@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Inspección RUS</title>
+<link rel="stylesheet" href="popup.css">
+<body><h1>Registro actual en RUS</h1>
+<p>Abre la bitácora o el formulario de nueva observación y captura esta pantalla. El archivo puede contener datos de la causa y de las personas.</p>
+<label for="stage">Pantalla</label>
+<select id="stage"><option value="bitacora">Bitácora antes de registrar</option><option value="formulario">Nueva observación, antes de guardar</option><option value="resultado">Resultado después del guardado manual</option></select>
+<button id="capture">Capturar estructura</button>
+<p id="status" role="status">La captura consulta el documento abierto. No rellena campos ni guarda observaciones.</p>
+<script src="capture.js"></script><script src="popup.js"></script></body></html>

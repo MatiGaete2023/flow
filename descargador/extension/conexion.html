@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conexión con SITFA</title><link rel="stylesheet" href="conexion.css">
+<main><p class="eyebrow">DESCARGADOR LOCAL</p><h1>Tu sesión de Chrome</h1>
+<p>Esta pestaña conecta las consultas de SITFA con la herramienta de Windows. Tu contraseña y tus cookies permanecen en Chrome.</p>
+<section><h2>Conectar la herramienta</h2><label for="code">Código que aparece en la ventana del descargador</label>
+<input id="code" autocomplete="off" spellcheck="false" placeholder="Pega el código de conexión">
+<div class="actions"><button id="connect">Conectar</button><button id="disconnect" disabled>Desconectar</button></div>
+<p id="status" role="status">Entra a la pantalla de consulta en la pestaña de SITFA antes de conectar.</p></section>
+<section><h2>Mientras se descarga</h2><p>Mantén abierta esta pestaña de conexión y la pestaña original de SITFA. Elige el lote y las fechas en la ventana del descargador. Las consultas y sus páginas se procesan una tras otra.</p>
+<p>Para detener un lote usa <strong>Cancelar</strong> en el descargador. Después puedes desconectar esta pestaña; cerrar la herramienta no cierra tu Chrome.</p></section>
+</main><script src="pagina.js"></script><script src="conexion.js"></script></html>

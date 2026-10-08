@@ -1,0 +1,53 @@
+name: Descargador experimental Windows
+on:
+  push:
+    branches: [main, 'experimento/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -p "test_*.py"
+      - run: python -m pip check
+      - name: Extensión con Chrome ficticio
+        if: matrix.python == '3.12'
+        run: |
+          python -m pip install playwright==1.63.0
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Playwright' }
+          python -m playwright install chromium
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la preparación de Chromium' }
+          python verificar_extension_real.py
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba de conexión de la extensión' }
+          python verificar_flujos_extension.py
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba de pantallas de la extensión' }
+          python verificar_pdf_extension.py
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la prueba de PDF de la extensión' }
+      - name: Ejecutable Windows
+        if: matrix.python == '3.12'
+        run: |
+          python -m pip install pyinstaller
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del empaquetador' }
+          python -m PyInstaller --noconfirm SITFA_Descargador.spec
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del ejecutable' }
+          $check = Start-Process -FilePath (Resolve-Path dist/SITFA_Descargador/SITFA_Descargador.exe).Path -ArgumentList '--verificar-paquete','artifacts/package-check.json' -PassThru -Wait -WindowStyle Hidden
+          if ($check.ExitCode -ne 0) { throw 'Falló la comprobación del paquete del descargador' }
+          $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
+          if (-not $proof.ok -or -not $proof.frozen) { throw 'El descargador no confirmó su arranque' }
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: SITFA-experimental-Windows
+          path: dist/SITFA_Descargador/
+          if-no-files-found: error

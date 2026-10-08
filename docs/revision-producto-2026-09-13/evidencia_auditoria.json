@@ -1,0 +1,52 @@
+{
+  "V03_dependencia_redaccion": {
+    "original": "PC_IE",
+    "misma_intencion_redactada_distinto": null
+  },
+  "V04_DCE": [
+    {
+      "dias": 0,
+      "asistente_menciona_correo": false,
+      "nurus_E05": false
+    },
+    {
+      "dias": 29,
+      "asistente_menciona_correo": false,
+      "nurus_E05": false
+    },
+    {
+      "dias": 30,
+      "asistente_menciona_correo": true,
+      "nurus_E05": true
+    },
+    {
+      "dias": 59,
+      "asistente_menciona_correo": true,
+      "nurus_E05": true
+    },
+    {
+      "dias": 60,
+      "asistente_menciona_correo": true,
+      "nurus_E05": true
+    }
+  ],
+  "V05_fallback_invalido": {
+    "asistente_genera_base": true,
+    "nurus_genera_base": false,
+    "nurus_incidencias": [
+      "E-05/E-06"
+    ]
+  },
+  "V06_fecha_contradictoria": {
+    "asistente_afirma_vencida": true,
+    "nurus_advierte": true
+  },
+  "V07_validacion_correo": {
+    "CC_omitido_sin_error": true,
+    "Para_vacio_bloqueado": true
+  },
+  "V08_catalogos": {
+    "textos_comparados": 25,
+    "diferencias": 0
+  }
+}

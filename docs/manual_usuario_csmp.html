@@ -1,0 +1,50 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>CSMP Windows 0.5.0.dev1</title><style>body{max-width:980px;margin:40px auto;padding:20px;font:17px Segoe UI;background:#f4f6fa;color:#233}pre{white-space:pre-wrap}</style><body><pre># CSMP Assistant · Windows
+
+**Versión 0.5.0.dev1 · 6 de octubre de 2026.**
+
+Programa de escritorio para revisar el trabajo actual y preparar archivos y borradores. Tiene cinco páginas: Trabajo, Correos, Resoluciones, Resultados y Configuración.
+
+## Instalación
+
+Requiere Windows, Python 3.12 y Microsoft Excel de escritorio para la exportación preservada. La creación de borradores requiere Outlook clásico; Outlook nuevo no ofrece la automatización COM utilizada.
+
+Ejecuta `Instalar_CSMP.bat` y después `Abrir_CSMP.bat`. Para instalar el wheel desde PowerShell:
+
+```powershell
+py -3.12 -m pip install &quot;./nurus-0.5.0.dev1-py3-none-any.whl[excel-legacy,excel-native,outlook]&quot;
+py -3.12 -m nurus.personal.app
+```
+
+## Flujo
+
+1. Carga el Excel en Trabajo, revisa avisos y observaciones, y exporta una copia actual. El original se conserva.
+2. Prepara correos. En **Revisar nómina**, edita las celdas y marca las filas que se incluirán; después acepta para generar los adjuntos.
+3. Revisa texto, destinatarios y adjuntos. El resumen final muestra el contenido efectivo antes de crear borradores en Outlook.
+4. Prepara proyectos en Resoluciones, revisa sus datos y genera Word.
+5. Consulta pendientes, fechas y entrega en Resultados. Un doble clic en un pendiente abre su registro o producto.
+
+**Correo libre** y **Word manual** funcionan sin cargar Excel. Word admite texto libre o una matriz DOCX con variables completadas. Sus ediciones se guardan como trabajo manual actual. Los bloques favoritos admiten `{NOMBRE}`, `{RIT}`, `{TRIBUNAL}`, `{PROGRAMA}` y `{FECHA}`; se completan antes de insertarlos.
+
+## Funciones adicionales
+
+- Informe de calidad por fila: campos vacíos, números/fechas ilegibles e identidades repetidas para revisión.
+- Explicación de sugerencias con reglas activadas, datos y umbrales configurados.
+- Selección conservada aunque una búsqueda o filtro oculte filas.
+- Preferencias de columnas visibles, recuperación de ediciones y productos actuales.
+- Búsqueda de contactos con elección explícita entre coincidencias.
+- Vencimiento de informe y egreso proyectado presentados por separado.
+- Diagnóstico de versión, dependencias, matrices y registro de Office.
+- ZIP de los productos que se seleccionen para la entrega.
+
+La sesión y los recibos críticos se conservan para recuperar el trabajo y evitar efectos duplicados. El guardado omite escrituras cuando el estado completo no cambió. Los productos basados en datos modificados deben prepararse y revisarse nuevamente.
+
+## Estado de entrega
+
+La fuente disponible era `b95f0db`, del prototipo dev17. Las versiones locales dev19 y Descargador 2.4.4 de la memoria no se encuentran publicadas; las mejoras se implementaron sobre la fuente disponible. Este paquete no se identifica como una recuperación exacta de esas versiones.
+
+Las pruebas locales incluyen interfaz con pantalla virtual y datos ficticios. La construcción del ejecutable y la aceptación con Excel y Outlook reales deben completarse en Windows. El flujo de Actions está configurado para Windows y la rama `feat/**`.
+
+El registro real en RUS sigue pendiente del formulario y la sesión operables. Preparar una observación no acredita que haya sido guardada en RUS.
+
+Consulta [el informe de ejecución](docs/EJECUCION_WINDOWS_20261006.md).
+</pre></body></html>

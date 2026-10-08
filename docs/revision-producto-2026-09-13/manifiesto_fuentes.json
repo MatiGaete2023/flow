@@ -1,0 +1,57 @@
+{
+  "fecha": "2026-09-13",
+  "nurus": {
+    "repositorio": "MatiGaete2023/NuRus",
+    "main": "b7e6930f625eb64a01f1e638577a368564699379",
+    "rama": "implementacion-plan-2026-09-08",
+    "commit": "e50eee4859fcdced832b52e5177041694d6fd109",
+    "tree": "db5868e9893c9fb659af591001082b4a6646c45c",
+    "archivos_cotejados": 83
+  },
+  "fuentes_adjuntas": [
+    {
+      "archivo": "config_correos_csmp.json",
+      "bytes": 4346,
+      "sha256": "e4683aa37e79354a256083b3ec0dd9f65c16a9a8f952692c031d4a0f5c1be120"
+    },
+    {
+      "archivo": "Creador de Correos.py",
+      "bytes": 57222,
+      "sha256": "d9c30652f7157b050c88136d2cee1e90e33135f0aa32b84baf69c40faa5f71ce"
+    },
+    {
+      "archivo": "Contador de Correos.PY",
+      "bytes": 3193,
+      "sha256": "026e207d0916e6b0fb47eb166e9b3abf26924234fac32f509b2a17da71b0dee1"
+    },
+    {
+      "archivo": "Asistente (1).zip",
+      "bytes": 346397,
+      "sha256": "485fb260bd24adaf70fe33fa12486216ce5ddebf4732f285985664e2a8746ad1"
+    },
+    {
+      "archivo": "CSMP_2025_Fusionado(2).md",
+      "bytes": 77978,
+      "sha256": "f1e7c3ff33f3e62b7dd867b42339061c799f165cf966f9520dd110cb66a2e59b"
+    }
+  ],
+  "pruebas": {
+    "entorno": "Linux-6.18.44-x86_64-with-glibc2.39",
+    "python": "3.12.14",
+    "asistente": {
+      "passed": 175,
+      "skipped": 3,
+      "seconds": 2.73
+    },
+    "nurus": {
+      "passed": 148,
+      "skipped": 1,
+      "seconds": 3.54
+    }
+  },
+  "limites": [
+    "Office institucional no ejecutado",
+    "RUS Engine original no localizado",
+    "Informe_Etiquetas_Proceso_NuRus.docx remoto no auditado"
+  ]
+}

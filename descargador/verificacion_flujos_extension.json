@@ -1,0 +1,18 @@
+{
+  "datos": "ficticios",
+  "api_extension_adaptada": false,
+  "perfil_usuario_accedido": false,
+  "peticiones_reales_sitfa": 0,
+  "resultado": "OK",
+  "pantallas": 4,
+  "lotes": 5,
+  "consultas": 9,
+  "paginas": 19,
+  "navegacion_entre_pantallas": true,
+  "tribunales_no_marcados_excluidos": true,
+  "fechas_litigantes": true,
+  "filtros_litigantes_conservados_y_restaurados": true,
+  "calendarios_mes_anio": true,
+  "radio_y_checkbox_restaurados": true,
+  "descargas_secuenciales": true
+}

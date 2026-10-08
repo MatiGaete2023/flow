@@ -1,0 +1,5 @@
+body { width: 350px; padding: 14px; font: 14px "Segoe UI", sans-serif; color: #162e48; }
+h1 { font-size: 19px; } p { line-height: 1.45; }
+select, button { width: 100%; padding: 9px; margin-top: 8px; }
+button { background: #164e70; color: white; border: 0; border-radius: 5px; cursor: pointer; }
+button:disabled { opacity: .5; }
