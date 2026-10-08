@@ -88,6 +88,10 @@ jobs:
         if: matrix.python == '3.12'
         run: python tools/flow_capture_pipeline.py artifacts/captura-v1 --rows 4 --complete
 
+      - name: Deferred institutional acceptance template
+        if: matrix.python == '3.12'
+        run: python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $env:GITHUB_SHA --assistant-version 0.5.0.dev4 --downloader-version 2.7.2 --extension-version 2.7.2
+
       - name: RUS capture in Chromium with a fictitious form
         if: matrix.python == '3.12'
         timeout-minutes: 4
@@ -131,7 +135,7 @@ jobs:
           $check = Start-Process -FilePath (Resolve-Path dist/CSMP_Integral/CSMP_Integral.exe).Path -ArgumentList '--verificar-paquete','artifacts/package-check.json' -PassThru -Wait -WindowStyle Hidden
           if ($check.ExitCode -ne 0) { throw 'Falló la comprobación del paquete CSMP' }
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
-          if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified) { throw 'El paquete CSMP no confirmó su arranque y contrato' }
+          if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
           python -m PyInstaller --noconfirm --onefile --windowed --paths src --name RUS_Inspector tools/rus_inspector_entry.py
           if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del inspector RUS' }
           New-Item -ItemType Directory -Force dist/RUS_Registro_Actual | Out-Null
@@ -210,6 +214,8 @@ jobs:
           Set-Content $sentinel 'conservar'
           $check = Start-Process (Join-Path $destination 'CSMP_Integral.exe') -ArgumentList '--verificar-paquete','artifacts/installed-package-check.json' -Wait -PassThru
           if ($check.ExitCode -ne 0) { throw 'Falló el arranque instalado' }
+          $proof = Get-Content artifacts/installed-package-check.json -Raw | ConvertFrom-Json
+          if (-not $proof.capture_pipeline_verified) { throw 'El instalador no confirmó los productos ficticios v1' }
           $reinstall = Start-Process $installer.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"') -Wait -PassThru
           if ($reinstall.ExitCode -ne 0) { throw 'Falló la reinstalación' }
           $uninstall = Start-Process (Join-Path $destination 'unins000.exe') -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
@@ -226,5 +232,7 @@ jobs:
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json
             artifacts/installed-package-check.json
+            artifacts/package-check.json
+            artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json
             artifacts/productos-ficticios/
             artifacts/captura-v1/

@@ -16,6 +16,19 @@ Push-Location $csmpRoot
 try {
     CheckedPython @('tools/write_build_meta.py')
     CheckedPython @('tools/write_build_meta.py','--descargador',$downloaderRoot)
+    $sourceCommit = (git rev-parse HEAD).Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA de la plantilla de aceptación' }
+    $acta = Join-Path $outputRoot 'ACTA_INSTITUCIONAL_NO_EJECUTADA.json'
+    if (Test-Path $acta) {
+        CheckedPython @('tools/flow_acceptance.py','validate',$acta)
+        $previousActa = Get-Content $acta -Raw | ConvertFrom-Json
+        if ($previousActa.artifact.source_commit -ne $sourceCommit) { throw 'El acta existente corresponde a otro SHA; use una carpeta nueva' }
+        if (@($previousActa.records | Where-Object { $_.result -ne 'NO_EJECUTADO' -or $_.evidence_kind -ne 'INSTITUCIONAL' }).Count -ne 0) {
+            throw 'El acta existente contiene resultados; conserve ese archivo y use una carpeta nueva para distribuir'
+        }
+    } else {
+        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.2','--extension-version','2.7.2')
+    }
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'CSMP_Experimental.spec')
 } finally { Pop-Location }
 Push-Location $downloaderRoot
@@ -41,6 +54,9 @@ try {
         if ($process.ExitCode -ne 0) { throw "Falló la verificación $($check[1])" }
         $proof = Get-Content -LiteralPath $check[2] -Raw | ConvertFrom-Json
         if (-not $proof.ok) { throw 'La distribución no confirmó su integración.' }
+        if ($check[1] -eq '--verificar-paquete' -and $check[0].StartsWith('CSMP_Integral/') -and -not $proof.capture_pipeline_verified) {
+            throw 'CSMP no confirmó los productos v1 desde el ejecutable autónomo.'
+        }
     }
 } finally { Pop-Location }
 Write-Output "Paquete integral verificado: $outputRoot"

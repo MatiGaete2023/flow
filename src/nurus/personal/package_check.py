@@ -46,6 +46,9 @@ def check(destination):
             from nurus.capture.selfcheck import check_contract
             result['capture_v1_verified']=check_contract(Path(folder))
             if not result['capture_v1_verified']:raise ValueError('Falló el contrato CSMP_CAPTURE_V1.')
+            from .capture_selfcheck import check_pipeline
+            result['capture_pipeline']=check_pipeline(Path(folder)/'captura-productos')
+            result['capture_pipeline_verified']=result['capture_pipeline']['ok']
         finally:app.destroy()
     destination.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 
