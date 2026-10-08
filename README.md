@@ -13,6 +13,9 @@ P0 está implementada y pendiente de aceptación G0. El contrato v1, el
 desacoplamiento final y las reglas contextuales siguen pendientes. El manual
 heredado que sigue describe la aplicación de partida.
 
+La especificación 02 ya está incorporada: [análisis y cambios pertinentes](docs/ANALISIS_ESPECIFICACION_02_20261008.md).
+La matriz comprende 115 requisitos de las cuatro especificaciones.
+
 # CSMP Assistant · Windows
 
 **Versión 0.5.0.dev4 · 8 de octubre de 2026 (integración en pruebas).**

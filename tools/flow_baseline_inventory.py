@@ -95,6 +95,14 @@ def graph(root):
             action, phase = "ADAPTAR con exportador v1 aditivo después de G2", "P4"
         elif name in {"nurus.personal.app_base", "nurus.personal.results_view"}:
             action, phase = "ADAPTAR entrada local después de G3/G5", "P5/P6"
+        elif name == "nurus.personal.work":
+            action, phase = "AMPLIAR por adaptador; conservar reglas/ediciones; aislar marcas históricas", "P5/P6/P7"
+        elif name == "nurus.personal.sitfa":
+            action, phase = "CONSERVAR Excel/procedencia; ADAPTAR consumo local v1", "P5"
+        elif name in {"nurus.personal.registration", "nurus.personal.registration_excel"}:
+            action, phase = "AISLAR infraestructura de escritura; preservar recuperación de comprobantes", "P6"
+        elif name in {"nurus.personal.session", "nurus.personal.product_state", "nurus.personal.sync"}:
+            action, phase = "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional", "P5/P8"
         nodes.append({"module": name, "path": relative, "imports": sorted(imports),
                       "local_imports": sorted(edges), "dynamic_import_lines": computed,
                       "action": action, "phase": phase})

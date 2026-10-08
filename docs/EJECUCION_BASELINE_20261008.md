@@ -11,7 +11,9 @@
 ## Resultado concreto
 
 Se importaron los 674 archivos versionados del SHA exigido a una rama nueva
-de flow, junto a los cinco adjuntos íntegros. No se cambiaron funciones de usuario,
+de flow, junto a los cinco adjuntos iniciales íntegros. La actualización por el
+documento 02 incorpora ese archivo y una segunda copia idéntica de 01: siete
+adjuntos en total. No se cambiaron funciones de usuario,
 versiones, reglas, plantillas, extensión o workflows. Se añadieron tres herramientas
 P0 para verificar integridad, inventariar módulos/tests y generar/comparar productos
 ficticios. La portada se adaptó a flow; el README de origen permanece íntegro en
@@ -34,11 +36,14 @@ No se creó tag ni se mutó NuRus; no se fusionó a main de ninguno de los repos
 | P0.06 | [Mapa de migración](MIGRACION_Y_MODULOS_20261008.md), configuración y sesiones legado preservadas | No se recibió configuración personal ni se migraron datos del usuario |
 | P0.07 | Inspector/extensión de captura y variantes preservados fuera del nuevo flujo | No eliminar ni fusionar por nombre |
 
-La [matriz funcional](MATRIZ_FUNCIONAL_20261008.md) registra los 95 IDs D-T01..20,
-R-T01..32, INT-01..27 y F00..15 presentes en los documentos accesibles. Es una
-matriz técnica inicial: las pruebas relacionadas no sustituyen el caso de
-aceptación completo. La especificación 02 anunciada por el usuario aún no aparece
-en los adjuntos accesibles; sus A-T01..20 quedan pendientes de incorporar.
+La [matriz funcional](MATRIZ_FUNCIONAL_20261008.md) registra **115 IDs**:
+D-T01..20, **A-T01..20**, R-T01..32, INT-01..27 y F00..15, con sus criterios
+de aceptación. Las cuatro especificaciones están disponibles y los adjuntos
+idénticos no duplican requisitos. Es una matriz técnica inicial: las pruebas
+relacionadas no sustituyen el caso de aceptación completo. Las correspondencias
+del documento 02 con el SHA actual se explican en
+[su análisis](ANALISIS_ESPECIFICACION_02_20261008.md); no se adoptan sin cotejo
+sus rutas de la antigua rama experimental.
 
 ## Ramas y CI de procedencia
 
