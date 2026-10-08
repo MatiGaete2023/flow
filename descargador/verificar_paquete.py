@@ -24,6 +24,10 @@ def check(destination):
     assert f"if(command==='capabilities') return {{tipo:'CSMP_RUS_CAPACIDADES',version:'{VERSION}'" in capability_source
     from csmp_shared import parser
     assert callable(parser())
+    from nurus.capture.selfcheck import check_contract
+    from tempfile import TemporaryDirectory
+    with TemporaryDirectory(prefix='capture-check-',dir=destination.parent) as folder:
+        assert check_contract(Path(folder))
     for name in ('background.js','conexion.js','conexion.html','conexion.css','pagina.js'):
         assert (extension/name).is_file()
     executable=Path(sys.executable).resolve();app_root=executable.parent

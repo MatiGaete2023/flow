@@ -87,3 +87,7 @@ El instalador Windows de Inno Setup instala por usuario, crea accesos directos y
 Para incidencias de bitácoras, compartir `diagnostico_bitacoras.json`
 (generado junto al lote), no el `bitacoras.json` ni las copias HTML con
 datos de NNA.
+
+El avance funcional está en [implementación del MVP](docs/IMPLEMENTACION_MVP_20261008.md),
+[contrato v1](contracts/csmp_capture_v1/README.md) y
+[aceptaciones pendientes](docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).

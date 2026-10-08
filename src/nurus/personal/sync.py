@@ -75,12 +75,22 @@ def associate(work, data):
 
 
 def remember_export(work):
-    data = read_external(work.output, work.mode, work.sheet)
+    data = read_copy(work,work.output)
     records = associate(work, data)
     for row in work.rows:
         row.sync_base = deepcopy(records[row.id][2])
         row.sync_local = deepcopy(row.review)
         row.sync_state = str(records[row.id][1].get('NURUS_DECISIONES', '') or '')
+
+
+def read_copy(work,path):
+    data=read_external(path,work.mode,work.sheet)
+    if getattr(work,'capture_digest','') and data['records']:
+        from nurus.rus.columns import map_columns
+        headers=data['records'][0][1]
+        for mode in ('ESPERA','CUMPLIMIENTO','INFORMES'):
+            data['mapping'].update(map_columns(headers,mode))
+    return data
 
 
 def refresh(work, resolutions=None):
@@ -94,7 +104,7 @@ def refresh(work, resolutions=None):
     path = Path(work.output)
     if not path.exists():
         raise ValueError('La copia fue movida. Usa Localizar copia para indicar su nueva ubicación.')
-    data = read_external(path, work.mode, work.sheet)
+    data = read_copy(work,path)
     if data['digest'] == work.output_hash:
         return False
     incoming = associate(work, data)

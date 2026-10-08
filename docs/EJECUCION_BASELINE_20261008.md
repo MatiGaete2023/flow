@@ -1,7 +1,7 @@
 # Ejecución P0 — 8 de octubre de 2026
 
 **Destino:** [MatiGaete2023/flow](https://github.com/MatiGaete2023/flow).
-**Estado:** `IMPLEMENTADA_PENDIENTE_ACEPTACION`; G0 aún no aprobado.
+**Estado histórico P0:** entrega sin cambios funcionales. El usuario autorizó continuar con el plan; avance actual en [IMPLEMENTACION_MVP_20261008.md](IMPLEMENTACION_MVP_20261008.md).
 **Origen:** NuRus `251d5c4025749edd4767183ebd3d2baf3bb9baed`, rama
 `feat/consolidacion-bitacoras-20261008`.
 **Commit de importación en flow:** `bd826d524761f24204323e7ad87c287045dc40d3`.

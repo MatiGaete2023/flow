@@ -1,4 +1,6 @@
-# Preparación de P2 — contrato aún no implementado
+# Preparación histórica P2 — decisiones iniciales
+
+**Estado actualizado:** contrato implementado; ver [README.md](README.md), esquema y diccionario. Las propuestas siguientes documentan la preparación P0 previa.
 
 Esta entrega P0 no declara existente `CSMP_CAPTURE_V1`. La primera modificación
 funcional tras aprobar G0 será su validador; no una reescritura de GUI.

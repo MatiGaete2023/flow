@@ -1,5 +1,7 @@
 # Análisis e incorporación de la especificación 02
 
+**Registro histórico anterior al desarrollo:** avance vigente en [IMPLEMENTACION_MVP_20261008.md](IMPLEMENTACION_MVP_20261008.md).
+
 Documento recibido: `02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md`, SHA-256
 `f22ae66bc25edcceeb8416eed54e423a487e0e1d556911995cd823c7e4ad3f55`.
 Se conserva íntegro en `docs/plan_20261008/`. La nueva copia del documento 01

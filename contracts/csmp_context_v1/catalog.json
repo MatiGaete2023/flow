@@ -1,0 +1,116 @@
+{
+  "schema_id": "CSMP_CONTEXT_CATALOG",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "CT-01",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Bitácora con identidad y cobertura confirmada",
+      "proposed_finding": "Última observación del centro, fecha y autor; entradas empatadas todas",
+      "action_limit": "Mostrar referencia de corte; no crear historial local",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-02",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Bitácora desde fecha de CT-01",
+      "proposed_finding": "Entradas posteriores de cualquier autor/tipo con referencias",
+      "action_limit": "Mostrar novedades, texto íntegro, origen; no confundir observación propia con respuesta",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-03",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Historia SITFA desde fecha de CT-01",
+      "proposed_finding": "Trámites posteriores, tipo, fecha, folio/referencia y vínculo PDF",
+      "action_limit": "Mostrar cronología y necesidad de examinar PDF si título es insuficiente",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-04",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Bitácora/historia vs dato Excel",
+      "proposed_finding": "Dato de vencimiento aparentemente discordante con actuación reciente",
+      "action_limit": "Clasificar revisión focalizada o exhaustiva; **no alterar plazo** automáticamente",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-05",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Observación centro anterior y respuesta comprobada",
+      "proposed_finding": "Posible respuesta vinculada a observación",
+      "action_limit": "Mostrar «respuesta registrada / pendiente de cotejar»; no «subsanada» sin evidencia",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-06",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Nueva consulta sin bitácora, lectura incompleta o ingreso ambiguo",
+      "proposed_finding": "Información necesaria no evaluable",
+      "action_limit": "Solicitar captura focalizada desde Descargador; no asumir ausencia",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-07",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Reiteración literal/semántica de observaciones con IDs conocidos",
+      "proposed_finding": "Posible repetición",
+      "action_limit": "Advertir y presentar fechas, autores y textos; no suprimir propuesta automáticamente",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-08",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Consulta de carga con cobertura temporal inequívoca",
+      "proposed_finding": "Resolución firmada posterior relevante",
+      "action_limit": "Mostrar evento y referencia; no inferir contenido ni trámite de otra persona",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-09",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Calendario individual y estado acreditado",
+      "proposed_finding": "Informe enviado/pendiente según estado de fuente",
+      "action_limit": "Propuesta de actualizar clasificación, revisión humana para contradicciones",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-10",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "required_source_and_evidence": "Varias incidencias relevantes y fuentes contradictorias",
+      "proposed_finding": "Necesidad de examen de causa",
+      "action_limit": "Categoría exhaustiva, con motivo y evidencias enumeradas",
+      "approval_reference": "",
+      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    }
+  ]
+}
