@@ -1,3 +1,18 @@
+# Flow — ejecución del plan NURUS / CSMP
+
+Repositorio de trabajo: **MatiGaete2023/flow**. Baseline: CSMP `0.5.0.dev4`,
+Descargador/extensión `2.7.2`, importados de NuRus `251d5c4` sin cambiar funciones.
+
+Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
+[plan y especificaciones](docs/plan_20261008/README.md). Primera entrega:
+[ejecución P0](docs/EJECUCION_BASELINE_20261008.md),
+[matriz funcional](docs/MATRIZ_FUNCIONAL_20261008.md) y herramientas de auditoría
+en `tools/flow_baseline_*.py`.
+
+P0 está implementada y pendiente de aceptación G0. El contrato v1, el
+desacoplamiento final y las reglas contextuales siguen pendientes. El manual
+heredado que sigue describe la aplicación de partida.
+
 # CSMP Assistant · Windows
 
 **Versión 0.5.0.dev4 · 8 de octubre de 2026 (integración en pruebas).**

@@ -1,0 +1,4 @@
+# Pytest guarda fragmentos originales de traceback con espacios al final.
+# Se conserva esa evidencia sin reformatearla.
+docs/evidencia_p0/flow-baseline-*.txt -whitespace
+docs/evidencia_p0/flow-baseline-*.xml -whitespace
