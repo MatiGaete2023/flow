@@ -1,0 +1,20 @@
+{
+  "snapshot_only": true,
+  "source_commit": "df1eab5b872bb9b423dd9be191367aeffb76ad42",
+  "assistant_run": {
+    "id": 37849961207,
+    "status": "in_progress",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37849961207"
+  },
+  "downloader_run": {
+    "id": 37849960999,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37849960999"
+  },
+  "previous_mvp_assistant": {
+    "id": 37849097939,
+    "conclusion": "failure",
+    "reason": "Dos tests con codificación implícita cp1252; corregidos en df1eab5."
+  },
+  "check_latest": "Consultar Actions/PR para el último SHA; este archivo no sustituye estado en vivo. Un commit posterior de evidencia no identifica estos binarios."
+}

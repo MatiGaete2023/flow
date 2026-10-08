@@ -1,0 +1,17 @@
+{
+  "rows": 2000,
+  "partial": false,
+  "schema": "1.0.0",
+  "stages_seconds": {
+    "export_zip": 0.6566,
+    "validate": 0.4339,
+    "import_normalize_analyze": 8.278,
+    "excel": 9.3124,
+    "drafts": 0.6005
+  },
+  "peak_bytes": 95463808,
+  "package_bytes": 110820,
+  "reads_institutional": 0,
+  "writes_institutional": 0,
+  "outlook_saved": 0
+}

@@ -61,8 +61,9 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 2. Comprobar resultados de workflows Windows del último SHA de la PR; atender
    fallos de empaquetado sin eliminar tests. Conservar mismo SHA para EXE/extensión.
 3. Leer [aceptación pendiente](docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).
-   La pregunta sobre entorno Windows y ubicación de evidencia quedó planteada
-   al usuario; usar su respuesta si existe, sin pedir credenciales ni publicar datos.
+   El usuario confirmó que no hay entorno/evidencia disponibles y que SITFA/RUS
+   se usarán después. La aceptación real queda diferida por esa decisión;
+   no insistir en obtener acceso ahora ni pedir credenciales o publicar datos.
 4. P9 no admite extractor especulativo. P10 CT-01..10 siguen desactivadas: el
    catálogo en `contracts/csmp_context_v1/` distingue implementación de preview
    y reglas aún pendientes. No activarlas por pasar fixtures.

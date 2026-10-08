@@ -6,3 +6,5 @@ docs/evidencia_p0/flow-baseline-*.xml -whitespace
 docs/plan_20261008/*.md -whitespace
 docs/evidencia_p0/flow-revision-02-*.txt -whitespace
 docs/evidencia_p0/flow-revision-02-*.xml -whitespace
+docs/evidencia_desarrollo_20261008/flow-*.txt -whitespace
+docs/evidencia_desarrollo_20261008/flow-*.xml -whitespace
