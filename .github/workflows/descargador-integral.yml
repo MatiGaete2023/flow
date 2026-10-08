@@ -44,7 +44,7 @@ jobs:
           $p = Start-Process -FilePath (Resolve-Path dist/SITFA_Descargador/SITFA_Descargador.exe).Path -ArgumentList '--verificar-paquete','artifacts/package-check.json' -PassThru -Wait -WindowStyle Hidden
           if ($p.ExitCode -ne 0) { throw 'Falló la verificación del ejecutable' }
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
-          if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified) { throw 'Paquete incompleto' }
+          if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified -or -not $proof.capture_v1_verified) { throw 'Paquete incompleto' }
       - uses: actions/upload-artifact@v4
         with:
           name: Descargador-SITFA-2.7.2-Windows

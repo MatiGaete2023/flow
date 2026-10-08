@@ -26,6 +26,11 @@ y 6 omitidas, añadiendo concatenación desde lote original sin editar el ZIP. D
 169 aprobadas y 57 subtests. Las omisiones y entornos específicos se detallan
 en JUnit; no equivalen a aceptación institucional.
 
+La última corrida `flow-mvp-final-build` alcanza **549 aprobadas y 6 omitidas**;
+incluye rechazo de metadata de build faltante/incorrecta y exposición del SHA.
+`flow-mvp-downloader-final-build` conserva **169 aprobadas y 57 subtests** con
+la prueba Tk en proceso separado. Estos son los resultados locales vigentes.
+
 Golden actual: 17 productos ficticios, paridad de contenidos, observaciones,
 reglas y estilos contra P0. El inventario P0 sigue detectando los cambios de
 implementación autorizados; no se reemplazan sus hashes de origen.
@@ -79,6 +84,23 @@ en pruebas y generador; no se omitieron los tests. El run histórico anterior
 falló al inicializar Tcl tras empaquetado; se conserva como antecedente, no PASÓ.
 La corrida Linux inicial detectó una aserción dependiente de imports previos;
 se corrigió midiendo los nuevos imports del acto probado.
+
+El fallo Tcl se reprodujo en el run Descargador de d261db5 (job 113562801344).
+La prueba afectada crea ahora una ventana real en un proceso separado, manteniendo
+las tres aserciones y fallando si el proceso no arranca. No se omite ni se declara
+resuelto en Windows por pasar Linux: comprobar el run posterior a esta corrección.
+
+La comprobación del paquete CSMP ahora incluye commit/versión y rechaza un build
+con origen ausente o incorrecto. El paquete conjunto rechaza SHA diferentes entre
+ambos ejecutables. Los workflows exigen también la verificación del contrato v1.
+El wheel instalado fuera del árbol fuente confirmó contrato, catálogo, cinco
+patches y seis plantillas; fue necesario usar el entorno de build aislado de pip
+porque el venv local no tenía setuptools.
+
+El descriptor de borrador de tribunal de la fixture conserva una glosa heredada
+que afirma registro en bitácora. Es material para revisión humana y debe corregirse:
+la API de creación de borradores para paquetes rechaza esa afirmación no acreditada.
+No se guardó ese descriptor en Outlook ni se cambió la plantilla del usuario.
 
 No hubo consultas institucionales, registros RUS ni correos enviados. La API
 distribuida de registro rechaza antes de acceder al adaptador. Las pruebas del
