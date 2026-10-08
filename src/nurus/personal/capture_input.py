@@ -24,7 +24,7 @@ def import_capture(path,config,*,as_of=None,previous=None):
     checkpoint();progress('Validando paquete y cobertura')
     capture=read_capture(path);as_of=as_of or date.today()
     config_hash=sha256(json.dumps(config,sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
-    if previous and getattr(previous,'capture_digest','')==capture.digest and previous.as_of==as_of.isoformat() and getattr(previous,'capture_config_hash','')==config_hash:
+    if previous and getattr(previous,'capture_digest','')==capture.digest and previous.as_of==as_of.isoformat() and getattr(previous,'capture_config_hash','')==config_hash and getattr(previous,'ruleset_version','')==RULESET_VERSION and getattr(previous,'mapping_version','')==capture.manifest['mapping_version']:
         return deepcopy(previous)
     records=list(capture.rows('registros'))
     # Un productor independiente puede aportar calendarios sin duplicarlos en
@@ -35,7 +35,8 @@ def import_capture(path,config,*,as_of=None,previous=None):
     for calendar in capture.rows('calendarios'):
         if physical(calendar) in represented:continue
         record={k:calendar[k] for k in SOURCE_FIELDS}
-        record.update(record_id='calendar:'+calendar['calendar_id'],record_type='INFORMES',
+        is_report=calendar['event_type'].strip().upper() in ('INFORME','INFORMES')
+        record.update(record_id='calendar:'+calendar['calendar_id'],record_type='INFORMES' if is_report else 'OTRO',
                       identity_status='VERIFICADA' if calendar['association']=='VERIFICADA' else 'INCIERTA',
                       raw_json=calendar['raw_json'],normalized_json=calendar['normalized_json'],
                       source_table='calendarios',calendar_id=calendar['calendar_id'])
@@ -45,7 +46,8 @@ def import_capture(path,config,*,as_of=None,previous=None):
     canonical=[];groups=defaultdict(list);provenance={};contexts={};row_modes={}
     calendars=defaultdict(list)
     for row in capture.rows('calendarios'):
-        if row['association']=='VERIFICADA':calendars[identity(row)].append(row)
+        if row['association']=='VERIFICADA' and row['event_type'].strip().upper() in ('INFORME','INFORMES'):
+            calendars[identity(row)].append(row)
     cross={}
     event_index=defaultdict(list)
     for table in ('bitacoras','historia_tramites'):
