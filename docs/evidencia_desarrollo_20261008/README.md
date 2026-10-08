@@ -31,6 +31,14 @@ incluye rechazo de metadata de build faltante/incorrecta y exposición del SHA.
 `flow-mvp-downloader-final-build` conserva **169 aprobadas y 57 subtests** con
 la prueba Tk en proceso separado. Estos son los resultados locales vigentes.
 
+El cierre `flow-mvp-final-rules` alcanza **552 aprobadas y 6 omitidas**. Calendarios
+de medida/tipo desconocido no activan reglas ni cruce de Informes; un horario
+sin offset no acredita orden aunque tenga una etiqueta de zona. Reimportar
+compara versiones y actualizar el motor invalida productos preparados sin tocar
+la edición humana. Preview temporal v2 continúa desactivado en producción.
+`flow-golden-final-rules.txt` vuelve a confirmar paridad de los 17 productos.
+Estos son los resultados finales después de los últimos ajustes funcionales.
+
 Golden actual: 17 productos ficticios, paridad de contenidos, observaciones,
 reglas y estilos contra P0. El inventario P0 sigue detectando los cambios de
 implementación autorizados; no se reemplazan sus hashes de origen.

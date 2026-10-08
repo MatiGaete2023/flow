@@ -91,6 +91,12 @@ Excel legado sigue su ruta anterior y se rotula SOLO_PLANILLA en evidencia.
 Sin ID remoto no hay unión de bitácoras por nombre/RIT. Calendarios ambiguos se
 conservan NO_ASOCIADO. No se suprimen filas repetidas legítimas.
 
+Un calendario independiente solo entra al motor de Informes si su tipo es
+INFORME/INFORMES. Medidas y tipos desconocidos se conservan como OTRO sin
+propuesta automática; tampoco aportan fecha al cruce C10 de informes.
+La reimportación compara versión del motor/mapeo antes de reutilizar resultados
+de una sesión anterior, preservando las decisiones humanas al reanalizar.
+
 ```sh
 python tools/flow_capture_cli.py validate captura.zip
 python tools/flow_capture_fixture.py /ruta/nueva/completa.zip

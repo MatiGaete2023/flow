@@ -2,7 +2,7 @@
 from datetime import date,datetime
 from calendar import monthrange
 
-RULESET_VERSION='baseline-20261008+context-preview-1'
+RULESET_VERSION='baseline-20261008+context-preview-2'
 CONTEXT_RULES={
  'CT-01':('bitacoras','Última observación atribuible al centro'),
  'CT-02':('bitacoras','Entradas posteriores y empates inciertos'),
@@ -34,6 +34,11 @@ def earliest(as_of):
     return date(year,zero_month+1,min(as_of.day,monthrange(year,zero_month+1)[1]))
 
 
+def certain_moment(row):
+    value=moment(row)
+    return row.get('time_precision')=='SEGUNDO' and row.get('time_zone') not in ('','DESCONOCIDA') and isinstance(value,datetime) and value.utcoffset() is not None
+
+
 def chronology(capture,record,as_of,*,fixture_preview=False,event_index=None):
     key=identity(record)
     result={'identity':list(key),'last_center':[],'later':[],'uncertain':[],'recent':[],'findings':[],'class':'NO_EVALUABLE','reason':'Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.'}
@@ -56,7 +61,7 @@ def chronology(capture,record,as_of,*,fixture_preview=False,event_index=None):
     if not center:
         result['reason']='ULTIMA_OBSERVACION_NO_ACREDITADA dentro del período capturado.';finding('CT-06',result['reason']);return result
     last_day=max(e['event_at'][:10] for e in center);same_day=[e for e in center if e['event_at'][:10]==last_day]
-    if any(e.get('time_precision')!='SEGUNDO' or e.get('time_zone') in ('','DESCONOCIDA') for e in same_day):
+    if not all(certain_moment(e) for e in same_day):
         last=same_day
     else:
         try:
@@ -67,7 +72,7 @@ def chronology(capture,record,as_of,*,fixture_preview=False,event_index=None):
         if event['event_id'] in last_ids:continue
         if event['event_at'][:10]>last_day:result['later'].append(event)
         elif event['event_at'][:10]==last_day:
-            certain=all(e.get('time_precision')=='SEGUNDO' and e.get('time_zone') not in ('','DESCONOCIDA') for e in [event,*last])
+            certain=all(certain_moment(e) for e in [event,*last])
             if certain:
                 try:
                     if moment(event)>max(moment(e) for e in last):result['later'].append(event)
