@@ -1,0 +1,95 @@
+{
+  "cc_obligatorio": "ucc_concepcion@pjud.cl",
+  "cc_adicional": "",
+  "modalidad_default": "",
+  "modalidades_default": [
+    "Cuidado alternativo residencial",
+    "Intervención ambulatoria de reparación",
+    "Cuidado alternativo familia de acogida",
+    "Diagnóstico Clínico Especializado (DCE)"
+  ],
+  "periodo_default": "el período revisado",
+  "abrir_borrador": true,
+  "validar_manual": true,
+  "tribunales": {
+    "TOME": {
+      "nombre": "Juzgado de Familia de Tomé",
+      "para": [
+        "nmojeda@pjud.cl",
+        "csrain@pjud.cl",
+        "pmella@pjud.cl",
+        "jparrav@pjud.cl"
+      ]
+    },
+    "LAJA": {
+      "nombre": "Juzgado de Letras y Garantía de Laja",
+      "para": [
+        "abergman@pjud.cl",
+        "ammillan@pjud.cl",
+        "cbparedes@pjud.cl",
+        "masanhueza@pjud.cl",
+        "omosqueira@pjud.cl",
+        "phidalgop@pjud.cl"
+      ]
+    },
+    "MULCHEN": {
+      "nombre": "Juzgado de Letras y Garantía de Mulchén",
+      "para": [
+        "cavillanueva@pjud.cl",
+        "ialister@pjud.cl",
+        "jocastillo@pjud.cl",
+        "wponsot@pjud.cl"
+      ]
+    }
+  },
+  "plantillas": {
+    "espera": {
+      "nombre": "Espera · informativo al tribunal",
+      "asunto": "Revisión pestaña \"Espera\" del módulo RUS — {TRIBUNAL}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+      "adjunto": "opcional",
+      "usa_modalidades": true,
+      "nota": "Correo general al finalizar la revisión de la pestaña Espera. Texto conforme Manual de funciones CSMP 2025."
+    },
+    "cumplimiento": {
+      "nombre": "Cumplimiento · informativo al tribunal",
+      "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — {TRIBUNAL}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+      "adjunto": "opcional",
+      "usa_modalidades": true,
+      "nota": "Correo general al finalizar la revisión de la pestaña Cumplimiento. Texto conforme Manual de funciones CSMP 2025."
+    },
+    "informes": {
+      "nombre": "Informes · informativo al tribunal",
+      "asunto": "Revisión pestaña \"Informes\" del módulo RUS — {TRIBUNAL}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+      "adjunto": "opcional",
+      "usa_modalidades": true,
+      "nota": "Correo general al finalizar la revisión de la pestaña Informes. Texto conforme Manual de funciones CSMP 2025."
+    },
+    "medidas": {
+      "nombre": "Medidas sin vigencia y por vencer",
+      "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+      "adjunto": "obligatorio",
+      "usa_modalidades": true,
+      "nota": "Correo posterior a la revisión de Cumplimiento. Requiere planilla adjunta. Texto conforme Manual de funciones CSMP 2025."
+    },
+    "proyectos": {
+      "nombre": "Reporte de proyectos de resolución",
+      "asunto": "Reporte de proyectos de resolución — {TRIBUNAL} — {PERIODO}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se remite reporte de proyectos de resolución elaborados durante {PERIODO}, para su conocimiento y gestión.\n\nAtte. a Ud.,",
+      "adjunto": "obligatorio",
+      "usa_modalidades": false,
+      "nota": "Reporte de proyectos de resolución. Requiere planilla adjunta."
+    },
+    "especial": {
+      "nombre": "Gestión particular / situación especial",
+      "asunto": "Gestión particular RUS — {TRIBUNAL} — {FECHA}",
+      "cuerpo": "Buen día:\n\nJunto con saludar, se remiten antecedentes para revisión y gestión particular del Tribunal.\n\nAtte. a Ud.,",
+      "adjunto": "opcional",
+      "usa_modalidades": false,
+      "nota": "Plantilla libre para una situación particular."
+    }
+  }
+}

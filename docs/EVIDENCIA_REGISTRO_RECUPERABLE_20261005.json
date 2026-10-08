@@ -1,0 +1,19 @@
+{
+  "native_excel": true,
+  "fictitious_rus_adapter": true,
+  "real_rus_accessed": false,
+  "original_unchanged": true,
+  "identity_after_reorder": true,
+  "rows": 2,
+  "updated_rows": 1,
+  "effective_date_and_cc": true,
+  "text_tt_res_preserved": true,
+  "formulas_styles_other_sheets_preserved": true,
+  "receipt_reconciled": true,
+  "formats": [
+    ".xlsx",
+    ".xls",
+    ".xlsm"
+  ],
+  "ok": true
+}

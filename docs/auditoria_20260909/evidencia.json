@@ -1,0 +1,117 @@
+{
+  "audited_commit": "afd82b80ae69375e1d2f6fc03f78c081b0bab45c",
+  "as_of": "2026-09-09",
+  "synthetic": {
+    "invalid_cross": {
+      "warnings": [
+        "CROSS_MAPPING_MISSING: faltan nombre, programa, rit, rut, tribunal, vencimiento; C-10 no se evaluará."
+      ],
+      "approved_without_exception": true,
+      "exception_recorded": false,
+      "error": null
+    },
+    "missing_projected_exit": {
+      "status": "reviewed",
+      "rule_ids": [
+        "C-09"
+      ],
+      "issues": [],
+      "observation": "Persona PRM: Medida revisada, sin observaciones."
+    },
+    "future_marked_expired": {
+      "status": "reviewed",
+      "rule_ids": [
+        "C-04"
+      ],
+      "issues": [],
+      "observation": "Persona PRM: La medida se visualiza vencida en RUS desde el 18 de diciembre de 2026."
+    },
+    "absent_fae_column": {
+      "status": "reviewed",
+      "rule_ids": [
+        "C-09",
+        "C-08"
+      ],
+      "issues": [],
+      "observation": "Persona FAE: Medida revisada. Se hace presente que Persona no tiene ficha FAE, se sugiere confeccionar."
+    },
+    "trace_formula": {
+      "new_formula_cells": [
+        "E9"
+      ],
+      "visible_observation": "'=texto de prueba"
+    },
+    "partial_export": {
+      "error_type": "ExportError",
+      "destination_remains": true,
+      "bytes": 10
+    },
+    "header_reads": {
+      "read_excel_calls": 32,
+      "header_row": 14,
+      "first_source_row": 15,
+      "records": 60
+    }
+  },
+  "provided_files": [
+    {
+      "file": "AGOSTO.xlsx",
+      "sha256": "fc48176a618817d09b65aacb43ece0c22f02e3881fd4c4c46a2e889a00a177df",
+      "mode": "ESPERA",
+      "header_row": 1,
+      "sheet": "ESPERA",
+      "rows": 96,
+      "warnings": [],
+      "status_counts": {
+        "reviewed": 95,
+        "blocked": 1
+      },
+      "issue_counts": {
+        "REQUIRED_DATA_MISSING": 1
+      }
+    },
+    {
+      "file": "AGOSTO.xlsx",
+      "sha256": "fc48176a618817d09b65aacb43ece0c22f02e3881fd4c4c46a2e889a00a177df",
+      "mode": "CUMPLIMIENTO",
+      "header_row": 1,
+      "sheet": "CUMPLIMIENTO",
+      "rows": 761,
+      "warnings": [],
+      "status_counts": {
+        "reviewed": 756,
+        "excluded": 4,
+        "blocked": 1
+      },
+      "issue_counts": {
+        "REQUIRED_DATA_MISSING": 1
+      }
+    },
+    {
+      "file": "AGOSTO.xlsx",
+      "sha256": "fc48176a618817d09b65aacb43ece0c22f02e3881fd4c4c46a2e889a00a177df",
+      "mode": "INFORMES",
+      "error_type": "WorkbookReadError",
+      "error": "Columna ambigua para ingreso: FECHA INGRESO, FEC. INGRESO EFECTIVO. Seleccione una columna explícitamente."
+    },
+    {
+      "file": "RUS_CUMPLIMIENTO_20260904_114132_856292.xlsx",
+      "sha256": "f4169bbeb763ee7c802b6990fc112184219e9c271cf0d946868b06534172d094",
+      "mode": "CUMPLIMIENTO",
+      "header_row": 1,
+      "sheet": "CUMPLIMIENTO",
+      "rows": 263,
+      "warnings": [
+        "CROSS_SHEET_NOT_SELECTED: C-10 no se evaluará sin una hoja de cruce identificable."
+      ],
+      "status_counts": {
+        "reviewed": 255,
+        "excluded": 7,
+        "blocked": 1
+      },
+      "issue_counts": {
+        "REQUIRED_DATA_MISSING": 1
+      }
+    }
+  ]
+}

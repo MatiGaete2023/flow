@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "RUS · Inspección del registro actual",
+  "version": "0.1.0",
+  "description": "Captura la estructura del formulario abierto para preparar la integración de registro.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {"default_popup": "popup.html", "default_title": "Inspeccionar formulario RUS"}
+}

@@ -1,0 +1,88 @@
+{
+  "baseline_commit": "b6657f57032b7888e0ba81aa17bec044185fe785",
+  "baseline": {
+    "version": "0.3.0.dev5",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.39",
+    "input": "sintético",
+    "office_tested": false,
+    "results": [
+      {
+        "rows": 100,
+        "conversion_median_seconds": 0.003466561000038837,
+        "read_seconds": 0.024508432000004632,
+        "evaluate_seconds": 0.0035502289999840286,
+        "persist_seconds": 0.005339702000014768,
+        "export_portable_seconds": 0.02973403200002167,
+        "reopen_seconds": 0.004812331999971775,
+        "total_pipeline_seconds": 0.06794472699999687,
+        "verified": true
+      },
+      {
+        "rows": 1000,
+        "conversion_median_seconds": 0.03623605799998586,
+        "read_seconds": 0.0894777320000344,
+        "evaluate_seconds": 0.03178648699997666,
+        "persist_seconds": 0.06756306500000164,
+        "export_portable_seconds": 0.3968150940000328,
+        "reopen_seconds": 0.01381691099999216,
+        "total_pipeline_seconds": 0.5994592890000376,
+        "verified": true
+      },
+      {
+        "rows": 10000,
+        "conversion_median_seconds": 0.38143438900004867,
+        "read_seconds": 0.9584561400000098,
+        "evaluate_seconds": 0.34740858000003527,
+        "persist_seconds": 0.6168308960000104,
+        "export_portable_seconds": 22.094396229999973,
+        "reopen_seconds": 0.07882593400000815,
+        "total_pipeline_seconds": 24.095917780000036,
+        "verified": true
+      }
+    ]
+  },
+  "optimized": {
+    "version": "0.3.0.dev6",
+    "python": "3.12.14",
+    "platform": "Linux-6.18.35-x86_64-with-glibc2.39",
+    "input": "sintético",
+    "office_tested": false,
+    "results": [
+      {
+        "rows": 100,
+        "conversion_median_seconds": 0.001241290000052686,
+        "read_seconds": 0.019745517999922413,
+        "evaluate_seconds": 0.003515140999979849,
+        "persist_seconds": 0.0050507910000305856,
+        "export_portable_seconds": 0.029358926999975665,
+        "reopen_seconds": 0.005278234000002158,
+        "total_pipeline_seconds": 0.06294861099991067,
+        "verified": true
+      },
+      {
+        "rows": 1000,
+        "conversion_median_seconds": 0.011392990999979702,
+        "read_seconds": 0.06538800700002412,
+        "evaluate_seconds": 0.031887015999927826,
+        "persist_seconds": 0.0650629360000039,
+        "export_portable_seconds": 0.20286476100000073,
+        "reopen_seconds": 0.011922292000008383,
+        "total_pipeline_seconds": 0.37712501199996495,
+        "verified": true
+      },
+      {
+        "rows": 10000,
+        "conversion_median_seconds": 0.11393176100000346,
+        "read_seconds": 0.7129689989999406,
+        "evaluate_seconds": 0.33474197800001093,
+        "persist_seconds": 0.549797754999986,
+        "export_portable_seconds": 2.5218063720000146,
+        "reopen_seconds": 0.0878946550000137,
+        "total_pipeline_seconds": 4.207209758999966,
+        "verified": true
+      }
+    ]
+  },
+  "method": "Una ejecución por tamaño para el flujo; mediana de cinco conversiones. Misma sesión Linux. Datos sintéticos. No mide Excel/Outlook ni interfaz."
+}

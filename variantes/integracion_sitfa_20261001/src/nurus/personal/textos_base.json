@@ -1,0 +1,36 @@
+{
+  "_meta": {"version": "v9.0.0", "descripcion": "Textos aprobados Catálogo v2 2026-07-14; 25 entradas confirmadas."},
+  "COMUN": {
+    "NO_SEGUIMIENTO": {"texto": "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-01"},
+    "MAYORIA_EDAD": {"texto": "Se hace presente que {PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}, se sugiere egresar la medida.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-02 / C-01"},
+    "PROXIMA_MAYORIA": {"texto": "Se hace presente que {PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-03 / C-02"},
+    "CURADOR": {"texto": "No registra curador asociado en RUS, se sugiere asociar curador ad litem informáticamente.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — T-01"},
+    "OIDO": {"texto": "Oído con fecha {FECHA_OIDO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — T-02"},
+    "PROX_AUDIENCIA": {"texto": "Se cita a audiencia para el día {FECHA_AUDIENCIA}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — T-03"}
+  },
+  "ESPERA": {
+    "E04_RESOLUCION_RECIENTE": {"texto": "Medida revisada, a la espera de ingreso efectivo. Se hace presente que el Tribunal ordenó el ingreso efectivo al programa {PROGRAMA} con fecha {FECHA_RESOLUCION}. (Observación administrativa, no requiere acción/respuesta del Tribunal).", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-04"},
+    "E05_SOLO_CORREO": {"texto": "Medida revisada, a la espera de ingreso efectivo. Se remite correo electrónico al programa consultando respecto de la fecha estimada de ingreso efectivo.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-05"},
+    "E05_PROYECTO_Y_CORREO": {"texto": "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta al programa respecto del ingreso efectivo. Igualmente, se remite correo electrónico al programa consultando respecto de la fecha estimada de ingreso efectivo.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-05"},
+    "E06_SIN_RESOLUCION": {"texto": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — E-06"}
+  },
+  "CUMPLIMIENTO": {
+    "C03_INGRESO_RECIENTE": {"texto": "Medida revisada. Se hace presente que el ingreso efectivo al programa {PROGRAMA} se registra con fecha {FECHA_INGRESO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-03"},
+    "C04_VENCIDA": {"texto": "La medida se visualiza vencida en RUS desde el {FECHA_EGRESO_PROYECTADO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-04"},
+    "C05_VENCE_HOY": {"texto": "Se hace presente que la medida se visualiza con vencimiento para el día de hoy, {FECHA_EGRESO_PROYECTADO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-05"},
+    "C05_POR_VENCER": {"texto": "Se hace presente que la medida se visualiza próxima a vencer en RUS el {FECHA_EGRESO_PROYECTADO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-05"},
+    "C07_SIN_FICHA": {"texto": "No registra ficha individual en RUS, se sugiere confeccionar.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-07"},
+    "C07_FICHA_ANTIGUA": {"texto": "Atendido que la ficha individual registra como última actualización el {FECHA_FICHA_INDIVIDUAL}, superando los 180 días, se sugiere actualizar.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-07"},
+    "C07_FICHA_RECIENTE": {"texto": "Se hace presente que la ficha individual fue actualizada con fecha {FECHA_FICHA_INDIVIDUAL}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-07"},
+    "C08_FICHA_FAE": {"texto": "Se hace presente que {PNOMBRE} no tiene ficha FAE, se sugiere confeccionar.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-08"},
+    "C09_SIN_OBSERVACIONES": {"texto": "Medida revisada, sin observaciones.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-09"},
+    "C09_BASE_BREVE": {"texto": "Medida revisada.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-09"},
+    "C10_HOJA2": {"texto": "Medida revisada, se hace presente que el programa {PROGRAMA} deberá remitir informe de avance a más tardar el {FECHA_VENCIMIENTO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — C-10"}
+  },
+  "INFORMES": {
+    "I01_VENCIDO_DCE": {"texto": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe diagnóstico que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — I-01"},
+    "I01_VENCIDO_GENERAL": {"texto": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe de avance que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — I-01"},
+    "I02_POR_VENCER_DCE": {"texto": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el informe diagnóstico ordenado en autos debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — I-02"},
+    "I02_POR_VENCER_GENERAL": {"texto": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.", "confirmado": true, "nota": "Catálogo v2 2026-07-14 — I-02"}
+  }
+}

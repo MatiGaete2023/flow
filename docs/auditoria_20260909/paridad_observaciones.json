@@ -1,0 +1,73 @@
+[
+  {
+    "file": "AGOSTO.xlsx",
+    "mode": "ESPERA",
+    "as_of": "2026-09-09",
+    "legacy_rows_evaluated": 97,
+    "legacy_ingreso_column": null,
+    "nurus_rows": 96,
+    "identical_observations": 95,
+    "differences_by_status": {
+      "blocked": 1
+    },
+    "differences": [
+      {
+        "source_row": 98,
+        "status": "blocked",
+        "rule_ids": [],
+        "legacy_length": 152,
+        "nurus_length": 0
+      }
+    ]
+  },
+  {
+    "file": "AGOSTO.xlsx",
+    "mode": "CUMPLIMIENTO",
+    "as_of": "2026-09-09",
+    "legacy_rows_evaluated": 762,
+    "legacy_ingreso_column": "FEC. INGRESO EFECTIVO",
+    "nurus_rows": 761,
+    "identical_observations": 760,
+    "differences_by_status": {
+      "blocked": 1
+    },
+    "differences": [
+      {
+        "source_row": 763,
+        "status": "blocked",
+        "rule_ids": [],
+        "legacy_length": 107,
+        "nurus_length": 0
+      }
+    ]
+  },
+  {
+    "file": "AGOSTO.xlsx",
+    "mode": "INFORMES",
+    "as_of": "2026-09-09",
+    "legacy_rows_evaluated": 302,
+    "legacy_ingreso_column": "FECHA INGRESO",
+    "nurus_error": "Columna ambigua para ingreso: FECHA INGRESO, FEC. INGRESO EFECTIVO. Seleccione una columna explícitamente."
+  },
+  {
+    "file": "RUS_CUMPLIMIENTO_20260904_114132_856292.xlsx",
+    "mode": "CUMPLIMIENTO",
+    "as_of": "2026-09-09",
+    "legacy_rows_evaluated": 264,
+    "legacy_ingreso_column": "FEC. INGRESO EFECTIVO",
+    "nurus_rows": 263,
+    "identical_observations": 262,
+    "differences_by_status": {
+      "blocked": 1
+    },
+    "differences": [
+      {
+        "source_row": 265,
+        "status": "blocked",
+        "rule_ids": [],
+        "legacy_length": 107,
+        "nurus_length": 0
+      }
+    ]
+  }
+]

@@ -1,0 +1,223 @@
+[
+  {
+    "id": "COMUN.NO_SEGUIMIENTO",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "COMUN.MAYORIA_EDAD",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "COMUN.PROXIMA_MAYORIA",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "COMUN.CURADOR",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "COMUN.OIDO",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Oído el {FECHA_OIDO}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "COMUN.PROX_AUDIENCIA",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "ESPERA.E04_RESOLUCION_RECIENTE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}. (Observación administrativa; no requiere gestión del Tribunal).",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "ESPERA.E05_SOLO_CORREO",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+    "acciones": [
+      "programa_espera"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "ESPERA.E05_PROYECTO_Y_CORREO",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "acciones": [
+      "programa_espera",
+      "PC_IE"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "ESPERA.E06_SIN_RESOLUCION",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C03_INGRESO_RECIENTE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C04_VENCIDA",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida vencida en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
+    "acciones": [
+      "medidas"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C05_VENCE_HOY",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida con vencimiento en RUS hoy, {FECHA_EGRESO_PROYECTADO}.",
+    "acciones": [
+      "medidas"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C05_POR_VENCER",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida próxima a vencer en RUS el {FECHA_EGRESO_PROYECTADO}.",
+    "acciones": [
+      "medidas"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C07_SIN_FICHA",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "No registra ficha individual en RUS. Se sugiere confeccionarla.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C07_FICHA_ANTIGUA",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Ficha individual actualizada por última vez el {FECHA_FICHA_INDIVIDUAL}. Se sugiere actualizarla.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C07_FICHA_RECIENTE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Ficha individual actualizada el {FECHA_FICHA_INDIVIDUAL}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C08_FICHA_FAE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "{PNOMBRE} no registra ficha FAE en RUS. Se sugiere confeccionarla.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C09_SIN_OBSERVACIONES",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada, sin observaciones.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C09_BASE_BREVE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Medida revisada.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "CUMPLIMIENTO.C10_HOJA2",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Próximo informe de avance de {PROGRAMA} vence el {FECHA_VENCIMIENTO}.",
+    "acciones": [],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_cumplimiento.py"
+  },
+  {
+    "id": "INFORMES.I01_VENCIDO_DCE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_informes.py"
+  },
+  {
+    "id": "INFORMES.I01_VENCIDO_GENERAL",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_informes.py"
+  },
+  {
+    "id": "INFORMES.I02_POR_VENCER_DCE",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
+    "acciones": [
+      "programa_por_vencer"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_informes.py"
+  },
+  {
+    "id": "INFORMES.I02_POR_VENCER_GENERAL",
+    "vigente": true,
+    "fuente": "Asistente v9.1",
+    "texto_inicial": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+    "acciones": [
+      "programa_por_vencer"
+    ],
+    "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_informes.py"
+  }
+]

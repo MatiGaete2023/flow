@@ -1,0 +1,96 @@
+name: CSMP Assistant Windows
+
+on:
+  push:
+    branches:
+      - main
+      - csmp-personal-2026-09-13
+      - csmp-ux-20260921
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        python: ['3.12', '3.13', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Python ${{ matrix.python }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install
+        run: python -m pip install ".[dev,excel-legacy,excel-native,outlook]"
+
+      - name: Build wheel
+        run: python -m pip wheel --no-deps --wheel-dir dist .
+
+      - name: Verify installed package outside source path
+        run: >-
+          python -I -c "import tempfile; from pathlib import Path;
+          import nurus; from importlib.metadata import version;
+          from nurus.rus.catalog import load_catalog;
+          from nurus.storage.database import Database;
+          from nurus.personal.template_package import _matrix_patches; import nurus.personal as personal;
+          assert nurus.__version__ == version('nurus'); assert load_catalog();
+          assert len(_matrix_patches()) == 5;
+          template_root = Path(personal.__file__).parent / 'plantillas_word';
+          expected = {'LAJA/NOMENCL.docx','LAJA/PC_IE.docx','LAJA/PC_INFO.docx','MULCHEN/NOMENCL.docx','MULCHEN/PC_IE.docx','MULCHEN/PC_INFO.docx'};
+          actual = {p.relative_to(template_root).as_posix() for p in template_root.rglob('*.docx')}; assert actual == expected;
+          folder = tempfile.TemporaryDirectory(); db = Database(Path(folder.name) / 'check.sqlite3');
+          assert db.list_templates(); print(nurus.__version__, 'installed resources OK; 5 patches and 6 templates verified'); folder.cleanup()"
+
+      - name: Dependency check
+        run: python -m pip check
+
+      - name: Legacy Excel dependency
+        run: python -c "import xlrd; print(xlrd.__version__)"
+
+      - name: Native Excel/Outlook dependency on Windows
+        run: python -c "import win32com.client; print('pywin32 OK')"
+
+      - name: Compile
+        run: python -m compileall -q src tests tools
+
+      - name: Personal GUI smoke
+        timeout-minutes: 2
+        if: matrix.python == '3.12'
+        run: python tools/smoke_personal_gui.py
+
+      - name: Tests
+        timeout-minutes: 8
+        run: python -m pytest -q -o faulthandler_timeout=90
+
+      - name: Windows interface captures
+        if: always() && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Windows-interface
+          path: artifacts/*.png
+          if-no-files-found: ignore
+
+      - name: Build Windows distribution
+        if: matrix.python == '3.12'
+        shell: pwsh
+        run: git archive --format=zip --prefix=CSMP_Assistant/ -o dist/CSMP_Assistant_personal_0.4.0-dev12.zip HEAD
+
+      - name: Source distribution
+        if: matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Windows-dev12
+          path: dist/CSMP_Assistant_personal_0.4.0-dev11.zip
+
+      - name: Wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nurus-wheel-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            dist/*.whl

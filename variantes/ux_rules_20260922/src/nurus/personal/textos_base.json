@@ -1,0 +1,139 @@
+{
+  "_meta": {
+    "version": "v9.1.0",
+    "descripcion": "Textos operativos aprobados y consolidados al 2026-09-22."
+  },
+  "COMUN": {
+    "NO_SEGUIMIENTO": {
+      "texto": "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — NO_SEGUIMIENTO"
+    },
+    "MAYORIA_EDAD": {
+      "texto": "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — MAYORIA_EDAD"
+    },
+    "PROXIMA_MAYORIA": {
+      "texto": "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — PROXIMA_MAYORIA"
+    },
+    "CURADOR": {
+      "texto": "No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — CURADOR"
+    },
+    "OIDO": {
+      "texto": "Oído el {FECHA_OIDO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — OIDO"
+    },
+    "PROX_AUDIENCIA": {
+      "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — PROX_AUDIENCIA"
+    }
+  },
+  "ESPERA": {
+    "E04_RESOLUCION_RECIENTE": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}. (Observación administrativa; no requiere gestión del Tribunal).",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — E04_RESOLUCION_RECIENTE"
+    },
+    "E05_SOLO_CORREO": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — E05_SOLO_CORREO"
+    },
+    "E05_PROYECTO_Y_CORREO": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — E05_PROYECTO_Y_CORREO"
+    },
+    "E06_SIN_RESOLUCION": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — E06_SIN_RESOLUCION"
+    }
+  },
+  "CUMPLIMIENTO": {
+    "C03_INGRESO_RECIENTE": {
+      "texto": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C03_INGRESO_RECIENTE"
+    },
+    "C04_VENCIDA": {
+      "texto": "Medida vencida en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C04_VENCIDA"
+    },
+    "C05_VENCE_HOY": {
+      "texto": "Medida con vencimiento en RUS hoy, {FECHA_EGRESO_PROYECTADO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C05_VENCE_HOY"
+    },
+    "C05_POR_VENCER": {
+      "texto": "Medida próxima a vencer en RUS el {FECHA_EGRESO_PROYECTADO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C05_POR_VENCER"
+    },
+    "C07_SIN_FICHA": {
+      "texto": "No registra ficha individual en RUS. Se sugiere confeccionarla.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C07_SIN_FICHA"
+    },
+    "C07_FICHA_ANTIGUA": {
+      "texto": "Ficha individual actualizada por última vez el {FECHA_FICHA_INDIVIDUAL}. Se sugiere actualizarla.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C07_FICHA_ANTIGUA"
+    },
+    "C07_FICHA_RECIENTE": {
+      "texto": "Ficha individual actualizada el {FECHA_FICHA_INDIVIDUAL}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C07_FICHA_RECIENTE"
+    },
+    "C08_FICHA_FAE": {
+      "texto": "{PNOMBRE} no registra ficha FAE en RUS. Se sugiere confeccionarla.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C08_FICHA_FAE"
+    },
+    "C09_SIN_OBSERVACIONES": {
+      "texto": "Medida revisada, sin observaciones.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C09_SIN_OBSERVACIONES"
+    },
+    "C09_BASE_BREVE": {
+      "texto": "Medida revisada.",
+      "confirmado": true,
+      "nota": "Catálogo v2 2026-07-14 — C-09"
+    },
+    "C10_HOJA2": {
+      "texto": "Próximo informe de avance de {PROGRAMA} vence el {FECHA_VENCIMIENTO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — C10_HOJA2"
+    }
+  },
+  "INFORMES": {
+    "I01_VENCIDO_DCE": {
+      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — I01_VENCIDO_DCE"
+    },
+    "I01_VENCIDO_GENERAL": {
+      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — I01_VENCIDO_GENERAL"
+    },
+    "I02_POR_VENCER_DCE": {
+      "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — I02_POR_VENCER_DCE"
+    },
+    "I02_POR_VENCER_GENERAL": {
+      "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+      "confirmado": true,
+      "nota": "Decisión aprobada 2026-09-22 — I02_POR_VENCER_GENERAL"
+    }
+  }
+}
