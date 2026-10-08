@@ -58,6 +58,9 @@ paquete; el programa no reescribe silenciosamente esa plantilla.
 
 ## Aceptaciones que no pueden reemplazarse por fixtures
 
+El usuario confirmó que no hay entorno/evidencia y que SITFA/RUS se usarán
+después. Se entrega el MVP técnico local y se difiere esa aceptación.
+
 - **G1/P1:** cotejo de SIN_VINCULO, contenido y cobertura con sesión autorizada,
   cuatro modalidades y pestañas, usando EXE/extensión del mismo SHA.
 - **P9/G9:** falta contrato remoto comprobado de historia y PDFs. No se implementa

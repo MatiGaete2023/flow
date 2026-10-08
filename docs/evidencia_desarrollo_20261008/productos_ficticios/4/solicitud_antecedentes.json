@@ -1,0 +1,80 @@
+{
+  "schema_id": "CSMP_REQUEST",
+  "schema_version": "1.0.0",
+  "capture_sha256": "4c6c8723c72f0b3138311c51491bfa590b08fad159b15370ecac14f341deacab",
+  "as_of": "2026-10-08",
+  "requests": [
+    {
+      "record_id": "r0",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-0",
+      "source": "bitacoras",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r0",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-0",
+      "source": "historia_tramites",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r1",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-1",
+      "source": "bitacoras",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r1",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-1",
+      "source": "historia_tramites",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r2",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-2",
+      "source": "bitacoras",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r2",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-2",
+      "source": "historia_tramites",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r3",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-3",
+      "source": "bitacoras",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    },
+    {
+      "record_id": "r3",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-3",
+      "source": "historia_tramites",
+      "reason": "Fuente necesaria no disponible con cobertura suficiente."
+    }
+  ]
+}
