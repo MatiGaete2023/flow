@@ -248,20 +248,31 @@ def test_query_failure_counts_and_safe_diagnostic(tmp_path,failure_phase):
     assert diagnostic['tipo']=='ValueError' and diagnostic['ubicacion']
     assert 'Dato privado' not in text and result['detalle']
 
-def test_zero_reads_ui_reports_failed_queries(tmp_path,monkeypatch):
-    import tkinter as tk
-    import preferencias
-    from descargador import Application
-    from test_lotes import dispose_interface
-    monkeypatch.setattr(preferencias,'data_directory',lambda:tmp_path)
-    root=tk.Tk();root.withdraw();app=Application(root,start_worker=False)
-    try:
-        app.process_event('diary_done',{'folder':str(tmp_path),'leidas':0,'fallidas':0,
-            'consultas_fallidas':3,'estado':'INCOMPLETA','detalle':'Falla en la consulta'})
-        assert '3 consultas fallidas' in app.count.get()
-        assert app.status.get().startswith('No se guardaron copias')
-        assert 'Falla en la consulta' in app.status.get()
-    finally:dispose_interface(app,root)
+def test_zero_reads_ui_reports_failed_queries(tmp_path):
+    # Tk/Tcl reutilizado por muchos tests en Python 3.12 Windows puede fallar al
+    # cargar init.tcl. Comprobar una instancia real en su propio proceso, igual
+    # que el usuario, conservando todas las aserciones y sin omitir la prueba.
+    import os,subprocess,sys,textwrap
+    source=textwrap.dedent('''
+        from pathlib import Path
+        import sys,tkinter as tk
+        import preferencias
+        from descargador import Application
+        from test_lotes import dispose_interface
+        folder=Path(sys.argv[1]);preferencias.data_directory=lambda:folder
+        root=tk.Tk();root.withdraw();app=Application(root,start_worker=False)
+        try:
+            app.process_event('diary_done',{'folder':str(folder),'leidas':0,'fallidas':0,
+                'consultas_fallidas':3,'estado':'INCOMPLETA','detalle':'Falla en la consulta'})
+            assert '3 consultas fallidas' in app.count.get()
+            assert app.status.get().startswith('No se guardaron copias')
+            assert 'Falla en la consulta' in app.status.get()
+        finally:dispose_interface(app,root)
+    ''')
+    result=subprocess.run([sys.executable,'-c',source,str(tmp_path)],cwd=Path(__file__).parent,
+                          env={**os.environ,'PYTHONIOENCODING':'utf-8'},capture_output=True,
+                          text=True,encoding='utf-8',timeout=45)
+    assert result.returncode==0,result.stderr
 
 def test_package_roundtrip_without_network(tmp_path):
     from prueba_bitacoras_paquete import check
