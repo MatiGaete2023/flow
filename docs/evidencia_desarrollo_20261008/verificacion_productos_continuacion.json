@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "data_kind": "SINTETICA",
+  "rows": 4,
+  "modalities": 4,
+  "modes": 3,
+  "human_edits_preserved": true,
+  "external_excel_edit_recovered": true,
+  "session_recovered": true,
+  "reimport_preserved": true,
+  "stale_products_rejected": true,
+  "corrupt_capture_rejected": true,
+  "original_preserved": true,
+  "production_context_disabled": true,
+  "request_items": 8,
+  "draft_descriptors": 3,
+  "rosters": 2,
+  "word_projects": 1,
+  "product_sha256": {
+    "Observaciones.xlsx": "cc5825b99c1c221350b3d0324fd127646b9a67c5161247a9ce9b3666174a2f11",
+    "Cobertura.xlsx": "089304a60c15b0344b5d78e1854edf65a59d59e74c01b2c10b95ee40bb29e70c",
+    "solicitud_antecedentes.json": "a732038f2e4bc4d4ef8501696fd164ffbc0ec974ce922a340f824d2ca1a423b9",
+    "Borradores.json": "01c0d14ca245a86982721cde4e08fcda44265b73c1909d42d36ccac89f28dcaa",
+    "Proyectos_revisables.docx": "6ac1479390b4a413213c9ed9f162381d388bc289da177fb94b6e6a1e43563358"
+  },
+  "institutional_reads": 0,
+  "institutional_writes": 0,
+  "outlook_saved": 0
+}

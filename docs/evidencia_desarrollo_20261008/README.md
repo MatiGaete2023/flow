@@ -5,6 +5,22 @@ tareas y productos». El usuario confirmó después que no hay entorno/evidencia
 institucional y que SITFA/RUS se usarán después. Esa etapa queda diferida.
 Historia/PDF por trámite y reglas CT de producción están excluidas del MVP.
 
+## Continuación: productos desde el ejecutable y actas
+
+- `flow-continuacion-asistente.txt/xml`: 576 aprobadas, 6 omitidas Linux.
+- `flow-continuacion-descargador.txt/xml`: 169 aprobadas y 57 subtests.
+- `flow-continuacion-golden.txt`: paridad de los 17 productos baseline.
+- `verificacion_productos_continuacion.json`: prueba portable del nuevo
+  `nurus.personal.capture_selfcheck` y hashes de productos ficticios temporales.
+
+La prueba de productos puede reproducirse con
+`python tools/flow_verify_capture_products.py /ruta/nueva`; la misma función se
+ejecuta dentro del EXE y el instalador, con prueba Windows registrada por SHA.
+Los hashes XLSX/DOCX cambian por metadatos temporales; no son golden semánticos.
+`flow_acceptance.py` crea plantillas y valida estructura/coherencia declarada,
+sin aceptar gates. Las pruebas del validador usan actas ficticias; no se presentan
+como aceptación institucional. No se consultó SITFA/RUS ni se guardó Outlook.
+
 ## Verificación reproducible
 
 Python 3.12.14 en Linux con Tk/pantalla virtual DISPLAY=:99. Dependencias de

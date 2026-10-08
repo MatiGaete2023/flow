@@ -72,6 +72,28 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 
 ## Al retomar
 
+### Continuación de verificación y actas
+
+Se amplió `--verificar-paquete` del Asistente: además del contrato comprueba
+cuatro modalidades/tres modos, edición y lectura Excel externa, recuperación,
+reimportación con exclusiones humanas, productos obsoletos, rechazo de corrupción,
+Word/nóminas/solicitudes y descriptores de borrador sin Outlook. La prueba corre
+dentro del EXE autónomo e instalador; CI exige `capture_pipeline_verified`.
+Ambos EXE comprueban contrato vacío/completo/parcial con fixtures compartidas.
+
+Reproducción local: `python tools/flow_verify_capture_products.py /ruta/nueva`.
+`tools/flow_acceptance.py init/validate` crea actas estructuradas, separa evidencia
+sintética/institucional y conserva resultados `NO_EJECUTADO` al preparar plantillas.
+El paquete conjunto incluye una plantilla del SHA compilado. Consultar comandos,
+campos y límites en el manual de aceptación pendiente. Validar no aprueba gates.
+
+Regresión de esta continuación: 576 aprobadas/6 omitidas Asistente, 169 aprobadas
+y 57 subtests Descargador; 17 productos golden conservan paridad. Logs con prefijo
+`flow-continuacion-` en la evidencia. La nueva CI Windows debe registrarse por
+su propio SHA antes de sustituir los enlaces al código anterior verificado.
+
+### Trabajo institucional diferido
+
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.
 2. Comprobar resultados de workflows Windows del último SHA de la PR; atender
    fallos de empaquetado sin eliminar tests. Conservar mismo SHA para EXE/extensión.
