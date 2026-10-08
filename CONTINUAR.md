@@ -12,21 +12,30 @@ no cambian el comportamiento de las aplicaciones.
 
 ## Qué quedó hecho
 
-- Baseline completo y cinco adjuntos originales copiados con hashes.
+- Baseline completo y siete adjuntos originales copiados con hashes; las cuatro
+  especificaciones 01–04 ya están disponibles.
 - P0: inventario de pantallas, 121 módulos/imports, configuración/sesiones,
-  inspector, 95 requisitos identificados y evidencia de regresión.
+  inspector, **115 requisitos identificados**, incluidos A-T01..A-T20, y evidencia
+  de regresión. Las copias idénticas de adjuntos no duplican requisitos.
 - Asistente: 503 pruebas pasaron, 6 omitidas Windows. Descargador: 167 pruebas
   y 57 subpruebas pasaron. Extensión Node, compileall y pip check pasaron.
 - Herramientas nuevas: `flow_baseline_inventory.py`, `flow_baseline_matrix.py`
   y `flow_baseline_golden.py`, todas en `tools/`.
 - Golden ficticios y showcase; paridad en una segunda generación independiente.
 - Propuestas técnicas P2 preparadas; **no hay contrato v1 implementado**.
+- Documento 02 analizado contra `0.5.0.dev4`: ver
+  [análisis y diferencias](docs/ANALISIS_ESPECIFICACION_02_20261008.md).
+  Se incorporaron `NO_SOLICITADA`, importación atómica, modelo por ingreso y
+  separación de decisiones locales, productos y hechos institucionales.
+- Verificación al incorporar 02: 192 pruebas pasaron, 1 omitida Windows,
+  cuatro rechazos del generador comprobados y paridad de 17 artefactos.
+  Evidencia enlazada en el análisis del documento.
 
 ## Estado por fase
 
 | Fase | Estado | Evidencia / dependencia | Próxima acción |
 |---|---|---|---|
-| P0 | IMPLEMENTADA_PENDIENTE_ACEPTACION | `docs/EJECUCION_BASELINE_20261008.md`, matriz y fixtures | Revisar matriz y cerrar G0; incorporar especificación 02 |
+| P0 | IMPLEMENTADA_PENDIENTE_ACEPTACION | `docs/EJECUCION_BASELINE_20261008.md`, matriz de 115 requisitos y fixtures; 02 incorporado | Revisar matriz completa y cerrar G0 |
 | P1 | BLOQUEADA_POR_EVIDENCIA | SIN_VINCULO y cobertura reales sin contraste nuevo | Operador autorizado prueba mismo EXE/extensión; no pedir credenciales |
 | P2 | PENDIENTE | Propuesta de decisiones; requiere G0 | Schema, diccionario y validador con fixture completa/parcial |
 | P3 | PENDIENTE | Excel bitácora aún en Asistente | Extraer exportador común tras G0/G2 |
@@ -46,9 +55,11 @@ no cambian el comportamiento de las aplicaciones.
 1. Leer [documentos rectores](docs/plan_20261008/README.md),
    [baseline](docs/EJECUCION_BASELINE_20261008.md) y
    [matriz](docs/MATRIZ_FUNCIONAL_20261008.md).
-2. Incorporar `02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md` cuando sea accesible.
-   El usuario informó que la subió; esta ejecución aún no ve el archivo. No
-   inventar sus A-T01..20. Conservar los adjuntos anteriores sin edición.
+2. Leer el [análisis del documento 02](docs/ANALISIS_ESPECIFICACION_02_20261008.md)
+   y sus A-T01..20 ya incorporados. No volver a pedir el archivo. `review_store`
+   y `rus_activity` no existen en el árbol activo; no reintroducirlos. La API
+   genérica `registration.submit(adapter)` sigue heredada y debe aislarse en P6;
+   las marcas recuperadas de sesiones no son última observación institucional.
 3. Comprobar si existe respuesta de aprobación G0/contrato en la conversación
    o revisión de PR. No pedir aprobación de nuevo si ya fue concedida.
 4. Primera modificación funcional: validador `CSMP_CAPTURE_V1`. Revisión técnica

@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": "missing_02",
+    "result": "PASÓ",
+    "reason": "Falta especificación canónica: 02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md"
+  },
+  {
+    "scenario": "changed_02",
+    "result": "PASÓ",
+    "reason": "Especificación distinta al adjunto original: 02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md"
+  },
+  {
+    "scenario": "missing_A_T01",
+    "result": "PASÓ",
+    "reason": "IDs sin revisar: ['A-T01']"
+  },
+  {
+    "scenario": "duplicate_A_T01",
+    "result": "PASÓ",
+    "reason": "IDs repetidos en la matriz"
+  }
+]

@@ -884,16 +884,17 @@
   },
   {
     "id": "INT-26",
-    "state": "IMPLEMENTADO",
+    "state": "PARCIAL",
     "code": [
       "descargador/extension/pagina.js",
-      "descargador/puente.py"
+      "descargador/puente.py",
+      "src/nurus/personal/registration.py"
     ],
     "tests": [
       "descargador/test_bitacoras_extension.cjs",
       "descargador/test_lectura_bitacoras.py"
     ],
-    "limit": "Solo lectura; actuaciones manuales documentadas."
+    "limit": "Extensión solo lectura y Outlook sin Send; queda una API genérica de registro heredada, sin adaptador institucional. Aislarla del nuevo flujo conforme a A-T15."
   },
   {
     "id": "INT-27",
@@ -1090,5 +1091,248 @@
       "tests/test_bitacora_lote.py"
     ],
     "limit": "Recuperación y avisos legados; archivo de solicitud declarativo pendiente."
+  },
+  {
+    "id": "A-T01",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "P2/P4/P5: no hay contrato ni importador v1; verificar cuatro modalidades y sus fuentes al implementarlos."
+  },
+  {
+    "id": "A-T02",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "El flujo Excel/bitácora legado registra faltantes, pero no hay paquete ni clasificación SOLO_PLANILLA/NO_EVALUABLE integrada."
+  },
+  {
+    "id": "A-T03",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Falta validador ZIP v1 y sustitución atómica de sesión; pruebas de hash legado no acreditan este caso."
+  },
+  {
+    "id": "A-T04",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/bitacora_html.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad remota de bitácoras probada con fixtures; falta relacionador compuesto v1 por ingreso."
+  },
+  {
+    "id": "A-T05",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No hay reimportación capture_id/hash ni preservación de decisiones sobre un paquete v1."
+  },
+  {
+    "id": "A-T06",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/rus/reader.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_preserved_workbook_export.py"
+    ],
+    "limit": "Excel legado y golden de los tres modos preservados; sin nuevas reglas contextuales ni certificación Office."
+  },
+  {
+    "id": "A-T07",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/table_update.py",
+      "src/nurus/personal/selection.py",
+      "src/nurus/personal/work_view.py"
+    ],
+    "tests": [
+      "tests/test_integral_ui.py"
+    ],
+    "limit": "UI integral probó 1100 filas/selección; faltan múltiples hallazgos y mediciones 100/500/2000 de la cadena nueva."
+  },
+  {
+    "id": "A-T08",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/session.py",
+      "src/nurus/personal/sync.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_review_20260929.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Ediciones y productos de sesión legado probados; aplicar el mismo contrato al nuevo importador."
+  },
+  {
+    "id": "A-T09",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/product_state.py",
+      "src/nurus/personal/product_checks.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_operational_products.py"
+    ],
+    "limit": "Guardas de cambios de decisión/fuente legado existentes; versión de reglas del nuevo paquete aún no integrada."
+  },
+  {
+    "id": "A-T10",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/outputs.py",
+      "src/nurus/personal/roster.py"
+    ],
+    "tests": [
+      "tests/test_personal_batch_revision.py",
+      "tests/test_mail_attachment_regressions_20260930.py"
+    ],
+    "limit": "Nóminas de trabajo legado probadas; falta integración de calendarios v1 y selección independiente de observación nueva."
+  },
+  {
+    "id": "A-T11",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/resolutions.py",
+      "src/nurus/personal/resolution_view.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Plantillas, edición y agrupación Word baseline; no acredita revisión institucional ni generación desde paquete v1."
+  },
+  {
+    "id": "A-T12",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "src/nurus/adapters/outlook.py",
+      "src/nurus/personal/current_tools.py"
+    ],
+    "tests": [
+      "tests/test_outlook_safety.py",
+      "tests/test_review_20260929.py"
+    ],
+    "limit": "Dobles de Outlook verifican Save sin Send y adjuntos; falta Outlook 365 institucional, contactos autorizados y recepción humana."
+  },
+  {
+    "id": "A-T13",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/outputs.py",
+      "src/nurus/adapters/outlook.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_personal_usability_20260921.py"
+    ],
+    "limit": "Análisis y exportación portable funcionan en Linux sin Office; backend nativo sigue siendo opcional según función."
+  },
+  {
+    "id": "A-T14",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/sync.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Rechazo de identidad ajena legado probado; Excel puede carecer de ID remoto y no autoriza asociación contextual v1."
+  },
+  {
+    "id": "A-T15",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/registration.py",
+      "src/nurus/personal/registration_excel.py",
+      "src/nurus/personal/app.py"
+    ],
+    "tests": [
+      "tests/test_rus_capture.py",
+      "tests/test_registration.py",
+      "tests/test_registration_excel.py"
+    ],
+    "limit": "No se encontró adaptador institucional ni botón de escritura operativo; submit(adapter) existe y llama adapter.save. Aislar esa API en P6; fixtures no habilitan registro real."
+  },
+  {
+    "id": "A-T16",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/session.py"
+    ],
+    "tests": [
+      "tests/test_current_release_contract.py",
+      "tests/test_current_work_features.py"
+    ],
+    "limit": "review_store/rus_activity ya no existen en el árbol activo; activity_reviewed se conserva por save/load y no tiene productores actuales. Aislar marcas heredadas sin perder sesión en P6."
+  },
+  {
+    "id": "A-T17",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/config.py",
+      "src/nurus/personal/personalization.py",
+      "src/nurus/personal/template_package.py"
+    ],
+    "tests": [
+      "tests/test_config_migration_regressions_20260914.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Migraciones idempotentes con backups probadas; configuración personal real del usuario no recibida ni migrada."
+  },
+  {
+    "id": "A-T18",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "CSMP_Experimental.spec",
+      "installer/CSMP.iss",
+      "src/nurus/personal/package_check.py"
+    ],
+    "tests": [
+      "tests/test_windows_installer_contract.py",
+      "tests/test_current_release_contract.py"
+    ],
+    "limit": "CI origen verifica Windows; nueva entrega/Windows 10 sin admin y Office institucional requieren pruebas propias. No asumirlas por usar Linux."
+  },
+  {
+    "id": "A-T19",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Excel legado funciona localmente; la entrada ZIP autónoma todavía no existe. Cerrar G5/G6 sin instalar extensión/Descargador."
+  },
+  {
+    "id": "A-T20",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/app.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_integral_ui.py",
+      "tests/test_personal_flow.py"
+    ],
+    "limit": "Snapshot exacto 251d5c4 preserva 11 commits sobre main; golden/UI pasan, pero no hay aceptación funcional de todas las diferencias históricas."
   }
 ]

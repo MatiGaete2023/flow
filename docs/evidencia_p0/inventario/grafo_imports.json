@@ -3882,8 +3882,8 @@
       "nurus.rus.columns"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional",
+    "phase": "P5/P8",
     "imported_by": [
       "nurus.personal.app_base",
       "nurus.personal.current_tools",
@@ -4190,8 +4190,8 @@
       "nurus.rus.columns"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "AISLAR infraestructura de escritura; preservar recuperación de comprobantes",
+    "phase": "P6",
     "imported_by": [
       "nurus.personal.app",
       "nurus.personal.registration_excel"
@@ -4303,8 +4303,8 @@
       "nurus.services.file_output"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "AISLAR infraestructura de escritura; preservar recuperación de comprobantes",
+    "phase": "P6",
     "imported_by": [],
     "transitive_imports": [
       "nurus",
@@ -4953,8 +4953,8 @@
       "nurus.services.file_output"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional",
+    "phase": "P5/P8",
     "imported_by": [
       "nurus.personal.app",
       "nurus.personal.app_base",
@@ -5036,8 +5036,8 @@
       "nurus.rus.reader"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "CONSERVAR Excel/procedencia; ADAPTAR consumo local v1",
+    "phase": "P5",
     "imported_by": [
       "nurus.personal.app",
       "nurus.personal.app_base",
@@ -5178,8 +5178,8 @@
       "nurus.rus.rules"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional",
+    "phase": "P5/P8",
     "imported_by": [
       "nurus.personal.app_base",
       "nurus.personal.outputs",
@@ -5798,8 +5798,8 @@
       "nurus.services.exports"
     ],
     "dynamic_import_lines": [],
-    "action": "CONSERVAR",
-    "phase": "P0",
+    "action": "AMPLIAR por adaptador; conservar reglas/ediciones; aislar marcas históricas",
+    "phase": "P5/P6/P7",
     "imported_by": [
       "nurus.personal.app",
       "nurus.personal.app_base",

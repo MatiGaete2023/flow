@@ -5,16 +5,20 @@ Las referencias a NuRus en los documentos originales se conservan como procedenc
 Las herramientas y avances nuevos se guardan en flow.
 
 1. [Descargador](01_ESPECIFICACION_DESCARGADOR_RUS_SITFA.md).
-2. `02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md`: el usuario informa que la subió;
-   todavía no está disponible en los archivos accesibles a esta ejecución.
+2. [Especificación técnica del Asistente](02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md).
 3. [Reglas de análisis](03_REGLAS_ANALISIS_OBSERVACIONES_CSMP.md).
 4. [Flujo integrado](04_FLUJO_TRABAJO_INTEGRADO_CSMP.md).
 5. [Plan maestro](05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008.md).
 6. [Segunda copia del plan maestro](<05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008 (1).md>).
+7. [Segunda copia de la especificación del Descargador](<01_ESPECIFICACION_DESCARGADOR_RUS_SITFA (1).md>).
 
-Los cinco adjuntos iniciales se copiaron sin editar. Las dos copias del plan son
-idénticas según SHA-256; ambas se conservan por instrucción del usuario.
+Los siete adjuntos recibidos se copiaron sin editar. Las dos copias del plan y
+las dos de la especificación 01 son idénticas según SHA-256; se conservan todas.
+La matriz utiliza únicamente las cuatro especificaciones canónicas, evitando
+contar dos veces las copias. El documento 02 se analizó contra el baseline actual;
+su referencia a `0.4.0.dev23` no sustituye el código `0.5.0.dev4` de partida.
 Los hashes están en [adjuntos_sha256.json](../evidencia_p0/adjuntos_sha256.json).
 
 Estado de ejecución y siguiente tarea: [CONTINUAR.md](../../CONTINUAR.md).
-No reconstruir la especificación 02 a partir de los documentos que la citan.
+Cambios derivados del documento 02:
+[análisis y correspondencia de módulos](../ANALISIS_ESPECIFICACION_02_20261008.md).
