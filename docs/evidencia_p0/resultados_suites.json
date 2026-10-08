@@ -1,0 +1,112 @@
+[
+  {
+    "file": "flow-baseline-assistant-xvfb.xml",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "6",
+      "tests": "509",
+      "time": "33.117",
+      "timestamp": "2026-10-08T20:46:02.322114+00:00",
+      "hostname": "3257d3a1028c"
+    },
+    "skipped_cases": [
+      {
+        "test": "tests.test_audit_gui_20260928::test_full_session_and_contextual_fields_recover",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_editors_and_actions_fit_without_detail_overlap[1024x650]",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_editors_and_actions_fit_without_detail_overlap[1180x820]",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_invalid_editable_draft_does_not_hide_cards_or_editor",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_mulchen_mail_gui::test_mulchen_draft_is_visible_after_automatic_and_manual_preparation",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_windows_installer_contract::test_windows_cmd_executes_detected_python_after_subroutine",
+        "reason": "Ejecuta cmd.exe real en el CI Windows"
+      }
+    ]
+  },
+  {
+    "file": "flow-baseline-assistant.xml",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "4",
+      "skipped": "7",
+      "tests": "509",
+      "time": "28.177",
+      "timestamp": "2026-10-08T20:44:33.474877+00:00",
+      "hostname": "3257d3a1028c"
+    },
+    "skipped_cases": [
+      {
+        "test": "tests.test_audit_gui_20260928::test_full_session_and_contextual_fields_recover",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_editors_and_actions_fit_without_detail_overlap[1024x650]",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_editors_and_actions_fit_without_detail_overlap[1180x820]",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_audit_gui_20260928::test_invalid_editable_draft_does_not_hide_cards_or_editor",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_mulchen_mail_gui::test_mulchen_draft_is_visible_after_automatic_and_manual_preparation",
+        "reason": "Windows GUI contract"
+      },
+      {
+        "test": "tests.test_rus_capture::test_separate_inspector_opens_capture_and_saves_current_structure",
+        "reason": "Interfaz Windows o pantalla de prueba requerida"
+      },
+      {
+        "test": "tests.test_windows_installer_contract::test_windows_cmd_executes_detected_python_after_subroutine",
+        "reason": "Ejecuta cmd.exe real en el CI Windows"
+      }
+    ]
+  },
+  {
+    "file": "flow-baseline-downloader-xvfb.xml",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "224",
+      "time": "23.142",
+      "timestamp": "2026-10-08T20:46:02.327897+00:00",
+      "hostname": "3257d3a1028c"
+    },
+    "skipped_cases": []
+  },
+  {
+    "file": "flow-baseline-downloader.xml",
+    "suite": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "7",
+      "skipped": "0",
+      "tests": "224",
+      "time": "20.226",
+      "timestamp": "2026-10-08T20:44:34.392035+00:00",
+      "hostname": "3257d3a1028c"
+    },
+    "skipped_cases": []
+  }
+]
