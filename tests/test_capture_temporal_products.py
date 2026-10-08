@@ -42,13 +42,26 @@ def test_no_center_origin_no_fictional_last_date(tmp_path):
     assert not context['last_center'] and context['class']=='NO_EVALUABLE'
 
 
+def test_temporal_window_does_not_seek_older_observation(tmp_path):
+    from nurus.capture import read_capture
+    from nurus.capture.temporal import earliest
+    assert earliest(date(2026,6,30))==date(2026,2,28)
+    m,t=fixture();t['bitacoras'][0]['event_at']='2026-06-07'
+    capture=read_capture(write_capture(tmp_path/'capture.zip',m,t))
+    result=chronology(capture,t['registros'][0],date(2026,10,8),fixture_preview=True)
+    assert result['period_from']=='2026-06-08'
+    assert not result['last_center'] and not result['recent']
+    assert result['class']=='NO_EVALUABLE'
+    assert len(capture.rows('bitacoras'))==4  # Copia capturada no recortada.
+
+
 def test_long_diary_text_is_split_exactly_and_formulas_are_text(tmp_path):
     source=manifest(tmp_path)
-    data=json.loads(source.read_text());data['registros']=data['registros'][:1]
-    html=tmp_path/'captura.html';body=html.read_text().replace('Texto completo que la tabla oculta.','=1+2 '+('😀texto\n'*6000))
-    html.write_text(body)
+    data=json.loads(source.read_text(encoding='utf-8'));data['registros']=data['registros'][:1]
+    html=tmp_path/'captura.html';body=html.read_text(encoding='utf-8').replace('Texto completo que la tabla oculta.','=1+2 '+('😀texto\n'*6000))
+    html.write_text(body,encoding='utf-8')
     from hashlib import sha256
-    data['registros'][0]['sha256']=sha256(html.read_bytes()).hexdigest();source.write_text(json.dumps(data))
+    data['registros'][0]['sha256']=sha256(html.read_bytes()).hexdigest();source.write_text(json.dumps(data),encoding='utf-8')
     path=export_diaries(source,tmp_path/'diaries.xlsx');book=load_workbook(path)
     parts=[row[-1] for row in book['Textos íntegros'].iter_rows(min_row=2,values_only=True) if row[1]=='texto']
     # Parser conserva el atributo completo (saltos HTML pueden normalizarse).
@@ -76,7 +89,7 @@ def test_product_source_rules_and_cut_invalidation_and_marks_not_saved(tmp_path)
     assert not stale(work,draft)
     work.ruleset_version='new';assert stale(work,draft)
     work.activity_reviewed={'old':'local'};work.signed_activity={'old':'local'};work.rows[0].review['OBSERVACION']='Humano'
-    work.save(tmp_path/'session');data=json.loads((tmp_path/'session/trabajo.json').read_text())
+    work.save(tmp_path/'session');data=json.loads((tmp_path/'session/trabajo.json').read_text(encoding='utf-8'))
     assert 'activity_reviewed' not in data and 'signed_activity' not in data
     loaded=Work.load(tmp_path/'session');assert loaded.rows[0].review['OBSERVACION']=='Humano' and not loaded.activity_reviewed
 
