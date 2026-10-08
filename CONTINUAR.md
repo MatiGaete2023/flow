@@ -6,6 +6,7 @@
 **Baseline NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`
 **P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`
 **Documento 02 incorporado:** `6c520f8e49e40c6c7d5379492e6064a55b28c0fb`
+**Código compilado y verificado Windows:** `01e013d8c6f2a89fb5309fc6f1952bf68a82b715`
 El último checkpoint se obtiene con `git log -1`.
 
 ## Autorización y entrega actual
@@ -37,7 +38,21 @@ No afirmar que todos los gates institucionales están cerrados.
 | P10 | CATÁLOGO_DESACTIVADO; motor ampliado pendiente | Aprobación individual CT y G9 según fuente; baseline intacto |
 | P11 | PRUEBAS_LOCALES; aceptación institucional pendiente | Matriz INT y límites; no confundir fixtures con RUS real |
 | P12 | BLOQUEADA_POR_P9_P10 | Aceptación ampliada no sustituible por simulación |
-| P13 | PREPARACIÓN/CI | Artefactos Windows y aceptación sin admin/Office; release/merge sin autorizar |
+| P13 | CI APROBADA; artefactos técnicos entregados | Aceptación Windows 10 institucional/Office y promoción diferidas |
+
+## Descargas del código verificado
+
+- [Paquete conjunto CSMP + Descargador + extensión + manuales](https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583198364).
+- [Instalador del Asistente y evidencia ficticia](https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583253391).
+- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37853563991/artifacts/11582388456).
+
+Ambos workflows del SHA 01e013d finalizaron SUCCESS. Asistente Windows Python
+3.12: 557 aprobadas, 1 omitida; 3.13/3.14 también aprobados. Descargador: 169
+aprobadas y 57 subtests. El paquete conjunto comprobó SHA coherente entre ambos
+EXE; instalador/reinstalación/desinstalación conservaron datos ficticios.
+Los artefactos Actions caducan según la retención del repositorio: conservar
+el paquete localmente y su SHA. Un checkpoint posterior solo de documentación
+no cambia el código distribuido ni identifica otros binarios.
 
 ## Comandos reproducibles
 
