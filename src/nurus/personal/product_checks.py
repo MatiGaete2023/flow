@@ -31,6 +31,10 @@ def check_products(work,drafts,projects):
     with dependency_scope(work):
         for index,draft in enumerate(drafts):
             issues=[]
+            if work:
+                from .capture_products import institutional_statement_issue
+                issue=institutional_statement_issue(work,draft)
+                if issue:issues.append(issue)
             try:
                 if not emails(draft.to):issues.append('Completar destinatario')
                 emails(draft.cc)

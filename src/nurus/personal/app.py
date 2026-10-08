@@ -199,7 +199,8 @@ class App(_BaseApp):
         self._capture_observation()
         if not self.work:raise ValueError('Primero analiza el archivo.')
         folder=Path(self.folder.get());folder.mkdir(parents=True,exist_ok=True)
-        path=folder/(Path(self.work.path).stem+' - revisable '+datetime.now().strftime('%Y%m%d_%H%M%S_%f')+Path(self.work.path).suffix)
+        suffix='.xlsx' if getattr(self.work,'capture_digest','') else Path(self.work.path).suffix
+        path=folder/(Path(self.work.path).stem+' - revisable '+datetime.now().strftime('%Y%m%d_%H%M%S_%f')+suffix)
         work=self.work
         def done(result):
             from uuid import uuid4

@@ -5,8 +5,37 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 from nurus.personal.registration import (
-    FormEvidence, Intent, Journal, RemoteEntry, RemoteIdentity, Snapshot, recover, submit,
+    FormEvidence, Intent, Journal, RemoteEntry, RemoteIdentity, Snapshot, recover, restore_intent,
 )
+
+
+# Simulación histórica SOLO en pruebas: no se distribuye una ruta de escritura.
+def simulate_legacy_submit(journal, operation_id, adapter):
+    """prepare_form fija y relee identidad, texto, tipo, estado y destino explícitos."""
+    data = journal.get(operation_id)
+    if data['state'] != 'PREPARADA':
+        return recover(journal, operation_id, adapter)
+    intent = restore_intent(data)
+    baseline = adapter.read(intent.identity)
+    baseline.validate(intent, journal.clock())
+    data = journal.check_existing(operation_id, baseline)
+    if data['state'] != 'PREPARADA':
+        return data
+    form = adapter.prepare_form(intent)
+    if not isinstance(form, FormEvidence):
+        raise ValueError('El adaptador debe aportar campos releídos y el límite observado del formulario.')
+    form.validate(intent, journal.clock())
+    journal.begin(operation_id, baseline, form)
+    try:
+        adapter.save(form.intent)
+    except Exception:
+        journal.uncertain(operation_id, 'No se confirmó el envío; consultar antes de continuar.')
+    else:
+        journal.uncertain(operation_id)
+    return recover(journal, operation_id, adapter)
+
+
+submit = simulate_legacy_submit
 
 
 class Clock:

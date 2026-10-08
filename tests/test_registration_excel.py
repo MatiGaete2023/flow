@@ -6,10 +6,10 @@ from openpyxl.styles import Border, PatternFill, Side
 import pytest
 
 from nurus.personal.config import defaults
-from nurus.personal.registration import Journal, RemoteEntry, attach_receipts, export_journal, intent_from_excel, submit
+from nurus.personal.registration import Journal, RemoteEntry, attach_receipts, export_journal, intent_from_excel
 from nurus.personal.registration_excel import reconcile_excel
 from nurus.personal.work import Work
-from test_registration import Adapter, Clock
+from test_registration import Adapter, Clock, simulate_legacy_submit as submit
 
 
 def source(tmp_path):

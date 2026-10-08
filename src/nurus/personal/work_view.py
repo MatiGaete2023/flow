@@ -22,6 +22,7 @@ def build(app):
         if top.winfo_manager():top.pack_forget()
         else:top.pack(fill='x',after=bar,pady=5)
     ui.Button(bar,text='Archivo / opciones',width=145,command=toggle_file).pack(side='left',padx=5)
+    ui.Button(bar,text='Importar paquete',width=130,command=lambda:app._guard(app._import_capture)).pack(side='left',padx=5)
     ui.Button(bar,text='Actualizar Excel · F5',width=145,fg_color='transparent',border_width=1,command=lambda:app._guard(app._refresh)).pack(side='left')
     app.work_primary_button=ui.Button(bar,text='Procesar Excel',command=lambda:app._guard(app._export_current if app.work else app._process))
     app.work_primary_button.pack(side='right')
@@ -36,7 +37,7 @@ def build(app):
         ('Procesar archivo',app._process),('Cargar revisada',app._external),('Localizar copia',app._locate),
         ('Abrir Excel',lambda:app._open(app._require_work().output)),('Abrir carpeta',app._open_output_folder),('Resumen',app._export_statistics)]):
         ui.Button(extra,text=label,width=110,fg_color='transparent',border_width=1,command=lambda fn=command:app._guard(fn)).grid(row=index//3,column=index%3,padx=3,pady=3,sticky='ew')
-    for index,(label,command) in enumerate([('Descargar y analizar',app._download_joint),('Comprobar columnas',app._inspect_input),('Abrir original SITFA',app._open_sitfa_source)]):
+    for index,(label,command) in enumerate([('Cobertura y fuentes',app._capture_evidence),('Comprobar columnas',app._inspect_input),('Abrir original SITFA',app._open_sitfa_source)]):
         ui.Button(extra,text=label,width=110,fg_color='transparent',border_width=1,command=lambda fn=command:app._guard(fn)).grid(row=2,column=index,padx=3,pady=3,sticky='ew')
     extra.grid_columnconfigure((0,1,2),weight=1)
     app.summary=tk.StringVar();ui.Label(page,textvariable=app.summary,anchor='w').pack(fill='x')

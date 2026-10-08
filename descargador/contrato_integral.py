@@ -6,7 +6,8 @@ def capabilities():
     try:from _build_meta import BUILD_COMMIT,BUILD_VERSION
     except ImportError:BUILD_COMMIT='desarrollo';BUILD_VERSION=VERSION
     return {'tipo':'CSMP_RUS_CAPACIDADES','version':BUILD_VERSION,'commit':BUILD_COMMIT,
-            'protocolos':dict(PROTOCOLS),'escritura_rus':False}
+            'protocolos':dict(PROTOCOLS),'escritura_rus':False,
+            'intercambio_local':{'CSMP_CAPTURE':'1.0.0','CSMP_REQUEST':'1.0.0'}}
 
 def verify_extension(bridge):
     import motor as m
