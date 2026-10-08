@@ -4,6 +4,16 @@ from tempfile import TemporaryDirectory
 import json
 from hashlib import sha256
 import sys
+import re
+
+
+def build_identity():
+    from nurus import __version__
+    try:from ._build_meta import BUILD_COMMIT,BUILD_VERSION
+    except ImportError:BUILD_COMMIT='desarrollo';BUILD_VERSION=__version__
+    if getattr(sys,'frozen',False) and (not re.fullmatch(r'[0-9a-f]{40}',BUILD_COMMIT) or BUILD_VERSION!=__version__):
+        raise ValueError('El ejecutable CSMP no acredita commit y versión de origen.')
+    return {'source_commit':BUILD_COMMIT,'source_version':BUILD_VERSION}
 
 
 def check(destination):
@@ -17,6 +27,7 @@ def check(destination):
     try:import win32com.client
     except ImportError:office_com=False
     else:office_com=True
+    build=build_identity()
     destination=Path(destination).resolve();destination.parent.mkdir(parents=True,exist_ok=True)
     root=Path(personal.__file__).parent
     templates={p.relative_to(root/'plantillas_word').as_posix() for p in (root/'plantillas_word').rglob('*.docx')}
@@ -30,10 +41,11 @@ def check(destination):
             app.withdraw();app.update()
             for name in ('Trabajo','Correos','Resoluciones','Resultados','Configuración'):
                 app.tabs.select(app.pages[name]);app.update()
-            result={'version':__version__,'frozen':bool(getattr(sys,'frozen',False)),
+            result={**build,'version':__version__,'frozen':bool(getattr(sys,'frozen',False)),
                     'pages':list(app.pages),'templates':len(templates),'matrix_patches':5,'office_com_available':office_com,'ok':True}
             from nurus.capture.selfcheck import check_contract
             result['capture_v1_verified']=check_contract(Path(folder))
+            if not result['capture_v1_verified']:raise ValueError('Falló el contrato CSMP_CAPTURE_V1.')
         finally:app.destroy()
     destination.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 
@@ -53,6 +65,9 @@ def check_integral(destination,downloader):
     with tempfile.TemporaryDirectory(prefix='integracion-ficticia-',dir=destination.parent) as temp:
         folder=Path(temp);lot=folder/'lotes';lot.mkdir()
         capabilities=validate([str(downloader)],folder)
+        build=build_identity()
+        if capabilities.get('commit')!=build['source_commit']:
+            raise ValueError('CSMP y Descargador pertenecen a commits distintos.')
         app=SimpleNamespace(cfg=SimpleNamespace(directory=folder,data={},save=lambda data:None))
         selected=choose(app)
         if Path(selected[0]).resolve()!=downloader:raise ValueError('CSMP no eligió el descargador del mismo paquete.')
@@ -76,7 +91,7 @@ def check_integral(destination,downloader):
             assert book['Consultas']['D2'].value=='ENUMERADA'
             sheets=book.sheetnames
         finally:book.close()
-        proof={'ok':True,'datos':'ficticios','csmp_version':__version__,'descargador':capabilities,
+        proof={**build,'ok':True,'datos':'ficticios','csmp_version':__version__,'descargador':capabilities,
             'csmp_exe_sha256':sha256(Path(sys.executable).read_bytes()).hexdigest(),
             'descargador_exe_sha256':sha256(downloader.read_bytes()).hexdigest(),
             'seleccion_descargador_del_paquete':True,'retorno_lote_verificado':True,'excel_generado_por_csmp':True,'texto_completo':True,

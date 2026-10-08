@@ -74,7 +74,7 @@ def check(destination):
                     'extension_files':len(resources),'joint_button':bool(app.joint_button.winfo_exists()),
                     'bitacora_button_verified':bool(app.diary_button.winfo_exists()),'shared_bitacora_parser_verified':True,
                     'pause_button_verified':bool(app.pause_button.winfo_exists()),'appearance_verified':app.theme.get() in ('Claro','Oscuro','Sistema'),
-                    'frozen_bitacora_roundtrip_verified':True,
+                    'frozen_bitacora_roundtrip_verified':True,'capture_v1_verified':True,
                     'calendar_dash_dates_verified':True,'measure_calendar_header_verified':True,
                     'dynamic_report_filter_verified':True,'joint_excludes_signatures_verified':True,'ok':True}
         finally:
