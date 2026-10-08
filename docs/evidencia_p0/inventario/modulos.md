@@ -77,11 +77,11 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.personalization](../../../src/nurus/personal/personalization.py) | CONSERVAR | P0 | 3 | 2 |
 | [nurus.personal.personalization_view](../../../src/nurus/personal/personalization_view.py) | CONSERVAR | P0 | 5 | 1 |
 | [nurus.personal.product_checks](../../../src/nurus/personal/product_checks.py) | CONSERVAR | P0 | 3 | 5 |
-| [nurus.personal.product_state](../../../src/nurus/personal/product_state.py) | CONSERVAR | P0 | 5 | 6 |
+| [nurus.personal.product_state](../../../src/nurus/personal/product_state.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 6 |
 | [nurus.personal.record_edits](../../../src/nurus/personal/record_edits.py) | CONSERVAR | P0 | 8 | 7 |
 | [nurus.personal.record_view](../../../src/nurus/personal/record_view.py) | CONSERVAR | P0 | 8 | 1 |
-| [nurus.personal.registration](../../../src/nurus/personal/registration.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.personal.registration_excel](../../../src/nurus/personal/registration_excel.py) | CONSERVAR | P0 | 6 | 0 |
+| [nurus.personal.registration](../../../src/nurus/personal/registration.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 4 | 2 |
+| [nurus.personal.registration_excel](../../../src/nurus/personal/registration_excel.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 6 | 0 |
 | [nurus.personal.reports](../../../src/nurus/personal/reports.py) | CONSERVAR | P0 | 3 | 4 |
 | [nurus.personal.resolution_view](../../../src/nurus/personal/resolution_view.py) | CONSERVAR | P0 | 8 | 2 |
 | [nurus.personal.resolutions](../../../src/nurus/personal/resolutions.py) | CONSERVAR | P0 | 10 | 8 |
@@ -90,10 +90,10 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.rus_capture](../../../src/nurus/personal/rus_capture.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.rus_capture_app](../../../src/nurus/personal/rus_capture_app.py) | CONSERVAR | P0 | 1 | 0 |
 | [nurus.personal.selection](../../../src/nurus/personal/selection.py) | CONSERVAR | P0 | 0 | 6 |
-| [nurus.personal.session](../../../src/nurus/personal/session.py) | CONSERVAR | P0 | 5 | 3 |
-| [nurus.personal.sitfa](../../../src/nurus/personal/sitfa.py) | CONSERVAR | P0 | 1 | 5 |
+| [nurus.personal.session](../../../src/nurus/personal/session.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 3 |
+| [nurus.personal.sitfa](../../../src/nurus/personal/sitfa.py) | CONSERVAR Excel/procedencia; ADAPTAR consumo local v1 | P5 | 1 | 5 |
 | [nurus.personal.statistics](../../../src/nurus/personal/statistics.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.personal.sync](../../../src/nurus/personal/sync.py) | CONSERVAR | P0 | 5 | 6 |
+| [nurus.personal.sync](../../../src/nurus/personal/sync.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 6 |
 | [nurus.personal.sync_view](../../../src/nurus/personal/sync_view.py) | CONSERVAR | P0 | 4 | 1 |
 | [nurus.personal.table_update](../../../src/nurus/personal/table_update.py) | CONSERVAR | P0 | 1 | 3 |
 | [nurus.personal.template_package](../../../src/nurus/personal/template_package.py) | CONSERVAR | P0 | 1 | 3 |
@@ -103,7 +103,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.widgets](../../../src/nurus/personal/widgets.py) | CONSERVAR | P0 | 2 | 6 |
 | [nurus.personal.word_preview](../../../src/nurus/personal/word_preview.py) | CONSERVAR | P0 | 3 | 1 |
 | [nurus.personal.word_quality](../../../src/nurus/personal/word_quality.py) | CONSERVAR | P0 | 1 | 5 |
-| [nurus.personal.work](../../../src/nurus/personal/work.py) | CONSERVAR | P0 | 18 | 8 |
+| [nurus.personal.work](../../../src/nurus/personal/work.py) | AMPLIAR por adaptador; conservar reglas/ediciones; aislar marcas históricas | P5/P6/P7 | 18 | 8 |
 | [nurus.personal.work_tools](../../../src/nurus/personal/work_tools.py) | CONSERVAR | P0 | 6 | 4 |
 | [nurus.personal.work_view](../../../src/nurus/personal/work_view.py) | CONSERVAR | P0 | 5 | 1 |
 | [nurus.rus](../../../src/nurus/rus/__init__.py) | CONSERVAR | P0 | 3 | 1 |

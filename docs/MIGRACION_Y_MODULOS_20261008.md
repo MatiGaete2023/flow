@@ -14,6 +14,9 @@ lectura manual. No se eliminaron módulos.
 | `bitacora_lote`, `bitacora_har`, `bitacoras` | Datos, exportación y análisis mezclados en paquete personal | Extraer exportación común sin mover reglas | Golden Excel bitácoras, parser y tests identidad |
 | `nurus.bitacora_html`, `descargador.csmp_shared` | Parser compartido y búsqueda de paquete | Conservar y verificar instalación autónoma | CI origen y pruebas fixtures; P3 pendiente |
 | `personal.outputs`, `resolutions`, plantillas | Nóminas, Word y preparación de borradores | Conservar; no enviar ni escribir RUS | Golden y suites Outlook/Word |
+| `personal.registration`, `registration_excel` | API genérica y comprobantes; `submit(adapter)` puede invocar `adapter.save`, sin adaptador institucional operativo | Aislar la API de escritura del nuevo flujo; conservar recuperación legítima sin fabricar hechos | `app._show_work` importa comprobantes de SQLite si existe; A-T15 parcial |
+| `personal.review_store`, `rus_activity` citados por 02 | Ausentes en el árbol activo del SHA fijado | No intentar retirarlos otra vez ni copiar versiones antiguas | `test_current_release_contract.py` verifica ausencia de `review_store`; hechos de firmas en `sitfa.py`/`work_tools.py` |
+| `manual_products`, `manual_actions` citados por 02 | Ausentes en el árbol activo | Conservar funciones actuales en `manual.py`/`current_tools.py`, no recrear una UI duplicada | `test_current_work_features.py`, `test_personal_cleanup_20260921.py` |
 | `nurus.rus.rules`, `services`, `storage` | Motor y flujo alternativos/compatibilidad | Conservar aislados; no fusionar semánticas | Suites heredadas y snapshots |
 | `tools/rus_inspector_entry.py`, `rus_capture_extension` | Inspector RUS independiente | Conservar fuera del nuevo flujo; no eliminar por omisión documental | `test_rus_capture.py`; navegador ficticio aún no repetido localmente |
 | `variantes/ux_rules_20260922` | Copia histórica versionada | Conservar como referencia, no importar al camino nuevo | No fusionar automáticamente |
@@ -26,16 +29,23 @@ lectura manual. No se eliminaron módulos.
 2. `Work` conserva sesión v2, ediciones, decisiones, overrides y comprobantes.
    `save/load` y `download_transfer` siguen intactos. No hay migración nueva
    en esta entrega ni acceso a la configuración personal del usuario.
-3. `signed_activity` y `activity_reviewed` existen en el modelo actual; deben
-   inventariarse como conflicto con el uso de marcas de revisión como autoridad
-   temporal. No borrarlas sin distinguir recuperación de sesión de inferencia
-   institucional. P6 exige una migración reversible con fixtures.
+3. `signed_activity` y `activity_reviewed` existen en el modelo actual. La búsqueda
+   en `src`/`tests` no encontró productores/consumidores aparte de su inicialización
+   en `Work`; `save/load` conservan estos campos con el resto de la sesión. La
+   desaparición de `review_store` no prueba que una sesión heredada no contenga
+   marcas. P6 debe aislar `activity_reviewed` de decisiones de una nueva captura,
+   conservando originales/backup y datos factuales de firmas por separado. No
+   borrar ediciones, preferencias, borradores ni comprobantes de productos.
 4. Los estados locales de revisión/`rus_recorded` no son evidencia autónoma
    de un registro institucional real. Se conserva baseline; aclaración de
    semántica y redacción queda para aprobación funcional, sin cambio unilateral.
 5. Antes de futura migración, copiar configuración/sesión de prueba a carpeta
    nueva, probar ida/vuelta y conservar entradas originales. Nunca convertir
    irreversiblemente trabajo del usuario como parte del arranque.
+
+La recepción del documento 02 cierra su ausencia documental. La correspondencia
+con sus rutas antiguas y todos sus requisitos se detalla en
+[ANALISIS_ESPECIFICACION_02_20261008.md](ANALISIS_ESPECIFICACION_02_20261008.md).
 
 No hay paridad entre motores certificada por cambiar nombres. La paridad
 registrada aquí corresponde al motor personal vigente frente a sí mismo,
