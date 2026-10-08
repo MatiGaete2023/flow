@@ -23,7 +23,13 @@ flowchart LR
 
 Usar los artefactos de una misma ejecución CI/SHA. El paquete conjunto contiene
 Abrir_CSMP.cmd, Abrir_Descargador.cmd, extensión, manuales y tres JSON de
-verificación. Las comprobaciones de arranque y contrato usan datos ficticios.
+verificación y una plantilla de acta institucional no ejecutada del mismo SHA.
+Las comprobaciones usan paquetes vacíos, completos y parciales ficticios.
+El Asistente verifica también importación, edición Excel, recuperación/reimportación,
+nóminas, Word y solicitudes desde su propio EXE, sin Office ni Descargador.
+`VERIFICACION_CSMP.json` incluye `capture_pipeline_verified` y la explicación
+estructurada `capture_pipeline`; los hashes corresponden a productos temporales
+de prueba, que se eliminan al terminar la comprobación.
 No mezclar una extensión anterior con otro EXE. Los metadatos de build y las
 capacidades se encuentran en los JSON de verificación de ambos programas.
 

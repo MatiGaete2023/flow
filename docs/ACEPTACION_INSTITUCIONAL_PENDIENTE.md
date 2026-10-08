@@ -35,3 +35,51 @@ consulta se conserva explícito. No puede convertirse en «sin actuaciones».
 Historia/PDF no se desarrollan contra endpoints supuestos: primero contrato real,
 luego adaptador de lectura y pruebas. La aceptación CT no cambia automáticamente
 las observaciones editadas del trabajo actual.
+
+## Preparar y validar el acta sin dar por hechas las pruebas
+
+`tools/flow_acceptance.py` funciona localmente con Python 3.10 o posterior.
+No necesita Chrome, Office, sesión institucional ni credenciales. La plantilla
+incluye los 115 IDs de las especificaciones, todos `NO_EJECUTADO`. No ejecutar
+`init` sobre un acta existente: la herramienta conserva el archivo y rechaza
+sobrescribirlo. Guardar actas nuevas para cada artefacto/alcance.
+
+Ejemplo PowerShell desde el repositorio, leyendo el SHA del EXE comprobado:
+
+```powershell
+$build = Get-Content 'C:\Paquete\VERIFICACION_CSMP.json' -Raw | ConvertFrom-Json
+python tools/flow_acceptance.py init 'C:\Trabajo\acta.json' --commit $build.source_commit --assistant-version $build.source_version --downloader-version 2.7.2 --extension-version 2.7.2
+python tools/flow_acceptance.py validate 'C:\Trabajo\acta.json'
+```
+
+Verificar las versiones del Descargador/extensión en su JSON antes de usar los
+valores del ejemplo. `--case D-T10 --gate G1` crea una plantilla focalizada;
+`--kind SINTETICA_WINDOWS` permite registrar pruebas ficticias de CI separadas.
+El paquete conjunto incluye una plantilla institucional del SHA que se compiló.
+
+Cada resultado ejecutado `PASÓ`/`FALLÓ` exige gate, fecha con zona, entorno,
+custodia local, al menos una huella SHA256 de evidencia y referencia opaca de
+operador `OP-` seguida de doce dígitos hexadecimales mayúsculos. La correspondencia
+del código con el funcionario y las evidencias se conserva institucionalmente.
+Un hash identifica un archivo; no acredita por sí solo su contenido ni su origen.
+
+Campos admisibles:
+
+| Campo | Valores |
+|---|---|
+| `evidence_kind` | `SINTETICA_LOCAL`, `SINTETICA_WINDOWS`, `INSTITUCIONAL` |
+| `environment` | Local: `LINUX`, `WINDOWS`, `MACOS`; CI: `WINDOWS_CI`; institucional: `WINDOWS_10_INSTITUCIONAL`, `WINDOWS_INSTITUCIONAL` |
+| `result` | `PASÓ`, `FALLÓ`, `NO_EJECUTADO`, `NO_APLICA` |
+| `counts` | Solo `expected`, `observed`, `matched`, `failed`, `unknown`, enteros no negativos |
+| `limitations` | `FALTA_ENTORNO`, `FALTA_EVIDENCIA`, `FALTA_OFFICE`, `FALTA_CONTRATO_REMOTO`, `FALTA_APROBACION_FUNCIONAL`, `COBERTURA_PARCIAL`, `IDENTIDAD_INCIERTA`, `FUERA_DEL_ALCANCE`, `FALLO_TECNICO`, `DIFERENCIA_BASELINE`, `NO_APLICA_AL_ARTEFACTO` |
+
+Los casos no ejecutados tienen fecha/entorno/referencia vacíos, sin comprobantes.
+`NO_APLICA` exige `NO_APLICA_AL_ARTEFACTO` y tampoco se cuenta como ejecución.
+No introducir nombres, RUT, causas, ingresos, rutas de evidencia, URLs, glosas
+ni texto libre. El validador rechaza campos adicionales, claves JSON duplicadas,
+documentos mayores de 1 MiB, casos repetidos y un `PASÓ` con fallos declarados.
+Su salida muestra únicamente SHA y conteos separados por tipo de evidencia.
+
+La validación comprueba estructura y coherencia declarada. **No verifica la
+autenticidad de evidencias, no ejecuta pruebas, no aprueba gates y no activa CT.**
+El responsable debe cotejar evidencia, alcance y criterios de las especificaciones.

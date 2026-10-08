@@ -135,7 +135,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | D-T17 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Baseline preservado; No hay Excel 2010 en este Linux; CI Windows no prueba Office 2010. |
 | D-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Solo lectura en rutas revisadas y fixtures; nunca subir material real. |
 | D-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline preservado; cualquier adaptación exige nueva regresión. |
-| D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes. |
+| D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS; verificación autónoma ampliada de productos v1 implementada y probada localmente. Nueva CI Windows por registrar; Windows 10 institucional/Office pendientes. |
 | R-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
@@ -228,7 +228,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | A-T15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T17 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| A-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes. |
+| A-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS; verificación autónoma ampliada de productos v1 implementada y probada localmente. Nueva CI Windows por registrar; Windows 10 institucional/Office pendientes. |
 | A-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T20 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Snapshot exacto 251d5c4 preserva 11 commits sobre main; golden/UI pasan, pero no hay aceptación funcional de todas las diferencias históricas. |
 

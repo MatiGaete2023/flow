@@ -80,8 +80,8 @@ def main():
     update('F15','src/nurus/capture/requests.py;descargador/solicitud_antecedentes.py',
            'tests/test_capture_temporal_products.py','Solicitud declarativa local; no ejecuta consultas.')
     update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1',
-           'tests/test_capture_build_identity.py;tests/test_windows_installer_contract.py;tests/test_current_release_contract.py',
-           'CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes.')
+           'tests/test_capture_build_identity.py;tests/test_capture_selfcheck.py;tests/test_windows_installer_contract.py;tests/test_current_release_contract.py',
+           'CI 01e013d SUCCESS; verificación autónoma ampliada de productos v1 implementada y probada localmente. Nueva CI Windows por registrar; Windows 10 institucional/Office pendientes.')
     update('F10 R-T17 R-T18 R-T19 R-T20 R-T21 INT-14','src/nurus/capture/temporal.py',
            'tests/test_capture_temporal_products.py','Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE.',
            state='EN_CURSO',result='NO EJECUTADO')
