@@ -84,6 +84,10 @@ jobs:
         if: matrix.python == '3.12'
         run: python tools/showcase_products.py
 
+      - name: CSMP capture v1 independent fictitious products
+        if: matrix.python == '3.12'
+        run: python tools/flow_capture_pipeline.py artifacts/captura-v1 --rows 4 --complete
+
       - name: RUS capture in Chromium with a fictitious form
         if: matrix.python == '3.12'
         timeout-minutes: 4
@@ -221,3 +225,4 @@ jobs:
             artifacts/performance.json
             artifacts/installed-package-check.json
             artifacts/productos-ficticios/
+            artifacts/captura-v1/

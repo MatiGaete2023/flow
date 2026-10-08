@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from openpyxl import Workbook
 from nurus.capture import read_capture
+from nurus.capture.contract import COMMON as SOURCE_FIELDS
 from nurus.capture.temporal import chronology,identity,RULESET_VERSION
 from nurus.rus.columns import COMMON,MODE_COLUMNS,map_columns
 from nurus.rus.models import ReadBatch,SourceRecord,SourceReference,Mode
@@ -25,7 +26,23 @@ def import_capture(path,config,*,as_of=None,previous=None):
     config_hash=sha256(json.dumps(config,sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
     if previous and getattr(previous,'capture_digest','')==capture.digest and previous.as_of==as_of.isoformat() and getattr(previous,'capture_config_hash','')==config_hash:
         return deepcopy(previous)
-    records=list(capture.rows('registros'));canonical=[];groups=defaultdict(list);provenance={};contexts={};row_modes={}
+    records=list(capture.rows('registros'))
+    # Un productor independiente puede aportar calendarios sin duplicarlos en
+    # registros. Solo se omite una copia de la misma fila física, nunca por RIT.
+    def physical(row):
+        return tuple(row[k] for k in ('query_id','source_sha256','original_file','original_sheet','original_row'))
+    represented={physical(row) for row in records}
+    for calendar in capture.rows('calendarios'):
+        if physical(calendar) in represented:continue
+        record={k:calendar[k] for k in SOURCE_FIELDS}
+        record.update(record_id='calendar:'+calendar['calendar_id'],record_type='INFORMES',
+                      identity_status='VERIFICADA' if calendar['association']=='VERIFICADA' else 'INCIERTA',
+                      raw_json=calendar['raw_json'],normalized_json=calendar['normalized_json'],
+                      source_table='calendarios',calendar_id=calendar['calendar_id'])
+        if any(row['record_id']==record['record_id'] for row in records):
+            raise ValueError('Identificador de calendario colisiona con registro; trabajo anterior intacto.')
+        records.append(record)
+    canonical=[];groups=defaultdict(list);provenance={};contexts={};row_modes={}
     calendars=defaultdict(list)
     for row in capture.rows('calendarios'):
         if row['association']=='VERIFICADA':calendars[identity(row)].append(row)

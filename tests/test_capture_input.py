@@ -79,3 +79,24 @@ def test_mixed_modes_export_refresh_and_individual_recalculation(tmp_path):
     recalculate(work,work.rows[2])
     assert any(rule.startswith('INFORMES.') for rule in work.rows[2].rules)
     assert work.rows[2].review['OBSERVACION']=='Edición informe'
+
+
+def test_calendar_only_and_mirrored_physical_source(tmp_path):
+    from nurus.capture.contract import COMMON
+    m,t=fixture();source=t['registros'][0]
+    calendar={k:source[k] for k in COMMON}
+    raw={'RIT':'FICT-0-2026','TRIBUNAL':'Laja','NOMBRE':'Persona Ficticia',
+         'DERIVACION':'PRM FICTICIO','FECHA VENCIMIENTO':'2026-10-15'}
+    calendar.update(calendar_id='cal0',event_at='2026-10-15',event_type='INFORME',
+                    status='PENDIENTE',association='NO_ASOCIADO',raw_json=json.dumps(raw),normalized_json=json.dumps(raw))
+    t['calendarios']=[calendar];m['table_states']['calendarios']='COMPLETA'
+    mirrored=import_capture(write_capture(tmp_path/'mirrored.zip',m,t),defaults(),as_of=date(2026,10,8))
+    assert len(mirrored.rows)==4
+    t['registros']=[];m['table_states']['registros']='VACIA_COMPROBADA'
+    work=import_capture(write_capture(tmp_path/'calendar.zip',m,t),defaults(),as_of=date(2026,10,8))
+    assert len(work.rows)==1 and work.rows[0].id=='calendar:cal0'
+    record=work.capture_sources[work.rows[0].id]
+    assert record['source_table']=='calendarios' and record['identity_status']=='INCIERTA'
+    assert work.capture_context[work.rows[0].id]['class']=='NO_EVALUABLE'
+    work.export(tmp_path/'calendar.xlsx',backend='portable',reduced_fidelity=True)
+    assert Path(work.output).is_file()

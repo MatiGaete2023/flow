@@ -23,7 +23,10 @@ try {
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'SITFA_Descargador.spec')
 } finally { Pop-Location }
 Copy-Item -LiteralPath (Join-Path $downloaderRoot 'extension') -Destination $outputRoot -Recurse -Force
-Copy-Item -LiteralPath (Join-Path $csmpRoot 'docs/INTEGRACION_FINAL_20261008.md') -Destination (Join-Path $outputRoot 'GUIA_INTEGRAL.md') -Force
+Copy-Item -LiteralPath (Join-Path $csmpRoot 'docs/GUIA_ENTREGA_MVP_20261008.md') -Destination (Join-Path $outputRoot 'GUIA_INTEGRAL.md') -Force
+foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP_20261008.md','ACEPTACION_INSTITUCIONAL_PENDIENTE.md')) {
+    Copy-Item -LiteralPath (Join-Path $csmpRoot "docs/$manual") -Destination $outputRoot -Force
+}
 '@echo off', 'start "" "%~dp0CSMP_Integral\CSMP_Integral.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_CSMP.cmd') -Encoding ascii
 '@echo off', 'start "" "%~dp0SITFA_Descargador\SITFA_Descargador.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_Descargador.cmd') -Encoding ascii
 $checks = @(
