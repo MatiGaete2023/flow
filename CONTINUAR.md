@@ -2,10 +2,13 @@
 
 **Repositorio:** https://github.com/MatiGaete2023/flow.
 **Rama:** `feat/ejecucion-plan-20261008`.
+**PR de continuación:** https://github.com/MatiGaete2023/flow/pull/1 (borrador, sin merge).
+**Commit P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`.
 **Origen NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`.
 **Importación inicial en flow:** `bd826d524761f24204323e7ad87c287045dc40d3`.
-El commit exacto de la entrega se obtiene con `git log -1`; este archivo viaja
-en el mismo commit y no se refiere a un SHA futuro inventado.
+El último checkpoint se obtiene con `git log -1`; el commit P0 anterior contiene
+las herramientas, matriz y evidencia. Los checkpoints documentales posteriores
+no cambian el comportamiento de las aplicaciones.
 
 ## Qué quedó hecho
 
