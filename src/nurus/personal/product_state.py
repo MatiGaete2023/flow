@@ -49,6 +49,8 @@ def _fingerprint(work, record_ids, kind, recipient_type=''):
     payload = {'records': records, 'config': configuration, 'kind': kind, 'ids': sorted(ids), 'recipient_type':recipient_type}
     if getattr(work,'capture_digest',''):
         payload['capture']={key:getattr(work,key,'') for key in ('capture_digest','ruleset_version','mapping_version','as_of')}
+        from nurus.capture.temporal import RULESET_VERSION
+        payload['capture']['active_ruleset_version']=RULESET_VERSION
     return sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
 
 

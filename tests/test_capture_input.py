@@ -60,6 +60,15 @@ def test_reanalysis_new_cut_preserves_human_decisions_and_invalidates_product(tm
     assert old.as_of=='2026-10-08'
 
 
+def test_old_rules_version_is_not_reused_from_session_cache(tmp_path):
+    from nurus.capture.temporal import RULESET_VERSION
+    m,t=fixture();path=write_capture(tmp_path/'full.zip',m,t)
+    old=import_capture(path,defaults(),as_of=date(2026,10,8))
+    old.ruleset_version='anterior';old.rows[0].review['OBSERVACION']='Humano'
+    new=import_capture(path,defaults(),as_of=date(2026,10,8),previous=old)
+    assert new.ruleset_version==RULESET_VERSION and new.rows[0].review['OBSERVACION']=='Humano'
+
+
 def test_mixed_modes_export_refresh_and_individual_recalculation(tmp_path):
     m,t=fixture()
     for index,mode in enumerate(('ESPERA','CUMPLIMIENTO','INFORMES','ESPERA')):
@@ -100,3 +109,8 @@ def test_calendar_only_and_mirrored_physical_source(tmp_path):
     assert work.capture_context[work.rows[0].id]['class']=='NO_EVALUABLE'
     work.export(tmp_path/'calendar.xlsx',backend='portable',reduced_fidelity=True)
     assert Path(work.output).is_file()
+    calendar.update(event_type='MEDIDA',association='VERIFICADA')
+    other=import_capture(write_capture(tmp_path/'measure.zip',m,t),defaults(),as_of=date(2026,10,8))
+    assert other.capture_sources[other.rows[0].id]['record_type']=='OTRO'
+    assert not other.rows[0].observation and not other.rows[0].rules and not other.rows[0].actions
+    assert all(due is None for due in other.cross_dates.values())

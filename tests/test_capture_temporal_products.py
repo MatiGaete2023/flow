@@ -42,6 +42,16 @@ def test_no_center_origin_no_fictional_last_date(tmp_path):
     assert not context['last_center'] and context['class']=='NO_EVALUABLE'
 
 
+def test_timezone_label_without_offset_does_not_prove_order(tmp_path):
+    from nurus.capture import read_capture
+    m,t=fixture();entry=t['bitacoras'][0]
+    entry.update(event_at='2026-09-10T10:00:00',time_precision='SEGUNDO',time_zone='America/Santiago')
+    t['bitacoras'].append({**entry,'event_id':'reply','origin':'OTRO','event_at':'2026-09-10T11:00:00-03:00'})
+    capture=read_capture(write_capture(tmp_path/'capture.zip',m,t))
+    result=chronology(capture,t['registros'][0],date(2026,10,8),fixture_preview=True)
+    assert not result['later'] and [e['event_id'] for e in result['uncertain']]==['reply']
+
+
 def test_temporal_window_does_not_seek_older_observation(tmp_path):
     from nurus.capture import read_capture
     from nurus.capture.temporal import earliest
@@ -92,6 +102,15 @@ def test_product_source_rules_and_cut_invalidation_and_marks_not_saved(tmp_path)
     work.save(tmp_path/'session');data=json.loads((tmp_path/'session/trabajo.json').read_text(encoding='utf-8'))
     assert 'activity_reviewed' not in data and 'signed_activity' not in data
     loaded=Work.load(tmp_path/'session');assert loaded.rows[0].review['OBSERVACION']=='Humano' and not loaded.activity_reviewed
+
+
+def test_engine_upgrade_invalidates_prepared_products_without_changing_session(tmp_path,monkeypatch):
+    from nurus.capture import temporal
+    m,t=fixture();work=import_capture(write_capture(tmp_path/'capture.zip',m,t),defaults())
+    draft=Draft('Ficticio','Ficticio',record_ids=[work.rows[0].id],kind='programa_espera');stamp(work,draft)
+    stored=work.ruleset_version
+    monkeypatch.setattr(temporal,'RULESET_VERSION','actualizacion-ficticia')
+    assert stale(work,draft) and work.ruleset_version==stored
 
 
 def test_production_submit_cannot_even_read_or_write():
