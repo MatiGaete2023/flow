@@ -64,9 +64,9 @@ def test_old_rules_version_is_not_reused_from_session_cache(tmp_path):
     from nurus.capture.temporal import RULESET_VERSION
     m,t=fixture();path=write_capture(tmp_path/'full.zip',m,t)
     old=import_capture(path,defaults(),as_of=date(2026,10,8))
-    old.ruleset_version='anterior';old.rows[0].review['OBSERVACION']='Humano'
+    old.ruleset_version='anterior';old.rows[0].review['OBSERVACION']='Humano';old.rows[0].excluded=True
     new=import_capture(path,defaults(),as_of=date(2026,10,8),previous=old)
-    assert new.ruleset_version==RULESET_VERSION and new.rows[0].review['OBSERVACION']=='Humano'
+    assert new.ruleset_version==RULESET_VERSION and new.rows[0].review['OBSERVACION']=='Humano' and new.rows[0].excluded
 
 
 def test_mixed_modes_export_refresh_and_individual_recalculation(tmp_path):
@@ -114,3 +114,8 @@ def test_calendar_only_and_mirrored_physical_source(tmp_path):
     assert other.capture_sources[other.rows[0].id]['record_type']=='OTRO'
     assert not other.rows[0].observation and not other.rows[0].rules and not other.rows[0].actions
     assert all(due is None for due in other.cross_dates.values())
+    from nurus.personal.record_edits import recalculate
+    other.rows[0].review['OBSERVACION']='Decisión manual'
+    recalculate(other,other.rows[0])
+    assert not other.rows[0].observation and not other.rows[0].actions
+    assert other.rows[0].review['OBSERVACION']=='Decisión manual'

@@ -107,7 +107,7 @@ def import_capture(path,config,*,as_of=None,previous=None):
         for row in candidate.rows:
             prior=old.get(row.id)
             if prior:
-                for field in ('review','decisions','overrides','word_overrides','sync_base','sync_local','sync_state'):
+                for field in ('review','decisions','overrides','word_overrides','excluded','sync_base','sync_local','sync_state'):
                     setattr(row,field,deepcopy(getattr(prior,field)))
                 if row.overrides:
                     from .record_edits import recalculate
