@@ -5,6 +5,8 @@
 **Origen:** NuRus `251d5c4025749edd4767183ebd3d2baf3bb9baed`, rama
 `feat/consolidacion-bitacoras-20261008`.
 **Commit de importación en flow:** `bd826d524761f24204323e7ad87c287045dc40d3`.
+**Commit P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`.
+**PR de revisión G0:** https://github.com/MatiGaete2023/flow/pull/1.
 
 ## Resultado concreto
 
