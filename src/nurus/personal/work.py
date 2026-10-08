@@ -104,8 +104,9 @@ class Work:
         self.cross_dates={}
         self.signed_activity={}
         self.activity_reviewed={}
+        self.source_scope='SOLO_PLANILLA'
 
-    def analyze(self,path,mode,*,sheet=None,cross_sheet=None,as_of=None,batch=None):
+    def analyze(self,path,mode,*,sheet=None,cross_sheet=None,as_of=None,batch=None,cross_by_record=None):
         from .operations import progress,checkpoint
         checkpoint();progress('Leyendo Excel y verificando su estructura')
         batch=batch if batch is not None else read_workbook(path,mode,sheet_name=sheet,cross_sheet_name=cross_sheet)
@@ -163,7 +164,7 @@ class Work:
                 if not court:warnings.append('Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.')
                 key=tuple(historical_match(values.get(cols.get(k,''),'')) for k in key_fields)
                 args={'incidencias':inc,'fila_excel':record.source.row_number}
-                if self.mode=='CUMPLIMIENTO':args['fecha_hoja2']=index.get(key)
+                if self.mode=='CUMPLIMIENTO':args['fecha_hoja2']=cross_by_record.get(record.record_id) if cross_by_record is not None else index.get(key)
                 observation=fn(values,court,cols,**args) if court else ''
                 warnings.extend(i['MOTIVO'] for i in inc._items)
             except (ValueError,TypeError,KeyError) as exc:
@@ -173,7 +174,7 @@ class Work:
             events=[e for e in ctx['events'] if e not in self.config['desactivadas']]
             excluded='COMUN.NO_SEGUIMIENTO' in events
             identity_key=tuple(historical_match(values.get(cols.get(k,''),'')) for k in key_fields)
-            self.cross_dates[record.record_id]=index.get(identity_key)
+            self.cross_dates[record.record_id]=cross_by_record.get(record.record_id) if cross_by_record is not None else index.get(identity_key)
             self.rows.append(Row(record.record_id,record.source.row_number,dict(record.values),observation,list(dict.fromkeys(events)),[] if excluded else actions_for(events),warnings,excluded))
             self.rows[-1].decisions={'structured':True,'mail':{},'resolution':'auto'}
         progress('Análisis completo',len(batch.records),len(batch.records))
@@ -197,7 +198,9 @@ class Work:
         require_current_copy(self)
         reviewed={row.id:_human_reviewed(row) for row in self.rows}
         reviewed_stage=any(reviewed.values())
-        batch={'source_name':Path(self.path).name,'source_path':self.path,'source_hash':self.source_hash,
+        package_input=bool(getattr(self,'capture_digest',''))
+        if package_input and backend=='native':backend='portable';reduced_fidelity=True
+        batch={'source_name':Path(self.path).stem+'.xlsx' if package_input else Path(self.path).name,'source_path':self.path,'source_hash':self.source_hash,
                'primary_sheet':self.sheet,'header_row':self.header,'mode':self.mode,
                'export_stage':'reviewed' if reviewed_stage else 'proposal'}
         from .record_edits import encode
@@ -212,7 +215,8 @@ class Work:
                 'edited_observation':_review_value(row,'OBSERVACION',row.observation),
                 'rule_ids_json':json.dumps(row.rules),
                 'decisions_json':encode(row),
-                'rus_recorded':bool(is_reviewed and not row.excluded),
+                'locally_validated':bool(is_reviewed and not row.excluded),
+                'rus_recorded':False,
                 'review_date':_review_value(row,'FECHA_OBS'),
                 'tt_value':_review_value(row,'TT'),
                 'workload_value':_review_value(row,'CC'),
@@ -270,7 +274,7 @@ class Work:
         if self.original_hash and self.original_content:
             original=directory/(self.original_hash+'.bin')
             archive_bytes(original,self.original_content,self.original_hash)
-        data={k:v for k,v in self.__dict__.items() if k not in ('rows','content','original_content') and not k.startswith('_save_')}
+        data={k:v for k,v in self.__dict__.items() if k not in ('rows','content','original_content','activity_reviewed','signed_activity') and not k.startswith('_save_')}
         data['rows']=[asdict(r) for r in self.rows]
         previous=directory/'trabajo.json'
         digest=sha256(json.dumps(data,sort_keys=True,default=str,ensure_ascii=False).encode()).hexdigest()
@@ -296,6 +300,7 @@ class Work:
         directory=Path(directory)
         data=json.loads((directory/'trabajo.json').read_text(encoding='utf-8'))
         obj=cls(data['config']);obj.__dict__.update(data)
+        obj.activity_reviewed={};obj.signed_activity={}
         if getattr(obj,'needs_cross',False):obj.cross_missing=True
         obj.needs_cross=False
         if not hasattr(obj,'cross_missing'):obj.cross_missing=False

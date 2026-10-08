@@ -360,6 +360,9 @@ def create_draft(work,draft,*,confirmed=False):
     if not confirmed:raise ValueError('Revisa destinatarios, texto y adjuntos antes de crear el borrador.')
     from .product_state import require_fresh
     require_fresh(work,draft)
+    from .capture_products import institutional_statement_issue
+    issue=institutional_statement_issue(work,draft)
+    if issue:raise ValueError(issue)
     if not draft.roster_reviewed:raise ValueError('Revisa la nómina antes de crear los adjuntos y guardar el correo.')
     draft.key=draft_fingerprint(draft)
     if draft.key in work.receipts:raise ValueError('Este borrador ya se creó o su guardado quedó incierto; revisa Outlook antes de repetir.')

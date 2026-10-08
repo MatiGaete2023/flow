@@ -335,8 +335,39 @@ class App(ctk.CTk):
         row=next(r for r in work.rows if r.id==selected[0]);self._open(verified_source(work,row))
 
     def _download_joint(self):
-        from .download_link import start
-        start(self)
+        raise ValueError('Las consultas se realizan en el Descargador. Importa aquí el paquete obtenido.')
+
+    def _import_capture(self):
+        if self.busy:return
+        path=filedialog.askopenfilename(parent=self,title='Importar paquete del Descargador',filetypes=[('Captura CSMP','*.zip')])
+        if not path:return
+        self._capture_observation();self._capture_mail();self._capture_project()
+        from .capture_input import import_capture
+        previous=deepcopy(self.work) if self.work else None
+        config=deepcopy(self.cfg.data)
+        text=simpledialog.askstring('Fecha de corte','Fecha de análisis AAAA-MM-DD:',initialvalue=date.today().isoformat(),parent=self)
+        if text is None:return
+        cut=date.fromisoformat(text)
+        def done(candidate):
+            reused=bool(previous and candidate.capture_digest==getattr(previous,'capture_digest',''))
+            if previous and not reused:
+                from uuid import uuid4
+                previous.save(self.cfg.directory/'sesion'/'anteriores'/uuid4().hex)
+            self.work=candidate
+            if not reused:self._clear_drafts();self.projects=[];self.observation_id=None
+            self._show_work(reset_projects=not reused);self._save_session()
+            self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones y productos actuales conservados.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
+        self._run('Importando paquete sin conexión…',lambda:import_capture(path,config,as_of=cut,previous=previous),done)
+
+    def _capture_evidence(self):
+        from .capture_products import show_evidence
+        show_evidence(self)
+
+    def _capture_requests(self):
+        if not self.work:raise ValueError('Importa un trabajo primero.')
+        from .capture_products import export_requests
+        target=filedialog.asksaveasfilename(parent=self,title='Solicitud para uso manual en Descargador',initialfile='solicitud_antecedentes.json',defaultextension='.json')
+        if target:self._run('Preparando solicitud local…',lambda:export_requests(self.work,target),lambda result:self.status.set('Solicitud declarativa guardada: '+str(result)))
 
     def _select_folder(self,var):
         path=filedialog.askdirectory()

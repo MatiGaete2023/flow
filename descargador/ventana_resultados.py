@@ -43,6 +43,10 @@ class ResultsWindow(tk.Toplevel):
         for text,action in [('CSV',lambda:self.run(lambda:export_csv(self.lot))),('Calendario ICS',lambda:self.run(lambda:export_ics(self.lot))),
             ('ZIP para entrega',lambda:self.run(lambda:export_zip(self.lot))),('Abrir carpeta',lambda:self.safe(lambda:open_local(self.lot.folder))),
             ('Preparar pendientes',self.pending)]:ttk.Button(row,text=text,command=action).pack(side='left',padx=(0,6))
+        row=ttk.Frame(self);row.pack(fill='x',padx=12,pady=4)
+        ttk.Button(row,text='Excel bitácoras autónomo…',command=self.diary_excel).pack(side='left',padx=(0,6))
+        ttk.Button(row,text='Paquete CSMP v1…',command=self.capture_package).pack(side='left',padx=(0,6))
+        ttk.Button(row,text='Abrir solicitud de antecedentes…',command=self.open_request).pack(side='left',padx=(0,6))
         ttk.Label(self,textvariable=self.status,wraplength=940).pack(fill='x',padx=12,pady=12)
         self.protocol('WM_DELETE_WINDOW',self.close);self.reload();self.after(100,self.poll)
     def close(self):
@@ -116,7 +120,33 @@ class ResultsWindow(tk.Toplevel):
             _,manifest=self.lot.queries[int(selected[0])];items=manifest.get('archivos',[]) or [manifest.get('evidencia',{})]
             if items and items[0].get('archivo'):open_local(inside(self.lot.folder,items[0]['archivo']))
         self.safe(action)
-    def csmp(self):self.safe(lambda:self.start(lambda:export_book([self.lot],csmp=True),'csmp'))
+    def csmp(self):self.safe(lambda:self.start(lambda:export_book([self.lot],csmp=True)))
+
+    def open_request(self):
+        if self.busy:return
+        path=filedialog.askopenfilename(parent=self,title='Solicitud declarativa del Asistente',filetypes=[('Solicitud local','*.json')])
+        if not path:return
+        from solicitud_antecedentes import summarize_request
+        try:messagebox.showinfo('Antecedentes solicitados',summarize_request(path),parent=self)
+        except (ValueError,OSError) as exc:self.status.set(str(exc))
+
+    def diary_excel(self):
+        if self.busy:return
+        manifest=filedialog.askopenfilename(parent=self,title='Lote de bitácoras ya capturado',filetypes=[('Control de lecturas','bitacoras.json')])
+        if not manifest:return
+        target=filedialog.asksaveasfilename(parent=self,initialfile='Bitacoras_RUS.xlsx',defaultextension='.xlsx')
+        if target:
+            from nurus.capture.diaries import export_diaries
+            self.start(lambda:export_diaries(manifest,target))
+
+    def capture_package(self):
+        def action():
+            target=filedialog.asksaveasfilename(parent=self,initialfile='Captura_CSMP.zip',defaultextension='.zip')
+            if not target:return
+            diary=filedialog.askopenfilename(parent=self,title='Bitácoras del paquete (cancelar para omitir)',filetypes=[('Control de lecturas','bitacoras.json')])
+            from export_csmp_capture import export_capture
+            self.start(lambda:export_capture([self.lot],target,diaries=diary or None))
+        self.safe(action)
     def cross(self):
         def action():
             folder=filedialog.askdirectory(parent=self,title='Lote de informes compatible para el cruce')
@@ -127,7 +157,7 @@ class ResultsWindow(tk.Toplevel):
                     modes={compatibility(h,s,rows)['modo'] for lot in (current,other) for _,s,_,h,rows in tables(lot)}
                     if modes!={'CUMPLIMIENTO','INFORMES'}:raise m.PocError('El cruce requiere un lote de Cumplimiento y otro de Informes, sin otras pantallas.')
                     return export_book([current,other],csmp=True)
-                self.start(export,'csmp')
+                self.start(export)
         self.safe(action)
     def compare(self):
         def action():

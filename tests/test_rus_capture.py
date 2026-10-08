@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from nurus.personal.registration import FormEvidence, submit
+from nurus.personal.registration import FormEvidence
 from nurus.personal.rus_capture import inspect_capture, main
-from test_registration import intent, setup
+from test_registration import intent, setup, simulate_legacy_submit as submit
 
 
 def capture(tmp_path):

@@ -262,7 +262,7 @@ def _annotation_values(record: dict, stage: str) -> tuple[str, str]:
 
 
 def _reviewed_fields(record: dict) -> dict[str, object]:
-    if record["decision"] != "approved" or not record.get("rus_recorded"):
+    if record["decision"] != "approved" or not record.get("locally_validated",record.get("rus_recorded")):
         return {}
     return {
         "OBSERVACION": record["edited_observation"],

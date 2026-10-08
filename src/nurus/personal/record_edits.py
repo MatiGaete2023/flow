@@ -149,31 +149,41 @@ def recalculate(work, row):
     from .motor.reglas_cumplimiento import generar_observacion_cumplimiento
     from .motor.reglas_informes import generar_observacion_informes
     from .work import actions_for
+    mode=getattr(work,'capture_modes',{}).get(row.id,work.mode)
+    mapping=dict(work.mapping)
+    source=getattr(work,'capture_sources',{}).get(row.id)
+    if source:
+        import json
+        from nurus.rus.columns import map_columns
+        allowed=map_columns(json.loads(source['normalized_json']),mode)
+        mapping={key:column for key,column in mapping.items() if key in allowed or key in row.overrides}
     values = dict(row.values)
     for key, value in row.overrides.items():
-        values[work.mapping[key]] = value
+        values[mapping[key]] = value
     ctx = dict(config=work.config, events=[], date=date.fromisoformat(work.as_of), invalid=[])
     token = current.set(ctx)
     incidences = Incidencias()
     warnings = []
     try:
-        if work.mode == 'CUMPLIMIENTO':
-            end = as_date(values.get(work.mapping.get('egreso_proy', '')))
-            counts = [as_int(values.get(work.mapping.get(key, ''))) for key in ('dias_cumpl', 'dias_egresar')]
+        if mode == 'CUMPLIMIENTO':
+            end = as_date(values.get(mapping.get('egreso_proy', '')))
+            counts = [as_int(values.get(mapping.get(key, ''))) for key in ('dias_cumpl', 'dias_egresar')]
             if end and end > ctx['date'] and any(number is not None and number < 0 for number in counts):
                 warnings.append('Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.')
                 ctx['invalid'].append('CUMPLIMIENTO.C04_VENCIDA')
-        court = tribunal(values.get(work.mapping.get('tribunal', ''), '')) or ''
+        court = tribunal(values.get(mapping.get('tribunal', ''), '')) or ''
         args = dict(incidencias=incidences, fila_excel=row.source_row)
-        if work.mode == 'CUMPLIMIENTO':
+        if mode == 'CUMPLIMIENTO':
             args['fecha_hoja2'] = as_date(getattr(work, 'cross_dates', {}).get(row.id))
         function = {'ESPERA': generar_observacion_espera, 'CUMPLIMIENTO': generar_observacion_cumplimiento,
-                    'INFORMES': generar_observacion_informes}[work.mode]
-        row.observation = function(values, court, work.mapping, **args) if court else ''
+                    'INFORMES': generar_observacion_informes}[mode]
+        row.observation = function(values, court, mapping, **args) if court else ''
         if not court:warnings.append('Tribunal sin reglas configuradas; requiere revisión manual.')
         warnings.extend(item['MOTIVO'] for item in incidences._items)
     finally:
         current.reset(token)
     row.rules = list(dict.fromkeys(event for event in ctx['events'] if event not in work.config['desactivadas']))
     row.actions = actions_for(row.rules)
+    context=getattr(work,'capture_context',{}).get(row.id)
+    if context:warnings.append(context['reason'])
     row.warnings = warnings

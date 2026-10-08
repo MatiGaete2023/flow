@@ -47,6 +47,8 @@ def _fingerprint(work, record_ids, kind, recipient_type=''):
     records.sort(key=lambda row: row['id'])
     configuration = {key: cfg.get(key) for key in ('correos', 'contactos', 'aliases', 'firma')}
     payload = {'records': records, 'config': configuration, 'kind': kind, 'ids': sorted(ids), 'recipient_type':recipient_type}
+    if getattr(work,'capture_digest',''):
+        payload['capture']={key:getattr(work,key,'') for key in ('capture_digest','ruleset_version','mapping_version','as_of')}
     return sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
 
 

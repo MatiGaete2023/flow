@@ -37,54 +37,14 @@ def build(app):
         else:advanced.pack(fill='x',pady=6)
     app.results_more=more
     ui.Button(actions,text='Más acciones',command=more).pack(side='right')
-    # Consulta autónoma, sin activar la escritura de observaciones.
     section=ui.Frame(advanced);section.pack(fill='x',pady=(8,4))
-    ui.Label(section,text='Bitácoras RUS · solo lectura',font=('Segoe UI',13,'bold')).pack(anchor='w')
-    from .bitacoras import earliest,validate_period
-    start_date=tk.StringVar(value=earliest(date.today()).isoformat())
-    end_date=tk.StringVar(value=date.today().isoformat())
-    dates=ui.Frame(section);dates.pack(fill='x',pady=4)
-    for caption,value in (('Desde AAAA-MM-DD',start_date),('Hasta AAAA-MM-DD',end_date)):
-        ui.Label(dates,text=caption).pack(side='left',padx=(0,4))
-        ui.Entry(dates,textvariable=value,width=116).pack(side='left',padx=(0,8))
-    def period():
-        start,end=date.fromisoformat(start_date.get()),date.fromisoformat(end_date.get())
-        validate_period(start,end)
-        return start,end
-    def consult():
-        from .bitacora_link import start
-        a,b=period()
-        start(app,a,b)
-    def recover():
-        from .bitacora_link import recover as recover_request
-        recover_request(app)
-    def open_har():
-        from .bitacora_har import import_har,export_har_audit
-        a,b=period()
-        selected=filedialog.askopenfilenames(parent=app,title='Capturas HAR de bitácoras',filetypes=[('HAR','*.har')])
-        if not selected:return
-        target=filedialog.asksaveasfilename(parent=app,defaultextension='.xlsx',initialfile='Bitacoras_RUS.xlsx')
-        if not target:return
-        app._run('Exportando bitácoras HAR…',lambda:export_har_audit(import_har(selected),target,a,b),
-                 lambda value:app.status.set('Excel de bitácoras: '+str(value)))
-    def open_lot():
-        from .bitacora_lote import export_lote
-        a,b=period()
-        selected=filedialog.askopenfilename(parent=app,title='Control de bitácoras',filetypes=[('Lote JSON','bitacoras.json')])
-        if not selected:return
-        target=filedialog.asksaveasfilename(parent=app,defaultextension='.xlsx',initialfile='Bitacoras_RUS.xlsx')
-        if not target:return
-        app._run('Exportando lote de bitácoras…',lambda:export_lote(selected,target,a,b),
-                 lambda value:app.status.set('Excel de bitácoras: '+str(value)))
-    buttons=ui.Frame(section);buttons.pack(fill='x',pady=4)
-    app.results_bitacora_live_button=ui.Button(buttons,text='Consultar bitácoras en RUS',command=lambda:app._guard(consult))
-    app.results_bitacora_live_button.pack(side='left',padx=(0,5))
-    ui.Button(buttons,text='Recuperar consulta',command=lambda:app._guard(recover)).pack(side='left',padx=(0,5))
-    ui.Button(buttons,text='Importar HAR',command=lambda:app._guard(open_har)).pack(side='left',padx=(0,5))
-    ui.Button(buttons,text='Abrir lote',command=lambda:app._guard(open_lot)).pack(side='left')
+    ui.Label(section,text='Fuentes locales y cobertura',font=('Segoe UI',13,'bold')).pack(anchor='w')
+    ui.Button(section,text='Importar paquete',command=lambda:app._guard(app._import_capture)).pack(anchor='w',pady=4)
+    ui.Button(section,text='Ver cobertura y antecedentes',command=lambda:app._guard(app._capture_evidence)).pack(anchor='w',pady=4)
+    ui.Button(section,text='Solicitar antecedentes faltantes',command=lambda:app._guard(app._capture_requests)).pack(anchor='w',pady=4)
     ui.Button(advanced,text='Diagnóstico de instalación',command=lambda:app._guard(lambda:export_diagnosis(app))).pack(anchor='w',pady=4)
     from .download_link import resume
-    app.results_download_button=ui.Button(advanced,text='Recuperar descarga interrumpida',command=lambda:app._guard(lambda:resume(app)));app.results_download_button.pack(anchor='w',pady=4)
+    app.results_download_button=ui.Button(advanced,text='Recuperar resultado local legado',command=lambda:app._guard(lambda:resume(app)));app.results_download_button.pack(anchor='w',pady=4)
     from .work_tools import show_deadlines
     ui.Button(advanced,text='Vencimientos / egreso proyectado',command=lambda:app._guard(lambda:show_deadlines(app))).pack(anchor='w',pady=4)
     def detail_selected(event=None):

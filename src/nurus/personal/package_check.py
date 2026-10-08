@@ -13,7 +13,10 @@ def check(destination):
     from .app import App
     from .template_package import _matrix_patches
     import nurus.personal as personal
-    import xlrd,win32com.client,openpyxl
+    import xlrd,openpyxl
+    try:import win32com.client
+    except ImportError:office_com=False
+    else:office_com=True
     destination=Path(destination).resolve();destination.parent.mkdir(parents=True,exist_ok=True)
     root=Path(personal.__file__).parent
     templates={p.relative_to(root/'plantillas_word').as_posix() for p in (root/'plantillas_word').rglob('*.docx')}
@@ -28,7 +31,9 @@ def check(destination):
             for name in ('Trabajo','Correos','Resoluciones','Resultados','Configuración'):
                 app.tabs.select(app.pages[name]);app.update()
             result={'version':__version__,'frozen':bool(getattr(sys,'frozen',False)),
-                    'pages':list(app.pages),'templates':len(templates),'matrix_patches':5,'ok':True}
+                    'pages':list(app.pages),'templates':len(templates),'matrix_patches':5,'office_com_available':office_com,'ok':True}
+            from nurus.capture.selfcheck import check_contract
+            result['capture_v1_verified']=check_contract(Path(folder))
         finally:app.destroy()
     destination.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 
