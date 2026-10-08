@@ -87,6 +87,14 @@ Los límites ZIP/CSV son conservadores y explícitos en el contrato.
 
 ## CI y discrepancias
 
+**CI final 01e013d: SUCCESS en ambos workflows**, 2026-10-08 22:38 UTC.
+Asistente: Windows Python 3.12/3.13/3.14 aprobados; 3.12 registró 557 aprobadas
+y 1 omitida. Descargador: 169 aprobadas y 57 subtests. Comprobación de contrato,
+ejecutables, paquete conjunto, instalación/reinstalación/desinstalación aprobadas.
+Los dos EXE del paquete conjunto acreditaron el mismo commit. Las descargas
+están en [CONTINUAR](../../CONTINUAR.md) y el JSON contiene IDs/tamaños/URLs.
+Los checkpoints posteriores de evidencia no cambian ese código compilado.
+
 Los runs y artefactos Windows se registran en `ci_windows.json`; usar siempre el
 SHA indicado. CI demuestra compilación y pruebas ficticias, no SITFA/RUS real,
 Windows 10 institucional, Excel 2010 ni Outlook 365 instalado.

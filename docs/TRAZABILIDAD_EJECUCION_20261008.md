@@ -26,7 +26,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | P10 | BLOQUEADA_POR_EVIDENCIA | CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9. |
 | P11 | IMPLEMENTADA_PENDIENTE_ACEPTACION | INT reales y ampliadas NO EJECUTADAS; MVP local comprobado. |
 | P12 | BLOQUEADA_POR_EVIDENCIA | P9/P10 y acta institucional; ampliación excluida del MVP. |
-| P13 | EN_CURSO | CI del SHA final, Windows 10 sin admin/Office y autorización de promoción. |
+| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes. |
 
 ## Todas las tareas y entregables
 
@@ -104,11 +104,11 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | P10-E04 | 335 | BLOQUEADA_POR_EVIDENCIA | Evitar que una glosa de bitácora «informe enviado» pruebe por sí sola recepción, trámite correcto o subsanación; clasificar `PENDIENTE_VERIFICACION`. |
 | P10-E05 | 336 | BLOQUEADA_POR_EVIDENCIA | No automatizar con/sin carga ni `TT/CC/RES` por simple coincidencia textual. No extender reglas jurídicas específicas de Laja/Mulchén/Tomé a otros tribunales sin catálogo nuevo. |
 | P10-E06 | 337 | BLOQUEADA_POR_EVIDENCIA | Validar estados `NO_EVALUABLE` cuando falta fuente o identidad, y `SIN_INCIDENCIA_DETECTADA` como resultado **acotado**, no certificado de regularidad integral. |
-| P13-E01 | 359 | EN_CURSO | Construir artefactos con metadatos de versión y SHA, incluyendo ejecutable Descargador, extensión 2.7.2 o nueva versión coherente y ejecutable Asistente; **preferir paquete conjunto para distribución**, aunque operen autónomamente. |
-| P13-E02 | 360 | EN_CURSO | Verificar arranque desde carpeta nueva sin admin, configuración local migrable, preservación de datos al reinstalar y capacidad de volver a la versión anterior. |
-| P13-E03 | 361 | EN_CURSO | Confirmar en Windows 10 el análisis/exportación sin Office; luego con Excel 2010 y Outlook 365 cuando corresponda. No presumir disponibilidad de COM en CI. |
-| P13-E04 | 362 | EN_CURSO | Entregar manuales separados, diagramas, notas de versión, criterios de soporte, riesgos residuales, lista de `NO_EJECUTADO` y limitaciones reales. |
-| P13-E05 | 363 | EN_CURSO | Realizar aceptación explícita del usuario antes de fusionar ramas, publicar release/instalador final o sustituir la versión en uso. |
+| P13-E01 | 359 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Construir artefactos con metadatos de versión y SHA, incluyendo ejecutable Descargador, extensión 2.7.2 o nueva versión coherente y ejecutable Asistente; **preferir paquete conjunto para distribución**, aunque operen autónomamente. |
+| P13-E02 | 360 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Verificar arranque desde carpeta nueva sin admin, configuración local migrable, preservación de datos al reinstalar y capacidad de volver a la versión anterior. |
+| P13-E03 | 361 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Confirmar en Windows 10 el análisis/exportación sin Office; luego con Excel 2010 y Outlook 365 cuando corresponda. No presumir disponibilidad de COM en CI. |
+| P13-E04 | 362 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Entregar manuales separados, diagramas, notas de versión, criterios de soporte, riesgos residuales, lista de `NO_EJECUTADO` y limitaciones reales. |
+| P13-E05 | 363 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Realizar aceptación explícita del usuario antes de fusionar ramas, publicar release/instalador final o sustituir la versión en uso. |
 | P11-ACEPTACION | 341 | IMPLEMENTADA_PENDIENTE_ACEPTACION | Aceptación integral según gate G11 |
 | P12-ACEPTACION | 349 | BLOQUEADA_POR_EVIDENCIA | Aceptación integral según gate G12 |
 
@@ -135,7 +135,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | D-T17 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Baseline preservado; No hay Excel 2010 en este Linux; CI Windows no prueba Office 2010. |
 | D-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Solo lectura en rutas revisadas y fixtures; nunca subir material real. |
 | D-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline preservado; cualquier adaptación exige nueva regresión. |
-| D-T20 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; CI origen exitoso; nueva distribución y aceptación Windows no ejecutadas. |
+| D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes. |
 | R-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
@@ -228,7 +228,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | A-T15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T17 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| A-T18 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Baseline preservado; CI origen verifica Windows; nueva entrega/Windows 10 sin admin y Office institucional requieren pruebas propias. No asumirlas por usar Linux. |
+| A-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes. |
 | A-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T20 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Snapshot exacto 251d5c4 preserva 11 commits sobre main; golden/UI pasan, pero no hay aceptación funcional de todas las diferencias históricas. |
 

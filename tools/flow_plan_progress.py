@@ -17,7 +17,7 @@ STATES={'PENDIENTE','EN_CURSO','BLOQUEADA_POR_EVIDENCIA','FALLÓ_PRUEBA',
 LOCAL='IMPLEMENTADA_PENDIENTE_ACEPTACION'
 PHASES={f'P{i}':LOCAL for i in range(14)}
 PHASES.update(P1='BLOQUEADA_POR_EVIDENCIA',P7='EN_CURSO',P9='BLOQUEADA_POR_EVIDENCIA',
-              P10='BLOQUEADA_POR_EVIDENCIA',P12='BLOQUEADA_POR_EVIDENCIA',P13='EN_CURSO')
+              P10='BLOQUEADA_POR_EVIDENCIA',P12='BLOQUEADA_POR_EVIDENCIA')
 DEPENDENCIES={
  'P0':'Continuación autorizada; conservar auditoría y golden del SHA original.',
  'P1':'Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente.',
@@ -32,7 +32,7 @@ DEPENDENCIES={
  'P10':'CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9.',
  'P11':'INT reales y ampliadas NO EJECUTADAS; MVP local comprobado.',
  'P12':'P9/P10 y acta institucional; ampliación excluida del MVP.',
- 'P13':'CI del SHA final, Windows 10 sin admin/Office y autorización de promoción.',
+ 'P13':'CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes.',
 }
 
 
@@ -79,6 +79,9 @@ def main():
            'Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional.',state='EN_CURSO')
     update('F15','src/nurus/capture/requests.py;descargador/solicitud_antecedentes.py',
            'tests/test_capture_temporal_products.py','Solicitud declarativa local; no ejecuta consultas.')
+    update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1',
+           'tests/test_capture_build_identity.py;tests/test_windows_installer_contract.py;tests/test_current_release_contract.py',
+           'CI 01e013d SUCCESS: EXE, contrato, SHA conjunto e instalador/datos preservados. Windows 10 institucional/Office pendientes.')
     update('F10 R-T17 R-T18 R-T19 R-T20 R-T21 INT-14','src/nurus/capture/temporal.py',
            'tests/test_capture_temporal_products.py','Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE.',
            state='EN_CURSO',result='NO EJECUTADO')
