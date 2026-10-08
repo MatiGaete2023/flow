@@ -39,6 +39,11 @@ la edición humana. Preview temporal v2 continúa desactivado en producción.
 `flow-golden-final-rules.txt` vuelve a confirmar paridad de los 17 productos.
 Estos son los resultados finales después de los últimos ajustes funcionales.
 
+`flow-mvp-final-preserved` conserva **552 aprobadas y 6 omitidas**, incluyendo
+exclusiones al reanalizar y edición de registros OTRO sin introducir propuestas.
+El subconjunto `flow-mvp-human-decisions` registra 43 aprobadas. La intervención
+humana sigue prevaleciendo sobre resultados automáticos y cambios de versión.
+
 Golden actual: 17 productos ficticios, paridad de contenidos, observaciones,
 reglas y estilos contra P0. El inventario P0 sigue detectando los cambios de
 implementación autorizados; no se reemplazan sus hashes de origen.

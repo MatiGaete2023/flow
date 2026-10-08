@@ -152,6 +152,10 @@ def recalculate(work, row):
     mode=getattr(work,'capture_modes',{}).get(row.id,work.mode)
     mapping=dict(work.mapping)
     source=getattr(work,'capture_sources',{}).get(row.id)
+    if source and source['record_type'] not in ('ESPERA','CUMPLIMIENTO','INFORMES'):
+        row.observation='';row.rules=[];row.actions=[]
+        row.warnings=['Tipo de fuente fuera del motor tradicional; no evaluado.']
+        return
     if source:
         import json
         from nurus.rus.columns import map_columns
