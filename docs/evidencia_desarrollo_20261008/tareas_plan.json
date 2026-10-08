@@ -1,0 +1,634 @@
+[
+  {
+    "id": "P0.01",
+    "phase": "P0",
+    "description": "Fijar SHA, versiones y estado real de CI; registrar divergencia con ramas históricas",
+    "source_line": 185,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.02",
+    "phase": "P0",
+    "description": "Ejecutar suite actual y registrar número de pruebas, fallas/skips, dependencias y artefactos",
+    "source_line": 186,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.03",
+    "phase": "P0",
+    "description": "Inventario de entradas, filtros, pestañas, modalidades, salidas y clases de error",
+    "source_line": 187,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.04",
+    "phase": "P0",
+    "description": "Inventario Asistente y grafo de imports; identificar dependencias de utilidades y componentes heredados",
+    "source_line": 188,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.05",
+    "phase": "P0",
+    "description": "Capturar resultados baseline con **fixtures ficticias**: Espera, Cumplimiento, Informes, Excel, Word, nóminas y borradores; anotar config",
+    "source_line": 189,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.06",
+    "phase": "P0",
+    "description": "Verificar configuración y compatibilidad de versiones sin perder cambios del usuario",
+    "source_line": 190,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P0.07",
+    "phase": "P0",
+    "description": "decisión de alcance:",
+    "source_line": 194,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Continuación autorizada; conservar auditoría y golden del SHA original."
+  },
+  {
+    "id": "P1.01",
+    "phase": "P1",
+    "description": "Comprobar que EXE, extensión y metadatos pertenecen al mismo SHA y anuncian versiones/capacidades coherentes",
+    "source_line": 202,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente."
+  },
+  {
+    "id": "P1.02",
+    "phase": "P1",
+    "description": "Reproducir los casos conocidos `SIN_VINCULO` mediante fixture y **contraste institucional local autorizado**",
+    "source_line": 203,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente."
+  },
+  {
+    "id": "P1.03",
+    "phase": "P1",
+    "description": "Ajustar vínculo `ShowObservaciones`/`ShowHistoria` sin fabricar causa/ingreso por RIT; comprobar diferencias visuales tolerables",
+    "source_line": 204,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente."
+  },
+  {
+    "id": "P1.04",
+    "phase": "P1",
+    "description": "Validar paginación, fechas, respuestas, fuentes y reintentos; comprobar exportación de textos largos",
+    "source_line": 205,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente."
+  },
+  {
+    "id": "P1.05",
+    "phase": "P1",
+    "description": "Ejecutar batería institucional por modalidades y pestañas permitidas; documentar alcance real",
+    "source_line": 206,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Sesión autorizada y cotejo real por modalidad/pestaña; G1 pendiente."
+  },
+  {
+    "id": "P2-E01",
+    "phase": "P2",
+    "description": "Especificación `contracts/csmp_capture_v1/README.md` con semántica, versiones, compatibilidad, claves de consulta/fila/ingreso, validación de esquema y reglas de contenido opcional.",
+    "source_line": 216,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E02",
+    "phase": "P2",
+    "description": "`manifest.schema.json` (JSON Schema) y diccionario **por tabla** con tipos, nulos, cardinalidad, valores permitidos, claves ajenas, reglas de normalización y ejemplos ficticios.",
+    "source_line": 217,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E03",
+    "phase": "P2",
+    "description": "Definir exportación ZIP con `manifest.json`, `data/consultas.csv`, `registros.csv`, `bitacoras.csv`, `historia_tramites.csv`, `documentos.csv`, `incidencias.csv`, y carpeta de originales **solo cuando su inclusión esté autorizada**. Las fuentes opcionales pueden omitirse; su omisión debe estar declarada.",
+    "source_line": 218,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E04",
+    "phase": "P2",
+    "description": "Estados separados **por consulta, por archivo, por registro y por evento**, por ejemplo `COMPLETA`, `VACIA_COMPROBADA`, `PARCIAL`, `FALLIDA`, `NO_CONSULTADA`; no mezclar ausencia de filas, fallo y cobertura incompleta.",
+    "source_line": 219,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E05",
+    "phase": "P2",
+    "description": "Canonicalización de fecha y zona **sin inventar zona horaria** para eventos que carezcan de ella. Si faltan hora o fecha, dejar incertidumbre explícita. RIT/RUT/IDs remotos como texto.",
+    "source_line": 220,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E06",
+    "phase": "P2",
+    "description": "Trazabilidad original por `source_system`, `query_id`, tribunal, ingreso, modalidad, origen, archivo, hoja, fila, hash y fecha de captura; **no** confiar en RIT+nombre como clave única.",
+    "source_line": 221,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E07",
+    "phase": "P2",
+    "description": "Formato de textos extensos fuera del límite de celda Excel, con sidecar/split documentado, evitando truncamiento silencioso y preservando integridad.",
+    "source_line": 222,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E08",
+    "phase": "P2",
+    "description": "Contrato de solicitud opcional de nuevas consultas desde el Asistente hacia el Descargador: **archivo declarativo**, nunca instrucciones ejecutables, navegación directa ni llamadas a escritura.",
+    "source_line": 223,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E09",
+    "phase": "P2",
+    "description": "Validación contra ZIP slip (`../`), symlinks, rutas absolutas, colisiones, archivos falsos, expansión desproporcionada, hash incorrecto, CSV fórmulas, encoding, registros duplicados y IDs cruzados. Establecer límites cuantificados tras medir fixtures y la memoria disponible.",
+    "source_line": 224,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P2-E10",
+    "phase": "P2",
+    "description": "Compatibilidad `1.x`: campos opcionales aditivos; cualquier cambio semántico incompatible requiere nueva versión mayor y migrador probado.",
+    "source_line": 225,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Contrato probado localmente; no certifica autenticidad de fuente institucional."
+  },
+  {
+    "id": "P3.01",
+    "phase": "P3",
+    "description": "Mantener intacta la captura individual por pantalla, modalidad, estado, fechas y paginación",
+    "source_line": 237,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.02",
+    "phase": "P3",
+    "description": "Mantener consolidado XLSX, CSV, ICS, ZIP, comparador de lotes, favoritos, controles y evidencias de consultas vacías",
+    "source_line": 238,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.03",
+    "phase": "P3",
+    "description": "Hacer disponible `Bitacoras_RUS.xlsx` desde la ventana del Descargador, con hojas de lecturas, consultas, copia íntegra y errores",
+    "source_line": 239,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.04",
+    "phase": "P3",
+    "description": "Compartir parser de bitácoras con Asistente sin importar paquetes exclusivos de UI de CSMP; mantener `nurus.bitacora_html` reutilizable",
+    "source_line": 240,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.05",
+    "phase": "P3",
+    "description": "Separar selección de exportaciones: «Excel habitual», «Excel bitácoras» y «Paquete CSMP»",
+    "source_line": 241,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.06",
+    "phase": "P3",
+    "description": "Desactivar dependencia del menú de «configurar CSMP» como requisito de trabajo; preservar compatibilidad de intercambio legado en fase transitoria",
+    "source_line": 242,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P3.07",
+    "phase": "P3",
+    "description": "Conservar controles de pausa, cancelación, resultado parcial y recuperación de consultas",
+    "source_line": 243,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "G1 para anunciar bitácoras reales fiables; Excel 2010 pendiente."
+  },
+  {
+    "id": "P4-E01",
+    "phase": "P4",
+    "description": "Obtener inventario de consultas y original/hashes; conservar fuente primaria y mapeos estables.",
+    "source_line": 251,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P4-E02",
+    "phase": "P4",
+    "description": "Transformar solo datos con lector validado; preservar originales junto a normalizados y registrar los problemas por fila.",
+    "source_line": 252,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P4-E03",
+    "phase": "P4",
+    "description": "Producir tablas con claves de captura/consulta/ingreso; permitir fuentes no consultadas sin archivos falsos.",
+    "source_line": 253,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P4-E04",
+    "phase": "P4",
+    "description": "Guardar primero en carpeta temporal, validar y publicar con escritura atómica; no sobrescribir paquete previo.",
+    "source_line": 254,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P4-E05",
+    "phase": "P4",
+    "description": "Si una consulta está parcialmente fallida, etiquetar explícitamente la cobertura; no declarar total y no deducir desapariciones.",
+    "source_line": 255,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P4-E06",
+    "phase": "P4",
+    "description": "Permitir abrir/reexportar un lote previo sin volver a acceder a RUS; hash y metadatos sin mutaciones silenciosas.",
+    "source_line": 256,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de fuente primaria, identidad y cobertura."
+  },
+  {
+    "id": "P5.01",
+    "phase": "P5",
+    "description": "Validar esquema, hash, tamaño, rutas ZIP y tipos antes de alterar la sesión actual",
+    "source_line": 266,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.02",
+    "phase": "P5",
+    "description": "Importar fuentes disponibles por tabla y registrar consultas no realizadas/errores",
+    "source_line": 267,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.03",
+    "phase": "P5",
+    "description": "Modelo de identidad por causa + ingreso + persona/programa cuando corresponda; relación por ID remoto verificado",
+    "source_line": 268,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.04",
+    "phase": "P5",
+    "description": "Normalizar eventos de bitácora y calendario, con metadatos de fuente y cobertura",
+    "source_line": 269,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.05",
+    "phase": "P5",
+    "description": "Mantener importación de Excel legado y misma evaluación/observación tradicional con golden files",
+    "source_line": 270,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.06",
+    "phase": "P5",
+    "description": "Reimportar misma captura y recuperar sesión/ediciones de forma explícita",
+    "source_line": 271,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P5.07",
+    "phase": "P5",
+    "description": "UI «Importar paquete» y reporte legible de integridad/cobertura antes de aceptar el trabajo",
+    "source_line": 272,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Aceptación institucional de los paquetes; pruebas locales y paridad disponibles."
+  },
+  {
+    "id": "P6-E01",
+    "phase": "P6",
+    "description": "Modificar `src/nurus/personal/results_view.py`: la lectura/descarga directa de bitácoras será **opción del Descargador**, no botón operativo de CSMP. Los Excel de bitácoras se producen allí; CSMP conserva **importación/análisis**.",
+    "source_line": 280,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Instalaciones institucionales separadas; código local ya desacoplado."
+  },
+  {
+    "id": "P6-E02",
+    "phase": "P6",
+    "description": "Desacoplar `src/nurus/personal/bitacora_link.py`, `download_link.py`, `download_transfer.py` y `integral_contract.py` del camino principal. No eliminarlos antes de comprobar grafo de imports, recuperación de solicitudes antiguas y rutas de UI heredadas.",
+    "source_line": 281,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Instalaciones institucionales separadas; código local ya desacoplado."
+  },
+  {
+    "id": "P6-E03",
+    "phase": "P6",
+    "description": "Evitar que `app_base.py` lance ejecutables externos para iniciar trabajo nuevo; mantener `Abrir Excel legado` y `Importar paquete`.",
+    "source_line": 282,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Instalaciones institucionales separadas; código local ya desacoplado."
+  },
+  {
+    "id": "P6-E04",
+    "phase": "P6",
+    "description": "Analizar otras utilidades duplicadas: exportaciones de fuentes en Descargador; propuestas, Word, Outlook y editor en Asistente; herramientas independientes se conservan fuera del flujo o se integran por un adaptador explícito.",
+    "source_line": 283,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Instalaciones institucionales separadas; código local ya desacoplado."
+  },
+  {
+    "id": "P6-E05",
+    "phase": "P6",
+    "description": "Distinguir una sesión de trabajo recuperable de un historial de revisiones institucionales. Retirar/dejar inactiva **solo** la persistencia de marcas locales como autoridad temporal; conservar edición, borradores, sesiones y comprobantes técnicos.",
+    "source_line": 284,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Instalaciones institucionales separadas; código local ya desacoplado."
+  },
+  {
+    "id": "P7-E01",
+    "phase": "P7",
+    "description": "Discriminar observaciones del centro, observaciones de otros actores, respuesta del tribunal, trámite SITFA, firma y calendario; no confundir fuentes.",
+    "source_line": 292,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P7-E02",
+    "phase": "P7",
+    "description": "Determinar `ultima_observacion_centro` **solo** entre entradas con identidad remota y origen suficientemente acreditado; fecha/hora sin inventar y respetando cobertura consultada.",
+    "source_line": 293,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P7-E03",
+    "phase": "P7",
+    "description": "Comparar eventos posteriores por fecha; ante empate sin hora, orden desconocido o campo ambiguo, mostrar incertidumbre y solicitar revisión focalizada.",
+    "source_line": 294,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P7-E04",
+    "phase": "P7",
+    "description": "Mostrar estado de cobertura y hecho literal que sustenta cada hallazgo. No equivaler registro previo a trabajo recién ejecutado.",
+    "source_line": 295,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P7-E05",
+    "phase": "P7",
+    "description": "Aplicar reglas tradicionales exactamente como baseline mientras las nuevas capas de contexto actúan solo como señales auxiliares controladas.",
+    "source_line": 296,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P7-E06",
+    "phase": "P7",
+    "description": "Clasificar causas en `EXHAUSTIVA`, `FOCALIZADA`, `ORDINARIA`, `SIN_INCIDENCIA_DETECTADA` o `NO_EVALUABLE`, con razones visibles; los criterios nuevos se aprobarán en P10.",
+    "source_line": 297,
+    "state": "EN_CURSO",
+    "open_dependency": "Preview ficticio CT-01/02; producción NO_EVALUABLE. G1/G10 pendientes."
+  },
+  {
+    "id": "P8-E01",
+    "phase": "P8",
+    "description": "Preservar páginas Trabajo, Correos, Resoluciones, Resultados y Configuración, editor de observaciones, filtros, selección múltiple, guardado y recuperación.",
+    "source_line": 305,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E02",
+    "phase": "P8",
+    "description": "Una fila de bandeja por registro/ingreso, con múltiples hallazgos relacionados; todas las incidencias deben poder consultarse sin generar duplicaciones erróneas en Excel.",
+    "source_line": 306,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E03",
+    "phase": "P8",
+    "description": "Mantener/reconciliar `OBSERVACION`, `FECHA_OBS`, `TT`, `CC`, `RES` y decisiones humanas. Ningún cambio de reglas puede reemplazar texto editado sin consentimiento.",
+    "source_line": 307,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E04",
+    "phase": "P8",
+    "description": "Producir Excel revisable y adjuntos de informes por vencer/pendientes **desde datos fuente válidos**, incluso si no se formula una observación nueva; agrupar según programa/tribunal/período.",
+    "source_line": 308,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E05",
+    "phase": "P8",
+    "description": "Mantener `outputs.py`, `resolutions.py`, `manual_products.py` y `adapters/outlook.py` como productores de Word y borradores sin envío; resolver destinatarios solo desde contactos comprobados, dejar desconocidos vacíos y generar error legible.",
+    "source_line": 309,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E06",
+    "phase": "P8",
+    "description": "Invalidar/regenerar productos preparados cuando cambie su fuente o decisión humana, sin afectar documentos ya exportados ajenos.",
+    "source_line": 310,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P8-E07",
+    "phase": "P8",
+    "description": "Mantener funciones auxiliares de edición libre y productos manuales si aún se utilizan; no eliminar porque no formen parte del flujo principal.",
+    "source_line": 311,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "Excel 2010/Outlook 365 y aceptación humana de productos."
+  },
+  {
+    "id": "P9-E01",
+    "phase": "P9",
+    "description": "Capturar localmente y bajo autorización ejemplos de ventana «Información de la causa» e historia SITFA: tabla real, fecha, descripción, referencia, identificador remoto, parámetros, paginación y estados.",
+    "source_line": 319,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P9-E02",
+    "phase": "P9",
+    "description": "Identificar nivel de identidad: **causa** vs **ingreso/persona**; impedir atribución al NNA equivocado si el trámite solo identifica la causa.",
+    "source_line": 320,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P9-E03",
+    "phase": "P9",
+    "description": "Desarrollar lectura secuencial `history_open`/equivalente únicamente sobre endpoint y parámetros auditados, sin permisos extra innecesarios.",
+    "source_line": 321,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P9-E04",
+    "phase": "P9",
+    "description": "Exportar `Historia_SITFA.xlsx` de modo autónomo y `historia_tramites.csv` para el paquete, preservando texto y referencias.",
+    "source_line": 322,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P9-E05",
+    "phase": "P9",
+    "description": "Registrar vínculos de documentos y estado; habilitar PDF **solo por selección explícita**, control de origen/identidad/tipo/tamaño/hash y política institucional. Un PDF no disponible **no** invalida la historia tabular comprobada.",
+    "source_line": 323,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P9-E06",
+    "phase": "P9",
+    "description": "Incorporar fuentes SITFA al importador del Asistente y mostrar contraste sin cambiar automáticamente resultados de reglas.",
+    "source_line": 324,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "Contrato remoto auditado de historia/PDF. Extractor NO IMPLEMENTADO."
+  },
+  {
+    "id": "P10-E01",
+    "phase": "P10",
+    "description": "Crear matriz `regla → dato requerido → fuente → cobertura → condición → fragmento/acción → prioridad → incertidumbre`.",
+    "source_line": 332,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P10-E02",
+    "phase": "P10",
+    "description": "Mantener el catálogo vigente y parámetros de `config.py`/personalizaciones; congelar golden files antes/después y registrar diferencias exactas.",
+    "source_line": 333,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P10-E03",
+    "phase": "P10",
+    "description": "Introducir `CT-xx` como **desactivadas** por defecto, con versión, fixtures ficticios, explicación, consentimiento para activar y rollback por regla.",
+    "source_line": 334,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P10-E04",
+    "phase": "P10",
+    "description": "Evitar que una glosa de bitácora «informe enviado» pruebe por sí sola recepción, trámite correcto o subsanación; clasificar `PENDIENTE_VERIFICACION`.",
+    "source_line": 335,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P10-E05",
+    "phase": "P10",
+    "description": "No automatizar con/sin carga ni `TT/CC/RES` por simple coincidencia textual. No extender reglas jurídicas específicas de Laja/Mulchén/Tomé a otros tribunales sin catálogo nuevo.",
+    "source_line": 336,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P10-E06",
+    "phase": "P10",
+    "description": "Validar estados `NO_EVALUABLE` cuando falta fuente o identidad, y `SIN_INCIDENCIA_DETECTADA` como resultado **acotado**, no certificado de regularidad integral.",
+    "source_line": 337,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9."
+  },
+  {
+    "id": "P13-E01",
+    "phase": "P13",
+    "description": "Construir artefactos con metadatos de versión y SHA, incluyendo ejecutable Descargador, extensión 2.7.2 o nueva versión coherente y ejecutable Asistente; **preferir paquete conjunto para distribución**, aunque operen autónomamente.",
+    "source_line": 359,
+    "state": "EN_CURSO",
+    "open_dependency": "CI del SHA final, Windows 10 sin admin/Office y autorización de promoción."
+  },
+  {
+    "id": "P13-E02",
+    "phase": "P13",
+    "description": "Verificar arranque desde carpeta nueva sin admin, configuración local migrable, preservación de datos al reinstalar y capacidad de volver a la versión anterior.",
+    "source_line": 360,
+    "state": "EN_CURSO",
+    "open_dependency": "CI del SHA final, Windows 10 sin admin/Office y autorización de promoción."
+  },
+  {
+    "id": "P13-E03",
+    "phase": "P13",
+    "description": "Confirmar en Windows 10 el análisis/exportación sin Office; luego con Excel 2010 y Outlook 365 cuando corresponda. No presumir disponibilidad de COM en CI.",
+    "source_line": 361,
+    "state": "EN_CURSO",
+    "open_dependency": "CI del SHA final, Windows 10 sin admin/Office y autorización de promoción."
+  },
+  {
+    "id": "P13-E04",
+    "phase": "P13",
+    "description": "Entregar manuales separados, diagramas, notas de versión, criterios de soporte, riesgos residuales, lista de `NO_EJECUTADO` y limitaciones reales.",
+    "source_line": 362,
+    "state": "EN_CURSO",
+    "open_dependency": "CI del SHA final, Windows 10 sin admin/Office y autorización de promoción."
+  },
+  {
+    "id": "P13-E05",
+    "phase": "P13",
+    "description": "Realizar aceptación explícita del usuario antes de fusionar ramas, publicar release/instalador final o sustituir la versión en uso.",
+    "source_line": 363,
+    "state": "EN_CURSO",
+    "open_dependency": "CI del SHA final, Windows 10 sin admin/Office y autorización de promoción."
+  },
+  {
+    "id": "P11-ACEPTACION",
+    "phase": "P11",
+    "description": "Aceptación integral según gate G11",
+    "source_line": 341,
+    "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
+    "open_dependency": "INT reales y ampliadas NO EJECUTADAS; MVP local comprobado."
+  },
+  {
+    "id": "P12-ACEPTACION",
+    "phase": "P12",
+    "description": "Aceptación integral según gate G12",
+    "source_line": 349,
+    "state": "BLOQUEADA_POR_EVIDENCIA",
+    "open_dependency": "P9/P10 y acta institucional; ampliación excluida del MVP."
+  }
+]

@@ -1,5 +1,9 @@
 # Procedimiento pendiente de aceptación en el entorno autorizado
 
+El usuario confirmó el 2026-10-08: «no hay, usaremos SITFA y RUS después».
+Estas pruebas quedan diferidas por su decisión. El MVP técnico local se entrega
+con evidencia ficticia; no se solicita acceso institucional en esta etapa.
+
 Esta acta describe trabajo aún no ejecutado. No contiene datos personales,
 credenciales, pantallas institucionales ni comprobantes ficticios.
 

@@ -1,0 +1,1088 @@
+{
+  "config": {
+    "version": 1,
+    "revision_textos": 3,
+    "revision_correos": 3,
+    "perfil": "Asistente v9.1; prioridad confirmada por usuario",
+    "umbrales": {
+      "espera_dce": 30,
+      "espera_laja": 30,
+      "espera_mulchen": 30,
+      "espera_tome": 30,
+      "proyecto_tome": 60,
+      "mayoria": 60,
+      "oido": 45,
+      "resolucion_reciente": 30,
+      "ingreso_reciente": 30,
+      "medida": 45,
+      "informe": 30,
+      "ficha_antigua": 180,
+      "ficha_reciente": 30,
+      "ficha_fae": 120
+    },
+    "desactivadas": [],
+    "textos": {
+      "_meta": {
+        "version": "v9.1.0",
+        "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
+      },
+      "COMUN": {
+        "NO_SEGUIMIENTO": {
+          "texto": "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-01"
+        },
+        "MAYORIA_EDAD": {
+          "texto": "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-02 / C-01"
+        },
+        "PROXIMA_MAYORIA": {
+          "texto": "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-03 / C-02"
+        },
+        "CURADOR": {
+          "texto": "No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — T-01"
+        },
+        "OIDO": {
+          "texto": "Oído el {FECHA_OIDO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — T-02"
+        },
+        "PROX_AUDIENCIA": {
+          "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — T-03"
+        }
+      },
+      "ESPERA": {
+        "E04_RESOLUCION_RECIENTE": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}. (Observación administrativa; no requiere gestión del Tribunal).",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-04"
+        },
+        "E05_SOLO_CORREO": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-05"
+        },
+        "E05_PROYECTO_Y_CORREO": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-05"
+        },
+        "E06_SIN_RESOLUCION": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — E-06"
+        }
+      },
+      "CUMPLIMIENTO": {
+        "C03_INGRESO_RECIENTE": {
+          "texto": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-03"
+        },
+        "C04_VENCIDA": {
+          "texto": "Medida vencida en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-04"
+        },
+        "C05_VENCE_HOY": {
+          "texto": "Medida con vencimiento en RUS hoy, {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-05"
+        },
+        "C05_POR_VENCER": {
+          "texto": "Medida próxima a vencer en RUS el {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-05"
+        },
+        "C07_SIN_FICHA": {
+          "texto": "No registra ficha individual en RUS. Se sugiere confeccionarla.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-07"
+        },
+        "C07_FICHA_ANTIGUA": {
+          "texto": "Ficha individual actualizada por última vez el {FECHA_FICHA_INDIVIDUAL}. Se sugiere actualizarla.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-07"
+        },
+        "C07_FICHA_RECIENTE": {
+          "texto": "Ficha individual actualizada el {FECHA_FICHA_INDIVIDUAL}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-07"
+        },
+        "C08_FICHA_FAE": {
+          "texto": "{PNOMBRE} no registra ficha FAE en RUS. Se sugiere confeccionarla.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-08"
+        },
+        "C09_SIN_OBSERVACIONES": {
+          "texto": "Medida revisada, sin observaciones.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-09"
+        },
+        "C09_BASE_BREVE": {
+          "texto": "Medida revisada.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-09"
+        },
+        "C10_HOJA2": {
+          "texto": "Próximo informe de avance de {PROGRAMA} vence el {FECHA_VENCIMIENTO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — C-10"
+        }
+      },
+      "INFORMES": {
+        "I01_VENCIDO_DCE": {
+          "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — I-01"
+        },
+        "I01_VENCIDO_GENERAL": {
+          "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — I-01"
+        },
+        "I02_POR_VENCER_DCE": {
+          "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — I-02"
+        },
+        "I02_POR_VENCER_GENERAL": {
+          "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+          "confirmado": true,
+          "nota": "Catálogo v2 2026-07-14 — I-02"
+        }
+      }
+    },
+    "correos": {
+      "cc_obligatorio": "ucc_concepcion@pjud.cl",
+      "cc_adicional": "",
+      "modalidad_default": "",
+      "modalidades_default": [
+        "Cuidado alternativo residencial",
+        "Intervención ambulatoria de reparación",
+        "Cuidado alternativo familia de acogida",
+        "Diagnóstico Clínico Especializado (DCE)"
+      ],
+      "periodo_default": "el período revisado",
+      "abrir_borrador": true,
+      "validar_manual": true,
+      "tribunales": {
+        "TOME": {
+          "nombre": "Juzgado de Familia de Tomé",
+          "para": [
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid"
+          ]
+        },
+        "LAJA": {
+          "nombre": "Jgdo. L. y G. de Laja",
+          "para": [
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid"
+          ]
+        },
+        "MULCHEN": {
+          "nombre": "Jgdo. L. y G. de Mulchén",
+          "para": [
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid",
+            "contacto@example.invalid"
+          ]
+        }
+      },
+      "plantillas": {
+        "espera": {
+          "nombre": "Espera · informativo al tribunal",
+          "asunto": "Revisión pestaña \"Espera\" del módulo RUS — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+          "adjunto": "opcional",
+          "usa_modalidades": true,
+          "nota": "Correo general al finalizar la revisión de la pestaña Espera. Texto conforme Manual de funciones CSMP 2025."
+        },
+        "cumplimiento": {
+          "nombre": "Cumplimiento · informativo al tribunal",
+          "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+          "adjunto": "opcional",
+          "usa_modalidades": true,
+          "nota": "Correo general al finalizar la revisión de la pestaña Cumplimiento. Texto conforme Manual de funciones CSMP 2025."
+        },
+        "informes": {
+          "nombre": "Informes · informativo al tribunal",
+          "asunto": "Revisión pestaña \"Informes\" del módulo RUS — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+          "adjunto": "opcional",
+          "usa_modalidades": true,
+          "nota": "Correo general al finalizar la revisión de la pestaña Informes. Texto conforme Manual de funciones CSMP 2025."
+        },
+        "medidas": {
+          "nombre": "Medidas sin vigencia y por vencer",
+          "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+          "adjunto": "obligatorio",
+          "usa_modalidades": true,
+          "nota": "Correo posterior a la revisión de Cumplimiento. Requiere planilla adjunta. Texto conforme Manual de funciones CSMP 2025."
+        },
+        "proyectos": {
+          "nombre": "Reporte de proyectos de resolución",
+          "asunto": "Reporte de proyectos de resolución — {TRIBUNAL} — {PERIODO}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se remite reporte de proyectos de resolución elaborados durante {PERIODO}, para su conocimiento y gestión.\n\nAtte. a Ud.,",
+          "adjunto": "obligatorio",
+          "usa_modalidades": false,
+          "nota": "Reporte de proyectos de resolución. Requiere planilla adjunta."
+        },
+        "especial": {
+          "nombre": "Gestión particular / situación especial",
+          "asunto": "Gestión particular RUS — {TRIBUNAL} — {FECHA}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se remiten antecedentes para revisión y gestión particular del Tribunal.\n\nAtte. a Ud.,",
+          "adjunto": "opcional",
+          "usa_modalidades": false,
+          "nota": "Plantilla libre para una situación particular."
+        },
+        "programa_espera": {
+          "nombre": "Lista de espera · programa",
+          "asunto": "Lista de espera — {PROGRAMA} — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de {PROGRAMA}, correspondientes a {TRIBUNAL}. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,",
+          "adjunto": "obligatorio",
+          "usa_modalidades": false,
+          "fuente": "Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14."
+        },
+        "programa_vencido": {
+          "nombre": "Informes pendientes · programa",
+          "asunto": "Informes pendientes — {PROGRAMA} — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a {PROGRAMA} y {TRIBUNAL}. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,",
+          "adjunto": "obligatorio",
+          "usa_modalidades": false,
+          "fuente": "Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14."
+        },
+        "programa_por_vencer": {
+          "nombre": "Informes por vencer · programa",
+          "asunto": "Informes por vencer — {PROGRAMA} — {TRIBUNAL}",
+          "cuerpo": "Buen día:\n\nJunto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.\n\nAtte. a Ud.,",
+          "adjunto": "obligatorio",
+          "usa_modalidades": false,
+          "fuente": "Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14."
+        }
+      }
+    },
+    "contactos": {
+      "programas": {},
+      "tribunales": {}
+    },
+    "aliases": {
+      "DCE - KAMULAYAN": "DCE - KAMULYAN",
+      "FAE - AADD SENAME CONCEPCIÓN (PROV. CONCEPCIÓN-ARAUCO)": "FAE AADD FAMILIA DE ACOGIDA DE ADMINISTRACIÓN DIRECTA DE CONCEPCIÓN",
+      "RFA - RESIDENCIA FAMILIAR AADD CASTELLÓN": "RFA – CASTELLÓN"
+    },
+    "cuenta_outlook": "",
+    "firma": "",
+    "vista": {
+      "tema": "Sistema"
+    },
+    "correo_html": true
+  },
+  "path": "/workspace/flow/docs/evidencia_desarrollo_20261008/productos_ficticios/4/Captura_CSMP.zip",
+  "output": "/workspace/flow/docs/evidencia_desarrollo_20261008/productos_ficticios/4/Observaciones.xlsx",
+  "warnings": [
+    "Fuentes faltantes: bitacoras: NO_CONSULTADA, calendarios: NO_SOLICITADA, documentos: NO_SOLICITADA, historia_tramites: NO_SOLICITADA"
+  ],
+  "exception": "",
+  "output_hash": "0862db13540f188f71ea0bfe9a45dcf5540bf440990c65ccaa2094c2620189c2",
+  "receipts": {
+    "3685d53fc50d4e99979dbd54c5078fdb": {
+      "kind": "word",
+      "state": "generated",
+      "created_at": "2026-10-08T21:55:47+00:00",
+      "record_ids": [
+        "r0"
+      ],
+      "record_id": "r0",
+      "path": "docs/evidencia_desarrollo_20261008/productos_ficticios/4/Proyectos_revisables.docx",
+      "type": "PC_IE",
+      "court": "LAJA",
+      "rit": "FICT-0-2026",
+      "product_id": "81937ec3ad9e438ca076ff5fac5ae0d5",
+      "product_hash": "240719c2913168a3dccb30260807bbf9f2a6d98e51215758f7e3882c71382bc5"
+    },
+    "3b6f125dd2d64941b0e62b8fca0ba311": {
+      "kind": "word",
+      "state": "generated",
+      "created_at": "2026-10-08T21:55:47+00:00",
+      "record_ids": [
+        "r1"
+      ],
+      "record_id": "r1",
+      "path": "docs/evidencia_desarrollo_20261008/productos_ficticios/4/Proyectos_revisables.docx",
+      "type": "PC_IE",
+      "court": "LAJA",
+      "rit": "FICT-1-2026",
+      "product_id": "612dcb2d1a6b43058b13041d6c0eb145",
+      "product_hash": "2c5015044bd115adaacbbf2ac26a9399e15d0373c4c9806dc0f9c5c7ab94c53c"
+    },
+    "c089fc7465504416aa8c436ba6df984b": {
+      "kind": "word",
+      "state": "generated",
+      "created_at": "2026-10-08T21:55:47+00:00",
+      "record_ids": [
+        "r2"
+      ],
+      "record_id": "r2",
+      "path": "docs/evidencia_desarrollo_20261008/productos_ficticios/4/Proyectos_revisables.docx",
+      "type": "PC_IE",
+      "court": "LAJA",
+      "rit": "FICT-2-2026",
+      "product_id": "447d286ee425419aae1381bf59f424b5",
+      "product_hash": "6b3c606e42cca710d15a39dc63c202615216848ba118055e6dc1d4d90718e738"
+    },
+    "b4138891aef34f55b44778df4775da6b": {
+      "kind": "word",
+      "state": "generated",
+      "created_at": "2026-10-08T21:55:47+00:00",
+      "record_ids": [
+        "r3"
+      ],
+      "record_id": "r3",
+      "path": "docs/evidencia_desarrollo_20261008/productos_ficticios/4/Proyectos_revisables.docx",
+      "type": "PC_IE",
+      "court": "LAJA",
+      "rit": "FICT-3-2026",
+      "product_id": "ec67004a57614f469323bab3dbcf0b5c",
+      "product_hash": "71943d613c6aead9bd33fb8ac2aecd2cbaa04bf261bc8834b7596839e122f6a8"
+    }
+  },
+  "revision": 0,
+  "session_version": 2,
+  "session": {},
+  "original_hash": "",
+  "needs_cross": false,
+  "cross_missing": false,
+  "cross_dates": {
+    "r0": null,
+    "r1": null,
+    "r2": null,
+    "r3": null
+  },
+  "source_scope": "PAQUETE",
+  "mapping": {
+    "programa": "DERIVACION",
+    "tribunal": "TRIBUNAL",
+    "nombre": "NOMBRE",
+    "resolucion": "FEC. RESOLUCIÓN",
+    "rit": "RIT",
+    "rut": "RUT",
+    "espera": "T ESPERA"
+  },
+  "mode": "ESPERA",
+  "sheet": "Trabajo",
+  "header": 1,
+  "as_of": "2026-10-08",
+  "source_hash": "2f8da12a7722d7bf4679bd3561e267308f11892dd001ed747a141b6e06eef190",
+  "sitfa_sources": {},
+  "capture_digest": "4c6c8723c72f0b3138311c51491bfa590b08fad159b15370ecac14f341deacab",
+  "capture_id": "ficticia-20261008-4-1",
+  "capture_config_hash": "ebbb8e7be51dad31edcfb23f1980c48721da14d8526f0719a225633025e01e70",
+  "capture_manifest": {
+    "capture_id": "ficticia-20261008-4-1",
+    "captured_at": "2026-10-08T15:00:00-03:00",
+    "contains_sensitive_data": false,
+    "downloader": {
+      "commit": "FIXTURE_SINTETICA",
+      "version": "2.7.2"
+    },
+    "files": [
+      {
+        "bytes": 673,
+        "path": "data/consultas.csv",
+        "rows": 4,
+        "sha256": "0e8c960dd52f18e996ae1eef0cc11688481a36ee36286efdb1d7a21bab1650c8",
+        "table": "consultas",
+        "type": "normalized_table"
+      },
+      {
+        "bytes": 3345,
+        "path": "data/registros.csv",
+        "rows": 4,
+        "sha256": "c69a1d3cc1d48064fb04a17369173a46c0516ea87e3be2415e13f445284c6223",
+        "table": "registros",
+        "type": "normalized_table"
+      },
+      {
+        "bytes": 82,
+        "path": "data/incidencias.csv",
+        "rows": 0,
+        "sha256": "7d20a7c9c4edbc24845d93319e052e0fd00fc403eee0b953eb135b16ab7ae799",
+        "table": "incidencias",
+        "type": "normalized_table"
+      }
+    ],
+    "mapping_version": "baseline-20261008-v1",
+    "originals_authorized": false,
+    "queries": [
+      {
+        "captured_at": "2026-10-08T15:00:00-03:00",
+        "court_code": "FICTICIO",
+        "court_name": "Laja",
+        "coverage": "COMPLETA",
+        "error": "",
+        "expected_pages": "1",
+        "filters_json": "{}",
+        "history_complete": "false",
+        "institutional_verified": "false",
+        "modality_code": "1",
+        "period_from": "",
+        "period_to": "",
+        "query_id": "q1",
+        "saved_pages": "1",
+        "screen": "seguimiento",
+        "source_system": "RUS",
+        "tab": "Espera",
+        "time_zone": "America/Santiago"
+      },
+      {
+        "captured_at": "2026-10-08T15:00:00-03:00",
+        "court_code": "FICTICIO",
+        "court_name": "Laja",
+        "coverage": "COMPLETA",
+        "error": "",
+        "expected_pages": "1",
+        "filters_json": "{}",
+        "history_complete": "false",
+        "institutional_verified": "false",
+        "modality_code": "2",
+        "period_from": "",
+        "period_to": "",
+        "query_id": "q2",
+        "saved_pages": "1",
+        "screen": "seguimiento",
+        "source_system": "RUS",
+        "tab": "Espera",
+        "time_zone": "America/Santiago"
+      },
+      {
+        "captured_at": "2026-10-08T15:00:00-03:00",
+        "court_code": "FICTICIO",
+        "court_name": "Laja",
+        "coverage": "COMPLETA",
+        "error": "",
+        "expected_pages": "1",
+        "filters_json": "{}",
+        "history_complete": "false",
+        "institutional_verified": "false",
+        "modality_code": "3",
+        "period_from": "",
+        "period_to": "",
+        "query_id": "q3",
+        "saved_pages": "1",
+        "screen": "seguimiento",
+        "source_system": "RUS",
+        "tab": "Espera",
+        "time_zone": "America/Santiago"
+      },
+      {
+        "captured_at": "2026-10-08T15:00:00-03:00",
+        "court_code": "FICTICIO",
+        "court_name": "Laja",
+        "coverage": "COMPLETA",
+        "error": "",
+        "expected_pages": "1",
+        "filters_json": "{}",
+        "history_complete": "false",
+        "institutional_verified": "false",
+        "modality_code": "4",
+        "period_from": "",
+        "period_to": "",
+        "query_id": "q4",
+        "saved_pages": "1",
+        "screen": "seguimiento",
+        "source_system": "RUS",
+        "tab": "Espera",
+        "time_zone": "America/Santiago"
+      }
+    ],
+    "required_features": [],
+    "schema_id": "CSMP_CAPTURE",
+    "schema_version": "1.0.0",
+    "table_states": {
+      "bitacoras": "NO_CONSULTADA",
+      "calendarios": "NO_SOLICITADA",
+      "consultas": "COMPLETA",
+      "documentos": "NO_SOLICITADA",
+      "historia_tramites": "NO_SOLICITADA",
+      "incidencias": "VACIA_COMPROBADA",
+      "registros": "COMPLETA"
+    }
+  },
+  "capture_sources": {
+    "r0": {
+      "capture_id": "ficticia-20261008-4-1",
+      "query_id": "q1",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "FICT-0-2026",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-0",
+      "person_id": "persona-ficticia-0",
+      "program_id": "programa-ficticio",
+      "modality_raw": "1",
+      "modality_code": "1",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "2",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "record_id": "r0",
+      "record_type": "ESPERA",
+      "identity_status": "VERIFICADA",
+      "raw_json": "{\"RIT\": \"FICT-0-2026\", \"RUT\": \"ID-FICTICIO-0\", \"NOMBRE\": \"Persona Ficticia 0\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"Residencial\"}",
+      "normalized_json": "{\"RIT\": \"FICT-0-2026\", \"RUT\": \"ID-FICTICIO-0\", \"NOMBRE\": \"Persona Ficticia 0\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"Residencial\"}"
+    },
+    "r1": {
+      "capture_id": "ficticia-20261008-4-1",
+      "query_id": "q2",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "FICT-1-2026",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-1",
+      "person_id": "persona-ficticia-1",
+      "program_id": "programa-ficticio",
+      "modality_raw": "2",
+      "modality_code": "2",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "3",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "record_id": "r1",
+      "record_type": "ESPERA",
+      "identity_status": "VERIFICADA",
+      "raw_json": "{\"RIT\": \"FICT-1-2026\", \"RUT\": \"ID-FICTICIO-1\", \"NOMBRE\": \"Persona Ficticia 1\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"Ambulatorio\"}",
+      "normalized_json": "{\"RIT\": \"FICT-1-2026\", \"RUT\": \"ID-FICTICIO-1\", \"NOMBRE\": \"Persona Ficticia 1\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"Ambulatorio\"}"
+    },
+    "r2": {
+      "capture_id": "ficticia-20261008-4-1",
+      "query_id": "q3",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "FICT-2-2026",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-2",
+      "person_id": "persona-ficticia-2",
+      "program_id": "programa-ficticio",
+      "modality_raw": "3",
+      "modality_code": "3",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "4",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "record_id": "r2",
+      "record_type": "ESPERA",
+      "identity_status": "VERIFICADA",
+      "raw_json": "{\"RIT\": \"FICT-2-2026\", \"RUT\": \"ID-FICTICIO-2\", \"NOMBRE\": \"Persona Ficticia 2\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"FAE\"}",
+      "normalized_json": "{\"RIT\": \"FICT-2-2026\", \"RUT\": \"ID-FICTICIO-2\", \"NOMBRE\": \"Persona Ficticia 2\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"FAE\"}"
+    },
+    "r3": {
+      "capture_id": "ficticia-20261008-4-1",
+      "query_id": "q4",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "FICT-3-2026",
+      "cause_id": "causa-ficticia-1",
+      "ingreso_id": "ingreso-ficticio-3",
+      "person_id": "persona-ficticia-3",
+      "program_id": "programa-ficticio",
+      "modality_raw": "4",
+      "modality_code": "4",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "5",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "record_id": "r3",
+      "record_type": "ESPERA",
+      "identity_status": "VERIFICADA",
+      "raw_json": "{\"RIT\": \"FICT-3-2026\", \"RUT\": \"ID-FICTICIO-3\", \"NOMBRE\": \"Persona Ficticia 3\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"DCE\"}",
+      "normalized_json": "{\"RIT\": \"FICT-3-2026\", \"RUT\": \"ID-FICTICIO-3\", \"NOMBRE\": \"Persona Ficticia 3\", \"DERIVACION\": \"PRM FICTICIO\", \"TRIBUNAL\": \"Laja\", \"T ESPERA\": \"40\", \"FEC. RESOLUCIÓN\": \"2026-08-01\", \"MODALIDAD\": \"DCE\"}"
+    }
+  },
+  "capture_context": {
+    "r0": {
+      "identity": [
+        "RUS",
+        "FICTICIO",
+        "causa-ficticia-0",
+        "ingreso-ficticio-0"
+      ],
+      "last_center": [],
+      "later": [],
+      "uncertain": [],
+      "recent": [],
+      "findings": [
+        {
+          "rule_id": "CT-06",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-0",
+            "ingreso-ficticio-0"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "condition": "Fuente o identidad necesaria no disponible",
+          "coverage": "COMPLETA",
+          "status": "NO_EVALUABLE",
+          "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "proposed_actions": [],
+          "confidence_class": "INCIERTA"
+        },
+        {
+          "rule_id": "ESPERA.E05_PROYECTO_Y_CORREO",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [
+            "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4"
+          ],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-0",
+            "ingreso-ficticio-0"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "condition": "Regla tradicional conservada; no acredita actuaciones remotas.",
+          "coverage": "COMPLETA",
+          "status": "APLICA",
+          "reason": "Evaluación del motor tradicional.",
+          "proposed_actions": [
+            "programa_espera",
+            "PC_IE"
+          ],
+          "confidence_class": "PARCIAL"
+        }
+      ],
+      "class": "NO_EVALUABLE",
+      "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+      "period_from": "2026-06-08",
+      "period_to": "2026-10-08"
+    },
+    "r1": {
+      "identity": [
+        "RUS",
+        "FICTICIO",
+        "causa-ficticia-0",
+        "ingreso-ficticio-1"
+      ],
+      "last_center": [],
+      "later": [],
+      "uncertain": [],
+      "recent": [],
+      "findings": [
+        {
+          "rule_id": "CT-06",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-0",
+            "ingreso-ficticio-1"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "condition": "Fuente o identidad necesaria no disponible",
+          "coverage": "COMPLETA",
+          "status": "NO_EVALUABLE",
+          "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "proposed_actions": [],
+          "confidence_class": "INCIERTA"
+        },
+        {
+          "rule_id": "ESPERA.E05_PROYECTO_Y_CORREO",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [
+            "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4"
+          ],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-0",
+            "ingreso-ficticio-1"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "condition": "Regla tradicional conservada; no acredita actuaciones remotas.",
+          "coverage": "COMPLETA",
+          "status": "APLICA",
+          "reason": "Evaluación del motor tradicional.",
+          "proposed_actions": [
+            "programa_espera",
+            "PC_IE"
+          ],
+          "confidence_class": "PARCIAL"
+        }
+      ],
+      "class": "NO_EVALUABLE",
+      "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+      "period_from": "2026-06-08",
+      "period_to": "2026-10-08"
+    },
+    "r2": {
+      "identity": [
+        "RUS",
+        "FICTICIO",
+        "causa-ficticia-1",
+        "ingreso-ficticio-2"
+      ],
+      "last_center": [],
+      "later": [],
+      "uncertain": [],
+      "recent": [],
+      "findings": [
+        {
+          "rule_id": "CT-06",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-1",
+            "ingreso-ficticio-2"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "condition": "Fuente o identidad necesaria no disponible",
+          "coverage": "COMPLETA",
+          "status": "NO_EVALUABLE",
+          "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "proposed_actions": [],
+          "confidence_class": "INCIERTA"
+        },
+        {
+          "rule_id": "ESPERA.E05_PROYECTO_Y_CORREO",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [
+            "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4"
+          ],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-1",
+            "ingreso-ficticio-2"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "condition": "Regla tradicional conservada; no acredita actuaciones remotas.",
+          "coverage": "COMPLETA",
+          "status": "APLICA",
+          "reason": "Evaluación del motor tradicional.",
+          "proposed_actions": [
+            "programa_espera",
+            "PC_IE"
+          ],
+          "confidence_class": "PARCIAL"
+        }
+      ],
+      "class": "NO_EVALUABLE",
+      "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+      "period_from": "2026-06-08",
+      "period_to": "2026-10-08"
+    },
+    "r3": {
+      "identity": [
+        "RUS",
+        "FICTICIO",
+        "causa-ficticia-1",
+        "ingreso-ficticio-3"
+      ],
+      "last_center": [],
+      "later": [],
+      "uncertain": [],
+      "recent": [],
+      "findings": [
+        {
+          "rule_id": "CT-06",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-1",
+            "ingreso-ficticio-3"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "condition": "Fuente o identidad necesaria no disponible",
+          "coverage": "COMPLETA",
+          "status": "NO_EVALUABLE",
+          "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+          "proposed_actions": [],
+          "confidence_class": "INCIERTA"
+        },
+        {
+          "rule_id": "ESPERA.E05_PROYECTO_Y_CORREO",
+          "rule_version": "baseline-20261008+context-preview-1",
+          "source_ids": [
+            "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4"
+          ],
+          "record_identity": [
+            "RUS",
+            "FICTICIO",
+            "causa-ficticia-1",
+            "ingreso-ficticio-3"
+          ],
+          "detected_at": "2026-10-08",
+          "fact": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "condition": "Regla tradicional conservada; no acredita actuaciones remotas.",
+          "coverage": "COMPLETA",
+          "status": "APLICA",
+          "reason": "Evaluación del motor tradicional.",
+          "proposed_actions": [
+            "programa_espera",
+            "PC_IE"
+          ],
+          "confidence_class": "PARCIAL"
+        }
+      ],
+      "class": "NO_EVALUABLE",
+      "reason": "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+      "period_from": "2026-06-08",
+      "period_to": "2026-10-08"
+    }
+  },
+  "capture_modes": {
+    "r0": "ESPERA",
+    "r1": "ESPERA",
+    "r2": "ESPERA",
+    "r3": "ESPERA"
+  },
+  "ruleset_version": "baseline-20261008+context-preview-1",
+  "mapping_version": "baseline-20261008-v1",
+  "storage_directory": "docs/evidencia_desarrollo_20261008/productos_ficticios/4/sesion",
+  "rows": [
+    {
+      "id": "r0",
+      "source_row": 2,
+      "values": {
+        "DERIVACION": "PRM FICTICIO",
+        "TRIBUNAL": "Laja",
+        "NOMBRE": "Persona Ficticia 0",
+        "FEC. RESOLUCIÓN": "2026-08-01",
+        "RIT": "FICT-0-2026",
+        "RUT": "ID-FICTICIO-0",
+        "T ESPERA": "40",
+        "NURUS_TIPO_REGISTRO": "ESPERA",
+        "MODALIDAD": "1",
+        "SITFA_CAUSA_RUS": "causa-ficticia-0",
+        "SITFA_INGRESO_RUS": "ingreso-ficticio-0",
+        "SITFA_TRIBUNAL_CODIGO": "FICTICIO",
+        "SITFA_SHA256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+        "SITFA_ARCHIVO": "fuente-ficticia.xls"
+      },
+      "observation": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "actions": [
+        "programa_espera",
+        "PC_IE"
+      ],
+      "warnings": [
+        "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones."
+      ],
+      "excluded": false,
+      "review": {},
+      "sync_base": {
+        "OBSERVACION": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+        "FECHA_OBS": "",
+        "TT": "",
+        "CC": "",
+        "RES": ""
+      },
+      "sync_local": {},
+      "sync_state": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+      "decisions": {
+        "structured": true,
+        "mail": {},
+        "resolution": "auto"
+      },
+      "overrides": {},
+      "word_overrides": {}
+    },
+    {
+      "id": "r1",
+      "source_row": 3,
+      "values": {
+        "DERIVACION": "PRM FICTICIO",
+        "TRIBUNAL": "Laja",
+        "NOMBRE": "Persona Ficticia 1",
+        "FEC. RESOLUCIÓN": "2026-08-01",
+        "RIT": "FICT-1-2026",
+        "RUT": "ID-FICTICIO-1",
+        "T ESPERA": "40",
+        "NURUS_TIPO_REGISTRO": "ESPERA",
+        "MODALIDAD": "2",
+        "SITFA_CAUSA_RUS": "causa-ficticia-0",
+        "SITFA_INGRESO_RUS": "ingreso-ficticio-1",
+        "SITFA_TRIBUNAL_CODIGO": "FICTICIO",
+        "SITFA_SHA256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+        "SITFA_ARCHIVO": "fuente-ficticia.xls"
+      },
+      "observation": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "actions": [
+        "programa_espera",
+        "PC_IE"
+      ],
+      "warnings": [
+        "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones."
+      ],
+      "excluded": false,
+      "review": {},
+      "sync_base": {
+        "OBSERVACION": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+        "FECHA_OBS": "",
+        "TT": "",
+        "CC": "",
+        "RES": ""
+      },
+      "sync_local": {},
+      "sync_state": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+      "decisions": {
+        "structured": true,
+        "mail": {},
+        "resolution": "auto"
+      },
+      "overrides": {},
+      "word_overrides": {}
+    },
+    {
+      "id": "r2",
+      "source_row": 4,
+      "values": {
+        "DERIVACION": "PRM FICTICIO",
+        "TRIBUNAL": "Laja",
+        "NOMBRE": "Persona Ficticia 2",
+        "FEC. RESOLUCIÓN": "2026-08-01",
+        "RIT": "FICT-2-2026",
+        "RUT": "ID-FICTICIO-2",
+        "T ESPERA": "40",
+        "NURUS_TIPO_REGISTRO": "ESPERA",
+        "MODALIDAD": "3",
+        "SITFA_CAUSA_RUS": "causa-ficticia-1",
+        "SITFA_INGRESO_RUS": "ingreso-ficticio-2",
+        "SITFA_TRIBUNAL_CODIGO": "FICTICIO",
+        "SITFA_SHA256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+        "SITFA_ARCHIVO": "fuente-ficticia.xls"
+      },
+      "observation": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "actions": [
+        "programa_espera",
+        "PC_IE"
+      ],
+      "warnings": [
+        "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones."
+      ],
+      "excluded": false,
+      "review": {},
+      "sync_base": {
+        "OBSERVACION": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+        "FECHA_OBS": "",
+        "TT": "",
+        "CC": "",
+        "RES": ""
+      },
+      "sync_local": {},
+      "sync_state": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+      "decisions": {
+        "structured": true,
+        "mail": {},
+        "resolution": "auto"
+      },
+      "overrides": {},
+      "word_overrides": {}
+    },
+    {
+      "id": "r3",
+      "source_row": 5,
+      "values": {
+        "DERIVACION": "PRM FICTICIO",
+        "TRIBUNAL": "Laja",
+        "NOMBRE": "Persona Ficticia 3",
+        "FEC. RESOLUCIÓN": "2026-08-01",
+        "RIT": "FICT-3-2026",
+        "RUT": "ID-FICTICIO-3",
+        "T ESPERA": "40",
+        "NURUS_TIPO_REGISTRO": "ESPERA",
+        "MODALIDAD": "4",
+        "SITFA_CAUSA_RUS": "causa-ficticia-1",
+        "SITFA_INGRESO_RUS": "ingreso-ficticio-3",
+        "SITFA_TRIBUNAL_CODIGO": "FICTICIO",
+        "SITFA_SHA256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+        "SITFA_ARCHIVO": "fuente-ficticia.xls"
+      },
+      "observation": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "actions": [
+        "programa_espera",
+        "PC_IE"
+      ],
+      "warnings": [
+        "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones."
+      ],
+      "excluded": false,
+      "review": {},
+      "sync_base": {
+        "OBSERVACION": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+        "FECHA_OBS": "",
+        "TT": "",
+        "CC": "",
+        "RES": ""
+      },
+      "sync_local": {},
+      "sync_state": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+      "decisions": {
+        "structured": true,
+        "mail": {},
+        "resolution": "auto"
+      },
+      "overrides": {},
+      "word_overrides": {}
+    }
+  ]
+}
