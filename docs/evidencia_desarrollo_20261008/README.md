@@ -97,6 +97,12 @@ El wheel instalado fuera del árbol fuente confirmó contrato, catálogo, cinco
 patches y seis plantillas; fue necesario usar el entorno de build aislado de pip
 porque el venv local no tenía setuptools.
 
+La nueva prueba de concatenación importa el productor del Descargador. El run
+Windows 073713d detectó `reportlab` ausente en el entorno de tests del Asistente
+(la suite local tenía ambas dependencias instaladas). Se declararon reportlab e
+icalendar como dependencias **dev** para reproducir pruebas integrales; no se
+añaden al runtime obligatorio del Asistente ni se omite la prueba.
+
 El descriptor de borrador de tribunal de la fixture conserva una glosa heredada
 que afirma registro en bitácora. Es material para revisión humana y debe corregirse:
 la API de creación de borradores para paquetes rechaza esa afirmación no acreditada.
