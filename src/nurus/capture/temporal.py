@@ -1,5 +1,6 @@
 """Cronología explicada; no atribuye revisiones locales a actuaciones oficiales."""
 from datetime import date,datetime
+from calendar import monthrange
 
 RULESET_VERSION='baseline-20261008+context-preview-1'
 CONTEXT_RULES={
@@ -26,6 +27,13 @@ def moment(row):
     return datetime.fromisoformat(value.replace('Z','+00:00')) if 'T' in value else date.fromisoformat(value)
 
 
+def earliest(as_of):
+    """Ventana de cuatro meses naturales; no busca antecedentes más antiguos."""
+    month=as_of.year*12+as_of.month-1-4
+    year,zero_month=divmod(month,12)
+    return date(year,zero_month+1,min(as_of.day,monthrange(year,zero_month+1)[1]))
+
+
 def chronology(capture,record,as_of,*,fixture_preview=False,event_index=None):
     key=identity(record)
     result={'identity':list(key),'last_center':[],'later':[],'uncertain':[],'recent':[],'findings':[],'class':'NO_EVALUABLE','reason':'Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.'}
@@ -37,7 +45,9 @@ def chronology(capture,record,as_of,*,fixture_preview=False,event_index=None):
     if event_index is None:
         related=[event for table in ('bitacoras','historia_tramites') for event in capture.rows(table) if identity(event)==key and event.get('identity_status')=='VERIFICADA' and event.get('scope','INGRESO')=='INGRESO']
     else:related=event_index.get(key,())
-    result['recent']=[e for e in related if e.get('event_at','') and e['event_at'][:10]<=as_of.isoformat()]
+    start=earliest(as_of)
+    result['period_from']=start.isoformat();result['period_to']=as_of.isoformat()
+    result['recent']=[e for e in related if e.get('event_at','') and start.isoformat()<=e['event_at'][:10]<=as_of.isoformat()]
     if not fixture_preview or capture.manifest['contains_sensitive_data']:
         finding('CT-06',result['reason'],sources=[e['event_id'] for e in result['recent']]);return result
     # Solo preview ficticio explícito. Garantías del manifiesto no activan reglas.

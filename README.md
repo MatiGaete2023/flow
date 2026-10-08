@@ -1,7 +1,7 @@
 # Flow — ejecución del plan NURUS / CSMP
 
 Repositorio de trabajo: **MatiGaete2023/flow**. Baseline: CSMP `0.5.0.dev4`,
-Descargador/extensión `2.7.2`, importados de NuRus `251d5c4` sin cambiar funciones.
+Descargador/extensión `2.7.2`, procedentes de NuRus `251d5c4`.
 
 Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
 [plan y especificaciones](docs/plan_20261008/README.md). Primera entrega:
@@ -9,9 +9,10 @@ Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
 [matriz funcional](docs/MATRIZ_FUNCIONAL_20261008.md) y herramientas de auditoría
 en `tools/flow_baseline_*.py`.
 
-P0 está implementada y pendiente de aceptación G0. El contrato v1, el
-desacoplamiento final y las reglas contextuales siguen pendientes. El manual
-heredado que sigue describe la aplicación de partida.
+El MVP implementa intercambio `CSMP_CAPTURE_V1`, Excel autónomo de bitácoras,
+importación local, revisión y productos. Las nuevas reglas CT están desactivadas;
+historia/PDF y aceptación institucional siguen pendientes. Consulta la
+[guía vigente](docs/GUIA_ENTREGA_MVP_20261008.md) y [trazabilidad](docs/TRAZABILIDAD_EJECUCION_20261008.md).
 
 La especificación 02 ya está incorporada: [análisis y cambios pertinentes](docs/ANALISIS_ESPECIFICACION_02_20261008.md).
 La matriz comprende 115 requisitos de las cuatro especificaciones.
@@ -23,14 +24,16 @@ La matriz comprende 115 requisitos de las cuatro especificaciones.
 Programa de escritorio para revisar el trabajo actual y preparar archivos y borradores. Tiene cinco páginas: Trabajo, Correos, Resoluciones, Resultados y Configuración.
 
 La versión de esta rama conserva las funciones principales de la línea 0.5 y
-añade lectura de bitácoras RUS, sin escritura institucional, mediante el
-Descargador/extensión 2.7.2. Acceso: **Resultados → Más acciones → Bitácoras RUS**.
-Consulta el [informe de integración](docs/INTEGRACION_FINAL_20261008.md)
-antes de usar la distribución. La aceptación con RUS real sigue pendiente.
+añade importación local de paquetes preparados por el Descargador/extensión
+2.7.2. Acceso: **Trabajo → Importar paquete**. Las consultas de bitácoras y su
+Excel se realizan desde Descargador. La aceptación con RUS real sigue pendiente.
 
 ## Instalación
 
-Requiere Windows, Python 3.12 y Microsoft Excel de escritorio para la exportación preservada. La creación de borradores requiere Outlook clásico; Outlook nuevo no ofrece la automatización COM utilizada.
+Requiere Windows y Python 3.12 si se usa la distribución de fuentes. La copia
+Excel de un paquete funciona sin Office; la exportación preservada de Excel legado
+requiere Excel de escritorio. La creación de borradores requiere Outlook clásico;
+Outlook nuevo no ofrece la automatización COM utilizada.
 
 Ejecuta `Instalar_CSMP.bat` y después `Abrir_CSMP.bat`. Para instalar el wheel desde PowerShell:
 

@@ -95,7 +95,7 @@ def test_schema_fixtures_and_optional_column(tmp_path):
     import csv
     from io import StringIO
     from jsonschema import Draft202012Validator
-    schema=json.loads((Path(__file__).parents[1]/'contracts/csmp_capture_v1/manifest.schema.json').read_text())
+    schema=json.loads((Path(__file__).parents[1]/'contracts/csmp_capture_v1/manifest.schema.json').read_text(encoding='utf-8'))
     Draft202012Validator.check_schema(schema)
     for partial in (True,False):
         m,t=fixture(partial=partial);path=write_capture(tmp_path/f'{partial}-schema.zip',m,t)

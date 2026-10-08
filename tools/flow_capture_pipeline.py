@@ -29,7 +29,7 @@ def run(root,count,partial=True):
     start=perf_counter();drafts=prepare_required_drafts(work,modalities='Residencial, Ambulatorio, FAE y DCE',period='octubre 2026',defer_attachments=True)
     # Descriptores de borrador; jamás instancia COM/Outlook ni envía mensajes.
     for draft in drafts:draft.to='ficticio@example.test';draft.cc='copia@example.test'
-    (root/'Borradores.json').write_text(json.dumps([{'kind':d.kind,'subject':d.subject,'to':d.to,'cc':d.cc,'body':d.body,'record_ids':d.record_ids,'attachments_pending':bool(d.roster),'requires_human_review':True} for d in drafts],ensure_ascii=False,indent=2,default=str))
+    (root/'Borradores.json').write_text(json.dumps([{'kind':d.kind,'subject':d.subject,'to':d.to,'cc':d.cc,'body':d.body,'record_ids':d.record_ids,'attachments_pending':bool(d.roster),'requires_human_review':True} for d in drafts],ensure_ascii=False,indent=2,default=str),encoding='utf-8')
     stages['drafts']=perf_counter()-start
     # Los proyectos siguen siendo documentos revisables con marcadores explícitos.
     if count<=100:
@@ -41,10 +41,10 @@ def run(root,count,partial=True):
         if projects:generate_projects(work,projects,root/'Proyectos_revisables.docx')
         for draft in drafts:
             if draft.roster:generate(draft,root)
-        (root/'Proyectos_pendientes.json').write_text(json.dumps(errors,ensure_ascii=False))
+        (root/'Proyectos_pendientes.json').write_text(json.dumps(errors,ensure_ascii=False),encoding='utf-8')
     work.save(root/'sesion');current,peak=tracemalloc.get_traced_memory();tracemalloc.stop()
     result={'rows':count,'partial':partial,'schema':capture.manifest['schema_version'],'stages_seconds':{k:round(v,4) for k,v in stages.items()},'peak_bytes':peak,'package_bytes':package.stat().st_size,'reads_institutional':0,'writes_institutional':0,'outlook_saved':0}
-    (root/'benchmark.json').write_text(json.dumps(result,indent=2)+'\n');return result
+    (root/'benchmark.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8');return result
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('output',type=Path);parser.add_argument('--rows',type=int,nargs='+',default=[100,500,2000]);parser.add_argument('--complete',action='store_true');args=parser.parse_args()
