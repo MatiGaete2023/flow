@@ -99,6 +99,11 @@ origen.write_text('{"Nombre": "PRM FICTICIO", "Mail": "prm@example.test", "Direc
 assert app.cfg.contacts_missing and 'Importar contactos' in app.status.get()
 app.update()
 assert app._contacts_dialog.winfo_exists() and app._contacts_dialog.title()=='Importar contactos'
+from customtkinter import CTkButton
+dialog=app._contacts_dialog
+buttons=[child for child in dialog.winfo_children() if isinstance(child,CTkButton)]
+assert len(buttons)==2
+assert all(button.winfo_rooty()+button.winfo_height() <= dialog.winfo_rooty()+dialog.winfo_height() for button in buttons)
 with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(origen)):
     app._import_contacts()
 assert app.cfg.data['contactos']=={'PRM FICTICIO':'prm@example.test'}
@@ -145,3 +150,16 @@ def test_defaults_y_golden_no_cargan_directorio_local_del_usuario(tmp_path):
     assert 'PRM LOCAL FICTICIO' not in base['contactos']
     cfg = Configuration(tmp_path / 'perfil')
     assert cfg.data['contactos'] == {'PRM LOCAL FICTICIO': 'usuario-local@example.invalid'}
+
+
+def test_perfil_anterior_conserva_contactos_al_pedir_importacion(tmp_path):
+    profile = tmp_path / 'perfil_anterior'
+    cfg = Configuration(profile)
+    datos = cfg.data
+    datos['contactos'] = {'PRM CONSERVADO FICTICIO': 'conservado@example.invalid'}
+    datos['firma'] = 'Edición local ficticia'
+    cfg.save(datos)
+    recuperada = Configuration(profile)
+    assert recuperada.contacts_missing
+    assert recuperada.data['contactos'] == {'PRM CONSERVADO FICTICIO': 'conservado@example.invalid'}
+    assert recuperada.data['firma'] == 'Edición local ficticia'

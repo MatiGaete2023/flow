@@ -25,8 +25,9 @@ from nurus.rus.reader import list_workbook_sheets
 from nurus.rus.columns import normalize
 
 
-CONTACTS_MISSING=('Sin directorio local de contactos: se usan 3 contactos ficticios de ejemplo. '
-                  'Pulsa «Importar contactos» y elige tu contactos_base.json o el catastro Excel.')
+CONTACTS_MISSING=('Falta el archivo local de contactos. Pulsa «Importar contactos» y elige '
+                  'tu contactos_base.json anterior o el catastro Excel. '
+                  'Las instalaciones nuevas usan tres contactos ficticios de ejemplo.')
 
 class App(ctk.CTk):
     def __init__(self,configuration=None):
@@ -95,7 +96,7 @@ class App(ctk.CTk):
         dialog=tk.Toplevel(self)
         dialog.title('Importar contactos')
         dialog.transient(self)
-        dialog.geometry('520x180')
+        dialog.geometry('520x240')
         self._contacts_dialog=dialog
         ttk.Label(dialog,text=CONTACTS_MISSING,wraplength=470).pack(fill='x',padx=20,pady=20)
         ttk.Button(dialog,text='Seleccionar archivo de contactos…',
