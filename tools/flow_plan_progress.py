@@ -32,7 +32,7 @@ DEPENDENCIES={
  'P10':'CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9.',
  'P11':'INT reales y ampliadas NO EJECUTADAS; MVP local comprobado.',
  'P12':'P9/P10 y acta institucional; ampliación excluida del MVP.',
- 'P13':'CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes.',
+ 'P13':'CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes.',
 }
 
 
@@ -79,9 +79,9 @@ def main():
            'Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional.',state='EN_CURSO')
     update('F15','src/nurus/capture/requests.py;descargador/solicitud_antecedentes.py',
            'tests/test_capture_temporal_products.py','Solicitud declarativa local; no ejecuta consultas.')
-    update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1',
-           'tests/test_capture_build_identity.py;tests/test_capture_selfcheck.py;tests/test_windows_installer_contract.py;tests/test_current_release_contract.py',
-           'CI 01e013d SUCCESS; verificación autónoma ampliada de productos v1 implementada y probada localmente. Nueva CI Windows por registrar; Windows 10 institucional/Office pendientes.')
+    update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1;tools/windows_process_check.ps1',
+           'tests/test_capture_build_identity.py;tests/test_capture_selfcheck.py;tests/test_windows_installer_contract.py;tests/test_windows_process_check.py;tests/test_current_release_contract.py;.github/workflows/verify-delivered-installer.yml',
+           'CI 6d3555a SUCCESS: productos v1 desde EXE autónomo, paquete SHA coherente e instalador; 396a643 verifica eliminación real y datos externos intactos. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes.')
     update('F10 R-T17 R-T18 R-T19 R-T20 R-T21 INT-14','src/nurus/capture/temporal.py',
            'tests/test_capture_temporal_products.py','Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE.',
            state='EN_CURSO',result='NO EJECUTADO')

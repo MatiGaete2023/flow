@@ -1,0 +1,33 @@
+[
+  {
+    "component": "Asistente",
+    "lines": [
+      "2026-10-09T03:23:35.6471047Z 584 passed, 1 skipped in 234.55s (0:03:54)\r",
+      "2026-10-09T03:25:18.4914923Z INICIO: EXE autónomo CSMP (plazo 180 s)\r",
+      "2026-10-09T03:25:22.5194683Z APROBADO: EXE autónomo CSMP\r",
+      "2026-10-09T03:26:22.8455353Z 169 passed, 57 subtests passed in 35.64s\r",
+      "2026-10-09T03:28:10.4441516Z INICIO: verificación SITFA_Descargador/SITFA_Descargador.exe --verificar-paquete (plazo 180 s)\r",
+      "2026-10-09T03:28:18.6655098Z APROBADO: verificación SITFA_Descargador/SITFA_Descargador.exe --verificar-paquete\r",
+      "2026-10-09T03:28:18.8919747Z INICIO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-paquete (plazo 180 s)\r",
+      "2026-10-09T03:28:24.3844935Z APROBADO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-paquete\r",
+      "2026-10-09T03:28:24.3885740Z INICIO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-integracion (plazo 180 s)\r",
+      "2026-10-09T03:28:27.7214800Z APROBADO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-integracion\r",
+      "2026-10-09T03:29:04.8374134Z INICIO: compilar instalador\r",
+      "2026-10-09T03:29:56.1344541Z APROBADO: compilar instalador\r",
+      "2026-10-09T03:29:56.1674611Z INICIO: instalación silenciosa (plazo 180 s)\r",
+      "2026-10-09T03:30:08.5319630Z APROBADO: instalación silenciosa\r",
+      "2026-10-09T03:30:08.5687110Z INICIO: productos v1 desde CSMP instalado (plazo 180 s)\r",
+      "2026-10-09T03:30:18.8693039Z APROBADO: productos v1 desde CSMP instalado\r",
+      "2026-10-09T03:30:18.8722746Z INICIO: reinstalación silenciosa (plazo 180 s)\r",
+      "2026-10-09T03:30:28.9499719Z APROBADO: reinstalación silenciosa\r",
+      "2026-10-09T03:30:28.9500906Z INICIO: desinstalación silenciosa (plazo 180 s)\r",
+      "2026-10-09T03:30:28.9709483Z APROBADO: desinstalación silenciosa\r"
+    ]
+  },
+  {
+    "component": "Descargador",
+    "lines": [
+      "2026-10-09T03:19:16.9648208Z 169 passed, 57 subtests passed in 32.22s\r"
+    ]
+  }
+]

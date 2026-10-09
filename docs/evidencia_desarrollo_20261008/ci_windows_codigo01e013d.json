@@ -1,0 +1,94 @@
+{
+  "checked_at": "2026-10-08T22:38:17Z",
+  "source_commit": "01e013d8c6f2a89fb5309fc6f1952bf68a82b715",
+  "assistant": {
+    "run_id": 37853564022,
+    "conclusion": "success",
+    "python": [
+      "3.12",
+      "3.13",
+      "3.14"
+    ],
+    "python_312_tests": {
+      "passed": 557,
+      "skipped": 1
+    },
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022",
+    "artifacts": [
+      {
+        "id": 11583402738,
+        "name": "CSMP-Integral-Windows-dev4",
+        "size_bytes": 67464743,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583402738"
+      },
+      {
+        "id": 11583382044,
+        "name": "CSMP-Windows-interface",
+        "size_bytes": 246816,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583382044"
+      },
+      {
+        "id": 11583253391,
+        "name": "CSMP-Instalador-Windows-dev4",
+        "size_bytes": 46481814,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583253391"
+      },
+      {
+        "id": 11583198364,
+        "name": "CSMP-Descargador-Integral-dev4-SITFA-272",
+        "size_bytes": 108073733,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583198364"
+      },
+      {
+        "id": 11582928170,
+        "name": "nurus-wheel-windows-latest-py3.13",
+        "size_bytes": 449635,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11582928170"
+      },
+      {
+        "id": 11582863647,
+        "name": "RUS-Registro-Actual-Windows",
+        "size_bytes": 11159180,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11582863647"
+      },
+      {
+        "id": 11582829164,
+        "name": "nurus-wheel-windows-latest-py3.12",
+        "size_bytes": 449626,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11582829164"
+      },
+      {
+        "id": 11582788559,
+        "name": "CSMP-Windows-dev4",
+        "size_bytes": 3033322,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11582788559"
+      },
+      {
+        "id": 11582749420,
+        "name": "nurus-wheel-windows-latest-py3.14",
+        "size_bytes": 450127,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11582749420"
+      }
+    ]
+  },
+  "downloader": {
+    "run_id": 37853563991,
+    "conclusion": "success",
+    "passed": 169,
+    "subtests_passed": 57,
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853563991",
+    "artifacts": [
+      {
+        "id": 11582388456,
+        "name": "Descargador-SITFA-2.7.2-Windows",
+        "size_bytes": 29182436,
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37853563991/artifacts/11582388456"
+      }
+    ]
+  },
+  "joint_verified": true,
+  "installer_reinstallation_uninstallation_data_preserved": true,
+  "institutional_acceptance": "DIFERIDA_POR_USUARIO",
+  "scope": "CI ficticia; no certifica SITFA/RUS, Windows 10 institucional, Excel 2010 ni Outlook 365. No release/merge.",
+  "later_checkpoints": "Documentación posterior no cambia el código distribuido de este SHA."
+}

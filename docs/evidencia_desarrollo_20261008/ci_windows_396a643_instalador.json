@@ -1,0 +1,36 @@
+{
+  "run_id": 37880150341,
+  "job_id": 113657744511,
+  "conclusion": "success",
+  "url": "https://github.com/MatiGaete2023/flow/actions/runs/37880150341",
+  "verification_source_commit": "396a643d7cd5e540ee6b34ffeb9c00708d1c90f6",
+  "binary_source_commit": "6d3555a14fe4b6966f5091dc6a7db51a1e54e521",
+  "reused_installer_run_id": 37878632095,
+  "installation_verified": true,
+  "installed_pipeline_verified": true,
+  "reinstallation_verified": true,
+  "installed_directory_removed": true,
+  "external_synthetic_data_preserved": true,
+  "artifact": {
+    "id": 11593803911,
+    "name": "CSMP-Delivered-Installer-Verification-6d3555a",
+    "size_bytes": 159934,
+    "digest": "sha256:c156770091d2b4b2626cc1ccd0bda199db63386b51982d62458137ded16a0f97",
+    "expires_at": "2027-01-07T03:37:47Z",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37880150341/artifacts/11593803911"
+  },
+  "digest_source": "GitHub Actions API; no recomputado localmente",
+  "evidence_source": "Aserciones ejecutadas en Windows y logs del job; JSON detallado incluido en el artefacto",
+  "institutional_acceptance": "NO_EJECUTADO",
+  "executed_log_lines": [
+    "2026-10-09T03:38:03.9684960Z INICIO: instalación del artefacto publicado (plazo 180 s)",
+    "2026-10-09T03:38:11.9241065Z APROBADO: instalación del artefacto publicado",
+    "2026-10-09T03:38:11.9287396Z INICIO: productos desde artefacto instalado (plazo 180 s)",
+    "2026-10-09T03:38:16.4633902Z APROBADO: productos desde artefacto instalado",
+    "2026-10-09T03:38:16.5339332Z INICIO: reinstalación del artefacto publicado (plazo 180 s)",
+    "2026-10-09T03:38:23.8493850Z APROBADO: reinstalación del artefacto publicado",
+    "2026-10-09T03:38:23.8507163Z INICIO: lanzador de desinstalación (plazo 180 s)",
+    "2026-10-09T03:38:25.3095980Z APROBADO: lanzador de desinstalación",
+    "2026-10-09T03:38:25.9702952Z APROBADO: carpeta de aplicación eliminada y datos externos conservados"
+  ]
+}

@@ -6,7 +6,7 @@
 **Baseline NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`
 **P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`
 **Documento 02 incorporado:** `6c520f8e49e40c6c7d5379492e6064a55b28c0fb`
-**Código compilado y verificado Windows:** `01e013d8c6f2a89fb5309fc6f1952bf68a82b715`
+**Código compilado y verificado Windows:** `6d3555a14fe4b6966f5091dc6a7db51a1e54e521`
 El último checkpoint se obtiene con `git log -1`.
 
 ## Autorización y entrega actual
@@ -42,17 +42,34 @@ No afirmar que todos los gates institucionales están cerrados.
 
 ## Descargas del código verificado
 
-- [Paquete conjunto CSMP + Descargador + extensión + manuales](https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583198364).
-- [Instalador del Asistente y evidencia ficticia](https://github.com/MatiGaete2023/flow/actions/runs/37853564022/artifacts/11583253391).
-- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37853563991/artifacts/11582388456).
+- [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593867357).
+- [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11594002109).
+- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37878632105/artifacts/11594120109).
 
-Ambos workflows del SHA 01e013d finalizaron SUCCESS. Asistente Windows Python
-3.12: 557 aprobadas, 1 omitida; 3.13/3.14 también aprobados. Descargador: 169
-aprobadas y 57 subtests. El paquete conjunto comprobó SHA coherente entre ambos
-EXE; instalador/reinstalación/desinstalación conservaron datos ficticios.
-Los artefactos Actions caducan según la retención del repositorio: conservar
-el paquete localmente y su SHA. Un checkpoint posterior solo de documentación
-no cambia el código distribuido ni identifica otros binarios.
+Ambos workflows del SHA `6d3555a` finalizaron SUCCESS el 2026-10-09.
+Asistente Python 3.12/3.13/3.14 aprobados (3.12: 584 aprobadas, 1 omitida).
+Descargador: 169 aprobadas y 57 subtests. El EXE autónomo, el paquete conjunto y
+el instalador comprobaron el flujo de productos v1 con datos ficticios. Se verificó
+SHA coherente entre ambos EXE y conservación de datos al reinstalar/desinstalar.
+
+La verificación adicional [396a643, SUCCESS](https://github.com/MatiGaete2023/flow/actions/runs/37880150341)
+reutilizó ese instalador: instalación, productos desde el EXE instalado,
+reinstalación, desaparición de la carpeta completa y conservación de un dato
+ficticio externo. Espera la eliminación real hasta 60 s, porque el retorno del
+lanzador de Inno puede anteceder a su proceso temporal. No cambia el binario
+`6d3555a`. [Logs y JSON de entrega](https://github.com/MatiGaete2023/flow/actions/runs/37880150341/artifacts/11593803911);
+resumen en `ci_windows_396a643_instalador.json`.
+
+Metadatos y digests ZIP informados por GitHub: `docs/evidencia_desarrollo_20261008/ci_windows.json`.
+La descarga local de los ZIP devolvió HTTP 403; no se afirma recomputación local
+de sus hashes. Las comprobaciones de binarios fueron ejecutadas en CI. El
+paquete conjunto conserva sus JSON de verificación y SHA de ambos EXE.
+El registro anterior está en `ci_windows_codigo01e013d.json`; el fallo CP1252 y
+la corrección se conservan en `ci_windows_1e50f95_fallo.json`.
+
+Los artefactos Actions caducan según la retención del repositorio. Un checkpoint
+posterior de documentación no cambia el código distribuido: estos binarios
+corresponden a `6d3555a`, no al SHA de ese checkpoint.
 
 ## Comandos reproducibles
 
@@ -72,6 +89,13 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 
 ## Al retomar
 
+**Cierre 2026-10-09:** CI del SHA `6d3555a` aprobada en ambos workflows. Los límites
+por proceso, aislamiento GUI Windows y diagnóstico del instalador están verificados.
+El run adicional `37880150341` confirma la eliminación real de la aplicación y
+datos externos intactos usando el instalador publicado de ese mismo código.
+Los párrafos siguientes conservan el historial de incidencias ya resueltas.
+
+
 ### Continuación de verificación y actas
 
 Se amplió `--verificar-paquete` del Asistente: además del contrato comprueba
@@ -89,8 +113,8 @@ campos y límites en el manual de aceptación pendiente. Validar no aprueba gate
 
 Regresión de esta continuación: 576 aprobadas/6 omitidas Asistente, 169 aprobadas
 y 57 subtests Descargador; 17 productos golden conservan paridad. Logs con prefijo
-`flow-continuacion-` en la evidencia. La nueva CI Windows debe registrarse por
-su propio SHA antes de sustituir los enlaces al código anterior verificado.
+`flow-continuacion-` en la evidencia. CI Windows del SHA corregido `6d3555a` aprobada; enlaces y metadatos actualizados
+arriba. El checkpoint documental posterior no cambia los binarios.
 
 El run Windows `37857365015` del SHA `1e50f95` detectó CP1252 en stderr del
 validador de actas (580 pasaron, una falló, una omitida). Se corrige stdout/stderr
@@ -117,8 +141,10 @@ la ruta de subprocess; esa prueba no sustituye la nueva CI Windows. Evidencia en
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.
-2. Comprobar resultados de workflows Windows del último SHA de la PR; atender
-   fallos de empaquetado sin eliminar tests. Conservar mismo SHA para EXE/extensión.
+2. Usar los artefactos aprobados del código `6d3555a` y la verificación adicional
+   del instalador `396a643`. Los checkpoints documentales no requieren recompilar.
+   Si se modifica código, verificar su nueva CI sin eliminar tests y conservar
+   mismo SHA para ambos EXE/extensión.
 3. Leer [aceptación pendiente](docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).
    El usuario confirmó que no hay entorno/evidencia disponibles y que SITFA/RUS
    se usarán después. La aceptación real queda diferida por esa decisión;
