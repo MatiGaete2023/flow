@@ -1,6 +1,6 @@
-; Build after PyInstaller: ISCC.exe installer\CSMP.iss
+; Build after PyInstaller: ISCC.exe "/DAppVersion=<versión de src/nurus/__init__.py>" installer\CSMP.iss
 #ifndef AppVersion
-  #define AppVersion "0.5.0-dev4"
+  #error AppVersion es obligatoria: pasarla con /DAppVersion desde la fuente única (tools/write_build_meta.py --versiones)
 #endif
 [Setup]
 AppId={{AB37C9B2-69F7-47B3-9D78-3BA9D86A63A9}
