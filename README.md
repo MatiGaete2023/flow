@@ -3,6 +3,8 @@
 Repositorio de trabajo: **MatiGaete2023/flow**. Entrega: CSMP `0.5.0.dev4`,
 Descargador/extensión `2.7.5`. Baseline de procedencia: NuRus `251d5c4`.
 
+**Resumen completo:** [fundamentos, planificación, problemas, implementación, pruebas y próximos pasos](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md).
+
 **Corrección del ZIP:** [recuperar o excluir referencias de bitácoras no disponibles](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
 
 **Para aprender a usar el Descargador:** [manual con imágenes](docs/manual_descargador_2_7_4/README.md),
