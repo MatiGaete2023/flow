@@ -1,0 +1,33 @@
+{
+  "run_id": 37922550724,
+  "job_id": 113793726664,
+  "source_commit": "76bae9c9754350e6c4151231245737516278a342",
+  "python": "3.14",
+  "result": "FALLO_DE_PREPARACION_DE_PRUEBAS",
+  "passed": 607,
+  "skipped": 1,
+  "errors": 8,
+  "cause": "pytest convierte parámetros de texto extenso en IDs; PYTEST_CURRENT_TEST supera 32767 caracteres en Windows.",
+  "correction": "IDs breves explícitos, textos y cuatro casos conservados; ac7fe5b5ec742c5e967e1b5ff0a7af3e5e2b5c94.",
+  "executed_lines": [
+    "2026-10-09T11:19:56.3101791Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:19:58.4967881Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:00.6726391Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:02.8399501Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:02.9485061Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:03.0573424Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:03.1888680Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:03.2973408Z E   ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:04.3734886Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-True] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:06.5218777Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-True] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:08.6688367Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-False] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:10.7906509Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-False] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:11.9531704Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … 0\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600x-True] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:12.0608248Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … 0\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600x-True] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:12.1664763Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … 0\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600-False] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:12.2718141Z ERROR tests/test_review_corrections.py::test_excel_limit_checked_before … [ID extenso omitido] … 0\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600\\U0001f600-False] - ValueError: the environment variable is longer than 32767 characters\r",
+    "2026-10-09T11:20:12.3250878Z 607 passed, 1 skipped, 8 errors in 216.81s (0:03:36)\r",
+    "2026-10-09T11:20:12.3271092Z ##[error]Process completed with exit code 1.\r"
+  ],
+  "run_conclusion": "cancelled (nuevo push; Python 3.13/3.14 fallaron por IDs, 3.12 fue cancelado)"
+}
