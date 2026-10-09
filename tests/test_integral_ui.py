@@ -40,6 +40,54 @@ open_editor(app,'mail');open_editor(app,'word');app.update()
 """)
 
 
+def test_save_mail_batch_with_excel_and_roster_files_excludes_only_invalid_mail(tmp_path):
+    run_gui(tmp_path,"""
+from types import SimpleNamespace
+from unittest.mock import patch
+from shutil import copyfile
+from nurus.personal.outputs import Draft
+from nurus.personal.product_checks import check_products
+from nurus.personal.current_tools import summary
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+app.work.export(root/'copia.xlsx',backend='portable',reduced_fidelity=True)
+copyfile(app.work.path,root/'nomina.xlsx')
+valid=Draft('Correo válido','Texto revisado',to='equipo@example.test',attachments=[str(root/'nomina.xlsx')],
+            roster=[{'program':'Programa ficticio','generated':str(root/'nomina.xlsx'),'rows':[]}])
+invalid=Draft('Correo pendiente','Texto pendiente',to='')
+app.drafts=[valid,invalid];app.draft_index=None
+checks=check_products(app.work,app.drafts,[])
+assert any(c.kind=='Excel' and not c.issues and c.target is None for c in checks)
+assert any(c.kind=='Nómina Excel' and not c.issues and c.target is None for c in checks)
+confirmed=[];saved=[]
+def confirm(parent,drafts,excluded):
+    assert len(drafts)==1 and drafts[0] is valid
+    assert len(excluded)==1 and 'Correo pendiente' in excluded[0]
+    assert 'equipo@example.test' in summary(drafts)
+    confirmed.append(True);return True
+def save(product,**kwargs):
+    assert confirmed and kwargs['confirmed'] is True
+    saved.append(product);return SimpleNamespace(entry_id='ENTRY-FICTICIA',store_id='STORE-FICTICIA')
+def run(label,operation,done):
+    result=operation();assert not result['errors'],result['errors'];done(result)
+with patch('nurus.personal.current_tools.confirm_drafts',side_effect=confirm), patch('nurus.personal.outputs.save_draft',side_effect=save), patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(app,'_run',side_effect=run):
+    app._send_all()
+    assert len(saved)==1 and saved[0].recipient=='equipo@example.test'
+    assert '1 borradores guardados' in app.status.get()
+    assert len(app.work.receipts)==1
+    app._send_all()
+    assert len(saved)==1 and '1 ya procesados' in app.status.get()
+app.work.receipts.clear();confirmed.clear();saved.clear()
+with patch('nurus.personal.current_tools.confirm_drafts',return_value=False), patch('nurus.personal.outputs.save_draft',side_effect=save), patch.object(app,'_capture_mail'), patch.object(app,'_run',side_effect=run):
+    app._send_all()
+    assert not saved and not app.work.receipts
+app.drafts=[invalid]
+with patch('nurus.personal.current_tools.confirm_drafts') as confirm, patch.object(app,'_capture_mail'):
+    try:app._send_all();raise AssertionError('No debe ofrecer guardar archivos como correos')
+    except ValueError as error:assert 'No hay borradores completos' in str(error)
+    assert not confirm.called
+""")
+
+
 def test_hidden_selection_and_view_preferences_survive_refresh(tmp_path):
     run_gui(tmp_path,"""
 app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2));app._show_work()

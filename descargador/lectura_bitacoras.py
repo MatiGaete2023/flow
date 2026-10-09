@@ -170,7 +170,7 @@ class DiaryRunner:
             if not path.is_file() or path.stat().st_size>8*1024*1024:return False
             data=path.read_bytes()
             if hashlib.sha256(data).hexdigest()!=previous.get('sha256'):return False
-            snapshot=read(data.decode('utf-8-sig'),record['params'])
+            snapshot=read(data,record['params'])
             annotate_visible(record,snapshot)
             record.update({k:previous[k] for k in ('archivo','sha256','capturada','entradas')})
             record['estado']='LEIDA';record['reutilizada']=True
@@ -241,7 +241,7 @@ class DiaryRunner:
                                             raise m.PocError('La respuesta de bitácora no coincide con la solicitud.')
                                         from datetime import datetime
                                         datetime.fromisoformat(result['startedAt'].replace('Z','+00:00'))
-                                        snapshot=read(data.decode('utf-8-sig'),record['params'])
+                                        snapshot=read(data,record['params'])
                                         annotate_visible(record,snapshot)
                                         name='bitacora-'+record['clave'][:24]+'-'+digest[:16]+'.html'
                                         path=folder/name

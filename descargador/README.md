@@ -1,6 +1,13 @@
-# Descargador SITFA · prototipo integral 2.7.0
+# Descargador SITFA · prototipo integral 2.7.3
 
-**Entrega 2.7.0, 8 de octubre de 2026.** Incluye la lectura de bitácoras y la
+**Entrega 2.7.3, 9 de octubre de 2026.** Corrige la lectura de bitácoras
+Windows-1252/Latin-1, preserva los originales y permite reutilizarlos al reintentar.
+Los PDF vacíos identifican tribunal, modalidad, pestaña y fechas en la captura;
+se rechazan si falta el contexto o los controles cambian. Actualiza también la
+extensión a 2.7.3 y recárgala en `chrome://extensions` antes de conectar.
+[Correcciones y actualización desde ZIP](../docs/REGRESIONES_PRUEBAS_USUARIO_20261009.md).
+
+**Antecedente 2.7.0, 8 de octubre de 2026.** Incluye la lectura de bitácoras y la
 reconstrucción visual del PDF en una misma extensión. El descargador acredita
 sus capacidades ante CSMP y comprueba las de la extensión antes de operar.
 Preserva pausa, apariencia, favoritos relativos, formato de Excel, calendarios

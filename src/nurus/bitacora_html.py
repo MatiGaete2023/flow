@@ -28,6 +28,26 @@ IDENTITY_FIELDS = ('COD_Tribunal', 'CRR_IdCausa', 'ID_Ingreso', 'COD_Etapa', 'TI
 FULL_FIELDS = ('HOBS_Centro_', 'HOBS_Tribunal_', 'HCOD_Estado_', 'HFUN_Tribunal_', 'HFLG_Envio_')
 
 
+def decode_snapshot(data):
+    """Decodifica sin reemplazos; SITFA antiguo usa Windows-1252/Latin-1."""
+    if isinstance(data, str): return data
+    if not isinstance(data, bytes): raise ValueError('La respuesta de bitácora no contiene HTML válido.')
+    declared = re.search(rb'<meta\b[^>]*\bcharset\s*=\s*[\"\']?\s*([a-zA-Z0-9_-]+)', data[:8192], re.I)
+    charset = declared.group(1).decode('ascii').lower() if declared else ''
+    supported = {'': '', 'utf-8': 'utf-8-sig', 'utf8': 'utf-8-sig',
+                 'windows-1252': 'cp1252', 'cp1252': 'cp1252',
+                 'iso-8859-1': 'cp1252', 'latin1': 'cp1252', 'latin-1': 'cp1252'}
+    if charset not in supported:
+        raise ValueError('Codificación HTML de bitácora no admitida: '+charset)
+    try:
+        if data.startswith(b'\xef\xbb\xbf'): return data.decode('utf-8-sig')
+        if charset: return data.decode(supported[charset])
+        try: return data.decode('utf-8-sig')
+        except UnicodeDecodeError: return data.decode('cp1252')
+    except UnicodeDecodeError:
+        raise ValueError('No se pudo decodificar íntegramente el HTML de bitácora; conserva el original y reintenta.') from None
+
+
 def _date(text, *, optional=False):
     text = text.strip()
     if optional and text in ('', '---'): return ''
@@ -45,6 +65,8 @@ def _one_input(form, name):
 
 def read_snapshot(text, params, *, source='', captured_at=''):
     """Vincula cada fila con sus campos ocultos por ID, nunca por posición."""
+    raw = text.encode('utf-8') if isinstance(text, str) else text
+    text = decode_snapshot(text)
     if params.get('tipo_popUp') != '12': raise ValueError('La captura no corresponde a una bitácora RUS.')
     # RUS añade scripts después de </html> en esta ventana.
     if not re.search(r'</html\s*>', text, re.I):
@@ -111,5 +133,5 @@ def read_snapshot(text, params, *, source='', captured_at=''):
     # Una captura no acredita la cobertura actual del sitio ni una consulta completa de otros ingresos.
     return {**base, 'entries': entries, 'coverage': 'PARCIAL', 'captured_at': captured_at,
             'stage_code': context['COD_Etapa'], 'source': source, 'row_metadata': row_metadata,
-            'warnings': warnings, 'html_sha256': sha256(text.encode('utf-8')).hexdigest(),
+            'warnings': warnings, 'html_sha256': sha256(raw).hexdigest(),
             'captures': 1, 'error': 'Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.'}

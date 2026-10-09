@@ -23,7 +23,7 @@ def import_lote(manifest):
                     raise ValueError('Archivo de bitácora fuera de alcance.')
                 body=path.read_bytes()
                 if sha256(body).hexdigest()!=record['sha256']:raise ValueError('La copia HTML cambió después de su verificación.')
-                query=read_snapshot(body.decode('utf-8-sig'),record['params'],source=name,captured_at=record['capturada'])
+                query=read_snapshot(body,record['params'],source=name,captured_at=record['capturada'])
                 if tuple(query[k] for k in ('tribunal_codigo','causa_id','ingreso_id'))!=identity:
                     raise ValueError('La bitácora pertenece a otro ingreso.')
                 notes=visible_identity_warnings(query,record['rit'],record['nombre'])

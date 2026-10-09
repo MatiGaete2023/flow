@@ -168,13 +168,26 @@ class BatchRunner:
                     if self.cancel.is_set():raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
                     self.emit('status','Preparando captura de la consulta sin registros…')
                     try:
-                        native=self.bridge.call('evidence_open',{'pairs':pairs,'label':profile.label})
+                        context=[['Tribunal',self.catalog['tribunales'][selection.tribunal]+' (código '+selection.tribunal+')']]
+                        if selection.screen=='seguimiento':
+                            context.extend([['Modalidad',self.catalog['modalidades'][selection.modality]],['Pestaña',selection.tab]])
+                        context.append(['Consulta',profile.label])
+                        context.append(['Fechas',batch.dates.start+' – '+batch.dates.end if batch.dates else 'Sin filtro de fechas'])
+                        native=self.bridge.call('evidence_open',{'pairs':pairs,'label':profile.label,'context':context})
                         native_html=ChromeTransport.body(native)
                         digest=hashlib.sha256(native_html).hexdigest()
                         if native.get('digest')!=digest:raise m.PocError('La pantalla de evidencia no coincide con la respuesta recibida.')
                         _,native_first=response_profile(native_html.decode('utf-8'),pairs,selection,self.catalog)
                         if native_first is not None:raise m.PocError('La consulta cambió y ahora tiene registros. Inicie un lote nuevo; no se guardó un PDF vacío.')
-                        native_fields=m.fields_from_form(m.root_html(native_html.decode('utf-8')).xpath('//form[@name=$name]',name=profile.form_name)[0])
+                        native_root=m.root_html(native_html.decode('utf-8'))
+                        banners=native_root.xpath('//*[@id="sitfaContextoConsulta"]')
+                        context_text='Consulta solicitada · '+' · '.join(label+': '+value for label,value in context)
+                        if (len(banners)!=1 or banners[0].get('data-context')!=json.dumps(context,ensure_ascii=False,separators=(',',':'))
+                            or banners[0].text_content()!=context_text):
+                            raise m.PocError('La pantalla no identifica el contexto de la consulta solicitada. Recarga la extensión de esta entrega.')
+                        native_fields=m.fields_from_form(native_root.xpath('//form[@name=$name]',name=profile.form_name)[0])
+                        if any(native_fields.get(k)!=v for k,v in profile.target.items()):
+                            raise m.PocError('Los controles de la pantalla a capturar no corresponden a la selección.')
                         date_fields=('FEC_Desde','FEC_Hasta') if selection.screen=='carga' else ('FEC_Inicio','FEC_Fin')
                         if batch.dates and any(unquote_plus(native_fields.get(k,''))!=v for k,v in zip(date_fields,(batch.dates.start,batch.dates.end))):
                             raise m.PocError('Las fechas de la pantalla a capturar no corresponden al lote.')
@@ -186,7 +199,7 @@ class BatchRunner:
                         name=base+suffix+'.pdf';path=folder/name;m.save_exclusive(path,pdf)
                         if hashlib.sha256(path.read_bytes()).hexdigest()!=checksum:
                             path.unlink(missing_ok=True);raise m.PocError('No se pudo verificar la escritura del PDF.')
-                        evidence={'archivo':name,'registros':0,'sha256':checksum,'tipo':'PDF_CAPTURA_SITFA'}
+                        evidence={'archivo':name,'registros':0,'sha256':checksum,'tipo':'PDF_CAPTURA_SITFA','contexto_consulta':context}
                     finally:
                         try:self.bridge.call('evidence_close',timeout=8)
                         except Exception:pass

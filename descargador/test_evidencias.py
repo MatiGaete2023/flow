@@ -134,6 +134,29 @@ class EvidenceTests(unittest.TestCase):
                 return super().call(command,payload,timeout)
         self.assert_failed_without_pdf(Failed(empty_first=True),'captura rechazada')
 
+    def test_missing_or_mislabelled_context_never_saves_pdf(self):
+        for mode in ('missing','wrong_text'):
+            class NoContext(FakeBridge):
+                def call(self,command,payload=None,timeout=75):
+                    result=super().call(command,payload,timeout)
+                    if command=='evidence_open':
+                        raw=base64.b64decode(result['body'])
+                        if mode=='missing':raw=re.sub(rb'<div id="sitfaContextoConsulta".*?</div>',b'',raw)
+                        else:raw=raw.replace('Tribunal:'.encode(),b'Otro:')
+                        result.update(body=base64.b64encode(raw).decode(),digest=hashlib.sha256(raw).hexdigest())
+                    return result
+            with self.subTest(mode=mode):self.assert_failed_without_pdf(NoContext(empty_first=True),'contexto')
+
+    def test_empty_response_without_active_tab_cannot_be_saved_with_blank_controls(self):
+        class BlankTab(FakeBridge):
+            def call(self,command,payload=None,timeout=75):
+                result=super().call(command,payload,timeout)
+                if command=='evidence_open':
+                    raw=base64.b64decode(result['body']).replace(b'name="COD_Lengueta" value="tdEspera"',b'name="COD_Lengueta" value=""')
+                    result.update(body=base64.b64encode(raw).decode(),digest=hashlib.sha256(raw).hexdigest())
+                return result
+        self.assert_failed_without_pdf(BlankTab(empty_first=True),'controles')
+
     def test_foreign_tribunal_in_native_response_rejected(self):
         class Wrong(FakeBridge):
             def call(self,command,payload=None,timeout=75):
