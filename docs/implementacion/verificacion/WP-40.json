@@ -1,0 +1,47 @@
+{
+  "commit": "b3d1134",
+  "base": "2765b47",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "645 passed, 11 skipped, 1 xfailed in 86.73s (0:01:26) (mínimo 605 aprobadas; base 605)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "200 passed, 59 subtests passed in 41.76s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "12 hallazgos (límite 18)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA"
+}

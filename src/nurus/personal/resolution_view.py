@@ -18,12 +18,13 @@ class ProjectSelection:
 
 def build(app):
     page=app.pages['Resoluciones']
-    actions=ui.Frame(page);actions.pack(fill='x',pady=4)
-    app.manual_word=tk.StringVar(value=KIND_LABELS['PC_IE'])
-    app.word_type_box=ui.Combobox(actions,textvariable=app.manual_word,values=[KIND_LABELS[k] for k in KINDS],state='readonly',width=36)
-    app.word_type_box.pack(side='left')
-    ui.Button(actions,text='Aplicar tipo',width=100,command=lambda:app._guard(app._assign_word_type)).pack(side='left',padx=5)
-    ui.Button(actions,text='Agregar desde Trabajo',width=145,command=lambda:app._guard(app._add_words)).pack(side='left')
+    groups=ui.Frame(page);groups.pack(fill='x',pady=4)
+    app.resolution_groups={}
+    for column,name in enumerate(('Preparar','Revisar','Generar')):
+        frame=ui.Frame(groups);frame.grid(row=0,column=column,sticky='nw',padx=(0,18))
+        ui.Label(frame,text=f'{column+1} {name}',font=('Segoe UI',12,'bold')).pack(anchor='w')
+        app.resolution_groups[name]=frame
+    prepare,review,generate=(app.resolution_groups[name] for name in ('Preparar','Revisar','Generar'))
     def set_decision(mode):
         work=app._require_work()
         selected=selected_ids(app,'words')
@@ -34,15 +35,26 @@ def build(app):
         from .record_edits import apply
         apply(work,ids,decisions={'resolution':mode})
         app._show_work();app._save_session()
-    ui.Button(actions,text='Quitar del lote',width=105,command=lambda:app._guard(lambda:set_decision('none'))).pack(side='right')
-    bar=ui.Frame(page);bar.pack(fill='x',pady=4)
-    ui.Button(bar,text='Preparar / actualizar proyectos',width=205,command=lambda:app._guard(app._prepare_words)).pack(side='left')
+    ui.Button(prepare,text='Agregar desde Trabajo',width=145,command=lambda:app._guard(app._add_words)).pack(side='left')
+    ui.Button(prepare,text='Preparar / actualizar proyectos',width=205,command=lambda:app._guard(app._prepare_words)).pack(side='left',padx=5)
+    app.manual_word=tk.StringVar(value=KIND_LABELS['PC_IE'])
+    app.word_type_box=ui.Combobox(review,textvariable=app.manual_word,values=[KIND_LABELS[k] for k in KINDS],state='readonly',width=36)
+    app.word_type_box.pack(side='left')
+    ui.Button(review,text='Aplicar tipo',width=100,command=lambda:app._guard(app._assign_word_type)).pack(side='left',padx=5)
+    ui.Button(review,text='Restaurar automático',width=150,command=lambda:app._guard(lambda:set_decision('auto'))).pack(side='left')
+    app.generate_word_button=ui.Button(generate,text='Generar Word',width=135,command=lambda:app._guard(app._generate_words))
+    app.generate_word_button.pack(side='left')
+    ui.Button(generate,text='Abrir Word',width=95,command=lambda:app._guard(lambda:app._open(app.last_word))).pack(side='left',padx=5)
+    more=ui.Frame(page)
+    def toggle_more():
+        if more.winfo_manager():more.pack_forget()
+        else:more.pack(fill='x',pady=(0,4),after=groups)
+    app.resolution_more_frame=more;app.resolution_more=toggle_more
+    ui.Button(groups,text='Más',width=70,fg_color='transparent',border_width=1,command=toggle_more).grid(row=0,column=3,sticky='ne')
+    groups.grid_columnconfigure(3,weight=1)
     from .manual import open_editor
-    ui.Button(bar,text='Word manual',width=120,command=lambda:app._guard(lambda:open_editor(app,'word'))).pack(side='left',padx=4)
-    ui.Button(bar,text='Restaurar automático',width=150,command=lambda:app._guard(lambda:set_decision('auto'))).pack(side='left',padx=5)
-    app.generate_word_button=ui.Button(bar,text='Generar Word',width=135,command=lambda:app._guard(app._generate_words))
-    app.generate_word_button.pack(side='right')
-    ui.Button(bar,text='Abrir Word',width=95,command=lambda:app._guard(lambda:app._open(app.last_word))).pack(side='right',padx=5)
+    ui.Button(more,text='Word manual',width=120,command=lambda:app._guard(lambda:open_editor(app,'word'))).pack(side='left')
+    ui.Button(more,text='Quitar del lote',width=105,command=lambda:app._guard(lambda:set_decision('none'))).pack(side='left',padx=5)
     filters=ui.Frame(page);filters.pack(fill='x',pady=5)
     app.resolution_search=tk.StringVar();app.resolution_filter=tk.StringVar(value='Todos')
     app.resolution_search_entry=ui.Entry(filters,textvariable=app.resolution_search,width=28,placeholder_text='Buscar causa o persona')

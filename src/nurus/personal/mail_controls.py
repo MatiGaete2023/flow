@@ -52,3 +52,18 @@ def empty_preparation_message(work,selected,modality_keys,kind=''):
     template=work.config['correos']['plantillas'].get(kind,{})
     name=template.get('nombre','el conjunto de correos')
     return f'No hay gestiones habilitadas para {name}. Revisa el tipo de correo, las reglas y las decisiones incluir/omitir en Trabajo.'
+
+
+# Botones de Correos que dependen del estado: la misma condición los deshabilita y redacta el motivo visible.
+MAIL_BUTTON_REASONS={
+    'preparar_tipo':lambda app:'' if getattr(app,'work',None) else 'Carga un Excel en Trabajo.',
+    'preparar_todos':lambda app:'' if getattr(app,'work',None) else 'Carga un Excel en Trabajo.',
+    'guardar_borradores':lambda app:'' if getattr(app,'drafts',None) else 'Prepara correos antes de guardarlos.',
+}
+
+
+def refresh_mail_buttons(app):
+    if getattr(app,'busy',False):return
+    for key,(button,reason) in getattr(app,'mail_gates',{}).items():
+        text=MAIL_BUTTON_REASONS[key](app)
+        button.configure(state='disabled' if text else 'normal');reason.set(text)
