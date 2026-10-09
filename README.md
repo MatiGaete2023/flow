@@ -1,7 +1,7 @@
 # Flow — ejecución del plan NURUS / CSMP
 
-Repositorio de trabajo: **MatiGaete2023/flow**. Baseline: CSMP `0.5.0.dev4`,
-Descargador/extensión `2.7.4`, procedentes de NuRus `251d5c4`.
+Repositorio de trabajo: **MatiGaete2023/flow**. Entrega: CSMP `0.5.0.dev4`,
+Descargador/extensión `2.7.4`. Baseline de procedencia: NuRus `251d5c4`.
 
 Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
 [plan y especificaciones](docs/plan_20261008/README.md). Primera entrega:
