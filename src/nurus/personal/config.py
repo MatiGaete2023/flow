@@ -131,6 +131,7 @@ def save_contacts(contacts,directory=None):
 
 
 def defaults(directory=None):
+    """Base ficticia; sólo la app carga contactos del usuario con una ruta explícita."""
     text=json.loads((BASE/'textos_base.json').read_text(encoding='utf-8'))
     mail=json.loads((BASE/'correos_base.json').read_text(encoding='utf-8'))
     mail['tribunales']['LAJA']['nombre']='Jgdo. L. y G. de Laja'
@@ -143,7 +144,8 @@ def defaults(directory=None):
             'programa_por_vencer':'Junto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.'}[kind]
         closing='Atte. a Ud.,' if kind=='programa_por_vencer' else 'Atentamente,'
         mail['plantillas'][kind]={'nombre':title+' · programa','asunto':title+' — {PROGRAMA} — {TRIBUNAL}', 'cuerpo':'Buen día:\n\n'+body+'\n\n'+closing,'adjunto':'obligatorio','usa_modalidades':False,'fuente':'Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14.'}
-    contacts=base_contacts(directory)[0]
+    contacts=(base_contacts(directory)[0] if directory is not None
+              else parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8')))
     # Destinatarios de tribunales: entradas «Tribunal: LAJA» del archivo local de contactos.
     for name in [n for n in contacts if n.startswith('Tribunal: ')]:
         key=name.split(': ',1)[1].strip().upper();address=contacts.pop(name)
