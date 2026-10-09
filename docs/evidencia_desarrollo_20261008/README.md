@@ -21,6 +21,12 @@ Los hashes XLSX/DOCX cambian por metadatos temporales; no son golden semánticos
 sin aceptar gates. Las pruebas del validador usan actas ficticias; no se presentan
 como aceptación institucional. No se consultó SITFA/RUS ni se guardó Outlook.
 
+La corrección UTF-8 del CLI está en `flow-continuacion-utf8.txt/xml` y en el
+registro `ci_windows_1e50f95_fallo.json`. En `9cd9f50` los tests Windows,
+EXE autónomo y paquete conjunto pasaron, pero la comprobación del instalador
+quedó bloqueada: se solicitó cancelación, sin declararla aprobada. Se introduce
+verificación de procesos con plazo y logs por etapa; su nueva CI debe cerrarse.
+
 ## Verificación reproducible
 
 Python 3.12.14 en Linux con Tk/pantalla virtual DISPLAY=:99. Dependencias de
