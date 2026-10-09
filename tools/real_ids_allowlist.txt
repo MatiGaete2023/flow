@@ -1,0 +1,1 @@
+# Un RUT sintético por línea (formato 11111111-1). Nunca RUT reales.
