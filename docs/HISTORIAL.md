@@ -13,12 +13,12 @@ Archivado el 9 de octubre de 2026 desde `2765b47`.
 **Código compilado y verificado Windows (Descargador 2.7.5 y Asistente/conjunto):** `0795cda5c402672050e39c3806762caf99d82245`
 El último checkpoint se obtiene con `git log -1`.
 
-[Resumen completo del proyecto](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md): fundamentos,
+[Resumen completo del proyecto](../RESUMEN_PROYECTO_NURUS_CSMP_20261009.md): fundamentos,
 documentos, planificación, hallazgos, correcciones, implementación, pruebas y pasos pendientes.
 
 ## ZIP bloqueado por bitacoras.json antiguo — 2.7.5
 
-[Corrección e instrucciones](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
+[Corrección e instrucciones](../docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
 El historial ocultaba referencias ausentes y la exportación seguía incluyéndolas.
 Ahora se muestran como NO_DISPONIBLE; la revisión permite localizarlas o excluirlas
 explícitamente antes de exportar. Conserva las fuentes válidas, las rutas recordadas
@@ -36,7 +36,7 @@ se analizó visualmente sin copiarla al repositorio; todas las pruebas son ficti
 
 ## Manual ilustrado solicitado por el usuario — 9 de octubre
 
-[Manual del Descargador 2.7.4](docs/manual_descargador_2_7_4/README.md), con
+[Manual del Descargador 2.7.4](../docs/manual_descargador_2_7_4/README.md), con
 PDF de 17 páginas, HTML autónomo con capturas ampliables y práctica ficticia
 sin SITFA. Explica conexión, selección, hojas, lectura y recuperación de bitácoras,
 Excel autónomo, combinación de lotes y el ZIP correcto para Trabajo → Importar paquete.
@@ -52,7 +52,7 @@ sus ejecutables eran `e3a6369` (2.7.4). Posteriormente se compiló y verificó
 
 El usuario ordenó continuar hasta completar tareas y productos. Se avanzó desde
 G0 con la matriz de 115 requisitos, sin pedir nueva aprobación de desarrollo.
-Ver [implementación y límites](docs/IMPLEMENTACION_MVP_20261008.md).
+Ver [implementación y límites](../docs/IMPLEMENTACION_MVP_20261008.md).
 Siete adjuntos originales y hashes conservados en `docs/plan_20261008/`.
 
 Contrato, esquema/diccionario, fixtures, validador, exportador autónomo, importador,
@@ -62,7 +62,7 @@ No afirmar que todos los gates institucionales están cerrados.
 
 ## Regresiones del usuario — entrega 2.7.4 (9 de octubre)
 
-[Informe y actualización desde ZIP](docs/REGRESIONES_PRUEBAS_USUARIO_20261009.md).
+[Informe y actualización desde ZIP](../docs/REGRESIONES_PRUEBAS_USUARIO_20261009.md).
 Código funcional `d6ec1b4`; `e3a6369` ajusta dos aserciones para rutas Windows y
 HTML ficticio UTF-8. Asistente 0.5.0.dev4 y Descargador/extensión **2.7.4**.
 
@@ -120,8 +120,8 @@ Código `0795cda5c402672050e39c3806762caf99d82245`, verificado en CI 37979286900
 y 37979286940. Asistente: 615 aprobadas/1 omitida por Python 3.12–3.14;
 Descargador: 198 aprobadas/59 subpruebas. EXE, conjunto e instalador comprobados.
 El nombre del conjunto conserva SITFA-274, con versión interna 2.7.5/SHA0795cda.
-Detalle en el [resumen](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md) y la
-[corrección 2.7.5](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
+Detalle en el [resumen](../RESUMEN_PROYECTO_NURUS_CSMP_20261009.md) y la
+[corrección 2.7.5](../docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
 
 ### Descargas históricas 2.7.4 — reemplazadas por 2.7.5
 
@@ -139,14 +139,14 @@ reinstalación, desaparición real de carpeta y conservación de datos externos
 comprobadas. Esto no acredita Outlook ni SITFA reales.
 
 Evidencia local y CI:
-[regresiones del usuario](docs/evidencia_regresiones_usuario_20261009/README.md)
-y [metadatos/digests Windows](docs/evidencia_regresiones_usuario_20261009/ci_windows.json).
+[regresiones del usuario](../docs/evidencia_regresiones_usuario_20261009/README.md)
+y [metadatos/digests Windows](../docs/evidencia_regresiones_usuario_20261009/ci_windows.json).
 Linux/Xvfb: **605 aprobadas/11 omitidas** Asistente, **192/59 subpruebas**
 Descargador; paridad de 17 productos tradicionales. El registro canónico en
 `docs/evidencia_desarrollo_20261008/ci_windows.json` corresponde a `e3a6369`;
 las entregas anteriores `99ed217` y `6d3555a` se conservan en archivos
 `ci_windows_codigo99ed217.json` y `ci_windows_codigo6d3555a.json`.
-[Correcciones H01–H09/M01–M03](docs/evidencia_correcciones_20261009/ci_windows.json)
+[Correcciones H01–H09/M01–M03](../docs/evidencia_correcciones_20261009/ci_windows.json)
 conserva su evidencia histórica de `99ed217`.
 
 Los digests ZIP los informa GitHub, no se afirma su recomputación local. Locks e
@@ -178,7 +178,7 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 ## Al retomar
 
 **Revisión técnica corregida:** H01–H09 y M01–M03 están implementados. Leer
-[informe de correcciones](docs/CORRECCIONES_REVISION_20261009.md) y
+[informe de correcciones](../docs/CORRECCIONES_REVISION_20261009.md) y
 `docs/evidencia_correcciones_20261009/`. Se conservan el informe y las sondas
 anteriores en `docs/evidencia_revision_20261009/` como diagnóstico histórico.
 `python tools/flow_review_probes.py --verify` exige las ocho correcciones
@@ -246,7 +246,7 @@ la ruta de subprocess; esa prueba no sustituye la nueva CI Windows. Evidencia en
    instalador en el mismo build. Los checkpoints documentales no requieren recompilar.
    Si se modifica código, verificar su nueva CI sin eliminar tests y conservar
    mismo SHA para ambos EXE/extensión.
-3. Leer [aceptación pendiente](docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).
+3. Leer [aceptación pendiente](../docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).
    El usuario confirmó que no hay entorno/evidencia disponibles y que SITFA/RUS
    se usarán después. La aceptación real queda diferida por esa decisión;
    no insistir en obtener acceso ahora ni pedir credenciales o publicar datos.
