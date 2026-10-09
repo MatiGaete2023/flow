@@ -581,7 +581,7 @@
     "description": "Construir artefactos con metadatos de versión y SHA, incluyendo ejecutable Descargador, extensión 2.7.2 o nueva versión coherente y ejecutable Asistente; **preferir paquete conjunto para distribución**, aunque operen autónomamente.",
     "source_line": 359,
     "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
-    "open_dependency": "CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes."
+    "open_dependency": "CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes."
   },
   {
     "id": "P13-E02",
@@ -589,7 +589,7 @@
     "description": "Verificar arranque desde carpeta nueva sin admin, configuración local migrable, preservación de datos al reinstalar y capacidad de volver a la versión anterior.",
     "source_line": 360,
     "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
-    "open_dependency": "CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes."
+    "open_dependency": "CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes."
   },
   {
     "id": "P13-E03",
@@ -597,7 +597,7 @@
     "description": "Confirmar en Windows 10 el análisis/exportación sin Office; luego con Excel 2010 y Outlook 365 cuando corresponda. No presumir disponibilidad de COM en CI.",
     "source_line": 361,
     "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
-    "open_dependency": "CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes."
+    "open_dependency": "CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes."
   },
   {
     "id": "P13-E04",
@@ -605,7 +605,7 @@
     "description": "Entregar manuales separados, diagramas, notas de versión, criterios de soporte, riesgos residuales, lista de `NO_EJECUTADO` y limitaciones reales.",
     "source_line": 362,
     "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
-    "open_dependency": "CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes."
+    "open_dependency": "CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes."
   },
   {
     "id": "P13-E05",
@@ -613,7 +613,7 @@
     "description": "Realizar aceptación explícita del usuario antes de fusionar ramas, publicar release/instalador final o sustituir la versión en uso.",
     "source_line": 363,
     "state": "IMPLEMENTADA_PENDIENTE_ACEPTACION",
-    "open_dependency": "CI 01e013d aprobada, ejecutables/paquete/instalador entregados; Windows 10 institucional/Office y promoción pendientes."
+    "open_dependency": "CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes."
   },
   {
     "id": "P11-ACEPTACION",
