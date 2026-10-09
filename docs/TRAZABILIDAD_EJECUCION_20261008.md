@@ -26,7 +26,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | P10 | BLOQUEADA_POR_EVIDENCIA | CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9. |
 | P11 | IMPLEMENTADA_PENDIENTE_ACEPTACION | INT reales y ampliadas NO EJECUTADAS; MVP local comprobado. |
 | P12 | BLOQUEADA_POR_EVIDENCIA | P9/P10 y acta institucional; ampliación excluida del MVP. |
-| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
+| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI 99ed217 aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
 
 ## Todas las tareas y entregables
 
@@ -135,7 +135,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | D-T17 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Baseline preservado; No hay Excel 2010 en este Linux; CI Windows no prueba Office 2010. |
 | D-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Solo lectura en rutas revisadas y fixtures; nunca subir material real. |
 | D-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline preservado; cualquier adaptación exige nueva regresión. |
-| D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 6d3555a SUCCESS: productos v1 desde EXE autónomo, paquete SHA coherente e instalador; 396a643 verifica eliminación real y datos externos intactos. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes. |
+| D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 99ed217 SUCCESS: 612 aprobadas/1 omitida por versión Windows, productos v1 desde EXE autónomo/instalado y paquete SHA coherente; el instalador actual acredita eliminación real y datos externos intactos. Dependencias bloqueadas por Python/plataforma y verificadas. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes. |
 | R-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
 | R-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
@@ -164,7 +164,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | R-T26 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
 | R-T27 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Incidencias tradicionales existen; falta modelo de hallazgo contextual por regla. |
 | R-T28 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Tribunales sin regla configurada advierten; no extrapolar catálogo jurídico. |
-| R-T29 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados. |
+| R-T29 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
 | R-T30 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Nóminas baseline; pendientes pruebas de enlace remoto del nuevo contrato. |
 | R-T31 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente. |
 | R-T32 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
@@ -182,15 +182,15 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | INT-12 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Fuentes ausentes e inciertas explícitas; contexto de producción NO_EVALUABLE. |
 | INT-13 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
 | INT-14 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| INT-15 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional. |
-| INT-16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados. |
+| INT-15 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos/cobertura por ingreso e incidencias persistidas; UI local y benchmark de importación 2000/10000/20000; máximo operativo 20000 registros. No certifica productividad institucional. |
+| INT-16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
 | INT-17 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Calendario independiente y métricas de nómina desde fuente, aun sin nueva observación; recepción no inferida. |
 | INT-18 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Word baseline y dobles Outlook; nueva entrega institucional pendiente. |
 | INT-19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente. |
 | INT-20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | INT-21 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | INT-22 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| INT-23 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados. |
+| INT-23 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
 | INT-24 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | INT-25 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Excel bitácoras autónomo, texto íntegro y consultas locales. G1/Excel 2010 pendientes. |
 | INT-26 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
@@ -206,20 +206,20 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | F08 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | F09 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | F10 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| F11 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional. |
-| F12 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados. |
+| F11 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos/cobertura por ingreso e incidencias persistidas; UI local y benchmark de importación 2000/10000/20000; máximo operativo 20000 registros. No certifica productividad institucional. |
+| F12 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
 | F13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Calendario independiente y métricas de nómina desde fuente, aun sin nueva observación; recepción no inferida. |
 | F14 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Actuación oficial humana; no automatizar registro ni envío. |
-| F15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Solicitud declarativa local; no ejecuta consultas. |
+| F15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Solicitud declarativa por fuente/ingreso; límite compartido 4 MiB UTF-8/20000 entradas antes de publicación. No ejecuta consultas. |
 | A-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | A-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Fuentes ausentes e inciertas explícitas; contexto de producción NO_EVALUABLE. |
 | A-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | A-T04 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | A-T05 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
 | A-T06 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| A-T07 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional. |
+| A-T07 | EN_CURSO | PASÓ | NO EJECUTADO | Hallazgos/cobertura por ingreso e incidencias persistidas; UI local y benchmark de importación 2000/10000/20000; máximo operativo 20000 registros. No certifica productividad institucional. |
 | A-T08 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| A-T09 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados. |
+| A-T09 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
 | A-T10 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Calendario independiente y métricas de nómina desde fuente, aun sin nueva observación; recepción no inferida. |
 | A-T11 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente. |
 | A-T12 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Dobles de Outlook verifican Save sin Send y adjuntos; falta Outlook 365 institucional, contactos autorizados y recepción humana. |
@@ -228,7 +228,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | A-T15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T17 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente. |
-| A-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 6d3555a SUCCESS: productos v1 desde EXE autónomo, paquete SHA coherente e instalador; 396a643 verifica eliminación real y datos externos intactos. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes. |
+| A-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI 99ed217 SUCCESS: 612 aprobadas/1 omitida por versión Windows, productos v1 desde EXE autónomo/instalado y paquete SHA coherente; el instalador actual acredita eliminación real y datos externos intactos. Dependencias bloqueadas por Python/plataforma y verificadas. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes. |
 | A-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad. |
 | A-T20 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Snapshot exacto 251d5c4 preserva 11 commits sobre main; golden/UI pasan, pero no hay aceptación funcional de todas las diferencias históricas. |
 

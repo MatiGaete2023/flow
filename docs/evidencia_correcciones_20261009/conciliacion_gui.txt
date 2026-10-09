@@ -1,0 +1,1 @@
+PASÓ: ventana real de conciliación muestra diferencias y recoge KEEP; sesión anterior intacta.

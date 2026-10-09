@@ -1,0 +1,91 @@
+{
+  "data_kind": "SINTETICA",
+  "institutional_access": false,
+  "observations": {
+    "H01": {
+      "input_characters": 33000,
+      "import_raised_error": true,
+      "silent_truncation": false,
+      "workbook_characters": null
+    },
+    "H02": {
+      "before_rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "after_rules": [
+        "ESPERA.E06_SIN_RESOLUCION"
+      ],
+      "stored_findings": [
+        "ESPERA.E06_SIN_RESOLUCION"
+      ],
+      "outdated_findings": false
+    },
+    "H03": {
+      "same_capture_id": true,
+      "same_record_ids": true,
+      "same_sources": true,
+      "different_zip_digest": true,
+      "human_review_carried_forward": true,
+      "exclusion_carried_forward": true,
+      "previous_object_preserved": true
+    },
+    "H04": {
+      "contradiction_rejected": true,
+      "valid_partial_package_accepted": true,
+      "query_coverage": "PARCIAL",
+      "diary_row_coverage": "PARCIAL",
+      "declared_diary_table": "PARCIAL",
+      "diary_requests_for_partial_ingreso": 1
+    },
+    "H05": {
+      "query_coverage": "PARCIAL",
+      "calendar_row_coverages": [
+        "PARCIAL"
+      ],
+      "calendar_table_state": "PARCIAL"
+    },
+    "H06": {
+      "contradictory_counts_accepted": false,
+      "counts": {
+        "expected": 1,
+        "observed": 1,
+        "matched": 200000,
+        "failed": 0,
+        "unknown": 0
+      },
+      "result": "PASÓ"
+    },
+    "H07": {
+      "write_succeeded": false,
+      "error": "Solicitud demasiado grande; reduzca el alcance.",
+      "oversized_file_published": false
+    },
+    "H08": {
+      "source_warnings": [
+        "Advertencia: nombre visible de bitácora distinto al listado; revisar el ingreso."
+      ],
+      "exported_incident_codes": [
+        "IDENTIDAD_INCIERTA",
+        "IDENTIDAD_INCIERTA",
+        "BITACORA_ADVERTENCIA"
+      ],
+      "exported_diary_query_error": "",
+      "exported_identity_states": [
+        "VERIFICADA"
+      ],
+      "input_incident_message": "MARCADOR_FICTICIO_DE_INCIDENCIA",
+      "incident_present_in_saved_work": true,
+      "incident_present_in_evidence_view": true
+    }
+  },
+  "corrections_verified": {
+    "H01": true,
+    "H02": true,
+    "H03": true,
+    "H04": true,
+    "H05": true,
+    "H06": true,
+    "H07": true,
+    "H08": true
+  }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "records": 2000,
+    "seconds": 8.589,
+    "peak_traced_bytes": 34254049,
+    "data_kind": "SINTETICA",
+    "institutional_access": false
+  },
+  {
+    "records": 10000,
+    "seconds": 33.1178,
+    "peak_traced_bytes": 167945006,
+    "data_kind": "SINTETICA",
+    "institutional_access": false
+  },
+  {
+    "records": 20000,
+    "seconds": 72.3236,
+    "peak_traced_bytes": 337036718,
+    "data_kind": "SINTETICA",
+    "institutional_access": false
+  }
+]

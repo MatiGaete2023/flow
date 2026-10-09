@@ -1,5 +1,10 @@
 # Evidencia técnica local y productos ficticios
 
+La verificación vigente de las nueve correcciones y tres mejoras está en
+[el informe de cierre](../CORRECCIONES_REVISION_20261009.md) y
+[su evidencia](../evidencia_correcciones_20261009/). Los resultados enumerados
+a continuación conservan las etapas históricas del desarrollo.
+
 Entrega del MVP autorizada por «continua con el plan hasta completar todas las
 tareas y productos». El usuario confirmó después que no hay entorno/evidencia
 institucional y que SITFA/RUS se usarán después. Esa etapa queda diferida.
