@@ -17,6 +17,41 @@ def test_windows_installer_detects_supported_python_without_requiring_default_la
     assert "%LOCALAPPDATA%\\Programs\\Python\\Python312\\python.exe" in script
     assert "(3, 12) <= v <= (3, 14)" in script
     assert "excel-native" in script
+    finder = script[script.index(":find_python"):script.index(":try_python\n")]
+    assert finder.index("py -3.12") < finder.index("py -3.13") < finder.index("py -3.14")
+    assert finder.index("Python312") < finder.index("Python313") < finder.index("Python314")
+
+
+def test_installer_uses_hash_locked_dependencies_then_package_without_deps():
+    script = (Path(__file__).parents[1] / "Instalar_CSMP.bat").read_text(encoding="utf-8")
+    assert 'set "NURUS_LOCK=requirements\\windows-py%NURUS_PYV%.lock"' in script
+    locked = script.index('--require-hashes -r "%NURUS_LOCK%"')
+    package = script.index("--no-deps --no-build-isolation .")
+    assert locked < package
+    assert ".[excel-legacy,excel-native,outlook]" not in script
+    assert 'set "NURUS_PIP_SOURCE=--no-index --find-links paquetes"' in script
+    for version in ("312", "313", "314"):
+        assert (Path(__file__).parents[1] / "requirements" / f"windows-py{version}.lock").is_file()
+
+
+def test_downloader_prefers_python_312_and_hash_lock(tmp_path, monkeypatch):
+    root = Path(__file__).parents[1]
+    starter = (root / "descargador" / "Iniciar.cmd").read_text(encoding="utf-8")
+    assert starter.index("py -3.12 -m venv") < starter.index("py -3 -m venv") < starter.index("python -m venv")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("preparar_entorno", root / "descargador" / "preparar_entorno.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.setattr(module.sys, "platform", "win32")
+    monkeypatch.setattr(module.sys, "version_info", (3, 12, 0, "final", 0))
+    source, arguments = module.dependency_file()
+    assert source == root / "requirements" / "windows-py312.lock"
+    assert arguments[:2] == ["--require-hashes", "-r"]
+    monkeypatch.setattr(module, "HERE", tmp_path / "descargador")
+    (tmp_path / "descargador").mkdir()
+    (tmp_path / "descargador" / "requirements.txt").write_text("openpyxl\n", encoding="utf-8")
+    source, arguments = module.dependency_file()
+    assert source.name == "requirements.txt" and "--require-hashes" not in arguments
 
 
 def test_detected_python_is_expanded_after_find_subroutine_returns():
