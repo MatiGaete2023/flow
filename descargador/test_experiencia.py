@@ -81,6 +81,6 @@ class PreviousDataExperienceTests(unittest.TestCase):
                 self.assertEqual(len(capture.rows('registros')),4);self.assertEqual(len(capture.rows('bitacoras')),2)
                 self.assertIn('ajenas excluidas: 1',window.status.get())
                 window.remove_package_source();self.assertEqual(window.package_diaries(),[])
-                self.assertTrue(manifest.is_file());self.assertIn(str(manifest),app.prefs.data['historial_bitacoras'])
+                self.assertTrue(manifest.is_file());self.assertIn(str(manifest.resolve()),app.prefs.data['historial_bitacoras'])
                 window.destroy()
             finally:dispose_interface(app,root)
