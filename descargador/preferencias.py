@@ -72,3 +72,61 @@ def pending_plan(folder):
     if summary.get('otros_filtros')=='formulario':raise PocError('Prepara otra vez los filtros privados; no se guardan para recuperación.')
     done=[{k:v for k,v in q.get('seleccion',{}).items() if k not in ('fecha_descarga',)} for q in summary['consultas']]
     return [s for s in summary['plan'] if {k:v for k,v in s.items() if k not in ('fecha_descarga',)} not in done]
+
+
+RETENCION_DIAS = 60
+PRESERVABLES = frozenset({'Bitacoras_RUS.xlsx','diagnostico_bitacoras.json'})
+
+
+def onedrive_warning(path):
+    return ('Advertencia: esta carpeta está en OneDrive. Los lotes pueden sincronizarse fuera de este equipo.'
+            if 'onedrive' in str(path).casefold() else '')
+
+
+def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
+    """Lista controles antiguos directos: ignora enlaces, carpetas ajenas y lotes vigentes."""
+    import time
+    root=Path(root)
+    if not root.is_dir() or root.is_symlink():return []
+    excluded={Path(path).resolve() for path in protected if path}
+    limit=time.time()-max_days*86400;result=[]
+    for folder in sorted(root.iterdir()):
+        if folder.is_symlink() or not folder.is_dir() or folder.resolve() in excluded:continue
+        controls=[folder/name for name in ('resumen.json','bitacoras.json')
+                  if (folder/name).is_file() and not (folder/name).is_symlink()]
+        if not controls:continue
+        modified=max(path.stat().st_mtime for path in controls)
+        if modified>=limit:continue
+        size=sum(path.stat().st_size for path in folder.rglob('*') if path.is_file() and not path.is_symlink())
+        result.append({'folder':folder,'bytes':size,'modified':modified})
+    return result
+
+
+def manage_old_batches(root, selected, *, confirmed=False, preserve=False, archive=None,
+                       max_days=RETENCION_DIAS, protected=()):
+    """Borra o mueve únicamente lotes elegibles después de confirmar y volver a comprobarlos."""
+    import shutil
+    if not confirmed:return []
+    root=Path(root).resolve()
+    available={item['folder'].resolve():item['folder'] for item in old_batches(root,max_days=max_days,protected=protected)}
+    selected=list(dict.fromkeys(Path(path).resolve() for path in selected))
+    if any(path not in available for path in selected):
+        raise PocError('La selección cambió o contiene lotes vigentes, recientes o fuera de la carpeta. Actualiza la lista.')
+    target=Path(archive).resolve() if archive else None
+    if target:
+        if target==root or any(target==path or target.is_relative_to(path) for path in selected):
+            raise PocError('La carpeta de archivo debe estar fuera de los lotes seleccionados.')
+        if any((target/path.name).exists() for path in selected):raise PocError('La carpeta de archivo ya contiene un lote con el mismo nombre.')
+    changed=[]
+    for path in selected:
+        if target:
+            target.mkdir(parents=True,exist_ok=True);shutil.move(str(path),str(target/path.name))
+        elif preserve:
+            for child in path.iterdir():
+                if child.name in PRESERVABLES and child.is_file() and not child.is_symlink():continue
+                if child.is_dir() and not child.is_symlink():shutil.rmtree(child)
+                else:child.unlink()
+            if not any(path.iterdir()):path.rmdir()
+        else:shutil.rmtree(path)
+        changed.append(str(path))
+    return changed
