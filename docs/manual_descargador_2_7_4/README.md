@@ -4,6 +4,10 @@ Desde una primera descarga hasta el paquete para el Asistente.
 
 **Versión 2.7.4 · 9 de octubre de 2026**
 
+**Complemento de la versión 2.7.5:** si el paquete indica que falta un
+`bitacoras.json` antiguo, consulta [cómo recuperar o excluir referencias no disponibles](../CORRECCION_REFERENCIAS_ZIP_20261009.md).
+Las imágenes de este manual corresponden a 2.7.4 y se conservan como referencia.
+
 [Descargar PDF](Manual_ilustrado_Descargador_SITFA_2.7.4.pdf) · [Abrir HTML sin conexión](Manual_ilustrado_Descargador_SITFA_2.7.4.html) · [Práctica ficticia](Practica_ficticia_Descargador_2.7.4.zip)
 
 En HTML puedes ampliar las imágenes. El PDF tiene una página por sección.
