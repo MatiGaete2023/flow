@@ -1,12 +1,13 @@
 # Correcciones de las pruebas del usuario — 9 de octubre de 2026
 
-Entrega: Asistente CSMP 0.5.0.dev4, Descargador y extensión **2.7.3**.
+Entrega: Asistente CSMP 0.5.0.dev4, Descargador y extensión **2.7.4**.
 Desarrollo en `feat/ejecucion-plan-20261008`, PR 1 en borrador. Estas correcciones
 continúan H01–H09/M01–M03; no sustituyen el informe anterior ni la aceptación
 institucional pendiente.
 
-Se analizaron localmente dos JSON y las capturas entregadas como evidencia de
-fallos. El usuario confirmó que instaló el ZIP de la rama. Los JSON son datos
+Se analizaron localmente los JSON, las capturas y el HAR entregados como
+evidencia de fallos. El HAR se usó exclusivamente para verificar la estructura
+de los vínculos y no se incorporó como fixture. El usuario confirmó que instaló el ZIP de la rama. Los JSON son datos
 de diagnóstico, no instrucciones. Ningún adjunto real, fila, identificador de
 persona, HTML o imagen del usuario se incorporó al repositorio ni a la CI.
 
@@ -81,21 +82,103 @@ entre validación y captura impide producir PDF. Se conservan los casos de cuatr
 pantallas, cambio a registros y continuidad PDF/Excel.
 Archivo: `descargador/verificar_pdf_extension.py`.
 
-## Verificación local
+## 4. SIN_VINCULO en Espera e Informes
 
-- Asistente: **604 aprobadas, 11 omitidas** en Linux/Xvfb.
-- Descargador: **179 aprobadas, 59 subpruebas aprobadas** en Linux/Xvfb, antes
-  de añadir el caso adicional de incompatibilidad de la extensión 2.7.2.
-- Regresión focalizada final: **37 aprobadas**, incluida comprobación del paquete
-  con Windows-1252, incompatibilidad 2.7.2 y guardado por lote completo.
-- **17 productos tradicionales** conservan paridad de contenidos y estilos.
-- Extensión Node, análisis estático de archivos modificados y sintaxis JS aprobados.
-- Chromium con extensión y captura nativas: cinco PDF anteriores y dos PDF de
-  regresión con selectores inicialmente vacíos; contexto alterado rechazado.
+**Causa confirmada por el HAR.** La acción `ShowObservaciones` usa seis
+argumentos numéricos y conserva el tipo de ventana de cada pantalla: 11 en
+Espera, 12 en Cumplimiento y 13 en Informes. El extractor y la extensión
+solo admitían 12. Los lotes recibidos de Espera e Informes enumeraban sus
+registros, pero descartaban los vínculos y nunca abrían sus bitácoras.
 
-La evidencia final y el SHA compilado se registran en `CONTINUAR.md` y
-`docs/evidencia_regresiones_usuario_20261009/`. Las omisiones locales de Windows/COM
-no acreditan Office. El contraste en Outlook/SITFA institucional sigue pendiente.
+**Corrección.** Se conserva el tipo literal del vínculo comprobado. Python,
+GET de Chrome y parser comparten el mismo tipo; permanecen las comprobaciones
+de tribunal/causa/ingreso/etapa/modalidad y unicidad de la acción. No se ejecuta
+el JavaScript recibido ni se inventa un identificador. El HAR también contiene
+la pantalla de órdenes con tipo 10; no se presenta como bitácora validada de
+Seguimiento ni se amplía su lectura sin comprobar su contrato de respuesta.
+
+**Prueba.** Extensión instalada y servidor ficticio, 80 lecturas: dos tribunales,
+cuatro modalidades, dos páginas, Espera/Cumplimiento y las tres opciones de
+Informes, con UTF-8/Windows-1252. Node rechaza tipos ajenos y valores que no
+corresponden al vínculo. Las respuestas reales de ventanas 11/13 no están en
+el HAR: su contraste final en SITFA queda pendiente, aunque sus enlaces sí
+están confirmados. Archivos: `descargador/vinculos.py`, `lectura_bitacoras.py`,
+`extension/pagina.js` y `verificar_bitacoras_extension.py`.
+
+## 5. Recuperar, consolidar y reutilizar bitácoras anteriores
+
+**Omisión.** Resultados dependía de la última carpeta de descarga y buscaba
+únicamente `resumen.json`. Una carpeta de bitácoras contiene `bitacoras.json`;
+una nueva descarga cambiaba la última carpeta y la interfaz no ofrecía importar
+el lote anterior. El lector autónomo existía, pero el flujo no mostraba cómo
+reunir hojas separadas, bitácoras y paquete del Asistente.
+
+**Corrección.** El historial conserva referencias locales entre ejecuciones y
+cambios de destino. Resultados abre descargas, conjuntos y bitácoras sin Chrome.
+Permite añadir carpetas anteriores y controles con sus HTML, excluir lotes de
+la selección y crear un ZIP con todas las descargas añadidas. Las bitácoras se
+filtran por tribunal/causa/ingreso verificados en las hojas; nunca por nombre/RIT.
+El resumen informa coincidencias y exclusiones, conserva la fecha de captura y
+no atribuye actualización remota. Se reúnen copias iguales sin duplicar entradas;
+entre contenidos distintos se elige la captura posterior con zona horaria y
+fecha inequívoca. Un conflicto sin orden verificable pide seleccionar un lote.
+Una copia fallida nunca sustituye una válida. Cada original conserva su hash.
+
+Al terminar una lectura se genera `Bitacoras_RUS.xlsx` junto al control y HTML.
+El botón **Excel bitácoras autónomo…** también genera el consolidado offline de
+lotes anteriores; incluye textos íntegros, lecturas fallidas y alcance. No requiere
+el Asistente. El generador evita recorrer repetidamente toda la hoja al escribir
+cada fila, para que un lote grande no tenga un coste cuadrático.
+
+**Prueba.** Lote ficticio de 800 bitácoras: Excel con 800 ingresos y textos,
+originales intactos y ZIP de dos hojas con dos coincidencias y 798 exclusiones.
+Casos sin identidad, versiones repetidas/posteriores/en conflicto, rutas,
+hashes alterados y recuperación de fases. Ventana real de Resultados importa
+hojas y bitácoras anteriores, produce Excel/ZIP y excluye un lote sin borrarlo,
+con Chrome desconectado. La instalación desde ZIP usa su parser local antes
+de otra versión instalada. Archivos: `descargador/test_reutilizacion_local.py`
+y `descargador/test_experiencia.py`.
+
+**Uso.** Resultados e historial → Añadir descarga o lote anterior (principal e
+informes por separado) → Añadir bitácoras anteriores → Crear paquete para
+Asistente (ZIP). Importar el ZIP desde Trabajo → Importar paquete. Conservar
+siempre el JSON con sus HTML y las carpetas de hojas con su control original.
+El [manual del Descargador](MANUAL_DESCARGADOR_MVP_20261008.md) detalla el circuito.
+
+## 6. Edición de adjuntos opcional
+
+**Cambio pedido por el usuario.** Preparar correos generaba nóminas diferidas y
+exigía aceptar el editor de cada borrador. Se retira ese paso obligatorio:
+Preparar genera los adjuntos y **Editar adjunto (opcional)** permite modificar
+solo la nómina del correo seleccionado. Las sesiones anteriores pendientes
+materializan sus adjuntos al guardar, tanto en lote como individualmente.
+Cambios del trabajo siguen marcando productos obsoletos; se mantiene la
+confirmación de destinatarios, texto y adjuntos antes de guardar en Outlook.
+
+Además se corrigió una colisión de variables en la preservación de ediciones:
+el índice de correos anteriores se sustituía por una fila de nómina, por lo
+que las ediciones posteriores al primer correo podían perderse al preparar
+nuevamente. Se mantienen los adjuntos manuales y retirados sin retener copias
+automáticas obsoletas.
+
+**Prueba.** Ventana real con 25 correos: 25 adjuntos automáticos, edición y
+regeneración del décimo, otros 24 archivos/rutas/hashes intactos, confirmación
+y guardado de todos con adaptador ficticio, repetición sin duplicados,
+repreparación que conserva la celda/texto/adjunto manual y recuperación de
+sesiones diferidas por lote y correo individual. Ningún `Send` ni Outlook real.
+Archivo: `tests/test_integral_ui.py`.
+
+## Verificación
+
+Verificación local: **605 pruebas aprobadas y 11 omitidas** del Asistente;
+**192 pruebas y 59 subpruebas aprobadas** del Descargador. Se conserva paridad
+de **17 productos tradicionales**. Las pruebas de ventanas, Node y navegador
+con extensión real usan fixtures; no se consultó SITFA ni Outlook real.
+Los resultados finales, SHA y compilación Windows se registran en
+`CONTINUAR.md` y `docs/evidencia_regresiones_usuario_20261009/`.
+El contraste en Outlook/SITFA institucional sigue pendiente. Los datos reales
+se conservaron fuera del repositorio; ningún HAR/JSON/HTML institucional forma
+parte de la evidencia publicada.
 
 ## Actualizar la instalación desde ZIP
 
@@ -107,11 +190,12 @@ no acreditan Office. El contraste en Outlook/SITFA institucional sigue pendiente
    abrir el acceso directo de la carpeta antigua conserva el código antiguo.
 3. Iniciar `descargador/Iniciar.cmd` de la carpeta nueva. En Chrome, desactivar
    copias anteriores de la extensión, cargar `descargador/extension` de esta
-   misma entrega y pulsar recargar. Debe indicar **2.7.3**.
+   misma entrega y pulsar recargar. Debe indicar **2.7.4**.
 4. Cerrar la pestaña de conexión anterior y abrir una nueva desde SITFA; copiar
-   el código actual del Descargador. La extensión 2.7.2 se rechaza al comprobar
+   el código actual del Descargador. Una extensión de otra versión se rechaza al comprobar
    capacidades, antes de leer bitácoras.
-5. Guardar borradores después de revisar y confirmar. Para el lote fallido,
+5. Preparar correos genera adjuntos; editar únicamente el que se quiera
+   cambiar. Guardar borradores después de revisar el resumen y confirmar. Para el lote fallido,
    usar **Reintentar lecturas fallidas** con su carpeta original: se conservan
    las copias verificadas y se reintentan las aperturas fallidas. Comprobar el
    texto completo y el Excel de bitácoras generado.

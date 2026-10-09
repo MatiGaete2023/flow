@@ -3,8 +3,10 @@ from datetime import datetime, date
 from hashlib import sha256
 import json
 from pathlib import Path
+from csmp_shared import parser
+parser()
 from nurus.capture.contract import COMMON,TABLES,write_capture
-from nurus.capture.diaries import import_lote
+from nurus.capture.diaries import import_lotes,diary_paths
 from resultados import tables,table_mode,read_json,inside,headers_and_rows
 import motor as m
 from nurus.capture.coverage import aggregate
@@ -16,13 +18,15 @@ def literal(value):
     return str(value)
 
 
-def export_capture(lots,destination,*,diaries=None,include_originals=False):
+def export_capture(lots,destination,*,diaries=None,include_originals=False,match_diaries=False):
     lots=list(lots)
     if not lots:raise ValueError('Selecciona un lote verificado.')
     captured=lots[0].summary.get('fecha_hora') or datetime.now().astimezone().isoformat()
     fingerprint=json.dumps([lot.summary for lot in lots],ensure_ascii=False,sort_keys=True)
     # Hash del control de bitácoras integra la identidad de la captura reexportable.
-    if diaries:fingerprint+=sha256(Path(diaries).read_bytes()).hexdigest()
+    if diaries:
+        fingerprint+=json.dumps(sorted(sha256(p.read_bytes()).hexdigest() for p in diary_paths(diaries)))
+        fingerprint+='MATCH' if match_diaries else 'ALL'
     cid='captura-'+sha256(fingerprint.encode()).hexdigest()[:24]
     data={'consultas':[],'registros':[],'incidencias':[]};originals={};query_index={}
     def incident(qid,code,message,rid=''):
@@ -63,7 +67,15 @@ def export_capture(lots,destination,*,diaries=None,include_originals=False):
                     data.setdefault('calendarios',[]).append({**common,'calendar_id':'cal-'+rid,'event_at':'','event_type':'INFORME','status':'SEGUN_FUENTE','association':'VERIFICADA' if verified else 'NO_ASOCIADO','raw_json':json.dumps(raw,ensure_ascii=False),'normalized_json':json.dumps(normalized,ensure_ascii=False)})
     if diaries:
         data['bitacoras']=[]
-        batch=import_lote(diaries)
+        identities={tuple(r[k] for k in ('court_code','cause_id','ingreso_id'))
+                    for r in data['registros'] if r['identity_status']=='VERIFICADA'} if match_diaries else None
+        batch=import_lotes(diaries,identities=identities)
+        if match_diaries:
+            incident(data['consultas'][0]['query_id'],'BITACORAS_REUTILIZADAS',
+                f"Bitácoras conservadas por tribunal/causa/ingreso: {batch['reuse']['matched']}; ajenas excluidas: {batch['reuse']['excluded']}. Se conservan fecha y cobertura originales; no se acredita actualización remota.")
+        if match_diaries and not batch['queries']:
+            query('diary-sin-coincidencia',{'capture_tables':['bitacoras']},'IDENTIDAD_INCIERTA',captured,
+                screen='bitacoras',error='Las bitácoras disponibles no tienen correspondencia remota verificada con los registros seleccionados.')
         for qi,snapshot in enumerate(batch['queries']):
             qid=f'diary-{qi}';selection={'tribunal':snapshot['tribunal_codigo'],'tab':'BITACORAS',
                  'capture_tables':['bitacoras'],'remote_identity':{'source_system':'RUS',

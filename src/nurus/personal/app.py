@@ -127,7 +127,9 @@ class App(_BaseApp):
         period=self.period.get()
         def done(drafts):self._display_prepared_drafts(drafts,'{count} borradores preparados para revisión; todavía no se guardaron en Outlook.',
                                                     empty_message=empty_preparation_message(work,selected,modality_keys,kind) if not drafts else None)
-        self._run('Preparando textos y adjuntos…',lambda:prepare_drafts(work,kind,modalities=phrase,period=period,selected=selected,manual_selection=manual,modality_keys=modality_keys,recipient_scope='auto' if target=='todos' else target,defer_attachments=True),done)
+        from .roster import prepare_optional
+        previous=deepcopy(getattr(self,'_draft_scope_source',self.drafts))
+        self._run('Preparando textos y adjuntos…',lambda:prepare_optional(work,prepare_drafts(work,kind,modalities=phrase,period=period,selected=selected,manual_selection=manual,modality_keys=modality_keys,recipient_scope='auto' if target=='todos' else target,defer_attachments=True),previous),done)
 
     def _prepare_all_mail(self):
         work=self._require_work();self._capture_mail();self._sync_mail_config(work)
@@ -136,11 +138,22 @@ class App(_BaseApp):
         phrase=alcance_modalidades(keys);selected=self._mail_selected_ids(work,manual=self.manual_mail.get());period=self.period.get();target=self.mail_target.get()
         def done(drafts):self._display_prepared_drafts(drafts,'{count} correos preparados para el alcance elegido. Todavía no se guardaron en Outlook.',
                                                     empty_message=empty_preparation_message(work,selected,keys) if not drafts else None)
-        self._run('Preparando todos los correos necesarios del trabajo…',lambda:prepare_required_drafts(work,modalities=phrase,period=period,selected=selected,modality_keys=keys,recipient_scope=target,defer_attachments=True),done)
+        from .roster import prepare_optional
+        previous=deepcopy(getattr(self,'_draft_scope_source',self.drafts))
+        self._run('Preparando todos los correos necesarios del trabajo…',lambda:prepare_optional(work,prepare_required_drafts(work,modalities=phrase,period=period,selected=selected,modality_keys=keys,recipient_scope=target,defer_attachments=True),previous),done)
 
     def _send_all(self):
         work=self._require_work();self._capture_mail()
         if not self.drafts:raise ValueError('Prepara y revisa los borradores antes de guardarlos.')
+        from .product_state import stale
+        if any(d.roster and not d.roster_reviewed and not stale(work,d) for d in self.drafts):
+            from .roster import prepare_optional
+            drafts=deepcopy(self.drafts)
+            def generated(result):
+                self._display_prepared_drafts(result,'{count} borradores con adjuntos preparados. Editar nómina es opcional.')
+                self._send_all()
+            self._run('Generando adjuntos de los borradores…',lambda:prepare_optional(work,drafts),generated)
+            return
         from .current_tools import confirm_drafts
         from .product_checks import check_products
         checks=[c for c in check_products(work,self.drafts,[]) if c.kind=='Correo']

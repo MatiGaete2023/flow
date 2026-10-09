@@ -87,7 +87,7 @@ def check_integral(destination,downloader):
         if request['estado']!='EXPORTADA':raise ValueError('CSMP no completó el retorno del lote.')
         book=openpyxl.load_workbook(request['archivo'])
         try:
-            assert book['Copia íntegra']['M2'].value=='Texto completo'
+            assert book['Copia íntegra']['M2'].value=='Observación íntegra: Ángela pidió revisión — texto completo.'
             assert book['Copia íntegra']['K2'].value==1
             assert book['Copia íntegra']['M2'].border.left.style=='thin'
             assert book['Lecturas']['K2'].value=='LEIDA'

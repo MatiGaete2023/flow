@@ -139,3 +139,73 @@ from nurus.personal.selection import selected_ids
 assert 'row-1099' in selected_ids(app,'records')
 app.work_search.set('');app._apply_work_filter();assert 'row-1099' in app.records.selection()
 """)
+
+
+def test_25_mail_attachments_are_automatic_and_editing_one_is_optional(tmp_path):
+    run_gui(tmp_path,"""
+from copy import deepcopy
+from hashlib import sha256
+from types import SimpleNamespace
+from unittest.mock import patch
+from openpyxl import load_workbook
+from nurus.personal.outputs import Draft
+from nurus.personal.roster import snapshot,review
+from nurus.personal.grid_edit import GridEditor
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+app.work.export(root/'copia.xlsx',backend='portable',reduced_fidelity=True)
+def pending():
+    return [Draft('Correo '+str(n),'Texto '+str(n),to='equipo@example.test',required=True,
+            program='Programa '+str(n),kind='programa_espera',recipient_type='programas',
+            roster=[snapshot(app.work,app.work.rows,'Programa '+str(n),'programa_espera')],roster_reviewed=False)
+            for n in range(25)]
+def run(label,operation,done):done(operation())
+app.mail_target.set('todos')
+with patch('nurus.personal.app.prepare_required_drafts',side_effect=lambda *a,**k:pending()), patch.object(app,'_selected_mail_modalities',return_value=['PRM']), patch.object(app,'_capture_mail'), patch.object(app,'_run',side_effect=run):
+    app._prepare_all_mail()
+assert len(app.drafts)==25 and all(d.roster_reviewed and len(d.attachments)==1 for d in app.drafts)
+original_paths=[d.attachments[0] for d in app.drafts]
+original_hashes=[sha256(Path(p).read_bytes()).hexdigest() for p in original_paths]
+# Open only the selected editor and accept a real inline cell edit.
+app.draft_index=9
+with patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(GridEditor,'commit',autospec=True,side_effect=lambda editor:editor.group['rows'][0]['cells'].__setitem__(2,'Dato corregido')):
+    review(app);app.update()
+    window=next(w for w in app.winfo_children() if w.winfo_class()=='Toplevel')
+    button=next(w for w in window.winfo_children() if w.winfo_class()=='TButton' and 'Aceptar' in w.cget('text'))
+    button.invoke();app.update()
+assert app.drafts[9].attachments[0]!=original_paths[9]
+book=load_workbook(app.drafts[9].attachments[0]);assert book.active['C2'].value=='Dato corregido';book.close()
+for n,draft in enumerate(app.drafts):
+    if n!=9:
+        assert draft.attachments[0]==original_paths[n]
+        assert sha256(Path(draft.attachments[0]).read_bytes()).hexdigest()==original_hashes[n]
+# Final batch confirmation works for all 25 without opening 24 editors.
+saved=[]
+def confirm(parent,drafts,excluded):
+    assert len(drafts)==25 and not excluded
+    assert all(d.roster_reviewed and Path(d.attachments[0]).is_file() for d in drafts)
+    return True
+with patch('nurus.personal.current_tools.confirm_drafts',side_effect=confirm), patch('nurus.personal.outputs.save_draft',side_effect=lambda product,**kw:saved.append(product) or SimpleNamespace(entry_id='FAKE',store_id='FAKE')), patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(app,'_run',side_effect=run):
+    app._send_all()
+    assert len(saved)==25 and '25 borradores guardados' in app.status.get()
+    app._send_all();assert len(saved)==25 and '25 ya procesados' in app.status.get()
+# Repreparation preserves the one edited cell, replaces automatic paths and
+# preserves explicit body edits and a separately attached file.
+app.drafts[9].body='Texto corregido manualmente'
+manual=root/'manual.txt';manual.write_text('Adjunto opcional');app.drafts[9].attachments.append(str(manual))
+with patch('nurus.personal.app.prepare_required_drafts',side_effect=lambda *a,**k:pending()), patch.object(app,'_selected_mail_modalities',return_value=['PRM']), patch.object(app,'_capture_mail'), patch.object(app,'_run',side_effect=run):
+    app._prepare_all_mail()
+assert app.drafts[9].body=='Texto corregido manualmente', (app.drafts[9].body,app.drafts[9].original)
+assert app.drafts[9].roster_reviewed and len(app.drafts[9].attachments)==2
+assert str(manual) in app.drafts[9].attachments
+book=load_workbook(app.drafts[9].roster[0]['generated']);assert book.active['C2'].value=='Dato corregido';book.close()
+# Old saved sessions with deferred rosters are materialized on Save too.
+app.work.receipts.clear();app._draft_scope_source=[];app.drafts=pending();app.draft_index=None
+with patch('nurus.personal.current_tools.confirm_drafts',side_effect=confirm), patch('nurus.personal.outputs.save_draft',side_effect=lambda product,**kw:SimpleNamespace(entry_id='FAKE',store_id='FAKE')), patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(app,'_run',side_effect=run):
+    app._send_all()
+assert len(app.work.receipts)==25 and all(d.roster_reviewed for d in app.drafts)
+# Saving one draft from an older session also avoids a mandatory editor.
+app.work.receipts.clear();app.drafts=pending();app.draft_index=9
+with patch('nurus.personal.current_tools.confirm_drafts',return_value=True), patch('nurus.personal.outputs.save_draft',return_value=SimpleNamespace(entry_id='FAKE',store_id='FAKE')), patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(app,'_run',side_effect=run):
+    app._send_draft()
+assert len(app.work.receipts)==1 and app.drafts[9].roster_reviewed
+""")

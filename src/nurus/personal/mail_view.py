@@ -120,7 +120,7 @@ def build_mail_page(app):
     from .manual import open_editor
     from .roster import review
     ui.Button(toolbar,text='Correo libre',width=110,command=lambda:app._guard(lambda:open_editor(app,'mail'))).pack(side='left')
-    ui.Button(toolbar,text='Revisar nómina',width=120,command=lambda:app._guard(lambda:review(app))).pack(side='left',padx=4)
+    ui.Button(toolbar,text='Editar adjunto (opcional)',width=180,command=lambda:app._guard(lambda:review(app))).pack(side='left',padx=4)
     app.mail_note=tk.StringVar();ui.Label(toolbar,textvariable=app.mail_note,wraplength=380,text_color=ui.MUTED).pack(side='left',padx=7)
 
     app.mail_scope=tk.StringVar()

@@ -1,10 +1,15 @@
-# Descargador SITFA · prototipo integral 2.7.3
+# Descargador SITFA · prototipo integral 2.7.4
 
-**Entrega 2.7.3, 9 de octubre de 2026.** Corrige la lectura de bitácoras
+**Entrega 2.7.4, 9 de octubre de 2026.** Corrige la lectura de bitácoras
 Windows-1252/Latin-1, preserva los originales y permite reutilizarlos al reintentar.
 Los PDF vacíos identifican tribunal, modalidad, pestaña y fechas en la captura;
 se rechazan si falta el contexto o los controles cambian. Actualiza también la
-extensión a 2.7.3 y recárgala en `chrome://extensions` antes de conectar.
+extensión a 2.7.4 y recárgala en `chrome://extensions` antes de conectar.
+Espera e Informes conservan su tipo de ventana de observaciones. Cada lectura
+genera `Bitacoras_RUS.xlsx`. En **Resultados e historial** se pueden añadir
+descargas separadas y bitácoras anteriores, revisarlas sin Chrome y crear un
+paquete ZIP para el Asistente, reutilizando solo ingresos con identidad remota
+comprobada. [Instrucciones paso a paso](../docs/MANUAL_DESCARGADOR_MVP_20261008.md).
 [Correcciones y actualización desde ZIP](../docs/REGRESIONES_PRUEBAS_USUARIO_20261009.md).
 
 **Antecedente 2.7.0, 8 de octubre de 2026.** Incluye la lectura de bitácoras y la

@@ -20,15 +20,20 @@ def open_local(path):
 
 class ResultsWindow(tk.Toplevel):
     def __init__(self,app):
+        from csmp_shared import parser
+        parser()
         super().__init__(app.root);self.app=app;self.title('Resultados y herramientas · rama experimental')
-        self.geometry('980x700');self.minsize(800,500);self.busy=False;self.events=queue.Queue();self.folders=[];self.lot=None
+        self.geometry('1100x780');self.minsize(900,650);self.busy=False;self.events=queue.Queue();self.folders=[];self.lot=None
+        self.package_folders=[];self.diary_capture=None;self.loaded_kind=None;self.excluded_diaries=set()
         app.result_windows.append(self)
         self.partial=tk.BooleanVar(value=False);self.status=tk.StringVar(value='Selecciona un lote del historial o abre su carpeta.')
-        self.history=ttk.Treeview(self,columns=('fecha','estado','consultas'),show='headings',height=5)
-        for col,label in [('fecha','Lote'),('estado','Estado'),('consultas','Consultas completadas')]:self.history.heading(col,text=label)
+        self.history=ttk.Treeview(self,columns=('fecha','tipo','estado','consultas'),show='headings',height=5,selectmode='extended')
+        for col,label in [('fecha','Lote'),('tipo','Tipo'),('estado','Estado'),('consultas','Consultas / bitácoras')]:self.history.heading(col,text=label)
         self.history.pack(fill='x',padx=12,pady=12);self.history.bind('<<TreeviewSelect>>',self.select_history)
         controls=ttk.Frame(self);controls.pack(fill='x',padx=12)
-        ttk.Button(controls,text='Abrir lote…',command=self.choose).pack(side='left')
+        ttk.Button(controls,text='Añadir descarga o lote anterior…',command=self.choose).pack(side='left')
+        ttk.Button(controls,text='Añadir bitácoras anteriores…',command=self.add_diaries).pack(side='left',padx=8)
+        ttk.Button(controls,text='Quitar lote del paquete',command=self.remove_package_source).pack(side='left',padx=8)
         ttk.Button(controls,text='Actualizar historial',command=self.reload).pack(side='left',padx=8)
         ttk.Checkbutton(controls,text='Permitir resultados INCOMPLETOS',variable=self.partial,command=self.load).pack(side='left')
         self.detail=ttk.Treeview(self,columns=('consulta','estado','filas','aptitud'),show='headings',height=8)
@@ -37,17 +42,21 @@ class ResultsWindow(tk.Toplevel):
         self.detail.bind('<Double-1>',lambda _:self.open_source())
         row=ttk.Frame(self);row.pack(fill='x',padx=12)
         for text,action in [('Consolidar XLSX',lambda:self.run(lambda:export_book([self.lot]))),
-            ('Exportar para CSMP',self.csmp),('Añadir informes al cruce…',self.cross),
+            ('Libro CSMP (Excel)',self.csmp),('Añadir informes al cruce…',self.cross),
             ('Comparar con otro lote…',self.compare)]:ttk.Button(row,text=text,command=action).pack(side='left',padx=(0,6))
         row=ttk.Frame(self);row.pack(fill='x',padx=12,pady=8)
         for text,action in [('CSV',lambda:self.run(lambda:export_csv(self.lot))),('Calendario ICS',lambda:self.run(lambda:export_ics(self.lot))),
-            ('ZIP para entrega',lambda:self.run(lambda:export_zip(self.lot))),('Abrir carpeta',lambda:self.safe(lambda:open_local(self.lot.folder))),
+            ('ZIP de originales del lote',lambda:self.run(lambda:export_zip(self.lot))),('Abrir carpeta',lambda:self.safe(lambda:open_local(self.lot.folder))),
             ('Preparar pendientes',self.pending)]:ttk.Button(row,text=text,command=action).pack(side='left',padx=(0,6))
         row=ttk.Frame(self);row.pack(fill='x',padx=12,pady=4)
         ttk.Button(row,text='Excel bitácoras autónomo…',command=self.diary_excel).pack(side='left',padx=(0,6))
-        ttk.Button(row,text='Paquete CSMP v1…',command=self.capture_package).pack(side='left',padx=(0,6))
+        ttk.Button(row,text='Crear paquete para Asistente (ZIP)…',command=self.capture_package).pack(side='left',padx=(0,6))
+        ttk.Button(row,text='Ver descarga conjunta…',command=self.show_joint).pack(side='left',padx=(0,6))
         ttk.Button(row,text='Abrir solicitud de antecedentes…',command=self.open_request).pack(side='left',padx=(0,6))
-        ttk.Label(self,textvariable=self.status,wraplength=940).pack(fill='x',padx=12,pady=12)
+        self.collection=tk.StringVar()
+        ttk.Label(self,textvariable=self.collection,wraplength=1050).pack(fill='x',padx=12,pady=4)
+        ttk.Label(self,text='Añade las carpetas de hojas y los controles bitacoras.json con sus HTML. El ZIP reúne las descargas añadidas; reutiliza bitácoras solo por tribunal, causa e ingreso. Importa ese ZIP en Trabajo → Importar paquete del Asistente.',wraplength=1050).pack(fill='x',padx=12,pady=4)
+        ttk.Label(self,textvariable=self.status,wraplength=1050).pack(fill='x',padx=12,pady=8)
         self.protocol('WM_DELETE_WINDOW',self.close);self.reload();self.after(100,self.poll)
     def close(self):
         if self.busy:self.status.set('Espera a que termine la escritura local.');return
@@ -61,25 +70,67 @@ class ResultsWindow(tk.Toplevel):
     def reload(self):
         if self.busy:return
         self.history.delete(*self.history.get_children());self.folders=[]
-        base=Path(self.app.dest.get())
-        for folder in sorted(base.glob('*'),reverse=True)[:300]:
-            if not folder.is_dir() or not (folder/'resumen.json').is_file():continue
-            try:data=read_json(folder/'resumen.json')
-            except (m.PocError,OSError):continue
+        from archivo_local import discover,remember
+        for folder,label,state,count in discover(self.app.dest.get(),self.app.prefs,self.app.last_folder):
             iid=str(len(self.folders));self.folders.append(folder)
-            self.history.insert('','end',iid=iid,values=(folder.name,data.get('estado'),data.get('consultas_completadas')))
-        if self.app.last_folder:
-            self.folder=self.app.last_folder;self.load()
+            self.history.insert('','end',iid=iid,values=(folder.name,label,state,count))
+            if label=='Bitácoras':remember(self.app.prefs,folder)
+        self.update_collection()
+        if getattr(self,'folder',None) or self.app.last_folder:
+            self.folder=getattr(self,'folder',None) or self.app.last_folder;self.load()
+
+    def update_collection(self):
+        names='; '.join(p.name for p in self.package_folders)
+        self.collection.set(f'Paquete: {len(self.package_folders)} descarga(s) añadida(s): {names} · {len(self.package_diaries())} lote(s) de bitácoras disponibles para este paquete. Las fechas originales se conservan; reutilizar no vuelve a consultar RUS.')
+
+    def package_diaries(self):
+        return [p for p in self.app.prefs.data.get('historial_bitacoras',[]) if Path(p).resolve() not in self.excluded_diaries]
+
+    def remove_package_source(self):
+        if self.busy:return
+        if self.loaded_kind=='Bitácoras':self.excluded_diaries.add((self.folder/'bitacoras.json').resolve())
+        if getattr(self,'folder',None) in self.package_folders:self.package_folders.remove(self.folder)
+        self.update_collection();self.status.set('Lote retirado de este paquete; sus archivos e historial se conservan. Añadir de nuevo lo incorpora otra vez.')
     def select_history(self,event=None):
         selected=self.history.selection()
         if selected and not self.busy:self.folder=self.folders[int(selected[0])];self.load()
     def choose(self):
         if self.busy:return
         folder=filedialog.askdirectory(parent=self,title='Carpeta del lote')
-        if folder:self.folder=Path(folder);self.load()
+        if folder:
+            from archivo_local import remember,kind
+            try:
+                self.folder=remember(self.app.prefs,folder)
+                self.excluded_diaries.discard((self.folder/'bitacoras.json').resolve())
+                if kind(self.folder)[1]!='Bitácoras' and self.folder not in self.package_folders:self.package_folders.append(self.folder)
+                self.reload();self.load()
+            except (m.PocError,OSError,ValueError) as exc:self.status.set(str(exc))
+
+    def add_diaries(self):
+        if self.busy:return
+        paths=filedialog.askopenfilenames(parent=self,title='Controles bitacoras.json con sus HTML originales',filetypes=[('Control de bitácoras','bitacoras.json')])
+        if not paths:return
+        from archivo_local import remember
+        try:
+            for path in paths:
+                remember(self.app.prefs,Path(path).parent);self.excluded_diaries.discard(Path(path).resolve())
+            self.folder=Path(paths[0]).parent;self.reload();self.update_collection()
+        except (m.PocError,OSError,ValueError) as exc:self.status.set(str(exc))
     def load(self):
         if self.busy or not getattr(self,'folder',None):return
-        self.lot=None
+        self.lot=None;self.diary_capture=None
+        from archivo_local import kind
+        try:_,self.loaded_kind=kind(self.folder)
+        except m.PocError as exc:self.status.set(str(exc));return
+        self.detail.delete(*self.detail.get_children())
+        if self.loaded_kind=='Bitácoras':
+            from nurus.capture.diaries import import_lotes
+            self.start(lambda:import_lotes(self.folder/'bitacoras.json'),'diary_load');return
+        if self.loaded_kind=='Conjunto':
+            if self.folder not in self.package_folders:self.package_folders.append(self.folder)
+            self.update_collection();self.status.set('Conjunto disponible. Crear paquete reúne sus fases; Ver descarga conjunta permite abrir el libro y recuperar pendientes.');return
+        if self.folder not in self.package_folders:self.package_folders.append(self.folder)
+        self.update_collection()
         # Capturar variables Tk en el hilo de interfaz.
         partial=self.partial.get();folder=self.folder
         def worker_action():
@@ -108,12 +159,26 @@ class ResultsWindow(tk.Toplevel):
                         self.detail.insert('','end',iid=str(i),values=(q['consulta'],manifest['estado'],sum(v['registros'] for v in manifest.get('archivos',[])),
                             '; '.join(dict.fromkeys(aptitudes.get(q['consulta'],['Sin registros'])))))
                     self.status.set(('INCOMPLETO · ' if self.lot.partial else '')+self.lot.folder.name+' · Doble clic en una consulta para abrir su primer archivo verificado.')
+                elif kind=='diary_load':
+                    self.diary_capture=result;self.detail.delete(*self.detail.get_children())
+                    for i,query in enumerate(result['queries']):
+                        self.detail.insert('','end',iid=str(i),values=(query['rit']+' · '+query['persona'],query['coverage'],len(query['entries']),'Identidad de tribunal/causa/ingreso conservada'))
+                    self.status.set(f'{len(result["queries"])} ingresos recuperados de bitácoras anteriores. Excel bitácoras autónomo genera su consolidado sin Chrome.')
+                elif kind=='capture':
+                    self.status.set('Paquete creado: '+str(result['path'])+' · '+result['reuse']+' Importa este ZIP en Trabajo → Importar paquete del Asistente.')
                 else:
                     self.status.set('Creado: '+('; '.join(str(p) for p in result) if isinstance(result,list) else str(result)))
                     if kind=='csmp':self.launch_csmp(result)
         except queue.Empty:pass
         self.after(100,self.poll)
     def open_source(self):
+        if self.diary_capture:
+            selected=self.detail.selection()
+            if selected:
+                query=self.diary_capture['queries'][int(selected[0])]
+                try:open_local(inside(Path(query['manifest_path']).parent,query['source']))
+                except (m.PocError,OSError,KeyError) as exc:self.status.set('No hay una copia HTML verificable para esta lectura: '+str(exc))
+            return
         def action():
             selected=self.detail.selection()
             if not selected:return
@@ -132,21 +197,37 @@ class ResultsWindow(tk.Toplevel):
 
     def diary_excel(self):
         if self.busy:return
-        manifest=filedialog.askopenfilename(parent=self,title='Lote de bitácoras ya capturado',filetypes=[('Control de lecturas','bitacoras.json')])
-        if not manifest:return
+        manifests=[self.folder/'bitacoras.json'] if self.loaded_kind=='Bitácoras' else self.package_diaries()
+        if not manifests:
+            self.add_diaries();return
         target=filedialog.asksaveasfilename(parent=self,initialfile='Bitacoras_RUS.xlsx',defaultextension='.xlsx')
         if target:
             from nurus.capture.diaries import export_diaries
-            self.start(lambda:export_diaries(manifest,target))
+            self.start(lambda:export_diaries(manifests,target))
 
     def capture_package(self):
-        def action():
-            target=filedialog.asksaveasfilename(parent=self,initialfile='Captura_CSMP.zip',defaultextension='.zip')
-            if not target:return
-            diary=filedialog.askopenfilename(parent=self,title='Bitácoras del paquete (cancelar para omitir)',filetypes=[('Control de lecturas','bitacoras.json')])
-            from export_csmp_capture import export_capture
-            self.start(lambda:export_capture([self.lot],target,diaries=diary or None))
-        self.safe(action)
+        if self.busy:return
+        if not self.package_folders:self.status.set('Añade primero una carpeta de descarga de hojas RUS. Las bitácoras anteriores seguirán disponibles.');return
+        target=filedialog.asksaveasfilename(parent=self,initialfile='Captura_CSMP.zip',defaultextension='.zip')
+        if not target:return
+        folders=list(self.package_folders);diaries=self.package_diaries();partial=self.partial.get()
+        from export_csmp_capture import export_capture
+        from archivo_local import load_sources
+        def export():
+            from nurus.capture import read_capture
+            path=export_capture(load_sources(folders,partial),target,diaries=diaries or None,match_diaries=True)
+            capture=read_capture(path)
+            summary=next((i['message'] for i in capture.rows('incidencias') if i['code']=='BITACORAS_REUTILIZADAS'),'Sin bitácoras añadidas.')
+            return {'path':path,'reuse':summary}
+        self.start(export,'capture')
+
+    def show_joint(self):
+        if self.busy:return
+        if self.loaded_kind!='Conjunto':self.status.set('Selecciona un conjunto del historial para abrir sus resultados.');return
+        from ventana_flujo import JointWindow
+        previous=self.app.last_folder;self.app.last_folder=self.folder
+        try:JointWindow(self.app)
+        finally:self.app.last_folder=previous
     def cross(self):
         def action():
             folder=filedialog.askdirectory(parent=self,title='Lote de informes compatible para el cruce')

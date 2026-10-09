@@ -577,6 +577,18 @@ class App(ctk.CTk):
     def _send_draft(self):
         work=self._require_work();self._capture_mail()
         if self.draft_index is None:raise ValueError('Primero prepara una vista previa.')
+        target=self.drafts[self.draft_index]
+        from .product_state import stale
+        if target.roster and not target.roster_reviewed and not stale(work,target):
+            from .roster import prepare_optional
+            def generated(drafts):
+                draft=drafts[0]
+                target.roster=draft.roster;target.roster_reviewed=draft.roster_reviewed
+                target.attachments=draft.attachments;target.original=draft.original
+                self.attach.set('\n'.join(target.attachments))
+                self._send_draft()
+            self._run('Generando adjunto del correo…',lambda:prepare_optional(work,[deepcopy(target)]),generated)
+            return
         from .current_tools import confirm_drafts
         if not confirm_drafts(self,[self.drafts[self.draft_index]]):return
         draft=deepcopy(self.drafts[self.draft_index])
