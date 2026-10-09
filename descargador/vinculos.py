@@ -60,7 +60,7 @@ def extract(table,tribunal_code):
         if len(observation)!=1 or len(history)>1:continue
         obs=observation[0]
         if len(obs)!=6 or obs[1]!=tribunal_code:continue
-        if any(not re.fullmatch(r'\d{1,20}',obs[i]) for i in (0,1,2,3,4,5)) or obs[3]!='12':continue
+        if any(not re.fullmatch(r'\d{1,20}',obs[i]) for i in (0,1,2,3,4,5)) or obs[3] not in ('11','12','13'):continue
         # En Espera la fila puede no incluir ShowHistoria, pero la acción
         # ShowObservaciones sigue entregando los tres identificadores remotos.
         # Cuando Historia existe, su concordancia continúa siendo obligatoria.
@@ -69,7 +69,7 @@ def extract(table,tribunal_code):
             if (len(hist)!=3 or hist[0]!=tribunal_code or obs[0]!=hist[2]
                     or m.normalized(hist[1])!=m.normalized(values[headers['rit']])):continue
         entry={k:values[i] for k,i in headers.items()}
-        entry.update(tribunal_codigo=tribunal_code,causa_id=obs[0],ingreso_id=obs[2],etapa=obs[4],antiguo=obs[5])
+        entry.update(tribunal_codigo=tribunal_code,causa_id=obs[0],ingreso_id=obs[2],etapa=obs[4],antiguo=obs[5],tipo_popup=obs[3])
         if len(calendar)==1 and len(calendar[0])==12:
             cal=calendar[0]
             if cal[0]==obs[0] and cal[2]==tribunal_code and cal[10]==obs[2] and all(re.fullmatch(r'\d{1,20}',cal[i]) for i in (1,3)):

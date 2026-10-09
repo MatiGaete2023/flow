@@ -22,12 +22,20 @@ async function main(){
   assert.equal(new URL(calls[0].url).searchParams.get('TIP_Consulta'),'2');
   for(const change of [{ID_Ingreso:'999'},{COD_Tribunal:'113'},{TIP_Consulta:'1'},{tipo_popUp:'13'},{evil:'extra'}]){
     const out=await context.sitfaTask('diary_open',{params:{...params,...change}});
-    assert.equal(out.__sitfaError,change.ID_Ingreso?'DIARY_LINK':'DIARY_IDENTITY');assert.equal(calls.length,1);
+    assert.equal(out.__sitfaError,change.ID_Ingreso||change.tipo_popUp?'DIARY_LINK':'DIARY_IDENTITY');assert.equal(calls.length,1);
   }
   elements.push(elements[0]);assert.equal((await context.sitfaTask('diary_open',{params})).__sitfaError,'DIARY_LINK');
   assert.equal(calls.length,1);elements=[elements[0]];
   tableId='tablaEspera';assert.equal((await context.sitfaTask('diary_open',{params})).__sitfaError,'DIARY_IDENTITY');
   assert.equal(calls.length,1);
+  for(const [tab,table,kind] of [['tdEspera','tablaEspera','11'],['tdInforme','tablaInforme','13']]) {
+    run.diaryPairs[2][1]=tab;tableId=table;
+    elements=[link(`ShowObservaciones('100','49','201','${kind}','3','0')`)];
+    const result=await context.sitfaTask('diary_open',{params:{...params,tipo_popUp:kind}});
+    assert.equal(result.status,200);assert.equal(new URL(calls.at(-1).url).searchParams.get('tipo_popUp'),kind);
+    assert.equal((await context.sitfaTask('diary_open',{params})).__sitfaError,'DIARY_LINK');
+  }
+  assert.equal(calls.length,3);
   console.log('OK: GET de lectura, identidad, modalidad, pestaña y duplicados; ningún guardado RUS.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

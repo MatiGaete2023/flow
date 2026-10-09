@@ -41,7 +41,7 @@ def check_products(work,drafts,projects):
             except ValueError as exc:issues.append(str(exc))
             if not draft.subject.strip():issues.append('Completar asunto')
             if not draft.body.strip():issues.append('Completar cuerpo')
-            if not draft.roster_reviewed:issues.append('Revisar nómina y generar adjuntos')
+            if not draft.roster_reviewed:issues.append('Generar o actualizar adjuntos de la nómina')
             if draft.required and not draft.attachments:issues.append('Agregar adjunto obligatorio')
             for path in draft.attachments:
                 if not Path(path).is_file():issues.append('Adjunto no disponible: '+Path(path).name)

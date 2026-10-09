@@ -103,17 +103,23 @@ def merge_draft_edits(old_drafts, new_drafts):
             if field in old.original and getattr(old, field) != old.original[field]:
                 setattr(draft, field, getattr(old, field))
         prior={row['id']:row for group in old.roster for row in group['rows']}
+        changed_roster=False
         for group in draft.roster:
             for row in group['rows']:
-                previous=prior.get(row['id'])
-                if not previous:continue
-                row['include']=previous['include']
-                for index,cell in enumerate(previous['cells']):
-                    base=previous.get('base',previous['cells'])
-                    if index<len(row['cells']) and index<len(base) and cell!=base[index]:row['cells'][index]=cell
+                previous_row=prior.get(row['id'])
+                if not previous_row:continue
+                if row['include']!=previous_row['include']:changed_roster=True
+                row['include']=previous_row['include']
+                for index,cell in enumerate(previous_row['cells']):
+                    base=previous_row.get('base',previous_row['cells'])
+                    if index<len(row['cells']) and index<len(base) and cell!=base[index]:
+                        if row['cells'][index]!=cell:changed_roster=True
+                        row['cells'][index]=cell
+        if changed_roster:draft.roster_reviewed=False
         # Regenerated automatic attachments replace the old automatic list. Explicit
         # additions/removals survive, without retaining an obsolete generated file.
-        originals = old.original.get('attachments', [])
+        originals = list(dict.fromkeys([*old.original.get('attachments', []),
+            *(g['generated'] for g in old.roster if g.get('generated'))]))
         additions = [path for path in old.attachments if path not in originals]
         from pathlib import Path
         removed={Path(path).name for path in originals if path not in old.attachments}

@@ -67,7 +67,7 @@ def read_snapshot(text, params, *, source='', captured_at=''):
     """Vincula cada fila con sus campos ocultos por ID, nunca por posición."""
     raw = text.encode('utf-8') if isinstance(text, str) else text
     text = decode_snapshot(text)
-    if params.get('tipo_popUp') != '12': raise ValueError('La captura no corresponde a una bitácora RUS.')
+    if params.get('tipo_popUp') not in ('11','12','13'): raise ValueError('La captura no corresponde a una bitácora RUS.')
     # RUS añade scripts después de </html> en esta ventana.
     if not re.search(r'</html\s*>', text, re.I):
         raise ValueError('La respuesta HTML está incompleta.')
@@ -87,7 +87,7 @@ def read_snapshot(text, params, *, source='', captured_at=''):
         if not context[key].isdigit() or int(context[key]) <= 0:
             raise ValueError('Identidad remota inválida: '+key)
     kind = _one_input(form, 'tipo_popUp')
-    if kind not in ('', '12'): raise ValueError('El tipo de ventana no corresponde a bitácora.')
+    if kind not in ('', params['tipo_popUp']): raise ValueError('El tipo de ventana no corresponde a bitácora.')
     tables = form.xpath('.//table[@id="TablaInforme"]')
     if len(tables) != 1: raise ValueError('La captura no contiene una tabla de bitácora única.')
     table = tables[0]; rows = table.xpath('.//tr')

@@ -32,7 +32,7 @@ try {
             throw 'El acta existente contiene resultados; conserve ese archivo y use una carpeta nueva para distribuir'
         }
     } else {
-        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.3','--extension-version','2.7.3')
+        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.4','--extension-version','2.7.4')
     }
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'CSMP_Experimental.spec')
 } finally { Pop-Location }

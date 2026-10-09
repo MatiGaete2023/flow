@@ -15,9 +15,15 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
 4. Exportar copia actual a XLSX. Para paquetes nuevos funciona sin Excel/Office.
    Abrir Excel legado conserva el motor y la exportación anteriores, con alcance
    SOLO_PLANILLA. Guardar/recuperar sesión conserva edición y configuración.
-5. Correos: revisar destinatarios, texto y nómina. Retirar adjuntos o cambiar
-   contactos según el caso. Un contacto desconocido queda vacío con aviso.
-   Outlook clásico puede guardar un borrador; el envío es decisión humana.
+5. Correos: Preparar genera los adjuntos automáticamente. **Editar adjunto
+   (opcional)** abre solo la nómina del correo seleccionado; aceptar actualiza
+   ese archivo, sin obligar a revisar los demás. Los cambios de celdas, filas,
+   texto y adjuntos manuales se conservan al preparar nuevamente. Revisar
+   destinatarios y texto y confirmar el lote antes de Guardar en Outlook.
+   Un contacto desconocido queda vacío con aviso. Outlook clásico puede guardar
+   borradores; el envío es decisión humana. Sesiones anteriores con nóminas
+   pendientes generan sus adjuntos al guardar. Cambios en los datos del trabajo
+   requieren preparar nuevamente los productos obsoletos.
 6. Resoluciones: revisar plantilla y variables, elegir proyectos y guardar Word
    editable. Correo libre, Word manual y edición libre siguen disponibles.
 7. Resultados: consultar detalle de hechos/fuentes y exportar una solicitud de

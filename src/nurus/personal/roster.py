@@ -45,13 +45,32 @@ def generate(draft, folder):
     return paths
 
 
+def prepare_optional(work,drafts,previous=()):
+    """Genera adjuntos sin exigir abrir el editor; conserva ediciones previas."""
+    from .session import merge_draft_edits
+    from .outputs import draft_fingerprint
+    from .product_state import require_fresh, stale
+    for draft in drafts:
+        for field in ('to','cc','subject','body','attachments'):
+            draft.original.setdefault(field,deepcopy(getattr(draft,field)))
+    drafts=merge_draft_edits(previous,drafts)
+    for draft in drafts:
+        if draft.roster and not draft.roster_reviewed and not stale(work,draft):
+            require_fresh(work,draft)
+            generate(draft,Path(work.output).parent)
+            draft.original['attachments']=[g['generated'] for g in draft.roster if g.get('generated')]
+    drafts=merge_draft_edits(previous,drafts)
+    for draft in drafts:draft.key=draft_fingerprint(draft)
+    return drafts
+
+
 def review(app):
     app._capture_mail()
     if app.draft_index is None:raise ValueError('Selecciona un correo preparado.')
     draft=app.drafts[app.draft_index]
     if not draft.roster:raise ValueError('Este correo no tiene una nómina automática pendiente.')
     groups=deepcopy(draft.roster)
-    win=tk.Toplevel(app);win.title('Revisar nómina antes de generar adjuntos');win.geometry('950x570');win.transient(app)
+    win=tk.Toplevel(app);win.title('Editar nómina del correo seleccionado');win.geometry('950x570');win.transient(app)
     editors=[]
     tabs=ttk.Notebook(win);tabs.pack(fill='both',expand=True,padx=10,pady=10)
     for group in groups:
@@ -72,5 +91,6 @@ def review(app):
         try:generate(candidate,Path(app.work.output).parent)
         except (ValueError,OSError) as exc:messagebox.showerror('Nómina',str(exc),parent=win);return
         draft.roster=candidate.roster;draft.attachments=candidate.attachments;draft.roster_reviewed=True
+        draft.original['attachments']=[g['generated'] for g in draft.roster if g.get('generated')]
         app.attach.set('\n'.join(draft.attachments));app._save_session();win.destroy()
     ttk.Button(win,text='Aceptar nómina y generar adjuntos',command=accept).pack(pady=10)
