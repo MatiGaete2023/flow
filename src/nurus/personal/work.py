@@ -223,10 +223,16 @@ class Work:
                 'resolution_value':_review_value(row,'RES'),
             })
         result=_export_preserved_payload(self.content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
+        previous=(self.output,self.output_hash)
         self.output=str(result.path)
         self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
         from .sync import remember_export
-        remember_export(self)
+        try:
+            remember_export(self)
+        except Exception:
+            self.output,self.output_hash=previous
+            Path(result.path).unlink(missing_ok=True)
+            raise
         return self.output
 
     def refresh(self, resolutions=None):
