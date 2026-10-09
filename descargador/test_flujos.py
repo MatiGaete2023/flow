@@ -16,6 +16,7 @@ from lotes import Batch,BatchRunner,Dates,file_base
 from test_lotes import CATALOG as OLD_CATALOG
 from test_lotes import dispose_interface
 import test_poc as old
+from gui_test_isolation import isolated_gui
 
 def catalog(screen):
     return {**OLD_CATALOG,'pantalla':screen,
@@ -155,6 +156,7 @@ class NewBatchTests(unittest.TestCase):
         self.assertEqual(bridge.events[-1],'unlock')
 
 class NewInterfaceTests(unittest.TestCase):
+    @isolated_gui
     def test_checkboxes_save_subset_and_empty_disables_download(self):
         import tkinter as tk
         from descargador import Application,TribunalPicker
@@ -170,6 +172,7 @@ class NewInterfaceTests(unittest.TestCase):
             with self.assertRaises(m.PocError):app.batch().plan(app.catalog)
         finally:
             popup.choices.clear();dispose_interface(app,root)
+    @isolated_gui
     def test_screen_controls_and_selection_survive_catalog_reload(self):
         import tkinter as tk
         from descargador import Application

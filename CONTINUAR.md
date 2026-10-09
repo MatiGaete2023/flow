@@ -106,6 +106,14 @@ con `tools/windows_process_check.ps1`; sus pruebas Windows comprueban código de
 salida y terminación de un proceso ficticio colgado. Mantener el fallo y el
 registro de cancelación, y cerrar la nueva ejecución antes de cambiar descargas.
 
+`32daba5` superó 584 tests Windows/1 omitido del Asistente, incluidas las tres
+pruebas nativas de procesos; el EXE autónomo también pasó. La suite Descargador
+detectó el mismo problema Tcl en otras dos pruebas GUI. Se aíslan las seis
+pruebas restantes mediante `descargador/gui_test_isolation.py`, conservando
+aserciones y sin reintentos/omisiones. Seis casos pasaron en Linux/Xvfb forzando
+la ruta de subprocess; esa prueba no sustituye la nueva CI Windows. Evidencia en
+`ci_windows_32daba5_tcl.json` y `flow-gui-aislada.txt/xml`.
+
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.

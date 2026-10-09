@@ -16,6 +16,7 @@ from lotes import Batch,BatchRunner,ChromeTransport,Dates,file_base
 from perfiles import Selection,TABS,selection_profile
 from puente import Bridge
 import test_poc as fixture
+from gui_test_isolation import isolated_gui
 
 CATALOG={'tribunales':{'49':'Juzgado de Familia Tomé','113':'Jgdo. L. y G. de Laja'},
  'modalidades':{'1':'Residencia','2':'Ambulatorio','3':'FAE','4':'DCE'},
@@ -268,6 +269,7 @@ class TransportTests(unittest.TestCase):
 
 
 class InterfaceTests(unittest.TestCase):
+    @isolated_gui
     def test_bulk_selection_and_compact_view(self):
         import tkinter as tk
         from descargador import Application

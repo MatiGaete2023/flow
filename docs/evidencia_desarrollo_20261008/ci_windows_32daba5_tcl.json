@@ -1,0 +1,28 @@
+{
+  "source_commit": "32daba571477c5083cc418f94247a8a7780503f2",
+  "assistant_run": 37877930780,
+  "downloader_run": 37877930787,
+  "conclusion": "failure",
+  "assistant_python_312_tests": {
+    "passed": 584,
+    "skipped": 1
+  },
+  "watchdog_windows_tests": "PASÓ",
+  "assistant_frozen_exe": "PASÓ",
+  "downloader_results": {
+    "passed": 168,
+    "failed": 1,
+    "subtests_passed": 57
+  },
+  "failed_cases": [
+    "NewInterfaceTests.test_checkboxes_save_subset_and_empty_disables_download",
+    "test_calendar_defaults_current_period_and_preserves_explicit_choice"
+  ],
+  "cause": "Tcl/Tk reutilizado entre pruebas GUI en Windows Python 3.12; error init.tcl/tk.tcl",
+  "correction": "Seis pruebas GUI restantes conservan sus aserciones y pasan a procesos Windows independientes, sin retries ni omisiones.",
+  "linux_isolation_route_results": {
+    "passed": 6
+  },
+  "installer_result": "NO_EJECUTADO_EN_ESTA_CORRIDA",
+  "institutional_result": "NO_EJECUTADO"
+}
