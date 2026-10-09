@@ -10,7 +10,7 @@ from string import Formatter
 from .template_validation import variables
 
 BASE = Path(__file__).parent
-CC = 'ucc_concepcion@pjud.cl'
+from nurus.services.policy import MANDATORY_CC as CC
 VARIABLES = {'TRIBUNAL','ALCANCE_MODALIDADES','PERIODO','FECHA','PROGRAMA','TABLA_REGISTROS'}
 UMBRALES = dict(espera_dce=30, espera_laja=30, espera_mulchen=30, espera_tome=30,
                proyecto_tome=60, mayoria=60, oido=45, resolucion_reciente=30,
