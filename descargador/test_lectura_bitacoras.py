@@ -40,6 +40,8 @@ class Bridge(FakeBridge):
             table=listing(court=self.selection.tribunal)
             table.set('id',profile.table_id)
             text=etree.tostring(table,encoding='unicode').replace("'200'",f"'{200+self.number}'")
+            kind={'Espera':'11','Cumplimiento':'12','Informes':'13'}[self.selection.tab]
+            text=text.replace("'12'",repr(kind))
             if self.missing:text=text.replace('ShowObservaciones','MissingObservaciones')
             # TD encabezado y RUT de la pestaña Espera observados en RUS.
             text=text.replace('<th>','<td>').replace('</th>','</td>').replace('>RUT<','>RUT (-&gt;RCeI)<')
@@ -162,8 +164,8 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     assert data['tipo']=='BITACORAS_DIAGNOSTICO_ANONIMO'
     assert data['estados']=={'SIN_VINCULO':2}
     assert data['registros']==2
-    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.3')
-    assert data['extension_version']=='2.7.3'
+    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.4')
+    assert data['extension_version']=='2.7.4'
     assert data['descargador_commit']=='NO_VERIFICADO' or len(data['descargador_commit'])==40
     assert data['diagnosticos_sin_vinculo']['SIN_ACCION_OBSERVACIONES']==2
     assert data['consultas'][0]['registros']==2
@@ -173,7 +175,7 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     malicious={'registros':[{'estado':'FALLIDA','rit':'X-1-2026','nombre':'Persona ficticia',
                             'error':'Texto privado NNA','diagnostico':{'codigo_extension':'Texto privado NNA'}}],
                'consultas':[{'tribunal':'Texto privado NNA','modality':'1','tab':'Espera','estado':'FALLIDA'}],
-               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.3'}}
+               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.4'}}
     sanitized=json.dumps(anonymous_diagnostic(malicious),ensure_ascii=False)
     assert 'Texto privado NNA' not in sanitized
     assert 'Persona ficticia' not in sanitized
@@ -187,6 +189,21 @@ def test_extension_declared_version_matches_manifest():
     script=(folder/'pagina.js').read_text(encoding='utf-8')
     assert f"if(command==='capabilities') return {{tipo:'CSMP_RUS_CAPACIDADES',version:'{VERSION}'" in script
     assert manifest['version']==VERSION
+
+
+@pytest.mark.parametrize('tab,report,kind', [('Espera','0','11'),('Cumplimiento','0','12'),
+    ('Informes','1','13'),('Informes','2','13'),('Informes','3','13')])
+def test_all_followup_observation_popup_kinds_are_preserved_and_excel_created(tmp_path,tab,report,kind):
+    from openpyxl import load_workbook
+    bridge=Bridge();result=run(tmp_path,bridge,Batch(('49',),('1','2','3','4'),(tab,),report=report))
+    assert result['estado']=='COMPLETA' and result['leidas']==8
+    assert {p['tipo_popUp'] for p in bridge.openings}=={kind}
+    book=load_workbook(result['excel'],read_only=True)
+    try:
+        # Cuatro modalidades repiten los mismos dos ingresos: dos copias
+        # semánticas, pero se conservan las ocho lecturas en el control.
+        assert book['Copia íntegra'].max_row==3 and book['Lecturas'].max_row==9
+    finally:book.close()
 
 
 @pytest.mark.parametrize('encoding,meta,bom', [

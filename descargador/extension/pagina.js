@@ -13,7 +13,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.3',
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.4',
     protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
@@ -397,13 +397,13 @@ async function sitfaTask(command, payload) {
     diaryPhase='IDENTIDAD';
     const names=["tipo_popUp","CRR_IdCausa","COD_Tribunal","TIP_Consulta","ID_Ingreso","COD_Etapa","FLG_MejorNinez"];
     if(Object.keys(expected).length!==names.length || names.some(k=>typeof expected[k]!=="string"||!/^\d{1,20}$/.test(expected[k])) ||
-       expected.tipo_popUp!=="12" || !["1","2","3","4"].includes(expected.TIP_Consulta))throw new Error("estructura");
+       !["11","12","13"].includes(expected.tipo_popUp) || !["1","2","3","4"].includes(expected.TIP_Consulta))throw new Error("estructura");
     const selected=new Map(run.diaryPairs);
     if(expected.COD_Tribunal!==selected.get("COD_Tribunal_sel")||expected.TIP_Consulta!==selected.get("TIP_Consulta"))throw new Error("estructura");
     const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
     const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
     if(!table)throw new Error("estructura");
-    const tuple=[expected.CRR_IdCausa,expected.COD_Tribunal,expected.ID_Ingreso,"12",expected.COD_Etapa,expected.FLG_MejorNinez];
+    const tuple=[expected.CRR_IdCausa,expected.COD_Tribunal,expected.ID_Ingreso,expected.tipo_popUp,expected.COD_Etapa,expected.FLG_MejorNinez];
     let matches=0;
     for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"]) {
       for(const match of (el.getAttribute(attr)||"").matchAll(/\bShowObservaciones\s*\(([^()]*)\)/g)) {

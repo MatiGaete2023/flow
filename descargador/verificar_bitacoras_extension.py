@@ -14,7 +14,9 @@ from test_lotes import CATALOG
 root=Path(__file__).resolve().parent
 tree=ast.parse((root/'verificar_chrome_ficticio.py').read_text(encoding='utf-8'))
 node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='master')
-exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'))
+fixture_namespace=dict(globals())
+exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
+master=fixture_namespace['master']
 
 async def main():
     bridge=Bridge();fixture=FixtureBridge();seen=[]
@@ -37,7 +39,7 @@ async def main():
                             tab=next(k for k,v in TABS.items() if v[0]==fields['COD_Lengueta'])
                             page_field=TABS[tab][1]
                             fields[page_field]=fields.get(page_field) or '1'
-                            fixture.selection=Selection(fields['COD_Tribunal_sel'],tab,fields['TIP_Consulta'])
+                            fixture.selection=Selection(fields['COD_Tribunal_sel'],tab,fields['TIP_Consulta'],fields.get('TIP_Informe') if tab=='Informes' else None)
                             fixture.queries+=1
                             result=fixture.call('search',{'pairs':list(fields.items())})
                             import base64
@@ -45,7 +47,7 @@ async def main():
                             encoding='windows-1252' if fields['TIP_Consulta'] in ('1','3') else 'utf-8'
                             await r.fulfill(body=body.decode('utf-8').encode(encoding),content_type='text/html; charset='+encoding);return
                         if url.path=='/SITFAWEB/IrPopUpInformesAccion.do':
-                            params=dict(parse_qsl(url.query));assert request.method=='GET' and params['tipo_popUp']=='12'
+                            params=dict(parse_qsl(url.query));assert request.method=='GET' and params['tipo_popUp'] in ('11','12','13')
                             seen.append(params)
                             await r.fulfill(body=popup(params),content_type='text/html; charset=utf-8');return
                         raise AssertionError('Petición fuera del contrato de lectura ficticio: '+url.path)
@@ -62,8 +64,13 @@ async def main():
                         Batch(('49','113'),('1','2','3','4'),('Espera','Cumplimiento')),Path(tmp)/'copias')
                     assert result['estado']=='COMPLETA' and result['leidas']==32,result
                     assert len(seen)==32 and {p['TIP_Consulta'] for p in seen}=={'1','2','3','4'}
-                    report={'resultado':'OK','datos':'ficticios','modalidades':4,'tribunales':2,'pestanas':2,
-                            'paginas_por_consulta':2,'bitacoras':32,'codificaciones':['utf-8','windows-1252'],
+                    for kind in ('1','2','3'):
+                        result=await asyncio.to_thread(DiaryRunner(bridge,catalog,lambda *a:None,threading.Event()).run,
+                            Batch(('49','113'),('1','2','3','4'),('Informes',),report=kind),Path(tmp)/'copias')
+                        assert result['estado']=='COMPLETA' and result['leidas']==16,result
+                    assert len(seen)==80 and {p['tipo_popUp'] for p in seen}=={'11','12','13'}
+                    report={'resultado':'OK','datos':'ficticios','modalidades':4,'tribunales':2,'pestanas':3,'opciones_informes':3,
+                            'paginas_por_consulta':2,'bitacoras':80,'tipos_popup':['11','12','13'],'codificaciones':['utf-8','windows-1252'],
                             'peticiones_reales_rus':0,'escrituras_rus':0}
                     out=root/'pruebas_locales';out.mkdir(exist_ok=True)
                     (out/'verificacion_bitacoras_extension.json').write_text(json.dumps(report,indent=2),encoding='utf-8')

@@ -27,7 +27,8 @@ def date_preset(name,today=None):
 class Preferences:
     def __init__(self,path=None,memory=False):
         self.path=Path(path) if path else None if memory else data_directory()/'preferencias.json'
-        self.data={'favoritos':{},'destino':'','tribunales':None,'aviso_sonoro':False,'csmp':'','dias_firmas':60,'tema':'Sistema'}
+        self.data={'favoritos':{},'destino':'','tribunales':None,'aviso_sonoro':False,'csmp':'','dias_firmas':60,'tema':'Sistema',
+                   'historial_lotes':[],'historial_bitacoras':[]}
         if self.path and self.path.is_file():
             try:
                 value=json.loads(self.path.read_text(encoding='utf-8'))

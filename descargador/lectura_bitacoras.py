@@ -229,7 +229,7 @@ class DiaryRunner:
                             if not all(identity):
                                 record.update(estado='SIN_VINCULO',error='La fila no tiene un enlace de bitácora inequívoco. No se construyó una consulta por RIT. Diagnóstico: '+item.get('vinculo_diagnostico','NO_VERIFICADO'))
                             else:
-                                record['params']={'tipo_popUp':'12','CRR_IdCausa':item['causa_id'],'COD_Tribunal':selection.tribunal,
+                                record['params']={'tipo_popUp':item['tipo_popup'],'CRR_IdCausa':item['causa_id'],'COD_Tribunal':selection.tribunal,
                                     'TIP_Consulta':selection.modality,'ID_Ingreso':item['ingreso_id'],'COD_Etapa':item['etapa'],'FLG_MejorNinez':item['antiguo']}
                                 checkpoint()
                                 try:
@@ -289,5 +289,15 @@ class DiaryRunner:
                'consultas_fallidas':sum(q['estado']=='FALLIDA' for q in state['consultas']),
                'detalle':next((q.get('error','') for q in state['consultas'] if q['estado']=='FALLIDA'),state.get('error',''))}
         value['diagnostico_anonimo']=str(folder/'diagnostico_bitacoras.json')
+        try:
+            from nurus.capture.diaries import export_diaries
+            target=folder/'Bitacoras_RUS.xlsx'
+            if target.exists():
+                from uuid import uuid4
+                target=folder/('Bitacoras_RUS_'+uuid4().hex[:8]+'.xlsx')
+            self.emit('status','Generando el Excel consolidado de las bitácoras y su control de lecturas…')
+            value['excel']=str(export_diaries(manifest,target))
+        except (ValueError,OSError) as exc:
+            value['excel_error']=str(exc)
         self.emit('diary_done',value)
         return value

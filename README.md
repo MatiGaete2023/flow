@@ -1,7 +1,7 @@
 # Flow — ejecución del plan NURUS / CSMP
 
 Repositorio de trabajo: **MatiGaete2023/flow**. Baseline: CSMP `0.5.0.dev4`,
-Descargador/extensión `2.7.3`, procedentes de NuRus `251d5c4`.
+Descargador/extensión `2.7.4`, procedentes de NuRus `251d5c4`.
 
 Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
 [plan y especificaciones](docs/plan_20261008/README.md). Primera entrega:
@@ -25,7 +25,7 @@ Programa de escritorio para revisar el trabajo actual y preparar archivos y borr
 
 La versión de esta rama conserva las funciones principales de la línea 0.5 y
 añade importación local de paquetes preparados por el Descargador/extensión
-2.7.3. Acceso: **Trabajo → Importar paquete**. Las consultas de bitácoras y su
+2.7.4. Acceso: **Trabajo → Importar paquete**. Las consultas de bitácoras y su
 Excel se realizan desde Descargador. La aceptación con RUS real sigue pendiente.
 
 ## Instalación
@@ -45,7 +45,7 @@ py -3.12 -m nurus.personal.app
 ## Flujo
 
 1. Carga el Excel en Trabajo, revisa avisos y observaciones, y exporta una copia actual. El original se conserva.
-2. Prepara correos. En **Revisar nómina**, edita las celdas y marca las filas que se incluirán; después acepta para generar los adjuntos.
+2. Prepara correos: los adjuntos se generan automáticamente. **Editar adjunto (opcional)** permite cambiar solo la nómina del correo seleccionado; aceptar actualiza ese adjunto.
 3. Revisa texto, destinatarios y adjuntos. El resumen final muestra el contenido efectivo antes de crear borradores en Outlook.
 4. Prepara proyectos en Resoluciones, revisa sus datos y genera Word.
 5. Consulta pendientes, fechas y entrega en Resultados. Un doble clic en un pendiente abre su registro o producto.

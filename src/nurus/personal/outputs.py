@@ -363,7 +363,7 @@ def create_draft(work,draft,*,confirmed=False):
     from .capture_products import institutional_statement_issue
     issue=institutional_statement_issue(work,draft)
     if issue:raise ValueError(issue)
-    if not draft.roster_reviewed:raise ValueError('Revisa la nómina antes de crear los adjuntos y guardar el correo.')
+    if not draft.roster_reviewed:raise ValueError('Genera o actualiza el adjunto de nómina antes de guardar el correo.')
     draft.key=draft_fingerprint(draft)
     if draft.key in work.receipts:raise ValueError('Este borrador ya se creó o su guardado quedó incierto; revisa Outlook antes de repetir.')
     to='; '.join(emails(draft.to));cc='; '.join(emails(CC+';'+draft.cc))

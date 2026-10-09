@@ -16,7 +16,7 @@ def pending(work,drafts,projects):
             tasks.extend(('Aviso',row.id,str(w)) for w in row.warnings)
             if not row.review and row.observation:tasks.append(('Revisión',row.id,'Revisar observación propuesta'))
     for draft in drafts:
-        if not draft.roster_reviewed:tasks.append(('Nómina',draft.subject,'Revisar y generar adjuntos'))
+        if not draft.roster_reviewed:tasks.append(('Nómina',draft.subject,'Generar o actualizar adjuntos'))
         if not draft.to.strip():tasks.append(('Contacto',draft.subject,'Completar destinatario'))
         if work and stale(work,draft):tasks.append(('Correo',draft.subject,'Actualizar producto'))
         elif work and draft_fingerprint(draft) not in work.receipts:tasks.append(('Correo',draft.subject,'Revisar y guardar borrador'))

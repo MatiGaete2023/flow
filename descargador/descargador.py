@@ -126,7 +126,7 @@ class Application:
         self.status=tk.StringVar(value='Abre tu Chrome, entra a Seguimiento y conecta la extensión local.')
         self.preview=tk.StringVar(value='Carga las opciones de tu sesión para preparar el lote.')
         self.count=tk.StringVar(value='Sin descargas en este lote')
-        root.title('Descargador SITFA · 2.7.3 integral · CSMP y bitácoras')
+        root.title('Descargador SITFA · 2.7.4 integral · CSMP y bitácoras')
         menu=tk.Menu(root);root.configure(menu=menu)
         self.theme=tk.StringVar(value=self.prefs.data.get('tema','Sistema'))
         appearance=tk.Menu(menu,tearoff=False);menu.add_cascade(label='Apariencia',menu=appearance)
@@ -302,9 +302,6 @@ class Application:
         ttk.Button(popup,text='Aplicar',command=apply).pack(pady=8)
     def show_results(self):
         if self.busy:self.status.set('Espera a que termine la operación para trabajar con resultados.');return
-        if self.last_folder and (self.last_folder/'flujo.json').is_file():
-            from ventana_flujo import JointWindow
-            JointWindow(self);return
         from ventana_resultados import ResultsWindow
         ResultsWindow(self)
     def open_selected(self,event=None):
@@ -513,11 +510,17 @@ class Application:
             finally:self.emit('idle',None)
 
     def process_event(self,name,value):
+        if name in ('diary_done','joint_done','done') and value.get('folder'):
+            from archivo_local import remember
+            try:remember(self.prefs,value['folder'])
+            except (m.PocError,OSError,ValueError):pass
         if name=='diary_done':
             self.last_folder=Path(value['folder']);self.count.set(f"{value['leidas']} lecturas verificadas · {value['fallidas']} filas fallidas o sin vínculo · {value.get('consultas_fallidas',0)} consultas fallidas")
             self.context.set('Bitácoras · '+value['estado'])
             self.status.set(('Copias guardadas. ' if value['leidas'] else 'No se guardaron copias de bitácoras. ')+
-                (value.get('detalle') or 'CSMP recibe el control del lote. Revisa Lecturas y Consultas en el Excel.'))
+                (value.get('detalle') or 'Abre Resultados para revisar o reutilizar este lote.'))
+            if value.get('excel'):self.status.set(self.status.get()+' Excel consolidado: '+Path(value['excel']).name)
+            if value.get('excel_error'):self.status.set(self.status.get()+' Excel pendiente: '+value['excel_error'])
             if self.bitacoras_reply:
                 from lectura_bitacoras import write
                 write(Path(self.bitacoras_reply),{**value,'id':self.bitacoras_id})
