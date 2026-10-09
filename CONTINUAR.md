@@ -6,7 +6,7 @@
 **Baseline NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`
 **P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`
 **Documento 02 incorporado:** `6c520f8e49e40c6c7d5379492e6064a55b28c0fb`
-**Código compilado y verificado Windows:** `99ed217c2fbb66d723b45f6e824622b07ae2f138`
+**Código compilado y verificado Windows:** `e3a63691ba75657cef82834406dadb849ba50ee6`
 El último checkpoint se obtiene con `git log -1`.
 
 ## Autorización y entrega actual
@@ -20,6 +20,36 @@ Contrato, esquema/diccionario, fixtures, validador, exportador autónomo, import
 UI local, cronología limitada, productos y solicitudes ya tienen implementación.
 No presentar contrato como pendiente ni volver a solicitar documento 02.
 No afirmar que todos los gates institucionales están cerrados.
+
+## Regresiones del usuario — entrega 2.7.4 (9 de octubre)
+
+[Informe y actualización desde ZIP](docs/REGRESIONES_PRUEBAS_USUARIO_20261009.md).
+Código funcional `d6ec1b4`; `e3a6369` ajusta dos aserciones para rutas Windows y
+HTML ficticio UTF-8. Asistente 0.5.0.dev4 y Descargador/extensión **2.7.4**.
+
+- Guardar el lote de correos excluye las comprobaciones de Excel sin borrador:
+  corregido `NoneType ... to`. Adjuntos automáticos; **Editar adjunto (opcional)**
+  afecta solo al seleccionado. Se mantienen 24 adjuntos al editar uno de 25,
+  ediciones al preparar nuevamente y recuperación de sesiones anteriores.
+- Lectura y reutilización de HTML UTF-8/Windows-1252 conserva bytes/hashes. El HAR
+  confirma los tipos 11/13 de Espera/Informes; se conserva cada tipo literal,
+  además del 12 de Cumplimiento. Respuestas institucionales 11/13 pendientes.
+- PDF vacío muestra tribunal, modalidad, pestaña y fechas o sin filtro; contexto
+  visible en píxeles de captura Chrome nativa y cambios rechazados.
+- **Resultados e historial** recupera descargas/conjuntos/bitácoras anteriores
+  sin Chrome. Cada lectura produce **Bitacoras_RUS.xlsx**. Se comprobó un lote
+  ficticio de 800 bitácoras, versiones/duplicados, hashes y exclusiones.
+- Para reunir datos: añadir carpetas de hojas y `bitacoras.json` con sus HTML,
+  pulsar **Crear paquete para Asistente (ZIP)** e importarlo en Trabajo.
+  Solo reutiliza por tribunal/causa/ingreso verificados; informa coincidencias y
+  exclusiones y conserva la fecha original. Quitar lote del paquete no borra
+  sus archivos. Reutilizar no acredita actualización remota.
+
+Los HAR/JSON/HTML reales permanecen fuera del repositorio. Las pruebas usan datos
+ficticios. Instalación ZIP: extraer la rama en carpeta nueva, ejecutar de nuevo
+`Instalar_CSMP.bat`, usar sus iniciadores y cargar/recargar **su** extensión 2.7.4.
+No volver a pedir los atributos onclick: el HAR ya los confirmó para Espera e
+Informes. Queda contraste de las respuestas y aceptación Office/institucional.
 
 ## Fases
 
@@ -42,32 +72,36 @@ No afirmar que todos los gates institucionales están cerrados.
 
 ## Descargas del código verificado
 
-- [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37924605460/artifacts/11614235483).
-- [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37924605460/artifacts/11613692954).
-- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37924605484/artifacts/11613751543).
+- [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622653641).
+- [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622223523).
+- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37942421581/artifacts/11623120729).
 
-Ambos workflows del SHA `99ed217` terminaron SUCCESS el 2026-10-09.
-Asistente Python 3.12/3.13/3.14: **612 aprobadas y 1 omitida** en cada versión.
-Descargador: **171 aprobadas y 57 subpruebas aprobadas**. El EXE autónomo,
-paquete conjunto e instalador comprobaron productos v1 con datos ficticios y SHA
-coherente entre ambos EXE. Cada build ahora verifica instalación, reinstalación,
-productos desde el EXE instalado, desaparición real de toda la carpeta y datos
-externos intactos. La comprobación histórica manual se parametriza por run/SHA.
+Workflows del SHA `e3a6369`: [Asistente](https://github.com/MatiGaete2023/flow/actions/runs/37942421534)
+y [Descargador](https://github.com/MatiGaete2023/flow/actions/runs/37942421581).
+Ambos SUCCESS el 2026-10-09. Asistente Python 3.12/3.13/3.14:
+**615 aprobadas y 1 omitida** en cada versión. Descargador:
+**192 aprobadas y 59 subpruebas aprobadas**. EXE autónomos, paquete conjunto e
+instalador verifican productos v1 ficticios y SHA coherente. Instalación,
+reinstalación, desaparición real de carpeta y conservación de datos externos
+comprobadas. Esto no acredita Outlook ni SITFA reales.
 
-Metadatos y digests ZIP de GitHub, pasos y extractos ejecutados:
-[CI de las correcciones](docs/evidencia_correcciones_20261009/ci_windows.json).
-El registro canónico se actualizó en `docs/evidencia_desarrollo_20261008/ci_windows.json`;
-la entrega anterior `6d3555a` se conserva en `ci_windows_codigo6d3555a.json`,
-con su verificación histórica adicional `396a643`. No se afirma recomputación
-local de los hashes ZIP: los binarios se comprueban en CI y los metadatos los
-informa la API de GitHub. Los inventarios de dependencias y locks acompañan
-los artefactos; son conjuntos de versiones probadas, no una promesa de identidad
-binaria frente a timestamps u otros factores.
+Evidencia local y CI:
+[regresiones del usuario](docs/evidencia_regresiones_usuario_20261009/README.md)
+y [metadatos/digests Windows](docs/evidencia_regresiones_usuario_20261009/ci_windows.json).
+Linux/Xvfb: **605 aprobadas/11 omitidas** Asistente, **192/59 subpruebas**
+Descargador; paridad de 17 productos tradicionales. El registro canónico en
+`docs/evidencia_desarrollo_20261008/ci_windows.json` corresponde a `e3a6369`;
+las entregas anteriores `99ed217` y `6d3555a` se conservan en archivos
+`ci_windows_codigo99ed217.json` y `ci_windows_codigo6d3555a.json`.
+[Correcciones H01–H09/M01–M03](docs/evidencia_correcciones_20261009/ci_windows.json)
+conserva su evidencia histórica de `99ed217`.
 
-Los artefactos Actions caducan según la retención del repositorio. Los binarios
-corresponden al código `99ed217`; el checkpoint documental posterior se obtiene
-con `git log -1` y no cambia el código distribuido. La aceptación Windows 10
-institucional/Office/SITFA/RUS sigue diferida por instrucción del usuario.
+Los digests ZIP los informa GitHub, no se afirma su recomputación local. Locks e
+inventarios acompañan los paquetes. Los artefactos caducan según retención de
+Actions. Los binarios corresponden a `e3a6369`; el checkpoint documental posterior
+se obtiene con `git log -1`. La aceptación Windows 10 institucional, Office,
+SITFA/RUS y promoción sigue pendiente. No fusionar a main ni publicar release
+sin instrucción; continuar en esta rama y PR en borrador.
 
 ## Comandos reproducibles
 
