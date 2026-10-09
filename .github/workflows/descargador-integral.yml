@@ -21,6 +21,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Identidades reales (RUT con dígito verificador válido)
+        working-directory: .
+        run: python tools/check_real_ids.py --excluir variantes/
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

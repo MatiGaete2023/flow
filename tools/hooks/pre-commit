@@ -1,0 +1,10 @@
+#!/bin/sh
+# Bloquea commits con RUT de dígito verificador válido. Activar con:
+#   git config core.hooksPath tools/hooks
+files=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$files" ] && exit 0
+PY=$(command -v python3 || command -v python || command -v py)
+echo "$files" | tr '\n' '\0' | xargs -0 "$PY" tools/check_real_ids.py --excluir variantes/ >/dev/null || {
+    echo "$files" | tr '\n' '\0' | xargs -0 "$PY" tools/check_real_ids.py --excluir variantes/
+    exit 1
+}

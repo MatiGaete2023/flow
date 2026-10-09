@@ -32,6 +32,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
+      - name: Identidades reales (RUT con dígito verificador válido)
+        run: python tools/check_real_ids.py --excluir variantes/
+
       - name: Python ${{ matrix.python }}
         uses: actions/setup-python@v7
         with:

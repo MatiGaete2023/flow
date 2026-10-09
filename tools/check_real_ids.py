@@ -3,10 +3,12 @@
 Uso:
     python tools/check_real_ids.py            # revisa archivos versionados
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
+    python tools/check_real_ids.py --excluir variantes/  # omite archivos bajo esa ruta (repetible)
 
 Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
 Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
 """
+import argparse
 import re
 import subprocess
 import sys
@@ -78,8 +80,18 @@ def scan(paths: list[Path], allowlist: set[str]) -> list[tuple[str, int, str]]:
     return findings
 
 
+def excluded(path: Path, prefixes: list[Path]) -> bool:
+    return any(path == prefix or prefix in path.parents for prefix in prefixes)
+
+
 def main(argv: list[str]) -> int:
-    paths = [Path(arg).resolve() for arg in argv] if argv else tracked_files()
+    parser = argparse.ArgumentParser(description="Detecta RUT con dígito verificador válido.")
+    parser.add_argument("rutas", nargs="*")
+    parser.add_argument("--excluir", action="append", default=[], metavar="RUTA")
+    args = parser.parse_args(argv)
+    paths = [Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files()
+    prefixes = [(ROOT / prefix).resolve() for prefix in args.excluir]
+    paths = [path for path in paths if not excluded(path, prefixes)]
     findings = scan(paths, load_allowlist())
     for label, line, masked in findings:
         print(f"{label}:{line}: RUT con dígito verificador válido ({masked})")
