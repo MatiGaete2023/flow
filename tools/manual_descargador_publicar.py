@@ -27,6 +27,10 @@ def markdown(data):
              '[Descargar PDF](' + PDF_NAME + ') · [Abrir HTML sin conexión](' + HTML_NAME + ') · '
              '[Práctica ficticia](' + PRACTICE_NAME + ')', '',
              'En HTML puedes ampliar las imágenes. El PDF tiene una página por sección.', '', '## Índice', '']
+    if (ROOT / 'docs/CORRECCION_REFERENCIAS_ZIP_20261009.md').is_file():
+        lines[6:6] = ['**Complemento de la versión 2.7.5:** si el paquete indica que falta un '
+                      '`bitacoras.json` antiguo, consulta [cómo recuperar o excluir referencias no disponibles]'
+                      '(../CORRECCION_REFERENCIAS_ZIP_20261009.md). Las imágenes de este manual corresponden a 2.7.4.', '']
     for i, page in enumerate(data['paginas'], 1):
         lines.append(f"- {page['titulo']} (página {i} del PDF)")
     for page in data['paginas']:
