@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:21-03:00",
+  "actualizado": "2026-10-09T18:22-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -230,12 +230,12 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-09T18:19-03:00",
       "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-15.json): 605/11, 200/59",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
@@ -296,7 +296,7 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -305,7 +305,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "9 de octubre de 2026: el entorno de la sesión denegó el 'git rm -r' masivo (clasificador de acciones destructivas). Requiere que el usuario autorice la eliminación o la ejecute él (comando en TRASPASO.md)."
+      ]
     },
     "WP-21": {
       "titulo": "Capa legado y segundo motor",
