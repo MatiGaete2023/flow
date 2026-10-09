@@ -1,12 +1,12 @@
 {
-  "commit": "2765b47",
+  "commit": "6f156c8",
   "asistente": {
     "aprobadas": 605,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "codigo": 0,
-    "resumen": "605 passed, 11 skipped in 40.86s"
+    "resumen": "605 passed, 11 skipped in 41.92s"
   },
   "descargador": {
     "aprobadas": 198,
@@ -14,7 +14,7 @@
     "fallidas": 0,
     "subpruebas": 59,
     "codigo": 0,
-    "resumen": "198 passed, 59 subtests passed in 36.40s"
+    "resumen": "198 passed, 59 subtests passed in 36.91s"
   },
   "identidades_reales": 18,
   "paridad_golden": "PASA",
