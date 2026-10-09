@@ -60,7 +60,7 @@ def build(app):
     app.words.tag_configure('res_legacy',background='#4a3b20',foreground='#fff0c2')
     app.project_list=ProjectSelection(app)
     def select(event=None):
-        if app.busy:return
+        if app.busy or getattr(app,'rendering',False):return
         app._resolution_detail()
         if not selected_ids(app,'words'):return
         rid,kind=selected_ids(app,'words')[0].split('|')
