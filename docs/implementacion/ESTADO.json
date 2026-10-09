@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:17:37.125759+00:00",
+  "actualizado": "2026-10-09T22:22:25.741000+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -87,11 +87,13 @@
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-01-gobernanza",
       "pr": 5,
-      "verificacion": null,
-      "revision": null,
+      "verificacion": "FALLA: 12 enlaces nuevos en HISTORIAL.md al mover CONTINUAR; demás controles pasan; corrección en curso.",
+      "revision": "APROBADO b49735d; reevaluar corrección de enlaces",
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "El prefacio histórico es permitido; actualizar destinos relativos preservando contenido y originales."
+      ]
     },
     "WP-02": {
       "titulo": "Acta de uso real",
