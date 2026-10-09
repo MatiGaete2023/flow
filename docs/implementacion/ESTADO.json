@@ -70,7 +70,8 @@
       "integrado_en": "c4db3e11216b5ae6c44f59c3e5d474a47c5c70f8",
       "notas": [
         "Kit exacto recuperado en rama propia; rama auxiliar 5471ca6 preservada sin integrar.",
-        "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente."
+        "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente.",
+        "Verificación posterior al merge reproducida: 605/11, 198/59, golden PASA, sin fallos; baseline actualizado con las deudas iniciales 18/26."
       ]
     },
     "WP-01": {
@@ -85,7 +86,7 @@
       "ejecutor": "/root/ejecutor_preparacion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-01-gobernanza",
-      "pr": null,
+      "pr": 5,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
@@ -184,7 +185,7 @@
       "ejecutor": "/root/ejecutor_retencion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-13-retencion-asistente",
-      "pr": null,
+      "pr": 3,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
@@ -205,7 +206,7 @@
       "ejecutor": "/root/ejecutor_retencion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-14-retencion-descargador",
-      "pr": null,
+      "pr": 4,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
