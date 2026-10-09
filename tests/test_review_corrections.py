@@ -36,7 +36,8 @@ def work_from(tmp_path, *, partial=False):
 
 
 @pytest.mark.parametrize('text,valid', [('x'*32767, True), ('x'*32768, False),
-                                     ('😀'*16383+'x', True), ('😀'*16384, False)])
+                                     ('😀'*16383+'x', True), ('😀'*16384, False)],
+                         ids=['ascii-limit', 'ascii-excess', 'utf16-limit', 'utf16-excess'])
 def test_excel_limit_checked_before_cell_assignment(text, valid):
     book = Workbook(); sheet = book.active
     if valid:
