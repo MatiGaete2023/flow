@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:52-03:00",
+  "actualizado": "2026-10-09T18:54-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -57,6 +57,20 @@
       "origen": "WP-60 / R-T13",
       "fecha": "9 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] Sin columna de ficha FAE, reglas_cumplimiento.py emite C08_FICHA_FAE («no registra ficha»); 03 §6 pide NO_EVALUABLE. Prueba xfail estricta en tests/test_reglas_cumplimiento.py. Decide el usuario; no se modificó la regla.",
+      "respuesta": null
+    },
+    {
+      "id": "R-T19-advertencia",
+      "origen": "WP-60",
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La cronología admite eventos con RIT/nombre visual distinto e IDs iguales, pero no deja advertencia trazable (03 §12 R-T19). xfail estricto en tests/test_reglas_contexto.py.",
+      "respuesta": null
+    },
+    {
+      "id": "R-T24-R-T26-alcance",
+      "origen": "WP-60",
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] R-T24 (CT-03/CT-05), R-T25 (CT-08) y R-T26 (CT-07) requieren historia SITFA/PDF o reglas CT que PLAN_VIGENTE deja fuera de alcance. xfail estricto; decide el usuario si se incorporan.",
       "respuesta": null
     }
   ],
@@ -173,12 +187,12 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-09T18:51-03:00",
       "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-12.json): 656/11+1xfail, 200/59, golden PASA",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
@@ -705,7 +719,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "TOMADO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-09T18:25-03:00",
       "rama": "ccr-4116db41-nm8g0r",
@@ -715,7 +729,8 @@
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "20 de 32 casos R-T con prueba (19 PASÓ + R-T13 con conflicto). Faltan R-T17–R-T26, R-T29, R-T30, R-T32."
+        "20 de 32 casos R-T con prueba (19 PASÓ + R-T13 con conflicto). Faltan R-T17–R-T26, R-T29, R-T30, R-T32.",
+        "32/32 R-T con prueba ejecutada; 4 conflictos abiertos registrados."
       ]
     },
     "WP-61": {
