@@ -1,0 +1,67 @@
+{
+  "data_kind": "SINTETICA",
+  "python": "3.12.14",
+  "platform": "Linux",
+  "display": ":99 (Xvfb)",
+  "assistant_tests": {
+    "passed": 602,
+    "skipped": 11,
+    "source_tree": "99ed217c2fbb66d723b45f6e824622b07ae2f138; regresión ejecutada antes de crear el commit"
+  },
+  "downloader_tests": {
+    "passed": 171,
+    "subtests_passed": 57,
+    "source_tree": "76bae9c9754350e6c4151231245737516278a342; módulos sin cambios posteriores"
+  },
+  "golden_products": 17,
+  "corrected_probes": 8,
+  "original_attachments": "7 archivos sin modificar; verifica tools/flow_plan_progress.py",
+  "dependency_lock_generator": "uv 0.12.19",
+  "commands": [
+    "DISPLAY=:99 python -m pytest -q --junitxml=tests_asistente.xml",
+    "DISPLAY=:99 python -m pytest -q descargador --junitxml=tests_descargador.xml",
+    "python tools/flow_review_probes.py --verify",
+    "python tools/flow_import_benchmark.py --rows 2000 10000 20000 --output benchmark_importacion.json",
+    "python tools/flow_dependency_inventory.py --lock requirements/linux-py312.lock --output dependencias_linux.json"
+  ],
+  "institutional_acceptance": "NO_EJECUTADO",
+  "institutional_access_deferred_by_user": true,
+  "sha256": {
+    "README.md": "d36393ab094d3d2f476e259dc372ddf1d411dcfe846f6b00aebd4340577061ab",
+    "adjuntos_verificados.json": "d432bfacd95511bf7ce2e4af4b7d73c95568ced3e5a2bf6f0194ec8321f6a19a",
+    "benchmark_importacion.json": "dd1693595b3327735a72fa3f3f84fb80d4f21775f7980b28f0cd155a97b0cf08",
+    "ci_76bae9c_ids_fallo.json": "15d2199e199e41c2566abdab0fbe19f4db4c9f83095e961536ecc7447981c827",
+    "ci_windows.json": "f480ead510d1c105759e737eb865e7627cb00e0aa7d08e660e2b4c6d2702d88f",
+    "conciliacion_gui.txt": "6cf3556e8f25e4b6c9d57ac71e6f30d2d118f346910cae2a9c7bf580764ae65f",
+    "dependencias_linux.json": "e85fbb1c230a025dfdb288c2a7e6936960e88965c1e32b17a140581c989910fe",
+    "golden.txt": "fd8c8b920276adefb219101296fb629e17f11ce3075bb2d8e2ccb15df3d96a3f",
+    "ids_pytest.txt": "193f2b63d44309aaea0554503d3792c3803630eda3b565c2b32962179558b815",
+    "sondas_verificadas.json": "eb155d0008498ef0d63c3a753ae5d13a8fb1589b506b6931a324bd65ba2173bc",
+    "tests_asistente.txt": "092983093e796ab5097c3865be8eb95338a48ad6dc94666449b576f7f2306645",
+    "tests_asistente.xml": "c5199021fe093c6ba1a3269c8ef39e222180a89ccf0d6c8eb67ac070ec6b7b19",
+    "tests_descargador.txt": "bb9b02f40c56a4f1d4f4b477908845e8582bc87e0d5e63322bfb743dffe0fd62",
+    "tests_descargador.xml": "8ef029cfb3acbfd93d46dd221bc616849e46a352e5ab31cbb10764cc2f2fcc95",
+    "tests_ids_windows.txt": "ebfb57030d2e1c6145360f7a5f7dec4ead17a85ee81a06fd0719cd70c83dd75f",
+    "tests_ids_windows.xml": "a0d5eb3fbd9cb6129e7d9fbb7b2fde93862f274a50608fcf1b928b9250067ef8"
+  },
+  "compiled_checkpoint": "99ed217c2fbb66d723b45f6e824622b07ae2f138",
+  "test_ids_followup": {
+    "passed": 23,
+    "parameter_values_unchanged": true,
+    "max_collected_line_characters": 118
+  },
+  "gui_followup": {
+    "synthetic_records": 600,
+    "live_draft_edit_preserved": true,
+    "ids_remapped_and_saved": true,
+    "prior_session_archived": true,
+    "test": "tests/test_capture_gui.py::test_complementary_import_restores_live_products_after_large_redraw"
+  },
+  "functional_source_commits": [
+    "76bae9c9754350e6c4151231245737516278a342",
+    "99ed217c2fbb66d723b45f6e824622b07ae2f138"
+  ],
+  "probe_checkpoint": "ac7fe5b5ec742c5e967e1b5ff0a7af3e5e2b5c94 (módulos examinados sin cambios posteriores)",
+  "benchmark_functional_tree": "76bae9c9754350e6c4151231245737516278a342; medición antes de crear el commit",
+  "ci_windows": "ci_windows.json"
+}

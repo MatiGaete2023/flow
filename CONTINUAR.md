@@ -6,7 +6,7 @@
 **Baseline NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`
 **P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`
 **Documento 02 incorporado:** `6c520f8e49e40c6c7d5379492e6064a55b28c0fb`
-**Código compilado y verificado Windows:** `6d3555a14fe4b6966f5091dc6a7db51a1e54e521`
+**Código compilado y verificado Windows:** `99ed217c2fbb66d723b45f6e824622b07ae2f138`
 El último checkpoint se obtiene con `git log -1`.
 
 ## Autorización y entrega actual
@@ -42,41 +42,42 @@ No afirmar que todos los gates institucionales están cerrados.
 
 ## Descargas del código verificado
 
-- [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593867357).
-- [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11594002109).
-- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37878632105/artifacts/11594120109).
+- [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37924605460/artifacts/11614235483).
+- [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37924605460/artifacts/11613692954).
+- [Descargador autónomo Windows](https://github.com/MatiGaete2023/flow/actions/runs/37924605484/artifacts/11613751543).
 
-Ambos workflows del SHA `6d3555a` finalizaron SUCCESS el 2026-10-09.
-Asistente Python 3.12/3.13/3.14 aprobados (3.12: 584 aprobadas, 1 omitida).
-Descargador: 169 aprobadas y 57 subtests. El EXE autónomo, el paquete conjunto y
-el instalador comprobaron el flujo de productos v1 con datos ficticios. Se verificó
-SHA coherente entre ambos EXE y conservación de datos al reinstalar/desinstalar.
+Ambos workflows del SHA `99ed217` terminaron SUCCESS el 2026-10-09.
+Asistente Python 3.12/3.13/3.14: **612 aprobadas y 1 omitida** en cada versión.
+Descargador: **171 aprobadas y 57 subpruebas aprobadas**. El EXE autónomo,
+paquete conjunto e instalador comprobaron productos v1 con datos ficticios y SHA
+coherente entre ambos EXE. Cada build ahora verifica instalación, reinstalación,
+productos desde el EXE instalado, desaparición real de toda la carpeta y datos
+externos intactos. La comprobación histórica manual se parametriza por run/SHA.
 
-La verificación adicional [396a643, SUCCESS](https://github.com/MatiGaete2023/flow/actions/runs/37880150341)
-reutilizó ese instalador: instalación, productos desde el EXE instalado,
-reinstalación, desaparición de la carpeta completa y conservación de un dato
-ficticio externo. Espera la eliminación real hasta 60 s, porque el retorno del
-lanzador de Inno puede anteceder a su proceso temporal. No cambia el binario
-`6d3555a`. [Logs y JSON de entrega](https://github.com/MatiGaete2023/flow/actions/runs/37880150341/artifacts/11593803911);
-resumen en `ci_windows_396a643_instalador.json`.
+Metadatos y digests ZIP de GitHub, pasos y extractos ejecutados:
+[CI de las correcciones](docs/evidencia_correcciones_20261009/ci_windows.json).
+El registro canónico se actualizó en `docs/evidencia_desarrollo_20261008/ci_windows.json`;
+la entrega anterior `6d3555a` se conserva en `ci_windows_codigo6d3555a.json`,
+con su verificación histórica adicional `396a643`. No se afirma recomputación
+local de los hashes ZIP: los binarios se comprueban en CI y los metadatos los
+informa la API de GitHub. Los inventarios de dependencias y locks acompañan
+los artefactos; son conjuntos de versiones probadas, no una promesa de identidad
+binaria frente a timestamps u otros factores.
 
-Metadatos y digests ZIP informados por GitHub: `docs/evidencia_desarrollo_20261008/ci_windows.json`.
-La descarga local de los ZIP devolvió HTTP 403; no se afirma recomputación local
-de sus hashes. Las comprobaciones de binarios fueron ejecutadas en CI. El
-paquete conjunto conserva sus JSON de verificación y SHA de ambos EXE.
-El registro anterior está en `ci_windows_codigo01e013d.json`; el fallo CP1252 y
-la corrección se conservan en `ci_windows_1e50f95_fallo.json`.
-
-Los artefactos Actions caducan según la retención del repositorio. Un checkpoint
-posterior de documentación no cambia el código distribuido: estos binarios
-corresponden a `6d3555a`, no al SHA de ese checkpoint.
+Los artefactos Actions caducan según la retención del repositorio. Los binarios
+corresponden al código `99ed217`; el checkpoint documental posterior se obtiene
+con `git log -1` y no cambia el código distribuido. La aceptación Windows 10
+institucional/Office/SITFA/RUS sigue diferida por instrucción del usuario.
 
 ## Comandos reproducibles
 
 ```sh
-python -m pip install ".[dev,excel-legacy]"
+python -m pip install --require-hashes -r requirements/linux-py312.lock
+python -m pip install --no-deps --no-build-isolation .
 python -m pytest -q
 python -m pytest descargador -q
+python tools/flow_review_probes.py --verify
+python tools/flow_dependency_inventory.py --lock requirements/linux-py312.lock --output /ruta/nueva/dependencias.json
 python tools/flow_capture_cli.py validate contracts/csmp_capture_v1/fixtures/completa.zip
 python tools/flow_capture_pipeline.py /ruta/nueva/prueba --rows 100 500 2000
 python tools/flow_baseline_golden.py --output /ruta/nueva/golden --expected docs/evidencia_p0/golden/semantic.json
@@ -89,22 +90,25 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 
 ## Al retomar
 
-**Revisión técnica posterior al cierre:** [informe del 2026-10-09](docs/INFORME_REVISION_20261009.md).
-Se identificaron ocho problemas reproducidos y una brecha de CI para nuevas
-entregas. Las correcciones están pendientes: priorizar H01/H02 (texto y hallazgos),
-H04/H05 (cobertura) y H03 (continuidad de decisiones). H06–H09 y las mejoras M01–M03
-incluyen solución propuesta y prueba de aceptación. La revisión no modificó código
-productivo ni convierte los resultados históricos de CI en aceptación de estos casos.
-Evidencia y reproducción: `docs/evidencia_revision_20261009/` y
-`python tools/flow_review_probes.py`. Al ejecutar las sondas, código 0 indica que
-se obtuvieron observaciones; no que los defectos estén corregidos.
+**Revisión técnica corregida:** H01–H09 y M01–M03 están implementados. Leer
+[informe de correcciones](docs/CORRECCIONES_REVISION_20261009.md) y
+`docs/evidencia_correcciones_20261009/`. Se conservan el informe y las sondas
+anteriores en `docs/evidencia_revision_20261009/` como diagnóstico histórico.
+`python tools/flow_review_probes.py --verify` exige las ocho correcciones
+reproducibles; H09 se comprueba con pruebas nativas y el instalador de cada build.
 
-**Cierre 2026-10-09:** CI del SHA `6d3555a` aprobada en ambos workflows. Los límites
-por proceso, aislamiento GUI Windows y diagnóstico del instalador están verificados.
-El run adicional `37880150341` confirma la eliminación real de la aplicación y
-datos externos intactos usando el instalador publicado de ese mismo código.
-Los párrafos siguientes conservan el historial de incidencias ya resueltas.
+La conciliación preserva decisiones con capturas compatibles y exige decisión
+humana ante cambios/ambigüedad. La cobertura se calcula por fuente/ingreso y se
+mantienen las incidencias visibles. Los límites son 20.000 registros de análisis,
+texto Excel en 32.767 unidades UTF-16 y solicitud de 4 MiB UTF-8/20.000 entradas.
+El contrato de transporte conserva 200.000 filas/80 MiB. Excesos se rechazan antes
+de sustituir el trabajo o publicar la solicitud; dividir el lote/alcance.
 
+**Cierre de correcciones 2026-10-09:** H01–H09/M01–M03 implementados y verificados
+con datos ficticios. Linux: 602 aprobadas/11 omitidas del Asistente, 171 y 57
+subpruebas del Descargador; 17 productos conservan paridad. Windows del código
+`99ed217` y el instalador actual aprobados. Los párrafos siguientes mantienen
+el historial de las entregas anteriores y sus incidencias resueltas.
 
 ### Continuación de verificación y actas
 
@@ -151,8 +155,8 @@ la ruta de subprocess; esa prueba no sustituye la nueva CI Windows. Evidencia en
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.
-2. Usar los artefactos aprobados del código `6d3555a` y la verificación adicional
-   del instalador `396a643`. Los checkpoints documentales no requieren recompilar.
+2. Usar los artefactos aprobados del código `99ed217` y su verificación del
+   instalador en el mismo build. Los checkpoints documentales no requieren recompilar.
    Si se modifica código, verificar su nueva CI sin eliminar tests y conservar
    mismo SHA para ambos EXE/extensión.
 3. Leer [aceptación pendiente](docs/ACEPTACION_INSTITUCIONAL_PENDIENTE.md).

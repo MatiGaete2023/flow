@@ -32,7 +32,7 @@ DEPENDENCIES={
  'P10':'CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9.',
  'P11':'INT reales y ampliadas NO EJECUTADAS; MVP local comprobado.',
  'P12':'P9/P10 y acta institucional; ampliación excluida del MVP.',
- 'P13':'CI 6d3555a aprobada; verificación adicional 396a643 confirma eliminación de carpeta y conservación de datos externos del instalador publicado. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes.',
+ 'P13':'CI 99ed217 aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes.',
 }
 
 
@@ -57,14 +57,14 @@ def main():
            'ZIP completo/parcial desde originales comprobados; fuente institucional no certificada por fixtures.')
     update('A-T01 A-T03 A-T04 A-T05 A-T06 A-T08 A-T14 A-T17 F08 F09 INT-09 INT-20 INT-21 INT-22',
            'src/nurus/personal/capture_input.py;src/nurus/personal/work.py',
-           'tests/test_capture_input.py;tests/test_capture_gui.py;tests/test_capture_contract.py',
+           'tests/test_capture_input.py;tests/test_capture_gui.py;tests/test_review_corrections.py;tests/test_capture_contract.py',
            'Cuatro modalidades, hash/identidad, edición y legado locales; golden sin divergencia. Office real pendiente.')
     update('A-T02 F05 INT-12','src/nurus/capture/contract.py;src/nurus/capture/temporal.py',
-           'tests/test_capture_contract.py;tests/test_capture_temporal_products.py',
+           'tests/test_capture_contract.py;tests/test_review_corrections.py;tests/test_capture_temporal_products.py',
            'Fuentes ausentes e inciertas explícitas; contexto de producción NO_EVALUABLE.')
     update('A-T09 R-T29 F12 INT-16 INT-23','src/nurus/personal/product_state.py;src/nurus/personal/record_edits.py',
            'tests/test_capture_input.py;tests/test_capture_temporal_products.py;tests/test_personal_batch_revision.py',
-           'Reanálisis/reimportación conserva decisiones; fuente/regla/corte invalida productos preparados.')
+           'Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados.')
     update('A-T15 A-T16 A-T19 INT-24 INT-26','src/nurus/personal/app_base.py;src/nurus/personal/registration.py',
            'tests/test_capture_gui.py;tests/test_capture_temporal_products.py',
            'Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad.')
@@ -76,12 +76,12 @@ def main():
            'Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente.')
     update('A-T07 F11 INT-15','src/nurus/personal/capture_input.py;src/nurus/personal/capture_products.py',
            'tests/test_capture_gui.py;tests/test_capture_input.py;tests/test_integral_ui.py',
-           'Hallazgos por ingreso y UI local; benchmark 100/500/2000. No certifica productividad institucional.',state='EN_CURSO')
+           'Hallazgos/cobertura por ingreso e incidencias persistidas; UI local y benchmark de importación 2000/10000/20000; máximo operativo 20000 registros. No certifica productividad institucional.',state='EN_CURSO')
     update('F15','src/nurus/capture/requests.py;descargador/solicitud_antecedentes.py',
-           'tests/test_capture_temporal_products.py','Solicitud declarativa local; no ejecuta consultas.')
-    update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1;tools/windows_process_check.ps1',
-           'tests/test_capture_build_identity.py;tests/test_capture_selfcheck.py;tests/test_windows_installer_contract.py;tests/test_windows_process_check.py;tests/test_current_release_contract.py;.github/workflows/verify-delivered-installer.yml',
-           'CI 6d3555a SUCCESS: productos v1 desde EXE autónomo, paquete SHA coherente e instalador; 396a643 verifica eliminación real y datos externos intactos. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes.')
+           'tests/test_capture_temporal_products.py;tests/test_review_corrections.py','Solicitud declarativa por fuente/ingreso; límite compartido 4 MiB UTF-8/20000 entradas antes de publicación. No ejecuta consultas.')
+    update('D-T20 A-T18','src/nurus/personal/package_check.py;descargador/verificar_paquete.py;tools/build_integral.ps1;tools/windows_process_check.ps1;tools/verify_installer.ps1;tools/flow_dependency_inventory.py',
+           'tests/test_capture_build_identity.py;tests/test_capture_selfcheck.py;tests/test_windows_installer_contract.py;tests/test_windows_process_check.py;tests/test_installer_removal.py;tests/test_dependency_inventory.py;tests/test_current_release_contract.py;.github/workflows/verify-delivered-installer.yml',
+           'CI 99ed217 SUCCESS: 612 aprobadas/1 omitida por versión Windows, productos v1 desde EXE autónomo/instalado y paquete SHA coherente; el instalador actual acredita eliminación real y datos externos intactos. Dependencias bloqueadas por Python/plataforma y verificadas. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes.')
     update('F10 R-T17 R-T18 R-T19 R-T20 R-T21 INT-14','src/nurus/capture/temporal.py',
            'tests/test_capture_temporal_products.py','Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE.',
            state='EN_CURSO',result='NO EJECUTADO')

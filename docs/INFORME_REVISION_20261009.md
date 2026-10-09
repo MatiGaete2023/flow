@@ -2,7 +2,7 @@
 
 **Fecha:** 9 de octubre de 2026. **Código revisado:** `45757c7d4acc47e96566528519c828fa6ba696d6`, rama `feat/ejecucion-plan-20261008`, [PR #1](https://github.com/MatiGaete2023/flow/pull/1).
 
-La revisión encontró **ocho problemas reproducidos con datos sintéticos y una brecha en la verificación de futuras entregas**. Cinco tienen prioridad alta por afectar fidelidad, decisiones humanas o cobertura; cuatro tienen prioridad media. Se proponen además tres mejoras de ingeniería. Las correcciones funcionales quedan pendientes: este trabajo entrega diagnóstico, evidencia y criterios para verificarlas.
+La revisión encontró **ocho problemas reproducidos con datos sintéticos y una brecha en la verificación de futuras entregas**. Cinco tienen prioridad alta por afectar fidelidad, decisiones humanas o cobertura; cuatro tienen prioridad media. Se proponen además tres mejoras de ingeniería. En la fecha de esta revisión las correcciones funcionales quedaban pendientes. Posteriormente se implementaron H01–H09 y M01–M03: consultar el [informe de correcciones y verificación](CORRECCIONES_REVISION_20261009.md). Este documento conserva el diagnóstico y la evidencia anteriores a esas correcciones.
 
 Las pruebas actuales del área examinada pasan, pero no detectan estos casos. Esto limita lo que puede concluirse de las anteriores comprobaciones satisfactorias del MVP. Se recomienda corregir los hallazgos de prioridad alta antes de promover una versión institucional.
 
