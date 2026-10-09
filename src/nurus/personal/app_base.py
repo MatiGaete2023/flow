@@ -753,6 +753,20 @@ class App(ctk.CTk):
         ttk.Button(matrices,text='Importar paquete de plantillas ZIP',command=lambda:self._guard(self._import_templates_zip)).grid(row=4,column=0,pady=8,sticky='w')
         ttk.Label(matrices,text='Carpetas LAJA, MULCHEN y TOME; tipos PC_IE.docx, PC_INFO.docx y NOMENCL.docx.',wraplength=640).grid(row=3,column=0,columnspan=2,sticky='w')
 
+        sample=ttk.Frame(advanced_nb,padding=8);advanced_nb.add(sample,text='Caso de prueba')
+        ttk.Label(sample,text='Crea una copia del Excel con nombres, RUT, RIT, curadores, domicilios, teléfonos y correos ficticios '
+                  'y estables, para compartir un caso sin datos reales. Revisa la copia antes de compartirla.',wraplength=640).pack(anchor='w')
+        ttk.Button(sample,text='Exportar caso de prueba anónimo',command=lambda:self._guard(self._export_anonymous_case)).pack(anchor='w',pady=8)
+
+    def _export_anonymous_case(self):
+        source=filedialog.askopenfilename(filetypes=[('Excel','*.xlsx *.xlsm')])
+        if not source:return
+        target=filedialog.asksaveasfilename(defaultextension='.xlsx',initialfile=Path(source).stem+'_anonimo.xlsx',filetypes=[('Excel','*.xlsx')])
+        if not target:return
+        from .anonymize import export_copy
+        changed,sheets=export_copy(source,target)
+        self.status.set(f'Copia anónima creada: {Path(target).name} · {changed} celdas reemplazadas en {sheets} hojas. Revísala antes de compartirla.')
+
     def _filter_config_parameters(self,*_):
         query=normalize(self.config_search.get()) if hasattr(self,'config_search') else ''
         for key,label,entry in getattr(self,'_config_parameter_widgets',[]):
