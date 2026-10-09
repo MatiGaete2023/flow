@@ -1,0 +1,25 @@
+{
+  "commit": "2765b47",
+  "asistente": {
+    "aprobadas": 605,
+    "omitidas": 11,
+    "fallidas": 0,
+    "subpruebas": 0,
+    "codigo": 0,
+    "resumen": "605 passed, 11 skipped in 72.82s (0:01:12)"
+  },
+  "descargador": {
+    "aprobadas": 198,
+    "omitidas": 0,
+    "fallidas": 0,
+    "subpruebas": 59,
+    "codigo": 0,
+    "resumen": "198 passed, 59 subtests passed in 40.93s"
+  },
+  "identidades_reales": 18,
+  "paridad_golden": "PASA",
+  "restricciones": [],
+  "ruff_src": 0,
+  "modulos_no_alcanzables": 12,
+  "enlaces_rotos": 26
+}
