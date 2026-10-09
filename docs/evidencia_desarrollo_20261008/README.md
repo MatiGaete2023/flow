@@ -154,3 +154,28 @@ No se guardó ese descriptor en Outlook ni se cambió la plantilla del usuario.
 No hubo consultas institucionales, registros RUS ni correos enviados. La API
 distribuida de registro rechaza antes de acceder al adaptador. Las pruebas del
 protocolo histórico usan una simulación residente exclusivamente en tests.
+
+## Cierre Windows de la continuación — 2026-10-09
+
+`ci_windows.json` identifica `6d3555a`, dos workflows SUCCESS y los artefactos/digests
+informados por GitHub. Asistente 3.12/3.13/3.14 aprobados: 584 aprobadas/1 omitida
+para 3.12. Descargador 169 aprobadas/57 subtests. Productos v1 comprobados en EXE
+frozen e instalador; paquete conjunto coteja SHA de origen; reinstalación/uninstall
+conservan el dato ficticio. Plantilla institucional NO_EJECUTADO incluida.
+
+`ci_windows_1e50f95_fallo.json` conserva el fallo CP1252 de stderr y su corrección;
+`flow-continuacion-utf8.txt/xml` prueba el caso con CP1252 forzado. No se omitió el
+test. El registro del código anterior está en `ci_windows_codigo01e013d.json`.
+La descarga local de ZIP devolvió HTTP 403: los digests proceden de la API de
+GitHub; la prueba de los binarios se realizó en CI, sin recomputación local.
+La aceptación institucional y de Office sigue NO_EJECUTADO por decisión del usuario.
+
+
+`ci_windows_396a643_instalador.json` registra la verificación adicional SUCCESS
+del instalador publicado `6d3555a`, sin recompilarlo. Comprueba instalación,
+productos desde el EXE instalado, reinstalación, eliminación de la carpeta
+completa tras la desinstalación y conservación de un dato ficticio externo.
+El retorno del lanzador se complementa con una espera acotada de eliminación
+real; no se presume terminación de su proceso temporal por el código de salida.
+El artefacto de evidencia incluye `delivery-verification.json`, SHA del EXE
+instalado y logs de Inno. El hash ZIP aquí registrado procede de GitHub.
