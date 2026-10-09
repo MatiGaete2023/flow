@@ -6,7 +6,7 @@
 **Baseline NuRus:** `251d5c4025749edd4767183ebd3d2baf3bb9baed`
 **P0:** `d74880bf7f1b3d53791e39c5245756848103bf0b`
 **Documento 02 incorporado:** `6c520f8e49e40c6c7d5379492e6064a55b28c0fb`
-**Código compilado y verificado Windows:** `e3a63691ba75657cef82834406dadb849ba50ee6`
+**Código compilado y verificado Windows (Descargador 2.7.5 y Asistente/conjunto):** `0795cda5c402672050e39c3806762caf99d82245`
 El último checkpoint se obtiene con `git log -1`.
 
 ## ZIP bloqueado por bitacoras.json antiguo — 2.7.5
@@ -17,8 +17,14 @@ Ahora se muestran como NO_DISPONIBLE; la revisión permite localizarlas o exclui
 explícitamente antes de exportar. Conserva las fuentes válidas, las rutas recordadas
 y los originales; Quitar lote del paquete aplica a todas las filas seleccionadas.
 Descargador/extensión 2.7.5; seis regresiones, suite 198/59 y 36 pruebas de intercambio
-aprobadas localmente. Compilación Windows nueva pendiente de CI; los artefactos
-anteriores e3a6369 son 2.7.4 y no incluyen esta corrección. La captura del usuario
+aprobadas localmente; nueve pruebas finales de interfaz tras ajustar visibilidad.
+Descargador Windows verificado sobre `0795cda`: CI 37979286940, 198/59, 80 lecturas
+ficticias, PDF y EXE aprobados; artefacto 11639937234. Asistente/conjunto e instalador
+verificados en CI 37979286900: 615/1 por Python 3.12/3.13/3.14, conjunto artefacto
+11640457954. Su etiqueta histórica termina en SITFA-274 pero los binarios y JSON
+de verificación corresponden a 2.7.5/SHA0795cda; las próximas ejecuciones usan
+SITFA-275. Los artefactos anteriores e3a6369 son 2.7.4 y no
+incluyen esta corrección. La captura del usuario
 se analizó visualmente sin copiarla al repositorio; todas las pruebas son ficticias.
 
 ## Manual ilustrado solicitado por el usuario — 9 de octubre

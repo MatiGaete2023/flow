@@ -36,6 +36,11 @@ se muestra como **ERROR_CONTROL**; sus originales siguen verificándose al expor
    Revisa las bitácoras correspondientes y las ajenas excluidas; importa el ZIP
    desde **Trabajo → Importar paquete** del Asistente.
 
+![Revisión de referencias no disponibles con datos ficticios](evidencia_referencias_20261009/revision_referencias_ficticias.png)
+
+Captura de la revisión 2.7.5, con veinte rutas ficticias ausentes. El contador,
+los botones y el desplazamiento permiten revisar la lista completa.
+
 **Cancelar** cierra la revisión sin iniciar la escritura del ZIP. El botón
 **Revisar referencias no disponibles…** abre esta revisión antes de exportar.
 También puedes seleccionar varias filas del historial y usar **Quitar lote del paquete**:
@@ -57,6 +62,24 @@ Los controles existentes y sus hashes no se omiten para sortear una validación.
 - Intercambio/bitácoras del Asistente: **36 pruebas aprobadas**. Sonda JavaScript
   de vínculos de lectura aprobada. Solo fixtures; no se consultó SITFA real.
 
-La compilación Windows de esta versión se verifica por CI antes de enlazar sus
-artefactos. El manual ilustrado 2.7.4 conserva sus imágenes originales y se
-complementa con esta corrección de selección de fuentes.
+Descargador Windows **verificado**: [ejecución CI 37979286940](https://github.com/MatiGaete2023/flow/actions/runs/37979286940),
+código `0795cda5c402672050e39c3806762caf99d82245`. Sus 198 pruebas/59 subpruebas,
+lectura de 80 bitácoras ficticias con extensión, captura PDF y verificación del
+EXE/contrato compartido terminaron correctamente.
+
+Asistente y conjunto también verificados en [CI 37979286900](https://github.com/MatiGaete2023/flow/actions/runs/37979286900):
+615 pruebas aprobadas y 1 omitida por versión Python 3.12/3.13/3.14, EXE autónomo,
+conjunto e instalador/reinstalación aprobados sobre el mismo SHA. El artefacto
+conjunto 11640457954 conserva la etiqueta histórica SITFA-274 en esta ejecución;
+su versión interna es 2.7.5. Las siguientes compilaciones usarán SITFA-275.
+
+[Descargar el Descargador 2.7.5 para Windows](https://github.com/MatiGaete2023/flow/actions/runs/37979286940/artifacts/11639937234).
+Si usas este artefacto, extrae el ZIP completo y abre `SITFA_Descargador.exe`
+desde la carpeta del programa; conserva sus archivos acompañantes. Pulsa
+**Instalar extensión…** para localizar la extensión 2.7.5 de esa distribución.
+El artefacto de Actions requiere iniciar sesión en GitHub y está sujeto a su
+período de conservación; el código corregido permanece en la rama del repositorio.
+
+El manual ilustrado 2.7.4 conserva sus imágenes originales y se complementa
+con esta corrección de selección de fuentes. Las capturas del usuario y los
+datos institucionales no se incorporaron al repositorio.
