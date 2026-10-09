@@ -31,8 +31,12 @@ def _merge_snapshot(old,new):
 
 def import_lote(manifest):
     manifest=Path(manifest).resolve()
-    if manifest.stat().st_size>32*1024*1024:raise ValueError('Lote de bitácoras demasiado grande.')
-    raw=manifest.read_bytes();data=json.loads(raw.decode('utf-8'))
+    try:
+        if manifest.stat().st_size>32*1024*1024:raise ValueError('Lote de bitácoras demasiado grande.')
+        raw=manifest.read_bytes()
+    except FileNotFoundError:
+        raise ValueError('No se encuentra el control de bitácoras: '+str(manifest)+'. Recupera bitacoras.json con sus HTML originales o excluye esa referencia del paquete.') from None
+    data=json.loads(raw.decode('utf-8'))
     if data.get('tipo')!='BITACORAS_LECTURA' or data.get('version')!=1:
         raise ValueError('El archivo no es un lote de lectura de bitácoras.')
     records=data.get('registros');scopes=data.get('consultas')

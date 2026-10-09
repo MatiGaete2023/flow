@@ -1,4 +1,10 @@
-# Descargador SITFA · prototipo integral 2.7.4
+# Descargador SITFA · prototipo integral 2.7.5
+
+**Corrección 2.7.5:** las referencias antiguas de `bitacoras.json` que ya no
+existen se muestran como **NO_DISPONIBLE**. Antes de crear el ZIP puedes localizar
+el lote movido o excluir esas referencias de este paquete, conservando los lotes
+válidos, el historial y los originales. [Cómo actualizar y crear el ZIP](../docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
+Usa la extensión **2.7.5** de esta misma copia.
 
 **Empieza aquí:** [manual ilustrado paso a paso](../docs/manual_descargador_2_7_4/README.md),
 [PDF descargable](../docs/manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf)

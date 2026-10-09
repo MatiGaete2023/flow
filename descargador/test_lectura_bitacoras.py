@@ -164,8 +164,8 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     assert data['tipo']=='BITACORAS_DIAGNOSTICO_ANONIMO'
     assert data['estados']=={'SIN_VINCULO':2}
     assert data['registros']==2
-    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.4')
-    assert data['extension_version']=='2.7.4'
+    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.5')
+    assert data['extension_version']=='2.7.5'
     assert data['descargador_commit']=='NO_VERIFICADO' or len(data['descargador_commit'])==40
     assert data['diagnosticos_sin_vinculo']['SIN_ACCION_OBSERVACIONES']==2
     assert data['consultas'][0]['registros']==2
@@ -175,7 +175,7 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     malicious={'registros':[{'estado':'FALLIDA','rit':'X-1-2026','nombre':'Persona ficticia',
                             'error':'Texto privado NNA','diagnostico':{'codigo_extension':'Texto privado NNA'}}],
                'consultas':[{'tribunal':'Texto privado NNA','modality':'1','tab':'Espera','estado':'FALLIDA'}],
-               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.4'}}
+               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.5'}}
     sanitized=json.dumps(anonymous_diagnostic(malicious),ensure_ascii=False)
     assert 'Texto privado NNA' not in sanitized
     assert 'Persona ficticia' not in sanitized

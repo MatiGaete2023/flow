@@ -126,7 +126,7 @@ class Application:
         self.status=tk.StringVar(value='Abre tu Chrome, entra a Seguimiento y conecta la extensión local.')
         self.preview=tk.StringVar(value='Carga las opciones de tu sesión para preparar el lote.')
         self.count=tk.StringVar(value='Sin descargas en este lote')
-        root.title('Descargador SITFA · 2.7.4 integral · CSMP y bitácoras')
+        root.title('Descargador SITFA · 2.7.5 integral · CSMP y bitácoras')
         menu=tk.Menu(root);root.configure(menu=menu)
         self.theme=tk.StringVar(value=self.prefs.data.get('tema','Sistema'))
         appearance=tk.Menu(menu,tearoff=False);menu.add_cascade(label='Apariencia',menu=appearance)

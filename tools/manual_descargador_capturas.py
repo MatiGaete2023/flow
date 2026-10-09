@@ -226,6 +226,9 @@ def main():
     parser.add_argument('--demo-dir', type=Path, required=True)
     parser.add_argument('--browser', type=Path, help='Chrome/Chromium compatible con extensiones')
     args = parser.parse_args()
+    from contrato_integral import VERSION
+    if VERSION!='2.7.4':
+        parser.error('Las imágenes archivadas corresponden a 2.7.4. Para reproducirlas usa el checkout f8a1fcc; no reemplaces el manual antiguo con capturas de otra versión.')
     demo = args.demo_dir.resolve()
     if demo.exists(): parser.error('El directorio de práctica debe ser nuevo: nunca se sobrescriben lotes existentes.')
     demo.mkdir(parents=True)
