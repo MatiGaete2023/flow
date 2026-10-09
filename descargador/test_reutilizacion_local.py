@@ -72,7 +72,7 @@ def test_duplicate_and_newer_versions_merge_without_overwriting_originals(tmp_pa
     result=import_lotes([old,same,new]);assert len(result['queries'])==1
     assert result['queries'][0]['entries'][0]['texto']=='Versión más reciente'
     assert result['reuse']['duplicates']==2 and len(result['sources'])==3
-    assert (old.parent/'bitacora_0.html').read_text().find('Versión anterior')>=0
+    assert 'Versión anterior' in (old.parent/'bitacora_0.html').read_text(encoding='utf-8')
     conflicting=diaries(tmp_path/'conflict',text='Versión diferente sin fecha posterior')
     with pytest.raises(ValueError,match='fecha inequívoca'):import_lotes([old,conflicting])
 
