@@ -127,7 +127,10 @@ class ResultsWindow(tk.Toplevel):
         for window in self.app.result_windows:
             if window.winfo_exists():
                 paths.append(getattr(window,'folder',None))
+                paths.append(getattr(window,'root_folder',None))
                 paths.extend(getattr(window,'package_folders',[]))
+                diaries=getattr(window,'package_diaries',None)
+                if callable(diaries):paths.extend(Path(control).parent for control in diaries())
         if self.app.recovery:paths.append(self.app.recovery[0].folder if hasattr(self.app.recovery[0],'folder') else None)
         return [path for path in paths if path]
 

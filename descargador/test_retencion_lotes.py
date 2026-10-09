@@ -105,3 +105,28 @@ def test_carpeta_defecto_no_depende_de_frozen_y_onedrive_avisa(tmp_path,monkeypa
         assert app.destination_warning.get()==''
     finally:root.destroy()
     assert 'OneDrive' in onedrive_warning('C:/ONEDRIVE/descargas')
+
+
+def test_lote_conjunto_flujo_esta_en_lista_y_se_borra_solo_confirmado(tmp_path):
+    joint=_lote(tmp_path,'conjunto',70);(joint/'resumen.json').rename(joint/'flujo.json')
+    assert [item['folder'] for item in old_batches(tmp_path)]==[joint]
+    assert manage_old_batches(tmp_path,[joint])==[] and joint.exists()
+    manage_old_batches(tmp_path,[joint],confirmed=True)
+    assert not joint.exists()
+
+
+def test_conjunto_raiz_y_bitacoras_de_paquetes_abiertos_se_protegen(tmp_path):
+    from ventana_resultados import ResultsWindow
+    joint=_lote(tmp_path,'conjunto',70);(joint/'resumen.json').rename(joint/'flujo.json')
+    diary=_lote(tmp_path,'bitacoras',70);(diary/'resumen.json').rename(diary/'bitacoras.json')
+    unlinked=_lote(tmp_path,'sin_uso',70)
+    joint_window=SimpleNamespace(winfo_exists=lambda:True,root_folder=joint)
+    package_window=SimpleNamespace(winfo_exists=lambda:True,package_folders=[],
+                                   package_diaries=lambda:[diary/'bitacoras.json'])
+    app=SimpleNamespace(last_folder=None,result_windows=[joint_window,package_window],recovery=None)
+    window=SimpleNamespace(app=app)
+    protected=ResultsWindow.retention_protected(window)
+    assert joint in protected and diary in protected
+    assert [item['folder'] for item in old_batches(tmp_path,protected=protected)]==[unlinked]
+    with pytest.raises(PocError):manage_old_batches(tmp_path,[joint,diary],protected=protected,confirmed=True)
+    assert joint.exists() and diary.exists()

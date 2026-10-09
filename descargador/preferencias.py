@@ -92,7 +92,7 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     limit=time.time()-max_days*86400;result=[]
     for folder in sorted(root.iterdir()):
         if folder.is_symlink() or not folder.is_dir() or folder.resolve() in excluded:continue
-        controls=[folder/name for name in ('resumen.json','bitacoras.json')
+        controls=[folder/name for name in ('resumen.json','bitacoras.json','flujo.json')
                   if (folder/name).is_file() and not (folder/name).is_symlink()]
         if not controls:continue
         modified=max(path.stat().st_mtime for path in controls)
