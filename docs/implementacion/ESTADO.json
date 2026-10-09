@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:51-03:00",
+  "actualizado": "2026-10-09T18:52-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -257,7 +257,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "BLOQUEADO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-09T18:21-03:00",
       "rama": "ccr-4116db41-nm8g0r",
@@ -267,7 +267,8 @@
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Herramienta y prueba hechas; botón bloqueado: requiere src/nurus/personal/anonymize.py (fuera de ficha)."
+        "Herramienta y prueba hechas; botón bloqueado: requiere src/nurus/personal/anonymize.py (fuera de ficha).",
+        "Ficha ampliada por el Orquestador: src/nurus/personal/anonymize.py y botón en Configuración."
       ]
     },
     "WP-17": {

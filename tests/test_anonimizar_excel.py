@@ -84,3 +84,25 @@ def test_nunca_sobrescribe(tmp_path):
     existing.write_bytes(b'previo')
     assert anonimizar.main([str(original), str(existing)]) == 1
     assert original.read_bytes() == before and existing.read_bytes() == b'previo'
+
+
+def test_boton_exporta_copia_y_no_sobrescribe(tmp_path):
+    from test_integral_ui import run_gui
+    original = tmp_path / 'original.xlsx'
+    _sonda(original)
+    run_gui(tmp_path, """
+from unittest.mock import patch
+origen=root/'original.xlsx';destino=root/'copia.xlsx'
+antes=origen.read_bytes()
+with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(origen)), \\
+     patch('nurus.personal.app_base.filedialog.asksaveasfilename',return_value=str(destino)):
+    app._export_anonymous_case()
+assert destino.is_file() and 'Copia anónima creada' in app.status.get()
+assert origen.read_bytes()==antes
+with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(origen)), \\
+     patch('nurus.personal.app_base.filedialog.asksaveasfilename',return_value=str(origen)), \\
+     patch('nurus.personal.app_base.messagebox.showerror') as error:
+    app._guard(app._export_anonymous_case)
+assert origen.read_bytes()==antes
+""")
+    assert check_real_ids.scan([tmp_path / 'copia.xlsx'], set()) == []
