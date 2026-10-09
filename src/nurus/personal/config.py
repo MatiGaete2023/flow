@@ -11,6 +11,8 @@ from .template_validation import variables
 
 BASE = Path(__file__).parent
 CC = 'ucc_concepcion@pjud.cl'
+RETENCION_DIAS = 60
+SESIONES_ANTERIORES = 10
 VARIABLES = {'TRIBUNAL','ALCANCE_MODALIDADES','PERIODO','FECHA','PROGRAMA','TABLA_REGISTROS'}
 UMBRALES = dict(espera_dce=30, espera_laja=30, espera_mulchen=30, espera_tome=30,
                proyecto_tome=60, mayoria=60, oido=45, resolucion_reciente=30,
