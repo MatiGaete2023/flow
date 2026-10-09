@@ -933,9 +933,12 @@ class App(ctk.CTk):
         path=filedialog.askopenfilename(filetypes=[('Contactos','*.json *.xlsx *.xls'),('Excel','*.xlsx *.xls'),('JSON','*.json')])
         if not path:return
         from copy import deepcopy
-        from .config import parse_contacts,save_contacts,contacts_file
+        from .config import parse_contacts,save_contacts,contacts_file,EXAMPLE_CONTACTS
         cfg=deepcopy(self.cfg.data)
-        if getattr(self.cfg,'contacts_missing',False):cfg['contactos']={}
+        if getattr(self.cfg,'contacts_missing',False):
+            examples=parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8'))
+            cfg['contactos']={name:address for name,address in cfg['contactos'].items()
+                              if examples.get(name)!=address}
         if Path(path).suffix.lower()=='.json':
             contacts=dict(cfg['contactos']);conflicts=[]
             for name,address in parse_contacts(Path(path).read_text(encoding='utf-8')).items():
