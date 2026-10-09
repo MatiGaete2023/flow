@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:22:25.741000+00:00",
+  "actualizado": "2026-10-09T22:26:36.132940+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -741,6 +741,10 @@
     {
       "fecha": "9 de octubre de 2026",
       "descripcion": "Revisión de legado: corregir hook para blobs staged; anonimizador deja títulos/comentarios/enlaces; recuperación sin trabajo pierde configuración; instalador permite fallback sin hashes; barra no actualiza conteos y Correos acumula temporizadores; cobertura R-T32 y límites R-T02 incompletos. Ninguno se da por aprobado sin recuperación por WP."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "CI pausada deliberadamente hasta sanear contactos y fixtures. Se retiraron 14 artefactos generados por las primeras ejecuciones de esta sesión antes del saneamiento; las compilaciones históricas y la purga D1 no se tocaron. No se anuncia paquete nuevo ni CI Windows aprobada."
     }
   ]
 }
