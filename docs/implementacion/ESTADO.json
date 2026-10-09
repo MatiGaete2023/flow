@@ -104,7 +104,7 @@
       "decisiones": [
         "D2"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -113,7 +113,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D2; ningún agente la presume."
+      ]
     },
     "WP-10": {
       "titulo": "Identidades sintéticas en pruebas",
@@ -184,7 +186,7 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -193,7 +195,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D4; ningún agente la presume."
+      ]
     },
     "WP-14": {
       "titulo": "Retención en el Descargador",
@@ -205,7 +209,7 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -214,7 +218,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D4; ningún agente la presume."
+      ]
     },
     "WP-15": {
       "titulo": "Extractor HAR anónimo",
@@ -224,10 +230,10 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T18:19-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
       "verificacion": null,
       "revision": null,
@@ -266,7 +272,7 @@
       "decisiones": [
         "D1"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -275,7 +281,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D1; ningún agente la presume."
+      ]
     },
     "WP-20": {
       "titulo": "Copias y restos",
@@ -326,7 +334,7 @@
       "decisiones": [
         "D3"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -335,7 +343,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D3; ningún agente la presume."
+      ]
     },
     "WP-23": {
       "titulo": "Restos de lanzamiento del Descargador",
@@ -354,7 +364,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Bloqueado en cadena: depende de WP-22 (D3)."
+      ]
     },
     "WP-24": {
       "titulo": "Documentación vigente",
@@ -442,7 +454,7 @@
       "decisiones": [
         "D8"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -451,7 +463,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D8 (y depende de WP-14/D4); ningún agente la presume."
+      ]
     },
     "WP-34": {
       "titulo": "CI ordenada",
@@ -471,7 +485,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Bloqueado en cadena: depende de WP-22 (D3) y WP-23."
+      ]
     },
     "WP-35": {
       "titulo": "Instaladores con dependencias fijadas",
@@ -566,7 +582,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Bloqueado en cadena: depende de WP-33."
+      ]
     },
     "WP-44": {
       "titulo": "Importar último paquete y fecha de corte",
@@ -585,7 +603,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Bloqueado en cadena: depende de WP-43."
+      ]
     },
     "WP-45": {
       "titulo": "Solicitud de antecedentes",
@@ -597,7 +617,7 @@
       "decisiones": [
         "D9"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -606,7 +626,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D9; ningún agente la presume."
+      ]
     },
     "WP-50": {
       "titulo": "Cronología de bitácoras solo mostrar",
@@ -619,7 +641,7 @@
       "decisiones": [
         "D5"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -628,7 +650,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D5; ningún agente la presume."
+      ]
     },
     "WP-51": {
       "titulo": "Fidelidad nativa desde ZIP",
@@ -640,7 +664,7 @@
       "decisiones": [
         "D6"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -649,7 +673,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D6; ningún agente la presume."
+      ]
     },
     "WP-60": {
       "titulo": "Pruebas de aceptación R-T",
@@ -706,7 +732,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Bloqueado en cadena: depende de WP-33."
+      ]
     },
     "WP-70": {
       "titulo": "Cierre de la implementación",
@@ -718,7 +746,7 @@
       "decisiones": [
         "D7"
       ],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -727,7 +755,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Espera decisión D7; ningún agente la presume."
+      ]
     }
   },
   "traspasos": []
