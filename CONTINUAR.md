@@ -9,6 +9,9 @@
 **Código compilado y verificado Windows (Descargador 2.7.5 y Asistente/conjunto):** `0795cda5c402672050e39c3806762caf99d82245`
 El último checkpoint se obtiene con `git log -1`.
 
+[Resumen completo del proyecto](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md): fundamentos,
+documentos, planificación, hallazgos, correcciones, implementación, pruebas y pasos pendientes.
+
 ## ZIP bloqueado por bitacoras.json antiguo — 2.7.5
 
 [Corrección e instrucciones](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
@@ -37,8 +40,9 @@ La práctica reproduce 800 ingresos, 4 registros de hojas y 2 bitácoras coincid
 (798 ajenas excluidas). No incorpora adjuntos institucionales del usuario.
 Generadores en `tools/manual_descargador_capturas.py` y
 `tools/manual_descargador_publicar.py`; contenido editable `contenido.json`.
-Entrega documental, sin cambios funcionales ni nueva compilación Windows.
-Los ejecutables verificados siguen correspondiendo a `e3a6369`.
+Ese checkpoint fue documental, sin cambios funcionales ni nueva compilación Windows:
+sus ejecutables eran `e3a6369` (2.7.4). Posteriormente se compiló y verificó
+`0795cda` (2.7.5); el manual conserva sus imágenes y se complementa con la guía del ZIP.
 
 ## Autorización y entrega actual
 
@@ -77,7 +81,8 @@ HTML ficticio UTF-8. Asistente 0.5.0.dev4 y Descargador/extensión **2.7.4**.
   sus archivos. Reutilizar no acredita actualización remota.
 
 Los HAR/JSON/HTML reales permanecen fuera del repositorio. Las pruebas usan datos
-ficticios. Instalación ZIP: extraer la rama en carpeta nueva, ejecutar de nuevo
+ficticios. Instrucciones históricas 2.7.4 (para actualizar ahora, usar 2.7.5):
+extraer la rama en carpeta nueva, ejecutar de nuevo
 `Instalar_CSMP.bat`, usar sus iniciadores y cargar/recargar **su** extensión 2.7.4.
 No volver a pedir los atributos onclick: el HAR ya los confirmó para Espera e
 Informes. Queda contraste de las respuestas y aceptación Office/institucional.
@@ -102,6 +107,19 @@ Informes. Queda contraste de las respuestas y aceptación Office/institucional.
 | P13 | CI APROBADA; artefactos técnicos entregados | Aceptación Windows 10 institucional/Office y promoción diferidas |
 
 ## Descargas del código verificado
+
+- [Paquete conjunto actual 2.7.5](https://github.com/MatiGaete2023/flow/actions/runs/37979286900/artifacts/11640457954).
+- [Instalador actual del Asistente](https://github.com/MatiGaete2023/flow/actions/runs/37979286900/artifacts/11640877263).
+- [Descargador autónomo Windows 2.7.5](https://github.com/MatiGaete2023/flow/actions/runs/37979286940/artifacts/11639937234).
+
+Código `0795cda5c402672050e39c3806762caf99d82245`, verificado en CI 37979286900
+y 37979286940. Asistente: 615 aprobadas/1 omitida por Python 3.12–3.14;
+Descargador: 198 aprobadas/59 subpruebas. EXE, conjunto e instalador comprobados.
+El nombre del conjunto conserva SITFA-274, con versión interna 2.7.5/SHA0795cda.
+Detalle en el [resumen](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md) y la
+[corrección 2.7.5](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
+
+### Descargas históricas 2.7.4 — reemplazadas por 2.7.5
 
 - [Paquete conjunto CSMP + Descargador + extensión + manuales + acta pendiente](https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622653641).
 - [Instalador del Asistente y evidencias ficticias de verificación](https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622223523).
@@ -220,7 +238,7 @@ la ruta de subprocess; esa prueba no sustituye la nueva CI Windows. Evidencia en
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.
-2. Usar los artefactos aprobados del código `99ed217` y su verificación del
+2. Usar los artefactos aprobados del código `0795cda` (2.7.5) y su verificación del
    instalador en el mismo build. Los checkpoints documentales no requieren recompilar.
    Si se modifica código, verificar su nueva CI sin eliminar tests y conservar
    mismo SHA para ambos EXE/extensión.

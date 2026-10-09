@@ -26,7 +26,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | P10 | BLOQUEADA_POR_EVIDENCIA | CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9. |
 | P11 | IMPLEMENTADA_PENDIENTE_ACEPTACION | INT reales y ampliadas NO EJECUTADAS; MVP local comprobado. |
 | P12 | BLOQUEADA_POR_EVIDENCIA | P9/P10 y acta institucional; ampliación excluida del MVP. |
-| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI e3a6369 aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
+| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI 0795cda (Descargador 2.7.5) aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
 
 ## Todas las tareas y entregables
 
