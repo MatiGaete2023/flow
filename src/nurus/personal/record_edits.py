@@ -122,7 +122,7 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
                 row.review['RES'] = '' if mode == 'none' else mode
         if overrides is not None:
             row.overrides = deepcopy(overrides)
-            recalculate(work, row)
+            recalculate(work, row, update_findings=False)
         if word_overrides is not None:
             row.word_overrides = deepcopy(word_overrides)
         if excluded is not None:
@@ -130,17 +130,36 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
         from .work import _sync_resolution_warning
         _sync_resolution_warning(row)
         updated.append(row)
+    from .capture_findings import updated_contexts
+    contexts = updated_contexts(work, updated)
     work.rows = updated
+    if hasattr(work, 'capture_context'):
+        work.capture_context = contexts
     work.revision += 1
     return before
 
 
 def undo(work, before):
-    work.rows = [deepcopy(before.get(row.id, row)) for row in work.rows]
+    from .capture_findings import updated_contexts
+    rows = [deepcopy(before.get(row.id, row)) for row in work.rows]
+    contexts = updated_contexts(work, rows)
+    work.rows = rows
+    if hasattr(work, 'capture_context'):
+        work.capture_context = contexts
     work.revision += 1
 
 
-def recalculate(work, row):
+def recalculate(work, row, *, update_findings=True):
+    from .capture_findings import updated_contexts
+    candidate = deepcopy(row)
+    _recalculate(work, candidate)
+    contexts = updated_contexts(work, [candidate]) if update_findings else None
+    row.__dict__.update(candidate.__dict__)
+    if update_findings and hasattr(work, 'capture_context'):
+        work.capture_context = contexts
+
+
+def _recalculate(work, row):
     from datetime import date
     from nurus.rus.rules import tribunal, as_date, as_int
     from .motor.contexto import current

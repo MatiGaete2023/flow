@@ -35,3 +35,29 @@ exportados previamente permanecen como archivos independientes.
 Ante error de importación conservar ZIP y sesión. Comunicar SHA, mensaje y etapa
 sin datos institucionales. Excel 2010, Outlook 365 y políticas de instalación
 requieren las pruebas reales descritas en aceptación pendiente.
+
+## Correcciones de revisión y capturas complementarias
+
+La importación comprueba longitud UTF-16 antes de generar celdas: rechaza texto
+que Excel no puede conservar íntegro. El paquete y el trabajo previo permanecen
+intactos. El límite operativo es 20.000 registros por trabajo, incluidos calendarios
+independientes; exportar por lotes si se supera.
+
+Una captura complementaria conserva ediciones/exclusiones cuando hay una
+correspondencia única de identidad remota y tipo/modalidad/persona/programa.
+Sin identidad verificada solo se recupera la misma fila física íntegra; no se
+asocia por nombre o RIT. Si cambian los datos o hay ambigüedad, la ventana de
+conciliación muestra diferencias y pide conservar decisiones o usar la nueva
+evaluación. En correspondencias ambiguas/no presentes se permite reset explícito,
+no traslado automático. Cancelar conserva todo el trabajo anterior.
+
+La sesión anterior se archiva y los productos preparados quedan obsoletos al
+cambiar de captura. Las decisiones no acreditan registros RUS. Editar, deshacer,
+refrescar Excel y recuperar sesión mantienen los hallazgos alineados con la regla
+vigente. Fuentes/cobertura muestran las incidencias generales y del ingreso; el
+Excel de evidencia incluye una hoja Incidencias.
+
+Las solicitudes usan cobertura por ingreso y rechazan exceder 4 MiB antes de
+publicarse. Si se supera, reducir la selección o dividir la captura de origen.
+Para un vacío por ingreso se requiere una consulta con alcance explícito; un
+estado vacío de toda la tabla no se aplica automáticamente a cada persona.

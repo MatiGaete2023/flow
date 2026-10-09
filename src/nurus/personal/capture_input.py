@@ -14,18 +14,26 @@ from nurus.rus.columns import COMMON,MODE_COLUMNS,map_columns
 from nurus.rus.models import ReadBatch,SourceRecord,SourceReference,Mode
 from nurus.rus.rules import as_date
 from .work import Work,Row
+from nurus.services.excel_cells import append_literal_row
 
 CANONICAL={key:names[0] for key,names in COMMON.items()}
 for columns in MODE_COLUMNS.values():CANONICAL.update({key:names[0] for key,names in columns.items()})
+MAX_ANALYSIS_RECORDS=20000  # Techo operativo ensayado; no altera el límite agregado del contrato.
 
 
-def import_capture(path,config,*,as_of=None,previous=None):
+def import_capture(path,config,*,as_of=None,previous=None,resolutions=None):
     from .operations import checkpoint,progress
     checkpoint();progress('Validando paquete y cobertura')
     capture=read_capture(path);as_of=as_of or date.today()
     config_hash=sha256(json.dumps(config,sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
     if previous and getattr(previous,'capture_digest','')==capture.digest and previous.as_of==as_of.isoformat() and getattr(previous,'capture_config_hash','')==config_hash and getattr(previous,'ruleset_version','')==RULESET_VERSION and getattr(previous,'mapping_version','')==capture.manifest['mapping_version']:
-        return deepcopy(previous)
+        cached=deepcopy(previous)
+        from .capture_findings import updated_contexts
+        cached.capture_context=updated_contexts(cached,cached.rows)
+        from nurus.capture.coverage import record_coverages
+        cached.capture_coverage=record_coverages(capture.manifest,capture.tables,cached.capture_sources)
+        cached.capture_incidents=deepcopy(capture.rows('incidencias'))
+        return cached
     records=list(capture.rows('registros'))
     # Un productor independiente puede aportar calendarios sin duplicarlos en
     # registros. Solo se omite una copia de la misma fila física, nunca por RIT.
@@ -43,6 +51,9 @@ def import_capture(path,config,*,as_of=None,previous=None):
         if any(row['record_id']==record['record_id'] for row in records):
             raise ValueError('Identificador de calendario colisiona con registro; trabajo anterior intacto.')
         records.append(record)
+    if len(records)>MAX_ANALYSIS_RECORDS:
+        raise ValueError('La captura excede el límite operativo de 20.000 registros; '
+                         'divida la exportación en lotes. El trabajo anterior sigue intacto.')
     canonical=[];groups=defaultdict(list);provenance={};contexts={};row_modes={}
     calendars=defaultdict(list)
     for row in capture.rows('calendarios'):
@@ -72,12 +83,10 @@ def import_capture(path,config,*,as_of=None,previous=None):
     headers=list(dict.fromkeys(key for row in canonical for key in row))
     if not headers:headers=['RIT','TRIBUNAL','NOMBRE','DERIVACION']
     book=Workbook();sheet=book.active;sheet.title='Trabajo';sheet.append(headers)
-    for row in canonical:
-        sheet.append([row.get(k,'') for k in headers])
-        for cell in sheet[sheet.max_row]:
-            if isinstance(cell.value,str):
-                if len(cell.value.encode('utf-16-le'))//2>32767:raise ValueError('Campo de registro excede límite Excel; se conserva el paquete y el trabajo anterior.')
-                cell.data_type='s'
+    for number,row in enumerate(canonical,2):
+        if number % 100 == 0:
+            checkpoint();progress('Construyendo copia Excel',number-1,len(canonical))
+        append_literal_row(sheet,(row.get(k,'') for k in headers),row_number=number)
     sheet.freeze_panes='A2';sheet.auto_filter.ref=sheet.dimensions
     out=BytesIO();book.save(out);book.close();content=out.getvalue();digest=sha256(content).hexdigest()
     candidate=Work(config);candidate.rows=[];candidate.mapping={key:title for key,title in CANONICAL.items() if title in headers}
@@ -101,21 +110,12 @@ def import_capture(path,config,*,as_of=None,previous=None):
     candidate.capture_manifest=capture.manifest;candidate.capture_sources=provenance;candidate.capture_context=contexts;candidate.capture_modes=row_modes
     candidate.ruleset_version=RULESET_VERSION;candidate.mapping_version=capture.manifest['mapping_version']
     candidate.source_scope='PAQUETE';candidate.signed_activity={};candidate.activity_reviewed={}
-    if previous and getattr(previous,'capture_digest','')==capture.digest:
-        # Reanalizar otra fecha/configuración no sustituye decisiones humanas.
-        old={row.id:row for row in previous.rows}
-        for row in candidate.rows:
-            prior=old.get(row.id)
-            if prior:
-                for field in ('review','decisions','overrides','word_overrides','excluded','sync_base','sync_local','sync_state'):
-                    setattr(row,field,deepcopy(getattr(prior,field)))
-                if row.overrides:
-                    from .record_edits import recalculate
-                    recalculate(candidate,row)
-        candidate.session=deepcopy(previous.session);candidate.receipts=deepcopy(previous.receipts)
-        candidate.output=previous.output;candidate.output_hash=previous.output_hash
-        candidate.revision=previous.revision+1
-    for row in candidate.rows:
-        contexts[row.id]['findings'].extend({'rule_id':rule,'rule_version':RULESET_VERSION,'source_ids':[provenance[row.id]['source_sha256']],'record_identity':list(identity(provenance[row.id])),'detected_at':as_of.isoformat(),'fact':row.observation,'condition':'Regla tradicional conservada; no acredita actuaciones remotas.','coverage':provenance[row.id]['coverage'],'status':'APLICA','reason':'Evaluación del motor tradicional.','proposed_actions':list(row.actions),'confidence_class':'PARCIAL'} for rule in row.rules)
+    from nurus.capture.coverage import record_coverages
+    candidate.capture_coverage=record_coverages(capture.manifest,capture.tables,provenance)
+    candidate.capture_incidents=deepcopy(capture.rows('incidencias'))
+    from .capture_reconciliation import reconcile
+    reconcile(candidate,previous,resolutions=resolutions)
+    from .capture_findings import updated_contexts
+    candidate.capture_context=updated_contexts(candidate,candidate.rows)
     candidate.warnings.append('Fuentes faltantes: '+', '.join(k+': '+v for k,v in capture.manifest['table_states'].items() if v not in ('COMPLETA','VACIA_COMPROBADA')))
     progress('Paquete validado; trabajo candidato disponible',len(records),len(records));return candidate

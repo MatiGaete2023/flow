@@ -66,3 +66,24 @@ python tools/flow_capture_cli.py validate /ruta/completa.zip
 
 [Fixture completa](fixtures/completa.zip) y [parcial](fixtures/parcial.zip) son
 exclusivamente sintéticas. El generador permite tamaños 100/500/2000 para medición.
+
+## Cobertura por identidad y consultas vacías
+
+El agregado de una tabla no puede declarar mayor cobertura que sus consultas o
+filas. Una consulta parcial nunca respalda una fila COMPLETA; VACIA_COMPROBADA
+no admite filas. Los calendarios agregan también consultas pendientes sin filas.
+
+`filters_json` admite dos claves declarativas opcionales: `capture_tables`, lista
+no vacía de tablas fuente, y `remote_identity`, objeto con `source_system`,
+`court_code`, `cause_id`, `ingreso_id`, todos textos completos de fuente.
+La identidad del alcance debe coincidir con sistema/tribunal de la consulta y
+con sus filas. Esto permite acreditar un resultado vacío para un ingreso concreto.
+No son comandos ni disparan consultas. Los productores antiguos siguen siendo
+legibles; un vacío global sin alcance por ingreso no prueba vacío de ese ingreso.
+
+El Asistente calcula cobertura por fuente/ingreso y conserva incidencias del ZIP.
+La tabla global sirve de resumen; las solicitudes evitan repetir fuentes completas
+y piden las insuficientes. La captura v1 mantiene el límite agregado de 200.000
+filas y 80 MiB. El análisis de trabajo limita a 20.000 registros incluidos los
+calendarios independientes; dividir lotes mayores. Ese techo se ensayó con datos
+sintéticos Linux y no certifica rendimiento ni Office institucional.
