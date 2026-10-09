@@ -129,15 +129,16 @@ jobs:
 
       - name: Windows executable
         if: matrix.python == '3.12'
+        timeout-minutes: 10
         run: |
+          . ./tools/windows_process_check.ps1
           python -m pip install pyinstaller
           if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del empaquetador' }
           python tools/write_build_meta.py
           if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del ejecutable CSMP' }
           python -m PyInstaller --noconfirm CSMP_Experimental.spec
           if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del ejecutable CSMP' }
-          $check = Start-Process -FilePath (Resolve-Path dist/CSMP_Integral/CSMP_Integral.exe).Path -ArgumentList '--verificar-paquete','artifacts/package-check.json' -PassThru -Wait -WindowStyle Hidden
-          if ($check.ExitCode -ne 0) { throw 'Falló la comprobación del paquete CSMP' }
+          Invoke-CheckedProcess -FilePath (Resolve-Path dist/CSMP_Integral/CSMP_Integral.exe).Path -Arguments @('--verificar-paquete','artifacts/package-check.json') -Label 'EXE autónomo CSMP'
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
           if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
           python -m PyInstaller --noconfirm --onefile --windowed --paths src --name RUS_Inspector tools/rus_inspector_entry.py
@@ -157,6 +158,7 @@ jobs:
 
       - name: Verificar lector y empaquetado integral SITFA
         if: matrix.python == '3.12'
+        timeout-minutes: 15
         shell: pwsh
         run: |
           python -m pip install -r descargador/requirements.txt playwright==1.63.0
@@ -197,35 +199,46 @@ jobs:
 
       - name: Build and verify Windows installer
         if: matrix.python == '3.12'
+        timeout-minutes: 10
         shell: pwsh
         run: |
+          . ./tools/windows_process_check.ps1
           $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
           if (-not $compiler) {
-            choco install innosetup --yes --no-progress
+            choco install innosetup --yes --no-progress --execution-timeout=180
             if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Inno Setup' }
             $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
           }
           if (-not $compiler) { throw 'No se encuentra Inno Setup' }
+          Write-Host 'INICIO: compilar instalador'
           & $compiler installer/CSMP.iss
           if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del instalador' }
+          Write-Host 'APROBADO: compilar instalador'
           $installer = Get-ChildItem dist/Instalar_CSMP_*_Windows.exe | Select-Object -First 1
           $destination = Join-Path $env:RUNNER_TEMP 'CSMP instalado'
-          $install = Start-Process $installer.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"') -Wait -PassThru
-          if ($install.ExitCode -ne 0) { throw 'Falló la instalación silenciosa' }
+          Invoke-CheckedProcess -FilePath $installer.FullName -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"'),('/LOG="'+(Join-Path $PWD 'artifacts/installer-install.log')+'"')) -Label 'instalación silenciosa'
           $dataFolder = Join-Path $env:LOCALAPPDATA 'CSMP_Personal_Prototipo_Integral'
           New-Item -ItemType Directory -Force $dataFolder | Out-Null
           $sentinel = Join-Path $dataFolder ('installer-test-'+[guid]::NewGuid().ToString()+'.txt')
           Set-Content $sentinel 'conservar'
-          $check = Start-Process (Join-Path $destination 'CSMP_Integral.exe') -ArgumentList '--verificar-paquete','artifacts/installed-package-check.json' -Wait -PassThru
-          if ($check.ExitCode -ne 0) { throw 'Falló el arranque instalado' }
+          Invoke-CheckedProcess -FilePath (Join-Path $destination 'CSMP_Integral.exe') -Arguments @('--verificar-paquete','artifacts/installed-package-check.json') -WorkingDirectory $PWD -Label 'productos v1 desde CSMP instalado'
           $proof = Get-Content artifacts/installed-package-check.json -Raw | ConvertFrom-Json
           if (-not $proof.capture_pipeline_verified) { throw 'El instalador no confirmó los productos ficticios v1' }
-          $reinstall = Start-Process $installer.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"') -Wait -PassThru
-          if ($reinstall.ExitCode -ne 0) { throw 'Falló la reinstalación' }
-          $uninstall = Start-Process (Join-Path $destination 'unins000.exe') -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
-          if ($uninstall.ExitCode -ne 0) { throw 'Falló la desinstalación' }
+          Invoke-CheckedProcess -FilePath $installer.FullName -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"'),('/LOG="'+(Join-Path $PWD 'artifacts/installer-reinstall.log')+'"')) -Label 'reinstalación silenciosa'
+          Invoke-CheckedProcess -FilePath (Join-Path $destination 'unins000.exe') -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+(Join-Path $PWD 'artifacts/installer-uninstall.log')+'"')) -Label 'desinstalación silenciosa'
           if (-not (Test-Path $sentinel) -or (Get-Content $sentinel) -ne 'conservar') { throw 'Se alteraron los datos de usuario' }
           Remove-Item $sentinel
+
+      - name: Installer diagnostics
+        if: always() && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Installer-diagnostics
+          path: |
+            artifacts/installer-*.log
+            artifacts/installed-package-check*.json
+            artifacts/package-check*.json
+          if-no-files-found: ignore
 
       - name: Installer and measurements
         if: matrix.python == '3.12'
