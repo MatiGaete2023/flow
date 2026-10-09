@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:12:45.585627+00:00",
+  "actualizado": "2026-10-09T22:16:58.066325+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -59,16 +59,19 @@
       "tipo": "C",
       "depende_de": [],
       "decisiones": [],
-      "estado": "TOMADO",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root (WP-00)",
       "tomado": "2026-10-09T22:12:45.585627+00:00",
       "rama": "wp/WP-00-kit",
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "pr": 2,
+      "verificacion": "PASA: verificacion/WP-00.json; 605/11 y 198/59; subprocessos verificados",
+      "revision": "APROBADO: /root/revision_previa, sobre 14bdc90",
+      "auditoria": "CONFORME: auditoria/WP-00.md",
+      "integrado_en": "c4db3e11216b5ae6c44f59c3e5d474a47c5c70f8",
+      "notas": [
+        "Kit exacto recuperado en rama propia; rama auxiliar 5471ca6 preservada sin integrar.",
+        "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente."
+      ]
     },
     "WP-01": {
       "titulo": "Gobernanza mínima",
@@ -78,7 +81,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -118,7 +121,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -156,7 +159,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -177,7 +180,7 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -198,7 +201,7 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -217,7 +220,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -236,7 +239,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -652,7 +655,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
