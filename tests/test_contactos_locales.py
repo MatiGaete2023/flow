@@ -163,3 +163,45 @@ def test_perfil_anterior_conserva_contactos_al_pedir_importacion(tmp_path):
     assert recuperada.contacts_missing
     assert recuperada.data['contactos'] == {'PRM CONSERVADO FICTICIO': 'conservado@example.invalid'}
     assert recuperada.data['firma'] == 'Edición local ficticia'
+
+
+@pytest.mark.parametrize('formato',['json','xlsx'])
+def test_importacion_parcial_conserva_perfil_anterior_y_conflictos(tmp_path, formato):
+    from test_integral_ui import run_gui
+    run_gui(tmp_path, """
+import json
+from unittest.mock import patch
+actual=app.cfg.data
+actual['contactos']={'PRM CONSERVADO FICTICIO':'conservado@example.invalid'}
+actual['correos']['tribunales']['LAJA']['para']=['tribunal-conservado@example.invalid']
+app.cfg.save(actual)
+app.cfg=Configuration(app.cfg.directory)
+assert app.cfg.contacts_missing
+formato='FORMATO_PRUEBA'
+origen=root/('contactos_parciales.'+formato)
+entradas=[
+    {'Nombre':'PRM CONSERVADO FICTICIO','Mail':'conflicto@example.invalid'},
+    {'Nombre':'PRM NUEVO FICTICIO','Mail':'nuevo@example.invalid'},
+]
+if formato=='json':origen.write_text(json.dumps(entradas),encoding='utf-8')
+else:
+    from openpyxl import Workbook
+    libro=Workbook();hoja=libro.active;hoja.append(['Nombre','Mail'])
+    for entrada in entradas:hoja.append([entrada['Nombre'],entrada['Mail']])
+    libro.save(origen);libro.close()
+with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(origen)), patch('nurus.personal.app_base.messagebox.showwarning') as aviso:
+    app._import_contacts()
+assert app.cfg.data['contactos']=={
+    'PRM CONSERVADO FICTICIO':'conservado@example.invalid',
+    'PRM NUEVO FICTICIO':'nuevo@example.invalid',
+}
+assert app.cfg.data['correos']['tribunales']['LAJA']['para']==['tribunal-conservado@example.invalid']
+aviso.assert_called_once()
+assert 'PRM CONSERVADO FICTICIO' in aviso.call_args.args[1]
+guardado=json.loads((app.cfg.contacts_directory/'contactos.json').read_text(encoding='utf-8'))
+assert {item['Nombre']:item['Mail'] for item in guardado}=={
+    'PRM CONSERVADO FICTICIO':'conservado@example.invalid',
+    'PRM NUEVO FICTICIO':'nuevo@example.invalid',
+    'Tribunal: LAJA':'tribunal-conservado@example.invalid',
+}
+""".replace('FORMATO_PRUEBA',formato))
