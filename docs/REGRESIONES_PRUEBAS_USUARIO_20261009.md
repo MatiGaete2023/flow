@@ -85,9 +85,8 @@ Archivo: `descargador/verificar_pdf_extension.py`.
 ## 4. SIN_VINCULO en Espera e Informes
 
 **Causa confirmada por el HAR.** La acción `ShowObservaciones` usa seis
-argumentos numéricos y conserva el tipo de ventana de cada pantalla: 11 en
-Espera, 12 en Cumplimiento y 13 en Informes. El extractor y la extensión
-solo admitían 12. Los lotes recibidos de Espera e Informes enumeraban sus
+argumentos numéricos: el HAR confirma el tipo 11 en Espera y 13 en Informes.
+El extractor y la extensión solo admitían el tipo 12 conocido de Cumplimiento. Los lotes recibidos de Espera e Informes enumeraban sus
 registros, pero descartaban los vínculos y nunca abrían sus bitácoras.
 
 **Corrección.** Se conserva el tipo literal del vínculo comprobado. Python,
@@ -176,7 +175,10 @@ de **17 productos tradicionales**. Las pruebas de ventanas, Node y navegador
 con extensión real usan fixtures; no se consultó SITFA ni Outlook real.
 Los resultados finales, SHA y compilación Windows se registran en
 `CONTINUAR.md` y `docs/evidencia_regresiones_usuario_20261009/`.
-El contraste en Outlook/SITFA institucional sigue pendiente. Los datos reales
+Windows: **615 aprobadas y 1 omitida** por versión (Python 3.12/3.13/3.14);
+Descargador **192 y 59 subpruebas**. EXE, paquete conjunto e instalador verificados
+en el SHA `e3a63691ba75657cef82834406dadb849ba50ee6`. El contraste en
+Outlook/SITFA institucional sigue pendiente. Los datos reales
 se conservaron fuera del repositorio; ningún HAR/JSON/HTML institucional forma
 parte de la evidencia publicada.
 

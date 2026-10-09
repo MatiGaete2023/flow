@@ -47,7 +47,7 @@ Esta actualización añade los calendarios de medidas e informes por vencer, la 
 
 1. Cierra el descargador y la pestaña de conexión anterior.
 2. Reemplaza los archivos de la versión anterior con los de esta versión, **en la misma carpeta cuya extensión cargaste en Chrome**. Si trabajas desde la carpeta entregada directamente, los archivos ya están actualizados.
-3. Abre `chrome://extensions`, busca **SITFA · Descargador local** y pulsa **Recargar**. Su versión debe ser **2.2.0**. No necesitas volver a instalarla.
+3. Abre `chrome://extensions`, busca **SITFA · Descargador local** y pulsa **Recargar**. Su versión debe ser **2.7.4**. No necesitas volver a instalarla.
 4. Abre **Iniciar.cmd**, pulsa el icono de la extensión desde la pestaña SITFA y conecta con el código nuevo. Luego pulsa **Cargar opciones**.
 
 El código anterior vence al cerrar el descargador. Si tienes varias copias de la herramienta, usa el iniciador y la extensión de la misma carpeta actualizada.
