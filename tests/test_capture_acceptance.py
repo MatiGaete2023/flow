@@ -1,5 +1,6 @@
 from copy import deepcopy
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -20,7 +21,7 @@ def executed(kind='INSTITUCIONAL'):
 
 
 def test_all_source_requirements_pending_and_no_implicit_acceptance():
-    source=json.loads((Path(__file__).parents[1]/'docs/evidencia_p0/requisitos.json').read_text())
+    source=json.loads((Path(__file__).parents[1]/'docs/evidencia_p0/requisitos.json').read_text(encoding='utf-8'))
     assert set(CASES)=={r['id'] for r in source} and len(CASES)==115
     pending=summary(template(ARTIFACT))
     assert pending['reported_results']['INSTITUCIONAL']=={'NO_EJECUTADO':115}
@@ -70,14 +71,16 @@ def test_acta_no_overwrite_and_invalid_input_preserves_original(tmp_path):
 
 def test_cli_creates_pending_acta_and_never_echoes_invalid_sensitive_input(tmp_path):
     script=Path(__file__).parents[1]/'tools/flow_acceptance.py'
+    # Reproduce CP1252 incluso en Linux: el CLI debe publicar siempre UTF-8.
+    env={**os.environ,'PYTHONIOENCODING':'cp1252'}
     result=subprocess.run([sys.executable,str(script),'init',str(tmp_path/'acta.json'),
                            '--commit','a'*40,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.2',
                            '--extension-version','2.7.2','--case','D-T10','--gate','G1'],
-                          capture_output=True,text=True,encoding='utf-8',timeout=30)
+                          env=env,capture_output=True,text=True,encoding='utf-8',timeout=30)
     assert result.returncode==0,result.stderr
     assert json.loads(result.stdout)['reported_results']['INSTITUCIONAL']=={'NO_EJECUTADO':1}
     invalid=tmp_path/'datos.json';invalid.write_text('{"secret":"NO_DEBE_IMPRIMIRSE"}',encoding='utf-8')
-    rejected=subprocess.run([sys.executable,str(script),'validate',str(invalid)],capture_output=True,text=True,encoding='utf-8',timeout=30)
+    rejected=subprocess.run([sys.executable,str(script),'validate',str(invalid)],env=env,capture_output=True,text=True,encoding='utf-8',timeout=30)
     assert rejected.returncode==2 and 'NO_DEBE_IMPRIMIRSE' not in rejected.stdout+rejected.stderr
 
 
