@@ -144,3 +144,69 @@ def merge_project_edits(previous, projects):
         if old.text!=old.original_text:
             project.text=old.text
             project.review_required=old.review_required or project.original_text!=old.original_text
+
+
+from .config import RETENCION_DIAS, SESIONES_ANTERIORES
+
+
+def previous_candidates(folder, *, keep=SESIONES_ANTERIORES, max_days=RETENCION_DIAS):
+    """Solo carpetas de sesiones reconocidas, sin seguir enlaces simbólicos."""
+    import time
+    from pathlib import Path
+    folder=Path(folder)
+    if not folder.is_dir() or folder.is_symlink():return []
+    entries=sorted((p for p in folder.iterdir() if not p.is_symlink() and p.is_dir()
+                    and not (p/'trabajo.json').is_symlink() and (p/'trabajo.json').is_file()),
+                   key=lambda p:((p/'trabajo.json').stat().st_mtime,p.name),reverse=True)
+    limit=time.time()-max_days*86400
+    return [entry for index,entry in enumerate(entries)
+            if (keep is not None and index>=keep) or (entry/'trabajo.json').stat().st_mtime<limit]
+
+
+def prune_previous(folder, *, keep=SESIONES_ANTERIORES, max_days=RETENCION_DIAS, confirmed=False):
+    """La eliminación requiere la confirmación expresa de la interfaz local."""
+    import shutil
+    if not confirmed:return []
+    removed=[]
+    for entry in previous_candidates(folder,keep=keep,max_days=max_days):
+        shutil.rmtree(entry);removed.append(entry.name)
+    return removed
+
+
+def saved_data_summary(directory):
+    """Inventario local; los adjuntos externos se miden, nunca se eliminan."""
+    import json
+    from pathlib import Path
+    directory=Path(directory);session=directory/'sesion'
+    result={key:{'count':0,'bytes':0} for key in ('sesiones','copias','adjuntos','recibos')}
+    folders=[]
+    if (session/'trabajo.json').is_file() and not session.is_symlink():folders.append(session)
+    archive=session/'anteriores'
+    if archive.is_dir() and not archive.is_symlink():
+        folders.extend(p for p in archive.iterdir() if p.is_dir() and not p.is_symlink()
+                       and (p/'trabajo.json').is_file() and not (p/'trabajo.json').is_symlink())
+    attachments=set()
+    for folder in folders:
+        result['sesiones']['count']+=1
+        files=[p for p in folder.iterdir() if p.is_file() and not p.is_symlink()]
+        result['sesiones']['bytes']+=sum(p.stat().st_size for p in files)
+        copies=[p for p in files if p.suffix=='.bin']
+        result['copias']['count']+=len(copies)
+        result['copias']['bytes']+=sum(p.stat().st_size for p in copies)
+        try:data=json.loads((folder/'trabajo.json').read_text(encoding='utf-8'))
+        except (OSError,ValueError):continue
+        if not isinstance(data,dict):continue
+        receipts=data.get('receipts',{})
+        if isinstance(receipts,dict):
+            result['recibos']['count']+=len(receipts)
+            result['recibos']['bytes']+=len(json.dumps(receipts,ensure_ascii=False).encode('utf-8')) if receipts else 0
+        saved=data.get('session',{})
+        if not isinstance(saved,dict):continue
+        for draft in saved.get('drafts',[]):
+            if isinstance(draft,dict):attachments.update(str(Path(p).resolve()) for p in draft.get('attachments',[]) if isinstance(p,str))
+    for path in attachments:
+        path=Path(path)
+        if path.is_file():
+            result['adjuntos']['count']+=1
+            result['adjuntos']['bytes']+=path.stat().st_size
+    return result
