@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:49:04.408398+00:00",
+  "actualizado": "2026-10-09T22:50:50.331714+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -236,16 +236,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
+      "rama": "wp/WP-15-har",
+      "pr": 8,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso."
+      ]
     },
     "WP-16": {
       "titulo": "Anonimizador de Excel",
@@ -255,7 +257,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -264,7 +266,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio."
+      ]
     },
     "WP-17": {
       "titulo": "Purga de historial",
