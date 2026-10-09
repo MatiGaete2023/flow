@@ -176,32 +176,15 @@
       "tribunales": {
         "TOME": {
           "nombre": "Juzgado de Familia de Tomé",
-          "para": [
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid"
-          ]
+          "para": []
         },
         "LAJA": {
           "nombre": "Jgdo. L. y G. de Laja",
-          "para": [
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid"
-          ]
+          "para": []
         },
         "MULCHEN": {
           "nombre": "Jgdo. L. y G. de Mulchén",
-          "para": [
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid",
-            "contacto@example.invalid"
-          ]
+          "para": []
         }
       },
       "plantillas": {

@@ -45,7 +45,7 @@ app.work=work;app.refresh_mail_buttons()
 estado={k:(b.cget('state'),r.get()) for k,(b,r) in app.mail_gates.items()}
 assert estado['preparar_tipo']==('normal','') and estado['preparar_todos']==('normal','')
 assert estado['guardar_borradores'][0]=='disabled'
-app.drafts=prepare_drafts(work,'programa_espera');assert app.drafts
+app.drafts=prepare_drafts(work,'programa_espera',directory=root/'salida');assert app.drafts
 app.refresh_mail_buttons()
 assert app.mail_gates['guardar_borradores'][0].cget('state')=='normal'
 assert app.mail_gates['guardar_borradores'][1].get()==''
