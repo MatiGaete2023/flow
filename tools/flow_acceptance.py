@@ -10,6 +10,9 @@ from nurus.capture import CaptureError
 
 
 def main():
+    # JSON y diagnósticos usan la misma codificación al ejecutarse por tuberías.
+    for stream in (sys.stdout,sys.stderr):
+        if hasattr(stream,'reconfigure'):stream.reconfigure(encoding='utf-8')
     parser=argparse.ArgumentParser(description=__doc__)
     commands=parser.add_subparsers(dest='command',required=True)
     create=commands.add_parser('init',help='Plantilla con todos los resultados NO_EJECUTADO.')

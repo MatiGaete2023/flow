@@ -92,6 +92,11 @@ y 57 subtests Descargador; 17 productos golden conservan paridad. Logs con prefi
 `flow-continuacion-` en la evidencia. La nueva CI Windows debe registrarse por
 su propio SHA antes de sustituir los enlaces al código anterior verificado.
 
+El run Windows `37857365015` del SHA `1e50f95` detectó CP1252 en stderr del
+validador de actas (580 pasaron, una falló, una omitida). Se corrige stdout/stderr
+a UTF-8 y la prueba reproduce explícitamente CP1252, incluso en Linux. Conservar
+el fallo como historial; no omitir esa prueba. Descargador `37857364791` SUCCESS.
+
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.
