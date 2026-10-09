@@ -93,7 +93,8 @@
       "integrado_en": "376f3d21239a948de8c5d09ad2c53edd377ab19c",
       "notas": [
         "El prefacio histórico es permitido; actualizar destinos relativos preservando contenido y originales.",
-        "PR5 integrado; siete documentos originales conservados; CI cancelada deliberadamente durante saneamiento."
+        "PR5 integrado; siete documentos originales conservados; CI cancelada deliberadamente durante saneamiento.",
+        "Verificación posterior al merge PASA: 605/11, 198/59, golden intacto y enlaces26 sin crecimiento."
       ]
     },
     "WP-02": {
