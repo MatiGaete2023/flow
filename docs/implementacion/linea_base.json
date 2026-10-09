@@ -1,12 +1,12 @@
 {
-  "commit": "a19f306",
+  "commit": "f2ae588",
   "asistente": {
     "aprobadas": 612,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "codigo": 0,
-    "resumen": "612 passed, 11 skipped in 36.24s"
+    "resumen": "612 passed, 11 skipped in 36.25s"
   },
   "descargador": {
     "aprobadas": 198,
@@ -14,9 +14,9 @@
     "fallidas": 0,
     "subpruebas": 59,
     "codigo": 0,
-    "resumen": "198 passed, 59 subtests passed in 35.98s"
+    "resumen": "198 passed, 59 subtests passed in 35.73s"
   },
-  "identidades_reales": 18,
+  "identidades_reales": 12,
   "paridad_golden": "PASA",
   "restricciones": [],
   "ruff_src": 0,

@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:47:39.579442+00:00",
+  "actualizado": "2026-10-09T22:49:04.408398+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -136,7 +136,8 @@
       "auditoria": "CONFORME",
       "integrado_en": "c8ee8cdef9a5f9c8ae6333400c305766d0b4a5a2",
       "notas": [
-        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20."
+        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20.",
+        "Control posterior: 612/11 y 198/59, golden PASA; identidades12, todas en variantes."
       ]
     },
     "WP-11": {
@@ -166,16 +167,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "TOMADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
+      "rama": "wp/WP-12-contactos-locales",
+      "pr": 7,
       "verificacion": null,
-      "revision": null,
+      "revision": "CAMBIOS",
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Revisión detectó borrado de contactos históricos en importación parcial; executor corrige antes de aprobación."
+      ]
     },
     "WP-13": {
       "titulo": "Retención en el Asistente",
@@ -212,16 +215,18 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "TOMADO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": "/root/ejecutor_retencion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-14-retencion-descargador",
       "pr": 4,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro."
+      ]
     },
     "WP-15": {
       "titulo": "Extractor HAR anónimo",
