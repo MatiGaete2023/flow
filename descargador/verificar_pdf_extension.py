@@ -1,6 +1,7 @@
 """Captura y PDF con APIs nativas y activeTab; todos los datos y rutas son ficticios."""
-import ast,asyncio,hashlib,json,re,sys,tempfile,threading
+import ast,asyncio,base64,hashlib,io,json,re,sys,tempfile,threading
 from pathlib import Path
+from PIL import Image
 from urllib.parse import parse_qsl,urlsplit
 from playwright.async_api import async_playwright,expect
 
@@ -14,10 +15,12 @@ from test_lotes import CATALOG,document
 from test_flujos import catalog,extended_data
 from test_poc import excel,table
 
+fixture_namespace=dict(globals())
 for source,func in [('verificar_chrome_ficticio.py','master'),('verificar_flujos_extension.py','form_html')]:
     tree=ast.parse((app/source).read_text(encoding='utf-8'))
     node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==func)
-    exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'))
+    exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
+master=fixture_namespace['master'];form_html=fixture_namespace['form_html']
 
 def response(s,fields,empty=True):
     if s.screen=='seguimiento':
@@ -43,7 +46,7 @@ def response(s,fields,empty=True):
 async def main():
     output=root/'pruebas_locales'/'pdf_fixture';output.mkdir(parents=True,exist_ok=True)
     report={'datos':'ficticios','api_extension_adaptada':False,'permisos_manifest_ampliados':False,'activeTab_gesto_accion_real':False,'peticiones_reales_sitfa':0,'perfil_usuario_accedido':False}
-    events=[];network=[];bridge=Bridge();mode={'nonempty':False,'change':False,'mixed':False};counts={};capture_names=[]
+    events=[];network=[];bridge=Bridge();mode={'nonempty':False,'change':False,'mixed':False,'defaults':False,'tamper':False};counts={};capture_names=[]
     with tempfile.TemporaryDirectory(prefix='pdf_extension_',dir=root/'pruebas_locales') as tmp:
         async with async_playwright() as pw:
             executable=root/'pruebas_locales'/'chrome-pruebas'/'chrome-win64'/'chrome.exe'
@@ -69,7 +72,17 @@ async def main():
                         key=(screen,s.tribunal,s.tab,s.modality);counts[key]=counts.get(key,0)+1
                         native=req.is_navigation_request();empty=not mode['nonempty'] and not(mode['change'] and native) and not(mode['mixed'] and s.modality=='2')
                         network.append(('POST',screen,s.tribunal,s.modality,native,empty))
-                        await r.fulfill(body=response(s,f,empty),content_type='text/html; charset=utf-8');return
+                        body=response(s,f,empty)
+                        if native and empty and mode['defaults'] and screen=='seguimiento':
+                            # RUS devuelve selectores vacíos, opciones omitidas,
+                            # Espera activa y fechas por defecto en la vista nativa.
+                            body=master()
+                            body=body.replace('</form>','').replace('<script>','</form><script>',1)
+                            body=re.sub(r'(<select name="(?:COD_Tribunal_sel|TIP_Consulta|TIP_Informe)"[^>]*>).*?</select>',
+                                r'\1<option value="-1" selected>...</option></select>',body)
+                            body=body.replace(f'<table id="{TABS[s.tab][3]}"></table>',
+                                f'<h3>Listado [Cantidad : 0]</h3><table id="{TABS[s.tab][3]}"><tr><td>RIT</td><td>Nombre</td></tr></table>')
+                        await r.fulfill(body=body,content_type='text/html; charset=utf-8');return
                     if u.path.startswith('/sitfa/reportes/'):
                         network.append(('XLS',));await r.fulfill(body=excel(1),content_type='application/vnd.ms-excel');return
                     await r.abort()
@@ -115,8 +128,62 @@ async def main():
                 folder=Path(next(v for n,v in reversed(events) if n=='folder'));assert not list(folder.glob('*.pdf'))
                 assert await target.frame_locator('iframe').locator('#sitfaDescargaLocal').count()==0
                 assert len([v for n,v in events if n=='evidence'])==5
+                # Comprobar controles y píxeles de respuestas que se inicializan
+                # con todos los filtros en blanco; no confiar en rótulos del fixture.
+                loop=asyncio.get_running_loop();inspections=[];pixels=[]
+                async def inspect(payload):
+                    frame=next(f for f in target.frames if f.url==m.ENDPOINT)
+                    values=await frame.evaluate('''() => {
+                        const form=document.InformesPpalForm,result={};
+                        for(const name of ['COD_Tribunal_sel','TIP_Consulta','COD_Lengueta','FEC_Inicio','FEC_Fin']) {
+                            const e=form.elements.namedItem(name);result[name]=e.value;
+                            if(e.tagName==='SELECT')result[name+'_text']=e.selectedOptions[0].textContent;
+                        }
+                        result.checked=form.CHK_Consulta.checked;
+                        result.context=document.getElementById('sitfaContextoConsulta').textContent;
+                        return result;
+                    }''')
+                    expected=dict(payload['pairs'])
+                    assert all(values[name]==expected[name] for name in ('COD_Tribunal_sel','TIP_Consulta','COD_Lengueta','FEC_Inicio','FEC_Fin'))
+                    assert values['COD_Tribunal_sel_text']==CATALOG['tribunales'][expected['COD_Tribunal_sel']]
+                    assert values['TIP_Consulta_text']==CATALOG['modalidades'][expected['TIP_Consulta']]
+                    assert values['checked']==(expected['FLG_Consulta']=='1')
+                    assert values['context']=='Consulta solicitada · '+' · '.join(label+': '+value for label,value in payload['context'])
+                    inspections.append({'tribunal':expected['COD_Tribunal_sel'],'modalidad':expected['TIP_Consulta'],
+                        'pestana':expected['COD_Lengueta'],'filtro_fechas':values['checked']})
+                    if mode['tamper']:
+                        await frame.evaluate("document.getElementById('sitfaContextoConsulta').textContent='Consulta distinta'")
+                class CheckedBridge:
+                    def call(self,command,payload=None,timeout=75):
+                        result=bridge.call(command,payload,timeout)
+                        if command=='evidence_open':asyncio.run_coroutine_threadsafe(inspect(payload),loop).result(20)
+                        if command=='evidence_capture':
+                            raw=base64.b64decode(result['png'])
+                            with Image.open(io.BytesIO(raw)) as image:
+                                count=sum(number for number,color in image.convert('RGB').getcolors(image.width*image.height) if color==(232,241,255))
+                            assert count>10000,'El contexto no aparece en los píxeles de Chrome'
+                            pixels.append(count)
+                            (output/f'contexto_consulta_ficticia_{len(pixels)}.png').write_bytes(raw)
+                        return result
+                mode.update(change=False,defaults=True)
+                checked_runner=BatchRunner(CheckedBridge(),cat,lambda n,v:events.append((n,v)),threading.Event())
+                for dates in (Dates('01/10/2026','31/10/2026'),None):
+                    result=await asyncio.to_thread(checked_runner.run,Batch(('113',),('2',),('Cumplimiento',),dates=dates),output)
+                    assert result[0]['estado']=='SIN_RESULTADOS'
+                    evidence_context=dict(result[0]['evidencia']['contexto_consulta'])
+                    assert evidence_context['Pestaña']=='Cumplimiento' and evidence_context['Modalidad']=='Ambulatorio'
+                    assert evidence_context['Fechas']==('01/10/2026 – 31/10/2026' if dates else 'Sin filtro de fechas')
+                mode['tamper']=True
+                try:
+                    await asyncio.to_thread(checked_runner.run,Batch(('113',),('2',),('Cumplimiento',)),output)
+                    raise AssertionError('No aceptar contexto alterado entre validación y captura')
+                except m.PocError:pass
+                folder=Path(next(v for n,v in reversed(events) if n=='folder'));assert not list(folder.glob('*.pdf'))
+                assert len(pixels)==2 and len(inspections)==3
                 report.update(resultado='OK',pdfs=5,pantallas=4,excel_posterior_verificado=True,continuidad_pdf_excel_mismo_lote=True,consulta_cambiada_sin_pdf=True,restauracion_y_cierre=True,
-                    nombres_pdf=capture_names,captura_chrome_real=True,pdf_sin_encabezado_ni_margen=True,cabeceras_td_vacias=True)
+                    nombres_pdf=capture_names,captura_chrome_real=True,pdf_sin_encabezado_ni_margen=True,cabeceras_td_vacias=True,
+                    pdfs_regresion_selectores_vacios=2,controles_y_rotulos_restituidos=inspections[:2],
+                    contexto_visible_en_pixeles=True,contexto_alterado_sin_pdf=True)
             finally:await context.close();bridge.close()
     (root/'pruebas_locales'/'verificacion_pdf_extension.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(report,ensure_ascii=False))

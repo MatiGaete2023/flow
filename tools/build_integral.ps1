@@ -32,7 +32,7 @@ try {
             throw 'El acta existente contiene resultados; conserve ese archivo y use una carpeta nueva para distribuir'
         }
     } else {
-        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.2','--extension-version','2.7.2')
+        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.3','--extension-version','2.7.3')
     }
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'CSMP_Experimental.spec')
 } finally { Pop-Location }
@@ -42,7 +42,7 @@ try {
 } finally { Pop-Location }
 Copy-Item -LiteralPath (Join-Path $downloaderRoot 'extension') -Destination $outputRoot -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $csmpRoot 'docs/GUIA_ENTREGA_MVP_20261008.md') -Destination (Join-Path $outputRoot 'GUIA_INTEGRAL.md') -Force
-foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP_20261008.md','ACEPTACION_INSTITUCIONAL_PENDIENTE.md')) {
+foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP_20261008.md','ACEPTACION_INSTITUCIONAL_PENDIENTE.md','REGRESIONES_PRUEBAS_USUARIO_20261009.md')) {
     Copy-Item -LiteralPath (Join-Path $csmpRoot "docs/$manual") -Destination $outputRoot -Force
 }
 '@echo off', 'start "" "%~dp0CSMP_Integral\CSMP_Integral.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_CSMP.cmd') -Encoding ascii

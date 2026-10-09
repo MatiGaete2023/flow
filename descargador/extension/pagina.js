@@ -13,7 +13,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.2',
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.3',
     protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
@@ -42,26 +42,12 @@ async function sitfaTask(command, payload) {
     return new TextEncoder().encode(copy.outerHTML);
   };
   const sha256 = async data => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",data))).map(x=>x.toString(16).padStart(2,"0")).join("");
-  const restoreEvidenceSelection = (doc,win,pairs) => {
+  const restoreEvidenceSelection = (doc,win,pairs,labels) => {
     const evidenceForm=doc.querySelector('form[name="InformesPpalForm"],form[name="MaoPpalForm"]');
     if(!evidenceForm)throw new Error("estructura");
     const submitted=new Map(pairs);
     const localTabMap={Espera:"tdEspera", Cumplimiento:"tdCumplimiento", Informes:"tdInforme", Egresados:"tdEgreso"};
-    const defaultSelectText=name=>({
-      COD_Tribunal_sel:"Consulta reconstruida",
-      COD_TribunalDist:"Consulta reconstruida",
-      TIP_Consulta:"Consulta reconstruida",
-      TIP_Informe:"Consulta reconstruida",
-      COD_EstBusqueda:"Consulta reconstruida",
-      COD_Mes_sel:"Consulta reconstruida",
-      COD_Anio_Sel:"Consulta reconstruida",
-      COD_CentroResidencial:"Consulta reconstruida",
-      COD_PlazoIntervencion:"Consulta reconstruida",
-      COD_TiempoEspera:"Consulta reconstruida",
-      TIP_Causa:"Consulta reconstruida",
-      COD_TipLitigante:"Consulta reconstruida"
-    }[name]||`Seleccionado (${valuePreview(name)})`);
-    const valuePreview=name=>submitted.get(name)||"";
+    const defaultSelectText=name=>labels[name]||`Seleccionado (${submitted.get(name)||""})`;
     const controls=name=>Array.from(evidenceForm.elements).filter(e=>e.name===name);
     const ensureSelectOption=(e,name,value)=>{
       if(Array.from(e.options).some(o=>o.value===value))return;
@@ -144,13 +130,20 @@ async function sitfaTask(command, payload) {
     if(run?.evidence) {
       run.evidence.remove();
       for(const item of run.evidenceScroll||[])try{item.window.scrollTo(item.x,item.y);}catch(_){}
-      delete run.evidence;delete run.evidenceFrame;delete run.evidenceDigest;delete run.evidenceDocument;delete run.evidenceScroll;
+      delete run.evidence;delete run.evidenceFrame;delete run.evidenceDigest;delete run.evidenceDocument;delete run.evidenceScroll;delete run.evidenceContext;
     }
     const cover=document.getElementById("sitfaDescargaLocal");if(cover)cover.style.visibility="visible";
   };
   if(command==="evidence_close") {evidenceClose();return {ok:true};}
   if(command==="evidence_open") {
-    if(!window.__sitfaRun || !validPairs(payload.pairs)) throw new Error("estructura");
+    if(!window.__sitfaRun || !validPairs(payload.pairs) || !Array.isArray(payload.context) || !payload.context.length ||
+       payload.context.length>12 || payload.context.some(row=>!Array.isArray(row)||row.length!==2||row.some(v=>typeof v!=="string"||v.length>500))) throw new Error("estructura");
+    const labels={};
+    for(const [name,value] of payload.pairs) {
+      const select=Array.from(form.elements).find(e=>e.name===name&&e.tagName==="SELECT");
+      const option=Array.from(select?.options||[]).find(o=>o.value===value);
+      if(option)labels[name]=option.textContent.trim();
+    }
     evidenceClose();
     const panel=document.createElement("div");panel.id="sitfaEvidenciaLocal";
     panel.style.cssText="position:fixed;inset:0;z-index:2147483646;background:white;display:flex;flex-direction:column";
@@ -180,11 +173,20 @@ async function sitfaTask(command, payload) {
       });
       // Refleja los valores actuales de los controles sin modificar la página.
       const doc=frame.contentDocument;
-      restoreEvidenceSelection(doc,frame.contentWindow,payload.pairs);
+      restoreEvidenceSelection(doc,frame.contentWindow,payload.pairs,labels);
+      // El contexto solicitado queda en los píxeles y en el DOM verificado,
+      // incluso si SITFA omite los selectores de una respuesta vacía.
+      const context=doc.createElement("div");context.id="sitfaContextoConsulta";
+      context.setAttribute("data-context",JSON.stringify(payload.context));
+      context.style.cssText="display:block!important;visibility:visible!important;opacity:1!important;position:sticky!important;top:0!important;z-index:2147483647!important;background:#e8f1ff!important;color:#16395b!important;font:15px Arial!important;padding:12px!important;border:2px solid #1b4f9c!important;white-space:normal!important";
+      context.textContent="Consulta solicitada · "+payload.context.map(([label,value])=>label+": "+value).join(" · ");
+      doc.body.prepend(context);
+      frame.contentWindow.scrollTo(0,0);
       const data=evidenceBytes(doc),digest=await sha256(data);
       if(data.length>80*1024*1024)throw new Error("estructura");
       window.__sitfaRun.evidenceDigest=digest;
       window.__sitfaRun.evidenceDocument=doc;
+      window.__sitfaRun.evidenceContext=context;
       const chunks=[];for(let i=0;i<data.length;i+=32768)chunks.push(String.fromCharCode(...data.subarray(i,i+32768)));
       return {status:200,type:"text/html; charset=utf-8",body:btoa(chunks.join("")),digest};
     } catch(error) {evidenceClose();throw error;}
@@ -206,6 +208,12 @@ async function sitfaTask(command, payload) {
       }
     }
     if(run.evidenceFrame.clientWidth<400 || run.evidenceFrame.clientHeight<200)throw new Error("pantalla");
+    run.evidenceFrame.contentWindow.scrollTo(0,0);
+    const context=run.evidenceContext,style=context&&run.evidenceFrame.contentWindow.getComputedStyle(context);
+    const rect=context?.getBoundingClientRect();
+    if(!context?.isConnected || style.display==="none" || style.visibility!=="visible" || Number(style.opacity)!==1 ||
+       rect.top<0 || rect.bottom>run.evidenceFrame.clientHeight || rect.width<300 || rect.height<20)throw new Error("pantalla");
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     document.getElementById("sitfaDescargaLocal").style.visibility="hidden";
     return {ok:true};
   }

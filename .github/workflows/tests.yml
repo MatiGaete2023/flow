@@ -103,7 +103,7 @@ jobs:
         run: |
           $captureSourceCommit = (git rev-parse HEAD).Trim()
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
-          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.2 --extension-version 2.7.2
+          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.3 --extension-version 2.7.3
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
       - name: RUS capture in Chromium with a fictitious form
@@ -184,7 +184,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Descargador-Integral-dev4-SITFA-272
+          name: CSMP-Descargador-Integral-dev4-SITFA-273
           path: dist/integral/
           if-no-files-found: error
 
