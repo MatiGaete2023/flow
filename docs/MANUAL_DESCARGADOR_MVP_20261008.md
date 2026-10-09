@@ -1,5 +1,10 @@
 # Descargador — manual de la entrega MVP
 
+Para aprender el recorrido con imágenes, consulta el
+[manual ilustrado 2.7.4](manual_descargador_2_7_4/README.md) y su
+[PDF](manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf).
+La página 14 propone una práctica completa con datos ficticios, sin entrar a SITFA.
+
 Versión 2.7.4, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
 compilación. El Asistente no necesita estar abierto ni instalado.
 

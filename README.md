@@ -3,6 +3,11 @@
 Repositorio de trabajo: **MatiGaete2023/flow**. Entrega: CSMP `0.5.0.dev4`,
 Descargador/extensión `2.7.4`. Baseline de procedencia: NuRus `251d5c4`.
 
+**Para aprender a usar el Descargador:** [manual con imágenes](docs/manual_descargador_2_7_4/README.md),
+[PDF](docs/manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf)
+y [práctica sin SITFA](docs/manual_descargador_2_7_4/Practica_ficticia_Descargador_2.7.4.zip).
+Incluye recuperar bitácoras anteriores, generar su Excel y reunir hojas para el Asistente.
+
 Para retomar: **[CONTINUAR.md](CONTINUAR.md)**. Documentos originales:
 [plan y especificaciones](docs/plan_20261008/README.md). Primera entrega:
 [ejecución P0](docs/EJECUCION_BASELINE_20261008.md),

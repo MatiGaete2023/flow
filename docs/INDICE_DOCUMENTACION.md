@@ -2,6 +2,9 @@
 
 Documento actualizado el 8 de octubre de 2026.
 
+Guía añadida el 9 de octubre: [manual ilustrado del Descargador 2.7.4](manual_descargador_2_7_4/README.md),
+con PDF, HTML autónomo ampliable y ejercicio de recuperación/exportación sin SITFA.
+
 La especificación y el estado vigentes se encuentran en [README](../README.md) y [Ejecución Windows](EJECUCION_WINDOWS_20261006.md).
 
 La entrega se centra en el trabajo actual, correo y Word manuales, revisión de nóminas, recuperación y controles de Office. El registro real en RUS requiere completar el formulario y la sesión operables.

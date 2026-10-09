@@ -55,6 +55,10 @@ Outlook 365 o políticas Chrome de la institución.
 
 ## Documentación y alcance
 
+- [Manual ilustrado del Descargador 2.7.4](manual_descargador_2_7_4/README.md):
+  17 pasos/secciones, imágenes ampliables y práctica ficticia offline. Disponible
+  en el repositorio y como PDF/HTML separado; añadido después de la compilación
+  Windows `e3a6369`, sin cambios en sus ejecutables.
 - MANUAL_DESCARGADOR_MVP_20261008.md: captura, cobertura y tres exportaciones.
 - MANUAL_ASISTENTE_MVP_20261008.md: importación, edición, productos y recuperación.
 - ACEPTACION_INSTITUCIONAL_PENDIENTE.md: pruebas reales y acta por gate.
