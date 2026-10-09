@@ -1,0 +1,7 @@
+# Entrada de resolución; CI instala exclusivamente los lockfiles con hashes.
+-r ../descargador/requirements.txt
+pyinstaller
+playwright==1.63.0
+ruff
+setuptools>=68
+wheel

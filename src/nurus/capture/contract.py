@@ -137,21 +137,26 @@ def validate_manifest(m):
         else: fail('Tipo de archivo desconocido.')
 
 
+def _validate_query(q):
+    """Fechas, paginación y garantías antes de relacionar filas."""
+    iso_time(q['captured_at'])
+    for k in ('expected_pages','saved_pages'):
+        if not q[k].isdigit(): fail('Páginas inválidas.')
+    if int(q['saved_pages'])>int(q['expected_pages']): fail('Cobertura de páginas inconsistente.')
+    if q['coverage']=='COMPLETA' and q['saved_pages']!=q['expected_pages']: fail('Consulta completa con páginas faltantes.')
+    for k in ('history_complete','institutional_verified'):
+        if q[k] not in ('true','false'): fail('Garantía de fuente inválida.')
+    json_object(q['filters_json'])
+    for k in ('period_from','period_to'):
+        if q[k]: iso_time(q[k],True)
+    if q['period_from'] and q['period_to'] and q['period_from']>q['period_to']: fail('Período invertido.')
+
+
 def _validate_rows(m,tables):
     queries={q['query_id']:q for q in m['queries']}
     if list(tables['consultas'])!=m['queries']: fail('Consultas CSV/manifiesto no coinciden.')
     for q in queries.values():
-        iso_time(q['captured_at'])
-        for k in ('expected_pages','saved_pages'):
-            if not q[k].isdigit(): fail('Páginas inválidas.')
-        if int(q['saved_pages'])>int(q['expected_pages']): fail('Cobertura de páginas inconsistente.')
-        if q['coverage']=='COMPLETA' and q['saved_pages']!=q['expected_pages']: fail('Consulta completa con páginas faltantes.')
-        for k in ('history_complete','institutional_verified'):
-            if q[k] not in ('true','false'): fail('Garantía de fuente inválida.')
-        json_object(q['filters_json'])
-        for k in ('period_from','period_to'):
-            if q[k]: iso_time(q[k],True)
-        if q['period_from'] and q['period_to'] and q['period_from']>q['period_to']: fail('Período invertido.')
+        _validate_query(q)
     record_ids=set(); event_ids=set(); document_ids=set(); calendar_ids=set(); incident_ids=set()
     for table,rows in tables.items():
         if table=='consultas': continue
@@ -210,6 +215,8 @@ def _validate_rows(m,tables):
         if state in ('NO_SOLICITADA','NO_CONSULTADA','VACIA_COMPROBADA','FALLIDA','CANCELADA','NO_DISPONIBLE') and rows and table not in REQUIRED: fail('Estado de tabla incompatible con filas.')
         if state=='VACIA_COMPROBADA' and rows: fail('Tabla vacía declarada con filas.')
         if table not in tables and state not in ('NO_SOLICITADA','NO_CONSULTADA','NO_DISPONIBLE','FALLIDA','CANCELADA'): fail('Tabla disponible omitida.')
+    from .coverage import validate_coverage
+    validate_coverage(m,tables,fail)
 
 
 def read_capture(path):

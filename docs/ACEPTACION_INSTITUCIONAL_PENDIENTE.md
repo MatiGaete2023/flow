@@ -80,6 +80,13 @@ ni texto libre. El validador rechaza campos adicionales, claves JSON duplicadas,
 documentos mayores de 1 MiB, casos repetidos y un `PASÓ` con fallos declarados.
 Su salida muestra únicamente SHA y conteos separados por tipo de evidencia.
 
+Los conteos describen una misma unidad: `expected` es el alcance previsto,
+`observed` lo cotejado, y `matched`/`failed`/`unknown` clasifican lo cotejado.
+Son opcionales; si se declaran las tres categorías, suman `observed`. Ninguna
+clasificación puede superar lo observado. PASÓ requiere cero fallos/desconocidos
+y, cuando ambos se declaran, `expected == observed`. Un resultado sin conteos
+no convierte esa ausencia en evidencia; conserva las exigencias de custodia.
+
 La validación comprueba estructura y coherencia declarada. **No verifica la
 autenticidad de evidencias, no ejecuta pruebas, no aprueba gates y no activa CT.**
 El responsable debe cotejar evidencia, alcance y criterios de las especificaciones.

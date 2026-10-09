@@ -17,6 +17,10 @@ Push-Location $csmpRoot
 try {
     CheckedPython @('tools/write_build_meta.py')
     CheckedPython @('tools/write_build_meta.py','--descargador',$downloaderRoot)
+    $minor = (& $Python -c "import sys; print(str(sys.version_info.major)+str(sys.version_info.minor))").Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar Python del build' }
+    CheckedPython @('tools/flow_dependency_inventory.py','--lock',"requirements/windows-py$minor.lock",'--output',(Join-Path $outputRoot 'DEPENDENCIAS.json'))
+    Copy-Item -LiteralPath (Join-Path $csmpRoot "requirements/windows-py$minor.lock") -Destination (Join-Path $outputRoot 'DEPENDENCIAS.lock') -Force
     $sourceCommit = (git rev-parse HEAD).Trim()
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA de la plantilla de aceptación' }
     $acta = Join-Path $outputRoot 'ACTA_INSTITUCIONAL_NO_EJECUTADA.json'

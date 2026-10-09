@@ -58,6 +58,11 @@ def validate_acta(data):
         seen.add(key)
         counts=record['counts']
         if not isinstance(counts,dict) or set(counts)-set(COUNTS) or any(type(v) is not int or not 0<=v<=200000 for v in counts.values()):fail('conteos inválidos.')
+        if 'observed' in counts:
+            classified=sum(counts.get(k,0) for k in ('matched','failed','unknown'))
+            if classified>counts['observed']:fail('clasificados superan observados.')
+            if all(k in counts for k in ('matched','failed','unknown')) and classified!=counts['observed']:
+                fail('clasificación incompleta de observados.')
         limits=record['limitations']
         if not isinstance(limits,list) or any(not isinstance(v,str) or v not in LIMITATIONS for v in limits) or len(set(limits))!=len(limits):fail('limitaciones deben ser códigos conocidos sin duplicados.')
         if type(record['evidence_retained_locally']) is not bool:fail('custodia local debe ser booleana.')
@@ -74,6 +79,9 @@ def validate_acta(data):
             if not re.fullmatch(r'OP-[0-9A-F]{12}',record['operator_reference']):fail('referencia opaca de operador requerida.')
             if not record['evidence_retained_locally'] or not hashes:fail('ejecución sin custodia local y huella de evidencia.')
             if record['result']=='PASÓ' and counts.get('failed',0)>0:fail('resultado aprobado con fallos declarados.')
+            if record['result']=='PASÓ' and (counts.get('unknown',0)>0 or
+                ('expected' in counts and 'observed' in counts and counts['expected']!=counts['observed'])):
+                fail('resultado aprobado con cobertura incompleta.')
             if record['result']=='FALLÓ' and not limits:fail('fallo sin código de limitación.')
     return data
 

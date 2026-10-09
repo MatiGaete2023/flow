@@ -312,4 +312,7 @@ class Work:
             if sha256(obj.original_content).hexdigest()!=obj.original_hash:
                 raise ValueError('La copia original archivada no coincide con su huella.')
         if sha256(obj.content).hexdigest()!=obj.source_hash:raise ValueError('La copia de origen guardada no coincide con el trabajo.')
+        if hasattr(obj,'capture_context'):
+            from .capture_findings import updated_contexts
+            obj.capture_context=updated_contexts(obj,obj.rows)
         return obj

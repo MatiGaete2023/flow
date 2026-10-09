@@ -24,7 +24,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install -r requirements.txt pytest pyinstaller playwright==1.63.0
+      - run: python -m pip install --require-hashes -r ../requirements/windows-py312.lock
+      - name: Inventario de dependencias bloqueadas
+        run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
       - run: python -m pytest -q -p no:cacheprovider
       - run: node test_bitacoras_extension.cjs
       - name: Extensión y servidor ficticios
@@ -41,12 +43,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del paquete' }
           python -m PyInstaller --noconfirm SITFA_Descargador.spec
           if ($LASTEXITCODE -ne 0) { throw 'Falló el empaquetado' }
-          $p = Start-Process -FilePath (Resolve-Path dist/SITFA_Descargador/SITFA_Descargador.exe).Path -ArgumentList '--verificar-paquete','artifacts/package-check.json' -PassThru -Wait -WindowStyle Hidden
-          if ($p.ExitCode -ne 0) { throw 'Falló la verificación del ejecutable' }
+          . ../tools/windows_process_check.ps1
+          Invoke-CheckedProcess -FilePath (Resolve-Path dist/SITFA_Descargador/SITFA_Descargador.exe).Path -Arguments @('--verificar-paquete','artifacts/package-check.json') -Label 'EXE Descargador'
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
           if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified -or -not $proof.capture_v1_verified) { throw 'Paquete incompleto' }
       - uses: actions/upload-artifact@v4
         with:
           name: Descargador-SITFA-2.7.2-Windows
-          path: descargador/dist/SITFA_Descargador/
+          path: |
+            descargador/dist/SITFA_Descargador/
+            descargador/artifacts/dependencies.json
           if-no-files-found: error
