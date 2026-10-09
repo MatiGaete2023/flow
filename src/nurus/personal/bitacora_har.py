@@ -37,7 +37,7 @@ def import_har(paths):
             if response.get('status') != 200: raise ValueError('Una apertura de bitácora no respondió correctamente.')
             content = response.get('content', {}); text = content.get('text', '')
             encoding = content.get('encoding')
-            if encoding == 'base64': text = base64.b64decode(text, validate=True).decode('utf-8-sig')
+            if encoding == 'base64': text = base64.b64decode(text, validate=True)
             elif encoding: raise ValueError('Codificación HAR desconocida.')
             capture_time = record.get('startedDateTime', '')
             try: datetime.fromisoformat(capture_time.replace('Z', '+00:00'))

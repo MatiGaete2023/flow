@@ -60,7 +60,12 @@ class FakeBridge:
                 data=data.replace(fixture.table(self.number).replace('tablaCumplimiento',profile.table_id).encode(),f'<table id="{profile.table_id}"></table>'.encode())
                 data=data.replace(f'name="{profile.total_field}" value="{self.total}"'.encode(),f'name="{profile.total_field}" value="0"'.encode())
             result={'status':200,'type':'text/html','body':base64.b64encode(data).decode()}
-            if command=='evidence_open':result['digest']=hashlib.sha256(data).hexdigest()
+            if command=='evidence_open':
+                import html
+                context=html.escape(json.dumps(payload['context'],ensure_ascii=False,separators=(',',':')),quote=True)
+                text=html.escape('Consulta solicitada · '+' · '.join(label+': '+value for label,value in payload['context']))
+                data=data.replace(b'<html>',('<html><div id="sitfaContextoConsulta" data-context="'+context+'">'+text+'</div>').encode())
+                result.update(body=base64.b64encode(data).decode(),digest=hashlib.sha256(data).hexdigest())
             return result
         if command=='evidence_capture':
             out=io.BytesIO();Image.new('RGB',(900,600),'white').save(out,'PNG')

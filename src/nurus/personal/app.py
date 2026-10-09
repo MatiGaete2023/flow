@@ -143,7 +143,7 @@ class App(_BaseApp):
         if not self.drafts:raise ValueError('Prepara y revisa los borradores antes de guardarlos.')
         from .current_tools import confirm_drafts
         from .product_checks import check_products
-        checks=check_products(work,self.drafts,[])
+        checks=[c for c in check_products(work,self.drafts,[]) if c.kind=='Correo']
         ready=[c.target for c in checks if not c.issues]
         excluded=[c.label+': '+'; '.join(c.issues) for c in checks if c.issues]
         if not ready:raise ValueError('No hay borradores completos. Abre Resultados para corregir los pendientes.')

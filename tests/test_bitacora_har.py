@@ -53,6 +53,18 @@ def test_identical_captures_not_triple_counted(tmp_path):
     assert captured['sources'][0]['openings']==3
 
 
+def test_base64_legacy_html_keeps_accents_and_original_hash(tmp_path):
+    from hashlib import sha256
+    text='Observación íntegra: Ángela pidió revisión — texto completo.'
+    raw=popup(text).replace('<html>','<html><meta charset="iso-8859-1">').encode('cp1252')
+    path=har(tmp_path/'sintetica.har',[popup()],encoded=True)
+    document=json.loads(path.read_text(encoding='utf-8'))
+    document['log']['entries'][0]['response']['content']['text']=base64.b64encode(raw).decode()
+    path.write_text(json.dumps(document),encoding='utf-8')
+    query=import_har([path])['queries'][0]
+    assert query['entries'][0].texto==text and query['html_sha256']==sha256(raw).hexdigest()
+
+
 def test_conflicting_snapshots_rejected(tmp_path):
     source=har(tmp_path/'capture.har',[popup('Antes'),popup('Después')])
     with pytest.raises(ValueError,match='difieren'):import_har([source])

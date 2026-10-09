@@ -136,11 +136,12 @@ def test_espera_without_historia_and_rut_script_reads_verified_ingresos(tmp_path
     assert all('vinculo_diagnostico' not in r for r in records)
 
 
-def test_version_incompatible_fails_before_query(tmp_path):
+@pytest.mark.parametrize('version',['2.7.0','2.7.2'])
+def test_version_incompatible_fails_before_query(tmp_path,version):
     class OlderExtension(Bridge):
         def call(self,command,payload=None,timeout=75):
             result=super().call(command,payload,timeout)
-            if command=='capabilities':result['version']='2.7.0'
+            if command=='capabilities':result['version']=version
             return result
     bridge=OlderExtension()
     result=run(tmp_path,bridge)
@@ -161,8 +162,8 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     assert data['tipo']=='BITACORAS_DIAGNOSTICO_ANONIMO'
     assert data['estados']=={'SIN_VINCULO':2}
     assert data['registros']==2
-    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.2')
-    assert data['extension_version']=='2.7.2'
+    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.3')
+    assert data['extension_version']=='2.7.3'
     assert data['descargador_commit']=='NO_VERIFICADO' or len(data['descargador_commit'])==40
     assert data['diagnosticos_sin_vinculo']['SIN_ACCION_OBSERVACIONES']==2
     assert data['consultas'][0]['registros']==2
@@ -172,7 +173,7 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     malicious={'registros':[{'estado':'FALLIDA','rit':'X-1-2026','nombre':'Persona ficticia',
                             'error':'Texto privado NNA','diagnostico':{'codigo_extension':'Texto privado NNA'}}],
                'consultas':[{'tribunal':'Texto privado NNA','modality':'1','tab':'Espera','estado':'FALLIDA'}],
-               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.2'}}
+               'origen':{'version':'Texto privado NNA'},'extension':{'version':'2.7.3'}}
     sanitized=json.dumps(anonymous_diagnostic(malicious),ensure_ascii=False)
     assert 'Texto privado NNA' not in sanitized
     assert 'Persona ficticia' not in sanitized
@@ -186,6 +187,53 @@ def test_extension_declared_version_matches_manifest():
     script=(folder/'pagina.js').read_text(encoding='utf-8')
     assert f"if(command==='capabilities') return {{tipo:'CSMP_RUS_CAPACIDADES',version:'{VERSION}'" in script
     assert manifest['version']==VERSION
+
+
+@pytest.mark.parametrize('encoding,meta,bom', [
+    ('cp1252','',b''), ('cp1252','<meta charset="windows-1252">',b''),
+    ('cp1252','<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">',b''),
+    ('utf-8','<meta charset="utf-8">',b''), ('utf-8','',b'\xef\xbb\xbf'),
+])
+def test_legacy_diary_download_resume_and_both_importers_keep_original_bytes(tmp_path,encoding,meta,bom):
+    from nurus.capture.diaries import import_lote as import_shared
+    from nurus.personal.bitacora_lote import import_lote as import_personal
+    complete='Observación íntegra: Ángela pidió revisión — línea siguiente.\nSegunda línea'
+    class EncodedBridge(Bridge):
+        def call(self,command,payload=None,timeout=75):
+            result=super().call(command,payload,timeout)
+            if command=='diary_open':
+                text=popup(payload['params']).replace('<html>','<html>'+meta)
+                text=text.replace('Texto completo\nSegunda línea',complete)
+                raw=bom+text.encode(encoding)
+                result.update(body=base64.b64encode(raw).decode(),digest=hashlib.sha256(raw).hexdigest())
+            return result
+    result=run(tmp_path,EncodedBridge())
+    assert result['estado']=='COMPLETA' and result['leidas']==2 and result['fallidas']==0
+    records=json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
+    for record in records:
+        raw=(Path(result['folder'])/record['archivo']).read_bytes()
+        assert raw==bom+popup(record['params']).replace('<html>','<html>'+meta).replace('Texto completo\nSegunda línea',complete).encode(encoding)
+        assert hashlib.sha256(raw).hexdigest()==record['sha256']
+    for importer in (import_shared,import_personal):
+        queries=importer(result['manifest'])['queries']
+        assert len(queries)==2
+        for query,record in zip(queries,records):
+            entry=query['entries'][0]
+            assert (entry['texto'] if isinstance(entry,dict) else entry.texto)==complete
+            assert query['html_sha256']==record['sha256']
+    bridge=EncodedBridge();resumed=run(tmp_path,bridge,resume=result['folder'])
+    assert resumed['leidas']==2 and not bridge.openings
+
+
+def test_legacy_encoding_does_not_bypass_remote_identity_or_accept_broken_bytes():
+    params={'tipo_popUp':'12','COD_Tribunal':'49','CRR_IdCausa':'100','ID_Ingreso':'201','COD_Etapa':'3','TIP_Consulta':'2'}
+    read=parser()
+    with pytest.raises(ValueError,match='ingreso solicitado'):
+        read(popup(params,wrong=True).encode('cp1252'),params)
+    with pytest.raises(ValueError,match='decodificar íntegramente'):
+        read(popup(params).encode('cp1252').replace(b'Texto completo',b'Texto\x81 completo'),params)
+    with pytest.raises(ValueError,match='incompleta'):
+        read(popup(params).encode('cp1252')[:-7],params)
 
 
 def test_cancel_and_resume_keeps_verified_copy(tmp_path):

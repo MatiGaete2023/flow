@@ -1,7 +1,13 @@
 # Descargador — manual de la entrega MVP
 
-Versión 2.7.2, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
+Versión 2.7.3, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
 compilación. El Asistente no necesita estar abierto ni instalado.
+
+La extensión 2.7.3 debe cargarse y recargarse junto con esta versión. Las
+bitácoras admiten UTF-8 y Windows-1252/Latin-1 y conservan sus bytes originales.
+Los PDF vacíos muestran la consulta solicitada, con tribunal, modalidad,
+pestaña y fechas o «Sin filtro de fechas». Ese contexto se restituye localmente;
+la tabla vacía se comprueba en la respuesta y no acredita un historial completo.
 
 1. Iniciar sesión institucional manualmente y definir tribunales, modalidades,
    pestañas y período autorizado. Enlazar la extensión del mismo paquete.

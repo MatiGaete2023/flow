@@ -1,8 +1,14 @@
 # Entrega MVP NURUS / CSMP — 8 de octubre de 2026
 
-CSMP 0.5.0.dev4 y Descargador/extensión 2.7.2; contrato CSMP_CAPTURE/REQUEST
+CSMP 0.5.0.dev4 y Descargador/extensión 2.7.3; contrato CSMP_CAPTURE/REQUEST
 1.0.0. Integración en pruebas, sin promoción a versión institucional vigente.
 Los dos programas funcionan autónomamente y pueden distribuirse juntos.
+
+Actualización del 9 de octubre: corregidos el guardado por lote de borradores,
+las bitácoras con codificación antigua y el contexto visible del PDF vacío.
+Al actualizar desde ZIP, ejecutar de nuevo `Instalar_CSMP.bat` y cargar/recargar
+la carpeta `descargador/extension` 2.7.3 en Chrome; iniciar una conexión nueva.
+El detalle está en `REGRESIONES_PRUEBAS_USUARIO_20261009.md`.
 
 ```mermaid
 flowchart LR
