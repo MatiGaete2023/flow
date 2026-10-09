@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:19-03:00",
+  "actualizado": "2026-10-09T18:21-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -249,16 +249,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "BLOQUEADO",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T18:21-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Herramienta y prueba hechas; botón bloqueado: requiere src/nurus/personal/anonymize.py (fuera de ficha)."
+      ]
     },
     "WP-17": {
       "titulo": "Purga de historial",
