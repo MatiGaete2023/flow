@@ -24,4 +24,5 @@ Las decisiones D1–D9 que bloquean WP están listadas en `PLAN_VIGENTE.md`.
 python -m pip install --require-hashes -r requirements/linux-py312.lock
 python -m pip install --no-deps --no-build-isolation -e .
 python tools/verificar_wp.py
+git config core.hooksPath tools/hooks   # bloquea commits con RUT reales
 ```
