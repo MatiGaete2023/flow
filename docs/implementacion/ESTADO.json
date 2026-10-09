@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:46:32.898418+00:00",
+  "actualizado": "2026-10-09T22:47:39.579442+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -126,16 +126,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-10-identidades",
+      "pr": 6,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "c8ee8cdef9a5f9c8ae6333400c305766d0b4a5a2",
+      "notas": [
+        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20."
+      ]
     },
     "WP-11": {
       "titulo": "Control de identidades en CI y pre-commit",
@@ -145,7 +147,7 @@
         "WP-10"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
