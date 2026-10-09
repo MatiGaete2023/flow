@@ -274,7 +274,9 @@ class Work:
         if self.original_hash and self.original_content:
             original=directory/(self.original_hash+'.bin')
             archive_bytes(original,self.original_content,self.original_hash)
-        data={k:v for k,v in self.__dict__.items() if k not in ('rows','content','original_content','activity_reviewed','signed_activity') and not k.startswith('_save_')}
+        # La configuración (contactos incluidos) no se copia a la sesión: solo su huella.
+        data={k:v for k,v in self.__dict__.items() if k not in ('config','rows','content','original_content','activity_reviewed','signed_activity') and not k.startswith('_save_')}
+        data['config_sha256']=sha256(json.dumps(self.config,sort_keys=True,default=str,ensure_ascii=False).encode()).hexdigest()
         data['rows']=[asdict(r) for r in self.rows]
         previous=directory/'trabajo.json'
         digest=sha256(json.dumps(data,sort_keys=True,default=str,ensure_ascii=False).encode()).hexdigest()
@@ -308,9 +310,14 @@ class Work:
         info=previous.stat();stats[key]=(info.st_mtime_ns,info.st_size);self._save_stats=stats
 
     @classmethod
-    def load(cls,directory):
+    def load(cls,directory,config=None):
+        """Sesiones nuevas usan la configuración vigente; las antiguas conservan la que traían."""
         directory=Path(directory)
         data=json.loads((directory/'trabajo.json').read_text(encoding='utf-8'))
+        if 'config' not in data:
+            from .config import defaults
+            data['config']=config if config is not None else defaults()
+        data.pop('config_sha256',None)
         obj=cls(data['config']);obj.__dict__.update(data)
         obj.activity_reviewed={};obj.signed_activity={}
         if getattr(obj,'needs_cross',False):obj.cross_missing=True
