@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:22-03:00",
+  "actualizado": "2026-10-09T18:25-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -51,7 +51,15 @@
       "fecha": null
     }
   },
-  "conflictos_abiertos": [],
+  "conflictos_abiertos": [
+    {
+      "id": "C-08-sin-columna",
+      "origen": "WP-60 / R-T13",
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] Sin columna de ficha FAE, reglas_cumplimiento.py emite C08_FICHA_FAE («no registra ficha»); 03 §6 pide NO_EVALUABLE. Prueba xfail estricta en tests/test_reglas_cumplimiento.py. Decide el usuario; no se modificó la regla.",
+      "respuesta": null
+    }
+  ],
   "paquetes": {
     "WP-00": {
       "titulo": "Kit, estado y línea base",
@@ -689,16 +697,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "TOMADO",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T18:25-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "20 de 32 casos R-T con prueba (19 PASÓ + R-T13 con conflicto). Faltan R-T17–R-T26, R-T29, R-T30, R-T32."
+      ]
     },
     "WP-61": {
       "titulo": "Formato automático",
