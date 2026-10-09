@@ -97,6 +97,15 @@ validador de actas (580 pasaron, una falló, una omitida). Se corrige stdout/std
 a UTF-8 y la prueba reproduce explícitamente CP1252, incluso en Linux. Conservar
 el fallo como historial; no omitir esa prueba. Descargador `37857364791` SUCCESS.
 
+Continuación 2026-10-09: `9cd9f50` corrigió UTF-8 (24 pruebas focalizadas).
+Windows superó 581 pruebas/1 omitida, EXE autónomo y paquete conjunto; Descargador
+`37875982173` SUCCESS. El run Asistente `37875982153` se quedó en la fase de
+instalador; se solicitó cancelación para recuperar logs. No declarar esa fase
+aprobada. Se añaden plazos por proceso, etiquetas de etapas y logs separados
+con `tools/windows_process_check.ps1`; sus pruebas Windows comprueban código de
+salida y terminación de un proceso ficticio colgado. Mantener el fallo y el
+registro de cancelación, y cerrar la nueva ejecución antes de cambiar descargas.
+
 ### Trabajo institucional diferido
 
 1. Leer implementación, trazabilidad y evidencia en `docs/evidencia_desarrollo_20261008`.

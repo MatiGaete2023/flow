@@ -4,6 +4,7 @@ param(
     [string]$Output = (Join-Path $PSScriptRoot '../dist/integral')
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'windows_process_check.ps1')
 $csmpRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $downloaderRoot = (Resolve-Path $Downloader).Path
 $outputRoot = [IO.Path]::GetFullPath($Output)
@@ -50,8 +51,7 @@ $checks = @(
 Push-Location $outputRoot
 try {
     foreach ($check in $checks) {
-        $process = Start-Process -FilePath (Join-Path $outputRoot $check[0]) -WorkingDirectory $outputRoot -ArgumentList $check[1..($check.Length-1)] -PassThru -Wait -WindowStyle Hidden
-        if ($process.ExitCode -ne 0) { throw "Falló la verificación $($check[1])" }
+        Invoke-CheckedProcess -FilePath (Join-Path $outputRoot $check[0]) -WorkingDirectory $outputRoot -Arguments $check[1..($check.Length-1)] -Label "verificación $($check[0]) $($check[1])"
         $proof = Get-Content -LiteralPath $check[2] -Raw | ConvertFrom-Json
         if (-not $proof.ok) { throw 'La distribución no confirmó su integración.' }
         if ($check[1] -eq '--verificar-paquete' -and $check[0].StartsWith('CSMP_Integral/') -and -not $proof.capture_pipeline_verified) {
