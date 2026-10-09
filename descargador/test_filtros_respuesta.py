@@ -78,6 +78,10 @@ def test_filter_45_days_downloads_all_pages(tmp_path):
     assert [('search',1),('download',1),('search',2),('download',2),('search',3),('download',3)]==bridge.requests
 
 
+from gui_test_isolation import isolated_gui
+
+
+@isolated_gui
 def test_calendar_defaults_current_period_and_preserves_explicit_choice():
     import tkinter as tk
     from descargador import Application

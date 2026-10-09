@@ -4,6 +4,7 @@ import tempfile
 import time
 import tkinter as tk
 import unittest
+from gui_test_isolation import isolated_gui
 
 from descargador import Application,TribunalPicker
 from test_lotes import CATALOG,dispose_interface
@@ -12,6 +13,7 @@ from ventana_resultados import ResultsWindow
 
 
 class ExperienceTests(unittest.TestCase):
+    @isolated_gui
     def test_search_preserves_hidden_choices_and_cancel(self):
         root=tk.Tk();root.withdraw();chosen=[]
         try:
@@ -20,6 +22,7 @@ class ExperienceTests(unittest.TestCase):
             self.assertTrue(picker.choices['49'].get());self.assertTrue(picker.choices['113'].get())
             picker.destroy();self.assertEqual(chosen,[])
         finally:root.destroy()
+    @isolated_gui
     def test_offline_results_load_and_generate(self):
         with tempfile.TemporaryDirectory() as temp:
             root=tk.Tk();root.withdraw();app=Application(root,start_worker=False)
