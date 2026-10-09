@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:16:58.066325+00:00",
+  "actualizado": "2026-10-09T22:17:37.125759+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -81,10 +81,10 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "TOMADO",
+      "ejecutor": "/root/ejecutor_preparacion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-01-gobernanza",
       "pr": null,
       "verificacion": null,
       "revision": null,
@@ -180,10 +180,10 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "TOMADO",
+      "ejecutor": "/root/ejecutor_retencion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-13-retencion-asistente",
       "pr": null,
       "verificacion": null,
       "revision": null,
@@ -201,10 +201,10 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "TOMADO",
+      "ejecutor": "/root/ejecutor_retencion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-14-retencion-descargador",
       "pr": null,
       "verificacion": null,
       "revision": null,
@@ -301,7 +301,7 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -310,7 +310,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda."
+      ]
     },
     "WP-22": {
       "titulo": "Inspector y diario de registro RUS",
@@ -732,6 +734,10 @@
       "rama_anterior": "ccr-4116db41-nm8g0r",
       "commit_anterior": "5471ca6",
       "descripcion": "Trabajo previo no integrado: se recuperará por WP en ramas propias; sin presumir revisión, auditoría ni decisiones."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "Revisión de legado: corregir hook para blobs staged; anonimizador deja títulos/comentarios/enlaces; recuperación sin trabajo pierde configuración; instalador permite fallback sin hashes; barra no actualiza conteos y Correos acumula temporizadores; cobertura R-T32 y límites R-T02 incompletos. Ninguno se da por aprobado sin recuperación por WP."
     }
   ]
 }
