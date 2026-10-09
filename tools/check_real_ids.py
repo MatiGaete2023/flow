@@ -1,0 +1,95 @@
+"""Falla si el repositorio contiene RUT chilenos con dígito verificador válido.
+
+Uso:
+    python tools/check_real_ids.py            # revisa archivos versionados
+    python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
+
+Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
+Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
+"""
+import re
+import subprocess
+import sys
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+ALLOWLIST = ROOT / "tools" / "real_ids_allowlist.txt"
+TEXT_SUFFIXES = {".py", ".json", ".md", ".txt", ".csv", ".html", ".js", ".xml", ".yml", ".yaml", ".b64", ".toml", ".cjs"}
+ZIP_SUFFIXES = {".docx", ".xlsx", ".zip"}
+ZIP_MEMBER_SUFFIXES = (".xml", ".csv", ".json", ".txt", ".html", ".md")
+PATTERN = re.compile(r"(?<![\d.])(\d{1,2}\.?\d{3}\.?\d{3})-([\dkK])(?![\w])")
+
+
+def check_digit(number: str) -> str:
+    total, factor = 0, 2
+    for char in reversed(number):
+        total += int(char) * factor
+        factor = 2 if factor == 7 else factor + 1
+    rest = 11 - total % 11
+    return {11: "0", 10: "K"}.get(rest, str(rest))
+
+
+def is_real_looking(number: str, digit: str) -> bool:
+    if int(number) < 1_000_000 or len(set(number)) <= 2:
+        return False
+    return check_digit(number) == digit.upper()
+
+
+def load_allowlist() -> set[str]:
+    if not ALLOWLIST.is_file():
+        return set()
+    return {line.strip().upper() for line in ALLOWLIST.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#")}
+
+
+def tracked_files() -> list[Path]:
+    output = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, check=True).stdout
+    return [ROOT / name for name in output.decode("utf-8").split("\0") if name]
+
+
+def texts(path: Path):
+    suffix = path.suffix.lower()
+    if suffix in TEXT_SUFFIXES:
+        yield str(path), path.read_text(encoding="utf-8", errors="ignore")
+    elif suffix in ZIP_SUFFIXES:
+        try:
+            with zipfile.ZipFile(path) as archive:
+                for name in archive.namelist():
+                    if name.lower().endswith(ZIP_MEMBER_SUFFIXES):
+                        yield f"{path}!{name}", archive.read(name).decode("utf-8", errors="ignore")
+        except zipfile.BadZipFile:
+            return
+
+
+def scan(paths: list[Path], allowlist: set[str]) -> list[tuple[str, int, str]]:
+    findings = []
+    for path in paths:
+        if not path.is_file():
+            continue
+        for label, content in texts(path):
+            for match in PATTERN.finditer(content):
+                number = match.group(1).replace(".", "")
+                normalized = f"{number}-{match.group(2).upper()}"
+                if normalized in allowlist or not is_real_looking(number, match.group(2)):
+                    continue
+                line = content.count("\n", 0, match.start()) + 1
+                findings.append((label, line, normalized[:2] + "******-" + normalized[-1]))
+    return findings
+
+
+def main(argv: list[str]) -> int:
+    paths = [Path(arg).resolve() for arg in argv] if argv else tracked_files()
+    findings = scan(paths, load_allowlist())
+    for label, line, masked in findings:
+        print(f"{label}:{line}: RUT con dígito verificador válido ({masked})")
+    if findings:
+        print(f"{len(findings)} posibles identidades reales. Reemplázalas por datos sintéticos "
+              "o agrega el RUT sintético a tools/real_ids_allowlist.txt.")
+        return 1
+    print("Sin RUT reales detectados.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
