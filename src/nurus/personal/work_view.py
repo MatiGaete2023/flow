@@ -63,7 +63,7 @@ def build(app):
     app.records.tag_configure('excluded',background='#665220',foreground='#fff2cc')
     app.records.tag_configure('warning',background='#653b29',foreground='#ffe2cd')
     app.records.tag_configure('signed',background='#243c56',foreground='#ddebf7')
-    app.records.bind('<<TreeviewSelect>>',lambda event:None if app.busy else app._guard(app._detail))
+    app.records.bind('<<TreeviewSelect>>',lambda event:None if app.busy or getattr(app,'rendering',False) else app._guard(app._detail))
     footer=ui.Frame(edit);footer.pack(side='bottom',fill='x',pady=(5,0))
     def maximize():
         if str(table) in split.panes():split.forget(table)

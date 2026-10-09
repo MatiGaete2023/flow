@@ -172,6 +172,7 @@ class App(ctk.CTk):
         self.after(15000,self._autosave)
 
     def _save_session(self):
+        if getattr(self,'rendering',False):return
         if not self.busy:
             for window,capture_manual in getattr(self,'_manual_captures',{}).values():
                 if window.winfo_exists():capture_manual()
@@ -347,6 +348,9 @@ class App(ctk.CTk):
         if not path:return
         self._capture_observation();self._capture_mail();self._capture_project()
         from .capture_input import import_capture
+        if self.work:
+            from .session import capture
+            capture(self)
         previous=deepcopy(self.work) if self.work else None
         config=deepcopy(self.cfg.data)
         text=simpledialog.askstring('Fecha de corte','Fecha de análisis AAAA-MM-DD:',initialvalue=date.today().isoformat(),parent=self)
@@ -360,8 +364,14 @@ class App(ctk.CTk):
                 previous.save(self.cfg.directory/'sesion'/'anteriores'/uuid4().hex)
             self.work=candidate
             if not reused:self._clear_drafts();self.projects=[];self.observation_id=None
-            self._show_work(reset_projects=not reused);self._save_session()
-            self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones y productos actuales conservados.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
+            def ready():
+                if reused:
+                    from .session import restore
+                    restore(self)
+                self._save_session()
+                self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones conservadas; revisa productos obsoletos.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
+            changed=bool(previous and candidate.capture_digest!=getattr(previous,'capture_digest',''))
+            self._show_work(reset_projects=not reused or changed,on_ready=ready)
         def attempt(answers=None):
             def action():
                 from .capture_reconciliation import ReconciliationRequired
@@ -465,10 +475,11 @@ class App(ctk.CTk):
         self.status.set('Edición incorporada a esta sesión y a sus productos.')
 
     def _detail(self,event=None):
-        if self.busy:return
+        if self.busy or getattr(self,'rendering',False):return
         self._capture_observation()
         if self.work and selected_ids(self,'records'):
-            row=next(r for r in self.work.rows if r.id==selected_ids(self,'records')[0])
+            row=next((r for r in self.work.rows if r.id==selected_ids(self,'records')[0]),None)
+            if row is None:return
             self.observation_id=row.id
             self.detail.set('; '.join(row.warnings))
             self.observation_editor.delete('1.0','end');self.observation_editor.insert('1.0',row.review.get('OBSERVACION',row.observation))
