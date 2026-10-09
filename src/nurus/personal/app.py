@@ -210,7 +210,7 @@ class App(_BaseApp):
             self._show_work(reset_projects=False);self._save_session();self._update_context();self.status.set('Excel generado: '+result+' · Disponible en Correos y Resoluciones.')
         self._run('Exportando copia preservada con Excel…',lambda:work.export(path),done)
 
-    def _show_work(self,reset_projects=True):
+    def _show_work(self,reset_projects=True,on_ready=None):
         if not self.work:return
         journal_path=self.cfg.directory/'registro_observaciones.sqlite'
         if journal_path.is_file():
@@ -265,6 +265,7 @@ class App(_BaseApp):
             if reset_projects:
                 self.words.selection_set([iid for iid in previous_words if self.words.exists(iid)])
                 self._apply_resolution_filter()
+            if on_ready:on_ready()
         render_rows(self,jobs,finish_render)
         n=len(self.work.rows);exc=sum(r.excluded for r in self.work.rows);obs=sum(bool(r.observation) for r in self.work.rows)
         invalid_res=sum(any(str(w).startswith('RES no reconocido:') for w in r.warnings) for r in self.work.rows)
