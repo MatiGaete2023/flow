@@ -135,3 +135,13 @@ def test_recuperacion_sin_trabajo_activo_usa_configuracion_vigente(tmp_path):
     assert reiniciado.work.config is reiniciado.cfg.data
     assert reiniciado.work.config['firma'] == 'Firma vigente del perfil'
     assert reiniciado.work.config['contactos'] == {'PRM FICTICIO': 'vigente@example.invalid'}
+
+
+def test_defaults_y_golden_no_cargan_directorio_local_del_usuario(tmp_path):
+    local = configuracion.user_directory()
+    save_contacts({'PRM LOCAL FICTICIO': 'usuario-local@example.invalid'}, local)
+    base = defaults()
+    assert len(base['contactos']) == 3
+    assert 'PRM LOCAL FICTICIO' not in base['contactos']
+    cfg = Configuration(tmp_path / 'perfil')
+    assert cfg.data['contactos'] == {'PRM LOCAL FICTICIO': 'usuario-local@example.invalid'}
