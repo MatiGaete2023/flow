@@ -9,6 +9,19 @@
 **Código compilado y verificado Windows:** `e3a63691ba75657cef82834406dadb849ba50ee6`
 El último checkpoint se obtiene con `git log -1`.
 
+## Manual ilustrado solicitado por el usuario — 9 de octubre
+
+[Manual del Descargador 2.7.4](docs/manual_descargador_2_7_4/README.md), con
+PDF de 17 páginas, HTML autónomo con capturas ampliables y práctica ficticia
+sin SITFA. Explica conexión, selección, hojas, lectura y recuperación de bitácoras,
+Excel autónomo, combinación de lotes y el ZIP correcto para Trabajo → Importar paquete.
+La práctica reproduce 800 ingresos, 4 registros de hojas y 2 bitácoras coincidentes
+(798 ajenas excluidas). No incorpora adjuntos institucionales del usuario.
+Generadores en `tools/manual_descargador_capturas.py` y
+`tools/manual_descargador_publicar.py`; contenido editable `contenido.json`.
+Entrega documental, sin cambios funcionales ni nueva compilación Windows.
+Los ejecutables verificados siguen correspondiendo a `e3a6369`.
+
 ## Autorización y entrega actual
 
 El usuario ordenó continuar hasta completar tareas y productos. Se avanzó desde

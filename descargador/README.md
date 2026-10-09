@@ -1,5 +1,11 @@
 # Descargador SITFA · prototipo integral 2.7.4
 
+**Empieza aquí:** [manual ilustrado paso a paso](../docs/manual_descargador_2_7_4/README.md),
+[PDF descargable](../docs/manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf)
+y [práctica ficticia sin conexión](../docs/manual_descargador_2_7_4/Practica_ficticia_Descargador_2.7.4.zip).
+La [versión HTML](../docs/manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.html)
+se abre en el navegador sin conexión y permite ampliar las capturas.
+
 **Entrega 2.7.4, 9 de octubre de 2026.** Corrige la lectura de bitácoras
 Windows-1252/Latin-1, preserva los originales y permite reutilizarlos al reintentar.
 Los PDF vacíos identifican tribunal, modalidad, pestaña y fechas en la captura;
