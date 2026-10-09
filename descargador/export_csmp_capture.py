@@ -7,20 +7,13 @@ from nurus.capture.contract import COMMON,TABLES,write_capture
 from nurus.capture.diaries import import_lote
 from resultados import tables,table_mode,read_json,inside,headers_and_rows
 import motor as m
+from nurus.capture.coverage import aggregate
 
 
 def literal(value):
     if value is None:return ''
     if isinstance(value,(date,datetime)):return value.isoformat()
     return str(value)
-
-
-def aggregate(states):
-    states=list(states)
-    if not states:return 'NO_SOLICITADA'
-    if all(s=='VACIA_COMPROBADA' for s in states):return 'VACIA_COMPROBADA'
-    if all(s in ('COMPLETA','VACIA_COMPROBADA') for s in states):return 'COMPLETA'
-    return 'PARCIAL'
 
 
 def export_capture(lots,destination,*,diaries=None,include_originals=False):
@@ -72,10 +65,14 @@ def export_capture(lots,destination,*,diaries=None,include_originals=False):
         data['bitacoras']=[]
         batch=import_lote(diaries)
         for qi,snapshot in enumerate(batch['queries']):
-            qid=f'diary-{qi}';selection={'tribunal':snapshot['tribunal_codigo'],'tab':'BITACORAS'}
+            qid=f'diary-{qi}';selection={'tribunal':snapshot['tribunal_codigo'],'tab':'BITACORAS',
+                 'capture_tables':['bitacoras'],'remote_identity':{'source_system':'RUS',
+                 'court_code':snapshot['tribunal_codigo'],'cause_id':snapshot['causa_id'],'ingreso_id':snapshot['ingreso_id']}}
             when=snapshot.get('captured_at') or captured
             q=query(qid,selection,snapshot['coverage'],when,1,1,screen='bitacoras')
             if snapshot['coverage']=='FALLIDA':incident(qid,'BITACORA_FALLIDA',snapshot['error'])
+            for warning in snapshot.get('warnings',[]):
+                incident(qid,'BITACORA_ADVERTENCIA',warning)
             for en,entry in enumerate(snapshot['entries'],1):
                 common={k:'' for k in COMMON};common.update(capture_id=cid,query_id=qid,source_system='RUS',court_code=snapshot['tribunal_codigo'],rit_original=entry['rit'],cause_id=entry['causa_id'],ingreso_id=entry['ingreso_id'],captured_at=when,original_file=entry['fuente'],original_sheet='TablaInforme',original_row=str(entry['fila_fuente']),source_sha256=snapshot['html_sha256'],coverage=snapshot['coverage'])
                 event_at=entry['fecha'];date_only=event_at.endswith('T00:00:00')
@@ -83,8 +80,12 @@ def export_capture(lots,destination,*,diaries=None,include_originals=False):
     states={k:'NO_SOLICITADA' for k in TABLES}
     states.update(consultas=aggregate(q['coverage'] for q in data['consultas']),registros=aggregate(q['coverage'] for q in data['consultas'] if q['screen']!='bitacoras'),incidencias='COMPLETA' if data['incidencias'] else 'VACIA_COMPROBADA')
     for name in ('calendarios','bitacoras'):
-        if name in data:
-            states[name]='PARCIAL' if name=='bitacoras' and any(q['coverage'] not in ('COMPLETA','VACIA_COMPROBADA') for q in data['consultas'] if q['screen']=='bitacoras') else 'COMPLETA' if data[name] else 'VACIA_COMPROBADA'
+        screen='calendario_informes' if name=='calendarios' else 'bitacoras'
+        relevant=[q['coverage'] for q in data['consultas'] if q['screen']==screen]
+        if name in data or relevant:
+            state=aggregate(relevant)
+            states[name]='VACIA_COMPROBADA' if not data.get(name) and state=='COMPLETA' else state
+            data.setdefault(name,[])
     from contrato_integral import capabilities
     build=capabilities()
     metadata={'capture_id':cid,'captured_at':captured,'downloader':{'version':build['version'],'commit':build['commit']},'contains_sensitive_data':True,'originals_authorized':include_originals,'queries':data['consultas'],'table_states':states}

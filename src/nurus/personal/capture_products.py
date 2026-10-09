@@ -12,7 +12,10 @@ def request_document(work):
     requests=[];seen=set()
     for rid,record in getattr(work,'capture_sources',{}).items():
         if record['identity_status']!='VERIFICADA':continue
-        missing=[source for source in ('bitacoras','historia_tramites') if states.get(source) not in ('COMPLETA','VACIA_COMPROBADA')]
+        from nurus.capture.coverage import ADEQUATE, ABSENT
+        coverage=getattr(work,'capture_coverage',{}).get(rid,{})
+        missing=[source for source in ('bitacoras','historia_tramites')
+                 if coverage.get(source,states.get(source) if states.get(source) in ABSENT else 'NO_CONSULTADA') not in ADEQUATE]
         for source in missing:
             key=(record['source_system'],record['court_code'],record['cause_id'],record['ingreso_id'],source)
             if key in seen:continue
@@ -33,6 +36,21 @@ def evidence_text(work,row=None):
     lines=['Captura: '+work.capture_id,'Huella: '+work.capture_digest,'Corte: '+work.as_of,'Reglas: '+work.ruleset_version,'Cobertura por fuente:']
     lines += [name+': '+state for name,state in manifest['table_states'].items()]
     lines.append('Contexto temporal NO_EVALUABLE: aceptación institucional/funcional pendiente. Los productos requieren revisión humana.')
+    incidents=getattr(work,'capture_incidents',[])
+    if row:
+        source=work.capture_sources[row.id]
+        incidents=[i for i in incidents if i['record_id']==source['record_id'] or
+                   (not i['record_id'] and i['query_id']==source['query_id'])]
+        # Advertencias de otras consultas vinculadas por identidad también importan.
+        query_ids={e['query_id'] for e in work.capture_context[row.id].get('recent',[])}
+        from nurus.capture.coverage import remote_identity
+        query_ids.update(q['query_id'] for q in manifest['queries']
+                         if remote_identity(json.loads(q['filters_json']).get('remote_identity',{}))==remote_identity(source))
+        incidents += [i for i in getattr(work,'capture_incidents',[]) if not i['record_id'] and
+                      i['query_id'] in query_ids and i not in incidents]
+        lines += ['','Cobertura del ingreso:']+[k+': '+v for k,v in getattr(work,'capture_coverage',{}).get(row.id,{}).items()]
+    if incidents:
+        lines += ['','Incidencias:']+[i['code']+' · '+i['severity']+' · '+i['message'] for i in incidents]
     if row:
         source=work.capture_sources[row.id];context=work.capture_context[row.id]
         lines += ['','Procedencia: '+source['original_file']+' / '+source['original_sheet']+' / fila '+source['original_row'],'SHA256 fuente: '+source['source_sha256'],'Identidad: '+source['identity_status'],'Motivo: '+context['reason']]
@@ -61,7 +79,10 @@ def export_evidence(work,destination):
         source=getattr(work,'capture_sources',{}).get(row.id,{})
         context=getattr(work,'capture_context',{}).get(row.id,{})
         rows.append([row.id,source.get('identity_status','SOLO_PLANILLA'),context.get('class','NO_EVALUABLE'),context.get('reason','Contexto no disponible.'),source.get('original_file',work.path),source.get('original_row',row.source_row)])
-    return _book([('Cobertura',('Fuente','Estado'),list(getattr(work,'capture_manifest',{}).get('table_states',{'Excel':'SOLO_PLANILLA'}).items())),('Registros',('ID local','Identidad','Revisión','Motivo','Archivo','Fila'),rows)],destination)
+    from nurus.capture.contract import TABLES
+    columns=TABLES['incidencias']
+    return _book([('Cobertura',('Fuente','Estado'),list(getattr(work,'capture_manifest',{}).get('table_states',{'Excel':'SOLO_PLANILLA'}).items())),('Registros',('ID local','Identidad','Revisión','Motivo','Archivo','Fila'),rows),
+                  ('Incidencias',columns,[[i[k] for k in columns] for i in getattr(work,'capture_incidents',[])])],destination)
 
 
 def institutional_statement_issue(work,draft):

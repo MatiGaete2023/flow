@@ -10,7 +10,9 @@ def _book(sheets, destination):
     try:
         for name,headers,rows in sheets:
             sheet=book.create_sheet(name);sheet.append(headers)
-            for row in rows:sheet.append(row)
+            from nurus.services.excel_cells import append_literal_row
+            for number,row in enumerate(rows,2):
+                append_literal_row(sheet,row,row_number=number)
             format_sheet(sheet,headers)
         content=workbook_bytes(book)
         write_new_file(destination,lambda p:Path(p).write_bytes(content))

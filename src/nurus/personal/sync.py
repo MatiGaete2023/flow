@@ -163,12 +163,14 @@ def refresh(work, resolutions=None):
                              for key, column in work.mapping.items() if key not in IDENTITY_FIELDS)
         row.values = values
         if changed_source and (row.rules or not getattr(work, 'external_input', False)):
-            recalculate(recalculation, row)
+            recalculate(recalculation, row, update_findings=False)
     if conflicts:
         raise SyncConflict(conflicts)
     from .work import _sync_resolution_warning
     for row in updated:
         _sync_resolution_warning(row)
+    from .capture_findings import updated_contexts
+    contexts = updated_contexts(recalculation, updated)
     if not getattr(work, 'original_hash', ''):
         work.original_hash = work.source_hash
         work.original_content = work.content
@@ -179,6 +181,8 @@ def refresh(work, resolutions=None):
     work.sheet = data['sheet']
     work.header = data['header']
     work.mapping = data['mapping']
+    if hasattr(work, 'capture_context'):
+        work.capture_context = contexts
     work.revision = getattr(work, 'revision', 0) + 1
     return True
 

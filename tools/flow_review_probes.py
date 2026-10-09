@@ -4,6 +4,7 @@ Ejecutar desde el checkout revisado con dependencias dev/Descargador instaladas.
 La salida describe observaciones, no representa aceptación institucional ni tests
 de regresión aprobados. Todos los productos temporales se eliminan al terminar.
 """
+import argparse
 from copy import deepcopy
 from datetime import date
 from io import BytesIO
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'src'), str(ROOT / 'descargador'), str(ROOT / 'tests')]
 
 from openpyxl import load_workbook
-from nurus.capture import read_capture, write_capture
+from nurus.capture import CaptureError, read_capture, write_capture
 from nurus.capture.acceptance import template, validate_acta
 from nurus.capture.fixtures import fixture
 from nurus.capture.requests import read_request, write_request
@@ -42,13 +43,18 @@ def run(folder):
     text = ''.join(random.Random(20261009).choices(string.ascii_letters, k=33000))
     raw['NOMBRE'] = text
     long_tables['registros'][0].update(raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
-    long_work = import_capture(write_capture(folder / 'long.zip', long_meta, long_tables), defaults(), as_of=CUT)
-    book = load_workbook(BytesIO(long_work.content))
-    headers = {c.value: c.column for c in book.active[1]}
-    saved = book.active.cell(2, headers[long_work.mapping['nombre']]).value
-    findings['H01'] = {'input_characters': len(text), 'workbook_characters': len(saved),
-                      'silent_truncation': saved != text, 'import_raised_error': False}
-    book.close()
+    try:
+        long_work = import_capture(write_capture(folder / 'long.zip', long_meta, long_tables), defaults(), as_of=CUT)
+    except ValueError:
+        findings['H01'] = {'input_characters': len(text), 'import_raised_error': True,
+                          'silent_truncation': False, 'workbook_characters': None}
+    else:
+        book = load_workbook(BytesIO(long_work.content))
+        headers = {c.value: c.column for c in book.active[1]}
+        saved = book.active.cell(2, headers[long_work.mapping['nombre']]).value
+        findings['H01'] = {'input_characters': len(text), 'workbook_characters': len(saved),
+                          'silent_truncation': saved != text, 'import_raised_error': False}
+        book.close()
 
     changed = deepcopy(work)
     old_rules = list(changed.rows[0].rules)
@@ -80,11 +86,17 @@ def run(folder):
     for name in ('registros', 'bitacoras'):
         for row in partial_tables[name]:
             if row['query_id'] == 'q1': row['coverage'] = 'PARCIAL'
-    partial_path = write_capture(folder / 'contradictory.zip', partial_meta, partial_tables)
+    contradiction_rejected = False
+    try:
+        partial_path = write_capture(folder / 'contradictory.zip', partial_meta, partial_tables)
+    except CaptureError:
+        contradiction_rejected = True
+        partial_meta['table_states'].update(registros='PARCIAL', bitacoras='PARCIAL')
+        partial_path = write_capture(folder / 'valid-partial.zip', partial_meta, partial_tables)
     partial_capture = read_capture(partial_path)
     partial_work = import_capture(partial_path, defaults(), as_of=CUT)
     requests = request_document(partial_work)['requests']
-    findings['H04'] = {'package_accepted': True,
+    findings['H04'] = {'contradiction_rejected': contradiction_rejected, 'valid_partial_package_accepted': True,
                       'query_coverage': partial_capture.rows('consultas')[0]['coverage'],
                       'diary_row_coverage': partial_capture.rows('bitacoras')[0]['coverage'],
                       'declared_diary_table': partial_capture.manifest['table_states']['bitacoras'],
@@ -115,22 +127,31 @@ def run(folder):
                   result='PASÓ', executed_at='2026-10-08T15:00:00Z',
                   counts={'expected': 1, 'observed': 1, 'matched': 200000, 'failed': 0, 'unknown': 0},
                   evidence_retained_locally=True, evidence_sha256=['a' * 64], operator_reference='OP-000000000001')
-    validate_acta(acta)
-    findings['H06'] = {'contradictory_counts_accepted': True, 'counts': record['counts'], 'result': record['result']}
+    try:
+        validate_acta(acta)
+        counts_accepted = True
+    except CaptureError:
+        counts_accepted = False
+    findings['H06'] = {'contradictory_counts_accepted': counts_accepted, 'counts': record['counts'], 'result': record['result']}
 
     request = {'schema_id': 'CSMP_REQUEST', 'schema_version': '1.0.0', 'capture_sha256': 'a' * 64,
                'as_of': '2026-10-08', 'requests': [
                    {'record_id': f'r{i}', 'source_system': 'RUS', 'court_code': 'FICTICIO',
                     'cause_id': 'causa-ficticia', 'ingreso_id': f'ingreso-ficticio-{i}',
                     'source': 'bitacoras', 'reason': 'x' * 2000} for i in range(2200)]}
-    request_path = write_request(folder / 'request.json', request)
     try:
-        read_request(request_path)
-    except ValueError as exc:
-        findings['H07'] = {'write_succeeded': True, 'bytes': request_path.stat().st_size,
-                          'read_succeeded': False, 'error': str(exc)}
+        request_path = write_request(folder / 'request.json', request)
+    except CaptureError as exc:
+        findings['H07'] = {'write_succeeded': False, 'error': str(exc),
+                          'oversized_file_published': (folder / 'request.json').exists()}
     else:
-        findings['H07'] = {'write_succeeded': True, 'read_succeeded': True}
+        try:
+            read_request(request_path)
+        except ValueError as exc:
+            findings['H07'] = {'write_succeeded': True, 'bytes': request_path.stat().st_size,
+                              'read_succeeded': False, 'error': str(exc)}
+        else:
+            findings['H07'] = {'write_succeeded': True, 'read_succeeded': True}
 
     from test_bitacora_lote import manifest as diary_fixture
     from nurus.capture.diaries import import_lote
@@ -164,8 +185,23 @@ def run(folder):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verify', action='store_true', help='Exigir correcciones H01–H08')
+    args = parser.parse_args()
     if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
     with TemporaryDirectory(prefix='flow-review-') as directory:
         observations = run(Path(directory))
+    checks = {
+        'H01': observations['H01']['import_raised_error'] and not observations['H01']['silent_truncation'],
+        'H02': not observations['H02']['outdated_findings'],
+        'H03': observations['H03']['human_review_carried_forward'] and observations['H03']['exclusion_carried_forward'],
+        'H04': observations['H04']['contradiction_rejected'] and observations['H04']['diary_requests_for_partial_ingreso'] == 1,
+        'H05': observations['H05']['calendar_table_state'] == 'PARCIAL',
+        'H06': not observations['H06']['contradictory_counts_accepted'],
+        'H07': not observations['H07']['write_succeeded'] and not observations['H07']['oversized_file_published'],
+        'H08': 'BITACORA_ADVERTENCIA' in observations['H08']['exported_incident_codes'] and
+               observations['H08']['incident_present_in_saved_work'] and observations['H08']['incident_present_in_evidence_view'],
+    }
     print(json.dumps({'data_kind': 'SINTETICA', 'institutional_access': False,
-                      'observations': observations}, ensure_ascii=False, indent=2))
+                      'observations': observations, 'corrections_verified': checks}, ensure_ascii=False, indent=2))
+    if args.verify and not all(checks.values()): raise SystemExit(1)

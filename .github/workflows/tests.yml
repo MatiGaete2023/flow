@@ -39,10 +39,14 @@ jobs:
           cache: pip
 
       - name: Install
-        run: python -m pip install ".[dev,excel-legacy,excel-native,outlook]"
+        run: |
+          python -m pip install --require-hashes -r requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación bloqueada' }
+          python -m pip install --no-deps --no-build-isolation .
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del proyecto' }
 
       - name: Build wheel
-        run: python -m pip wheel --no-deps --wheel-dir dist .
+        run: python -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
 
       - name: Verify installed package outside source path
         run: >-
@@ -67,6 +71,12 @@ jobs:
 
       - name: Native Excel/Outlook dependency on Windows
         run: python -c "import win32com.client; print('pywin32 OK')"
+
+      - name: Locked dependency inventory
+        run: python tools/flow_dependency_inventory.py --lock requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock --output artifacts/dependencies-${{ matrix.python }}.json
+
+      - name: Static analysis of contract boundaries
+        run: python -m ruff check --select E9,F63,F7,F82 src/nurus/capture src/nurus/personal/capture_findings.py src/nurus/personal/capture_reconciliation.py src/nurus/services/excel_cells.py tools/flow_dependency_inventory.py
 
       - name: Compile
         run: python -m compileall -q src tests tools
@@ -100,7 +110,7 @@ jobs:
         if: matrix.python == '3.12'
         timeout-minutes: 4
         run: |
-          python -m pip install "playwright>=1.50,<2"
+          python -c "import playwright"
           if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Playwright' }
           python -m playwright install chromium
           if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Chromium' }
@@ -132,7 +142,7 @@ jobs:
         timeout-minutes: 10
         run: |
           . ./tools/windows_process_check.ps1
-          python -m pip install pyinstaller
+          python -c "import PyInstaller"
           if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del empaquetador' }
           python tools/write_build_meta.py
           if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del ejecutable CSMP' }
@@ -161,7 +171,7 @@ jobs:
         timeout-minutes: 15
         shell: pwsh
         run: |
-          python -m pip install -r descargador/requirements.txt playwright==1.63.0
+          python -m pip check
           if ($LASTEXITCODE -ne 0) { throw 'Dependencias descargador' }
           python -m pytest descargador -q
           if ($LASTEXITCODE -ne 0) { throw 'Pruebas descargador' }
@@ -192,6 +202,8 @@ jobs:
           name: nurus-wheel-${{ matrix.os }}-py${{ matrix.python }}
           path: |
             dist/*.whl
+            artifacts/dependencies-${{ matrix.python }}.json
+            requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
 
       - name: Measure native table redraws
         if: matrix.python == '3.12'
@@ -216,18 +228,10 @@ jobs:
           Write-Host 'APROBADO: compilar instalador'
           $installer = Get-ChildItem dist/Instalar_CSMP_*_Windows.exe | Select-Object -First 1
           $destination = Join-Path $env:RUNNER_TEMP 'CSMP instalado'
-          Invoke-CheckedProcess -FilePath $installer.FullName -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"'),('/LOG="'+(Join-Path $PWD 'artifacts/installer-install.log')+'"')) -Label 'instalación silenciosa'
-          $dataFolder = Join-Path $env:LOCALAPPDATA 'CSMP_Personal_Prototipo_Integral'
-          New-Item -ItemType Directory -Force $dataFolder | Out-Null
-          $sentinel = Join-Path $dataFolder ('installer-test-'+[guid]::NewGuid().ToString()+'.txt')
-          Set-Content $sentinel 'conservar'
-          Invoke-CheckedProcess -FilePath (Join-Path $destination 'CSMP_Integral.exe') -Arguments @('--verificar-paquete','artifacts/installed-package-check.json') -WorkingDirectory $PWD -Label 'productos v1 desde CSMP instalado'
-          $proof = Get-Content artifacts/installed-package-check.json -Raw | ConvertFrom-Json
-          if (-not $proof.capture_pipeline_verified) { throw 'El instalador no confirmó los productos ficticios v1' }
-          Invoke-CheckedProcess -FilePath $installer.FullName -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"'),('/LOG="'+(Join-Path $PWD 'artifacts/installer-reinstall.log')+'"')) -Label 'reinstalación silenciosa'
-          Invoke-CheckedProcess -FilePath (Join-Path $destination 'unins000.exe') -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+(Join-Path $PWD 'artifacts/installer-uninstall.log')+'"')) -Label 'desinstalación silenciosa'
-          if (-not (Test-Path $sentinel) -or (Get-Content $sentinel) -ne 'conservar') { throw 'Se alteraron los datos de usuario' }
-          Remove-Item $sentinel
+          . ./tools/verify_installer.ps1
+          $expectedCommit = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo obtener SHA de la prueba' }
+          Invoke-InstallerVerification -Installer $installer.FullName -ExpectedSourceCommit $expectedCommit -Destination $destination -EvidenceDirectory 'artifacts'
 
       - name: Installer diagnostics
         if: always() && matrix.python == '3.12'
@@ -237,6 +241,8 @@ jobs:
           path: |
             artifacts/installer-*.log
             artifacts/installed-package-check*.json
+            artifacts/delivery-verification.json
+            artifacts/dependencies*.json
             artifacts/package-check*.json
           if-no-files-found: ignore
 
@@ -249,6 +255,9 @@ jobs:
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json
             artifacts/installed-package-check.json
+            artifacts/delivery-verification.json
+            artifacts/dependencies*.json
+            requirements/windows-py312.lock
             artifacts/package-check.json
             artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json
             artifacts/productos-ficticios/

@@ -1,77 +1,43 @@
 name: Verificar instalador entregado
 on:
-  pull_request:
-    paths: ['.github/workflows/verify-delivered-installer.yml']
-  push:
-    branches: ['feat/**']
-    paths: ['.github/workflows/verify-delivered-installer.yml']
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: true
+    inputs:
+      run_id:
+        description: Run que produjo el instalador a verificar
+        required: true
+        type: string
+      source_commit:
+        description: SHA completo del código de ese instalador
+        required: true
+        type: string
 permissions:
   contents: read
   actions: read
-
 jobs:
   verify:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Descargar instalador del código aprobado
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: CSMP-Instalador-Windows-dev4
-          run-id: 37878632095
+          run-id: ${{ inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: installer-artifact
-      - name: Confirmar instalación, reinstalación y eliminación real
+      - name: Verificar la entrega elegida con el mismo control del build
         shell: pwsh
+        env:
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.source_commit }}
         run: |
-          . ./tools/windows_process_check.ps1
-          $expected = '6d3555a14fe4b6966f5091dc6a7db51a1e54e521'
-          $proofFiles = @(Get-ChildItem installer-artifact -Recurse -File -Filter installed-package-check.json)
+          . ./tools/verify_installer.ps1
           $installers = @(Get-ChildItem installer-artifact -Recurse -File -Filter Instalar_CSMP_*_Windows.exe)
-          if ($proofFiles.Count -ne 1 -or $installers.Count -ne 1) { throw 'El artefacto no contiene un instalador y comprobante únicos' }
-          $original = Get-Content $proofFiles[0].FullName -Raw | ConvertFrom-Json
-          if ($original.source_commit -ne $expected -or -not $original.capture_pipeline_verified) { throw 'El artefacto no acredita el código aprobado' }
-          New-Item -ItemType Directory -Force artifacts | Out-Null
-          $destination = Join-Path $env:RUNNER_TEMP 'CSMP verificacion final'
-          $installer = $installers[0].FullName
-          $arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$destination+'"'))
-          Invoke-CheckedProcess -FilePath $installer -Arguments ($arguments + ('/LOG="'+(Join-Path $PWD 'artifacts/install.log')+'"')) -Label 'instalación del artefacto publicado'
-          $exe = Join-Path $destination 'CSMP_Integral.exe'
-          if (-not (Test-Path $exe)) { throw 'La instalación no creó el ejecutable' }
-          Invoke-CheckedProcess -FilePath $exe -Arguments @('--verificar-paquete','artifacts/installed-check.json') -WorkingDirectory $PWD -Label 'productos desde artefacto instalado'
-          $installed = Get-Content artifacts/installed-check.json -Raw | ConvertFrom-Json
-          if ($installed.source_commit -ne $expected -or -not $installed.capture_pipeline_verified) { throw 'El ejecutable instalado no coincide con el artefacto aprobado' }
-          $exeHash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()
-          $data = Join-Path $env:LOCALAPPDATA 'CSMP_Personal_Prototipo_Integral'
-          New-Item -ItemType Directory -Force $data | Out-Null
-          $sentinel = Join-Path $data ('verification-'+[guid]::NewGuid().ToString()+'.txt')
-          Set-Content $sentinel 'dato ficticio que se conserva'
-          Invoke-CheckedProcess -FilePath $installer -Arguments ($arguments + ('/LOG="'+(Join-Path $PWD 'artifacts/reinstall.log')+'"')) -Label 'reinstalación del artefacto publicado'
-          Invoke-CheckedProcess -FilePath (Join-Path $destination 'unins000.exe') -Arguments @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+(Join-Path $PWD 'artifacts/uninstall.log')+'"')) -Label 'lanzador de desinstalación'
-          # Inno puede delegar en un proceso temporal: el retorno del lanzador
-          # no sustituye comprobar que todos los archivos de la app desaparecen.
-          $elapsed = [Diagnostics.Stopwatch]::StartNew()
-          while (Test-Path $destination) {
-            if ($elapsed.Elapsed.TotalSeconds -ge 60) { throw 'La carpeta instalada sigue presente tras desinstalar' }
-            Start-Sleep -Milliseconds 200
-          }
-          if (-not (Test-Path $sentinel) -or (Get-Content $sentinel -Raw).Trim() -ne 'dato ficticio que se conserva') { throw 'La desinstalación alteró los datos externos' }
-          $result = @{ ok=$true; data_kind='SINTETICA'; binary_source_commit=$expected; artifact_run_id=37878632095; installed_exe_sha256=$exeHash; installation_verified=$true; installed_pipeline_verified=$true; reinstall_verified=$true; installed_directory_removed=$true; external_data_preserved=$true; institutional_reads=0; institutional_writes=0 }
-          $result | ConvertTo-Json -Depth 5 | Set-Content artifacts/delivery-verification.json -Encoding utf8
-          Remove-Item $sentinel
-          Write-Host 'APROBADO: carpeta de aplicación eliminada y datos externos conservados'
+          if ($installers.Count -ne 1) { throw 'Se requiere un instalador único' }
+          Invoke-InstallerVerification -Installer $installers[0].FullName -ExpectedSourceCommit $env:EXPECTED_SOURCE_COMMIT -Destination (Join-Path $env:RUNNER_TEMP 'CSMP entrega verificada') -EvidenceDirectory artifacts
       - name: Evidencia de verificación
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Delivered-Installer-Verification-6d3555a
+          name: CSMP-Delivered-Installer-Verification
           path: artifacts/
           if-no-files-found: ignore

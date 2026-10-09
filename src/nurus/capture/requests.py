@@ -7,13 +7,15 @@ from .contract import CaptureError, json_object, HEX, iso_time
 
 FIELDS={'record_id','source_system','court_code','cause_id','ingreso_id','source','reason'}
 SOURCES={'bitacoras','historia_tramites','calendarios','documentos'}
+MAX_BYTES=4*1024*1024
+MAX_ITEMS=20000
 
 
 def validate_request(data):
-    if set(data)!={'schema_id','schema_version','capture_sha256','as_of','requests'} or data['schema_id']!='CSMP_REQUEST' or data['schema_version']!='1.0.0':raise CaptureError('Solicitud incompatible.')
-    if data['capture_sha256'] and not HEX.fullmatch(data['capture_sha256']):raise CaptureError('Huella inválida.')
+    if not isinstance(data,dict) or set(data)!={'schema_id','schema_version','capture_sha256','as_of','requests'} or data['schema_id']!='CSMP_REQUEST' or data['schema_version']!='1.0.0':raise CaptureError('Solicitud incompatible.')
+    if not isinstance(data['capture_sha256'],str) or (data['capture_sha256'] and not HEX.fullmatch(data['capture_sha256'])):raise CaptureError('Huella inválida.')
     iso_time(data['as_of'],True)
-    if not isinstance(data['requests'],list) or len(data['requests'])>20000:raise CaptureError('Alcance de solicitud excesivo.')
+    if not isinstance(data['requests'],list) or len(data['requests'])>MAX_ITEMS:raise CaptureError('Alcance de solicitud excesivo.')
     seen=set()
     for item in data['requests']:
         if not isinstance(item,dict) or set(item)!=FIELDS or any(not isinstance(v,str) or len(v)>2000 for v in item.values()):raise CaptureError('Campos de solicitud inválidos.')
@@ -26,16 +28,21 @@ def validate_request(data):
 
 def read_request(path):
     path=Path(path)
-    if path.stat().st_size>4*1024*1024:raise CaptureError('Solicitud demasiado grande.')
-    return validate_request(json_object(path.read_text(encoding='utf-8-sig')))
+    if path.stat().st_size>MAX_BYTES:raise CaptureError('Solicitud demasiado grande; reduzca el alcance.')
+    raw=path.read_bytes()
+    if len(raw)>MAX_BYTES:raise CaptureError('Solicitud demasiado grande; reduzca el alcance.')
+    return validate_request(json_object(raw.decode('utf-8-sig')))
 
 
 def write_request(path,data):
-    validate_request(data);path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
+    validate_request(data)
+    raw=json.dumps(data,ensure_ascii=False,indent=2).encode('utf-8')
+    if len(raw)>MAX_BYTES:raise CaptureError('Solicitud demasiado grande; reduzca el alcance.')
+    path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     if path.exists():raise CaptureError('El destino ya existe.')
     fd,temp=tempfile.mkstemp(prefix='.request-',dir=path.parent)
     try:
-        with os.fdopen(fd,'w',encoding='utf-8') as stream:json.dump(data,stream,ensure_ascii=False,indent=2)
+        with os.fdopen(fd,'wb') as stream:stream.write(raw)
         os.link(temp,path)
     finally:Path(temp).unlink(missing_ok=True)
     return path

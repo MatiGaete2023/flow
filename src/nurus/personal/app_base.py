@@ -148,10 +148,14 @@ class App(ctk.CTk):
                             self.status.set(str(exc));messagebox.showerror('No se completó la operación',str(exc))
                 else:
                     from .sync import SyncConflict
+                    from .capture_reconciliation import ReconciliationRequired
                     from .operations import OperationCancelled
                     if isinstance(result,OperationCancelled):self.status.set(str(result))
                     elif isinstance(result,SyncConflict):
                         from .sync_view import resolve
+                        resolve(self,result)
+                    elif isinstance(result,ReconciliationRequired):
+                        from .capture_reconcile_view import resolve
                         resolve(self,result)
                     elif isinstance(result,SheetChoice):self._choose_external_sheet(result.names)
                     else:self.status.set(str(result));messagebox.showerror('No se completó la operación',str(result))
@@ -349,15 +353,24 @@ class App(ctk.CTk):
         if text is None:return
         cut=date.fromisoformat(text)
         def done(candidate):
-            reused=bool(previous and candidate.capture_digest==getattr(previous,'capture_digest',''))
-            if previous and not reused:
+            reused=bool(previous and (candidate.capture_digest==getattr(previous,'capture_digest','') or
+                        getattr(candidate,'capture_reconciliation',{}).get('continued')))
+            if previous and candidate.capture_digest!=getattr(previous,'capture_digest',''):
                 from uuid import uuid4
                 previous.save(self.cfg.directory/'sesion'/'anteriores'/uuid4().hex)
             self.work=candidate
             if not reused:self._clear_drafts();self.projects=[];self.observation_id=None
             self._show_work(reset_projects=not reused);self._save_session()
             self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones y productos actuales conservados.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
-        self._run('Importando paquete sin conexión…',lambda:import_capture(path,config,as_of=cut,previous=previous),done)
+        def attempt(answers=None):
+            def action():
+                from .capture_reconciliation import ReconciliationRequired
+                try:return import_capture(path,config,as_of=cut,previous=previous,resolutions=answers)
+                except ReconciliationRequired as error:
+                    error.retry=attempt
+                    raise
+            self._run('Importando paquete sin conexión…',action,done)
+        attempt()
 
     def _capture_evidence(self):
         from .capture_products import show_evidence
