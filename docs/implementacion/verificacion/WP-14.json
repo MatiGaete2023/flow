@@ -1,16 +1,16 @@
 {
-  "commit": "8c3623c",
+  "commit": "0edd58f",
   "base": "2765b47",
   "controles": [
     {
       "control": "Suite asistente",
       "resultado": "PASA",
-      "detalle": "605 passed, 11 skipped in 47.11s (mínimo 605 aprobadas; base 605)"
+      "detalle": "605 passed, 11 skipped in 43.04s (mínimo 605 aprobadas; base 605)"
     },
     {
       "control": "Suite descargador",
       "resultado": "PASA",
-      "detalle": "209 passed, 59 subtests passed in 37.37s (mínimo 198 aprobadas; base 198)"
+      "detalle": "209 passed, 59 subtests passed in 39.36s (mínimo 198 aprobadas; base 198)"
     },
     {
       "control": "Identidades reales",
@@ -43,5 +43,174 @@
       "detalle": "26 (base 26)"
     }
   ],
-  "veredicto": "PASA"
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "0edd58f",
+      "asistente": {
+        "aprobadas": 605,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "605 passed, 11 skipped in 43.04s"
+      },
+      "descargador": {
+        "aprobadas": 209,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "209 passed, 59 subtests passed in 39.36s"
+      },
+      "identidades_reales": 18,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "/workspace/flow-wp14/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "/workspace/flow-wp14/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmpimbdrryh/golden",
+          "--expected",
+          "/workspace/flow-wp14/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "/workspace/flow-wp14/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp14-verify-venv/bin/python",
+          "/workspace/flow-wp14/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {},
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "18 hallazgos de identidades y 26 enlaces rotos heredados; sus códigos 1 representan deuda basal conocida, sin acreditar que esté resuelta.",
+  "historial_verificaciones": [
+    {
+      "commit": "8c3623c",
+      "base": "2765b47",
+      "controles": [
+        {
+          "control": "Suite asistente",
+          "resultado": "PASA",
+          "detalle": "605 passed, 11 skipped in 47.11s (mínimo 605 aprobadas; base 605)"
+        },
+        {
+          "control": "Suite descargador",
+          "resultado": "PASA",
+          "detalle": "209 passed, 59 subtests passed in 37.37s (mínimo 198 aprobadas; base 198)"
+        },
+        {
+          "control": "Identidades reales",
+          "resultado": "PASA",
+          "detalle": "18 hallazgos (límite 18)"
+        },
+        {
+          "control": "Paridad golden",
+          "resultado": "PASA",
+          "detalle": "PASA"
+        },
+        {
+          "control": "Restricciones absolutas",
+          "resultado": "PASA",
+          "detalle": "sin infracciones"
+        },
+        {
+          "control": "Ruff E9/F63/F7/F82",
+          "resultado": "PASA",
+          "detalle": "0 (base 0)"
+        },
+        {
+          "control": "Módulos no alcanzables",
+          "resultado": "PASA",
+          "detalle": "12 (base 12)"
+        },
+        {
+          "control": "Enlaces rotos",
+          "resultado": "PASA",
+          "detalle": "26 (base 26)"
+        }
+      ],
+      "veredicto": "PASA"
+    }
+  ],
+  "antecedente_revision": {
+    "commit": "8c3623c",
+    "resultado": "CAMBIOS",
+    "hallazgos": [
+      "El inventario omitía flujo.json de lotes Conjunto.",
+      "La protección de paquetes abiertos no incluía completamente root_folder ni package_diaries()."
+    ],
+    "verificacion_independiente_anterior": "Detenida por el Orquestador sin veredicto final.",
+    "correccion": "0edd58f añade reconocimiento/protección y dos regresiones; el resultado presente verifica ese commit."
+  }
 }
