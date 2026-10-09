@@ -1,0 +1,730 @@
+{
+  "version": 1,
+  "rama_base": "feat/ejecucion-plan-20261008",
+  "commit_inicio": "2765b47",
+  "actualizado": "2026-10-09T18:12-03:00",
+  "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
+  "decisiones": {
+    "D1": {
+      "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D2": {
+      "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D3": {
+      "pregunta": "¿Retirar inspector y diario de registro RUS?",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D4": {
+      "pregunta": "Retención local: días de lotes y sesiones; máximo de sesiones anteriores",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D5": {
+      "pregunta": "¿Activar CT-01/CT-02 solo mostrar? ¿Horizonte (4 meses u otro)?",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D6": {
+      "pregunta": "¿El ZIP puede incluir el XLSX consolidado (sin HTML ni PDF)?",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D7": {
+      "pregunta": "¿Fusionar a main al cierre?",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D8": {
+      "pregunta": "¿Alguna consulta 2.7.5 falló por Envio() o filtros con 0? (sin datos)",
+      "respuesta": null,
+      "fecha": null
+    },
+    "D9": {
+      "pregunta": "Solicitud de antecedentes: precargar o retirar",
+      "respuesta": null,
+      "fecha": null
+    }
+  },
+  "conflictos_abiertos": [],
+  "paquetes": {
+    "WP-00": {
+      "titulo": "Kit, estado y línea base",
+      "ola": 0,
+      "tipo": "C",
+      "depende_de": [],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T18:12-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
+      "pr": null,
+      "verificacion": "LINEA_BASE: 605/11, 198/59, 18 IDs, golden PASA, 12 módulos, 26 enlaces",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Etiqueta pre-implementacion-20261009 creada en 2765b47.",
+        "Desviación de proceso: la sesión debía trabajar en la rama ccr-4116db41-nm8g0r (instrucción del entorno), no en wp/<ID>-<slug>. Cada WP es un commit '<ID>: ...' en esa rama, que parte de 2765b47; integrar a feat/ejecucion-plan-20261008 por PR."
+      ]
+    },
+    "WP-01": {
+      "titulo": "Gobernanza mínima",
+      "ola": 0,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-02": {
+      "titulo": "Acta de uso real",
+      "ola": 0,
+      "tipo": "C",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [
+        "D2"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-10": {
+      "titulo": "Identidades sintéticas en pruebas",
+      "ola": 1,
+      "tipo": "M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-11": {
+      "titulo": "Control de identidades en CI y pre-commit",
+      "ola": 1,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-10"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-12": {
+      "titulo": "Contactos fuera del paquete",
+      "ola": 1,
+      "tipo": "C/E/M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-13": {
+      "titulo": "Retención en el Asistente",
+      "ola": 1,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [
+        "D4"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-14": {
+      "titulo": "Retención en el Descargador",
+      "ola": 1,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [
+        "D4"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-15": {
+      "titulo": "Extractor HAR anónimo",
+      "ola": 1,
+      "tipo": "C",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-16": {
+      "titulo": "Anonimizador de Excel",
+      "ola": 1,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-17": {
+      "titulo": "Purga de historial",
+      "ola": 1,
+      "tipo": "M",
+      "depende_de": [
+        "WP-10",
+        "WP-12",
+        "WP-20"
+      ],
+      "decisiones": [
+        "D1"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-20": {
+      "titulo": "Copias y restos",
+      "ola": 2,
+      "tipo": "E",
+      "depende_de": [
+        "WP-10",
+        "WP-11"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-21": {
+      "titulo": "Capa legado y segundo motor",
+      "ola": 2,
+      "tipo": "E/M",
+      "depende_de": [
+        "WP-20"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-22": {
+      "titulo": "Inspector y diario de registro RUS",
+      "ola": 2,
+      "tipo": "E/M",
+      "depende_de": [
+        "WP-21"
+      ],
+      "decisiones": [
+        "D3"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-23": {
+      "titulo": "Restos de lanzamiento del Descargador",
+      "ola": 2,
+      "tipo": "E/M",
+      "depende_de": [
+        "WP-22"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-24": {
+      "titulo": "Documentación vigente",
+      "ola": 2,
+      "tipo": "E/M",
+      "depende_de": [
+        "WP-20"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-30": {
+      "titulo": "CC fijo con una sola fuente",
+      "ola": 3,
+      "tipo": "M",
+      "depende_de": [
+        "WP-21"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-31": {
+      "titulo": "Versión con una sola fuente",
+      "ola": 3,
+      "tipo": "M/C",
+      "depende_de": [
+        "WP-20"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-32": {
+      "titulo": "Exportación sin residuos y sin fórmulas",
+      "ola": 3,
+      "tipo": "M/C",
+      "depende_de": [
+        "WP-21"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-33": {
+      "titulo": "Ritmo de consultas y checkpoint",
+      "ola": 3,
+      "tipo": "M",
+      "depende_de": [
+        "WP-14"
+      ],
+      "decisiones": [
+        "D8"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-34": {
+      "titulo": "CI ordenada",
+      "ola": 3,
+      "tipo": "M",
+      "depende_de": [
+        "WP-22",
+        "WP-23"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-35": {
+      "titulo": "Instaladores con dependencias fijadas",
+      "ola": 3,
+      "tipo": "M",
+      "depende_de": [
+        "WP-20"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-40": {
+      "titulo": "Trabajo legible",
+      "ola": 4,
+      "tipo": "M",
+      "depende_de": [
+        "WP-31"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-41": {
+      "titulo": "Barra Siguiente paso",
+      "ola": 4,
+      "tipo": "C",
+      "depende_de": [
+        "WP-40"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-42": {
+      "titulo": "Resoluciones y Correos más claros",
+      "ola": 4,
+      "tipo": "M",
+      "depende_de": [
+        "WP-40"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-43": {
+      "titulo": "Crear paquete de este lote",
+      "ola": 4,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-33"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-44": {
+      "titulo": "Importar último paquete y fecha de corte",
+      "ola": 4,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-43"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-45": {
+      "titulo": "Solicitud de antecedentes",
+      "ola": 4,
+      "tipo": "M/E",
+      "depende_de": [
+        "WP-23"
+      ],
+      "decisiones": [
+        "D9"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-50": {
+      "titulo": "Cronología de bitácoras solo mostrar",
+      "ola": 5,
+      "tipo": "M/C",
+      "depende_de": [
+        "WP-40",
+        "WP-02"
+      ],
+      "decisiones": [
+        "D5"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-51": {
+      "titulo": "Fidelidad nativa desde ZIP",
+      "ola": 5,
+      "tipo": "M",
+      "depende_de": [
+        "WP-43"
+      ],
+      "decisiones": [
+        "D6"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-60": {
+      "titulo": "Pruebas de aceptación R-T",
+      "ola": 6,
+      "tipo": "C",
+      "depende_de": [
+        "WP-00"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-61": {
+      "titulo": "Formato automático",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        "TODAS_LAS_DEMAS"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-62": {
+      "titulo": "Dividir DiaryRunner.run",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        "WP-33"
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    },
+    "WP-70": {
+      "titulo": "Cierre de la implementación",
+      "ola": 7,
+      "tipo": "M",
+      "depende_de": [
+        "TODAS_LAS_DEMAS"
+      ],
+      "decisiones": [
+        "D7"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": []
+    }
+  },
+  "traspasos": []
+}
