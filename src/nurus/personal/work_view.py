@@ -4,6 +4,47 @@ from . import ui
 from .widgets import CaseDetailPanel, ScrollPane
 from .record_view import RecordForm
 
+# Orden visible: primero lo que se revisa (estado y observación), luego la identidad del registro.
+DISPLAY_ORDER=('Estado','Observación','RIT','Nombre','Programa','Tribunal')
+EXCLUDED_COLORS={'background':'#f2f2f2','foreground':'#7a7a7a'}
+
+
+class CellTip:
+    """Muestra el texto completo de una celda de la tabla al pasar el cursor."""
+    def __init__(self,tree,column):
+        self.tree=tree;self.column=column;self.tip=None;self.key=None
+        tree.bind('<Motion>',self._motion,add='+');tree.bind('<Leave>',lambda event:self.hide(),add='+')
+
+    def text_at(self,x,y):
+        iid=self.tree.identify_row(y);column=self.tree.identify_column(x)
+        if not iid or not column.startswith('#'):return iid,''
+        shown=self.tree['displaycolumns']
+        names=self.tree['columns'] if shown in ('#all',('#all',)) else shown
+        index=int(column[1:])-1
+        if not 0<=index<len(names) or names[index]!=self.column:return iid,''
+        return iid,str(self.tree.set(iid,self.column) or '')
+
+    def _motion(self,event):
+        iid,text=self.text_at(event.x,event.y)
+        if (iid,text)==self.key:return
+        self.hide()
+        if not text:return
+        self.key=(iid,text)
+        try:
+            self.tip=tk.Toplevel(self.tree);self.tip.wm_overrideredirect(True)
+            self.tip.wm_geometry(f'+{event.x_root+16}+{event.y_root+18}')
+            tk.Label(self.tip,text=text,justify='left',wraplength=520,background='#fffbe6',foreground='#202020',
+                     relief='solid',borderwidth=1,font=('Segoe UI',9)).pack(ipadx=6,ipady=4)
+        except tk.TclError:
+            self.tip=None
+
+    def hide(self):
+        self.key=None
+        if self.tip:
+            try:self.tip.destroy()
+            except tk.TclError:pass
+            self.tip=None
+
 
 def build(app):
     page=app.pages['Trabajo']
@@ -55,15 +96,19 @@ def build(app):
     ui.Button(filters,text='Aviso anterior',width=95,command=lambda:app._next_incident(-1)).pack(side='left',padx=3)
     ui.Button(filters,text='Siguiente aviso',width=110,command=lambda:app._next_incident(1)).pack(side='left')
     app.records=app._tree(table,('Estado','RIT','Nombre','Tribunal','Programa','Observación'))
-    app.records.configure(height=5)
+    app.records.configure(height=5,displaycolumns=DISPLAY_ORDER)
     columns=app.cfg.data.get('vista',{}).get('columnas_trabajo')
     if columns and all(c in app.records['columns'] for c in columns):app.records.configure(displaycolumns=columns)
+    app.work_observation_tip=CellTip(app.records,'Observación')
     for name,width in [('Estado',110),('RIT',85),('Nombre',180),('Tribunal',95),('Programa',160),('Observación',220)]:
         app.records.column(name,width=width,minwidth=65)
-    app.records.tag_configure('excluded',background='#665220',foreground='#fff2cc')
+    app.records.tag_configure('excluded',**EXCLUDED_COLORS)
     app.records.tag_configure('warning',background='#653b29',foreground='#ffe2cd')
     app.records.tag_configure('signed',background='#243c56',foreground='#ddebf7')
-    app.records.bind('<<TreeviewSelect>>',lambda event:None if app.busy or getattr(app,'rendering',False) else app._guard(app._detail))
+    def selected(event=None):
+        if app.records.selection():expand_editor()
+        if not (app.busy or getattr(app,'rendering',False)):app._guard(app._detail)
+    app.records.bind('<<TreeviewSelect>>',selected)
     footer=ui.Frame(edit);footer.pack(side='bottom',fill='x',pady=(5,0))
     def maximize():
         if str(table) in split.panes():split.forget(table)
@@ -73,7 +118,17 @@ def build(app):
     ui.Button(footer,text='Ampliar / reducir editor',width=160,fg_color='transparent',border_width=1,command=maximize).pack(side='left')
     ui.Button(footer,text='Guardar local · Ctrl+S',width=150,command=lambda:app._guard(app._save_session)).pack(side='right')
     ui.Button(footer,text='Aplicar · Ctrl+Enter',width=135,fg_color='transparent',border_width=1,command=lambda:app._guard(app.record_form.save)).pack(side='right',padx=5)
-    app.record_tabs=tabs=ui.Notebook(edit);tabs.pack(fill='both',expand=True)
+    app.record_tabs=tabs=ui.Notebook(edit)
+    # El editor queda plegado hasta que se selecciona una fila; los botones del pie siguen visibles.
+    app.work_editor_hint=ui.Label(edit,text='Selecciona una fila para revisar su observación.',text_color=ui.MUTED)
+    app.work_editor_hint.pack(fill='x',pady=4)
+    app.work_editor_collapsed=True
+    def expand_editor():
+        if not app.work_editor_collapsed:return
+        app.work_editor_collapsed=False
+        app.work_editor_hint.pack_forget();tabs.pack(fill='both',expand=True)
+        app.after_idle(fit)
+    app.work_expand_editor=expand_editor
     observation=ui.Frame(tabs);tabs.add(observation,text='Observación')
     app.detail=tk.StringVar();ui.Label(observation,textvariable=app.detail,wraplength=700,text_color=ui.MUTED).pack(fill='x')
     app.observation_editor=ui.Textbox(observation,wrap='word',height=7,font=('Segoe UI',11),undo=True)
@@ -88,10 +143,12 @@ def build(app):
     def fit(event=None):
         height=split.winfo_height()
         if len(split.panes())<2 or height<250:return
+        if app.work_editor_collapsed:
+            split.sashpos(0,max(100,height-90));return
         ratio=getattr(app,'work_sash_ratio',.40)
         split.sashpos(0,max(100,min(height-180,int(height*ratio))))
     def remember(event=None):
-        if len(split.panes())==2 and split.winfo_height()>250:
+        if len(split.panes())==2 and split.winfo_height()>250 and not app.work_editor_collapsed:
             app.work_sash_ratio=split.sashpos(0)/split.winfo_height()
     split.bind('<Configure>',fit)
     split.bind('<Map>',lambda event:app.after_idle(fit))
