@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:25-03:00",
+  "actualizado": "2026-10-09T18:26-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -407,16 +407,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T18:26-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Quitar cc_obligatorio del JSON se traslada a WP-12 (rompe paridad golden)."
+      ]
     },
     "WP-31": {
       "titulo": "Versión con una sola fuente",
