@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:33:50.179981+00:00",
+  "actualizado": "2026-10-09T22:46:32.898418+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -196,7 +196,8 @@
       "integrado_en": "243e59d9eac882d808c57a84f0e8067fc7a167b4",
       "notas": [
         "D4 aplicada: 60 días y hasta 10 sesiones anteriores; borrado tras confirmar, vigente y adjuntos externos conservados.",
-        "Tres cargas normales dejan dos .bin; legado con originales distintos puede necesitar cuatro para vigente y respaldo, documentado sin pérdida."
+        "Tres cargas normales dejan dos .bin; legado con originales distintos puede necesitar cuatro para vigente y respaldo, documentado sin pérdida.",
+        "Verificación posterior a integración: 612 aprobadas y 11 omitidas en Asistente; 198 aprobadas y 59 subpruebas en Descargador; golden de 17 productos PASA."
       ]
     },
     "WP-14": {
