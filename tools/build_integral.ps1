@@ -17,6 +17,8 @@ Push-Location $csmpRoot
 try {
     CheckedPython @('tools/write_build_meta.py')
     CheckedPython @('tools/write_build_meta.py','--descargador',$downloaderRoot)
+    $versions = (& $Python tools/write_build_meta.py --versiones) | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudieron leer las versiones desde sus fuentes' }
     $minor = (& $Python -c "import sys; print(str(sys.version_info.major)+str(sys.version_info.minor))").Trim()
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar Python del build' }
     CheckedPython @('tools/flow_dependency_inventory.py','--lock',"requirements/windows-py$minor.lock",'--output',(Join-Path $outputRoot 'DEPENDENCIAS.json'))
@@ -32,7 +34,7 @@ try {
             throw 'El acta existente contiene resultados; conserve ese archivo y use una carpeta nueva para distribuir'
         }
     } else {
-        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version','0.5.0.dev4','--downloader-version','2.7.5','--extension-version','2.7.5')
+        CheckedPython @('tools/flow_acceptance.py','init',$acta,'--commit',$sourceCommit,'--assistant-version',$versions.asistente,'--downloader-version',$versions.descargador,'--extension-version',$versions.descargador)
     }
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'CSMP_Experimental.spec')
 } finally { Pop-Location }
