@@ -176,32 +176,15 @@
       "tribunales": {
         "TOME": {
           "nombre": "Juzgado de Familia de Tomé",
-          "para": [
-            "nmojeda@pjud.cl",
-            "csrain@pjud.cl",
-            "pmella@pjud.cl",
-            "jparrav@pjud.cl"
-          ]
+          "para": []
         },
         "LAJA": {
           "nombre": "Jgdo. L. y G. de Laja",
-          "para": [
-            "abergman@pjud.cl",
-            "ammillan@pjud.cl",
-            "cbparedes@pjud.cl",
-            "masanhueza@pjud.cl",
-            "omosqueira@pjud.cl",
-            "phidalgop@pjud.cl"
-          ]
+          "para": []
         },
         "MULCHEN": {
           "nombre": "Jgdo. L. y G. de Mulchén",
-          "para": [
-            "cavillanueva@pjud.cl",
-            "ialister@pjud.cl",
-            "jocastillo@pjud.cl",
-            "wponsot@pjud.cl"
-          ]
+          "para": []
         }
       },
       "plantillas": {

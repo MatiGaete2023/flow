@@ -1,5 +1,4 @@
 {
-  "cc_obligatorio": "ucc_concepcion@pjud.cl",
   "cc_adicional": "",
   "modalidad_default": "",
   "modalidades_default": [
@@ -14,32 +13,15 @@
   "tribunales": {
     "TOME": {
       "nombre": "Juzgado de Familia de Tomé",
-      "para": [
-        "nmojeda@pjud.cl",
-        "csrain@pjud.cl",
-        "pmella@pjud.cl",
-        "jparrav@pjud.cl"
-      ]
+      "para": []
     },
     "LAJA": {
       "nombre": "Juzgado de Letras y Garantía de Laja",
-      "para": [
-        "abergman@pjud.cl",
-        "ammillan@pjud.cl",
-        "cbparedes@pjud.cl",
-        "masanhueza@pjud.cl",
-        "omosqueira@pjud.cl",
-        "phidalgop@pjud.cl"
-      ]
+      "para": []
     },
     "MULCHEN": {
       "nombre": "Juzgado de Letras y Garantía de Mulchén",
-      "para": [
-        "cavillanueva@pjud.cl",
-        "ialister@pjud.cl",
-        "jocastillo@pjud.cl",
-        "wponsot@pjud.cl"
-      ]
+      "para": []
     }
   },
   "plantillas": {

@@ -13,7 +13,7 @@ encabezados=['RIT','TRIBUNAL','NOMBRE','RUT','NOMBRE CENTRO','T ESPERA']
 work=analizar(root,'ESPERA',encabezados,[persona(1)+[45],persona(2)+['sin dato'],persona(3)+['x'],persona(4,tribunal='OTRO')+[50]])
 work.rows[2].excluded=True
 app.work=work;app._show_work();app.update()
-app.drafts=prepare_drafts(work,'programa_espera')+[Draft('Correo pendiente','Texto',to='')];app.draft_index=None
+app.drafts=prepare_drafts(work,'programa_espera',directory=root/'salida')+[Draft('Correo pendiente','Texto',to='')];app.draft_index=None
 projects,errors=prepare_projects(work,automatic_project_selections(work),BASE/'plantillas_word');assert not errors
 app.projects=projects
 app.tabs.select(app.pages['Resultados']);app.update()
