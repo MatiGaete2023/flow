@@ -290,8 +290,8 @@ def test_reviewed_res_column_is_authoritative_for_automatic_projects(tmp_path):
 def test_resolution_mark_on_one_row_recognizes_complete_rit(tmp_path):
     book=Workbook();sheet=book.active;sheet.title='Registros'
     sheet.append(['RIT','TRIBUNAL','NOMBRE','RUT','DERIVACION','OBSERVACION','GENERAR RESOLUCIÓN'])
-    sheet.append(['X-149-2025','MULCHEN','SOFÍA IGNACIA DAROCH VERDUGO','11111111-1','AFT MULCHEN','Texto','1'])
-    sheet.append(['X-149-2025','MULCHEN','MIA VALENTINA DAROCH VERDUGO','11111111-1','AFT MULCHEN','Texto',''])
+    sheet.append(['X-149-2025','MULCHEN','PERSONA FICTICIA UNO','11111111-1','AFT MULCHEN','Texto','1'])
+    sheet.append(['X-149-2025','MULCHEN','PERSONA FICTICIA DOS','22222222-2','AFT MULCHEN','Texto',''])
     sheet.append(['X-150-2025','MULCHEN','Otra Persona','11111111-1','AFT MULCHEN','Texto',''])
     path=tmp_path/'res_por_causa.xlsx';book.save(path)
     work=Work.external(path,defaults())
@@ -301,21 +301,21 @@ def test_resolution_mark_on_one_row_recognizes_complete_rit(tmp_path):
     projects,errors=prepare_projects(work,selected,BASE/'plantillas_word')
     assert not errors and len(projects)==1
     assert set(projects[0].record_ids)=={work.rows[0].id,work.rows[1].id}
-    assert 'SOFÍA IGNACIA DAROCH VERDUGO' in projects[0].text
-    assert 'MIA VALENTINA DAROCH VERDUGO' in projects[0].text
+    assert 'PERSONA FICTICIA UNO' in projects[0].text
+    assert 'PERSONA FICTICIA DOS' in projects[0].text
 
 
 def test_grouped_people_keep_each_identity_number_next_to_its_name(tmp_path):
     rows=[
-        ['X-149-2025','MULCHEN','SOFÍA IGNACIA DAROCH VERDUGO','11111111-1','AFT  MULCHEN','Texto','2026-09-14',1,0],
-        ['X-149-2025','MULCHEN','MIA VALENTINA DAROCH VERDUGO','11111111-1','AFT  MULCHEN','Texto','2026-09-14',1,0],
+        ['X-149-2025','MULCHEN','PERSONA FICTICIA UNO','11111111-1','AFT  MULCHEN','Texto','2026-09-14',1,0],
+        ['X-149-2025','MULCHEN','PERSONA FICTICIA DOS','22222222-2','AFT  MULCHEN','Texto','2026-09-14',1,0],
     ]
     work=external(tmp_path,rows)
     projects,errors=prepare_projects(work,[(r.id,'PC_IE') for r in work.rows],BASE/'plantillas_word')
     assert not errors and len(projects)==1
     text=projects[0].text
-    expected=('SOFÍA IGNACIA DAROCH VERDUGO, cédula de identidad N° 11111111-1 y '
-              'MIA VALENTINA DAROCH VERDUGO, cédula de identidad N° 11111111-1')
+    expected=('PERSONA FICTICIA UNO, cédula de identidad N° 11111111-1 y '
+              'PERSONA FICTICIA DOS, cédula de identidad N° 22222222-2')
     assert expected in text
-    assert 'SOFÍA IGNACIA DAROCH VERDUGO y MIA VALENTINA DAROCH VERDUGO, cédula' not in text
+    assert 'PERSONA FICTICIA UNO y PERSONA FICTICIA DOS, cédula' not in text
     assert 'cédulas de identidad' not in text
