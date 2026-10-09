@@ -291,6 +291,18 @@ class Work:
                 pass
             else:atomic_json(directory/'trabajo.json.bak',old)
         atomic_json(previous,data)
+        # Conserva también todas las copias que necesita la recuperación anterior.
+        keep={self.source_hash+'.bin'}
+        if self.original_hash:keep.add(self.original_hash+'.bin')
+        backup=directory/'trabajo.json.bak'
+        if backup.is_file():
+            try:
+                old=json.loads(backup.read_text(encoding='utf-8'))
+                for field in ('source_hash','original_hash'):
+                    if old.get(field):keep.add(old[field]+'.bin')
+            except (ValueError,OSError):pass
+        for stale in directory.glob('*.bin'):
+            if stale.name not in keep and not stale.is_symlink():stale.unlink(missing_ok=True)
         saved[str(directory.resolve())]=digest
         self._save_digests=saved
         info=previous.stat();stats[key]=(info.st_mtime_ns,info.st_size);self._save_stats=stats
