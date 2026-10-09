@@ -14,7 +14,7 @@ import customtkinter as ctk
 from . import ui as ttk
 from .ui import Textbox as ScrolledText
 
-from .config import Configuration, PARAMETER_LABELS, VARIABLES
+from .config import Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES
 from .widgets import ScrollPane, NamedChoice, Tooltip
 from .ux_support import case_detail_text, compact_case_detail_text, grouped_draft_detail, incident_ids, resume_available, resume_description, RES_HELP
 from .work import Work
@@ -362,6 +362,7 @@ class App(ctk.CTk):
             if previous and candidate.capture_digest!=getattr(previous,'capture_digest',''):
                 from uuid import uuid4
                 previous.save(self.cfg.directory/'sesion'/'anteriores'/uuid4().hex)
+                self._prune_previous_sessions()
             self.work=candidate
             if not reused:self._clear_drafts();self.projects=[];self.observation_id=None
             def ready():
@@ -369,7 +370,7 @@ class App(ctk.CTk):
                     from .session import restore
                     restore(self)
                 self._save_session()
-                self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones conservadas; revisa productos obsoletos.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
+                self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones conservadas; revisa productos obsoletos.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.')+(' Limpieza de sesiones anteriores pendiente: no se borró ningún dato.' if getattr(self,'_retention_pending',False) else ''))
             changed=bool(previous and candidate.capture_digest!=getattr(previous,'capture_digest',''))
             self._show_work(reset_projects=not reused or changed,on_ready=ready)
         def attempt(answers=None):
@@ -655,11 +656,54 @@ class App(ctk.CTk):
             self.last_word=result;self._save_session();self.status.set('Word conjunto generado: '+result)
         self._run('Generando un Word con los proyectos…',lambda:generate_projects(work,projects,path),done)
 
+    def _prune_previous_sessions(self, *, keep=SESIONES_ANTERIORES):
+        from .session import previous_candidates, prune_previous
+        archive=self.cfg.directory/'sesion'/'anteriores'
+        candidates=previous_candidates(archive,keep=keep)
+        self._retention_pending=False
+        if not candidates:return []
+        size=sum(p.stat().st_size for folder in candidates for p in folder.rglob('*')
+                 if p.is_file() and not p.is_symlink())
+        reason=f' anteriores a {RETENCION_DIAS} días'
+        if keep is not None:reason+=f' o que exceden {keep} sesiones anteriores'
+        confirmed=messagebox.askyesno('Confirmar borrado local',
+            f'Se borrarán {len(candidates)} sesiones{reason} ({size/1048576:.2f} MB).'
+            '\nEl trabajo vigente y los adjuntos externos se conservan. ¿Continuar?',parent=self)
+        if not confirmed:
+            self._retention_pending=True
+            self.status.set('No se borró ningún dato. La limpieza de sesiones anteriores queda pendiente.')
+            return []
+        removed=prune_previous(archive,keep=keep,confirmed=True)
+        self.status.set(f'{len(removed)} sesiones anteriores borradas. El trabajo vigente se conserva.')
+        return removed
+
+    def _show_saved_data(self):
+        if self.busy or getattr(self,'rendering',False):
+            self.status.set('Espera a que termine la operación para revisar los datos guardados.');return
+        from .session import saved_data_summary
+        window=tk.Toplevel(self);window.title('Datos guardados en este equipo')
+        ttk.Label(window,text=f'Retención: {RETENCION_DIAS} días y hasta {SESIONES_ANTERIORES} sesiones anteriores.').pack(padx=15,pady=10)
+        table=ttk.Treeview(window,columns=('tipo','cantidad','tamaño'),show='headings',height=4)
+        for key,label in [('tipo','Datos'),('cantidad','Cantidad'),('tamaño','Tamaño')]:table.heading(key,text=label)
+        table.pack(padx=15,pady=8)
+        def refresh():
+            table.delete(*table.get_children())
+            for key,item in saved_data_summary(self.cfg.directory).items():
+                table.insert('','end',values=(key.capitalize(),item['count'],f"{item['bytes']/1048576:.2f} MB"))
+        def clean(keep):
+            if self.busy or getattr(self,'rendering',False):return
+            self._guard(lambda:self._prune_previous_sessions(keep=keep));refresh()
+        ttk.Label(window,text='Los recibos están dentro de las sesiones. Los adjuntos externos solo se muestran; no se borran.',wraplength=590).pack(padx=15,pady=8)
+        ttk.Button(window,text=f'Borrar lo anterior a {RETENCION_DIAS} días',command=lambda:clean(None)).pack(pady=5)
+        ttk.Button(window,text=f'Aplicar límite de {SESIONES_ANTERIORES} sesiones anteriores',command=lambda:clean(SESIONES_ANTERIORES)).pack(pady=5)
+        refresh()
+
     def _config_page(self):
         page=self.pages['Configuración']
         level=ttk.Notebook(page);level.pack(fill='both',expand=True)
         basic=ttk.Frame(level,padding=5);advanced=ttk.Frame(level,padding=5)
         level.add(basic,text='Básico');level.add(advanced,text='Avanzado')
+        ttk.Button(basic,text='Datos guardados en este equipo',command=lambda:self._guard(self._show_saved_data)).pack(anchor='w',pady=5)
         basic_nb=ttk.Notebook(basic);basic_nb.pack(fill='both',expand=True)
         advanced_nb=ttk.Notebook(advanced);advanced_nb.pack(fill='both',expand=True)
 
