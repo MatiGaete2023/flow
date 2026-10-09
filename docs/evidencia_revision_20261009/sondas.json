@@ -1,0 +1,80 @@
+{
+  "data_kind": "SINTETICA",
+  "institutional_access": false,
+  "observations": {
+    "H01": {
+      "input_characters": 33000,
+      "workbook_characters": 32767,
+      "silent_truncation": true,
+      "import_raised_error": false
+    },
+    "H02": {
+      "before_rules": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "after_rules": [
+        "ESPERA.E06_SIN_RESOLUCION"
+      ],
+      "stored_findings": [
+        "ESPERA.E05_PROYECTO_Y_CORREO"
+      ],
+      "outdated_findings": true
+    },
+    "H03": {
+      "same_capture_id": true,
+      "same_record_ids": true,
+      "same_sources": true,
+      "different_zip_digest": true,
+      "human_review_carried_forward": false,
+      "exclusion_carried_forward": false,
+      "previous_object_preserved": true
+    },
+    "H04": {
+      "package_accepted": true,
+      "query_coverage": "PARCIAL",
+      "diary_row_coverage": "PARCIAL",
+      "declared_diary_table": "COMPLETA",
+      "diary_requests_for_partial_ingreso": 0
+    },
+    "H05": {
+      "query_coverage": "PARCIAL",
+      "calendar_row_coverages": [
+        "PARCIAL"
+      ],
+      "calendar_table_state": "COMPLETA"
+    },
+    "H06": {
+      "contradictory_counts_accepted": true,
+      "counts": {
+        "expected": 1,
+        "observed": 1,
+        "matched": 200000,
+        "failed": 0,
+        "unknown": 0
+      },
+      "result": "PASÓ"
+    },
+    "H07": {
+      "write_succeeded": true,
+      "bytes": 4908375,
+      "read_succeeded": false,
+      "error": "Solicitud demasiado grande."
+    },
+    "H08": {
+      "source_warnings": [
+        "Advertencia: nombre visible de bitácora distinto al listado; revisar el ingreso."
+      ],
+      "exported_incident_codes": [
+        "IDENTIDAD_INCIERTA",
+        "IDENTIDAD_INCIERTA"
+      ],
+      "exported_diary_query_error": "",
+      "exported_identity_states": [
+        "VERIFICADA"
+      ],
+      "input_incident_message": "MARCADOR_FICTICIO_DE_INCIDENCIA",
+      "incident_present_in_saved_work": false,
+      "incident_present_in_evidence_view": false
+    }
+  }
+}

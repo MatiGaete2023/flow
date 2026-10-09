@@ -1,0 +1,37 @@
+{
+  "reviewed_commit": "45757c7d4acc47e96566528519c828fa6ba696d6",
+  "checked_at_utc": "2026-10-09T10:31:57.089654+00:00",
+  "platform": "Linux",
+  "python": "3.12.14",
+  "dependencies": {
+    "openpyxl": "3.1.5",
+    "pandas": "2.3.3",
+    "pytest": "9.1.1",
+    "lxml": "6.1.3"
+  },
+  "probe_command": "python tools/flow_review_probes.py",
+  "assistant_test_command": "python -m pytest -q tests/test_capture_contract.py tests/test_capture_input.py tests/test_capture_temporal_products.py tests/test_capture_acceptance.py tests/test_capture_selfcheck.py tests/test_capture_vertical.py",
+  "downloader_test_command": "python -m pytest -q descargador/test_export_csmp_capture.py descargador/test_resultados.py",
+  "assistant_tests": {
+    "exit_code": 0,
+    "passed": 68
+  },
+  "downloader_tests": {
+    "exit_code": 0,
+    "passed": 19,
+    "subtests_passed": 2
+  },
+  "original_attachments_verified": 7,
+  "production_code_modified": false,
+  "institutional_access": false,
+  "previous_windows_run_checked": {
+    "run_id": 37880150415,
+    "conclusion": "success",
+    "rerun_for_this_review": false
+  },
+  "evidence_sha256": {
+    "sondas.json": "868e7453f18dcc11d6474ee7dcb9ca4c6305f2c6533e00b331a64864e0327e6d",
+    "tests_asistente.txt": "ed64e4e3f51d16240533c5e64c99a368117e6a868864a85dc8957bd3b3197e06",
+    "tests_descargador.txt": "69de5b5de4843b711c2c92b7d9a95fff5e85f1559e094511d15adf4bb33183cd"
+  }
+}

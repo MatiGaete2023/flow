@@ -89,6 +89,16 @@ esperadas; conservar ese resultado como historial, no cambiar los hashes origina
 
 ## Al retomar
 
+**Revisión técnica posterior al cierre:** [informe del 2026-10-09](docs/INFORME_REVISION_20261009.md).
+Se identificaron ocho problemas reproducidos y una brecha de CI para nuevas
+entregas. Las correcciones están pendientes: priorizar H01/H02 (texto y hallazgos),
+H04/H05 (cobertura) y H03 (continuidad de decisiones). H06–H09 y las mejoras M01–M03
+incluyen solución propuesta y prueba de aceptación. La revisión no modificó código
+productivo ni convierte los resultados históricos de CI en aceptación de estos casos.
+Evidencia y reproducción: `docs/evidencia_revision_20261009/` y
+`python tools/flow_review_probes.py`. Al ejecutar las sondas, código 0 indica que
+se obtuvieron observaciones; no que los defectos estén corregidos.
+
 **Cierre 2026-10-09:** CI del SHA `6d3555a` aprobada en ambos workflows. Los límites
 por proceso, aislamiento GUI Windows y diagnóstico del instalador están verificados.
 El run adicional `37880150341` confirma la eliminación real de la aplicación y
