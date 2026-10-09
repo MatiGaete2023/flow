@@ -15,14 +15,18 @@ class MissingDiariesWindow(tk.Toplevel):
     """Resolver referencias invisibles del historial sin borrar sus originales."""
     def __init__(self,owner,on_ready=None):
         super().__init__(owner);self.owner=owner;self.on_ready=on_ready
-        self.title('Bitácoras no disponibles para el paquete');self.geometry('1050x440')
+        self.title('Bitácoras no disponibles para el paquete');self.geometry('1050x520');self.minsize(1000,480)
         self.transient(owner)
         ttk.Label(self,text='Estos controles se recuerdan en el historial, pero no se encuentran en su ruta. Localízalos con sus HTML o exclúyelos solo de este paquete. El resto de las fuentes se conserva.',wraplength=990).pack(fill='x',padx=12,pady=12)
-        self.tree=ttk.Treeview(self,columns=('lote','ruta'),show='headings',selectmode='extended')
+        table=ttk.Frame(self);table.pack(fill='both',expand=True,padx=12)
+        table.rowconfigure(0,weight=1);table.columnconfigure(0,weight=1)
+        self.tree=ttk.Treeview(table,columns=('lote','ruta'),show='headings',selectmode='extended')
         self.tree.heading('lote',text='Lote NO_DISPONIBLE');self.tree.heading('ruta',text='Control que falta')
         self.tree.column('lote',width=270);self.tree.column('ruta',width=740)
-        self.tree.pack(fill='both',expand=True,padx=12)
-        ttk.Scrollbar(self,orient='horizontal',command=self.tree.xview).pack(fill='x',padx=12)
+        self.tree.grid(row=0,column=0,sticky='nsew')
+        vertical=ttk.Scrollbar(table,orient='vertical',command=self.tree.yview);vertical.grid(row=0,column=1,sticky='ns')
+        horizontal=ttk.Scrollbar(table,orient='horizontal',command=self.tree.xview);horizontal.grid(row=1,column=0,sticky='ew')
+        self.tree.configure(yscrollcommand=vertical.set,xscrollcommand=horizontal.set)
         buttons=ttk.Frame(self);buttons.pack(fill='x',padx=12,pady=12)
         for label,action in [('Localizar seleccionado…',self.locate),('Excluir seleccionados',self.exclude_selected),
                              ('Excluir todos los no disponibles',self.exclude_all),('Continuar',self.finish),('Cancelar',self.close)]:
