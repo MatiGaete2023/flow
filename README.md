@@ -1,7 +1,9 @@
 # Flow — ejecución del plan NURUS / CSMP
 
 Repositorio de trabajo: **MatiGaete2023/flow**. Entrega: CSMP `0.5.0.dev4`,
-Descargador/extensión `2.7.4`. Baseline de procedencia: NuRus `251d5c4`.
+Descargador/extensión `2.7.5`. Baseline de procedencia: NuRus `251d5c4`.
+
+**Corrección del ZIP:** [recuperar o excluir referencias de bitácoras no disponibles](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
 
 **Para aprender a usar el Descargador:** [manual con imágenes](docs/manual_descargador_2_7_4/README.md),
 [PDF](docs/manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf)
@@ -30,7 +32,7 @@ Programa de escritorio para revisar el trabajo actual y preparar archivos y borr
 
 La versión de esta rama conserva las funciones principales de la línea 0.5 y
 añade importación local de paquetes preparados por el Descargador/extensión
-2.7.4. Acceso: **Trabajo → Importar paquete**. Las consultas de bitácoras y su
+2.7.5. Acceso: **Trabajo → Importar paquete**. Las consultas de bitácoras y su
 Excel se realizan desde Descargador. La aceptación con RUS real sigue pendiente.
 
 ## Instalación
