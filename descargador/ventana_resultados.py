@@ -11,6 +11,63 @@ import motor as m
 from resultados import load_lot,export_book,export_csv,export_ics,export_zip,compare_lots,inside,read_json,tables,compatibility
 
 
+class MissingDiariesWindow(tk.Toplevel):
+    """Resolver referencias invisibles del historial sin borrar sus originales."""
+    def __init__(self,owner,on_ready=None):
+        super().__init__(owner);self.owner=owner;self.on_ready=on_ready
+        self.title('Bitácoras no disponibles para el paquete');self.geometry('1050x440')
+        self.transient(owner)
+        ttk.Label(self,text='Estos controles se recuerdan en el historial, pero no se encuentran en su ruta. Localízalos con sus HTML o exclúyelos solo de este paquete. El resto de las fuentes se conserva.',wraplength=990).pack(fill='x',padx=12,pady=12)
+        self.tree=ttk.Treeview(self,columns=('lote','ruta'),show='headings',selectmode='extended')
+        self.tree.heading('lote',text='Lote NO_DISPONIBLE');self.tree.heading('ruta',text='Control que falta')
+        self.tree.column('lote',width=270);self.tree.column('ruta',width=740)
+        self.tree.pack(fill='both',expand=True,padx=12)
+        ttk.Scrollbar(self,orient='horizontal',command=self.tree.xview).pack(fill='x',padx=12)
+        buttons=ttk.Frame(self);buttons.pack(fill='x',padx=12,pady=12)
+        for label,action in [('Localizar seleccionado…',self.locate),('Excluir seleccionados',self.exclude_selected),
+                             ('Excluir todos los no disponibles',self.exclude_all),('Continuar',self.finish),('Cancelar',self.close)]:
+            ttk.Button(buttons,text=label,command=action).pack(side='left',padx=(0,6))
+        self.status=tk.StringVar()
+        ttk.Label(self,textvariable=self.status,wraplength=990).pack(fill='x',padx=12,pady=(0,12))
+        self.protocol('WM_DELETE_WINDOW',self.close);self.refresh()
+    def refresh(self):
+        self.paths=self.owner.missing_package_diaries();self.tree.delete(*self.tree.get_children())
+        for i,path in enumerate(self.paths):self.tree.insert('','end',iid=str(i),values=(path.parent.name,str(path)))
+        self.owner.update_collection()
+        self.status.set(f'{len(self.paths)} referencia(s) pendientes. Excluir no borra archivos ni preferencias; puedes añadir el lote nuevamente cuando lo encuentres.' if self.paths else 'Referencias resueltas. Pulsa Continuar para volver a la exportación.')
+    def locate(self):
+        selected=self.tree.selection()
+        if len(selected)!=1:self.status.set('Selecciona un solo lote para localizar su control.');return
+        old=self.paths[int(selected[0])]
+        path=filedialog.askopenfilename(parent=self,title='Localizar bitacoras.json con sus HTML originales',filetypes=[('Control de bitácoras','bitacoras.json')])
+        if not path:return
+        try:
+            from archivo_local import remember
+            path=Path(path).resolve()
+            if path.name!='bitacoras.json' or not path.is_file():raise m.PocError('Selecciona bitacoras.json de la carpeta conservada con sus HTML.')
+            remember(self.owner.app.prefs,path.parent)
+            self.owner.excluded_diaries.discard(path)
+            if old!=path:self.owner.excluded_diaries.add(old)
+            self.owner.reload(load_current=False);self.refresh()
+        except (m.PocError,OSError,ValueError) as exc:self.status.set(str(exc))
+    def exclude_selected(self):
+        selected=self.tree.selection()
+        if not selected:self.status.set('Selecciona las referencias que deseas excluir.');return
+        self.owner.excluded_diaries.update(self.paths[int(i)] for i in selected)
+        self.refresh()
+    def exclude_all(self):
+        self.owner.excluded_diaries.update(self.paths);self.refresh()
+    def finish(self):
+        if self.owner.missing_package_diaries():self.status.set('Todavía quedan referencias no disponibles. Localízalas o exclúyelas antes de continuar.');return
+        ready=self.on_ready;self.close()
+        if ready:ready()
+    def close(self):
+        if self.owner:self.owner.missing_window=None
+        self.on_ready=None;self.destroy()
+        # Liberar variables Tcl y referencias de callbacks en el hilo de interfaz.
+        self.status=None;self.owner=None
+
+
 def open_local(path):
     path=Path(path).resolve()
     if not path.exists():raise m.PocError('El archivo fue movido o ya no existe.')
@@ -25,6 +82,7 @@ class ResultsWindow(tk.Toplevel):
         super().__init__(app.root);self.app=app;self.title('Resultados y herramientas · rama experimental')
         self.geometry('1100x780');self.minsize(900,650);self.busy=False;self.events=queue.Queue();self.folders=[];self.lot=None
         self.package_folders=[];self.diary_capture=None;self.loaded_kind=None;self.excluded_diaries=set()
+        self.missing_window=None
         app.result_windows.append(self)
         self.partial=tk.BooleanVar(value=False);self.status=tk.StringVar(value='Selecciona un lote del historial o abre su carpeta.')
         self.history=ttk.Treeview(self,columns=('fecha','tipo','estado','consultas'),show='headings',height=5,selectmode='extended')
@@ -55,6 +113,7 @@ class ResultsWindow(tk.Toplevel):
         ttk.Button(row,text='Abrir solicitud de antecedentes…',command=self.open_request).pack(side='left',padx=(0,6))
         self.collection=tk.StringVar()
         ttk.Label(self,textvariable=self.collection,wraplength=1050).pack(fill='x',padx=12,pady=4)
+        ttk.Button(self,text='Revisar referencias no disponibles…',command=self.review_missing_diaries).pack(anchor='w',padx=12,pady=4)
         ttk.Label(self,text='Añade las carpetas de hojas y los controles bitacoras.json con sus HTML. El ZIP reúne las descargas añadidas; reutiliza bitácoras solo por tribunal, causa e ingreso. Importa ese ZIP en Trabajo → Importar paquete del Asistente.',wraplength=1050).pack(fill='x',padx=12,pady=4)
         ttk.Label(self,textvariable=self.status,wraplength=1050).pack(fill='x',padx=12,pady=8)
         self.protocol('WM_DELETE_WINDOW',self.close);self.reload();self.after(100,self.poll)
@@ -67,29 +126,57 @@ class ResultsWindow(tk.Toplevel):
             if not self.lot:raise m.PocError('Selecciona un lote primero.')
             action()
         except (m.PocError,OSError,ValueError) as exc:self.status.set(str(exc))
-    def reload(self):
+    def reload(self,load_current=True):
         if self.busy:return
         self.history.delete(*self.history.get_children());self.folders=[]
         from archivo_local import discover,remember
         for folder,label,state,count in discover(self.app.dest.get(),self.app.prefs,self.app.last_folder):
             iid=str(len(self.folders));self.folders.append(folder)
             self.history.insert('','end',iid=iid,values=(folder.name,label,state,count))
-            if label=='Bitácoras':remember(self.app.prefs,folder)
+            if label=='Bitácoras' and state not in ('NO_DISPONIBLE','ERROR_CONTROL'):remember(self.app.prefs,folder)
         self.update_collection()
-        if getattr(self,'folder',None) or self.app.last_folder:
+        if load_current and (getattr(self,'folder',None) or self.app.last_folder):
             self.folder=getattr(self,'folder',None) or self.app.last_folder;self.load()
 
     def update_collection(self):
         names='; '.join(p.name for p in self.package_folders)
-        self.collection.set(f'Paquete: {len(self.package_folders)} descarga(s) añadida(s): {names} · {len(self.package_diaries())} lote(s) de bitácoras disponibles para este paquete. Las fechas originales se conservan; reutilizar no vuelve a consultar RUS.')
+        references=self.package_diaries();missing=self.missing_package_diaries()
+        unavailable=f' · {len(missing)} referencia(s) NO_DISPONIBLE: recuperar o excluir antes de exportar' if missing else ''
+        self.collection.set(f'Paquete: {len(self.package_folders)} descarga(s) añadida(s): {names} · {len(references)-len(missing)} lote(s) de bitácoras disponibles para este paquete{unavailable}. Las fechas originales se conservan; reutilizar no vuelve a consultar RUS.')
 
     def package_diaries(self):
-        return [p for p in self.app.prefs.data.get('historial_bitacoras',[]) if Path(p).resolve() not in self.excluded_diaries]
+        from archivo_local import diary_references
+        return diary_references(self.app.prefs,self.excluded_diaries)
+
+    def missing_package_diaries(self):
+        return [p for p in self.package_diaries() if not p.is_file()]
+
+    def review_missing_diaries(self,on_ready=None):
+        if self.busy:return
+        self.update_collection()
+        if not self.missing_package_diaries():
+            self.status.set('Los controles de bitácoras están disponibles. Sus originales se verifican al exportar.')
+            if on_ready:on_ready()
+            return
+        self.status.set('Hay referencias antiguas no disponibles. Localiza sus controles o exclúyelas de este paquete; no se borran los lotes.')
+        if self.missing_window and self.missing_window.winfo_exists():self.missing_window.lift();return
+        self.missing_window=MissingDiariesWindow(self,on_ready)
+
+    def check_diary_references(self,manifests,on_ready):
+        if any(not Path(p).is_file() for p in manifests):
+            if self.missing_package_diaries():self.review_missing_diaries(on_ready)
+            else:self.status.set('El lote de bitácoras seleccionado no está disponible. Localiza bitacoras.json con sus HTML o selecciona una descarga para consolidar los otros lotes disponibles.')
+            return False
+        return True
 
     def remove_package_source(self):
         if self.busy:return
-        if self.loaded_kind=='Bitácoras':self.excluded_diaries.add((self.folder/'bitacoras.json').resolve())
-        if getattr(self,'folder',None) in self.package_folders:self.package_folders.remove(self.folder)
+        selected=self.history.selection()
+        targets=[(self.folders[int(i)],self.history.item(i,'values')[1]) for i in selected]
+        if not targets and getattr(self,'folder',None):targets=[(self.folder,self.loaded_kind)]
+        for folder,label in targets:
+            if label=='Bitácoras':self.excluded_diaries.add((folder/'bitacoras.json').resolve())
+            if folder in self.package_folders:self.package_folders.remove(folder)
         self.update_collection();self.status.set('Lote retirado de este paquete; sus archivos e historial se conservan. Añadir de nuevo lo incorpora otra vez.')
     def select_history(self,event=None):
         selected=self.history.selection()
@@ -120,9 +207,12 @@ class ResultsWindow(tk.Toplevel):
         if self.busy or not getattr(self,'folder',None):return
         self.lot=None;self.diary_capture=None
         from archivo_local import kind
-        try:_,self.loaded_kind=kind(self.folder)
-        except m.PocError as exc:self.status.set(str(exc));return
         self.detail.delete(*self.detail.get_children())
+        self.loaded_kind=None
+        try:_,self.loaded_kind=kind(self.folder)
+        except m.PocError:
+            if (self.folder/'bitacoras.json').resolve() in self.package_diaries():self.loaded_kind='Bitácoras'
+            self.status.set('NO_DISPONIBLE · '+str(self.folder)+' · Añade la carpeta en su ubicación actual o usa Quitar lote del paquete.');return
         if self.loaded_kind=='Bitácoras':
             from nurus.capture.diaries import import_lotes
             self.start(lambda:import_lotes(self.folder/'bitacoras.json'),'diary_load');return
@@ -200,6 +290,7 @@ class ResultsWindow(tk.Toplevel):
         manifests=[self.folder/'bitacoras.json'] if self.loaded_kind=='Bitácoras' else self.package_diaries()
         if not manifests:
             self.add_diaries();return
+        if not self.check_diary_references(manifests,self.diary_excel):return
         target=filedialog.asksaveasfilename(parent=self,initialfile='Bitacoras_RUS.xlsx',defaultextension='.xlsx')
         if target:
             from nurus.capture.diaries import export_diaries
@@ -208,6 +299,7 @@ class ResultsWindow(tk.Toplevel):
     def capture_package(self):
         if self.busy:return
         if not self.package_folders:self.status.set('Añade primero una carpeta de descarga de hojas RUS. Las bitácoras anteriores seguirán disponibles.');return
+        if not self.check_diary_references(self.package_diaries(),self.capture_package):return
         target=filedialog.asksaveasfilename(parent=self,initialfile='Captura_CSMP.zip',defaultextension='.zip')
         if not target:return
         folders=list(self.package_folders);diaries=self.package_diaries();partial=self.partial.get()

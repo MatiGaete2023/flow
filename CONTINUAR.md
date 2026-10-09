@@ -9,6 +9,18 @@
 **Código compilado y verificado Windows:** `e3a63691ba75657cef82834406dadb849ba50ee6`
 El último checkpoint se obtiene con `git log -1`.
 
+## ZIP bloqueado por bitacoras.json antiguo — 2.7.5
+
+[Corrección e instrucciones](docs/CORRECCION_REFERENCIAS_ZIP_20261009.md).
+El historial ocultaba referencias ausentes y la exportación seguía incluyéndolas.
+Ahora se muestran como NO_DISPONIBLE; la revisión permite localizarlas o excluirlas
+explícitamente antes de exportar. Conserva las fuentes válidas, las rutas recordadas
+y los originales; Quitar lote del paquete aplica a todas las filas seleccionadas.
+Descargador/extensión 2.7.5; seis regresiones, suite 198/59 y 36 pruebas de intercambio
+aprobadas localmente. Compilación Windows nueva pendiente de CI; los artefactos
+anteriores e3a6369 son 2.7.4 y no incluyen esta corrección. La captura del usuario
+se analizó visualmente sin copiarla al repositorio; todas las pruebas son ficticias.
+
 ## Manual ilustrado solicitado por el usuario — 9 de octubre
 
 [Manual del Descargador 2.7.4](docs/manual_descargador_2_7_4/README.md), con

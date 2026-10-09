@@ -103,7 +103,7 @@ jobs:
         run: |
           $captureSourceCommit = (git rev-parse HEAD).Trim()
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
-          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.4 --extension-version 2.7.4
+          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.5 --extension-version 2.7.5
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
       - name: RUS capture in Chromium with a fictitious form
