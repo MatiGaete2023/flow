@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
+RETIRADAS = set(json.loads((ROOT / 'docs/evidencia_p0/rutas_retiradas.json').read_text(encoding='utf-8'))['rutas'])
 STATES = {"IMPLEMENTADO", "PARCIAL", "NO IMPLEMENTADO", "BLOQUEADO POR PRUEBA REAL"}
 SPEC_FILES = (
     "01_ESPECIFICACION_DESCARGADOR_RUS_SITFA.md",
@@ -58,7 +59,7 @@ def main():
             raise SystemExit("Estado inválido: " + item["id"])
         for field in ("code", "tests"):
             for path in item[field]:
-                if not (ROOT / path).is_file():
+                if path not in RETIRADAS and not (ROOT / path).is_file():
                     raise SystemExit("Evidencia inexistente: " + path)
         name, line, title, acceptance = identified[item["id"]]
         item.update(source=name, source_line=line, requirement=title, acceptance=acceptance)

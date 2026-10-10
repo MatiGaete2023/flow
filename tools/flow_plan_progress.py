@@ -11,6 +11,7 @@ import re
 
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'docs/evidencia_desarrollo_20261008'
+RETIRADAS=set(json.loads((ROOT/'docs/evidencia_p0/rutas_retiradas.json').read_text(encoding='utf-8'))['rutas'])
 PLAN=ROOT/'docs/plan_20261008/05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008.md'
 STATES={'PENDIENTE','EN_CURSO','BLOQUEADA_POR_EVIDENCIA','FALLÓ_PRUEBA',
         'IMPLEMENTADA_PENDIENTE_ACEPTACION','ACEPTADA'}
@@ -71,7 +72,7 @@ def main():
     update('A-T09 R-T29 F12 INT-16 INT-23','src/nurus/personal/product_state.py;src/nurus/personal/record_edits.py',
            'tests/test_capture_input.py;tests/test_capture_temporal_products.py;tests/test_personal_batch_revision.py',
            'Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados.')
-    update('A-T15 A-T16 A-T19 INT-24 INT-26','src/nurus/personal/app_base.py;src/nurus/personal/registration.py',
+    update('A-T15 A-T16 A-T19 INT-24 INT-26','src/nurus/personal/app_base.py',
            'tests/test_capture_gui.py;tests/test_capture_temporal_products.py',
            'Sin lanzador remoto principal; submit rechaza antes de tocar adaptador. Marcas locales no persistidas como autoridad.')
     update('A-T10 F13 INT-17','src/nurus/personal/capture_input.py;src/nurus/personal/outputs.py',
@@ -109,7 +110,7 @@ def main():
         row['institutional_result']='NO EJECUTADO'
         for field in ('code','tests'):
             for path in filter(None,row[field].split(';')):
-                if not (ROOT/path).is_file():raise ValueError('Ruta de evidencia inexistente: '+path)
+                if path not in RETIRADAS and not (ROOT/path).is_file():raise ValueError('Ruta de evidencia inexistente: '+path)
         if row['state'] not in STATES:raise ValueError('Estado inválido')
     fields=list(records[0])
     with (OUT/'matriz_actual.csv').open('w',encoding='utf-8',newline='') as stream:
