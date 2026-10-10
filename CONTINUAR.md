@@ -45,6 +45,5 @@ git config core.hooksPath tools/hooks
 
 El hook revisa el contenido del índice, incluidos los XML de Excel y Word;
 no lee las modificaciones que aún no agregaste. Ambos workflows ejecutan el
-control antes de instalar dependencias o producir artefactos. Hasta WP-20,
-se excluyen `variantes/` y el documento antiguo del Descargador con rutas
-personales también del checkout y del ZIP de fuentes.
+control antes de instalar dependencias o producir artefactos, sobre todo el
+árbol: WP-20 retiró `variantes/` y las rutas personales (recuperables desde `pre-WP-20`).

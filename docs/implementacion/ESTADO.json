@@ -312,16 +312,18 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T09:00:00-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-20.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e."
+      ]
     },
     "WP-21": {
       "titulo": "Capa legado y segundo motor",
