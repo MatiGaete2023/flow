@@ -82,7 +82,7 @@ Las pruebas locales incluyen interfaz con pantalla virtual y datos ficticios. La
 
 El registro real en RUS sigue pendiente del formulario y la sesión operables. Preparar una observación no acredita que haya sido guardada en RUS.
 
-La herramienta separada **RUS · Inspector del registro actual** y su extensión de Chrome permiten capturar la estructura del formulario. Consulta [el avance de integración y las instrucciones](docs/REGISTRO_RUS_AVANCE_20261006.md).
+El inspector del registro RUS y su extensión de captura se retiraron por decisión del usuario (D3, 10 de octubre de 2026); el antecedente queda en [docs/historico/REGISTRO_RUS_AVANCE_20261006.md](docs/historico/REGISTRO_RUS_AVANCE_20261006.md).
 
 Consulta [el informe de ejecución](docs/EJECUCION_WINDOWS_20261006.md).
 

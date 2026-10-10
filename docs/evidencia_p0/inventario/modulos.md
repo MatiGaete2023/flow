@@ -80,15 +80,15 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.product_state](../../../src/nurus/personal/product_state.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 6 |
 | [nurus.personal.record_edits](../../../src/nurus/personal/record_edits.py) | CONSERVAR | P0 | 8 | 7 |
 | [nurus.personal.record_view](../../../src/nurus/personal/record_view.py) | CONSERVAR | P0 | 8 | 1 |
-| [nurus.personal.registration](../../../src/nurus/personal/registration.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 4 | 2 |
-| [nurus.personal.registration_excel](../../../src/nurus/personal/registration_excel.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 6 | 0 |
+| nurus.personal.registration (`src/nurus/personal/registration.py`, retirado en WP-22) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 4 | 2 |
+| nurus.personal.registration_excel (`src/nurus/personal/registration_excel.py`, retirado en WP-22) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 6 | 0 |
 | [nurus.personal.reports](../../../src/nurus/personal/reports.py) | CONSERVAR | P0 | 3 | 4 |
 | [nurus.personal.resolution_view](../../../src/nurus/personal/resolution_view.py) | CONSERVAR | P0 | 8 | 2 |
 | [nurus.personal.resolutions](../../../src/nurus/personal/resolutions.py) | CONSERVAR | P0 | 10 | 8 |
 | [nurus.personal.results_view](../../../src/nurus/personal/results_view.py) | ADAPTAR entrada local después de G3/G5 | P5/P6 | 12 | 1 |
 | [nurus.personal.roster](../../../src/nurus/personal/roster.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.personal.rus_capture](../../../src/nurus/personal/rus_capture.py) | CONSERVAR | P0 | 0 | 1 |
-| [nurus.personal.rus_capture_app](../../../src/nurus/personal/rus_capture_app.py) | CONSERVAR | P0 | 1 | 0 |
+| nurus.personal.rus_capture (`src/nurus/personal/rus_capture.py`, retirado en WP-22) | CONSERVAR | P0 | 0 | 1 |
+| nurus.personal.rus_capture_app (`src/nurus/personal/rus_capture_app.py`, retirado en WP-22) | CONSERVAR | P0 | 1 | 0 |
 | [nurus.personal.selection](../../../src/nurus/personal/selection.py) | CONSERVAR | P0 | 0 | 6 |
 | [nurus.personal.session](../../../src/nurus/personal/session.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 3 |
 | [nurus.personal.sitfa](../../../src/nurus/personal/sitfa.py) | CONSERVAR Excel/procedencia; ADAPTAR consumo local v1 | P5 | 1 | 5 |

@@ -225,10 +225,6 @@ class App(_BaseApp):
 
     def _show_work(self,reset_projects=True,on_ready=None):
         if not self.work:return
-        journal_path=self.cfg.directory/'registro_observaciones.sqlite'
-        if journal_path.is_file():
-            from .registration import Journal,attach_receipts
-            attach_receipts(self.work,Journal(journal_path))
         previous_selection=list(selected_ids(self,'records'))
         previous_words=list(selected_ids(self,'words'))
         self.mode.set(self.work.mode);self.file.set(self.work.path);self.observation_id=None

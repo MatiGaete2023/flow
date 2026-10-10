@@ -358,16 +358,18 @@
       "decisiones": [
         "D3"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T10:30:00-03:00",
+      "rama": "wp/WP-22-inspector-rus",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-22.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "D3 = Sí, retirarlos. registration.py eliminado (no reducido). Apilado sobre WP-21 (PR #13)."
+      ]
     },
     "WP-23": {
       "titulo": "Restos de lanzamiento del Descargador",
