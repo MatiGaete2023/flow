@@ -10,9 +10,8 @@ def test_release_version_and_current_docs_are_aligned():
     project=tomllib.loads((ROOT/'pyproject.toml').read_text(encoding='utf-8'))
     assert project['project']['version']==nurus.__version__
     current_docs=[
-        ROOT/'README.md', ROOT/'docs/IMPLEMENTACION.md',
-        ROOT/'docs/VERIFICACION_PERSONAL.md', ROOT/'docs/ACEPTACION_CSMP_PERSONAL.md',
-        ROOT/'docs/INDICE_DOCUMENTACION.md', ROOT/'docs/ESTADO_CONSOLIDADO_20260920.md',
+        # WP-20: se retiraron los stubs IMPLEMENTACION, VERIFICACION_PERSONAL, ACEPTACION_CSMP_PERSONAL y ESTADO_CONSOLIDADO_20260920.
+        ROOT/'README.md', ROOT/'docs/INDICE_DOCUMENTACION.md',
     ]
     for path in current_docs:
         text=path.read_text(encoding='utf-8')

@@ -260,15 +260,15 @@ Cada entrega necesita pruebas significativas de identidad, períodos, fuentes va
 
 | Documento | Aporte a este plan |
 |---|---|
-| [Auditoría inicial](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Informe_NuRus_2026-09-25.md) | Errores de estado/sincronización, diseño y ampliación de lo editable. |
-| [Implementación de la auditoría](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Implementacion_NuRus_2026-09-28.md) | Base ya corregida y reorganización de interfaz. |
-| [Revisión y cierre dev13](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Revision_NuRus_2026-09-29.md) | Correcciones adicionales, Mulchén, productos, recuperación y pruebas documentadas. |
-| [Corrección de adjuntos dev14](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Correccion_adjuntos_NuRus_2026-09-30.md) | Fechas, ceros, bordes y dependencias de adjuntos. |
-| [Análisis del recorrido SITFA](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Analisis_flujo_SITFA_2026-10-02.md) | Video/HAR, aperturas, calendario, pesquisas y contratos pendientes. |
-| [Exportación autónoma de bitácoras](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Ampliacion_bitacoras_Excel_2026-10-02.md) | Libro de historial, resumen e incidencias, y comparación entre consultas. |
-| [Bitácoras y registro desde Excel](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Propuesta_CSMP_RUS_y_bitacoras_2026-10-02.md) | Última entrada, cuatro meses, carga por tipo, registro y recibos. |
-| [Alcance por tribunal](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Plan_CSMP_todos_los_tribunales_2026-10-02.md) | Universalidad de lectura/registro y conservación del asistente de tres tribunales. |
-| [Resoluciones firmadas](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Analisis_carga_tribunal_y_cruce_CSMP_2026-10-02.md) | Reporte de carga, error fijo del encabezado y límite de cobertura temporal. |
-| [Flujo conjunto de 60 días](C:/Users/cmgaete/Documents/Codex/2026-09-25/github-plugin-github-openai-curated-remote/outputs/Especificacion_flujo_integrado_CSMP_60_dias_2026-10-02.md) | Tres fuentes, dos meses de informes, alertas y producto final. |
+| Auditoría inicial (`Informe_NuRus_2026-09-25.md`) | Errores de estado/sincronización, diseño y ampliación de lo editable. |
+| Implementación de la auditoría (`Implementacion_NuRus_2026-09-28.md`) | Base ya corregida y reorganización de interfaz. |
+| Revisión y cierre dev13 (`Revision_NuRus_2026-09-29.md`) | Correcciones adicionales, Mulchén, productos, recuperación y pruebas documentadas. |
+| Corrección de adjuntos dev14 (`Correccion_adjuntos_NuRus_2026-09-30.md`) | Fechas, ceros, bordes y dependencias de adjuntos. |
+| Análisis del recorrido SITFA (`Analisis_flujo_SITFA_2026-10-02.md`) | Video/HAR, aperturas, calendario, pesquisas y contratos pendientes. |
+| Exportación autónoma de bitácoras (`Ampliacion_bitacoras_Excel_2026-10-02.md`) | Libro de historial, resumen e incidencias, y comparación entre consultas. |
+| Bitácoras y registro desde Excel (`Propuesta_CSMP_RUS_y_bitacoras_2026-10-02.md`) | Última entrada, cuatro meses, carga por tipo, registro y recibos. |
+| Alcance por tribunal (`Plan_CSMP_todos_los_tribunales_2026-10-02.md`) | Universalidad de lectura/registro y conservación del asistente de tres tribunales. |
+| Resoluciones firmadas (`Analisis_carga_tribunal_y_cruce_CSMP_2026-10-02.md`) | Reporte de carga, error fijo del encabezado y límite de cobertura temporal. |
+| Flujo conjunto de 60 días (`Especificacion_flujo_integrado_CSMP_60_dias_2026-10-02.md`) | Tres fuentes, dos meses de informes, alertas y producto final. |
 
 «NuRus» en los títulos de antecedentes identifica el repositorio y los documentos históricos. El producto final de este plan es CSMP.

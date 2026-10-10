@@ -21,26 +21,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          # Hasta WP-20: no hidratar copias con datos pendientes de retiro.
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !/variantes/
-            !/descargador/docs/PLAN_INTEGRAL_20261002.md
           persist-credentials: false
-      - name: Verificar exclusiones del checkout antes de cualquier prueba
-        working-directory: .
-        shell: pwsh
-        run: |
-          if (Test-Path -LiteralPath 'variantes') { throw 'El checkout hidrató copias excluidas' }
-          if (Test-Path -LiteralPath 'descargador/docs/PLAN_INTEGRAL_20261002.md') { throw 'El checkout hidrató el documento pendiente de saneamiento' }
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Control de identidades antes de instalar o generar artefactos
         working-directory: .
-        run: python tools/check_real_ids.py --excluir variantes/
+        run: python tools/check_real_ids.py
       - run: python -m pip install --require-hashes -r ../requirements/windows-py312.lock
       - name: Inventario de dependencias bloqueadas
         run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
