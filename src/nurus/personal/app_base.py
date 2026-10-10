@@ -14,7 +14,7 @@ import customtkinter as ctk
 from . import ui as ttk
 from .ui import Textbox as ScrolledText
 
-from .config import Configuration, PARAMETER_LABELS, VARIABLES
+from .config import Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES, emails
 from .widgets import ScrollPane, NamedChoice, Tooltip
 from .ux_support import case_detail_text, compact_case_detail_text, grouped_draft_detail, incident_ids, resume_available, resume_description, RES_HELP
 from .work import Work
@@ -23,6 +23,11 @@ from .resolutions import KINDS, kind_code, kind_label, prepare_projects, generat
 from .importing import SheetChoice
 from nurus.rus.reader import list_workbook_sheets
 from nurus.rus.columns import normalize
+
+
+CONTACTS_MISSING=('Falta el archivo local de contactos. Pulsa «Importar contactos» y elige '
+                  'tu contactos_base.json anterior o el catastro Excel. '
+                  'Las instalaciones nuevas usan tres contactos ficticios de ejemplo.')
 
 class App(ctk.CTk):
     def __init__(self,configuration=None):
@@ -71,10 +76,13 @@ class App(ctk.CTk):
         self._bind_shortcuts()
         self.after(100,self._poll)
         self.after(15000,self._autosave)
+        if getattr(self.cfg,'contacts_missing',False):
+            self.status.set(CONTACTS_MISSING)
+            self.after_idle(self._show_contacts_import)
         saved=self.cfg.directory/'sesion/trabajo.json'
         if saved.exists():
             try:
-                recovered=Work.load(saved.parent)
+                recovered=Work.load(saved.parent,self.cfg.data)
                 if resume_available(recovered):
                     self._resume_work=recovered
                     self._show_resume_offer(saved)
@@ -82,6 +90,18 @@ class App(ctk.CTk):
                 else:
                     self.status.set('La sesión anterior existe, pero su copia Excel ya no está disponible. Elige otro archivo.')
             except Exception as exc:self.status.set('No se pudo recuperar el trabajo anterior: '+str(exc))
+
+    def _show_contacts_import(self):
+        if not getattr(self.cfg,'contacts_missing',False):return
+        dialog=tk.Toplevel(self)
+        dialog.title('Importar contactos')
+        dialog.transient(self)
+        dialog.geometry('520x240')
+        self._contacts_dialog=dialog
+        ttk.Label(dialog,text=CONTACTS_MISSING,wraplength=470).pack(fill='x',padx=20,pady=20)
+        ttk.Button(dialog,text='Seleccionar archivo de contactos…',
+                   command=lambda:self._guard(self._import_contacts)).pack(padx=20,pady=5)
+        ttk.Button(dialog,text='Continuar con el ejemplo',command=dialog.destroy).pack(padx=20,pady=5)
 
     def _install_templates(self):
         source=Path(__file__).parent/'plantillas_word'
@@ -362,6 +382,7 @@ class App(ctk.CTk):
             if previous and candidate.capture_digest!=getattr(previous,'capture_digest',''):
                 from uuid import uuid4
                 previous.save(self.cfg.directory/'sesion'/'anteriores'/uuid4().hex)
+                self._prune_previous_sessions()
             self.work=candidate
             if not reused:self._clear_drafts();self.projects=[];self.observation_id=None
             def ready():
@@ -369,7 +390,7 @@ class App(ctk.CTk):
                     from .session import restore
                     restore(self)
                 self._save_session()
-                self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones conservadas; revisa productos obsoletos.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.'))
+                self.status.set(f'{len(candidate.rows)} registros importados. '+('Ediciones conservadas; revisa productos obsoletos.' if reused else 'Revisa cobertura y exporta la copia para preparar productos.')+(' Limpieza de sesiones anteriores pendiente: no se borró ningún dato.' if getattr(self,'_retention_pending',False) else ''))
             changed=bool(previous and candidate.capture_digest!=getattr(previous,'capture_digest',''))
             self._show_work(reset_projects=not reused or changed,on_ready=ready)
         def attempt(answers=None):
@@ -655,11 +676,54 @@ class App(ctk.CTk):
             self.last_word=result;self._save_session();self.status.set('Word conjunto generado: '+result)
         self._run('Generando un Word con los proyectos…',lambda:generate_projects(work,projects,path),done)
 
+    def _prune_previous_sessions(self, *, keep=SESIONES_ANTERIORES):
+        from .session import previous_candidates, prune_previous
+        archive=self.cfg.directory/'sesion'/'anteriores'
+        candidates=previous_candidates(archive,keep=keep)
+        self._retention_pending=False
+        if not candidates:return []
+        size=sum(p.stat().st_size for folder in candidates for p in folder.rglob('*')
+                 if p.is_file() and not p.is_symlink())
+        reason=f' anteriores a {RETENCION_DIAS} días'
+        if keep is not None:reason+=f' o que exceden {keep} sesiones anteriores'
+        confirmed=messagebox.askyesno('Confirmar borrado local',
+            f'Se borrarán {len(candidates)} sesiones{reason} ({size/1048576:.2f} MB).'
+            '\nEl trabajo vigente y los adjuntos externos se conservan. ¿Continuar?',parent=self)
+        if not confirmed:
+            self._retention_pending=True
+            self.status.set('No se borró ningún dato. La limpieza de sesiones anteriores queda pendiente.')
+            return []
+        removed=prune_previous(archive,keep=keep,confirmed=True)
+        self.status.set(f'{len(removed)} sesiones anteriores borradas. El trabajo vigente se conserva.')
+        return removed
+
+    def _show_saved_data(self):
+        if self.busy or getattr(self,'rendering',False):
+            self.status.set('Espera a que termine la operación para revisar los datos guardados.');return
+        from .session import saved_data_summary
+        window=tk.Toplevel(self);window.title('Datos guardados en este equipo')
+        ttk.Label(window,text=f'Retención: {RETENCION_DIAS} días y hasta {SESIONES_ANTERIORES} sesiones anteriores.').pack(padx=15,pady=10)
+        table=ttk.Treeview(window,columns=('tipo','cantidad','tamaño'),show='headings',height=4)
+        for key,label in [('tipo','Datos'),('cantidad','Cantidad'),('tamaño','Tamaño')]:table.heading(key,text=label)
+        table.pack(padx=15,pady=8)
+        def refresh():
+            table.delete(*table.get_children())
+            for key,item in saved_data_summary(self.cfg.directory).items():
+                table.insert('','end',values=(key.capitalize(),item['count'],f"{item['bytes']/1048576:.2f} MB"))
+        def clean(keep):
+            if self.busy or getattr(self,'rendering',False):return
+            self._guard(lambda:self._prune_previous_sessions(keep=keep));refresh()
+        ttk.Label(window,text='Los recibos están dentro de las sesiones. Los adjuntos externos solo se muestran; no se borran.',wraplength=590).pack(padx=15,pady=8)
+        ttk.Button(window,text=f'Borrar lo anterior a {RETENCION_DIAS} días',command=lambda:clean(None)).pack(pady=5)
+        ttk.Button(window,text=f'Aplicar límite de {SESIONES_ANTERIORES} sesiones anteriores',command=lambda:clean(SESIONES_ANTERIORES)).pack(pady=5)
+        refresh()
+
     def _config_page(self):
         page=self.pages['Configuración']
         level=ttk.Notebook(page);level.pack(fill='both',expand=True)
         basic=ttk.Frame(level,padding=5);advanced=ttk.Frame(level,padding=5)
         level.add(basic,text='Básico');level.add(advanced,text='Avanzado')
+        ttk.Button(basic,text='Datos guardados en este equipo',command=lambda:self._guard(self._show_saved_data)).pack(anchor='w',pady=5)
         basic_nb=ttk.Notebook(basic);basic_nb.pack(fill='both',expand=True)
         advanced_nb=ttk.Notebook(advanced);advanced_nb.pack(fill='both',expand=True)
 
@@ -711,7 +775,9 @@ class App(ctk.CTk):
         self.contact_name=tk.StringVar();self.contact_mail=tk.StringVar();self.contact_alias=tk.StringVar()
         self._field(contacts,'Programa / tribunal',self.contact_name,0);self._field(contacts,'Correos (; separados)',self.contact_mail,1);self._field(contacts,'Alias (; separados)',self.contact_alias,2)
         ttk.Button(contacts,text='Guardar contacto',command=lambda:self._guard(self._save_contact)).grid(row=3,column=0)
-        ttk.Button(contacts,text='Importar catastro Excel',command=lambda:self._guard(self._import_contacts)).grid(row=3,column=1,sticky='w')
+        ttk.Button(contacts,text='Importar contactos',command=lambda:self._guard(self._import_contacts)).grid(row=3,column=1,sticky='w')
+        self.contacts_notice=tk.StringVar(value=CONTACTS_MISSING if getattr(self.cfg,'contacts_missing',False) else '')
+        ttk.Label(contacts,textvariable=self.contacts_notice,text_color=ttk.MUTED,wraplength=520).grid(row=6,column=0,columnspan=2,sticky='w',pady=4)
         self.contact_list=tk.Listbox(contacts,exportselection=False);self.contact_list.grid(row=4,column=0,columnspan=2,sticky='nsew');contacts.rowconfigure(4,weight=1)
         self.contact_list.bind('<<ListboxSelect>>',self._select_contact)
         ttk.Button(contacts,text='Eliminar contacto seleccionado',command=lambda:self._guard(self._delete_contact)).grid(row=5,column=0)
@@ -864,11 +930,31 @@ class App(ctk.CTk):
         self.status.set('Contacto eliminado. Puedes deshacer esta acción.')
 
     def _import_contacts(self):
-        path=filedialog.askopenfilename(filetypes=[('Excel','*.xlsx *.xls')])
+        path=filedialog.askopenfilename(filetypes=[('Contactos','*.json *.xlsx *.xls'),('Excel','*.xlsx *.xls'),('JSON','*.json')])
         if not path:return
         from copy import deepcopy
-        cfg=deepcopy(self.cfg.data);contacts,conflicts=import_contacts(cfg,path);cfg['contactos']=contacts;self.cfg.save(cfg);self._list_contacts()
-        self.status.set(f'✓ Catastro incorporado · {len(contacts)} contactos disponibles.')
+        from .config import parse_contacts,save_contacts,contacts_file,EXAMPLE_CONTACTS
+        cfg=deepcopy(self.cfg.data)
+        if getattr(self.cfg,'contacts_missing',False):
+            examples=parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8'))
+            cfg['contactos']={name:address for name,address in cfg['contactos'].items()
+                              if examples.get(name)!=address}
+        if Path(path).suffix.lower()=='.json':
+            contacts=dict(cfg['contactos']);conflicts=[]
+            for name,address in parse_contacts(Path(path).read_text(encoding='utf-8')).items():
+                if name.startswith('Tribunal: ') and name.split(': ',1)[1].upper() in cfg['correos']['tribunales']:
+                    cfg['correos']['tribunales'][name.split(': ',1)[1].upper()]['para']=emails(address);continue
+                if contacts.get(name,address)!=address:conflicts.append(name);continue
+                contacts[name]=address
+        else:contacts,conflicts=import_contacts(cfg,path)
+        cfg['contactos']=contacts;self.cfg.save(cfg)
+        courts={'Tribunal: '+key:'; '.join(court['para']) for key,court in cfg['correos']['tribunales'].items() if court.get('para')}
+        save_contacts({**contacts,**courts},self.cfg.contacts_directory);self.cfg.contacts_missing=False
+        if hasattr(self,'contacts_notice'):self.contacts_notice.set('')
+        dialog=getattr(self,'_contacts_dialog',None)
+        if dialog is not None and dialog.winfo_exists():dialog.destroy()
+        self._list_contacts()
+        self.status.set(f'✓ Catastro incorporado · {len(contacts)} contactos disponibles · copia local en {contacts_file(self.cfg.contacts_directory).name}.')
         if conflicts:messagebox.showwarning('Contactos con conflicto','No se sustituyeron coincidencias conflictivas:\n'+'\n'.join(conflicts))
 
     def _save_office(self):

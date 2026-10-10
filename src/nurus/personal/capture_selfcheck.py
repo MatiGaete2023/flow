@@ -85,7 +85,7 @@ def check_pipeline(folder):
     generate_projects(work,projects,folder/'Proyectos_revisables.docx')
     doc=Document(folder/'Proyectos_revisables.docx')
     require('FICT-0-2026' in '\n'.join(p.text for p in doc.paragraphs),'Word sin causa ficticia.')
-    work.save(folder/'sesion');restored=Work.load(folder/'sesion')
+    work.save(folder/'sesion');restored=Work.load(folder/'sesion',config)
     require(restored.rows[0].review==row.review and restored.rows[1].excluded,'recuperación perdió decisiones humanas.')
     require(not restored.activity_reviewed and not restored.signed_activity,'marcas locales usadas como fuente.')
     require(restored.capture_digest==digest,'recuperación cambió captura.')

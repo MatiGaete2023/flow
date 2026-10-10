@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:16:58.066325+00:00",
+  "actualizado": "2026-10-10T00:14:50.693324+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -70,7 +70,8 @@
       "integrado_en": "c4db3e11216b5ae6c44f59c3e5d474a47c5c70f8",
       "notas": [
         "Kit exacto recuperado en rama propia; rama auxiliar 5471ca6 preservada sin integrar.",
-        "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente."
+        "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente.",
+        "Verificación posterior al merge reproducida: 605/11, 198/59, golden PASA, sin fallos; baseline actualizado con las deudas iniciales 18/26."
       ]
     },
     "WP-01": {
@@ -81,16 +82,20 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "estado": "INTEGRADO",
+      "ejecutor": "/root/ejecutor_preparacion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-01-gobernanza",
+      "pr": 5,
+      "verificacion": "PASA: 071fd1a; verificacion/WP-01.json conserva FALLA anterior y corrección; 605/11 y 198/59",
+      "revision": "APROBADO: /root/revision_previa, incluidos los 12 enlaces reubicados",
+      "auditoria": "CONFORME: auditoria/WP-01.md",
+      "integrado_en": "376f3d21239a948de8c5d09ad2c53edd377ab19c",
+      "notas": [
+        "El prefacio histórico es permitido; actualizar destinos relativos preservando contenido y originales.",
+        "PR5 integrado; siete documentos originales conservados; CI cancelada deliberadamente durante saneamiento.",
+        "Verificación posterior al merge PASA: 605/11, 198/59, golden intacto y enlaces26 sin crecimiento."
+      ]
     },
     "WP-02": {
       "titulo": "Acta de uso real",
@@ -121,16 +126,19 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-10-identidades",
+      "pr": 6,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "c8ee8cdef9a5f9c8ae6333400c305766d0b4a5a2",
+      "notas": [
+        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20.",
+        "Control posterior: 612/11 y 198/59, golden PASA; identidades12, todas en variantes."
+      ]
     },
     "WP-11": {
       "titulo": "Control de identidades en CI y pre-commit",
@@ -140,16 +148,19 @@
         "WP-10"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-11-identidades-ci",
+      "pr": 9,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "28679280e0f965bc14170bcf2cf21ddb497e1c47",
+      "notas": [
+        "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada.",
+        "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20."
+      ]
     },
     "WP-12": {
       "titulo": "Contactos fuera del paquete",
@@ -159,16 +170,20 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-12-contactos-locales",
+      "pr": 7,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "f990fe842d7a24d5ebe3dcc6c18c97a5ea58f8c5",
+      "notas": [
+        "Revisión detectó borrado de contactos históricos en importación parcial; executor corrige antes de aprobación.",
+        "PR7 integrado con controles625/11 y198/59; datos de contactos locales, importación parcial sin pérdida y golden productos intacto. Se conserva limpieza10 y retención13.",
+        "Control de la base combinada:625/11 y198/59; golden17 PASA, IDs12 solo variantes; preservadas pruebas de WP-10 y WP-13."
+      ]
     },
     "WP-13": {
       "titulo": "Retención en el Asistente",
@@ -180,16 +195,20 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "estado": "INTEGRADO",
+      "ejecutor": "/root/ejecutor_retencion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-13-retencion-asistente",
+      "pr": 3,
+      "verificacion": "PASA: verificacion/WP-13.json sobre 30647b5; 612/11 y 198/59",
+      "revision": "APROBADO: /root/revision_previa; legado con cuatro copias conserva recuperación",
+      "auditoria": "CONFORME: auditoria/WP-13.md; captura ficticia archivada",
+      "integrado_en": "243e59d9eac882d808c57a84f0e8067fc7a167b4",
+      "notas": [
+        "D4 aplicada: 60 días y hasta 10 sesiones anteriores; borrado tras confirmar, vigente y adjuntos externos conservados.",
+        "Tres cargas normales dejan dos .bin; legado con originales distintos puede necesitar cuatro para vigente y respaldo, documentado sin pérdida.",
+        "Verificación posterior a integración: 612 aprobadas y 11 omitidas en Asistente; 198 aprobadas y 59 subpruebas en Descargador; golden de 17 productos PASA."
+      ]
     },
     "WP-14": {
       "titulo": "Retención en el Descargador",
@@ -201,16 +220,18 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "/root/ejecutor_retencion",
+      "tomado": "2026-10-09T22:17:37.125759+00:00",
+      "rama": "wp/WP-14-retencion-descargador",
+      "pr": 4,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro."
+      ]
     },
     "WP-15": {
       "titulo": "Extractor HAR anónimo",
@@ -220,16 +241,19 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
+      "rama": "wp/WP-15-har",
+      "pr": 8,
       "verificacion": null,
-      "revision": null,
+      "revision": "APROBADO",
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
+        "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes."
+      ]
     },
     "WP-16": {
       "titulo": "Anonimizador de Excel",
@@ -239,7 +263,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -248,7 +272,10 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
+        "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita."
+      ]
     },
     "WP-17": {
       "titulo": "Purga de historial",
@@ -282,7 +309,7 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -301,7 +328,7 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -310,7 +337,10 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
+        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta."
+      ]
     },
     "WP-22": {
       "titulo": "Inspector y diario de registro RUS",
@@ -655,16 +685,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "TOMADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
+      "rama": "wp/WP-60-reglas-limites",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Calidad en paralelo:32filasR-T con casos fijos; seis conflictos xfail estrictos propuestos por executor; revisión y verificación independientes pendientes, motor sin cambios."
+      ]
     },
     "WP-61": {
       "titulo": "Formato automático",
@@ -732,6 +764,14 @@
       "rama_anterior": "ccr-4116db41-nm8g0r",
       "commit_anterior": "5471ca6",
       "descripcion": "Trabajo previo no integrado: se recuperará por WP en ramas propias; sin presumir revisión, auditoría ni decisiones."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "Revisión de legado: corregir hook para blobs staged; anonimizador deja títulos/comentarios/enlaces; recuperación sin trabajo pierde configuración; instalador permite fallback sin hashes; barra no actualiza conteos y Correos acumula temporizadores; cobertura R-T32 y límites R-T02 incompletos. Ninguno se da por aprobado sin recuperación por WP."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "CI pausada deliberadamente hasta sanear contactos y fixtures. Se retiraron 14 artefactos generados por las primeras ejecuciones de esta sesión antes del saneamiento; las compilaciones históricas y la purga D1 no se tocaron. No se anuncia paquete nuevo ni CI Windows aprobada."
     }
   ]
 }
