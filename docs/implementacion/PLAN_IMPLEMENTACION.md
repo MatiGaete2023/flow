@@ -43,15 +43,16 @@ Un WP que viole cualquiera de estas reglas se rechaza completo, aunque sus prueb
 
 ### Reglas de alcance
 
-13. Cada WP toca solo los archivos de su ficha. Si necesita otro, se detiene y lo anota en `ESTADO.json` como `BLOQUEADO`, con el motivo.
+13. Cada WP toca solo los archivos de su ficha. Si necesita otro, se detiene y lo anota como `BLOQUEADO`, con el motivo, en `docs/implementacion/estado/WP-XX.json` (E1; antes de `dividir`, en su ficha).
 14. No crear documentos nuevos fuera de los que la ficha nombra. No crear actas, matrices ni evidencias ficticias.
 15. No marcar nada como «aceptado» o «institucional»: eso solo lo hace el usuario en un acta.
 16. Formato de fecha en documentos: «9 de octubre de 2026». Idioma: español de Chile.
 
-### Enmiendas propuestas del 10 de octubre de 2026 (pendientes de aprobación)
+### Enmiendas del 10 de octubre de 2026 (aprobadas)
 
-Detalle y fundamento en [REPORTE_REVISION_20261010.md](REPORTE_REVISION_20261010.md), sección 5. Hasta que el
-Orquestador y el usuario las aprueben, rigen las reglas 1–16 tal como están.
+Aprobadas por el usuario el 10 de octubre de 2026: «Apruebo las enmiendas E1–E6 del plan». Detalle y fundamento en
+[REPORTE_REVISION_20261010.md](REPORTE_REVISION_20261010.md), sección 5. Donde difieran de las reglas 1–16 o de las
+secciones siguientes, prevalecen estas enmiendas.
 
 - **E1 · Estado por WP.** Cada Ejecutor escribe solo `docs/implementacion/estado/WP-XX.json`. `ESTADO.json` se
   regenera con `python tools/estado.py agregar` y la CI corre `python tools/estado.py validar`. Hasta que el
@@ -71,7 +72,7 @@ Orquestador y el usuario las aprueben, rigen las reglas 1–16 tal como están.
 
 ## Roles y ciclo de vida de un WP
 
-Cinco roles de agente y el usuario. Un mismo agente puede asumir varios roles en distintos WP, pero **nunca revisa ni audita un WP que él mismo ejecutó**.
+Cinco roles de agente y el usuario. Un mismo agente puede asumir varios roles en distintos WP, pero **nunca revisa ni audita un WP que él mismo ejecutó**. Revisor y Auditor pertenecen a una raíz de agente distinta de la del Ejecutor; los subagentes de una misma raíz cuentan como el mismo agente (E3).
 
 | Rol | Qué hace | Qué no hace | Entrega |
 | --- | --- | --- | --- |
@@ -128,6 +129,8 @@ flowchart TD
 ```
 
 Una ola empieza cuando todos los WP de la anterior están `INTEGRADO`, o `BLOQUEADO_USUARIO` si no la condicionan. Entre paréntesis, la decisión del usuario que bloquea cada WP.
+
+Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus dependencias `funcional` están `INTEGRADO`. Una dependencia `archivo` no impide ejecutarlo contra `feat`; solo obliga a resolver el conflicto textual al integrar. Ningún WP depende de `TODAS_LAS_DEMAS`.
 
 ## Paquetes de trabajo
 
