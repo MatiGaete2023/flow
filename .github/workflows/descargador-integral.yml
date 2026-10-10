@@ -29,6 +29,9 @@ jobs:
       - name: Control de identidades antes de instalar o generar artefactos
         working-directory: .
         run: python tools/check_real_ids.py
+      - name: Versiones desde sus fuentes únicas
+        working-directory: .
+        run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
       - run: python -m pip install --require-hashes -r ../requirements/windows-py312.lock
       - name: Inventario de dependencias bloqueadas
         run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
@@ -54,7 +57,7 @@ jobs:
           if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified -or -not $proof.capture_v1_verified) { throw 'Paquete incompleto' }
       - uses: actions/upload-artifact@v4
         with:
-          name: Descargador-SITFA-2.7.5-Windows
+          name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows
           path: |
             descargador/dist/SITFA_Descargador/
             descargador/artifacts/dependencies.json
