@@ -17,7 +17,7 @@ Push-Location $csmpRoot
 try {
     CheckedPython @('tools/write_build_meta.py')
     CheckedPython @('tools/write_build_meta.py','--descargador',$downloaderRoot)
-    $versions = (& $Python tools/write_build_meta.py --versiones) | ConvertFrom-Json
+    $versions = (& $Python tools/write_build_meta.py --versiones --descargador $downloaderRoot) | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) { throw 'No se pudieron leer las versiones desde sus fuentes' }
     $minor = (& $Python -c "import sys; print(str(sys.version_info.major)+str(sys.version_info.minor))").Trim()
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar Python del build' }

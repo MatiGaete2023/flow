@@ -224,10 +224,11 @@ class Work:
             })
         result=_export_preserved_payload(self.content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
         previous=(self.output,self.output_hash)
-        self.output=str(result.path)
-        self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
         from .sync import remember_export
         try:
+            # Todo lo que puede fallar (lectura del archivo bloqueado, registro) queda dentro del try.
+            self.output=str(result.path)
+            self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
             remember_export(self)
         except Exception:
             self.output,self.output_hash=previous
