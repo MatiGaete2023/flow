@@ -451,12 +451,6 @@ class App(ctk.CTk):
         from .capture_products import show_evidence
         show_evidence(self)
 
-    def _capture_requests(self):
-        if not self.work:raise ValueError('Importa un trabajo primero.')
-        from .capture_products import export_requests
-        target=filedialog.asksaveasfilename(parent=self,title='Solicitud para uso manual en Descargador',initialfile='solicitud_antecedentes.json',defaultextension='.json')
-        if target:self._run('Preparando solicitud local…',lambda:export_requests(self.work,target),lambda result:self.status.set('Solicitud declarativa guardada: '+str(result)))
-
     def _select_folder(self,var):
         path=filedialog.askdirectory()
         if path:var.set(path)
