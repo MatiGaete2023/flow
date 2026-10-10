@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-10T00:14:19.346880+00:00",
+  "actualizado": "2026-10-10T00:14:50.693324+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -148,17 +148,18 @@
         "WP-10"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
       "rama": "wp/WP-11-identidades-ci",
       "pr": 9,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "28679280e0f965bc14170bcf2cf21ddb497e1c47",
       "notas": [
-        "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada."
+        "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada.",
+        "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20."
       ]
     },
     "WP-12": {
@@ -308,7 +309,7 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
