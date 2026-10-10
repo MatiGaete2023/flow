@@ -63,3 +63,29 @@ assert mail_block(app,'editar_adjunto')
 revisar()
 assert {'Correo libre','Cargar planilla','Adjuntar…','Filtros / opciones'}<=set(textos(app.pages['Correos']))
 """)
+
+
+def test_render_por_trozos_no_deja_botones_con_estado_viejo(tmp_path):
+    # Con más de 500 filas la tabla se dibuja en trozos con la interfaz bloqueada;
+    # al desbloquear se recalcula la disponibilidad (antes quedaban deshabilitados).
+    run_gui(tmp_path, COMUN + """
+import time
+from openpyxl import Workbook
+from nurus.personal.mail_controls import mail_block
+from nurus.personal.outputs import Draft
+libro=Workbook();hoja=libro.active;hoja.title='ESPERA'
+hoja.append(['RIT','TRIBUNAL','NOMBRE','RUT','NOMBRE CENTRO','T ESPERA'])
+for i in range(700):hoja.append([f'X-{i+1}-2026','Tribunal ficticio 777',f'Persona {i}','11111111-1',f'PRM Centro {i%7}',40])
+libro.save(root/'grande.xlsx')
+trabajo=Work(app.cfg.data).analyze(root/'grande.xlsx','ESPERA',as_of=date(2026,10,2))
+trabajo.export(root/'copia.xlsx',backend='portable',reduced_fidelity=True)
+app.mail_target.set('todos');app.work=trabajo;app._show_work()
+app._display_prepared_drafts([Draft('Uno','Cuerpo',to='a@example.test',program='Programa ficticio')],'{count} recuperados')
+fin=time.monotonic()+20
+while time.monotonic()<fin and getattr(app,'rendering',False):
+    app.update();time.sleep(0.02)
+app.update()
+assert not getattr(app,'rendering',False)
+for clave in ('vista_previa','guardar_este','guardar_todos','preparar_todos','preparar_tipo'):
+    assert mail_block(app,clave)=='' and app.mail_action_buttons[clave].cget('state')=='normal',clave
+""")
