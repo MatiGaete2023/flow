@@ -11,6 +11,8 @@ Las herramientas y avances nuevos se guardan en flow.
 5. [Plan maestro](05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008.md).
 6. [Segunda copia del plan maestro](<05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008 (1).md>).
 7. [Segunda copia de la especificación del Descargador](<01_ESPECIFICACION_DESCARGADOR_RUS_SITFA (1).md>).
+8. [Funcionamiento interno del Descargador 2.6.0](06_FUNCIONAMIENTO_INTERNO_DESCARGADOR_2_6_0.md)
+   (histórico; donde difiera, prevalece [`PLAN_VIGENTE.md`](../../PLAN_VIGENTE.md)).
 
 Los siete adjuntos recibidos se copiaron sin editar. Las dos copias del plan y
 las dos de la especificación 01 son idénticas según SHA-256; se conservan todas.
@@ -19,6 +21,6 @@ contar dos veces las copias. El documento 02 se analizó contra el baseline actu
 su referencia a `0.4.0.dev23` no sustituye el código `0.5.0.dev4` de partida.
 Los hashes están en [adjuntos_sha256.json](../evidencia_p0/adjuntos_sha256.json).
 
-Estado de ejecución y siguiente tarea: [CONTINUAR.md](../../CONTINUAR.md).
+Estado vigente: [PLAN_VIGENTE.md](../../PLAN_VIGENTE.md); siguiente tarea: [CONTINUAR.md](../../CONTINUAR.md).
 Cambios derivados del documento 02:
 [análisis y correspondencia de módulos](../ANALISIS_ESPECIFICACION_02_20261008.md).

@@ -1,0 +1,765 @@
+{
+  "commit": "b13cc48",
+  "base": "f2ae588",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "625 passed, 11 skipped in 51.00s (mínimo 612 aprobadas; base 612)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "198 passed, 59 subtests passed in 38.56s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "12 hallazgos (límite 12)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "b13cc48",
+      "asistente": {
+        "aprobadas": 625,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "625 passed, 11 skipped in 51.00s"
+      },
+      "descargador": {
+        "aprobadas": 198,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "198 passed, 59 subtests passed in 38.56s"
+      },
+      "identidades_reales": 12,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "/workspace/flow-wp11/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "/workspace/flow-wp11/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmpbc6pchqu/golden",
+          "--expected",
+          "/workspace/flow-wp11/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "/workspace/flow-wp11/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp11-verify-venv/bin/python",
+          "/workspace/flow-wp11/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {
+      "fecha_verificacion": "2026-10-10T00:11:48.668376+00:00",
+      "cabeza_completa": "b13cc489b035c8debdd2be288e150349447b1da9",
+      "minimo_asistente_independiente": 625,
+      "minimo_descargador_independiente": 198,
+      "smoke_independiente": {
+        "resultados": [
+          {
+            "caso": "directorio recursivo",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "índice con hallazgo y árbol limpio",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "índice limpio y árbol con hallazgo",
+            "esperado": 0,
+            "obtenido": 0,
+            "pasa": true
+          },
+          {
+            "caso": "archivo eliminado",
+            "esperado": 0,
+            "obtenido": 0,
+            "pasa": true
+          },
+          {
+            "caso": "ruta con espacio y salto",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "XML de ZIP del índice",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "exclusión solo de ruta completa",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "exclusión repetible",
+            "esperado": 0,
+            "obtenido": 0,
+            "pasa": true
+          },
+          {
+            "caso": "allowlist no staged no elude control",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "allowlist staged autoriza fixture sintético",
+            "esperado": 0,
+            "obtenido": 0,
+            "pasa": true
+          },
+          {
+            "caso": "cambio de tipo enlace a archivo",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "cambio de tipo archivo a enlace",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          },
+          {
+            "caso": "enlace de exclusión en árbol no omite índice",
+            "esperado": 1,
+            "obtenido": 1,
+            "pasa": true
+          }
+        ],
+        "pasa": true
+      },
+      "hook_independiente": [
+        {
+          "caso": "hook rechaza índice sintético",
+          "esperado": 1,
+          "obtenido": 1,
+          "pasa": true
+        },
+        {
+          "caso": "hook permite índice limpio",
+          "esperado": 0,
+          "obtenido": 0,
+          "pasa": true
+        }
+      ],
+      "scanner_CLI_directorio_y_exclusion": [
+        {
+          "comando": [
+            "/workspace/flow-wp11-verify-venv/bin/python",
+            "tools/check_real_ids.py",
+            "--excluir",
+            "variantes/"
+          ],
+          "codigo": 0,
+          "hallazgos": 0
+        },
+        {
+          "comando": [
+            "/workspace/flow-wp11-verify-venv/bin/python",
+            "tools/check_real_ids.py",
+            "tests/"
+          ],
+          "codigo": 0,
+          "hallazgos": 0
+        }
+      ],
+      "identidades_totales": 12,
+      "identidades_fuera_variantes": 0,
+      "motor_textos_y_golden_sin_diff": true,
+      "productos_golden_versionados": 17,
+      "ensayo_negativo_CI": {
+        "resultado": "PASA criterio negativo de la ficha, no CI verde",
+        "rama_ensayo_PR": 10,
+        "ejecuciones": [
+          {
+            "run": 38007896713,
+            "url": "https://github.com/MatiGaete2023/flow/actions/runs/38007896713",
+            "workflow": "asistente",
+            "head": "37fd2a90e391a650d9e94b49f9cf01ec64b7262c",
+            "resultado_esperado": "failure en control de identidades",
+            "hallazgos_por_job": 1,
+            "codigo_por_job": 1,
+            "jobs": [
+              {
+                "nombre": "test (windows-latest, 3.13)",
+                "control_identidades": "failure",
+                "guardia_sparse": "success",
+                "generacion_sintetica": "success",
+                "pasos_posteriores": [
+                  {
+                    "paso": "Install",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build wheel",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verify installed package outside source path",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Dependency check",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Legacy Excel dependency",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Native Excel/Outlook dependency on Windows",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Locked dependency inventory",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Static analysis of contract boundaries",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Compile",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Personal GUI smoke",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Tests",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Fictitious end-to-end products and interface",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "CSMP capture v1 independent fictitious products",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Deferred institutional acceptance template",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS capture in Chromium with a fictitious form",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows interface captures",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build Windows distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Source distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows executable",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS inspector and Chrome capture extension",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verificar lector y empaquetado integral SITFA",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Artefacto integral CSMP y Descargador",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Executable artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Wheel artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Measure native table redraws",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build and verify Windows installer",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Installer diagnostics",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Installer and measurements",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Python 3.13",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Checkout",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Complete job",
+                    "resultado": "success"
+                  }
+                ]
+              },
+              {
+                "nombre": "test (windows-latest, 3.12)",
+                "control_identidades": "failure",
+                "guardia_sparse": "success",
+                "generacion_sintetica": "success",
+                "pasos_posteriores": [
+                  {
+                    "paso": "Install",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build wheel",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verify installed package outside source path",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Dependency check",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Legacy Excel dependency",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Native Excel/Outlook dependency on Windows",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Locked dependency inventory",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Static analysis of contract boundaries",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Compile",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Personal GUI smoke",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Tests",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Fictitious end-to-end products and interface",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "CSMP capture v1 independent fictitious products",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Deferred institutional acceptance template",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS capture in Chromium with a fictitious form",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows interface captures",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Build Windows distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Source distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows executable",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS inspector and Chrome capture extension",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verificar lector y empaquetado integral SITFA",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Artefacto integral CSMP y Descargador",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Executable artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Wheel artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Measure native table redraws",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build and verify Windows installer",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Installer diagnostics",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Installer and measurements",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Python 3.12",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Checkout",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Complete job",
+                    "resultado": "success"
+                  }
+                ]
+              },
+              {
+                "nombre": "test (windows-latest, 3.14)",
+                "control_identidades": "failure",
+                "guardia_sparse": "success",
+                "generacion_sintetica": "success",
+                "pasos_posteriores": [
+                  {
+                    "paso": "Install",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build wheel",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verify installed package outside source path",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Dependency check",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Legacy Excel dependency",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Native Excel/Outlook dependency on Windows",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Locked dependency inventory",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Static analysis of contract boundaries",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Compile",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Personal GUI smoke",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Tests",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Fictitious end-to-end products and interface",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "CSMP capture v1 independent fictitious products",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Deferred institutional acceptance template",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS capture in Chromium with a fictitious form",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows interface captures",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build Windows distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Source distribution",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Windows executable",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "RUS inspector and Chrome capture extension",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Verificar lector y empaquetado integral SITFA",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Artefacto integral CSMP y Descargador",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Executable artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Wheel artifact",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Measure native table redraws",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Build and verify Windows installer",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Installer diagnostics",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Installer and measurements",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Python 3.14",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Checkout",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Complete job",
+                    "resultado": "success"
+                  }
+                ]
+              }
+            ],
+            "artefactos_publicados": 0
+          },
+          {
+            "run": 38007896807,
+            "url": "https://github.com/MatiGaete2023/flow/actions/runs/38007896807",
+            "workflow": "descargador",
+            "head": "37fd2a90e391a650d9e94b49f9cf01ec64b7262c",
+            "resultado_esperado": "failure en control de identidades",
+            "hallazgos_por_job": 1,
+            "codigo_por_job": 1,
+            "jobs": [
+              {
+                "nombre": "descargador",
+                "control_identidades": "failure",
+                "guardia_sparse": "success",
+                "generacion_sintetica": "success",
+                "pasos_posteriores": [
+                  {
+                    "paso": "Run python -m pip install --require-hashes -r ../requirements/windows-py312.lock",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Inventario de dependencias bloqueadas",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Run python -m pytest -q -p no:cacheprovider",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Run node test_bitacoras_extension.cjs",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Extensión y servidor ficticios",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Ejecutable y contrato compartido",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Run actions/upload-artifact@v4",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Run actions/setup-python@v5",
+                    "resultado": "skipped"
+                  },
+                  {
+                    "paso": "Post Run actions/checkout@v4",
+                    "resultado": "success"
+                  },
+                  {
+                    "paso": "Complete job",
+                    "resultado": "success"
+                  }
+                ]
+              }
+            ],
+            "artefactos_publicados": 0
+          }
+        ],
+        "reversion": "cc18a30a1ae0b3a1199fa98ec3f8bf7f13b219fc",
+        "PR_ensayo": "CLOSED sin integrar",
+        "diff_tras_reversion_contra_b13cc48": 0,
+        "confirmacion_executor": "Recibida por /root/ejecutor_continuidad",
+        "nota_always": "Dos pasos upload always() del job Asistente 3.12 terminaron success sin publicaciones; API ambos runs total_count 0."
+      },
+      "criterio_tecnico_WP": "PASA: suites Linux y ensayo negativo remoto seguido de reversión; revisión, auditoría e integración corresponden a roles independientes.",
+      "cabeza_documentacion_actual": "af9608d; cambia exclusivamente informe Markdown, código probado permanece b13cc48"
+    },
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "12 hallazgos de identidades y 26 enlaces rotos; sus códigos 1 representan hallazgos contabilizados contra la deuda basal, sin acreditar que esté resuelta."
+}
