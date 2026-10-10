@@ -3,45 +3,55 @@
 Uso:
     python -m nurus.personal.anonymize original.xls copia_anonima.xlsx [--desplazar-fechas DIAS]
 
-Reemplaza nombres, RUT, RIT, curadores, domicilios, teléfonos y correos por valores
-ficticios estables: el mismo dato original recibe siempre el mismo reemplazo, así se
-conservan agrupaciones por causa o hermanos. Los RUT generados tienen dígito verificador
-inválido a propósito. Títulos sobre el encabezado, textos libres, nombres de hoja,
-encabezados y pies de página reciben los mismos reemplazos. Se retiran comentarios,
-hipervínculos, validaciones, imágenes y propiedades del documento. Tribunal, programa,
-fechas y números se conservan para que las reglas den el mismo resultado.
+La copia se construye desde cero y solo con valores: no lleva fórmulas, comentarios,
+hipervínculos, gráficos, tablas, filtros, formato condicional, nombres definidos,
+vínculos externos, imágenes ni propiedades del original. Nombres, RUT, RIT, curadores,
+domicilios, teléfonos y correos se reemplazan por valores ficticios estables (el mismo
+dato recibe siempre el mismo reemplazo, así se conservan hermanos y causas). Los RUT
+ficticios tienen dígito verificador inválido y el mismo formato que el original.
+Tribunal, programa, fechas y números se conservan para que las reglas den el mismo
+resultado.
 
-Antes de entregar la copia se relee el archivo guardado: si queda un dato original
-(nombre completo, RUT, RIT o correo) la copia se borra y se informa el error. Nunca
-sobrescribe archivos ni modifica el original.
+Falla cerrado: antes de entregar la copia se revisa completa. Si queda un dato original,
+un RUT con dígito válido, un teléfono o un correo real, la copia se borra y se informa.
+Nunca sobrescribe archivos ni modifica el original.
 """
 from __future__ import annotations
 
 import argparse
-import html
+import os
 import re
 import sys
 import unicodedata
-import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.packaging.core import DocumentProperties
-from openpyxl.worksheet.header_footer import HeaderFooter
 
-SENSITIVE = ("nombre", "rut", "rit", "ruc", "direccion", "domicilio", "telefono",
-             "fono", "celular", "correo", "email", "mail", "madre", "padre", "litigante",
-             "abogado", "apoderado", "tutor", "hermano", "familiar", "responsable")
+SENSITIVE = ("nombre", "nna", "menor", "nino", "joven", "usuario", "beneficiario", "victima", "ruc",
+             "madre", "padre", "litigante", "abogado", "apoderado", "tutor", "hermano", "familiar",
+             "responsable", "profesional", "dupla", "contacto", "referente", "cuidador", "adulto",
+             "educador", "psicolog", "trabajador", "asistente", "denunciante", "imputado")
 KEEP = ("nombre centro", "nombre programa", "nombre tribunal", "nombre proyecto", "nombre institucion")
 FREE_TEXT = ("observacion", "obs", "glosa", "detalle", "texto", "comentario", "nota", "motivo")
-STOPWORDS = {"de", "del", "la", "las", "los", "san", "santa", "y", "e", "van", "von", "da", "dos"}
-RIT_RE = re.compile(r"\b([A-Z])-(\d{1,6})-((?:19|20)\d{2})\b", re.IGNORECASE)
-RUT_RE = re.compile(r"(?<![\d.])\d{1,2}\.?\d{3}\.?\d{3}-[\dkK](?!\w)")
-MAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
-IDENTITY_KINDS = ("persona", "rut", "rit", "mail", "telefono", "direccion")
+PLACEHOLDERS = {"", "no", "no posee", "no tiene", "sin designar", "sin curador", "sin rut", "n a", "na",
+                "no aplica", "s i", "si", "sin informacion", "sin dato", "sd", "pendiente"}
+STOPWORDS = {"de", "del", "la", "las", "los", "san", "santa", "y", "e", "van", "von", "da", "dos",
+             "abog", "sr", "sra", "srta", "don", "dona", "fono", "rut", "run"}
+RUT_RE = re.compile(r"(?<![\w.])(\d{1,2}(?:\.\d{3}){2}|\d{6,8})(\s*-\s*|\s+)([\dkK])(?![\w])")
+RIT_STRICT_RE = re.compile(r"(?<!\w)([A-Za-z])-(\d{1,6})-((?:19|20)\d{2})(?!\w)")
+RIT_FREE_RE = re.compile(r"(?<!\w)(?:([A-Za-z])[\s-]+)?(\d{1,6})[\s-]+((?:19|20)\d{2})(?![\w])")
+PHONE_RE = re.compile(r"(?<![\w+])(?:\+?56[\s-]?)?(?:9[\s-]?\d{4}[\s-]?\d{4}|\d{2}[\s-]?\d{3}[\s-]?\d{4}|\d{2}[\s-]?\d{7})(?!\d)")
+MAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+ADDRESS_RE = re.compile(r"(?i)\b(?:av(?:enida)?|calle|pasaje|pje|villa|pobl(?:aci[oó]n)?|block|depto|camino)\.?\s+"
+                        r"[\wÁÉÍÓÚÑáéíóúñ .'-]{2,40}?\d{1,5}")
+DIGITS_RE = re.compile(r"(?<![\d.\-])\d{7,9}(?![\d\-])")
+FAKE_DOMAIN = "@example.invalid"
 SUFFIXES = {".xls", ".xlsx", ".xlsm"}
+HEADER_LIMIT = 60
+_FOLD = {"a": "aáàäâ", "e": "eéèëê", "i": "iíìïî", "o": "oóòöô", "u": "uúùüû", "n": "nñ", "c": "cç"}
 
 
 @dataclass
@@ -53,9 +63,13 @@ class Report:
     warnings: list[str] = field(default_factory=list)
 
 
+def nfc(value):
+    return unicodedata.normalize("NFC", value) if isinstance(value, str) else value
+
+
 def normalize(value):
     text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode()
-    return re.sub(r"\s+", " ", re.sub(r"[-().:_/]+", " ", text.lower())).strip()
+    return re.sub(r"\s+", " ", re.sub(r"[-().:_/°º]+", " ", text.lower())).strip()
 
 
 def check_digit(number):
@@ -67,8 +81,21 @@ def check_digit(number):
     return {11: "0", 10: "K"}.get(rest, str(rest))
 
 
-def _rut_key(value):
-    return re.sub(r"[.\s]", "", str(value)).upper()
+def folded_pattern(text):
+    """Patrón que encuentra `text` sin importar mayúsculas, tildes ni espacios repetidos."""
+    base = normalize(text)
+    parts = []
+    for char in base:
+        if char == " ":
+            parts.append(r"[\s\-.,]+")
+        else:
+            parts.append("[" + re.escape(_FOLD.get(char, char) + _FOLD.get(char, char).upper()) + "]"
+                         if char in _FOLD else re.escape(char))
+    return re.compile(r"(?<!\w)" + "".join(parts) + r"(?!\w)", re.IGNORECASE)
+
+
+def _rut_key(digits, dv):
+    return re.sub(r"\D", "", digits) + "-" + dv.upper()
 
 
 class Pseudonyms:
@@ -77,19 +104,24 @@ class Pseudonyms:
         self.counters = {}
 
     def get(self, kind, original):
-        original = _rut_key(original) if kind == "rut" else str(original).strip()
-        key = (kind, original.upper())
+        original = str(original).strip()
+        key = (kind, normalize(original) if kind in ("persona", "direccion") else original.upper())
+        if kind == "rit":
+            match = RIT_FREE_RE.search(original)
+            if match:
+                key = (kind, f"{(match.group(1) or '').upper()}-{int(match.group(2))}-{match.group(3)}")
         if key not in self.values:
             self.counters[kind] = number = self.counters.get(kind, 0) + 1
             if kind == "rut":
                 base = 90_000_000 + number
                 self.values[key] = f"{base}-{'1' if check_digit(base) != '1' else '2'}"
             elif kind == "rit":
-                match = RIT_RE.search(original)
-                letter, year = (match.group(1).upper(), match.group(3)) if match else ("X", "2000")
+                match = RIT_FREE_RE.search(original)
+                letter = (match.group(1) or "X").upper() if match else "X"
+                year = match.group(3) if match else "2000"
                 self.values[key] = f"{letter}-{number}-{year}"
             elif kind == "mail":
-                self.values[key] = f"contacto{number}@example.invalid"
+                self.values[key] = f"contacto{number}{FAKE_DOMAIN}"
             elif kind == "telefono":
                 self.values[key] = f"900000{number:03d}"
             elif kind == "direccion":
@@ -98,8 +130,18 @@ class Pseudonyms:
                 self.values[key] = f"Persona Ficticia {number}"
         return self.values[key]
 
-    def originals(self):
-        return [(kind, original) for kind, original in self.values]
+    def fakes(self, kind):
+        return {value for (k, _), value in self.values.items() if k == kind}
+
+
+def fake_rut(pseudonyms, match):
+    """RUT ficticio con el mismo formato (puntos y separador) que el original."""
+    digits, separator, dv = match.group(1), match.group(2), match.group(3)
+    fake = pseudonyms.get("rut", _rut_key(digits, dv))
+    number, _, fake_dv = fake.partition("-")
+    if "." in digits:
+        number = f"{int(number):,}".replace(",", ".")
+    return number + separator + fake_dv
 
 
 def column_kind(header):
@@ -110,7 +152,7 @@ def column_kind(header):
         return "rit"
     if "curador" in name:
         return "curador"
-    if name.startswith("rut") or " rut" in name:
+    if name.startswith(("rut", "run")) or re.search(r"\b(rut|run)\b", name):
         return "rut"
     if any(word in name for word in ("correo", "email", "mail")):
         return "mail"
@@ -125,137 +167,211 @@ def column_kind(header):
     return None
 
 
-def header_row(sheet, limit=15):
-    for row in sheet.iter_rows(min_row=1, max_row=min(limit, sheet.max_row)):
-        names = [normalize(cell.value) for cell in row if isinstance(cell.value, str) and cell.value.strip()]
-        if len(names) >= 2 and ("rit" in names or "rut" in names or any(n.startswith("nombre") for n in names)):
-            return row[0].row
+def _protected_headers():
+    """Columnas que lee el motor y no son identidad: se conservan tal cual."""
+    from nurus.rus.columns import COMMON, H2_COLUMNS, MODE_COLUMNS, VENCIMIENTO_ALIASES
+    names = set(VENCIMIENTO_ALIASES)
+    for key, aliases in {**COMMON, **H2_COLUMNS}.items():
+        if key not in ("nombre", "rut", "rit", "curador"):
+            names.update(aliases)
+    for columns in MODE_COLUMNS.values():
+        for aliases in columns.values():
+            names.update(aliases)
+    return {normalize(name) for name in names}
+
+
+def header_row(rows, limit=HEADER_LIMIT):
+    for index, row in enumerate(rows[:limit]):
+        names = [normalize(value) for value in row if isinstance(value, str) and value.strip()]
+        if len(names) >= 2 and any(n in ("rit", "rut", "run") or n.startswith(("nombre", "rut ", "rit "))
+                                   for n in names):
+            return index
     return None
 
 
-def _xls_book(source):
+def _xls_sheets(source):
     import xlrd
     legacy = xlrd.open_workbook(str(source))
-    book = Workbook()
-    book.remove(book.active)
     for index in range(legacy.nsheets):
         old = legacy.sheet_by_index(index)
-        sheet = book.create_sheet(old.name[:31])
+        rows = []
         for r in range(old.nrows):
+            row = []
             for c in range(old.ncols):
                 cell = old.cell(r, c)
                 value = cell.value
-                if cell.ctype == xlrd.XL_CELL_EMPTY or value == "":
-                    continue
-                if cell.ctype == xlrd.XL_CELL_DATE:
+                if cell.ctype in (xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_ERROR) or value == "":
+                    value = None
+                elif cell.ctype == xlrd.XL_CELL_DATE:
                     value = xlrd.xldate_as_datetime(value, legacy.datemode)
                 elif cell.ctype == xlrd.XL_CELL_BOOLEAN:
                     value = bool(value)
-                elif cell.ctype == xlrd.XL_CELL_ERROR:
-                    continue
                 elif isinstance(value, float) and value.is_integer():
                     value = int(value)
-                sheet.cell(r + 1, c + 1, value)
-    return book
+                row.append(value)
+            rows.append(row)
+        yield old.name, rows, []
+
+
+def _xlsx_sheets(source):
+    # data_only: el valor calculado que lee el motor, nunca el texto de la fórmula.
+    book = load_workbook(source, data_only=True, read_only=False)
+    for sheet in book.worksheets:
+        rows = [[None if isinstance(v, str) and v.startswith("#") and v.endswith(("!", "?", "A")) else v
+                 for v in row] for row in sheet.iter_rows(values_only=True)]
+        yield sheet.title, rows, [str(r) for r in sheet.merged_cells.ranges]
 
 
 def _load(source):
-    if source.suffix.lower() == ".xls":
-        return _xls_book(source)
-    return load_workbook(source)
+    loader = _xls_sheets if source.suffix.lower() == ".xls" else _xlsx_sheets
+    return [(nfc(title), [[nfc(v) for v in row] for row in rows], merged) for title, rows, merged in loader(source)]
 
 
 def _tokens(full_name, fake):
     parts = fake.split()
-    for index, token in enumerate(re.split(r"\s+", full_name.strip())):
-        clean = token.strip(",.;:")
-        if len(clean) >= 3 and normalize(clean) not in STOPWORDS:
-            yield clean, ("Apellido" if index else "Nombre") + parts[-1]
+    words = [w.strip(",.;:()") for w in re.split(r"\s+", full_name.strip())]
+    for index, token in enumerate(words):
+        if len(token) >= 3 and normalize(token) not in STOPWORDS and re.search(r"[^\W\d_]", token):
+            yield token, ("Apellido" if index else "Nombre") + parts[-1]
 
 
-def _same_format(original, fake):
-    if "." not in original:
-        return fake
-    digits, _, dv = fake.partition("-")
-    return f"{int(digits):,}".replace(",", ".") + "-" + dv
-
-
-def fake_rut(pseudonyms, original):
-    return _same_format(str(original), pseudonyms.get("rut", original))
+def is_placeholder(text):
+    norm = normalize(text)
+    return norm in PLACEHOLDERS or not re.search(r"[a-z]", norm)
 
 
 def curator_name(text):
-    """Nombre de un curador individual: el texto de la celda sin su RUT; vacío si no hay RUT."""
-    if not RUT_RE.search(text) or "Institución:" in text:
+    """Nombre de un curador individual; vacío para placeholders y curadores institucionales."""
+    if is_placeholder(text) or "Institución:" in text:
         return ""
     rest = RUT_RE.sub(" ", text)
-    rest = re.sub(r"(?i)\brut\b|[()\[\]:;,/|]", " ", rest)
-    return re.sub(r"\s+", " ", rest).strip(" -")
+    rest = PHONE_RE.sub(" ", rest)
+    rest = MAIL_RE.sub(" ", rest)
+    rest = re.sub(r"(?i)\b(rut|run|fono|tel[eé]fono|abog|abogad[oa]|sr|sra|srta|curador[a]?)\b\.?", " ", rest)
+    rest = re.sub(r"[()\[\]:;,/|0-9]", " ", rest)
+    return re.sub(r"\s+", " ", rest).strip(" -.")
 
 
-def replace_in_text(text, replacements, pseudonyms, *, tokens=True):
-    result = RIT_RE.sub(lambda m: pseudonyms.get("rit", m.group(0)), text)
-    result = RUT_RE.sub(lambda m: fake_rut(pseudonyms, m.group(0)), result)
-    result = MAIL_RE.sub(lambda m: pseudonyms.get("mail", m.group(0)), result)
-    for original, fake in sorted(replacements.items(), key=lambda item: -len(item[0])):
-        if not tokens and " " not in original:
+class Replacer:
+    def __init__(self, pseudonyms):
+        self.pseudonyms = pseudonyms
+        self.names = {}      # nombre completo -> ficticio
+        self.tokens = {}     # palabra de nombre -> ficticio
+        self._patterns = None
+
+    def add_person(self, full):
+        full = re.sub(r"\s+", " ", full).strip()
+        if len(full) < 3 or is_placeholder(full):
+            return
+        fake = self.pseudonyms.get("persona", full)
+        self.names.setdefault(full, fake)
+        for token, short in _tokens(full, fake):
+            self.tokens.setdefault(token, short)
+        self._patterns = None
+
+    def patterns(self):
+        if self._patterns is None:
+            items = sorted({**self.tokens, **self.names}.items(), key=lambda item: -len(normalize(item[0])))
+            self._patterns = [(folded_pattern(original), fake) for original, fake in items]
+        return self._patterns
+
+    def identifiers(self, text, *, free):
+        result = RUT_RE.sub(lambda m: fake_rut(self.pseudonyms, m), text)
+        rit = RIT_FREE_RE if free else RIT_STRICT_RE
+        result = rit.sub(lambda m: self.pseudonyms.get("rit", m.group(0)), result)
+        result = MAIL_RE.sub(lambda m: m.group(0) if m.group(0).endswith(FAKE_DOMAIN)
+                             else self.pseudonyms.get("mail", m.group(0)), result)
+        if free:
+            result = PHONE_RE.sub(lambda m: self.pseudonyms.get("telefono", re.sub(r"\D", "", m.group(0))), result)
+            result = ADDRESS_RE.sub(lambda m: self.pseudonyms.get("direccion", m.group(0)), result)
+            result = DIGITS_RE.sub(lambda m: m.group(0) if m.group(0).startswith("900000")
+                                   else "#" * len(m.group(0)), result)
+        return result
+
+    def text(self, value, *, free=True):
+        result = self.identifiers(value, free=free)
+        for pattern, fake in self.patterns():
+            result = pattern.sub(fake, result)
+        return result
+
+
+def _identity_value(kind, value, pseudonyms, replacer):
+    if isinstance(value, (datetime, date, bool)):
+        return value
+    text = str(value).strip()
+    if kind == "rut":
+        if isinstance(value, (int, float)) or re.fullmatch(r"\d{6,9}", text):
+            digits = re.sub(r"\D", "", text)
+            fake = pseudonyms.get("rut", digits)
+            return int(fake.split("-")[0]) if isinstance(value, (int, float)) else fake.split("-")[0]
+        if not re.search(r"\d", text):
+            return value
+        return RUT_RE.sub(lambda m: fake_rut(pseudonyms, m), text) if RUT_RE.search(text) else "#" * len(text)
+    if is_placeholder(text):
+        return value
+    if kind == "rit":
+        return pseudonyms.get("rit", text)
+    if kind == "persona":
+        return replacer.text(text)
+    return pseudonyms.get(kind, text)
+
+
+def _sheet_plan(rows):
+    index = header_row(rows)
+    if index is None:
+        return None, {}
+    return index, {col: column_kind(value) for col, value in enumerate(rows[index])}
+
+
+def _collect_names(sheets, replacer):
+    for _, rows, _ in sheets:
+        index, kinds = _sheet_plan(rows)
+        if index is None:
             continue
-        result = re.sub(r"(?<!\w)" + re.escape(original) + r"(?!\w)", fake, result, flags=re.IGNORECASE)
-    return result
+        for row in rows[index + 1:]:
+            for col, value in enumerate(row):
+                if not isinstance(value, str):
+                    continue
+                kind = kinds.get(col)
+                if kind == "persona":
+                    replacer.add_person(re.sub(r"(?i)^\s*(dupla|profesional|contacto|referente)\s*:\s*", "",
+                                               MAIL_RE.sub(" ", PHONE_RE.sub(" ", value))))
+                elif kind == "curador":
+                    replacer.add_person(curator_name(value))
 
 
-def _strip_extras(book, report):
-    def count(key, amount=1):
-        if amount:
-            report.removed[key] = report.removed.get(key, 0) + amount
+def _scan(book, pseudonyms, replacer, protected_cells):
+    """Revisión final de la copia ya construida. Devuelve (filtraciones, residuos permitidos)."""
+    found, residual = set(), 0
+    fake_ruts = {f.split("-")[0] for f in pseudonyms.fakes("rut")}
+    fake_phones = pseudonyms.fakes("telefono")
+    names = [(folded_pattern(name), "persona") for name in replacer.names]
+    tokens = [(folded_pattern(token), "palabra de nombre") for token in replacer.tokens if len(normalize(token)) >= 4]
+    texts = [(sheet.title, False) for sheet in book.worksheets]
     for sheet in book.worksheets:
         for row in sheet.iter_rows():
             for cell in row:
-                if cell.comment is not None:
-                    cell.comment = None
-                    count("comentarios")
-                if cell.hyperlink is not None:
-                    cell.hyperlink = None
-                    count("hipervinculos")
-        count("validaciones", len(sheet.data_validations.dataValidation))
-        sheet.data_validations.dataValidation = []
-        count("imagenes", len(getattr(sheet, "_images", [])))
-        sheet._images = []
-        sheet.HeaderFooter = HeaderFooter()
-    count("nombres_definidos", len(book.defined_names))
-    for name in list(book.defined_names):
-        del book.defined_names[name]
-    book.properties = DocumentProperties(creator="anonimizado", lastModifiedBy="anonimizado")
-    if hasattr(book, "custom_doc_props"):
-        count("propiedades", len(book.custom_doc_props))
-        for prop in list(book.custom_doc_props):
-            book.custom_doc_props.remove(prop)
-
-
-def _xml_text(target):
-    with zipfile.ZipFile(target) as archive:
-        return html.unescape("\n".join(archive.read(name).decode("utf-8", "ignore")
-                                       for name in archive.namelist() if name.endswith((".xml", ".rels"))))
-
-
-def leaks(target, pseudonyms, full_names):
-    text = _xml_text(target)
-    found = []
-    for kind, original in pseudonyms.originals():
-        if kind == "persona" and " " not in original:
-            continue
-        variants = {original}
-        if kind == "rut":
-            digits, _, dv = original.partition("-")
-            if len(digits) >= 7:
-                variants.add(f"{int(digits):,}".replace(",", ".") + "-" + dv)
-        for variant in variants:
-            if len(variant) >= 4 and re.search(r"(?<!\w)" + re.escape(variant) + r"(?!\w)", text, re.IGNORECASE):
-                found.append(f"{kind}: {variant[:2]}…")
-    for name in full_names:
-        if re.search(r"(?<!\w)" + re.escape(name) + r"(?!\w)", text, re.IGNORECASE):
-            found.append(f"persona: {name[:2]}…")
-    return sorted(set(found))
+                if isinstance(cell.value, str):
+                    texts.append((cell.value, (sheet.title, cell.row, cell.column) in protected_cells))
+    for text, protected in texts:
+        text = nfc(text)
+        for match in RUT_RE.finditer(text):
+            digits = re.sub(r"\D", "", match.group(1))
+            if digits not in fake_ruts and check_digit(digits) == match.group(3).upper():
+                found.add("RUT con dígito válido")
+        if any(not m.group(0).endswith(FAKE_DOMAIN) for m in MAIL_RE.finditer(text)):
+            found.add("correo")
+        if not protected:
+            for match in PHONE_RE.finditer(text):
+                if re.sub(r"\D", "", match.group(0)) not in fake_phones:
+                    found.add("teléfono")
+        for pattern, label in names + tokens:
+            if pattern.search(text):
+                if protected and label == "palabra de nombre":
+                    residual += 1
+                else:
+                    found.add(label)
+    return sorted(found), residual
 
 
 def anonymize(source, target, shift_days=0):
@@ -268,70 +384,70 @@ def anonymize(source, target, shift_days=0):
         raise FileExistsError(f"El destino ya existe; elige otro nombre: {target.name}")
     if source.resolve() == target.resolve():
         raise ValueError("El destino debe ser distinto del original.")
-    book = _load(source)
+    sheets = _load(source)
     report = Report(target)
     pseudonyms = Pseudonyms()
-    replacements, full_names, plans = {}, set(), []
-    for sheet in book.worksheets:
-        row_number = header_row(sheet)
-        kinds = {cell.column: column_kind(cell.value) for cell in sheet[row_number]} if row_number else {}
-        plans.append((sheet, row_number or 0, kinds))
-        if not row_number:
-            continue
-        for row in sheet.iter_rows(min_row=row_number + 1):
-            for cell in row:
-                kind = kinds.get(cell.column)
-                if not isinstance(cell.value, str) or kind not in ("persona", "curador"):
-                    continue
-                full = cell.value.strip() if kind == "persona" else curator_name(cell.value)
-                if len(full) >= 3:
-                    fake = pseudonyms.get("persona", full)
-                    replacements[full] = fake
-                    full_names.add(full)
-                    for token, short in _tokens(full, fake):
-                        replacements.setdefault(token, short)
-    for sheet, row_number, kinds in plans:
-        for row in sheet.iter_rows():
-            for cell in row:
-                value = cell.value
+    replacer = Replacer(pseudonyms)
+    _collect_names(sheets, replacer)
+    protected_headers = _protected_headers()
+    book = Workbook()
+    book.remove(book.active)
+    protected_cells = set()
+    used_titles = set()
+    for number, (title, rows, merged) in enumerate(sheets, 1):
+        index, kinds = _sheet_plan(rows)
+        others = {t for t, _, _ in sheets if t != title}
+        new_title = replacer.text(title)[:31] or f"Hoja{number}"
+        if new_title in used_titles or (new_title != title and new_title in others):
+            new_title = f"Hoja{number}"
+        used_titles.add(new_title)
+        sheet = book.create_sheet(new_title)
+        protected_cols = {col for col, value in enumerate(rows[index]) if normalize(value) in protected_headers} \
+            if index is not None else set()
+        for r, row in enumerate(rows):
+            body = index is not None and r > index
+            for c, value in enumerate(row):
                 if value is None or value == "":
                     continue
-                body = cell.row > row_number
-                kind = kinds.get(cell.column) if body else None
+                kind = kinds.get(c) if body else None
+                new = value
                 if shift_days and isinstance(value, (datetime, date)):
-                    cell.value = value + timedelta(days=shift_days)
-                    continue
-                if kind == "rut":
-                    cell.value = fake_rut(pseudonyms, value)
+                    new = value + timedelta(days=shift_days)
+                elif index is not None and r == index:
+                    new = value
+                elif body and c in protected_cols:
+                    new = replacer.identifiers(value, free=False) if isinstance(value, str) else value
+                    protected_cells.add((new_title, r + 1, c + 1))
+                elif kind in ("rut", "rit", "mail", "telefono", "direccion", "persona"):
+                    new = _identity_value(kind, value, pseudonyms, replacer)
+                elif isinstance(value, str):
+                    new = replacer.text(value, free=kind != "rit")
+                if new != value:
                     report.changed += 1
-                elif kind in IDENTITY_KINDS:
-                    cell.value = pseudonyms.get(kind, value)
-                    report.changed += 1
-                elif isinstance(value, str) and cell.row != row_number:
-                    free = kind in ("texto", "curador") or not body or not row_number
-                    new_value = replace_in_text(value, replacements, pseudonyms, tokens=free)
-                    if new_value != value:
-                        cell.value = new_value
-                        report.changed += 1
-        title = replace_in_text(sheet.title, replacements, pseudonyms)[:31]
-        if title != sheet.title and title not in book.sheetnames:
-            sheet.title = title
-        report.sheets += bool(row_number)
-    _strip_extras(book, report)
-    book.save(target)
-    try:
-        found = leaks(target, pseudonyms, full_names)
-    except Exception:
-        target.unlink(missing_ok=True)
-        raise
+                sheet.cell(r + 1, c + 1, new)
+        for cells in merged:
+            sheet.merge_cells(cells)
+        report.sheets += index is not None
+    book.properties = DocumentProperties(creator="anonimizado", lastModifiedBy="anonimizado")
+    found, residual = _scan(book, pseudonyms, replacer, protected_cells)
     if found:
-        target.unlink(missing_ok=True)
-        raise ValueError("La copia conservaba datos originales y se eliminó: " + ", ".join(found))
-    residual = [token for token in replacements if " " not in token
-                and re.search(r"(?<!\w)" + re.escape(token) + r"(?!\w)", _xml_text(target), re.IGNORECASE)]
+        raise ValueError("No se creó la copia: quedarían datos personales (" + ", ".join(found)
+                         + "). Revisa el original o informa el caso sin adjuntarlo.")
+    temp = target.with_name(f".{target.stem}.{os.getpid()}.tmp.xlsx")
+    try:
+        book.save(temp)
+        if target.exists():
+            raise FileExistsError(f"El destino ya existe; elige otro nombre: {target.name}")
+        os.replace(temp, target)
+    finally:
+        temp.unlink(missing_ok=True)
     if residual:
-        report.warnings.append(f"{len(residual)} palabra(s) de nombres siguen en columnas no libres "
-                               "(p. ej. programa o tribunal). Revisa la copia antes de compartirla.")
+        report.warnings.append(f"{residual} celda(s) de programa o tribunal contienen palabras iguales a "
+                               "nombres; se conservaron porque las lee el motor. Revisa la copia.")
+    if shift_days:
+        report.warnings.append("Las fechas se desplazaron: usa la fecha de corte desplazada; las reglas "
+                               "pueden diferir del original.")
+    report.warnings.append("Revisa la copia antes de compartirla; no conserva formato, fórmulas ni objetos.")
     return report
 
 
@@ -346,8 +462,7 @@ def main(argv=None):
     except (OSError, ValueError) as exc:
         print(exc)
         return 1
-    print(f"Copia anónima creada: {report.target} ({report.changed} celdas reemplazadas en {report.sheets} hojas). "
-          "Revísala antes de compartirla.")
+    print(f"Copia anónima creada: {report.target} ({report.changed} celdas reemplazadas en {report.sheets} hojas).")
     for warning in report.warnings:
         print("Advertencia:", warning)
     return 0

@@ -46,3 +46,22 @@ def test_observacion_formula_se_exporta_como_texto(tmp_path):
     celda = hoja.cell(2, columnas['OBSERVACION'])
     assert celda.value == '=1+1' and celda.data_type == 's'
     assert not any(c.data_type == 'f' for fila in hoja.iter_rows() for c in fila)
+
+
+def test_lectura_fallida_de_la_copia_restaura_output_y_borra(tmp_path, monkeypatch):
+    import nurus.personal.work as modulo
+    trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
+    antes = (trabajo.output, trabajo.output_hash)
+    destino = tmp_path / 'salida.xlsx'
+    original = modulo.Path.read_bytes
+
+    def bloqueado(self):
+        if self == destino:
+            raise PermissionError('archivo bloqueado')
+        return original(self)
+
+    monkeypatch.setattr(modulo.Path, 'read_bytes', bloqueado)
+    with pytest.raises(PermissionError):
+        trabajo.export(destino, backend='portable', reduced_fidelity=True)
+    assert (trabajo.output, trabajo.output_hash) == antes
+    assert not destino.exists()
