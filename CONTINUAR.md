@@ -11,7 +11,8 @@ WP en estado `LISTO` en `docs/implementacion/PLAN_IMPLEMENTACION.md`.
 El informe de recuperación y los pasos pendientes están en
 `docs/implementacion/wp/WP-01.md`; el estado compartido es la fuente vigente.
 D3 permite retirar inspector y diario RUS; D4 fija 60 días y hasta 10 sesiones
-anteriores; D8 no informó fallos. Las demás decisiones siguen pendientes.
+anteriores; D8 no informó fallos; D6 acepta el consolidado en el ZIP (WP-51, #32); D9 retira el botón
+(WP-45, #31). D1, D2, D5 y D7 siguen pendientes.
 
 ## Enlaces
 
