@@ -7,10 +7,12 @@ if exist "dist\SITFA_Descargador\SITFA_Descargador.exe" (
 )
 if not exist ".venv\Scripts\pythonw.exe" (
     echo Preparando el entorno local. No se requieren permisos de administrador.
-    rem Python 3.12 primero: es la version con la que CI prueba el lock con hashes.
-    py -3.12 -m venv .venv >nul 2>nul
-    if errorlevel 1 py -3 -m venv .venv >nul 2>nul
-    if errorlevel 1 python -m venv .venv
+    where py >nul 2>nul
+    if errorlevel 1 (
+        python -m venv .venv
+    ) else (
+        py -3 -m venv .venv
+    )
     if errorlevel 1 goto error
 )
 ".venv\Scripts\python.exe" "%~dp0preparar_entorno.py"

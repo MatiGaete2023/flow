@@ -1,6 +1,6 @@
 # Lote de bitácoras sin lecturas · corrección 2.5.1
 
-**Guía vigente:** paquete conjunto dev22 / 2.7.0 (documento `INTEGRACION_COMPLETA_20261008.md`, no versionado). Los números anteriores se conservan como antecedentes.
+**Guía vigente:** [paquete conjunto dev22 / 2.7.0](../../docs/INTEGRACION_COMPLETA_20261008.md). Los números anteriores se conservan como antecedentes.
 
 ## Evidencia y alcance
 

@@ -5369,6 +5369,7 @@
       }
     },
     "correos": {
+      "cc_obligatorio": "ucc_concepcion@pjud.cl",
       "cc_adicional": "",
       "modalidad_default": "",
       "modalidades_default": [

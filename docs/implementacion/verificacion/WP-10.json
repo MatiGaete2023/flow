@@ -1,16 +1,16 @@
 {
-  "commit": "4c6c74f",
-  "base": "2765b47",
+  "commit": "dae70ad",
+  "base": "6f156c8",
   "controles": [
     {
       "control": "Suite asistente",
       "resultado": "PASA",
-      "detalle": "605 passed, 11 skipped in 73.77s (0:01:13) (mínimo 605 aprobadas; base 605)"
+      "detalle": "605 passed, 11 skipped in 38.33s (mínimo 605 aprobadas; base 605)"
     },
     {
       "control": "Suite descargador",
       "resultado": "PASA",
-      "detalle": "198 passed, 59 subtests passed in 42.68s (mínimo 198 aprobadas; base 198)"
+      "detalle": "198 passed, 59 subtests passed in 36.04s (mínimo 198 aprobadas; base 198)"
     },
     {
       "control": "Identidades reales",
@@ -43,5 +43,120 @@
       "detalle": "26 (base 26)"
     }
   ],
-  "veredicto": "PASA"
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "dae70ad",
+      "asistente": {
+        "aprobadas": 605,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "605 passed, 11 skipped in 38.33s"
+      },
+      "descargador": {
+        "aprobadas": 198,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "198 passed, 59 subtests passed in 36.04s"
+      },
+      "identidades_reales": 12,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "/workspace/flow-wp10/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "/workspace/flow-wp10/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmp0_48bpy8/golden",
+          "--expected",
+          "/workspace/flow-wp10/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "/workspace/flow-wp10/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp10-verify-venv/bin/python",
+          "/workspace/flow-wp10/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {
+      "tests_archivos_recorridos_recursivamente": 141,
+      "tests_hallazgos": 0,
+      "metodo": "API scan con Path(tests).rglob; el CLI del kit ignora directorios y no acredita este control por sí solo.",
+      "correccion_cli_pendiente": "WP-11"
+    },
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "12 hallazgos de identidades y 26 enlaces rotos; sus códigos 1 representan hallazgos contabilizados contra la deuda basal, sin acreditar que esté resuelta."
 }
