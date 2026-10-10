@@ -1,7 +1,6 @@
 from datetime import date
 from hashlib import sha256
 import json
-from pathlib import Path
 from types import SimpleNamespace
 import pytest
 
@@ -63,59 +62,6 @@ def ready(app, path, mode='ESPERA'):
     return request
 
 
-def test_frozen_script_is_reselected_and_never_runs_csmp_as_python(tmp_path, monkeypatch):
-    app = App(tmp_path)
-    script = tmp_path/'descargador.py';script.write_text('raise RuntimeError')
-    exe = tmp_path/'SITFA_Descargador.exe';exe.write_bytes(b'fake executable; never launched')
-    app.cfg.data['descargador_integral'] = str(script)
-    monkeypatch.setattr(link.sys, 'frozen', True, raising=False)
-    choices = []
-    def choose(**kwargs):
-        choices.append(kwargs);return str(exe)
-    monkeypatch.setattr(link.filedialog, 'askopenfilename', choose)
-    calls = []
-    monkeypatch.setattr(link.subprocess, 'Popen', lambda command, **kwargs:
-                        (calls.append(command) or SimpleNamespace(poll=lambda: None)))
-    link.start(app)
-    assert choices[0]['filetypes'] == [('Descargador Windows', '*.exe')]
-    assert calls[0][0] == str(exe.resolve()) and str(script) not in calls[0]
-    ticket = next((app.cfg.directory/'intercambio').glob('*.solicitud.json'))
-    request = Transfer.load(ticket.parent, ticket)
-    assert calls[0][calls[0].index('--csmp-reply')+1] == str(request.reply)
-
-
-def test_source_python_entry_point_remains_available(tmp_path, monkeypatch):
-    script = tmp_path/'descargador.py';script.write_text('# not executed')
-    monkeypatch.setattr(link.sys, 'frozen', False, raising=False)
-    assert link.launch_command(script) == [link.sys.executable, str(script.resolve())]
-    with pytest.raises(ValueError):link.launch_command(Path(link.sys.executable))
-
-
-def test_failure_to_persist_request_prevents_launch(tmp_path, monkeypatch):
-    app = App(tmp_path);exe=tmp_path/'download.exe';exe.write_bytes(b'fixture')
-    app.cfg.data['descargador_integral'] = str(exe)
-    import nurus.personal.download_transfer as storage
-    monkeypatch.setattr(storage, 'atomic_json', lambda *args: (_ for _ in ()).throw(OSError('disk full')))
-    calls=[];monkeypatch.setattr(link.subprocess, 'Popen', lambda *args, **kwargs: calls.append(args))
-    with pytest.raises(OSError, match='disk full'):link.start(app)
-    assert calls == []
-
-
-def test_launch_failure_keeps_recoverable_request(tmp_path, monkeypatch):
-    app=App(tmp_path);exe=tmp_path/'download.exe';exe.write_bytes(b'fixture')
-    app.cfg.data['descargador_integral']=str(exe)
-    monkeypatch.setattr(link.subprocess, 'Popen', lambda *args, **kwargs: (_ for _ in ()).throw(OSError('blocked')))
-    with pytest.raises(OSError):link.start(app)
-    path=next((app.cfg.directory/'intercambio').glob('*.solicitud.json'))
-    assert Transfer.load(path.parent,path).data['state']=='ERROR_INICIO'
-
-
-def test_second_launch_does_not_duplicate_live_download(tmp_path, monkeypatch):
-    app=App(tmp_path);app._download_process=SimpleNamespace(poll=lambda:None)
-    calls=[];monkeypatch.setattr(link.subprocess,'Popen',lambda *args,**kwargs:calls.append(args))
-    with pytest.raises(ValueError,match='ya está abierto'):link.start(app)
-    assert not calls and not (app.cfg.directory/'intercambio').exists()
-
 
 @pytest.mark.parametrize('problem', ['mode','hash','columns'])
 def test_invalid_return_preserves_current_work_and_does_not_export(tmp_path, problem):
@@ -136,9 +82,12 @@ def test_invalid_return_preserves_current_work_and_does_not_export(tmp_path, pro
 def test_result_after_csmp_restart_is_selected_without_starting_downloader(tmp_path, monkeypatch):
     path=source(tmp_path);app=App(tmp_path);request=ready(app,path)
     new_app=App(tmp_path)
-    calls=[];monkeypatch.setattr(link.subprocess,'Popen',lambda *args,**kwargs:calls.append(args))
+    import subprocess
+    calls=[];monkeypatch.setattr(subprocess,'Popen',lambda *args,**kwargs:calls.append(args))
     link.resume(new_app)
     assert not calls and new_app.analyses==1 and new_app.exports==1
+    # WP-23: el Asistente ya no tiene cómo iniciar el Descargador.
+    assert not hasattr(link,'start') and not hasattr(link,'launch_command') and not hasattr(link,'subprocess')
     assert new_app.work.source_hash==sha256(path.read_bytes()).hexdigest()
     assert Transfer.load(request.folder,request.path).data['state']=='INCORPORADA'
     assert (request.recovery_folder/'incorporada/trabajo.json').is_file()
