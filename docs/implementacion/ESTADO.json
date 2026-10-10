@@ -469,16 +469,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:00:00-03:00",
+      "rama": "wp/WP-32-exportacion",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-32.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-31 (PR #17)."
+      ]
     },
     "WP-33": {
       "titulo": "Ritmo de consultas y checkpoint",

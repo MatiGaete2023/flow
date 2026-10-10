@@ -33,6 +33,13 @@ def _safe_cell(value: object) -> object:
     return value
 
 
+def _write_text(cell, value: object) -> None:
+    """Escribe texto literal: un valor que empieza con «=» no se guarda como fórmula."""
+    cell.value = value
+    if isinstance(value, str) and cell.data_type == "f":
+        cell.data_type = "s"
+
+
 def _is_blank_excel_value(value: object) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
@@ -246,10 +253,13 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             sheet.cell(row, columns["NURUS_REGLAS"]).value = _safe_cell(record["rule_ids_json"])
             if 'NURUS_DECISIONES' in columns:
                 sheet.cell(row, columns['NURUS_DECISIONES']).value = _safe_cell(record.get('decisions_json', ''))
-            sheet.cell(row, observation_column).value = observation
-            sheet.cell(row, state_column).value = state
-            if stage == "proposal" and _is_blank_excel_value(sheet.cell(row, columns["OBSERVACION"]).value):
-                sheet.cell(row, columns["OBSERVACION"]).value = observation
+            _write_text(sheet.cell(row, observation_column), observation)
+            _write_text(sheet.cell(row, state_column), state)
+            existing = sheet.cell(row, columns["OBSERVACION"])
+            if stage == "proposal" and _is_blank_excel_value(existing.value):
+                _write_text(existing, observation)
+            elif stage == "proposal":
+                _write_text(existing, existing.value)
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
                     sheet.cell(row, columns[title]).value = _safe_cell(value)
