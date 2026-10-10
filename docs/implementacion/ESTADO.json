@@ -531,16 +531,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:15:00-03:00",
+      "rama": "wp/WP-35-instaladores",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-35.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-32 (PR #18). Sin respaldo sin hashes en el Descargador."
+      ]
     },
     "WP-40": {
       "titulo": "Trabajo legible",
