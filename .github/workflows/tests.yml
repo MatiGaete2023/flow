@@ -31,18 +31,16 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Identidades reales (RUT con dígito verificador válido)
-        run: python tools/check_real_ids.py --excluir variantes/
-
-      - name: Versiones desde sus fuentes únicas
-        run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
+          persist-credentials: false
 
       - name: Python ${{ matrix.python }}
         uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           cache: pip
+
+      - name: Control de identidades antes de instalar o generar artefactos
+        run: python tools/check_real_ids.py
 
       - name: Install
         run: |
@@ -109,7 +107,7 @@ jobs:
         run: |
           $captureSourceCommit = (git rev-parse HEAD).Trim()
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
-          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version $env:ASSISTANT_VERSION --downloader-version $env:DOWNLOADER_VERSION --extension-version $env:DOWNLOADER_VERSION
+          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.5 --extension-version 2.7.5
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
       - name: RUS capture in Chromium with a fictitious form
@@ -134,14 +132,41 @@ jobs:
       - name: Build Windows distribution
         if: matrix.python == '3.12'
         shell: pwsh
-        run: git archive --format=zip --prefix=CSMP_Assistant/ -o dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip HEAD
+        run: |
+          @'
+          import os
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          excluded = {".git", ".pytest_cache", "__pycache__", ".venv", "venv", "node_modules", "artifacts", "dist", "build", "cache", "data"}
+          names = subprocess.check_output(["git", "ls-files", "-z"])
+          destination = Path("dist/CSMP_Assistant_personal_0.5.0-dev4.zip")
+          with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for raw in names.split(b"\0"):
+                  if not raw:
+                      continue
+                  name = os.fsdecode(raw)
+                  path = Path(name)
+                  if path.is_absolute() or ".." in path.parts:
+                      raise RuntimeError("La fuente contiene una ruta fuera del checkout")
+                  if any(part in excluded for part in path.parts):
+                      continue
+                  if path.is_symlink():
+                      raise RuntimeError("La fuente no puede incluir enlaces simbólicos")
+                  if path.is_file():
+                      if not path.resolve().is_relative_to(Path.cwd().resolve()):
+                          raise RuntimeError("La fuente apunta fuera del checkout")
+                      archive.write(path, "CSMP_Assistant/" + path.as_posix())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la selección segura de archivos fuente' }
 
       - name: Source distribution
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
-          path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
+          name: CSMP-Windows-dev4
+          path: dist/CSMP_Assistant_personal_0.5.0-dev4.zip
 
       - name: Windows executable
         if: matrix.python == '3.12'
@@ -190,7 +215,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
+          name: CSMP-Descargador-Integral-dev4-SITFA-275
           path: dist/integral/
           if-no-files-found: error
 
@@ -198,7 +223,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
+          name: CSMP-Integral-Windows-dev4
           path: dist/CSMP_Integral/
           if-no-files-found: error
 
@@ -229,7 +254,7 @@ jobs:
           }
           if (-not $compiler) { throw 'No se encuentra Inno Setup' }
           Write-Host 'INICIO: compilar instalador'
-          & $compiler "/DAppVersion=$env:ASSISTANT_VERSION" installer/CSMP.iss
+          & $compiler installer/CSMP.iss
           if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del instalador' }
           Write-Host 'APROBADO: compilar instalador'
           $installer = Get-ChildItem dist/Instalar_CSMP_*_Windows.exe | Select-Object -First 1
@@ -256,7 +281,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
+          name: CSMP-Instalador-Windows-dev4
           path: |
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json

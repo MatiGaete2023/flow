@@ -1,15 +1,20 @@
-# Índice de documentación vigente
+# CSMP Windows · 0.5.0.dev4
 
-Actualizado el 10 de octubre de 2026 (WP-24). Lo histórico está en [historico/](historico/) y [HISTORIAL.md](HISTORIAL.md).
+Documento actualizado el 8 de octubre de 2026.
 
-| Documento | Para qué |
-| --- | --- |
-| [PLAN_VIGENTE.md](../PLAN_VIGENTE.md) | Esencia, prohibiciones, prioridades y decisiones D1–D9 |
-| [CONTINUAR.md](../CONTINUAR.md) | Estado y siguiente acción única |
-| [Plan de implementación](implementacion/PLAN_IMPLEMENTACION.md) · [ESTADO.json](implementacion/ESTADO.json) · [Traspaso](implementacion/TRASPASO.md) | Paquetes de trabajo, estado y traspaso entre sesiones |
-| [Trazabilidad de ejecución](TRAZABILIDAD_EJECUCION_20261008.md) | Estado vigente de los 115 requisitos y casos R-T |
-| [Documentos rectores 01–06](plan_20261008/README.md) | Especificaciones originales (referencia; prevalece PLAN_VIGENTE) |
-| [Resumen del proyecto](../RESUMEN_PROYECTO_NURUS_CSMP_20261009.md) | Fundamentos, fases, correcciones y pendientes al 9 de octubre |
-| [Manual ilustrado del Descargador](manual_descargador_2_7_4/README.md) | Uso paso a paso, PDF y práctica ficticia |
-| [Corrección del ZIP 2.7.5](CORRECCION_REFERENCIAS_ZIP_20261009.md) | Referencias de bitácoras no disponibles |
-| [README del Descargador](../descargador/README.md) · [historial de cambios](../descargador/CHANGELOG.md) | Instalación y uso del Descargador |
+[Resumen del proyecto al 9 de octubre](../RESUMEN_PROYECTO_NURUS_CSMP_20261009.md):
+fundamentos, documentos clave, fases, correcciones, pruebas y pendientes institucionales.
+
+Guía añadida el 9 de octubre: [manual ilustrado del Descargador 2.7.4](manual_descargador_2_7_4/README.md),
+con PDF, HTML autónomo ampliable y ejercicio de recuperación/exportación sin SITFA.
+
+[Corrección del ZIP en 2.7.5](CORRECCION_REFERENCIAS_ZIP_20261009.md): localizar o
+excluir referencias no disponibles, con captura ficticia e instrucciones.
+
+La especificación y el estado vigentes se encuentran en [README](../README.md) y [Ejecución Windows](EJECUCION_WINDOWS_20261006.md).
+
+La entrega se centra en el trabajo actual, correo y Word manuales, revisión de nóminas, recuperación y controles de Office. En el flujo vigente, el registro real en RUS es manual; `registration.submit` está inhabilitado en producción.
+
+El antecedente histórico de integración RUS se conserva en [Registro actual: avance e instrucciones](REGISTRO_RUS_AVANCE_20261006.md). Para el estado vigente, consultar el resumen y [CONTINUAR.md](../CONTINUAR.md).
+
+La integración experimental de bitácoras RUS está descrita en [INTEGRACION_FINAL_20261008.md](INTEGRACION_FINAL_20261008.md).

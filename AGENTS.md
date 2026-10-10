@@ -5,7 +5,6 @@ Lee, en este orden y nada más salvo que tu paquete lo cite:
 1. `PLAN_VIGENTE.md`: esencia, prohibiciones, prioridades y decisiones del usuario.
 2. `docs/implementacion/ESTADO.json`: paquetes de trabajo (WP), estado y decisiones D1–D9.
 3. `docs/implementacion/PLAN_IMPLEMENTACION.md`: «Reglas inviolables», tu rol y la ficha de tu WP.
-4. `docs/implementacion/TRASPASO.md`: qué se hizo en la última sesión y qué sigue.
 
 Las instrucciones expresas del usuario prevalecen sobre estos documentos.
 
@@ -26,4 +25,4 @@ Las instrucciones expresas del usuario prevalecen sobre estos documentos.
 ## Verificación
 
 `python tools/verificar_wp.py` decide PASA/FALLA contra `docs/implementacion/linea_base.json`.
-Antes de commitear: `python tools/check_real_ids.py` debe salir con 0 hallazgos.
+Desde WP-11, el hook y la CI controlan identidades tras la limpieza de WP-10.

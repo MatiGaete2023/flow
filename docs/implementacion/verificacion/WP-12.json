@@ -1,21 +1,21 @@
 {
-  "commit": "0bf2c23",
-  "base": "2765b47",
+  "commit": "382953c",
+  "base": "e5d5088",
   "controles": [
     {
       "control": "Suite asistente",
       "resultado": "PASA",
-      "detalle": "656 passed, 11 skipped, 1 xfailed in 96.03s (0:01:36) (mínimo 605 aprobadas; base 605)"
+      "detalle": "625 passed, 11 skipped in 43.65s (mínimo 605 aprobadas; base 605)"
     },
     {
       "control": "Suite descargador",
       "resultado": "PASA",
-      "detalle": "200 passed, 59 subtests passed in 42.46s (mínimo 198 aprobadas; base 198)"
+      "detalle": "198 passed, 59 subtests passed in 36.70s (mínimo 198 aprobadas; base 198)"
     },
     {
       "control": "Identidades reales",
       "resultado": "PASA",
-      "detalle": "12 hallazgos (límite 18)"
+      "detalle": "18 hallazgos (límite 18)"
     },
     {
       "control": "Paridad golden",
@@ -43,5 +43,185 @@
       "detalle": "26 (base 26)"
     }
   ],
-  "veredicto": "PASA"
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "382953c",
+      "asistente": {
+        "aprobadas": 625,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "625 passed, 11 skipped in 43.65s"
+      },
+      "descargador": {
+        "aprobadas": 198,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "198 passed, 59 subtests passed in 36.70s"
+      },
+      "identidades_reales": 18,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "/workspace/flow-wp12/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "/workspace/flow-wp12/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmpfgt8pn_q/golden",
+          "--expected",
+          "/workspace/flow-wp12/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "/workspace/flow-wp12/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp12-verify-venv/bin/python",
+          "/workspace/flow-wp12/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {
+      "corpus_emails": 151,
+      "corpus_directores": 165,
+      "documentos_y_miembros_revisados": 1712,
+      "exclusiones": [
+        "variantes/",
+        "docs/historico/"
+      ],
+      "filtraciones_corpus": [],
+      "correos_pjud_distintos_del_CC": [],
+      "XML_identificadores_pruebas_repitendo_CC_con_separador": [
+        "docs/evidencia_correcciones_20261009/tests_asistente.xml",
+        "docs/evidencia_desarrollo_20261008/flow-continuacion-asistente.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-delivery.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-final-build.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-final-preserved.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-final-rules.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-final.xml",
+        "docs/evidencia_p0/flow-baseline-assistant-xvfb.xml",
+        "docs/evidencia_p0/flow-baseline-assistant.xml",
+        "docs/evidencia_p0/flow-revision-02-tests.xml",
+        "docs/evidencia_regresiones_usuario_20261009/pytest_assistant.xml"
+      ],
+      "golden_snapshots": [
+        {
+          "archivo": "docs/evidencia_desarrollo_20261008/golden_actual.json",
+          "rutas_modificadas": 235,
+          "rutas_no_permitidas": []
+        },
+        {
+          "archivo": "docs/evidencia_p0/golden/semantic.json",
+          "rutas_modificadas": 235,
+          "rutas_no_permitidas": []
+        },
+        {
+          "archivo": "docs/evidencia_regresiones_usuario_20261009/golden_semantic.json",
+          "rutas_modificadas": 235,
+          "rutas_no_permitidas": []
+        }
+      ],
+      "retencion_dias": 60,
+      "sesiones_anteriores": 10,
+      "CC_preservado": true,
+      "minimo_asistente_independiente": 625,
+      "escaneo_identidades_versionados": {
+        "hallazgos": 18,
+        "por_area": {
+          "tests": 6,
+          "variantes": 12
+        }
+      },
+      "escaneo_tests_recursivo": {
+        "archivos": 145,
+        "hallazgos_heredados_antes_WP10": 6
+      },
+      "wheel": {
+        "archivo": "nurus-0.5.0.dev4-py3-none-any.whl",
+        "compilacion_codigo": 0,
+        "ejemplos": 3,
+        "contactos_base_excluido": true,
+        "documentos_revisados": 204,
+        "filtraciones_corpus": []
+      },
+      "motor_y_textos_diff_vacio": true,
+      "tag_pre_WP12": "a19f3062601d6ec7b1a0f3ba6f12c6380a7608eb",
+      "contexto_rama": "Base a19f306 incluye WP-13 pero antecede a WP-10; los 6 hallazgos en pruebas son heredados y el merge debe conservar la limpieza ya integrada.",
+      "pruebas_sesion": [
+        "test_sesion_nueva_sin_config_y_con_huella",
+        "test_sesion_antigua_con_config_todavia_carga"
+      ]
+    },
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "18 hallazgos de identidades y 26 enlaces rotos; sus códigos 1 representan hallazgos contabilizados contra la deuda basal, sin acreditar que esté resuelta."
 }

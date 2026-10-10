@@ -13,7 +13,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.6',
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.5',
     protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};

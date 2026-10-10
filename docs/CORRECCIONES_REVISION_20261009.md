@@ -26,7 +26,7 @@ Las regresiones se encuentran en [test_review_corrections.py](../tests/test_revi
 - Los **17 productos de referencia mantienen paridad**; H01–H08 pasan las ocho sondas con `--verify`.
 - Inventario bloqueado, `pip check`, compilación Python y Ruff aprobados. Conciliación en una ventana real comprobada bajo Xvfb con decisión KEEP y trabajo anterior intacto. La regresión GUI adicional confirma la continuidad de editores y productos tras importar 600 registros con IDs cambiados.
 
-Evidencias: [directorio](evidencia_correcciones_20261009), [contexto y hashes](evidencia_correcciones_20261009/contexto.json), [sondas](evidencia_correcciones_20261009/sondas_verificadas.json). Para reproducir las sondas: `python tools/flow_review_probes.py --verify`; código 0 exige las ocho correcciones verificadas.
+Evidencias: [directorio](evidencia_correcciones_20261009/), [contexto y hashes](evidencia_correcciones_20261009/contexto.json), [sondas](evidencia_correcciones_20261009/sondas_verificadas.json). Para reproducir las sondas: `python tools/flow_review_probes.py --verify`; código 0 exige las ocho correcciones verificadas.
 
 ## Rendimiento y límites
 
