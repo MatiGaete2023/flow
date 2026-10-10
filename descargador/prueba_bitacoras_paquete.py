@@ -30,7 +30,7 @@ def produce(folder):
             else:return {'ok':True}
             data=body.encode('cp1252' if command=='diary_open' else 'utf-8');return {'status':200,'type':'text/html','body':base64.b64encode(data).decode(),
                 'params':params,'digest':hashlib.sha256(data).hexdigest(),'startedAt':'2026-10-08T13:00:00Z'}
-    result=DiaryRunner(Bridge(),catalog,lambda *a:None,threading.Event()).run(Batch(('49',),('1',),('Cumplimiento',)),folder)
+    result=DiaryRunner(Bridge(),catalog,lambda *a:None,threading.Event(),pause=0).run(Batch(('49',),('1',),('Cumplimiento',)),folder)
     if result['estado']!='COMPLETA' or result['leidas']!=1:
         details=json.loads(Path(result['manifest']).read_text(encoding='utf-8'))
         raise ValueError('Falló el recorrido congelado ficticio: '+json.dumps(details['consultas'],ensure_ascii=False))

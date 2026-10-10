@@ -130,9 +130,18 @@ def anonymous_diagnostic(data):
         'contiene_identificadores_personales':False
     }
 
+PAUSA_SITFA_S=1.0
+CHECKPOINT_CADA=25
+MAX_LECTURAS_POR_LOTE=300
+
+
+class LimiteLecturas(m.PocError):
+    """Detiene todo el lote (no solo la consulta) al alcanzar MAX_LECTURAS_POR_LOTE."""
+
 class DiaryRunner:
-    def __init__(self,bridge,catalog,emit,cancel):
+    def __init__(self,bridge,catalog,emit,cancel,pause=PAUSA_SITFA_S):
         self.bridge,self.catalog,self.emit,self.cancel=bridge,catalog,emit,cancel
+        self.pause=max(0.0,float(pause))
 
     def run(self,batch,destination,resume=None):
         if batch.screen!='seguimiento':raise m.PocError('Las bitácoras se consultan desde Seguimiento.')
@@ -159,6 +168,10 @@ class DiaryRunner:
         except ImportError:state['origen']={'version':'desarrollo','commit':'sin metadatos'}
         manifest=folder/MANIFEST
         def checkpoint():write(manifest,state)
+        pending_writes=[0]
+        def checkpoint_lazy():
+            pending_writes[0]+=1
+            if pending_writes[0]>=CHECKPOINT_CADA:pending_writes[0]=0;checkpoint()
         def stopped():
             if self.cancel.is_set():raise m.PocError('Lectura cancelada. Se conserva lo ya comprobado.')
         def reuse(record):
@@ -176,6 +189,7 @@ class DiaryRunner:
             record['estado']='LEIDA';record['reutilizada']=True
             return True
         checkpoint();self.emit('folder',str(folder));locked=False
+        openings=[0]
         try:
             from contrato_integral import verify_extension
             state['extension']=verify_extension(self.bridge);checkpoint()
@@ -231,9 +245,14 @@ class DiaryRunner:
                             else:
                                 record['params']={'tipo_popUp':item['tipo_popup'],'CRR_IdCausa':item['causa_id'],'COD_Tribunal':selection.tribunal,
                                     'TIP_Consulta':selection.modality,'ID_Ingreso':item['ingreso_id'],'COD_Etapa':item['etapa'],'FLG_MejorNinez':item['antiguo']}
-                                checkpoint()
+                                checkpoint_lazy()
+                                if record['clave'] not in old and openings[0]>=MAX_LECTURAS_POR_LOTE:
+                                    record.update(estado='PENDIENTE',error='Pendiente: se alcanzó el máximo de lecturas del lote.')
+                                    raise LimiteLecturas(f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
+                                                         'Divide el período o los tribunales y usa «Retomar» para continuar.')
                                 try:
                                     if not reuse(record):
+                                        openings[0]+=1
                                         result=self.bridge.call('diary_open',{'params':record['params'],'timeout':60000})
                                         data=ChromeTransport.body(result)
                                         digest=hashlib.sha256(data).hexdigest()
@@ -252,12 +271,14 @@ class DiaryRunner:
                                 except (m.PocError,ValueError,KeyError,OSError,RuntimeError) as exc:
                                     record.update(estado='FALLIDA',error=str(exc) if isinstance(exc,(m.PocError,ValueError)) else 'No se pudo comprobar o guardar esta bitácora.')
                                     if getattr(exc,'code',None):record['diagnostico']={'codigo_extension':exc.code}
-                            checkpoint()
+                            checkpoint_lazy()
                             self.emit('diary_progress',{'pagina':number,'registros':1,'archivo':record.get('archivo',record['estado']),'rit':record['rit'],'estado':record['estado']})
-                            if self.cancel.wait(.15):stopped()
+                            if self.cancel.wait(self.pause if record['estado']!='SIN_VINCULO' and not record.get('reutilizada') else .05):stopped()
                         query['paginas']=number;checkpoint()
                     query['estado']='ENUMERADA';checkpoint()
                 except (m.PocError,ValueError,KeyError,OSError) as exc:
+                    if isinstance(exc,LimiteLecturas):
+                        query['estado']='INCOMPLETA';self.emit('warning',str(exc));raise
                     import traceback
                     trace=traceback.extract_tb(exc.__traceback__)
                     diagnostic={'fase':phase,'tipo':type(exc).__name__,
