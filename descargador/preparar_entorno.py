@@ -7,12 +7,16 @@ import sys
 HERE=Path(__file__).resolve().parent
 
 
+class FaltaLock(RuntimeError):
+    """La versión de Python en uso no tiene lock con hashes (código de salida 3)."""
+
+
 def lock_file():
     """Lock con hashes de la versión de Python en uso. Sin lock no se instala nada sin verificar."""
     platform='windows' if sys.platform=='win32' else 'linux'
     lock=HERE.parent/'requirements'/f'{platform}-py{sys.version_info[0]}{sys.version_info[1]}.lock'
     if not lock.is_file():
-        raise RuntimeError(f'Falta {lock.name}: usa el ejecutable entregado o una copia completa del repositorio '
+        raise FaltaLock(f'Falta {lock.name}: usa el ejecutable entregado o una copia completa del repositorio '
                            'con Python 3.12, 3.13 o 3.14.')
     return lock
 
@@ -34,5 +38,7 @@ def main():
 
 if __name__=='__main__':
     try:main()
+    except FaltaLock as exc:
+        print('E_INSTALACION:',exc);raise SystemExit(3)
     except (RuntimeError,OSError,subprocess.CalledProcessError) as exc:
         print('E_INSTALACION:',exc);raise SystemExit(1)
