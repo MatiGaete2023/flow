@@ -14,11 +14,11 @@ lectura manual. No se eliminaron módulos.
 | `bitacora_lote`, `bitacora_har`, `bitacoras` | Datos, exportación y análisis mezclados en paquete personal | Extraer exportación común sin mover reglas | Golden Excel bitácoras, parser y tests identidad |
 | `nurus.bitacora_html`, `descargador.csmp_shared` | Parser compartido y búsqueda de paquete | Conservar y verificar instalación autónoma | CI origen y pruebas fixtures; P3 pendiente |
 | `personal.outputs`, `resolutions`, plantillas | Nóminas, Word y preparación de borradores | Conservar; no enviar ni escribir RUS | Golden y suites Outlook/Word |
-| `personal.registration`, `registration_excel` | API genérica y comprobantes; `submit(adapter)` puede invocar `adapter.save`, sin adaptador institucional operativo | Aislar la API de escritura del nuevo flujo; conservar recuperación legítima sin fabricar hechos | `app._show_work` importa comprobantes de SQLite si existe; A-T15 parcial |
+| `personal.registration`, `registration_excel` | API genérica y comprobantes de registro RUS | **Retirados en WP-22 (D3)**; sin vía de escritura RUS en `src` (control negativo de `verificar_wp.py`) | Historial Git |
 | `personal.review_store`, `rus_activity` citados por 02 | Ausentes en el árbol activo del SHA fijado | No intentar retirarlos otra vez ni copiar versiones antiguas | `test_current_release_contract.py` verifica ausencia de `review_store`; hechos de firmas en `sitfa.py`/`work_tools.py` |
 | `manual_products`, `manual_actions` citados por 02 | Ausentes en el árbol activo | Conservar funciones actuales en `manual.py`/`current_tools.py`, no recrear una UI duplicada | `test_current_work_features.py`, `test_personal_cleanup_20260921.py` |
-| `nurus.rus.rules`, `services`, `storage` | Motor y flujo alternativos/compatibilidad | Conservar aislados; no fusionar semánticas | Suites heredadas y snapshots |
-| `tools/rus_inspector_entry.py`, `rus_capture_extension` | Inspector RUS independiente | Conservar fuera del nuevo flujo; no eliminar por omisión documental | `test_rus_capture.py`; navegador ficticio aún no repetido localmente |
+| `nurus.rus.rules`, `services`, `storage` | Motor y flujo alternativos/compatibilidad | **Retirados en WP-21** (se conservan `domain/models.py`, `rus/util.py`, `services/policy.py` y `exports.py`) | Historial Git |
+| `tools/rus_inspector_entry.py`, `rus_capture_extension` | Inspector RUS independiente | **Retirado en WP-22 por decisión D3** | Historial Git |
 | `variantes/ux_rules_20260922` | Copia histórica versionada (retirada en WP-20; recuperable desde la etiqueta `pre-WP-20` o los commits `39b6c06`/`3708930`) | No importar al camino nuevo | No fusionar automáticamente |
 
 ## Configuración, sesiones y rollback
