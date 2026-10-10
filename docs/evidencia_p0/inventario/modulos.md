@@ -42,7 +42,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.appearance_view](../../../src/nurus/personal/appearance_view.py) | CONSERVAR | P0 | 2 | 1 |
 | [nurus.personal.attachment_store](../../../src/nurus/personal/attachment_store.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.bitacora_har](../../../src/nurus/personal/bitacora_har.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
-| [nurus.personal.bitacora_link](../../../src/nurus/personal/bitacora_link.py) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 4 | 2 |
+| nurus.personal.bitacora_link (`src/nurus/personal/bitacora_link.py`, retirado en WP-23) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 4 | 2 |
 | [nurus.personal.bitacora_lote](../../../src/nurus/personal/bitacora_lote.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
 | [nurus.personal.bitacoras](../../../src/nurus/personal/bitacoras.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 3 | 5 |
 | [nurus.personal.commands](../../../src/nurus/personal/commands.py) | CONSERVAR | P0 | 3 | 1 |
@@ -55,7 +55,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.excel_presentation](../../../src/nurus/personal/excel_presentation.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.grid_edit](../../../src/nurus/personal/grid_edit.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.importing](../../../src/nurus/personal/importing.py) | CONSERVAR | P0 | 2 | 3 |
-| [nurus.personal.integral_contract](../../../src/nurus/personal/integral_contract.py) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 1 | 2 |
+| nurus.personal.integral_contract (`src/nurus/personal/integral_contract.py`, retirado en WP-23) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 1 | 2 |
 | [nurus.personal.interaction](../../../src/nurus/personal/interaction.py) | CONSERVAR | P0 | 0 | 2 |
 | [nurus.personal.mail_category](../../../src/nurus/personal/mail_category.py) | CONSERVAR | P0 | 0 | 5 |
 | [nurus.personal.mail_controls](../../../src/nurus/personal/mail_controls.py) | CONSERVAR | P0 | 3 | 1 |
