@@ -27,10 +27,12 @@ def commands(app):
                   Command('Preparar proyectos Word',app._prepare_words,ready,'Carga un trabajo primero.'),
                   Command('Generar Word revisado',app._generate_words,lambda:bool(app.projects),'Prepara los proyectos primero.')])
     from .current_tools import deliver
-    from .work_tools import show_quality,show_deadlines
+    from .work_tools import show_quality,show_deadlines,preferences
     items.extend([Command('Preparar ZIP de productos',lambda:deliver(app),ready,'Genera productos primero.'),
                   Command('Revisar calidad de datos',lambda:show_quality(app),ready,'Carga un trabajo primero.'),
-                  Command('Ver vencimientos',lambda:show_deadlines(app),ready,'Carga un trabajo primero.')])
+                  Command('Ver vencimientos',lambda:show_deadlines(app),ready,'Carga un trabajo primero.'),
+                  # Con el editor plegado, la pestaña Detalle no se ve: la paleta mantiene el acceso.
+                  Command('Preferencias de vista (columnas de Trabajo)',lambda:preferences(app),lambda:True)])
     return items
 
 
