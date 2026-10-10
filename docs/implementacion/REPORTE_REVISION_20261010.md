@@ -37,6 +37,10 @@ plan.
 | Datos sensibles | 16 | #22 | PASA (anonimizador reescrito) | sin runners |
 | Interfaz | 40, 41, 42 | #23–#25 | PASA | sin runners |
 | Descargador | 33 | #26 (contra `feat`) | PASA (625/11, 203/59) | sin runners |
+| Descargador | 43 | #28 (contra `feat`, E6) | PASA (625/11, 200/59) | sin runners |
+| Descargador | 62 | #29 (sobre #26, dependencia funcional) | PASA; Radon 77 → 12 | sin runners |
+| Interfaz | 44 | #30 (sobre #25, dependencia de archivo) | PASA (514/11) | sin runners |
+| Plan | — | #27 (este reporte, contra `feat`) | PASA (629/11) | sin runners |
 | Codex | 14, 15, 60 | #4, #8, #11 | sus fichas | — |
 
 **Bloqueados por decisión del usuario:**
@@ -51,8 +55,10 @@ plan.
 | WP-70 | D7 |
 
 **Bloqueados por dependencias:**
-- WP-43, WP-44 y WP-62 dependen de WP-33 (#26).
-- WP-61 va al final.
+- WP-61 va al final, con todo lo demás integrado.
+
+Fuera de WP-61 y de los bloqueados por decisión, ya no quedan WP ejecutables para esta sesión: WP-43, WP-44 y WP-62
+se ejecutaron después de esta revisión.
 
 ## 3. Hallazgos en lo avanzado y su corrección
 
@@ -179,7 +185,7 @@ como texto. Supuesto: es lo deseado, para que la copia no ejecute fórmulas.
 7. **Usuario, en el PC autorizado.** Probar el anonimizador con un `.xls` real.
    - Protocolo (E5): solo vuelve al agente «se creó o no se creó» y la lista de **tipos** de dato que bloquearon.
      Nunca el archivo ni su contenido.
-8. **Después de #26.** WP-43, luego WP-44 y WP-62. WP-61 queda para el final, excluyendo `motor/`.
+8. **Integrar #26, luego #28, #29 y #30.** WP-61 queda para el final, excluyendo `motor/`.
 
 ## 5. Cambios al plan e implementación
 
