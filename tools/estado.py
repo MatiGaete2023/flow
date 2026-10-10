@@ -25,6 +25,7 @@ STATES = {"PENDIENTE", "LISTO", "TOMADO", "EN_VERIFICACION", "EN_REVISION", "EN_
           "REVERTIDO", "BLOQUEADO", "BLOQUEADO_USUARIO"}
 WP_ID = re.compile(r"^WP-\d{2}$")
 ORDER = "orden_paquetes"
+DEP_TYPES = {"funcional", "archivo"}
 
 
 def dump(value):
@@ -61,6 +62,15 @@ def aggregate(sources=SOURCES):
     return result
 
 
+def dependencies(entry):
+    """(wp, tipo) por dependencia. Un texto es `funcional`; {"wp": ..., "tipo": "archivo"} solo choca en archivos (E6)."""
+    for dep in entry.get("depende_de", []):
+        if isinstance(dep, dict):
+            yield dep.get("wp"), dep.get("tipo")
+        else:
+            yield dep, "funcional"
+
+
 def problems(state):
     found = []
     packages = state["paquetes"]
@@ -69,7 +79,9 @@ def problems(state):
             found.append(f"{wp}: identificador inválido")
         if entry.get("estado") not in STATES:
             found.append(f"{wp}: estado desconocido {entry.get('estado')!r}")
-        for dep in entry.get("depende_de", []):
+        for dep, kind in dependencies(entry):
+            if kind not in DEP_TYPES:
+                found.append(f"{wp}: dependencia {dep} de tipo desconocido {kind!r}")
             if dep == "TODAS_LAS_DEMAS":
                 found.append(f"{wp}: dependencia TODAS_LAS_DEMAS; usar una lista explícita")
             elif dep not in packages:
@@ -82,8 +94,8 @@ def problems(state):
         if entry.get("estado") in ("EN_REVISION", "EN_AUDITORIA", "INTEGRADO") and not entry.get("verificacion"):
             found.append(f"{wp}: {entry['estado']} sin verificación")
         if entry.get("estado") == "INTEGRADO":
-            for dep in entry.get("depende_de", []):
-                if packages.get(dep, {}).get("estado") != "INTEGRADO":
+            for dep, kind in dependencies(entry):
+                if kind == "funcional" and packages.get(dep, {}).get("estado") != "INTEGRADO":
                     found.append(f"{wp}: INTEGRADO con la dependencia {dep} sin integrar")
     for conflict in state.get("conflictos_abiertos", []):
         if not conflict.get("respuesta") and not conflict.get("dueño"):

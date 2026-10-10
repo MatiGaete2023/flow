@@ -41,6 +41,15 @@ def test_estado_detecta_incoherencias():
         assert texto in problemas
 
 
+def test_estado_dependencia_de_archivo_no_bloquea_integracion():
+    vista = {'paquetes': {
+        'WP-01': {'estado': 'INTEGRADO', 'verificacion': 'PASA',
+                  'depende_de': [{'wp': 'WP-02', 'tipo': 'archivo'}]},
+        'WP-02': {'estado': 'PENDIENTE', 'depende_de': [{'wp': 'WP-01', 'tipo': 'otro'}]}}}
+    problemas = estado.problems(vista)
+    assert problemas == ["WP-02: dependencia WP-01 de tipo desconocido 'otro'"]
+
+
 def base_y_ahora():
     suite = {'aprobadas': 10, 'fallidas': 0, 'resumen': '10 passed'}
     base = {'asistente': dict(suite), 'descargador': dict(suite), 'identidades_reales': 0, 'paridad_golden': 'PASA',
