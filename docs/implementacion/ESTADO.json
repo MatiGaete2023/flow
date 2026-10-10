@@ -568,7 +568,7 @@
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T16:00:00-03:00",
       "rama": "wp/WP-40-trabajo-legible",
-      "pr": null,
+      "pr": 23,
       "verificacion": "PASA (verificacion/WP-40.json)",
       "revision": null,
       "auditoria": null,
@@ -585,16 +585,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T17:00:00-03:00",
+      "rama": "wp/WP-41-siguiente-paso",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-41.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-40 (PR #23). Módulo nuevo next_step.py; un único temporizador sin acumulación."
+      ]
     },
     "WP-42": {
       "titulo": "Resoluciones y Correos más claros",
