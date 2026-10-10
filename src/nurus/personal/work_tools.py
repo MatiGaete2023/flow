@@ -1,5 +1,5 @@
 """Revisión de datos, contactos y preferencias del trabajo actual."""
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids
 from collections import defaultdict
 import tkinter as tk
 from tkinter import ttk, messagebox

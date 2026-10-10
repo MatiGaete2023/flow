@@ -9,7 +9,6 @@ from pathlib import Path
 import threading
 import unittest
 from PIL import Image
-from urllib.parse import urlencode
 
 import motor as m
 from lotes import Batch,BatchRunner,ChromeTransport,Dates,file_base

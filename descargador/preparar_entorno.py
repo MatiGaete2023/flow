@@ -20,7 +20,7 @@ def lock_file():
 def main():
     if sys.version_info<(3,10):raise RuntimeError('Se requiere Python 3.10 o posterior.')
     if sys.version_info[:2]!=(3,12):print('Aviso: la versión probada es Python 3.12; se usa',sys.version.split()[0])
-    try:import tkinter
+    try:import tkinter  # noqa: F401 (comprobación de disponibilidad)
     except ImportError:raise RuntimeError('Este Python no incluye Tkinter. Reinstala Python con soporte Tcl/Tk.') from None
     lock=lock_file()
     marker=Path(sys.prefix)/'dependencias.sha256'

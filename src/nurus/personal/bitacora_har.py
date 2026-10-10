@@ -8,7 +8,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 from .bitacoras import Observation, export_audit, cc_for_type, response_state, EXCEL_CELL_TEXT_LIMIT, _utf16_units
 
-from nurus.bitacora_html import ORIGIN, POPUP_PATH, HEADERS, read_snapshot
+from nurus.bitacora_html import ORIGIN, POPUP_PATH, HEADERS as HEADERS, read_snapshot
 
 def read_popup(text, params, *, source="", captured_at=""):
     query=read_snapshot(text,params,source=source,captured_at=captured_at)

@@ -1,22 +1,16 @@
 """Extensión real en Chromium aislado, con servidor RUS enteramente ficticio."""
-import ast,asyncio,json,sys,tempfile,threading
+import asyncio,json,sys,tempfile,threading
 from pathlib import Path
 from urllib.parse import urlsplit,parse_qsl
 from playwright.async_api import async_playwright,expect
-import motor as m
 from puente import Bridge
 from lotes import Batch
 from lectura_bitacoras import DiaryRunner
 from perfiles import Selection,TABS
 from test_lectura_bitacoras import Bridge as FixtureBridge,popup
-from test_lotes import CATALOG
 
 root=Path(__file__).resolve().parent
-tree=ast.parse((root/'verificar_chrome_ficticio.py').read_text(encoding='utf-8'))
-node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='master')
-fixture_namespace=dict(globals())
-exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
-master=fixture_namespace['master']
+from formulario_ficticio import master
 
 async def main():
     bridge=Bridge();fixture=FixtureBridge();seen=[]

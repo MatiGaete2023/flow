@@ -425,8 +425,7 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         if any('decisions_json' in record for record in snapshot['records']):
             titles = (*titles, 'NURUS_DECISIONES')
         columns = _column_plan(headers, titles)
-        observation_column = columns[observation_title]
-        state_column = columns["NURUS_ESTADO_REVISION"]
+        columns[observation_title], columns["NURUS_ESTADO_REVISION"]  # exige ambas columnas (KeyError)
         for title, column in columns.items():
             if sheet.Cells(header_row, column).Value2 in (None, ""):
                 sheet.Cells(header_row, column).Value2 = title

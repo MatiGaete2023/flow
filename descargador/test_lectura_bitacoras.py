@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from perfiles import Selection,selection_profile
 from lotes import Batch
-from lectura_bitacoras import DiaryRunner,MANIFEST
+from lectura_bitacoras import DiaryRunner
 from test_lotes import CATALOG,FakeBridge,document
 from test_vinculos import listing
 from csmp_shared import parser
@@ -183,7 +183,6 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
 
 
 def test_extension_declared_version_matches_manifest():
-    import re
     from contrato_integral import VERSION
     folder=Path(__file__).parent/'extension'
     manifest=json.loads((folder/'manifest.json').read_text(encoding='utf-8'))

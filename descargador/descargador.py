@@ -274,7 +274,6 @@ class Application:
             if name:
                 offset=0
                 if batch.screen.startswith('calendario_'):
-                    from datetime import date
                     today=m.now().date();offset=int(batch.year)*12+int(batch.month)-today.year*12-today.month
                     if offset not in (0,1):raise m.PocError('Los perfiles automáticos admiten el mes actual o siguiente.')
                 self.prefs.favorite(name,batch,calendar_offset=offset);self.status.set('Perfil guardado; recalcula el período al aplicarlo.')

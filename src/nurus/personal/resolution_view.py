@@ -1,5 +1,5 @@
 """One case list and four focused project panels."""
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids
 import tkinter as tk
 from . import ui
 from .widgets import CaseDetailPanel, ScrollPane

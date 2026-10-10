@@ -2,7 +2,6 @@
 from .selection import selected_ids, remember, restore_visible
 from pathlib import Path
 from datetime import date, datetime
-from dataclasses import replace
 from copy import deepcopy
 import os
 import queue

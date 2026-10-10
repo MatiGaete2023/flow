@@ -1,7 +1,6 @@
 """Identidades del ingreso desde enlaces del listado actual. No ejecuta JavaScript."""
 import ast
 from collections import defaultdict
-from html import unescape
 import re
 
 

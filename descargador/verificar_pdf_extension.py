@@ -16,11 +16,11 @@ from test_flujos import catalog,extended_data
 from test_poc import excel,table
 
 fixture_namespace=dict(globals())
-for source,func in [('verificar_chrome_ficticio.py','master'),('verificar_flujos_extension.py','form_html')]:
-    tree=ast.parse((app/source).read_text(encoding='utf-8'))
-    node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==func)
-    exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
-master=fixture_namespace['master'];form_html=fixture_namespace['form_html']
+tree=ast.parse((app/'verificar_flujos_extension.py').read_text(encoding='utf-8'))
+node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='form_html')
+exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
+form_html=fixture_namespace['form_html']
+from formulario_ficticio import master  # noqa: E402
 
 def response(s,fields,empty=True):
     if s.screen=='seguimiento':
