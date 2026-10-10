@@ -15,12 +15,13 @@ from test_lotes import CATALOG,document
 from test_flujos import catalog,extended_data
 from test_poc import excel,table
 
+from formulario_ficticio import master
+
 fixture_namespace=dict(globals())
 tree=ast.parse((app/'verificar_flujos_extension.py').read_text(encoding='utf-8'))
 node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='form_html')
 exec(compile(ast.Module(body=[node],type_ignores=[]),'fixture','exec'),fixture_namespace)
 form_html=fixture_namespace['form_html']
-from formulario_ficticio import master  # noqa: E402
 
 def response(s,fields,empty=True):
     if s.screen=='seguimiento':
