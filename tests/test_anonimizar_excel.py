@@ -81,7 +81,8 @@ def test_sonda_sin_filtraciones_mismas_reglas_y_check_real_ids(tmp_path):
                  *(r.replace('.', '') for r in RUTS)]
     filtrados = [s for s in sensibles if s.lower() in contenido.lower()]
     assert filtrados == []
-    assert informe.removed.get('comentarios') == 1 and informe.removed.get('hipervinculos') == 1
+    copia = load_workbook(destino)
+    assert all(c.comment is None and c.hyperlink is None for h in copia.worksheets for f in h.iter_rows() for c in f)
     assert reglas(origen) == reglas(destino)
     assert any(acciones for _, acciones, _ in reglas(origen))
     hoja = load_workbook(destino)['ESPERA']
