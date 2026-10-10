@@ -696,6 +696,19 @@ class App(ctk.CTk):
         self.status.set(f'{len(removed)} sesiones anteriores borradas. El trabajo vigente se conserva.')
         return removed
 
+    def _export_anonymous_case(self):
+        source=filedialog.askopenfilename(parent=self,title='Excel original (no se modifica)',filetypes=[('Excel','*.xls *.xlsx *.xlsm')])
+        if not source:return
+        target=filedialog.asksaveasfilename(parent=self,title='Guardar copia anónima',defaultextension='.xlsx',
+                                            initialfile=Path(source).stem+'_anonimo.xlsx',filetypes=[('Excel','*.xlsx')],confirmoverwrite=False)
+        if not target:return
+        from .anonymize import anonymize
+        report=anonymize(source,target)
+        notes=''.join('\n'+warning for warning in report.warnings)
+        messagebox.showinfo('Caso de prueba anónimo',f'Copia creada: {Path(target).name}\n{report.changed} celdas reemplazadas. '
+                            'El original no se modificó. Revisa la copia antes de compartirla.'+notes,parent=self)
+        self.status.set('Copia anónima creada: '+Path(target).name)
+
     def _show_saved_data(self):
         if self.busy or getattr(self,'rendering',False):
             self.status.set('Espera a que termine la operación para revisar los datos guardados.');return
@@ -723,6 +736,7 @@ class App(ctk.CTk):
         basic=ttk.Frame(level,padding=5);advanced=ttk.Frame(level,padding=5)
         level.add(basic,text='Básico');level.add(advanced,text='Avanzado')
         ttk.Button(basic,text='Datos guardados en este equipo',command=lambda:self._guard(self._show_saved_data)).pack(anchor='w',pady=5)
+        ttk.Button(basic,text='Exportar caso de prueba anónimo',command=lambda:self._guard(self._export_anonymous_case)).pack(anchor='w',pady=(0,5))
         basic_nb=ttk.Notebook(basic);basic_nb.pack(fill='both',expand=True)
         advanced_nb=ttk.Notebook(advanced);advanced_nb.pack(fill='both',expand=True)
 
