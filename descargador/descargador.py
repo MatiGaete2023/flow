@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import filedialog,messagebox,simpledialog,ttk
 
 import motor as m
+from contrato_integral import VERSION
 from lotes import Batch,BatchRunner,Dates,MODALITIES
 from puente import Bridge
 from perfiles import SCREENS
@@ -126,7 +127,7 @@ class Application:
         self.status=tk.StringVar(value='Abre tu Chrome, entra a Seguimiento y conecta la extensión local.')
         self.preview=tk.StringVar(value='Carga las opciones de tu sesión para preparar el lote.')
         self.count=tk.StringVar(value='Sin descargas en este lote')
-        root.title('Descargador SITFA · 2.7.5 integral · CSMP y bitácoras')
+        root.title(f'Descargador SITFA · {VERSION} integral · CSMP y bitácoras')
         menu=tk.Menu(root);root.configure(menu=menu)
         self.theme=tk.StringVar(value=self.prefs.data.get('tema','Sistema'))
         appearance=tk.Menu(menu,tearoff=False);menu.add_cascade(label='Apariencia',menu=appearance)
