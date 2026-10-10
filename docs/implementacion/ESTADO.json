@@ -32,8 +32,8 @@
     },
     "D6": {
       "pregunta": "¿El ZIP puede incluir el XLSX consolidado (sin HTML ni PDF)?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, solo el consolidado (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D7": {
       "pregunta": "¿Fusionar a main al cierre?",
@@ -47,8 +47,8 @@
     },
     "D9": {
       "pregunta": "Solicitud de antecedentes: precargar o retirar",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Retirar botón (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     }
   },
   "conflictos_abiertos": [],

@@ -40,6 +40,8 @@ plan.
 | Descargador | 43 | #28 (contra `feat`, E6) | PASA (625/11, 200/59) | sin runners |
 | Descargador | 62 | #29 (sobre #26, dependencia funcional) | PASA; Radon 77 → 12 | sin runners |
 | Interfaz | 44 | #30 (sobre #25, dependencia de archivo) | PASA (514/11) | sin runners |
+| Interfaz | 45 | #31 (sobre #30, dependencia de archivo; D9: retirar) | PASA (515/11) | sin runners |
+| Descargador | 51 | #32 (contra `feat`, sobre #28; D6: sí) | PASA (637/11, 204/59); salida nativa con Excel sin probar | sin runners |
 | Plan | — | #27 (este reporte, contra `feat`) | PASA (629/11) | sin runners |
 | Codex | 14, 15, 60 | #4, #8, #11 | sus fichas | — |
 
@@ -49,9 +51,7 @@ plan.
 | --- | --- |
 | WP-02 | D2 |
 | WP-17 | D1 |
-| WP-45 | D9 |
 | WP-50 | D5 |
-| WP-51 | D6 |
 | WP-70 | D7 |
 
 **Bloqueados por dependencias:**
