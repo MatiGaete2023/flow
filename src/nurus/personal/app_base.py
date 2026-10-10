@@ -14,7 +14,7 @@ import customtkinter as ctk
 from . import ui as ttk
 from .ui import Textbox as ScrolledText
 
-from .config import Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES, emails
+from .config import CC, Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES, emails
 from .widgets import ScrollPane, NamedChoice, Tooltip
 from .ux_support import case_detail_text, compact_case_detail_text, grouped_draft_detail, incident_ids, resume_available, resume_description, RES_HELP
 from .work import Work
@@ -787,7 +787,7 @@ class App(ctk.CTk):
         office=ttk.Frame(basic_nb,padding=8);basic_nb.add(office,text='Outlook y CC')
         self.account=tk.StringVar(value=self.cfg.data.get('cuenta_outlook',''));self.signature=tk.StringVar(value=self.cfg.data.get('firma',''));self.additional=tk.StringVar(value=self.cfg.data['correos'].get('cc_adicional',''))
         self._field(office,'Cuenta Outlook (vacío: predeterminada)',self.account,0);self._field(office,'Firma de texto adicional',self.signature,1);self._field(office,'CC adicional',self.additional,2)
-        ttk.Label(office,text='Copia institucional siempre incluida: ucc_concepcion@pjud.cl').grid(row=3,column=0,columnspan=2,sticky='w',pady=10)
+        ttk.Label(office,text='Copia institucional siempre incluida: '+CC).grid(row=3,column=0,columnspan=2,sticky='w',pady=10)
         ttk.Button(office,text='Guardar Outlook y CC',command=lambda:self._guard(self._save_office)).grid(row=4,column=0)
 
         texts=ttk.Frame(advanced_nb,padding=8);advanced_nb.add(texts,text='Textos de observación')
