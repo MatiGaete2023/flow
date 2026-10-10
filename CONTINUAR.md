@@ -27,3 +27,24 @@ python -m pip install --require-hashes -r requirements/linux-py312.lock
 python -m pip install --no-deps --no-build-isolation -e .
 python tools/verificar_wp.py
 ```
+
+## Migración de contactos antes de actualizar
+
+Copia tu `contactos_base.json` de la instalación anterior a
+`%LOCALAPPDATA%\CSMP_Personal\contactos.json` antes de reemplazarla.
+Si no existe esa copia, el primer inicio abre «Importar contactos» para elegir
+el JSON anterior o el catastro Excel; mientras tanto se usa el ejemplo ficticio.
+
+## Control de identidades
+
+Activa el control antes de cada commit con:
+
+```sh
+git config core.hooksPath tools/hooks
+```
+
+El hook revisa el contenido del índice, incluidos los XML de Excel y Word;
+no lee las modificaciones que aún no agregaste. Ambos workflows ejecutan el
+control antes de instalar dependencias o producir artefactos. Hasta WP-20,
+se excluyen `variantes/` y el documento antiguo del Descargador con rutas
+personales también del checkout y del ZIP de fuentes.

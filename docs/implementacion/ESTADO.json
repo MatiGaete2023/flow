@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T22:47:39.579442+00:00",
+  "actualizado": "2026-10-10T00:14:50.693324+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -136,7 +136,8 @@
       "auditoria": "CONFORME",
       "integrado_en": "c8ee8cdef9a5f9c8ae6333400c305766d0b4a5a2",
       "notas": [
-        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20."
+        "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20.",
+        "Control posterior: 612/11 y 198/59, golden PASA; identidades12, todas en variantes."
       ]
     },
     "WP-11": {
@@ -147,16 +148,19 @@
         "WP-10"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-11-identidades-ci",
+      "pr": 9,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "28679280e0f965bc14170bcf2cf21ddb497e1c47",
+      "notas": [
+        "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada.",
+        "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20."
+      ]
     },
     "WP-12": {
       "titulo": "Contactos fuera del paquete",
@@ -166,16 +170,20 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "INTEGRADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-12-contactos-locales",
+      "pr": 7,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
+      "integrado_en": "f990fe842d7a24d5ebe3dcc6c18c97a5ea58f8c5",
+      "notas": [
+        "Revisión detectó borrado de contactos históricos en importación parcial; executor corrige antes de aprobación.",
+        "PR7 integrado con controles625/11 y198/59; datos de contactos locales, importación parcial sin pérdida y golden productos intacto. Se conserva limpieza10 y retención13.",
+        "Control de la base combinada:625/11 y198/59; golden17 PASA, IDs12 solo variantes; preservadas pruebas de WP-10 y WP-13."
+      ]
     },
     "WP-13": {
       "titulo": "Retención en el Asistente",
@@ -212,16 +220,18 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "TOMADO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": "/root/ejecutor_retencion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-14-retencion-descargador",
       "pr": 4,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
+      "verificacion": "PASA",
+      "revision": "APROBADO",
+      "auditoria": "CONFORME",
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro."
+      ]
     },
     "WP-15": {
       "titulo": "Extractor HAR anónimo",
@@ -231,16 +241,19 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
+      "rama": "wp/WP-15-har",
+      "pr": 8,
       "verificacion": null,
-      "revision": null,
+      "revision": "APROBADO",
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
+        "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes."
+      ]
     },
     "WP-16": {
       "titulo": "Anonimizador de Excel",
@@ -250,7 +263,7 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "BLOQUEADO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -259,7 +272,10 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
+        "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita."
+      ]
     },
     "WP-17": {
       "titulo": "Purga de historial",
@@ -293,7 +309,7 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -322,7 +338,8 @@
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda."
+        "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
+        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta."
       ]
     },
     "WP-22": {
@@ -668,16 +685,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "TOMADO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
+      "rama": "wp/WP-60-reglas-limites",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Calidad en paralelo:32filasR-T con casos fijos; seis conflictos xfail estrictos propuestos por executor; revisión y verificación independientes pendientes, motor sin cambios."
+      ]
     },
     "WP-61": {
       "titulo": "Formato automático",
