@@ -27,8 +27,8 @@
     },
     "D5": {
       "pregunta": "¿Activar CT-01/CT-02 solo mostrar? ¿Horizonte (4 meses u otro)?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, horizonte de 4 meses (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D6": {
       "pregunta": "¿El ZIP puede incluir el XLSX consolidado (sin HTML ni PDF)?",
@@ -37,8 +37,8 @@
     },
     "D7": {
       "pregunta": "¿Fusionar a main al cierre?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, tras el acta final (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D8": {
       "pregunta": "¿Alguna consulta 2.7.5 falló por Envio() o filtros con 0? (sin datos)",

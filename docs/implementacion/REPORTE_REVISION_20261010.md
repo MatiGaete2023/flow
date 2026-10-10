@@ -51,8 +51,8 @@ plan.
 | --- | --- |
 | WP-02 | D2 |
 | WP-17 | D1 |
-| WP-50 | D5 |
-| WP-70 | D7 |
+| WP-50 | WP-02 (D2); D5 respondida: sí, 4 meses |
+| WP-70 | integrar todo; D7 respondida: sí, tras el acta final |
 
 **Bloqueados por dependencias:**
 - WP-61 va al final, con todo lo demás integrado.
