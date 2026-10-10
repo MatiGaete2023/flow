@@ -1,3 +1,5 @@
+> Copia de procedencia (histórica), trasladada por WP-24. Sus enlaces se escribieron desde la raíz del repositorio original.
+
 # NuRus
 
 Aplicación de escritorio local para analizar y revisar planillas del seguimiento de medidas de protección con trazabilidad y control humano.

@@ -1,3 +1,5 @@
+Histórico (P0). Estado vigente en [TRAZABILIDAD_EJECUCION_20261008.md](TRAZABILIDAD_EJECUCION_20261008.md).
+
 # Matriz funcional P0 por SHA
 
 Origen: `251d5c4025749edd4767183ebd3d2baf3bb9baed`.
