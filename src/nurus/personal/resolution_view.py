@@ -1,6 +1,7 @@
 """One case list and four focused project panels."""
 from .selection import selected_ids
 import tkinter as tk
+import customtkinter as ctk
 from . import ui
 from .widgets import CaseDetailPanel, ScrollPane
 from .resolutions import KINDS, KIND_LABELS, _case_key
@@ -54,11 +55,17 @@ def build(app):
     app.generate_word_button.pack(side='left')
     ui.Button(generate,text='Abrir Word',width=95,command=lambda:app._guard(lambda:app._open(app.last_word))).pack(side='left',padx=4)
     more_row=group('Más')
-    app.resolution_more_menu=menu=tk.Menu(page,tearoff=False)
+    app.resolution_more_menu=menu=tk.Menu(page,tearoff=False,font=('Segoe UI',11))
+    def theme_menu():
+        dark=ctk.get_appearance_mode()=='Dark'
+        menu.configure(bg='#2b2b2b' if dark else '#ffffff',fg='#f2f2f2' if dark else '#1f1f1f',
+                       activebackground='#1f6aa5',activeforeground='#ffffff')
     menu.add_command(label='Word manual',command=lambda:app._guard(lambda:open_editor(app,'word')))
     menu.add_command(label='Quitar del lote',command=lambda:app._guard(lambda:set_decision('none')))
     def show_more():
-        menu.tk_popup(app.resolution_more_button.winfo_rootx(),app.resolution_more_button.winfo_rooty()+app.resolution_more_button.winfo_height())
+        theme_menu()
+        try:menu.tk_popup(app.resolution_more_button.winfo_rootx(),app.resolution_more_button.winfo_rooty()+app.resolution_more_button.winfo_height())
+        finally:menu.grab_release()
     app.resolution_more_button=ui.Button(more_row,text='Más ▾',width=70,fg_color='transparent',border_width=1,command=show_more)
     app.resolution_more_button.pack(side='left')
     filters=ui.Frame(page);filters.pack(fill='x',pady=5)
