@@ -110,20 +110,12 @@ def build_mail_page(app):
     app.mail_kind=tk.StringVar(value='programa_por_vencer')
     app.kind_box=NamedChoice(top,keyvariable=app.mail_kind,names=lambda:{k:v['nombre'] for k,v in app.cfg.data['correos']['plantillas'].items() if not v.get('archivada',False)},state='readonly',width=32)
     app.kind_box.grid(row=0,column=1,sticky='ew');app.kind_box.bind('<<ComboboxSelected>>',app._mail_kind_changed)
-    app.mail_gates={}
-    def gate(key,button,parent,**place):
-        reason=tk.StringVar();label=ui.Label(parent,textvariable=reason,text_color=ui.MUTED,font=('Segoe UI',10))
-        if 'row' in place:label.grid(**place)
-        else:label.pack(**place)
-        app.mail_gates[key]=(button,reason)
-    prepare=ui.Button(top,text='Preparar tipo',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_mail))
-    prepare.grid(row=0,column=2,padx=7);gate('preparar_tipo',prepare,top,row=1,column=2,padx=7)
+    ui.Button(top,text='Preparar tipo',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_mail)).grid(row=0,column=2,padx=7)
     def toggle():
         tabs.select(compose if tabs.select()==str(options) else options)
     ui.Button(top,text='Filtros / opciones',fg_color='transparent',border_width=1,command=toggle).grid(row=0,column=3)
     toolbar=ctk.CTkFrame(page,fg_color='transparent');toolbar.grid(row=1,column=0,sticky='ew',padx=8,pady=(2,6))
-    prepare_all=ui.Button(toolbar,text='Preparar todos',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_all_mail))
-    prepare_all.pack(side='left');gate('preparar_todos',prepare_all,toolbar,side='left',padx=(4,0))
+    ui.Button(toolbar,text='Preparar todos',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_all_mail)).pack(side='left')
     ui.Button(toolbar,text='Cargar planilla',fg_color='transparent',border_width=1,command=lambda:app._guard(app._external)).pack(side='left',padx=7)
     from .manual import open_editor
     from .roster import review
@@ -160,7 +152,6 @@ def build_mail_page(app):
     ui.Button(actions,text='Adjuntar…',width=82,fg_color='transparent',border_width=1,command=app._attachment).pack(side='left')
     ui.Button(actions,text='Guardar este',width=106,fg_color='transparent',border_width=1,command=lambda:app._guard(app._send_draft)).pack(side='left',padx=5)
     app.save_all_button=ui.Button(actions,text='Guardar borradores',width=145,command=lambda:app._guard(app._send_all));app.save_all_button.pack(side='right')
-    gate('guardar_borradores',app.save_all_button,actions,side='right',padx=6)
     from .widgets import ScrollPane
     details=ScrollPane(tabs);tabs.add(details,text='Registros incluidos')
     app.mail_case_detail=CaseDetailPanel(details.body);app.mail_case_detail.pack(fill='x',padx=8,pady=8)
@@ -172,18 +163,6 @@ def build_mail_page(app):
     app.mail_options_tab=options
     build_mail_options(app,options.body,cfg)
     app._mail_kind_changed();app._mail_modality_changed()
-    from .mail_controls import refresh_mail_buttons
-    def poll():
-        refresh_mail_buttons(app)
-        if app.tabs.select()==str(page):app.after(800,poll)
-    original_select=app.tabs.select
-    def select(target=None):
-        result=original_select(target)
-        if target is not None and str(target)==str(page):poll()
-        return result
-    app.tabs.select=select
-    app.refresh_mail_buttons=lambda:refresh_mail_buttons(app)
-    refresh_mail_buttons(app)
 
 
 def build_mail_options(app,options,cfg):

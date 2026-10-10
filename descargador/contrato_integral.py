@@ -1,6 +1,6 @@
 """Contrato explícito de las piezas entregadas juntas; no consulta RUS."""
 PROTOCOLS={'bitacoras_lectura':1,'descarga_conjunta':1,'pdf_seleccion':1}
-VERSION='2.7.6'
+VERSION='2.7.5'
 
 def capabilities():
     try:from _build_meta import BUILD_COMMIT,BUILD_VERSION

@@ -1,0 +1,406 @@
+{
+  "commit": "071fd1a",
+  "base": "2765b47",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "605 passed, 11 skipped in 68.27s (0:01:08) (mínimo 605 aprobadas; base 605)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "198 passed, 59 subtests passed in 38.81s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "18 hallazgos (límite 18)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "071fd1a",
+      "asistente": {
+        "aprobadas": 605,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "605 passed, 11 skipped in 68.27s (0:01:08)"
+      },
+      "descargador": {
+        "aprobadas": 198,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "198 passed, 59 subtests passed in 38.81s"
+      },
+      "identidades_reales": 18,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "/workspace/flow-wp01/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "/workspace/flow-wp01/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmpeviq8dew/golden",
+          "--expected",
+          "/workspace/flow-wp01/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "/workspace/flow-wp01/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp01-verify-venv/bin/python",
+          "/workspace/flow-wp01/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {
+      "AGENTS_lineas": 29,
+      "PLAN_VIGENTE_lineas": 39,
+      "CONTINUAR_bytes": 1138,
+      "originales": [
+        {
+          "archivo": "docs/plan_20261008/01_ESPECIFICACION_DESCARGADOR_RUS_SITFA (1).md",
+          "sha256_base": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19",
+          "sha256_actual": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19"
+        },
+        {
+          "archivo": "docs/plan_20261008/01_ESPECIFICACION_DESCARGADOR_RUS_SITFA.md",
+          "sha256_base": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19",
+          "sha256_actual": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19"
+        },
+        {
+          "archivo": "docs/plan_20261008/02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md",
+          "sha256_base": "f22ae66bc25edcceeb8416eed54e423a487e0e1d556911995cd823c7e4ad3f55",
+          "sha256_actual": "f22ae66bc25edcceeb8416eed54e423a487e0e1d556911995cd823c7e4ad3f55"
+        },
+        {
+          "archivo": "docs/plan_20261008/03_REGLAS_ANALISIS_OBSERVACIONES_CSMP.md",
+          "sha256_base": "df0ff0ea88b2c58bfd8d767040808ff9d045bc33b132c42f79ef9f6ea3855ef2",
+          "sha256_actual": "df0ff0ea88b2c58bfd8d767040808ff9d045bc33b132c42f79ef9f6ea3855ef2"
+        },
+        {
+          "archivo": "docs/plan_20261008/04_FLUJO_TRABAJO_INTEGRADO_CSMP.md",
+          "sha256_base": "90a7c5ac4eca37c5855c2216077925e89205469017190a8ba57a1b91d3361cda",
+          "sha256_actual": "90a7c5ac4eca37c5855c2216077925e89205469017190a8ba57a1b91d3361cda"
+        },
+        {
+          "archivo": "docs/plan_20261008/05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008 (1).md",
+          "sha256_base": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f",
+          "sha256_actual": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f"
+        },
+        {
+          "archivo": "docs/plan_20261008/05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008.md",
+          "sha256_base": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f",
+          "sha256_actual": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f"
+        }
+      ],
+      "HISTORIAL_cuerpo_preservado_salvo_destinos_relativos": true,
+      "HISTORIAL_destinos_reubicados": 12
+    },
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "18 hallazgos de identidades y 26 enlaces rotos heredados; sus códigos 1 representan deuda basal conocida, sin acreditar que esté resuelta.",
+  "historial_verificaciones": [
+    {
+      "commit": "b49735d",
+      "base": "2765b47",
+      "controles": [
+        {
+          "control": "Suite asistente",
+          "resultado": "PASA",
+          "detalle": "605 passed, 11 skipped in 36.93s (mínimo 605 aprobadas; base 605)"
+        },
+        {
+          "control": "Suite descargador",
+          "resultado": "PASA",
+          "detalle": "198 passed, 59 subtests passed in 39.32s (mínimo 198 aprobadas; base 198)"
+        },
+        {
+          "control": "Identidades reales",
+          "resultado": "PASA",
+          "detalle": "18 hallazgos (límite 18)"
+        },
+        {
+          "control": "Paridad golden",
+          "resultado": "PASA",
+          "detalle": "PASA"
+        },
+        {
+          "control": "Restricciones absolutas",
+          "resultado": "PASA",
+          "detalle": "sin infracciones"
+        },
+        {
+          "control": "Ruff E9/F63/F7/F82",
+          "resultado": "PASA",
+          "detalle": "0 (base 0)"
+        },
+        {
+          "control": "Módulos no alcanzables",
+          "resultado": "PASA",
+          "detalle": "12 (base 12)"
+        },
+        {
+          "control": "Enlaces rotos",
+          "resultado": "FALLA",
+          "detalle": "38 (base 26)"
+        }
+      ],
+      "veredicto": "FALLA",
+      "verificacion_independiente": {
+        "verificador_codigo": 1,
+        "mediciones": {
+          "commit": "b49735d",
+          "asistente": {
+            "aprobadas": 605,
+            "omitidas": 11,
+            "fallidas": 0,
+            "subpruebas": 0,
+            "codigo": 0,
+            "resumen": "605 passed, 11 skipped in 36.93s"
+          },
+          "descargador": {
+            "aprobadas": 198,
+            "omitidas": 0,
+            "fallidas": 0,
+            "subpruebas": 59,
+            "codigo": 0,
+            "resumen": "198 passed, 59 subtests passed in 39.32s"
+          },
+          "identidades_reales": 18,
+          "paridad_golden": "PASA",
+          "restricciones": [],
+          "ruff_src": 0,
+          "modulos_no_alcanzables": 12,
+          "enlaces_rotos": 38
+        },
+        "ejecuciones": [
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "descargador"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "/workspace/flow-wp01/tools/check_real_ids.py"
+            ],
+            "codigo": 1,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "/workspace/flow-wp01/tools/flow_baseline_golden.py",
+              "--output",
+              "/tmp/tmpy_tecd08/golden",
+              "--expected",
+              "/workspace/flow-wp01/docs/evidencia_p0/golden/semantic.json"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "-m",
+              "ruff",
+              "check",
+              "--select",
+              "E9,F63,F7,F82",
+              "--output-format",
+              "concise",
+              "src"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "/workspace/flow-wp01/tools/modulos_no_alcanzables.py",
+              "--json"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp01-verify-venv/bin/python",
+              "/workspace/flow-wp01/tools/check_links.py"
+            ],
+            "codigo": 1,
+            "ejecucion_esperada": true
+          }
+        ],
+        "aceptacion_wp01": {
+          "AGENTS_lineas": 29,
+          "PLAN_VIGENTE_lineas": 39,
+          "CONTINUAR_bytes": 1138,
+          "originales": [
+            {
+              "archivo": "docs/plan_20261008/01_ESPECIFICACION_DESCARGADOR_RUS_SITFA (1).md",
+              "sha256_base": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19",
+              "sha256_actual": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19"
+            },
+            {
+              "archivo": "docs/plan_20261008/01_ESPECIFICACION_DESCARGADOR_RUS_SITFA.md",
+              "sha256_base": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19",
+              "sha256_actual": "ec75152d0ee9cb6631ef271453824f616e2d68c606c2356a3cbd2522d7e97a19"
+            },
+            {
+              "archivo": "docs/plan_20261008/02_ESPECIFICACION_TECNICA_ASISTENTE_CSMP.md",
+              "sha256_base": "f22ae66bc25edcceeb8416eed54e423a487e0e1d556911995cd823c7e4ad3f55",
+              "sha256_actual": "f22ae66bc25edcceeb8416eed54e423a487e0e1d556911995cd823c7e4ad3f55"
+            },
+            {
+              "archivo": "docs/plan_20261008/03_REGLAS_ANALISIS_OBSERVACIONES_CSMP.md",
+              "sha256_base": "df0ff0ea88b2c58bfd8d767040808ff9d045bc33b132c42f79ef9f6ea3855ef2",
+              "sha256_actual": "df0ff0ea88b2c58bfd8d767040808ff9d045bc33b132c42f79ef9f6ea3855ef2"
+            },
+            {
+              "archivo": "docs/plan_20261008/04_FLUJO_TRABAJO_INTEGRADO_CSMP.md",
+              "sha256_base": "90a7c5ac4eca37c5855c2216077925e89205469017190a8ba57a1b91d3361cda",
+              "sha256_actual": "90a7c5ac4eca37c5855c2216077925e89205469017190a8ba57a1b91d3361cda"
+            },
+            {
+              "archivo": "docs/plan_20261008/05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008 (1).md",
+              "sha256_base": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f",
+              "sha256_actual": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f"
+            },
+            {
+              "archivo": "docs/plan_20261008/05_PLAN_COMPLETO_EJECUCION_NURUS_CSMP_20261008.md",
+              "sha256_base": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f",
+              "sha256_actual": "2e1d47db3d4f5b57da126e3f9551c27b61cd92275924e3ad062cc89ffb98907f"
+            }
+          ],
+          "HISTORIAL_preserva_cuerpo_identico_CONTINUAR_2765b47": true,
+          "HISTORIAL_prefacio_bytes": 91
+        }
+      },
+      "nota_deuda_baseline": "Persisten 18 hallazgos de identidades y 26 enlaces rotos basales. WP-01 introduce 12 enlaces rotos adicionales en docs/HISTORIAL.md (38 totales), por trasladar referencias relativas del CONTINUAR original.",
+      "diagnostico_fallo": {
+        "archivo": "docs/HISTORIAL.md",
+        "enlaces_rotos_nuevos": 12,
+        "motivo": "referencias relativas conservadas desde el CONTINUAR de la raíz, trasladadas a docs/"
+      }
+    }
+  ]
+}

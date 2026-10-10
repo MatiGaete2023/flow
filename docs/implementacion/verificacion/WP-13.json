@@ -1,0 +1,206 @@
+{
+  "commit": "30647b5",
+  "base": "2765b47",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "612 passed, 11 skipped in 72.43s (0:01:12) (mínimo 605 aprobadas; base 605)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "198 passed, 59 subtests passed in 39.07s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "18 hallazgos (límite 18)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "30647b5",
+      "asistente": {
+        "aprobadas": 612,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "612 passed, 11 skipped in 72.43s (0:01:12)"
+      },
+      "descargador": {
+        "aprobadas": 198,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 59,
+        "codigo": 0,
+        "resumen": "198 passed, 59 subtests passed in 39.07s"
+      },
+      "identidades_reales": 18,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "/workspace/flow-wp13/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "/workspace/flow-wp13/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmp1k_o4t4u/golden",
+          "--expected",
+          "/workspace/flow-wp13/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "/workspace/flow-wp13/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp13-verify-venv/bin/python",
+          "/workspace/flow-wp13/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {},
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "18 hallazgos de identidades y 26 enlaces rotos heredados; sus códigos 1 representan deuda basal conocida, sin acreditar que esté resuelta.",
+  "historial_verificaciones": [
+    {
+      "commit": "b69701a",
+      "base": "2765b47",
+      "controles": [
+        {
+          "control": "Suite asistente",
+          "resultado": "PASA",
+          "detalle": "612 passed, 11 skipped in 46.24s (mínimo 605 aprobadas; base 605)"
+        },
+        {
+          "control": "Suite descargador",
+          "resultado": "PASA",
+          "detalle": "198 passed, 59 subtests passed in 36.39s (mínimo 198 aprobadas; base 198)"
+        },
+        {
+          "control": "Identidades reales",
+          "resultado": "PASA",
+          "detalle": "18 hallazgos (límite 18)"
+        },
+        {
+          "control": "Paridad golden",
+          "resultado": "PASA",
+          "detalle": "PASA"
+        },
+        {
+          "control": "Restricciones absolutas",
+          "resultado": "PASA",
+          "detalle": "sin infracciones"
+        },
+        {
+          "control": "Ruff E9/F63/F7/F82",
+          "resultado": "PASA",
+          "detalle": "0 (base 0)"
+        },
+        {
+          "control": "Módulos no alcanzables",
+          "resultado": "PASA",
+          "detalle": "12 (base 12)"
+        },
+        {
+          "control": "Enlaces rotos",
+          "resultado": "PASA",
+          "detalle": "26 (base 26)"
+        }
+      ],
+      "veredicto": "PASA"
+    }
+  ]
+}

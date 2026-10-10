@@ -223,16 +223,10 @@ class Work:
                 'resolution_value':_review_value(row,'RES'),
             })
         result=_export_preserved_payload(self.content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
-        previous=(self.output,self.output_hash)
         self.output=str(result.path)
         self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
         from .sync import remember_export
-        try:
-            remember_export(self)
-        except Exception:
-            self.output,self.output_hash=previous
-            Path(result.path).unlink(missing_ok=True)
-            raise
+        remember_export(self)
         return self.output
 
     def refresh(self, resolutions=None):
@@ -299,6 +293,18 @@ class Work:
                 pass
             else:atomic_json(directory/'trabajo.json.bak',old)
         atomic_json(previous,data)
+        # Conserva también todas las copias que necesita la recuperación anterior.
+        keep={self.source_hash+'.bin'}
+        if self.original_hash:keep.add(self.original_hash+'.bin')
+        backup=directory/'trabajo.json.bak'
+        if backup.is_file():
+            try:
+                old=json.loads(backup.read_text(encoding='utf-8'))
+                for field in ('source_hash','original_hash'):
+                    if old.get(field):keep.add(old[field]+'.bin')
+            except (ValueError,OSError):pass
+        for stale in directory.glob('*.bin'):
+            if stale.name not in keep and not stale.is_symlink():stale.unlink(missing_ok=True)
         saved[str(directory.resolve())]=digest
         self._save_digests=saved
         info=previous.stat();stats[key]=(info.st_mtime_ns,info.st_size);self._save_stats=stats

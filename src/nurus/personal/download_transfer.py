@@ -104,7 +104,7 @@ def archive_current(work, configuration_folder):
     work.save(transfer.recovery_folder / 'incorporada')
 
 
-def recovery_work(transfer, current=None):
+def recovery_work(transfer, current=None, config=None):
     """Prefiere las ediciones actuales o guardadas; no vuelve a analizar el origen."""
     from .work import Work
     snapshot = transfer.recovery_folder / 'incorporada'
@@ -119,7 +119,7 @@ def recovery_work(transfer, current=None):
         return work is not None and work.source_hash == expected and work.mode == mode
     # El archivo propio demuestra que el análisis terminó incluso si falló la
     # actualización del estado después de guardar esa sesión.
-    config = current.config if current is not None else None
+    config = config if config is not None else (current.config if current is not None else None)
     archived = Work.load(snapshot, config)
     if not matches(archived):
         raise ValueError('La sesión de devolución no corresponde a esta descarga.')

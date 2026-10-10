@@ -23,20 +23,13 @@ if errorlevel 1 goto :error
 
 :install
 
-echo Instalando CSMP Assistant y soporte Excel / Outlook con las versiones probadas en CI...
-set "NURUS_PYV="
-for %%v in (12 13 14) do ".venv-csmp\Scripts\python.exe" -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, %%v) else 1)" >nul 2>&1 && set "NURUS_PYV=3%%v"
-set "NURUS_LOCK=requirements\windows-py%NURUS_PYV%.lock"
-if not exist "%NURUS_LOCK%" goto :no_lock
+echo Instalando CSMP Assistant y soporte Excel / Outlook...
 set "NURUS_PIP_SOURCE="
 if exist "paquetes\" (
   echo Usando paquetes institucionales locales desde .\paquetes
   set "NURUS_PIP_SOURCE=--no-index --find-links paquetes"
 )
-rem Dependencias fijadas con hash (incluyen excel-legacy, excel-native y outlook); luego el paquete sin resolver dependencias.
-".venv-csmp\Scripts\python.exe" -m pip install %NURUS_PIP_SOURCE% --require-hashes -r "%NURUS_LOCK%"
-if errorlevel 1 goto :error
-".venv-csmp\Scripts\python.exe" -m pip install %NURUS_PIP_SOURCE% --no-deps --no-build-isolation .
+".venv-csmp\Scripts\python.exe" -m pip install %NURUS_PIP_SOURCE% ".[excel-legacy,excel-native,outlook]"
 if errorlevel 1 goto :error
 
 ".venv-csmp\Scripts\python.exe" -m pip check
@@ -53,19 +46,19 @@ exit /b 0
 :find_python
 set "NURUS_PYTHON="
 if defined NURUS_PYTHON_EXE call :try_python "%NURUS_PYTHON_EXE%"
-if not defined NURUS_PYTHON call :try_python py -3.12
-if not defined NURUS_PYTHON call :try_python py -3.13
 if not defined NURUS_PYTHON call :try_python py -3.14
-if not defined NURUS_PYTHON if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" call :try_python "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
-if not defined NURUS_PYTHON if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" call :try_python "%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+if not defined NURUS_PYTHON call :try_python py -3.13
+if not defined NURUS_PYTHON call :try_python py -3.12
 if not defined NURUS_PYTHON if exist "%LOCALAPPDATA%\Programs\Python\Python314\python.exe" call :try_python "%LOCALAPPDATA%\Programs\Python\Python314\python.exe"
-if not defined NURUS_PYTHON if exist "%ProgramFiles%\Python312\python.exe" call :try_python "%ProgramFiles%\Python312\python.exe"
-if not defined NURUS_PYTHON if exist "%ProgramFiles%\Python313\python.exe" call :try_python "%ProgramFiles%\Python313\python.exe"
+if not defined NURUS_PYTHON if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" call :try_python "%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+if not defined NURUS_PYTHON if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" call :try_python "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
 if not defined NURUS_PYTHON if exist "%ProgramFiles%\Python314\python.exe" call :try_python "%ProgramFiles%\Python314\python.exe"
-if not defined NURUS_PYTHON call :try_python python3.12
+if not defined NURUS_PYTHON if exist "%ProgramFiles%\Python313\python.exe" call :try_python "%ProgramFiles%\Python313\python.exe"
+if not defined NURUS_PYTHON if exist "%ProgramFiles%\Python312\python.exe" call :try_python "%ProgramFiles%\Python312\python.exe"
 if not defined NURUS_PYTHON call :try_python python
-if not defined NURUS_PYTHON call :try_python python3.13
 if not defined NURUS_PYTHON call :try_python python3.14
+if not defined NURUS_PYTHON call :try_python python3.13
+if not defined NURUS_PYTHON call :try_python python3.12
 exit /b 0
 
 :try_python
@@ -77,12 +70,6 @@ exit /b 0
 echo.
 echo ERROR: existe .venv-csmp, pero no usa una version soportada de Python 3.12 a 3.14.
 echo Renombra o elimina esa carpeta solo si no contiene trabajo pendiente y vuelve a ejecutar el instalador.
-pause
-exit /b 1
-
-:no_lock
-echo.
-echo ERROR: falta %NURUS_LOCK%. Usa Python 3.12, 3.13 o 3.14 y una copia completa del repositorio.
 pause
 exit /b 1
 

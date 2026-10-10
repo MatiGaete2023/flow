@@ -1,29 +1,24 @@
 # Continuar
 
-**Estado:** implementación del plan del 9 de octubre de 2026 en curso.
-**Rama de trabajo de la sesión:** `ccr-4116db41-nm8g0r` (parte de `2765b47`, punta de
-`feat/ejecucion-plan-20261008`). Último código compilado y verificado en Windows: `0795cda`
-(Descargador 2.7.5, Asistente 0.5.0.dev4).
+**Estado:** recuperación del plan del 9 de octubre de 2026 desde `2765b47`.
+**Rama base:** `feat/ejecucion-plan-20261008`. Cada WP usa una rama propia;
+solo el Orquestador integra después de verificación, revisión y auditoría.
 
-## Siguiente acción única
+## Siguiente acción
 
-Leer `docs/implementacion/TRASPASO.md` (qué se hizo, cómo, para qué y qué falta) y
-continuar con el primer WP en estado `LISTO` de `docs/implementacion/ESTADO.json`.
-Las decisiones D1–D9 que bloquean WP están listadas en `PLAN_VIGENTE.md`.
-
-## Migración de contactos (WP-12)
-
-El repositorio ya no trae el directorio real de contactos ni los correos de tribunales. Un perfil existente conserva
-los suyos en `configuracion.json`. En un perfil nuevo: Configuración → Contactos → **Importar contactos** y elegir
-el `contactos_base.json` de la instalación anterior (o el catastro Excel); queda copia en
-`%LOCALAPPDATA%\CSMP_Personal_Prototipo_Integral\contactos.json` (entradas `Tribunal: LAJA` para tribunales).
+Leer `PLAN_VIGENTE.md`, `docs/implementacion/ESTADO.json` y la ficha del primer
+WP en estado `LISTO` en `docs/implementacion/PLAN_IMPLEMENTACION.md`.
+El informe de recuperación y los pasos pendientes están en
+`docs/implementacion/wp/WP-01.md`; el estado compartido es la fuente vigente.
+D3 permite retirar inspector y diario RUS; D4 fija 60 días y hasta 10 sesiones
+anteriores; D8 no informó fallos. Las demás decisiones siguen pendientes.
 
 ## Enlaces
 
-- [Plan vigente](PLAN_VIGENTE.md) · [Instrucciones para agentes](AGENTS.md)
+- [Plan vigente](PLAN_VIGENTE.md) · [Instrucciones](AGENTS.md)
 - [Plan de implementación](docs/implementacion/PLAN_IMPLEMENTACION.md)
-- [Traspaso entre sesiones](docs/implementacion/TRASPASO.md)
-- [Historial anterior](docs/HISTORIAL.md) · [Resumen del proyecto](RESUMEN_PROYECTO_NURUS_CSMP_20261009.md)
+- [Recuperación](docs/implementacion/wp/WP-01.md)
+- [Historial anterior](docs/HISTORIAL.md)
 
 ## Comandos
 
@@ -31,5 +26,24 @@ el `contactos_base.json` de la instalación anterior (o el catastro Excel); qued
 python -m pip install --require-hashes -r requirements/linux-py312.lock
 python -m pip install --no-deps --no-build-isolation -e .
 python tools/verificar_wp.py
-git config core.hooksPath tools/hooks   # bloquea commits con RUT reales
 ```
+
+## Migración de contactos antes de actualizar
+
+Copia tu `contactos_base.json` de la instalación anterior a
+`%LOCALAPPDATA%\CSMP_Personal\contactos.json` antes de reemplazarla.
+Si no existe esa copia, el primer inicio abre «Importar contactos» para elegir
+el JSON anterior o el catastro Excel; mientras tanto se usa el ejemplo ficticio.
+
+## Control de identidades
+
+Activa el control antes de cada commit con:
+
+```sh
+git config core.hooksPath tools/hooks
+```
+
+El hook revisa el contenido del índice, incluidos los XML de Excel y Word;
+no lee las modificaciones que aún no agregaste. Ambos workflows ejecutan el
+control antes de instalar dependencias o producir artefactos, sobre todo el
+árbol: WP-20 retiró `variantes/` y las rutas personales (recuperables desde `pre-WP-20`).
