@@ -65,14 +65,14 @@ class NextStepBar(ui.Frame):
         self.values = {}
         self._signature = object()
         self._after = None
-        ui.Label(self, text='Siguiente paso', text_color=ui.MUTED).pack(side='left', padx=(10, 6))
+        ui.Label(self, text='Siguiente paso', text_color=ui.MUTED).pack(side='left', padx=(6, 4))
         self.buttons = {}
         for index, (key, name, page) in enumerate(STEPS):
             if index:
                 ui.Label(self, text='→', text_color=ui.MUTED).pack(side='left', padx=2)
-            button = ui.Button(self, text=name, width=60, height=26, fg_color='transparent', border_width=1,
+            button = ui.Button(self, text=name, width=40, height=22, fg_color='transparent', border_width=1,
                                command=lambda page=page: self.open(page))
-            button.pack(side='left', padx=2, pady=3)
+            button.pack(side='left', padx=1, pady=1)
             self.buttons[key] = button
         self.refresh(force=True)
         self._schedule()
