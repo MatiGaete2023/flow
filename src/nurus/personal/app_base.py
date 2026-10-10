@@ -59,6 +59,8 @@ class App(ctk.CTk):
         build_results(self)
         contextbar=ctk.CTkFrame(self,corner_radius=0,fg_color=ttk.PANEL)
         contextbar.grid(row=1,column=0,columnspan=2,sticky='ew')
+        from .next_step import NextStepBar
+        self.next_step=NextStepBar(contextbar,self);self.next_step.pack(fill='x',padx=4,pady=(4,0))
         ctk.CTkLabel(contextbar,textvariable=self.context,anchor='w',text_color=ttk.MUTED,font=('Segoe UI',11)).pack(fill='x',padx=14,pady=4)
         statusbar=ctk.CTkFrame(self,corner_radius=0,fg_color=ttk.SIDEBAR)
         statusbar.grid(row=2,column=0,columnspan=2,sticky='ew');statusbar.grid_columnconfigure(0,weight=1)
@@ -234,6 +236,7 @@ class App(ctk.CTk):
         else:messagebox.showinfo('Archivo disponible',str(path))
 
     def _update_context(self):
+        if hasattr(self,'next_step'):self.next_step.refresh()
         if not self.work:
             self.context.set('Sin trabajo activo · Ctrl+O para elegir un Excel')
             return
