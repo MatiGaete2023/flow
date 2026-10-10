@@ -65,6 +65,7 @@ class NextStepBar(ui.Frame):
         self.values = {}
         self._signature = object()
         self._after = None
+        self.error = None
         ui.Label(self, text='Siguiente paso', text_color=ui.MUTED).pack(side='left', padx=(6, 4))
         self.buttons = {}
         for index, (key, name, page) in enumerate(STEPS):
@@ -97,6 +98,13 @@ class NextStepBar(ui.Frame):
         try:
             if not (getattr(self.app, 'busy', False) or getattr(self.app, 'rendering', False)):
                 self.refresh()
+            self.error = None
+        except Exception as exc:  # una ruta de red caída no debe repetir tracebacks cada 1,5 s
+            if self.error is None:
+                self.error = exc
+                status = getattr(self.app, 'status', None)
+                if status is not None:
+                    status.set('No se pudieron actualizar los pasos: ' + str(exc)[:120])
         finally:
             self._schedule()
 

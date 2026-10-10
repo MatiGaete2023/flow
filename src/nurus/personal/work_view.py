@@ -96,7 +96,8 @@ def build(app):
     app.records=app._tree(table,WORK_COLUMNS)
     app.records.configure(height=5)
     columns=app.cfg.data.get('vista',{}).get('columnas_trabajo')
-    if columns and all(c in app.records['columns'] for c in columns):app.records.configure(displaycolumns=columns)
+    # La preferencia guarda qué columnas se ven; el orden siempre es el de WORK_COLUMNS.
+    if columns and all(c in WORK_COLUMNS for c in columns):app.records.configure(displaycolumns=[c for c in WORK_COLUMNS if c in columns])
     for name,width in WORK_WIDTHS.items():
         app.records.column(name,width=width,minwidth=65)
     app.observation_tip=ObservationTip(app.records)
