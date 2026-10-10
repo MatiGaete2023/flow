@@ -237,7 +237,8 @@ class App(ctk.CTk):
         else:messagebox.showinfo('Archivo disponible',str(path))
 
     def _update_context(self):
-        if hasattr(self,'next_step'):self.next_step.refresh()
+        # Forzado: ediciones de revisión no cambian la firma barata pero sí dejan productos desactualizados.
+        if hasattr(self,'next_step'):self.next_step.refresh(force=True)
         if not self.work:
             self.context.set('Sin trabajo activo · Ctrl+O para elegir un Excel')
             return
