@@ -6,7 +6,7 @@ def test_import_without_remote_launcher_and_rejected_zip_keeps_edits(tmp_path):
     run_gui(tmp_path,"""
 from unittest.mock import patch
 import contextlib
-patcher=patch('nurus.personal.app_base.simpledialog.askstring',return_value='2026-10-08');patcher.start()
+patcher=patch.object(app,'_ask_cut_date',return_value=date(2026,10,8));patcher.start()
 from nurus.capture import write_capture
 from test_capture_contract import fixture
 m,t=fixture();path=write_capture(root/'capture.zip',m,t)
@@ -48,7 +48,7 @@ import time
 m,t=fixture(600);path=write_capture(root/'base.zip',m,t)
 app._run=lambda label,action,done=None:done(action()) if done else action()
 def import_file(path):
-    with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(path)),patch('nurus.personal.app_base.simpledialog.askstring',return_value='2026-10-08'):
+    with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(path)),patch.object(app,'_ask_cut_date',return_value=date(2026,10,8)):
         app._import_capture()
     deadline=time.monotonic()+10
     while getattr(app,'rendering',False) and time.monotonic()<deadline:app.update()
