@@ -37,7 +37,10 @@ def test_installer_uses_hash_locked_dependencies_then_package_without_deps():
 def test_downloader_prefers_python_312_and_requires_hash_lock(tmp_path, monkeypatch):
     root = Path(__file__).parents[1]
     starter = (root / "descargador" / "Iniciar.cmd").read_text(encoding="utf-8")
-    assert starter.index("py -3.12 -m venv") < starter.index("py -3 -m venv") < starter.index("python -m venv")
+    assert (starter.index("py -3.12 -m venv") < starter.index("py -3.13 -m venv") < starter.index("py -3.14 -m venv")
+            < starter.index("py -3 -m venv") < starter.index("python -m venv"))
+    # Sin lock para la versión elegida: código 3 y se borra el .venv para no reutilizarlo.
+    assert "if errorlevel 3 goto nolock" in starter and 'rmdir /s /q ".venv"' in starter
     import importlib.util
     spec = importlib.util.spec_from_file_location("preparar_entorno", root / "descargador" / "preparar_entorno.py")
     module = importlib.util.module_from_spec(spec)
@@ -48,8 +51,9 @@ def test_downloader_prefers_python_312_and_requires_hash_lock(tmp_path, monkeypa
     source = (root / "descargador" / "preparar_entorno.py").read_text(encoding="utf-8")
     assert "'--require-hashes','-r'" in source and "requirements.txt" not in source
     monkeypatch.setattr(module, "HERE", tmp_path / "descargador")
-    with pytest.raises(RuntimeError, match="Falta windows-py312.lock"):
+    with pytest.raises(module.FaltaLock, match="Falta windows-py312.lock"):
         module.lock_file()
+    assert "raise SystemExit(3)" in source
 
 
 def test_detected_python_is_expanded_after_find_subroutine_returns():

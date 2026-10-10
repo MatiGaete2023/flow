@@ -31,6 +31,9 @@ def check_baseline(root):
             alternate = root / "docs/historico/README_NURUS_BASELINE.md"
             if alternate.exists():
                 path = alternate
+        # WP-24 trasladó documentos de época a docs/historico sin modificarlos.
+        if not path.is_file() and name.startswith("docs/") and (root / "docs/historico" / Path(name).name).is_file():
+            path = root / "docs/historico" / Path(name).name
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             changed.append(name)
     return {"source_sha": manifest["sha"], "files": len(manifest["files_sha256"]),
