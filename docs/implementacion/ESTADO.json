@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-10T00:05:54.224470+00:00",
+  "actualizado": "2026-10-10T00:07:55.948105+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -148,16 +148,18 @@
         "WP-10"
       ],
       "decisiones": [],
-      "estado": "LISTO",
+      "estado": "EN_VERIFICACION",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
-      "pr": null,
+      "rama": "wp/WP-11-identidades-ci",
+      "pr": 9,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada."
+      ]
     },
     "WP-12": {
       "titulo": "Contactos fuera del paquete",
@@ -178,7 +180,8 @@
       "integrado_en": "f990fe842d7a24d5ebe3dcc6c18c97a5ea58f8c5",
       "notas": [
         "Revisión detectó borrado de contactos históricos en importación parcial; executor corrige antes de aprobación.",
-        "PR7 integrado con controles625/11 y198/59; datos de contactos locales, importación parcial sin pérdida y golden productos intacto. Se conserva limpieza10 y retención13."
+        "PR7 integrado con controles625/11 y198/59; datos de contactos locales, importación parcial sin pérdida y golden productos intacto. Se conserva limpieza10 y retención13.",
+        "Control de la base combinada:625/11 y198/59; golden17 PASA, IDs12 solo variantes; preservadas pruebas de WP-10 y WP-13."
       ]
     },
     "WP-13": {
@@ -243,11 +246,12 @@
       "rama": "wp/WP-15-har",
       "pr": 8,
       "verificacion": null,
-      "revision": null,
+      "revision": "APROBADO",
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso."
+        "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
+        "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes."
       ]
     },
     "WP-16": {
@@ -268,7 +272,8 @@
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio."
+        "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
+        "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita."
       ]
     },
     "WP-17": {
