@@ -40,3 +40,16 @@ for clave,pagina in [('correos','Correos'),('resoluciones','Resoluciones'),('res
     assert app.tabs.select()==str(app.pages[pagina])
 assert bar._after is not None
 """)
+
+
+def test_tick_con_error_no_se_repite_ni_detiene_la_barra(tmp_path):
+    run_gui(tmp_path, """
+bar=app.next_step
+llamadas=[]
+def falla(force=False):
+    llamadas.append(1);raise OSError('ruta de red no disponible')
+bar.refresh=falla
+bar._tick();bar._tick()
+assert len(llamadas)==2 and isinstance(bar.error,OSError) and bar._after is not None
+assert 'No se pudieron actualizar' in app.status.get()
+""")
