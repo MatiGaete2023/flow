@@ -250,7 +250,7 @@ class App(_BaseApp):
             if row.excluded:tags.append('excluded')
             elif row.warnings:tags.append('warning')
             if row.id in resolution_ids:tags.append('resolution')
-            values=(state,value(self.work,row,'rit'),value(self.work,row,'nombre'),value(self.work,row,'tribunal'),value(self.work,row,'programa'),row.review.get('OBSERVACION',row.observation))
+            values=(state,row.review.get('OBSERVACION',row.observation),value(self.work,row,'rit'),value(self.work,row,'nombre'),value(self.work,row,'programa'),value(self.work,row,'tribunal'))
             jobs.append((self.records,row.id,values,tuple(tags)))
             self._work_all_iids.append(row.id)
             self._work_search_text[row.id]=' '.join(str(value(self.work,row,key) or '') for key in ('nombre','rut','rit','tribunal','programa'))

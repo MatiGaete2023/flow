@@ -285,7 +285,7 @@
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T15:00:00-03:00",
       "rama": "wp/WP-16-anonimizador",
-      "pr": null,
+      "pr": 22,
       "verificacion": "PASA (verificacion/WP-16.json)",
       "revision": null,
       "auditoria": null,
@@ -564,16 +564,18 @@
         "WP-31"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T16:00:00-03:00",
+      "rama": "wp/WP-40-trabajo-legible",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-40.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-16 (PR #22)."
+      ]
     },
     "WP-41": {
       "titulo": "Barra Siguiente paso",
