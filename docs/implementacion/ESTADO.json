@@ -408,16 +408,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:30:00-03:00",
+      "rama": "wp/WP-24-documentacion",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-24.json): enlaces rotos 0",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-35 (PR #19)."
+      ]
     },
     "WP-30": {
       "titulo": "CC fijo con una sola fuente",

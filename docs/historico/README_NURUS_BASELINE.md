@@ -1,3 +1,5 @@
+> Copia de procedencia (histórica), trasladada por WP-24. Sus enlaces se escribieron desde la raíz del repositorio original.
+
 # CSMP Assistant · Windows
 
 **Versión 0.5.0.dev4 · 8 de octubre de 2026 (integración en pruebas).**
