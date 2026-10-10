@@ -42,6 +42,9 @@ jobs:
       - name: Control de identidades antes de instalar o generar artefactos
         run: python tools/check_real_ids.py
 
+      - name: Versiones desde sus fuentes únicas
+        run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
+
       - name: Install
         run: |
           python -m pip install --require-hashes -r requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
@@ -107,7 +110,7 @@ jobs:
         run: |
           $captureSourceCommit = (git rev-parse HEAD).Trim()
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
-          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.5 --extension-version 2.7.5
+          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version $env:ASSISTANT_VERSION --downloader-version $env:DOWNLOADER_VERSION --extension-version $env:DOWNLOADER_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
       - name: Windows interface captures
@@ -130,7 +133,7 @@ jobs:
 
           excluded = {".git", ".pytest_cache", "__pycache__", ".venv", "venv", "node_modules", "artifacts", "dist", "build", "cache", "data"}
           names = subprocess.check_output(["git", "ls-files", "-z"])
-          destination = Path("dist/CSMP_Assistant_personal_0.5.0-dev4.zip")
+          destination = Path("dist/CSMP_Assistant_personal_" + os.environ["ASSISTANT_VERSION"] + ".zip")
           with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
               for raw in names.split(b"\0"):
                   if not raw:
@@ -154,8 +157,8 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Windows-dev4
-          path: dist/CSMP_Assistant_personal_0.5.0-dev4.zip
+          name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
+          path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
 
       - name: Windows executable
         if: matrix.python == '3.12'
@@ -190,7 +193,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Descargador-Integral-dev4-SITFA-275
+          name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
           path: dist/integral/
           if-no-files-found: error
 
@@ -198,7 +201,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Integral-Windows-dev4
+          name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
           path: dist/CSMP_Integral/
           if-no-files-found: error
 
@@ -229,7 +232,7 @@ jobs:
           }
           if (-not $compiler) { throw 'No se encuentra Inno Setup' }
           Write-Host 'INICIO: compilar instalador'
-          & $compiler installer/CSMP.iss
+          & $compiler "/DAppVersion=$env:ASSISTANT_VERSION" installer/CSMP.iss
           if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del instalador' }
           Write-Host 'APROBADO: compilar instalador'
           $installer = Get-ChildItem dist/Instalar_CSMP_*_Windows.exe | Select-Object -First 1
@@ -256,7 +259,7 @@ jobs:
         if: matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
-          name: CSMP-Instalador-Windows-dev4
+          name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
           path: |
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json

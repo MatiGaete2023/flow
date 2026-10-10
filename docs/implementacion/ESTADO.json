@@ -448,16 +448,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:40:00-03:00",
+      "rama": "wp/WP-31-version",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-31.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-30 (PR #16). Tocó verify-delivered-installer.yml (fuera de ficha) para no romper la descarga por nombre."
+      ]
     },
     "WP-32": {
       "titulo": "Exportación sin residuos y sin fórmulas",
