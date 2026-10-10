@@ -11,6 +11,7 @@ Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si 
 """
 import argparse
 import io
+import os
 import re
 import subprocess
 import sys
@@ -118,7 +119,7 @@ def main(argv: list[str]) -> int:
     paths = staged_files() if args.stage else ([Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files())
     if not args.stage and args.rutas:
         paths = [candidate for path in paths for candidate in (path.rglob("*") if path.is_dir() else [path])]
-    prefixes = [(ROOT / prefix).resolve() for prefix in args.excluir]
+    prefixes = [Path(os.path.abspath(ROOT / prefix)) for prefix in args.excluir]
     paths = [path for path in paths if not excluded(path, prefixes)]
     findings = scan(paths, load_allowlist(stage=args.stage), stage=args.stage)
     for label, line, masked in findings:
