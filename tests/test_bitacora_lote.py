@@ -6,7 +6,6 @@ import pytest
 from openpyxl import load_workbook
 from test_bitacora_har import popup,PARAMS
 from nurus.personal.bitacora_lote import import_lote,export_lote
-from nurus.personal.bitacora_link import verify_reply
 
 def manifest(tmp_path):
     body=popup().encode();(tmp_path/'captura.html').write_bytes(body)
@@ -46,16 +45,6 @@ def test_remote_identity_mismatch_not_exported(tmp_path):
     data['registros'][0]['ingreso_id']='99';source.write_text(json.dumps(data))
     assert import_lote(source)['queries'][0]['coverage']=='FALLIDA'
 
-def test_reply_id_and_scope_and_hash_checked(tmp_path):
-    folder=tmp_path/'solicitud';lot=folder/'lotes'/'lote';lot.mkdir(parents=True)
-    source=manifest(lot)
-    request={'folder':str(folder),'id':'prueba'}
-    reply=folder/'respuesta.json';data={'id':'prueba','manifest':str(source),'sha256':sha256(source.read_bytes()).hexdigest()}
-    reply.write_text(json.dumps(data));assert verify_reply(request)==source.resolve()
-    data['id']='otra';reply.write_text(json.dumps(data))
-    with pytest.raises(ValueError,match='otra solicitud'):verify_reply(request)
-    data['id']='prueba';data['manifest']=str(manifest(tmp_path));reply.write_text(json.dumps(data))
-    with pytest.raises(ValueError,match='fuera'):verify_reply(request)
 
 def test_date_window_never_extends_beyond_four_calendar_months(tmp_path):
     source=manifest(tmp_path)

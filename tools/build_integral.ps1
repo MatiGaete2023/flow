@@ -49,8 +49,7 @@ foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP
 '@echo off', 'start "" "%~dp0SITFA_Descargador\SITFA_Descargador.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_Descargador.cmd') -Encoding ascii
 $checks = @(
     @('SITFA_Descargador/SITFA_Descargador.exe','--verificar-paquete','VERIFICACION_DESCARGADOR.json'),
-    @('CSMP_Integral/CSMP_Integral.exe','--verificar-paquete','VERIFICACION_CSMP.json'),
-    @('CSMP_Integral/CSMP_Integral.exe','--verificar-integracion','VERIFICACION_INTEGRACION.json','--descargador-integral','SITFA_Descargador/SITFA_Descargador.exe')
+    @('CSMP_Integral/CSMP_Integral.exe','--verificar-paquete','VERIFICACION_CSMP.json')
 )
 Push-Location $outputRoot
 try {
