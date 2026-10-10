@@ -38,6 +38,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Generar identidad sintética solo para el ensayo negativo WP-11
+        working-directory: .
+        shell: pwsh
+        run: |
+          @'
+          import runpy
+          from pathlib import Path
+          checker = runpy.run_path("tools/check_real_ids.py")
+          number = "12345678"
+          synthetic = number + "-" + checker["check_digit"](number)
+          path = Path("tests/test_personal_batch_revision.py")
+          with path.open("a", encoding="utf-8") as fixture:
+              fixture.write("\n# Ensayo sintético WP-11: " + synthetic + "\n")
+          print("Fixture sintético preparado; se espera rechazo antes de artefactos")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el ensayo sintético' }
+
       - name: Control de identidades antes de instalar o generar artefactos
         working-directory: .
         run: python tools/check_real_ids.py --excluir variantes/
