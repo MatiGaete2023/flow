@@ -97,7 +97,7 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
 
 def staged_files() -> list[Path]:
     output = subprocess.run(
-        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"],
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRT", "-z"],
         cwd=ROOT, capture_output=True, check=True,
     ).stdout
     return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
