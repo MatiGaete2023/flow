@@ -51,7 +51,15 @@
       "fecha": null
     }
   },
-  "conflictos_abiertos": [],
+  "conflictos_abiertos": [
+    {
+      "id": "WP-30-cc_obligatorio",
+      "origen": "WP-30",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
+      "respuesta": null
+    }
+  ],
   "paquetes": {
     "WP-00": {
       "titulo": "Kit, estado y línea base",
@@ -419,16 +427,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:20:00-03:00",
+      "rama": "wp/WP-30-cc-unico",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-30.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-23 (PR #15). cc_obligatorio queda en correos_base.json sin lector: quitarlo rompe la paridad golden (conflicto abierto)."
+      ]
     },
     "WP-31": {
       "titulo": "Versión con una sola fuente",
