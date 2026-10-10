@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-APPROVED_EXCEPTIONS = {"README.md": "Portada flow; original en docs/README_NURUS_BASELINE.md"}
+APPROVED_EXCEPTIONS = {"README.md": "Portada flow; original en docs/historico/README_NURUS_BASELINE.md"}
 
 
 def write_json(path, value):
@@ -28,7 +28,7 @@ def check_baseline(root):
         path = root / name
         # También se verifica la copia del README original, cuando existe.
         if name in APPROVED_EXCEPTIONS:
-            alternate = root / "docs/README_NURUS_BASELINE.md"
+            alternate = root / "docs/historico/README_NURUS_BASELINE.md"
             if alternate.exists():
                 path = alternate
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:

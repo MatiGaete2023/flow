@@ -60,14 +60,14 @@ El gráfico describe el circuito objetivo y las partes disponibles del MVP; no i
 
 | Componente | Responsabilidad e implementación |
 |---|---|
-| Descargador Python | Consultas, lotes, resultados, recuperación y exportación; código en [descargador](descargador/). |
+| Descargador Python | Consultas, lotes, resultados, recuperación y exportación; código en [descargador](descargador). |
 | Extensión Chrome | Lectura de pantallas y vínculos comprobados, identidad y captura nativa de evidencia; [extension/pagina.js](descargador/extension/pagina.js). No ejecuta el JavaScript recibido como instrucción. |
 | Parser compartido | Lectura de bitácoras y codificaciones preservando bytes; [bitacora_html.py](src/nurus/bitacora_html.py) y [capture/diaries.py](src/nurus/capture/diaries.py). |
 | Contrato de intercambio | ZIP local con manifiesto y CSV, hashes, límites, identidad y cobertura; [capture/contract.py](src/nurus/capture/contract.py). |
 | Exportador | Construye el paquete desde consultas ya obtenidas y comprobadas; [export_csmp_capture.py](descargador/export_csmp_capture.py). No vuelve a consultar para exportar. |
 | Importador y continuidad | Construye un candidato de trabajo antes de sustituir la sesión; [capture_input.py](src/nurus/personal/capture_input.py) y [capture_reconciliation.py](src/nurus/personal/capture_reconciliation.py). |
 | Hallazgos y productos | Coherencia de reglas/evidencias, edición, Excel, solicitudes, Word y borradores; [capture_findings.py](src/nurus/personal/capture_findings.py), [capture_products.py](src/nurus/personal/capture_products.py) y [outputs.py](src/nurus/personal/outputs.py). |
-| Entrega y verificaciones | Lockfiles, workflows Windows, verificación de EXE/paquete/instalador y herramientas reproducibles en [requirements](requirements/) y [tools](tools/). |
+| Entrega y verificaciones | Lockfiles, workflows Windows, verificación de EXE/paquete/instalador y herramientas reproducibles en [requirements](requirements) y [tools](tools). |
 
 ### Contrato y límites operativos
 
@@ -236,11 +236,11 @@ La CI actual del Descargador también verificó JavaScript de lectura, las 80 bi
 
 | Evidencia | Ubicación |
 |---|---|
-| Baseline y golden | [docs/evidencia_p0](docs/evidencia_p0/) |
-| Revisión antes de corregir | [docs/evidencia_revision_20261009](docs/evidencia_revision_20261009/) |
-| H01–H09/M01–M03 | [docs/evidencia_correcciones_20261009](docs/evidencia_correcciones_20261009/) |
-| Regresiones 2.7.4 | [docs/evidencia_regresiones_usuario_20261009](docs/evidencia_regresiones_usuario_20261009/) |
-| Referencias ausentes y CI actual | [docs/evidencia_referencias_20261009](docs/evidencia_referencias_20261009/) |
+| Baseline y golden | [docs/evidencia_p0](docs/evidencia_p0) |
+| Revisión antes de corregir | [docs/evidencia_revision_20261009](docs/evidencia_revision_20261009) |
+| H01–H09/M01–M03 | [docs/evidencia_correcciones_20261009](docs/evidencia_correcciones_20261009) |
+| Regresiones 2.7.4 | [docs/evidencia_regresiones_usuario_20261009](docs/evidencia_regresiones_usuario_20261009) |
+| Referencias ausentes y CI actual | [docs/evidencia_referencias_20261009](docs/evidencia_referencias_20261009) |
 | CI Asistente/conjunto actual | [Run 37979286900](https://github.com/MatiGaete2023/flow/actions/runs/37979286900) |
 | CI Descargador actual | [Run 37979286940](https://github.com/MatiGaete2023/flow/actions/runs/37979286940) |
 
