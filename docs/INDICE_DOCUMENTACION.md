@@ -15,6 +15,6 @@ La especificación y el estado vigentes se encuentran en [README](../README.md) 
 
 La entrega se centra en el trabajo actual, correo y Word manuales, revisión de nóminas, recuperación y controles de Office. En el flujo vigente, el registro real en RUS es manual; `registration.submit` está inhabilitado en producción.
 
-El antecedente histórico de integración RUS se conserva en [Registro actual: avance e instrucciones](REGISTRO_RUS_AVANCE_20261006.md). Para el estado vigente, consultar el resumen y [CONTINUAR.md](../CONTINUAR.md).
+El antecedente histórico de integración RUS se conserva en [Registro actual: avance e instrucciones](historico/REGISTRO_RUS_AVANCE_20261006.md). Para el estado vigente, consultar el resumen y [CONTINUAR.md](../CONTINUAR.md).
 
 La integración experimental de bitácoras RUS está descrita en [INTEGRACION_FINAL_20261008.md](INTEGRACION_FINAL_20261008.md).

@@ -99,7 +99,7 @@ def graph(root):
             action, phase = "AMPLIAR por adaptador; conservar reglas/ediciones; aislar marcas históricas", "P5/P6/P7"
         elif name == "nurus.personal.sitfa":
             action, phase = "CONSERVAR Excel/procedencia; ADAPTAR consumo local v1", "P5"
-        elif name in {"nurus.personal.registration", "nurus.personal.registration_excel"}:
+        elif name in {"nurus.personal.registration"}:
             action, phase = "AISLAR infraestructura de escritura; preservar recuperación de comprobantes", "P6"
         elif name in {"nurus.personal.session", "nurus.personal.product_state", "nurus.personal.sync"}:
             action, phase = "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional", "P5/P8"
