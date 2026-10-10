@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-09T18:54-03:00",
+  "actualizado": "2026-10-09T21:34-03:00",
   "orquestador": "claude-sesion-012yjVgL (orquestador y ejecutor en una sola sesión)",
   "decisiones": {
     "D1": {
@@ -403,16 +403,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-09T21:34-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "13 enlaces rotos restantes: 6 en variantes/ y 7 en copias de procedencia con hash."
+      ]
     },
     "WP-30": {
       "titulo": "CC fijo con una sola fuente",
@@ -719,12 +721,12 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-09T18:25-03:00",
       "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-60.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
