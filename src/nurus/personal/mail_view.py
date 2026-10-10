@@ -127,7 +127,7 @@ class AttachmentChips(ctk.CTkScrollableFrame):
 
 
 def build_mail_page(app):
-    page=app.pages['Correos'];page.grid_columnconfigure(0,weight=1);page.grid_rowconfigure(4,weight=1)
+    page=app.pages['Correos'];page.grid_columnconfigure(0,weight=1);page.grid_rowconfigure(3,weight=1)
     cfg=app.cfg.data['correos']
     top=ctk.CTkFrame(page,fg_color='transparent');top.grid(row=0,column=0,sticky='ew',padx=8,pady=(8,4));top.grid_columnconfigure(1,weight=1)
     app.mail_target=tk.StringVar(value='programas')
@@ -147,14 +147,16 @@ def build_mail_page(app):
     from .roster import review
     ui.Button(toolbar,text='Correo libre',width=110,command=lambda:app._guard(lambda:open_editor(app,'mail'))).pack(side='left')
     action_button(app,toolbar,'editar_adjunto',text='Editar adjunto (opcional)',width=180,command=lambda:app._guard(lambda:review(app)))[0].pack(side='left',padx=4)
-    # Fila propia: con motivos visibles en la barra no queda espacio a 1024x650.
-    app.mail_note=tk.StringVar();ui.Label(page,textvariable=app.mail_note,wraplength=760,text_color=ui.MUTED,anchor='w').grid(row=2,column=0,sticky='ew',padx=8)
+    # Fuera de la barra (con motivos visibles no cabe a 1024x650) y en la fila del resumen, sin restar alto.
+    app.mail_note=tk.StringVar()
 
     app.mail_scope=tk.StringVar()
-    app.mail_filters_summary=ui.Label(page,textvariable=app.mail_scope,text_color=ui.MUTED,anchor='w')
-    app.mail_filters_summary.grid(row=3,column=0,sticky='ew',padx=8)
+    summary_row=ctk.CTkFrame(page,fg_color='transparent');summary_row.grid(row=2,column=0,sticky='ew',padx=8)
+    app.mail_filters_summary=ui.Label(summary_row,textvariable=app.mail_scope,text_color=ui.MUTED,anchor='w')
+    app.mail_filters_summary.pack(side='left')
+    ui.Label(summary_row,textvariable=app.mail_note,wraplength=420,text_color=ui.MUTED,anchor='e').pack(side='right')
 
-    content=ctk.CTkFrame(page,fg_color='transparent');content.grid(row=4,column=0,sticky='nsew',padx=8,pady=(0,8))
+    content=ctk.CTkFrame(page,fg_color='transparent');content.grid(row=3,column=0,sticky='nsew',padx=8,pady=(0,8))
     content.grid_rowconfigure(0,weight=1);content.grid_columnconfigure(1,weight=1)
     app.mail_list=DraftCards(content);app.mail_list.grid(row=0,column=0,sticky='ns',padx=(0,10));app.mail_list.bind('<<ListboxSelect>>',app._select_mail)
     app.mail_list.set_drafts([])
