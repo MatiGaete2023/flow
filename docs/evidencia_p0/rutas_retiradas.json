@@ -1,0 +1,12 @@
+{
+  "nota": "Rutas que la evidencia P0 (congelada) todavía nombra y que se retiraron por decisión del plan. Las herramientas de evidencia las omiten en vez de fallar; la evidencia original no se edita.",
+  "rutas": {
+    "src/nurus/personal/registration.py": "WP-22 (D3)",
+    "src/nurus/personal/registration_excel.py": "WP-22 (D3)",
+    "tests/test_registration.py": "WP-22 (D3)",
+    "tests/test_registration_excel.py": "WP-22 (D3)",
+    "tests/test_rus_capture.py": "WP-22 (D3)",
+    "tests/test_operational_products.py": "WP-21",
+    "tests/test_rus_reader_and_rules.py": "WP-21 (renombrada a tests/test_rus_reader.py)"
+  }
+}
