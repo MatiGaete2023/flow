@@ -46,6 +46,23 @@ anteriores; D8 no informó fallos. Las demás decisiones siguen pendientes.
 
 **Para qué:** ejecutar las olas 2 a 4 del plan sin tocar el motor ni los textos tradicionales.
 
+**Revisión del 10 de octubre (misma sesión).**
+- Cinco revisores independientes encontraron errores; todos quedaron corregidos en sus ramas.
+- Nuevos PR independientes o declarados:
+
+  | PR | Contenido | Base |
+  | --- | --- | --- |
+  | #26 | WP-33 | `feat` |
+  | #27 | plan, reporte y herramientas | `feat` |
+  | #28 | WP-43 | `feat` |
+  | #29 | WP-62 | sobre #26 |
+  | #30 | WP-44 | sobre #25 |
+
+- Hallazgos, pasos y enmiendas E1–E6:
+  [REPORTE_REVISION_20261010.md](docs/implementacion/REPORTE_REVISION_20261010.md) (rama
+  `plan/revision-20261010`).
+- Desde las 03:24 UTC, Actions no asigna runners: revisar *Settings › Billing › Actions*.
+
 **Falta:**
 - Revisión, auditoría e integración de #12 a #25, en ese orden.
 - WP-33, WP-43, WP-44 y WP-62: esperan WP-14 (Codex, PR #4).
