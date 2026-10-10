@@ -30,7 +30,8 @@ def test_workflow_and_distribution_match_current_release():
     assert 'CSMP_Assistant_personal_" + os.environ["ASSISTANT_VERSION"] + ".zip' in workflow
     assert 'CSMP-Windows-${{ env.ASSISTANT_VERSION }}' in workflow
     assert 'python tools/write_build_meta.py --github-env $env:GITHUB_ENV' in workflow
-    assert "'wp/**'" in workflow and "'codex/**'" not in workflow
+    assert "'wp/**'" not in workflow and "'codex/**'" not in workflow and "'feat/**'" in workflow
+    assert '${{ github.event_name }}-${{ github.head_ref || github.ref_name }}' in workflow
     assert 'permissions:\n  contents: read' in workflow
     assert 'retention-days: 14' in workflow and 'retention-days: 90' in workflow
 
