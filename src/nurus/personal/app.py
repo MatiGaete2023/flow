@@ -11,8 +11,8 @@ import customtkinter as ctk
 from .ui import Textbox as ScrolledText
 
 from .app_base import App as _BaseApp
-from .mail_view import build_mail_page
-from .mail_controls import alcance_modalidades, selected_court_record_ids, empty_preparation_message
+from .mail_view import build_mail_page, update_mail_actions
+from .mail_controls import alcance_modalidades, selected_court_record_ids, empty_preparation_message, require_mail_action
 from .outputs import prepare_drafts, prepare_required_drafts, create_drafts, drafts_for_scope, value
 from .resolutions import automatic_project_selections, unique_case_selections, resolution_selection_source, _case_key, kind_code, kind_label
 from .statistics import summarize
@@ -113,6 +113,7 @@ class App(_BaseApp):
         if drafts and not keep_source and hasattr(self,'mail_tabs'):self.mail_tabs.select(self.mail_compose_tab)
         if hasattr(self,'save_all_button'):self.save_all_button.configure(text=f'Guardar {len(drafts)} en Outlook')
         self.status.set(empty_message if not drafts and empty_message else message.format(count=len(drafts)))
+        update_mail_actions(self)
 
     def _prepare_mail(self):
         work=self._require_work();self._capture_mail();self._sync_mail_config(work)
@@ -143,7 +144,7 @@ class App(_BaseApp):
 
     def _send_all(self):
         work=self._require_work();self._capture_mail()
-        if not self.drafts:raise ValueError('Prepara y revisa los borradores antes de guardarlos.')
+        require_mail_action(self,'guardar_todos')
         from .product_state import stale
         if any(d.roster and not d.roster_reviewed and not stale(work,d) for d in self.drafts):
             from .roster import prepare_optional
@@ -169,7 +170,7 @@ class App(_BaseApp):
 
     def _attachment_all(self):
         self._capture_mail()
-        if not self.drafts:raise ValueError('Primero prepara los borradores.')
+        require_mail_action(self,'adjuntar_todos')
         paths=filedialog.askopenfilenames(title='Seleccionar adjuntos para todos los borradores')
         if not paths:return
         for draft in self.drafts:
@@ -183,7 +184,7 @@ class App(_BaseApp):
 
     def _preview_mail(self):
         self._capture_mail()
-        if self.draft_index is None:raise ValueError('Primero prepara y selecciona un borrador.')
+        require_mail_action(self,'vista_previa')
         draft=self.drafts[self.draft_index]
         win=ctk.CTkToplevel(self);win.title('Vista previa del borrador');win.geometry('820x640');win.transient(self)
         text=ScrolledText(win,wrap='word',font=('Segoe UI',10),padx=12,pady=12);text.pack(fill='both',expand=True)

@@ -18,6 +18,8 @@ from .widgets import ScrollPane, NamedChoice, Tooltip
 from .ux_support import case_detail_text, compact_case_detail_text, grouped_draft_detail, incident_ids, resume_available, resume_description, RES_HELP
 from .work import Work
 from .outputs import create_draft, import_contacts
+from .mail_controls import NO_WORK, require_mail_action
+from .mail_view import update_mail_actions
 from .resolutions import KINDS, kind_code, kind_label, prepare_projects, generate_projects, automatic_project_selections
 from .importing import SheetChoice
 from nurus.rus.reader import list_workbook_sheets
@@ -221,7 +223,7 @@ class App(ctk.CTk):
     def _require_work(self):
         if self.busy or getattr(self,'rendering',False):raise ValueError('Hay una operación en curso.')
         self._capture_observation()
-        if not self.work or not self.work.output:raise ValueError('Procesa primero el Excel; se compartirá automáticamente con esta pestaña.')
+        if not self.work or not self.work.output:raise ValueError(NO_WORK)
         return self.work
 
     def _guard(self,action):
@@ -237,6 +239,7 @@ class App(ctk.CTk):
 
     def _update_context(self):
         if hasattr(self,'next_step'):self.next_step.refresh()
+        update_mail_actions(self)
         if not self.work:
             self.context.set('Sin trabajo activo · Ctrl+O para elegir un Excel')
             return
@@ -569,7 +572,7 @@ class App(ctk.CTk):
 
     def _clear_drafts(self):
         self.drafts=[];self._draft_scope_source=[];self.draft_index=None;self.mail_list.delete(0,'end')
-        self._clear_mail_editor();self._clear_projects()
+        self._clear_mail_editor();self._clear_projects();update_mail_actions(self)
     def _clear_projects(self):
         self.projects=[];self.project_index=None
         self.project_list.delete(0,'end');self.project_editor.delete('1.0','end')
@@ -592,14 +595,14 @@ class App(ctk.CTk):
         self.draft_index=self.mail_list.curselection()[0];d=self.drafts[self.draft_index]
         self.to.set(d.to);self.cc.set(d.cc);self.subject.set(d.subject);self.body.delete('1.0','end');self.body.insert('1.0',d.body);self.attach.set('\n'.join(d.attachments))
         self.body._textbox.edit_reset()
-        self._update_mail_case_detail();
+        self._update_mail_case_detail();update_mail_actions(self)
     def _attachment(self):
         paths=filedialog.askopenfilenames()
         if paths:self.attach.set('\n'.join([p for p in self.attach.get().split('\n') if p]+list(paths)))
 
     def _send_draft(self):
         work=self._require_work();self._capture_mail()
-        if self.draft_index is None:raise ValueError('Primero prepara una vista previa.')
+        require_mail_action(self,'guardar_este')
         target=self.drafts[self.draft_index]
         from .product_state import stale
         if target.roster and not target.roster_reviewed and not stale(work,target):

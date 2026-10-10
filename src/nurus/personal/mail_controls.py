@@ -52,3 +52,33 @@ def empty_preparation_message(work,selected,modality_keys,kind=''):
     template=work.config['correos']['plantillas'].get(kind,{})
     name=template.get('nombre','el conjunto de correos')
     return f'No hay gestiones habilitadas para {name}. Revisa el tipo de correo, las reglas y las decisiones incluir/omitir en Trabajo.'
+
+
+NO_WORK='Procesa primero el Excel; se compartirá automáticamente con esta pestaña.'
+NO_DRAFTS='Prepara y revisa los borradores antes de guardarlos.'
+NO_DRAFTS_ATTACH='Primero prepara los borradores.'
+NO_SELECTED='Primero prepara y selecciona un borrador.'
+NO_ROSTER='Este correo no tiene una nómina automática pendiente.'
+# Acciones de Correos que dependen del estado; las demás siempre están disponibles.
+MAIL_ACTIONS=('preparar_tipo','preparar_todos','editar_adjunto','vista_previa','guardar_este','guardar_todos','adjuntar_todos')
+
+
+def mail_block(app,key):
+    """Motivo por el que una acción de Correos no está disponible; '' si lo está.
+
+    La misma condición deshabilita el botón y detiene la acción (`require_mail_action`)."""
+    work=getattr(app,'work',None)
+    drafts=list(getattr(app,'drafts',[]) or [])
+    index=getattr(app,'draft_index',None)
+    if key in ('preparar_tipo','preparar_todos','guardar_este','guardar_todos') and not (work and getattr(work,'output','')):
+        return NO_WORK
+    if key=='guardar_todos' and not drafts:return NO_DRAFTS
+    if key=='adjuntar_todos' and not drafts:return NO_DRAFTS_ATTACH
+    if key in ('vista_previa','guardar_este','editar_adjunto') and (index is None or index>=len(drafts)):return NO_SELECTED
+    if key=='editar_adjunto' and not drafts[index].roster:return NO_ROSTER
+    return ''
+
+
+def require_mail_action(app,key):
+    reason=mail_block(app,key)
+    if reason:raise ValueError(reason)

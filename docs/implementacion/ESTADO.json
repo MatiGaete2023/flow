@@ -589,7 +589,7 @@
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T17:00:00-03:00",
       "rama": "wp/WP-41-siguiente-paso",
-      "pr": null,
+      "pr": 24,
       "verificacion": "PASA (verificacion/WP-41.json)",
       "revision": null,
       "auditoria": null,
@@ -606,16 +606,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T18:00:00-03:00",
+      "rama": "wp/WP-42-resoluciones-correos",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-42.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-41 (PR #24). Condición única mail_block en mail_controls.py para deshabilitar y para la acción."
+      ]
     },
     "WP-43": {
       "titulo": "Crear paquete de este lote",
