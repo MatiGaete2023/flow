@@ -18,9 +18,18 @@ def literal(value):
     return str(value)
 
 
-def export_capture(lots,destination,*,diaries=None,include_originals=False,match_diaries=False):
+def consolidated_workbook(lots):
+    """Libro CSMP de los lotes como bytes (D6): solo el XLSX, nunca HTML ni PDF. Falla si el lote no es apto."""
+    from tempfile import TemporaryDirectory
+    from resultados import export_book
+    with TemporaryDirectory(prefix='consolidado-') as folder:
+        return export_book(lots,Path(folder),csmp=True).read_bytes()
+
+
+def export_capture(lots,destination,*,diaries=None,include_originals=False,match_diaries=False,consolidated=False):
     lots=list(lots)
     if not lots:raise ValueError('Selecciona un lote verificado.')
+    consolidated_bytes=consolidated_workbook(lots) if consolidated else None
     captured=lots[0].summary.get('fecha_hora') or datetime.now().astimezone().isoformat()
     fingerprint=json.dumps([lot.summary for lot in lots],ensure_ascii=False,sort_keys=True)
     # Hash del control de bitácoras integra la identidad de la captura reexportable.
@@ -101,4 +110,4 @@ def export_capture(lots,destination,*,diaries=None,include_originals=False,match
     from contrato_integral import capabilities
     build=capabilities()
     metadata={'capture_id':cid,'captured_at':captured,'downloader':{'version':build['version'],'commit':build['commit']},'contains_sensitive_data':True,'originals_authorized':include_originals,'queries':data['consultas'],'table_states':states}
-    return write_capture(destination,metadata,data,originals=originals)
+    return write_capture(destination,metadata,data,originals=originals,consolidated=consolidated_bytes)
