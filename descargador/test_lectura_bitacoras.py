@@ -56,7 +56,7 @@ class Bridge(FakeBridge):
 
 def run(tmp_path,bridge,batch=None,resume=None,cancel=None,emit=None):
     parser()
-    return DiaryRunner(bridge,CATALOG,emit or (lambda *a:None),cancel or threading.Event()).run(
+    return DiaryRunner(bridge,CATALOG,emit or (lambda *a:None),cancel or threading.Event(),pause=0).run(
         batch or Batch(('49',),('2',),('Cumplimiento',)),tmp_path,resume)
 
 def test_four_modalities_all_courts_and_two_tabs(tmp_path):
