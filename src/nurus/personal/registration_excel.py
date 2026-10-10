@@ -9,7 +9,7 @@ from zipfile import ZipFile
 from xml.etree import ElementTree
 
 from nurus.rus.columns import normalize
-from nurus.rus.rules import as_date, as_int
+from nurus.rus.util import as_date, as_int
 from nurus.services.file_output import write_new_file
 from .config import defaults
 from .registration import RemoteIdentity, restore_intent

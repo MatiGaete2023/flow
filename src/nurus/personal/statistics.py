@@ -1,7 +1,7 @@
 """Conteos de constancias; propuestas y borradores no equivalen a gestiones."""
 from collections import Counter
 from pathlib import Path
-from nurus.rus.rules import as_date, as_int
+from nurus.rus.util import as_date, as_int
 from nurus.services.file_output import write_new_file
 
 def summarize(work):

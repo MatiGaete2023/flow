@@ -7,7 +7,7 @@ from .config import emails
 from .sitfa import REQUIRED
 from .outputs import value
 from nurus.rus.columns import normalize
-from nurus.rus.rules import as_date, as_int
+from nurus.rus.util import as_date, as_int
 
 
 def quality(work):

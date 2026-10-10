@@ -54,18 +54,18 @@ jobs:
 
       - name: Verify installed package outside source path
         run: >-
-          python -I -c "import tempfile; from pathlib import Path;
+          python -I -c "from pathlib import Path;
           import nurus; from importlib.metadata import version;
           from nurus.rus.catalog import load_catalog;
-          from nurus.storage.database import Database;
+          from nurus.personal.config import defaults;
           from nurus.personal.template_package import _matrix_patches; import nurus.personal as personal;
           assert nurus.__version__ == version('nurus'); assert load_catalog();
           assert len(_matrix_patches()) == 5;
           template_root = Path(personal.__file__).parent / 'plantillas_word';
           expected = {'LAJA/NOMENCL.docx','LAJA/PC_IE.docx','LAJA/PC_INFO.docx','MULCHEN/NOMENCL.docx','MULCHEN/PC_IE.docx','MULCHEN/PC_INFO.docx'};
           actual = {p.relative_to(template_root).as_posix() for p in template_root.rglob('*.docx')}; assert actual == expected;
-          folder = tempfile.TemporaryDirectory(); db = Database(Path(folder.name) / 'check.sqlite3');
-          assert db.list_templates(); print(nurus.__version__, 'installed resources OK; 5 patches and 6 templates verified'); folder.cleanup()"
+          assert defaults()['correos']['plantillas'] and defaults()['textos'];
+          print(nurus.__version__, 'installed resources OK; 5 patches, 6 templates and mail/text defaults verified')"
 
       - name: Dependency check
         run: python -m pip check

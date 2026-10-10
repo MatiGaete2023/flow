@@ -333,18 +333,19 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "BLOQUEADO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T10:00:00-03:00",
+      "rama": "wp/WP-21-capa-legado",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-21.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
-        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta."
+        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta.",
+        "Autorizado por el usuario el 10 de octubre de 2026 conservando domain/models.py. Propuesta del Ejecutor en su PR; apilada sobre WP-20 (PR #12)."
       ]
     },
     "WP-22": {

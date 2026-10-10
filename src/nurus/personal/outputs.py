@@ -225,7 +225,7 @@ def prepare_drafts(work,kind,*,modalities='',period='',selected=None,directory=N
     groups=defaultdict(list)
     for row in work.rows:
         if row.excluded or (selected is not None and row.id not in selected) or not selected_row(work,row,modality_keys):continue
-        from nurus.rus.rules import tribunal
+        from nurus.rus.util import tribunal
         if tribunal(value(work,row,'tribunal')) is None:continue
         # Las comunicaciones automáticas respetan la regla por fila. Una entrada externa
         # sin trazabilidad solo conserva el uso histórico cuando el tipo se pidió de forma
@@ -253,7 +253,7 @@ def prepare_drafts(work,kind,*,modalities='',period='',selected=None,directory=N
         to=resolve_contact(cfg,program) if to_program else '; '.join(court_cfg['para'])
         draft=Draft(render(tpl['asunto'],context),render(tpl['cuerpo'],context),to,
                     '; '.join(emails(CC+';'+cfg['correos'].get('cc_adicional',''))),required=tpl['adjunto']=='obligatorio')
-        from nurus.rus.rules import as_date
+        from nurus.rus.util import as_date
         dates=[as_date(due_value(work,r,operational)) for r in rows]
         dates=[d for d in dates if d]
         draft.recipient_type='programas' if to_program else 'tribunales'
@@ -435,7 +435,7 @@ def fill_docx(template,destination,values):
 
 
 def word_values(work,row):
-    from nurus.rus.rules import as_date
+    from nurus.rus.util import as_date
     durations=[str(v) for k,v in row.values.items() if normalize(k) in ('duracion','plazo','vigencia')]
     vals={key.upper():value(work,row,key) for key in ('rit','rut','nombre','programa')}
     resolution=as_date(value(work,row,'resolucion'))

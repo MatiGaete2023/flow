@@ -8,7 +8,7 @@ import json
 
 from nurus.rus.columns import normalize
 from nurus.rus.reader import read_workbook
-from nurus.rus.rules import as_date, as_int, tribunal, historical_match
+from nurus.rus.util import as_date, as_int, tribunal, historical_match
 from nurus.services.exports import _export_preserved_payload
 from .config import atomic_json
 from .motor.contexto import current

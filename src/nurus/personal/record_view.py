@@ -78,7 +78,7 @@ class RecordForm:
             from .work import _review_value
             raw=_review_value(row,key)
             if key=='FECHA_OBS' and raw:
-                from nurus.rus.rules import as_date
+                from nurus.rus.util import as_date
                 parsed=as_date(raw)
                 if parsed:raw=parsed.strftime('%d/%m/%Y')
             variable.set(raw)
