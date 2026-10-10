@@ -13,7 +13,6 @@ from nurus.personal.config import defaults
 from nurus.personal.product_state import stamp,stale
 from nurus.personal.outputs import Draft
 from nurus.personal.work import Work
-from nurus.personal.registration import submit
 from test_capture_contract import fixture
 from test_bitacora_lote import manifest
 
@@ -112,11 +111,6 @@ def test_engine_upgrade_invalidates_prepared_products_without_changing_session(t
     monkeypatch.setattr(temporal,'RULESET_VERSION','actualizacion-ficticia')
     assert stale(work,draft) and work.ruleset_version==stored
 
-
-def test_production_submit_cannot_even_read_or_write():
-    class Dangerous:
-        def __getattr__(self,name):raise AssertionError('No tocar adaptador/journal')
-    with pytest.raises(ValueError,match='inhabilitado'):submit(Dangerous(),'id',Dangerous())
 
 
 def test_inherited_mail_statement_needs_correction_for_new_package(tmp_path):

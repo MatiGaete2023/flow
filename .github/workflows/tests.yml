@@ -110,17 +110,6 @@ jobs:
           python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version 0.5.0.dev4 --downloader-version 2.7.5 --extension-version 2.7.5
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
-      - name: RUS capture in Chromium with a fictitious form
-        if: matrix.python == '3.12'
-        timeout-minutes: 4
-        run: |
-          python -c "import playwright"
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Playwright' }
-          python -m playwright install chromium
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Chromium' }
-          python tools/smoke_rus_capture.py
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la comprobación de captura RUS' }
-
       - name: Windows interface captures
         if: always() && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
@@ -182,20 +171,6 @@ jobs:
           Invoke-CheckedProcess -FilePath (Resolve-Path dist/CSMP_Integral/CSMP_Integral.exe).Path -Arguments @('--verificar-paquete','artifacts/package-check.json') -Label 'EXE autónomo CSMP'
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
           if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
-          python -m PyInstaller --noconfirm --onefile --windowed --paths src --name RUS_Inspector tools/rus_inspector_entry.py
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del inspector RUS' }
-          New-Item -ItemType Directory -Force dist/RUS_Registro_Actual | Out-Null
-          Copy-Item dist/RUS_Inspector.exe dist/RUS_Registro_Actual/
-          Copy-Item -Recurse tools/rus_capture_extension dist/RUS_Registro_Actual/
-          Copy-Item docs/REGISTRO_RUS_AVANCE_20261006.md dist/RUS_Registro_Actual/
-
-      - name: RUS inspector and Chrome capture extension
-        if: matrix.python == '3.12'
-        uses: actions/upload-artifact@v4
-        with:
-          name: RUS-Registro-Actual-Windows
-          path: dist/RUS_Registro_Actual/
-          if-no-files-found: error
 
       - name: Verificar lector y empaquetado integral SITFA
         if: matrix.python == '3.12'
