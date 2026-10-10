@@ -8,7 +8,7 @@ Uso:
   python tools/write_build_meta.py                    # _build_meta.py del Asistente
   python tools/write_build_meta.py --descargador DIR  # _build_meta.py del Descargador y sincroniza la extensión
   python tools/write_build_meta.py --sincronizar-extension   # solo manifest.json y pagina.js
-  python tools/write_build_meta.py --versiones        # imprime JSON con ambas versiones
+  python tools/write_build_meta.py --versiones [--descargador DIR]  # imprime JSON con ambas versiones
   python tools/write_build_meta.py --github-env ARCHIVO      # agrega ASSISTANT_VERSION y DOWNLOADER_VERSION
 """
 import argparse,json,re,subprocess
@@ -43,7 +43,8 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--descargador',type=Path)
     parser.add_argument('--sincronizar-extension',action='store_true');parser.add_argument('--versiones',action='store_true')
     parser.add_argument('--github-env',type=Path);args=parser.parse_args()
-    versions={'asistente':assistant_version(),'descargador':downloader_version()}
+    downloader_root=args.descargador.resolve() if args.descargador else ROOT/'descargador'
+    versions={'asistente':assistant_version(),'descargador':downloader_version(downloader_root)}
     if args.versiones:print(json.dumps(versions));return
     if args.github_env:
         with args.github_env.open('a',encoding='utf-8') as stream:
