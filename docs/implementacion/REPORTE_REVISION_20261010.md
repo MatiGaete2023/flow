@@ -204,12 +204,25 @@ como texto. Supuesto: es lo deseado, para que la copia no ejecute fórmulas.
 - `verificar_wp.py` debería incluir el lint de WP-34 (F401/F841) para que local y CI coincidan.
 - Un fixture con más de 500 filas en la suite base: los errores de render por trozos solo aparecen ahí.
 
-## 6. Texto de las enmiendas al plan (para aprobación)
+## 6. Texto de las enmiendas al plan (aprobado)
 
-Agregar en `docs/implementacion/PLAN_IMPLEMENTACION.md`, después de «Reglas de alcance». Ya está agregado en esta rama,
-marcado como propuesta.
+El usuario aprobó E1–E6 el 10 de octubre de 2026 («Apruebo las enmiendas E1–E6 del plan»). El texto quedó en
+`docs/implementacion/PLAN_IMPLEMENTACION.md`, después de «Reglas de alcance», e incorporado en la regla 13, en «Roles»
+(E3) y en «Olas y dependencias» (E6).
 
-> **Enmiendas propuestas del 10 de octubre de 2026 (pendientes de aprobación del Orquestador y del usuario)**
+**Pasos del Orquestador al integrar esta rama (rol del Orquestador, no del Ejecutor):**
+
+1. Integrar esta rama en `feat` antes de los PR que todavía editan `ESTADO.json`, o resolver su conflicto primero.
+2. `python tools/estado.py dividir` sobre el `ESTADO.json` vigente en `feat`, y commit de `docs/implementacion/estado/`.
+3. E6: reemplazar `TODAS_LAS_DEMAS` en `estado/WP-61.json` y `estado/WP-70.json` por listas explícitas; marcar como
+   `archivo` las dependencias WP-33 → WP-14, WP-43 → WP-33 y WP-44 → WP-43 (se ejecutaron sin ellas integradas),
+   con el formato `{"wp": "WP-14", "tipo": "archivo"}`; un texto simple cuenta como `funcional`. WP-61 excluye
+   `src/nurus/personal/motor/`. Hoy `validar` da FALLA solo por esas dos entradas `TODAS_LAS_DEMAS`.
+4. `python tools/estado.py agregar` y luego `validar`, que debe dar PASA. Desde ahí la CI corre `validar` en cada PR.
+5. E3: anotar `revisor` y `auditor` en cada `estado/WP-XX.json`, siempre de una raíz distinta a la del Ejecutor.
+6. E2: regenerar `linea_base.json` tras cada integración; el siguiente WP se verifica contra esa línea base.
+
+> **Enmiendas del 10 de octubre de 2026 (aprobadas por el usuario el 10 de octubre de 2026)**
 >
 > - **E1.** Cada Ejecutor escribe solo `docs/implementacion/estado/WP-XX.json`. `ESTADO.json` se regenera con
 >   `python tools/estado.py agregar` y la CI corre `validar`. Hasta que el Orquestador ejecute `dividir`, rige la regla
