@@ -3,8 +3,13 @@
 Uso:
     python tools/verificar_wp.py --linea-base
         Ejecuta todo y guarda docs/implementacion/linea_base.json.
-    python tools/verificar_wp.py [--pruebas-eliminadas-asistente N] [--pruebas-eliminadas-descargador N] [--salida archivo.json]
+    python tools/verificar_wp.py [--lista-eliminadas ARCHIVO ...] [--salida archivo.json]
         Ejecuta todo y compara con la línea base. Código de salida 1 si algún control FALLA.
+        --lista-eliminadas: archivo con un nodeid de pytest por línea (p. ej.
+        tests/test_x.py::test_y o descargador/test_z.py::Clase::test_w). Cada nodo debe estar
+        ausente ahora; su cantidad reemplaza a los conteos declarados a mano.
+    --pruebas-eliminadas-asistente/-descargador N siguen aceptados por compatibilidad, pero
+        el control queda marcado «sin lista verificable».
 
 Controles:
   1. Suite del Asistente (pytest en tests/): 0 fallos; aprobadas >= base - eliminadas declaradas.
@@ -16,6 +21,7 @@ Controles:
   6. Ruff E9,F63,F7,F82 en src/: nunca más avisos que la base.
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
+Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
 """
 import argparse
@@ -132,23 +138,59 @@ def collect():
     }
 
 
-def compare(now, base, removed_a, removed_d):
+def collected_nodeids(suite):
+    """Nodeids presentes ahora, relativos a la raíz (las pruebas del Descargador llevan prefijo descargador/)."""
+    args = ["--collect-only", "-q", "-p", "no:cacheprovider"] + (["descargador"] if suite == "descargador" else [])
+    code, out = run([PY, "-m", "pytest", *args])
+    ids = {line.strip() for line in out.splitlines() if "::" in line and not line.startswith(("=", " "))}
+    if suite == "descargador":
+        ids |= {"descargador/" + i for i in ids if not i.startswith("descargador/")}
+    return ids
+
+
+def removed_from_lists(paths):
+    """Lee las listas de nodos eliminados; devuelve conteos por suite y problemas (nodos que siguen presentes)."""
+    removed = {"asistente": [], "descargador": []}
+    for path in paths:
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            node = line.split("#", 1)[0].strip()
+            if node:
+                removed["descargador" if node.startswith("descargador/") else "asistente"].append(node)
+    problems = []
+    for suite, nodes in removed.items():
+        if nodes:
+            present = collected_nodeids(suite)
+            problems += [f"{node} sigue presente" for node in nodes if node in present]
+    return {suite: len(set(nodes)) for suite, nodes in removed.items()}, problems
+
+
+def compare(now, base, removed_a, removed_d, lists=None):
     checks = []
     def add(name, ok, detail):
         checks.append({"control": name, "resultado": "PASA" if ok else "FALLA", "detalle": detail})
+    listed, problems = lists if lists else ({}, [])
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
         n, b = now[key], base[key]
+        removed += listed.get(key, 0)
         minimum = b["aprobadas"] - removed
+        origin = "" if not removed or listed.get(key) else "; eliminadas sin lista verificable"
         add(f"Suite {key}", n["fallidas"] == 0 and n["aprobadas"] >= minimum,
-            f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']})")
+            f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']}{origin})")
+    if lists:
+        add("Pruebas eliminadas listadas", not problems,
+            "; ".join(problems) or f"{sum(listed.values())} nodos ausentes como se declaró")
     ids_now, ids_base = now["identidades_reales"], base["identidades_reales"]
-    if ids_now is not None:
+    if ids_now is None:
+        add("Identidades reales", False, "NO_MEDIDO: falta tools/check_real_ids.py o su salida no se pudo leer")
+    else:
         limit = 0 if not ids_base else ids_base
         add("Identidades reales", ids_now <= limit, f"{ids_now} hallazgos (límite {limit})")
     add("Paridad golden", now["paridad_golden"] == "PASA", now["paridad_golden"])
     add("Restricciones absolutas", not now["restricciones"], "; ".join(now["restricciones"]) or "sin infracciones")
     for key, label in (("ruff_src", "Ruff E9/F63/F7/F82"), ("modulos_no_alcanzables", "Módulos no alcanzables"), ("enlaces_rotos", "Enlaces rotos")):
-        if now[key] is not None and base.get(key) is not None:
+        if now[key] is None or base.get(key) is None:
+            add(label, False, f"NO_MEDIDO (ahora {now[key]}, base {base.get(key)})")
+        else:
             add(label, now[key] <= base[key], f"{now[key]} (base {base[key]})")
     return checks
 
@@ -158,6 +200,7 @@ def main(argv):
     parser.add_argument("--linea-base", action="store_true")
     parser.add_argument("--pruebas-eliminadas-asistente", type=int, default=0)
     parser.add_argument("--pruebas-eliminadas-descargador", type=int, default=0)
+    parser.add_argument("--lista-eliminadas", type=Path, action="append", default=[])
     parser.add_argument("--salida", type=Path)
     args = parser.parse_args(argv)
     now = collect()
@@ -171,7 +214,8 @@ def main(argv):
         print("Falta la línea base: ejecuta primero --linea-base en la rama base.")
         return 1
     base = json.loads(BASE_FILE.read_text(encoding="utf-8"))
-    checks = compare(now, base, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador)
+    lists = removed_from_lists(args.lista_eliminadas) if args.lista_eliminadas else None
+    checks = compare(now, base, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
     report = {"commit": now["commit"], "base": base["commit"], "controles": checks,
               "veredicto": "PASA" if all(c["resultado"] == "PASA" for c in checks) else "FALLA"}
     for check in checks:

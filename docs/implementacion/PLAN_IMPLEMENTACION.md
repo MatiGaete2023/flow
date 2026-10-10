@@ -48,6 +48,27 @@ Un WP que viole cualquiera de estas reglas se rechaza completo, aunque sus prueb
 15. No marcar nada como «aceptado» o «institucional»: eso solo lo hace el usuario en un acta.
 16. Formato de fecha en documentos: «9 de octubre de 2026». Idioma: español de Chile.
 
+### Enmiendas propuestas del 10 de octubre de 2026 (pendientes de aprobación)
+
+Detalle y fundamento en [REPORTE_REVISION_20261010.md](REPORTE_REVISION_20261010.md), sección 5. Hasta que el
+Orquestador y el usuario las aprueben, rigen las reglas 1–16 tal como están.
+
+- **E1 · Estado por WP.** Cada Ejecutor escribe solo `docs/implementacion/estado/WP-XX.json`. `ESTADO.json` se
+  regenera con `python tools/estado.py agregar` y la CI corre `python tools/estado.py validar`. Hasta que el
+  Orquestador ejecute `python tools/estado.py dividir`, rige la regla actual.
+- **E2 · Verificación sin holgura.** Las pruebas retiradas se declaran con `--lista-eliminadas` (nodeids). Un control
+  que no se puede medir es FALLA. Ningún WP se integra sobre una línea base anterior a la última integración.
+- **E3 · Revisión cruzada.** Revisor y Auditor pertenecen siempre a una raíz de agente distinta de la del Ejecutor.
+  Los subagentes de una misma raíz cuentan como el mismo agente.
+- **E4 · Presupuesto de CI.** Cada PR corre la CI mínima (Python 3.12). La matriz 3.12–3.14, Playwright, PyInstaller
+  y el instalador corren al integrar en `feat` o a pedido (`workflow_dispatch`).
+- **E5 · Privacidad del historial.** No se sube una etiqueta o rama cuyo árbol contenga datos reales; WP-17 cubre
+  también etiquetas `pre-*`, ramas legado y `ccr-*`. Las pruebas con datos reales se hacen solo en el PC autorizado y
+  devuelven al agente un resultado binario o agregado, nunca contenido.
+- **E6 · Dependencias explícitas.** Sin `TODAS_LAS_DEMAS`: cada dependencia es una lista explícita de tipo
+  `funcional` o `archivo`. Una dependencia de archivo no impide ejecutar el WP contra `feat`; solo obliga a resolver
+  el conflicto textual al integrar. WP-61 excluye `src/nurus/personal/motor/` salvo decisión expresa.
+
 ## Roles y ciclo de vida de un WP
 
 Cinco roles de agente y el usuario. Un mismo agente puede asumir varios roles en distintos WP, pero **nunca revisa ni audita un WP que él mismo ejecutó**.
