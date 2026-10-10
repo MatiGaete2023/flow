@@ -66,9 +66,9 @@ def prepare_optional(work,drafts,previous=()):
 
 def review(app):
     app._capture_mail()
-    if app.draft_index is None:raise ValueError('Selecciona un correo preparado.')
+    from .mail_controls import require_mail_action
+    require_mail_action(app,'editar_adjunto')
     draft=app.drafts[app.draft_index]
-    if not draft.roster:raise ValueError('Este correo no tiene una nómina automática pendiente.')
     groups=deepcopy(draft.roster)
     win=tk.Toplevel(app);win.title('Editar nómina del correo seleccionado');win.geometry('950x570');win.transient(app)
     editors=[]
