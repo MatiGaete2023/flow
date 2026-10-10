@@ -85,7 +85,7 @@ def graph(root):
         relative = path.relative_to(root).as_posix()
         action = "CONSERVAR"
         phase = "P0"
-        if any(part in relative for part in ("download_link", "download_transfer", "bitacora_link", "integral_contract")):
+        if any(part in relative for part in ("download_link", "download_transfer")):
             action, phase = "DESACOPLAR TRAS G3/G5; conservar recuperación", "P6"
         elif name in {"nurus.personal.bitacoras", "nurus.personal.bitacora_lote", "nurus.personal.bitacora_har"}:
             action, phase = "SEPARAR exportación/análisis sin cambiar reglas", "P3"

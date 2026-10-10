@@ -379,16 +379,18 @@
         "WP-22"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:00:00-03:00",
+      "rama": "wp/WP-23-lanzamiento",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-23.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-22 (PR #14). download_link/download_transfer sin cambios."
+      ]
     },
     "WP-24": {
       "titulo": "Documentación vigente",

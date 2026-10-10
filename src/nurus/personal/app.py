@@ -365,9 +365,6 @@ def main(argv=None):
     if args.verificar_paquete:
         from .package_check import check
         check(args.verificar_paquete);return
-    if args.verificar_integracion:
-        from .package_check import check_integral
-        check_integral(args.verificar_integracion,args.descargador_integral);return
     app=App()
     if args.archivo:
         app.work=None;app._clear_drafts();app._clear_projects();app.records.delete(*app.records.get_children())
