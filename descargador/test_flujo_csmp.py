@@ -1,5 +1,4 @@
 """Cruces y períodos con registros ficticios; no ejecuta consultas reales."""
-from collections import Counter
 from datetime import date
 from dataclasses import replace
 from io import BytesIO
@@ -8,10 +7,9 @@ import tempfile,unittest
 from urllib.parse import urlencode
 from openpyxl import Workbook
 import motor as m
-from carga import HEADERS,date_blocks,record_rows,signatures,coverage,records_in_grid
+from carga import HEADERS,date_blocks,record_rows,signatures,coverage
 from flujo_csmp import months,plan,assemble
 from resultados import load_lot
-from lotes import Batch,Dates
 from perfiles import Selection,selection_profile,response_profile
 
 

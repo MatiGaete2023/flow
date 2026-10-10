@@ -4,7 +4,6 @@ No lee HAR al ejecutar ni accede a cookies, contrasenas o perfiles de navegador.
 """
 from __future__ import annotations
 
-import argparse
 import ast
 from html import unescape
 from collections import Counter
@@ -15,10 +14,7 @@ import io
 import json
 import os
 from pathlib import Path
-import queue
 import re
-import sys
-import threading
 import zipfile
 import unicodedata
 from urllib.parse import parse_qsl, urlencode, urlsplit

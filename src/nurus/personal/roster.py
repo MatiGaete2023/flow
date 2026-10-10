@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 from uuid import uuid4
 import tkinter as tk
-from tkinter import ttk, simpledialog, messagebox
+from tkinter import ttk, messagebox
 from .outputs import value, due_value, mail_metric_key, mail_metric_value, program_filename
 
 

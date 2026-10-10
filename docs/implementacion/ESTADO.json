@@ -58,6 +58,13 @@
       "fecha": "10 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
       "respuesta": null
+    },
+    {
+      "id": "WP-34-motor-f401",
+      "origen": "WP-34",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-34 pide ruff F401/F841 sobre src completo, pero src/nurus/personal/motor/ tiene 4 F401 y es intocable salvo decisión expresa. La CI lo excluye con --extend-exclude.",
+      "respuesta": null
     }
   ],
   "paquetes": {
@@ -514,16 +521,18 @@
         "WP-23"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T14:00:00-03:00",
+      "rama": "wp/WP-34-ci",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-34.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-24 (PR #20). Lint excluye src/nurus/personal/motor (4 F401 intactos por regla de motor)."
+      ]
     },
     "WP-35": {
       "titulo": "Instaladores con dependencias fijadas",

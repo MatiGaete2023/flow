@@ -1,5 +1,4 @@
 """Correo y Word manuales independientes de cualquier Excel."""
-from dataclasses import asdict
 from pathlib import Path
 from copy import deepcopy
 import json

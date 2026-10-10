@@ -1,7 +1,7 @@
 import tempfile,json,hashlib,unittest
 from pathlib import Path
 from zipfile import ZipFile
-from openpyxl import load_workbook,Workbook
+from openpyxl import load_workbook
 from icalendar import Calendar
 from test_resultados import fixture
 from resultados import load_lot,export_book,export_zip,export_ics

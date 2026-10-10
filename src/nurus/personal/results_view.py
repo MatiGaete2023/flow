@@ -1,7 +1,5 @@
 """Current products, next action and preflight in one place."""
 import tkinter as tk
-from datetime import date
-from tkinter import filedialog
 from . import ui
 from .widgets import ScrollPane
 from .current_tools import deliver,export_diagnosis

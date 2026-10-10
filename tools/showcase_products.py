@@ -1,8 +1,7 @@
 """Generate fictitious current products and capture the real Resultados view."""
-import os,json
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from hashlib import sha256
 from nurus.personal.config import Configuration
 from nurus.personal.app import App
 from nurus.personal.work import Work
