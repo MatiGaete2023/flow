@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-10T00:14:50.693324+00:00",
+  "actualizado": "2026-10-10T00:17:53.657878+00:00",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -159,7 +159,8 @@
       "integrado_en": "28679280e0f965bc14170bcf2cf21ddb497e1c47",
       "notas": [
         "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada.",
-        "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20."
+        "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20.",
+        "Control posterior a merge:625/11 y198/59, golden17 PASA, identidades12 sólo variantes, Ruff0 y enlaces26."
       ]
     },
     "WP-12": {
@@ -230,7 +231,8 @@
       "auditoria": "CONFORME",
       "integrado_en": null,
       "notas": [
-        "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro."
+        "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro.",
+        "CI positiva sobre árbol saneado62335f1: runs38008361009 Assistant y38008361011 Descargador en progreso; sin declarar verde hasta resultado."
       ]
     },
     "WP-15": {
@@ -248,11 +250,12 @@
       "pr": 8,
       "verificacion": null,
       "revision": "APROBADO",
-      "auditoria": null,
+      "auditoria": "CONFORME",
       "integrado_en": null,
       "notas": [
         "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
-        "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes."
+        "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes.",
+        "CI positiva sobre árbol saneado6c9cefe: runs38008362069 Assistant y38008362082 Descargador en progreso; Linux y alineación repetidas por incorporarbase625."
       ]
     },
     "WP-16": {
