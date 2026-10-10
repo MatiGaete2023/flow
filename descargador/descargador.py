@@ -108,6 +108,7 @@ class Application:
         self.root=root;self.events=queue.Queue();self.commands=queue.Queue();self.cancel=PauseGate()
         self.bridge_factory=bridge_factory;self.bridge=bridge_factory(self.emit)
         self.catalog=None;self.connected=False;self.busy=False;self.quitting=False;self.last_folder=None
+        self.last_sheets_folder=None;self.last_diary_manifest=None
         self.prefs=Preferences(preferences_path,memory=not start_worker and preferences_path is None)
         self.recovery=None;self.context=tk.StringVar(value='Sin lote activo');self.query_index=0;self.query_total=0
         self.result_windows=[]
@@ -216,6 +217,8 @@ class Application:
         self.diary_retry_button.grid(row=2,column=1,columnspan=2,sticky='w',padx=8)
         self.pause_button=ttk.Button(actions,text='Pausar / continuar',command=self.toggle_pause)
         self.pause_button.grid(row=3,column=0,sticky='w',pady=5)
+        self.package_button=ttk.Button(actions,text='Crear paquete de este lote…',command=self.create_package)
+        self.package_button.grid(row=3,column=1,columnspan=2,sticky='w',padx=8)
         self.progress=ttk.Progressbar(results);self.progress.grid(row=1,column=0,sticky='ew',pady=10)
         table=ttk.Frame(results);table.grid(row=2,column=0,sticky='ew');table.columnconfigure(0,weight=1)
         self.tree=ttk.Treeview(table,columns=('page','rows','file'),show='headings',height=5)
@@ -376,6 +379,7 @@ class Application:
              (self.trib_button,ready),(self.cancel_button,self.busy and getattr(self,'operation',None) in ('download','joint','resume_joint','diary') and not self.quitting),
              (self.pause_button,self.busy and getattr(self,'operation',None) in ('download','joint','resume_joint','diary') and not self.quitting),
              (self.folder_button,self.last_folder is not None and not self.quitting),
+             (self.package_button,idle and self.last_sheets_folder is not None and self.last_diary_manifest is not None),
              (self.date_check,ready and not calendar_screen),(self.filter_check,ready and not calendar_screen)]:button.configure(state='normal' if enabled else 'disabled')
         for combo in (self.mod_combo,self.tab_combo):combo.configure(state='readonly' if ready and followup else 'disabled')
         self.state_combo.configure(state='readonly' if ready and screen=='litigantes' else 'disabled')
@@ -393,6 +397,15 @@ class Application:
         if self.recovery:
             for widget in (self.screen_combo,self.mod_combo,self.tab_combo,self.state_combo,self.month_combo,self.year_combo,self.report_combo,self.trib_button,
                            self.date_check,self.filter_check,*self.date_widgets):widget.configure(state='disabled')
+
+    def create_package(self):
+        """Paquete del Asistente con el lote de hojas y las bitácoras recién leídas, sin abrir Resultados."""
+        if self.busy or not (self.last_sheets_folder and self.last_diary_manifest):return
+        target=filedialog.asksaveasfilename(parent=self.root,title='Guardar paquete para el Asistente',defaultextension='.zip',
+            initialfile=f'Captura_CSMP_{m.now():%Y-%m-%d_%H%M}.zip',filetypes=[('Paquete CSMP','*.zip')],confirmoverwrite=False)
+        if not target:return
+        if Path(target).exists():self.status.set('Ese archivo ya existe. Elige un nombre nuevo para no reemplazar otro paquete.');return
+        self.enqueue('package',(self.last_sheets_folder,self.last_diary_manifest,Path(target)))
 
     def enqueue(self,command,arg=None):
         if self.busy or self.quitting:return
@@ -487,6 +500,7 @@ class Application:
                 if command=='open':open_chrome(m.START);self.emit('status','SITFA abierto en tu Chrome. Entra a Seguimiento y conecta su extensión.')
                 elif command=='catalog':self.emit('catalog',self.bridge.call('catalog',{'screen':arg}))
                 elif command=='download':BatchRunner(self.bridge,self.catalog,self.emit,self.cancel).run(*arg)
+                elif command=='package':self.emit('package_done',package_current_lot(*arg))
                 elif command=='diary':
                     from lectura_bitacoras import DiaryRunner
                     DiaryRunner(self.bridge,self.catalog,self.emit,self.cancel).run(*arg)
@@ -514,7 +528,14 @@ class Application:
             from archivo_local import remember
             try:remember(self.prefs,value['folder'])
             except (m.PocError,OSError,ValueError):pass
+        if name=='package_done':
+            self.last_folder=Path(value['path']).parent
+            self.status.set('Paquete creado: '+Path(value['path']).name+'. '+value['reuse']+' Ábrelo en el Asistente con «Importar paquete».')
+            self.refresh();return True
         if name=='diary_done':
+            from lectura_bitacoras import MANIFEST
+            manifest=Path(value['folder'])/MANIFEST
+            self.last_diary_manifest=manifest if manifest.is_file() else None
             self.last_folder=Path(value['folder']);self.count.set(f"{value['leidas']} lecturas verificadas · {value['fallidas']} filas fallidas o sin vínculo · {value.get('consultas_fallidas',0)} consultas fallidas")
             self.context.set('Bitácoras · '+value['estado'])
             self.status.set(('Copias guardadas. ' if value['leidas'] else 'No se guardaron copias de bitácoras. ')+
@@ -530,7 +551,7 @@ class Application:
             self.tree.yview_moveto(1);self.count.set(f'{len(self.tree.get_children())} filas revisadas en el lote')
             self.status.set('Bitácora '+value['rit']+' · '+value['estado']);return True
         if name=='joint_done':
-            self.catalog=None;self.last_folder=Path(value['folder']);self.tree.delete(*self.tree.get_children())
+            self.catalog=None;self.last_folder=Path(value['folder']);self.last_sheets_folder=Path(value['folder']);self.tree.delete(*self.tree.get_children())
             self.tree.insert('','end',values=('Final','',Path(value['archivo']).name))
             self.status.set('Libro preparado para CSMP: principal completa e informes de ambos meses. No se consultaron resoluciones firmadas.')
             self.count.set('Descarga conjunta terminada');self.context.set(value['estado'])
@@ -570,6 +591,7 @@ class Application:
             self.tree.insert('','end',values=('PDF',0,value['archivo']));self.tree.yview_moveto(1)
             self.count.set(f'{len(self.tree.get_children())} archivos guardados en el lote')
         elif name=='done':
+            self.last_sheets_folder=self.last_folder
             self.status.set(f'Lote completo: {value["queries"]} consultas, {value["files"]} Excel, {value.get("pdfs",0)} PDF y {value["records"]} registros.');self.count.set('Completado. Puedes abrir Resultados o iniciar otro lote.')
             self.context.set(self.last_folder.name if self.last_folder else 'Lote completo')
             self.recovery=None;self.download_button.configure(text='Descargar el lote completo')
@@ -591,6 +613,19 @@ class Application:
             except queue.Empty:break
             if not self.process_event(*event):return
         self.root.after(100,self.poll)
+
+
+def package_current_lot(sheets_folder,diary_manifest,target):
+    """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
+    from archivo_local import load_sources
+    from export_csmp_capture import export_capture
+    from nurus.capture import read_capture
+    target=Path(target)
+    if target.exists():raise m.PocError('El destino ya existe; elige un nombre nuevo.')
+    path=export_capture(load_sources([sheets_folder]),target,diaries=[Path(diary_manifest)],match_diaries=True)
+    capture=read_capture(path)
+    summary=next((i['message'] for i in capture.rows('incidencias') if i['code']=='BITACORAS_REUTILIZADAS'),'Sin bitácoras añadidas.')
+    return {'path':str(path),'reuse':summary}
 
 
 def main(argv=None):
