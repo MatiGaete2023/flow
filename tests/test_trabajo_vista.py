@@ -36,3 +36,16 @@ assert str(app.records.tag_configure('excluded','foreground'))=='#7a7a7a'
 assert str(app.records.tag_configure('excluded','background'))=='#eeeeee'
 assert all(app.bind_all(sequence) for sequence in atajos)
 """)
+
+
+def test_preferencia_antigua_respeta_el_orden_nuevo(tmp_path):
+    run_gui(tmp_path, """
+from nurus.personal.work_view import build
+cfg=dict(app.cfg.data);cfg['vista']={'columnas_trabajo':['Estado','RIT','Nombre','Tribunal','Programa','Observación']}
+app.cfg.save(cfg)
+for child in app.pages['Trabajo'].winfo_children():child.destroy()
+build(app);app.update()
+assert tuple(app.records['displaycolumns'])==('Estado','Observación','RIT','Nombre','Programa','Tribunal')
+from nurus.personal.commands import commands
+assert any('Preferencias de vista' in c.name for c in commands(app))
+""")

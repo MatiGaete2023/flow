@@ -1,20 +1,21 @@
 name: CSMP Assistant Windows
 
 on:
+  # Las ramas wp/** se prueban en su PR; el push solo corre en las ramas de integración.
   push:
     branches:
       - main
       - 'feat/**'
-      - 'wp/**'
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Push y PR de la misma rama no deben lanzar dos compilaciones simultáneas.
+# Una corrida nueva del mismo evento y rama cancela la anterior. El evento va en el grupo
+# para que un push y un PR no se cancelen entre sí (cada uno corre su propio alcance).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -23,8 +24,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        # Push corre solo 3.12; la matriz completa queda para pull_request.
-        python: ${{ github.event_name == 'pull_request' && fromJSON('["3.12","3.13","3.14"]') || fromJSON('["3.12"]') }}
+        # Presupuesto de minutos Windows: cada PR corre 3.12; la matriz completa corre al
+        # integrar (push a feat/** o main) y a pedido (workflow_dispatch).
+        python: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.12","3.13","3.14"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout

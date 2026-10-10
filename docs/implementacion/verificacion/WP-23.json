@@ -1,16 +1,16 @@
 {
-  "commit": "8b04ebf",
+  "commit": "07cffc6",
   "base": "054cef2",
   "controles": [
     {
       "control": "Suite asistente",
       "resultado": "PASA",
-      "detalle": "482 passed, 11 skipped in 43.03s (mínimo 482 aprobadas; base 625)"
+      "detalle": "477 passed, 11 skipped in 44.19s (mínimo 477 aprobadas; base 625)"
     },
     {
       "control": "Suite descargador",
       "resultado": "PASA",
-      "detalle": "198 passed, 59 subtests passed in 38.42s (mínimo 198 aprobadas; base 198)"
+      "detalle": "198 passed, 59 subtests passed in 38.86s (mínimo 198 aprobadas; base 198)"
     },
     {
       "control": "Identidades reales",
