@@ -31,12 +31,29 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Hasta WP-20: no hidratar copias con datos pendientes de retiro.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/variantes/
+            !/descargador/docs/PLAN_INTEGRAL_20261002.md
+          persist-credentials: false
+
+      - name: Verificar exclusiones del checkout antes de cualquier prueba
+        working-directory: .
+        shell: pwsh
+        run: |
+          if (Test-Path -LiteralPath 'variantes') { throw 'El checkout hidrató copias excluidas' }
+          if (Test-Path -LiteralPath 'descargador/docs/PLAN_INTEGRAL_20261002.md') { throw 'El checkout hidrató el documento pendiente de saneamiento' }
 
       - name: Python ${{ matrix.python }}
         uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           cache: pip
+
+      - name: Control de identidades antes de instalar o generar artefactos
+        run: python tools/check_real_ids.py --excluir variantes/
 
       - name: Install
         run: |
@@ -128,7 +145,35 @@ jobs:
       - name: Build Windows distribution
         if: matrix.python == '3.12'
         shell: pwsh
-        run: git archive --format=zip --prefix=CSMP_Assistant/ -o dist/CSMP_Assistant_personal_0.5.0-dev4.zip HEAD
+        run: |
+          @'
+          import os
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          excluded = {"variantes", ".git", ".pytest_cache", "__pycache__", ".venv", "venv", "node_modules", "artifacts", "dist", "build", "cache", "data"}
+          private_document = "descargador/docs/PLAN_INTEGRAL_20261002.md"
+          names = subprocess.check_output(["git", "ls-files", "-z"])
+          destination = Path("dist/CSMP_Assistant_personal_0.5.0-dev4.zip")
+          with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for raw in names.split(b"\0"):
+                  if not raw:
+                      continue
+                  name = os.fsdecode(raw)
+                  path = Path(name)
+                  if path.is_absolute() or ".." in path.parts:
+                      raise RuntimeError("La fuente contiene una ruta fuera del checkout")
+                  if name == private_document or any(part in excluded for part in path.parts):
+                      continue
+                  if path.is_symlink():
+                      raise RuntimeError("La fuente no puede incluir enlaces simbólicos")
+                  if path.is_file():
+                      if not path.resolve().is_relative_to(Path.cwd().resolve()):
+                          raise RuntimeError("La fuente apunta fuera del checkout")
+                      archive.write(path, "CSMP_Assistant/" + path.as_posix())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la selección segura de archivos fuente' }
 
       - name: Source distribution
         if: matrix.python == '3.12'
