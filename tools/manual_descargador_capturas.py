@@ -97,7 +97,7 @@ def desktop(demo: Path):
         body = app.progress.master.master
         status_widget = next(w for w in body.winfo_children() if str(w.grid_info().get('row')) == '6')
         shot('08_descarga_finalizada', app.progress.master, status_widget)
-        result = DiaryRunner(DiaryFixture(), CATALOG, app.process_event, threading.Event()).run(
+        result = DiaryRunner(DiaryFixture(), CATALOG, app.process_event, threading.Event(), pause=0).run(
             Batch(('113',), ('2',), ('Cumplimiento',)), demo / '05_Lectura_nueva')
         app.process_event('diary_done', result)
         shot('09_lectura_finalizada', app.progress.master, status_widget)
