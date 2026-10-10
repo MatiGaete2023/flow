@@ -44,7 +44,7 @@ def launch_command(executable):
 def incorporate(app, transfer):
     if app.busy:
         raise ValueError('Espera a que termine la operación actual antes de recuperar la descarga.')
-    recovered = recovery_work(transfer, app.work)
+    recovered = recovery_work(transfer, app.work, app.cfg.data)
     if recovered is not None:
         if recovered is not app.work:
             app._save_session()

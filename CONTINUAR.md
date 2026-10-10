@@ -27,3 +27,10 @@ python -m pip install --require-hashes -r requirements/linux-py312.lock
 python -m pip install --no-deps --no-build-isolation -e .
 python tools/verificar_wp.py
 ```
+
+## Migración de contactos antes de actualizar
+
+Copia tu `contactos_base.json` de la instalación anterior a
+`%LOCALAPPDATA%\CSMP_Personal\contactos.json` antes de reemplazarla.
+Si no existe esa copia, el primer inicio abre «Importar contactos» para elegir
+el JSON anterior o el catastro Excel; mientras tanto se usa el ejemplo ficticio.
