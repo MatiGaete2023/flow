@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import filedialog,messagebox,ttk
 
 import motor as m
-from resultados import load_lot,export_book,export_csv,export_ics,export_zip,compare_lots,inside,read_json,tables,compatibility
+from resultados import load_lot,export_book,export_csv,export_ics,export_zip,compare_lots,inside,tables,compatibility
 
 
 class MissingDiariesWindow(tk.Toplevel):

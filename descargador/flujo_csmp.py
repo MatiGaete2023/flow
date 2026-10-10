@@ -1,12 +1,12 @@
 """Descarga conjunta y recuperación por fase. Comparte los contratos del descargador."""
 from dataclasses import asdict
-from datetime import date,timedelta
+from datetime import timedelta
 from pathlib import Path
 import hashlib,json
 
 import motor as m
 from lotes import Batch,BatchRunner
-from resultados import load_lot,export_book,publish,mapping,tables,append_text,check_file
+from resultados import load_lot,export_book,publish,mapping,check_file
 from perfiles import Selection
 
 

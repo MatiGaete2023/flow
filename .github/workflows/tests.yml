@@ -4,14 +4,13 @@ on:
   push:
     branches:
       - main
-      - csmp-personal-2026-09-13
-      - csmp-ux-20260921
-      - ux-observaciones-20260922
-      - 'codex/**'
-      - 'experimento/**'
       - 'feat/**'
+      - 'wp/**'
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 # Push y PR de la misma rama no deben lanzar dos compilaciones simultáneas.
 concurrency:
@@ -24,7 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        python: ['3.12', '3.13', '3.14']
+        # Push corre solo 3.12; la matriz completa queda para pull_request.
+        python: ${{ github.event_name == 'pull_request' && fromJSON('["3.12","3.13","3.14"]') || fromJSON('["3.12"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -82,8 +82,8 @@ jobs:
       - name: Locked dependency inventory
         run: python tools/flow_dependency_inventory.py --lock requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock --output artifacts/dependencies-${{ matrix.python }}.json
 
-      - name: Static analysis of contract boundaries
-        run: python -m ruff check --select E9,F63,F7,F82 src/nurus/capture src/nurus/personal/capture_findings.py src/nurus/personal/capture_reconciliation.py src/nurus/services/excel_cells.py tools/flow_dependency_inventory.py
+      - name: Static analysis
+        run: python -m ruff check --select E9,F63,F7,F82,F401,F841 src descargador tools --extend-exclude src/nurus/personal/motor
 
       - name: Compile
         run: python -m compileall -q src tests tools
@@ -118,6 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Windows-interface
+          retention-days: 14
           path: artifacts/*.png
           if-no-files-found: ignore
 
@@ -158,6 +159,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 14
           path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
 
       - name: Windows executable
@@ -194,6 +196,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
+          retention-days: 90
           path: dist/integral/
           if-no-files-found: error
 
@@ -202,6 +205,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 14
           path: dist/CSMP_Integral/
           if-no-files-found: error
 
@@ -209,6 +213,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nurus-wheel-${{ matrix.os }}-py${{ matrix.python }}
+          retention-days: 14
           path: |
             dist/*.whl
             artifacts/dependencies-${{ matrix.python }}.json
@@ -247,6 +252,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Installer-diagnostics
+          retention-days: 14
           path: |
             artifacts/installer-*.log
             artifacts/installed-package-check*.json
@@ -260,6 +266,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 90
           path: |
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json

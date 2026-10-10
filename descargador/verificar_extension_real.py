@@ -1,5 +1,4 @@
 """API reales de extension + HTTP real. No usa el perfil ni la sesion del usuario."""
-import ast
 import asyncio
 import json
 from pathlib import Path
@@ -21,9 +20,7 @@ from test_lotes import CATALOG,document
 from test_poc import excel
 
 # Reutiliza solo el formulario ficticio; no ejecuta los lotes de ese archivo.
-tree=ast.parse((app/'verificar_chrome_ficticio.py').read_text(encoding='utf-8'))
-master_node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='master')
-exec(compile(ast.Module(body=[master_node],type_ignores=[]),'fixture', 'exec'))
+from formulario_ficticio import master
 
 async def main():
     report={'datos':'ficticios','perfil_usuario_accedido':False,'api_extension_adaptada':False,

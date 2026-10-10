@@ -20,7 +20,7 @@ def main():
         path=export_book([wait],csmp=True);work=Work(defaults()).analyze(path,'ESPERA',as_of=date(2026,10,1))
         assert len(work.rows)==2 and all('programa_espera' in r.actions for r in work.rows)
         assert verified_source(work,work.rows[0])==wait.folder/'pagina.xls'
-        output=work.export(root/'revisable.xlsx',backend='portable',reduced_fidelity=True)
+        work.export(root/'revisable.xlsx',backend='portable',reduced_fidelity=True)
         work.save(root/'sesion');recovered=Work.load(root/'sesion')
         assert verified_source(recovered,recovered.rows[0])==wait.folder/'pagina.xls'
         cmp=load_lot(fixture(root/'cumplimiento',mode='Cumplimiento'))

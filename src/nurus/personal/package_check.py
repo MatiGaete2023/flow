@@ -22,8 +22,8 @@ def check(destination):
     from .app import App
     from .template_package import _matrix_patches
     import nurus.personal as personal
-    import xlrd,openpyxl
-    try:import win32com.client
+    import xlrd,openpyxl  # noqa: F401  (comprueba que el paquete trae estas dependencias)
+    try:import win32com.client  # noqa: F401
     except ImportError:office_com=False
     else:office_com=True
     build=build_identity()

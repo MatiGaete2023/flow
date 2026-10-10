@@ -2,9 +2,8 @@
 
 Único flujo operativo del producto; app_base contiene sus controles compartidos.
 """
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids, remember
 from copy import deepcopy
-from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox

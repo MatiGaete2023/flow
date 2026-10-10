@@ -1,5 +1,5 @@
 """Contextual form with explicit empty values and reversible bulk edits."""
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids
 import tkinter as tk
 import customtkinter as ctk
 

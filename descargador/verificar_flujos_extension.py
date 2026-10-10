@@ -1,5 +1,5 @@
 """Recorrido de la extensión por cinco pantallas enteramente ficticias."""
-import ast,asyncio,json
+import asyncio,json
 from pathlib import Path
 import sys,tempfile,threading
 from urllib.parse import parse_qsl,urlsplit
@@ -16,9 +16,7 @@ from test_flujo_csmp import row as carga_row
 from test_lotes import document as seguimiento_response,CATALOG
 from test_poc import excel
 
-tree=ast.parse((app/'verificar_chrome_ficticio.py').read_text(encoding='utf-8'))
-master_node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='master')
-exec(compile(ast.Module(body=[master_node],type_ignores=[]),'fixture','exec'))
+from formulario_ficticio import master
 
 def form_html(screen):
     if screen=='seguimiento':return master()

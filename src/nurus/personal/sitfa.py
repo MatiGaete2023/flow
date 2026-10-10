@@ -1,5 +1,5 @@
 """Contrato opcional de entrada/procedencia SITFA. No cambia reglas ni revisiones."""
-from datetime import date,datetime
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
