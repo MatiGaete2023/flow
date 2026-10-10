@@ -3,10 +3,14 @@
 Uso:
     python tools/check_real_ids.py            # revisa archivos versionados
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
+    python tools/check_real_ids.py --excluir variantes/  # omite archivos bajo esa ruta (repetible)
+    python tools/check_real_ids.py --stage  # revisa blobs del índice, no el árbol de trabajo
 
 Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
 Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
 """
+import argparse
+import io
 import re
 import subprocess
 import sys
@@ -36,25 +40,34 @@ def is_real_looking(number: str, digit: str) -> bool:
     return check_digit(number) == digit.upper()
 
 
-def load_allowlist() -> set[str]:
-    if not ALLOWLIST.is_file():
-        return set()
-    return {line.strip().upper() for line in ALLOWLIST.read_text(encoding="utf-8").splitlines()
+def load_allowlist(*, stage: bool = False) -> set[str]:
+    if stage:
+        relative = ALLOWLIST.relative_to(ROOT).as_posix()
+        result = subprocess.run(["git", "show", f":{relative}"], cwd=ROOT, capture_output=True)
+        if result.returncode:
+            return set()
+        content = result.stdout.decode("utf-8", errors="ignore")
+    else:
+        if not ALLOWLIST.is_file():
+            return set()
+        content = ALLOWLIST.read_text(encoding="utf-8")
+    return {line.strip().upper() for line in content.splitlines()
             if line.strip() and not line.startswith("#")}
 
 
 def tracked_files() -> list[Path]:
     output = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, check=True).stdout
-    return [ROOT / name for name in output.decode("utf-8").split("\0") if name]
+    return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
 
 
-def texts(path: Path):
+def texts(path: Path, staged: bytes | None = None):
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
-        yield str(path), path.read_text(encoding="utf-8", errors="ignore")
+        content = staged.decode("utf-8", errors="ignore") if staged is not None else path.read_text(encoding="utf-8", errors="ignore")
+        yield str(path), content
     elif suffix in ZIP_SUFFIXES:
         try:
-            with zipfile.ZipFile(path) as archive:
+            with zipfile.ZipFile(io.BytesIO(staged) if staged is not None else path) as archive:
                 for name in archive.namelist():
                     if name.lower().endswith(ZIP_MEMBER_SUFFIXES):
                         yield f"{path}!{name}", archive.read(name).decode("utf-8", errors="ignore")
@@ -62,12 +75,16 @@ def texts(path: Path):
             return
 
 
-def scan(paths: list[Path], allowlist: set[str]) -> list[tuple[str, int, str]]:
+def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list[tuple[str, int, str]]:
     findings = []
     for path in paths:
-        if not path.is_file():
+        staged = None
+        if stage:
+            relative = path.relative_to(ROOT).as_posix()
+            staged = subprocess.run(["git", "show", f":{relative}"], cwd=ROOT, capture_output=True, check=True).stdout
+        elif not path.is_file():
             continue
-        for label, content in texts(path):
+        for label, content in texts(path, staged):
             for match in PATTERN.finditer(content):
                 number = match.group(1).replace(".", "")
                 normalized = f"{number}-{match.group(2).upper()}"
@@ -78,9 +95,32 @@ def scan(paths: list[Path], allowlist: set[str]) -> list[tuple[str, int, str]]:
     return findings
 
 
+def staged_files() -> list[Path]:
+    output = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"],
+        cwd=ROOT, capture_output=True, check=True,
+    ).stdout
+    return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
+
+
+def excluded(path: Path, prefixes: list[Path]) -> bool:
+    return any(path == prefix or prefix in path.parents for prefix in prefixes)
+
+
 def main(argv: list[str]) -> int:
-    paths = [Path(arg).resolve() for arg in argv] if argv else tracked_files()
-    findings = scan(paths, load_allowlist())
+    parser = argparse.ArgumentParser(description="Detecta RUT con dígito verificador válido.")
+    parser.add_argument("rutas", nargs="*")
+    parser.add_argument("--excluir", action="append", default=[], metavar="RUTA")
+    parser.add_argument("--stage", action="store_true", help="Revisa solo el contenido añadido al índice de Git.")
+    args = parser.parse_args(argv)
+    if args.stage and args.rutas:
+        parser.error("--stage no acepta rutas; revisa los archivos del índice.")
+    paths = staged_files() if args.stage else ([Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files())
+    if not args.stage and args.rutas:
+        paths = [candidate for path in paths for candidate in (path.rglob("*") if path.is_dir() else [path])]
+    prefixes = [(ROOT / prefix).resolve() for prefix in args.excluir]
+    paths = [path for path in paths if not excluded(path, prefixes)]
+    findings = scan(paths, load_allowlist(stage=args.stage), stage=args.stage)
     for label, line, masked in findings:
         print(f"{label}:{line}: RUT con dígito verificador válido ({masked})")
     if findings:
