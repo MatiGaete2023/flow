@@ -11,6 +11,8 @@ from .template_validation import variables
 
 BASE = Path(__file__).parent
 CC = 'ucc_concepcion@pjud.cl'
+RETENCION_DIAS = 60
+SESIONES_ANTERIORES = 10
 VARIABLES = {'TRIBUNAL','ALCANCE_MODALIDADES','PERIODO','FECHA','PROGRAMA','TABLA_REGISTROS'}
 UMBRALES = dict(espera_dce=30, espera_laja=30, espera_mulchen=30, espera_tome=30,
                proyecto_tome=60, mayoria=60, oido=45, resolucion_reciente=30,
@@ -91,7 +93,45 @@ def emails(value):
             result.append(part)
     return result
 
-def defaults():
+EXAMPLE_CONTACTS = BASE / 'contactos_ejemplo.json'
+CONTACTS_FILE = 'contactos.json'
+
+
+def contacts_file(directory=None):
+    """Directorio local del usuario (fuera del repositorio y del paquete)."""
+    return Path(directory or user_directory()) / CONTACTS_FILE
+
+
+def parse_contacts(raw):
+    """Acepta una lista JSON de {Nombre, Mail} o el formato histórico de objetos separados por comas."""
+    raw=raw.strip()
+    records=json.loads(raw if raw.startswith('[') else '['+raw.rstrip(',')+']')
+    contacts={};ambiguous=set()
+    for record in records:
+        name=str(record.get('Nombre','')).strip();address=str(record.get('Mail','')).strip()
+        if not name:continue
+        try:emails(address)
+        except ValueError:continue
+        if name in contacts and contacts[name]!=address:ambiguous.add(name)
+        else:contacts[name]=address
+    for name in ambiguous:contacts.pop(name,None)
+    return contacts
+
+
+def base_contacts(directory=None):
+    """Contactos locales del usuario o, si aún no existen, el ejemplo ficticio (segundo valor False)."""
+    path=contacts_file(directory)
+    if path.is_file():return parse_contacts(path.read_text(encoding='utf-8')),True
+    return parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8')),False
+
+
+def save_contacts(contacts,directory=None):
+    """Guarda el directorio local de contactos; nunca dentro del paquete."""
+    atomic_json(contacts_file(directory),[{'Nombre':name,'Mail':address} for name,address in sorted(contacts.items())])
+
+
+def defaults(directory=None):
+    """Base ficticia; sólo la app carga contactos del usuario con una ruta explícita."""
     text=json.loads((BASE/'textos_base.json').read_text(encoding='utf-8'))
     mail=json.loads((BASE/'correos_base.json').read_text(encoding='utf-8'))
     mail['tribunales']['LAJA']['nombre']='Jgdo. L. y G. de Laja'
@@ -104,16 +144,12 @@ def defaults():
             'programa_por_vencer':'Junto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.'}[kind]
         closing='Atte. a Ud.,' if kind=='programa_por_vencer' else 'Atentamente,'
         mail['plantillas'][kind]={'nombre':title+' · programa','asunto':title+' — {PROGRAMA} — {TRIBUNAL}', 'cuerpo':'Buen día:\n\n'+body+'\n\n'+closing,'adjunto':'obligatorio','usa_modalidades':False,'fuente':'Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14.'}
-    raw=(BASE/'contactos_base.json').read_text(encoding='utf-8').strip()
-    records=json.loads(raw if raw.startswith('[') else '['+raw.rstrip(',')+']')
-    contacts={};ambiguous=set()
-    for record in records:
-        name=record['Nombre'].strip();address=record.get('Mail','').strip()
-        try:emails(address)
-        except ValueError:continue
-        if name in contacts and contacts[name]!=address:ambiguous.add(name)
-        else:contacts[name]=address
-    for name in ambiguous:contacts.pop(name,None)
+    contacts=(base_contacts(directory)[0] if directory is not None
+              else parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8')))
+    # Destinatarios de tribunales: entradas «Tribunal: LAJA» del archivo local de contactos.
+    for name in [n for n in contacts if n.startswith('Tribunal: ')]:
+        key=name.split(': ',1)[1].strip().upper();address=contacts.pop(name)
+        if key in mail['tribunales']:mail['tribunales'][key]['para']=emails(address)
     aliases={a['alias']:a['nombre_catastro'] for a in json.loads((BASE/'aliases_base.json').read_text(encoding='utf-8'))}
     return {'version':1,'revision_textos':TEXT_REVISION,'revision_correos':CORREO_REVISION,'perfil':'Asistente v9.1; prioridad confirmada por usuario',
             'umbrales':deepcopy(UMBRALES),'desactivadas':[], 'textos':text,
@@ -153,9 +189,12 @@ class Configuration:
     def __init__(self,directory=None):
         self.directory=Path(directory) if directory else user_directory()
         self.path=self.directory/'configuracion.json'
-        if not self.path.exists():self.save(defaults())
+        self.contacts_directory=user_directory()
+        if not self.path.exists():self.save(defaults(self.contacts_directory))
         try:self.data=json.loads(self.path.read_text(encoding='utf-8'));validate(self.data)
         except Exception as exc:raise ValueError(f'Configuración no utilizable: {self.path}. Conserva el archivo y recupera su copia .bak. Detalle: {exc}') from exc
+        # Sin contactos locales y con el ejemplo ficticio cargado: la app pide importar el directorio real.
+        self.contacts_missing=not contacts_file(self.contacts_directory).is_file()
 
         if self.data.get('revision_textos',1)<2:
             updated=deepcopy(self.data)
