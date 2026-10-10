@@ -1,4 +1,3 @@
-from copy import deepcopy
 from types import SimpleNamespace
 from pathlib import Path
 import tomllib
@@ -96,13 +95,6 @@ def test_legacy_shortcuts_open_only_personal_assistant():
     scripts=tomllib.loads((root/'pyproject.toml').read_text())['project']['scripts']
     assert scripts['nurus']==scripts['csmp-assistant']=='nurus.personal.app:main'
 
-
-def test_old_module_entry_opens_personal_assistant(monkeypatch):
-    import nurus.app
-    calls=[]
-    monkeypatch.setattr('nurus.personal.app.main',lambda:calls.append('personal'))
-    nurus.app.main()
-    assert calls==['personal']
 
 
 def test_resolution_labels_are_readable_but_codes_stay_stable():

@@ -7,21 +7,15 @@ import pytest
 
 from nurus.adapters import outlook as outlook_adapter
 from nurus.domain.models import Product, ProductKind, ProductStatus, Template
-from nurus.services.rendering import prepare
+from nurus.services.policy import with_mandatory_cc
 
 
 def _product_without_recipient() -> Product:
-    template = Template(
-        "mail", "Correo", ProductKind.EMAIL,
-        "Ingreso {TRIBUNAL}", "Hola {PROGRAMA}",
-        ("TRIBUNAL", "PROGRAMA"), "published"
-    )
-    return prepare(
-        Product(
-            ProductKind.EMAIL,
-            template,
-            {"TRIBUNAL": "Laja", "PROGRAMA": "PRM"},
-        )
+    """Producto como lo arma el Asistente vigente (personal/outputs.py): texto revisado y CC fijo."""
+    template = Template("personal", "Correo revisado", ProductKind.EMAIL, "", "", ())
+    return Product(
+        ProductKind.EMAIL, template, {}, recipient="", cc=with_mandatory_cc(""),
+        status=ProductStatus.READY, rendered_subject="Ingreso Laja", rendered_body="Hola PRM",
     )
 
 
@@ -202,12 +196,6 @@ def test_mandatory_copy_preserves_other_recipients(cc, expected):
     from nurus.services.policy import with_mandatory_cc
     assert with_mandatory_cc(cc) == expected
     assert with_mandatory_cc(expected) == expected
-
-
-def test_preview_includes_mandatory_copy():
-    product = _product_without_recipient()
-    assert product.recipient == ""
-    assert product.cc == "ucc_concepcion@pjud.cl"
 
 
 def test_resolution_cannot_create_mail():

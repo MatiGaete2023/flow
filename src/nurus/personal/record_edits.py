@@ -69,7 +69,7 @@ def validate_review(changes):
     if 'FECHA_OBS' in result:
         raw = str(result['FECHA_OBS'] or '').strip()
         if raw:
-            from nurus.rus.rules import as_date
+            from nurus.rus.util import as_date
             parsed = as_date(raw)
             if parsed is None:
                 raise ValueError('FECHA_OBS debe ser una fecha válida dd/mm/aaaa o quedar vacía.')
@@ -161,7 +161,7 @@ def recalculate(work, row, *, update_findings=True):
 
 def _recalculate(work, row):
     from datetime import date
-    from nurus.rus.rules import tribunal, as_date, as_int
+    from nurus.rus.util import tribunal, as_date, as_int
     from .motor.contexto import current
     from .motor.composicion import Incidencias
     from .motor.reglas_espera import generar_observacion_espera
