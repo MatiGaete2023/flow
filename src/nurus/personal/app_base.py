@@ -369,9 +369,47 @@ class App(ctk.CTk):
     def _download_joint(self):
         raise ValueError('Las consultas se realizan en el Descargador. Importa aquí el paquete obtenido.')
 
-    def _import_capture(self):
+    def _ask_cut_date(self):
+        """Fecha de corte: hoy por defecto, botón «Usar hoy» y posibilidad de escribir otra."""
+        win=ctk.CTkToplevel(self);win.title('Fecha de corte');win.transient(self);win.resizable(False,False)
+        value=tk.StringVar(value=date.today().isoformat());error=tk.StringVar();result=[]
+        ttk.Label(win,text='Fecha de análisis (AAAA-MM-DD)').grid(row=0,column=0,columnspan=3,sticky='w',padx=12,pady=(12,4))
+        entry=ttk.Entry(win,textvariable=value,width=16);entry.grid(row=1,column=0,padx=(12,6),pady=4)
+        today=ttk.Button(win,text='Usar hoy',width=90,command=lambda:(value.set(date.today().isoformat()),error.set('')))
+        today.grid(row=1,column=1,padx=6)
+        win.cut_value,win.today_button=value,today
+        ttk.Label(win,textvariable=error,text_color=ttk.MUTED).grid(row=2,column=0,columnspan=3,sticky='w',padx=12)
+        def accept(event=None):
+            try:result.append(date.fromisoformat(value.get().strip()))
+            except ValueError:error.set('Escribe la fecha como AAAA-MM-DD, por ejemplo '+date.today().isoformat()+'.');return
+            win.destroy()
+        ttk.Button(win,text='Aceptar',width=90,command=accept).grid(row=3,column=1,padx=6,pady=12)
+        ttk.Button(win,text='Cancelar',width=90,fg_color='transparent',border_width=1,command=win.destroy).grid(row=3,column=2,padx=(6,12),pady=12)
+        win.bind('<Return>',accept);win.bind('<Escape>',lambda event:win.destroy())
+        win.accept,win.cancel=accept,win.destroy
+        self.cut_date_dialog=win
+        win.after(50,lambda:entry.focus_set() if win.winfo_exists() else None)
+        try:win.wait_visibility();win.grab_set()
+        except tk.TclError:pass  # cerrado antes de mostrarse
+        if win.winfo_exists():self.wait_window(win)
+        return result[0] if result else None
+
+    def _import_latest_capture(self):
+        """Busca el último paquete del Descargador en sus carpetas locales (solo lectura) y lo importa."""
         if self.busy:return
-        path=filedialog.askopenfilename(parent=self,title='Importar paquete del Descargador',filetypes=[('Captura CSMP','*.zip')])
+        from .latest_capture import latest_capture,search_folders
+        path=latest_capture()
+        if path is None:
+            folders='\n'.join(str(f) for f in search_folders()) or 'ninguna carpeta del Descargador en este equipo'
+            messagebox.showinfo('Importar último paquete','No se encontró un paquete CSMP válido en:\n'+folders+'\n\nUsa «Importar paquete» para elegirlo.',parent=self)
+            return
+        stamp=datetime.fromtimestamp(path.stat().st_mtime).strftime('%d-%m-%Y %H:%M')
+        if not messagebox.askyesno('Importar último paquete',f'{path.name}\n{stamp}\n{path.parent}\n\n¿Importar este paquete?',parent=self):return
+        self._import_capture(path)
+
+    def _import_capture(self,path=None):
+        if self.busy:return
+        path=path or filedialog.askopenfilename(parent=self,title='Importar paquete del Descargador',filetypes=[('Captura CSMP','*.zip')])
         if not path:return
         self._capture_observation();self._capture_mail();self._capture_project()
         from .capture_input import import_capture
@@ -380,9 +418,8 @@ class App(ctk.CTk):
             capture(self)
         previous=deepcopy(self.work) if self.work else None
         config=deepcopy(self.cfg.data)
-        text=simpledialog.askstring('Fecha de corte','Fecha de análisis AAAA-MM-DD:',initialvalue=date.today().isoformat(),parent=self)
-        if text is None:return
-        cut=date.fromisoformat(text)
+        cut=self._ask_cut_date()
+        if cut is None:return
         def done(candidate):
             reused=bool(previous and (candidate.capture_digest==getattr(previous,'capture_digest','') or
                         getattr(candidate,'capture_reconciliation',{}).get('continued')))

@@ -38,6 +38,7 @@ def build(app):
     section=ui.Frame(advanced);section.pack(fill='x',pady=(8,4))
     ui.Label(section,text='Fuentes locales y cobertura',font=('Segoe UI',13,'bold')).pack(anchor='w')
     ui.Button(section,text='Importar paquete',command=lambda:app._guard(app._import_capture)).pack(anchor='w',pady=4)
+    ui.Button(section,text='Importar último paquete del Descargador',command=lambda:app._guard(app._import_latest_capture)).pack(anchor='w',pady=4)
     ui.Button(section,text='Ver cobertura y antecedentes',command=lambda:app._guard(app._capture_evidence)).pack(anchor='w',pady=4)
     ui.Button(section,text='Solicitar antecedentes faltantes',command=lambda:app._guard(app._capture_requests)).pack(anchor='w',pady=4)
     ui.Button(advanced,text='Diagnóstico de instalación',command=lambda:app._guard(lambda:export_diagnosis(app))).pack(anchor='w',pady=4)

@@ -16,6 +16,7 @@ class Command:
 def commands(app):
     ready=lambda:bool(app.work and getattr(app.work,'output',''))
     items=[Command('Elegir Excel · Ctrl+O',app._choose,lambda:True),
+           Command('Importar último paquete del Descargador',app._import_latest_capture,lambda:True),
            Command('Guardar trabajo · Ctrl+S',app._save_session,lambda:bool(app.work),'Carga un trabajo primero.'),
            Command('Buscar registros · Ctrl+F',app._shortcut_find,lambda:bool(app.work),'Carga un trabajo primero.'),
            Command('Actualizar Excel · F5',app._refresh,ready,'Genera la copia de trabajo primero.'),
