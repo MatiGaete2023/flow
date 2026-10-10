@@ -31,7 +31,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus](../../../src/nurus/__init__.py) | CONSERVAR | P0 | 0 | 3 |
 | [nurus.adapters](../../../src/nurus/adapters/__init__.py) | CONSERVAR | P0 | 0 | 0 |
 | [nurus.adapters.outlook](../../../src/nurus/adapters/outlook.py) | CONSERVAR | P0 | 3 | 2 |
-| [nurus.app](../../../src/nurus/app.py) | CONSERVAR | P0 | 1 | 0 |
+| nurus.app (`src/nurus/app.py`, retirado en WP-21) | CONSERVAR | P0 | 1 | 0 |
 | [nurus.bitacora_html](../../../src/nurus/bitacora_html.py) | CONSERVAR parser común; comprobar paquete autónomo | P3 | 0 | 4 |
 | [nurus.domain](../../../src/nurus/domain/__init__.py) | CONSERVAR | P0 | 0 | 0 |
 | [nurus.domain.models](../../../src/nurus/domain/models.py) | CONSERVAR | P0 | 0 | 8 |
@@ -111,20 +111,20 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.rus.columns](../../../src/nurus/rus/columns.py) | CONSERVAR | P0 | 1 | 25 |
 | [nurus.rus.models](../../../src/nurus/rus/models.py) | CONSERVAR | P0 | 0 | 7 |
 | [nurus.rus.reader](../../../src/nurus/rus/reader.py) | CONSERVAR | P0 | 2 | 6 |
-| [nurus.rus.rules](../../../src/nurus/rus/rules.py) | CONSERVAR | P0 | 3 | 14 |
-| [nurus.rus.service](../../../src/nurus/rus/service.py) | CONSERVAR | P0 | 4 | 1 |
+| nurus.rus.rules (`src/nurus/rus/rules.py`, retirado en WP-21) | CONSERVAR | P0 | 3 | 14 |
+| nurus.rus.service (`src/nurus/rus/service.py`, retirado en WP-21) | CONSERVAR | P0 | 4 | 1 |
 | [nurus.services](../../../src/nurus/services/__init__.py) | CONSERVAR | P0 | 0 | 0 |
-| [nurus.services.communications](../../../src/nurus/services/communications.py) | CONSERVAR | P0 | 7 | 0 |
-| [nurus.services.contacts](../../../src/nurus/services/contacts.py) | CONSERVAR | P0 | 2 | 1 |
-| [nurus.services.delivery](../../../src/nurus/services/delivery.py) | CONSERVAR | P0 | 2 | 0 |
+| nurus.services.communications (`src/nurus/services/communications.py`, retirado en WP-21) | CONSERVAR | P0 | 7 | 0 |
+| nurus.services.contacts (`src/nurus/services/contacts.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 1 |
+| nurus.services.delivery (`src/nurus/services/delivery.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 0 |
 | [nurus.services.exports](../../../src/nurus/services/exports.py) | CONSERVAR | P0 | 2 | 1 |
 | [nurus.services.file_output](../../../src/nurus/services/file_output.py) | CONSERVAR | P0 | 0 | 15 |
 | [nurus.services.policy](../../../src/nurus/services/policy.py) | CONSERVAR | P0 | 0 | 2 |
-| [nurus.services.products](../../../src/nurus/services/products.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.services.rendering](../../../src/nurus/services/rendering.py) | CONSERVAR | P0 | 2 | 3 |
-| [nurus.services.resolutions](../../../src/nurus/services/resolutions.py) | CONSERVAR | P0 | 6 | 0 |
-| [nurus.services.review_import](../../../src/nurus/services/review_import.py) | CONSERVAR | P0 | 2 | 0 |
-| [nurus.services.statistics](../../../src/nurus/services/statistics.py) | CONSERVAR | P0 | 1 | 0 |
-| [nurus.services.workflow](../../../src/nurus/services/workflow.py) | CONSERVAR | P0 | 3 | 0 |
-| [nurus.storage](../../../src/nurus/storage/__init__.py) | CONSERVAR | P0 | 0 | 0 |
-| [nurus.storage.database](../../../src/nurus/storage/database.py) | CONSERVAR | P0 | 2 | 5 |
+| nurus.services.products (`src/nurus/services/products.py`, retirado en WP-21) | CONSERVAR | P0 | 4 | 2 |
+| nurus.services.rendering (`src/nurus/services/rendering.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 3 |
+| nurus.services.resolutions (`src/nurus/services/resolutions.py`, retirado en WP-21) | CONSERVAR | P0 | 6 | 0 |
+| nurus.services.review_import (`src/nurus/services/review_import.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 0 |
+| nurus.services.statistics (`src/nurus/services/statistics.py`, retirado en WP-21) | CONSERVAR | P0 | 1 | 0 |
+| nurus.services.workflow (`src/nurus/services/workflow.py`, retirado en WP-21) | CONSERVAR | P0 | 3 | 0 |
+| nurus.storage (`src/nurus/storage/__init__.py`, retirado en WP-21) | CONSERVAR | P0 | 0 | 0 |
+| nurus.storage.database (`src/nurus/storage/database.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 5 |

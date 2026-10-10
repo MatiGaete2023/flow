@@ -1,6 +1,6 @@
 """Identidad común de tribunales para filtros y destinatarios de correo."""
 from nurus.rus.columns import normalize
-from nurus.rus.rules import tribunal
+from nurus.rus.util import tribunal
 
 
 def court_key(value):
