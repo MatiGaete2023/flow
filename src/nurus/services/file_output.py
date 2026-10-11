@@ -33,10 +33,3 @@ def write_new_file(destination, writer):
     finally:
         temporary.unlink(missing_ok=True)
     return target
-
-
-def excel_text(value):
-    """Protege texto externo en salidas nuevas sin alterar fórmulas de origen."""
-    if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")):
-        return "'" + value
-    return value
