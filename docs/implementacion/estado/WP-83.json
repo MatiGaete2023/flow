@@ -1,0 +1,28 @@
+{
+  "titulo": "Bloqueo de editores secundarios",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/83-bloqueo-editores-20261011",
+  "pr": 38,
+  "verificacion": "PASA después de integración en 4470ff32bb9d479f0ad4a6774948038bc6729c02: Asistente 830/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+  "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
+  "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
+  "integrado_en": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
+  "notas": [
+    "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37.",
+    "Seis escenarios fallaron antes: editor manual, preferencias, dos tipos de ventana anidada, ventana cerrada y fallo parcial.",
+    "Bloqueo de controles editables existentes; Detener disponible, estados anteriores conservados. Sin pruebas retiradas ni nuevos skips/xfail.",
+    "Revisión propia no sustituye E3 ni actas de uso real.",
+    "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+  ]
+}

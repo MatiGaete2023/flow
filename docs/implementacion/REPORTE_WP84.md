@@ -1,5 +1,10 @@
 # WP-84 · G-5 y limpieza restante del historial
 
+Estado actual: #36–38 integrados en feat 9fbb08c con excepción E3 expresa del usuario.
+#39 actualizado contra esa base (830/240); verificación vigente en curso. E3 de #39 pendiente.
+Las evidencias y notas anteriores de preparación son históricas.
+
+
 11 de octubre de 2026. Base feat `286c28f`. Paquete verificado; E3 independiente pendiente.
 
 ## Hallazgos y corrección
