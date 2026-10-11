@@ -62,5 +62,5 @@ siguen sujetos a las pruebas reales y al acta del usuario.
 ## Ensayo conjunto con G-5
 
 PASA en `eae6b499b16f41960aa570538d857d335cdef9ec`: 839/11/6 y 240/62, nueve
-controles, procedencia limpia/estable. La resolución de documentos posterior no modifica
-código, pruebas ni configuración. Los cuatro paquetes permanecen EN_REVISION, sin E3.
+controles y procedencia limpia/estable. La resolución posterior de documentos no modifica
+código, pruebas ni configuración. Los cuatro paquetes siguen EN_REVISION, sin E3.
