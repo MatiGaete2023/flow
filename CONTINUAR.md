@@ -16,15 +16,15 @@ historial viejo con datos reales: vuelve a clonar y nunca hagas push desde una c
 - **Pendientes del usuario:**
   1. Borrar las etiquetas `pre-WP-12` y `pre-implementacion-20261009` (conservan el historial viejo).
   2. Pedir a GitHub la eliminación de datos sensibles en las referencias de PR.
-  3. Borrar los artefactos de Actions previos.
+  3. ~~Borrar los artefactos de Actions previos~~: hecho (607 borrados por la API, 11 de octubre de 2026).
   4. Billing: GitHub Pro y presupuesto de Actions de 5 USD (11 de octubre de 2026); CI verde en `14f679d`.
 - **Lo que falta del plan:**
   - WP-02 (D2: casos probados en uso real).
   - WP-50: cronología solo para mostrar, 4 meses. Depende de WP-02 y del acta de 10 ingresos.
   - WP-70: cierre. Paquete compilado en CI (`14f679d`, run 38136720831); esperar el acta final y, con D7, sacar el PR #1
     de borrador y fusionarlo a `main`, sin release.
-- **Conflictos abiertos** (deciden el usuario o el Orquestador): `cc_obligatorio` frente a la prueba golden y los 4 F401
-  del motor (ver `ESTADO.json` › `conflictos_abiertos`), y los 6 casos R-T de WP-60 marcados xfail.
+- **Conflictos respondidos** (11 de octubre de 2026): `cc_obligatorio` se conserva; motor/ queda intacto (4 F401
+  excluidos en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla).
 
 ## Traspaso del 10 de octubre de 2026 (sesión claude-sesion-012yjVgL)
 

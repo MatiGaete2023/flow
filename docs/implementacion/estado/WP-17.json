@@ -21,6 +21,7 @@
   "integrado_en": null,
   "notas": [
     "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas.",
-    "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions."
+    "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions.",
+    "11 de octubre de 2026: 607 artefactos de Actions previos a la purga borrados por la API (autorización escrita). Las 2 etiquetas no se pueden borrar desde el proxy (403): las borra el usuario. Falta además refs/pull vía Soporte de GitHub."
   ]
 }
