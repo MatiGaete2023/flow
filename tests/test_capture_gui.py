@@ -33,9 +33,8 @@ try:
 except ValueError:pass
 else:raise AssertionError('Paquete corrupto aceptado')
 assert app.work is previous and app.work.rows[0].review['OBSERVACION']=='Decisión humana'
-try:app._download_joint()
-except ValueError:pass
-else:raise AssertionError('Lanzador remoto activo')
+# El Asistente no inicia el Descargador: no existe ningún lanzador remoto (especificación 02).
+assert not hasattr(app,'_download_joint')
 app._capture_evidence();app.update()
 """,
     )

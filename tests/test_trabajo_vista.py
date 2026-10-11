@@ -22,6 +22,11 @@ assert app.records.set(fila.id,'Observación')==fila.review.get('OBSERVACION',fi
 assert app.records.set(fila.id,'RIT') and app.records.set(fila.id,'Tribunal')
 app.records.selection_set(fila.id);app.update()
 assert app.work_editor_open()
+# G-1: el dato original/automático es visible junto al campo (CTkEntry ignora placeholder con textvariable).
+import customtkinter as ctk
+textos=[w.cget('text') for linea in app.record_form.source_fields.winfo_children() for w in linea.winfo_children() if isinstance(w,ctk.CTkLabel)]
+assert any(t.startswith('Origen: ') and t!='Origen: (vacío)' for t in textos), textos
+assert all(h.cget('text').startswith('Automático: ') for h in app.record_form.word_hints.values())
 app.update_idletasks();app.update()
 assert app.observation_editor.winfo_ismapped() and app.observation_editor.winfo_height()>=120
 app.update()
