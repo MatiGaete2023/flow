@@ -1,5 +1,9 @@
 # Revisión propia y continuación — WP-81
 
+Estado actual: WP-81 integrado en feat con excepción E3 expresa del usuario para #36–38.
+Las notas de preparación siguientes son históricas; ver «Integración autorizada» al final.
+
+
 11 de octubre de 2026. Base remota revisada: `286c28f`, después de WP-63 (#34) y WP-80 (#35).
 [PR #36](https://github.com/MatiGaete2023/flow/pull/36), borrador.
 Esta revisión directa del Ejecutor responde a la instrucción del usuario; no constituye E3.

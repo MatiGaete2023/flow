@@ -1,5 +1,9 @@
 # Continuación técnica — WP-83
 
+Estado actual: WP-83 integrado en feat con excepción E3 expresa del usuario para #36–38.
+Las notas de preparación siguientes son históricas; ver «Integración autorizada» al final.
+
+
 11 de octubre de 2026. Base remota `286c28f`, con WP-63/WP-80 integrados.
 WP-81/#36 y WP-82/#37 siguen abiertos, con CI aprobada pero sin revisión E3 registrada.
 Este paquete continúa G-3 de WP-80 en rama propia desde feat; no integra su propio trabajo.
@@ -61,3 +65,11 @@ Motor/textos intactos; no se acredita Office/SITFA real ni se crean actas.
 
 Firmas retiradas/módulos de bitácoras/excel_presentacion y pagina.js mantienen las decisiones
 pendientes de WP-80. No se eliminan por parecer duplicados ni se cambian reglas tradicionales.
+
+## Integración autorizada — 11 de octubre de 2026
+
+Usuario: «Autorizar excepción E3 para #36–38». Sin revisión ni auditoría de otra raíz;
+no se extiende a #39. Integrado en feat mediante 4470ff32bb9d479f0ad4a6774948038bc6729c02; verificación posterior PASA
+(830/11/6 y 240/62), procedencia limpia/estable y línea base regenerada. La evidencia
+actual en verificacion/WP-83.json corresponde a esta medición; la evidencia previa se conserva
+en la historia de la rama del PR. Main y releases no autorizados antes del acta.
