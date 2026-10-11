@@ -51,3 +51,21 @@ def test_sincronizar_no_cambia_archivos_ya_coherentes(tmp_path):
     meta.sync_extension(destino)
     for nombre in ('extension/manifest.json', 'extension/pagina.js'):
         assert (destino / nombre).read_bytes() == (ROOT / 'descargador' / nombre).read_bytes()
+
+
+def test_sincronizar_extension_respeta_la_carpeta_indicada(tmp_path, monkeypatch):
+    import sys
+    destino = tmp_path / 'descargador'
+    (destino / 'extension').mkdir(parents=True)
+    for nombre in ('contrato_integral.py', 'extension/manifest.json', 'extension/pagina.js'):
+        (destino / nombre).write_bytes((ROOT / 'descargador' / nombre).read_bytes())
+    manifest = json.loads((destino / 'extension/manifest.json').read_text(encoding='utf-8'))
+    manifest['version'] = '0.0.0'
+    (destino / 'extension/manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+    llamadas = []
+    original = meta.sync_extension
+    monkeypatch.setattr(meta, 'sync_extension', lambda root=None: llamadas.append(root) or original(root))
+    monkeypatch.setattr(sys, 'argv', ['write_build_meta.py', '--descargador', str(destino), '--sincronizar-extension'])
+    meta.main()
+    assert llamadas == [destino.resolve()]
+    assert json.loads((destino / 'extension/manifest.json').read_text(encoding='utf-8'))['version'] != '0.0.0'
