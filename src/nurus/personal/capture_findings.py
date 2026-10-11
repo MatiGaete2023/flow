@@ -54,3 +54,64 @@ def updated_contexts(work, rows):
         context['findings'] = contextual + traditional_findings(work, row)
         contexts[row.id] = context
     return contexts
+
+
+def _when(event):
+    value = event.get('event_at', '')
+    day = '/'.join(reversed(value[:10].split('-')))
+    return day + (' ' + value[11:16] if 'T' in value else ' (sin hora)')
+
+
+def display_of(work, row):
+    return getattr(work, 'capture_context', {}).get(row.id, {}).get('display')
+
+
+def last_center_label(work, row):
+    """Columna «Última obs. centro»: solo muestra lo capturado; vacío si no hay paquete."""
+    display = display_of(work, row)
+    if not display:
+        return ''
+    if display['status'] == 'ORIGEN_DESCONOCIDO':
+        return 'ORIGEN_DESCONOCIDO'
+    if display['status'] != 'ACREDITADA':
+        return 'Sin entradas capturadas'
+    label = _when(display['last_center'][0])[:10]
+    pending = len(display['later']) + len(display['uncertain'])
+    return label + (f' · {pending} posterior' + ('es' if pending > 1 else '') if pending else '')
+
+
+def novelties_text(work, row):
+    """Panel «Novedades posteriores»: texto íntegro, autor y origen; no acredita historia completa."""
+    display = display_of(work, row)
+    if not display:
+        return 'Novedades posteriores: no disponibles (trabajo sin paquete de captura o identidad no verificada).'
+    period = (
+        '/'.join(reversed(display['period_from'].split('-')))
+        + ' a '
+        + '/'.join(reversed(display['period_to'].split('-')))
+    )
+    lines = [f'Novedades posteriores · solo mostrar · período {period}']
+    if display['status'] == 'SIN_ENTRADAS_CAPTURADAS':
+        lines.append('No hay entradas capturadas en el período; no acredita ausencia de actuaciones.')
+    elif display['status'] == 'ORIGEN_DESCONOCIDO':
+        lines.append('ORIGEN_DESCONOCIDO: ninguna entrada del período tiene origen del centro acreditado.')
+        lines += _entries(display['unattributed'])
+    else:
+        lines.append('Última observación atribuible al centro:')
+        lines += _entries(display['last_center'])
+        lines.append('Entradas posteriores:' if display['later'] else 'Entradas posteriores: ninguna capturada.')
+        lines += _entries(display['later'])
+        if display['uncertain']:
+            lines.append('Mismo día, orden incierto (sin hora comparable):')
+            lines += _entries(display['uncertain'])
+    if display['outside_horizon']:
+        lines.append(f"{display['outside_horizon']} entrada(s) anteriores al período no se consideran.")
+    return '\n'.join(lines)
+
+
+def _entries(events):
+    return [
+        f"- {_when(e)} · {e.get('origin') or 'DESCONOCIDO'} · {e.get('author') or 'autor no informado'}: "
+        f"{e.get('text', '')}"
+        for e in events
+    ]

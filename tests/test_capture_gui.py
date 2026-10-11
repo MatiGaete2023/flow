@@ -19,7 +19,11 @@ with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str
 for _ in range(5):app.update()
 assert len(app.work.rows)==4
 rid=app.work.rows[0].id
-app.records.selection_set(rid);app._detail();app.observation_editor.delete('1.0','end');app.observation_editor.insert('1.0','Decisión humana')
+app.records.selection_set(rid);app._detail()
+# WP-50: la columna y el panel solo muestran la bitácora capturada.
+assert app.records.set(rid,'Última obs. centro')=='10/09/2026'
+assert app.work_novelties.get().startswith('Novedades posteriores · solo mostrar')
+app.observation_editor.delete('1.0','end');app.observation_editor.insert('1.0','Decisión humana')
 with patch('nurus.personal.app_base.filedialog.askopenfilename',return_value=str(path)):
     app._import_capture()
 for _ in range(5):app.update()
