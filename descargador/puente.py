@@ -162,7 +162,7 @@ class Bridge:
                 with parent.lock:
                     entry = parent.pending.get(data['id'])
                     if entry is None or entry['event'].is_set():
-                        self.reply(409, {'error': 'Tarea vencida.'})
+                        self.reply(409, {'error': 'TASK_EXPIRED'})
                         return
                     entry['result'] = data
                     entry['event'].set()
