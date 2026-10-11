@@ -12,9 +12,8 @@ from nurus.capture import read_capture
 from nurus.capture.contract import COMMON as SOURCE_FIELDS
 from nurus.capture.temporal import (
     chronology,
-    display_chronology,
+    attach_displays,
     identity,
-    DISPLAY_RULES,
     DISPLAY_VERSION,
     RULESET_VERSION,
 )
@@ -48,7 +47,6 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         and previous.as_of == as_of.isoformat()
         and getattr(previous, 'capture_config_hash', '') == config_hash
         and getattr(previous, 'ruleset_version', '') == RULESET_VERSION
-        and getattr(previous, 'display_version', '') == DISPLAY_VERSION
         and getattr(previous, 'mapping_version', '') == capture.manifest['mapping_version']
     ):
         if resolutions:
@@ -60,6 +58,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         from .capture_findings import updated_contexts
 
         cached.capture_context = updated_contexts(cached, cached.rows)
+        if getattr(previous, 'display_version', '') != DISPLAY_VERSION:
+            # Una versión nueva de la vista solo se recalcula: no invalida ediciones ni pide conciliación.
+            attach_displays(capture, cached.capture_context, cached.capture_sources, date.fromisoformat(cached.as_of))
+            cached.display_version = DISPLAY_VERSION
         from nurus.capture.coverage import record_coverages
 
         cached.capture_coverage = record_coverages(capture.manifest, capture.tables, cached.capture_sources)
@@ -106,13 +108,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             calendars[identity(row)].append(row)
     cross = {}
     event_index = defaultdict(list)
-    diary_index = defaultdict(list)
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
             if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
                 event_index[identity(event)].append(event)
-                if table == 'bitacoras':
-                    diary_index[identity(event)].append(event)
     for number, record in enumerate(records, 2):
         if number % 100 == 0:
             checkpoint()
@@ -138,9 +137,6 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         provenance[record['record_id']] = record
         row_modes[record['record_id']] = mode
         contexts[record['record_id']] = chronology(capture, record, as_of, event_index=event_index)
-        if DISPLAY_RULES and all(identity(record)) and record.get('identity_status') == 'VERIFICADA':
-            # Solo mostrar (D5): no altera hallazgos, observaciones ni productos.
-            contexts[record['record_id']]['display'] = display_chronology(diary_index.get(identity(record), ()), as_of)
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
         for cal in matching:
@@ -215,6 +211,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
                 row.warnings.append('Tipo de fuente fuera del motor tradicional; no evaluado.')
             row.warnings.append(contexts[row.id]['reason'])
             candidate.rows.append(row)
+    attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']

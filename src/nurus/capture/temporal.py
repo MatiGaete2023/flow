@@ -6,7 +6,7 @@ from calendar import monthrange
 RULESET_VERSION = 'baseline-20261008+context-preview-2'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
 DISPLAY_RULES = ('CT-01', 'CT-02')
-DISPLAY_VERSION = 'solo-mostrar-1'
+DISPLAY_VERSION = 'solo-mostrar-2'
 CONTEXT_RULES = {
     'CT-01': ('bitacoras', 'Última observación atribuible al centro'),
     'CT-02': ('bitacoras', 'Entradas posteriores y empates inciertos'),
@@ -93,30 +93,58 @@ def order(related):
     return last, later, uncertain
 
 
-def display_chronology(events, as_of):
+def display_chronology(events, as_of, *, requested=True):
     """CT-01/CT-02 en modo «solo mostrar» (D5): no genera hallazgos ni cambia observaciones.
 
     Solo bitácoras del ingreso dentro del horizonte de cuatro meses. Sin origen acreditado del
-    centro se informa ORIGEN_DESCONOCIDO; sin entradas capturadas no se afirma ausencia.
+    centro se informa ORIGEN_DESCONOCIDO; sin entradas capturadas no se afirma ausencia. Si el
+    paquete no solicitó bitácoras se informa NO_SOLICITADA. Las entradas sin fecha y las posteriores
+    al corte se cuentan aparte: no son «anteriores al período».
     """
-    start = earliest(as_of)
+    start, end = earliest(as_of).isoformat(), as_of.isoformat()
+    dated = [e for e in events if e.get('event_at', '')]
     recent = sorted(
-        (e for e in events if e.get('event_at', '') and start.isoformat() <= e['event_at'][:10] <= as_of.isoformat()),
+        (e for e in dated if start <= e['event_at'][:10] <= end),
         key=lambda e: (e['event_at'], e.get('event_id', '')),
     )
     last, later, uncertain = order(recent)
-    status = 'ACREDITADA' if last else 'ORIGEN_DESCONOCIDO' if recent else 'SIN_ENTRADAS_CAPTURADAS'
+    if last:
+        status = 'ACREDITADA'
+    elif recent:
+        status = 'ORIGEN_DESCONOCIDO'
+    elif not requested and not events:
+        status = 'NO_SOLICITADA'
+    else:
+        status = 'SIN_ENTRADAS_CAPTURADAS'
     return {
         'version': DISPLAY_VERSION,
-        'period_from': start.isoformat(),
-        'period_to': as_of.isoformat(),
+        'period_from': start,
+        'period_to': end,
         'status': status,
         'last_center': last,
         'later': later,
         'uncertain': uncertain,
         'unattributed': [] if last else recent,
-        'outside_horizon': sum(1 for e in events if e.get('event_at', '')[:10] < start.isoformat()),
+        'outside_horizon': sum(1 for e in dated if e['event_at'][:10] < start),
+        'after_cutoff': sum(1 for e in dated if e['event_at'][:10] > end),
+        'undated': len(events) - len(dated),
     }
+
+
+def attach_displays(capture, contexts, records, as_of):
+    """Agrega la vista «solo mostrar» a cada contexto con identidad verificada (no toca hallazgos)."""
+    if not DISPLAY_RULES:
+        return
+    requested = capture.manifest['table_states'].get('bitacoras') != 'NO_SOLICITADA'
+    diaries = {}
+    for event in capture.rows('bitacoras'):
+        if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
+            diaries.setdefault(identity(event), []).append(event)
+    for record_id, record in records.items():
+        if record_id in contexts and all(identity(record)) and record.get('identity_status') == 'VERIFICADA':
+            contexts[record_id]['display'] = display_chronology(
+                diaries.get(identity(record), ()), as_of, requested=requested
+            )
 
 
 def chronology(capture, record, as_of, *, fixture_preview=False, event_index=None):

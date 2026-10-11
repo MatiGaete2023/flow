@@ -6,7 +6,6 @@ from pathlib import Path
 
 from nurus.capture import write_capture
 from nurus.capture.temporal import DISPLAY_RULES, display_chronology
-from nurus.personal import capture_input
 from nurus.personal.capture_findings import last_center_label, novelties_text
 from nurus.personal.capture_input import import_capture
 from nurus.personal.config import defaults
@@ -89,7 +88,9 @@ def test_hora_cierta_ordena_dentro_del_mismo_dia():
 
 def test_vista_no_cambia_observaciones_hallazgos_ni_productos(tmp_path, monkeypatch):
     con_vista, _ = importar(tmp_path)
-    monkeypatch.setattr(capture_input, 'DISPLAY_RULES', ())
+    from nurus.capture import temporal
+
+    monkeypatch.setattr(temporal, 'DISPLAY_RULES', ())
     (tmp_path / 'sin').mkdir()
     sin_vista, _ = importar(tmp_path / 'sin')
     assert all('display' in c for c in con_vista.capture_context.values())
@@ -124,3 +125,37 @@ def test_catalogo_coincide_con_reglas_solo_mostrar():
     activas = tuple(r['rule_id'] for r in catalogo['rules'] if r['activation_state'] == 'ACTIVA_SOLO_MOSTRAR')
     assert activas == DISPLAY_RULES == ('CT-01', 'CT-02')
     assert not any(r['enabled'] for r in catalogo['rules'])
+
+
+def test_entradas_sin_fecha_y_posteriores_al_corte_se_cuentan_aparte():
+    # C2 (revisión integral): ni las entradas sin fecha ni las posteriores al corte son «anteriores al período».
+    centro = {
+        'event_id': 'c',
+        'event_at': '2026-09-10',
+        'origin': 'CENTRO',
+        'origin_verified': 'true',
+        'coverage': 'COMPLETA',
+    }
+    sin_fecha = {**centro, 'event_id': 's', 'event_at': ''}
+    futura = {**centro, 'event_id': 'f', 'event_at': '2026-10-20', 'origin': 'OTRO'}
+    display = display_chronology([centro, sin_fecha, futura], CORTE)
+    assert (display['outside_horizon'], display['undated'], display['after_cutoff']) == (0, 1, 1)
+
+
+def test_bitacoras_no_solicitadas_se_distinguen_de_vacias():
+    # F4: sin bitácoras solicitadas no se dice «Sin entradas capturadas».
+    assert display_chronology([], CORTE, requested=False)['status'] == 'NO_SOLICITADA'
+    assert display_chronology([], CORTE)['status'] == 'SIN_ENTRADAS_CAPTURADAS'
+
+
+def test_paquete_sin_bitacoras_muestra_no_solicitadas(tmp_path):
+    def cambiar(t):
+        t['bitacoras'] = []
+
+    m, t = fixture()
+    cambiar(t)
+    m['table_states']['bitacoras'] = 'NO_SOLICITADA'
+    work = import_capture(write_capture(tmp_path / 'sin.zip', m, t), defaults(), as_of=CORTE)
+    fila = work.rows[0]
+    assert last_center_label(work, fila) == 'Bitácoras no solicitadas'
+    assert 'no solicitó bitácoras' in novelties_text(work, fila)
