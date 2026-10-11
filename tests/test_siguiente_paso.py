@@ -61,3 +61,75 @@ assert len(llamadas)==2 and isinstance(bar.error,OSError) and bar._after is not 
 assert 'No se pudieron actualizar' in app.status.get()
 """,
     )
+
+
+def test_cambios_de_destinatario_y_archivo_actualizan_los_pasos(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+from nurus.personal.outputs import Draft
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+archivo=root/'adjunto.txt';archivo.write_text('contenido ficticio')
+borrador=Draft('Asunto','Cuerpo',to='correo-invalido',attachments=[str(archivo)])
+app.drafts=[borrador];bar=app.next_step
+bar.refresh(force=True);assert bar.values['resultados']==1
+app.refresh_pending(capture=False)
+assert app.results_checks['draft:'+borrador.product_id].state=='Por corregir'
+assert 'Dirección inválida' in app.results_checks['draft:'+borrador.product_id].issues[0]
+borrador.to='equipo@example.test'
+assert bar.refresh() and bar.values['resultados']==0
+borrador.cc='cc-invalido'
+assert bar.refresh() and bar.values['resultados']==1
+borrador.cc='ucc_concepcion@pjud.cl'
+assert bar.refresh() and bar.values['resultados']==0
+archivo.unlink()
+assert bar.refresh() and bar.values['resultados']==1
+archivo.write_text('nuevo contenido ficticio')
+assert bar.refresh() and bar.values['resultados']==0
+from nurus.personal.outputs import draft_fingerprint
+clave=draft_fingerprint(borrador)
+app.work.receipts[clave]={'state':'created'}
+assert bar.refresh() and bar.values['resultados']==0
+app.work.receipts[clave]['state']='uncertain'
+assert bar.refresh() and bar.values['resultados']==1
+assert not bar.refresh()
+""",
+    )
+
+
+def test_editar_proyecto_recalcula_campos_pendientes(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+from nurus.personal.resolutions import Project
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+proyecto=Project('ficticio','Tribunal ficticio','X-1-2026','PC_IE',[],'',{},'Texto revisado','Texto revisado')
+app.projects=[proyecto];bar=app.next_step
+bar.refresh(force=True);assert bar.values['resoluciones']==1 and bar.values['resultados']==0
+proyecto.text='{{CAMPO_PENDIENTE}}'
+assert bar.refresh() and bar.values['resultados']==1
+proyecto.text='Texto revisado'
+assert bar.refresh() and bar.values['resultados']==0
+assert not bar.refresh()
+""",
+    )
+
+
+def test_un_error_transitorio_no_guarda_la_firma_sin_recalcular(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+from unittest.mock import patch
+import nurus.personal.next_step as modulo
+bar=app.next_step
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+original=modulo.counts
+with patch.object(modulo,'counts',side_effect=OSError('ruta temporalmente inaccesible')):
+    bar._tick()
+assert isinstance(bar.error,OSError)
+with patch.object(modulo,'counts',wraps=original) as recalcular:
+    bar._tick()
+    assert recalcular.call_count==1
+assert bar.error is None and bar.values['revisar']==len(app.work.rows)
+""",
+    )
