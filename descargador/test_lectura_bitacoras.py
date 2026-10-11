@@ -275,7 +275,10 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
 def test_anonymous_diagnostic_keeps_egresados_tab():
     from lectura_bitacoras import anonymous_diagnostic
 
-    data = {'registros': [], 'consultas': [{'tribunal': '1', 'modality': '1', 'tab': 'Egresados', 'estado': 'ENUMERADA'}]}
+    data = {
+        'registros': [],
+        'consultas': [{'tribunal': '1', 'modality': '1', 'tab': 'Egresados', 'estado': 'ENUMERADA'}],
+    }
     assert anonymous_diagnostic(data)['consultas'][0]['pestana'] == 'Egresados'
 
 
