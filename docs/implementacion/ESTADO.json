@@ -1028,12 +1028,12 @@
         "WP-62"
       ],
       "decisiones": [],
-      "estado": "EN_REVISION",
+      "estado": "EN_VERIFICACION",
       "ejecutor": "Codex /root con subagentes de apoyo",
       "tomado": "11 de octubre de 2026",
       "rama": "wp/auditoria-refactor-20261011",
       "pr": 34,
-      "verificacion": "PASA en d25fe2f4852bb657d5f5c0caacb766590eaf097e: Linux Asistente 780 aprobadas/11 omitidas/6 xfail; Descargador 235/62 subpruebas; 9 controles PASA y golden17. CI Windows PASA: Asistente 790/1/6 xfail (run38146205442), Descargador run38146205453. Evidencia WP-63.json y WP-63-windows.json. Sin bajas de pruebas; Office real y revisión E3 pendientes.",
+      "verificacion": "Auditoría inicial PASA en d25fe2f (780 Linux/790 Windows; Descargador235/62 y golden17). Revisión propia sobre84b92e4: 3 defectos de herramientas corregidos, 160 pruebas focales PASA; nueva verificación completa y CI pendientes.",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
@@ -1043,8 +1043,18 @@
         "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar.",
         "La primera corrida detectó 5 regresiones antiguas del verificador; se ajustaron al contrato E2 conservando nodeids. Evidencia FALLA conservada en WP-63-falla-api.json.",
         "Evidencia inicial Windows FALLA conservada en WP-63-windows-inicial.json. No se usa PYTHONUTF8 ni se omiten pruebas para ocultar el problema.",
-        "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null."
-      ]
+        "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null.",
+        "Revisión propia autorizada por el usuario el 11 de octubre, sin excepción a E3; protege salida/procedencia, limpieza temporal Windows y metadatos de rutas/ZIP."
+      ],
+      "revision_propia": {
+        "solicitud_usuario": "Sin perjuicio de la regla e3, ejecuta tu propia revisión",
+        "fecha": "11 de octubre de 2026",
+        "revisor": "Codex /root (mismo Ejecutor)",
+        "sobre_commit": "84b92e49ed8d784c85e7735e6fbc3ec2b0144734",
+        "resultado": "Tres defectos adicionales reproducidos y corregidos; verificación completa pendiente",
+        "evidencia": "docs/implementacion/REPORTE_REVISION_20261011.md, sección 8",
+        "equivale_a_E3": false
+      }
     },
     "WP-70": {
       "titulo": "Cierre de la implementación",

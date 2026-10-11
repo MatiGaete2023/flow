@@ -105,6 +105,12 @@ def decode_text(data: bytes) -> str:
 
 def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
     budget = budget if budget is not None else {"bytes": 0, "members": 0}
+    if depth == 0:
+        # Git paths and archive names are also metadata that can identify a person.
+        name = path
+        if path.is_absolute():
+            name = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+        yield str(path), str(name)
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
         data = staged if staged is not None else path.read_bytes()
@@ -119,6 +125,7 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
                     budget["members"] += 1
                     if budget["members"] > MAX_ARCHIVE_MEMBERS:
                         raise ValueError("Demasiados miembros; control incompleto")
+                    yield f"{path}!{member.filename}", member.filename
                     if member.is_dir():
                         continue
                     name = member.filename

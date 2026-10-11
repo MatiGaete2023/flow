@@ -8,6 +8,8 @@ Uso:
         --lista-eliminadas: archivo con un nodeid de pytest por línea (p. ej.
         tests/test_x.py::test_y o descargador/test_z.py::Clase::test_w). Cada nodo debe estar
         ausente ahora; su cantidad reemplaza a los conteos declarados a mano.
+        La salida es .json; dentro del repo solo en docs/implementacion/verificacion/.
+        Código y configuración nunca se excluyen de la comprobación de procedencia.
     --pruebas-eliminadas-asistente/-descargador N siguen aceptados por compatibilidad, pero
         un valor positivo da FALLA; usar --lista-eliminadas con nodeids medidos.
 
@@ -22,7 +24,6 @@ Controles:
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
   9. Inventario de pruebas: ninguna baja sin declaración exacta, aunque se agreguen otras pruebas.
-  9. Inventario de pruebas: toda baja respecto de la base debe declararse con nodeids exactos.
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
 """
@@ -434,19 +435,35 @@ def nonnegative_argument(value):
 def write_json(path, value):
     # Replace atomically so an interrupted write cannot destroy the baseline.
     path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as stream:
-        temporary = Path(stream.name)
-        try:
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as stream:
+            temporary = Path(stream.name)
             json.dump(value, stream, ensure_ascii=False, indent=2)
             stream.flush()
             os.fsync(stream.fileno())
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
         temporary.replace(path)
     finally:
-        temporary.unlink(missing_ok=True)
+        # Windows requires the file handle to close before it can be removed.
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def report_path(output):
+    """A report cannot replace code/configuration or hide it from provenance."""
+    try:
+        target = Path(output).resolve()
+    except (OSError, ValueError, RuntimeError):
+        raise ValueError("No se pudo resolver la ruta del informe") from None
+    if target == BASE_FILE.resolve():
+        raise ValueError("--salida no puede sobrescribir la línea base")
+    if target.suffix.lower() != '.json':
+        raise ValueError("--salida debe ser un informe .json")
+    root = ROOT.resolve()
+    reports = root / 'docs' / 'implementacion' / 'verificacion'
+    if target.is_relative_to(root) and not target.is_relative_to(reports):
+        raise ValueError("Dentro del repositorio, --salida solo admite docs/implementacion/verificacion/*.json")
+    return target
 
 
 def provenance(output=None):
@@ -459,7 +476,11 @@ def provenance(output=None):
     excluded = None
     if output:
         try:
-            excluded = output.resolve().relative_to(ROOT.resolve()).as_posix()
+            output = report_path(output)
+        except ValueError:
+            return None
+        try:
+            excluded = output.relative_to(ROOT.resolve()).as_posix()
         except ValueError:
             pass
 
@@ -525,8 +546,11 @@ def main(argv):
     parser.add_argument("--lista-eliminadas", type=Path, action="append", default=[])
     parser.add_argument("--salida", type=Path)
     args = parser.parse_args(argv)
-    if args.salida and args.salida.resolve() == BASE_FILE.resolve():
-        parser.error("--salida no puede sobrescribir la línea base")
+    if args.salida:
+        try:
+            args.salida = report_path(args.salida)
+        except ValueError as exc:
+            parser.error(str(exc))
     base = None
     baseline_exists = BASE_FILE.exists()
     if baseline_exists:
