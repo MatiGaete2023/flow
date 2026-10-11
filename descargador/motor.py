@@ -19,6 +19,7 @@ import queue
 import re
 import sys
 import threading
+import time
 import zipfile
 import unicodedata
 from urllib.parse import parse_qsl, urlencode, urlsplit
@@ -615,8 +616,11 @@ def run_sequence(transport, initial_pairs, initial_page, folder, timeout_ms=6000
                     raise PocError("La consulta inicial no corresponde a la primera pagina.")
                 validate_export_url(current.excel_url, profile)
             else:
-                if pause > 0 and cancel is not None and cancel.wait(pause):
-                    raise PocError("Descarga cancelada. Las paginas ya verificadas se conservan.")
+                if pause > 0:
+                    if cancel is None:
+                        time.sleep(pause)
+                    elif cancel.wait(pause):
+                        raise PocError("Descarga cancelada. Las paginas ya verificadas se conservan.")
                 body = transport.search(pairs, timeout_ms)
                 current = search_page(body, pairs, number, total, profile)
             pagination = current.pagination
