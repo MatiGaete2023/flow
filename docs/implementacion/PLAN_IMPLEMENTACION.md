@@ -4,7 +4,7 @@
 
 ## Cómo usar este plan
 
-Este plan convierte las cuatro auditorías del 9 de octubre de 2026 en 35 paquetes de trabajo (WP, incluido WP-63 de mantenimiento) agrupados en 8 olas, pensados para varios agentes de IA en ventanas separadas. Cada WP crea, elimina o modifica código con criterios binarios, y pasa por verificación, revisión y auditoría de alineación antes de integrarse. Ningún agente necesita esta conversación: todo lo que necesita está aquí, en el kit adjunto y en el repositorio.
+Este plan convierte las cuatro auditorías del 9 de octubre de 2026 en paquetes de trabajo (WP; inventario vigente en ESTADO.json) agrupados en 8 olas, pensados para varios agentes de IA en ventanas separadas. Cada WP crea, elimina o modifica código con criterios binarios, y pasa por verificación, revisión y auditoría de alineación antes de integrarse. Ningún agente necesita esta conversación: todo lo que necesita está aquí, en el kit adjunto y en el repositorio.
 
 **Punto de partida (N1):** repositorio `MatiGaete2023/flow`, rama `feat/ejecucion-plan-20261008`, commit `2765b47` (9 de octubre de 2026). `main` contiene solo `README.md`. Suites base: Asistente 605 aprobadas / 11 omitidas; Descargador 198 aprobadas / 59 subpruebas.
 
@@ -139,7 +139,10 @@ El estado operativo parte de `2cf8ca8` después de la purga; los SHA de inicio s
 WP-63 implementa esa revisión con archivos y pruebas propios; no altera reglas, textos, decisiones ni golden.
 [Reporte de revisión](REPORTE_REVISION_20261011.md) y [ficha WP-63](wp/WP-63.md).
 
-Orden vigente: verificar y revisar WP-63; completar residuos de WP-17; recibir resultados/acta de WP-02;
+WP-63 y WP-80 están integrados. WP-81 (#36) está verificado, pendiente de E3.
+WP-82 continúa G-4 en rama independiente desde feat; no sustituye revisión cruzada.
+
+Orden vigente: revisar WP-81 y verificar/revisar WP-82; completar residuos de WP-17; recibir resultados/acta de WP-02;
 contrastar 10 ingresos e integrar WP-50; cerrar WP-70 con acta final. WP-02, WP-17, WP-50 y WP-63 son
 **dependencias funcionales del cierre**, no meros conflictos de archivo. Cada commit posterior respeta
 `ruff format --check`; WP-61 ya integrado no exime a las correcciones futuras del formato.
@@ -147,6 +150,11 @@ Los seis conflictos R-T de WP-60 constan en el estado; se conservan xfail estric
 La excepción E3 anterior no se extiende a esta revisión: PR borrador y revisión cruzada antes de integrar.
 
 ## Paquetes de trabajo
+
+**WP-82 · Pendientes de correo coherentes con Resultados** — M · depende funcionalmente de WP-80.
+Alcance y criterios en [su ficha](wp/WP-82.md); [reporte](REPORTE_WP82.md).
+Continúa G-4 sin integrar WP-81 (#36), que mantiene E3 pendiente. PR borrador hacia feat.
+
 
 Cada ficha indica tipo (**C** crear · **E** eliminar · **M** modificar), dependencias, decisión del usuario, archivos permitidos, pasos, criterio de aceptación binario y la fuente en las auditorías. «Suite» significa `tools/verificar_wp.py`. Las líneas citadas corresponden al commit `2765b47`; si se movieron, el Ejecutor las ubica por contenido.
 
@@ -489,7 +497,7 @@ La memoria del proyecto vive en el repositorio, no en las conversaciones. Tres a
 
 | Archivo | Quién escribe | Contenido |
 | --- | --- | --- |
-| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los 35 WP, conflictos abiertos, traspasos |
+| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los WP, conflictos abiertos, traspasos |
 | `docs/implementacion/wp/<ID>.md` | El Ejecutor del WP | Qué hizo, archivos tocados, pruebas agregadas o borradas, dudas |
 | `docs/implementacion/auditoria/<ID>.md` | El Auditor | Lista de control y veredicto |
 
