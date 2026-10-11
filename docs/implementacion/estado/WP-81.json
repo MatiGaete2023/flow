@@ -1,0 +1,30 @@
+{
+  "titulo": "Revisión propia posterior a WP-63 y WP-80",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-63",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/81-revision-propia-20261011",
+  "pr": null,
+  "verificacion": "164 pruebas focales PASA; verificación general y CI pendientes",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Pedido expreso del usuario: revisión propia sin perjuicio de E3. No acredita revisión cruzada ni aceptación de uso real.",
+    "Cuatro fallos corregidos, incluido O1 de WP-63; 14 nuevas regresiones, ninguna prueba retirada.",
+    "Base 286c28f posterior a integración WP-63/WP-80; no modificar su estado, E3 ni decisiones."
+  ]
+}
