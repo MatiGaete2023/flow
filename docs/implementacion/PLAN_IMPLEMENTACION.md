@@ -134,10 +134,10 @@ Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus depe
 
 ## Revisión del conjunto integrado — 11 de octubre de 2026
 
-WP-63/#34 y WP-80/#35 integrados. Continuación: WP-81 integrados;
-WP-82, WP-83 pendientes de integración.
+WP-63/#34 y WP-80/#35 integrados. Continuación: WP-81, WP-82 integrados;
+WP-83 pendientes de integración.
 Usuario: «Autorizar excepción E3 para #36–38». Sin aprobación de otra raíz; no extender a #39.
-Línea base después de la integración actual: 810/240; evidencia en verificacion/WP-81.json.
+Línea base después de la integración actual: 824/240; evidencia en verificacion/WP-82.json.
 G-5 corregido en #39, pendiente de actualización a feat y revisión E3 propia.
 WP-17: dos etiquetas antiguas eliminadas; refs de PR/cachés requieren Soporte GitHub.
 

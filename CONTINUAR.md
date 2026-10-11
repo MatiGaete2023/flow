@@ -1,8 +1,8 @@
 # Continuar — 11 de octubre de 2026
 
-WP-63/#34 y WP-80/#35 integrados. WP-81 integrados en feat.
-Última integración: c2a5d807578c69a506fe8f338f3fe69186367195; verificación posterior PASA 810/11/6 y 240/62.
-Línea base regenerada. Pendientes autorizados: WP-82, WP-83.
+WP-63/#34 y WP-80/#35 integrados. WP-81, WP-82 integrados en feat.
+Última integración: a59c4dff0997c611c5d03bc4f40da68046b62b7b; verificación posterior PASA 824/11/6 y 240/62.
+Línea base regenerada. Pendientes autorizados: WP-83.
 Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39.
 
 G-5: [PR #39](https://github.com/MatiGaete2023/flow/pull/39), código y CI aprobados;
