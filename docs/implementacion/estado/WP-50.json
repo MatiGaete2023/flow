@@ -13,7 +13,7 @@
   "ejecutor": "claude-sesion-012yjVgL",
   "tomado": "11 de octubre de 2026",
   "rama": "wp/50-cronologia-solo-mostrar",
-  "pr": null,
+  "pr": 33,
   "verificacion": "PASA (verificar_wp.py, 11 de octubre de 2026)",
   "revision": null,
   "auditoria": null,
