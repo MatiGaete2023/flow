@@ -65,3 +65,15 @@ def test_lectura_fallida_de_la_copia_restaura_output_y_borra(tmp_path, monkeypat
         trabajo.export(destino, backend='portable', reduced_fidelity=True)
     assert (trabajo.output, trabajo.output_hash) == antes
     assert not destino.exists()
+
+
+def test_copia_portable_no_muestra_apostrofo_en_la_propuesta(tmp_path):
+    trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
+    trabajo.rows[0].observation = '- revisar =1+1'
+    destino = tmp_path / 'salida.xlsx'
+    trabajo.export(destino, backend='portable', reduced_fidelity=True)
+    hoja = load_workbook(destino)['ESPERA']
+    columnas = {celda.value: celda.column for celda in hoja[1]}
+    for titulo in ('NURUS_PROPUESTA', 'OBSERVACION'):
+        celda = hoja.cell(2, columnas[titulo])
+        assert celda.value == '- revisar =1+1' and celda.data_type == 's', (titulo, celda.value)
