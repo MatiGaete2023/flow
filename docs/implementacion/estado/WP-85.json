@@ -9,15 +9,15 @@
     }
   ],
   "decisiones": [],
-  "estado": "EN_VERIFICACION",
+  "estado": "INTEGRADO",
   "ejecutor": "Codex /root (Orquestador)",
   "tomado": "11 de octubre de 2026",
   "rama": "wp/85-consolidacion-20261011",
   "pr": null,
-  "verificacion": "29 focales PASA; 45/45 SHA de ramas remotas son ancestros del resultado. Verificación completa en curso.",
-  "revision": null,
-  "auditoria": null,
-  "integrado_en": null,
+  "verificacion": "PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288 contra base 841/240: Asistente 848/11/6 xfail; Descargador 240/62; nueve controles, procedencia limpia/estable y 45/45 encabezados incluidos. Línea base regenerada.",
+  "revision": "Revisión propia del Orquestador; orden expresa del usuario de fusionar todas las ramas. Se conservaron versiones vigentes y verificaron nuevas aportaciones.",
+  "auditoria": "Sin informe de otra raíz para esta consolidación solicitada directamente. Restricciones absolutas y golden17 PASA; actas reales y aceptación funcional no presumidas.",
+  "integrado_en": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
   "notas": [
     "Orden expresa de consolidar todas las ramas. No convierte plantillas ni pruebas ficticias en aceptación real."
   ]

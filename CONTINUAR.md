@@ -1,9 +1,16 @@
-# Continuar — consolidación del 11 de octubre de 2026
+# Continuar — consolidado del 11 de octubre de 2026
 
-Rama canónica: feat/ejecucion-plan-20261008. Consolidación de 45 ramas preparada en WP-85.
-Código de WP-50/#33 y plantilla WP-02 recuperados; no aceptación funcional ni casos reales.
+**Usar feat/ejecucion-plan-20261008.** Las 45 ramas inventariadas quedaron incorporadas
+al historial; referencias antiguas son respaldo. Código de #33/WP-50 y plantilla WP-02
+incluidos. G-3/G-4/G-5 preservados. No repetir fusiones ni correcciones ya consolidadas.
+
+Verificación PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288: 848/11/6 y 240/62; baseline regenerado, golden17 intacto,
+historia sin hallazgos y 29 focales PASA. Controles finales CI en PR #33.
 [Reporte](docs/implementacion/REPORTE_CONSOLIDACION_20261011.md).
 [Inventario con SHA](docs/implementacion/ramas_consolidadas_20261011.json).
-29 focales PASA; verificación completa en curso. G-3/G-4/G-5 preservados; motor/golden intactos.
-Pendientes: Soporte GitHub (WP-17), Excel/Outlook reales y diez ingresos (WP-02/WP-50), acta WP-70.
-No main ni release antes del acta final; no force ni publicaciones desde clones previos a purga.
+
+Pendiente real: Soporte GitHub (refs/cachés, WP-17), pruebas Excel/Outlook y actas del usuario
+(WP-02), contraste de diez ingresos (aceptación WP-50), acta final WP-70 antes de main.
+WP-50 tiene su código consolidado; su estado bloqueado es funcional. Plantilla WP-02: 40 NO_EJECUTADO.
+Motor/textos/golden17 intactos; seis xfail estrictos; Outlook Save-only y CC fijo.
+No main/release antes de acta, no force ni publicaciones desde clones previos a purga.
