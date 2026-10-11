@@ -219,6 +219,9 @@ class Application:
         self.pause_button.grid(row=3,column=0,sticky='w',pady=5)
         self.package_button=ttk.Button(actions,text='Crear paquete de este lote…',command=self.create_package)
         self.package_button.grid(row=3,column=1,columnspan=2,sticky='w',padx=8)
+        # D6: el paquete puede llevar solo el XLSX consolidado (nunca HTML ni PDF) para la copia nativa del Asistente.
+        self.package_consolidated=tk.BooleanVar(value=True)
+        ttk.Checkbutton(actions,text='Incluir XLSX consolidado',variable=self.package_consolidated).grid(row=3,column=3,sticky='w')
         self.progress=ttk.Progressbar(results);self.progress.grid(row=1,column=0,sticky='ew',pady=10)
         table=ttk.Frame(results);table.grid(row=2,column=0,sticky='ew');table.columnconfigure(0,weight=1)
         self.tree=ttk.Treeview(table,columns=('page','rows','file'),show='headings',height=5)
@@ -405,7 +408,7 @@ class Application:
             initialfile=f'Captura_CSMP_{m.now():%Y-%m-%d_%H%M}.zip',filetypes=[('Paquete CSMP','*.zip')],confirmoverwrite=False)
         if not target:return
         if Path(target).exists():self.status.set('Ese archivo ya existe. Elige un nombre nuevo para no reemplazar otro paquete.');return
-        self.enqueue('package',(self.last_sheets_folder,self.last_diary_manifest,Path(target)))
+        self.enqueue('package',(self.last_sheets_folder,self.last_diary_manifest,Path(target),self.package_consolidated.get()))
 
     def enqueue(self,command,arg=None):
         if self.busy or self.quitting:return
@@ -615,17 +618,18 @@ class Application:
         self.root.after(100,self.poll)
 
 
-def package_current_lot(sheets_folder,diary_manifest,target):
+def package_current_lot(sheets_folder,diary_manifest,target,consolidated=False):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
-    from export_csmp_capture import export_capture
+    from export_csmp_capture import export_capture,consolidated_note
     from nurus.capture import read_capture
     target=Path(target)
     if target.exists():raise m.PocError('El destino ya existe; elige un nombre nuevo.')
-    path=export_capture(load_sources([sheets_folder]),target,diaries=[Path(diary_manifest)],match_diaries=True)
+    lots=load_sources([sheets_folder]);include,note=consolidated_note(lots,consolidated)
+    path=export_capture(lots,target,diaries=[Path(diary_manifest)],match_diaries=True,consolidated=include)
     capture=read_capture(path)
     summary=next((i['message'] for i in capture.rows('incidencias') if i['code']=='BITACORAS_REUTILIZADAS'),'Sin bitácoras añadidas.')
-    return {'path':str(path),'reuse':summary}
+    return {'path':str(path),'reuse':summary+note}
 
 
 def main(argv=None):
