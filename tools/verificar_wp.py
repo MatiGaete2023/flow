@@ -28,6 +28,7 @@ En Linux sin pantalla usa xvfb-run si está disponible.
 import argparse
 import ast
 import json
+import hashlib
 import os
 import re
 import shutil
@@ -41,34 +42,53 @@ BASE_FILE = ROOT / "docs" / "implementacion" / "linea_base.json"
 PY = sys.executable
 
 
-def run(command, cwd=ROOT, timeout=1800):
+def run(command, cwd=None, timeout=1800):
     prefix = []
     if sys.platform.startswith("linux") and not os.environ.get("DISPLAY") and shutil.which("xvfb-run"):
         prefix = ["xvfb-run", "-a"]
-    result = subprocess.run(prefix + command, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    try:
+        result = subprocess.run(prefix + command, cwd=cwd or ROOT, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return 124, ""
+    except (OSError, UnicodeError):
+        return 127, ""
     return result.returncode, result.stdout + result.stderr
 
 
 def pytest_counts(args):
     code, out = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", *args])
-    tail = out.strip().splitlines()[-1] if out.strip() else ""
-
-    def number(word):
-        match = re.search(r"(\d+) " + word, tail)
-        return int(match.group(1)) if match else 0
-
-    failed = number("failed") + number("error")
-    if code not in (0, 1) and not failed:
-        # Interrupción, error de recolección o caída al cerrar: no se cuenta como suite sana.
-        failed, tail = 1, f"{tail} (pytest terminó con código {code})"
-    return {
-        "aprobadas": number("passed"),
-        "omitidas": number("skipped"),
-        "fallidas": failed,
-        "subpruebas": number("subtests passed"),
+    tail = out.strip().splitlines()[-1].strip("= ") if out.strip() else ""
+    # Parse the complete summary: a subtest is not a parent test, and xfailed
+    # must not match failed. Unknown/truncated output cannot certify a suite.
+    match = re.fullmatch(r"(.+?) in \d+(?:\.\d+)?s(?: \([^\n]+\))?", tail)
+    counts = {}
+    valid = bool(match)
+    if match:
+        for item in match.group(1).split(", "):
+            token = re.fullmatch(
+                r"(\d+) (passed|skipped|failed|errors?|xfailed|xpassed|deselected|warnings?|subtests passed|subtests failed|subtests skipped)",
+                item,
+            )
+            if not token or token.group(2) in counts:
+                valid = False
+                break
+            counts[token.group(2)] = int(token.group(1))
+    valid = valid and any(
+        key in counts for key in ("passed", "skipped", "failed", "error", "errors", "xfailed", "xpassed")
+    )
+    result = {
+        "aprobadas": counts.get("passed", 0),
+        "omitidas": counts.get("skipped", 0),
+        "fallidas": sum(counts.get(key, 0) for key in ("failed", "error", "errors", "subtests failed")),
+        "subpruebas": counts.get("subtests passed", 0),
         "codigo": code,
-        "resumen": tail,
+        "medicion_valida": bool(valid),
     }
+    result["resumen"] = (
+        f"{result['aprobadas']} aprobadas, {result['omitidas']} omitidas, "
+        f"{result['fallidas']} fallidas, {result['subpruebas']} subpruebas; código {code}"
+    )
+    return result
 
 
 def count_real_ids():
@@ -76,10 +96,16 @@ def count_real_ids():
     if not script.exists():
         return None
     code, out = run([PY, str(script)])
-    found = sum(1 for line in out.splitlines() if "dígito verificador válido" in line)
-    if code != 0 and not found:
-        return None  # el script falló sin informar hallazgos: no se midió
-    return found
+    lines = out.strip().splitlines()
+    if code == 0 and lines == ["Sin RUT reales detectados."]:
+        return 0
+    if code != 1 or not lines:
+        return None
+    match = re.fullmatch(r"(\d+) posibles identidades reales\. Reemplázalas por datos sintéticos .*", lines[-1])
+    findings = sum("dígito verificador válido" in line for line in lines[:-1])
+    if match and int(match.group(1)) == findings and findings > 0 and len(lines) == findings + 1:
+        return findings
+    return None
 
 
 def golden():
@@ -94,6 +120,8 @@ def golden():
 
 def restrictions():
     problems = []
+    if not (ROOT / "src").is_dir():
+        return ["No disponible: código fuente de restricciones"]
     for path in (ROOT / "src").rglob("*.py"):
         if re.search(r"\.Send\(", path.read_text(encoding="utf-8", errors="ignore")):
             problems.append(f"{path.relative_to(ROOT)} usa .Send(")
@@ -103,7 +131,10 @@ def restrictions():
     registration = ROOT / "src" / "nurus" / "personal" / "registration.py"
     # Sin registration.py (retirado en WP-22) no queda forma de escribir en RUS. Si vuelve, submit debe lanzar error.
     if registration.exists():
-        tree = ast.parse(registration.read_text(encoding="utf-8"))
+        try:
+            tree = ast.parse(registration.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeError, OSError):
+            return problems + ["No se pudo analizar registration.py"]
         submits = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "submit"]
         if not submits:
             problems.append("registration.py existe pero no se encontró submit: no se pudo medir")
@@ -132,9 +163,12 @@ def restrictions():
     for path in (ROOT / "src").rglob("*.py"):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
-        except SyntaxError:
+        except (SyntaxError, UnicodeError, OSError):
+            problems.append(f"No se pudo analizar {path.relative_to(ROOT)}")
             continue
         for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "Send":
+                problems.append(f"{path.relative_to(ROOT)} llama .Send()")
             names = (
                 [a.name for a in node.names]
                 if isinstance(node, ast.Import)
@@ -152,12 +186,32 @@ def restrictions():
 
 
 def ruff_count():
-    if not shutil.which("ruff") and run([PY, "-m", "ruff", "--version"])[0] != 0:
+    code, out = run(
+        [
+            PY,
+            "-m",
+            "ruff",
+            "check",
+            "--select",
+            "E9,F63,F7,F82,F401,F841",
+            "--output-format",
+            "json",
+            "src",
+            "descargador",
+            "tools",
+            "--extend-exclude",
+            "src/nurus/personal/motor",
+        ]
+    )
+    try:
+        findings = json.loads(out)
+    except (ValueError, TypeError):
         return None
-    code, out = run([PY, "-m", "ruff", "check", "--select", "E9,F63,F7,F82", "--output-format", "concise", "src"])
-    if code > 1:
-        return None  # configuración inválida o fallo de ruff: no se midió
-    return sum(1 for line in out.splitlines() if re.match(r"^src[\\/].+:\d+:\d+:", line))
+    if not isinstance(findings, list) or any(
+        not isinstance(item, dict) or not isinstance(item.get("code"), str) for item in findings
+    ):
+        return None
+    return len(findings) if code == bool(findings) else None
 
 
 def unreachable_count():
@@ -166,9 +220,13 @@ def unreachable_count():
         return None
     code, out = run([PY, str(script), "--json"])
     try:
-        return len(json.loads(out[out.index("{") :])["no_alcanzables"])
-    except (ValueError, KeyError):
+        result = json.loads(out)
+        missing = result["no_alcanzables"]
+    except (ValueError, KeyError, TypeError):
         return None
+    if code != 0 or not isinstance(missing, list) or any(not isinstance(item, str) for item in missing):
+        return None
+    return len(missing)
 
 
 def broken_links():
@@ -176,24 +234,34 @@ def broken_links():
     if not script.exists():
         return None
     code, out = run([PY, str(script)])
-    match = re.search(r"(\d+) enlaces rotos", out)
-    return int(match.group(1)) if match else None
+    lines = out.strip().splitlines()
+    match = re.fullmatch(r"(\d+) enlaces rotos\.", lines[-1]) if lines else None
+    if not match:
+        return None
+    count = int(match.group(1))
+    return count if code == bool(count) and len(lines) == count + 1 else None
 
 
 def collect():
-    return {
-        "commit": subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True
-        ).stdout.strip(),
-        "asistente": pytest_counts([]),
-        "descargador": pytest_counts(["descargador"]),
-        "identidades_reales": count_real_ids(),
-        "paridad_golden": golden(),
-        "restricciones": restrictions(),
-        "ruff_src": ruff_count(),
-        "modulos_no_alcanzables": unreachable_count(),
-        "enlaces_rotos": broken_links(),
-    }
+    code, commit = run(["git", "rev-parse", "--short", "HEAD"])
+    result = {"commit": commit.strip() if code == 0 and re.fullmatch(r"[a-f0-9]+\s*", commit) else "NO_DISPONIBLE"}
+    for key, measure in (
+        ("asistente", lambda: pytest_counts([])),
+        ("descargador", lambda: pytest_counts(["descargador"])),
+        ("identidades_reales", count_real_ids),
+        ("paridad_golden", golden),
+        ("restricciones", restrictions),
+        ("ruff_src", ruff_count),
+        ("modulos_no_alcanzables", unreachable_count),
+        ("enlaces_rotos", broken_links),
+    ):
+        try:
+            result[key] = measure()
+        except (OSError, UnicodeError, ValueError, TypeError, subprocess.SubprocessError):
+            # Never copy exceptions: filenames, source lines or subprocess output
+            # can contain personal data. Missing measurement fails its control.
+            result[key] = None
+    return result
 
 
 def collected_nodeids(suite):
@@ -203,7 +271,7 @@ def collected_nodeids(suite):
     ids = {line.strip() for line in out.splitlines() if "::" in line and not line.startswith(("=", " "))}
     if suite == "descargador":
         ids |= {"descargador/" + i for i in ids if not i.startswith("descargador/")}
-    return ids
+    return ids if code == 0 else None
 
 
 def existed_in_base(node, commit):
@@ -237,11 +305,16 @@ def removed_from_lists(paths, commit=None):
             ]
         if nodes:
             present = collected_nodeids(suite)
-            problems += [f"{node} sigue presente" for node in nodes if node in present]
+            if present is None:
+                problems.append(f"No se pudo recolectar la suite {suite} para verificar bajas")
+            else:
+                problems += [f"{node} sigue presente" for node in nodes if node in present]
     return {suite: len(set(nodes)) for suite, nodes in removed.items()}, problems
 
 
 def compare(now, base, removed_a, removed_d, lists=None):
+    now = now if isinstance(now, dict) else {}
+    base = base if isinstance(base, dict) else {}
     checks = []
 
     def add(name, ok, detail):
@@ -249,73 +322,206 @@ def compare(now, base, removed_a, removed_d, lists=None):
 
     listed, problems = lists if lists else ({}, [])
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
-        n, b = now[key], base[key]
-        removed += listed.get(key, 0)
-        minimum = b["aprobadas"] - removed
-        origin = "" if not removed or listed.get(key) else "; eliminadas sin lista verificable"
-        add(
-            f"Suite {key}",
-            n["fallidas"] == 0 and n["aprobadas"] >= minimum,
-            f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']}{origin})",
-        )
+        removed = removed + listed.get(key, 0) if nonnegative(removed) else None
+        n, b = now.get(key), base.get(key)
+        valid = suite_valid(n) and suite_valid(b) and nonnegative(removed)
+        if valid:
+            valid = removed <= b["aprobadas"]
+        if valid:
+            minimum = b["aprobadas"] - removed
+            add(
+                f"Suite {key}",
+                n["aprobadas"] >= minimum,
+                f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; código 0"
+                + ("; bajas numéricas sin lista verificable" if removed and not listed.get(key) else ""),
+            )
+        else:
+            add(f"Suite {key}", False, "Medición, línea base o declaración de bajas inválida")
     if lists:
         add(
             "Pruebas eliminadas listadas",
             not problems,
             "; ".join(problems) or f"{sum(listed.values())} nodos ausentes como se declaró",
         )
-    ids_now, ids_base = now["identidades_reales"], base["identidades_reales"]
-    if ids_now is None:
-        add("Identidades reales", False, "NO_MEDIDO: falta tools/check_real_ids.py o su salida no se pudo leer")
-    else:
-        limit = 0 if not ids_base else ids_base
-        add("Identidades reales", ids_now <= limit, f"{ids_now} hallazgos (límite {limit})")
-    add("Paridad golden", now["paridad_golden"] == "PASA", now["paridad_golden"])
-    add("Restricciones absolutas", not now["restricciones"], "; ".join(now["restricciones"]) or "sin infracciones")
+    n, b = now.get("identidades_reales"), base.get("identidades_reales")
+    valid = nonnegative(n) and nonnegative(b)
+    add(
+        "Identidades reales",
+        valid and n <= b,
+        f"{n} hallazgos; límite {b}" if valid else "Medición o línea base no disponible",
+    )
+    add(
+        "Paridad golden",
+        now.get("paridad_golden") == base.get("paridad_golden") == "PASA",
+        "Paridad válida" if now.get("paridad_golden") == "PASA" else "Paridad fallida o no disponible",
+    )
+    n, b = now.get("restricciones"), base.get("restricciones")
+    add(
+        "Restricciones absolutas",
+        isinstance(n, list) and not n and isinstance(b, list) and not b,
+        "Sin infracciones" if n == [] else "Infracciones o análisis no disponible",
+    )
     for key, label in (
-        ("ruff_src", "Ruff E9/F63/F7/F82"),
+        ("ruff_src", "Ruff E9/F63/F7/F82/F401/F841"),
         ("modulos_no_alcanzables", "Módulos no alcanzables"),
         ("enlaces_rotos", "Enlaces rotos"),
     ):
-        if now[key] is None or base.get(key) is None:
-            add(label, False, f"NO_MEDIDO (ahora {now[key]}, base {base.get(key)})")
-        else:
-            add(label, now[key] <= base[key], f"{now[key]} (base {base[key]})")
+        n, b = now.get(key), base.get(key)
+        valid = nonnegative(n) and nonnegative(b)
+        add(label, valid and n <= b, f"{n}; base {b}" if valid else "Medición o línea base no disponible")
     return checks
+
+
+def nonnegative(value):
+    return type(value) is int and value >= 0
+
+
+def suite_valid(suite):
+    return (
+        isinstance(suite, dict)
+        and all(nonnegative(suite.get(key)) for key in ("aprobadas", "omitidas", "fallidas", "subpruebas"))
+        and type(suite.get("codigo")) is int
+        and suite["codigo"] == 0
+        and suite["fallidas"] == 0
+        and suite.get("medicion_valida", True) is True
+    )
+
+
+def nonnegative_argument(value):
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("El número de pruebas eliminadas no puede ser negativo")
+    return number
+
+
+def write_json(path, value):
+    # Replace atomically so an interrupted write cannot destroy the baseline.
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as stream:
+        temporary = Path(stream.name)
+        try:
+            json.dump(value, stream, ensure_ascii=False, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def provenance(output=None):
+    """Identify the committed tree and detect any worktree change during tests.
+
+    Paths/content are hashed in memory and never included in the report. Only
+    the explicitly requested report is excluded, so writing it cannot invalidate
+    its own measurement. Other documentation and untracked files still count.
+    """
+    excluded = None
+    if output:
+        try:
+            excluded = output.resolve().relative_to(ROOT.resolve()).as_posix()
+        except ValueError:
+            pass
+
+    def git(*args):
+        result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, timeout=30)
+        if result.returncode:
+            raise ValueError("Git no disponible")
+        return result.stdout
+
+    try:
+        head = git("rev-parse", "HEAD").decode("ascii").strip()
+        tree = git("rev-parse", "HEAD^{tree}").decode("ascii").strip()
+        if not re.fullmatch(r"[a-f0-9]{40,64}", head) or not re.fullmatch(r"[a-f0-9]{40,64}", tree):
+            return None
+        pathspec = ["--", "."] + ([f":(exclude,literal){excluded}"] if excluded else [])
+        status = git("status", "--porcelain=v1", "-z", "--untracked-files=all", *pathspec)
+        digest = hashlib.sha256(status)
+        digest.update(git("diff", "--cached", "--binary", *pathspec))
+        names = git("ls-files", "--cached", "--others", "--exclude-standard", "-z", *pathspec)
+        for name in sorted(set(names.split(b"\0")) - {b""}):
+            digest.update(name + b"\0")
+            path = ROOT / os.fsdecode(name)
+            if path.is_symlink():
+                digest.update(b"link:" + os.fsencode(os.readlink(path)))
+            elif path.is_file():
+                with path.open("rb") as stream:
+                    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(chunk)
+            else:
+                digest.update(b"missing")
+        return {
+            "commit": head,
+            "arbol_git": tree,
+            "cambios_locales": bool(status),
+            "huella_trabajo": digest.hexdigest(),
+        }
+    except (OSError, UnicodeError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def public_provenance(value):
+    return {key: value[key] for key in ("commit", "arbol_git", "cambios_locales")} if value else None
 
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Verificación estándar de un WP.")
     parser.add_argument("--linea-base", action="store_true")
-    parser.add_argument("--pruebas-eliminadas-asistente", type=int, default=0)
-    parser.add_argument("--pruebas-eliminadas-descargador", type=int, default=0)
+    parser.add_argument("--pruebas-eliminadas-asistente", type=nonnegative_argument, default=0)
+    parser.add_argument("--pruebas-eliminadas-descargador", type=nonnegative_argument, default=0)
     parser.add_argument("--lista-eliminadas", type=Path, action="append", default=[])
     parser.add_argument("--salida", type=Path)
     args = parser.parse_args(argv)
+    if args.salida and args.salida.resolve() == BASE_FILE.resolve():
+        parser.error("--salida no puede sobrescribir la línea base")
+    base = None
+    baseline_exists = BASE_FILE.exists()
+    if baseline_exists:
+        try:
+            base = json.loads(BASE_FILE.read_text(encoding="utf-8"))
+        except (ValueError, UnicodeError, OSError):
+            base = {}
+    before = provenance(args.salida)
     now = collect()
-    if args.linea_base:
-        BASE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        BASE_FILE.write_text(json.dumps(now, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(json.dumps(now, ensure_ascii=False, indent=2))
-        print(f"Línea base guardada en {BASE_FILE.relative_to(ROOT)}")
-        return 0
-    if not BASE_FILE.exists():
-        print("Falta la línea base: ejecuta primero --linea-base en la rama base.")
-        return 1
-    base = json.loads(BASE_FILE.read_text(encoding="utf-8"))
-    lists = removed_from_lists(args.lista_eliminadas, base.get("commit")) if args.lista_eliminadas else None
-    checks = compare(now, base, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
+    after = provenance(args.salida)
+    eligible = bool(before and after and before == after and not before["cambios_locales"])
+    if before:
+        now["commit"] = before["commit"]
+    # Only an absent baseline may be initialized against the current healthy
+    # measurements. An existing corrupt baseline must never be silently reset.
+    reference = now if not baseline_exists and args.linea_base else base
+    lists = None
+    if args.lista_eliminadas:
+        try:
+            lists = removed_from_lists(
+                args.lista_eliminadas, reference.get("commit") if isinstance(reference, dict) else None
+            )
+        except (OSError, UnicodeError, ValueError):
+            lists = ({}, ["No se pudieron verificar las listas de pruebas retiradas"])
+    checks = compare(now, reference, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
     report = {
-        "commit": now["commit"],
-        "base": base["commit"],
+        "commit": now.get("commit", "NO_DISPONIBLE"),
+        "base": reference.get("commit", "NO_DISPONIBLE") if isinstance(reference, dict) else "NO_DISPONIBLE",
         "controles": checks,
-        "veredicto": "PASA" if all(c["resultado"] == "PASA" for c in checks) else "FALLA",
+        "procedencia_inicio": public_provenance(before),
+        "procedencia_fin": public_provenance(after),
+        "elegible_integracion": eligible,
+        "veredicto": "PASA" if eligible and all(c["resultado"] == "PASA" for c in checks) else "FALLA",
     }
     for check in checks:
         print(f"[{check['resultado']}] {check['control']}: {check['detalle']}")
+    if not eligible:
+        report["motivo_procedencia"] = "Árbol sin commit, modificado durante la medición o identidad Git no disponible"
+        print("[FALLA] Procedencia:", report["motivo_procedencia"])
     print("VEREDICTO:", report["veredicto"])
     if args.salida:
-        args.salida.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        write_json(args.salida, report)
+    if args.linea_base and report["veredicto"] == "PASA":
+        write_json(BASE_FILE, now)
+        print("Línea base guardada.")
     return 0 if report["veredicto"] == "PASA" else 1
 
 
