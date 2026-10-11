@@ -13,7 +13,8 @@ No volver a tratar #34/#35 como pendientes ni reemplazar sus decisiones por nota
 
 WP-81 continúa la revisión propia pedida por el usuario desde esa base, en
 `wp/81-revision-propia-20261011`. Corrige cuatro fallos adicionales de herramientas,
-incluido O1 de WP-63, y ordena el traspaso. Su ficha registra la verificación y el PR.
+incluido O1 de WP-63, y ordena el traspaso. PR #36 borrador. Verificación general PASA en `08b897f` (810/240);
+su ficha registra la evidencia y los controles Windows.
 Reporte: [REPORTE_WP81.md](docs/implementacion/REPORTE_WP81.md).
 La revisión propia no sustituye la revisión/auditoría E3 independiente de este paquete.
 
