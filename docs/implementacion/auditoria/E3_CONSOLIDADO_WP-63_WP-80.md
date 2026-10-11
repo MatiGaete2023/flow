@@ -18,6 +18,9 @@ Fuentes contrastadas:
 Convención: **N1** hecho comprobado aquí con un comando o una ejecución; **N2** inferencia por lectura de código, con
 el supuesto explícito.
 
+> **Actualización (11 de octubre de 2026, tarde):** WP-63 está **INTEGRADO** en `feat` (`f64bc7c`). WP-80 fusionó `feat`
+> y quedó APROBADO / CONFORME con condiciones (§5). Las tablas siguientes describen el estado previo a esa integración.
+
 ## 1. Estado del repositorio (N1, al 11 de octubre de 2026)
 
 | Elemento | WP-63 | WP-80 |
@@ -165,7 +168,7 @@ Datos adicionales:
 | WP | Revisión de código | Alineación | Comentario |
 | --- | --- | --- | --- |
 | **WP-63** | **APROBADO CON OBSERVACIONES** (revisión completa; ver §5.1) | **CONFORME** (con las decisiones del §8) | Sin bloqueos. Observaciones no bloqueantes en §5.1. |
-| **WP-80** | **APROBADO** en `672146f` (re-revisión; ver [WP-80.md](WP-80.md), al final) | **CONFORME**, sujeto a: etiqueta `pre-WP-80` antes de integrar y commit de integración con formato de la regla 11 | La Ejecutora aplicó los ítems de §4.5, A2r, G-1, G-2 y G-6 (`168ce0d`, `92d7ba8`). Verificación PASA 608/236. Nuevo conflicto con WP-63: `decode_text` en `check_real_ids` (ver WP-80.md). |
+| **WP-80** | **APROBADO** (revisión final sobre `95991b6`, tras fusionar `feat` con WP-63; ver [WP-80.md](WP-80.md)) | **CONFORME**, sujeto a: (1) regenerar la línea base después de WP-63 y volver a verificar (E2); (2) etiqueta `pre-WP-80`; (3) squash con el formato de la regla 11; CI verde | Conflictos resueltos conforme al §7.4. Verificación PASA 796/240, sin bajas frente a la punta de `feat`. |
 
 Observaciones de alineación de WP-63:
 
