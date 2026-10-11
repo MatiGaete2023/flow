@@ -217,3 +217,53 @@ def test_absence_of_exact_baseline_collection_cannot_certify_removal(monkeypatch
     manifest.write_text('tests/test_x.py::test_exists')
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     assert verifier.removed_from_lists([manifest], 'commit')[1]
+
+
+def zip_bytes(name, data):
+    import io
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(name, data)
+    return buffer.getvalue()
+
+
+def test_zip_capture_checks_consolidated_xlsx(tmp_path, identity, capsys):
+    sample = tmp_path / 'synthetic_capture.zip'
+    sample.write_bytes(
+        zip_bytes('consolidated.xlsx', zip_bytes('xl/sharedStrings.xml', f'<sst><si><t>{identity}</t></si></sst>'))
+    )
+    assert scanner.main([str(sample)]) == 1
+    output = capsys.readouterr().out
+    assert identity not in output
+    assert 'consolidated.xlsx' in output
+
+
+def test_corrupt_nested_ooxml_cannot_certify_clean(tmp_path):
+    sample = tmp_path / 'synthetic_capture.zip'
+    sample.write_bytes(zip_bytes('consolidated.xlsx', b'not zip'))
+    assert scanner.main([str(sample)]) == 2
+
+
+@pytest.mark.parametrize('limit', ['depth', 'expansion', 'members'])
+def test_archive_resource_limits_fail_closed(tmp_path, monkeypatch, limit):
+    sample = tmp_path / 'synthetic_capture.zip'
+    if limit == 'depth':
+        data = b'fictitious'
+        for _ in range(scanner.MAX_ARCHIVE_DEPTH + 1):
+            data = zip_bytes('nested.zip', data)
+    elif limit == 'expansion':
+        monkeypatch.setattr(scanner, 'MAX_ARCHIVE_BYTES', 5)
+        data = zip_bytes('synthetic.txt', 'fictitious')
+    else:
+        monkeypatch.setattr(scanner, 'MAX_ARCHIVE_MEMBERS', 0)
+        data = zip_bytes('synthetic.txt', 'fictitious')
+    sample.write_bytes(data)
+    assert scanner.main([str(sample)]) == 2
+
+
+def test_identifier_in_filename_is_redacted_in_diagnostics(tmp_path, identity, capsys):
+    sample = tmp_path / (identity + '.txt')
+    sample.write_text(identity)
+    assert scanner.main([str(sample)]) == 1
+    assert identity not in capsys.readouterr().out

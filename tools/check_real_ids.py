@@ -38,8 +38,10 @@ TEXT_SUFFIXES = {
     ".toml",
     ".cjs",
 }
-ZIP_SUFFIXES = {".docx", ".xlsx", ".zip"}
-ZIP_MEMBER_SUFFIXES = (".xml", ".csv", ".json", ".txt", ".html", ".md")
+ZIP_SUFFIXES = {".docx", ".docm", ".dotx", ".dotm", ".xlsx", ".xlsm", ".xltx", ".xltm", ".zip"}
+MAX_ARCHIVE_DEPTH = 4
+MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
+MAX_ARCHIVE_MEMBERS = 10_000
 PATTERN = re.compile(r"(?<![\d.])(\d{1,2}[. \u00a0]?\d{3}[. \u00a0]?\d{3})\s*[-\u2010-\u2015\u2212]\s*([\dkK])(?![\w])")
 
 
@@ -77,7 +79,8 @@ def tracked_files() -> list[Path]:
     return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
 
 
-def texts(path: Path, staged: bytes | None = None):
+def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
+    budget = budget if budget is not None else {"bytes": 0, "members": 0}
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
         content = (
@@ -87,11 +90,28 @@ def texts(path: Path, staged: bytes | None = None):
         )
         yield str(path), content
     elif suffix in ZIP_SUFFIXES:
+        if depth >= MAX_ARCHIVE_DEPTH:
+            raise ValueError("Profundidad de contenedores excedida; control incompleto")
         try:
             with zipfile.ZipFile(io.BytesIO(staged) if staged is not None else path) as archive:
-                for name in archive.namelist():
-                    if name.lower().endswith(ZIP_MEMBER_SUFFIXES):
-                        content = archive.read(name).decode("utf-8", errors="ignore")
+                for member in archive.infolist():
+                    budget["members"] += 1
+                    if budget["members"] > MAX_ARCHIVE_MEMBERS:
+                        raise ValueError("Demasiados miembros; control incompleto")
+                    if member.is_dir():
+                        continue
+                    name = member.filename
+                    member_suffix = Path(name).suffix.lower()
+                    if member_suffix not in TEXT_SUFFIXES | ZIP_SUFFIXES:
+                        continue
+                    budget["bytes"] += member.file_size
+                    if budget["bytes"] > MAX_ARCHIVE_BYTES:
+                        raise ValueError("Expansión de contenedores excedida; control incompleto")
+                    data = archive.read(member)
+                    if member_suffix in ZIP_SUFFIXES:
+                        yield from texts(Path(f"{path}!{name}"), data, depth=depth + 1, budget=budget)
+                    else:
+                        content = data.decode("utf-8", errors="ignore")
                         if name.lower().endswith(".xml"):
                             try:
                                 tree = ET.fromstring(content)
@@ -121,6 +141,13 @@ def texts(path: Path, staged: bytes | None = None):
             raise ValueError("Contenedor ZIP ilegible") from None
 
 
+def redact_label(label):
+    return PATTERN.sub(
+        lambda match: re.sub(r"\D", "", match.group(1))[:2] + "******-" + match.group(2).upper(),
+        label,
+    )
+
+
 def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list[tuple[str, int, str]]:
     findings = []
     for path in paths:
@@ -137,7 +164,7 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
                 if normalized in allowlist or not is_real_looking(number, match.group(2)):
                     continue
                 line = content.count("\n", 0, match.start()) + 1
-                findings.append((label, line, normalized[:2] + "******-" + normalized[-1]))
+                findings.append((redact_label(label), line, normalized[:2] + "******-" + normalized[-1]))
     return findings
 
 
@@ -165,7 +192,9 @@ def scan_history(allowlist: set[str]) -> list[tuple[str, int, str]]:
                 if normalized in allowlist or not is_real_looking(number, match.group(2)):
                     continue
                 line = text.count("\n", 0, match.start()) + 1
-                findings.append((f"{sha[:10]}:{label}", line, normalized[:2] + "******-" + normalized[-1]))
+                findings.append(
+                    (redact_label(f"{sha[:10]}:{label}"), line, normalized[:2] + "******-" + normalized[-1])
+                )
     return findings
 
 
