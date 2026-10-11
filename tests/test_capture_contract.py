@@ -271,3 +271,19 @@ def test_lowercase_content_types_is_read_not_keyerror():
         book.writestr('[content_types].xml', '<Types/>')
         book.writestr('xl/workbook.xml', '<workbook/>')
     check_workbook(out.getvalue())
+
+
+def test_corrupt_deflate_in_workbook_is_capture_error():
+    from io import BytesIO
+    from nurus.capture.contract import check_workbook
+
+    out = BytesIO()
+    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as book:
+        book.writestr('[Content_Types].xml', '<Types>' + 'x' * 4000 + '</Types>')
+        book.writestr('xl/workbook.xml', '<workbook/>')
+    raw = bytearray(out.getvalue())
+    start = raw.index(b'[Content_Types].xml') + len('[Content_Types].xml')
+    for i in range(start, start + 12):
+        raw[i] ^= 0xFF
+    with pytest.raises(CaptureError):
+        check_workbook(bytes(raw))

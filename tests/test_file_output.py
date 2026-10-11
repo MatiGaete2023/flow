@@ -53,3 +53,16 @@ def test_publication_is_a_single_atomic_link(tmp_path, monkeypatch):
     assert write_new_file(destination, lambda path: path.write_bytes(b"complete")) == destination
     assert destination.read_bytes() == b"complete"
     assert list(tmp_path.iterdir()) == [destination]
+
+
+@pytest.mark.skipif(__import__("os").name != "posix", reason="permisos POSIX")
+def test_published_file_has_umask_permissions_not_tempfile_0600(tmp_path):
+    import os
+    import stat
+
+    umask = os.umask(0o022)
+    try:
+        destination = write_new_file(tmp_path / "p.xlsx", lambda path: path.write_bytes(b"x"))
+    finally:
+        os.umask(umask)
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o644

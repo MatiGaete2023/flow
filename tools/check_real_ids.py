@@ -38,6 +38,7 @@ TEXT_SUFFIXES = {
     ".cjs",
 }
 ZIP_SUFFIXES = {".docx", ".xlsx", ".zip"}
+BINARY_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".ttf", ".woff", ".woff2"}
 ZIP_MEMBER_SUFFIXES = (".xml", ".csv", ".json", ".txt", ".html", ".md")
 PATTERN = re.compile(r"(?<![\d.])(\d{1,2}\.?\d{3}\.?\d{3})-([\dkK])(?![\w])")
 
@@ -76,6 +77,18 @@ def tracked_files() -> list[Path]:
     return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
 
 
+def decode_text(raw: bytes) -> str | None:
+    """Texto de un archivo de sufijo desconocido: UTF-16 con BOM, UTF-8 o cp1252; None si es binario."""
+    if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return raw.decode("utf-16", errors="ignore")
+    if b"\0" in raw:
+        return None
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="ignore")
+
+
 def texts(path: Path, staged: bytes | None = None):
     """Texto de un archivo versionado: por sufijo conocido o, si el sufijo es otro, por su contenido.
 
@@ -86,13 +99,10 @@ def texts(path: Path, staged: bytes | None = None):
         raw = staged if staged is not None else path.read_bytes()
         if zipfile.is_zipfile(io.BytesIO(raw)):
             staged, suffix = raw, ".zip"
-        elif b"\0" not in raw:
-            try:
-                yield str(path), raw.decode("utf-8")
-            except UnicodeDecodeError:
-                pass
-            return
         else:
+            content = decode_text(raw)
+            if content is not None:
+                yield str(path), content
             return
     if suffix in TEXT_SUFFIXES:
         content = (
@@ -132,12 +142,13 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
 
 
 def history_blobs() -> list[tuple[str, str]]:
-    """(blob, ruta) de cada blob distinto alcanzable desde cualquier referencia, con sufijo revisable."""
+    """(blob, ruta) de cada blob distinto alcanzable desde cualquier referencia que pueda contener texto."""
     output = subprocess.run(["git", "rev-list", "--all", "--objects"], cwd=ROOT, capture_output=True, check=True).stdout
     seen, result = set(), []
     for line in output.decode("utf-8", errors="surrogateescape").splitlines():
         sha, _, name = line.partition(" ")
-        if not name or sha in seen or Path(name).suffix.lower() not in TEXT_SUFFIXES | ZIP_SUFFIXES:
+        # Como texts(): también sufijos desconocidos (p. ej. sesiones .bin), salvo imágenes y fuentes.
+        if not name or sha in seen or Path(name).suffix.lower() in BINARY_SUFFIXES:
             continue
         seen.add(sha)
         result.append((sha, name))

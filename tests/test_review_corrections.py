@@ -179,6 +179,17 @@ def test_unedited_rows_never_require_reconciliation(tmp_path):
     assert len(new.rows) == len(tables['registros'])
 
 
+def test_rule_exclusion_is_not_a_human_edit():
+    from types import SimpleNamespace
+    from nurus.personal.capture_reconciliation import _edited
+
+    base = dict(
+        review={}, overrides={}, word_overrides={}, decisions={'structured': True, 'mail': {}, 'resolution': 'auto'}
+    )
+    assert not _edited(SimpleNamespace(**base, excluded=True, rules=['COMUN.NO_SEGUIMIENTO']))
+    assert _edited(SimpleNamespace(**base, excluded=True, rules=['E-01']))
+
+
 def test_query_row_and_table_cannot_overclaim_coverage(tmp_path):
     metadata, tables = fixture()
     tables['consultas'][0].update(coverage='PARCIAL', expected_pages='2', saved_pages='1')
