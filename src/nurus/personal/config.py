@@ -306,16 +306,19 @@ class Configuration:
                 if scope.startswith('_'):
                     continue
                 for key, entry in entries.items():
-                    # El texto rev2 de las claves que cambiaron en rev3 es LEGACY_TEXTS_REV2, no la base actual;
-                    # rev3 lo migra después en el paso siguiente.
-                    original = LEGACY_TEXTS_REV2.get(scope + '.' + key, entry['texto'])
-                    previous = (
-                        original.replace('Se remite correo electrónico', 'Se sugiere remitir correo electrónico')
-                        .replace('se remite correo electrónico', 'se sugiere remitir correo electrónico')
-                        .replace('Se remite proyecto de resolución', 'Se sugiere preparar proyecto de resolución')
-                    )
-                    if updated['textos'][scope][key]['texto'] == previous:
-                        updated['textos'][scope][key]['texto'] = original
+                    # Un texto rev1 puede venir del texto rev2 (LEGACY_TEXTS_REV2, que rev3 migra en el paso
+                    # siguiente) o del texto base vigente: se aceptan ambos orígenes.
+                    for original in dict.fromkeys((LEGACY_TEXTS_REV2.get(scope + '.' + key), entry['texto'])):
+                        if original is None:
+                            continue
+                        previous = (
+                            original.replace('Se remite correo electrónico', 'Se sugiere remitir correo electrónico')
+                            .replace('se remite correo electrónico', 'se sugiere remitir correo electrónico')
+                            .replace('Se remite proyecto de resolución', 'Se sugiere preparar proyecto de resolución')
+                        )
+                        if updated['textos'][scope][key]['texto'] == previous:
+                            updated['textos'][scope][key]['texto'] = original
+                            break
             updated['revision_textos'] = 2
             self.save(updated)
 

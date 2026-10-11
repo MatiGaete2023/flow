@@ -56,7 +56,7 @@ def _mail_state(work, row_id, drafts):
             continue
         # key registra el último guardado; no acredita texto o adjuntos editados después.
         try:
-            # Presentación: no relee adjuntos sin cambios al recorrer la tabla (Outlook sí relee al guardar).
+            # Una lectura por adjunto y consulta, compartida entre borradores (WP-84); Outlook relee al guardar.
             key = draft_fingerprint_for_display(draft)
         except (ValueError, OSError):
             # Las incidencias se muestran en Resultados; no bloquear la fila ni confirmar el guardado.

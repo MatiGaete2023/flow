@@ -106,7 +106,8 @@ def test_row_indicator_stays_prepared_after_recipient_becomes_invalid(work):
 
 
 def test_row_selection_does_not_rehash_unchanged_attachments(tmp_path, monkeypatch):
-    # C1 (revisión integral): recorrer la tabla no relee los adjuntos de cada borrador en cada selección.
+    # C1 (revisión integral): cada selección lee una vez el adjunto compartido, no una vez por borrador.
+    # Entre selecciones se relee a propósito: una edición con igual tamaño y mtime debe verse (WP-84).
     from pathlib import Path
     from types import SimpleNamespace
     from nurus.personal.outputs import Draft, draft_fingerprint
@@ -127,7 +128,7 @@ def test_row_selection_does_not_rehash_unchanged_attachments(tmp_path, monkeypat
     monkeypatch.setattr(Path, 'read_bytes', lambda p: (lecturas.append(p), original(p))[1])
     for _ in range(10):
         product_indicators(work, fila, borradores)
-    assert len(lecturas) <= 1
+    assert len(lecturas) <= 10
     from nurus.personal.ux_support import _mail_state
 
     assert _mail_state(work, 'r1', borradores) == 'created'

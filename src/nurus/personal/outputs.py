@@ -262,29 +262,8 @@ def draft_preview_scope():
         _PREVIEW_DIGESTS.reset(token)
 
 
-# Solo presentación: huella por (ruta, mtime, tamaño) para no releer adjuntos al recorrer la tabla.
-# Guardar en Outlook nunca la usa: draft_fingerprint relee siempre los bytes.
-_DISPLAY_DIGESTS = {}
-_DISPLAY_DIGESTS_MAX = 512
-
-
-def _display_digest(path):
-    try:
-        stat = path.stat()
-    except OSError:
-        return 'MISSING'
-    key = (str(path), stat.st_mtime_ns, stat.st_size)
-    digest = _DISPLAY_DIGESTS.get(key)
-    if digest is None:
-        if len(_DISPLAY_DIGESTS) >= _DISPLAY_DIGESTS_MAX:
-            _DISPLAY_DIGESTS.clear()
-        digest = sha256(path.read_bytes()).hexdigest()
-        _DISPLAY_DIGESTS[key] = digest
-    return digest
-
-
 def draft_fingerprint_for_display(draft):
-    return _draft_fingerprint(draft, _PREVIEW_DIGESTS.get(), display=True)
+    return _draft_fingerprint(draft, _PREVIEW_DIGESTS.get())
 
 
 def draft_fingerprint(draft):
@@ -298,17 +277,14 @@ def draft_fingerprint(draft):
     return _draft_fingerprint(draft)
 
 
-def _draft_fingerprint(draft, digests=None, *, display=False):
+def _draft_fingerprint(draft, digests=None):
     attachments = []
     for item in draft.attachments:
         path = Path(item)
         if digests is not None and path in digests:
             digest = digests[path]
         else:
-            if display:
-                digest = _display_digest(path)
-            else:
-                digest = sha256(path.read_bytes()).hexdigest() if path.is_file() else 'MISSING'
+            digest = sha256(path.read_bytes()).hexdigest() if path.is_file() else 'MISSING'
             if digests is not None:
                 digests[path] = digest
         attachments.append((path.name, digest))
