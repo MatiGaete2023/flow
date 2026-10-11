@@ -270,7 +270,9 @@ def test_lowercase_content_types_is_read_not_keyerror():
     with zipfile.ZipFile(out, 'w') as book:
         book.writestr('[content_types].xml', '<Types/>')
         book.writestr('xl/workbook.xml', '<workbook/>')
-    check_workbook(out.getvalue())
+    # WP-63 exige los nombres exactos que escribe Excel; lo que importa es un rechazo claro, no un KeyError.
+    with pytest.raises(CaptureError, match='no es un libro'):
+        check_workbook(out.getvalue())
 
 
 def test_corrupt_deflate_in_workbook_is_capture_error():

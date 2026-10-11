@@ -241,9 +241,7 @@ def check_workbook(raw):
                     fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
                 if low.startswith(('xl/externallinks/', 'xl/querytables/')) or low == 'xl/connections.xml':
                     fail('El consolidado no puede traer vínculos ni conexiones a datos externos.')
-            # El nombre real puede variar en mayúsculas (las partes OOXML no distinguen); se lee el que existe.
-            content_types = next(i for i in infos if i.filename.casefold() == '[content_types].xml')
-            types = book.read(content_types).decode('utf-8-sig').casefold()
+            types = book.read('[Content_Types].xml').decode('utf-8-sig').casefold()
             if 'macroenabled' in types or 'vbaproject' in types or 'activex' in types:
                 fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
             # La huella del XLSX exterior no detecta un miembro interno corrupto.
