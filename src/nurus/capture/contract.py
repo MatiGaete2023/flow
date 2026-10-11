@@ -15,6 +15,8 @@ import threading
 import zipfile
 
 VERSION = '1.0.0'
+VERSION_CONSOLIDATED = '1.1.0'
+CONSOLIDATED_PATH = 'consolidado/consolidado.xlsx'
 MAPPING_VERSION = 'baseline-20261008-v1'
 STATES = ('NO_SOLICITADA','NO_CONSULTADA','COMPLETA','VACIA_COMPROBADA','PARCIAL','FALLIDA','CANCELADA','IDENTIDAD_INCIERTA','NO_DISPONIBLE')
 COMMON = ('capture_id','query_id','source_system','court_code','court_name','rit_original','cause_id','ingreso_id','person_id','program_id','modality_raw','modality_code','tab','captured_at','original_file','original_sheet','original_row','source_sha256','coverage')
@@ -83,9 +85,30 @@ class Capture:
     manifest: dict
     tables: dict
     digest: str
+    consolidated: bytes | None = None
 
     def rows(self,table):
         return self.tables.get(table,())
+
+
+def check_workbook(raw):
+    """El consolidado es solo un libro .xlsx de datos: sin macros, objetos incrustados, HTML ni PDF."""
+    try:
+        with zipfile.ZipFile(BytesIO(raw)) as book:
+            infos=book.infolist();names={i.filename.casefold() for i in infos}
+            if '[content_types].xml' not in names or 'xl/workbook.xml' not in names: fail('El consolidado no es un libro xlsx.')
+            if len(infos)>MAX_FILES or sum(i.file_size for i in infos)>MAX_BYTES: fail('El consolidado excede el límite de expansión.')
+            for info in infos:
+                low=info.filename.casefold()
+                if info.file_size/max(1,info.compress_size)>MAX_RATIO: fail('Expansión del consolidado excede límite.')
+                if low.endswith(('.html','.htm','.pdf','.bin','.exe','.dll')) or 'vbaproject' in low or low.startswith(('xl/embeddings/','xl/activex/')):
+                    fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
+                if low.startswith(('xl/externallinks/','xl/querytables/')) or low=='xl/connections.xml':
+                    fail('El consolidado no puede traer vínculos ni conexiones a datos externos.')
+            types=book.read('[Content_Types].xml').decode('utf-8','ignore').casefold()
+            if 'macroenabled' in types or 'vbaproject' in types or 'activex' in types:
+                fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
+    except zipfile.BadZipFile as exc: raise CaptureError('El consolidado no es un libro xlsx.') from exc
 
 
 def csv_bytes(table,rows):
@@ -120,7 +143,7 @@ def validate_manifest(m):
         for key in TABLES['consultas']:
             if not isinstance(q.get(key),str): fail('Consulta sin campo '+key)
         if q['coverage'] not in STATES: fail('Cobertura inválida.')
-    seen=set()
+    seen=set();consolidated=False
     for f in m['files']:
         if not isinstance(f,dict): fail('Archivo inválido.')
         name=safe_path(f.get('path'))
@@ -134,6 +157,9 @@ def validate_manifest(m):
             if type(f.get('rows')) is not int or not 0<=f['rows']<=MAX_ROWS: fail('Número de filas inválido.')
         elif f.get('type')=='original':
             if not m['originals_authorized'] or not name.startswith(('originales/','evidencias/')): fail('Original no autorizado.')
+        elif f.get('type')=='consolidated_workbook':
+            if int(version.split('.')[1])<1 or name!=CONSOLIDATED_PATH or consolidated: fail('Consolidado no permitido en esta versión o duplicado.')
+            consolidated=True
         else: fail('Tipo de archivo desconocido.')
 
 
@@ -243,7 +269,7 @@ def read_capture(path):
             m=json_object(archive.read('manifest.json').decode('utf-8-sig'));validate_manifest(m)
             declared={'manifest.json',*(f['path'] for f in m['files'])}
             if set(i.filename for i in infos)!=declared: fail('Archivos ZIP no coinciden con manifiesto.')
-            tables={}; count=0
+            tables={}; count=0; consolidated=None
             with CSV_LOCK:
                 old_limit=csv.field_size_limit()
                 try:
@@ -251,6 +277,7 @@ def read_capture(path):
                     for f in m['files']:
                         raw=archive.read(f['path'])
                         if len(raw)!=f['bytes'] or sha256(raw).hexdigest()!=f['sha256']: fail('Hash o tamaño incorrecto.')
+                        if f['type']=='consolidated_workbook': check_workbook(raw);consolidated=raw
                         if f['type']!='normalized_table': continue
                         table=f['table'];reader=csv.DictReader(StringIO(raw.decode('utf-8-sig'),newline=''),strict=True)
                         fields=reader.fieldnames or []
@@ -265,17 +292,18 @@ def read_capture(path):
                 finally: csv.field_size_limit(old_limit)
             if not all(t in tables for t in REQUIRED): fail('Falta tabla requerida.')
             _validate_rows(m,tables)
-            return Capture(deepcopy(m),tables,digest)
+            return Capture(deepcopy(m),tables,digest,consolidated)
     except (zipfile.BadZipFile,UnicodeError,csv.Error,KeyError,EOFError,RuntimeError) as exc:
         raise CaptureError('Paquete corrupto o incompatible.') from exc
 
 
-def write_capture(destination,metadata,tables,*,originals=None):
+def write_capture(destination,metadata,tables,*,originals=None,consolidated=None):
     """Publicación nueva y atómica: validar temporal y enlazar sin sobrescribir."""
     destination=Path(destination);destination.parent.mkdir(parents=True,exist_ok=True)
     if destination.exists(): fail('El paquete de destino ya existe.')
     if metadata.get('schema_version',VERSION)!=VERSION: fail('El productor solo escribe versión 1.0.0.')
-    m=deepcopy(metadata);m.update(schema_id='CSMP_CAPTURE',schema_version=VERSION,files=[])
+    if consolidated is not None: check_workbook(consolidated)
+    m=deepcopy(metadata);m.update(schema_id='CSMP_CAPTURE',schema_version=VERSION_CONSOLIDATED if consolidated is not None else VERSION,files=[])
     m.setdefault('mapping_version',MAPPING_VERSION);m.setdefault('required_features',[])
     payload={}
     for table,rows in tables.items():
@@ -285,6 +313,9 @@ def write_capture(destination,metadata,tables,*,originals=None):
     for name,raw in (originals or {}).items():
         safe_path(name);payload[name]=raw
         m['files'].append({'path':name,'type':'original','bytes':len(raw),'sha256':sha256(raw).hexdigest()})
+    if consolidated is not None:
+        payload[CONSOLIDATED_PATH]=consolidated
+        m['files'].append({'path':CONSOLIDATED_PATH,'type':'consolidated_workbook','bytes':len(consolidated),'sha256':sha256(consolidated).hexdigest()})
     payload['manifest.json']=json.dumps(m,ensure_ascii=False,sort_keys=True,indent=2).encode('utf-8')
     fd,temp=tempfile.mkstemp(prefix='.capture-',suffix='.zip',dir=destination.parent);os.close(fd)
     try:

@@ -98,6 +98,8 @@ class ResultsWindow(tk.Toplevel):
         ttk.Button(controls,text='Quitar lote del paquete',command=self.remove_package_source).pack(side='left',padx=8)
         ttk.Button(controls,text='Actualizar historial',command=self.reload).pack(side='left',padx=8)
         ttk.Checkbutton(controls,text='Permitir resultados INCOMPLETOS',variable=self.partial,command=self.load).pack(side='left')
+        self.package_consolidated=tk.BooleanVar(value=True)
+        ttk.Checkbutton(controls,text='Paquete con XLSX consolidado',variable=self.package_consolidated).pack(side='left',padx=(8,0))
         self.detail=ttk.Treeview(self,columns=('consulta','estado','filas','aptitud'),show='headings',height=8)
         for col,label in [('consulta','Consulta'),('estado','Resultado'),('filas','Registros'),('aptitud','Compatibilidad CSMP')]:self.detail.heading(col,text=label)
         self.detail.column('consulta',width=350);self.detail.pack(fill='both',expand=True,padx=12,pady=12)
@@ -361,14 +363,16 @@ class ResultsWindow(tk.Toplevel):
         target=filedialog.asksaveasfilename(parent=self,initialfile='Captura_CSMP.zip',defaultextension='.zip')
         if not target:return
         folders=list(self.package_folders);diaries=self.package_diaries();partial=self.partial.get()
-        from export_csmp_capture import export_capture
+        wanted=self.package_consolidated.get()
+        from export_csmp_capture import export_capture,consolidated_note
         from archivo_local import load_sources
         def export():
             from nurus.capture import read_capture
-            path=export_capture(load_sources(folders,partial),target,diaries=diaries or None,match_diaries=True)
+            lots=load_sources(folders,partial);include,note=consolidated_note(lots,wanted)
+            path=export_capture(lots,target,diaries=diaries or None,match_diaries=True,consolidated=include)
             capture=read_capture(path)
             summary=next((i['message'] for i in capture.rows('incidencias') if i['code']=='BITACORAS_REUTILIZADAS'),'Sin bitácoras añadidas.')
-            return {'path':path,'reuse':summary}
+            return {'path':path,'reuse':summary+note}
         self.start(export,'capture')
 
     def show_joint(self):

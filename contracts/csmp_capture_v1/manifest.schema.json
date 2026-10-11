@@ -169,7 +169,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "pattern": "^(data|originales|evidencias)/[^\\\\]+$"
+            "pattern": "^(data|originales|evidencias|consolidado)/[^\\\\]+$"
           },
           "sha256": {
             "type": "string",
@@ -183,7 +183,8 @@
           "type": {
             "enum": [
               "normalized_table",
-              "original"
+              "original",
+              "consolidated_workbook"
             ]
           },
           "table": {
@@ -217,6 +218,22 @@
                 "table",
                 "rows"
               ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "consolidated_workbook"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "path": {
+                  "const": "consolidado/consolidado.xlsx"
+                }
+              }
             }
           }
         ]
