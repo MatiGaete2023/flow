@@ -599,3 +599,5 @@ La implementación termina cuando los 34 WP están `INTEGRADO` (o descartados po
 **Lo que no mide este plan:** el valor jurídico de las observaciones, que sigue siendo decisión del usuario, ni la aceptación institucional formal, que no es requisito de esta implementación.
 
 WP-82: [ficha](wp/WP-82.md) y [reporte](REPORTE_WP82.md). CI aprobada, E3 pendiente.
+
+WP-83: [ficha](wp/WP-83.md) y [reporte](REPORTE_WP83.md). CI aprobada, E3 pendiente.
