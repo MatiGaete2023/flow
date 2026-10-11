@@ -582,8 +582,11 @@ def write_manifest(folder, records, total, state, profile=ORIGINAL, manifest_nam
 
 
 def run_sequence(transport, initial_pairs, initial_page, folder, timeout_ms=60000, profile=ORIGINAL,
-                 progress=None, cancel=None, folder_ready=False, filename_factory=None, manifest_name="verificacion.json"):
-    """POST(n) -> XLS(n) -> validar -> fsync -> POST(n+1). Sin reintentos silenciosos."""
+                 progress=None, cancel=None, folder_ready=False, filename_factory=None, manifest_name="verificacion.json",
+                 pause=0.0):
+    """POST(n) -> XLS(n) -> validar -> fsync -> POST(n+1). Sin reintentos silenciosos.
+
+    `pause` (segundos) se espera antes de cada POST de página siguiente, para no saturar SITFA."""
     total = initial_page.total
     original = invariant(initial_pairs)
     pairs = list(initial_pairs)
@@ -608,6 +611,8 @@ def run_sequence(transport, initial_pairs, initial_page, folder, timeout_ms=6000
                     raise PocError("La consulta inicial no corresponde a la primera pagina.")
                 validate_export_url(current.excel_url, profile)
             else:
+                if pause > 0 and cancel is not None and cancel.wait(pause):
+                    raise PocError("Descarga cancelada. Las paginas ya verificadas se conservan.")
                 body = transport.search(pairs, timeout_ms)
                 current = search_page(body, pairs, number, total, profile)
             pagination = current.pagination
