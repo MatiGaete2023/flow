@@ -32,8 +32,10 @@ De Codex: #4 (WP-14, aprobado y conforme), #8 (WP-15), #11 (WP-60). No los modif
 
 - D3 retirar inspector y diario RUS · D4 60 días y 10 sesiones · D8 sin fallos · D6 «Sí, solo el consolidado» · D9 «Retirar
   botón» · D5 «Sí, horizonte de 4 meses» · D7 «Sí, tras el acta final».
-- **Pendientes:** D1 (purga del historial, requiere push forzado y autorización escrita) y D2 (lista de casos probados en
-  uso real; el usuario no marcó ninguno).
+- D1 (11 de octubre de 2026): «Reescribir historial». WP-17 se ejecuta solo después de integrar WP-10, WP-12 y WP-20, y
+  el push forzado necesita además la autorización escrita del usuario en ese momento; NuRus está fuera del alcance de esta sesión.
+- **Pendiente:** D2 (lista de casos probados en uso real; el usuario no marcó ninguno).
+- **Revisión:** el usuario pidió que esta sesión revise con subagentes; por E3 es apoyo, no aprobación.
 
 ### Qué falta (en este orden)
 
@@ -53,6 +55,22 @@ De Codex: #4 (WP-14, aprobado y conforme), #8 (WP-15), #11 (WP-60). No los modif
    `ventana_resultados.py` para pasar `consolidated=True` (WP-51 no tiene entrada en la GUI); el manual 2.7.4 aún menciona
    el botón retirado en WP-45.
 6. **Sin probar:** la salida nativa con Excel de WP-51 (solo Windows, PC autorizado). La ruta portable sí tiene pruebas.
+
+### Integración de prueba (11 de octubre de 2026)
+
+CI: tras la caída se relanzó cada PR una vez. #12–#30 quedaron en verde; #29 tenía un error real (WP-62 importaba `nurus`
+antes de `parser()`), corregido en `c65f9fb`.
+
+Rama `integracion/prueba-20261011` (no es `feat`; nadie la integra): `feat` + #27 + Codex #4, #8 y #11 + cima de la pila
+(`wp/WP-45`, que trae #12–#25, #30 y #31) + `wp/WP-62` (#26 y #29) + `wp/WP-51` (#28 y #32). Resultado:
+
+- Conflictos textuales solo en `descargador/descargador.py` (ritmo de WP-33 y comando `package` de WP-43: se conservan
+  ambos) y `src/nurus/personal/work.py` (base consolidada de WP-51 dentro del `try` de WP-32, que borra la copia si falla).
+- Un choque semántico: WP-34 quitó `from pathlib import Path` de `descargador/export_csmp_capture.py` (F401) y WP-51 lo usa.
+  Se restituye al integrar.
+- `verificar_wp.py --pruebas-eliminadas-asistente 148`: PASA (Asistente 569/11 y 6 xfail de WP-60; Descargador 227/62;
+  identidades 0; módulos no alcanzables 0; enlaces rotos 0). Los 4 F401 del motor quedan excluidos del lint, como en la CI.
+- El Orquestador puede usar esa rama como guía de resolución.
 
 ### Conflictos abiertos que decide el usuario (detalle en el reporte, §4)
 

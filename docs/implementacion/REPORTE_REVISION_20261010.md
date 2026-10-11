@@ -217,7 +217,8 @@ El usuario aprobó E1–E6 el 10 de octubre de 2026 («Apruebo las enmiendas E1�
 3. E6: reemplazar `TODAS_LAS_DEMAS` en `estado/WP-61.json` y `estado/WP-70.json` por listas explícitas; marcar como
    `archivo` las dependencias WP-33 → WP-14, WP-43 → WP-33 y WP-44 → WP-43 (se ejecutaron sin ellas integradas),
    con el formato `{"wp": "WP-14", "tipo": "archivo"}`; un texto simple cuenta como `funcional`. WP-61 excluye
-   `src/nurus/personal/motor/`. Hoy `validar` da FALLA solo por esas dos entradas `TODAS_LAS_DEMAS`.
+   `src/nurus/personal/motor/`. Hoy `validar` da FALLA por esas dos entradas `TODAS_LAS_DEMAS` y porque WP-15
+   (`EN_VERIFICACION`) y WP-60 (`TOMADO`) no tienen `ejecutor`: anotar el agente de Codex en ambos.
 4. `python tools/estado.py agregar` y luego `validar`, que debe dar PASA. Desde ahí la CI corre `validar` en cada PR.
 5. E3: anotar `revisor` y `auditor` en cada `estado/WP-XX.json`, siempre de una raíz distinta a la del Ejecutor.
 6. E2: regenerar `linea_base.json` tras cada integración; el siguiente WP se verifica contra esa línea base.
