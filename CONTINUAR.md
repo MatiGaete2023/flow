@@ -20,7 +20,8 @@ historial viejo con datos reales: vuelve a clonar y nunca hagas push desde una c
   4. Billing: GitHub Pro y presupuesto de Actions de 5 USD (11 de octubre de 2026); CI verde en `14f679d`.
 - **Lo que falta del plan:**
   - WP-02 (D2: casos probados en uso real).
-  - WP-50: cronología solo para mostrar, 4 meses. Depende de WP-02 y del acta de 10 ingresos.
+  - WP-50: implementado en `wp/50-cronologia-solo-mostrar` (PR #33 borrador, CI verde, `verificar_wp` PASA). Se integra
+    tras el acta de 10 ingresos del usuario y WP-02.
   - WP-70: cierre. Paquete compilado en CI (`14f679d`, run 38136720831); esperar el acta final y, con D7, sacar el PR #1
     de borrador y fusionarlo a `main`, sin release.
 - **Conflictos respondidos** (11 de octubre de 2026): `cc_obligatorio` se conserva; motor/ queda intacto (4 F401
