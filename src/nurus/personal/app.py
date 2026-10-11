@@ -358,7 +358,13 @@ class App(_BaseApp):
             self._show_work(reset_projects=False)
             self._save_session()
             self._update_context()
-            self.status.set('Excel generado: ' + result + ' · Disponible en Correos y Resoluciones.')
+            notice = getattr(self.work, 'export_notice', '')
+            self.status.set(
+                'Excel generado: '
+                + result
+                + ' · Disponible en Correos y Resoluciones.'
+                + (' ' + notice if notice else '')
+            )
 
         self._run('Exportando copia preservada con Excel…', lambda: work.export(path), done)
 

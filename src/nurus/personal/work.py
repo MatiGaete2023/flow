@@ -85,8 +85,16 @@ def _source_cell_key(field, value):
     return ('text', '' if value is None else str(value).strip())
 
 
-def _consolidated_base(work):
+REDUCED_FIDELITY_NOTICE = (
+    'Copia de fidelidad reducida: el XLSX consolidado del paquete no sirve como base (por ejemplo, trae una hoja '
+    'por modalidad o un registro repetido). El consolidado se conserva intacto dentro del paquete.'
+)
+
+
+def _consolidated_base(work, notices=None):
     """Libro consolidado del paquete (D6) como base de la copia, o None si no sirve.
+
+    Si el paquete trae consolidado pero no sirve, agrega a notices el aviso de fidelidad reducida.
 
     Sirve solo si el paquete sigue siendo el importado y cada registro aparece una única vez, por
     (SITFA_SHA256, SITFA_ARCHIVO, SITFA_FILA), en una misma hoja de datos. Ante cualquier duda
@@ -104,11 +112,14 @@ def _consolidated_base(work):
     except Exception:
         return None
     try:
-        return _map_consolidated(work, capture, book)
+        base = _map_consolidated(work, capture, book)
     except Exception:
-        return None  # libro inesperado: la copia queda portable, como sin consolidado
+        base = None  # libro inesperado: la copia queda portable, como sin consolidado
     finally:
         book.close()
+    if base is None and notices is not None:
+        notices.append(REDUCED_FIDELITY_NOTICE)
+    return base
 
 
 def _map_consolidated(work, capture, book):
@@ -376,7 +387,10 @@ class Work:
         reviewed = {row.id: _human_reviewed(row) for row in self.rows}
         reviewed_stage = any(reviewed.values())
         package_input = bool(getattr(self, 'capture_digest', ''))
-        base = _consolidated_base(self) if package_input else None
+        notices = []
+        base = _consolidated_base(self, notices) if package_input else None
+        # Aviso visible (manual del Asistente): el consolidado existe pero la copia no parte de él.
+        self.export_notice = ' '.join(notices)
         content, source_hash, primary_sheet, header_row = (
             (base[0], sha256(base[0]).hexdigest(), base[1], 1)
             if base
