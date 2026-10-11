@@ -133,7 +133,7 @@
       "integrado_en": null,
       "notas": [
         "D2: «Ninguna todavía» (11 de octubre de 2026).",
-        "Plantilla docs/aceptacion/ACTA_USO_REAL_20261011.json generada con flow_acceptance.py init (40 casos D-T/A-T, todos NO_EJECUTADO, commit c3ec462). Solo el usuario completa resultados."
+        "Plantilla docs/aceptacion/ACTA_USO_REAL_20261011.json generada con flow_acceptance.py init (40 casos D-T/A-T, todos NO_EJECUTADO, commit 14f679d, paquete compilado en CI). Solo el usuario completa resultados."
       ]
     },
     "WP-10": {

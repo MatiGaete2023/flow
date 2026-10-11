@@ -1,9 +1,9 @@
 {
   "schema_id": "CSMP_ACCEPTANCE",
   "schema_version": "1.0.0",
-  "created_at": "2026-10-11T11:33:59Z",
+  "created_at": "2026-10-11T11:56:48Z",
   "artifact": {
-    "source_commit": "c3ec46246899b254d6aebf4a3bef4a62552d4f75",
+    "source_commit": "14f679d1d82daeef393a1bed121bab4c2a630ef8",
     "assistant_version": "0.5.0.dev5",
     "downloader_version": "2.7.6",
     "extension_version": "2.7.6"
