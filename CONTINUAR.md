@@ -7,7 +7,8 @@ WP-63 (#34) y WP-80 (#35) están integrados con E3 independiente. Línea base: 7
 WP-81 (#36): implementación y CI completas; revisión E3 sin registrar, no integrado.
 Su informe está en la rama wp/81-revision-propia-20261011.
 WP-82 continúa G-4 de WP-80 y evita huellas de adjuntos sin recibos; parte de feat,
-independiente de WP-81. Rama wp/82-pendientes-correo-20261011.
+independiente de WP-81. Rama wp/82-pendientes-correo-20261011, PR #37 borrador.
+Verificación completa PASA en `004dc65` (810/240); controles Windows en el PR.
 [Ficha](docs/implementacion/wp/WP-82.md) y [reporte](docs/implementacion/REPORTE_WP82.md).
 
 ## Pendientes, en orden
