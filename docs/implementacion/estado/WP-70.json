@@ -146,6 +146,7 @@
   "auditoria": null,
   "integrado_en": null,
   "notas": [
-    "D7: fusionar a main solo tras el acta final firmada por el usuario."
+    "D7: fusionar a main solo tras el acta final firmada por el usuario.",
+    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2."
   ]
 }
