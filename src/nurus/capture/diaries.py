@@ -65,7 +65,10 @@ def import_lote(manifest):
             + str(manifest)
             + '. Recupera bitacoras.json con sus HTML originales o excluye esa referencia del paquete.'
         ) from None
-    data = json.loads(raw.decode('utf-8'))
+    from .contract import json_object
+
+    # Mismo lector que el contrato: rechaza claves duplicadas, NaN y un JSON que no sea objeto.
+    data = json_object(raw.decode('utf-8'))
     if data.get('tipo') != 'BITACORAS_LECTURA' or data.get('version') != 1:
         raise ValueError('El archivo no es un lote de lectura de bitácoras.')
     records = data.get('registros')
@@ -75,6 +78,8 @@ def import_lote(manifest):
     queries = {}
     ledger = []
     for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get('params', {}), dict):
+            raise ValueError('El control de lecturas tiene un registro mal formado.')
         identity = tuple(record.get(k, '') for k in ('tribunal_codigo', 'causa_id', 'ingreso_id'))
         state = record.get('estado', 'FALLIDA')
         error = record.get('error', '')
@@ -95,7 +100,7 @@ def import_lote(manifest):
                 if notes:
                     query['warnings'].extend(notes)
                     error = ' '.join(notes)
-            except (ValueError, KeyError, OSError, TypeError) as exc:
+            except (ValueError, KeyError, OSError, TypeError, AttributeError) as exc:
                 state = 'FALLIDA'
                 error = str(exc) if isinstance(exc, ValueError) else 'No se pudo abrir una copia verificable.'
                 query = None
