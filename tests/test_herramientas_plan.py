@@ -165,3 +165,15 @@ def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
     assert any(rut in text for name, text in found.items() if '.bin!' in name)
     assert any(rut in text for name, text in found.items() if name.endswith('.ps1'))
     assert not any(name.endswith('.png') for name in found)
+
+
+def test_check_real_ids_decodes_utf16_and_cp1252():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    rut = '12345678-' + ids.check_digit('12345678')
+    assert rut in ids.decode_text(('Año ' + rut).encode('utf-16'))
+    assert rut in ids.decode_text(('Año ' + rut).encode('cp1252'))
+    assert ids.decode_text(b'\x89PNG\x00') is None

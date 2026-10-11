@@ -6,9 +6,10 @@ on:
     branches:
       - main
       - 'feat/**'
-  # Solo PR hacia ramas de integración: el PR feat → main no repite lo que ya corrió el push a feat.
+  # E4: todo PR corre la CI mínima (3.12), también feat → main, que prueba la fusión con main.
   pull_request:
     branches:
+      - main
       - 'feat/**'
   workflow_dispatch:
 

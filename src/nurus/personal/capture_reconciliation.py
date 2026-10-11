@@ -58,7 +58,15 @@ def _decided(decisions):
 
 
 def _edited(row):
-    return any(_decided(row.decisions) if field == 'decisions' else getattr(row, field) for field in EDIT_FIELDS)
+    def changed(field):
+        if field == 'decisions':
+            return _decided(row.decisions)
+        if field == 'excluded':
+            # analyze excluye por regla (COMUN.NO_SEGUIMIENTO); solo una exclusión fuera de esa regla es humana.
+            return row.excluded and 'COMUN.NO_SEGUIMIENTO' not in row.rules
+        return getattr(row, field)
+
+    return any(changed(field) for field in EDIT_FIELDS)
 
 
 def _remap_session(session, id_map):

@@ -14,6 +14,7 @@ import stat
 import tempfile
 import threading
 import zipfile
+import zlib
 
 VERSION = '1.0.0'
 VERSION_CONSOLIDATED = '1.1.0'
@@ -236,7 +237,7 @@ def check_workbook(raw):
             types = book.read(content_types).decode('utf-8', 'ignore').casefold()
             if 'macroenabled' in types or 'vbaproject' in types or 'activex' in types:
                 fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
-    except (zipfile.BadZipFile, KeyError, RuntimeError, NotImplementedError, OSError) as exc:
+    except (zipfile.BadZipFile, zlib.error, KeyError, RuntimeError, NotImplementedError, OSError) as exc:
         # Compresión no soportada o entrada ilegible: siempre CaptureError, nunca una excepción cruda.
         raise CaptureError('El consolidado no es un libro xlsx.') from exc
 

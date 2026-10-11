@@ -6,6 +6,17 @@ import shutil
 import tempfile
 
 
+def _umask():
+    """Umask actual sin cambiarlo (os.umask lo modifica para todo el proceso, también otros hilos)."""
+    try:
+        for line in Path("/proc/self/status").read_text().splitlines():
+            if line.startswith("Umask:"):
+                return int(line.split()[1], 8)
+    except OSError:
+        pass
+    return 0o022
+
+
 def write_new_file(destination, writer):
     target = Path(destination).expanduser().resolve()
     if target.exists():
@@ -23,6 +34,9 @@ def write_new_file(destination, writer):
             raise ValueError("No se produjo un archivo completo.")
         # Publicación atómica: os.link crea el nombre final completo de una vez y falla si ya existe,
         # de modo que un corte a mitad nunca deja un producto truncado con el nombre final.
+        if os.name == "posix":
+            # El temporal nace 0600 y el enlace conserva el inodo: mismos permisos que open("xb").
+            os.chmod(temporary, 0o666 & ~_umask())
         try:
             os.link(temporary, target)
             created = True
@@ -30,7 +44,7 @@ def write_new_file(destination, writer):
             # Destino creado por otro durante la generación: se conserva intacto.
             raise
         except OSError:
-            # Sistemas de archivos sin enlaces duros: copia exclusiva como respaldo.
+            # Sistemas de archivos sin enlaces duros (SMB/FAT): copia exclusiva como respaldo, no atómica.
             with target.open("xb") as output:
                 created = True
                 with temporary.open("rb") as source:
