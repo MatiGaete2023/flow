@@ -72,6 +72,37 @@ Rama `integracion/prueba-20261011` (no es `feat`; nadie la integra): `feat` + #2
   identidades 0; módulos no alcanzables 0; enlaces rotos 0). Los 4 F401 del motor quedan excluidos del lint, como en la CI.
 - El Orquestador puede usar esa rama como guía de resolución.
 
+### Revisión con subagentes (11 de octubre de 2026; por E3 es apoyo, no aprobación)
+
+Cinco revisores aislados (anonimizador, retiros, interfaz, Descargador y contrato, CI y herramientas). Corregido, cada
+arreglo con prueba que falla sin él, y propagado hacia arriba en la pila con merges:
+
+- **WP-16:** nueve filtraciones del anonimizador (RUT con guion largo o espacios o sin dígito, teléfonos 3-3-3, enteros
+  de 7 a 9 dígitos, encabezados `CUR. AD LITEM`/`R.U.N.`/`TEL.`/`N° RIT`/`RUN NNA`, teléfonos en columnas del motor,
+  curador institucional con abogado, RIT con barra). `_scan` revisa además números, RIT y teléfonos.
+- **WP-40:** Ctrl+K borraba texto del campo antes de abrir la paleta; los atajos actuaban con el diálogo de fecha abierto.
+- **WP-42:** la paleta mostraba «Revisar y guardar borradores» disponible con el botón deshabilitado.
+- **WP-33:** la pausa no separaba una consulta de la siguiente. **WP-62:** al retomar, el manifiesto perdía lo ya
+  leído hasta el cierre.
+- **WP-51:** el consolidado admitía vínculos externos, conexiones y macros declaradas en `[Content_Types].xml`; el mapeo
+  podía fallar en vez de caer a portable.
+- **WP-31:** `--sincronizar-extension` ignoraba `--descargador`. **WP-35:** sin `requirements/` se borraba el `.venv` en
+  cada arranque.
+- **#27:** `verificar_wp.py` daba PASA cuando `check_real_ids`, ruff o pytest no pudieron medir; `--lista-eliminadas`
+  aceptaba nodos inventados; `estado.py` sin fuentes daba traceback y trataba como error un conflicto abierto.
+
+**No corregido, decide el usuario o el Orquestador:**
+
+- `exports._annotation_values` deja un apóstrofo visible en `NURUS_PROPUESTA`/`NURUS_OBSERVACION_FINAL` de la copia
+  portable; la ficha de WP-32 dice «sin apóstrofo», pero una prueba de la línea base
+  (`test_preserved_export_uses_archived_bytes_and_marks_excluded`) exige `'=texto de prueba`. Es una decisión de diseño
+  (defensa contra fórmulas).
+- `tools/flow_baseline_matrix.py` y `flow_plan_progress.py` reescriben `docs/` aun con `--help` y devuelven enlaces a
+  rutas retiradas: no ejecutarlos hasta corregirlos.
+- Restos sin uso tras WP-21 (`operational_templates.json`, `resolution_templates.json`, clases `Issue`/`Evaluation` en
+  `rus/models.py`), manual 2.7.4 con el botón de WP-45, `os.startfile` no vigilado por `verificar_wp.py`.
+- Sin casilla en la GUI para `consolidated=True` (WP-51); búsqueda del último paquete en el hilo de la interfaz (WP-44).
+
 ### Conflictos abiertos que decide el usuario (detalle en el reporte, §4)
 
 `cc_obligatorio` contra la prueba golden · 4 avisos F401 en el motor · la ficha de WP-23 contra el retiro de
