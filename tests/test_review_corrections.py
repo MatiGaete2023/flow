@@ -168,6 +168,17 @@ def test_ambiguous_rows_or_missing_record_never_auto_copy_decisions(tmp_path):
     assert caught.value.conflicts[0].record_id == 'missing:r0'
 
 
+def test_unedited_rows_never_require_reconciliation(tmp_path):
+    # analyze deja decisiones por defecto en cada fila; sin edición humana no hay nada que conciliar.
+    old, metadata, tables = work_from(tmp_path)
+    tables['registros'] = tables['registros'][1:]
+    raw = json.loads(tables['registros'][0]['normalized_json'])
+    raw['T ESPERA'] = '0'
+    tables['registros'][0]['normalized_json'] = json.dumps(raw)
+    new = import_capture(write_capture(tmp_path / 'sin.zip', metadata, tables), defaults(), as_of=CUT, previous=old)
+    assert len(new.rows) == len(tables['registros'])
+
+
 def test_query_row_and_table_cannot_overclaim_coverage(tmp_path):
     metadata, tables = fixture()
     tables['consultas'][0].update(coverage='PARCIAL', expected_pages='2', saved_pages='1')
