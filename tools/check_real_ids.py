@@ -12,6 +12,7 @@ Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si 
 """
 
 import argparse
+import codecs
 import io
 import os
 import re
@@ -66,7 +67,7 @@ def load_allowlist(*, stage: bool = False) -> set[str]:
         result = subprocess.run(["git", "show", f":{relative}"], cwd=ROOT, capture_output=True)
         if result.returncode:
             return set()
-        content = result.stdout.decode("utf-8", errors="ignore")
+        content = decode_text(result.stdout)
     else:
         if not ALLOWLIST.is_file():
             return set()
@@ -79,15 +80,33 @@ def tracked_files() -> list[Path]:
     return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
 
 
+def decode_text(data: bytes) -> str:
+    """Decode known text encodings strictly; ambiguity must not certify a file."""
+    try:
+        if data.startswith((codecs.BOM_UTF32_LE, codecs.BOM_UTF32_BE)):
+            raise ValueError("Codificación no admitida")
+        if data.startswith(codecs.BOM_UTF8):
+            content = data.decode("utf-8-sig")
+        elif data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+            content = data.decode("utf-16")
+        else:
+            try:
+                content = data.decode("utf-8")
+            except UnicodeDecodeError:
+                content = data.decode("cp1252")
+    except UnicodeError:
+        raise ValueError("Codificación ilegible; control incompleto") from None
+    if "\x00" in content:
+        raise ValueError("Texto con NUL o codificación ambigua; control incompleto")
+    return content
+
+
 def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
     budget = budget if budget is not None else {"bytes": 0, "members": 0}
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
-        content = (
-            staged.decode("utf-8", errors="ignore")
-            if staged is not None
-            else path.read_text(encoding="utf-8", errors="ignore")
-        )
+        data = staged if staged is not None else path.read_bytes()
+        content = decode_text(data)
         yield str(path), content
     elif suffix in ZIP_SUFFIXES:
         if depth >= MAX_ARCHIVE_DEPTH:
@@ -111,11 +130,11 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
                     if member_suffix in ZIP_SUFFIXES:
                         yield from texts(Path(f"{path}!{name}"), data, depth=depth + 1, budget=budget)
                     else:
-                        content = data.decode("utf-8", errors="ignore")
+                        content = decode_text(data)
                         if name.lower().endswith(".xml"):
                             try:
-                                tree = ET.fromstring(content)
-                            except ET.ParseError:
+                                tree = ET.fromstring(data)
+                            except (ET.ParseError, LookupError):
                                 raise ValueError("XML interno ilegible") from None
                             # Word runs and Excel rich text split a visible identity into
                             # multiple XML tags. Join only within one paragraph/cell.

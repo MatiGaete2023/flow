@@ -29,7 +29,7 @@ def identity():
 @pytest.mark.parametrize('separator', ['-', '\u2013', '\u2212'])
 def test_identity_spaces_and_unicode_hyphens(tmp_path, identity, separator):
     sample = tmp_path / 'synthetic.txt'
-    sample.write_text(identity[:-2] + ' ' + separator + ' ' + identity[-1])
+    sample.write_text(identity[:-2] + ' ' + separator + ' ' + identity[-1], encoding="utf-8")
     assert scanner.scan([sample], set())
 
 
@@ -78,7 +78,7 @@ def test_history_rejects_silent_exclusions(monkeypatch):
 
 def test_collection_failure_does_not_prove_removed_node(monkeypatch, tmp_path):
     manifest = tmp_path / 'removed.txt'
-    manifest.write_text('tests/test_fake.py::test_deleted\n')
+    manifest.write_text('tests/test_fake.py::test_deleted\n', encoding="utf-8")
     monkeypatch.setattr(verifier, 'run', lambda *_: (2, 'collection failed'))
     counts, problems, nodes = verifier.removed_from_lists([manifest])
     assert counts['asistente'] == 1
@@ -88,7 +88,7 @@ def test_collection_failure_does_not_prove_removed_node(monkeypatch, tmp_path):
 def test_send_with_space_is_restricted(monkeypatch, tmp_path):
     source = tmp_path / 'src'
     source.mkdir()
-    (source / 'fake.py').write_text('mail.Send ()\n')
+    (source / 'fake.py').write_text('mail.Send ()\n', encoding="utf-8")
     monkeypatch.setattr(verifier, 'ROOT', tmp_path)
     assert any('Send()' in issue for issue in verifier.restrictions())
 
@@ -123,7 +123,7 @@ def test_functional_cycle_is_invalid():
 def test_invalid_sources_do_not_overwrite_view(monkeypatch, tmp_path):
     sources = tmp_path / 'sources'
     sources.mkdir()
-    (sources / 'global.json').write_text('{}')
+    (sources / 'global.json').write_text('{}', encoding="utf-8")
     view = tmp_path / 'ESTADO.json'
     view.write_bytes(b'previous view')
     monkeypatch.setattr(state_tool, 'SOURCES', sources)
@@ -136,7 +136,7 @@ def test_invalid_sources_do_not_overwrite_view(monkeypatch, tmp_path):
 def test_invalid_json_reports_failure_without_traceback(monkeypatch, tmp_path, capsys):
     sources = tmp_path / 'sources'
     sources.mkdir()
-    (sources / 'global.json').write_text('{ private synthetic invalid')
+    (sources / 'global.json').write_text('{ private synthetic invalid', encoding="utf-8")
     monkeypatch.setattr(state_tool, 'SOURCES', sources)
 
     # A failed source read must not publish its content through a traceback.
@@ -167,7 +167,7 @@ def test_heavy_ci_steps_run_after_integration_and_skip_pr():
     }
     found = set()
     for workflow in ['tests.yml', 'descargador-integral.yml']:
-        source = (root / '.github' / 'workflows' / workflow).read_text()
+        source = (root / '.github' / 'workflows' / workflow).read_text(encoding="utf-8")
         for block in source.split('- name: ')[1:]:
             name = block.splitlines()[0].strip()
             if name not in names:
@@ -196,7 +196,7 @@ def test_heavy_ci_steps_run_after_integration_and_skip_pr():
 )
 def test_invented_removed_node_cannot_borrow_existing_function(monkeypatch, tmp_path, node):
     manifest = tmp_path / 'removed.txt'
-    manifest.write_text(node)
+    manifest.write_text(node, encoding="utf-8")
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     inventory = {'asistente': ['tests/test_x.py::test_exists[synthetic]'], 'descargador': []}
     assert verifier.removed_from_lists([manifest], 'commit', inventory)[1]
@@ -205,7 +205,7 @@ def test_invented_removed_node_cannot_borrow_existing_function(monkeypatch, tmp_
 def test_exact_baseline_collection_supports_parameterized_removals(monkeypatch, tmp_path):
     node = 'tests/test_x.py::test_exists[synthetic]'
     manifest = tmp_path / 'removed.txt'
-    manifest.write_text(node)
+    manifest.write_text(node, encoding="utf-8")
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     inventory = {'asistente': [node], 'descargador': []}
     assert verifier.removed_from_lists([manifest], 'commit', inventory) == (
@@ -218,7 +218,7 @@ def test_exact_baseline_collection_supports_parameterized_removals(monkeypatch, 
 
 def test_absence_of_exact_baseline_collection_cannot_certify_removal(monkeypatch, tmp_path):
     manifest = tmp_path / 'removed.txt'
-    manifest.write_text('tests/test_x.py::test_exists')
+    manifest.write_text('tests/test_x.py::test_exists', encoding="utf-8")
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     assert verifier.removed_from_lists([manifest], 'commit')[1]
 
@@ -268,6 +268,55 @@ def test_archive_resource_limits_fail_closed(tmp_path, monkeypatch, limit):
 
 def test_identifier_in_filename_is_redacted_in_diagnostics(tmp_path, identity, capsys):
     sample = tmp_path / (identity + '.txt')
-    sample.write_text(identity)
+    sample.write_text(identity, encoding="utf-8")
     assert scanner.main([str(sample)]) == 1
     assert identity not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('encoding', ['utf-8', 'utf-8-sig', 'cp1252', 'utf-16', 'utf-16-be'])
+def test_identity_detection_preserves_explicit_text_encodings(tmp_path, identity, encoding):
+    text = identity.replace('-', '\u2013')
+    data = text.encode(encoding)
+    if encoding == 'utf-16-be':
+        import codecs
+
+        data = codecs.BOM_UTF16_BE + data
+    sample = tmp_path / 'synthetic.txt'
+    sample.write_bytes(data)
+    assert scanner.scan([sample], set())
+    nested = tmp_path / 'synthetic.zip'
+    nested.write_bytes(zip_bytes('synthetic.txt', data))
+    assert scanner.scan([nested], set())
+
+
+@pytest.mark.parametrize('data', [b'\x81', b'\xef\xbb\xbf\x81', b'\xff\xfe\x41', b'a\x00b'])
+def test_invalid_or_ambiguous_text_encoding_fails_closed(tmp_path, data, capsys):
+    sample = tmp_path / 'synthetic.txt'
+    sample.write_bytes(data)
+    assert scanner.main([str(sample)]) == 2
+    nested = tmp_path / 'synthetic.zip'
+    nested.write_bytes(zip_bytes('synthetic.txt', data))
+    assert scanner.main([str(nested)]) == 2
+    assert 'no se certifica' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize('encoding', ['utf-8', 'utf-16', 'windows-1252'])
+def test_ooxml_uses_declared_encoding_without_losing_identity(tmp_path, identity, encoding):
+    text = identity.replace('-', '\u2013')
+    xml = f'<?xml version="1.0" encoding="{encoding}"?><sst><si><r><t>{text[:4]}</t></r><r><t>{text[4:]}</t></r></si></sst>'
+    data = xml.encode(encoding)
+    sample = tmp_path / 'synthetic.xlsx'
+    sample.write_bytes(zip_bytes('xl/sharedStrings.xml', data))
+    assert scanner.scan([sample], set())
+
+
+def test_unknown_xml_encoding_fails_with_sanitized_diagnostic(tmp_path, identity, capsys):
+    marker = 'private-fixture-unknown'
+    xml = f'<?xml version="1.0" encoding="{marker}"?><sst><si><t>{identity}</t></si></sst>'
+    sample = tmp_path / 'synthetic.xlsx'
+    sample.write_bytes(zip_bytes('xl/sharedStrings.xml', xml.encode('utf-8')))
+    assert scanner.main([str(sample)]) == 2
+    output = capsys.readouterr()
+    assert marker not in output.out + output.err
+    assert identity not in output.out + output.err
+    assert 'Traceback' not in output.out + output.err
