@@ -10,7 +10,14 @@ from pathlib import Path
 from openpyxl import Workbook
 from nurus.capture import read_capture
 from nurus.capture.contract import COMMON as SOURCE_FIELDS
-from nurus.capture.temporal import chronology, identity, RULESET_VERSION
+from nurus.capture.temporal import (
+    chronology,
+    display_chronology,
+    identity,
+    DISPLAY_RULES,
+    DISPLAY_VERSION,
+    RULESET_VERSION,
+)
 from nurus.rus.columns import COMMON, MODE_COLUMNS, map_columns
 from nurus.rus.models import ReadBatch, SourceRecord, SourceReference, Mode
 from nurus.rus.util import as_date
@@ -37,6 +44,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         and previous.as_of == as_of.isoformat()
         and getattr(previous, 'capture_config_hash', '') == config_hash
         and getattr(previous, 'ruleset_version', '') == RULESET_VERSION
+        and getattr(previous, 'display_version', '') == DISPLAY_VERSION
         and getattr(previous, 'mapping_version', '') == capture.manifest['mapping_version']
     ):
         cached = deepcopy(previous)
@@ -89,10 +97,13 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             calendars[identity(row)].append(row)
     cross = {}
     event_index = defaultdict(list)
+    diary_index = defaultdict(list)
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
             if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
                 event_index[identity(event)].append(event)
+                if table == 'bitacoras':
+                    diary_index[identity(event)].append(event)
     for number, record in enumerate(records, 2):
         if number % 100 == 0:
             checkpoint()
@@ -118,6 +129,9 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         provenance[record['record_id']] = record
         row_modes[record['record_id']] = mode
         contexts[record['record_id']] = chronology(capture, record, as_of, event_index=event_index)
+        if DISPLAY_RULES and all(identity(record)) and record.get('identity_status') == 'VERIFICADA':
+            # Solo mostrar (D5): no altera hallazgos, observaciones ni productos.
+            contexts[record['record_id']]['display'] = display_chronology(diary_index.get(identity(record), ()), as_of)
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
         for cal in matching:
@@ -199,6 +213,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     candidate.capture_context = contexts
     candidate.capture_modes = row_modes
     candidate.ruleset_version = RULESET_VERSION
+    candidate.display_version = DISPLAY_VERSION
     candidate.mapping_version = capture.manifest['mapping_version']
     candidate.source_scope = 'PAQUETE'
     candidate.signed_activity = {}

@@ -6,23 +6,23 @@
       "rule_id": "CT-01",
       "version": "preview-1",
       "enabled": false,
-      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "activation_state": "ACTIVA_SOLO_MOSTRAR",
       "required_source_and_evidence": "Bitácora con identidad y cobertura confirmada",
       "proposed_finding": "Última observación del centro, fecha y autor; entradas empatadas todas",
       "action_limit": "Mostrar referencia de corte; no crear historial local",
-      "approval_reference": "",
-      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+      "approval_reference": "Decisión D5 del usuario (10 de octubre de 2026): solo mostrar, horizonte de 4 meses. Acta de 10 ingresos pendiente.",
+      "rollback": "Volver a PENDIENTE_ACEPTACION_FUNCIONAL y vaciar DISPLAY_RULES en nurus.capture.temporal; motor tradicional sin cambios."
     },
     {
       "rule_id": "CT-02",
       "version": "preview-1",
       "enabled": false,
-      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "activation_state": "ACTIVA_SOLO_MOSTRAR",
       "required_source_and_evidence": "Bitácora desde fecha de CT-01",
       "proposed_finding": "Entradas posteriores de cualquier autor/tipo con referencias",
       "action_limit": "Mostrar novedades, texto íntegro, origen; no confundir observación propia con respuesta",
-      "approval_reference": "",
-      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+      "approval_reference": "Decisión D5 del usuario (10 de octubre de 2026): solo mostrar, horizonte de 4 meses. Acta de 10 ingresos pendiente.",
+      "rollback": "Volver a PENDIENTE_ACEPTACION_FUNCIONAL y vaciar DISPLAY_RULES en nurus.capture.temporal; motor tradicional sin cambios."
     },
     {
       "rule_id": "CT-03",
