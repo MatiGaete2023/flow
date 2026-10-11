@@ -40,10 +40,15 @@ PLACEHOLDERS = {"", "no", "no posee", "no tiene", "sin designar", "sin curador",
                 "no aplica", "s i", "si", "sin informacion", "sin dato", "sd", "pendiente"}
 STOPWORDS = {"de", "del", "la", "las", "los", "san", "santa", "y", "e", "van", "von", "da", "dos",
              "abog", "sr", "sra", "srta", "don", "dona", "fono", "rut", "run"}
-RUT_RE = re.compile(r"(?<![\w.])(\d{1,2}(?:\.\d{3}){2}|\d{6,8})(\s*-\s*|\s+)([\dkK])(?![\w])")
-RIT_STRICT_RE = re.compile(r"(?<!\w)([A-Za-z])-(\d{1,6})-((?:19|20)\d{2})(?!\w)")
-RIT_FREE_RE = re.compile(r"(?<!\w)(?:([A-Za-z])[\s-]+)?(\d{1,6})[\s-]+((?:19|20)\d{2})(?![\w])")
-PHONE_RE = re.compile(r"(?<![\w+])(?:\+?56[\s-]?)?(?:9[\s-]?\d{4}[\s-]?\d{4}|\d{2}[\s-]?\d{3}[\s-]?\d{4}|\d{2}[\s-]?\d{7})(?!\d)")
+DASH = "\\-\u2010\u2011\u2012\u2013\u2014\u2212"  # guiones; el ASCII va escapado para usarlo en clases
+RUT_RE = re.compile(r"(?<![\w.])(\d{1,2}(?:\.\d{3}){2}|\d{1,2}(?: \d{3}){2}|\d{6,8})(\s*[" + DASH + r"]\s*|\s+)([\dkK])(?![\w])")
+RUT_NO_DV_RE = re.compile(r"(?<![\w.])\d{1,2}(?:\.\d{3}){2}(?![\w.])")
+RIT_STRICT_RE = re.compile(r"(?<!\w)([A-Za-z])[" + DASH + r"](\d{1,6})[" + DASH + r"/]((?:19|20)\d{2})(?!\w)")
+RIT_FREE_RE = re.compile(r"(?<!\w)(?:([A-Za-z])[\s" + DASH + r"]+)?(\d{1,6})[\s" + DASH + r"/]+((?:19|20)\d{2})(?![\w])")
+PHONE_RE = re.compile(r"(?<![\w+])(?:\+?56[\s-]?)?(?:9[\s-]?\d{4}[\s-]?\d{4}|\d{3}[\s-]\d{3}[\s-]\d{3}"
+                      r"|\d{2}[\s-]?\d{3}[\s-]?\d{4}|\d{2}[\s-]?\d{7})(?!\d)")
+GROUPED_DIGITS_RE = re.compile(r"(?<![\w.])\d(?:[\s" + DASH + r"]?\d){7,}(?![\w])")
+DATE_LIKE_RE = re.compile(r"\d{4}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{1,2}|\d{1,2}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{4}")
 MAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 ADDRESS_RE = re.compile(r"(?i)\b(?:av(?:enida)?|calle|pasaje|pje|villa|pobl(?:aci[oó]n)?|block|depto|camino)\.?\s+"
                         r"[\wÁÉÍÓÚÑáéíóúñ .'-]{2,40}?\d{1,5}")
@@ -139,8 +144,9 @@ def fake_rut(pseudonyms, match):
     digits, separator, dv = match.group(1), match.group(2), match.group(3)
     fake = pseudonyms.get("rut", _rut_key(digits, dv))
     number, _, fake_dv = fake.partition("-")
-    if "." in digits:
-        number = f"{int(number):,}".replace(",", ".")
+    thousands = "." if "." in digits else " " if " " in digits else ""
+    if thousands:
+        number = f"{int(number):,}".replace(",", thousands)
     return number + separator + fake_dv
 
 
@@ -148,15 +154,16 @@ def column_kind(header):
     name = normalize(header)
     if not name or any(name.startswith(keep) for keep in KEEP):
         return None
-    if name.startswith("rit"):
+    compact = name.replace(" ", "")
+    if name.startswith("rit") or re.search(r"\brit\b", name):
         return "rit"
-    if "curador" in name:
+    if "curador" in name or re.search(r"\bcur\b", name):
         return "curador"
-    if name.startswith(("rut", "run")) or re.search(r"\b(rut|run)\b", name):
+    if compact in ("rut", "run") or name.startswith(("rut", "run")) or re.search(r"\b(rut|run)\b", name):
         return "rut"
     if any(word in name for word in ("correo", "email", "mail")):
         return "mail"
-    if any(word in name for word in ("telefono", "fono", "celular")):
+    if any(word in name for word in ("telefono", "fono", "celular")) or re.search(r"\btel\b", name):
         return "telefono"
     if any(word in name for word in ("direccion", "domicilio")):
         return "direccion"
@@ -181,10 +188,16 @@ def _protected_headers():
 
 
 def header_row(rows, limit=HEADER_LIMIT):
+    """Primera fila con al menos dos títulos y una columna de identidad (RIT, RUT/RUN, nombre o curador)."""
     for index, row in enumerate(rows[:limit]):
-        names = [normalize(value) for value in row if isinstance(value, str) and value.strip()]
-        if len(names) >= 2 and any(n in ("rit", "rut", "run") or n.startswith(("nombre", "rut ", "rit "))
-                                   for n in names):
+        texts = [value for value in row if isinstance(value, str) and value.strip()]
+        names = [normalize(value) for value in texts]
+        if len(names) < 2 or any(len(n) > 40 for n in names):
+            continue
+        kinds = [column_kind(value) for value in texts]
+        identity = sum(kind in ("rit", "rut", "curador", "persona") for kind in kinds)
+        if identity >= 2 or any(n in ("rit", "rut", "run") or n.startswith(("nombre", "rut ", "rit ", "run "))
+                                for n in names):
             return index
     return None
 
@@ -236,14 +249,19 @@ def _tokens(full_name, fake):
 
 
 def is_placeholder(text):
+    """Texto sin dato: marcadores conocidos o signos sueltos. Un texto con dígitos nunca es marcador."""
     norm = normalize(text)
-    return norm in PLACEHOLDERS or not re.search(r"[a-z]", norm)
+    return norm in PLACEHOLDERS or not re.search(r"[a-z0-9]", norm)
 
 
 def curator_name(text):
     """Nombre de un curador individual; vacío para placeholders y curadores institucionales."""
-    if is_placeholder(text) or "Institución:" in text:
+    if is_placeholder(text):
         return ""
+    if "Institución:" in text:
+        # Solo la persona que acompaña a la institución («abog.», «Sr.», entre paréntesis); la entidad se conserva.
+        match = re.search(r"(?i)\b(?:abog(?:ad[oa])?|sr|sra|srta)\.?\s+([^()\[\],;:0-9]+)", text)
+        return curator_name(match.group(1)) if match else ""
     rest = RUT_RE.sub(" ", text)
     rest = PHONE_RE.sub(" ", rest)
     rest = MAIL_RE.sub(" ", rest)
@@ -275,15 +293,31 @@ class Replacer:
             self._patterns = [(folded_pattern(original), fake) for original, fake in items]
         return self._patterns
 
-    def identifiers(self, text, *, free):
+    def _mask_dotted(self, match):
+        digits = re.sub(r"\D", "", match.group(0))
+        fakes = {f.split("-")[0] for f in self.pseudonyms.fakes("rut")}
+        return match.group(0) if digits in fakes else "#" * len(match.group(0))
+
+    def _phone(self, match):
+        return self.pseudonyms.get("telefono", re.sub(r"\D", "", match.group(0)))
+
+    def identifiers(self, text, *, free, phones=None):
+        """RUT, RIT, correos y RUT sin dígito en `text`. Con `free`, además teléfonos, domicilios y números largos.
+
+        `phones=True` reemplaza teléfonos aunque `free` sea falso (columnas que lee el motor)."""
         result = RUT_RE.sub(lambda m: fake_rut(self.pseudonyms, m), text)
+        result = RUT_NO_DV_RE.sub(self._mask_dotted, result)
         rit = RIT_FREE_RE if free else RIT_STRICT_RE
         result = rit.sub(lambda m: self.pseudonyms.get("rit", m.group(0)), result)
         result = MAIL_RE.sub(lambda m: m.group(0) if m.group(0).endswith(FAKE_DOMAIN)
                              else self.pseudonyms.get("mail", m.group(0)), result)
+        if free or phones:
+            result = PHONE_RE.sub(self._phone, result)
         if free:
-            result = PHONE_RE.sub(lambda m: self.pseudonyms.get("telefono", re.sub(r"\D", "", m.group(0))), result)
             result = ADDRESS_RE.sub(lambda m: self.pseudonyms.get("direccion", m.group(0)), result)
+            result = GROUPED_DIGITS_RE.sub(lambda m: m.group(0) if DATE_LIKE_RE.fullmatch(m.group(0))
+                                           or re.sub(r"\D", "", m.group(0)).startswith("900000")
+                                           else "#" * len(m.group(0)), result)
             result = DIGITS_RE.sub(lambda m: m.group(0) if m.group(0).startswith("900000")
                                    else "#" * len(m.group(0)), result)
         return result
@@ -314,6 +348,12 @@ def _identity_value(kind, value, pseudonyms, replacer):
     if kind == "persona":
         return replacer.text(text)
     return pseudonyms.get(kind, text)
+
+
+def _long_number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return float(value).is_integer() and 7 <= len(str(abs(int(value)))) <= 9
 
 
 def _sheet_plan(rows):
@@ -347,24 +387,32 @@ def _scan(book, pseudonyms, replacer, protected_cells):
     fake_phones = pseudonyms.fakes("telefono")
     names = [(folded_pattern(name), "persona") for name in replacer.names]
     tokens = [(folded_pattern(token), "palabra de nombre") for token in replacer.tokens if len(normalize(token)) >= 4]
+    fake_rits = pseudonyms.fakes("rit")
     texts = [(sheet.title, False) for sheet in book.worksheets]
     for sheet in book.worksheets:
         for row in sheet.iter_rows():
             for cell in row:
+                protected = (sheet.title, cell.row, cell.column) in protected_cells
                 if isinstance(cell.value, str):
-                    texts.append((cell.value, (sheet.title, cell.row, cell.column) in protected_cells))
+                    texts.append((cell.value, protected))
+                elif isinstance(cell.value, (int, float)) and not isinstance(cell.value, bool) and not protected:
+                    digits = str(int(cell.value)) if float(cell.value).is_integer() else ""
+                    if 7 <= len(digits) <= 9 and digits not in fake_ruts and digits not in fake_phones:
+                        found.add("número de 7 a 9 dígitos")
     for text, protected in texts:
         text = nfc(text)
+        for match in RIT_STRICT_RE.finditer(text):
+            if f"{match.group(1).upper()}-{int(match.group(2))}-{match.group(3)}" not in fake_rits:
+                found.add("RIT")
         for match in RUT_RE.finditer(text):
             digits = re.sub(r"\D", "", match.group(1))
             if digits not in fake_ruts and check_digit(digits) == match.group(3).upper():
                 found.add("RUT con dígito válido")
         if any(not m.group(0).endswith(FAKE_DOMAIN) for m in MAIL_RE.finditer(text)):
             found.add("correo")
-        if not protected:
-            for match in PHONE_RE.finditer(text):
-                if re.sub(r"\D", "", match.group(0)) not in fake_phones:
-                    found.add("teléfono")
+        for match in PHONE_RE.finditer(text):
+            if re.sub(r"\D", "", match.group(0)) not in fake_phones:
+                found.add("teléfono")
         for pattern, label in names + tokens:
             if pattern.search(text):
                 if protected and label == "palabra de nombre":
@@ -416,10 +464,13 @@ def anonymize(source, target, shift_days=0):
                 elif index is not None and r == index:
                     new = value
                 elif body and c in protected_cols:
-                    new = replacer.identifiers(value, free=False) if isinstance(value, str) else value
+                    new = replacer.identifiers(value, free=False, phones=True) if isinstance(value, str) else value
                     protected_cells.add((new_title, r + 1, c + 1))
                 elif kind in ("rut", "rit", "mail", "telefono", "direccion", "persona"):
                     new = _identity_value(kind, value, pseudonyms, replacer)
+                elif _long_number(value):
+                    # Fuera de columnas que lee el motor, un entero de 7 a 9 dígitos puede ser RUT o teléfono.
+                    new = "#" * len(str(int(value)))
                 elif isinstance(value, str):
                     new = replacer.text(value, free=kind != "rit")
                 if new != value:
@@ -436,9 +487,13 @@ def anonymize(source, target, shift_days=0):
     temp = target.with_name(f".{target.stem}.{os.getpid()}.tmp.xlsx")
     try:
         book.save(temp)
-        if target.exists():
-            raise FileExistsError(f"El destino ya existe; elige otro nombre: {target.name}")
-        os.replace(temp, target)
+        try:
+            os.link(temp, target)  # falla si el destino apareció mientras tanto; nunca sobrescribe
+        except FileExistsError:
+            raise FileExistsError(f"El destino ya existe; elige otro nombre: {target.name}") from None
+        except OSError:
+            with target.open("xb") as output:
+                output.write(temp.read_bytes())
     finally:
         temp.unlink(missing_ok=True)
     if residual:
