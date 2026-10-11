@@ -17,7 +17,7 @@ def test_windows_installer_detects_supported_python_without_requiring_default_la
     assert "%LOCALAPPDATA%\\Programs\\Python\\Python312\\python.exe" in script
     assert "(3, 12) <= v <= (3, 14)" in script
     assert "excel-native" in script
-    finder = script[script.index(":find_python"):script.index(":try_python\n")]
+    finder = script[script.index(":find_python") : script.index(":try_python\n")]
     assert finder.index("py -3.12") < finder.index("py -3.13") < finder.index("py -3.14")
     assert finder.index("Python312") < finder.index("Python313") < finder.index("Python314")
 
@@ -37,11 +37,17 @@ def test_installer_uses_hash_locked_dependencies_then_package_without_deps():
 def test_downloader_prefers_python_312_and_requires_hash_lock(tmp_path, monkeypatch):
     root = Path(__file__).parents[1]
     starter = (root / "descargador" / "Iniciar.cmd").read_text(encoding="utf-8")
-    assert (starter.index("py -3.12 -m venv") < starter.index("py -3.13 -m venv") < starter.index("py -3.14 -m venv")
-            < starter.index("py -3 -m venv") < starter.index("python -m venv"))
+    assert (
+        starter.index("py -3.12 -m venv")
+        < starter.index("py -3.13 -m venv")
+        < starter.index("py -3.14 -m venv")
+        < starter.index("py -3 -m venv")
+        < starter.index("python -m venv")
+    )
     # Sin lock para la versión elegida: código 3 y se borra el .venv para no reutilizarlo.
     assert "if errorlevel 3 goto nolock" in starter and 'rmdir /s /q ".venv"' in starter
     import importlib.util
+
     spec = importlib.util.spec_from_file_location("preparar_entorno", root / "descargador" / "preparar_entorno.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -49,7 +55,7 @@ def test_downloader_prefers_python_312_and_requires_hash_lock(tmp_path, monkeypa
     monkeypatch.setattr(module.sys, "version_info", (3, 12, 0, "final", 0))
     assert module.lock_file() == root / "requirements" / "windows-py312.lock"
     source = (root / "descargador" / "preparar_entorno.py").read_text(encoding="utf-8")
-    assert "'--require-hashes','-r'" in source and "requirements.txt" not in source
+    assert "'--require-hashes','-r'" in ''.join(source.split()) and "requirements.txt" not in source
     monkeypatch.setattr(module, "HERE", tmp_path / "descargador")
     # Copia sin requirements/: no es problema de la versión de Python, así que no es código 3 ni borra el .venv.
     with pytest.raises(RuntimeError, match="Falta la carpeta requirements") as error:
@@ -82,7 +88,7 @@ def test_installer_uses_regular_package_and_preserves_exclamation_paths():
 @pytest.mark.skipif(sys.platform != "win32", reason="Ejecuta cmd.exe real en el CI Windows")
 def test_windows_cmd_executes_detected_python_after_subroutine(tmp_path):
     script = (Path(__file__).parents[1] / "Instalar_CSMP.bat").read_text(encoding="utf-8")
-    subroutine = script[script.index("\n:find_python\n"):script.index("\n:wrong_venv\n")]
+    subroutine = script[script.index("\n:find_python\n") : script.index("\n:wrong_venv\n")]
     probe = tmp_path / "detectar python!.bat"
     probe.write_text(
         '@echo off\nsetlocal EnableExtensions DisableDelayedExpansion\n'
@@ -91,8 +97,11 @@ def test_windows_cmd_executes_detected_python_after_subroutine(tmp_path):
         encoding="utf-8",
     )
     result = subprocess.run(
-        ["cmd.exe", "/d", "/c", str(probe)], capture_output=True, text=True,
-        env={**os.environ, "NURUS_PYTHON_EXE": sys.executable}, timeout=30,
+        ["cmd.exe", "/d", "/c", str(probe)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "NURUS_PYTHON_EXE": sys.executable},
+        timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Python version" in result.stdout
