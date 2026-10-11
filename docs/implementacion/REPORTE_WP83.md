@@ -33,10 +33,19 @@ se omiten al liberar. No se modifica el comportamiento de cancelación ni las re
 
 ## Verificación
 
-Seis regresiones GUI PASA en Linux con Xvfb. Primera verificación completa PASA en d7aa476
-(802/240); se refuerza el caso de ventana cerrada con un control efectivamente bloqueado
-y destruido. Se repetirá sobre ese test final y SHA limpio, sin cambiar el código funcional.
-Windows pendiente. Motor/textos y golden17 intactos; no se acreditan Office/SITFA real ni actas.
+Verificación completa **PASA** en `636af86855df3524c6a0b9fda72819fd0f1cb005`, con árbol limpio y estable antes/después.
+
+- Asistente: 802 aprobadas, 11 omitidas y seis xfail estrictos preexistentes.
+- Descargador: 240 aprobadas y 62 subpruebas.
+- Nueve controles PASA: golden17, identidades 0, inventario sin bajas, restricciones, lint,
+  módulos no alcanzables 0 y enlaces rotos 0. Formato: 275 archivos correctos.
+- Seis regresiones GUI PASA con Xvfb. Se reforzó el caso de cierre con un control bloqueado
+  realmente destruido; la medición final incluye ese test, con código funcional sin cambios.
+- [Evidencia completa](verificacion/WP-83.json). Los commits posteriores solo registran documentación/estado.
+- CI Windows: controles por SHA en [PR #38](https://github.com/MatiGaete2023/flow/pull/38).
+
+Estas métricas corresponden a WP-83 sobre feat; no incluyen los paquetes aún no integrados WP-81/WP-82.
+Motor/textos intactos; no se acredita Office/SITFA real ni se crean actas.
 
 ## Continuación
 
