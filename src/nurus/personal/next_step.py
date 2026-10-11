@@ -1,6 +1,7 @@
 """Barra «Siguiente paso»: solo lee el estado del trabajo y de los productos; no crea datos ni reglas."""
 
 from pathlib import Path
+import json
 
 from . import ui
 from .product_checks import check_products, current_drafts
@@ -43,6 +44,17 @@ def text(values):
     return ' → '.join(labels(values))
 
 
+def _file_state(path):
+    """Detecta desapariciones y cambios de archivos sin leer su contenido en cada pulso."""
+    if not path:
+        return None
+    try:
+        info = Path(path).stat()
+    except FileNotFoundError:
+        return (str(path), None)
+    return (str(path), info.st_mtime_ns, info.st_size)
+
+
 def _signature(app):
     work = getattr(app, 'work', None)
     drafts = current_drafts(app) if hasattr(app, 'drafts') else []
@@ -56,12 +68,32 @@ def _signature(app):
         sum(bool(r.warnings) for r in work.rows),
         output,
         Path(output).is_file() if output else False,
-        len(getattr(work, 'receipts', {}) or {}),
+        json.dumps(getattr(work, 'receipts', {}) or {}, sort_keys=True, default=str),
+        tuple(_file_state(r.get('path')) for r in (getattr(work, 'receipts', {}) or {}).values()),
         tuple(
-            (d.product_id, d.subject, bool(d.to), bool(d.body.strip()), len(d.attachments), d.roster_reviewed)
+            (
+                d.product_id,
+                d.subject,
+                d.to,
+                d.cc,
+                d.body,
+                d.required,
+                tuple(_file_state(path) for path in d.attachments),
+                d.roster_reviewed,
+                tuple(_file_state(group.get('generated')) for group in d.roster),
+            )
             for d in drafts
         ),
-        tuple((p.key, p.review_required) for p in projects),
+        tuple(
+            (
+                p.key,
+                p.review_required,
+                p.text,
+                json.dumps(p.values, sort_keys=True, default=str),
+                _file_state(p.template),
+            )
+            for p in projects
+        ),
     )
 
 
@@ -101,12 +133,12 @@ class NextStepBar(ui.Frame):
         signature = _signature(self.app)
         if not force and signature == self._signature:
             return False
-        self._signature = signature
         app = self.app
         work = getattr(app, 'work', None)
         self.values = counts(work, current_drafts(app) if work else [], list(getattr(app, 'projects', [])))
         for (key, _, _), label in zip(STEPS, labels(self.values), strict=True):
             self.buttons[key].configure(text=label)
+        self._signature = signature
         return True
 
     def _tick(self):

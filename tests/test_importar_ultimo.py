@@ -63,6 +63,9 @@ importados=[]
 app._import_capture=lambda path=None:importados.append(path)
 with patch('nurus.personal.app_base.messagebox.askyesno',return_value=True):
     app._import_latest_capture()
+    limite=time.monotonic()+5
+    while app.busy and time.monotonic()<limite:
+        app.update();time.sleep(0.01)
 assert importados==[ruta]
 for c in app.pages['Trabajo'].winfo_children():pass
 from nurus.personal.commands import commands
@@ -89,5 +92,49 @@ def invalida_y_cancelar(win):
     assert win.winfo_exists()
     win.cancel()
 assert preguntar(invalida_y_cancelar) is None
+""",
+    )
+
+
+def test_busqueda_del_ultimo_paquete_no_bloquea_tk_y_confirma_en_tk(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+import threading,time
+from unittest.mock import patch
+entrada=threading.Event();continuar=threading.Event()
+principal=threading.get_ident();hilos=[];confirmados=[];importados=[]
+archivo=root/'captura.zip';archivo.write_bytes(b'ficticio')
+def buscar():
+    hilos.append(threading.get_ident());entrada.set()
+    assert continuar.wait(2),'Tk no pudo liberar la búsqueda'
+    return archivo
+def confirmar(*args,**kwargs):
+    assert threading.get_ident()==principal
+    confirmados.append(True);return True
+app._import_capture=lambda path=None:importados.append(path)
+with patch('nurus.personal.latest_capture.latest_capture',side_effect=buscar), patch('nurus.personal.app_base.messagebox.askyesno',side_effect=confirmar):
+    try:
+        app._import_latest_capture()
+        assert entrada.wait(1) and app.busy and hilos!=[principal]
+        pulsos=[];app.after(0,lambda:pulsos.append(True));app.update()
+        assert pulsos and not confirmados and not importados
+        continuar.set()
+        limite=time.monotonic()+5
+        while app.busy and time.monotonic()<limite:
+            app.update();time.sleep(0.01)
+        assert not app.busy and confirmados and importados==[archivo]
+        assert app.cancel_button.cget('state')=='disabled'
+        entrada.clear();continuar.clear()
+        app._import_latest_capture()
+        assert entrada.wait(1) and app.busy
+        app._cancel_operation();continuar.set()
+        limite=time.monotonic()+5
+        while app.busy and time.monotonic()<limite:
+            app.update();time.sleep(0.01)
+        assert not app.busy and confirmados==[True] and importados==[archivo]
+        assert 'detenida' in app.status.get().lower()
+    finally:
+        continuar.set()
 """,
     )
