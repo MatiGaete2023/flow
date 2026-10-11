@@ -12,7 +12,8 @@ CI Windows y compilación aprobadas en `14f679d`; Actions vuelve a funcionar.
 WP-63 corrige la versión integrada: [PR #34](https://github.com/MatiGaete2023/flow/pull/34),
 rama `wp/auditoria-refactor-20261011`.
 Reporte: [REPORTE_REVISION_20261011.md](docs/implementacion/REPORTE_REVISION_20261011.md).
-Verificación local PASA en `473175c`: Asistente 767/11/6 xfail; Descargador 235/62; golden17.
+Linux inicial PASA (`473175c`); fallo de codificación en CI Windows corregido, sin skips.
+Verificación final en curso; consultar ficha y controles de PR #34 por SHA.
 La ficha registra evidencia y siguiente acción; no equivale a aceptación de uso real.
 El estado se edita en `docs/implementacion/estado/` y se regenera con `tools/estado.py agregar`.
 
