@@ -17,6 +17,38 @@ Los commits posteriores solo registran documentación/evidencia; consultar contr
 La ficha registra evidencia y siguiente acción; no equivale a aceptación de uso real.
 El estado se edita en `docs/implementacion/estado/` y se regenera con `tools/estado.py agregar`.
 
+- **Integrado en `feat`** (excepción a E3 autorizada por el usuario): #27, Codex #4, #8 y #11, #12–#32, más WP-61
+  (formato). `ESTADO.json` es una vista generada desde `docs/implementacion/estado/` (`tools/estado.py`, PASA). La
+  línea base se regeneró: asistente 592/11/6 xfail, descargador 231/62, identidades 0, enlaces rotos 0.
+- **Decisiones:** D1 (purga hecha), D3–D9 respondidas, D2 «Ninguna todavía».
+- **Pendientes del usuario:**
+  1. Borrar las etiquetas `pre-WP-12` y `pre-implementacion-20261009` (conservan el historial viejo).
+  2. Pedir a GitHub la eliminación de datos sensibles en las referencias de PR.
+  3. ~~Borrar los artefactos de Actions previos~~: hecho (607 borrados por la API, 11 de octubre de 2026).
+  4. Billing: GitHub Pro y presupuesto de Actions de 5 USD (11 de octubre de 2026); CI verde en `14f679d`.
+- **Lo que falta del plan:**
+  - WP-02 (D2: casos probados en uso real).
+  - WP-50: implementado en `wp/50-cronologia-solo-mostrar` (PR #33 borrador, CI verde, `verificar_wp` PASA). Se integra
+    tras el acta de 10 ingresos del usuario y WP-02.
+  - WP-70: cierre. Paquete compilado en CI (`14f679d`, run 38136720831); esperar el acta final y, con D7, sacar el PR #1
+    de borrador y fusionarlo a `main`, sin release.
+- **Auditorías paralelas abiertas (11 de octubre de 2026, tarde):**
+  - **WP-80** (PR #35, rama `wp/80-auditoria`, sesión claude-sesion-012yjVgL): auditoría de 6 áreas con 30 correcciones,
+    retiros y CI más barata. Informe en `docs/implementacion/wp/WP-80.md`.
+    - Revisión E3 de otra raíz (`e3/wp-80-revision`): CAMBIOS ya aplicados (`168ce0d`, `92d7ba8`). Falta su
+      re-revisión.
+    - `verificar_wp` PASA: asistente 608, descargador 236.
+  - **WP-63** (PR #34, rama `wp/auditoria-refactor-20261011`, otra sesión): auditoría paralela desde la misma base.
+    - E3: APROBADO y CONFORME, ambos con observaciones.
+    - El usuario confirmó las dependencias funcionales de WP-70 el 11 de octubre de 2026 y autorizó integrar WP-63
+      y después WP-80; WP-80 se integra con squash formateado (regla 11).
+  - **Orden recomendado por E3:** integrar WP-63, luego fusionar `feat` en WP-80, resolver los 8 conflictos (§7 de
+    `E3_CONSOLIDADO_WP-63_WP-80.md`), volver a verificar e integrar WP-80. La regla 11 se cumple con un merge squash
+    formateado o con una excepción del usuario. La etiqueta `pre-WP-80` (`2cf8ca8`) la crea el usuario, porque el
+    proxy no deja subir etiquetas.
+- **Conflictos respondidos** (11 de octubre de 2026): `cc_obligatorio` se conserva; motor/ queda intacto (4 F401
+  excluidos en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla).
+
 ## Pendientes, en orden
 
 1. Revisar WP-63 y sus verificaciones antes de integrar; E3 exige revisión de otra raíz.
