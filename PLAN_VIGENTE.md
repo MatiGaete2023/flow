@@ -25,7 +25,7 @@ No hay otras puertas. Las pruebas automáticas no reemplazan el acta, y el acta 
 - D2 casos probados en uso real: «Ninguna todavía»; WP-02 espera resultados del usuario.
 - D3 retiro del inspector y diario de registro RUS: «Sí, retirarlos».
 - D4 retención local: «60 días y hasta 10 sesiones anteriores».
-- D5 cronología CT-01/CT-02: «Sí, horizonte de 4 meses»; PR #33 preparado, pendiente del acta de 10 ingresos y WP-02.
+- D5 cronología CT-01/CT-02: «Sí, horizonte de 4 meses»; código de #33 consolidado por orden de fusionar todas las ramas; aceptación pendiente del acta de 10 ingresos y WP-02.
 - D6 XLSX consolidado dentro del ZIP: «Sí, solo el consolidado»; implementado con casilla en el Descargador.
 - D7 fusión a main: «Sí, tras el acta final»; no se fusiona ni publica una release antes del acta.
 - D8 consultas 2.7.5: «No observé esos fallos»; se descarta la variante reaplicar tras Envio() de WP-33.
