@@ -147,6 +147,7 @@
   "integrado_en": null,
   "notas": [
     "D7: fusionar a main solo tras el acta final firmada por el usuario.",
-    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2."
+    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
+    "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2."
   ]
 }
