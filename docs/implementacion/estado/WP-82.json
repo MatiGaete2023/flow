@@ -1,0 +1,26 @@
+{
+  "titulo": "Pendientes de correo coherentes con Resultados",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/82-pendientes-correo-20261011",
+  "pr": null,
+  "verificacion": "Suite focal en curso; verificación completa pendiente",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
+    "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente.",
+    "Diez regresiones nuevas; siete fallaron antes de unificar y una antes de optimizar. Sin pruebas retiradas ni nuevos skips."
+  ]
+}
