@@ -11,7 +11,8 @@ CI Windows y compilación aprobadas en `14f679d`; Actions vuelve a funcionar.
 
 WP-63 audita y corrige la versión integrada en `wp/auditoria-refactor-20261011`.
 Reporte: [REPORTE_REVISION_20261011.md](docs/implementacion/REPORTE_REVISION_20261011.md).
-La ficha registra verificaciones y siguiente acción; no equivale a aceptación de uso real.
+Verificación local PASA en `473175c`: Asistente 767/11/6 xfail; Descargador 235/62; golden17.
+La ficha registra evidencia y siguiente acción; no equivale a aceptación de uso real.
 El estado se edita en `docs/implementacion/estado/` y se regenera con `tools/estado.py agregar`.
 
 ## Pendientes, en orden
