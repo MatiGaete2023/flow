@@ -157,3 +157,32 @@ def test_al_retomar_ninguna_escritura_pierde_lo_ya_leido(tmp_path, monkeypatch):
     )
     assert snapshots and min(snapshots) >= 12, snapshots
     assert result['leidas'] == 20 and len(bridge.openings) == 8
+
+
+def test_retomar_con_cache_alterada_respeta_tope_de_aperturas(tmp_path, monkeypatch):
+    run_many(tmp_path, monkeypatch, 5)
+    folder = next(tmp_path.glob('Bitacoras *'))
+    previous = json.loads((folder / lb.MANIFEST).read_text(encoding='utf-8'))
+    for record in previous['registros'][:4]:
+        (folder / record['archivo']).write_bytes(b'cache ficticia alterada')
+    monkeypatch.setattr(lb, 'MAX_LECTURAS_POR_LOTE', 2)
+    bridge = Bridge30(5)
+    result = lb.DiaryRunner(bridge, tlb.CATALOG, lambda *a: None, threading.Event(), pause=0).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path, resume=folder
+    )
+    assert len(bridge.openings) == 2
+    assert result['estado'] == 'INCOMPLETA' and 'máximo de 2 lecturas' in result['detalle']
+
+
+def test_fallo_de_escritura_al_cerrar_desbloquea_chrome(tmp_path, monkeypatch):
+    import pytest
+
+    bridge = Bridge30(1)
+    runner = lb.DiaryRunner(bridge, tlb.CATALOG, lambda *a: None, threading.Event(), pause=0)
+    session = lb._Lectura(runner, Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path, None)
+    bridge.call('lock')
+    session.locked = True
+    monkeypatch.setattr(lb, 'write', lambda *args: (_ for _ in ()).throw(OSError('disco ficticio lleno')))
+    with pytest.raises(OSError, match='disco ficticio lleno'):
+        runner._cerrar(session)
+    assert bridge.events[-1][0] == 'unlock'

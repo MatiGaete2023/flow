@@ -507,15 +507,12 @@ class DiaryRunner:
                 'FLG_MejorNinez': item['antiguo'],
             }
             session.persistir(lazy=True)
-            if record['clave'] not in session.old and session.openings >= MAX_LECTURAS_POR_LOTE:
-                record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
-                raise LimiteLecturas(
-                    f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                    'Divide el período o los tribunales y usa «Retomar» para continuar.'
-                )
             try:
                 if not session.reutilizar(record):
                     self._abrir_bitacora(session, record)
+            except LimiteLecturas:
+                record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
+                raise
             except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
                 record.update(
                     estado='FALLIDA',
@@ -542,6 +539,12 @@ class DiaryRunner:
             session.detener_si_cancelada()
 
     def _abrir_bitacora(self, session, record):
+        # La presencia de una lectura anterior no garantiza que su archivo siga siendo reutilizable.
+        if session.openings >= MAX_LECTURAS_POR_LOTE:
+            raise LimiteLecturas(
+                f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
+                'Divide el período o los tribunales y usa «Retomar» para continuar.'
+            )
         session.openings += 1
         result = self.bridge.call('diary_open', {'params': record['params'], 'timeout': 60000})
         data = ChromeTransport.body(result)
@@ -569,18 +572,18 @@ class DiaryRunner:
         )
 
     def _cerrar(self, session):
-        state = session.state
-        current_keys = {r['clave'] for r in state['registros']}
-        retained = {r['clave']: r for r in session.previous_records if r['clave'] not in current_keys}
-        state['anteriores_no_reenumeradas'] = list(retained.values())
-        session.persistir()
-        # Archivo independiente para soporte técnico sin datos judiciales de NNA.
-        write(session.folder / 'diagnostico_bitacoras.json', anonymous_diagnostic(state))
-        if session.locked:
-            try:
-                self.bridge.call('unlock', timeout=8)
-            except Exception:
-                pass
+        try:
+            # persistir también conserva las lecturas anteriores todavía no enumeradas.
+            session.state.setdefault('anteriores_no_reenumeradas', [])
+            session.persistir()
+            # Archivo independiente para soporte técnico sin datos judiciales de NNA.
+            write(session.folder / 'diagnostico_bitacoras.json', anonymous_diagnostic(session.state))
+        finally:
+            if session.locked:
+                try:
+                    self.bridge.call('unlock', timeout=8)
+                except Exception:
+                    pass
 
     def _resultado(self, session):
         state, folder, manifest = session.state, session.folder, session.manifest
