@@ -1216,14 +1216,15 @@
       "tomado": "11 de octubre de 2026",
       "rama": "wp/80-auditoria",
       "pr": 35,
-      "verificacion": "PASA (verificar_wp.py tras CAMBIOS E3, 11 de octubre de 2026: asistente 608, descargador 236)",
+      "verificacion": "PASA tras fusionar feat con WP-63 (verificar_wp de WP-63, 11 de octubre de 2026): asistente 796, descargador 240, inventario sin bajas",
       "revision": "E3 session_016DC9qxvuqT6mr91tHBaw7b: CAMBIOS (6) → aplicados en 168ce0d; GUI G-1/G-2/G-6 en 92d7ba8",
       "auditoria": "E3: NO CONFORME formal (E4 subsanado; pre-WP-80 y regla 11 pendientes de usuario/Orquestador)",
       "integrado_en": null,
       "notas": [
         "Pedido expreso del usuario (11 de octubre de 2026). Revisión y auditoría E3 por otra raíz de agente, también pedida por el usuario.",
         "Revisión E3 encargada a una sesión independiente (session_016DC9qxvuqT6mr91tHBaw7b); entrega en la rama e3/wp-80-revision y comentario en el PR #35.",
-        "Conflicto con WP-63 (PR #34): E3 recomienda integrar WP-63 primero y luego resolver 8 conflictos en WP-80."
+        "Conflicto con WP-63 (PR #34): E3 recomienda integrar WP-63 primero y luego resolver 8 conflictos en WP-80.",
+        "11 de octubre de 2026: el usuario autorizó integrar WP-63 y luego WP-80 (squash con mensaje formateado, regla 11) y confirmó las dependencias funcionales de WP-70. WP-63 integrado; 8 conflictos resueltos en WP-80 según §7 de E3."
       ]
     }
   },
