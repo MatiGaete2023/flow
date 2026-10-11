@@ -9,7 +9,7 @@
   "tomado": "11 de octubre de 2026",
   "rama": "wp/86-correctivo",
   "pr": null,
-  "verificacion": null,
+  "verificacion": "PASA (verificar_wp.py, 11 de octubre de 2026): asistente 856, descargador 240, inventario sin bajas",
   "revision": null,
   "auditoria": null,
   "integrado_en": null,
