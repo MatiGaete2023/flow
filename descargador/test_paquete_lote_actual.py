@@ -114,3 +114,35 @@ def test_lote_no_apto_crea_el_paquete_sin_consolidado_y_lo_dice(tmp_path, monkey
     resultado = descargador.package_current_lot(lote.folder, manifiesto, tmp_path / 'p.zip', consolidated=True)
     assert read_capture(resultado['path']).manifest['schema_version'] == '1.0.0'
     assert 'Sin XLSX consolidado: No apto para CSMP' in resultado['reuse']
+
+
+def test_evento_que_falla_no_detiene_la_cola(tmp_path):
+    source = textwrap.dedent('''
+        from pathlib import Path
+        import sys,tkinter as tk
+        from descargador import Application
+        from test_lotes import dispose_interface
+        carpeta=Path(sys.argv[1])
+        root=tk.Tk();root.withdraw();app=Application(root,start_worker=False)
+        try:
+            # Respuesta a CSMP en carpeta inexistente: joint_done falla al escribir.
+            app.csmp_reply=str(carpeta/'no'/'existe'/'respuesta.json')
+            app.busy=True
+            app.events.put(('joint_done',{'folder':str(carpeta),'archivo':str(carpeta/'libro.xlsx'),'estado':'x','modo':'ESPERA'}))
+            app.events.put(('idle',None))
+            app.poll()
+            assert app.events.empty() and not app.busy
+            assert 'joint_done' in app.status.get()
+        finally:dispose_interface(app,root)
+    ''')
+    (tmp_path / 'libro.xlsx').write_bytes(b'ficticio')
+    result = subprocess.run(
+        [sys.executable, '-c', source, str(tmp_path)],
+        cwd=Path(__file__).parent,
+        env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
