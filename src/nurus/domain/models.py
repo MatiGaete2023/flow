@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import uuid4
 
@@ -51,16 +50,3 @@ class Product:
     issues: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     source_snapshot_hash: str = ""
-
-    def mark_ready(self) -> None:
-        """Solo los errores de contenido bloquean el producto.
-
-        Un correo sin destinatario puede seguir listo para guardarse como borrador,
-        porque NuRus nunca envía correos y el destinatario puede completarse durante
-        la revisión humana en Outlook.
-        """
-        self.status = ProductStatus.READY if not self.issues else ProductStatus.BLOCKED
-
-
-def utc_now() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
