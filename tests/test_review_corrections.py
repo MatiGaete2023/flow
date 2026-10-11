@@ -45,11 +45,11 @@ def test_excel_limit_checked_before_cell_assignment(text, valid):
     book = Workbook()
     sheet = book.active
     if valid:
-        append_literal_row(sheet, ['=1+1', text], row_number=1)
+        append_literal_row(sheet, ['=1+1', text])
         assert sheet['B1'].value == text and sheet['A1'].data_type == 's'
     else:
         with pytest.raises(ValueError, match='UTF-16'):
-            append_literal_row(sheet, [text], row_number=1)
+            append_literal_row(sheet, [text])
         assert sheet._cells == {}
     book.close()
 

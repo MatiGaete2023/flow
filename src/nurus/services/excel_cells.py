@@ -14,14 +14,15 @@ def validate_excel_text(value: object) -> None:
         )
 
 
-def append_literal_row(sheet: Worksheet, values: Iterable[object], *, row_number: int) -> None:
-    """Índices conocidos, texto literal y validación antes de mutar la hoja."""
+def append_literal_row(sheet: Worksheet, values: Iterable[object]) -> None:
+    """Agrega una fila al final con texto literal (nunca fórmula), validando antes de mutar la hoja."""
     values = list(values)
     for value in values:
         validate_excel_text(value)
     cells = []
     for column, value in enumerate(values, 1):
-        cell = Cell(sheet, row=row_number, column=column, value=value)
+        # Worksheet.append fija la fila definitiva de cada celda.
+        cell = Cell(sheet, row=1, column=column, value=value)
         if isinstance(value, str):
             cell.data_type = 's'
         cells.append(cell)

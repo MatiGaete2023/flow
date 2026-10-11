@@ -17,8 +17,8 @@ def _book(sheets, destination):
             sheet.append(headers)
             from nurus.services.excel_cells import append_literal_row
 
-            for number, row in enumerate(rows, 2):
-                append_literal_row(sheet, row, row_number=number)
+            for row in rows:
+                append_literal_row(sheet, row)
             format_sheet(sheet, headers)
         content = workbook_bytes(book)
         write_new_file(destination, lambda p: Path(p).write_bytes(content))
