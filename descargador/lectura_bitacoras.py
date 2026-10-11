@@ -506,7 +506,6 @@ class DiaryRunner:
                 'COD_Etapa': item['etapa'],
                 'FLG_MejorNinez': item['antiguo'],
             }
-            session.persistir(lazy=True)
             if record['clave'] not in session.old and session.openings >= MAX_LECTURAS_POR_LOTE:
                 record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
                 raise LimiteLecturas(
@@ -573,14 +572,20 @@ class DiaryRunner:
         current_keys = {r['clave'] for r in state['registros']}
         retained = {r['clave']: r for r in session.previous_records if r['clave'] not in current_keys}
         state['anteriores_no_reenumeradas'] = list(retained.values())
-        session.persistir()
-        # Archivo independiente para soporte técnico sin datos judiciales de NNA.
-        write(session.folder / 'diagnostico_bitacoras.json', anonymous_diagnostic(state))
-        if session.locked:
-            try:
-                self.bridge.call('unlock', timeout=8)
-            except Exception:
-                pass
+        if state.get('estado') == 'EN_CURSO':
+            # Error no previsto (p. ej. disco): el lote nunca queda «en curso» al cerrar.
+            state['estado'] = 'INCOMPLETA'
+        try:
+            session.persistir()
+            # Archivo independiente para soporte técnico sin datos judiciales de NNA.
+            write(session.folder / 'diagnostico_bitacoras.json', anonymous_diagnostic(state))
+        finally:
+            # La pestaña SITFA se desbloquea aunque falle la escritura local.
+            if session.locked:
+                try:
+                    self.bridge.call('unlock', timeout=8)
+                except Exception:
+                    pass
 
     def _resultado(self, session):
         state, folder, manifest = session.state, session.folder, session.manifest
