@@ -102,3 +102,25 @@ def test_descarga_paginada_espera_la_misma_pausa_entre_paginas(monkeypatch, tmp_
     BatchRunner(FakeBridge(total=3), CATALOG, lambda *a: None, Gate(), pause=0.7).run(
         Batch(('49',), ('1',), ('Espera',)), tmp_path)
     assert seen == [0.7] and waits.count(0.7) == 2
+
+
+class EsperaRegistrada(threading.Event):
+    def __init__(self):
+        super().__init__()
+        self.esperas = []
+
+    def wait(self, timeout=None):
+        self.esperas.append(timeout)
+        return False
+
+
+def test_pausa_entre_consultas_y_entre_paginas(tmp_path):
+    from lotes import BatchRunner
+    from test_lotes import CATALOG, FakeBridge
+    cancel = EsperaRegistrada()
+    resultado = BatchRunner(FakeBridge(), CATALOG, lambda *a: None, cancel, pause=0.5).run(
+        Batch(('49',), ('1', '4'), ('Espera', 'Cumplimiento')), tmp_path)
+    paginas = sum(item['paginas'] for item in resultado)
+    # Una espera antes de cada página n>1 de cada consulta y otra antes de cada consulta salvo la primera.
+    assert cancel.esperas == [0.5] * ((paginas - len(resultado)) + (len(resultado) - 1))
+
