@@ -1,0 +1,84 @@
+{
+  "commit": "98f9cb0b8dea3cc7fa93c0b6e9449475ecce0a45",
+  "base": "5ac7385cdf902d1d8c859e45334b8287d6933916",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "805 aprobadas; mínimo 796; base 796; código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "240 aprobadas; mínimo 240; base 240; código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 805,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "codigo": 0,
+      "medicion_valida": true
+    },
+    "descargador": {
+      "aprobadas": 240,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "codigo": 0,
+      "medicion_valida": true
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "98f9cb0b8dea3cc7fa93c0b6e9449475ecce0a45",
+    "arbol_git": "00148db3e588f6341984268aa92c6cd6e4435ff7",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "98f9cb0b8dea3cc7fa93c0b6e9449475ecce0a45",
+    "arbol_git": "00148db3e588f6341984268aa92c6cd6e4435ff7",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
+  "veredicto": "PASA"
+}
