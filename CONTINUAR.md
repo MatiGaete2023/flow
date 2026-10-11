@@ -9,7 +9,8 @@ CI Windows y compilación aprobadas en `14f679d`; Actions vuelve a funcionar.
 
 ## Revisión actual
 
-WP-63 audita y corrige la versión integrada en `wp/auditoria-refactor-20261011`.
+WP-63 corrige la versión integrada: [PR #34](https://github.com/MatiGaete2023/flow/pull/34),
+rama `wp/auditoria-refactor-20261011`.
 Reporte: [REPORTE_REVISION_20261011.md](docs/implementacion/REPORTE_REVISION_20261011.md).
 Verificación local PASA en `473175c`: Asistente 767/11/6 xfail; Descargador 235/62; golden17.
 La ficha registra evidencia y siguiente acción; no equivale a aceptación de uso real.

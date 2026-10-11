@@ -18,7 +18,7 @@
   "ejecutor": "Codex /root con subagentes de apoyo",
   "tomado": "11 de octubre de 2026",
   "rama": "wp/auditoria-refactor-20261011",
-  "pr": null,
+  "pr": 34,
   "verificacion": "PASA en 473175c25b24e1d8f7fb3163ed95b1d3076443e9: Asistente 767 aprobadas/11 omitidas/6 xfail estrictos; Descargador 235 aprobadas/62 subpruebas; 9 controles PASA, golden17 y procedencia limpia. Evidencia: docs/implementacion/verificacion/WP-63.json. CI Windows pendiente en el PR.",
   "revision": null,
   "auditoria": null,

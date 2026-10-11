@@ -2,7 +2,8 @@
 
 **Resultado:** la revisión se implementa en WP-63, rama `wp/auditoria-refactor-20261011`, sobre
 `2cf8ca893e85a0203b1c051026b87f16ff6be964`. Los errores descritos se reprodujeron con datos ficticios y se corrigieron
-con regresiones. Motor, umbrales, textos tradicionales y golden permanecen intactos. No se declara aceptación de uso real.
+con regresiones. [PR #34](https://github.com/MatiGaete2023/flow/pull/34), en borrador para revisión E3.
+Motor, umbrales, textos tradicionales y golden permanecen intactos. No se declara aceptación de uso real.
 
 ## 1. Estado comprobado al retomar
 
