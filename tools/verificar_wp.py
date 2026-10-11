@@ -83,6 +83,7 @@ def pytest_counts(args):
         "omitidas": counts.get("skipped", 0),
         "fallidas": sum(counts.get(key, 0) for key in ("failed", "error", "errors", "subtests failed")),
         "subpruebas": counts.get("subtests passed", 0),
+        "xfail": counts.get("xfailed", 0),
         "codigo": code,
         "medicion_valida": bool(valid),
     }
@@ -503,6 +504,19 @@ def public_provenance(value):
     return {key: value[key] for key in ("commit", "arbol_git", "cambios_locales")} if value else None
 
 
+def suite_report(value):
+    """Publish diagnostic metrics, never subprocess output or arbitrary fields."""
+    value = value if isinstance(value, dict) else {}
+    result = {
+        key: value.get(key) if nonnegative(value.get(key)) else None
+        for key in ("aprobadas", "omitidas", "fallidas", "subpruebas", "xfail")
+    }
+    result["codigo"] = value.get("codigo") if type(value.get("codigo")) is int else None
+    measured = value.get("medicion_valida", True)
+    result["medicion_valida"] = measured if type(measured) is bool else False
+    return result
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description="Verificación estándar de un WP.")
     parser.add_argument("--linea-base", action="store_true")
@@ -544,6 +558,7 @@ def main(argv):
         "commit": now.get("commit", "NO_DISPONIBLE"),
         "base": reference.get("commit", "NO_DISPONIBLE") if isinstance(reference, dict) else "NO_DISPONIBLE",
         "controles": checks,
+        "suites": {suite: suite_report(now.get(suite)) for suite in ("asistente", "descargador")},
         "procedencia_inicio": public_provenance(before),
         "procedencia_fin": public_provenance(after),
         "procedencia_verificada": eligible,
