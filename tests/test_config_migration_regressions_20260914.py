@@ -31,3 +31,21 @@ def test_email_migration_is_idempotent_after_repair(tmp_path):
     second = Configuration(conf.directory)
 
     assert second.data['correos']['plantillas'] == snapshot
+
+
+def test_missing_text_key_is_added_from_base_without_touching_others(tmp_path, monkeypatch):
+    import json
+    from nurus.personal import config as config_module
+
+    monkeypatch.setattr(config_module, 'user_directory', lambda: tmp_path)
+    first = config_module.Configuration(tmp_path)
+    data = json.loads(first.path.read_text(encoding='utf-8'))
+    scope = next(s for s in data['textos'] if not s.startswith('_'))
+    removed, kept = list(data['textos'][scope])[:2]
+    base_text = data['textos'][scope][removed]['texto']
+    del data['textos'][scope][removed]
+    data['textos'][scope][kept]['texto'] = data['textos'][scope][kept]['texto'] + ' '
+    first.path.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+    loaded = config_module.Configuration(tmp_path)
+    assert loaded.data['textos'][scope][removed]['texto'] == base_text
+    assert loaded.data['textos'][scope][kept]['texto'] == data['textos'][scope][kept]['texto']

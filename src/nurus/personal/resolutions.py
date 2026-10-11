@@ -14,6 +14,7 @@ from nurus.rus.util import tribunal
 from nurus.rus.columns import normalize
 from nurus.services.file_output import write_new_file
 from .outputs import value, word_values, template_variables, fill_docx
+from .work import _explicit as _has_explicit_value
 
 
 KINDS = ('PC_IE', 'PC_INFO', 'NOMENCL')
@@ -28,12 +29,8 @@ def kind_code(value):
     raw = str(value or '').strip()
     upper = raw.upper()
     for code in KINDS:
-        if (
-            upper == code
-            or upper.startswith(code + ' ')
-            or upper.startswith(code + ' —')
-            or upper.startswith(code + ' -')
-        ):
+        # «PC_IE —», «PC_IE -» y «PC_IE texto» empiezan todos por código + espacio.
+        if upper == code or upper.startswith(code + ' '):
             return code
     return resolution_kind(value)
 
@@ -64,14 +61,6 @@ class Project:
 def join_names(values):
     values = list(dict.fromkeys(str(v).strip() for v in values if str(v).strip()))
     return values[0] if len(values) == 1 else ', '.join(values[:-1]) + ' y ' + values[-1] if values else ''
-
-
-def _has_explicit_value(value):
-    if value is None:
-        return False
-    if isinstance(value, str):
-        return bool(value.strip())
-    return True
 
 
 def resolution_kind(value):

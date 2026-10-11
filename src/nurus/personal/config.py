@@ -261,6 +261,24 @@ def validate(cfg):
     emails(cfg['correos'].get('cc_adicional', ''))
 
 
+def complete_texts(cfg):
+    """Agrega con su texto base las claves que una configuración anterior no tiene; nunca cambia las existentes.
+
+    Sin esto, una clave nueva en textos_base.json haría fallar validate() antes de cualquier migración.
+    """
+    added = []
+    textos = cfg.setdefault('textos', {})
+    for scope, entries in defaults()['textos'].items():
+        if scope.startswith('_'):
+            continue
+        current = textos.setdefault(scope, {})
+        for key, entry in entries.items():
+            if key not in current:
+                current[key] = deepcopy(entry)
+                added.append(scope + '.' + key)
+    return added
+
+
 class Configuration:
     def __init__(self, directory=None):
         self.directory = Path(directory) if directory else user_directory()
@@ -270,11 +288,14 @@ class Configuration:
             self.save(defaults(self.contacts_directory))
         try:
             self.data = json.loads(self.path.read_text(encoding='utf-8'))
+            added = complete_texts(self.data)
             validate(self.data)
         except Exception as exc:
             raise ValueError(
                 f'Configuración no utilizable: {self.path}. Conserva el archivo y recupera su copia .bak. Detalle: {exc}'
             ) from exc
+        if added:
+            self.save(self.data)
         # Sin contactos locales y con el ejemplo ficticio cargado: la app pide importar el directorio real.
         self.contacts_missing = not contacts_file(self.contacts_directory).is_file()
 

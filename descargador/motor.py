@@ -103,7 +103,6 @@ LAJA_ESPERA = QueryProfile(
     "NUM_TotalEspera",
     "tablaEspera",
 )
-PROFILES = {p.key: p for p in (ORIGINAL, LAJA_FAE, LAJA_ESPERA)}
 ALLOWED_FIELDS = frozenset(
     """COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
 COD_Tribunal_sel TIP_Consulta COD_CentroResidencial COD_PlazoIntervencion TIP_Informe
@@ -112,7 +111,8 @@ COD_TipLitigante CHK_Consulta FEC_Inicio FEC_Fin irAccion NUM_PaginaEspera
 NUM_TotalEspera NUM_PaginaCumplimiento NUM_TotalCumplimiento NUM_PaginaInforme
 NUM_TotalInforme NUM_PaginaEgreso NUM_TotalEgreso""".split()
 )
-PAGINATION = frozenset(x for x in ALLOWED_FIELDS if x.startswith(("NUM_Pagina", "NUM_Total")))
+# NUM_Total solo existe en la pantalla de litigantes.
+PAGINATION = frozenset(x for x in ALLOWED_FIELDS if x.startswith(("NUM_Pagina", "NUM_Total"))) | {"NUM_Total"}
 COMMON_FIELDS = frozenset(
     "COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Tribunal_sel TIP_Consulta TIP_Causa ROL_Causa ERA_Causa RUT_Consulta RUT_DvConsulta CHK_Consulta FEC_Inicio FEC_Fin irAccion".split()
 )
@@ -127,7 +127,6 @@ SCREEN_FIELDS = {
         "FLG_Busqueda COD_TribunalActual GLS_TribunalActual busquedaPorTribunal TIP_Consulta COD_Tribunal_sel FEC_Inicio COD_Mes_sel COD_Anio_Sel CHK_Contrae irAccion".split()
     ),
 }
-PAGINATION = PAGINATION | frozenset({"NUM_Total"})
 
 
 class PocError(Exception):

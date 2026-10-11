@@ -266,8 +266,11 @@ class Work:
                 if key in index and index[key] != due:
                     self.warnings.append('Cruce duplicado: se usa la última fila según el perfil Asistente.')
                 index[key] = due
-        if self.mode == 'CUMPLIMIENTO' and (
-            not batch.cross_records or not all(batch.cross_mapping.get(k) for k in (*key_fields, 'vencimiento'))
+        # Paquete de captura: el cruce llega por registro (calendarios verificados), no como hoja 2.
+        if (
+            self.mode == 'CUMPLIMIENTO'
+            and cross_by_record is None
+            and (not batch.cross_records or not all(batch.cross_mapping.get(k) for k in (*key_fields, 'vencimiento')))
         ):
             self.cross_missing = True
             self.needs_cross = False
@@ -517,10 +520,13 @@ class Work:
             obj.rows.append(row)
         return obj
 
-    def save(self, directory):
+    def save(self, directory, *, snapshot=False):
+        """snapshot=True guarda una copia de respaldo sin cambiar la sesión principal (storage_directory),
+        donde los recibos de borradores y proyectos siguen persistiéndose."""
         directory = Path(directory)
         directory.mkdir(parents=True, exist_ok=True)
-        self.storage_directory = str(directory)
+        if not snapshot:
+            self.storage_directory = str(directory)
         source = directory / (self.source_hash + '.bin')
         from .session import archive_bytes
 

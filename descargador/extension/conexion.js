@@ -35,7 +35,7 @@ async function bridge(path,body) {
   } catch (error) {throw failure(error?.name==="TimeoutError"?"LOCAL_TIMEOUT":"LOCAL_UNREACHABLE");}
   let data;
   try {data=await response.json();} catch (_) {throw failure("LOCAL_PROTOCOL");}
-  if (!response.ok) throw failure(["CONNECTION_CODE","EXTENSION_ORIGIN","EXTENSION_CHANGED"].includes(data?.error)?data.error:"LOCAL_PROTOCOL");
+  if (!response.ok) throw failure(["CONNECTION_CODE","EXTENSION_ORIGIN","EXTENSION_CHANGED","TASK_EXPIRED"].includes(data?.error)?data.error:"LOCAL_PROTOCOL");
   return data;
 }
 async function inject(command,payload={}) {
@@ -123,7 +123,8 @@ byId("connect").addEventListener("click",async()=>{
         const code=safeCode(error,"SITFA_TASK");
         result={id:task.id,ok:false,error:code};status(messages[code]);
       }
-      await bridge("/complete",result);
+      // Python ya dejó de esperar esta tarea (plazo vencido): la respuesta tardía se descarta sin cortar la conexión.
+      try {await bridge("/complete",result);} catch (error) {if (error?.code!=="TASK_EXPIRED") throw error;}
       busy=false;byId("disconnect").disabled=false;
     }
   } catch (error) {

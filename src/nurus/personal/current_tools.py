@@ -107,9 +107,12 @@ def confirm_drafts(app, drafts, excluded=()):
     ).pack(pady=10)
 
     ttk.Label(win, text='Se crearán borradores en Outlook. Revisa destinatarios, nómina, cuerpo y archivos.').pack()
-    ttk.Button(win, text='Confirmar y guardar borradores', command=lambda: (accepted.append(True), win.destroy())).pack(
-        pady=12
-    )
+    buttons = ttk.Frame(win)
+    buttons.pack(pady=12)
+    ttk.Button(
+        buttons, text='Confirmar y guardar borradores', command=lambda: (accepted.append(True), win.destroy())
+    ).pack(side='left', padx=4)
+    ttk.Button(buttons, text='Cancelar', command=win.destroy).pack(side='left', padx=4)
     win.grab_set()
     app.wait_window(win)
     return bool(accepted)

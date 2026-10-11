@@ -184,3 +184,39 @@ def test_existed_in_base_lee_el_archivo_de_la_linea_base(tmp_path, monkeypatch):
     assert not any(known in problem for problem in problems)
     assert any(invented in problem for problem in problems)
     assert any(absent_file in problem for problem in problems)
+
+
+def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
+    import importlib.util
+    import io
+    import zipfile
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    # El dígito verificador se calcula aquí: el archivo de prueba no contiene un RUT válido literal.
+    rut = '12345678-' + ids.check_digit('12345678')
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as book:
+        book.writestr('xl/sharedStrings.xml', '<t>RUT ' + rut + '</t>')
+    session = tmp_path / 'abc.bin'
+    session.write_bytes(buffer.getvalue())
+    script = tmp_path / 'instalar.ps1'
+    script.write_text('$rut = "' + rut + '"', encoding='utf-8')
+    image = tmp_path / 'logo.png'
+    image.write_bytes(b'\x89PNG\x00\x00')
+    found = {name: text for path in (session, script, image) for name, text in ids.texts(path)}
+    assert any(rut in text for name, text in found.items() if '.bin!' in name)
+    assert any(rut in text for name, text in found.items() if name.endswith('.ps1'))
+    assert not any(name.endswith('.png') for name in found)
+
+
+def test_check_real_ids_decodes_utf16_and_cp1252():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    rut = '12345678-' + ids.check_digit('12345678')
+    assert rut in ids.decode_text(('Año ' + rut).encode('utf-16'))
+    assert rut in ids.decode_text(('Año ' + rut).encode('cp1252'))

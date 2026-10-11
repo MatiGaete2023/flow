@@ -1273,8 +1273,12 @@ class Application:
                 event = self.events.get_nowait()
             except queue.Empty:
                 break
-            if not self.process_event(*event):
-                return
+            try:
+                if not self.process_event(*event):
+                    return
+            except Exception as exc:
+                # Un evento defectuoso no detiene la cola: los siguientes (p. ej. idle) liberan la ventana.
+                self.status.set(f'No se pudo completar «{event[0]}»: {exc}')
         self.root.after(100, self.poll)
 
 

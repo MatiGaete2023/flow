@@ -125,10 +125,3 @@ def map_columns(headers: Iterable[str], mode: Mode | str) -> dict[str, str]:
 
 def map_cross_columns(headers: Iterable[str]) -> dict[str, str]:
     return _map(headers, H2_COLUMNS)
-
-
-def has_full_cross_mapping(headers: Iterable[str]) -> bool:
-    try:
-        return set(map_cross_columns(headers)) == set(H2_COLUMNS)
-    except ColumnMappingError:
-        return False

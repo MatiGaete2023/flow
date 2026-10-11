@@ -148,7 +148,7 @@ def export_capture(
                 originals[name] = inside(lot.folder, source['archivo']).read_bytes()
             else:
                 name = source['archivo']
-            mode = table_mode(selection) or ('EGRESADOS' if selection.get('tab') == 'Egreso' else 'OTRO')
+            mode = table_mode(selection) or ('EGRESADOS' if selection.get('tab') in ('Egresados', 'Egreso') else 'OTRO')
             for number, values in rows:
                 normalized = {h: literal(v) for h, v in zip(headers, values)}
                 raw = {h: literal(v) for h, v in zip(raw_headers, raw_index[number])}

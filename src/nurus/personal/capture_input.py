@@ -144,7 +144,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         if number % 100 == 0:
             checkpoint()
             progress('Construyendo copia Excel', number - 1, len(canonical))
-        append_literal_row(sheet, (row.get(k, '') for k in headers), row_number=number)
+        append_literal_row(sheet, (row.get(k, '') for k in headers))
     sheet.freeze_panes = 'A2'
     sheet.auto_filter.ref = sheet.dimensions
     out = BytesIO()
@@ -218,13 +218,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     from .capture_findings import updated_contexts
 
     candidate.capture_context = updated_contexts(candidate, candidate.rows)
-    candidate.warnings.append(
-        'Fuentes faltantes: '
-        + ', '.join(
-            k + ': ' + v
-            for k, v in capture.manifest['table_states'].items()
-            if v not in ('COMPLETA', 'VACIA_COMPROBADA')
-        )
-    )
+    missing = [
+        k + ': ' + v for k, v in capture.manifest['table_states'].items() if v not in ('COMPLETA', 'VACIA_COMPROBADA')
+    ]
+    if missing:
+        candidate.warnings.append('Fuentes faltantes: ' + ', '.join(missing))
     progress('Paquete validado; trabajo candidato disponible', len(records), len(records))
     return candidate

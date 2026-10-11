@@ -4,7 +4,6 @@ from contextvars import ContextVar
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from threading import Event
-from time import perf_counter
 
 _CURRENT = ContextVar('csmp_operation', default=None)
 
@@ -45,15 +44,3 @@ def checkpoint():
     active = _CURRENT.get()
     if active:
         active.checkpoint()
-
-
-@contextmanager
-def phase(label):
-    progress(label)
-    started = perf_counter()
-    try:
-        yield
-    finally:
-        active = _CURRENT.get()
-        if active:
-            active.emit(('timing', str(label), perf_counter() - started, None))

@@ -81,10 +81,11 @@ def load_sources(folders, partial=False):
         if label == 'Bitácoras':
             continue
         if label == 'Conjunto':
-            from flujo_csmp import source_folder
+            from flujo_csmp import FLOW_DONE, source_folder
 
             data = read_json(folder / 'flujo.json')
-            if data.get('estado') not in ('VALIDADA', 'COMPLETA') and not partial:
+            # VALIDADA/COMPLETA: conjuntos de versiones anteriores.
+            if data.get('estado') not in (FLOW_DONE, 'VALIDADA', 'COMPLETA') and not partial:
                 raise m.PocError(
                     'El conjunto está incompleto. Permite resultados incompletos para conservar su alcance explícito.'
                 )

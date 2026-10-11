@@ -11,13 +11,15 @@ import motor as m
 
 class JointWindow(tk.Toplevel):
     def __init__(self, app):
+        # Leer antes de crear la ventana: un flujo.json ausente o dañado no deja una ventana vacía registrada.
+        root_folder = Path(app.last_folder).resolve()
+        data = read_json(root_folder / 'flujo.json')
         super().__init__(app.root)
         self.busy = False
         app.result_windows.append(self)
         self.title('Resultados · descarga conjunta CSMP')
         self.geometry('820x560')
-        self.root_folder = Path(app.last_folder).resolve()
-        data = read_json(self.root_folder / 'flujo.json')
+        self.root_folder = root_folder
         ttk.Label(self, text=data['estado'], wraplength=760).pack(anchor='w', padx=12, pady=10)
         scope = data['seleccion']
         ttk.Label(

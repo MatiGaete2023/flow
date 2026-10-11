@@ -539,7 +539,9 @@ def parse_day(value):
 def export_csv(lot):
     outputs = []
     schemas = {}
-    for query, selection, item, headers, rows in tables(lot):
+    # Una sola lectura verificada de los XLS; cada CSV filtra sobre la misma lista.
+    data = list(tables(lot))
+    for query, selection, item, headers, rows in data:
         key = (table_mode(selection) or selection.get('screen') or 'Datos', headers)
         schemas.setdefault(key, len(schemas) + 1)
     for (family, headers), number in schemas.items():
@@ -548,7 +550,7 @@ def export_csv(lot):
             with path.open('w', encoding='utf-8-sig', newline='') as output:
                 writer = csv.writer(output, delimiter=';')
                 writer.writerow((*headers, *ORIGIN))
-                for query, selection, item, current, rows in tables(lot):
+                for query, selection, item, current, rows in data:
                     if (table_mode(selection) or selection.get('screen') or 'Datos', current) != expected:
                         continue
                     for n, row in rows:
