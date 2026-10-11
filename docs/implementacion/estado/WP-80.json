@@ -10,8 +10,8 @@
   "rama": "wp/80-auditoria",
   "pr": 35,
   "verificacion": "PASA tras fusionar feat con WP-63 (verificar_wp de WP-63, 11 de octubre de 2026): asistente 796, descargador 240, inventario sin bajas",
-  "revision": "E3 session_016DC9qxvuqT6mr91tHBaw7b: CAMBIOS (6) → aplicados en 168ce0d; GUI G-1/G-2/G-6 en 92d7ba8",
-  "auditoria": "E3: NO CONFORME formal (E4 subsanado; pre-WP-80 y regla 11 pendientes de usuario/Orquestador)",
+  "revision": "E3 (session_016DC9qxvuqT6mr91tHBaw7b): APROBADO en 672146f; pendiente la revisión del diff de fusión con WP-63 (95991b6)",
+  "auditoria": "E3: CONFORME condicionada a pre-WP-80 y al formato de integración. El usuario decidió el 11 de octubre de 2026 integrar sin etiqueta (rollback con git revert del squash).",
   "integrado_en": null,
   "notas": [
     "Pedido expreso del usuario (11 de octubre de 2026). Revisión y auditoría E3 por otra raíz de agente, también pedida por el usuario.",
