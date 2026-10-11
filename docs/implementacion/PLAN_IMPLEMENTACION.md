@@ -134,20 +134,17 @@ Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus depe
 
 ## Revisión del conjunto integrado — 11 de octubre de 2026
 
-El usuario pidió auditar lo integrado, corregir errores, simplificar y actualizar el repositorio.
-El estado operativo parte de `2cf8ca8` después de la purga; los SHA de inicio se conservan como referencia histórica.
-WP-63 implementa esa revisión con archivos y pruebas propios; no altera reglas, textos, decisiones ni golden.
-[Reporte de revisión](REPORTE_REVISION_20261011.md) y [ficha WP-63](wp/WP-63.md).
+WP-63/#34 y WP-80/#35 integrados. Continuación: WP-81 integrados;
+WP-82, WP-83 pendientes de integración.
+Usuario: «Autorizar excepción E3 para #36–38». Sin aprobación de otra raíz; no extender a #39.
+Línea base después de la integración actual: 810/240; evidencia en verificacion/WP-81.json.
+G-5 corregido en #39, pendiente de actualización a feat y revisión E3 propia.
+WP-17: dos etiquetas antiguas eliminadas; refs de PR/cachés requieren Soporte GitHub.
 
-WP-63 y WP-80 están integrados; WP-81 continúa la revisión propia sobre `286c28f`.
-[Ficha WP-81](wp/WP-81.md) y [reporte](REPORTE_WP81.md): herramientas y traspaso, sin alterar E3.
-
-Orden vigente: verificar y revisar WP-81; completar residuos de WP-17; recibir resultados/acta de WP-02;
-contrastar 10 ingresos e integrar WP-50; cerrar WP-70 con acta final. WP-02, WP-17, WP-50 y WP-63 son
-**dependencias funcionales del cierre**, no meros conflictos de archivo. Cada commit posterior respeta
-`ruff format --check`; WP-61 ya integrado no exime a las correcciones futuras del formato.
-Los seis conflictos R-T de WP-60 constan en el estado; se conservan xfail estricto y motor intacto.
-La excepción E3 anterior no se extiende a esta revisión: PR borrador y revisión cruzada antes de integrar.
+Orden vigente: integrar los PR autorizados pendientes y regenerar línea base tras cada uno;
+revisar #39; confirmar limpieza externa; recibir resultados/acta WP-02; contrastar diez ingresos
+WP-50 y cerrar WP-70 tras acta. Dependencias funcionales de WP-70 conservadas exactamente.
+Sin main, release, force ni cambios de motor/textos. Seis xfail estrictos, golden17 intacto.
 
 ## Paquetes de trabajo
 
