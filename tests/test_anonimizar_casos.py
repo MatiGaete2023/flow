@@ -97,6 +97,16 @@ def hojas_con_nombre(wb, ws):
     wb.create_sheet('Pérez')
 
 
+def hoja_extra(encabezados, *filas):
+    def construir(wb, ws):
+        base(ws)
+        otra = wb.create_sheet('Extra')
+        otra.append(encabezados)
+        for fila in filas:
+            otra.append(fila)
+    return construir
+
+
 CASOS = {
     'encabezado_en_fila_20': (lambda wb, ws: base(ws, filas_titulo=19), [NOMBRE, 'Ñuñez']),
     'texto_libre_variantes': (lambda wb, ws: base(ws, obs=(
@@ -120,6 +130,26 @@ CASOS = {
     'vinculo_externo': (vinculo_externo, ['Lucas Arriagada Vidal', 'lucas.arriagada', 'Arriagada']),
     'run_numerico_en_hoja_secundaria': (hoja_secundaria, ['Ñuñez Pérez José', rut(15_284_731, '{n}{dv}')]),
     'hojas_con_nombre': (hojas_con_nombre, ['Ñuñez', 'Pérez']),
+    # Revisión del 11 de octubre de 2026: formatos y lugares que antes pasaban sin cambio.
+    'rut_sin_dv_guion_largo_y_espacios': (lambda wb, ws: base(ws, obs=(
+        'RUT 15.284.731; ' + rut(16_345_678, '{p}\u2013{dv}') + '; ' + rut(17_456_789, '{n}').replace('17456789', '17 456 789')
+        + '-' + check_digit(17_456_789))),
+        ['15.284.731', rut(16_345_678, '{p}\u2013{dv}'), '17 456 789']),
+    'telefono_en_grupos_de_tres': (lambda wb, ws: base(ws, obs='llamar al 912 345 678'), ['912 345 678']),
+    'numeros_en_celdas_numericas': (hoja_extra(['RIT', 'NOMBRE', 'TEL.', 'R.U.N.', 'CONTACTO'],
+                                               ['P-2-2026', 'Persona Dos', 912345678, 15_284_731, 987654321]),
+                                    ['912345678', '15284731', '987654321']),
+    'curador_ad_litem': (hoja_extra(['RIT', 'NOMBRE', 'CUR. AD LITEM'], ['P-3-2026', 'Persona Tres', 'Rosa Quintanilla Soto']),
+                         ['Quintanilla']),
+    'encabezado_sin_nombre_ni_rut': (hoja_extra(['N° RIT', 'NNA', 'CURADOR'], ['P-4-2026', 'Rosa Quintanilla', 'Ignacio Valdebenito']),
+                                     ['Quintanilla', 'Valdebenito']),
+    'encabezado_run_nna': (hoja_extra(['CAUSA', 'RUN NNA', 'NNA'], ['C-5-2026', rut(15_284_731), 'Rosa Quintanilla']),
+                           ['Quintanilla', rut(15_284_731)]),
+    'telefono_en_columna_protegida': (hoja_extra(['RIT', 'NOMBRE', 'DERIVACION'], ['P-6-2026', 'Persona Seis', 'Derivó fono 9 1234 5678']),
+                                      ['1234 5678']),
+    'curador_institucional_con_abogado': (lambda wb, ws: base(ws, curador='Institución: Corp X (abog. Ignacio Valdebenito)'),
+                                          ['Valdebenito']),
+    'rit_con_barra': (lambda wb, ws: base(ws, obs='causa C-2345/2023'), ['2345/2023']),
 }
 
 
