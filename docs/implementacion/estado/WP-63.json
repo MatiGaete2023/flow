@@ -1,0 +1,31 @@
+{
+  "titulo": "Auditoría del conjunto integrado y refactorización correctiva",
+  "ola": 6,
+  "tipo": "M/C",
+  "depende_de": [
+    "WP-00",
+    "WP-14",
+    "WP-15",
+    "WP-16",
+    "WP-32",
+    "WP-41",
+    "WP-44",
+    "WP-51",
+    "WP-62"
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root con subagentes de apoyo",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/auditoria-refactor-20261011",
+  "pr": null,
+  "verificacion": "Pruebas focales y revisión de apoyo pasan; corrida completa pendiente antes de publicar el PR.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Alcance autorizado por la petición del usuario: auditar, corregir, simplificar y actualizar el repositorio y el plan.",
+    "Base limpia 2cf8ca893e85a0203b1c051026b87f16ff6be964. Medición previa: 592/11/6 xfail y 231/62; golden17 y controles PASA.",
+    "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar."
+  ]
+}

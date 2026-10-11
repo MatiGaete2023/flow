@@ -21,15 +21,16 @@ No hay otras puertas. Las pruebas automáticas no reemplazan el acta, y el acta 
 
 ## Decisiones del usuario (estado en docs/implementacion/ESTADO.json → decisiones)
 - Motor de reglas vigente: personal/motor (N1: el otro no participa en la app).
-- D1 purga de historial: pendiente.
-- D2 casos probados en uso real: pendiente.
+- D1 purga de historial: ramas reescritas el 11 de octubre; faltan dos etiquetas antiguas y referencias de PR (WP-17).
+- D2 casos probados en uso real: «Ninguna todavía»; WP-02 espera resultados del usuario.
 - D3 retiro del inspector y diario de registro RUS: «Sí, retirarlos».
 - D4 retención local: «60 días y hasta 10 sesiones anteriores».
-- D5 cronología CT-01/CT-02 «solo mostrar» y horizonte: pendiente (propuesta: 4 meses).
-- D6 XLSX consolidado dentro del ZIP: pendiente.
-- D7 fusión a main al cierre: pendiente.
+- D5 cronología CT-01/CT-02: «Sí, horizonte de 4 meses»; PR #33 preparado, pendiente del acta de 10 ingresos y WP-02.
+- D6 XLSX consolidado dentro del ZIP: «Sí, solo el consolidado»; implementado con casilla en el Descargador.
+- D7 fusión a main: «Sí, tras el acta final»; no se fusiona ni publica una release antes del acta.
 - D8 consultas 2.7.5: «No observé esos fallos»; se descarta la variante reaplicar tras Envio() de WP-33.
-- D9 solicitud de antecedentes (precargar o retirar): pendiente.
+- D9 solicitud de antecedentes: «Retirar botón»; retirado.
+- Decisiones adicionales del 11 de octubre: quitar apóstrofo visible preservando texto seguro; conservar cc_obligatorio; motor intacto.
 - Historia SITFA/PDF y reglas CT-03..10: fuera de alcance hasta nueva decisión.
 
 ## Documentos
