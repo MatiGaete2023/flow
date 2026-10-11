@@ -1,46 +1,11 @@
-"""Herramientas del trabajo actual: pendientes, revisión, diagnóstico y entrega."""
+"""Herramientas del trabajo actual: revisión, diagnóstico y entrega."""
 
 from pathlib import Path
 import json, os, sys
 from tkinter import messagebox, filedialog
 from .outputs import emails, CC
 from .product_checks import check_products
-from .product_state import stale
 from nurus.services.file_output import write_new_file
-
-
-def pending(work, drafts, projects):
-    tasks = []
-    if work:
-        for row in work.rows:
-            if row.excluded:
-                continue
-            tasks.extend(('Aviso', row.id, str(w)) for w in row.warnings)
-            if not row.review and row.observation:
-                tasks.append(('Revisión', row.id, 'Revisar observación propuesta'))
-    # Resultados y Pendientes deben conservar los mismos avisos antes de guardar.
-    # Un recibo saving/uncertain nunca acredita un borrador confirmado en Outlook.
-    for check in check_products(work, drafts, []):
-        if check.kind != 'Correo':
-            continue
-        for issue in check.issues:
-            kind = 'Contacto' if 'destinatario' in issue.lower() else 'Nómina' if 'nómina' in issue else 'Correo'
-            tasks.append((kind, check.target.subject, issue))
-        if work and not check.issues and check.state == 'Listo para revisar':
-            tasks.append(('Correo', check.target.subject, 'Revisar y guardar borrador'))
-    for project in projects:
-        if project.review_required or (work and stale(work, project)):
-            tasks.append(('Word', project.rit, 'Revisar/actualizar proyecto'))
-        elif work and not any(
-            item.get('kind') == 'word'
-            and item.get('state') == 'generated'
-            and set(project.record_ids).issubset(item.get('record_ids', []))
-            and item.get('type') == project.kind
-            and Path(item.get('path', '')).is_file()
-            for item in work.receipts.values()
-        ):
-            tasks.append(('Word', project.rit, 'Generar Word revisado'))
-    return tasks
 
 
 def summary(drafts):
