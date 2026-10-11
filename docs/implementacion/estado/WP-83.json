@@ -1,0 +1,27 @@
+{
+  "titulo": "Bloqueo de editores secundarios",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/83-bloqueo-editores-20261011",
+  "pr": null,
+  "verificacion": "Seis regresiones GUI PASA; verificación completa y Windows pendientes",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37.",
+    "Seis escenarios fallaron antes: editor manual, preferencias, dos tipos de ventana anidada, ventana cerrada y fallo parcial.",
+    "Bloqueo de controles editables existentes; Detener disponible, estados anteriores conservados. Sin pruebas retiradas ni nuevos skips/xfail.",
+    "Revisión propia no sustituye E3 ni actas de uso real."
+  ]
+}
