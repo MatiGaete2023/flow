@@ -258,13 +258,27 @@ class App(ctk.CTk):
         folder.mkdir(parents=True,exist_ok=True)
         self._open(folder)
 
+    SHORTCUT_CLASSES=('Entry','TEntry','Text','Spinbox','TSpinbox','TCombobox')
+
     def _bind_shortcuts(self):
-        self.bind_all('<Control-s>',self._shortcut_save)
-        self.bind_all('<Control-o>',self._shortcut_open)
-        self.bind_all('<Control-f>',self._shortcut_find)
-        self.bind_all('<F5>',self._shortcut_refresh)
         from .commands import show_palette
-        self.bind_all('<Control-k>',lambda event:(show_palette(self),'break')[1])
+        shortcuts={'<Control-s>':self._shortcut_save,'<Control-o>':self._shortcut_open,'<Control-f>':self._shortcut_find,
+                   '<F5>':self._shortcut_refresh,'<Control-k>':lambda event:(show_palette(self),'break')[1]}
+        for sequence,handler in shortcuts.items():
+            guarded=self._unless_modal(handler)
+            self.bind_all(sequence,guarded)
+            # Las clases de texto de Tk ya usan Ctrl+K (borrar hasta el final), Ctrl+O o Ctrl+F y corren antes
+            # que bind_all: sin esto, el atajo editaría el campo antes de ejecutarse.
+            for widget_class in self.SHORTCUT_CLASSES:self.bind_class(widget_class,sequence,guarded)
+
+    def _unless_modal(self,handler):
+        def run(event=None):
+            # Con un diálogo modal abierto (p. ej. la fecha de corte) los atajos no hacen nada.
+            grab=self.grab_current()
+            if grab is not None and grab is not self:return 'break'
+            handler(event)
+            return 'break'
+        return run
 
     def _shortcut_save(self,event=None):
         self._guard(self._save_session)
