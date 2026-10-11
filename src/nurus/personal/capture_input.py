@@ -33,6 +33,7 @@ MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite a
 # Tipos de registro que evalúa el motor tradicional; EGRESADOS/OTRO quedan sin evaluar.
 ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
 
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 

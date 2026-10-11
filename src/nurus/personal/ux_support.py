@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from nurus.rus.columns import normalize
-from .outputs import value, draft_fingerprint
+from .outputs import value, draft_fingerprint_for_display, draft_preview_scope
 from .resolutions import KINDS, resolution_kind
 
 
@@ -43,6 +43,7 @@ def _word_done(work, row_id):
     return False
 
 
+@draft_preview_scope()
 def _mail_state(work, row_id, drafts):
     prepared = False
     created = False
@@ -55,7 +56,8 @@ def _mail_state(work, row_id, drafts):
             continue
         # key registra el último guardado; no acredita texto o adjuntos editados después.
         try:
-            key = draft_fingerprint(draft)
+            # Presentación: no relee adjuntos sin cambios al recorrer la tabla (Outlook sí relee al guardar).
+            key = draft_fingerprint_for_display(draft)
         except (ValueError, OSError):
             # Las incidencias se muestran en Resultados; no bloquear la fila ni confirmar el guardado.
             continue

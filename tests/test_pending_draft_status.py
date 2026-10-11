@@ -104,3 +104,34 @@ def test_row_indicator_stays_prepared_after_recipient_becomes_invalid(work):
     indicators = product_indicators(work, row, [draft])
     assert 'Correo ✓' not in indicators
     assert 'Correo preparado' in indicators
+
+
+def test_row_selection_does_not_rehash_unchanged_attachments(tmp_path, monkeypatch):
+    # C1 (revisión integral): recorrer la tabla no relee los adjuntos de cada borrador en cada selección.
+    from pathlib import Path
+    from types import SimpleNamespace
+    from nurus.personal.outputs import Draft, draft_fingerprint
+    from nurus.personal.ux_support import product_indicators
+    from nurus.personal.work import Row
+
+    adjunto = tmp_path / 'nomina.xlsx'
+    adjunto.write_bytes(b'x' * 200_000)
+    fila = Row('r1', 2, {}, '', [], [], [], False, {})
+    borradores = [
+        Draft(f'S{i}', 'b', to='a@example.test', record_ids=['r1'], attachments=[str(adjunto)]) for i in range(5)
+    ]
+    for borrador in borradores:
+        borrador.key = draft_fingerprint(borrador)
+    work = SimpleNamespace(receipts={borradores[0].key: {'state': 'created'}}, output='')
+    lecturas = []
+    original = Path.read_bytes
+    monkeypatch.setattr(Path, 'read_bytes', lambda p: (lecturas.append(p), original(p))[1])
+    for _ in range(10):
+        product_indicators(work, fila, borradores)
+    assert len(lecturas) <= 1
+    from nurus.personal.ux_support import _mail_state
+
+    assert _mail_state(work, 'r1', borradores) == 'created'
+    # Un adjunto editado (otro tamaño y mtime) cambia la huella mostrada: ya no figura como guardado.
+    adjunto.write_bytes(b'y' * 200_001)
+    assert _mail_state(work, 'r1', borradores) == 'prepared'
