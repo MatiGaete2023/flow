@@ -54,7 +54,11 @@ def pytest_counts(args):
     def number(word):
         match = re.search(r"(\d+) " + word, tail)
         return int(match.group(1)) if match else 0
-    return {"aprobadas": number("passed"), "omitidas": number("skipped"), "fallidas": number("failed") + number("error"),
+    failed = number("failed") + number("error")
+    if code not in (0, 1) and not failed:
+        # Interrupción, error de recolección o caída al cerrar: no se cuenta como suite sana.
+        failed, tail = 1, f"{tail} (pytest terminó con código {code})"
+    return {"aprobadas": number("passed"), "omitidas": number("skipped"), "fallidas": failed,
             "subpruebas": number("subtests passed"), "codigo": code, "resumen": tail}
 
 
@@ -63,7 +67,10 @@ def count_real_ids():
     if not script.exists():
         return None
     code, out = run([PY, str(script)])
-    return sum(1 for line in out.splitlines() if "dígito verificador válido" in line)
+    found = sum(1 for line in out.splitlines() if "dígito verificador válido" in line)
+    if code != 0 and not found:
+        return None  # el script falló sin informar hallazgos: no se midió
+    return found
 
 
 def golden():
@@ -85,12 +92,16 @@ def restrictions():
     if not policy.exists() or 'MANDATORY_CC = "ucc_concepcion@pjud.cl"' not in policy.read_text(encoding="utf-8"):
         problems.append("policy.py no define MANDATORY_CC = ucc_concepcion@pjud.cl")
     registration = ROOT / "src" / "nurus" / "personal" / "registration.py"
+    # Sin registration.py (retirado en WP-22) no queda forma de escribir en RUS. Si vuelve, submit debe lanzar error.
     if registration.exists():
         tree = ast.parse(registration.read_text(encoding="utf-8"))
-        submit = next((n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "submit"), None)
-        body = [n for n in (submit.body if submit else []) if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))]
-        if submit and not (body and isinstance(body[0], ast.Raise)):
-            problems.append("registration.submit ya no lanza error al inicio")
+        submits = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "submit"]
+        if not submits:
+            problems.append("registration.py existe pero no se encontró submit: no se pudo medir")
+        for submit in submits:
+            body = [n for n in submit.body if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))]
+            if not (body and isinstance(body[0], ast.Raise)):
+                problems.append("registration.submit ya no lanza error al inicio")
     for path in (ROOT / "descargador" / "extension").glob("*.js"):
         if re.search(r"document\.cookie\s*[=;.)\[]", path.read_text(encoding="utf-8", errors="ignore")):
             problems.append(f"{path.relative_to(ROOT)} accede a document.cookie")
@@ -101,7 +112,9 @@ def ruff_count():
     if not shutil.which("ruff") and run([PY, "-m", "ruff", "--version"])[0] != 0:
         return None
     code, out = run([PY, "-m", "ruff", "check", "--select", "E9,F63,F7,F82", "--output-format", "concise", "src"])
-    return sum(1 for line in out.splitlines() if re.match(r"^src/.+:\d+:\d+:", line))
+    if code > 1:
+        return None  # configuración inválida o fallo de ruff: no se midió
+    return sum(1 for line in out.splitlines() if re.match(r"^src[\\/].+:\d+:\d+:", line))
 
 
 def unreachable_count():
@@ -148,8 +161,20 @@ def collected_nodeids(suite):
     return ids
 
 
-def removed_from_lists(paths):
-    """Lee las listas de nodos eliminados; devuelve conteos por suite y problemas (nodos que siguen presentes)."""
+def existed_in_base(node, commit):
+    """El nodo declarado existía en la línea base: su archivo y su función estaban en `commit`."""
+    if not commit:
+        return False
+    path, _, name = node.partition("::")
+    code, source = run(["git", "show", f"{commit}:{path}"])
+    function = name.split("::")[-1].split("[")[0]
+    return code == 0 and re.search(r"def\s+" + re.escape(function) + r"\s*\(", source) is not None
+
+
+def removed_from_lists(paths, commit=None):
+    """Lee las listas de nodos eliminados; devuelve conteos por suite y problemas.
+
+    Problemas: nodos que siguen presentes, nodos repetidos y nodos que no existían en la línea base."""
     removed = {"asistente": [], "descargador": []}
     for path in paths:
         for line in Path(path).read_text(encoding="utf-8").splitlines():
@@ -158,6 +183,10 @@ def removed_from_lists(paths):
                 removed["descargador" if node.startswith("descargador/") else "asistente"].append(node)
     problems = []
     for suite, nodes in removed.items():
+        problems += [f"{node} está repetido" for node in sorted({n for n in nodes if nodes.count(n) > 1})]
+        if commit:
+            problems += [f"{node} no existía en la línea base {commit}" for node in sorted(set(nodes))
+                         if not existed_in_base(node, commit)]
         if nodes:
             present = collected_nodeids(suite)
             problems += [f"{node} sigue presente" for node in nodes if node in present]
@@ -214,7 +243,7 @@ def main(argv):
         print("Falta la línea base: ejecuta primero --linea-base en la rama base.")
         return 1
     base = json.loads(BASE_FILE.read_text(encoding="utf-8"))
-    lists = removed_from_lists(args.lista_eliminadas) if args.lista_eliminadas else None
+    lists = removed_from_lists(args.lista_eliminadas, base.get("commit")) if args.lista_eliminadas else None
     checks = compare(now, base, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
     report = {"commit": now["commit"], "base": base["commit"], "controles": checks,
               "veredicto": "PASA" if all(c["resultado"] == "PASA" for c in checks) else "FALLA"}
