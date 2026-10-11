@@ -9,17 +9,18 @@
     }
   ],
   "decisiones": [],
-  "estado": "EN_REVISION",
+  "estado": "EN_VERIFICACION",
   "ejecutor": "Codex /root",
   "tomado": "11 de octubre de 2026",
   "rama": "wp/84-huellas-consulta-20261011",
   "pr": 39,
-  "verificacion": "PASA en 98f9cb0b8dea3cc7fa93c0b6e9449475ecce0a45: Asistente 805/11/6 xfail; Descargador 240/62. Nueve controles; procedencia limpia y estable; CI Windows en el PR.",
+  "verificacion": "Preparación original PASA 805/240; ensayo conjunto PASA 839/240. Actualización sobre feat 9fbb08c (línea base 830/240) en verificación; E3 propia pendiente.",
   "revision": null,
   "auditoria": null,
   "integrado_en": null,
   "notas": [
     "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
-    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat."
+    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat.",
+    "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82."
   ]
 }

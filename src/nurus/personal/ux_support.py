@@ -51,7 +51,14 @@ def _mail_state(work, row_id, drafts):
         if row_id not in getattr(draft, 'record_ids', []):
             continue
         prepared = True
-        key = getattr(draft, 'key', '') or draft_fingerprint(draft)
+        if not receipts:
+            continue
+        # key registra el último guardado; no acredita texto o adjuntos editados después.
+        try:
+            key = draft_fingerprint(draft)
+        except (ValueError, OSError):
+            # Las incidencias se muestran en Resultados; no bloquear la fila ni confirmar el guardado.
+            continue
         if receipts.get(key, {}).get('state') == 'created':
             created = True
     return 'created' if created else 'prepared' if prepared else ''

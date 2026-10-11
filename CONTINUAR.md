@@ -1,20 +1,16 @@
 # Continuar — 11 de octubre de 2026
 
-Base feat: `286c28f`. WP-63/#34 y WP-80/#35 integrados.
-#36–38: CI aprobada; ensayo conjunto en revisión/integracion-36-38-20261011.
-No hay revisión E3 de otra raíz; no se ha integrado el ensayo en feat.
+WP-63/#34 y WP-80/#35 integrados. WP-81, WP-82, WP-83 integrados en feat.
+Última integración: 4470ff32bb9d479f0ad4a6774948038bc6729c02; verificación posterior PASA 830/11/6 y 240/62.
+Línea base regenerada. Pendientes autorizados: ninguno de #36–38.
+Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39.
 
-WP-84: G-5, hashes de adjuntos compartidos solo durante consultas síncronas de lectura;
-identidad de guardado siempre fresca. [Ficha](docs/implementacion/wp/WP-84.md),
-[reporte](docs/implementacion/REPORTE_WP84.md). Verificación completa PASA en 98f9cb0: 805/11/6 y 240/62. E3 pendiente; CI en el PR.
+G-5: [PR #39](https://github.com/MatiGaete2023/flow/pull/39), código y CI aprobados;
+rama actualizada a feat 9fbb08c, documentos resueltos; verificar contra la línea base 830/240
+antes de revisar E3. No integrado.
 
-WP-17: etiquetas antiguas eliminadas por API y ls-remote sin etiquetas. 607 artefactos
-anteriores ya borrados. Referencias de PR/cachés pendientes de Soporte GitHub; no purga completa.
-
-1. E3 independiente; integrar #36–38 y WP-84 aprobados, resolver documentos, generar ESTADO.
-2. Verificar y regenerar línea base después de cada integración.
-3. Confirmación de Soporte GitHub para WP-17.
-4. Excel/Outlook reales y acta WP-02; diez ingresos WP-50; cierre WP-70 tras acta.
-
-Motor/textos/golden17 intactos; seis xfail estrictos. Sin main, release ni force.
-No publicar desde clones previos a purga. [Historial](docs/HISTORIAL.md).
+WP-17: etiquetas antiguas eliminadas; ramas nuevas sin RUT reales; 607 artefactos antiguos
+borrados. Referencias antiguas/cachés requieren Soporte GitHub. No se certifica purga completa.
+WP-02: pruebas reales Excel/Outlook y acta; WP-50: diez ingresos; WP-70: acta final antes de main.
+Motor/textos/golden17 intactos; seis xfail estrictos; Outlook Save-only y CC fijo.
+No force ni publicaciones desde clones anteriores a purga. [Historial](docs/HISTORIAL.md).
