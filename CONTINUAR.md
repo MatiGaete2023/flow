@@ -4,6 +4,28 @@
 **Rama base:** `feat/ejecucion-plan-20261008`. Cada WP usa una rama propia;
 solo el Orquestador integra después de verificación, revisión y auditoría.
 
+## Estado al cierre del 11 de octubre de 2026 (léelo primero)
+
+**El historial se reescribió (WP-17).** Todo clon, worktree o rama local anterior al 11 de octubre de 2026 tiene el
+historial viejo con datos reales: vuelve a clonar y nunca hagas push desde una copia antigua.
+
+- **Integrado en `feat`** (excepción a E3 autorizada por el usuario): #27, Codex #4, #8 y #11, #12–#32, más WP-61
+  (formato). `ESTADO.json` es una vista generada desde `docs/implementacion/estado/` (`tools/estado.py`, PASA). La
+  línea base se regeneró: asistente 592/11/6 xfail, descargador 231/62, identidades 0, enlaces rotos 0.
+- **Decisiones:** D1 (purga hecha), D3–D9 respondidas, D2 «Ninguna todavía».
+- **Pendientes del usuario:**
+  1. Borrar las etiquetas `pre-WP-12` y `pre-implementacion-20261009` (conservan el historial viejo).
+  2. Pedir a GitHub la eliminación de datos sensibles en las referencias de PR.
+  3. Borrar los artefactos de Actions previos.
+  4. Revisar *Billing › Actions*: la CI quedó sin runners desde la 01:44 UTC.
+- **Lo que falta del plan:**
+  - WP-02 (D2: casos probados en uso real).
+  - WP-50: cronología solo para mostrar, 4 meses. Depende de WP-02 y del acta de 10 ingresos.
+  - WP-70: cierre. Compilar el paquete en CI, entregarlo al usuario, esperar el acta final y, con D7, sacar el PR #1
+    de borrador y fusionarlo a `main`, sin release.
+- **Conflictos abiertos** (deciden el usuario o el Orquestador): `cc_obligatorio` frente a la prueba golden y los 4 F401
+  del motor (ver `ESTADO.json` › `conflictos_abiertos`), y los 6 casos R-T de WP-60 marcados xfail.
+
 ## Traspaso del 10 de octubre de 2026 (sesión claude-sesion-012yjVgL)
 
 **Léelo en este orden:** `PLAN_VIGENTE.md` → `AGENTS.md` → este traspaso → `docs/implementacion/REPORTE_REVISION_20261010.md`

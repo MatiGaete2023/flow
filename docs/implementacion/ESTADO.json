@@ -313,17 +313,18 @@
       "decisiones": [
         "D1"
       ],
-      "estado": "LISTO",
-      "ejecutor": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
+      "rama": "feat/ejecucion-plan-20261008",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "check_real_ids --historia = 0 en ramas; etiquetas viejas pendientes de borrar por el usuario",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas."
+        "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas.",
+        "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions."
       ]
     },
     "WP-20": {

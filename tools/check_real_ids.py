@@ -5,6 +5,7 @@ Uso:
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
     python tools/check_real_ids.py --excluir variantes/  # omite archivos bajo esa ruta (repetible)
     python tools/check_real_ids.py --stage  # revisa blobs del índice, no el árbol de trabajo
+    python tools/check_real_ids.py --historia  # revisa todos los blobs alcanzables (git rev-list --all)
 
 Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
 Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
@@ -114,6 +115,34 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
     return findings
 
 
+def history_blobs() -> list[tuple[str, str]]:
+    """(blob, ruta) de cada blob distinto alcanzable desde cualquier referencia, con sufijo revisable."""
+    output = subprocess.run(["git", "rev-list", "--all", "--objects"], cwd=ROOT, capture_output=True, check=True).stdout
+    seen, result = set(), []
+    for line in output.decode("utf-8", errors="surrogateescape").splitlines():
+        sha, _, name = line.partition(" ")
+        if not name or sha in seen or Path(name).suffix.lower() not in TEXT_SUFFIXES | ZIP_SUFFIXES:
+            continue
+        seen.add(sha)
+        result.append((sha, name))
+    return result
+
+
+def scan_history(allowlist: set[str]) -> list[tuple[str, int, str]]:
+    findings = []
+    for sha, name in history_blobs():
+        content = subprocess.run(["git", "cat-file", "-p", sha], cwd=ROOT, capture_output=True, check=True).stdout
+        for label, text in texts(Path(name), content):
+            for match in PATTERN.finditer(text):
+                number = match.group(1).replace(".", "")
+                normalized = f"{number}-{match.group(2).upper()}"
+                if normalized in allowlist or not is_real_looking(number, match.group(2)):
+                    continue
+                line = text.count("\n", 0, match.start()) + 1
+                findings.append((f"{sha[:10]}:{label}", line, normalized[:2] + "******-" + normalized[-1]))
+    return findings
+
+
 def staged_files() -> list[Path]:
     output = subprocess.run(
         ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRT", "-z"],
@@ -133,7 +162,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument("rutas", nargs="*")
     parser.add_argument("--excluir", action="append", default=[], metavar="RUTA")
     parser.add_argument("--stage", action="store_true", help="Revisa solo el contenido añadido al índice de Git.")
+    parser.add_argument("--historia", action="store_true", help="Revisa todos los blobs del historial (WP-17).")
     args = parser.parse_args(argv)
+    if args.historia:
+        findings = scan_history(load_allowlist())
+        for label, line, masked in findings:
+            print(f"{label}:{line}: RUT con dígito verificador válido ({masked})")
+        print(f"{len(findings)} hallazgos en el historial." if findings else "Sin RUT reales en el historial.")
+        return 1 if findings else 0
     if args.stage and args.rutas:
         parser.error("--stage no acepta rutas; revisa los archivos del índice.")
     paths = (
