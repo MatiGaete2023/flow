@@ -1,14 +1,14 @@
 {
-  "commit": "c2a5d807578c69a506fe8f338f3fe69186367195",
+  "commit": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
   "asistente": {
-    "aprobadas": 810,
+    "aprobadas": 824,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "810 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "824 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 240,
@@ -460,6 +460,20 @@
       "tests/test_outlook_signature_regression_20260914.py::test_preserved_signature_closes_inspector_without_sending",
       "tests/test_output_format_regressions_20260914.py::test_native_excel_date_is_rendered_without_time_in_program_attachment",
       "tests/test_output_format_regressions_20260914.py::test_zero_waiting_days_is_not_lost_in_program_attachment",
+      "tests/test_pending_draft_status.py::test_confirmed_receipt_has_no_pending_outlook_action",
+      "tests/test_pending_draft_status.py::test_draft_without_receipt_requires_review_and_explicit_save",
+      "tests/test_pending_draft_status.py::test_incomplete_content_remains_pending[body]",
+      "tests/test_pending_draft_status.py::test_incomplete_content_remains_pending[subject]",
+      "tests/test_pending_draft_status.py::test_invalid_recipient_becomes_a_pending_issue_instead_of_crashing[a@example.test;mal]",
+      "tests/test_pending_draft_status.py::test_invalid_recipient_becomes_a_pending_issue_instead_of_crashing[correo inv\\xe1lido]",
+      "tests/test_pending_draft_status.py::test_missing_attachment_remains_pending_even_with_matching_receipt",
+      "tests/test_pending_draft_status.py::test_no_receipts_do_not_require_reading_attachment_bytes",
+      "tests/test_pending_draft_status.py::test_row_indicator_does_not_reuse_saved_key_after_draft_edit[attachment]",
+      "tests/test_pending_draft_status.py::test_row_indicator_does_not_reuse_saved_key_after_draft_edit[body]",
+      "tests/test_pending_draft_status.py::test_row_indicator_does_not_reuse_saved_key_after_draft_edit[subject]",
+      "tests/test_pending_draft_status.py::test_row_indicator_stays_prepared_after_recipient_becomes_invalid",
+      "tests/test_pending_draft_status.py::test_uncertain_receipt_remains_an_actionable_outlook_check[saving]",
+      "tests/test_pending_draft_status.py::test_uncertain_receipt_remains_an_actionable_outlook_check[uncertain]",
       "tests/test_personal_batch_revision.py::test_batch_save_empty_to_and_partial_failure_do_not_duplicate",
       "tests/test_personal_batch_revision.py::test_bundled_template_revision_replaces_once_with_backup_then_preserves_user_edit",
       "tests/test_personal_batch_revision.py::test_combined_word_preserves_each_matrix_style",

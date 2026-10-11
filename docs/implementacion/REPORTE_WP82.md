@@ -56,3 +56,11 @@ G-3 (ventanas secundarias editables durante operación) requiere prueba GUI prop
 requiere medir coste sin perder comprobación de bytes. Extraer analyze/_recalculate exige paridad
 sobre ediciones humanas y golden17, sin alterar motor. No eliminar firmas/módulos de bitácoras
 sin resolver los motivos funcionales registrados en WP-80.
+
+## Integración autorizada — 11 de octubre de 2026
+
+Usuario: «Autorizar excepción E3 para #36–38». Sin revisión ni auditoría de otra raíz;
+no se extiende a #39. Integrado en feat mediante a59c4dff0997c611c5d03bc4f40da68046b62b7b; verificación posterior PASA
+(824/11/6 y 240/62), procedencia limpia/estable y línea base regenerada. La evidencia
+actual en verificacion/WP-82.json corresponde a esta medición; la evidencia previa se conserva
+en la historia de la rama del PR. Main y releases no autorizados antes del acta.
