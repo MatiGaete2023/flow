@@ -24,6 +24,19 @@ historial viejo con datos reales: vuelve a clonar y nunca hagas push desde una c
     tras el acta de 10 ingresos del usuario y WP-02.
   - WP-70: cierre. Paquete compilado en CI (`14f679d`, run 38136720831); esperar el acta final y, con D7, sacar el PR #1
     de borrador y fusionarlo a `main`, sin release.
+- **Auditorías paralelas abiertas (11 de octubre de 2026, tarde):**
+  - **WP-80** (PR #35, rama `wp/80-auditoria`, sesión claude-sesion-012yjVgL): auditoría de 6 áreas con 30 correcciones,
+    retiros y CI más barata. Informe en `docs/implementacion/wp/WP-80.md`.
+    - Revisión E3 de otra raíz (`e3/wp-80-revision`): CAMBIOS ya aplicados (`168ce0d`, `92d7ba8`). Falta su
+      re-revisión.
+    - `verificar_wp` PASA: asistente 608, descargador 236.
+  - **WP-63** (PR #34, rama `wp/auditoria-refactor-20261011`, otra sesión): auditoría paralela desde la misma base.
+    - E3: APROBADO y CONFORME, ambos con observaciones.
+    - Falta que el usuario confirme el cambio de dependencias de WP-70.
+  - **Orden recomendado por E3:** integrar WP-63, luego fusionar `feat` en WP-80, resolver los 8 conflictos (§7 de
+    `E3_CONSOLIDADO_WP-63_WP-80.md`), volver a verificar e integrar WP-80. La regla 11 se cumple con un merge squash
+    formateado o con una excepción del usuario. La etiqueta `pre-WP-80` (`2cf8ca8`) la crea el usuario, porque el
+    proxy no deja subir etiquetas.
 - **Conflictos respondidos** (11 de octubre de 2026): `cc_obligatorio` se conserva; motor/ queda intacto (4 F401
   excluidos en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla).
 
