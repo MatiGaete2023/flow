@@ -73,6 +73,9 @@ def test_paquete_1_0_0_sigue_igual_y_sin_consolidado(tmp_path):
     {'xl/embeddings/objeto.bin': b'x'},
     {'xl/media/pagina.html': b'<html></html>'},
     {'xl/media/informe.pdf': b'%PDF'},
+    {'xl/externalLinks/externalLink1.xml': b'<externalLink/>'},
+    {'xl/connections.xml': b'<connections/>'},
+    {'xl/queryTables/queryTable1.xml': b'<queryTable/>'},
 ])
 def test_consolidado_con_macros_incrustados_html_o_pdf_se_rechaza(tmp_path, extra):
     metadata, tables = module.fixture()
@@ -107,3 +110,18 @@ def test_hash_alterado_del_consolidado_se_detecta(tmp_path):
     rewrite(path, lambda items: items.__setitem__(CONSOLIDATED_PATH, libro(extra={'xl/otro.xml': b'<a/>'})))
     with pytest.raises(CaptureError):
         read_capture(path)
+
+
+def test_consolidado_declarado_con_macros_en_content_types_se_rechaza(tmp_path):
+    metadata, tables = module.fixture()
+    raw = libro()
+    source = zipfile.ZipFile(BytesIO(raw))
+    out = BytesIO()
+    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as target:
+        for info in source.infolist():
+            data = source.read(info)
+            if info.filename == '[Content_Types].xml':
+                data = data.replace(b'sheet.main+xml', b'sheet.macroEnabled.main+xml')
+            target.writestr(info.filename, data)
+    with pytest.raises(CaptureError):
+        write_capture(tmp_path / 'malo.zip', metadata, tables, consolidated=out.getvalue())
