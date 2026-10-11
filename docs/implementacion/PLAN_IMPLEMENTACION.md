@@ -137,7 +137,7 @@ Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus depe
 WP-63/#34, WP-80/#35 y WP-81–84/#36–39 integrados en feat. G-3, G-4 y G-5 resueltos.
 Excepciones E3 expresas del usuario: #36–38 («Autorizar excepción E3 para #36–38») y
 #39 («Haz la excepcion y termina tu»). No acreditan revisión/auditoría independiente y no
-se extienden a main, releases ni paquetes futuros. Línea base vigente: 841/240 en c58de60fc9654a10d027765fa7202865f222c456.
+se extienden a main, releases ni paquetes futuros. Línea base vigente: 848/11/6 y 240/62 en `4dc54e9` (WP-85); CI verde en `32dd14c` (PR #1).
 
 Orden pendiente: confirmar retiro de referencias/cachés mediante Soporte GitHub (WP-17);
 recibir resultados de Excel/Outlook y acta WP-02; validar diez ingresos para aceptación de

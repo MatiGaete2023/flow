@@ -19,7 +19,7 @@
   "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
   "integrado_en": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
   "notas": [
-    "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37.",
+    "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37. (histórico, superado: WP-81..83 integrados con excepción E3 expresa; WP-83 en 4470ff3)",
     "Seis escenarios fallaron antes: editor manual, preferencias, dos tipos de ventana anidada, ventana cerrada y fallo parcial.",
     "Bloqueo de controles editables existentes; Detener disponible, estados anteriores conservados. Sin pruebas retiradas ni nuevos skips/xfail.",
     "Revisión propia no sustituye E3 ni actas de uso real.",

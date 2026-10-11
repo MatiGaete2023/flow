@@ -2,6 +2,20 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**2.7.6, 11 de octubre de 2026** (Descargador y extensión; Asistente 0.5.0.dev5). Cambios visibles desde 2.7.5:
+- **Crear paquete de este lote…** en la ventana principal, con la casilla **Incluir XLSX consolidado**; en
+  Resultados, **Paquete con XLSX consolidado**. El paquete lleva solo el XLSX consolidado (CSMP_CAPTURE 1.1.0),
+  nunca HTML, PDF ni XLS originales (D6).
+- El consolidado se genera una sola vez por lectura.
+- Lecturas de bitácoras con pausa entre consultas, checkpoint cada 25 y máximo de 300 por lote; al retomar se
+  conserva lo ya leído y SITFA se desbloquea aunque falle el disco.
+- La pestaña Egresados se tipa como EGRESADOS en el paquete.
+- Una respuesta tardía de la extensión (`TASK_EXPIRED`) se descarta sin cortar la conexión.
+- La cola de eventos resiste errores; un lote conjunto terminado se puede cargar como fuente.
+- Lotes antiguos con plazo de retención (60 días, 10 sesiones) y confirmación local.
+- Retirados los botones de solicitud de antecedentes (D9).
+- `calendarios.event_at` lleva el vencimiento en ISO (WP-86).
+
 
 **Corrección 2.7.5:** las referencias antiguas de `bitacoras.json` que ya no
 existen se muestran como **NO_DISPONIBLE**. Antes de crear el ZIP puedes localizar

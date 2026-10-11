@@ -131,10 +131,41 @@
       "wp": "WP-62",
       "tipo": "archivo"
     },
-    "WP-61",
+    {
+      "wp": "WP-61",
+      "tipo": "archivo"
+    },
     {
       "wp": "WP-63",
       "tipo": "funcional"
+    },
+    {
+      "wp": "WP-80",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-81",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-82",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-83",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-84",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-85",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-86",
+      "tipo": "archivo"
     }
   ],
   "decisiones": [
@@ -151,8 +182,9 @@
   "integrado_en": null,
   "notas": [
     "D7: fusionar a main solo tras el acta final firmada por el usuario.",
-    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
+    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2. (histórico, superado: CI verde en 14f679d y luego en 32dd14c, runs 38182127247 y 38182124001)",
     "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
-    "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta."
+    "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
+    "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
   ]
 }

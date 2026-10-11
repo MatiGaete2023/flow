@@ -5,7 +5,7 @@ Para aprender el recorrido con imágenes, consulta el
 [PDF](manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf).
 La página 14 propone una práctica completa con datos ficticios, sin entrar a SITFA.
 
-Versión 2.7.6, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
+Versión 2.7.6, con intercambio CSMP_CAPTURE 1.0.0 (1.1.0 con XLSX consolidado). El SHA identifica cada
 compilación. El Asistente no necesita estar abierto ni instalado.
 
 La extensión 2.7.6 debe cargarse y recargarse junto con esta versión. Las
@@ -44,8 +44,10 @@ la tabla vacía se comprueba en la respuesta y no acredita un historial completo
    ingreso difieren, se elige la captura posterior con fecha inequívoca; en un
    conflicto sin orden verificable, quitar uno de los lotes. Añadirlo de nuevo
    lo reincorpora. Los hashes originales se comprueban antes de exportar. El ZIP
-   contiene tablas y metadatos; la casilla **Incluir XLSX consolidado** permite
-   añadir la base para una copia nativa del Asistente. No adjunta HTML, PDF
+   contiene tablas y metadatos; en esta ventana, la casilla **Paquete con XLSX
+   consolidado** añade la base para una copia nativa del Asistente. En la ventana
+   principal, **Crear paquete de este lote…** usa la casilla **Incluir XLSX
+   consolidado**. Ambas vienen marcadas. No adjunta HTML, PDF
    ni las copias XLS originales. Si el consolidado no es compatible, se
    informa y se conserva el paquete portable.
    En 2.7.5 aplica a todas las filas seleccionadas. Las referencias ausentes

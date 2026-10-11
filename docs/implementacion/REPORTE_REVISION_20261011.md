@@ -1,5 +1,7 @@
 # Revisión del código y del plan — 11 de octubre de 2026
 
+> **Histórico, superado:** su lista de pendientes ya no rige; ver [REVISION_INTEGRAL_20261011.md](REVISION_INTEGRAL_20261011.md) y [CIERRE.md](CIERRE.md).
+
 > Estado actual, 11 de octubre de 2026: WP-63 (#34) y WP-80 (#35) están integrados
 > con E3 independiente registrado en ESTADO.json. Las etapas pendientes descritas abajo
 > son históricas; la continuación vigente está en CONTINUAR.md y en WP-81 (#36).

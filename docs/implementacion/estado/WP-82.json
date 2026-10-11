@@ -20,7 +20,7 @@
   "integrado_en": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
   "notas": [
     "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
-    "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente.",
+    "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente. (histórico, superado: WP-81 integrado en c2a5d80 con excepción E3 expresa)",
     "Catorce regresiones nuevas; cuatro indicadores y siete casos del ayudante fallaron antes de corregir; una optimización falló antes de aplicarse. Sin pruebas retiradas ni nuevos skips.",
     "pending() es ayudante legado sin llamadas GUI; G-4 visible corregido en ux_support.product_indicators.",
     "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."

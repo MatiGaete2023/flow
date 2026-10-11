@@ -26,10 +26,10 @@
   "notas": [
     "Alcance autorizado por la petición del usuario: auditar, corregir, simplificar y actualizar el repositorio y el plan.",
     "Base limpia 2cf8ca893e85a0203b1c051026b87f16ff6be964. Medición previa: 592/11/6 xfail y 231/62; golden17 y controles PASA.",
-    "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar.",
+    "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar. (histórico, superado: integrado en f64bc7c con revisión E3 de otra raíz registrada)",
     "La primera corrida detectó 5 regresiones antiguas del verificador; se ajustaron al contrato E2 conservando nodeids. Evidencia FALLA conservada en WP-63-falla-api.json.",
     "Evidencia inicial Windows FALLA conservada en WP-63-windows-inicial.json. No se usa PYTHONUTF8 ni se omiten pruebas para ocultar el problema.",
-    "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null.",
+    "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null. (histórico, superado: integrado en f64bc7c con revisión E3 de otra raíz registrada)",
     "11 de octubre de 2026: el usuario confirmó las dependencias funcionales de WP-70 y autorizó integrar WP-63 y luego WP-80. Integrado en f64bc7c; verificar_wp PASA."
   ]
 }

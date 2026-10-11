@@ -1,6 +1,8 @@
 # Correcciones de las pruebas del usuario — 9 de octubre de 2026
 
 Entrega: Asistente CSMP 0.5.0.dev4, Descargador y extensión **2.7.4**.
+
+> Histórico: describe la entrega del 9 de octubre. Versiones vigentes: CSMP 0.5.0.dev5 y Descargador/extensión 2.7.6.
 Desarrollo en `feat/ejecucion-plan-20261008`, PR 1 en borrador. Estas correcciones
 continúan H01–H09/M01–M03; no sustituyen el informe anterior ni la aceptación
 institucional pendiente.

@@ -91,7 +91,7 @@ Para un informe del estado actual, importa un lote elegido, no todos los lotes
 históricos automáticamente. Si haces un histórico, conserva `SITFA_LOTE` y
 no confundas registros repetidos entre fechas con registros nuevos.
 
-«Cambiar carpeta» admite una carpeta de trabajo compartida o sincronizada. Las
+«Cambiar…» (carpeta de destino) admite una carpeta de trabajo compartida o sincronizada. Las
 escrituras se verifican localmente; la sincronización y los accesos los administra
 OneDrive o el servicio de carpetas, no el descargador. No se publica un tablero
 ni se envían archivos a la nube automáticamente.
