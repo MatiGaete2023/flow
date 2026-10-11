@@ -2,6 +2,7 @@
 
 from datetime import date
 from io import BytesIO
+from pathlib import Path
 from openpyxl import Workbook, load_workbook
 from nurus.capture import write_capture
 from nurus.personal.capture_input import import_capture
@@ -81,3 +82,16 @@ def test_paquete_sin_consolidado_sigue_igual(tmp_path):
     destino = tmp_path / 'copia.xlsx'
     work.export(destino)
     assert load_workbook(destino).sheetnames[0] == 'Trabajo'
+
+
+def test_reimportar_el_mismo_paquete_movido_conserva_la_base_y_ediciones(tmp_path):
+    previous, _, raw = importar(tmp_path)
+    old_path = Path(previous.path)
+    new_path = old_path.rename(tmp_path / 'movido.zip')
+    previous.rows[0].review['OBSERVACION'] = 'Edición humana ficticia'
+    restored = import_capture(new_path, defaults(), as_of=date(2026, 10, 8), previous=previous)
+    assert restored.path == str(new_path.resolve())
+    assert previous.path == str(old_path.resolve())
+    assert restored.rows[0].review == previous.rows[0].review
+    base = _consolidated_base(restored)
+    assert base and base[0] == raw

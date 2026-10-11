@@ -166,3 +166,13 @@ def test_calendar_only_and_mirrored_physical_source(tmp_path):
     recalculate(other, other.rows[0])
     assert not other.rows[0].observation and not other.rows[0].actions
     assert other.rows[0].review['OBSERVACION'] == 'Decisión manual'
+
+
+def test_reimportar_sin_conflictos_rechaza_respuestas_ajenas_incluso_en_cache(tmp_path):
+    m, t = fixture()
+    path = write_capture(tmp_path / 'full.zip', m, t)
+    previous = import_capture(path, defaults(), as_of=date(2026, 10, 8))
+    before = deepcopy(previous.__dict__)
+    with pytest.raises(ValueError, match='ajena o innecesaria'):
+        import_capture(path, defaults(), as_of=date(2026, 10, 8), previous=previous, resolutions={'r0': 'RESET'})
+    assert previous.__dict__ == before

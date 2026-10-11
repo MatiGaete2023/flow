@@ -247,7 +247,11 @@ def saved_data_summary(directory):
     session = directory / 'sesion'
     result = {key: {'count': 0, 'bytes': 0} for key in ('sesiones', 'copias', 'adjuntos', 'recibos')}
     folders = []
-    if (session / 'trabajo.json').is_file() and not session.is_symlink():
+    if (
+        (session / 'trabajo.json').is_file()
+        and not (session / 'trabajo.json').is_symlink()
+        and not session.is_symlink()
+    ):
         folders.append(session)
     archive = session / 'anteriores'
     if archive.is_dir() and not archive.is_symlink():
@@ -282,9 +286,17 @@ def saved_data_summary(directory):
         saved = data.get('session', {})
         if not isinstance(saved, dict):
             continue
-        for draft in saved.get('drafts', []):
-            if isinstance(draft, dict):
-                attachments.update(str(Path(p).resolve()) for p in draft.get('attachments', []) if isinstance(p, str))
+        drafts = saved.get('drafts', [])
+        if not isinstance(drafts, list):
+            continue
+        for draft in drafts:
+            if not isinstance(draft, dict) or not isinstance(draft.get('attachments', []), list):
+                continue
+            attachments.update(
+                str(Path(p).resolve())
+                for p in draft.get('attachments', [])
+                if isinstance(p, str) and p and '\x00' not in p
+            )
     for path in attachments:
         path = Path(path)
         if path.is_file():

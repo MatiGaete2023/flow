@@ -39,7 +39,12 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         and getattr(previous, 'ruleset_version', '') == RULESET_VERSION
         and getattr(previous, 'mapping_version', '') == capture.manifest['mapping_version']
     ):
+        if resolutions:
+            raise ValueError('Respuesta de conciliación ajena o innecesaria; trabajo anterior intacto.')
         cached = deepcopy(previous)
+        # Los mismos bytes pueden reimportarse después de mover el paquete.
+        # La procedencia debe apuntar al ZIP validado en esta importación.
+        cached.path = str(Path(path).resolve())
         from .capture_findings import updated_contexts
 
         cached.capture_context = updated_contexts(cached, cached.rows)
