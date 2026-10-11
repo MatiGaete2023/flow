@@ -1,0 +1,65 @@
+{
+  "commit": "ccfeee122aa47cfc0606ea316d6c6c831dfe60b2",
+  "base": "2cf8ca893e85a0203b1c051026b87f16ff6be964",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "FALLA",
+      "detalle": "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "235 aprobadas; mínimo 231; base 231; código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "procedencia_inicio": {
+    "commit": "ccfeee122aa47cfc0606ea316d6c6c831dfe60b2",
+    "arbol_git": "5fe72448a35a8e208f719abab0365f03f76ea7ee",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "ccfeee122aa47cfc0606ea316d6c6c831dfe60b2",
+    "arbol_git": "5fe72448a35a8e208f719abab0365f03f76ea7ee",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": false,
+  "veredicto": "FALLA",
+  "nota": "Primera corrida sobre ccfeee1: 5 pruebas antiguas incompatibles con el contrato E2 refactorizado; diagnóstico directo: 5 fallidas, 762 aprobadas, 11 omitidas, 6 xfail y 8 warnings. Se conservan los nodeids; el veredicto FALLA no se oculta."
+}

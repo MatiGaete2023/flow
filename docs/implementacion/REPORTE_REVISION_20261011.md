@@ -88,6 +88,9 @@ rectores. Las siete fuentes originales se conservan.
 La ficha WP-63 y el informe de verificación final registran el commit medido y los resultados del conjunto.
 Se ejecutan suites completas, golden17, control de identidades, lint/formato, estado, enlaces y restricciones.
 Las regresiones focales y la revisión de apoyo sirven de diagnóstico; no reemplazan esa corrida completa ni el acta.
+La primera corrida conjunta detectó cinco pruebas antiguas acopladas a la API privada retirada del verificador.
+Se actualizaron sus fixtures y aserciones al contrato E2 (inventario medido, código de proceso y JSON de Ruff),
+preservando todos sus nodeids y su propósito. El informe FALLA se conserva para trazabilidad.
 Ninguna prueba existente se retira ni se omite para ocultar un fallo. Los seis xfail son los conflictos estrictos
 preexistentes de WP-60; no se convierten en aceptación.
 
