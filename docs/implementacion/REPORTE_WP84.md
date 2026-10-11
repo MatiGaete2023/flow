@@ -1,7 +1,8 @@
 # WP-84 · G-5 y limpieza restante del historial
 
 Estado actual: #36–38 integrados en feat 9fbb08c con excepción E3 expresa del usuario.
-#39 actualizado contra esa base (830/240); verificación vigente PASA 839/240. E3 de #39 pendiente.
+#39 actualizado contra esa base; excepción E3 autorizada por el usuario («Haz la excepcion y termina tu»).
+Corrección final de avisos de dirección inválida; verificación de integración en curso.
 Las evidencias y notas anteriores de preparación son históricas.
 
 
@@ -78,3 +79,12 @@ nueve controles y procedencia limpia/estable. Commit posterior: solo documentos/
 La rama conserva estados de integración, excepción E3 limitada a #36–38 y dependencia
 de archivo WP-82 explícita. CI actual en el PR #39; las corridas de preparación son históricas.
 No se integra #39 sin revisión E3 propia. No cambios de motor, textos, golden ni línea base.
+
+## Revisión final y corrección de avisos
+
+La ruta sin recibos omitía la validación de direcciones que antes ocurría al calcular
+la huella: una tarjeta con destinatario o CC inválido aparecía como Preparado. Dos pruebas
+GUI adicionales fallaron antes de corregir; se valida con emails sin leer adjuntos.
+Once regresiones focales PASA; se conservan las nueve originales y la reducción 100→1.
+Usuario autoriza excepción E3 para #39: «Haz la excepcion y termina tu». No se autoriza main
+ni se sustituye el acta real. Verificación completa posterior a integración en curso.
