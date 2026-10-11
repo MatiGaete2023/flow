@@ -166,3 +166,15 @@ def test_calendar_only_and_mirrored_physical_source(tmp_path):
     recalculate(other, other.rows[0])
     assert not other.rows[0].observation and not other.rows[0].actions
     assert other.rows[0].review['OBSERVACION'] == 'Decisión manual'
+
+
+def test_cumplimiento_package_has_no_spurious_cross_or_source_warnings(tmp_path):
+    m, t = fixture()
+    for record in t['registros']:
+        raw = json.loads(record['normalized_json'])
+        raw.update({'DIAS DE CUMPLIMIENTO': '50', 'DIAS PARA EGRESAR': '10', 'FEC.EGRESO PROYECTADO': '2026-10-18'})
+        record.update(record_type='CUMPLIMIENTO', raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    work = import_capture(write_capture(tmp_path / 'c.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    # El cruce de un paquete llega por registro: no se avisa «Sin cruce utilizable».
+    assert not any('Sin cruce utilizable' in w for w in work.warnings)
+    assert 'Fuentes faltantes: ' not in work.warnings
