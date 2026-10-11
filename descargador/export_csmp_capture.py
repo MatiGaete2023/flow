@@ -32,14 +32,17 @@ def consolidated_workbook(lots):
 
 
 def consolidated_note(lots, wanted):
-    """(incluir, nota): el consolidado solo va si el lote es apto para CSMP; si no, se informa por qué."""
+    """(libro o False, nota): el consolidado solo va si el lote es apto para CSMP; si no, se informa por qué.
+
+    Devuelve los bytes ya generados para que export_capture no vuelva a leer y consolidar los XLS.
+    """
     if not wanted:
         return False, ''
     try:
-        consolidated_workbook(lots)
+        book = consolidated_workbook(lots)
     except m.PocError as exc:
         return False, ' Sin XLSX consolidado: ' + str(exc)
-    return True, ' Incluye el XLSX consolidado.'
+    return book, ' Incluye el XLSX consolidado.'
 
 
 def export_capture(
@@ -48,7 +51,11 @@ def export_capture(
     lots = list(lots)
     if not lots:
         raise ValueError('Selecciona un lote verificado.')
-    consolidated_bytes = consolidated_workbook(lots) if consolidated else None
+    # consolidated: True genera el libro; bytes reutiliza el que ya armó consolidated_note.
+    if isinstance(consolidated, bytes):
+        consolidated_bytes = consolidated
+    else:
+        consolidated_bytes = consolidated_workbook(lots) if consolidated else None
     captured = lots[0].summary.get('fecha_hora') or datetime.now().astimezone().isoformat()
     fingerprint = json.dumps([lot.summary for lot in lots], ensure_ascii=False, sort_keys=True)
     # Hash del control de bitácoras integra la identidad de la captura reexportable.
