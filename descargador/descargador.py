@@ -1281,15 +1281,16 @@ class Application:
 def package_current_lot(sheets_folder, diary_manifest, target, consolidated=False):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
-    from export_csmp_capture import export_capture, consolidated_note
+    from export_csmp_capture import export_capture_with_note
     from nurus.capture import read_capture
 
     target = Path(target)
     if target.exists():
         raise m.PocError('El destino ya existe; elige un nombre nuevo.')
     lots = load_sources([sheets_folder])
-    include, note = consolidated_note(lots, consolidated)
-    path = export_capture(lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=include)
+    path, note = export_capture_with_note(
+        lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=consolidated
+    )
     capture = read_capture(path)
     summary = next(
         (i['message'] for i in capture.rows('incidencias') if i['code'] == 'BITACORAS_REUTILIZADAS'),

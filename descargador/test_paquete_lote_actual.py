@@ -114,3 +114,21 @@ def test_lote_no_apto_crea_el_paquete_sin_consolidado_y_lo_dice(tmp_path, monkey
     resultado = descargador.package_current_lot(lote.folder, manifiesto, tmp_path / 'p.zip', consolidated=True)
     assert read_capture(resultado['path']).manifest['schema_version'] == '1.0.0'
     assert 'Sin XLSX consolidado: No apto para CSMP' in resultado['reuse']
+
+
+def test_paquete_genera_el_consolidado_una_sola_vez(tmp_path, monkeypatch):
+    import export_csmp_capture
+
+    lote = bound_lot(tmp_path / 'principal')
+    manifiesto = diaries(tmp_path / 'Bitacoras 2026-10-10', 1)
+    calls = []
+    original = export_csmp_capture.consolidated_workbook
+
+    def counted(lots):
+        calls.append(True)
+        return original(lots)
+
+    monkeypatch.setattr(export_csmp_capture, 'consolidated_workbook', counted)
+    resultado = package_current_lot(lote.folder, manifiesto, tmp_path / 'p.zip', consolidated=True)
+    assert read_capture(resultado['path']).consolidated
+    assert len(calls) == 1
