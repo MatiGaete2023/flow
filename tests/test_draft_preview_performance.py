@@ -161,3 +161,33 @@ with patch.object(Path,'read_bytes',read):
 cards.destroy()
 '''.replace('HAS_RECEIPT', str(has_receipt)).replace('EXPECTED', '1' if has_receipt else '0'),
     )
+
+
+@pytest.mark.parametrize('field', ['to', 'cc'])
+def test_cards_without_receipts_still_warn_about_invalid_addresses(tmp_path, field):
+    run_gui(
+        tmp_path,
+        '''
+from unittest.mock import patch
+import customtkinter as ctk
+from nurus.personal.outputs import Draft
+from nurus.personal.mail_view import DraftCards
+attachment=root/'ficticio.txt';attachment.write_bytes(b'antes')
+draft=Draft('Ficticio','Texto ficticio',to='a@example.test',attachments=[str(attachment)])
+setattr(draft,FIELD,'correo inválido')
+cards=DraftCards(app)
+original=Path.read_bytes;reads=[]
+def read(path):
+    if path==attachment:reads.append(path)
+    return original(path)
+def texts(widget):
+    found=[widget.cget('text')] if isinstance(widget,ctk.CTkLabel) else []
+    for child in widget.winfo_children():found.extend(texts(child))
+    return found
+with patch.object(Path,'read_bytes',read):
+    cards.set_drafts([draft],{})
+assert 'Revisar destinatarios / adjuntos' in texts(cards)
+assert not reads
+cards.destroy()
+'''.replace('FIELD', repr(field)),
+    )
