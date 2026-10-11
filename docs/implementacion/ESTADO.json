@@ -1047,6 +1047,61 @@
         "11 de octubre de 2026: el usuario confirmó las dependencias funcionales de WP-70 y autorizó integrar WP-63 y luego WP-80. Integrado en f64bc7c; verificar_wp PASA."
       ]
     },
+    "WP-80": {
+      "titulo": "Auditoría de código, correcciones y refactor",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/80-auditoria",
+      "pr": 35,
+      "verificacion": "PASA tras integrar (verificar_wp.py sobre 5ac7385; línea base regenerada: asistente 796, descargador 240)",
+      "revision": "E3 (sesión remota independiente session_016DC9qxvuqT6mr91tHBaw7b): APROBADO en 95991b6/54bb56f",
+      "auditoria": "E3: CONFORME (docs/implementacion/auditoria/WP-80.md, rama e3/wp-80-revision). Sin etiqueta pre-WP-80 por decisión del usuario: rollback con git revert 5ac7385.",
+      "integrado_en": "5ac7385",
+      "notas": [
+        "Pedido expreso del usuario (11 de octubre de 2026). Revisión y auditoría E3 por otra raíz de agente, también pedida por el usuario.",
+        "Revisión E3 encargada a una sesión independiente (session_016DC9qxvuqT6mr91tHBaw7b); entrega en la rama e3/wp-80-revision y comentario en el PR #35.",
+        "Conflicto con WP-63 (PR #34): E3 recomienda integrar WP-63 primero y luego resolver 8 conflictos en WP-80.",
+        "11 de octubre de 2026: el usuario autorizó integrar WP-63 y luego WP-80 (squash con mensaje formateado, regla 11) y confirmó las dependencias funcionales de WP-70. WP-63 integrado; 8 conflictos resueltos en WP-80 según §7 de E3.",
+        "11 de octubre de 2026: integrado con squash 5ac7385 (regla 11). El Co-Authored-By del mensaje quedó con entidades HTML; es cosmético y no se reescribe sin --force.",
+        "Pendientes anotados (bajo): G-3 (lock no cubre Toplevel), G-4 (dos criterios de borrador guardado), G-5 (huella de adjuntos recalculada); O1 de WP-63 (zlib.error en check_real_ids sale con código 1); _recalculate duplicado frente a analyze (WP propio con paridad golden)."
+      ]
+    },
+    "WP-81": {
+      "titulo": "Revisión propia posterior a WP-63 y WP-80",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-63",
+          "tipo": "funcional"
+        },
+        {
+          "wp": "WP-80",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "EN_REVISION",
+      "ejecutor": "Codex /root",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/81-revision-propia-20261011",
+      "pr": 36,
+      "verificacion": "PASA en 08b897f0c3a2dedac134561ade1882a2e0791125: Asistente 810/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Windows: consultar controles del PR #36.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Pedido expreso del usuario: revisión propia sin perjuicio de E3. No acredita revisión cruzada ni aceptación de uso real.",
+        "Cuatro fallos corregidos, incluido O1 de WP-63; 14 nuevas regresiones, ninguna prueba retirada.",
+        "Base 286c28f posterior a integración WP-63/WP-80; no modificar su estado, E3 ni decisiones.",
+        "Evidencia posterior al SHA medido: cambios solo en documentación/estado, no código, pruebas ni configuración. E3 independiente pendiente."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -1204,30 +1259,6 @@
         "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
         "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta."
       ]
-    },
-    "WP-80": {
-      "titulo": "Auditoría de código, correcciones y refactor",
-      "ola": 6,
-      "tipo": "M",
-      "depende_de": [],
-      "decisiones": [],
-      "estado": "INTEGRADO",
-      "ejecutor": "claude-sesion-012yjVgL",
-      "tomado": "11 de octubre de 2026",
-      "rama": "wp/80-auditoria",
-      "pr": 35,
-      "verificacion": "PASA tras integrar (verificar_wp.py sobre 5ac7385; línea base regenerada: asistente 796, descargador 240)",
-      "revision": "E3 (sesión remota independiente session_016DC9qxvuqT6mr91tHBaw7b): APROBADO en 95991b6/54bb56f",
-      "auditoria": "E3: CONFORME (docs/implementacion/auditoria/WP-80.md, rama e3/wp-80-revision). Sin etiqueta pre-WP-80 por decisión del usuario: rollback con git revert 5ac7385.",
-      "integrado_en": "5ac7385",
-      "notas": [
-        "Pedido expreso del usuario (11 de octubre de 2026). Revisión y auditoría E3 por otra raíz de agente, también pedida por el usuario.",
-        "Revisión E3 encargada a una sesión independiente (session_016DC9qxvuqT6mr91tHBaw7b); entrega en la rama e3/wp-80-revision y comentario en el PR #35.",
-        "Conflicto con WP-63 (PR #34): E3 recomienda integrar WP-63 primero y luego resolver 8 conflictos en WP-80.",
-        "11 de octubre de 2026: el usuario autorizó integrar WP-63 y luego WP-80 (squash con mensaje formateado, regla 11) y confirmó las dependencias funcionales de WP-70. WP-63 integrado; 8 conflictos resueltos en WP-80 según §7 de E3.",
-        "11 de octubre de 2026: integrado con squash 5ac7385 (regla 11). El Co-Authored-By del mensaje quedó con entidades HTML; es cosmético y no se reescribe sin --force.",
-        "Pendientes anotados (bajo): G-3 (lock no cubre Toplevel), G-4 (dos criterios de borrador guardado), G-5 (huella de adjuntos recalculada); O1 de WP-63 (zlib.error en check_real_ids sale con código 1); _recalculate duplicado frente a analyze (WP propio con paridad golden)."
-      ]
     }
   },
   "traspasos": [
@@ -1248,6 +1279,10 @@
     {
       "fecha": "11 de octubre de 2026",
       "descripcion": "WP-63: nueva auditoría y refactorización autorizadas por el usuario sobre 2cf8ca8 en clon limpio. Correcciones y reporte en rama propia; revisión cruzada E3 e integración pendientes. Los traspasos anteriores quedan como historial."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "WP-63 y WP-80 integrados; WP-81 continúa revisión propia desde 286c28f. Preserva decisiones/E3 previos; revisión propia no sustituye E3 del paquete nuevo."
     }
   ],
   "decisiones_adicionales": {

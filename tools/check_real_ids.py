@@ -16,11 +16,13 @@ Contenido ilegible, codificación ambigua o revisión incompleta termina con có
 import argparse
 import codecs
 import io
+import lzma
 import os
 import re
 import subprocess
 import sys
 import zipfile
+import zlib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -125,6 +127,12 @@ def sniff(path: Path, staged: bytes | None) -> tuple[str, bytes | None]:
 
 def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
     budget = budget if budget is not None else {"bytes": 0, "members": 0}
+    if depth == 0:
+        # Git paths and archive names are also metadata that can identify a person.
+        name = path
+        if path.is_absolute():
+            name = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+        yield str(path), str(name)
     suffix = path.suffix.lower()
     if suffix not in TEXT_SUFFIXES and suffix not in ZIP_SUFFIXES and depth == 0:
         suffix, staged = sniff(path, staged)
@@ -141,6 +149,7 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
                     budget["members"] += 1
                     if budget["members"] > MAX_ARCHIVE_MEMBERS:
                         raise ValueError("Demasiados miembros; control incompleto")
+                    yield f"{path}!{member.filename}", member.filename
                     if member.is_dir():
                         continue
                     name = member.filename
@@ -180,7 +189,7 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
                                         seen.add(identity)
                             content += "\n" + "\n".join(extra)
                         yield f"{path}!{name}", content
-        except zipfile.BadZipFile:
+        except (zipfile.BadZipFile, zlib.error, lzma.LZMAError):
             raise ValueError("Contenedor ZIP ilegible") from None
 
 
