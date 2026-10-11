@@ -136,8 +136,10 @@ from tkinter import ttk
 from nurus.personal.interaction import lock, unlock
 first=tk.Toplevel(app)
 second=tk.Toplevel(app)
+closed_entry=ttk.Entry(first)
 entry=ttk.Entry(second)
 lock(app)
+assert closed_entry.instate(['disabled'])
 assert entry.instate(['disabled'])
 first.destroy()
 unlock(app)
