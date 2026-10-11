@@ -535,9 +535,6 @@ class App(ctk.CTk):
         row = next(r for r in work.rows if r.id == selected[0])
         self._open(verified_source(work, row))
 
-    def _download_joint(self):
-        raise ValueError('Las consultas se realizan en el Descargador. Importa aquí el paquete obtenido.')
-
     def _ask_cut_date(self):
         """Fecha de corte: hoy por defecto, botón «Usar hoy» y posibilidad de escribir otra."""
         win = ctk.CTkToplevel(self)

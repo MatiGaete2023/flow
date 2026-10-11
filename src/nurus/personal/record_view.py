@@ -20,6 +20,12 @@ RES_NAMES = {
 MAIL_NAMES = {'auto': 'Automático', 'include': 'Incluir', 'omit': 'Omitir'}
 
 
+def original_hint(value, label='Origen'):
+    """Texto visible del dato que se usa si el campo queda vacío."""
+    text = str(value if value is not None else '').strip()
+    return f'{label}: {text[:80]}' if text else f'{label}: (vacío)'
+
+
 class RecordForm:
     def __init__(self, app, notebook):
         self.app = app
@@ -89,13 +95,17 @@ class RecordForm:
             anchor='w', pady=6
         )
         self.word_entries = {}
+        self.word_hints = {}
         for key in WORD_FIELDS:
             ui.Label(word_panel.body, text=key.replace('_', ' ')).pack(anchor='w')
             variable = self.variable()
             self.word[key] = variable
             entry = ui.Entry(word_panel.body, textvariable=variable)
-            entry.pack(fill='x', pady=(0, 5))
+            entry.pack(fill='x')
             self.word_entries[key] = entry
+            hint = ui.Label(word_panel.body, text='', text_color=ui.MUTED, anchor='w')
+            hint.pack(fill='x', pady=(0, 5))
+            self.word_hints[key] = hint
         ui.Button(word_panel.body, text='Aplicar datos Word', command=lambda: app._guard(self.save)).pack(
             anchor='e', pady=8
         )
@@ -137,13 +147,13 @@ class RecordForm:
             ui.Label(line, text=column, width=210, anchor='w').pack(side='left')
             variable = self.variable(str(row.overrides.get(key, '')))
             self.source[key] = variable
-            ui.Entry(line, textvariable=variable, placeholder_text=str(row.values.get(column, '') or '')).pack(
-                side='left', fill='x', expand=True
-            )
+            ui.Entry(line, textvariable=variable).pack(side='left', fill='x', expand=True)
+            # CTkEntry no muestra placeholder_text con textvariable: el dato original va en una etiqueta.
+            ui.Label(line, text=original_hint(row.values.get(column)), text_color=ui.MUTED).pack(side='left', padx=6)
         automatic = word_values(self.app.work, row)
         for key, variable in self.word.items():
             variable.set(row.word_overrides.get(key, ''))
-            self.word_entries[key].configure(placeholder_text=str(automatic.get(key, '')))
+            self.word_hints[key].configure(text=original_hint(automatic.get(key), 'Automático'))
         self.loading = False
         self.dirty = False
 
