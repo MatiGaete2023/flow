@@ -58,3 +58,9 @@ Los 607 artefactos antiguos habían sido eliminados por la sesión previa.
 E3 de #36–38 y WP-84; integrar aprobados con nueva medición/línea base tras cada integración.
 Soporte GitHub: confirmar retiro de referencias y cachés antiguas. WP-02/WP-50/WP-70
 siguen sujetos a las pruebas reales y al acta del usuario.
+
+## Ensayo conjunto con G-5
+
+PASA en `eae6b499b16f41960aa570538d857d335cdef9ec`: 839/11/6 y 240/62, nueve
+controles, procedencia limpia/estable. La resolución de documentos posterior no modifica
+código, pruebas ni configuración. Los cuatro paquetes permanecen EN_REVISION, sin E3.
