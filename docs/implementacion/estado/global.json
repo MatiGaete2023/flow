@@ -201,7 +201,7 @@
     "WP-81",
     "WP-70"
   ],
-  "commit_integracion": "8ccdc5d",
+  "commit_integracion": "c58de60fc9654a10d027765fa7202865f222c456",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",
@@ -212,6 +212,14 @@
         38
       ],
       "alcance": "Solo WP-81, WP-82 y WP-83. No se extiende a #39, main ni releases."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Haz la excepcion y termina tu",
+      "pr": [
+        39
+      ],
+      "alcance": "Excepción E3 para WP-84/#39 solicitada en el mensaje anterior. Sin revisión de otra raíz. No autoriza main, release ni sustituye acta real."
     }
   ]
 }

@@ -134,17 +134,18 @@ Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus depe
 
 ## Revisión del conjunto integrado — 11 de octubre de 2026
 
-WP-63/#34 y WP-80/#35 integrados. Continuación: WP-81, WP-82, WP-83 integrados;
-ninguno de #36–38 pendientes de integración.
-Usuario: «Autorizar excepción E3 para #36–38». Sin aprobación de otra raíz; no extender a #39.
-Línea base después de la integración actual: 830/240; evidencia en verificacion/WP-83.json.
-G-5 corregido en #39, actualizado a feat 9fbb08c; verificación vigente PASA 839/240 y E3 propia pendiente.
-WP-17: dos etiquetas antiguas eliminadas; refs de PR/cachés requieren Soporte GitHub.
+WP-63/#34, WP-80/#35 y WP-81–84/#36–39 integrados en feat. G-3, G-4 y G-5 resueltos.
+Excepciones E3 expresas del usuario: #36–38 («Autorizar excepción E3 para #36–38») y
+#39 («Haz la excepcion y termina tu»). No acreditan revisión/auditoría independiente y no
+se extienden a main, releases ni paquetes futuros. Línea base vigente: 841/240 en c58de60fc9654a10d027765fa7202865f222c456.
 
-Orden vigente: integrar los PR autorizados pendientes y regenerar línea base tras cada uno;
-revisar #39; confirmar limpieza externa; recibir resultados/acta WP-02; contrastar diez ingresos
-WP-50 y cerrar WP-70 tras acta. Dependencias funcionales de WP-70 conservadas exactamente.
-Sin main, release, force ni cambios de motor/textos. Seis xfail estrictos, golden17 intacto.
+Orden pendiente: confirmar retiro de referencias/cachés mediante Soporte GitHub (WP-17);
+recibir resultados de Excel/Outlook reales y acta WP-02; contrastar diez ingresos e integrar
+cronología WP-50/#33 tras WP-02; cerrar WP-70 tras acta final. Sus dependencias funcionales
+se conservan exactamente. Sin pruebas reales ni actas presumidas.
+
+Motor/textos/golden17 intactos; seis xfail estrictos. D3/D9 retirados, D4 60 días/10 sesiones,
+D5 cuatro meses, D6 consolidado en ZIP, D8 sin fallos observados. E3 general continúa vigente.
 
 ## Paquetes de trabajo
 
@@ -599,4 +600,4 @@ WP-82: [ficha](wp/WP-82.md), [reporte](REPORTE_WP82.md); integración autorizada
 
 WP-83: [ficha](wp/WP-83.md), [reporte](REPORTE_WP83.md); integración autorizada en verificación.
 
-WP-84: [ficha](wp/WP-84.md) y [reporte](REPORTE_WP84.md), sin excepción E3 ni integración.
+WP-84: [ficha](wp/WP-84.md) y [reporte](REPORTE_WP84.md), integrado con excepción E3 expresa.
