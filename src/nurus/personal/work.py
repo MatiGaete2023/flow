@@ -55,6 +55,52 @@ def _explicit(value):
     return True
 
 
+SERVICE_SHEETS={'Resumen','SITFA_ARCHIVOS','Vencimientos'}
+
+
+def _consolidated_base(work):
+    """Libro consolidado del paquete (D6) como base de la copia, o None si no sirve.
+
+    Sirve solo si el paquete sigue siendo el importado y cada registro aparece una única vez, por
+    (SITFA_SHA256, SITFA_ARCHIVO, SITFA_FILA), en una misma hoja de datos. Ante cualquier duda
+    devuelve None y la copia queda portable de fidelidad reducida, como antes.
+    """
+    from io import BytesIO
+    from openpyxl import load_workbook
+    from nurus.capture import read_capture
+    try:
+        capture=read_capture(work.path)
+        if capture.digest!=work.capture_digest or not capture.consolidated:return None
+        book=load_workbook(BytesIO(capture.consolidated),read_only=True,data_only=True)
+    except Exception:return None
+    try:
+        return _map_consolidated(work,capture,book)
+    except Exception:return None  # libro inesperado: la copia queda portable, como sin consolidado
+    finally:book.close()
+
+
+def _map_consolidated(work,capture,book):
+    """(bytes, hoja, filas) si cada registro está una sola vez en una misma hoja de datos; si no, None."""
+    index={};duplicated=set()
+    for sheet in book.worksheets:
+        if sheet.title in SERVICE_SHEETS:continue
+        rows=sheet.iter_rows(values_only=True);header=next(rows,None)
+        if not header or not {'SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'}<=set(header):continue
+        file_col,row_col,hash_col=(header.index(name) for name in ('SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'))
+        for number,values in enumerate(rows,2):
+            key=(str(values[hash_col]),str(values[file_col]),str(values[row_col]))
+            if key in index:duplicated.add(key)
+            index[key]=(sheet.title,number)
+    positions={};sheets=set()
+    for row in work.rows:
+        record=work.capture_sources.get(row.id)
+        key=(record['source_sha256'],record['original_file'],record['original_row']) if record else None
+        if key is None or key not in index or key in duplicated:return None
+        sheet,number=index[key];sheets.add(sheet);positions[row.id]=number
+    if len(sheets)!=1:return None
+    return capture.consolidated,sheets.pop(),positions
+
+
 def _human_reviewed(row):
     """Distingue una edición humana real de columnas técnicas reimportadas vacías."""
     review=row.review or {}
@@ -199,16 +245,18 @@ class Work:
         reviewed={row.id:_human_reviewed(row) for row in self.rows}
         reviewed_stage=any(reviewed.values())
         package_input=bool(getattr(self,'capture_digest',''))
-        if package_input and backend=='native':backend='portable';reduced_fidelity=True
-        batch={'source_name':Path(self.path).stem+'.xlsx' if package_input else Path(self.path).name,'source_path':self.path,'source_hash':self.source_hash,
-               'primary_sheet':self.sheet,'header_row':self.header,'mode':self.mode,
+        base=_consolidated_base(self) if package_input else None
+        content,source_hash,primary_sheet,header_row=(base[0],sha256(base[0]).hexdigest(),base[1],1) if base else (self.content,self.source_hash,self.sheet,self.header)
+        if package_input and backend=='native' and not base:backend='portable';reduced_fidelity=True
+        batch={'source_name':Path(self.path).stem+'.xlsx' if package_input else Path(self.path).name,'source_path':self.path,'source_hash':source_hash,
+               'primary_sheet':primary_sheet,'header_row':header_row,'mode':self.mode,
                'export_stage':'reviewed' if reviewed_stage else 'proposal'}
         from .record_edits import encode
         records=[]
         for row in self.rows:
             is_reviewed=reviewed[row.id]
             records.append({
-                'record_id':row.id,'source_sheet':self.sheet,'source_row':row.source_row,'source_hash':self.source_hash,
+                'record_id':row.id,'source_sheet':primary_sheet,'source_row':base[2][row.id] if base else row.source_row,'source_hash':source_hash,
                 'decision':'excluded' if row.excluded else ('approved' if is_reviewed else 'pending'),
                 'evaluation_status':'blocked' if row.warnings else 'reviewed',
                 'edit_reason':'; '.join(row.warnings),
@@ -222,16 +270,21 @@ class Work:
                 'workload_value':_review_value(row,'CC'),
                 'resolution_value':_review_value(row,'RES'),
             })
-        result=_export_preserved_payload(self.content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
-        previous=(self.output,self.output_hash)
+        result=_export_preserved_payload(content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
+        saved=(self.output,self.output_hash,self.content,self.source_hash,self.sheet,self.header,[row.source_row for row in self.rows])
         from .sync import remember_export
         try:
             # Todo lo que puede fallar (lectura del archivo bloqueado, registro) queda dentro del try.
             self.output=str(result.path)
             self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
+            if base:
+                # La copia parte del consolidado: el trabajo pasa a apuntar a su hoja y a sus filas, como un Excel tradicional.
+                self.content,self.source_hash,self.sheet,self.header=content,source_hash,primary_sheet,header_row
+                for row in self.rows:row.source_row=base[2][row.id]
             remember_export(self)
         except Exception:
-            self.output,self.output_hash=previous
+            (self.output,self.output_hash,self.content,self.source_hash,self.sheet,self.header,rows)=saved
+            for row,number in zip(self.rows,rows):row.source_row=number
             Path(result.path).unlink(missing_ok=True)
             raise
         return self.output
