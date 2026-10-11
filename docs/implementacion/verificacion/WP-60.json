@@ -1,0 +1,58 @@
+{
+  "commit": "5502dfd",
+  "base": "f2ae588",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "662 passed, 11 skipped, 6 xfailed in 67.47s (0:01:07) (mínimo 612 aprobadas; base 612)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "198 passed, 59 subtests passed in 38.24s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "12 hallazgos (límite 12)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA",
+  "rol": "Ejecutor",
+  "fecha": "10 de octubre de 2026",
+  "casos_rt": {
+    "ejecutados": 32,
+    "pasados_sin_conflicto": 26,
+    "con_conflicto": 6,
+    "pruebas_focales_pasadas": 37,
+    "xfail_estrictos": 6,
+    "runxfail_fallos_sustantivos": 6,
+    "errores_fixture": 0
+  }
+}
