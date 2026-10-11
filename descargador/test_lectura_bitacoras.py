@@ -352,3 +352,28 @@ def test_extension_260_without_diary_command_is_rejected_before_any_query(tmp_pa
     data=json.loads(Path(result['manifest']).read_text(encoding='utf-8'))
     assert not bridge.openings and not data['registros'] and not data['consultas']
     assert result['estado']=='INCOMPLETA' and 'Actualiza la extensión' in result['detalle']
+
+
+def test_lectura_importa_nurus_solo_despues_de_ubicar_src(tmp_path):
+    """Como en la CI del Descargador: sin paquete instalado, nurus existe solo tras parser()."""
+    import subprocess
+    import sys
+    script = '''
+import sys,tempfile,threading
+from pathlib import Path
+src=str(Path.cwd().parent/"src")
+class Bloqueo:
+    def find_spec(self,name,path=None,target=None):
+        if name.split(".")[0]=="nurus" and src not in sys.path:
+            raise ModuleNotFoundError("No module named 'nurus'",name="nurus")
+sys.meta_path.insert(0,Bloqueo())
+import lectura_bitacoras
+from lotes import Batch
+class Runner:
+    cancel=threading.Event()
+batch=Batch(("49",),("2",),("Cumplimiento",))
+lectura_bitacoras._Lectura(Runner(),batch,tempfile.mkdtemp(),None)
+'''
+    result = subprocess.run([sys.executable, '-c', script], cwd=Path(__file__).resolve().parent,
+                            capture_output=True, text=True, timeout=60)
+    assert result.returncode == 0, result.stderr
