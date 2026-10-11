@@ -2,24 +2,16 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import date
 from enum import StrEnum
 from hashlib import sha256
 from types import MappingProxyType
 from typing import Mapping
-from uuid import uuid4
 
 
 class Mode(StrEnum):
     ESPERA = "ESPERA"
     CUMPLIMIENTO = "CUMPLIMIENTO"
     INFORMES = "INFORMES"
-
-
-class EvaluationStatus(StrEnum):
-    REVIEWED = "reviewed"
-    BLOCKED = "blocked"
-    EXCLUDED = "excluded"
 
 
 def _freeze(value: object) -> object:
@@ -80,48 +72,3 @@ class ReadBatch:
     def __post_init__(self) -> None:
         object.__setattr__(self, "column_mapping", _freeze(dict(self.column_mapping)))
         object.__setattr__(self, "cross_mapping", _freeze(dict(self.cross_mapping)))
-
-
-@dataclass(frozen=True)
-class Issue:
-    code: str
-    message: str
-    source: SourceReference
-
-
-@dataclass(frozen=True)
-class Evaluation:
-    record_id: str
-    source: SourceReference
-    values: Mapping[str, object]
-    observation: str
-    rule_ids: tuple[str, ...]
-    issues: tuple[Issue, ...] = ()
-    related_sources: tuple[SourceReference, ...] = ()
-    status: EvaluationStatus = EvaluationStatus.REVIEWED
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "values", _freeze(dict(self.values)))
-
-
-@dataclass(frozen=True)
-class EvaluationBatch:
-    mode: Mode
-    as_of: date
-    evaluations: tuple[Evaluation, ...]
-    warnings: tuple[str, ...] = ()
-    batch_id: str = field(default_factory=lambda: str(uuid4()))
-    source_path: str = ""
-    workbook_name: str = ""
-    workbook_sha256: str = ""
-    primary_sheet: str = ""
-    cross_sheet: str = ""
-    header_row: int = 1
-    excel_epoch: str = "1900"
-    engine_version: str = ""
-    catalog_sha256: str = ""
-    column_mapping: Mapping[str, str] = field(default_factory=dict)
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "column_mapping", _freeze(dict(self.column_mapping)))
-
