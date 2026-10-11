@@ -138,7 +138,7 @@ WP-63/#34 y WP-80/#35 integrados. Continuación: WP-81, WP-82, WP-83 integrados;
 ninguno de #36–38 pendientes de integración.
 Usuario: «Autorizar excepción E3 para #36–38». Sin aprobación de otra raíz; no extender a #39.
 Línea base después de la integración actual: 830/240; evidencia en verificacion/WP-83.json.
-G-5 corregido en #39, pendiente de actualización a feat y revisión E3 propia.
+G-5 corregido en #39, actualizado a feat 9fbb08c; verificación vigente PASA 839/240 y E3 propia pendiente.
 WP-17: dos etiquetas antiguas eliminadas; refs de PR/cachés requieren Soporte GitHub.
 
 Orden vigente: integrar los PR autorizados pendientes y regenerar línea base tras cada uno;
@@ -598,3 +598,5 @@ La implementación termina cuando los 34 WP están `INTEGRADO` (o descartados po
 WP-82: [ficha](wp/WP-82.md), [reporte](REPORTE_WP82.md); integración autorizada en verificación.
 
 WP-83: [ficha](wp/WP-83.md), [reporte](REPORTE_WP83.md); integración autorizada en verificación.
+
+WP-84: [ficha](wp/WP-84.md) y [reporte](REPORTE_WP84.md), sin excepción E3 ni integración.

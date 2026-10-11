@@ -1,0 +1,30 @@
+{
+  "titulo": "Consultas de estado sin lecturas repetidas y cierre técnico de etiquetas",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-82",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_REVISION",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/84-huellas-consulta-20261011",
+  "pr": 39,
+  "verificacion": "PASA en 9518d9bcc667b915dd46c751561bf740fdceafd5 contra base integrada 4470ff3 (830/240): Asistente 839/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. CI Windows en PR #39.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
+    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat.",
+    "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82."
+  ]
+}
