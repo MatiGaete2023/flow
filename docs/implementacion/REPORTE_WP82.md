@@ -1,5 +1,9 @@
 # Continuación técnica — WP-82
 
+Estado actual: WP-82 integrado en feat con excepción E3 expresa del usuario para #36–38.
+Las notas de preparación siguientes son históricas; ver «Integración autorizada» al final.
+
+
 11 de octubre de 2026. Base remota `286c28f`, con WP-63/WP-80 integrados.
 WP-81 (#36) tiene CI verde pero no revisión E3 registrada; no se integra su propio trabajo.
 Se continúa el pendiente G-4 de WP-80, independiente de WP-81, en rama propia desde feat.

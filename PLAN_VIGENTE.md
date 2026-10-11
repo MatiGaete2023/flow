@@ -21,7 +21,7 @@ No hay otras puertas. Las pruebas automáticas no reemplazan el acta, y el acta 
 
 ## Decisiones del usuario (estado en docs/implementacion/ESTADO.json → decisiones)
 - Motor de reglas vigente: personal/motor (N1: el otro no participa en la app).
-- D1 purga de historial: ramas reescritas el 11 de octubre; faltan dos etiquetas antiguas y referencias de PR (WP-17).
+- D1 purga de historial: ramas reescritas el 11 de octubre; etiquetas antiguas eliminadas; faltan referencias de PR y cachés mediante Soporte GitHub (WP-17).
 - D2 casos probados en uso real: «Ninguna todavía»; WP-02 espera resultados del usuario.
 - D3 retiro del inspector y diario de registro RUS: «Sí, retirarlos».
 - D4 retención local: «60 días y hasta 10 sesiones anteriores».

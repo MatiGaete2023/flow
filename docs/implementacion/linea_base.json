@@ -1,14 +1,14 @@
 {
-  "commit": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
+  "commit": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
   "asistente": {
-    "aprobadas": 824,
+    "aprobadas": 830,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "824 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "830 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 240,
@@ -726,6 +726,12 @@
       "tests/test_rus_reader.py::test_compliance_does_not_use_an_unrelated_second_sheet",
       "tests/test_rus_reader.py::test_named_cross_sheet_with_incomplete_mapping_requires_missing_cross_exception",
       "tests/test_rus_reader.py::test_waiting_reader_preserves_source_and_applies_rule",
+      "tests/test_secondary_window_lock.py::test_closed_secondary_window_does_not_prevent_unlock",
+      "tests/test_secondary_window_lock.py::test_failed_secondary_lock_restores_inputs_already_disabled",
+      "tests/test_secondary_window_lock.py::test_manual_editor_cannot_change_inputs_during_worker",
+      "tests/test_secondary_window_lock.py::test_nested_windows_restore_readonly_selected_and_disabled_states[False]",
+      "tests/test_secondary_window_lock.py::test_nested_windows_restore_readonly_selected_and_disabled_states[True]",
+      "tests/test_secondary_window_lock.py::test_preferences_cannot_save_configuration_during_worker",
       "tests/test_siguiente_paso.py::test_cambios_de_destinatario_y_archivo_actualizan_los_pasos",
       "tests/test_siguiente_paso.py::test_conteos_coinciden_con_cada_pagina_y_se_actualizan",
       "tests/test_siguiente_paso.py::test_editar_proyecto_recalcula_campos_pendientes",
