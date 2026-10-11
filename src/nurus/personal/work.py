@@ -74,25 +74,31 @@ def _consolidated_base(work):
         book=load_workbook(BytesIO(capture.consolidated),read_only=True,data_only=True)
     except Exception:return None
     try:
-        index={};duplicated=set()
-        for sheet in book.worksheets:
-            if sheet.title in SERVICE_SHEETS:continue
-            rows=sheet.iter_rows(values_only=True);header=next(rows,None)
-            if not header or not {'SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'}<=set(header):continue
-            file_col,row_col,hash_col=(header.index(name) for name in ('SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'))
-            for number,values in enumerate(rows,2):
-                key=(str(values[hash_col]),str(values[file_col]),str(values[row_col]))
-                if key in index:duplicated.add(key)
-                index[key]=(sheet.title,number)
-        positions={};sheets=set()
-        for row in work.rows:
-            record=work.capture_sources.get(row.id)
-            key=(record['source_sha256'],record['original_file'],record['original_row']) if record else None
-            if key is None or key not in index or key in duplicated:return None
-            sheet,number=index[key];sheets.add(sheet);positions[row.id]=number
-        if len(sheets)!=1:return None
-        return capture.consolidated,sheets.pop(),positions
+        return _map_consolidated(work,capture,book)
+    except Exception:return None  # libro inesperado: la copia queda portable, como sin consolidado
     finally:book.close()
+
+
+def _map_consolidated(work,capture,book):
+    """(bytes, hoja, filas) si cada registro está una sola vez en una misma hoja de datos; si no, None."""
+    index={};duplicated=set()
+    for sheet in book.worksheets:
+        if sheet.title in SERVICE_SHEETS:continue
+        rows=sheet.iter_rows(values_only=True);header=next(rows,None)
+        if not header or not {'SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'}<=set(header):continue
+        file_col,row_col,hash_col=(header.index(name) for name in ('SITFA_ARCHIVO','SITFA_FILA','SITFA_SHA256'))
+        for number,values in enumerate(rows,2):
+            key=(str(values[hash_col]),str(values[file_col]),str(values[row_col]))
+            if key in index:duplicated.add(key)
+            index[key]=(sheet.title,number)
+    positions={};sheets=set()
+    for row in work.rows:
+        record=work.capture_sources.get(row.id)
+        key=(record['source_sha256'],record['original_file'],record['original_row']) if record else None
+        if key is None or key not in index or key in duplicated:return None
+        sheet,number=index[key];sheets.add(sheet);positions[row.id]=number
+    if len(sheets)!=1:return None
+    return capture.consolidated,sheets.pop(),positions
 
 
 def _human_reviewed(row):
