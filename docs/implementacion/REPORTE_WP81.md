@@ -1,6 +1,7 @@
 # Revisión propia y continuación — WP-81
 
 11 de octubre de 2026. Base remota revisada: `286c28f`, después de WP-63 (#34) y WP-80 (#35).
+[PR #36](https://github.com/MatiGaete2023/flow/pull/36), borrador.
 Esta revisión directa del Ejecutor responde a la instrucción del usuario; no constituye E3.
 
 ## Estado y razonamiento
@@ -28,7 +29,10 @@ ahora distingue metadatos de PNG de sus bytes binarios. Ninguna prueba eliminada
 
 ## Verificación
 
-Pendiente de completar en el commit limpio de WP-81: controles generales y CI Windows.
+Primera ejecución completa en `2dae700`: suites 810/240, golden17, identidades y restricciones PASA;
+veredicto FALLA por dos enlaces relativos del traspaso archivado. Se corrigen los enlaces,
+se conservan los resultados de esa ejecución y se repite contra un commit limpio.
+CI Windows en curso.
 El entorno Linux no acredita Office/SITFA real. Evidencia se registrará por SHA medido.
 
 ## Continuación y mejoras del plan
