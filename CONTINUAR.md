@@ -32,8 +32,10 @@ De Codex: #4 (WP-14, aprobado y conforme), #8 (WP-15), #11 (WP-60). No los modif
 
 - D3 retirar inspector y diario RUS · D4 60 días y 10 sesiones · D8 sin fallos · D6 «Sí, solo el consolidado» · D9 «Retirar
   botón» · D5 «Sí, horizonte de 4 meses» · D7 «Sí, tras el acta final».
-- **Pendientes:** D1 (purga del historial, requiere push forzado y autorización escrita) y D2 (lista de casos probados en
-  uso real; el usuario no marcó ninguno).
+- D1 (11 de octubre de 2026): «Reescribir historial». WP-17 se ejecuta solo después de integrar WP-10, WP-12 y WP-20, y
+  el push forzado necesita además la autorización escrita del usuario en ese momento; NuRus está fuera del alcance de esta sesión.
+- **Pendiente:** D2 (lista de casos probados en uso real; el usuario no marcó ninguno).
+- **Revisión:** el usuario pidió que esta sesión revise con subagentes; por E3 es apoyo, no aprobación.
 
 ### Qué falta (en este orden)
 
