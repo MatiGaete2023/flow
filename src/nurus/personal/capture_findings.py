@@ -56,10 +56,14 @@ def updated_contexts(work, rows):
     return contexts
 
 
+def _day(iso):
+    """aaaa-mm-dd → dd/mm/aaaa."""
+    return '/'.join(reversed(iso[:10].split('-')))
+
+
 def _when(event):
     value = event.get('event_at', '')
-    day = '/'.join(reversed(value[:10].split('-')))
-    return day + (' ' + value[11:16] if 'T' in value else ' (sin hora)')
+    return _day(value) + (' ' + value[11:16] if 'T' in value else ' (sin hora)')
 
 
 def display_of(work, row):
@@ -73,6 +77,8 @@ def last_center_label(work, row):
         return ''
     if display['status'] == 'ORIGEN_DESCONOCIDO':
         return 'ORIGEN_DESCONOCIDO'
+    if display['status'] == 'NO_SOLICITADA':
+        return 'Bitácoras no solicitadas'
     if display['status'] != 'ACREDITADA':
         return 'Sin entradas capturadas'
     label = _when(display['last_center'][0])[:10]
@@ -85,13 +91,11 @@ def novelties_text(work, row):
     display = display_of(work, row)
     if not display:
         return 'Novedades posteriores: no disponibles (trabajo sin paquete de captura o identidad no verificada).'
-    period = (
-        '/'.join(reversed(display['period_from'].split('-')))
-        + ' a '
-        + '/'.join(reversed(display['period_to'].split('-')))
-    )
+    period = _day(display['period_from']) + ' a ' + _day(display['period_to'])
     lines = [f'Novedades posteriores · solo mostrar · período {period}']
-    if display['status'] == 'SIN_ENTRADAS_CAPTURADAS':
+    if display['status'] == 'NO_SOLICITADA':
+        lines.append('El paquete no solicitó bitácoras: no hay entradas que mostrar.')
+    elif display['status'] == 'SIN_ENTRADAS_CAPTURADAS':
         lines.append('No hay entradas capturadas en el período; no acredita ausencia de actuaciones.')
     elif display['status'] == 'ORIGEN_DESCONOCIDO':
         lines.append('ORIGEN_DESCONOCIDO: ninguna entrada del período tiene origen del centro acreditado.')
@@ -106,6 +110,10 @@ def novelties_text(work, row):
             lines += _entries(display['uncertain'])
     if display['outside_horizon']:
         lines.append(f"{display['outside_horizon']} entrada(s) anteriores al período no se consideran.")
+    if display.get('after_cutoff'):
+        lines.append(f"{display['after_cutoff']} entrada(s) posteriores a la fecha de corte no se consideran.")
+    if display.get('undated'):
+        lines.append(f"{display['undated']} entrada(s) sin fecha no se pueden ubicar en la cronología.")
     return '\n'.join(lines)
 
 
