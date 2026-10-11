@@ -208,7 +208,8 @@ def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
     found = {name: text for path in (session, script, image) for name, text in ids.texts(path)}
     assert any(rut in text for name, text in found.items() if '.bin!' in name)
     assert any(rut in text for name, text in found.items() if name.endswith('.ps1'))
-    assert not any(name.endswith('.png') for name in found)
+    # La identidad del nombre se revisa; el contenido binario no se interpreta como texto.
+    assert [text for name, text in found.items() if name.endswith('.png')] == ['logo.png']
 
 
 def test_check_real_ids_decodes_utf16_and_cp1252():

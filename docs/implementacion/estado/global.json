@@ -141,6 +141,10 @@
     {
       "fecha": "11 de octubre de 2026",
       "descripcion": "WP-63: nueva auditoría y refactorización autorizadas por el usuario sobre 2cf8ca8 en clon limpio. Correcciones y reporte en rama propia; revisión cruzada E3 e integración pendientes. Los traspasos anteriores quedan como historial."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "WP-63 y WP-80 integrados; WP-81 continúa revisión propia desde 286c28f. Preserva decisiones/E3 previos; revisión propia no sustituye E3 del paquete nuevo."
     }
   ],
   "decisiones_adicionales": {
@@ -193,6 +197,8 @@
     "WP-61",
     "WP-62",
     "WP-63",
+    "WP-80",
+    "WP-81",
     "WP-70"
   ],
   "commit_integracion": "8ccdc5d"
