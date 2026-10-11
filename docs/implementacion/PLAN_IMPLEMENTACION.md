@@ -173,7 +173,7 @@ Cada ficha indica tipo (**C** crear · **E** eliminar · **M** modificar), depen
 **WP-02 · Acta de uso real** — C · depende de WP-00 · **D2**
 
 - **Archivos:** `docs/aceptacion/ACTA_USO_REAL_<fecha>.json`, una línea en `CONTINUAR.md`.
-- **Hacer:** `python tools/flow_acceptance.py init docs/aceptacion/ACTA_USO_REAL_<fecha>.json --commit <SHA> --kind INSTITUCIONAL` con un `--case` por cada caso de D2. El usuario marca PASÓ; el agente no completa resultados.
+- **Hacer:** `python tools/flow_acceptance.py init docs/aceptacion/ACTA_USO_REAL_<fecha>.json --commit <SHA>` con un `--case` por cada caso de D2 (sin `--kind`: el tipo de evidencia lo elige el usuario al ejecutar cada caso; decisión del 11 de octubre de 2026). El usuario marca PASÓ; el agente no completa resultados.
 - **Aceptación:** `python tools/flow_acceptance.py validate <acta>` sin errores; el acta no contiene nombres, RUT, RIT ni rutas personales.
 
 ### Ola 1 · Datos sensibles

@@ -25,12 +25,12 @@ try {
     Copy-Item -LiteralPath (Join-Path $csmpRoot "requirements/windows-py$minor.lock") -Destination (Join-Path $outputRoot 'DEPENDENCIAS.lock') -Force
     $sourceCommit = (git rev-parse HEAD).Trim()
     if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA de la plantilla de aceptación' }
-    $acta = Join-Path $outputRoot 'ACTA_INSTITUCIONAL_NO_EJECUTADA.json'
+    $acta = Join-Path $outputRoot 'ACTA_USO_REAL_NO_EJECUTADA.json'
     if (Test-Path $acta) {
         CheckedPython @('tools/flow_acceptance.py','validate',$acta)
         $previousActa = Get-Content $acta -Raw | ConvertFrom-Json
         if ($previousActa.artifact.source_commit -ne $sourceCommit) { throw 'El acta existente corresponde a otro SHA; use una carpeta nueva' }
-        if (@($previousActa.records | Where-Object { $_.result -ne 'NO_EJECUTADO' -or $_.evidence_kind -ne 'INSTITUCIONAL' }).Count -ne 0) {
+        if (@($previousActa.records | Where-Object { $_.result -ne 'NO_EJECUTADO' }).Count -ne 0) {
             throw 'El acta existente contiene resultados; conserve ese archivo y use una carpeta nueva para distribuir'
         }
     } else {

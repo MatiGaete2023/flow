@@ -123,7 +123,7 @@ jobs:
         run: |
           $captureSourceCommit = (git rev-parse HEAD).Trim()
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
-          python tools/flow_acceptance.py init artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version $env:ASSISTANT_VERSION --downloader-version $env:DOWNLOADER_VERSION --extension-version $env:DOWNLOADER_VERSION
+          python tools/flow_acceptance.py init artifacts/ACTA_USO_REAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version $env:ASSISTANT_VERSION --downloader-version $env:DOWNLOADER_VERSION --extension-version $env:DOWNLOADER_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
 
       - name: Windows interface captures
@@ -284,6 +284,6 @@ jobs:
             artifacts/dependencies*.json
             requirements/windows-py312.lock
             artifacts/package-check.json
-            artifacts/ACTA_INSTITUCIONAL_NO_EJECUTADA.json
+            artifacts/ACTA_USO_REAL_NO_EJECUTADA.json
             artifacts/productos-ficticios/
             artifacts/captura-v1/
