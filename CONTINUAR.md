@@ -8,7 +8,8 @@ WP-81/#36 (herramientas) y WP-82/#37 (correo) tienen verificación y CI aprobada
 siguen abiertos sin revisión E3 registrada. Consultar sus fichas en sus propias ramas.
 WP-83 continúa G-3: bloquear controles editables de ventanas secundarias durante una
 operación y restaurar estados anteriores. Rama wp/83-bloqueo-editores-20261011, desde feat,
-independiente de #36/#37. [Ficha](docs/implementacion/wp/WP-83.md) y
+independiente de #36/#37. PR #38 borrador; verificación completa PASA
+en `636af86` (802/240); controles Windows en el PR. [Ficha](docs/implementacion/wp/WP-83.md) y
 [reporte](docs/implementacion/REPORTE_WP83.md).
 
 ## Continuación, en orden
