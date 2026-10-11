@@ -6,7 +6,10 @@ on:
     branches:
       - main
       - 'feat/**'
+  # Solo PR hacia ramas de integración: el PR feat → main no repite lo que ya corrió el push a feat.
   pull_request:
+    branches:
+      - 'feat/**'
   workflow_dispatch:
 
 permissions:
@@ -47,8 +50,8 @@ jobs:
       - name: Versiones desde sus fuentes únicas
         run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
 
-      - name: Estado compartido coherente (E1, cuando existan las fuentes por WP)
-        run: if (Test-Path docs/implementacion/estado/global.json) { python tools/estado.py validar; if ($LASTEXITCODE -ne 0) { throw 'ESTADO.json no coincide con sus fuentes' } }
+      - name: Estado compartido coherente (E1)
+        run: python tools/estado.py validar; if ($LASTEXITCODE -ne 0) { throw 'ESTADO.json no coincide con sus fuentes' }
 
       - name: Install
         run: |
@@ -190,13 +193,8 @@ jobs:
         if: matrix.python == '3.12'
         timeout-minutes: 15
         shell: pwsh
+        # pip check ya corrió en este job; pruebas del Descargador y de la extensión: workflow descargador-integral.
         run: |
-          python -m pip check
-          if ($LASTEXITCODE -ne 0) { throw 'Dependencias descargador' }
-          python -m pytest descargador -q
-          if ($LASTEXITCODE -ne 0) { throw 'Pruebas descargador' }
-          node descargador/test_bitacoras_extension.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Pruebas extensión' }
           ./tools/build_integral.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Falló paquete CSMP-Descargador' }
 

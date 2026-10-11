@@ -77,7 +77,23 @@ def tracked_files() -> list[Path]:
 
 
 def texts(path: Path, staged: bytes | None = None):
+    """Texto de un archivo versionado: por sufijo conocido o, si el sufijo es otro, por su contenido.
+
+    Una sesión guardada (.bin que es un XLSX) o un .ps1/.iss con datos también se revisan.
+    """
     suffix = path.suffix.lower()
+    if suffix not in TEXT_SUFFIXES and suffix not in ZIP_SUFFIXES:
+        raw = staged if staged is not None else path.read_bytes()
+        if zipfile.is_zipfile(io.BytesIO(raw)):
+            staged, suffix = raw, ".zip"
+        elif b"\0" not in raw:
+            try:
+                yield str(path), raw.decode("utf-8")
+            except UnicodeDecodeError:
+                pass
+            return
+        else:
+            return
     if suffix in TEXT_SUFFIXES:
         content = (
             staged.decode("utf-8", errors="ignore")
