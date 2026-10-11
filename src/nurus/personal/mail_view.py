@@ -6,6 +6,7 @@ import tkinter as tk
 import customtkinter as ctk
 
 from . import ui
+from .config import CC, emails
 from .outputs import draft_fingerprint_for_display, draft_preview_scope
 from .widgets import NamedChoice, CaseDetailPanel, Tooltip
 from .modalities import MODALITIES
@@ -130,9 +131,13 @@ class DraftCards(ctk.CTkScrollableFrame):
             expired = bool(draft.due and draft.due < date.today().isoformat())
             problem = False
             try:
-                receipt = (
-                    (receipts or {}).get(draft_fingerprint_for_display(draft), {}).get('state') if receipts else None
-                )
+                receipt = None
+                if receipts:
+                    receipt = receipts.get(draft_fingerprint_for_display(draft), {}).get('state')
+                else:
+                    # Validar direcciones aunque no haya recibos; no requiere leer adjuntos.
+                    emails(draft.to)
+                    emails(CC + ';' + draft.cc)
             except (ValueError, OSError):
                 receipt = None
                 problem = True
