@@ -21,6 +21,7 @@ Controles:
   6. Ruff E9,F63,F7,F82,F401,F841 en src/descargador/tools: mismo alcance que CI, motor intacto.
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
+  9. Inventario de pruebas: ninguna baja sin declaración exacta, aunque se agreguen otras pruebas.
   9. Inventario de pruebas: toda baja respecto de la base debe declararse con nodeids exactos.
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
