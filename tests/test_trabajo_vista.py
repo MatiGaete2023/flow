@@ -8,7 +8,7 @@ def test_columnas_editor_plegado_tooltip_excluidas_y_atajos(tmp_path):
         tmp_path,
         """
 from nurus.personal.work_view import WORK_COLUMNS
-assert WORK_COLUMNS==('Estado','Observación','RIT','Nombre','Programa','Tribunal')
+assert WORK_COLUMNS==('Estado','Observación','RIT','Nombre','Programa','Tribunal','Última obs. centro')
 assert tuple(app.records['columns'])==WORK_COLUMNS
 atajos=('<Control-s>','<Control-o>','<Control-f>','<F5>','<Control-k>')
 assert all(app.bind_all(sequence) for sequence in atajos)
@@ -20,6 +20,8 @@ assert not app.work_editor_open()
 fila=app.work.rows[0]
 assert app.records.set(fila.id,'Observación')==fila.review.get('OBSERVACION',fila.observation)
 assert app.records.set(fila.id,'RIT') and app.records.set(fila.id,'Tribunal')
+# Sin paquete de captura no hay bitácoras: la columna queda vacía, no afirma ausencia.
+assert app.records.set(fila.id,'Última obs. centro')==''
 app.records.selection_set(fila.id);app.update()
 assert app.work_editor_open()
 app.update_idletasks();app.update()

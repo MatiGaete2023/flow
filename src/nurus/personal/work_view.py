@@ -5,8 +5,16 @@ from . import ui
 from .widgets import CaseDetailPanel, ScrollPane
 from .record_view import RecordForm
 
-WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal')
-WORK_WIDTHS = {'Estado': 110, 'Observación': 260, 'RIT': 85, 'Nombre': 180, 'Programa': 160, 'Tribunal': 95}
+WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro')
+WORK_WIDTHS = {
+    'Estado': 110,
+    'Observación': 260,
+    'RIT': 85,
+    'Nombre': 180,
+    'Programa': 160,
+    'Tribunal': 95,
+    'Última obs. centro': 140,
+}
 
 
 class ObservationTip:
@@ -293,6 +301,11 @@ def build(app):
         )
     app.work_case_detail = CaseDetailPanel(detail.body)
     app.work_case_detail.pack(fill='x', pady=4)
+    # Novedades posteriores (WP-50, D5): solo mostrar; no edita observaciones ni reglas.
+    app.work_novelties = tk.StringVar()
+    ui.Label(detail.body, textvariable=app.work_novelties, wraplength=700, justify='left', anchor='w').pack(
+        fill='x', pady=4
+    )
 
     def fit(event=None):
         height = split.winfo_height()

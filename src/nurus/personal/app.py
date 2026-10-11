@@ -394,6 +394,7 @@ class App(_BaseApp):
         self.work_primary_button.configure(text='Exportar copia actual')
         self.observation_editor.delete('1.0', 'end')
         from .table_update import prune, render_rows
+        from .capture_findings import last_center_label
 
         old_work = list(getattr(self, '_work_all_iids', self.records.get_children()))
         old_words = list(getattr(self, '_resolution_all_iids', self.words.get_children()))
@@ -438,6 +439,7 @@ class App(_BaseApp):
                 value(self.work, row, 'nombre'),
                 value(self.work, row, 'programa'),
                 value(self.work, row, 'tribunal'),
+                last_center_label(self.work, row),
             )
             jobs.append((self.records, row.id, values, tuple(tags)))
             self._work_all_iids.append(row.id)

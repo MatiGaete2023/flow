@@ -50,6 +50,16 @@ def check_pipeline(folder):
     work = import_capture(package, config, as_of=date(2026, 10, 8))
     require(len(work.rows) == 4, 'faltan registros.')
     require(all(c['class'] == 'NO_EVALUABLE' for c in work.capture_context.values()), 'se activó contexto no aceptado.')
+    # CT-01/CT-02 solo se muestran (D5): ninguna vista genera hallazgos contextuales aplicables.
+    require(
+        all(
+            f['status'] != 'APLICA'
+            for c in work.capture_context.values()
+            for f in c['findings']
+            if f['rule_id'].startswith('CT-')
+        ),
+        'la vista de cronología generó hallazgos.',
+    )
     row = work.rows[0]
     row.review = {'OBSERVACION': 'Edición humana ficticia', 'TT': 'T', 'CC': '1', 'RES': 'PC_IE'}
     work.rows[1].excluded = True
@@ -165,6 +175,7 @@ def check_pipeline(folder):
         'corrupt_capture_rejected': True,
         'original_preserved': True,
         'production_context_disabled': True,
+        'chronology_display_only': True,
         'request_items': len(request['requests']),
         'draft_descriptors': len(drafts),
         'rosters': len(rosters),

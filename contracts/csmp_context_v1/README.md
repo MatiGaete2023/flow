@@ -1,8 +1,15 @@
 # Catálogo contextual — activación pendiente
 
 [Catálogo](catalog.json) conserva CT-01..CT-10 del documento 03, con fuentes,
-condiciones propuestas y límites. Todas están desactivadas; falta aceptación
-funcional individual y evidencia G1/G9 donde corresponda.
+condiciones propuestas y límites. Ninguna genera hallazgos (`enabled: false`); falta
+aceptación funcional individual y evidencia G1/G9 donde corresponda.
+
+CT-01 y CT-02 están en `ACTIVA_SOLO_MOSTRAR` (decisión D5, WP-50): el Asistente muestra
+la última observación atribuible al centro y las entradas posteriores de los últimos
+cuatro meses (columna «Última obs. centro» y panel «Novedades posteriores» en Detalle).
+No cambian observaciones, reglas, umbrales, `TT`, `CC` ni `RES`. Sin origen acreditado
+se muestra `ORIGEN_DESCONOCIDO`. `nurus.capture.temporal.DISPLAY_RULES` debe coincidir
+con este catálogo; vaciarlo es el rollback.
 
 `nurus.capture.temporal` implementa cronología de preview para CT-01/02/06,
 exclusivamente con fixtures explícitas no sensibles. Producción informa contexto
