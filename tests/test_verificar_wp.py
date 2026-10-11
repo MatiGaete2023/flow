@@ -13,6 +13,7 @@ SPEC = importlib.util.spec_from_file_location(
 )
 verifier = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(verifier)
+REAL_PROVENANCE = verifier.provenance
 
 
 @pytest.fixture(autouse=True)
@@ -232,6 +233,65 @@ def test_output_cannot_overwrite_baseline(monkeypatch, baseline_file, healthy):
     with pytest.raises(SystemExit) as exc:
         verifier.main(["--salida", str(baseline_file)])
     assert exc.value.code == 2
+
+
+@pytest.mark.parametrize('relative', ['src/config.json', 'src/code.py', '.git/state.json', 'report.json'])
+def test_report_output_cannot_replace_or_exclude_project_files(monkeypatch, tmp_path, relative):
+    monkeypatch.setattr(verifier, 'ROOT', tmp_path)
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('original ficticio', encoding='utf-8')
+    monkeypatch.setattr(verifier, 'collect', lambda: pytest.fail('must reject before collecting'))
+    with pytest.raises(SystemExit) as exc:
+        verifier.main(['--salida', str(target)])
+    assert exc.value.code == 2
+    assert target.read_text(encoding='utf-8') == 'original ficticio'
+
+
+def test_dirty_source_cannot_be_hidden_as_report(monkeypatch, tmp_path):
+    source = tmp_path / 'src' / 'config.json'
+    source.parent.mkdir()
+    source.write_text('{}', encoding='utf-8')
+    for command in (
+        ['git', 'init', '-q'],
+        ['git', 'add', '.'],
+        ['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'],
+    ):
+        subprocess.run(command, cwd=tmp_path, check=True, capture_output=True)
+    source.write_text('{"changed": true}', encoding='utf-8')
+    monkeypatch.setattr(verifier, 'ROOT', tmp_path)
+    assert REAL_PROVENANCE(source) is None
+    report = tmp_path / 'docs' / 'implementacion' / 'verificacion' / 'fixture.json'
+    assert REAL_PROVENANCE(report)['cambios_locales'] is True
+
+
+def test_failed_json_write_closes_temporary_before_cleanup(monkeypatch, tmp_path):
+    target = tmp_path / 'report.json'
+    target.write_bytes(b'previous report')
+    original_create = verifier.tempfile.NamedTemporaryFile
+    original_unlink = Path.unlink
+    handles = []
+
+    def create(*args, **kwargs):
+        handle = original_create(*args, **kwargs)
+        handles.append(handle)
+        return handle
+
+    def unlink(path, *args, **kwargs):
+        if handles and path == Path(handles[0].name):
+            assert handles[0].closed, 'Windows cannot remove an open temporary file'
+        return original_unlink(path, *args, **kwargs)
+
+    def fail_write(*args, **kwargs):
+        raise OSError('fictitious write failure')
+
+    monkeypatch.setattr(verifier.tempfile, 'NamedTemporaryFile', create)
+    monkeypatch.setattr(Path, 'unlink', unlink)
+    monkeypatch.setattr(verifier.json, 'dump', fail_write)
+    with pytest.raises(OSError, match='fictitious write failure'):
+        verifier.write_json(target, {})
+    assert target.read_bytes() == b'previous report'
+    assert not Path(handles[0].name).exists()
 
 
 def test_negative_cli_removal_rejected_before_running(monkeypatch):

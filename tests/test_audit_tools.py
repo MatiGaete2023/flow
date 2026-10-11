@@ -1,8 +1,10 @@
 """Synthetic regressions for the audit of verification and identity gates."""
 
 import importlib.util
+import lzma
 import subprocess
 import zipfile
+import zlib
 from pathlib import Path
 
 import pytest
@@ -62,6 +64,22 @@ def test_unreadable_container_cannot_certify_clean(tmp_path, contents, capsys):
         sample.write_bytes(contents)
     assert scanner.main([str(sample)]) == 2
     assert 'no se certifica' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize('error', [zlib.error, lzma.LZMAError])
+def test_corrupt_compressed_member_fails_without_traceback(monkeypatch, tmp_path, capsys, error):
+    sample = tmp_path / 'fixture.zip'
+    with zipfile.ZipFile(sample, 'w') as archive:
+        archive.writestr('fixture.txt', 'contenido ficticio')
+
+    def corrupt(*args, **kwargs):
+        raise error('private-fictitious-marker')
+
+    monkeypatch.setattr(zipfile.ZipFile, 'read', corrupt)
+    assert scanner.main([str(sample)]) == 2
+    output = capsys.readouterr()
+    assert 'no se certifica' in output.err
+    assert 'private-fictitious-marker' not in output.out + output.err
 
 
 def test_absent_explicit_path_cannot_certify_clean(tmp_path):
@@ -269,6 +287,35 @@ def test_archive_resource_limits_fail_closed(tmp_path, monkeypatch, limit):
 def test_identifier_in_filename_is_redacted_in_diagnostics(tmp_path, identity, capsys):
     sample = tmp_path / (identity + '.txt')
     sample.write_text(identity, encoding="utf-8")
+    assert scanner.main([str(sample)]) == 1
+    assert identity not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('suffix', ['.txt', '.png'])
+def test_identity_in_filename_without_sensitive_contents_is_detected(tmp_path, identity, suffix, capsys):
+    sample = tmp_path / (identity + suffix)
+    sample.write_bytes(b'innocuous fixture')
+    assert scanner.main([str(sample)]) == 1
+    assert identity not in capsys.readouterr().out
+
+
+def test_identity_in_tracked_directory_name_is_detected(monkeypatch, tmp_path, identity, capsys):
+    folder = tmp_path / identity
+    folder.mkdir()
+    sample = folder / 'fixture.png'
+    sample.write_bytes(b'innocuous fixture')
+    monkeypatch.setattr(scanner, 'ROOT', tmp_path)
+    monkeypatch.setattr(scanner, 'ALLOWLIST', tmp_path / 'allowlist.txt')
+    monkeypatch.setattr(scanner, 'tracked_files', lambda: [sample])
+    assert scanner.main([]) == 1
+    assert identity not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('member', ['{identity}.txt', '{identity}.png', '{identity}/innocuous.txt'])
+def test_identity_in_zip_member_name_is_detected(tmp_path, identity, member, capsys):
+    sample = tmp_path / 'fixture.zip'
+    with zipfile.ZipFile(sample, 'w') as archive:
+        archive.writestr(member.format(identity=identity), b'innocuous fixture')
     assert scanner.main([str(sample)]) == 1
     assert identity not in capsys.readouterr().out
 
