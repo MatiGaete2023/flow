@@ -26,6 +26,14 @@ def consolidated_workbook(lots):
         return export_book(lots,Path(folder),csmp=True).read_bytes()
 
 
+def consolidated_note(lots,wanted):
+    """(incluir, nota): el consolidado solo va si el lote es apto para CSMP; si no, se informa por qué."""
+    if not wanted:return False,''
+    try:consolidated_workbook(lots)
+    except m.PocError as exc:return False,' Sin XLSX consolidado: '+str(exc)
+    return True,' Incluye el XLSX consolidado.'
+
+
 def export_capture(lots,destination,*,diaries=None,include_originals=False,match_diaries=False,consolidated=False):
     lots=list(lots)
     if not lots:raise ValueError('Selecciona un lote verificado.')

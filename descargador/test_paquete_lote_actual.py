@@ -61,7 +61,7 @@ def test_boton_se_habilita_tras_lote_y_bitacoras_y_no_abre_resultados(tmp_path):
             import descargador
             descargador.filedialog.asksaveasfilename=lambda **kw:str(salida)
             app.create_package()
-            assert pedidos==[('package',(lote,bitacoras/'bitacoras.json',salida))]
+            assert pedidos==[('package',(lote,bitacoras/'bitacoras.json',salida,True))]
             resultado=descargador.package_current_lot(*pedidos[0][1])
             app.process_event('package_done',resultado)
             assert 'Paquete creado: '+salida.name in app.status.get()
@@ -73,3 +73,30 @@ def test_boton_se_habilita_tras_lote_y_bitacoras_y_no_abre_resultados(tmp_path):
                             cwd=Path(__file__).parent, env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
                             capture_output=True, text=True, encoding='utf-8', timeout=60)
     assert result.returncode == 0, result.stderr
+
+
+def test_paquete_con_consolidado_si_el_lote_es_apto(tmp_path):
+    lote = bound_lot(tmp_path / 'principal')
+    manifiesto = diaries(tmp_path / 'Bitacoras 2026-10-10', 1)
+    resultado = package_current_lot(lote.folder, manifiesto, tmp_path / 'con.zip', consolidated=True)
+    capture = read_capture(resultado['path'])
+    assert capture.manifest['schema_version'] == '1.1.0' and capture.consolidated
+    assert 'Incluye el XLSX consolidado' in resultado['reuse']
+    sin = package_current_lot(lote.folder, manifiesto, tmp_path / 'sin.zip')
+    assert read_capture(sin['path']).manifest['schema_version'] == '1.0.0'
+
+
+def test_lote_no_apto_crea_el_paquete_sin_consolidado_y_lo_dice(tmp_path, monkeypatch):
+    import descargador
+    import export_csmp_capture
+    from motor import PocError as Error
+
+    def no_apto(lots):
+        raise Error('No apto para CSMP: consulta ficticia')
+
+    monkeypatch.setattr(export_csmp_capture, 'consolidated_workbook', no_apto)
+    lote = bound_lot(tmp_path / 'principal')
+    manifiesto = diaries(tmp_path / 'Bitacoras 2026-10-10', 1)
+    resultado = descargador.package_current_lot(lote.folder, manifiesto, tmp_path / 'p.zip', consolidated=True)
+    assert read_capture(resultado['path']).manifest['schema_version'] == '1.0.0'
+    assert 'Sin XLSX consolidado: No apto para CSMP' in resultado['reuse']
