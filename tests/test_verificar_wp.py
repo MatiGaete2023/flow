@@ -274,3 +274,16 @@ def test_cli_removed_list_uses_exact_baseline_inventory(
     manifest = tmp_path / 'removed.txt'
     manifest.write_text('tests/test_synthetic.py::' + declared)
     assert verifier.main(['--lista-eliminadas', str(manifest)]) == expected
+
+
+def test_clean_source_with_failed_control_is_not_integrable(monkeypatch, baseline_file, healthy, tmp_path):
+    baseline_file.write_text(json.dumps(healthy))
+    now = copy.deepcopy(healthy)
+    now['asistente']['fallidas'] = 1
+    monkeypatch.setattr(verifier, 'collect', lambda: now)
+    report_file = tmp_path / 'report.json'
+    assert verifier.main(['--salida', str(report_file)]) == 1
+    report = json.loads(report_file.read_text())
+    assert report['procedencia_verificada'] is True
+    assert report['elegible_integracion'] is False
+    assert report['veredicto'] == 'FALLA'
