@@ -50,7 +50,7 @@ resultado obsoleto o gasto evitable. Cada grupo de errores de código tiene regr
 | Alta | Informe sin árbol exacto podía referirse a código local distinto; «integrable» podía ignorar controles fallidos | SHA completo, árbol Git, cambios locales e igualdad antes/después; elegibilidad exige procedencia y todos los controles PASA |
 | Media | Estado admitía ciclos funcionales o podía regenerarse con fuentes incoherentes | Detectar ciclos y validar antes de agregar; dependencias de archivo mantienen su semántica |
 | Media | CI ejecutaba compilaciones/Playwright en PR, invirtiendo E4 | PR con pruebas mínimas 3.12; matriz y pasos pesados al integrar o ejecutar manualmente |
-| Media | Plan/manuales mantenían decisiones pendientes o botones/versiones retirados; CONTINUAR mezclaba varios estados | Sincronizar decisiones, manuales y estado; traspaso de 1,7 KB y contenido anterior en HISTORIAL |
+| Media | Plan/manuales mantenían decisiones pendientes o botones/versiones retirados; CONTINUAR mezclaba varios estados | Sincronizar decisiones, manuales y estado; traspaso compacto y contenido anterior en HISTORIAL |
 
 La revisión de apoyo del conjunto detectó además la incoherencia entre una celda de T ESPERA del consolidado y el CSV
 usado por el motor: se incorpora a la validación de coherencia indicada arriba. Verificar solo identidad/procedencia no
@@ -87,30 +87,39 @@ rectores. Las siete fuentes originales se conservan.
 
 ## 5. Validación
 
-Primera verificación Linux **PASA**, medida sobre `473175c25b24e1d8f7fb3163ed95b1d3076443e9`, con árbol Git limpio
-y sin cambios durante la ejecución. [Evidencia inicial Linux](verificacion/WP-63-linux-inicial.json).
+Verificación final **PASA**, medida sobre `d25fe2f4852bb657d5f5c0caacb766590eaf097e`, con árbol Git limpio y estable.
+[Evidencia local](verificacion/WP-63.json) y [CI Windows](verificacion/WP-63-windows.json).
 
 | Medición | Resultado |
 | --- | --- |
-| Asistente | 767 aprobadas, 11 omitidas, 6 xfail estrictos preexistentes |
-| Descargador | 235 aprobadas y 62 subpruebas |
+| Asistente Linux | 780 aprobadas, 11 omitidas, 6 xfail estrictos preexistentes |
+| Asistente Windows | 790 aprobadas, 1 omitida, 6 xfail; CI PASA |
+| Descargador Linux | 235 aprobadas y 62 subpruebas |
+| Descargador Windows | Suite y extensión PASA |
 | Inventario de la base | Sin bajas no declaradas; todos los nodeids originales presentes |
 | Paridad | 17 productos golden sin cambios |
 | Identidades, lint, módulos no alcanzables y enlaces rotos | 0 hallazgos en cada control |
 | Restricciones y procedencia | PASA; mismo SHA/árbol limpio antes y después |
 
-Los nueve controles pasan. Formato y estado se comprueban también por separado. La CI Windows se observará en el
-PR; su resultado no certifica Excel ni Outlook reales. La primera CI Windows detectó siete regresiones de codificación en las nuevas pruebas: fixtures Unicode, lectura YAML
-y lectura del informe JSON. Se hicieron explícitas las codificaciones UTF-8 sin modificar nodeids, activar PYTHONUTF8
-ni agregar skips. [Evidencia Windows FALLA](verificacion/WP-63-windows-inicial.json).
-Además se corrigió la decodificación del scanner para el texto Windows y miembros ZIP/XML, con 13 nuevas regresiones;
-148 pruebas focales pasan. La nueva verificación completa y CI están en curso.
-Las regresiones focales y la revisión de apoyo sirven de diagnóstico; no reemplazan esa corrida completa ni el acta.
+Los nueve controles locales pasan; formato y estado se comprobaron por separado. La diferencia entre suites Linux/Windows
+corresponde a pruebas habilitadas según plataforma. La CI mínima E4 pasa sobre el mismo código; compilaciones, instalador,
+Playwright y matriz completa se ejecutarán al integrar/manual. Office real no se probó aquí. Los commits posteriores al
+medido solo completan documentación/evidencia; código, configuración, pruebas y línea base permanecen idénticos.
+
 La primera corrida conjunta detectó cinco pruebas antiguas acopladas a la API privada retirada del verificador.
-Se actualizaron sus fixtures y aserciones al contrato E2 (inventario medido, código de proceso y JSON de Ruff),
-preservando todos sus nodeids y su propósito. El [informe FALLA](verificacion/WP-63-falla-api.json) se conserva para trazabilidad.
-Ninguna prueba existente se retira ni se omite para ocultar un fallo. Los seis xfail son los conflictos estrictos
-preexistentes de WP-60; no se convierten en aceptación.
+Se actualizaron fixtures/aserciones al contrato E2 preservando nodeids y propósito; se conserva el
+[informe FALLA](verificacion/WP-63-falla-api.json). La [primera corrida Linux PASA](verificacion/WP-63-linux-inicial.json)
+precede a la comprobación de Windows.
+
+La primera CI Windows encontró siete fallos de codificación en las nuevas pruebas: fixtures Unicode, lectura YAML y
+lectura JSON. Se explicitó UTF-8, conservando nodeids y sin activar PYTHONUTF8 ni añadir skips.
+[Evidencia Windows FALLA](verificacion/WP-63-windows-inicial.json). Además se corrigió la decodificación del scanner
+para texto Windows y miembros ZIP/XML, con 13 nuevas regresiones. Las 148 pruebas focales del autor y las 140 de apoyo
+incluyen casos comunes; no se suman como pruebas distintas. La revisión de apoyo no encontró nuevos bloqueos.
+
+Ninguna prueba existente se retira ni se omite para ocultar fallos. Los seis xfail estrictos son conflictos preexistentes
+WP-60; no constituyen aceptación. El PASA técnico y el campo de elegibilidad del verificador tampoco reemplazan la
+revisión E3 ni el acta de uso real.
 
 ## 6. Pasos pendientes, en orden
 

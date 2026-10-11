@@ -1,0 +1,27 @@
+{
+  "commit": "d25fe2f4852bb657d5f5c0caacb766590eaf097e",
+  "plataforma": "windows-latest, Python 3.12.10",
+  "veredicto": "PASA",
+  "controles": [
+    {
+      "control": "Asistente Windows",
+      "resultado": "PASA",
+      "run": 38146205442,
+      "url": "https://github.com/MatiGaete2023/flow/actions/runs/38146205442",
+      "suite": {
+        "aprobadas": 790,
+        "omitidas": 1,
+        "fallidas": 0,
+        "xfail": 6,
+        "advertencias": 8
+      }
+    },
+    {
+      "control": "Descargador Windows",
+      "resultado": "PASA",
+      "run": 38146205453,
+      "url": "https://github.com/MatiGaete2023/flow/actions/runs/38146205453"
+    }
+  ],
+  "nota": "CI mínima E4: suites, formato, lint, interfaz y productos ficticios. Matriz completa, compilación, instalador y Playwright al integrar/manual. No certifica Excel ni Outlook reales."
+}
