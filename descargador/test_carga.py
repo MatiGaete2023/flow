@@ -1,7 +1,7 @@
 import pytest
 from datetime import date
 
-from carga import HEADERS, record_rows, records_in_grid, signatures
+from carga import HEADERS, record_rows, signatures
 from motor import PocError
 
 

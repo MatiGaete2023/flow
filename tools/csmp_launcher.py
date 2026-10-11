@@ -8,7 +8,7 @@ if __name__=='__main__':
         from nurus.personal.app import main
         main()
     except Exception as exc:
-        option=next((flag for flag in ('--verificar-paquete','--verificar-integracion') if flag in sys.argv),None)
+        option='--verificar-paquete' if '--verificar-paquete' in sys.argv else None
         if option:
             index=sys.argv.index(option)+1
             if index<len(sys.argv):

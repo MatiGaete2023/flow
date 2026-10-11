@@ -30,8 +30,8 @@ def test_no_duplicate_operational_methods_or_old_interface():
     folder=ROOT/'src/nurus/personal'
     assert methods(folder/'app.py') & methods(folder/'app_base.py') == {'__init__'}
     assert not (ROOT/'src/nurus/product_ui.py').exists()
-    tree=ast.parse((ROOT/'src/nurus/app.py').read_text())
-    assert not any(isinstance(n,ast.ClassDef) for n in tree.body)
+    # WP-21: el acceso anterior nurus.app se retiró; los scripts apuntan a nurus.personal.app:main.
+    assert not (ROOT/'src/nurus/app.py').exists()
 
 
 def test_mode_change_restores_automatic_sheet_without_discarding_work():

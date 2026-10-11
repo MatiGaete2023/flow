@@ -1,9 +1,7 @@
 """Prueba de ventana real en Windows; no inicia Office ni usa archivos del usuario."""
 from tempfile import TemporaryDirectory
 from pathlib import Path
-import base64
 import time
-from PIL import Image
 import customtkinter as ctk
 from nurus.personal.outputs import Draft
 from nurus.personal.config import Configuration

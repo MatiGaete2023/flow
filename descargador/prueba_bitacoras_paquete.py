@@ -1,7 +1,6 @@
 """Prueba del recorrido completo dentro del EXE, con datos ficticios."""
 import base64,hashlib,json,threading
 from pathlib import Path
-from urllib.parse import urlencode
 from lotes import Batch
 from lectura_bitacoras import DiaryRunner
 from csmp_shared import parser

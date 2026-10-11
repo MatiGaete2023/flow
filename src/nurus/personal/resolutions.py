@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 from docx import Document
 from docxcompose.composer import Composer
 
-from nurus.rus.rules import tribunal
+from nurus.rus.util import tribunal
 from nurus.rus.columns import normalize
 from nurus.services.file_output import write_new_file
 from .outputs import value,word_values,template_variables,fill_docx

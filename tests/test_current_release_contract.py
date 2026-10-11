@@ -1,23 +1,16 @@
 from pathlib import Path
 import subprocess
 import tomllib
-import nurus
 
 ROOT=Path(__file__).parents[1]
 
 
 def test_release_version_and_current_docs_are_aligned():
+    # WP-31: la versión vive solo en nurus.__version__; pyproject la lee de ahí y los documentos no la repiten.
     project=tomllib.loads((ROOT/'pyproject.toml').read_text(encoding='utf-8'))
-    assert project['project']['version']==nurus.__version__
-    current_docs=[
-        ROOT/'README.md', ROOT/'docs/IMPLEMENTACION.md',
-        ROOT/'docs/VERIFICACION_PERSONAL.md', ROOT/'docs/ACEPTACION_CSMP_PERSONAL.md',
-        ROOT/'docs/INDICE_DOCUMENTACION.md', ROOT/'docs/ESTADO_CONSOLIDADO_20260920.md',
-    ]
-    for path in current_docs:
-        text=path.read_text(encoding='utf-8')
-        assert nurus.__version__ in text[:1000], path
-    readme=current_docs[0].read_text(encoding='utf-8')
+    assert 'version' not in project['project'] and 'version' in project['project']['dynamic']
+    assert project['tool']['setuptools']['dynamic']['version']=={'attr':'nurus.__version__'}
+    readme=(ROOT/'README.md').read_text(encoding='utf-8')
     assert 'Windows' in readme and 'Correo libre' in readme and 'Word manual' in readme
     for obsolete in ('nurus/adapters/sent_mail.py','nurus/personal/activity_view.py','nurus/personal/review_store.py'):
         assert not (ROOT/'src'/obsolete).exists()
@@ -34,9 +27,13 @@ def test_workflow_and_distribution_match_current_release():
     workflow=(ROOT/'.github/workflows/tests.yml').read_text(encoding='utf-8')
     assert 'actions/checkout@v7' in workflow
     assert 'actions/setup-python@v7' in workflow
-    assert f'CSMP_Assistant_personal_{nurus.__version__.replace(".dev","-dev")}.zip' in workflow
-    assert f'CSMP-Windows-{nurus.__version__.split(".")[-1]}' in workflow
-    assert "'codex/**'" in workflow
+    assert 'CSMP_Assistant_personal_" + os.environ["ASSISTANT_VERSION"] + ".zip' in workflow
+    assert 'CSMP-Windows-${{ env.ASSISTANT_VERSION }}' in workflow
+    assert 'python tools/write_build_meta.py --github-env $env:GITHUB_ENV' in workflow
+    assert "'wp/**'" not in workflow and "'codex/**'" not in workflow and "'feat/**'" in workflow
+    assert '${{ github.event_name }}-${{ github.head_ref || github.ref_name }}' in workflow
+    assert 'permissions:\n  contents: read' in workflow
+    assert 'retention-days: 14' in workflow and 'retention-days: 90' in workflow
 
 
 def test_gitignore_covers_local_csmp_environment_and_build_outputs():

@@ -51,7 +51,22 @@
       "fecha": "10 de octubre de 2026"
     }
   },
-  "conflictos_abiertos": [],
+  "conflictos_abiertos": [
+    {
+      "id": "WP-30-cc_obligatorio",
+      "origen": "WP-30",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
+      "respuesta": null
+    },
+    {
+      "id": "WP-34-motor-f401",
+      "origen": "WP-34",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-34 pide ruff F401/F841 sobre src completo, pero src/nurus/personal/motor/ tiene 4 F401 y es intocable salvo decisión expresa. La CI lo excluye con --extend-exclude.",
+      "respuesta": null
+    }
+  ],
   "paquetes": {
     "WP-00": {
       "titulo": "Kit, estado y línea base",
@@ -266,18 +281,19 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "BLOQUEADO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T15:00:00-03:00",
+      "rama": "wp/WP-16-anonimizador",
+      "pr": 22,
+      "verificacion": "PASA (verificacion/WP-16.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
-        "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita."
+        "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita.",
+        "Usuario: «Autorizo ... WP-16 en anonymize.py». Lógica única en src/nurus/personal/anonymize.py; tools/anonimizar_excel.py es envoltorio. Apilado sobre WP-34 (PR #21)."
       ]
     },
     "WP-17": {
@@ -312,16 +328,18 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "LISTO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T09:00:00-03:00",
+      "rama": "ccr-4116db41-nm8g0r",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-20.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e."
+      ]
     },
     "WP-21": {
       "titulo": "Capa legado y segundo motor",
@@ -331,18 +349,19 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "BLOQUEADO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T10:00:00-03:00",
+      "rama": "wp/WP-21-capa-legado",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-21.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
-        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta."
+        "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta.",
+        "Autorizado por el usuario el 10 de octubre de 2026 conservando domain/models.py. Propuesta del Ejecutor en su PR; apilada sobre WP-20 (PR #12)."
       ]
     },
     "WP-22": {
@@ -355,16 +374,18 @@
       "decisiones": [
         "D3"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T10:30:00-03:00",
+      "rama": "wp/WP-22-inspector-rus",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-22.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "D3 = Sí, retirarlos. registration.py eliminado (no reducido). Apilado sobre WP-21 (PR #13)."
+      ]
     },
     "WP-23": {
       "titulo": "Restos de lanzamiento del Descargador",
@@ -374,16 +395,18 @@
         "WP-22"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:00:00-03:00",
+      "rama": "wp/WP-23-lanzamiento",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-23.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-22 (PR #14). download_link/download_transfer sin cambios."
+      ]
     },
     "WP-24": {
       "titulo": "Documentación vigente",
@@ -393,16 +416,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:30:00-03:00",
+      "rama": "wp/WP-24-documentacion",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-24.json): enlaces rotos 0",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-35 (PR #19)."
+      ]
     },
     "WP-30": {
       "titulo": "CC fijo con una sola fuente",
@@ -412,16 +437,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:20:00-03:00",
+      "rama": "wp/WP-30-cc-unico",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-30.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-23 (PR #15). cc_obligatorio queda en correos_base.json sin lector: quitarlo rompe la paridad golden (conflicto abierto)."
+      ]
     },
     "WP-31": {
       "titulo": "Versión con una sola fuente",
@@ -431,16 +458,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T11:40:00-03:00",
+      "rama": "wp/WP-31-version",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-31.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-30 (PR #16). Tocó verify-delivered-installer.yml (fuera de ficha) para no romper la descarga por nombre."
+      ]
     },
     "WP-32": {
       "titulo": "Exportación sin residuos y sin fórmulas",
@@ -450,16 +479,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:00:00-03:00",
+      "rama": "wp/WP-32-exportacion",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-32.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-31 (PR #17)."
+      ]
     },
     "WP-33": {
       "titulo": "Ritmo de consultas y checkpoint",
@@ -491,16 +522,18 @@
         "WP-23"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T14:00:00-03:00",
+      "rama": "wp/WP-34-ci",
+      "pr": 21,
+      "verificacion": "PASA (verificacion/WP-34.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-24 (PR #20). Lint excluye src/nurus/personal/motor (4 F401 intactos por regla de motor)."
+      ]
     },
     "WP-35": {
       "titulo": "Instaladores con dependencias fijadas",
@@ -510,16 +543,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T12:15:00-03:00",
+      "rama": "wp/WP-35-instaladores",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-35.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-32 (PR #18). Sin respaldo sin hashes en el Descargador."
+      ]
     },
     "WP-40": {
       "titulo": "Trabajo legible",
@@ -529,16 +564,18 @@
         "WP-31"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T16:00:00-03:00",
+      "rama": "wp/WP-40-trabajo-legible",
+      "pr": 23,
+      "verificacion": "PASA (verificacion/WP-40.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-16 (PR #22)."
+      ]
     },
     "WP-41": {
       "titulo": "Barra Siguiente paso",
@@ -548,16 +585,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T17:00:00-03:00",
+      "rama": "wp/WP-41-siguiente-paso",
+      "pr": 24,
+      "verificacion": "PASA (verificacion/WP-41.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-40 (PR #23). Módulo nuevo next_step.py; un único temporizador sin acumulación."
+      ]
     },
     "WP-42": {
       "titulo": "Resoluciones y Correos más claros",
@@ -567,16 +606,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "2026-10-10T18:00:00-03:00",
+      "rama": "wp/WP-42-resoluciones-correos",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA (verificacion/WP-42.json)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "Apilado sobre WP-41 (PR #24). Condición única mail_block en mail_controls.py para deshabilitar y para la acción."
+      ]
     },
     "WP-43": {
       "titulo": "Crear paquete de este lote",

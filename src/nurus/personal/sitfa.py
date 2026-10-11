@@ -1,5 +1,5 @@
 """Contrato opcional de entrada/procedencia SITFA. No cambia reglas ni revisiones."""
-from datetime import date,datetime
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -80,8 +80,6 @@ def startup_arguments(argv=None):
     parser.add_argument('--modo',choices=list(REQUIRED))
     parser.add_argument('--hoja')
     parser.add_argument('--verificar-paquete',type=Path,help=argparse.SUPPRESS)
-    parser.add_argument('--verificar-integracion',type=Path,help=argparse.SUPPRESS)
-    parser.add_argument('--descargador-integral',type=Path,help=argparse.SUPPRESS)
     args=parser.parse_args(argv)
     if args.archivo:
         args.archivo=args.archivo.expanduser().resolve()

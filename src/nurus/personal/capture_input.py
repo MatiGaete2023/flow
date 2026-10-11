@@ -12,8 +12,8 @@ from nurus.capture.contract import COMMON as SOURCE_FIELDS
 from nurus.capture.temporal import chronology,identity,RULESET_VERSION
 from nurus.rus.columns import COMMON,MODE_COLUMNS,map_columns
 from nurus.rus.models import ReadBatch,SourceRecord,SourceReference,Mode
-from nurus.rus.rules import as_date
-from .work import Work,Row
+from nurus.rus.util import as_date
+from .work import Work
 from nurus.services.excel_cells import append_literal_row
 
 CANONICAL={key:names[0] for key,names in COMMON.items()}
