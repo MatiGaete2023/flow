@@ -142,6 +142,9 @@ class BatchRunner:
             self.bridge.call('lock');locked=True
             for index,selection in enumerate(plan,1):
                 if self.cancel.is_set():raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
+                # La pausa también separa una consulta de la siguiente, no solo las páginas de una misma consulta.
+                if index>1 and self.pause and self.cancel.wait(self.pause):
+                    raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
                 desired=selection_profile(selection,self.catalog)
                 self.emit('query',{'index':index,'total':len(plan),'label':desired.label})
                 prepared=self.bridge.call('prepare',{'selection':selection.__dict__,
