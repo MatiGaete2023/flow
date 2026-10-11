@@ -4,6 +4,9 @@ from datetime import date, datetime
 from calendar import monthrange
 
 RULESET_VERSION = 'baseline-20261008+context-preview-2'
+# Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
+DISPLAY_RULES = ('CT-01', 'CT-02')
+DISPLAY_VERSION = 'solo-mostrar-1'
 CONTEXT_RULES = {
     'CT-01': ('bitacoras', 'Última observación atribuible al centro'),
     'CT-02': ('bitacoras', 'Entradas posteriores y empates inciertos'),
@@ -44,6 +47,76 @@ def certain_moment(row):
         and isinstance(value, datetime)
         and value.utcoffset() is not None
     )
+
+
+def center_entries(events):
+    return [
+        e
+        for e in events
+        if e.get('origin') == 'CENTRO'
+        and e.get('origin_verified') == 'true'
+        and e.get('coverage') in ('COMPLETA', 'PARCIAL')
+    ]
+
+
+def order(related):
+    """Última entrada atribuible al centro, posteriores y empates de orden incierto."""
+    center = center_entries(related)
+    if not center:
+        return [], [], []
+    last_day = max(e['event_at'][:10] for e in center)
+    same_day = [e for e in center if e['event_at'][:10] == last_day]
+    if not all(certain_moment(e) for e in same_day):
+        last = same_day
+    else:
+        try:
+            maximum = max(moment(e) for e in same_day)
+            last = [e for e in same_day if moment(e) == maximum]
+        except TypeError:
+            last = same_day
+    later, uncertain = [], []
+    last_ids = {e['event_id'] for e in last}
+    for event in related:
+        if event['event_id'] in last_ids:
+            continue
+        if event['event_at'][:10] > last_day:
+            later.append(event)
+        elif event['event_at'][:10] == last_day:
+            if all(certain_moment(e) for e in [event, *last]):
+                try:
+                    if moment(event) > max(moment(e) for e in last):
+                        later.append(event)
+                except TypeError:
+                    uncertain.append(event)
+            else:
+                uncertain.append(event)
+    return last, later, uncertain
+
+
+def display_chronology(events, as_of):
+    """CT-01/CT-02 en modo «solo mostrar» (D5): no genera hallazgos ni cambia observaciones.
+
+    Solo bitácoras del ingreso dentro del horizonte de cuatro meses. Sin origen acreditado del
+    centro se informa ORIGEN_DESCONOCIDO; sin entradas capturadas no se afirma ausencia.
+    """
+    start = earliest(as_of)
+    recent = sorted(
+        (e for e in events if e.get('event_at', '') and start.isoformat() <= e['event_at'][:10] <= as_of.isoformat()),
+        key=lambda e: (e['event_at'], e.get('event_id', '')),
+    )
+    last, later, uncertain = order(recent)
+    status = 'ACREDITADA' if last else 'ORIGEN_DESCONOCIDO' if recent else 'SIN_ENTRADAS_CAPTURADAS'
+    return {
+        'version': DISPLAY_VERSION,
+        'period_from': start.isoformat(),
+        'period_to': as_of.isoformat(),
+        'status': status,
+        'last_center': last,
+        'later': later,
+        'uncertain': uncertain,
+        'unattributed': [] if last else recent,
+        'outside_horizon': sum(1 for e in events if e.get('event_at', '')[:10] < start.isoformat()),
+    }
 
 
 def chronology(capture, record, as_of, *, fixture_preview=False, event_index=None):
@@ -102,45 +175,12 @@ def chronology(capture, record, as_of, *, fixture_preview=False, event_index=Non
         finding('CT-06', result['reason'], sources=[e['event_id'] for e in result['recent']])
         return result
     # Solo preview ficticio explícito. Garantías del manifiesto no activan reglas.
-    related = result['recent']
-    center = [
-        e
-        for e in related
-        if e.get('origin') == 'CENTRO'
-        and e.get('origin_verified') == 'true'
-        and e.get('coverage') in ('COMPLETA', 'PARCIAL')
-    ]
-    if not center:
+    last, later, uncertain = order(result['recent'])
+    if not last:
         result['reason'] = 'ULTIMA_OBSERVACION_NO_ACREDITADA dentro del período capturado.'
         finding('CT-06', result['reason'])
         return result
-    last_day = max(e['event_at'][:10] for e in center)
-    same_day = [e for e in center if e['event_at'][:10] == last_day]
-    if not all(certain_moment(e) for e in same_day):
-        last = same_day
-    else:
-        try:
-            maximum = max(moment(e) for e in same_day)
-            last = [e for e in same_day if moment(e) == maximum]
-        except TypeError:
-            last = same_day
-    result['last_center'] = last
-    last_ids = {e['event_id'] for e in last}
-    for event in related:
-        if event['event_id'] in last_ids:
-            continue
-        if event['event_at'][:10] > last_day:
-            result['later'].append(event)
-        elif event['event_at'][:10] == last_day:
-            certain = all(certain_moment(e) for e in [event, *last])
-            if certain:
-                try:
-                    if moment(event) > max(moment(e) for e in last):
-                        result['later'].append(event)
-                except TypeError:
-                    result['uncertain'].append(event)
-            else:
-                result['uncertain'].append(event)
+    result['last_center'], result['later'], result['uncertain'] = last, later, uncertain
     result['reason'] = 'Preview ficticio acotado a las fuentes capturadas; no acredita historia completa.'
     result['class'] = 'FOCALIZADA' if result['later'] or result['uncertain'] else 'NO_EVALUABLE'
     finding('CT-01', result['reason'], 'APLICA', [e['event_id'] for e in last])

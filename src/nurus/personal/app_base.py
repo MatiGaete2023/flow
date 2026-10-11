@@ -758,6 +758,10 @@ class App(ctk.CTk):
 
     def _update_work_case_detail(self, row):
         self.work_case_detail.set_text(compact_case_detail_text(self.work, row, getattr(self, 'drafts', [])))
+        if hasattr(self, 'work_novelties'):
+            from .capture_findings import novelties_text
+
+            self.work_novelties.set(novelties_text(self.work, row))
 
     def _resolution_detail(self, event=None):
         if self.busy:
