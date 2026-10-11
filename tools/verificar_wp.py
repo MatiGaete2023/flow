@@ -523,7 +523,8 @@ def main(argv):
         "controles": checks,
         "procedencia_inicio": public_provenance(before),
         "procedencia_fin": public_provenance(after),
-        "elegible_integracion": eligible,
+        "procedencia_verificada": eligible,
+        "elegible_integracion": eligible and all(c["resultado"] == "PASA" for c in checks),
         "veredicto": "PASA" if eligible and all(c["resultado"] == "PASA" for c in checks) else "FALLA",
     }
     for check in checks:
