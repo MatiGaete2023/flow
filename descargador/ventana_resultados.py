@@ -117,10 +117,73 @@ class ResultsWindow(tk.Toplevel):
         ttk.Button(row,text='Abrir solicitud de antecedentes…',command=self.open_request).pack(side='left',padx=(0,6))
         self.collection=tk.StringVar()
         ttk.Label(self,textvariable=self.collection,wraplength=1050).pack(fill='x',padx=12,pady=4)
+        ttk.Button(self,text='Archivar o borrar lotes antiguos',command=self.manage_old_batches).pack(anchor='w',padx=12,pady=4)
         ttk.Button(self,text='Revisar referencias no disponibles…',command=self.review_missing_diaries).pack(anchor='w',padx=12,pady=4)
         ttk.Label(self,text='Añade las carpetas de hojas y los controles bitacoras.json con sus HTML. El ZIP reúne las descargas añadidas; reutiliza bitácoras solo por tribunal, causa e ingreso. Importa ese ZIP en Trabajo → Importar paquete del Asistente.',wraplength=1050).pack(fill='x',padx=12,pady=4)
         ttk.Label(self,textvariable=self.status,wraplength=1050).pack(fill='x',padx=12,pady=8)
         self.protocol('WM_DELETE_WINDOW',self.close);self.reload();self.after(100,self.poll)
+    def retention_protected(self):
+        paths=[self.app.last_folder]
+        for window in self.app.result_windows:
+            if window.winfo_exists():
+                paths.append(getattr(window,'folder',None))
+                paths.append(getattr(window,'root_folder',None))
+                paths.extend(getattr(window,'package_folders',[]))
+                diaries=getattr(window,'package_diaries',None)
+                if callable(diaries):paths.extend(Path(control).parent for control in diaries())
+        if self.app.recovery:paths.append(self.app.recovery[0].folder if hasattr(self.app.recovery[0],'folder') else None)
+        return [path for path in paths if path]
+
+    def manage_old_batches(self):
+        if self.busy or self.app.busy:
+            self.status.set('Espera a que termine la operación para gestionar lotes antiguos.');return
+        from preferencias import old_batches, RETENCION_DIAS
+        window=tk.Toplevel(self);window.title('Archivar o borrar lotes antiguos')
+        window.geometry('820x420');window.transient(self)
+        ttk.Label(window,text=f'Lotes con más de {RETENCION_DIAS} días en la carpeta de descarga. Se conservan los lotes en uso.',wraplength=780).pack(padx=12,pady=10)
+        table=ttk.Treeview(window,columns=('lote','fecha','tamaño'),show='headings',selectmode='extended',height=9)
+        for key,label in [('lote','Lote'),('fecha','Último control'),('tamaño','Tamaño')]:table.heading(key,text=label)
+        table.pack(fill='both',expand=True,padx=12,pady=8)
+        rows={}
+        def refresh():
+            from datetime import datetime
+            table.delete(*table.get_children());rows.clear()
+            for index,item in enumerate(old_batches(self.app.dest.get(),protected=self.retention_protected())):
+                iid=str(index);rows[iid]=item['folder']
+                table.insert('','end',iid=iid,values=(item['folder'].name,datetime.fromtimestamp(item['modified']).strftime('%d/%m/%Y'),f"{item['bytes']/1048576:.2f} MB"))
+        preserve=tk.BooleanVar(value=True)
+        ttk.Checkbutton(window,text='Al borrar, conservar Bitacoras_RUS.xlsx y diagnostico_bitacoras.json',variable=preserve).pack(anchor='w',padx=12,pady=5)
+        actions=ttk.Frame(window);actions.pack(fill='x',padx=12,pady=10)
+        def act(archive=False):
+            selected=[rows[iid] for iid in table.selection()]
+            if not selected:self.status.set('Selecciona los lotes antiguos que quieres gestionar.');return
+            destination=None
+            if archive:
+                destination=filedialog.askdirectory(parent=window,title='Carpeta donde archivar los lotes completos')
+                if not destination:return
+            try:
+                self.apply_batch_retention(selected,preserve=preserve.get(),archive=destination,parent=window)
+                refresh();self.reload(load_current=False)
+            except (m.PocError,OSError,ValueError) as exc:self.status.set(str(exc))
+        ttk.Button(actions,text='Archivar seleccionados…',command=lambda:act(True)).pack(side='left',padx=5)
+        ttk.Button(actions,text='Borrar seleccionados…',command=act).pack(side='left',padx=5)
+        ttk.Button(actions,text='Actualizar',command=refresh).pack(side='left',padx=5)
+        refresh()
+
+    def apply_batch_retention(self, selected, *, preserve=True, archive=None, parent=None):
+        if self.busy or self.app.busy:raise m.PocError('Hay una operación en curso; los lotes se conservan.')
+        from preferencias import manage_old_batches, RETENCION_DIAS
+        action='archivarán completos' if archive else 'borrarán'
+        note=' Se conservarán Bitacoras_RUS.xlsx y diagnostico_bitacoras.json.' if preserve and not archive else ''
+        confirmed=messagebox.askyesno('Confirmar gestión local',
+            f'Se {action} {len(selected)} lotes de más de {RETENCION_DIAS} días.{note} ¿Continuar?',parent=parent or self)
+        if not confirmed:
+            self.status.set('No se cambió ningún lote.');return []
+        changed=manage_old_batches(self.app.dest.get(),selected,confirmed=True,preserve=preserve,
+                                  archive=archive,protected=self.retention_protected())
+        self.status.set(f'{len(changed)} lotes antiguos gestionados. Los lotes vigentes se conservan.')
+        return changed
+
     def close(self):
         if self.busy:self.status.set('Espera a que termine la escritura local.');return
         self.destroy()
