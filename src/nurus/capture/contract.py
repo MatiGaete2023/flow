@@ -609,7 +609,9 @@ def write_capture(destination, metadata, tables, *, originals=None, consolidated
     if destination.exists():
         fail('El paquete de destino ya existe.')
     if metadata.get('schema_version', VERSION) != VERSION:
-        fail('El productor solo escribe versión 1.0.0.')
+        fail(
+            'La versión del paquete la asigna el productor (1.0.0, o 1.1.0 con consolidado); no la indiques en los metadatos.'
+        )
     if consolidated is not None:
         check_workbook(consolidated)
     m = deepcopy(metadata)

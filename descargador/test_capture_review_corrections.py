@@ -28,6 +28,8 @@ def test_partial_calendar_and_unattempted_calendar_never_complete(tmp_path):
     capture = read_capture(export_capture([load_lot(folder, partial=True)], tmp_path / 'partial.zip'))
     assert capture.manifest['table_states']['calendarios'] == 'PARCIAL'
     assert {r['coverage'] for r in capture.rows('calendarios')} == {'PARCIAL'}
+    # F5 (revisión integral): la fila de calendario lleva su vencimiento ISO (fixture: 10/10/2026).
+    assert {r['event_at'] for r in capture.rows('calendarios')} == {'2026-10-10'}
     (folder / 'verificacion 001.json').unlink()
     capture = read_capture(export_capture([load_lot(folder, partial=True)], tmp_path / 'unattempted.zip'))
     assert capture.manifest['table_states']['calendarios'] == 'NO_CONSULTADA'

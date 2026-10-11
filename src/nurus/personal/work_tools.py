@@ -167,7 +167,9 @@ def preferences(app):
             return
         app.records.configure(displaycolumns=selected)
         cfg = dict(app.cfg.data)
-        cfg['vista'] = {**cfg.get('vista', {}), 'columnas_trabajo': selected}
+        from .work_view import WORK_COLUMNS
+
+        cfg['vista'] = {**cfg.get('vista', {}), 'columnas_trabajo': selected, 'columnas_conocidas': list(WORK_COLUMNS)}
         app.cfg.save(cfg)
         win.destroy()
 

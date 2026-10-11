@@ -49,3 +49,25 @@ def test_missing_text_key_is_added_from_base_without_touching_others(tmp_path, m
     loaded = config_module.Configuration(tmp_path)
     assert loaded.data['textos'][scope][removed]['texto'] == base_text
     assert loaded.data['textos'][scope][kept]['texto'] == data['textos'][scope][kept]['texto']
+
+
+def test_rev1_texts_reach_current_base_through_rev2(tmp_path, monkeypatch):
+    # F7 (revisión integral): un texto rev1 («se sugiere remitir…») de una clave que cambió en rev3 llega al texto vigente.
+    import json
+    from nurus.personal import config as config_module
+    from nurus.personal.config import LEGACY_TEXTS_REV2, defaults
+
+    monkeypatch.setattr(config_module, 'user_directory', lambda: tmp_path)
+    first = config_module.Configuration(tmp_path)
+    data = json.loads(first.path.read_text(encoding='utf-8'))
+    scope, key = 'ESPERA', 'E05_SOLO_CORREO'
+    rev2 = LEGACY_TEXTS_REV2[scope + '.' + key]
+    rev1 = rev2.replace('Se remite correo electrónico', 'Se sugiere remitir correo electrónico').replace(
+        'se remite correo electrónico', 'se sugiere remitir correo electrónico'
+    )
+    assert rev1 != rev2
+    data['textos'][scope][key]['texto'] = rev1
+    data['revision_textos'] = 1
+    first.path.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+    loaded = config_module.Configuration(tmp_path)
+    assert loaded.data['textos'][scope][key]['texto'] == defaults()['textos'][scope][key]['texto']
