@@ -24,11 +24,21 @@ def date_preset(name,today=None):
     raise PocError('Período rápido desconocido.')
 
 
+PAUSA_MINIMA_S=0.5
+PAUSA_DEFECTO_S=1.0
+PAUSA_MAXIMA_S=10.0
+
+
+def clamp_pause(value):
+    """Pausa entre consultas a SITFA: nunca menos de 0,5 s."""
+    return min(PAUSA_MAXIMA_S,max(PAUSA_MINIMA_S,float(value)))
+
+
 class Preferences:
     def __init__(self,path=None,memory=False):
         self.path=Path(path) if path else None if memory else data_directory()/'preferencias.json'
         self.data={'favoritos':{},'destino':'','tribunales':None,'aviso_sonoro':False,'csmp':'','dias_firmas':60,'tema':'Sistema',
-                   'historial_lotes':[],'historial_bitacoras':[]}
+                   'historial_lotes':[],'historial_bitacoras':[],'pausa_consultas':PAUSA_DEFECTO_S}
         if self.path and self.path.is_file():
             try:
                 value=json.loads(self.path.read_text(encoding='utf-8'))
@@ -36,6 +46,8 @@ class Preferences:
                     for key in self.data:
                         if key in value and isinstance(value[key],type(self.data[key])):self.data[key]=value[key]
                     if isinstance(value.get('tribunales'),list):self.data['tribunales']=value['tribunales']
+                    if isinstance(value.get('pausa_consultas'),(int,float)) and not isinstance(value['pausa_consultas'],bool):
+                        self.data['pausa_consultas']=clamp_pause(value['pausa_consultas'])
             except (OSError,ValueError):pass
     def save(self):
         if not self.path:return
