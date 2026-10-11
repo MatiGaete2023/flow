@@ -41,6 +41,7 @@ def healthy():
     }
     return {
         "commit": "abcdef0",
+        "pruebas_recolectadas": {"asistente": ["tests/test_fictitious.py::test_known"], "descargador": []},
         "asistente": suite.copy(),
         "descargador": suite.copy(),
         "identidades_reales": 12,
@@ -53,7 +54,7 @@ def healthy():
 
 
 def passes(checks):
-    assert len(checks) == 8
+    assert len(checks) == 9
     return all(check["resultado"] == "PASA" for check in checks)
 
 
@@ -94,6 +95,7 @@ def test_pytest_summary_is_complete_and_distinguishes_xfail(monkeypatch, output,
     [
         "asistente",
         "descargador",
+        "pruebas_recolectadas",
         "identidades_reales",
         "paridad_golden",
         "restricciones",
@@ -256,7 +258,7 @@ def test_changed_or_dirty_worktree_not_integrable(monkeypatch, baseline_file, he
     report = json.loads(report_file.read_text())
     assert report["elegible_integracion"] is False
     assert report["veredicto"] == "FALLA"
-    assert len(report["controles"]) == 8
+    assert len(report["controles"]) == 9
     assert "huella_trabajo" not in json.dumps(report)
 
 
@@ -269,6 +271,7 @@ def test_cli_removed_list_uses_exact_baseline_inventory(
     baseline_file.write_text(json.dumps(healthy))
     now = copy.deepcopy(healthy)
     now['asistente']['aprobadas'] -= 1
+    now['pruebas_recolectadas']['asistente'] = []
     monkeypatch.setattr(verifier, 'collect', lambda: now)
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     manifest = tmp_path / 'removed.txt'
@@ -287,3 +290,35 @@ def test_clean_source_with_failed_control_is_not_integrable(monkeypatch, baselin
     assert report['procedencia_verificada'] is True
     assert report['elegible_integracion'] is False
     assert report['veredicto'] == 'FALLA'
+
+
+@pytest.mark.parametrize(
+    'scenario,expected',
+    [
+        ('unchanged', 'PASA'),
+        ('undeclared', 'FALLA'),
+        ('new_tests_mask_deletions', 'FALLA'),
+        ('partially_declared', 'FALLA'),
+        ('fully_declared', 'PASA'),
+    ],
+)
+def test_inventory_prevents_new_tests_from_hiding_unreported_deletions(healthy, scenario, expected):
+    base = copy.deepcopy(healthy)
+    nodes = [f'tests/test_synthetic.py::test_case_{index}' for index in range(10)]
+    base['pruebas_recolectadas']['asistente'] = nodes
+    now = copy.deepcopy(base)
+    lists = None
+    if scenario != 'unchanged':
+        now['pruebas_recolectadas']['asistente'] = nodes[:6]
+        now['asistente']['aprobadas'] = 6
+        if scenario != 'undeclared':
+            now['pruebas_recolectadas']['asistente'] += [f'tests/test_new.py::test_added_{i}' for i in range(5)]
+            now['asistente']['aprobadas'] = 11
+        if scenario in {'partially_declared', 'fully_declared'}:
+            declared = set(nodes[6:9] if scenario == 'partially_declared' else nodes[6:])
+            lists = ({'asistente': len(declared), 'descargador': 0}, [], {'asistente': declared, 'descargador': set()})
+    checks = verifier.compare(now, base, 0, 0, lists)
+    inventory = next(check for check in checks if check['control'] == 'Inventario de pruebas')
+    assert inventory['resultado'] == expected
+    if scenario == 'new_tests_mask_deletions':
+        assert next(check for check in checks if check['control'] == 'Suite asistente')['resultado'] == 'PASA'
