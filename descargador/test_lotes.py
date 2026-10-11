@@ -418,7 +418,8 @@ class BridgeTests(unittest.TestCase):
             self.bridge.pending['ficticio'] = entry
         first = {'id': 'ficticio', 'ok': True, 'result': CATALOG}
         self.assertEqual(self.request('/complete', first)[0], 200)
-        self.assertEqual(self.request('/complete', {'id': 'ficticio', 'ok': False})[0], 409)
+        # Código estable: la extensión lo descarta sin cortar la conexión (conexion.js).
+        self.assertEqual(self.request('/complete', {'id': 'ficticio', 'ok': False}), (409, {'error': 'TASK_EXPIRED'}))
         self.assertEqual(entry['result'], first)
 
 
