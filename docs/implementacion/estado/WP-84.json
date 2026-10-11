@@ -24,8 +24,8 @@
   "integrado_en": "c58de60fc9654a10d027765fa7202865f222c456",
   "notas": [
     "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
-    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat.",
-    "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82.",
+    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat. (histórico, superado: WP-81..83 integrados en c2a5d80, a59c4df y 4470ff3 con excepción E3 expresa)",
+    "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82. (histórico, superado: integrado en c58de60 con excepción E3 expresa para #39)",
     "Usuario autoriza excepción E3 para #39: «Haz la excepcion y termina tu». Se corrige omisión del aviso de destinatario/CC inválido sin leer adjuntos.",
     "Integración definitiva con excepción E3 explícita para #39. Once regresiones focales PASA; dos nuevas reproducen y corrigen avisos ocultos de destinatario/CC inválidos. No se habilita main ni release."
   ]

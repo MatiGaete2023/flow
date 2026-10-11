@@ -21,17 +21,29 @@ No hay otras puertas. Las pruebas automáticas no reemplazan el acta, y el acta 
 
 ## Decisiones del usuario (estado en docs/implementacion/ESTADO.json → decisiones)
 - Motor de reglas vigente: personal/motor (N1: el otro no participa en la app).
-- D1 purga de historial: ramas reescritas el 11 de octubre; etiquetas antiguas eliminadas; faltan referencias de PR y cachés mediante Soporte GitHub (WP-17).
+- D1 purga de historial: historial reescrito el 11-oct (35 ramas, force-with-lease, autorizado); 607 artefactos y 2 etiquetas remotas borradas; pendiente: refs/pull y cachés vía Soporte GitHub (WP-17).
 - D2 casos probados en uso real: «Ninguna todavía»; WP-02 espera resultados del usuario.
 - D3 retiro del inspector y diario de registro RUS: «Sí, retirarlos».
 - D4 retención local: «60 días y hasta 10 sesiones anteriores».
-- D5 cronología CT-01/CT-02: «Sí, horizonte de 4 meses»; código de #33 consolidado por orden de fusionar todas las ramas; aceptación pendiente del acta de 10 ingresos y WP-02.
+- D5 cronología CT-01/CT-02: «Sí, horizonte de 4 meses»; código de #33 en feat desde 8c4036d y visible por decisión del usuario (g); aceptación pendiente del acta de 10 ingresos y WP-02.
 - D6 XLSX consolidado dentro del ZIP: «Sí, solo el consolidado»; implementado con casilla en el Descargador.
 - D7 fusión a main: «Sí, tras el acta final»; no se fusiona ni publica una release antes del acta.
 - D8 consultas 2.7.5: «No observé esos fallos»; se descarta la variante reaplicar tras Envio() de WP-33.
 - D9 solicitud de antecedentes: «Retirar botón»; retirado.
 - Decisiones adicionales del 11 de octubre: quitar apóstrofo visible preservando texto seguro; conservar cc_obligatorio; motor intacto.
 - Historia SITFA/PDF y reglas CT-03..10: fuera de alcance hasta nueva decisión.
+
+## Decisiones del 11 de octubre de 2026
+Registradas también en docs/implementacion/estado/global.json → decisiones_adicionales.decisiones_20261011.
+- a) «Fusiona todas las ramas»: consolidación WP-85.
+- b) WP-63 se integra antes que WP-80.
+- c) WP-70 depende funcionalmente de WP-02, WP-17, WP-50 y WP-63.
+- d) WP-80 se integra por squash con mensaje formateado (regla 11).
+- e) WP-80 sin etiqueta pre-WP-80; rollback con `git revert 5ac7385`.
+- f) Excepciones E3 autorizadas para los PR #4/#8/#11/#12–#32, #27 y #36–#39.
+- g) La cronología WP-50 queda visible en feat mientras falta el acta de 10 ingresos; la aceptación sigue pendiente.
+- h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.
+- i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar.
 
 ## Documentos
 - Plan de implementación: docs/implementacion/PLAN_IMPLEMENTACION.md

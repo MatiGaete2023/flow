@@ -1,7 +1,8 @@
 # Entrega MVP NURUS / CSMP — 8 de octubre de 2026
 
-CSMP 0.5.0.dev4 y Descargador/extensión 2.7.5; contrato CSMP_CAPTURE/REQUEST
-1.0.0. Integración en pruebas, sin promoción a versión institucional vigente.
+CSMP 0.5.0.dev5 y Descargador/extensión 2.7.6; contrato CSMP_CAPTURE/REQUEST
+1.0.0 (CSMP_CAPTURE 1.1.0 con XLSX consolidado). Cambios de 2.7.6 en el
+[historial del Descargador](../descargador/CHANGELOG.md); lo que sigue sobre 2.7.5 es antecedente. Integración en pruebas, sin promoción a versión institucional vigente.
 Los dos programas funcionan autónomamente y pueden distribuirse juntos.
 
 La corrección 2.7.5 añade revisión explícita de referencias ausentes antes de
@@ -17,7 +18,7 @@ También se corrigen los vínculos de Espera e Informes, se recuperan lotes
 anteriores y se reúnen descargas separadas con bitácoras reutilizables en un ZIP.
 El Excel de bitácoras se genera automáticamente y editar nóminas es opcional.
 Al actualizar desde ZIP, ejecutar de nuevo `Instalar_CSMP.bat` y cargar/recargar
-la carpeta `descargador/extension` 2.7.5 en Chrome; iniciar una conexión nueva.
+la carpeta `descargador/extension` de la misma entrega (hoy 2.7.6) en Chrome; iniciar una conexión nueva.
 El detalle está en `REGRESIONES_PRUEBAS_USUARIO_20261009.md`.
 
 ```mermaid

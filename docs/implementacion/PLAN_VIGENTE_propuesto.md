@@ -1,5 +1,7 @@
 # Plan vigente — Descargador SITFA y Asistente CSMP
 
+> Histórico (kit WP-00); vigente: [PLAN_VIGENTE.md](../../PLAN_VIGENTE.md) (D4: 60 días / 10 sesiones).
+
 Responsable funcional y usuario único: Matías Gaete. El agente de IA programa; no decide reglas.
 
 ## Esencia (no se cambia)

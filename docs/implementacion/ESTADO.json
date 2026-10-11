@@ -8,7 +8,8 @@
     "D1": {
       "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
       "respuesta": "Reescribir historial; push forzado en flow autorizado por escrito el 11 de octubre de 2026 («Sí, autorizo push forzado»), con confirmación final antes de ejecutarlo",
-      "fecha": "11 de octubre de 2026"
+      "fecha": "11 de octubre de 2026",
+      "ejecucion": "Historial reescrito el 11-oct (35 ramas, force-with-lease, autorizado); 607 artefactos y 2 etiquetas remotas borradas; pendiente: refs/pull y cachés vía Soporte GitHub"
     },
     "D2": {
       "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",
@@ -117,7 +118,7 @@
       "id": "WP-60-R-T32",
       "origen": "WP-60",
       "fecha": "11 de octubre de 2026",
-      "descripcion": "CT-01/CT-02 desactivadas carecen de explicación específica de exclusión.",
+      "descripcion": "CT-01/CT-02 en modo solo mostrar (enabled=false en el motor) sin explicación específica de exclusión.",
       "estado": "ABIERTO",
       "responsable": "Usuario: decisión específica por regla",
       "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
@@ -796,11 +797,12 @@
       "verificacion": "Código consolidado por orden expresa; verificación técnica PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288: 848/11/6 y 240/62; 29 focales (incluidas 7 cronología), golden17 intacto. Aceptación real de diez ingresos y WP-02 pendientes.",
       "revision": null,
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "8c4036d",
       "notas": [
         "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02.",
         "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional.",
-        "PR #33 queda incorporado técnicamente al historial; BLOQUEADO_USUARIO no significa que falte su código, sino la validación funcional real."
+        "PR #33 queda incorporado técnicamente al historial; BLOQUEADO_USUARIO no significa que falte su código, sino la validación funcional real.",
+        "11 de octubre de 2026 (decisión g del usuario): la cronología queda visible en feat desde 8c4036d mientras falta el acta de 10 ingresos; la aceptación sigue pendiente. integrado_en registra el código, no la aceptación. WP-86 corrige C2, C5 y F4."
       ],
       "consolidado_en": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
     },
@@ -1047,10 +1049,10 @@
       "notas": [
         "Alcance autorizado por la petición del usuario: auditar, corregir, simplificar y actualizar el repositorio y el plan.",
         "Base limpia 2cf8ca893e85a0203b1c051026b87f16ff6be964. Medición previa: 592/11/6 xfail y 231/62; golden17 y controles PASA.",
-        "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar.",
+        "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar. (histórico, superado: integrado en f64bc7c con revisión E3 de otra raíz registrada)",
         "La primera corrida detectó 5 regresiones antiguas del verificador; se ajustaron al contrato E2 conservando nodeids. Evidencia FALLA conservada en WP-63-falla-api.json.",
         "Evidencia inicial Windows FALLA conservada en WP-63-windows-inicial.json. No se usa PYTHONUTF8 ni se omiten pruebas para ocultar el problema.",
-        "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null.",
+        "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null. (histórico, superado: integrado en f64bc7c con revisión E3 de otra raíz registrada)",
         "11 de octubre de 2026: el usuario confirmó las dependencias funcionales de WP-70 y autorizó integrar WP-63 y luego WP-80. Integrado en f64bc7c; verificar_wp PASA."
       ]
     },
@@ -1106,8 +1108,143 @@
         "Pedido expreso del usuario: revisión propia sin perjuicio de E3. No acredita revisión cruzada ni aceptación de uso real.",
         "Cuatro fallos corregidos, incluido O1 de WP-63; 14 nuevas regresiones, ninguna prueba retirada.",
         "Base 286c28f posterior a integración WP-63/WP-80; no modificar su estado, E3 ni decisiones.",
-        "Evidencia posterior al SHA medido: cambios solo en documentación/estado, no código, pruebas ni configuración. E3 independiente pendiente.",
+        "Evidencia posterior al SHA medido: cambios solo en documentación/estado, no código, pruebas ni configuración. E3 independiente pendiente. (histórico, superado: integrado en c2a5d80 con excepción E3 expresa)",
         "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+      ]
+    },
+    "WP-82": {
+      "titulo": "Pendientes de correo coherentes con Resultados",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-80",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/82-pendientes-correo-20261011",
+      "pr": 37,
+      "verificacion": "PASA después de integración en a59c4dff0997c611c5d03bc4f40da68046b62b7b: Asistente 824/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+      "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
+      "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
+      "integrado_en": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
+      "notas": [
+        "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
+        "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente. (histórico, superado: WP-81 integrado en c2a5d80 con excepción E3 expresa)",
+        "Catorce regresiones nuevas; cuatro indicadores y siete casos del ayudante fallaron antes de corregir; una optimización falló antes de aplicarse. Sin pruebas retiradas ni nuevos skips.",
+        "pending() es ayudante legado sin llamadas GUI; G-4 visible corregido en ux_support.product_indicators.",
+        "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+      ]
+    },
+    "WP-83": {
+      "titulo": "Bloqueo de editores secundarios",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-80",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/83-bloqueo-editores-20261011",
+      "pr": 38,
+      "verificacion": "PASA después de integración en 4470ff32bb9d479f0ad4a6774948038bc6729c02: Asistente 830/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+      "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
+      "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
+      "integrado_en": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
+      "notas": [
+        "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37. (histórico, superado: WP-81..83 integrados con excepción E3 expresa; WP-83 en 4470ff3)",
+        "Seis escenarios fallaron antes: editor manual, preferencias, dos tipos de ventana anidada, ventana cerrada y fallo parcial.",
+        "Bloqueo de controles editables existentes; Detener disponible, estados anteriores conservados. Sin pruebas retiradas ni nuevos skips/xfail.",
+        "Revisión propia no sustituye E3 ni actas de uso real.",
+        "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+      ]
+    },
+    "WP-84": {
+      "titulo": "Consultas de estado sin lecturas repetidas y cierre técnico de etiquetas",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-80",
+          "tipo": "funcional"
+        },
+        {
+          "wp": "WP-82",
+          "tipo": "archivo"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/84-huellas-consulta-20261011",
+      "pr": 39,
+      "verificacion": "PASA tras integración en c58de60fc9654a10d027765fa7202865f222c456, contra línea base 830/240: Asistente 841/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+      "revision": "Revisión propia del Ejecutor; excepción E3 expresa del usuario para #39: «Haz la excepcion y termina tu», 11 de octubre de 2026.",
+      "auditoria": "Sin auditoría de otra raíz: excepción E3 explícita del usuario para #39. Restricciones absolutas y golden17 PASA.",
+      "integrado_en": "c58de60fc9654a10d027765fa7202865f222c456",
+      "notas": [
+        "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
+        "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat. (histórico, superado: WP-81..83 integrados en c2a5d80, a59c4df y 4470ff3 con excepción E3 expresa)",
+        "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82. (histórico, superado: integrado en c58de60 con excepción E3 expresa para #39)",
+        "Usuario autoriza excepción E3 para #39: «Haz la excepcion y termina tu». Se corrige omisión del aviso de destinatario/CC inválido sin leer adjuntos.",
+        "Integración definitiva con excepción E3 explícita para #39. Once regresiones focales PASA; dos nuevas reproducen y corrigen avisos ocultos de destinatario/CC inválidos. No se habilita main ni release."
+      ]
+    },
+    "WP-85": {
+      "titulo": "Consolidación de todas las ramas en feat",
+      "ola": 7,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-84",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root (Orquestador)",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/85-consolidacion-20261011",
+      "pr": null,
+      "verificacion": "PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288 contra base 841/240: Asistente 848/11/6 xfail; Descargador 240/62; nueve controles, procedencia limpia/estable y 45/45 encabezados incluidos. Línea base regenerada.",
+      "revision": "Revisión propia del Orquestador; orden expresa del usuario de fusionar todas las ramas. Se conservaron versiones vigentes y verificaron nuevas aportaciones.",
+      "auditoria": "Sin informe de otra raíz para esta consolidación solicitada directamente. Restricciones absolutas y golden17 PASA; actas reales y aceptación funcional no presumidas.",
+      "integrado_en": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+      "notas": [
+        "Orden expresa de consolidar todas las ramas. No convierte plantillas ni pruebas ficticias en aceptación real."
+      ]
+    },
+    "WP-86": {
+      "titulo": "Correcciones de la revisión integral previa al cierre",
+      "ola": 6,
+      "tipo": "M/C",
+      "depende_de": [],
+      "decisiones": [],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/86-correctivo",
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Autorizado por el usuario («Sí, todo», decisión i del 11 de octubre de 2026), con revisión E3 antes de integrar.",
+        "Origen: docs/implementacion/REVISION_INTEGRAL_20261011.md sobre 32dd14c (línea base 848/11/6 y 240/62).",
+        "Código: F1, F2, F3, F4, F5, F7, C1, C2, C3, C4 y C5; acta de uso real con tipo de evidencia vacío (D3).",
+        "Documentación: armonización D1–D14; CIERRE.md rehecho; decisiones del 11 de octubre registradas en PLAN_VIGENTE.md y global.json.",
+        "Sin cambio intencional: F6 (aviso temporal por fila), DeprecationWarning de motor/ (decisión del usuario) y base consolidada multihoja (solo se avisa)."
       ]
     },
     "WP-70": {
@@ -1243,10 +1380,41 @@
           "wp": "WP-62",
           "tipo": "archivo"
         },
-        "WP-61",
+        {
+          "wp": "WP-61",
+          "tipo": "archivo"
+        },
         {
           "wp": "WP-63",
           "tipo": "funcional"
+        },
+        {
+          "wp": "WP-80",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-81",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-82",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-83",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-84",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-85",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-86",
+          "tipo": "archivo"
         }
       ],
       "decisiones": [
@@ -1263,121 +1431,10 @@
       "integrado_en": null,
       "notas": [
         "D7: fusionar a main solo tras el acta final firmada por el usuario.",
-        "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
+        "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2. (histórico, superado: CI verde en 14f679d y luego en 32dd14c, runs 38182127247 y 38182124001)",
         "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
-        "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta."
-      ]
-    },
-    "WP-82": {
-      "titulo": "Pendientes de correo coherentes con Resultados",
-      "ola": 6,
-      "tipo": "M",
-      "depende_de": [
-        {
-          "wp": "WP-80",
-          "tipo": "funcional"
-        }
-      ],
-      "decisiones": [],
-      "estado": "INTEGRADO",
-      "ejecutor": "Codex /root",
-      "tomado": "11 de octubre de 2026",
-      "rama": "wp/82-pendientes-correo-20261011",
-      "pr": 37,
-      "verificacion": "PASA después de integración en a59c4dff0997c611c5d03bc4f40da68046b62b7b: Asistente 824/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
-      "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
-      "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
-      "integrado_en": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
-      "notas": [
-        "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
-        "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente.",
-        "Catorce regresiones nuevas; cuatro indicadores y siete casos del ayudante fallaron antes de corregir; una optimización falló antes de aplicarse. Sin pruebas retiradas ni nuevos skips.",
-        "pending() es ayudante legado sin llamadas GUI; G-4 visible corregido en ux_support.product_indicators.",
-        "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
-      ]
-    },
-    "WP-83": {
-      "titulo": "Bloqueo de editores secundarios",
-      "ola": 6,
-      "tipo": "M",
-      "depende_de": [
-        {
-          "wp": "WP-80",
-          "tipo": "funcional"
-        }
-      ],
-      "decisiones": [],
-      "estado": "INTEGRADO",
-      "ejecutor": "Codex /root",
-      "tomado": "11 de octubre de 2026",
-      "rama": "wp/83-bloqueo-editores-20261011",
-      "pr": 38,
-      "verificacion": "PASA después de integración en 4470ff32bb9d479f0ad4a6774948038bc6729c02: Asistente 830/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
-      "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
-      "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
-      "integrado_en": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
-      "notas": [
-        "Continuación solicitada por el usuario: G-3 de WP-80. Base feat 286c28f, independiente de WP-81/#36 y WP-82/#37.",
-        "Seis escenarios fallaron antes: editor manual, preferencias, dos tipos de ventana anidada, ventana cerrada y fallo parcial.",
-        "Bloqueo de controles editables existentes; Detener disponible, estados anteriores conservados. Sin pruebas retiradas ni nuevos skips/xfail.",
-        "Revisión propia no sustituye E3 ni actas de uso real.",
-        "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
-      ]
-    },
-    "WP-84": {
-      "titulo": "Consultas de estado sin lecturas repetidas y cierre técnico de etiquetas",
-      "ola": 6,
-      "tipo": "M",
-      "depende_de": [
-        {
-          "wp": "WP-80",
-          "tipo": "funcional"
-        },
-        {
-          "wp": "WP-82",
-          "tipo": "archivo"
-        }
-      ],
-      "decisiones": [],
-      "estado": "INTEGRADO",
-      "ejecutor": "Codex /root",
-      "tomado": "11 de octubre de 2026",
-      "rama": "wp/84-huellas-consulta-20261011",
-      "pr": 39,
-      "verificacion": "PASA tras integración en c58de60fc9654a10d027765fa7202865f222c456, contra línea base 830/240: Asistente 841/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
-      "revision": "Revisión propia del Ejecutor; excepción E3 expresa del usuario para #39: «Haz la excepcion y termina tu», 11 de octubre de 2026.",
-      "auditoria": "Sin auditoría de otra raíz: excepción E3 explícita del usuario para #39. Restricciones absolutas y golden17 PASA.",
-      "integrado_en": "c58de60fc9654a10d027765fa7202865f222c456",
-      "notas": [
-        "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
-        "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat.",
-        "Usuario autorizó excepción E3 para #36–38: integrados en feat. No se extiende a #39. Rama actualizada sin force; conservar condición sin recibos de WP-82.",
-        "Usuario autoriza excepción E3 para #39: «Haz la excepcion y termina tu». Se corrige omisión del aviso de destinatario/CC inválido sin leer adjuntos.",
-        "Integración definitiva con excepción E3 explícita para #39. Once regresiones focales PASA; dos nuevas reproducen y corrigen avisos ocultos de destinatario/CC inválidos. No se habilita main ni release."
-      ]
-    },
-    "WP-85": {
-      "titulo": "Consolidación de todas las ramas en feat",
-      "ola": 7,
-      "tipo": "M",
-      "depende_de": [
-        {
-          "wp": "WP-84",
-          "tipo": "funcional"
-        }
-      ],
-      "decisiones": [],
-      "estado": "INTEGRADO",
-      "ejecutor": "Codex /root (Orquestador)",
-      "tomado": "11 de octubre de 2026",
-      "rama": "wp/85-consolidacion-20261011",
-      "pr": null,
-      "verificacion": "PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288 contra base 841/240: Asistente 848/11/6 xfail; Descargador 240/62; nueve controles, procedencia limpia/estable y 45/45 encabezados incluidos. Línea base regenerada.",
-      "revision": "Revisión propia del Orquestador; orden expresa del usuario de fusionar todas las ramas. Se conservaron versiones vigentes y verificaron nuevas aportaciones.",
-      "auditoria": "Sin informe de otra raíz para esta consolidación solicitada directamente. Restricciones absolutas y golden17 PASA; actas reales y aceptación funcional no presumidas.",
-      "integrado_en": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
-      "notas": [
-        "Orden expresa de consolidar todas las ramas. No convierte plantillas ni pruebas ficticias en aceptación real."
+        "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
+        "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
       ]
     }
   },
@@ -1418,6 +1475,20 @@
     "fuera_de_ficha": {
       "respuesta": "Casilla consolidado en GUI; arreglar generadores docs; manual 2.7.4 sin botón retirado; retirar restos de WP-21",
       "fecha": "11 de octubre de 2026"
+    },
+    "decisiones_20261011": {
+      "fecha": "11 de octubre de 2026",
+      "lista": [
+        "a) «Fusiona todas las ramas»: consolidación WP-85.",
+        "b) WP-63 se integra antes que WP-80.",
+        "c) WP-70 depende funcionalmente de WP-02, WP-17, WP-50 y WP-63.",
+        "d) WP-80 se integra por squash con mensaje formateado (regla 11).",
+        "e) WP-80 sin etiqueta pre-WP-80; rollback con git revert 5ac7385.",
+        "f) Excepciones E3 autorizadas para los PR #4/#8/#11/#12–#32, #27 y #36–#39.",
+        "g) La cronología WP-50 queda visible en feat mientras falta el acta de 10 ingresos; aceptación pendiente.",
+        "h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.",
+        "i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar."
+      ]
     }
   },
   "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",

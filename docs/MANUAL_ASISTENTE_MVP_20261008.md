@@ -1,6 +1,6 @@
 # Asistente — manual de la entrega MVP
 
-Versión 0.5.0.dev5, con intercambio CSMP_CAPTURE 1.0.0. No requiere Chrome,
+Versión 0.5.0.dev5, con intercambio CSMP_CAPTURE 1.0.0 (1.1.0 con XLSX consolidado). No requiere Chrome,
 extensión ni Descargador para importar y producir archivos de un paquete local.
 
 1. Trabajo → Importar paquete: seleccionar ZIP y fecha de corte del análisis.
@@ -15,8 +15,11 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
 4. Exportar copia actual a XLSX. Para paquetes nuevos funciona sin Excel/Office.
    Si el ZIP incluye consolidado y Excel está disponible, usa la copia nativa;
    si no, informa la fidelidad reducida de la copia portable.
-   Abrir Excel legado conserva el motor y la exportación anteriores, con alcance
-   SOLO_PLANILLA. Guardar/recuperar sesión conserva edición y configuración.
+   **Elegir Excel · Ctrl+O** y luego **Procesar Excel** conservan el motor y la
+   exportación anteriores, con alcance SOLO_PLANILLA. **Guardar trabajo · Ctrl+S**
+   conserva edición y configuración; al volver a abrir, el aviso del trabajo
+   anterior ofrece **Continuar**. En Resultados, **Recuperar resultado local legado**
+   incorpora una descarga conservada por versiones anteriores.
 5. Correos: Preparar genera los adjuntos automáticamente. **Editar adjunto
    (opcional)** abre solo la nómina del correo seleccionado; aceptar actualiza
    ese archivo, sin obligar a revisar los demás. Los cambios de celdas, filas,
@@ -44,6 +47,30 @@ exportados previamente permanecen como archivos independientes.
 Ante error de importación conservar ZIP y sesión. Comunicar SHA, mensaje y etapa
 sin datos institucionales. Excel 2010, Outlook 365 y políticas de instalación
 requieren las pruebas reales descritas en aceptación pendiente.
+
+## Cronología de bitácoras (solo mostrar, WP-50)
+
+Con un paquete del Descargador, Trabajo muestra la columna **Última obs. centro**
+y la pestaña Detalle el panel **Novedades posteriores**. Solo muestran lo capturado
+en las bitácoras del ingreso, dentro de un horizonte de 4 meses hasta la fecha de
+corte. No cambian observaciones, hallazgos, TT/CC/RES ni productos.
+
+- La columna da la fecha de la última entrada atribuible al centro y cuántas hay
+  después. Vacía si el trabajo no viene de un paquete.
+- **ORIGEN_DESCONOCIDO**: hay entradas, pero ninguna con origen del centro acreditado.
+- **Sin entradas capturadas**: se pidieron bitácoras y no hay entradas en el período;
+  no acredita ausencia de actuaciones.
+- **Bitácoras no solicitadas**: el paquete no pidió bitácoras.
+- El panel da texto íntegro, fecha, origen y autor, y cuenta aparte las entradas
+  sin fecha y las posteriores a la fecha de corte.
+
+La aceptación espera el contraste de 10 ingresos reales; la vista no es una regla.
+
+## Aviso de fidelidad reducida
+
+Si el paquete trae XLSX consolidado pero no sirve como base (por ejemplo, una hoja
+por modalidad o un registro repetido), la copia sale portable y el mensaje de
+«Excel generado» lo avisa. El consolidado queda intacto dentro del paquete.
 
 ## Correcciones de revisión y capturas complementarias
 

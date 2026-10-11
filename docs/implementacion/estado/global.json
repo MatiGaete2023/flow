@@ -8,7 +8,8 @@
     "D1": {
       "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
       "respuesta": "Reescribir historial; push forzado en flow autorizado por escrito el 11 de octubre de 2026 («Sí, autorizo push forzado»), con confirmación final antes de ejecutarlo",
-      "fecha": "11 de octubre de 2026"
+      "fecha": "11 de octubre de 2026",
+      "ejecucion": "Historial reescrito el 11-oct (35 ramas, force-with-lease, autorizado); 607 artefactos y 2 etiquetas remotas borradas; pendiente: refs/pull y cachés vía Soporte GitHub"
     },
     "D2": {
       "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",
@@ -117,7 +118,7 @@
       "id": "WP-60-R-T32",
       "origen": "WP-60",
       "fecha": "11 de octubre de 2026",
-      "descripcion": "CT-01/CT-02 desactivadas carecen de explicación específica de exclusión.",
+      "descripcion": "CT-01/CT-02 en modo solo mostrar (enabled=false en el motor) sin explicación específica de exclusión.",
       "estado": "ABIERTO",
       "responsable": "Usuario: decisión específica por regla",
       "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
@@ -160,6 +161,20 @@
     "fuera_de_ficha": {
       "respuesta": "Casilla consolidado en GUI; arreglar generadores docs; manual 2.7.4 sin botón retirado; retirar restos de WP-21",
       "fecha": "11 de octubre de 2026"
+    },
+    "decisiones_20261011": {
+      "fecha": "11 de octubre de 2026",
+      "lista": [
+        "a) «Fusiona todas las ramas»: consolidación WP-85.",
+        "b) WP-63 se integra antes que WP-80.",
+        "c) WP-70 depende funcionalmente de WP-02, WP-17, WP-50 y WP-63.",
+        "d) WP-80 se integra por squash con mensaje formateado (regla 11).",
+        "e) WP-80 sin etiqueta pre-WP-80; rollback con git revert 5ac7385.",
+        "f) Excepciones E3 autorizadas para los PR #4/#8/#11/#12–#32, #27 y #36–#39.",
+        "g) La cronología WP-50 queda visible en feat mientras falta el acta de 10 ingresos; aceptación pendiente.",
+        "h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.",
+        "i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar."
+      ]
     }
   },
   "orden_paquetes": [
@@ -199,6 +214,11 @@
     "WP-63",
     "WP-80",
     "WP-81",
+    "WP-82",
+    "WP-83",
+    "WP-84",
+    "WP-85",
+    "WP-86",
     "WP-70"
   ],
   "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",

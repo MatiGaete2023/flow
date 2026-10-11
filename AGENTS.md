@@ -10,7 +10,8 @@ Las instrucciones expresas del usuario prevalecen sobre estos documentos.
 
 ## Reglas que no se negocian
 
-- Sin escritura automática en RUS ni SATURNO; `registration.submit` siempre lanza error.
+- Sin escritura automática en RUS ni SATURNO. Sin módulo de registro RUS ni SATURNO; si reapareciera, `submit`
+  debe lanzar error.
 - Outlook solo borradores (`mail.Save()`); nunca `.Send(`. CC fijo `ucc_concepcion@pjud.cl`.
 - Sin credenciales, cookies ni tokens en código, logs, fixtures o conversaciones.
 - **Sin HAR, HTML, PDF, Excel ni capturas reales; solo estructura anónima** generada

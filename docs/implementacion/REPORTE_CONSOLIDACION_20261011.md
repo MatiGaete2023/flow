@@ -39,7 +39,7 @@ La orden de consolidar es expresa; no hay revisión de otra raíz ni acta funcio
 
 ## Pasos pendientes
 
-1. Resultado publicado en la rama canónica; controles CI finales en PR #33.
+1. Resultado publicado en la rama canónica; CI verde en `32dd14c` (runs 38182127247 y 38182124001; PR #1).
 2. Soporte GitHub retira referencias antiguas de PR/cachés (WP-17).
 3. Pruebas reales de Excel/Outlook y diez ingresos; completar actas WP-02/WP-50 con resultados
    agregados, sin datos reales. Luego acta final WP-70 y main según D7.
@@ -56,7 +56,7 @@ Las referencias históricas no se borraron: el usuario pidió fusionar/consolida
 SHA/archivos están preservados en el historial. No hay cambios pendientes exclusivos
 de las ramas inventariadas. No se declara revisión independiente ni aceptación real.
 El commit posterior solo modifica documentación/evidencia; el código coincide con el SHA medido.
-CI final, ejecutable e instalador: ver resultado observado en PR #33.
+CI final, ejecutable e instalador: verde en `32dd14c` (runs 38182127247 y 38182124001; PR #1). PR #33 está cerrado.
 
 El inventario excluye el alias simbólico origin/HEAD: no es una rama adicional.
 El conteo verificado de ramas reales es 45/45.
