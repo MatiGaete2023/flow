@@ -120,8 +120,11 @@ class Application:
         self.from_date=tk.StringVar(value=m.now().strftime('%d/%m/%Y'));self.to_date=tk.StringVar(value=self.from_date.get())
         self.use_dates=tk.BooleanVar(value=False);self.keep_filters=tk.BooleanVar(value=False)
         from preferencias import data_directory
-        default_folder=data_directory()/'descargas' if getattr(__import__('sys'),'frozen',False) else Path(__file__).resolve().parent/'descargas'
+        default_folder=data_directory()/'descargas'
         self.dest=tk.StringVar(value=self.prefs.data['destino'] or str(default_folder))
+        from preferencias import onedrive_warning
+        self.destination_warning=tk.StringVar(value=onedrive_warning(self.dest.get()))
+        self.dest.trace_add('write',lambda *args:self.destination_warning.set(onedrive_warning(self.dest.get())))
         self.code=tk.StringVar(value=self.bridge.connection_code)
         self.status=tk.StringVar(value='Abre tu Chrome, entra a Seguimiento y conecta la extensión local.')
         self.preview=tk.StringVar(value='Carga las opciones de tu sesión para preparar el lote.')
@@ -202,6 +205,7 @@ class Application:
         ttk.Label(destination,text='Carpeta de descarga · se creará una subcarpeta con fecha y hora').grid(row=0,column=0,sticky='w')
         ttk.Entry(destination,textvariable=self.dest,state='readonly').grid(row=1,column=0,sticky='ew',padx=(0,8),pady=(4,0))
         self.browse_button=ttk.Button(destination,text='Cambiar…',command=self.browse);self.browse_button.grid(row=1,column=1,pady=(4,0))
+        ttk.Label(destination,textvariable=self.destination_warning,foreground='#b45309',wraplength=800).grid(row=2,column=0,columnspan=2,sticky='w',pady=(4,0))
         results=ttk.Frame(body);results.grid(row=5,column=0,sticky='ew');results.columnconfigure(0,weight=1)
         actions=ttk.Frame(results);actions.grid(row=0,column=0,sticky='ew');actions.columnconfigure(0,weight=1)
         self.download_button=ttk.Button(actions,text='Descargar el lote completo',command=self.start_download);self.download_button.grid(row=0,column=0,sticky='w')
