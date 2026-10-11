@@ -1,0 +1,22 @@
+{
+  "titulo": "Resoluciones y Correos más claros",
+  "ola": 4,
+  "tipo": "M",
+  "depende_de": [
+    "WP-40"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T18:00:00-03:00",
+  "rama": "wp/WP-42-resoluciones-correos",
+  "pr": 25,
+  "verificacion": "PASA (verificacion/WP-42.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-41 (PR #24). Condición única mail_block en mail_controls.py para deshabilitar y para la acción.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

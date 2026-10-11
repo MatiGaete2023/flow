@@ -1,0 +1,23 @@
+{
+  "titulo": "Control de identidades en CI y pre-commit",
+  "ola": 1,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-10"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": "wp/WP-11-identidades-ci",
+  "pr": 9,
+  "verificacion": "PASA",
+  "revision": "APROBADO",
+  "auditoria": "CONFORME",
+  "integrado_en": "28679280e0f965bc14170bcf2cf21ddb497e1c47",
+  "notas": [
+    "db1dfb7: checker del índice y directorios; workflows con checkout y ZIP fuente sin residuos. Diseño auditado; prueba negativa todavía no activada.",
+    "PR9 integrado: índices/directory/hooks verificados; ensayo negativo4jobs/0artefactos revertido y cerrado. Workflows seguros excluyen temporalmente variantes y documento reservado aWP20.",
+    "Control posterior a merge:625/11 y198/59, golden17 PASA, identidades12 sólo variantes, Ruff0 y enlaces26."
+  ]
+}

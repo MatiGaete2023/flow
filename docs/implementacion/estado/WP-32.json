@@ -1,0 +1,22 @@
+{
+  "titulo": "Exportación sin residuos y sin fórmulas",
+  "ola": 3,
+  "tipo": "M/C",
+  "depende_de": [
+    "WP-21"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T12:00:00-03:00",
+  "rama": "wp/WP-32-exportacion",
+  "pr": 18,
+  "verificacion": "PASA (verificacion/WP-32.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-31 (PR #17).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "2026-10-10T00:17:53.657878+00:00",
+  "actualizado": "11 de octubre de 2026",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -131,7 +131,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "D2: «Ninguna todavía» (11 de octubre de 2026)."
+      ]
     },
     "WP-10": {
       "titulo": "Identidades sintéticas en pruebas",
@@ -236,7 +238,7 @@
       "decisiones": [
         "D4"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "/root/ejecutor_retencion",
       "tomado": "2026-10-09T22:17:37.125759+00:00",
       "rama": "wp/WP-14-retencion-descargador",
@@ -244,10 +246,11 @@
       "verificacion": "PASA",
       "revision": "APROBADO",
       "auditoria": "CONFORME",
-      "integrado_en": null,
+      "integrado_en": "14d6df5",
       "notas": [
         "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro.",
-        "CI positiva sobre árbol saneado62335f1: runs38008361009 Assistant y38008361011 Descargador en progreso; sin declarar verde hasta resultado."
+        "CI positiva sobre árbol saneado62335f1: runs38008361009 Assistant y38008361011 Descargador en progreso; sin declarar verde hasta resultado.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-15": {
@@ -258,19 +261,20 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex (ejecutor de WP-15)",
       "tomado": null,
       "rama": "wp/WP-15-har",
       "pr": 8,
-      "verificacion": null,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
       "revision": "APROBADO",
       "auditoria": "CONFORME",
-      "integrado_en": null,
+      "integrado_en": "a3c037d",
       "notas": [
         "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
         "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes.",
-        "CI positiva sobre árbol saneado6c9cefe: runs38008362069 Assistant y38008362082 Descargador en progreso; Linux y alineación repetidas por incorporarbase625."
+        "CI positiva sobre árbol saneado6c9cefe: runs38008362069 Assistant y38008362082 Descargador en progreso; Linux y alineación repetidas por incorporarbase625.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-16": {
@@ -281,19 +285,20 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T15:00:00-03:00",
       "rama": "wp/WP-16-anonimizador",
       "pr": 22,
       "verificacion": "PASA (verificacion/WP-16.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
         "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
         "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita.",
-        "Usuario: «Autorizo ... WP-16 en anonymize.py». Lógica única en src/nurus/personal/anonymize.py; tools/anonimizar_excel.py es envoltorio. Apilado sobre WP-34 (PR #21)."
+        "Usuario: «Autorizo ... WP-16 en anonymize.py». Lógica única en src/nurus/personal/anonymize.py; tools/anonimizar_excel.py es envoltorio. Apilado sobre WP-34 (PR #21).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-17": {
@@ -308,7 +313,7 @@
       "decisiones": [
         "D1"
       ],
-      "estado": "BLOQUEADO_USUARIO",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -317,7 +322,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas."
+      ]
     },
     "WP-20": {
       "titulo": "Copias y restos",
@@ -328,17 +335,18 @@
         "WP-11"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T09:00:00-03:00",
       "rama": "ccr-4116db41-nm8g0r",
-      "pr": null,
+      "pr": 12,
       "verificacion": "PASA (verificacion/WP-20.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e."
+        "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-21": {
@@ -349,19 +357,20 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T10:00:00-03:00",
       "rama": "wp/WP-21-capa-legado",
-      "pr": null,
+      "pr": 13,
       "verificacion": "PASA (verificacion/WP-21.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
         "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
         "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta.",
-        "Autorizado por el usuario el 10 de octubre de 2026 conservando domain/models.py. Propuesta del Ejecutor en su PR; apilada sobre WP-20 (PR #12)."
+        "Autorizado por el usuario el 10 de octubre de 2026 conservando domain/models.py. Propuesta del Ejecutor en su PR; apilada sobre WP-20 (PR #12).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-22": {
@@ -374,17 +383,18 @@
       "decisiones": [
         "D3"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T10:30:00-03:00",
       "rama": "wp/WP-22-inspector-rus",
-      "pr": null,
+      "pr": 14,
       "verificacion": "PASA (verificacion/WP-22.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "D3 = Sí, retirarlos. registration.py eliminado (no reducido). Apilado sobre WP-21 (PR #13)."
+        "D3 = Sí, retirarlos. registration.py eliminado (no reducido). Apilado sobre WP-21 (PR #13).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-23": {
@@ -395,17 +405,18 @@
         "WP-22"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T11:00:00-03:00",
       "rama": "wp/WP-23-lanzamiento",
-      "pr": null,
+      "pr": 15,
       "verificacion": "PASA (verificacion/WP-23.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-22 (PR #14). download_link/download_transfer sin cambios."
+        "Apilado sobre WP-22 (PR #14). download_link/download_transfer sin cambios.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-24": {
@@ -416,17 +427,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T12:30:00-03:00",
       "rama": "wp/WP-24-documentacion",
-      "pr": null,
+      "pr": 20,
       "verificacion": "PASA (verificacion/WP-24.json): enlaces rotos 0",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-35 (PR #19)."
+        "Apilado sobre WP-35 (PR #19).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-30": {
@@ -437,17 +449,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T11:20:00-03:00",
       "rama": "wp/WP-30-cc-unico",
-      "pr": null,
+      "pr": 16,
       "verificacion": "PASA (verificacion/WP-30.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-23 (PR #15). cc_obligatorio queda en correos_base.json sin lector: quitarlo rompe la paridad golden (conflicto abierto)."
+        "Apilado sobre WP-23 (PR #15). cc_obligatorio queda en correos_base.json sin lector: quitarlo rompe la paridad golden (conflicto abierto).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-31": {
@@ -458,17 +471,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T11:40:00-03:00",
       "rama": "wp/WP-31-version",
-      "pr": null,
+      "pr": 17,
       "verificacion": "PASA (verificacion/WP-31.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-30 (PR #16). Tocó verify-delivered-installer.yml (fuera de ficha) para no romper la descarga por nombre."
+        "Apilado sobre WP-30 (PR #16). Tocó verify-delivered-installer.yml (fuera de ficha) para no romper la descarga por nombre.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-32": {
@@ -479,17 +493,18 @@
         "WP-21"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T12:00:00-03:00",
       "rama": "wp/WP-32-exportacion",
-      "pr": null,
+      "pr": 18,
       "verificacion": "PASA (verificacion/WP-32.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-31 (PR #17)."
+        "Apilado sobre WP-31 (PR #17).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-33": {
@@ -497,21 +512,26 @@
       "ola": 3,
       "tipo": "M",
       "depende_de": [
-        "WP-14"
+        {
+          "wp": "WP-14",
+          "tipo": "archivo"
+        }
       ],
       "decisiones": [
         "D8"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-33-ritmo-checkpoint",
+      "pr": 26,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "7921e95",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-34": {
       "titulo": "CI ordenada",
@@ -522,17 +542,18 @@
         "WP-23"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T14:00:00-03:00",
       "rama": "wp/WP-34-ci",
       "pr": 21,
       "verificacion": "PASA (verificacion/WP-34.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-24 (PR #20). Lint excluye src/nurus/personal/motor (4 F401 intactos por regla de motor)."
+        "Apilado sobre WP-24 (PR #20). Lint excluye src/nurus/personal/motor (4 F401 intactos por regla de motor).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-35": {
@@ -543,17 +564,18 @@
         "WP-20"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T12:15:00-03:00",
       "rama": "wp/WP-35-instaladores",
-      "pr": null,
+      "pr": 19,
       "verificacion": "PASA (verificacion/WP-35.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-32 (PR #18). Sin respaldo sin hashes en el Descargador."
+        "Apilado sobre WP-32 (PR #18). Sin respaldo sin hashes en el Descargador.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-40": {
@@ -564,17 +586,18 @@
         "WP-31"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T16:00:00-03:00",
       "rama": "wp/WP-40-trabajo-legible",
       "pr": 23,
       "verificacion": "PASA (verificacion/WP-40.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-16 (PR #22)."
+        "Apilado sobre WP-16 (PR #22).",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-41": {
@@ -585,17 +608,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T17:00:00-03:00",
       "rama": "wp/WP-41-siguiente-paso",
       "pr": 24,
       "verificacion": "PASA (verificacion/WP-41.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-40 (PR #23). Módulo nuevo next_step.py; un único temporizador sin acumulación."
+        "Apilado sobre WP-40 (PR #23). Módulo nuevo next_step.py; un único temporizador sin acumulación.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-42": {
@@ -606,17 +630,18 @@
         "WP-40"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "2026-10-10T18:00:00-03:00",
       "rama": "wp/WP-42-resoluciones-correos",
-      "pr": null,
+      "pr": 25,
       "verificacion": "PASA (verificacion/WP-42.json)",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
       "notas": [
-        "Apilado sobre WP-41 (PR #24). Condición única mail_block en mail_controls.py para deshabilitar y para la acción."
+        "Apilado sobre WP-41 (PR #24). Condición única mail_block en mail_controls.py para deshabilitar y para la acción.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-43": {
@@ -624,38 +649,48 @@
       "ola": 4,
       "tipo": "C/M",
       "depende_de": [
-        "WP-33"
+        {
+          "wp": "WP-33",
+          "tipo": "archivo"
+        }
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-43-paquete-lote",
+      "pr": 28,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "8ccdc5d",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-44": {
       "titulo": "Importar último paquete y fecha de corte",
       "ola": 4,
       "tipo": "C/M",
       "depende_de": [
-        "WP-43"
+        {
+          "wp": "WP-43",
+          "tipo": "archivo"
+        }
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-44-importar-ultimo",
+      "pr": 30,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-45": {
       "titulo": "Solicitud de antecedentes",
@@ -667,16 +702,18 @@
       "decisiones": [
         "D9"
       ],
-      "estado": "BLOQUEADO_USUARIO",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-45-retirar-solicitud",
+      "pr": 31,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "463699f",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-50": {
       "titulo": "Cronología de bitácoras solo mostrar",
@@ -710,16 +747,18 @@
       "decisiones": [
         "D6"
       ],
-      "estado": "BLOQUEADO_USUARIO",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-51-fidelidad-nativa",
+      "pr": 32,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "8ccdc5d",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-60": {
       "titulo": "Pruebas de aceptación R-T",
@@ -729,17 +768,18 @@
         "WP-00"
       ],
       "decisiones": [],
-      "estado": "TOMADO",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex (ejecutor de WP-60)",
       "tomado": null,
       "rama": "wp/WP-60-reglas-limites",
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "pr": 11,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "094c77b",
       "notas": [
-        "Calidad en paralelo:32filasR-T con casos fijos; seis conflictos xfail estrictos propuestos por executor; revisión y verificación independientes pendientes, motor sin cambios."
+        "Calidad en paralelo:32filasR-T con casos fijos; seis conflictos xfail estrictos propuestos por executor; revisión y verificación independientes pendientes, motor sin cambios.",
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
     "WP-61": {
@@ -747,10 +787,137 @@
       "ola": 6,
       "tipo": "M",
       "depende_de": [
-        "TODAS_LAS_DEMAS"
+        {
+          "wp": "WP-00",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-01",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-02",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-10",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-11",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-12",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-13",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-14",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-15",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-16",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-17",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-20",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-21",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-22",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-23",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-24",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-30",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-31",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-32",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-33",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-34",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-35",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-40",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-41",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-42",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-43",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-44",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-45",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-50",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-51",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-60",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-62",
+          "tipo": "archivo"
+        }
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
+      "estado": "LISTO",
       "ejecutor": null,
       "tomado": null,
       "rama": null,
@@ -759,7 +926,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "E6: excluye src/nurus/personal/motor/ salvo decisión expresa."
+      ]
     },
     "WP-62": {
       "titulo": "Dividir DiaryRunner.run",
@@ -769,23 +938,153 @@
         "WP-33"
       ],
       "decisiones": [],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
       "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
-      "notas": []
+      "rama": "wp/WP-62-dividir-diaryrunner",
+      "pr": 29,
+      "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+      "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+      "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+      "integrado_en": "7921e95",
+      "notas": [
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+      ]
     },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
       "tipo": "M",
       "depende_de": [
-        "TODAS_LAS_DEMAS"
+        {
+          "wp": "WP-00",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-01",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-02",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-10",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-11",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-12",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-13",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-14",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-15",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-16",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-17",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-20",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-21",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-22",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-23",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-24",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-30",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-31",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-32",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-33",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-34",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-35",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-40",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-41",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-42",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-43",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-44",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-45",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-50",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-51",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-60",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-62",
+          "tipo": "archivo"
+        },
+        "WP-61"
       ],
       "decisiones": [
         "D7"
@@ -799,7 +1098,9 @@
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "D7: fusionar a main solo tras el acta final firmada por el usuario."
+      ]
     }
   },
   "traspasos": [
@@ -832,5 +1133,6 @@
       "respuesta": "Casilla consolidado en GUI; arreglar generadores docs; manual 2.7.4 sin botón retirado; retirar restos de WP-21",
       "fecha": "11 de octubre de 2026"
     }
-  }
+  },
+  "commit_integracion": "8ccdc5d"
 }

@@ -1,0 +1,25 @@
+{
+  "titulo": "Purga de historial",
+  "ola": 1,
+  "tipo": "M",
+  "depende_de": [
+    "WP-10",
+    "WP-12",
+    "WP-20"
+  ],
+  "decisiones": [
+    "D1"
+  ],
+  "estado": "LISTO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas."
+  ]
+}
