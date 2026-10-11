@@ -50,7 +50,7 @@ def main():
         with args.github_env.open('a',encoding='utf-8') as stream:
             stream.write(f"ASSISTANT_VERSION={versions['asistente']}\nDOWNLOADER_VERSION={versions['descargador']}\n")
         print(versions);return
-    if args.sincronizar_extension:print(sync_extension());return
+    if args.sincronizar_extension:print(sync_extension(downloader_root));return
     root=args.descargador.resolve() if args.descargador else ROOT
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
     if args.descargador:
