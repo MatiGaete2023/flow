@@ -38,9 +38,9 @@ jobs:
         run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
       - run: python -m pytest -q -p no:cacheprovider
       - run: node test_bitacoras_extension.cjs
-      # Playwright y PyInstaller son lentos: solo en PR y ejecución manual.
+      # E4: pruebas unitarias en PR; Playwright y PyInstaller al integrar o a pedido.
       - name: Extensión y servidor ficticios
-        if: github.event_name != 'push'
+        if: github.event_name != 'pull_request'
         run: |
           python -m playwright install chromium
           if ($LASTEXITCODE -ne 0) { throw 'Falló Chromium de pruebas' }
@@ -49,7 +49,7 @@ jobs:
           python verificar_pdf_extension.py
           if ($LASTEXITCODE -ne 0) { throw 'Falló la evidencia PDF con extensión real' }
       - name: Ejecutable y contrato compartido
-        if: github.event_name != 'push'
+        if: github.event_name != 'pull_request'
         run: |
           python ../tools/write_build_meta.py --descargador .
           if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del paquete' }
@@ -60,7 +60,7 @@ jobs:
           $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
           if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified -or -not $proof.capture_v1_verified) { throw 'Paquete incompleto' }
       - uses: actions/upload-artifact@v4
-        if: github.event_name != 'push'
+        if: github.event_name != 'pull_request'
         with:
           retention-days: 14
           name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows

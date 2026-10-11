@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -39,7 +40,7 @@ TEXT_SUFFIXES = {
 }
 ZIP_SUFFIXES = {".docx", ".xlsx", ".zip"}
 ZIP_MEMBER_SUFFIXES = (".xml", ".csv", ".json", ".txt", ".html", ".md")
-PATTERN = re.compile(r"(?<![\d.])(\d{1,2}\.?\d{3}\.?\d{3})-([\dkK])(?![\w])")
+PATTERN = re.compile(r"(?<![\d.])(\d{1,2}[. \u00a0]?\d{3}[. \u00a0]?\d{3})\s*[-\u2010-\u2015\u2212]\s*([\dkK])(?![\w])")
 
 
 def check_digit(number: str) -> str:
@@ -90,9 +91,34 @@ def texts(path: Path, staged: bytes | None = None):
             with zipfile.ZipFile(io.BytesIO(staged) if staged is not None else path) as archive:
                 for name in archive.namelist():
                     if name.lower().endswith(ZIP_MEMBER_SUFFIXES):
-                        yield f"{path}!{name}", archive.read(name).decode("utf-8", errors="ignore")
+                        content = archive.read(name).decode("utf-8", errors="ignore")
+                        if name.lower().endswith(".xml"):
+                            try:
+                                tree = ET.fromstring(content)
+                            except ET.ParseError:
+                                raise ValueError("XML interno ilegible") from None
+                            # Word runs and Excel rich text split a visible identity into
+                            # multiple XML tags. Join only within one paragraph/cell.
+                            segments = [
+                                "".join(node.itertext())
+                                for node in tree.iter()
+                                if node.tag.rsplit("}", 1)[-1] in {"p", "si", "is"}
+                            ]
+                            seen = {
+                                (re.sub(r"\D", "", match.group(1)), match.group(2).upper())
+                                for match in PATTERN.finditer(content)
+                            }
+                            extra = []
+                            for segment in segments:
+                                for match in PATTERN.finditer(segment):
+                                    identity = (re.sub(r"\D", "", match.group(1)), match.group(2).upper())
+                                    if identity not in seen:
+                                        extra.append(match.group(0))
+                                        seen.add(identity)
+                            content += "\n" + "\n".join(extra)
+                        yield f"{path}!{name}", content
         except zipfile.BadZipFile:
-            return
+            raise ValueError("Contenedor ZIP ilegible") from None
 
 
 def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list[tuple[str, int, str]]:
@@ -106,7 +132,7 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
             continue
         for label, content in texts(path, staged):
             for match in PATTERN.finditer(content):
-                number = match.group(1).replace(".", "")
+                number = re.sub(r"\D", "", match.group(1))
                 normalized = f"{number}-{match.group(2).upper()}"
                 if normalized in allowlist or not is_real_looking(number, match.group(2)):
                     continue
@@ -134,7 +160,7 @@ def scan_history(allowlist: set[str]) -> list[tuple[str, int, str]]:
         content = subprocess.run(["git", "cat-file", "-p", sha], cwd=ROOT, capture_output=True, check=True).stdout
         for label, text in texts(Path(name), content):
             for match in PATTERN.finditer(text):
-                number = match.group(1).replace(".", "")
+                number = re.sub(r"\D", "", match.group(1))
                 normalized = f"{number}-{match.group(2).upper()}"
                 if normalized in allowlist or not is_real_looking(number, match.group(2)):
                     continue
@@ -157,13 +183,15 @@ def excluded(path: Path, prefixes: list[Path]) -> bool:
     return any(path == prefix or prefix in path.parents for prefix in prefixes)
 
 
-def main(argv: list[str]) -> int:
+def _main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Detecta RUT con dígito verificador válido.")
     parser.add_argument("rutas", nargs="*")
     parser.add_argument("--excluir", action="append", default=[], metavar="RUTA")
     parser.add_argument("--stage", action="store_true", help="Revisa solo el contenido añadido al índice de Git.")
     parser.add_argument("--historia", action="store_true", help="Revisa todos los blobs del historial (WP-17).")
     args = parser.parse_args(argv)
+    if args.historia and (args.stage or args.rutas or args.excluir):
+        parser.error("--historia no acepta --stage, rutas ni exclusiones")
     if args.historia:
         findings = scan_history(load_allowlist())
         for label, line, masked in findings:
@@ -178,6 +206,8 @@ def main(argv: list[str]) -> int:
         else ([Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files())
     )
     if not args.stage and args.rutas:
+        if any(not path.exists() for path in paths):
+            parser.error("Una ruta solicitada no existe")
         paths = [candidate for path in paths for candidate in (path.rglob("*") if path.is_dir() else [path])]
     prefixes = [Path(os.path.abspath(ROOT / prefix)) for prefix in args.excluir]
     paths = [path for path in paths if not excluded(path, prefixes)]
@@ -192,6 +222,14 @@ def main(argv: list[str]) -> int:
         return 1
     print("Sin RUT reales detectados.")
     return 0
+
+
+def main(argv: list[str]) -> int:
+    try:
+        return _main(argv)
+    except (OSError, ValueError, UnicodeError, subprocess.SubprocessError, RuntimeError):
+        print("No se pudo completar el control de identidades; no se certifica el contenido.", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

@@ -131,8 +131,9 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: ignore
 
+      # E4: distribuciones, ejecutables e instaladores se producen al integrar o a pedido.
       - name: Build Windows distribution
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         shell: pwsh
         run: |
           @'
@@ -164,7 +165,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Falló la selección segura de archivos fuente' }
 
       - name: Source distribution
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
@@ -172,7 +173,7 @@ jobs:
           path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
 
       - name: Windows executable
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         timeout-minutes: 10
         run: |
           . ./tools/windows_process_check.ps1
@@ -187,7 +188,7 @@ jobs:
           if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
 
       - name: Verificar lector y empaquetado integral SITFA
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         timeout-minutes: 15
         shell: pwsh
         run: |
@@ -201,7 +202,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Falló paquete CSMP-Descargador' }
 
       - name: Artefacto integral CSMP y Descargador
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
@@ -210,7 +211,7 @@ jobs:
           if-no-files-found: error
 
       - name: Executable artifact
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
@@ -229,11 +230,11 @@ jobs:
             requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
 
       - name: Measure native table redraws
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         run: python tools/benchmark_interface.py --rows 1000 10000 --repeats 10
 
       - name: Build and verify Windows installer
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         timeout-minutes: 10
         shell: pwsh
         run: |
@@ -257,7 +258,7 @@ jobs:
           Invoke-InstallerVerification -Installer $installer.FullName -ExpectedSourceCommit $expectedCommit -Destination $destination -EvidenceDirectory 'artifacts'
 
       - name: Installer diagnostics
-        if: always() && matrix.python == '3.12'
+        if: always() && github.event_name != 'pull_request' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Installer-diagnostics
@@ -271,7 +272,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Installer and measurements
-        if: matrix.python == '3.12'
+        if: github.event_name != 'pull_request' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
