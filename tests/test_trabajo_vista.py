@@ -49,3 +49,25 @@ assert tuple(app.records['displaycolumns'])==('Estado','Observación','RIT','Nom
 from nurus.personal.commands import commands
 assert any('Preferencias de vista' in c.name for c in commands(app))
 """)
+
+
+def test_atajos_no_editan_campos_ni_actuan_con_un_dialogo_modal(tmp_path):
+    run_gui(tmp_path, """
+import tkinter as tk
+llamadas=[]
+app._choose=lambda:llamadas.append('choose')
+marco=tk.Toplevel(app)
+campo=tk.Entry(marco);campo.pack();campo.insert(0,'2026-10-11');campo.icursor(4);campo.focus_force();app.update()
+campo.event_generate('<Control-k>');app.update()
+assert campo.get()=='2026-10-11'
+assert getattr(app,'command_palette',None) is not None and app.command_palette.winfo_exists()
+app.command_palette.destroy();app.update()
+nota=tk.Text(marco,height=2);nota.pack();nota.insert('1.0','observación');nota.mark_set('insert','1.3');nota.focus_force();app.update()
+nota.event_generate('<Control-o>');app.update()
+assert nota.get('1.0','end-1c')=='observación' and llamadas==['choose']
+dialogo=tk.Toplevel(app);fecha=tk.Entry(dialogo);fecha.pack();fecha.insert(0,'2026-10-11');app.update()
+dialogo.grab_set();fecha.focus_force();app.update()
+fecha.event_generate('<Control-o>');fecha.event_generate('<Control-k>');app.update()
+assert llamadas==['choose'] and fecha.get()=='2026-10-11'
+dialogo.grab_release();dialogo.destroy()
+""")
