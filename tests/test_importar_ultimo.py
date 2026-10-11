@@ -1,10 +1,14 @@
 """WP-44: «Importar último paquete» (solo lectura) y fecha de corte con «Usar hoy». Datos ficticios."""
 
 import json
+import lzma
 import os
 import subprocess
 import time
 import zipfile
+import zlib
+
+import pytest
 
 from nurus.capture import write_capture
 from nurus.personal import latest_capture as modulo
@@ -46,6 +50,52 @@ def test_elige_el_mas_reciente_valido_e_ignora_ajenos_y_danados(tmp_path, monkey
     assert modulo.latest_capture() == esperado
     assert not llamadas
     assert modulo.latest_capture([tmp_path / 'vacio']) is None
+
+
+@pytest.mark.parametrize('problema', ['deflate_corrupto', 'lzma_corrupto', 'cifrado'])
+def test_zip_nuevo_ilegible_no_oculta_paquete_valido_anterior(tmp_path, problema):
+    esperado = paquete(tmp_path / 'valido_anterior.zip', 600)
+    ilegible = tmp_path / 'nuevo_ilegible.zip'
+    compresion = zipfile.ZIP_LZMA if problema == 'lzma_corrupto' else zipfile.ZIP_DEFLATED
+    with zipfile.ZipFile(ilegible, 'w', compression=compresion) as archivo:
+        archivo.writestr('manifest.json', json.dumps({'schema_id': 'CSMP_CAPTURE'}))
+    contenido = bytearray(ilegible.read_bytes())
+    if problema in {'deflate_corrupto', 'lzma_corrupto'}:
+        nombre = int.from_bytes(contenido[26:28], 'little')
+        extra = int.from_bytes(contenido[28:30], 'little')
+        inicio = 30 + nombre + extra
+        if problema == 'deflate_corrupto':
+            # Bloque DEFLATE de tipo reservado: el contenedor ZIP sigue siendo reconocible.
+            contenido[inicio] = (contenido[inicio] & ~7) | 7
+            error = zlib.error
+        else:
+            # Propiedades LZMA inválidas tras la cabecera de cuatro bytes.
+            contenido[inicio + 4] = 255
+            error = lzma.LZMAError
+    else:
+        # Marcar el archivo ficticio como cifrado basta para exigir una contraseña.
+        central = contenido.index(b'PK\x01\x02')
+        contenido[6] |= 1
+        contenido[central + 8] |= 1
+        error = RuntimeError
+    ilegible.write_bytes(contenido)
+    with zipfile.ZipFile(ilegible) as archivo, pytest.raises(error):
+        archivo.read('manifest.json')
+    assert modulo.latest_capture([tmp_path]) == esperado
+
+
+def test_manifest_truncado_se_ignora_sin_ocultar_otro_paquete(tmp_path, monkeypatch):
+    esperado = paquete(tmp_path / 'valido_anterior.zip', 600)
+    ilegible = ajeno(tmp_path / 'nuevo_ilegible.zip')
+    leer = zipfile.ZipFile.read
+
+    def truncado(archivo, *args, **kwargs):
+        if archivo.filename == str(ilegible):
+            raise EOFError('manifiesto ficticio truncado')
+        return leer(archivo, *args, **kwargs)
+
+    monkeypatch.setattr(zipfile.ZipFile, 'read', truncado)
+    assert modulo.latest_capture([tmp_path]) == esperado
 
 
 def test_boton_importa_el_ultimo_y_fecha_de_corte_usar_hoy(tmp_path):

@@ -2,8 +2,10 @@
 procesos, no abre Chrome ni el Descargador (restricción 7)."""
 
 import json
+import lzma
 import os
 import zipfile
+import zlib
 from pathlib import Path
 
 DOWNLOADER_DIR = 'SITFA_Descargador_Integral'
@@ -57,7 +59,18 @@ def _declares_capture(path):
             if info.file_size > 4 * 1024 * 1024:
                 return False
             return json.loads(archive.read(info).decode('utf-8-sig')).get('schema_id') == 'CSMP_CAPTURE'
-    except (OSError, KeyError, ValueError, zipfile.BadZipFile, AttributeError):
+    except (
+        OSError,
+        KeyError,
+        ValueError,
+        zipfile.BadZipFile,
+        AttributeError,
+        zlib.error,
+        lzma.LZMAError,
+        RuntimeError,
+        EOFError,
+    ):
+        # Un manifiesto comprimido dañado o cifrado no debe ocultar paquetes anteriores.
         return False
 
 
