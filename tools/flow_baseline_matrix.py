@@ -1,9 +1,12 @@
 """P0: renderiza la matriz revisada; verifica IDs y rutas de evidencia.
 
-python tools/flow_baseline_matrix.py
+python tools/flow_baseline_matrix.py              # solo comprueba y dice si los archivos difieren
+python tools/flow_baseline_matrix.py --escribir   # reescribe la matriz y su CSV
 La relación con tests es evidencia técnica; no equivale a aceptación de RUS.
 """
+import argparse
 import csv
+import io
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -20,7 +23,15 @@ SPEC_FILES = (
 )
 
 
-def main():
+def evidence_link(path):
+    """Enlace a la evidencia; las rutas retiradas por el plan quedan como texto, sin enlace roto."""
+    return f"`{path}` (retirado)" if path in RETIRADAS else f"[{path}](../{path})"
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Matriz funcional P0 (histórica).")
+    parser.add_argument("--escribir", action="store_true", help="reescribe los archivos; sin esto solo comprueba")
+    write = parser.parse_args(argv).escribir
     records = json.loads((ROOT / "docs/evidencia_p0/requisitos.json").read_text(encoding="utf-8"))
     by_id = {item["id"]: item for item in records}
     if len(by_id) != len(records):
@@ -45,7 +56,8 @@ def main():
                 identified[code] = (path.name, number, cells[2].strip(), cells[-2].strip())
     if set(by_id) != set(identified):
         raise SystemExit("IDs sin revisar: " + str(sorted(set(by_id) ^ set(identified))))
-    lines = ["# Matriz funcional P0 por SHA", "",
+    lines = ["Histórico (P0). Estado vigente en [TRAZABILIDAD_EJECUCION_20261008.md](TRAZABILIDAD_EJECUCION_20261008.md).", "",
+             "# Matriz funcional P0 por SHA", "",
              "Origen: `251d5c4025749edd4767183ebd3d2baf3bb9baed`.", "",
              "IMPLEMENTADO describe evidencia de código/fixtures, no aprobación institucional.",
              "Los tests relacionados se ejecutaron en suites locales; los casos D/A/R/INT completos",
@@ -64,16 +76,23 @@ def main():
         name, line, title, acceptance = identified[item["id"]]
         item.update(source=name, source_line=line, requirement=title, acceptance=acceptance)
         link = f"[{item['id']}](plan_20261008/{name}#L{line})"
-        code = "; ".join(f"[{p}](../{p})" for p in item["code"]) or "—"
-        tests = "; ".join(f"[{p}](../{p})" for p in item["tests"]) or "—"
+        code = "; ".join(evidence_link(p) for p in item["code"]) or "—"
+        tests = "; ".join(evidence_link(p) for p in item["tests"]) or "—"
         lines.append(f"| {link} | {title.replace('|', '/')} | {acceptance.replace('|', '/')} | {item['state']} | {code} | {tests} | {item['limit']} |")
-    (ROOT / "docs/MATRIZ_FUNCIONAL_20261008.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    with (ROOT / "docs/evidencia_p0/matriz_funcional.csv").open("w", newline="", encoding="utf-8") as stream:
-        fields = ["id", "requirement", "acceptance", "state", "code", "tests", "limit", "source", "source_line"]
-        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
-        writer.writeheader()
-        writer.writerows({**item, "code": ";".join(item["code"]), "tests": ";".join(item["tests"])} for item in records)
+    stream = io.StringIO()
+    fields = ["id", "requirement", "acceptance", "state", "code", "tests", "limit", "source", "source_line"]
+    writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows({**item, "code": ";".join(item["code"]), "tests": ";".join(item["tests"])} for item in records)
+    outputs = {ROOT / "docs/MATRIZ_FUNCIONAL_20261008.md": "\n".join(lines) + "\n",
+               ROOT / "docs/evidencia_p0/matriz_funcional.csv": stream.getvalue()}
+    changed = [path for path, text in outputs.items() if not path.is_file() or path.read_text(encoding="utf-8") != text]
+    if write:
+        for path in changed:
+            path.write_text(outputs[path], encoding="utf-8", newline="")
     print(f"{len(records)} requisitos identificados; IDs, estados y rutas comprobados")
+    for path in changed:
+        print(("Reescrito: " if write else "Difiere (usa --escribir): ") + str(path.relative_to(ROOT)))
 
 
 if __name__ == "__main__":
