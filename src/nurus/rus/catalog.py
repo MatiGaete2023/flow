@@ -13,14 +13,6 @@ def default_catalog_path() -> Path:
     return Path(__file__).with_name("textos_observaciones.json")
 
 
-def catalog_sha256(path: str | Path | None = None) -> str:
-    catalog_path = Path(path) if path else default_catalog_path()
-    try:
-        return hashlib.sha256(catalog_path.read_bytes()).hexdigest()
-    except OSError as exc:
-        raise CatalogError(f"No se pudo abrir el catálogo: {catalog_path}") from exc
-
-
 def load_catalog(path: str | Path | None = None) -> dict[str, dict[str, dict[str, object]]]:
     return load_catalog_snapshot(path)[0]
 

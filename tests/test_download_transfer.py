@@ -220,3 +220,14 @@ def test_other_transfer_cannot_receive_saved_edits_by_shared_rit(tmp_path):
     with pytest.raises(ValueError, match='corresponde'):
         archive_current(app.work, app.cfg.directory)
     assert not (other.recovery_folder / 'incorporada/trabajo.json').exists()
+
+
+def test_incorporated_backup_keeps_session_as_storage_directory(tmp_path):
+    # Camino real de A3: _save_session guarda en sesion y archive_current guarda el respaldo «incorporada».
+    path = source(tmp_path)
+    app = App(tmp_path)
+    request = ready(app, path)
+    link.incorporate(app, request)
+    app._save_session()
+    assert (request.recovery_folder / 'incorporada' / 'trabajo.json').is_file()
+    assert app.work.storage_directory == str(app.cfg.directory / 'sesion')

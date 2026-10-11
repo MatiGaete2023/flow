@@ -12,7 +12,6 @@ TABS = {
     "Informes": ("tdInforme", "NUM_PaginaInforme", "NUM_TotalInforme", "tablaInforme"),
     "Egresados": ("tdEgreso", "NUM_PaginaEgreso", "NUM_TotalEgreso", "tablaEgresados"),
 }
-FORM = 'form[name="InformesPpalForm"]'
 SCREENS = {
     'Seguimiento': 'seguimiento',
     'Medidas por vencer (calendario)': 'calendario_medidas',

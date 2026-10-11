@@ -422,11 +422,6 @@ class App(ctk.CTk):
         values = tree.item(iid, 'values')
         return normalize(' '.join([str(extra or ''), *(str(value or '') for value in values)]))
 
-    @staticmethod
-    def _show_tree_item(tree, iid):
-        if tree.exists(iid):
-            tree.move(iid, '', 'end')
-
     def _apply_work_filter(self, *_):
         if not hasattr(self, 'records'):
             return
@@ -539,9 +534,6 @@ class App(ctk.CTk):
             raise ValueError('Selecciona una fila para abrir su original.')
         row = next(r for r in work.rows if r.id == selected[0])
         self._open(verified_source(work, row))
-
-    def _download_joint(self):
-        raise ValueError('Las consultas se realizan en el Descargador. Importa aquí el paquete obtenido.')
 
     def _ask_cut_date(self):
         """Fecha de corte: hoy por defecto, botón «Usar hoy» y posibilidad de escribir otra."""
@@ -661,7 +653,7 @@ class App(ctk.CTk):
             if previous and candidate.capture_digest != getattr(previous, 'capture_digest', ''):
                 from uuid import uuid4
 
-                previous.save(self.cfg.directory / 'sesion' / 'anteriores' / uuid4().hex)
+                previous.save(self.cfg.directory / 'sesion' / 'anteriores' / uuid4().hex, snapshot=True)
                 self._prune_previous_sessions()
             self.work = candidate
             if not reused:
@@ -821,11 +813,6 @@ class App(ctk.CTk):
                 self._update_work_case_detail(row)
         if hasattr(self, 'record_form') and self.work:
             self.record_form.capture()
-
-    def _apply_observation(self):
-        self._capture_observation()
-        self._save_session()
-        self.status.set('Edición incorporada a esta sesión y a sus productos.')
 
     def _detail(self, event=None):
         if self.busy or getattr(self, 'rendering', False):

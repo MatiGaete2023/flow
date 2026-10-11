@@ -91,6 +91,9 @@ def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
         # Decisión del usuario (11 de octubre de 2026): texto literal sin apóstrofo visible, nunca fórmula.
         assert sheet.cell(2, observation).value == "=texto de prueba"
         assert sheet.cell(2, observation).data_type == "s"
+        # La columna OBSERVACION revisada tampoco lleva apóstrofo visible (auditoría 11 de octubre de 2026).
+        reviewed = sheet.cell(2, headers.index("OBSERVACION") + 1)
+        assert (reviewed.value, reviewed.data_type) == ("=texto de prueba", "s")
         assert sheet.cell(2, state).value == "REVISADO"
         assert sheet.cell(3, state).value == "EXCLUIDO"
         rules = list(sheet.conditional_formatting)
@@ -257,3 +260,12 @@ def test_native_savecopyas_separates_input_output_and_closes_excel(tmp_path, mon
     pythoncom.CoUninitialize.assert_called_once()
     assert sheet.Range.return_value.Interior.Color == 255 + 242 * 256 + 204 * 65536
     assert opened and not opened[0].exists()
+
+
+def test_snapshot_save_keeps_primary_session(tmp_path):
+    # Un respaldo (anteriores/incorporada) no desvía los recibos de borradores fuera de la sesión principal.
+    work, _ = _work(tmp_path / "entrada.xlsx")
+    work.save(tmp_path / "sesion")
+    work.save(tmp_path / "respaldo", snapshot=True)
+    assert work.storage_directory == str(tmp_path / "sesion")
+    assert (tmp_path / "respaldo" / "trabajo.json").is_file()

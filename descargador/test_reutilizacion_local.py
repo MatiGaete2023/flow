@@ -9,6 +9,7 @@ from nurus.capture import read_capture
 from nurus.capture.diaries import import_lotes, export_diaries
 from export_csmp_capture import export_capture
 from resultados import load_lot
+from flujo_csmp import FLOW_DONE
 from preferencias import Preferences
 from archivo_local import remember, discover, load_sources
 from test_resultados import fixture
@@ -148,11 +149,26 @@ def test_joint_sources_load_all_phases_and_deduplicate_selected_phase(tmp_path):
     second = fixture(root / 'reports', mode='Informes')
     (root / 'flujo.json').write_text(
         json.dumps(
-            {'estado': 'COMPLETA', 'fases': {'principal': {'carpeta': 'primary'}, 'informes': {'carpeta': 'reports'}}}
+            {
+                'estado': FLOW_DONE,
+                'fases': {'principal': {'carpeta': 'primary'}, 'informes': {'carpeta': 'reports'}},
+            }
         ),
         encoding='utf-8',
     )
     assert {lot.folder for lot in load_sources([root, first])} == {first.resolve(), second.resolve()}
+
+
+def test_joint_in_progress_requires_partial(tmp_path):
+    root = tmp_path / 'joint'
+    root.mkdir()
+    fixture(root / 'primary')
+    (root / 'flujo.json').write_text(
+        json.dumps({'estado': 'EN_CURSO', 'fases': {'principal': {'carpeta': 'primary'}}}), encoding='utf-8'
+    )
+    with pytest.raises(Exception, match='incompleto'):
+        load_sources([root])
+    assert len(load_sources([root], partial=True)) == 1
 
 
 def test_zip_uses_its_shared_reader_before_a_different_installed_release():

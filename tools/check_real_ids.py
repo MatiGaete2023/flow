@@ -42,6 +42,7 @@ TEXT_SUFFIXES = {
     ".cjs",
 }
 ZIP_SUFFIXES = {".docx", ".docm", ".dotx", ".dotm", ".xlsx", ".xlsm", ".xltx", ".xltm", ".zip"}
+BINARY_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".ttf", ".woff", ".woff2"}
 MAX_ARCHIVE_DEPTH = 4
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_ARCHIVE_MEMBERS = 10_000
@@ -103,9 +104,30 @@ def decode_text(data: bytes) -> str:
     return content
 
 
+def sniff(path: Path, staged: bytes | None) -> tuple[str, bytes | None]:
+    """Sufijo efectivo de un archivo de sufijo desconocido según su contenido (WP-80).
+
+    Una sesión guardada (.bin que es un XLSX) se revisa como ZIP; un script (.ps1, .iss…) como texto; un binario
+    sin texto (imagen, fuente) no se revisa.
+    """
+    raw = staged if staged is not None else path.read_bytes()
+    if zipfile.is_zipfile(io.BytesIO(raw)):
+        return ".zip", raw
+    if raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)) or b"\0" not in raw:
+        try:
+            decode_text(raw)
+        except ValueError:
+            # Sufijo desconocido que no es texto: binario, no es un control incompleto.
+            return "", None
+        return ".txt", raw
+    return "", None
+
+
 def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
     budget = budget if budget is not None else {"bytes": 0, "members": 0}
     suffix = path.suffix.lower()
+    if suffix not in TEXT_SUFFIXES and suffix not in ZIP_SUFFIXES and depth == 0:
+        suffix, staged = sniff(path, staged)
     if suffix in TEXT_SUFFIXES:
         data = staged if staged is not None else path.read_bytes()
         content = decode_text(data)
@@ -190,12 +212,13 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
 
 
 def history_blobs() -> list[tuple[str, str]]:
-    """(blob, ruta) de cada blob distinto alcanzable desde cualquier referencia, con sufijo revisable."""
+    """(blob, ruta) de cada blob distinto alcanzable desde cualquier referencia que pueda contener texto."""
     output = subprocess.run(["git", "rev-list", "--all", "--objects"], cwd=ROOT, capture_output=True, check=True).stdout
     seen, result = set(), []
     for line in output.decode("utf-8", errors="surrogateescape").splitlines():
         sha, _, name = line.partition(" ")
-        if not name or sha in seen or Path(name).suffix.lower() not in TEXT_SUFFIXES | ZIP_SUFFIXES:
+        # Como texts(): también sufijos desconocidos (p. ej. sesiones .bin), salvo imágenes y fuentes.
+        if not name or sha in seen or Path(name).suffix.lower() in BINARY_SUFFIXES:
             continue
         seen.add(sha)
         result.append((sha, name))

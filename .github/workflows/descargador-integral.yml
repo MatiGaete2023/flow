@@ -3,6 +3,7 @@ on:
   push:
     branches: ['feat/**', main]
   pull_request:
+    branches: ['feat/**']
   workflow_dispatch:
 
 # Una corrida nueva del mismo evento y rama cancela la anterior. El evento va en el grupo
@@ -24,9 +25,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/windows-py312.lock
       - name: Control de identidades antes de instalar o generar artefactos
         working-directory: .
         run: python tools/check_real_ids.py

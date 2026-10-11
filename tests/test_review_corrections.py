@@ -45,11 +45,11 @@ def test_excel_limit_checked_before_cell_assignment(text, valid):
     book = Workbook()
     sheet = book.active
     if valid:
-        append_literal_row(sheet, ['=1+1', text], row_number=1)
+        append_literal_row(sheet, ['=1+1', text])
         assert sheet['B1'].value == text and sheet['A1'].data_type == 's'
     else:
         with pytest.raises(ValueError, match='UTF-16'):
-            append_literal_row(sheet, [text], row_number=1)
+            append_literal_row(sheet, [text])
         assert sheet._cells == {}
     book.close()
 
@@ -166,6 +166,28 @@ def test_ambiguous_rows_or_missing_record_never_auto_copy_decisions(tmp_path):
     with pytest.raises(ReconciliationRequired) as caught:
         import_capture(path, defaults(), as_of=CUT, previous=old)
     assert caught.value.conflicts[0].record_id == 'missing:r0'
+
+
+def test_unedited_rows_never_require_reconciliation(tmp_path):
+    # analyze deja decisiones por defecto en cada fila; sin edición humana no hay nada que conciliar.
+    old, metadata, tables = work_from(tmp_path)
+    tables['registros'] = tables['registros'][1:]
+    raw = json.loads(tables['registros'][0]['normalized_json'])
+    raw['T ESPERA'] = '0'
+    tables['registros'][0]['normalized_json'] = json.dumps(raw)
+    new = import_capture(write_capture(tmp_path / 'sin.zip', metadata, tables), defaults(), as_of=CUT, previous=old)
+    assert len(new.rows) == len(tables['registros'])
+
+
+def test_rule_exclusion_is_not_a_human_edit():
+    from types import SimpleNamespace
+    from nurus.personal.capture_reconciliation import _edited
+
+    base = dict(
+        review={}, overrides={}, word_overrides={}, decisions={'structured': True, 'mail': {}, 'resolution': 'auto'}
+    )
+    assert not _edited(SimpleNamespace(**base, excluded=True, rules=['COMUN.NO_SEGUIMIENTO']))
+    assert _edited(SimpleNamespace(**base, excluded=True, rules=['E-01']))
 
 
 def test_query_row_and_table_cannot_overclaim_coverage(tmp_path):

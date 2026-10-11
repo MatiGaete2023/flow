@@ -56,25 +56,8 @@ class App(_BaseApp):
     def _selected_mail_courts(self):
         return [self.mail_court_keys[i] for i in self.mail_courts.curselection() if i < len(self.mail_court_keys)]
 
-    def _select_all_mail_courts(self):
-        if self.mail_courts.size():
-            self.mail_courts.selection_set(0, 'end')
-
-    def _select_no_mail_courts(self):
-        self.mail_courts.selection_clear(0, 'end')
-
     def _selected_mail_modalities(self):
         return [key for key, var in self.modality_vars.items() if var.get()]
-
-    def _select_all_mail_modalities(self):
-        for var in self.modality_vars.values():
-            var.set(True)
-        self._mail_modality_changed()
-
-    def _select_no_mail_modalities(self):
-        for var in self.modality_vars.values():
-            var.set(False)
-        self._mail_modality_changed()
 
     def _mail_modality_changed(self):
         keys = self._selected_mail_modalities() if hasattr(self, 'modality_vars') else []
@@ -300,10 +283,6 @@ class App(_BaseApp):
         if self.draft_index is not None:
             self.attach.set('\n'.join(self.drafts[self.draft_index].attachments))
         self.status.set(f'{len(paths)} adjunto(s) incorporado(s) a {len(self.drafts)} borradores.')
-
-    def _clear_current_attachments(self):
-        self.attach.set('')
-        self._capture_mail()
 
     def _preview_mail(self):
         self._capture_mail()

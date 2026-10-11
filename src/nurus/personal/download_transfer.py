@@ -109,7 +109,7 @@ def archive_current(work, configuration_folder):
     transfer = Transfer.load(folder, folder / (identifier + '.solicitud.json'))
     if transfer.data.get('source_hash') != work.source_hash or transfer.data['mode'] != work.mode:
         raise ValueError('El trabajo ya no corresponde a su devolución de descarga.')
-    work.save(transfer.recovery_folder / 'incorporada')
+    work.save(transfer.recovery_folder / 'incorporada', snapshot=True)
 
 
 def recovery_work(transfer, current=None, config=None):

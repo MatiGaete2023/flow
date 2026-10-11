@@ -137,6 +137,8 @@ MAX_RATIO = 200
 REQUIRED = ('consultas', 'registros', 'incidencias')
 CSV_LOCK = threading.RLock()
 HEX = re.compile(r'^[0-9a-f]{64}$')
+# Solo dígitos ASCII: str.isdigit() acepta «²», que int() rechaza fuera de CaptureError.
+DIGITS = re.compile(r'[0-9]+')
 
 
 class CaptureError(ValueError):
@@ -246,7 +248,17 @@ def check_workbook(raw):
             # Validar todos sus CRC antes de ofrecer la copia nativa o persistir el paquete.
             if book.testzip() is not None:
                 fail('El consolidado contiene un archivo corrupto.')
-    except (zipfile.BadZipFile, UnicodeError, KeyError, EOFError, RuntimeError, zlib.error) as exc:
+    except (
+        zipfile.BadZipFile,
+        UnicodeError,
+        KeyError,
+        EOFError,
+        RuntimeError,
+        NotImplementedError,
+        OSError,
+        zlib.error,
+    ) as exc:
+        # Compresión no soportada o entrada ilegible: siempre CaptureError, nunca una excepción cruda.
         raise CaptureError('El consolidado no es un libro xlsx.') from exc
 
 
@@ -338,11 +350,12 @@ def _validate_query(q):
     """Fechas, paginación y garantías antes de relacionar filas."""
     iso_time(q['captured_at'])
     for k in ('expected_pages', 'saved_pages'):
-        if not q[k].isdigit():
+        if not DIGITS.fullmatch(q[k]):
             fail('Páginas inválidas.')
-    if int(q['saved_pages']) > int(q['expected_pages']):
+    saved, expected = int(q['saved_pages']), int(q['expected_pages'])
+    if saved > expected:
         fail('Cobertura de páginas inconsistente.')
-    if q['coverage'] == 'COMPLETA' and q['saved_pages'] != q['expected_pages']:
+    if q['coverage'] == 'COMPLETA' and saved != expected:
         fail('Consulta completa con páginas faltantes.')
     for k in ('history_complete', 'institutional_verified'):
         if q[k] not in ('true', 'false'):
@@ -351,8 +364,18 @@ def _validate_query(q):
     for k in ('period_from', 'period_to'):
         if q[k]:
             iso_time(q[k], True)
-    if q['period_from'] and q['period_to'] and q['period_from'] > q['period_to']:
+    if q['period_from'] and q['period_to'] and _instant_after(q['period_from'], q['period_to']):
         fail('Período invertido.')
+
+
+def _instant_after(first, second):
+    """Compara instantes con zona; si mezclan fecha y fecha-hora, o con y sin zona, compara solo el día."""
+    if 'T' in first and 'T' in second:
+        a = datetime.fromisoformat(first.replace('Z', '+00:00'))
+        b = datetime.fromisoformat(second.replace('Z', '+00:00'))
+        if (a.utcoffset() is None) == (b.utcoffset() is None):
+            return a > b
+    return first[:10] > second[:10]
 
 
 def _validate_rows(m, tables):
@@ -386,7 +409,7 @@ def _validate_rows(m, tables):
                 if (
                     not row['source_sha256']
                     or not row['original_file']
-                    or not row['original_row'].isdigit()
+                    or not DIGITS.fullmatch(row['original_row'])
                     or int(row['original_row']) < 1
                 ):
                     fail('Procedencia incompleta.')
@@ -428,6 +451,8 @@ def _validate_rows(m, tables):
                     fail('Este contrato no acredita lectura de documentos.')
                 if row['download_state'] not in ('NO_SOLICITADA', 'NO_DISPONIBLE', 'FALLIDA', 'DESCARGADO'):
                     fail('Estado documental inválido.')
+                if row['sha256'] and not HEX.fullmatch(row['sha256']):
+                    fail('Huella documental inválida.')
                 if row['download_state'] == 'DESCARGADO':
                     f = next((f for f in m['files'] if f['path'] == row['local_file']), None)
                     if not f or f['type'] != 'original' or f['sha256'] != row['sha256']:
@@ -442,6 +467,8 @@ def _validate_rows(m, tables):
                     fail('Calendario sin identidad completa.')
             else:
                 key, seen = 'incident_id', incident_ids
+                if row['recoverable'] not in ('true', 'false'):
+                    fail('Recuperabilidad de incidencia inválida.')
             if not row[key] or row[key] in seen:
                 fail('ID vacío o duplicado en ' + table)
             seen.add(row[key])
