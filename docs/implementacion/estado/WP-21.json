@@ -1,0 +1,24 @@
+{
+  "titulo": "Capa legado y segundo motor",
+  "ola": 2,
+  "tipo": "E/M",
+  "depende_de": [
+    "WP-20"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T10:00:00-03:00",
+  "rama": "wp/WP-21-capa-legado",
+  "pr": 13,
+  "verificacion": "PASA (verificacion/WP-21.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Inspección independiente: domain.models contiene Product/Template usados por personal/outputs.py y adapters/outlook.py; eliminarlo rompe productos y borradores. La ficha debe definir conservación o destino de los modelos compartidos y adaptación de pruebas mixtas antes de ejecutar la poda.",
+    "Propuesta externa /workspace/propuesta-WP21/LEEME.md: mantener modelos usados, corregir tres archivos omitidos y aceptación imposible antesWP22. Clasificación119funciones,74legado/45vigentes (no nodos pytest). Pregunta de autorización concreta enviada; sin borrar hasta respuesta.",
+    "Autorizado por el usuario el 10 de octubre de 2026 conservando domain/models.py. Propuesta del Ejecutor en su PR; apilada sobre WP-20 (PR #12).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "titulo": "Retención en el Asistente",
+  "ola": 1,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [
+    "D4"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "/root/ejecutor_retencion",
+  "tomado": "2026-10-09T22:17:37.125759+00:00",
+  "rama": "wp/WP-13-retencion-asistente",
+  "pr": 3,
+  "verificacion": "PASA: verificacion/WP-13.json sobre 30647b5; 612/11 y 198/59",
+  "revision": "APROBADO: /root/revision_previa; legado con cuatro copias conserva recuperación",
+  "auditoria": "CONFORME: auditoria/WP-13.md; captura ficticia archivada",
+  "integrado_en": "243e59d9eac882d808c57a84f0e8067fc7a167b4",
+  "notas": [
+    "D4 aplicada: 60 días y hasta 10 sesiones anteriores; borrado tras confirmar, vigente y adjuntos externos conservados.",
+    "Tres cargas normales dejan dos .bin; legado con originales distintos puede necesitar cuatro para vigente y respaldo, documentado sin pérdida.",
+    "Verificación posterior a integración: 612 aprobadas y 11 omitidas en Asistente; 198 aprobadas y 59 subpruebas en Descargador; golden de 17 productos PASA."
+  ]
+}

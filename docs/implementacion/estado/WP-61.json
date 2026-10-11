@@ -1,0 +1,148 @@
+{
+  "titulo": "Formato automático",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-00",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-01",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-02",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-10",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-11",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-12",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-13",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-14",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-15",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-16",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-17",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-20",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-21",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-22",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-23",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-24",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-30",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-31",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-32",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-33",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-34",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-35",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-40",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-41",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-42",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-43",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-44",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-45",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-50",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-51",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-60",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-62",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [],
+  "estado": "LISTO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "E6: excluye src/nurus/personal/motor/ salvo decisión expresa."
+  ]
+}

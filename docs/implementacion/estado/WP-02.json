@@ -1,0 +1,23 @@
+{
+  "titulo": "Acta de uso real",
+  "ola": 0,
+  "tipo": "C",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [
+    "D2"
+  ],
+  "estado": "BLOQUEADO_USUARIO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "D2: «Ninguna todavía» (11 de octubre de 2026)."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "titulo": "Gobernanza mínima",
+  "ola": 0,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "/root/ejecutor_preparacion",
+  "tomado": "2026-10-09T22:17:37.125759+00:00",
+  "rama": "wp/WP-01-gobernanza",
+  "pr": 5,
+  "verificacion": "PASA: 071fd1a; verificacion/WP-01.json conserva FALLA anterior y corrección; 605/11 y 198/59",
+  "revision": "APROBADO: /root/revision_previa, incluidos los 12 enlaces reubicados",
+  "auditoria": "CONFORME: auditoria/WP-01.md",
+  "integrado_en": "376f3d21239a948de8c5d09ad2c53edd377ab19c",
+  "notas": [
+    "El prefacio histórico es permitido; actualizar destinos relativos preservando contenido y originales.",
+    "PR5 integrado; siete documentos originales conservados; CI cancelada deliberadamente durante saneamiento.",
+    "Verificación posterior al merge PASA: 605/11, 198/59, golden intacto y enlaces26 sin crecimiento."
+  ]
+}

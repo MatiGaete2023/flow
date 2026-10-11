@@ -1,0 +1,23 @@
+{
+  "titulo": "Copias y restos",
+  "ola": 2,
+  "tipo": "E",
+  "depende_de": [
+    "WP-10",
+    "WP-11"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T09:00:00-03:00",
+  "rama": "ccr-4116db41-nm8g0r",
+  "pr": 12,
+  "verificacion": "PASA (verificacion/WP-20.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "titulo": "Retención en el Descargador",
+  "ola": 1,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [
+    "D4"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "/root/ejecutor_retencion",
+  "tomado": "2026-10-09T22:17:37.125759+00:00",
+  "rama": "wp/WP-14-retencion-descargador",
+  "pr": 4,
+  "verificacion": "PASA",
+  "revision": "APROBADO",
+  "auditoria": "CONFORME",
+  "integrado_en": "14d6df5",
+  "notas": [
+    "Once regresiones nuevas: Descargador209/59. Integración condicionada a Windows verde tras saneamiento y checkout seguro.",
+    "CI positiva sobre árbol saneado62335f1: runs38008361009 Assistant y38008361011 Descargador en progreso; sin declarar verde hasta resultado.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

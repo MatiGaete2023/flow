@@ -1,0 +1,22 @@
+{
+  "titulo": "Cronología de bitácoras solo mostrar",
+  "ola": 5,
+  "tipo": "M/C",
+  "depende_de": [
+    "WP-40",
+    "WP-02"
+  ],
+  "decisiones": [
+    "D5"
+  ],
+  "estado": "BLOQUEADO_USUARIO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": []
+}
