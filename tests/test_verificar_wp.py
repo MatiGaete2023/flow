@@ -112,7 +112,7 @@ def test_missing_or_malformed_control_never_disappears(healthy, key, bad):
     assert not passes(verifier.compare(now, healthy, 0, 0))
 
 
-@pytest.mark.parametrize("removed", [-1, 11, True])
+@pytest.mark.parametrize("removed", [-1, 1, 11, True])
 def test_invalid_declared_test_removals_fail(healthy, removed):
     assert not passes(verifier.compare(healthy, healthy, removed, 0))
 
@@ -258,3 +258,19 @@ def test_changed_or_dirty_worktree_not_integrable(monkeypatch, baseline_file, he
     assert report["veredicto"] == "FALLA"
     assert len(report["controles"]) == 8
     assert "huella_trabajo" not in json.dumps(report)
+
+
+@pytest.mark.parametrize('declared,expected', [('test_known[synthetic]', 0), ('test_known[invented]', 1)])
+def test_cli_removed_list_uses_exact_baseline_inventory(
+    monkeypatch, baseline_file, healthy, tmp_path, declared, expected
+):
+    node = 'tests/test_synthetic.py::test_known[synthetic]'
+    healthy['pruebas_recolectadas'] = {'asistente': [node], 'descargador': []}
+    baseline_file.write_text(json.dumps(healthy))
+    now = copy.deepcopy(healthy)
+    now['asistente']['aprobadas'] -= 1
+    monkeypatch.setattr(verifier, 'collect', lambda: now)
+    monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text('tests/test_synthetic.py::' + declared)
+    assert verifier.main(['--lista-eliminadas', str(manifest)]) == expected

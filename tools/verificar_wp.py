@@ -9,7 +9,7 @@ Uso:
         tests/test_x.py::test_y o descargador/test_z.py::Clase::test_w). Cada nodo debe estar
         ausente ahora; su cantidad reemplaza a los conteos declarados a mano.
     --pruebas-eliminadas-asistente/-descargador N siguen aceptados por compatibilidad, pero
-        el control queda marcado «sin lista verificable».
+        un valor positivo da FALLA; usar --lista-eliminadas con nodeids medidos.
 
 Controles:
   1. Suite del Asistente (pytest en tests/): 0 fallos; aprobadas >= base - eliminadas declaradas.
@@ -18,7 +18,7 @@ Controles:
   4. Paridad de 17 productos golden (tools/flow_baseline_golden.py): debe decir «PARIDAD PASÓ».
   5. Restricciones absolutas: sin .Send( en src/, CC fijo en policy.py, submit de registro deshabilitado,
      extensión sin acceso a document.cookie.
-  6. Ruff E9,F63,F7,F82 en src/: nunca más avisos que la base.
+  6. Ruff E9,F63,F7,F82,F401,F841 en src/descargador/tools: mismo alcance que CI, motor intacto.
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
@@ -261,6 +261,13 @@ def collect():
             # Never copy exceptions: filenames, source lines or subprocess output
             # can contain personal data. Missing measurement fails its control.
             result[key] = None
+    inventory = {}
+    for suite in ("asistente", "descargador"):
+        nodes = collected_nodeids(suite)
+        inventory[suite] = sorted(nodes) if nodes is not None else None
+        if nodes is None and isinstance(result.get(suite), dict):
+            result[suite]["medicion_valida"] = False
+    result["pruebas_recolectadas"] = inventory
     return result
 
 
@@ -270,21 +277,11 @@ def collected_nodeids(suite):
     code, out = run([PY, "-m", "pytest", *args])
     ids = {line.strip() for line in out.splitlines() if "::" in line and not line.startswith(("=", " "))}
     if suite == "descargador":
-        ids |= {"descargador/" + i for i in ids if not i.startswith("descargador/")}
-    return ids if code == 0 else None
+        ids = {i if i.startswith("descargador/") else "descargador/" + i for i in ids}
+    return ids if code == 0 and ids else None
 
 
-def existed_in_base(node, commit):
-    """El nodo declarado existía en la línea base: su archivo y su función estaban en `commit`."""
-    if not commit:
-        return False
-    path, _, name = node.partition("::")
-    code, source = run(["git", "show", f"{commit}:{path}"])
-    function = name.split("::")[-1].split("[")[0]
-    return code == 0 and re.search(r"def\s+" + re.escape(function) + r"\s*\(", source) is not None
-
-
-def removed_from_lists(paths, commit=None):
+def removed_from_lists(paths, commit=None, baseline_nodes=None):
     """Lee las listas de nodos eliminados; devuelve conteos por suite y problemas.
 
     Problemas: nodos que siguen presentes, nodos repetidos y nodos que no existían en la línea base."""
@@ -295,13 +292,25 @@ def removed_from_lists(paths, commit=None):
             if node:
                 removed["descargador" if node.startswith("descargador/") else "asistente"].append(node)
     problems = []
+    valid_inventory = (
+        isinstance(baseline_nodes, dict)
+        and set(baseline_nodes) == {"asistente", "descargador"}
+        and all(
+            isinstance(nodes, list)
+            and all(isinstance(node, str) and "::" in node for node in nodes)
+            and len(nodes) == len(set(nodes))
+            for nodes in baseline_nodes.values()
+        )
+    )
+    if not valid_inventory:
+        problems.append("La línea base no registra un inventario medido de nodeids; no se certifican las bajas")
     for suite, nodes in removed.items():
         problems += [f"{node} está repetido" for node in sorted({n for n in nodes if nodes.count(n) > 1})]
-        if commit:
+        if valid_inventory:
             problems += [
                 f"{node} no existía en la línea base {commit}"
                 for node in sorted(set(nodes))
-                if not existed_in_base(node, commit)
+                if node not in baseline_nodes[suite]
             ]
         if nodes:
             present = collected_nodeids(suite)
@@ -322,7 +331,8 @@ def compare(now, base, removed_a, removed_d, lists=None):
 
     listed, problems = lists if lists else ({}, [])
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
-        removed = removed + listed.get(key, 0) if nonnegative(removed) else None
+        numeric_valid = nonnegative(removed) and removed == 0
+        removed = listed.get(key, 0) if numeric_valid else None
         n, b = now.get(key), base.get(key)
         valid = suite_valid(n) and suite_valid(b) and nonnegative(removed)
         if valid:
@@ -332,11 +342,14 @@ def compare(now, base, removed_a, removed_d, lists=None):
             add(
                 f"Suite {key}",
                 n["aprobadas"] >= minimum,
-                f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; código 0"
-                + ("; bajas numéricas sin lista verificable" if removed and not listed.get(key) else ""),
+                f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; código 0",
             )
         else:
-            add(f"Suite {key}", False, "Medición, línea base o declaración de bajas inválida")
+            add(
+                f"Suite {key}",
+                False,
+                "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos",
+            )
     if lists:
         add(
             "Pruebas eliminadas listadas",
@@ -497,7 +510,9 @@ def main(argv):
     if args.lista_eliminadas:
         try:
             lists = removed_from_lists(
-                args.lista_eliminadas, reference.get("commit") if isinstance(reference, dict) else None
+                args.lista_eliminadas,
+                reference.get("commit") if isinstance(reference, dict) else None,
+                reference.get("pruebas_recolectadas") if isinstance(reference, dict) else None,
             )
         except (OSError, UnicodeError, ValueError):
             lists = ({}, ["No se pudieron verificar las listas de pruebas retiradas"])
