@@ -7,13 +7,13 @@
   "decisiones": {
     "D1": {
       "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Reescribir historial; push forzado en flow autorizado por escrito el 11 de octubre de 2026 («Sí, autorizo push forzado»), con confirmación final antes de ejecutarlo",
+      "fecha": "11 de octubre de 2026"
     },
     "D2": {
       "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Ninguna todavía",
+      "fecha": "11 de octubre de 2026"
     },
     "D3": {
       "pregunta": "¿Retirar inspector y diario de registro RUS?",
@@ -27,18 +27,18 @@
     },
     "D5": {
       "pregunta": "¿Activar CT-01/CT-02 solo mostrar? ¿Horizonte (4 meses u otro)?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, horizonte de 4 meses (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D6": {
       "pregunta": "¿El ZIP puede incluir el XLSX consolidado (sin HTML ni PDF)?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, solo el consolidado (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D7": {
       "pregunta": "¿Fusionar a main al cierre?",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Sí, tras el acta final (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     },
     "D8": {
       "pregunta": "¿Alguna consulta 2.7.5 falló por Envio() o filtros con 0? (sin datos)",
@@ -47,8 +47,8 @@
     },
     "D9": {
       "pregunta": "Solicitud de antecedentes: precargar o retirar",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Retirar botón (Recomendado)",
+      "fecha": "10 de octubre de 2026"
     }
   },
   "conflictos_abiertos": [],
@@ -776,5 +776,20 @@
       "fecha": "9 de octubre de 2026",
       "descripcion": "CI pausada deliberadamente hasta sanear contactos y fixtures. Se retiraron 14 artefactos generados por las primeras ejecuciones de esta sesión antes del saneamiento; las compilaciones históricas y la purga D1 no se tocaron. No se anuncia paquete nuevo ni CI Windows aprobada."
     }
-  ]
+  ],
+  "decisiones_adicionales": {
+    "E3_excepcion": {
+      "respuesta": "Exceptuar E3, integra tú",
+      "fecha": "11 de octubre de 2026",
+      "alcance": "Integración en feat de #27, Codex #4/#8/#11 y #12–#32 por esta sesión, sin revisión de otra raíz; nunca a main."
+    },
+    "apostrofo_copia_portable": {
+      "respuesta": "Quitar apóstrofo",
+      "fecha": "11 de octubre de 2026"
+    },
+    "fuera_de_ficha": {
+      "respuesta": "Casilla consolidado en GUI; arreglar generadores docs; manual 2.7.4 sin botón retirado; retirar restos de WP-21",
+      "fecha": "11 de octubre de 2026"
+    }
+  }
 }
