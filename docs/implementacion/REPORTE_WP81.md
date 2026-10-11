@@ -29,11 +29,17 @@ ahora distingue metadatos de PNG de sus bytes binarios. Ninguna prueba eliminada
 
 ## Verificación
 
-Primera ejecución completa en `2dae700`: suites 810/240, golden17, identidades y restricciones PASA;
-veredicto FALLA por dos enlaces relativos del traspaso archivado. Se corrigen los enlaces,
-se conservan los resultados de esa ejecución y se repite contra un commit limpio.
-CI Windows en curso.
-El entorno Linux no acredita Office/SITFA real. Evidencia se registrará por SHA medido.
+Verificación completa **PASA** en `08b897f0c3a2dedac134561ade1882a2e0791125`; árbol limpio y estable antes/después.
+
+- Asistente: 810 aprobadas, 11 omitidas y 6 xfail estrictos preexistentes.
+- Descargador: 240 aprobadas y 62 subpruebas.
+- Nueve controles PASA: inventario sin bajas, identidades 0, golden17, restricciones,
+  lint, módulos no alcanzables 0 y enlaces rotos 0. Formato: 274 archivos correctos.
+- [Evidencia completa](verificacion/WP-81.json); [fallo inicial de enlaces archivados](verificacion/WP-81-falla-enlaces.json), corregido sin rebajar línea base.
+- CI Windows: controles por SHA en [PR #36](https://github.com/MatiGaete2023/flow/pull/36).
+  Los commits de evidencia posteriores solo modifican documentación/estado.
+
+El entorno Linux y la CI no acreditan Office/SITFA real. E3 independiente sigue pendiente.
 
 ## Continuación y mejoras del plan
 
