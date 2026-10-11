@@ -601,3 +601,5 @@ La implementación termina cuando los 34 WP están `INTEGRADO` (o descartados po
 WP-82: [ficha](wp/WP-82.md) y [reporte](REPORTE_WP82.md). CI aprobada, E3 pendiente.
 
 WP-83: [ficha](wp/WP-83.md) y [reporte](REPORTE_WP83.md). CI aprobada, E3 pendiente.
+
+WP-84: [ficha](wp/WP-84.md) y [reporte](REPORTE_WP84.md). G-5; E3 pendiente.

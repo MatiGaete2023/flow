@@ -1,6 +1,8 @@
 """Salidas desde el trabajo compartido. No modifica RUS ni envía correos."""
 
 from collections import defaultdict
+from contextlib import contextmanager
+from contextvars import ContextVar
 from copy import deepcopy
 from .template_validation import render
 from dataclasses import dataclass, field
@@ -244,6 +246,26 @@ def _table(work, rows, path, kind=''):
     return _book([('Nómina', headers, data)], path)
 
 
+_PREVIEW_DIGESTS = ContextVar('csmp_draft_preview_digests', default=None)
+
+
+@contextmanager
+def draft_preview_scope():
+    """Comparte lecturas solo durante una consulta síncrona, sin efectos ni callbacks."""
+    if _PREVIEW_DIGESTS.get() is not None:
+        yield
+        return
+    token = _PREVIEW_DIGESTS.set({})
+    try:
+        yield
+    finally:
+        _PREVIEW_DIGESTS.reset(token)
+
+
+def draft_fingerprint_for_display(draft):
+    return _draft_fingerprint(draft, _PREVIEW_DIGESTS.get())
+
+
 def draft_fingerprint(draft):
     """Identidad estable del borrador realmente revisado.
 
@@ -251,10 +273,20 @@ def draft_fingerprint(draft):
     idéntica dentro de otra carpeta UUID no permite crear un duplicado en Outlook,
     mientras que una edición real de destinatarios, texto o bytes sí cambia la clave.
     """
+    # Guardar nunca consulta la caché de presentación, incluso si hay un scope activo.
+    return _draft_fingerprint(draft)
+
+
+def _draft_fingerprint(draft, digests=None):
     attachments = []
     for item in draft.attachments:
         path = Path(item)
-        digest = sha256(path.read_bytes()).hexdigest() if path.is_file() else 'MISSING'
+        if digests is not None and path in digests:
+            digest = digests[path]
+        else:
+            digest = sha256(path.read_bytes()).hexdigest() if path.is_file() else 'MISSING'
+            if digests is not None:
+                digests[path] = digest
         attachments.append((path.name, digest))
     payload = {
         'to': '; '.join(emails(draft.to)),
