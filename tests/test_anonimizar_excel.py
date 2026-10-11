@@ -177,6 +177,101 @@ def test_nunca_sobrescribe_ni_usa_el_original_como_destino(tmp_path):
     assert main([str(origen), str(existente)]) == 1
 
 
+@pytest.mark.parametrize('texto_literal', ['=1+1', '# informe A', '#DIV/0!'])
+def test_texto_literal_no_se_convierte_en_formula(tmp_path, texto_literal):
+    origen = sonda(tmp_path)
+    libro = load_workbook(origen)
+    celda = libro['ESPERA']['I3']
+    celda.value = texto_literal
+    celda.data_type = 's'
+    libro.save(origen)
+    libro.close()
+    destino = tmp_path / 'copia.xlsx'
+    anonymize(origen, destino)
+    copia = load_workbook(destino, data_only=False)
+    try:
+        celda = copia['ESPERA']['I3']
+        assert celda.value == texto_literal and celda.data_type == 's'
+        assert not any(c.data_type == 'f' for h in copia for f in h for c in f)
+    finally:
+        copia.close()
+
+
+def test_fallo_al_copiar_no_deja_destino_parcial(tmp_path, monkeypatch):
+    import nurus.personal.anonymize as modulo
+
+    origen = sonda(tmp_path)
+    destino = tmp_path / 'copia.xlsx'
+    abrir = Path.open
+
+    class EscrituraFallida:
+        def __enter__(self):
+            self.archivo = abrir(destino, 'xb')
+            return self
+
+        def write(self, contenido):
+            self.archivo.write(contenido[:10])
+            raise OSError('disco sin espacio')
+
+        def __exit__(self, *exc):
+            self.archivo.close()
+
+    def abrir_con_fallo(self, mode='r', *args, **kwargs):
+        return EscrituraFallida() if self == destino and mode == 'xb' else abrir(self, mode, *args, **kwargs)
+
+    def sin_enlaces(*args):
+        raise OSError('el sistema de archivos no admite enlaces')
+
+    monkeypatch.setattr(modulo.os, 'link', sin_enlaces)
+    monkeypatch.setattr(Path, 'open', abrir_con_fallo)
+    with pytest.raises(OSError, match='disco sin espacio'):
+        anonymize(origen, destino)
+    assert not destino.exists()
+    assert sorted(p.name for p in tmp_path.iterdir()) == [origen.name]
+
+
+def test_copias_concurrentes_usan_temporales_distintos(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    origen = sonda(tmp_path)
+    destinos = [tmp_path / 'copia_uno.xlsx', tmp_path / 'copia_dos.xlsx']
+    guardar = Workbook.save
+    barrera = Barrier(2)
+
+    def guardar_a_la_vez(self, path):
+        guardar(self, path)
+        barrera.wait(timeout=10)
+
+    monkeypatch.setattr(Workbook, 'save', guardar_a_la_vez)
+    with ThreadPoolExecutor(max_workers=2) as ejecutor:
+        informes = list(ejecutor.map(lambda ruta: anonymize(origen, ruta), destinos))
+    assert [i.target for i in informes] == destinos
+    for destino in destinos:
+        copia = load_workbook(destino)
+        copia.close()
+    assert sorted(p.name for p in tmp_path.iterdir()) == sorted([origen.name, *(p.name for p in destinos)])
+
+
+def test_rit_ficticios_no_colisionan_con_ninguna_causa_original(tmp_path):
+    libro = Workbook()
+    hoja = libro.active
+    hoja.append(['RIT', 'NOMBRE', 'OBSERVACION'])
+    hoja.append(['P-1-2026', 'Persona Uno', 'Ver P-3-2026'])
+    hoja.append(['P-1-2026', 'Persona Dos', ''])
+    hoja.append(['P-2-2026', 'Persona Tres', ''])
+    origen, destino = tmp_path / 'original.xlsx', tmp_path / 'copia.xlsx'
+    libro.save(origen)
+    anonymize(origen, destino)
+    contenido = texto(destino)
+    assert all(rit not in contenido for rit in ('P-1-2026', 'P-2-2026', 'P-3-2026'))
+    copia = load_workbook(destino)
+    try:
+        assert copia.active['A2'].value == copia.active['A3'].value != copia.active['A4'].value
+    finally:
+        copia.close()
+
+
 def test_boton_configuracion_crea_copia_y_no_sobrescribe(tmp_path, monkeypatch):
     from types import SimpleNamespace
     from unittest.mock import Mock

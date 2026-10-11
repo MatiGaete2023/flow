@@ -3,6 +3,8 @@
 from datetime import date
 from io import BytesIO
 from pathlib import Path
+import json
+import pytest
 from openpyxl import Workbook, load_workbook
 from nurus.capture import write_capture
 from nurus.personal.capture_input import import_capture
@@ -21,23 +23,45 @@ ORIGIN = (
 )
 
 
-def consolidado(registros, *, hojas=1, invertir=True, duplicar=False):
+def consolidado(registros, *, hojas=1, invertir=True, duplicar=False, incompleto=False, identidad_alterada=False):
     book = Workbook()
     resumen = book.active
     resumen.title = 'Resumen'
     resumen.append(['Resultado'])
     destinos = [book.create_sheet(f'Datos{i}') for i in range(hojas)]
+    encabezados = ['RIT'] if incompleto else list(json.loads(registros[0]['normalized_json']))
     for sheet in destinos:
-        sheet.append(['RIT', *ORIGIN])
+        sheet.append([*encabezados, *ORIGIN])
     lista = list(reversed(registros)) if invertir else list(registros)
     for i, r in enumerate(lista):
+        datos = json.loads(r['normalized_json'])
+        if identidad_alterada:
+            datos['NOMBRE'] = 'Persona Diferente'
         destinos[i % hojas].append(
-            [r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], '']
+            [
+                *[datos[h] for h in encabezados],
+                '',
+                '',
+                r['original_file'],
+                '1',
+                r['original_row'],
+                r['source_sha256'],
+                '',
+            ]
         )
     if duplicar:
         r = lista[0]
         destinos[0].append(
-            [r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], '']
+            [
+                *[json.loads(r['normalized_json'])[h] for h in encabezados],
+                '',
+                '',
+                r['original_file'],
+                '1',
+                r['original_row'],
+                r['source_sha256'],
+                '',
+            ]
         )
     out = BytesIO()
     book.save(out)
@@ -62,6 +86,28 @@ def test_la_base_apunta_a_la_hoja_y_a_las_filas_del_consolidado(tmp_path):
     col_fila = encabezado.index('SITFA_FILA')
     for record_id, numero in base[2].items():
         assert str(sheet.cell(numero, col_fila + 1).value) == by_id[record_id]['original_row']
+    book.close()
+    destino = tmp_path / 'copia.xlsx'
+    work.export(destino, backend='portable', reduced_fidelity=True)
+    copia = load_workbook(destino)
+    try:
+        assert copia.sheetnames[0] == 'Resumen'
+        assert work.sheet == 'Datos0'
+    finally:
+        copia.close()
+
+
+@pytest.mark.parametrize('opcion', ['incompleto', 'identidad_alterada'])
+def test_consolidado_incompatible_con_el_trabajo_utiliza_copia_portable(tmp_path, opcion):
+    work, _, _ = importar(tmp_path, **{opcion: True})
+    assert _consolidated_base(work) is None
+    destino = tmp_path / 'copia.xlsx'
+    work.export(destino)
+    copia = load_workbook(destino)
+    try:
+        assert copia.sheetnames[0] == 'Trabajo'
+    finally:
+        copia.close()
 
 
 def test_con_registros_en_varias_hojas_o_duplicados_no_hay_base_y_queda_portable(tmp_path):

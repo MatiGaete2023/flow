@@ -94,8 +94,13 @@ def _consolidated_base(work):
 
 def _map_consolidated(work, capture, book):
     """(bytes, hoja, filas) si cada registro está una sola vez en una misma hoja de datos; si no, None."""
+    from nurus.rus.columns import map_columns, normalize
+    from nurus.rus.util import historical_match
+    from .sync import IDENTITY_FIELDS
+
     index = {}
     duplicated = set()
+    identity_fields = [key for key in IDENTITY_FIELDS if work.mapping.get(key)]
     for sheet in book.worksheets:
         if sheet.title in SERVICE_SHEETS:
             continue
@@ -103,12 +108,22 @@ def _map_consolidated(work, capture, book):
         header = next(rows, None)
         if not header or not {'SITFA_ARCHIVO', 'SITFA_FILA', 'SITFA_SHA256'} <= set(header):
             continue
+        headers = [
+            str(value).strip() if value is not None and str(value).strip() else f'__col_{i}'
+            for i, value in enumerate(header)
+        ]
+        if len({normalize(value) for value in headers}) != len(headers):
+            continue
+        mapping = map_columns(headers, work.mode)
+        if not all(mapping.get(key) for key in {*identity_fields, 'rit', 'tribunal', 'nombre'}):
+            continue
+        identity_columns = [headers.index(mapping[field]) for field in identity_fields]
         file_col, row_col, hash_col = (header.index(name) for name in ('SITFA_ARCHIVO', 'SITFA_FILA', 'SITFA_SHA256'))
         for number, values in enumerate(rows, 2):
             key = (str(values[hash_col]), str(values[file_col]), str(values[row_col]))
             if key in index:
                 duplicated.add(key)
-            index[key] = (sheet.title, number)
+            index[key] = (sheet.title, number, tuple(historical_match(values[col]) for col in identity_columns))
     positions = {}
     sheets = set()
     for row in work.rows:
@@ -116,7 +131,9 @@ def _map_consolidated(work, capture, book):
         key = (record['source_sha256'], record['original_file'], record['original_row']) if record else None
         if key is None or key not in index or key in duplicated:
             return None
-        sheet, number = index[key]
+        sheet, number, identity = index[key]
+        if identity != tuple(historical_match(row.values.get(work.mapping[field], '')) for field in identity_fields):
+            return None
         sheets.add(sheet)
         positions[row.id] = number
     if len(sheets) != 1:
