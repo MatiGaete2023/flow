@@ -240,6 +240,15 @@ CASOS = {
         ['Valdebenito'],
     ),
     'rit_con_barra': (lambda wb, ws: base(ws, obs='causa C-2345/2023'), ['2345/2023']),
+    **{
+        f'columna_identidad_{numero}': (
+            hoja_extra(['RIT', encabezado], ['P-700-2026', 'Teresa Malibran Arrieta']),
+            ['Malibran', 'Arrieta'],
+        )
+        for numero, encabezado in enumerate(
+            ['APELLIDO PATERNO', 'APELLIDOS', 'DEMANDANTE', 'DEMANDADO', 'SOLICITANTE', 'INTERVINIENTE'], 1
+        )
+    },
 }
 
 

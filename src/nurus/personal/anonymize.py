@@ -23,9 +23,11 @@ import argparse
 import os
 import re
 import sys
+import tempfile
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from itertools import chain
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
@@ -33,6 +35,7 @@ from openpyxl.packaging.core import DocumentProperties
 
 SENSITIVE = (
     "nombre",
+    "apellido",
     "nna",
     "menor",
     "nino",
@@ -62,6 +65,10 @@ SENSITIVE = (
     "asistente",
     "denunciante",
     "imputado",
+    "demandante",
+    "demandado",
+    "solicitante",
+    "interviniente",
 )
 KEEP = ("nombre centro", "nombre programa", "nombre tribunal", "nombre proyecto", "nombre institucion")
 FREE_TEXT = ("observacion", "obs", "glosa", "detalle", "texto", "comentario", "nota", "motivo")
@@ -184,9 +191,10 @@ def _rut_key(digits, dv):
 
 
 class Pseudonyms:
-    def __init__(self):
+    def __init__(self, reserved_rits=()):
         self.values = {}
         self.counters = {}
+        self.reserved_rits = set(reserved_rits)
 
     def get(self, kind, original):
         original = str(original).strip()
@@ -204,6 +212,9 @@ class Pseudonyms:
                 match = RIT_FREE_RE.search(original)
                 letter = (match.group(1) or "X").upper() if match else "X"
                 year = match.group(3) if match else "2000"
+                while f"{letter}-{number}-{year}" in self.reserved_rits:
+                    number += 1
+                self.counters[kind] = number
                 self.values[key] = f"{letter}-{number}-{year}"
             elif kind == "mail":
                 self.values[key] = f"contacto{number}{FAKE_DOMAIN}"
@@ -312,12 +323,12 @@ def _xls_sheets(source):
 def _xlsx_sheets(source):
     # data_only: el valor calculado que lee el motor, nunca el texto de la fórmula.
     book = load_workbook(source, data_only=True, read_only=False)
-    for sheet in book.worksheets:
-        rows = [
-            [None if isinstance(v, str) and v.startswith("#") and v.endswith(("!", "?", "A")) else v for v in row]
-            for row in sheet.iter_rows(values_only=True)
-        ]
-        yield sheet.title, rows, [str(r) for r in sheet.merged_cells.ranges]
+    try:
+        for sheet in book.worksheets:
+            rows = [[None if cell.data_type == "e" else cell.value for cell in row] for row in sheet.iter_rows()]
+            yield sheet.title, rows, [str(r) for r in sheet.merged_cells.ranges]
+    finally:
+        book.close()
 
 
 def _load(source):
@@ -478,6 +489,17 @@ def _collect_names(sheets, replacer):
                     replacer.add_person(curator_name(value))
 
 
+def _original_rits(sheets):
+    """Reserva causas de todas las hojas y títulos antes de generar reemplazos."""
+    result = set()
+    for title, rows, _ in sheets:
+        texts = chain((title,), (value for row in rows for value in row if isinstance(value, str)))
+        for text in texts:
+            for match in RIT_FREE_RE.finditer(text):
+                result.add(f"{(match.group(1) or 'X').upper()}-{int(match.group(2))}-{match.group(3)}")
+    return result
+
+
 def _scan(book, pseudonyms, replacer, protected_cells):
     """Revisión final de la copia ya construida. Devuelve (filtraciones, residuos permitidos)."""
     found, residual = set(), 0
@@ -532,7 +554,7 @@ def anonymize(source, target, shift_days=0):
         raise ValueError("El destino debe ser distinto del original.")
     sheets = _load(source)
     report = Report(target)
-    pseudonyms = Pseudonyms()
+    pseudonyms = Pseudonyms(_original_rits(sheets))
     replacer = Replacer(pseudonyms)
     _collect_names(sheets, replacer)
     protected_headers = _protected_headers()
@@ -576,7 +598,10 @@ def anonymize(source, target, shift_days=0):
                     new = replacer.text(value, free=kind != "rit")
                 if new != value:
                     report.changed += 1
-                sheet.cell(r + 1, c + 1, new)
+                cell = sheet.cell(r + 1, c + 1, new)
+                if isinstance(new, str):
+                    # openpyxl interpreta «=» como fórmula incluso si el origen era texto literal.
+                    cell.data_type = "s"
         for cells in merged:
             sheet.merge_cells(cells)
         report.sheets += index is not None
@@ -588,7 +613,9 @@ def anonymize(source, target, shift_days=0):
             + ", ".join(found)
             + "). Revisa el original o informa el caso sin adjuntarlo."
         )
-    temp = target.with_name(f".{target.stem}.{os.getpid()}.tmp.xlsx")
+    handle = tempfile.NamedTemporaryFile(prefix=".nurus-anon-", suffix=".xlsx", dir=target.parent, delete=False)
+    handle.close()
+    temp = Path(handle.name)
     try:
         book.save(temp)
         try:
@@ -596,10 +623,18 @@ def anonymize(source, target, shift_days=0):
         except FileExistsError:
             raise FileExistsError(f"El destino ya existe; elige otro nombre: {target.name}") from None
         except OSError:
-            with target.open("xb") as output:
-                output.write(temp.read_bytes())
+            created = False
+            try:
+                with target.open("xb") as output:
+                    created = True
+                    output.write(temp.read_bytes())
+            except Exception:
+                if created:
+                    target.unlink(missing_ok=True)
+                raise
     finally:
         temp.unlink(missing_ok=True)
+        book.close()
     if residual:
         report.warnings.append(
             f"{residual} celda(s) de programa o tribunal contienen palabras iguales a "

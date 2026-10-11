@@ -1,6 +1,7 @@
 """Exportación: sin archivo residual ante error y sin fórmulas en la copia."""
 
 from datetime import date
+from pathlib import Path
 
 import pytest
 from openpyxl import Workbook, load_workbook
@@ -72,6 +73,44 @@ def test_lectura_fallida_de_la_copia_restaura_output_y_borra(tmp_path, monkeypat
     assert not destino.exists()
 
 
+def test_fallo_al_calcular_huella_no_publica_copia(tmp_path, monkeypatch):
+    import nurus.services.exports as modulo
+
+    trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
+    antes = (trabajo.output, trabajo.output_hash)
+    destino = tmp_path / 'salida.xlsx'
+
+    def huella_bloqueada(path):
+        raise PermissionError('archivo bloqueado al calcular huella')
+
+    monkeypatch.setattr(modulo, '_hash', huella_bloqueada)
+    with pytest.raises((PermissionError, modulo.ExportError), match='huella'):
+        trabajo.export(destino, backend='portable', reduced_fidelity=True)
+    assert (trabajo.output, trabajo.output_hash) == antes
+    assert not destino.exists()
+    assert sorted(p.name for p in tmp_path.iterdir()) == ['fuente.xlsx']
+
+
+def test_fallo_al_abrir_temporal_para_copiar_no_deja_archivo_vacio(tmp_path, monkeypatch):
+    import nurus.services.exports as modulo
+
+    trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
+    destino = tmp_path / 'salida.xlsx'
+    abrir = Path.open
+
+    def temporal_bloqueado(self, mode='r', *args, **kwargs):
+        if self.name.startswith('nurus-salida-') and mode == 'rb' and destino.exists():
+            raise PermissionError('temporal bloqueado al copiar')
+        return abrir(self, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, 'open', temporal_bloqueado)
+    with pytest.raises(modulo.ExportError, match='bloqueado'):
+        trabajo.export(destino, backend='portable', reduced_fidelity=True)
+    assert not destino.exists()
+    assert not trabajo.output and not trabajo.output_hash
+    assert sorted(p.name for p in tmp_path.iterdir()) == ['fuente.xlsx']
+
+
 def test_copia_portable_no_muestra_apostrofo_en_la_propuesta(tmp_path):
     trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
     trabajo.rows[0].observation = '- revisar =1+1'
@@ -82,3 +121,21 @@ def test_copia_portable_no_muestra_apostrofo_en_la_propuesta(tmp_path):
     for titulo in ('NURUS_PROPUESTA', 'OBSERVACION'):
         celda = hoja.cell(2, columnas[titulo])
         assert celda.value == '- revisar =1+1' and celda.data_type == 's', (titulo, celda.value)
+
+
+def test_copia_portable_revisada_conserva_observacion_literal_sin_apostrofo(tmp_path):
+    from nurus.personal.record_edits import apply
+
+    trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
+    apply(trabajo, [trabajo.rows[0].id], review={'OBSERVACION': '=texto revisado'})
+    destino = tmp_path / 'salida.xlsx'
+    trabajo.export(destino, backend='portable', reduced_fidelity=True)
+    copia = load_workbook(destino)
+    try:
+        hoja = copia['ESPERA']
+        columnas = {celda.value: celda.column for celda in hoja[1]}
+        for titulo in ('NURUS_OBSERVACION_FINAL', 'OBSERVACION'):
+            celda = hoja.cell(2, columnas[titulo])
+            assert celda.value == '=texto revisado' and celda.data_type == 's'
+    finally:
+        copia.close()
