@@ -21,6 +21,7 @@ Controles:
   6. Ruff E9,F63,F7,F82,F401,F841 en src/descargador/tools: mismo alcance que CI, motor intacto.
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
+  9. Inventario de pruebas: toda baja respecto de la base debe declararse con nodeids exactos.
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
 """
@@ -292,16 +293,7 @@ def removed_from_lists(paths, commit=None, baseline_nodes=None):
             if node:
                 removed["descargador" if node.startswith("descargador/") else "asistente"].append(node)
     problems = []
-    valid_inventory = (
-        isinstance(baseline_nodes, dict)
-        and set(baseline_nodes) == {"asistente", "descargador"}
-        and all(
-            isinstance(nodes, list)
-            and all(isinstance(node, str) and "::" in node for node in nodes)
-            and len(nodes) == len(set(nodes))
-            for nodes in baseline_nodes.values()
-        )
-    )
+    valid_inventory = inventory_valid(baseline_nodes)
     if not valid_inventory:
         problems.append("La línea base no registra un inventario medido de nodeids; no se certifican las bajas")
     for suite, nodes in removed.items():
@@ -318,7 +310,24 @@ def removed_from_lists(paths, commit=None, baseline_nodes=None):
                 problems.append(f"No se pudo recolectar la suite {suite} para verificar bajas")
             else:
                 problems += [f"{node} sigue presente" for node in nodes if node in present]
-    return {suite: len(set(nodes)) for suite, nodes in removed.items()}, problems
+    return (
+        {suite: len(set(nodes)) for suite, nodes in removed.items()},
+        problems,
+        {suite: set(nodes) for suite, nodes in removed.items()},
+    )
+
+
+def inventory_valid(value):
+    return (
+        isinstance(value, dict)
+        and set(value) == {"asistente", "descargador"}
+        and all(
+            isinstance(nodes, list)
+            and all(isinstance(node, str) and "::" in node for node in nodes)
+            and len(nodes) == len(set(nodes))
+            for nodes in value.values()
+        )
+    )
 
 
 def compare(now, base, removed_a, removed_d, lists=None):
@@ -329,7 +338,7 @@ def compare(now, base, removed_a, removed_d, lists=None):
     def add(name, ok, detail):
         checks.append({"control": name, "resultado": "PASA" if ok else "FALLA", "detalle": detail})
 
-    listed, problems = lists if lists else ({}, [])
+    listed, problems, declared_nodes = lists if lists else ({}, [], {})
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
         numeric_valid = nonnegative(removed) and removed == 0
         removed = listed.get(key, 0) if numeric_valid else None
@@ -350,6 +359,19 @@ def compare(now, base, removed_a, removed_d, lists=None):
                 False,
                 "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos",
             )
+    baseline_inventory, current_inventory = base.get("pruebas_recolectadas"), now.get("pruebas_recolectadas")
+    inventory_ok = inventory_valid(baseline_inventory) and inventory_valid(current_inventory)
+    inventory_details = []
+    if inventory_ok:
+        for suite in ("asistente", "descargador"):
+            missing = set(baseline_inventory[suite]) - set(current_inventory[suite])
+            undeclared = missing - declared_nodes.get(suite, set())
+            if undeclared:
+                inventory_ok = False
+                inventory_details.append(f"{suite}: {len(undeclared)} bajas sin declarar")
+    else:
+        inventory_details.append("Inventario actual o de línea base ausente, ilegible o inválido")
+    add("Inventario de pruebas", inventory_ok, "; ".join(inventory_details) or "Sin bajas no declaradas")
     if lists:
         add(
             "Pruebas eliminadas listadas",
@@ -515,7 +537,7 @@ def main(argv):
                 reference.get("pruebas_recolectadas") if isinstance(reference, dict) else None,
             )
         except (OSError, UnicodeError, ValueError):
-            lists = ({}, ["No se pudieron verificar las listas de pruebas retiradas"])
+            lists = ({}, ["No se pudieron verificar las listas de pruebas retiradas"], {})
     checks = compare(now, reference, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
     report = {
         "commit": now.get("commit", "NO_DISPONIBLE"),

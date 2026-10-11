@@ -80,7 +80,7 @@ def test_collection_failure_does_not_prove_removed_node(monkeypatch, tmp_path):
     manifest = tmp_path / 'removed.txt'
     manifest.write_text('tests/test_fake.py::test_deleted\n')
     monkeypatch.setattr(verifier, 'run', lambda *_: (2, 'collection failed'))
-    counts, problems = verifier.removed_from_lists([manifest])
+    counts, problems, nodes = verifier.removed_from_lists([manifest])
     assert counts['asistente'] == 1
     assert any('No se pudo recolectar' in issue for issue in problems)
 
@@ -208,7 +208,11 @@ def test_exact_baseline_collection_supports_parameterized_removals(monkeypatch, 
     manifest.write_text(node)
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     inventory = {'asistente': [node], 'descargador': []}
-    assert verifier.removed_from_lists([manifest], 'commit', inventory) == ({'asistente': 1, 'descargador': 0}, [])
+    assert verifier.removed_from_lists([manifest], 'commit', inventory) == (
+        {'asistente': 1, 'descargador': 0},
+        [],
+        {'asistente': {node}, 'descargador': set()},
+    )
     assert verifier.removed_from_lists([manifest], 'commit', {})[1]
 
 
