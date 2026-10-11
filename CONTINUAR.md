@@ -17,9 +17,10 @@ historial viejo con datos reales: vuelve a clonar y nunca hagas push desde una c
   1. Borrar las etiquetas `pre-WP-12` y `pre-implementacion-20261009` (conservan el historial viejo).
   2. Pedir a GitHub la eliminación de datos sensibles en las referencias de PR.
   3. Borrar los artefactos de Actions previos.
-  4. Revisar *Billing › Actions*: la CI quedó sin runners desde la 01:44 UTC.
+  4. Billing: el usuario cambió a GitHub Pro el 11 de octubre de 2026; relanzar la CI y confirmar que vuelve a correr.
 - **Lo que falta del plan:**
-  - WP-02 (D2: casos probados en uso real).
+  - WP-02: plantilla `docs/aceptacion/ACTA_USO_REAL_20261011.json` lista (40 casos D-T/A-T `NO_EJECUTADO`); la completa
+    el usuario y se valida con `python tools/flow_acceptance.py validate <acta>`.
   - WP-50: cronología solo para mostrar, 4 meses. Depende de WP-02 y del acta de 10 ingresos.
   - WP-70: cierre. Compilar el paquete en CI, entregarlo al usuario, esperar el acta final y, con D7, sacar el PR #1
     de borrador y fusionarlo a `main`, sin release.
