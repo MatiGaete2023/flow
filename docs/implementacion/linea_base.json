@@ -1,25 +1,25 @@
 {
-  "commit": "054cef2",
+  "commit": "79610fd",
   "asistente": {
-    "aprobadas": 625,
+    "aprobadas": 592,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "codigo": 0,
-    "resumen": "625 passed, 11 skipped in 53.51s"
+    "resumen": "592 passed, 11 skipped, 6 xfailed in 77.21s (0:01:17)"
   },
   "descargador": {
-    "aprobadas": 198,
+    "aprobadas": 231,
     "omitidas": 0,
     "fallidas": 0,
-    "subpruebas": 59,
+    "subpruebas": 62,
     "codigo": 0,
-    "resumen": "198 passed, 59 subtests passed in 40.84s"
+    "resumen": "231 passed, 62 subtests passed in 26.38s"
   },
-  "identidades_reales": 12,
+  "identidades_reales": 0,
   "paridad_golden": "PASA",
   "restricciones": [],
   "ruff_src": 0,
-  "modulos_no_alcanzables": 12,
-  "enlaces_rotos": 26
+  "modulos_no_alcanzables": 0,
+  "enlaces_rotos": 0
 }
