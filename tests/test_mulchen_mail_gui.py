@@ -1,4 +1,5 @@
 """Windows: selección de tribunal, preparación asíncrona y editor de borrador."""
+
 import os
 import subprocess
 import sys
@@ -11,8 +12,9 @@ import pytest
 def test_mulchen_draft_is_visible_after_automatic_and_manual_preparation(tmp_path):
     env = dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path))
     script = 'from pathlib import Path; import sys; from test_mulchen_mail_gui import probe; probe(Path(sys.argv[1]))'
-    result = subprocess.run([sys.executable, '-c', script, str(tmp_path)],
-                            env=env, capture_output=True, text=True, timeout=45)
+    result = subprocess.run(
+        [sys.executable, '-c', script, str(tmp_path)], env=env, capture_output=True, text=True, timeout=45
+    )
     assert result.returncode == 0, result.stdout + '\n' + result.stderr
 
 
@@ -21,7 +23,8 @@ def probe(tmp_path):
     from nurus.personal.app import App
     from nurus.personal.config import Configuration
     from test_residential_mail import residential_work
-    cfg = Configuration(tmp_path/'profile')
+
+    cfg = Configuration(tmp_path / 'profile')
     # Configuración antigua con clave descriptiva en lugar del ID estable.
     cfg.data['correos']['tribunales']['MULCHËN'] = cfg.data['correos']['tribunales'].pop('MULCHEN')
     app = App(cfg)
@@ -30,7 +33,8 @@ def probe(tmp_path):
         app._show_work()
         app.mail_target.set('tribunales')
         app.mail_kind.set('cumplimiento')
-        for key,var in app.modality_vars.items():var.set(key == 'RES')
+        for key, var in app.modality_vars.items():
+            var.set(key == 'RES')
         app.mail_courts.selection_set(app.mail_court_keys.index('MULCHËN'))
         app.tabs.select(app.pages['Correos'])
         errors = []

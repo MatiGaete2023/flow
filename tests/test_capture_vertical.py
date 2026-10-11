@@ -1,14 +1,15 @@
 """Un lote original atraviesa productor, contrato y consumidor sin editar el ZIP."""
+
 from pathlib import Path
 import subprocess
 import sys
 import pytest
 
 
-@pytest.mark.parametrize('mode',['Espera','Informes'])
-def test_downloader_original_to_assistant_and_excel(tmp_path,mode):
-    root=Path(__file__).parents[1]
-    script='''
+@pytest.mark.parametrize('mode', ['Espera', 'Informes'])
+def test_downloader_original_to_assistant_and_excel(tmp_path, mode):
+    root = Path(__file__).parents[1]
+    script = '''
 from datetime import date
 from pathlib import Path
 import sys
@@ -38,6 +39,11 @@ book.close()
 export_requests(work,output/'solicitud.json')
 assert {p.name:p.read_bytes() for p in folder.iterdir()}==before
 '''
-    result=subprocess.run([sys.executable,'-c',script,str(root),str(tmp_path),mode],
-                          capture_output=True,text=True,encoding='utf-8',timeout=60)
-    assert result.returncode==0,result.stderr
+    result = subprocess.run(
+        [sys.executable, '-c', script, str(root), str(tmp_path), mode],
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr

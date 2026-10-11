@@ -1,32 +1,38 @@
 """Prevent edits while a worker consumes a stable snapshot."""
+
 import tkinter as tk
 import customtkinter as ctk
 
 
 def lock(app):
-    saved=[]
-    types=(ctk.CTkButton, ctk.CTkEntry, ctk.CTkTextbox, ctk.CTkComboBox,
-           ctk.CTkCheckBox, tk.Listbox)
+    saved = []
+    types = (ctk.CTkButton, ctk.CTkEntry, ctk.CTkTextbox, ctk.CTkComboBox, ctk.CTkCheckBox, tk.Listbox)
+
     def visit(widget):
-        if isinstance(widget,types):
-            state=widget._textbox.cget('state') if isinstance(widget,ctk.CTkTextbox) else widget.cget('state')
-            saved.append((widget,state))
+        if isinstance(widget, types):
+            state = widget._textbox.cget('state') if isinstance(widget, ctk.CTkTextbox) else widget.cget('state')
+            saved.append((widget, state))
             widget.configure(state='disabled')
             return
-        for child in widget.winfo_children():visit(child)
-    app._locked_inputs=saved
+        for child in widget.winfo_children():
+            visit(child)
+
+    app._locked_inputs = saved
     try:
-        for page in app.pages.values():visit(page)
+        for page in app.pages.values():
+            visit(page)
     except Exception:
         unlock(app)
         raise
 
 
 def unlock(app):
-    for widget,state in getattr(app,'_locked_inputs',[]):
-        if widget.winfo_exists():widget.configure(state=state)
-    app._locked_inputs=[]
+    for widget, state in getattr(app, '_locked_inputs', []):
+        if widget.winfo_exists():
+            widget.configure(state=state)
+    app._locked_inputs = []
     # El estado guardado al bloquear puede ser viejo (p. ej. tras procesar un Excel o
     # restaurar borradores durante el bloqueo): se recalcula con la misma condición.
     from .mail_view import update_mail_actions
+
     update_mail_actions(app)

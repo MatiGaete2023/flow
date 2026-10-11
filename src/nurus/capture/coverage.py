@@ -1,4 +1,5 @@
 """Cobertura por fuente e identidad; un agregado nunca sustituye el alcance."""
+
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 import json
@@ -9,10 +10,14 @@ CoverageIndex: TypeAlias = dict[tuple[str, Identity], str]
 ADEQUATE = frozenset(('COMPLETA', 'VACIA_COMPROBADA'))
 ABSENT = frozenset(('NO_SOLICITADA', 'NO_CONSULTADA', 'NO_DISPONIBLE', 'FALLIDA', 'CANCELADA'))
 SOURCES = ('bitacoras', 'historia_tramites', 'calendarios', 'documentos')
-SCREEN_TABLES = {'seguimiento': ('registros',), 'carga': ('registros',),
-                 'calendario_informes': ('registros', 'calendarios'),
-                 'bitacoras': ('bitacoras',), 'historia_tramites': ('historia_tramites',),
-                 'documentos': ('documentos',)}
+SCREEN_TABLES = {
+    'seguimiento': ('registros',),
+    'carga': ('registros',),
+    'calendario_informes': ('registros', 'calendarios'),
+    'bitacoras': ('bitacoras',),
+    'historia_tramites': ('historia_tramites',),
+    'documentos': ('documentos',),
+}
 
 
 def remote_identity(row: Mapping[str, str]) -> Identity:
@@ -45,9 +50,12 @@ def validate_coverage(manifest, tables, fail) -> None:
     for q in queries.values():
         filters = json.loads(q['filters_json'])
         declared = filters.get('capture_tables')
-        if declared is not None and (not isinstance(declared, list) or not declared or
-                                    any(not isinstance(t, str) or t not in SOURCES + ('registros',) for t in declared) or
-                                    len(set(declared)) != len(declared)):
+        if declared is not None and (
+            not isinstance(declared, list)
+            or not declared
+            or any(not isinstance(t, str) or t not in SOURCES + ('registros',) for t in declared)
+            or len(set(declared)) != len(declared)
+        ):
             fail('Alcance de tablas de consulta inválido.')
         scope = filters.get('remote_identity')
         if scope is not None:

@@ -1,4 +1,5 @@
 """Validated edits and decisions shared by the UI, workbook and session."""
+
 from copy import deepcopy
 import json
 
@@ -12,9 +13,15 @@ def state(row):
     decisions = deepcopy(row.decisions)
     if decisions.get('structured') and 'RES' in row.review:
         decisions['resolution'] = 'review'
-    return dict(version=1, decisions=decisions, overrides=row.overrides,
-                word_overrides=row.word_overrides, excluded=row.excluded,
-                resolution_cell=row.review.get('RES', ''), proposal=row.observation)
+    return dict(
+        version=1,
+        decisions=decisions,
+        overrides=row.overrides,
+        word_overrides=row.word_overrides,
+        excluded=row.excluded,
+        resolution_cell=row.review.get('RES', ''),
+        proposal=row.observation,
+    )
 
 
 def encode(row):
@@ -32,7 +39,11 @@ def decode(raw):
         if data.get('version') != 1:
             raise ValueError('versión desconocida')
         decisions = data['decisions']
-        if not isinstance(decisions, dict) or not isinstance(data['overrides'], dict) or not isinstance(data['word_overrides'], dict):
+        if (
+            not isinstance(decisions, dict)
+            or not isinstance(data['overrides'], dict)
+            or not isinstance(data['word_overrides'], dict)
+        ):
             raise ValueError('estructura inválida')
         if decisions.get('resolution', 'auto') not in RESOLUTIONS:
             raise ValueError('resolución inválida')
@@ -70,6 +81,7 @@ def validate_review(changes):
         raw = str(result['FECHA_OBS'] or '').strip()
         if raw:
             from nurus.rus.util import as_date
+
             parsed = as_date(raw)
             if parsed is None:
                 raise ValueError('FECHA_OBS debe ser una fecha válida dd/mm/aaaa o quedar vacía.')
@@ -82,6 +94,7 @@ def validate_review(changes):
             result[key] = int(raw) if raw else ''
     if 'RES' in result:
         from .resolutions import resolution_review_issue
+
         issue = resolution_review_issue(result['RES'])
         if issue:
             raise ValueError(issue)
@@ -128,9 +141,11 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
         if excluded is not None:
             row.excluded = bool(excluded)
         from .work import _sync_resolution_warning
+
         _sync_resolution_warning(row)
         updated.append(row)
     from .capture_findings import updated_contexts
+
     contexts = updated_contexts(work, updated)
     work.rows = updated
     if hasattr(work, 'capture_context'):
@@ -141,6 +156,7 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
 
 def undo(work, before):
     from .capture_findings import updated_contexts
+
     rows = [deepcopy(before.get(row.id, row)) for row in work.rows]
     contexts = updated_contexts(work, rows)
     work.rows = rows
@@ -151,6 +167,7 @@ def undo(work, before):
 
 def recalculate(work, row, *, update_findings=True):
     from .capture_findings import updated_contexts
+
     candidate = deepcopy(row)
     _recalculate(work, candidate)
     contexts = updated_contexts(work, [candidate]) if update_findings else None
@@ -168,18 +185,22 @@ def _recalculate(work, row):
     from .motor.reglas_cumplimiento import generar_observacion_cumplimiento
     from .motor.reglas_informes import generar_observacion_informes
     from .work import actions_for
-    mode=getattr(work,'capture_modes',{}).get(row.id,work.mode)
-    mapping=dict(work.mapping)
-    source=getattr(work,'capture_sources',{}).get(row.id)
-    if source and source['record_type'] not in ('ESPERA','CUMPLIMIENTO','INFORMES'):
-        row.observation='';row.rules=[];row.actions=[]
-        row.warnings=['Tipo de fuente fuera del motor tradicional; no evaluado.']
+
+    mode = getattr(work, 'capture_modes', {}).get(row.id, work.mode)
+    mapping = dict(work.mapping)
+    source = getattr(work, 'capture_sources', {}).get(row.id)
+    if source and source['record_type'] not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+        row.observation = ''
+        row.rules = []
+        row.actions = []
+        row.warnings = ['Tipo de fuente fuera del motor tradicional; no evaluado.']
         return
     if source:
         import json
         from nurus.rus.columns import map_columns
-        allowed=map_columns(json.loads(source['normalized_json']),mode)
-        mapping={key:column for key,column in mapping.items() if key in allowed or key in row.overrides}
+
+        allowed = map_columns(json.loads(source['normalized_json']), mode)
+        mapping = {key: column for key, column in mapping.items() if key in allowed or key in row.overrides}
     values = dict(row.values)
     for key, value in row.overrides.items():
         values[mapping[key]] = value
@@ -192,21 +213,28 @@ def _recalculate(work, row):
             end = as_date(values.get(mapping.get('egreso_proy', '')))
             counts = [as_int(values.get(mapping.get(key, ''))) for key in ('dias_cumpl', 'dias_egresar')]
             if end and end > ctx['date'] and any(number is not None and number < 0 for number in counts):
-                warnings.append('Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.')
+                warnings.append(
+                    'Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.'
+                )
                 ctx['invalid'].append('CUMPLIMIENTO.C04_VENCIDA')
         court = tribunal(values.get(mapping.get('tribunal', ''), '')) or ''
         args = dict(incidencias=incidences, fila_excel=row.source_row)
         if mode == 'CUMPLIMIENTO':
             args['fecha_hoja2'] = as_date(getattr(work, 'cross_dates', {}).get(row.id))
-        function = {'ESPERA': generar_observacion_espera, 'CUMPLIMIENTO': generar_observacion_cumplimiento,
-                    'INFORMES': generar_observacion_informes}[mode]
+        function = {
+            'ESPERA': generar_observacion_espera,
+            'CUMPLIMIENTO': generar_observacion_cumplimiento,
+            'INFORMES': generar_observacion_informes,
+        }[mode]
         row.observation = function(values, court, mapping, **args) if court else ''
-        if not court:warnings.append('Tribunal sin reglas configuradas; requiere revisión manual.')
+        if not court:
+            warnings.append('Tribunal sin reglas configuradas; requiere revisión manual.')
         warnings.extend(item['MOTIVO'] for item in incidences._items)
     finally:
         current.reset(token)
     row.rules = list(dict.fromkeys(event for event in ctx['events'] if event not in work.config['desactivadas']))
     row.actions = actions_for(row.rules)
-    context=getattr(work,'capture_context',{}).get(row.id)
-    if context:warnings.append(context['reason'])
+    context = getattr(work, 'capture_context', {}).get(row.id)
+    if context:
+        warnings.append(context['reason'])
     row.warnings = warnings

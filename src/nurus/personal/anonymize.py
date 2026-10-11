@@ -16,6 +16,7 @@ Falla cerrado: antes de entregar la copia se revisa completa. Si queda un dato o
 un RUT con dígito válido, un teléfono o un correo real, la copia se borra y se informa.
 Nunca sobrescribe archivos ni modifica el original.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,28 +31,104 @@ from pathlib import Path
 from openpyxl import Workbook, load_workbook
 from openpyxl.packaging.core import DocumentProperties
 
-SENSITIVE = ("nombre", "nna", "menor", "nino", "joven", "usuario", "beneficiario", "victima", "ruc",
-             "madre", "padre", "litigante", "abogado", "apoderado", "tutor", "hermano", "familiar",
-             "responsable", "profesional", "dupla", "contacto", "referente", "cuidador", "adulto",
-             "educador", "psicolog", "trabajador", "asistente", "denunciante", "imputado")
+SENSITIVE = (
+    "nombre",
+    "nna",
+    "menor",
+    "nino",
+    "joven",
+    "usuario",
+    "beneficiario",
+    "victima",
+    "ruc",
+    "madre",
+    "padre",
+    "litigante",
+    "abogado",
+    "apoderado",
+    "tutor",
+    "hermano",
+    "familiar",
+    "responsable",
+    "profesional",
+    "dupla",
+    "contacto",
+    "referente",
+    "cuidador",
+    "adulto",
+    "educador",
+    "psicolog",
+    "trabajador",
+    "asistente",
+    "denunciante",
+    "imputado",
+)
 KEEP = ("nombre centro", "nombre programa", "nombre tribunal", "nombre proyecto", "nombre institucion")
 FREE_TEXT = ("observacion", "obs", "glosa", "detalle", "texto", "comentario", "nota", "motivo")
-PLACEHOLDERS = {"", "no", "no posee", "no tiene", "sin designar", "sin curador", "sin rut", "n a", "na",
-                "no aplica", "s i", "si", "sin informacion", "sin dato", "sd", "pendiente"}
-STOPWORDS = {"de", "del", "la", "las", "los", "san", "santa", "y", "e", "van", "von", "da", "dos",
-             "abog", "sr", "sra", "srta", "don", "dona", "fono", "rut", "run"}
+PLACEHOLDERS = {
+    "",
+    "no",
+    "no posee",
+    "no tiene",
+    "sin designar",
+    "sin curador",
+    "sin rut",
+    "n a",
+    "na",
+    "no aplica",
+    "s i",
+    "si",
+    "sin informacion",
+    "sin dato",
+    "sd",
+    "pendiente",
+}
+STOPWORDS = {
+    "de",
+    "del",
+    "la",
+    "las",
+    "los",
+    "san",
+    "santa",
+    "y",
+    "e",
+    "van",
+    "von",
+    "da",
+    "dos",
+    "abog",
+    "sr",
+    "sra",
+    "srta",
+    "don",
+    "dona",
+    "fono",
+    "rut",
+    "run",
+}
 DASH = "\\-\u2010\u2011\u2012\u2013\u2014\u2212"  # guiones; el ASCII va escapado para usarlo en clases
-RUT_RE = re.compile(r"(?<![\w.])(\d{1,2}(?:\.\d{3}){2}|\d{1,2}(?: \d{3}){2}|\d{6,8})(\s*[" + DASH + r"]\s*|\s+)([\dkK])(?![\w])")
+RUT_RE = re.compile(
+    r"(?<![\w.])(\d{1,2}(?:\.\d{3}){2}|\d{1,2}(?: \d{3}){2}|\d{6,8})(\s*[" + DASH + r"]\s*|\s+)([\dkK])(?![\w])"
+)
 RUT_NO_DV_RE = re.compile(r"(?<![\w.])\d{1,2}(?:\.\d{3}){2}(?![\w.])")
 RIT_STRICT_RE = re.compile(r"(?<!\w)([A-Za-z])[" + DASH + r"](\d{1,6})[" + DASH + r"/]((?:19|20)\d{2})(?!\w)")
-RIT_FREE_RE = re.compile(r"(?<!\w)(?:([A-Za-z])[\s" + DASH + r"]+)?(\d{1,6})[\s" + DASH + r"/]+((?:19|20)\d{2})(?![\w])")
-PHONE_RE = re.compile(r"(?<![\w+])(?:\+?56[\s-]?)?(?:9[\s-]?\d{4}[\s-]?\d{4}|\d{3}[\s-]\d{3}[\s-]\d{3}"
-                      r"|\d{2}[\s-]?\d{3}[\s-]?\d{4}|\d{2}[\s-]?\d{7})(?!\d)")
+RIT_FREE_RE = re.compile(
+    r"(?<!\w)(?:([A-Za-z])[\s" + DASH + r"]+)?(\d{1,6})[\s" + DASH + r"/]+((?:19|20)\d{2})(?![\w])"
+)
+PHONE_RE = re.compile(
+    r"(?<![\w+])(?:\+?56[\s-]?)?(?:9[\s-]?\d{4}[\s-]?\d{4}|\d{3}[\s-]\d{3}[\s-]\d{3}"
+    r"|\d{2}[\s-]?\d{3}[\s-]?\d{4}|\d{2}[\s-]?\d{7})(?!\d)"
+)
 GROUPED_DIGITS_RE = re.compile(r"(?<![\w.])\d(?:[\s" + DASH + r"]?\d){7,}(?![\w])")
-DATE_LIKE_RE = re.compile(r"\d{4}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{1,2}|\d{1,2}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{4}")
+DATE_LIKE_RE = re.compile(
+    r"\d{4}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{1,2}|\d{1,2}[\s" + DASH + r"/]\d{1,2}[\s" + DASH + r"/]\d{4}"
+)
 MAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
-ADDRESS_RE = re.compile(r"(?i)\b(?:av(?:enida)?|calle|pasaje|pje|villa|pobl(?:aci[oó]n)?|block|depto|camino)\.?\s+"
-                        r"[\wÁÉÍÓÚÑáéíóúñ .'-]{2,40}?\d{1,5}")
+ADDRESS_RE = re.compile(
+    r"(?i)\b(?:av(?:enida)?|calle|pasaje|pje|villa|pobl(?:aci[oó]n)?|block|depto|camino)\.?\s+"
+    r"[\wÁÉÍÓÚÑáéíóúñ .'-]{2,40}?\d{1,5}"
+)
 DIGITS_RE = re.compile(r"(?<![\d.\-])\d{7,9}(?![\d\-])")
 FAKE_DOMAIN = "@example.invalid"
 SUFFIXES = {".xls", ".xlsx", ".xlsm"}
@@ -94,8 +171,11 @@ def folded_pattern(text):
         if char == " ":
             parts.append(r"[\s\-.,]+")
         else:
-            parts.append("[" + re.escape(_FOLD.get(char, char) + _FOLD.get(char, char).upper()) + "]"
-                         if char in _FOLD else re.escape(char))
+            parts.append(
+                "[" + re.escape(_FOLD.get(char, char) + _FOLD.get(char, char).upper()) + "]"
+                if char in _FOLD
+                else re.escape(char)
+            )
     return re.compile(r"(?<!\w)" + "".join(parts) + r"(?!\w)", re.IGNORECASE)
 
 
@@ -177,6 +257,7 @@ def column_kind(header):
 def _protected_headers():
     """Columnas que lee el motor y no son identidad: se conservan tal cual."""
     from nurus.rus.columns import COMMON, H2_COLUMNS, MODE_COLUMNS, VENCIMIENTO_ALIASES
+
     names = set(VENCIMIENTO_ALIASES)
     for key, aliases in {**COMMON, **H2_COLUMNS}.items():
         if key not in ("nombre", "rut", "rit", "curador"):
@@ -196,14 +277,16 @@ def header_row(rows, limit=HEADER_LIMIT):
             continue
         kinds = [column_kind(value) for value in texts]
         identity = sum(kind in ("rit", "rut", "curador", "persona") for kind in kinds)
-        if identity >= 2 or any(n in ("rit", "rut", "run") or n.startswith(("nombre", "rut ", "rit ", "run "))
-                                for n in names):
+        if identity >= 2 or any(
+            n in ("rit", "rut", "run") or n.startswith(("nombre", "rut ", "rit ", "run ")) for n in names
+        ):
             return index
     return None
 
 
 def _xls_sheets(source):
     import xlrd
+
     legacy = xlrd.open_workbook(str(source))
     for index in range(legacy.nsheets):
         old = legacy.sheet_by_index(index)
@@ -230,8 +313,10 @@ def _xlsx_sheets(source):
     # data_only: el valor calculado que lee el motor, nunca el texto de la fórmula.
     book = load_workbook(source, data_only=True, read_only=False)
     for sheet in book.worksheets:
-        rows = [[None if isinstance(v, str) and v.startswith("#") and v.endswith(("!", "?", "A")) else v
-                 for v in row] for row in sheet.iter_rows(values_only=True)]
+        rows = [
+            [None if isinstance(v, str) and v.startswith("#") and v.endswith(("!", "?", "A")) else v for v in row]
+            for row in sheet.iter_rows(values_only=True)
+        ]
         yield sheet.title, rows, [str(r) for r in sheet.merged_cells.ranges]
 
 
@@ -273,8 +358,8 @@ def curator_name(text):
 class Replacer:
     def __init__(self, pseudonyms):
         self.pseudonyms = pseudonyms
-        self.names = {}      # nombre completo -> ficticio
-        self.tokens = {}     # palabra de nombre -> ficticio
+        self.names = {}  # nombre completo -> ficticio
+        self.tokens = {}  # palabra de nombre -> ficticio
         self._patterns = None
 
     def add_person(self, full):
@@ -309,17 +394,25 @@ class Replacer:
         result = RUT_NO_DV_RE.sub(self._mask_dotted, result)
         rit = RIT_FREE_RE if free else RIT_STRICT_RE
         result = rit.sub(lambda m: self.pseudonyms.get("rit", m.group(0)), result)
-        result = MAIL_RE.sub(lambda m: m.group(0) if m.group(0).endswith(FAKE_DOMAIN)
-                             else self.pseudonyms.get("mail", m.group(0)), result)
+        result = MAIL_RE.sub(
+            lambda m: m.group(0) if m.group(0).endswith(FAKE_DOMAIN) else self.pseudonyms.get("mail", m.group(0)),
+            result,
+        )
         if free or phones:
             result = PHONE_RE.sub(self._phone, result)
         if free:
             result = ADDRESS_RE.sub(lambda m: self.pseudonyms.get("direccion", m.group(0)), result)
-            result = GROUPED_DIGITS_RE.sub(lambda m: m.group(0) if DATE_LIKE_RE.fullmatch(m.group(0))
-                                           or re.sub(r"\D", "", m.group(0)).startswith("900000")
-                                           else "#" * len(m.group(0)), result)
-            result = DIGITS_RE.sub(lambda m: m.group(0) if m.group(0).startswith("900000")
-                                   else "#" * len(m.group(0)), result)
+            result = GROUPED_DIGITS_RE.sub(
+                lambda m: (
+                    m.group(0)
+                    if DATE_LIKE_RE.fullmatch(m.group(0)) or re.sub(r"\D", "", m.group(0)).startswith("900000")
+                    else "#" * len(m.group(0))
+                ),
+                result,
+            )
+            result = DIGITS_RE.sub(
+                lambda m: m.group(0) if m.group(0).startswith("900000") else "#" * len(m.group(0)), result
+            )
         return result
 
     def text(self, value, *, free=True):
@@ -368,14 +461,19 @@ def _collect_names(sheets, replacer):
         index, kinds = _sheet_plan(rows)
         if index is None:
             continue
-        for row in rows[index + 1:]:
+        for row in rows[index + 1 :]:
             for col, value in enumerate(row):
                 if not isinstance(value, str):
                     continue
                 kind = kinds.get(col)
                 if kind == "persona":
-                    replacer.add_person(re.sub(r"(?i)^\s*(dupla|profesional|contacto|referente)\s*:\s*", "",
-                                               MAIL_RE.sub(" ", PHONE_RE.sub(" ", value))))
+                    replacer.add_person(
+                        re.sub(
+                            r"(?i)^\s*(dupla|profesional|contacto|referente)\s*:\s*",
+                            "",
+                            MAIL_RE.sub(" ", PHONE_RE.sub(" ", value)),
+                        )
+                    )
                 elif kind == "curador":
                     replacer.add_person(curator_name(value))
 
@@ -450,8 +548,11 @@ def anonymize(source, target, shift_days=0):
             new_title = f"Hoja{number}"
         used_titles.add(new_title)
         sheet = book.create_sheet(new_title)
-        protected_cols = {col for col, value in enumerate(rows[index]) if normalize(value) in protected_headers} \
-            if index is not None else set()
+        protected_cols = (
+            {col for col, value in enumerate(rows[index]) if normalize(value) in protected_headers}
+            if index is not None
+            else set()
+        )
         for r, row in enumerate(rows):
             body = index is not None and r > index
             for c, value in enumerate(row):
@@ -482,8 +583,11 @@ def anonymize(source, target, shift_days=0):
     book.properties = DocumentProperties(creator="anonimizado", lastModifiedBy="anonimizado")
     found, residual = _scan(book, pseudonyms, replacer, protected_cells)
     if found:
-        raise ValueError("No se creó la copia: quedarían datos personales (" + ", ".join(found)
-                         + "). Revisa el original o informa el caso sin adjuntarlo.")
+        raise ValueError(
+            "No se creó la copia: quedarían datos personales ("
+            + ", ".join(found)
+            + "). Revisa el original o informa el caso sin adjuntarlo."
+        )
     temp = target.with_name(f".{target.stem}.{os.getpid()}.tmp.xlsx")
     try:
         book.save(temp)
@@ -497,11 +601,14 @@ def anonymize(source, target, shift_days=0):
     finally:
         temp.unlink(missing_ok=True)
     if residual:
-        report.warnings.append(f"{residual} celda(s) de programa o tribunal contienen palabras iguales a "
-                               "nombres; se conservaron porque las lee el motor. Revisa la copia.")
+        report.warnings.append(
+            f"{residual} celda(s) de programa o tribunal contienen palabras iguales a "
+            "nombres; se conservaron porque las lee el motor. Revisa la copia."
+        )
     if shift_days:
-        report.warnings.append("Las fechas se desplazaron: usa la fecha de corte desplazada; las reglas "
-                               "pueden diferir del original.")
+        report.warnings.append(
+            "Las fechas se desplazaron: usa la fecha de corte desplazada; las reglas pueden diferir del original."
+        )
     report.warnings.append("Revisa la copia antes de compartirla; no conserva formato, fórmulas ni objetos.")
     return report
 

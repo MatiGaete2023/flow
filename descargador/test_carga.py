@@ -37,13 +37,23 @@ def test_load_report_rejects_renamed_column_before_returning_rows():
 
 def test_load_report_accepts_normalized_header_and_fixed_concepcion_title():
     header = [f"  {name.lower()}  " for name in HEADERS]
-    grid = [["Concepción"] * 23, *report_grid(header=header, tribunals=("Tribunal ficticio 777", "Tribunal ficticio 777"))]
+    grid = [
+        ["Concepción"] * 23,
+        *report_grid(header=header, tribunals=("Tribunal ficticio 777", "Tribunal ficticio 777")),
+    ]
     rows = record_rows(grid)
     assert [row[0] for row in rows] == ["X-1-2026", "Y-2-2026"]
     signatures_found = signatures(
-        grid, "777", "Tribunal ficticio 777", date(2026, 10, 1), date(2026, 10, 3),
+        grid,
+        "777",
+        "Tribunal ficticio 777",
+        date(2026, 10, 1),
+        date(2026, 10, 3),
     )
-    assert [(item["rit"], item["tribunal_codigo"]) for item in signatures_found] == [("X-1-2026", "777"), ("Y-2-2026", "777")]
+    assert [(item["rit"], item["tribunal_codigo"]) for item in signatures_found] == [
+        ("X-1-2026", "777"),
+        ("Y-2-2026", "777"),
+    ]
 
 
 def test_signature_key_ignores_flow_changes_and_keeps_legacy_alias():
@@ -62,7 +72,9 @@ def test_signature_identity_uses_available_document_and_hour_and_preserves_ambig
     single = report_grid(tribunals=("Tribunal ficticio 777",))
     base = signatures(single, "777", "Tribunal ficticio 777", date(2026, 10, 1), date(2026, 10, 3))[0]["huella"]
     single[1][6] = "Documento alternativo"
-    with_document = signatures(single, "777", "Tribunal ficticio 777", date(2026, 10, 1), date(2026, 10, 3))[0]["huella"]
+    with_document = signatures(single, "777", "Tribunal ficticio 777", date(2026, 10, 1), date(2026, 10, 3))[0][
+        "huella"
+    ]
     assert with_document != base
     single[1][22] = "10:45"
     with_hour = signatures(single, "777", "Tribunal ficticio 777", date(2026, 10, 1), date(2026, 10, 3))[0]["huella"]

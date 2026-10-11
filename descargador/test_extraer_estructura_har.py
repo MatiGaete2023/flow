@@ -1,4 +1,5 @@
 """El extractor de HAR conserva estructura y descarta todo valor."""
+
 import json
 from pathlib import Path
 import tempfile
@@ -14,27 +15,45 @@ RUT = '11111111-0'  # Identidad ficticia con dígito verificador inválido.
 HTML = (
     '<html><body><form><input name="txtRit" value="' + RIT + '"><select name="cboTribunal"></select></form>'
     '<table><tr><td>' + NAME + '</td><td>' + RUT + '</td>'
-    "<td><a onclick=\"ShowObservaciones(11,'" + RIT + "','" + NAME + "','" + RUT + "',4,'x')\">Ver</a></td></tr></table>"
+    "<td><a onclick=\"ShowObservaciones(11,'"
+    + RIT
+    + "','"
+    + NAME
+    + "','"
+    + RUT
+    + "',4,'x')\">Ver</a></td></tr></table>"
     '</body></html>'
 )
 
 
 def har():
-    return {'log': {'entries': [{
-        'request': {
-            'method': 'POST',
-            'url': 'https://sitfa.ejemplo.invalid/Consulta/Buscar?rit=' + RIT + '&nombre=' + NAME.replace(' ', '+'),
-            'headers': [{'name': 'Cookie', 'value': COOKIE}],
-            'cookies': [{'name': 'ASP.NET_SessionId', 'value': COOKIE}],
-            'queryString': [{'name': 'rit', 'value': RIT}, {'name': 'nombre', 'value': NAME}],
-            'postData': {'mimeType': 'application/x-www-form-urlencoded', 'text': 'txtRit=' + RIT + '&txtRut=' + RUT},
-        },
-        'response': {
-            'status': 200,
-            'headers': [{'name': 'Set-Cookie', 'value': COOKIE}],
-            'content': {'mimeType': 'text/html; charset=utf-8', 'size': len(HTML), 'text': HTML},
-        },
-    }]}}
+    return {
+        'log': {
+            'entries': [
+                {
+                    'request': {
+                        'method': 'POST',
+                        'url': 'https://sitfa.ejemplo.invalid/Consulta/Buscar?rit='
+                        + RIT
+                        + '&nombre='
+                        + NAME.replace(' ', '+'),
+                        'headers': [{'name': 'Cookie', 'value': COOKIE}],
+                        'cookies': [{'name': 'ASP.NET_SessionId', 'value': COOKIE}],
+                        'queryString': [{'name': 'rit', 'value': RIT}, {'name': 'nombre', 'value': NAME}],
+                        'postData': {
+                            'mimeType': 'application/x-www-form-urlencoded',
+                            'text': 'txtRit=' + RIT + '&txtRut=' + RUT,
+                        },
+                    },
+                    'response': {
+                        'status': 200,
+                        'headers': [{'name': 'Set-Cookie', 'value': COOKIE}],
+                        'content': {'mimeType': 'text/html; charset=utf-8', 'size': len(HTML), 'text': HTML},
+                    },
+                }
+            ]
+        }
+    }
 
 
 class ExtraerEstructuraHarTest(unittest.TestCase):
@@ -61,8 +80,7 @@ class ExtraerEstructuraHarTest(unittest.TestCase):
         request['queryString'].append({'name': 'nombre_PERSONA_FICTICIA', 'value': 'ficticio'})
         request['postData']['text'] += '&post_PERSONA_FICTICIA=ficticio'
         entry['response']['content']['text'] += (
-            '<input name="form_PERSONA_FICTICIA">'
-            '<a onclick="mostrar_PERSONA_FICTICIA(11, 2)">Ver</a>'
+            '<input name="form_PERSONA_FICTICIA"><a onclick="mostrar_PERSONA_FICTICIA(11, 2)">Ver</a>'
         )
         result = summarize(data)
         text = json.dumps(result)
@@ -120,7 +138,6 @@ class ExtraerEstructuraHarTest(unittest.TestCase):
             target.write_text('previo', encoding='utf-8')
             self.assertEqual(main([str(source), str(target)]), 1)
             self.assertEqual(target.read_text(encoding='utf-8'), 'previo')
-
 
     def test_no_sobrescribe_salida_creada_durante_lectura(self):
         with tempfile.TemporaryDirectory() as temp:

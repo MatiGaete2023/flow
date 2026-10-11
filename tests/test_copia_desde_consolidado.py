@@ -1,4 +1,5 @@
 """D6: con consolidado en el paquete, la copia del Asistente parte de ese libro; sin él, queda como antes."""
+
 from datetime import date
 from io import BytesIO
 from openpyxl import Workbook, load_workbook
@@ -8,7 +9,15 @@ from nurus.personal.config import defaults
 from nurus.personal.work import _consolidated_base
 from test_capture_contract import fixture
 
-ORIGIN = ('SITFA_LOTE', 'SITFA_CONSULTA', 'SITFA_ARCHIVO', 'SITFA_PAGINA', 'SITFA_FILA', 'SITFA_SHA256', 'SITFA_FECHA_DESCARGA')
+ORIGIN = (
+    'SITFA_LOTE',
+    'SITFA_CONSULTA',
+    'SITFA_ARCHIVO',
+    'SITFA_PAGINA',
+    'SITFA_FILA',
+    'SITFA_SHA256',
+    'SITFA_FECHA_DESCARGA',
+)
 
 
 def consolidado(registros, *, hojas=1, invertir=True, duplicar=False):
@@ -21,10 +30,14 @@ def consolidado(registros, *, hojas=1, invertir=True, duplicar=False):
         sheet.append(['RIT', *ORIGIN])
     lista = list(reversed(registros)) if invertir else list(registros)
     for i, r in enumerate(lista):
-        destinos[i % hojas].append([r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], ''])
+        destinos[i % hojas].append(
+            [r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], '']
+        )
     if duplicar:
         r = lista[0]
-        destinos[0].append([r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], ''])
+        destinos[0].append(
+            [r['rit_original'], '', '', r['original_file'], '1', r['original_row'], r['source_sha256'], '']
+        )
     out = BytesIO()
     book.save(out)
     return out.getvalue()

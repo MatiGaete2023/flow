@@ -44,9 +44,6 @@ def _is_blank_excel_value(value: object) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
 
-
-
-
 def _hash(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -55,25 +52,19 @@ def _hash(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _validate_destination(
-    batch: dict[str, object], target: Path, *, allow_overwrite: bool = False
-) -> None:
+def _validate_destination(batch: dict[str, object], target: Path, *, allow_overwrite: bool = False) -> None:
     source_path = str(batch.get("source_path", "") or "")
     if not source_path:
         raise ExportError("El lote no identifica la ruta de origen; vuelve a importarlo antes de exportar.")
     source = Path(source_path).expanduser().resolve()
     try:
-        is_source = target == source or (
-            target.exists() and source.exists() and target.samefile(source)
-        )
+        is_source = target == source or (target.exists() and source.exists() and target.samefile(source))
     except OSError as exc:
         raise ExportError(f"No se pudo comprobar la identidad del destino: {exc}") from exc
     if is_source:
         raise ExportError("El destino corresponde al archivo de origen; elige otro archivo.")
     if target.exists() and not allow_overwrite:
         raise ExportError("El archivo de destino ya existe; confirma un nombre distinto o sobrescritura.")
-
-
 
 
 def _normalized_header(value: object) -> str:
@@ -109,11 +100,17 @@ def _trace_rows(snapshot: dict) -> list[tuple[object, ...]]:
         ("HOJA", "FILA", "ESTADO", "MOTIVO", "OBSERVACION", "REGLAS", "HASH_ORIGEN"),
     ]
     for record in snapshot["records"]:
-        rows.append((
-            record["source_sheet"], record["source_row"], record["decision"],
-            record["edit_reason"], record["edited_observation"],
-            record["rule_ids_json"], record["source_hash"],
-        ))
+        rows.append(
+            (
+                record["source_sheet"],
+                record["source_row"],
+                record["decision"],
+                record["edit_reason"],
+                record["edited_observation"],
+                record["rule_ids_json"],
+                record["source_hash"],
+            )
+        )
     return rows
 
 
@@ -164,7 +161,7 @@ def _annotation_values(record: dict, stage: str) -> tuple[str, str]:
 
 
 def _reviewed_fields(record: dict) -> dict[str, object]:
-    if record["decision"] != "approved" or not record.get("locally_validated",record.get("rus_recorded")):
+    if record["decision"] != "approved" or not record.get("locally_validated", record.get("rus_recorded")):
         return {}
     return {
         "OBSERVACION": record["edited_observation"],
@@ -200,6 +197,7 @@ def _portable_resolution_validation(sheet, column: int, first_row: int, last_row
     current = sheet.column_dimensions[letter].width or 0
     sheet.column_dimensions[letter].width = max(current, 14)
 
+
 def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
     from copy import copy
 
@@ -209,9 +207,7 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
     from openpyxl.utils import get_column_letter
 
     suffix = target.suffix.lower()
-    book = load_workbook(
-        BytesIO(content), data_only=False, keep_links=True, keep_vba=suffix == ".xlsm"
-    )
+    book = load_workbook(BytesIO(content), data_only=False, keep_links=True, keep_vba=suffix == ".xlsm")
     try:
         batch = snapshot["batch"]
         if batch["primary_sheet"] not in book.sheetnames:
@@ -225,10 +221,29 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             raise ExportError("La fila de encabezado del snapshot no es válida en el libro conservado.")
         headers = [sheet.cell(header_row, col).value for col in range(1, sheet.max_column + 1)]
         titles = (
-            ("NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES", "NURUS_ESTADO_REVISION")
+            (
+                "NURUS_ID_REGISTRO",
+                "NURUS_REGLAS",
+                "NURUS_PROPUESTA",
+                "OBSERVACION",
+                "FECHA_OBS",
+                "TT",
+                "CC",
+                "RES",
+                "NURUS_ESTADO_REVISION",
+            )
             if stage == "proposal"
-            else ("NURUS_ID_REGISTRO", "NURUS_REGLAS", observation_title, "NURUS_ESTADO_REVISION",
-                  "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES")
+            else (
+                "NURUS_ID_REGISTRO",
+                "NURUS_REGLAS",
+                observation_title,
+                "NURUS_ESTADO_REVISION",
+                "OBSERVACION",
+                "FECHA_OBS",
+                "TT",
+                "CC",
+                "RES",
+            )
         )
         if any('decisions_json' in record for record in snapshot['records']):
             titles = (*titles, 'NURUS_DECISIONES')
@@ -274,7 +289,7 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         last_column = max(sheet.max_column, state_column)
         status_letter = get_column_letter(state_column)
         highlight = FormulaRule(
-            formula=["$" + status_letter + str(first_data_row) + '=\"EXCLUIDO\"'],
+            formula=["$" + status_letter + str(first_data_row) + '="EXCLUIDO"'],
             fill=PatternFill(fill_type="solid", fgColor="FFF2CC"),
         )
         sheet.conditional_formatting.add(
@@ -290,8 +305,9 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         book.close()
 
 
-def _native_write_column(sheet, column: int, updates: list[tuple[int, object]], *,
-                         keep_existing: bool = False, chunk_size: int = 500) -> None:
+def _native_write_column(
+    sheet, column: int, updates: list[tuple[int, object]], *, keep_existing: bool = False, chunk_size: int = 500
+) -> None:
     """Escribe tramos contiguos; nunca atraviesa filas ajenas al conjunto dado."""
     from itertools import groupby
 
@@ -301,7 +317,7 @@ def _native_write_column(sheet, column: int, updates: list[tuple[int, object]], 
     for _, group in groupby(enumerate(ordered), key=lambda item: item[1][0] - item[0]):
         contiguous = [item for _, item in group]
         for offset in range(0, len(contiguous), chunk_size):
-            block = contiguous[offset:offset + chunk_size]
+            block = contiguous[offset : offset + chunk_size]
             region = sheet.Range(sheet.Cells(block[0][0], column), sheet.Cells(block[-1][0], column))
             if keep_existing:
                 values = region.Value2
@@ -358,6 +374,7 @@ def _native_resolution_validation(book, sheet, column: int, first_row: int, last
     region.Validation.InputMessage = "Selecciona PC_IE, PC_INFO o NOMENCL. Vacío: sin proyecto."
     sheet.Columns(column).ColumnWidth = max(float(sheet.Columns(column).ColumnWidth or 0), 14)
 
+
 def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
     import platform
 
@@ -377,13 +394,13 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         import pythoncom
         import win32com.client
     except ImportError as exc:
-        raise ExportError(
-            "Falta pywin32 para usar Excel de escritorio. Instala la dependencia excel-native."
-        ) from exc
+        raise ExportError("Falta pywin32 para usar Excel de escritorio. Instala la dependencia excel-native.") from exc
 
     source_handle = tempfile.NamedTemporaryFile(
-        prefix="nurus-origen-", suffix=target.suffix,
-        dir=target.parent, delete=False,
+        prefix="nurus-origen-",
+        suffix=target.suffix,
+        dir=target.parent,
+        delete=False,
     )
     source_path = Path(source_handle.name)
     with source_handle:
@@ -419,10 +436,29 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         used_last = sheet.UsedRange.Column + sheet.UsedRange.Columns.Count - 1
         headers = [sheet.Cells(header_row, column).Value2 for column in range(1, used_last + 1)]
         titles = (
-            ("NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES", "NURUS_ESTADO_REVISION")
+            (
+                "NURUS_ID_REGISTRO",
+                "NURUS_REGLAS",
+                "NURUS_PROPUESTA",
+                "OBSERVACION",
+                "FECHA_OBS",
+                "TT",
+                "CC",
+                "RES",
+                "NURUS_ESTADO_REVISION",
+            )
             if stage == "proposal"
-            else ("NURUS_ID_REGISTRO", "NURUS_REGLAS", observation_title, "NURUS_ESTADO_REVISION",
-                  "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES")
+            else (
+                "NURUS_ID_REGISTRO",
+                "NURUS_REGLAS",
+                observation_title,
+                "NURUS_ESTADO_REVISION",
+                "OBSERVACION",
+                "FECHA_OBS",
+                "TT",
+                "CC",
+                "RES",
+            )
         )
         if any('decisions_json' in record for record in snapshot['records']):
             titles = (*titles, 'NURUS_DECISIONES')
@@ -454,8 +490,9 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
                     writes[title].append((row, _safe_cell(value)))
 
         for title, updates in writes.items():
-            _native_write_column(sheet, columns[title], updates,
-                                 keep_existing=stage == "proposal" and title == "OBSERVACION")
+            _native_write_column(
+                sheet, columns[title], updates, keep_existing=stage == "proposal" and title == "OBSERVACION"
+            )
         sheet.Columns(columns["NURUS_REGLAS"]).Hidden = True
         if 'NURUS_DECISIONES' in columns:
             sheet.Columns(columns['NURUS_DECISIONES']).Hidden = True
@@ -483,7 +520,8 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         region.NumberFormat = "@"
         region.Value2 = tuple(
             tuple(str(_safe_cell(value)) if value is not None else "" for value in values)
-            + ("",) * (width - len(values)) for values in trace_rows
+            + ("",) * (width - len(values))
+            for values in trace_rows
         )
 
         operation = "guardar la copia"
@@ -500,17 +538,25 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         ) from exc
     finally:
         if book is not None:
-            try:book.Close(False)
-            except Exception:pass
+            try:
+                book.Close(False)
+            except Exception:
+                pass
         if placeholder is not None:
-            try:placeholder.Close(False)
-            except Exception:pass
+            try:
+                placeholder.Close(False)
+            except Exception:
+                pass
         if app is not None:
-            try:app.Quit()
-            except Exception:pass
+            try:
+                app.Quit()
+            except Exception:
+                pass
         if initialized:
-            try:pythoncom.CoUninitialize()
-            except Exception:pass
+            try:
+                pythoncom.CoUninitialize()
+            except Exception:
+                pass
         source_path.unlink(missing_ok=True)
 
 
@@ -532,15 +578,11 @@ def _export_preserved_payload(
     if backend not in {"native", "portable"}:
         raise ExportError("Backend de exportación no válido.")
     if backend == "portable" and (suffix == ".xls" or not allow_reduced_fidelity):
-        raise ExportError(
-            "La salida portable requiere confirmación de fidelidad reducida y no admite .xls."
-        )
+        raise ExportError("La salida portable requiere confirmación de fidelidad reducida y no admite .xls.")
     _validate_destination(batch, target, allow_overwrite=False)
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    handle = tempfile.NamedTemporaryFile(
-        prefix="nurus-salida-", suffix=target.suffix, dir=target.parent, delete=False
-    )
+    handle = tempfile.NamedTemporaryFile(prefix="nurus-salida-", suffix=target.suffix, dir=target.parent, delete=False)
     handle.close()
     temporary = Path(handle.name)
     target_created = False
@@ -553,13 +595,10 @@ def _export_preserved_payload(
             target_created = True
             shutil.copyfileobj(source, output)
     except OSError as exc:
-        if target_created:target.unlink(missing_ok=True)
+        if target_created:
+            target.unlink(missing_ok=True)
         raise ExportError(f"No se pudo escribir la exportación: {exc}") from exc
     finally:
         temporary.unlink(missing_ok=True)
 
     return ExportResult(target, _hash(target), len(snapshot["records"]))
-
-
-
-

@@ -3,6 +3,7 @@
 Uso (en el PC autorizado):
     python tools/anonimizar_excel.py original.xls copia_anonima.xlsx [--desplazar-fechas DIAS]
 """
+
 import sys
 from pathlib import Path
 

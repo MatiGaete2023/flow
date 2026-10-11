@@ -32,3 +32,11 @@ version = {attr = "nurus.__version__"}
 "nurus.rus" = ["*.json"]
 "nurus.services" = ["*.json"]
 "nurus.personal" = ["*.json", "matrix_patches/*.b64", "plantillas_word/*/*.docx"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["src/nurus/personal/motor"]
+
+[tool.ruff.format]
+# Conserva comillas: varias pruebas y contratos leen el código como texto.
+quote-style = "preserve"

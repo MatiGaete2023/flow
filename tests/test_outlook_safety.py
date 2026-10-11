@@ -14,8 +14,14 @@ def _product_without_recipient() -> Product:
     """Producto como lo arma el Asistente vigente (personal/outputs.py): texto revisado y CC fijo."""
     template = Template("personal", "Correo revisado", ProductKind.EMAIL, "", "", ())
     return Product(
-        ProductKind.EMAIL, template, {}, recipient="", cc=with_mandatory_cc(""),
-        status=ProductStatus.READY, rendered_subject="Ingreso Laja", rendered_body="Hola PRM",
+        ProductKind.EMAIL,
+        template,
+        {},
+        recipient="",
+        cc=with_mandatory_cc(""),
+        status=ProductStatus.READY,
+        rendered_subject="Ingreso Laja",
+        rendered_body="Hola PRM",
     )
 
 
@@ -27,6 +33,7 @@ def test_save_draft_requires_explicit_confirmation():
 
 def test_attachment_copy_keeps_exact_reviewed_bytes_and_original_name(tmp_path):
     from hashlib import sha256
+
     source = tmp_path / "nomina.xlsx"
     source.write_bytes(b"reviewed bytes")
     with outlook_adapter._reviewed_attachments([(str(source), sha256(source.read_bytes()).hexdigest())]) as copies:
@@ -186,14 +193,18 @@ def test_account_selection_is_exact_and_sets_send_using_account_without_sending(
     assert mail.SendUsingAccount is account
 
 
-@pytest.mark.parametrize("cc,expected", [
-    ("", "ucc_concepcion@pjud.cl"),
-    ("otro@example.test", "otro@example.test; ucc_concepcion@pjud.cl"),
-    ("UCC_CONCEPCION@PJUD.CL; ucc_concepcion@pjud.cl", "UCC_CONCEPCION@PJUD.CL"),
-    ("uno@example.test, dos@example.test", "uno@example.test; dos@example.test; ucc_concepcion@pjud.cl"),
-])
+@pytest.mark.parametrize(
+    "cc,expected",
+    [
+        ("", "ucc_concepcion@pjud.cl"),
+        ("otro@example.test", "otro@example.test; ucc_concepcion@pjud.cl"),
+        ("UCC_CONCEPCION@PJUD.CL; ucc_concepcion@pjud.cl", "UCC_CONCEPCION@PJUD.CL"),
+        ("uno@example.test, dos@example.test", "uno@example.test; dos@example.test; ucc_concepcion@pjud.cl"),
+    ],
+)
 def test_mandatory_copy_preserves_other_recipients(cc, expected):
     from nurus.services.policy import with_mandatory_cc
+
     assert with_mandatory_cc(cc) == expected
     assert with_mandatory_cc(expected) == expected
 

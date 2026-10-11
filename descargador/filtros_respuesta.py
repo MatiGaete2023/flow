@@ -4,6 +4,7 @@ The server sends the initial report SELECT with options 1/2/3 even for
 Cumplimiento. cargarOpciones then replaces it with 0/4/5 and selects the
 server's literal. Only this known initializer is recognized; no JS is run.
 """
+
 import re
 
 
@@ -48,13 +49,14 @@ _KNOWN = re.compile(_pattern)
 def selected_report(root, tab):
     """Return a validated literal, or None for a plain HTML selector."""
     from motor import PocError
+
     scripts = '\n'.join(root.xpath('//script/text()'))
     definitions = list(re.finditer(r'\bfunction\s+cargarOpciones\s*\(', scripts))
     if not definitions:
         return None
     if len(definitions) != 1:
         raise PocError('El selector dinámico de vencimiento es ambiguo.')
-    block = scripts[definitions[0].start():]
+    block = scripts[definitions[0].start() :]
     # The audited helper has no comments inside strings. Labels only display
     # text; altered code, expressions and additional statements are rejected.
     block = re.sub(r'/\*.*?\*/|//[^\r\n]*', '', block, flags=re.S)

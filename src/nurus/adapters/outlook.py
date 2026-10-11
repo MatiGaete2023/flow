@@ -151,13 +151,15 @@ def save_draft(
         mail.Subject = product.rendered_subject
         if preserve_signature:
             from nurus.personal.mail_presentation import insert_before_signature
+
             mail.Display(False)
             signature = str(mail.HTMLBody or '')
             # The signature is HTML even when the user chooses plain-style body.
             mail.HTMLBody = insert_before_signature(product.rendered_body, signature, styled=html_body)
         elif html_body:
             from nurus.personal.mail_presentation import body_html
-            mail.HTMLBody = '<html><body>'+body_html(product.rendered_body)+'</body></html>'
+
+            mail.HTMLBody = '<html><body>' + body_html(product.rendered_body) + '</body></html>'
         else:
             mail.Body = product.rendered_body
         with _reviewed_attachments(product.attachments) as attachments:
@@ -173,7 +175,9 @@ def save_draft(
             store_id = str(getattr(store, "StoreID", "") or "") if store is not None else ""
             folder_name = str(getattr(folder, "FolderPath", "") or getattr(folder, "Name", "") or "")
             if not entry_id.strip() or not store_id.strip():
-                raise DraftSaveUncertain("Outlook no devolvió EntryID y StoreID completos; concilia antes de reintentar.")
+                raise DraftSaveUncertain(
+                    "Outlook no devolvió EntryID y StoreID completos; concilia antes de reintentar."
+                )
         except Exception as exc:
             raise DraftSaveUncertain(
                 "El borrador fue guardado, pero no se pudo confirmar completamente su identidad."

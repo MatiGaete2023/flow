@@ -12,7 +12,10 @@ from nurus.personal.work import Work
 
 
 VARIANTS = [
-    'Mulchén', 'MULCHEN', 'MULCHËN', 'mulche\u0301n',
+    'Mulchén',
+    'MULCHEN',
+    'MULCHËN',
+    'mulche\u0301n',
     'Juzgado de Letras y Garantía de Mulchén',
     'Jgdo. L. y G. de Mulchén                          ',
     'MULCHËN — Garantía y Letras, Juzgado',
@@ -21,8 +24,7 @@ VARIANTS = [
 
 @pytest.mark.parametrize('selected', VARIANTS)
 def test_court_filter_normalizes_selection_as_well_as_excel_values(selected):
-    rows = [SimpleNamespace(id=str(i), values={'TRIBUNAL': name})
-            for i, name in enumerate(VARIANTS + ['LAJA', 'TOME'])]
+    rows = [SimpleNamespace(id=str(i), values={'TRIBUNAL': name}) for i, name in enumerate(VARIANTS + ['LAJA', 'TOME'])]
     work = SimpleNamespace(rows=rows, mapping={'tribunal': 'TRIBUNAL'})
     assert selected_court_record_ids(work, [selected]) == [str(i) for i in range(len(VARIANTS))]
     rows[-1].overrides = {'tribunal': 'MULCHËN'}
@@ -36,7 +38,7 @@ def test_excel_variants_make_one_addressed_draft_for_automatic_and_manual_select
     book.active.append(['RIT', 'TRIBUNAL', 'NOMBRE', 'DERIVACION', 'OBSERVACION'])
     for i, name in enumerate(VARIANTS + ['LAJA']):
         book.active.append([f'X-{i}', name, 'Persona de prueba', 'AFT PRUEBA', 'Revisado'])
-    path = tmp_path/'revisado.xlsx'
+    path = tmp_path / 'revisado.xlsx'
     book.save(path)
     config = defaults()
     contact = config['correos']['tribunales'].pop('MULCHEN')

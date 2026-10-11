@@ -6,6 +6,7 @@ Uso:
 
 Código de salida 1 si hay enlaces rotos. Ignora http(s), mailto y anclas internas.
 """
+
 import re
 import subprocess
 import sys

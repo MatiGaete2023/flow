@@ -1,4 +1,5 @@
 """Exportación: sin archivo residual ante error y sin fórmulas en la copia."""
+
 from datetime import date
 
 import pytest
@@ -25,10 +26,13 @@ def _trabajo(tmp_path, filas):
 
 
 def test_exportacion_fallida_no_deja_archivo_y_restaura_output(tmp_path):
-    trabajo = _trabajo(tmp_path, [
-        ['X-1-2026', 'LAJA', '=HYPERLINK("https://ejemplo.invalid","Persona")', '11111111-1', 'PRM UNO', 40, ''],
-        ['X-2-2026', 'LAJA', 'Persona Ficticia', '22222222-2', 'PRM UNO', 40, ''],
-    ])
+    trabajo = _trabajo(
+        tmp_path,
+        [
+            ['X-1-2026', 'LAJA', '=HYPERLINK("https://ejemplo.invalid","Persona")', '11111111-1', 'PRM UNO', 40, ''],
+            ['X-2-2026', 'LAJA', 'Persona Ficticia', '22222222-2', 'PRM UNO', 40, ''],
+        ],
+    )
     antes = (trabajo.output, trabajo.output_hash)
     destino = tmp_path / 'salida.xlsx'
     with pytest.raises(Exception):
@@ -50,6 +54,7 @@ def test_observacion_formula_se_exporta_como_texto(tmp_path):
 
 def test_lectura_fallida_de_la_copia_restaura_output_y_borra(tmp_path, monkeypatch):
     import nurus.personal.work as modulo
+
     trabajo = _trabajo(tmp_path, [['X-1-2026', 'LAJA', 'Persona Ficticia', '11111111-1', 'PRM UNO', 40, '']])
     antes = (trabajo.output, trabajo.output_hash)
     destino = tmp_path / 'salida.xlsx'

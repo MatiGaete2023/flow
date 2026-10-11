@@ -1,4 +1,5 @@
 """Resolve just the fields that conflict, without changing Work until acceptance."""
+
 import tkinter as tk
 import customtkinter as ctk
 from . import ui
@@ -33,7 +34,10 @@ def resolve(app, conflict):
         item = conflict.conflicts[current.get()]
         row = next(row for row in app.work.rows if row.id == item.record_id)
         from .outputs import value
-        title.set(f'{current.get()+1}/{len(conflict.conflicts)} · {value(app.work,row,"rit")} · {value(app.work,row,"nombre")} · {item.field}')
+
+        title.set(
+            f'{current.get() + 1}/{len(conflict.conflicts)} · {value(app.work, row, "rit")} · {value(app.work, row, "nombre")} · {item.field}'
+        )
         for key, box in boxes.items():
             box.configure(state='normal')
             box.delete('1.0', 'end')
@@ -48,6 +52,7 @@ def resolve(app, conflict):
     def accept():
         item = conflict.conflicts[current.get()]
         from .record_edits import validate_review
+
         value = chosen.get('1.0', 'end-1c')
         answers[(item.record_id, item.field)] = validate_review({item.field: value})[item.field]
         if current.get() + 1 < len(conflict.conflicts):
@@ -55,10 +60,14 @@ def resolve(app, conflict):
             show()
         else:
             window.destroy()
-            app._refresh_resolved(answers,path=getattr(conflict,'path',None))
+            app._refresh_resolved(answers, path=getattr(conflict, 'path', None))
 
-    ui.Button(buttons, text='Usar Excel', command=lambda: choose(conflict.conflicts[current.get()].incoming)).pack(side='left')
-    ui.Button(buttons, text='Usar mi edición', command=lambda: choose(conflict.conflicts[current.get()].local)).pack(side='left', padx=6)
+    ui.Button(buttons, text='Usar Excel', command=lambda: choose(conflict.conflicts[current.get()].incoming)).pack(
+        side='left'
+    )
+    ui.Button(buttons, text='Usar mi edición', command=lambda: choose(conflict.conflicts[current.get()].local)).pack(
+        side='left', padx=6
+    )
     ui.Button(buttons, text='Cancelar', command=window.destroy).pack(side='right')
     ui.Button(buttons, text='Aceptar y continuar', command=lambda: app._guard(accept)).pack(side='right', padx=6)
     show()

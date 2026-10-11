@@ -19,7 +19,6 @@ def source_file(tmp_path):
     return path
 
 
-
 def test_snapshot_bytes_hash_and_repr(tmp_path):
     path = source_file(tmp_path)
     batch = read_workbook(path, Mode.ESPERA)

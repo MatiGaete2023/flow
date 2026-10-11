@@ -1,4 +1,5 @@
 """R-T01 y R-T04 a R-T08: reglas tradicionales de Espera con fecha de corte fija."""
+
 import pytest
 
 from test_mayoria_edad import analizar, persona
@@ -37,8 +38,12 @@ def test_rt05_laja_mulchen_tramo_exacto(tmp_path, tribunal):
 
 def test_rt06_tome_cortes_29_30_59_60(tmp_path):
     filas = _espera(tmp_path, [('TOME', 'PRM UNO', dias) for dias in (29, 30, 59, 60)])
-    assert [f.rules for f in filas] == [['ESPERA.E06_SIN_RESOLUCION'], ['ESPERA.E05_SOLO_CORREO'],
-                                        ['ESPERA.E05_SOLO_CORREO'], ['ESPERA.E05_PROYECTO_Y_CORREO']]
+    assert [f.rules for f in filas] == [
+        ['ESPERA.E06_SIN_RESOLUCION'],
+        ['ESPERA.E05_SOLO_CORREO'],
+        ['ESPERA.E05_SOLO_CORREO'],
+        ['ESPERA.E05_PROYECTO_Y_CORREO'],
+    ]
     assert [f.actions for f in filas] == [[], [CORREO], [CORREO], [CORREO, PROYECTO]]
 
 

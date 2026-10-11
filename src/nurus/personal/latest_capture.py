@@ -1,5 +1,6 @@
 """Último paquete CSMP_CAPTURE del Descargador. Solo lectura de archivos locales: no inicia
 procesos, no abre Chrome ni el Descargador (restricción 7)."""
+
 import json
 import os
 import zipfile
@@ -63,6 +64,7 @@ def _declares_capture(path):
 def latest_capture(folders=None):
     """El ZIP más reciente que declara CSMP_CAPTURE y además pasa la validación completa."""
     from nurus.capture import read_capture
+
     candidates = []
     for folder in search_folders() if folders is None else folders:
         for path in _zips(Path(folder)):

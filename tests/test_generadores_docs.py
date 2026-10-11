@@ -1,4 +1,5 @@
 """Los generadores de evidencia solo escriben con --escribir y no enlazan rutas retiradas."""
+
 import importlib.util
 import json
 from pathlib import Path
@@ -15,8 +16,12 @@ def cargar(nombre):
     return modulo
 
 
-SALIDAS = ['docs/MATRIZ_FUNCIONAL_20261008.md', 'docs/evidencia_p0/matriz_funcional.csv',
-           'docs/TRAZABILIDAD_EJECUCION_20261008.md', 'docs/evidencia_desarrollo_20261008/matriz_actual.json']
+SALIDAS = [
+    'docs/MATRIZ_FUNCIONAL_20261008.md',
+    'docs/evidencia_p0/matriz_funcional.csv',
+    'docs/TRAZABILIDAD_EJECUCION_20261008.md',
+    'docs/evidencia_desarrollo_20261008/matriz_actual.json',
+]
 
 
 @pytest.mark.parametrize('nombre', ['flow_baseline_matrix', 'flow_plan_progress'])

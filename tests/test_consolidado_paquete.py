@@ -1,4 +1,5 @@
 """Contrato 1.1.0 (D6): el ZIP puede llevar solo el XLSX consolidado; todos los datos son ficticios."""
+
 from io import BytesIO
 import importlib.util
 import json
@@ -51,7 +52,10 @@ def test_ida_y_vuelta_1_1_0_y_el_zip_solo_lleva_csv_xlsx_y_manifiesto(tmp_path):
     assert capture.manifest['schema_version'] == '1.1.0'
     assert capture.consolidated == raw
     from jsonschema import Draft202012Validator
-    schema = json.loads((Path(__file__).parents[1] / 'contracts/csmp_capture_v1/manifest.schema.json').read_text(encoding='utf-8'))
+
+    schema = json.loads(
+        (Path(__file__).parents[1] / 'contracts/csmp_capture_v1/manifest.schema.json').read_text(encoding='utf-8')
+    )
     Draft202012Validator(schema).validate(capture.manifest)
     with zipfile.ZipFile(path) as z:
         names = z.namelist()
@@ -68,15 +72,18 @@ def test_paquete_1_0_0_sigue_igual_y_sin_consolidado(tmp_path):
     assert CONSOLIDATED_PATH not in zipfile.ZipFile(path).namelist()
 
 
-@pytest.mark.parametrize('extra', [
-    {'xl/vbaProject.bin': b'x'},
-    {'xl/embeddings/objeto.bin': b'x'},
-    {'xl/media/pagina.html': b'<html></html>'},
-    {'xl/media/informe.pdf': b'%PDF'},
-    {'xl/externalLinks/externalLink1.xml': b'<externalLink/>'},
-    {'xl/connections.xml': b'<connections/>'},
-    {'xl/queryTables/queryTable1.xml': b'<queryTable/>'},
-])
+@pytest.mark.parametrize(
+    'extra',
+    [
+        {'xl/vbaProject.bin': b'x'},
+        {'xl/embeddings/objeto.bin': b'x'},
+        {'xl/media/pagina.html': b'<html></html>'},
+        {'xl/media/informe.pdf': b'%PDF'},
+        {'xl/externalLinks/externalLink1.xml': b'<externalLink/>'},
+        {'xl/connections.xml': b'<connections/>'},
+        {'xl/queryTables/queryTable1.xml': b'<queryTable/>'},
+    ],
+)
 def test_consolidado_con_macros_incrustados_html_o_pdf_se_rechaza(tmp_path, extra):
     metadata, tables = module.fixture()
     with pytest.raises(CaptureError):

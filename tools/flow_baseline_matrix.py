@@ -4,6 +4,7 @@ python tools/flow_baseline_matrix.py              # solo comprueba y dice si los
 python tools/flow_baseline_matrix.py --escribir   # reescribe la matriz y su CSV
 La relación con tests es evidencia técnica; no equivale a aceptación de RUS.
 """
+
 import argparse
 import csv
 import io
@@ -56,16 +57,22 @@ def main(argv=None):
                 identified[code] = (path.name, number, cells[2].strip(), cells[-2].strip())
     if set(by_id) != set(identified):
         raise SystemExit("IDs sin revisar: " + str(sorted(set(by_id) ^ set(identified))))
-    lines = ["Histórico (P0). Estado vigente en [TRAZABILIDAD_EJECUCION_20261008.md](TRAZABILIDAD_EJECUCION_20261008.md).", "",
-             "# Matriz funcional P0 por SHA", "",
-             "Origen: `251d5c4025749edd4767183ebd3d2baf3bb9baed`.", "",
-             "IMPLEMENTADO describe evidencia de código/fixtures, no aprobación institucional.",
-             "Los tests relacionados se ejecutaron en suites locales; los casos D/A/R/INT completos",
-             "no se dan por aprobados cuando exigen interfaz institucional, Office o contrato nuevo.",
-             "Incluye las cuatro especificaciones canónicas y A-T01..A-T20 del documento 02.",
-             "Las copias idénticas de adjuntos se conservan sin contar dos veces sus requisitos.", "",
-             "| ID | Requisito de la fuente | Criterio de aceptación de la fuente | Estado | Código | Pruebas relacionadas | Límite / siguiente acción |",
-             "|---|---|---|---|---|---|---|"]
+    lines = [
+        "Histórico (P0). Estado vigente en [TRAZABILIDAD_EJECUCION_20261008.md](TRAZABILIDAD_EJECUCION_20261008.md).",
+        "",
+        "# Matriz funcional P0 por SHA",
+        "",
+        "Origen: `251d5c4025749edd4767183ebd3d2baf3bb9baed`.",
+        "",
+        "IMPLEMENTADO describe evidencia de código/fixtures, no aprobación institucional.",
+        "Los tests relacionados se ejecutaron en suites locales; los casos D/A/R/INT completos",
+        "no se dan por aprobados cuando exigen interfaz institucional, Office o contrato nuevo.",
+        "Incluye las cuatro especificaciones canónicas y A-T01..A-T20 del documento 02.",
+        "Las copias idénticas de adjuntos se conservan sin contar dos veces sus requisitos.",
+        "",
+        "| ID | Requisito de la fuente | Criterio de aceptación de la fuente | Estado | Código | Pruebas relacionadas | Límite / siguiente acción |",
+        "|---|---|---|---|---|---|---|",
+    ]
     for item in records:
         if item["state"] not in STATES:
             raise SystemExit("Estado inválido: " + item["id"])
@@ -78,14 +85,18 @@ def main(argv=None):
         link = f"[{item['id']}](plan_20261008/{name}#L{line})"
         code = "; ".join(evidence_link(p) for p in item["code"]) or "—"
         tests = "; ".join(evidence_link(p) for p in item["tests"]) or "—"
-        lines.append(f"| {link} | {title.replace('|', '/')} | {acceptance.replace('|', '/')} | {item['state']} | {code} | {tests} | {item['limit']} |")
+        lines.append(
+            f"| {link} | {title.replace('|', '/')} | {acceptance.replace('|', '/')} | {item['state']} | {code} | {tests} | {item['limit']} |"
+        )
     stream = io.StringIO()
     fields = ["id", "requirement", "acceptance", "state", "code", "tests", "limit", "source", "source_line"]
     writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
     writer.writeheader()
     writer.writerows({**item, "code": ";".join(item["code"]), "tests": ";".join(item["tests"])} for item in records)
-    outputs = {ROOT / "docs/MATRIZ_FUNCIONAL_20261008.md": "\n".join(lines) + "\n",
-               ROOT / "docs/evidencia_p0/matriz_funcional.csv": stream.getvalue()}
+    outputs = {
+        ROOT / "docs/MATRIZ_FUNCIONAL_20261008.md": "\n".join(lines) + "\n",
+        ROOT / "docs/evidencia_p0/matriz_funcional.csv": stream.getvalue(),
+    }
     changed = [path for path, text in outputs.items() if not path.is_file() or path.read_text(encoding="utf-8") != text]
     if write:
         for path in changed:

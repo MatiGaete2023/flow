@@ -45,10 +45,7 @@ class SourceRecord:
     def __post_init__(self) -> None:
         object.__setattr__(self, "values", _freeze(dict(self.values)))
         if not self.record_id:
-            raw = (
-                f"{self.source.workbook_sha256}|{self.source.sheet_name}|"
-                f"{self.source.row_number}"
-            )
+            raw = f"{self.source.workbook_sha256}|{self.source.sheet_name}|{self.source.row_number}"
             object.__setattr__(self, "record_id", sha256(raw.encode("utf-8")).hexdigest()[:24])
 
 
