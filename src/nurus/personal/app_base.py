@@ -586,25 +586,38 @@ class App(ctk.CTk):
 
     def _import_latest_capture(self):
         """Busca el último paquete del Descargador en sus carpetas locales (solo lectura) y lo importa."""
-        if self.busy:
-            return
         from .latest_capture import latest_capture, search_folders
 
-        path = latest_capture()
-        if path is None:
-            folders = '\n'.join(str(f) for f in search_folders()) or 'ninguna carpeta del Descargador en este equipo'
-            messagebox.showinfo(
+        def search():
+            from .operations import checkpoint
+
+            checkpoint()
+            path = latest_capture()
+            checkpoint()
+            if path is None:
+                return None, search_folders()
+            return path, datetime.fromtimestamp(path.stat().st_mtime).strftime('%d-%m-%Y %H:%M')
+
+        def found(result):
+            path, details = result
+            if path is None:
+                folders = '\n'.join(str(f) for f in details) or 'ninguna carpeta del Descargador en este equipo'
+                messagebox.showinfo(
+                    'Importar último paquete',
+                    'No se encontró un paquete CSMP válido en:\n'
+                    + folders
+                    + '\n\nUsa «Importar paquete» para elegirlo.',
+                    parent=self,
+                )
+                return
+            if messagebox.askyesno(
                 'Importar último paquete',
-                'No se encontró un paquete CSMP válido en:\n' + folders + '\n\nUsa «Importar paquete» para elegirlo.',
+                f'{path.name}\n{details}\n{path.parent}\n\n¿Importar este paquete?',
                 parent=self,
-            )
-            return
-        stamp = datetime.fromtimestamp(path.stat().st_mtime).strftime('%d-%m-%Y %H:%M')
-        if not messagebox.askyesno(
-            'Importar último paquete', f'{path.name}\n{stamp}\n{path.parent}\n\n¿Importar este paquete?', parent=self
-        ):
-            return
-        self._import_capture(path)
+            ):
+                self._import_capture(path)
+
+        self._run('Buscando el último paquete del Descargador…', search, found)
 
     def _import_capture(self, path=None):
         if self.busy:

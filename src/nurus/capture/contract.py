@@ -215,12 +215,21 @@ def check_workbook(raw):
     try:
         with zipfile.ZipFile(BytesIO(raw)) as book:
             infos = book.infolist()
-            names = {i.filename.casefold() for i in infos}
-            if '[content_types].xml' not in names or 'xl/workbook.xml' not in names:
+            names = {i.filename for i in infos}
+            if '[Content_Types].xml' not in names or 'xl/workbook.xml' not in names:
                 fail('El consolidado no es un libro xlsx.')
             if len(infos) > MAX_FILES or sum(i.file_size for i in infos) > MAX_BYTES:
                 fail('El consolidado excede el límite de expansión.')
+            seen = set()
             for info in infos:
+                name = safe_path(info.filename.rstrip('/') if info.is_dir() else info.filename)
+                mode = info.external_attr >> 16
+                allowed_mode = stat.S_IFDIR if info.is_dir() else stat.S_IFREG
+                if name.casefold() in seen or stat.S_IFMT(mode) not in (0, allowed_mode):
+                    fail('Duplicado o enlace en el consolidado no permitido.')
+                seen.add(name.casefold())
+                if info.flag_bits & 1 or info.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):
+                    fail('Cifrado/compresión del consolidado no permitidos.')
                 low = info.filename.casefold()
                 if info.file_size / max(1, info.compress_size) > MAX_RATIO:
                     fail('Expansión del consolidado excede límite.')
@@ -232,12 +241,25 @@ def check_workbook(raw):
                     fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
                 if low.startswith(('xl/externallinks/', 'xl/querytables/')) or low == 'xl/connections.xml':
                     fail('El consolidado no puede traer vínculos ni conexiones a datos externos.')
-            # El nombre real puede variar en mayúsculas; se lee el que existe.
+            # El nombre real puede variar en mayúsculas (las partes OOXML no distinguen); se lee el que existe.
             content_types = next(i for i in infos if i.filename.casefold() == '[content_types].xml')
-            types = book.read(content_types).decode('utf-8', 'ignore').casefold()
+            types = book.read(content_types).decode('utf-8-sig').casefold()
             if 'macroenabled' in types or 'vbaproject' in types or 'activex' in types:
                 fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
-    except (zipfile.BadZipFile, zlib.error, KeyError, RuntimeError, NotImplementedError, OSError) as exc:
+            # La huella del XLSX exterior no detecta un miembro interno corrupto.
+            # Validar todos sus CRC antes de ofrecer la copia nativa o persistir el paquete.
+            if book.testzip() is not None:
+                fail('El consolidado contiene un archivo corrupto.')
+    except (
+        zipfile.BadZipFile,
+        UnicodeError,
+        KeyError,
+        EOFError,
+        RuntimeError,
+        NotImplementedError,
+        OSError,
+        zlib.error,
+    ) as exc:
         # Compresión no soportada o entrada ilegible: siempre CaptureError, nunca una excepción cruda.
         raise CaptureError('El consolidado no es un libro xlsx.') from exc
 
@@ -578,7 +600,7 @@ def read_capture(path):
                 fail('Falta tabla requerida.')
             _validate_rows(m, tables)
             return Capture(deepcopy(m), tables, digest, consolidated)
-    except (zipfile.BadZipFile, UnicodeError, csv.Error, KeyError, EOFError, RuntimeError) as exc:
+    except (zipfile.BadZipFile, UnicodeError, csv.Error, KeyError, EOFError, RuntimeError, zlib.error) as exc:
         raise CaptureError('Paquete corrupto o incompatible.') from exc
 
 

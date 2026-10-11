@@ -4,6 +4,7 @@ from io import BytesIO
 import importlib.util
 import json
 from pathlib import Path
+import stat
 import zipfile
 
 import pytest
@@ -132,3 +133,40 @@ def test_consolidado_declarado_con_macros_en_content_types_se_rechaza(tmp_path):
             target.writestr(info.filename, data)
     with pytest.raises(CaptureError):
         write_capture(tmp_path / 'malo.zip', metadata, tables, consolidated=out.getvalue())
+
+
+def test_crc_interno_corrupto_no_se_publica_aunque_el_hash_exterior_coincida(tmp_path):
+    metadata, tables = module.fixture()
+    out = BytesIO()
+    with zipfile.ZipFile(BytesIO(libro())) as source, zipfile.ZipFile(out, 'w', zipfile.ZIP_STORED) as target:
+        for info in source.infolist():
+            target.writestr(info.filename, source.read(info))
+    raw = bytearray(out.getvalue())
+    with zipfile.ZipFile(BytesIO(raw)) as archive:
+        info = archive.getinfo('xl/worksheets/sheet1.xml')
+        offset = info.header_offset + 30 + len(info.filename.encode()) + len(info.extra)
+    raw[offset + 20] ^= 1
+    with pytest.raises(CaptureError, match='corrupto'):
+        write_capture(tmp_path / 'malo.zip', metadata, tables, consolidated=bytes(raw))
+    assert not (tmp_path / 'malo.zip').exists()
+
+
+@pytest.mark.parametrize('attack', ['duplicate', 'path', 'symlink', 'compression'])
+def test_el_zip_interno_aplica_las_restricciones_del_paquete(tmp_path, attack):
+    metadata, tables = module.fixture()
+    out = BytesIO(libro())
+    with zipfile.ZipFile(out, 'a') as archive:
+        if attack == 'duplicate':
+            with pytest.warns(UserWarning, match='Duplicate name'):
+                archive.writestr('xl/worksheets/sheet1.xml', b'<worksheet/>')
+        elif attack == 'path':
+            archive.writestr('../fuera.xml', b'<a/>')
+        elif attack == 'symlink':
+            info = zipfile.ZipInfo('xl/enlace.xml')
+            info.external_attr = (stat.S_IFLNK | 0o600) << 16
+            archive.writestr(info, b'../fuera.xml')
+        else:
+            archive.writestr('xl/extra.xml', b'<a/>', compress_type=zipfile.ZIP_BZIP2)
+    with pytest.raises(CaptureError):
+        write_capture(tmp_path / 'malo.zip', metadata, tables, consolidated=out.getvalue())
+    assert not (tmp_path / 'malo.zip').exists()

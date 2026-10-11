@@ -154,7 +154,11 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     limit = time.time() - max_days * 86400
     result = []
     for folder in sorted(root.iterdir()):
-        if folder.is_symlink() or not folder.is_dir() or folder.resolve() in excluded:
+        if (
+            folder.is_symlink()
+            or not folder.is_dir()
+            or any(path.is_relative_to(folder.resolve()) for path in excluded)
+        ):
             continue
         controls = [
             folder / name

@@ -13,7 +13,7 @@
     },
     {
       "wp": "WP-02",
-      "tipo": "archivo"
+      "tipo": "funcional"
     },
     {
       "wp": "WP-10",
@@ -45,7 +45,7 @@
     },
     {
       "wp": "WP-17",
-      "tipo": "archivo"
+      "tipo": "funcional"
     },
     {
       "wp": "WP-20",
@@ -117,7 +117,7 @@
     },
     {
       "wp": "WP-50",
-      "tipo": "archivo"
+      "tipo": "funcional"
     },
     {
       "wp": "WP-51",
@@ -131,7 +131,11 @@
       "wp": "WP-62",
       "tipo": "archivo"
     },
-    "WP-61"
+    "WP-61",
+    {
+      "wp": "WP-63",
+      "tipo": "funcional"
+    }
   ],
   "decisiones": [
     "D7"
@@ -148,6 +152,7 @@
   "notas": [
     "D7: fusionar a main solo tras el acta final firmada por el usuario.",
     "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
-    "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2."
+    "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
+    "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta."
   ]
 }

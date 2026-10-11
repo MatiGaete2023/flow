@@ -4,7 +4,7 @@
 
 ## Cómo usar este plan
 
-Este plan convierte las cuatro auditorías del 9 de octubre de 2026 en 34 paquetes de trabajo (WP) agrupados en 8 olas, pensados para varios agentes de IA en ventanas separadas. Cada WP crea, elimina o modifica código con criterios binarios, y pasa por verificación, revisión y auditoría de alineación antes de integrarse. Ningún agente necesita esta conversación: todo lo que necesita está aquí, en el kit adjunto y en el repositorio.
+Este plan convierte las cuatro auditorías del 9 de octubre de 2026 en 35 paquetes de trabajo (WP, incluido WP-63 de mantenimiento) agrupados en 8 olas, pensados para varios agentes de IA en ventanas separadas. Cada WP crea, elimina o modifica código con criterios binarios, y pasa por verificación, revisión y auditoría de alineación antes de integrarse. Ningún agente necesita esta conversación: todo lo que necesita está aquí, en el kit adjunto y en el repositorio.
 
 **Punto de partida (N1):** repositorio `MatiGaete2023/flow`, rama `feat/ejecucion-plan-20261008`, commit `2765b47` (9 de octubre de 2026). `main` contiene solo `README.md`. Suites base: Asistente 605 aprobadas / 11 omitidas; Descargador 198 aprobadas / 59 subpruebas.
 
@@ -131,6 +131,20 @@ flowchart TD
 Una ola empieza cuando todos los WP de la anterior están `INTEGRADO`, o `BLOQUEADO_USUARIO` si no la condicionan. Entre paréntesis, la decisión del usuario que bloquea cada WP.
 
 Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus dependencias `funcional` están `INTEGRADO`. Una dependencia `archivo` no impide ejecutarlo contra `feat`; solo obliga a resolver el conflicto textual al integrar. Ningún WP depende de `TODAS_LAS_DEMAS`.
+
+## Revisión del conjunto integrado — 11 de octubre de 2026
+
+El usuario pidió auditar lo integrado, corregir errores, simplificar y actualizar el repositorio.
+El estado operativo parte de `2cf8ca8` después de la purga; los SHA de inicio se conservan como referencia histórica.
+WP-63 implementa esa revisión con archivos y pruebas propios; no altera reglas, textos, decisiones ni golden.
+[Reporte de revisión](REPORTE_REVISION_20261011.md) y [ficha WP-63](wp/WP-63.md).
+
+Orden vigente: verificar y revisar WP-63; completar residuos de WP-17; recibir resultados/acta de WP-02;
+contrastar 10 ingresos e integrar WP-50; cerrar WP-70 con acta final. WP-02, WP-17, WP-50 y WP-63 son
+**dependencias funcionales del cierre**, no meros conflictos de archivo. Cada commit posterior respeta
+`ruff format --check`; WP-61 ya integrado no exime a las correcciones futuras del formato.
+Los seis conflictos R-T de WP-60 constan en el estado; se conservan xfail estricto y motor intacto.
+La excepción E3 anterior no se extiende a esta revisión: PR borrador y revisión cruzada antes de integrar.
 
 ## Paquetes de trabajo
 
@@ -475,7 +489,7 @@ La memoria del proyecto vive en el repositorio, no en las conversaciones. Tres a
 
 | Archivo | Quién escribe | Contenido |
 | --- | --- | --- |
-| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los 34 WP, conflictos abiertos, traspasos |
+| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los 35 WP, conflictos abiertos, traspasos |
 | `docs/implementacion/wp/<ID>.md` | El Ejecutor del WP | Qué hizo, archivos tocados, pruebas agregadas o borradas, dudas |
 | `docs/implementacion/auditoria/<ID>.md` | El Auditor | Lista de control y veredicto |
 

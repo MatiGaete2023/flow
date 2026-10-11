@@ -165,3 +165,14 @@ def test_conjunto_raiz_y_bitacoras_de_paquetes_abiertos_se_protegen(tmp_path):
     with pytest.raises(PocError):
         manage_old_batches(tmp_path, [joint, diary], protected=protected, confirmed=True)
     assert joint.exists() and diary.exists()
+
+
+def test_lote_antiguo_con_fuente_anidada_en_uso_se_conserva(tmp_path):
+    joint = _lote(tmp_path, 'Conjunto antiguo', 70)
+    source = joint / 'descarga'
+    source.mkdir()
+    (source / 'original.xls').write_bytes(b'fuente ficticia en uso')
+    assert old_batches(tmp_path, protected=[source]) == []
+    with pytest.raises(PocError):
+        manage_old_batches(tmp_path, [joint], confirmed=True, protected=[source])
+    assert (source / 'original.xls').read_bytes() == b'fuente ficticia en uso'

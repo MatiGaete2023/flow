@@ -31,31 +31,35 @@ def consolidated_workbook(lots):
         return export_book(lots, Path(folder), csmp=True).read_bytes()
 
 
-def consolidated_note(lots, wanted):
-    """(libro o False, nota): el consolidado solo va si el lote es apto para CSMP; si no, se informa por qué.
-
-    Devuelve los bytes ya generados para que export_capture no vuelva a leer y consolidar los XLS.
-    """
-    if not wanted:
-        return False, ''
-    try:
-        book = consolidated_workbook(lots)
-    except m.PocError as exc:
-        return False, ' Sin XLSX consolidado: ' + str(exc)
-    return book, ' Incluye el XLSX consolidado.'
+def export_capture_with_note(lots, destination, *, consolidated=False, **options):
+    """Entrega de GUI: genera el consolidado una vez o informa por qué el lote no es apto para CSMP."""
+    lots = list(lots)
+    data, note = None, ''
+    if consolidated:
+        try:
+            data = consolidated_workbook(lots)
+        except m.PocError as exc:
+            note = ' Sin XLSX consolidado: ' + str(exc)
+        else:
+            note = ' Incluye el XLSX consolidado.'
+    path = export_capture(lots, destination, _consolidated_data=data, **options)
+    return path, note
 
 
 def export_capture(
-    lots, destination, *, diaries=None, include_originals=False, match_diaries=False, consolidated=False
+    lots,
+    destination,
+    *,
+    diaries=None,
+    include_originals=False,
+    match_diaries=False,
+    consolidated=False,
+    _consolidated_data=None,
 ):
     lots = list(lots)
     if not lots:
         raise ValueError('Selecciona un lote verificado.')
-    # consolidated: True genera el libro; bytes reutiliza el que ya armó consolidated_note.
-    if isinstance(consolidated, bytes):
-        consolidated_bytes = consolidated
-    else:
-        consolidated_bytes = consolidated_workbook(lots) if consolidated else None
+    consolidated_bytes = consolidated_workbook(lots) if consolidated else _consolidated_data
     captured = lots[0].summary.get('fecha_hora') or datetime.now().astimezone().isoformat()
     fingerprint = json.dumps([lot.summary for lot in lots], ensure_ascii=False, sort_keys=True)
     # Hash del control de bitácoras integra la identidad de la captura reexportable.
@@ -144,7 +148,7 @@ def export_capture(
                 originals[name] = inside(lot.folder, source['archivo']).read_bytes()
             else:
                 name = source['archivo']
-            mode = table_mode(selection) or ('EGRESADOS' if selection.get('tab') in ('Egresados', 'Egreso') else 'OTRO')
+            mode = table_mode(selection) or ('EGRESADOS' if selection.get('tab') == 'Egreso' else 'OTRO')
             for number, values in rows:
                 normalized = {h: literal(v) for h, v in zip(headers, values)}
                 raw = {h: literal(v) for h, v in zip(raw_headers, raw_index[number])}

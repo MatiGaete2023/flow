@@ -113,6 +113,24 @@ def problems(state):
             for dep, kind in dependencies(entry):
                 if kind == "funcional" and packages.get(dep, {}).get("estado") != "INTEGRADO":
                     found.append(f"{wp}: INTEGRADO con la dependencia {dep} sin integrar")
+    # File-only dependencies do not gate integration; functional cycles do.
+    visiting, visited = set(), set()
+
+    def visit(wp):
+        if wp in visiting:
+            found.append(f"{wp}: ciclo de dependencias funcionales")
+            return
+        if wp in visited:
+            return
+        visiting.add(wp)
+        for dep, kind in dependencies(packages[wp]):
+            if kind == "funcional" and dep in packages:
+                visit(dep)
+        visiting.remove(wp)
+        visited.add(wp)
+
+    for wp in packages:
+        visit(wp)
     for conflict in state.get("conflictos_abiertos", []):
         # Un conflicto abierto espera la respuesta del usuario: no es error. Sí lo es uno sin id o sin descripción.
         if not conflict.get("id") or not conflict.get("descripcion"):
@@ -120,7 +138,7 @@ def problems(state):
     return found
 
 
-def main(argv=None):
+def _main(argv=None):
     parser = argparse.ArgumentParser(description="Estado compartido por WP.")
     parser.add_argument("accion", choices=("dividir", "agregar", "validar"))
     args = parser.parse_args(argv)
@@ -132,8 +150,11 @@ def main(argv=None):
         return 1
     state = aggregate()
     if args.accion == "agregar":
-        if state.get("_sin_archivo"):
-            print("No se regeneró: listados sin archivo:", ", ".join(state["_sin_archivo"]))
+        issues = problems(state)
+        if issues:
+            print("No se regeneró: fuentes incoherentes.")
+            for issue in issues:
+                print("-", issue)
             return 1
         VIEW.write_text(dump(state), encoding="utf-8")
         print(f"{VIEW.relative_to(ROOT)} regenerado ({len(state['paquetes'])} paquetes)")
@@ -146,6 +167,14 @@ def main(argv=None):
         print("-", issue)
     print("ESTADO:", "FALLA" if issues else "PASA")
     return 1 if issues else 0
+
+
+def main(argv=None):
+    try:
+        return _main(argv)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        print("ESTADO: FALLA; fuentes o vista ausentes, ilegibles o con estructura inválida.")
+        return 1
 
 
 if __name__ == "__main__":

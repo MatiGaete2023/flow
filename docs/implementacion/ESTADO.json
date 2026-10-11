@@ -57,14 +57,70 @@
       "origen": "WP-30",
       "fecha": "10 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
-      "respuesta": "Usuario, 11 de octubre de 2026: «Conservarlo». cc_obligatorio queda sin lector; el CC fijo sigue aplicándose por código."
+      "respuesta": "Usuario, 11 de octubre de 2026: «Conservarlo». cc_obligatorio queda sin lector; el CC fijo sigue aplicándose por código.",
+      "estado": "RESUELTO"
     },
     {
       "id": "WP-34-motor-f401",
       "origen": "WP-34",
       "fecha": "10 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-34 pide ruff F401/F841 sobre src completo, pero src/nurus/personal/motor/ tiene 4 F401 y es intocable salvo decisión expresa. La CI lo excluye con --extend-exclude.",
-      "respuesta": "Usuario, 11 de octubre de 2026: «Dejar como está». motor/ intacto; F401 excluido en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla."
+      "respuesta": "Usuario, 11 de octubre de 2026: «Dejar como está». motor/ intacto; F401 excluido en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla.",
+      "estado": "RESUELTO"
+    },
+    {
+      "id": "WP-60-R-T13",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "C-08 declara falta de ficha FAE aunque no exista su columna.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T19",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "El RIT visual discrepante se admite por IDs sin advertencia trazable.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T24",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta un hallazgo de cotejo del trámite de informe, CT-05.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T25",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta un hallazgo de firma con cobertura parcial, CT-08.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T26",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta una señal de posible reiteración, CT-07.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T32",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "CT-01/CT-02 desactivadas carecen de explicación específica de exclusión.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
     }
   ],
   "paquetes": {
@@ -956,6 +1012,41 @@
         "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
       ]
     },
+    "WP-63": {
+      "titulo": "Auditoría del conjunto integrado y refactorización correctiva",
+      "ola": 6,
+      "tipo": "M/C",
+      "depende_de": [
+        "WP-00",
+        "WP-14",
+        "WP-15",
+        "WP-16",
+        "WP-32",
+        "WP-41",
+        "WP-44",
+        "WP-51",
+        "WP-62"
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root con subagentes de apoyo",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/auditoria-refactor-20261011",
+      "pr": 34,
+      "verificacion": "PASA en d25fe2f4852bb657d5f5c0caacb766590eaf097e: Linux Asistente 780 aprobadas/11 omitidas/6 xfail; Descargador 235/62 subpruebas; 9 controles PASA y golden17. CI Windows PASA: Asistente 790/1/6 xfail (run38146205442), Descargador run38146205453. Evidencia WP-63.json y WP-63-windows.json. Sin bajas de pruebas; Office real y revisión E3 pendientes.",
+      "revision": "E3 (sesión remota independiente session_016DC9qxvuqT6mr91tHBaw7b): APROBADO CON OBSERVACIONES",
+      "auditoria": "E3: CONFORME CON OBSERVACIONES (docs/implementacion/auditoria/E3_CONSOLIDADO_WP-63_WP-80.md en e3/wp-80-revision)",
+      "integrado_en": "f64bc7c",
+      "notas": [
+        "Alcance autorizado por la petición del usuario: auditar, corregir, simplificar y actualizar el repositorio y el plan.",
+        "Base limpia 2cf8ca893e85a0203b1c051026b87f16ff6be964. Medición previa: 592/11/6 xfail y 231/62; golden17 y controles PASA.",
+        "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar.",
+        "La primera corrida detectó 5 regresiones antiguas del verificador; se ajustaron al contrato E2 conservando nodeids. Evidencia FALLA conservada en WP-63-falla-api.json.",
+        "Evidencia inicial Windows FALLA conservada en WP-63-windows-inicial.json. No se usa PYTHONUTF8 ni se omiten pruebas para ocultar el problema.",
+        "La revisión de apoyo del último arreglo no detectó bloqueos. Los commits posteriores al medido solo completan documentación/evidencia; revisión/auditoría formal E3 permanecen null.",
+        "11 de octubre de 2026: el usuario confirmó las dependencias funcionales de WP-70 y autorizó integrar WP-63 y luego WP-80. Integrado en f64bc7c; verificar_wp PASA."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -971,7 +1062,7 @@
         },
         {
           "wp": "WP-02",
-          "tipo": "archivo"
+          "tipo": "funcional"
         },
         {
           "wp": "WP-10",
@@ -1003,7 +1094,7 @@
         },
         {
           "wp": "WP-17",
-          "tipo": "archivo"
+          "tipo": "funcional"
         },
         {
           "wp": "WP-20",
@@ -1075,7 +1166,7 @@
         },
         {
           "wp": "WP-50",
-          "tipo": "archivo"
+          "tipo": "funcional"
         },
         {
           "wp": "WP-51",
@@ -1089,7 +1180,11 @@
           "wp": "WP-62",
           "tipo": "archivo"
         },
-        "WP-61"
+        "WP-61",
+        {
+          "wp": "WP-63",
+          "tipo": "funcional"
+        }
       ],
       "decisiones": [
         "D7"
@@ -1106,7 +1201,8 @@
       "notas": [
         "D7: fusionar a main solo tras el acta final firmada por el usuario.",
         "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
-        "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2."
+        "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
+        "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta."
       ]
     },
     "WP-80": {
@@ -1145,6 +1241,10 @@
     {
       "fecha": "9 de octubre de 2026",
       "descripcion": "CI pausada deliberadamente hasta sanear contactos y fixtures. Se retiraron 14 artefactos generados por las primeras ejecuciones de esta sesión antes del saneamiento; las compilaciones históricas y la purga D1 no se tocaron. No se anuncia paquete nuevo ni CI Windows aprobada."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "WP-63: nueva auditoría y refactorización autorizadas por el usuario sobre 2cf8ca8 en clon limpio. Correcciones y reporte en rama propia; revisión cruzada E3 e integración pendientes. Los traspasos anteriores quedan como historial."
     }
   ],
   "decisiones_adicionales": {
