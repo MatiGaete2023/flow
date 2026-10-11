@@ -213,13 +213,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     from .capture_findings import updated_contexts
 
     candidate.capture_context = updated_contexts(candidate, candidate.rows)
-    candidate.warnings.append(
-        'Fuentes faltantes: '
-        + ', '.join(
-            k + ': ' + v
-            for k, v in capture.manifest['table_states'].items()
-            if v not in ('COMPLETA', 'VACIA_COMPROBADA')
-        )
-    )
+    missing = [
+        k + ': ' + v for k, v in capture.manifest['table_states'].items() if v not in ('COMPLETA', 'VACIA_COMPROBADA')
+    ]
+    if missing:
+        candidate.warnings.append('Fuentes faltantes: ' + ', '.join(missing))
     progress('Paquete validado; trabajo candidato disponible', len(records), len(records))
     return candidate

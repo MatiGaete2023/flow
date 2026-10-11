@@ -218,8 +218,11 @@ class Work:
                 if key in index and index[key] != due:
                     self.warnings.append('Cruce duplicado: se usa la última fila según el perfil Asistente.')
                 index[key] = due
-        if self.mode == 'CUMPLIMIENTO' and (
-            not batch.cross_records or not all(batch.cross_mapping.get(k) for k in (*key_fields, 'vencimiento'))
+        # Paquete de captura: el cruce llega por registro (calendarios verificados), no como hoja 2.
+        if (
+            self.mode == 'CUMPLIMIENTO'
+            and cross_by_record is None
+            and (not batch.cross_records or not all(batch.cross_mapping.get(k) for k in (*key_fields, 'vencimiento')))
         ):
             self.cross_missing = True
             self.needs_cross = False
