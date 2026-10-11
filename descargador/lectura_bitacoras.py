@@ -149,8 +149,11 @@ class _Lectura:
         if resume:
             self.folder=Path(resume).resolve();previous=load(self.folder/MANIFEST)
             if asdict(batch)!=asdict(saved_batch(previous)):raise m.PocError('El alcance no coincide con el lote recuperado.')
-            self.old={r['clave']:r for r in previous.get('registros',[]) if r.get('estado')=='LEIDA'}
+            # Lo leído en ejecuciones anteriores se reutiliza esté en registros o en anteriores_no_reenumeradas.
             self.previous_records=previous.get('registros',[])+previous.get('anteriores_no_reenumeradas',[])
+            self.old={}
+            for record in reversed(self.previous_records):
+                if record.get('estado')=='LEIDA':self.old[record['clave']]=record
         else:
             self.folder=Path(destination).resolve()/('Bitacoras '+m.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
             self.folder.mkdir(parents=True,exist_ok=False)
@@ -169,6 +172,12 @@ class _Lectura:
             self.pending+=1
             if self.pending<CHECKPOINT_CADA:return
             self.pending=0
+        if self.previous_records:
+            # Al retomar, cada escritura conserva lo ya leído que aún no se volvió a enumerar: si el proceso
+            # muere antes de cerrar, el manifiesto no pierde esas lecturas.
+            current={r['clave'] for r in self.state['registros']}
+            retained={r['clave']:r for r in self.previous_records if r['clave'] not in current}
+            self.state['anteriores_no_reenumeradas']=list(retained.values())
         write(self.manifest,self.state)
 
     def detener_si_cancelada(self):
