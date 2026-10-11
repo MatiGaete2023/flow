@@ -22,6 +22,9 @@ no solicita repetir; los recibos inciertos requieren comprobar Outlook, nunca re
 Catorce casos nuevos. Cuatro regresiones del indicador fallaron antes de corregir su clave. Siete regresiones fallaron antes de unificar y la optimización falló antes de
 aplicarse. Solo datos ficticios. No se modifica el guardado Outlook, la huella efectiva ni el bloqueo
 contra duplicados; no se introduce caché de adjuntos que pueda ocultar cambios de contenido.
+Con recibos existentes, la identidad efectiva vuelve a leer adjuntos; puede aumentar el coste
+del repintado de filas. Medir antes de optimizar; una caché por tamaño/fecha podría ocultar cambios
+de bytes y no se introduce aquí.
 La búsqueda de llamadas confirmó que pending() es un ayudante legado sin lector GUI actual,
 aunque importado por pruebas previas. Se conserva su API sin presentar sus fallos como incidentes
 observados en la interfaz. El efecto visible de G-4 se corrige en ux_support.product_indicators.
@@ -29,7 +32,15 @@ La optimización resuelve solo el caso sin recibos de G-5; el resto continúa pe
 
 ## Verificación
 
-Pendiente de registrar por SHA limpio: suites completas, nueve controles y CI Windows.
+Verificación completa **PASA** en `004dc65addb5cae4bb700b82ab0bc995cb8b6320`; árbol limpio y estable antes/después.
+
+- Asistente: 810 aprobadas, 11 omitidas y seis xfail estrictos preexistentes.
+- Descargador: 240 aprobadas y 62 subpruebas.
+- Nueve controles PASA, golden17, identidades 0, inventario sin bajas, restricciones,
+  lint, módulos no alcanzables 0 y enlaces rotos 0. Formato: 275 archivos correctos.
+- 53 pruebas focales PASA; catorce nuevas regresiones, ninguna retirada.
+- [Evidencia completa](verificacion/WP-82.json). Los commits posteriores solo registran documentación/estado.
+- CI Windows: consultar controles por SHA en [PR #37](https://github.com/MatiGaete2023/flow/pull/37).
 Motor/textos y golden17 se conservan. No se acredita Office/SITFA real ni se crean actas.
 
 ## Orden para continuar
