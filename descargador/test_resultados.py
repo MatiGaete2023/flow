@@ -55,6 +55,7 @@ def fixture(
             [50, 90, '30/12/2026'],
         ),
         'Informes': (['FECHA VENCIMIENTO'], ['10/10/2026']),
+        'Egresados': (['FECHA EGRESO'], ['01/10/2026']),
     }
     more, values = extra[mode]
     headers += more

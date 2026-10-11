@@ -162,7 +162,7 @@ def anonymous_diagnostic(data):
             {
                 'tribunal_codigo': str(key[0]) if str(key[0]).isdigit() else 'NO_VERIFICADO',
                 'modalidad_codigo': str(key[1]) if key[1] in ('1', '2', '3', '4') else 'NO_VERIFICADA',
-                'pestana': key[2] if key[2] in ('Espera', 'Cumplimiento', 'Informes', 'Egreso') else 'NO_VERIFICADA',
+                'pestana': key[2] if key[2] in ('Espera', 'Cumplimiento', 'Informes', 'Egresados') else 'NO_VERIFICADA',
                 'estado_consulta': status
                 if status in ('ENUMERADA', 'SIN_REGISTROS', 'FALLIDA', 'EN_CURSO')
                 else 'OTRO',
