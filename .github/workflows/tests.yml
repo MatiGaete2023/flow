@@ -55,6 +55,9 @@ jobs:
       - name: Control de identidades antes de instalar o generar artefactos
         run: python tools/check_real_ids.py --excluir variantes/
 
+      - name: Estado compartido coherente (E1, cuando existan las fuentes por WP)
+        run: if (Test-Path docs/implementacion/estado/global.json) { python tools/estado.py validar; if ($LASTEXITCODE -ne 0) { throw 'ESTADO.json no coincide con sus fuentes' } }
+
       - name: Install
         run: |
           python -m pip install --require-hashes -r requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
