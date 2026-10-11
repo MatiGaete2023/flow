@@ -541,3 +541,19 @@ lectura_bitacoras._Lectura(Runner(),batch,tempfile.mkdtemp(),None)
         [sys.executable, '-c', script], cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=60
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_disk_failure_on_close_still_unlocks_sitfa(tmp_path, monkeypatch):
+    import lectura_bitacoras
+
+    def broken(path, data):
+        if path.name == 'diagnostico_bitacoras.json':
+            raise OSError('disco lleno ficticio')
+        return real(path, data)
+
+    real = lectura_bitacoras.write
+    monkeypatch.setattr(lectura_bitacoras, 'write', broken)
+    bridge = Bridge()
+    with pytest.raises(OSError):
+        run(tmp_path, bridge)
+    assert ('unlock', None) in bridge.events
