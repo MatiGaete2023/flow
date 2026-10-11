@@ -10,7 +10,7 @@ from string import Formatter
 from .template_validation import variables
 
 BASE = Path(__file__).parent
-CC = 'ucc_concepcion@pjud.cl'
+from nurus.services.policy import MANDATORY_CC as CC  # noqa: F401 (reexportación pública)
 RETENCION_DIAS = 60
 SESIONES_ANTERIORES = 10
 VARIABLES = {'TRIBUNAL','ALCANCE_MODALIDADES','PERIODO','FECHA','PROGRAMA','TABLA_REGISTROS'}

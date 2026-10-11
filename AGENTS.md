@@ -26,4 +26,3 @@ Las instrucciones expresas del usuario prevalecen sobre estos documentos.
 
 `python tools/verificar_wp.py` decide PASA/FALLA contra `docs/implementacion/linea_base.json`.
 Desde WP-11, el hook y la CI controlan identidades tras la limpieza de WP-10.
-Hasta WP-20 se excluye `variantes/`; después se retira esa exclusión.

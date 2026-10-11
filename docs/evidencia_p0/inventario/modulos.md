@@ -31,7 +31,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus](../../../src/nurus/__init__.py) | CONSERVAR | P0 | 0 | 3 |
 | [nurus.adapters](../../../src/nurus/adapters/__init__.py) | CONSERVAR | P0 | 0 | 0 |
 | [nurus.adapters.outlook](../../../src/nurus/adapters/outlook.py) | CONSERVAR | P0 | 3 | 2 |
-| [nurus.app](../../../src/nurus/app.py) | CONSERVAR | P0 | 1 | 0 |
+| nurus.app (`src/nurus/app.py`, retirado en WP-21) | CONSERVAR | P0 | 1 | 0 |
 | [nurus.bitacora_html](../../../src/nurus/bitacora_html.py) | CONSERVAR parser común; comprobar paquete autónomo | P3 | 0 | 4 |
 | [nurus.domain](../../../src/nurus/domain/__init__.py) | CONSERVAR | P0 | 0 | 0 |
 | [nurus.domain.models](../../../src/nurus/domain/models.py) | CONSERVAR | P0 | 0 | 8 |
@@ -42,7 +42,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.appearance_view](../../../src/nurus/personal/appearance_view.py) | CONSERVAR | P0 | 2 | 1 |
 | [nurus.personal.attachment_store](../../../src/nurus/personal/attachment_store.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.bitacora_har](../../../src/nurus/personal/bitacora_har.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
-| [nurus.personal.bitacora_link](../../../src/nurus/personal/bitacora_link.py) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 4 | 2 |
+| nurus.personal.bitacora_link (`src/nurus/personal/bitacora_link.py`, retirado en WP-23) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 4 | 2 |
 | [nurus.personal.bitacora_lote](../../../src/nurus/personal/bitacora_lote.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
 | [nurus.personal.bitacoras](../../../src/nurus/personal/bitacoras.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 3 | 5 |
 | [nurus.personal.commands](../../../src/nurus/personal/commands.py) | CONSERVAR | P0 | 3 | 1 |
@@ -55,7 +55,7 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.excel_presentation](../../../src/nurus/personal/excel_presentation.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.grid_edit](../../../src/nurus/personal/grid_edit.py) | CONSERVAR | P0 | 0 | 1 |
 | [nurus.personal.importing](../../../src/nurus/personal/importing.py) | CONSERVAR | P0 | 2 | 3 |
-| [nurus.personal.integral_contract](../../../src/nurus/personal/integral_contract.py) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 1 | 2 |
+| nurus.personal.integral_contract (`src/nurus/personal/integral_contract.py`, retirado en WP-23) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 1 | 2 |
 | [nurus.personal.interaction](../../../src/nurus/personal/interaction.py) | CONSERVAR | P0 | 0 | 2 |
 | [nurus.personal.mail_category](../../../src/nurus/personal/mail_category.py) | CONSERVAR | P0 | 0 | 5 |
 | [nurus.personal.mail_controls](../../../src/nurus/personal/mail_controls.py) | CONSERVAR | P0 | 3 | 1 |
@@ -80,15 +80,15 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.product_state](../../../src/nurus/personal/product_state.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 6 |
 | [nurus.personal.record_edits](../../../src/nurus/personal/record_edits.py) | CONSERVAR | P0 | 8 | 7 |
 | [nurus.personal.record_view](../../../src/nurus/personal/record_view.py) | CONSERVAR | P0 | 8 | 1 |
-| [nurus.personal.registration](../../../src/nurus/personal/registration.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 4 | 2 |
-| [nurus.personal.registration_excel](../../../src/nurus/personal/registration_excel.py) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 6 | 0 |
+| nurus.personal.registration (`src/nurus/personal/registration.py`, retirado en WP-22) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 4 | 2 |
+| nurus.personal.registration_excel (`src/nurus/personal/registration_excel.py`, retirado en WP-22) | AISLAR infraestructura de escritura; preservar recuperación de comprobantes | P6 | 6 | 0 |
 | [nurus.personal.reports](../../../src/nurus/personal/reports.py) | CONSERVAR | P0 | 3 | 4 |
 | [nurus.personal.resolution_view](../../../src/nurus/personal/resolution_view.py) | CONSERVAR | P0 | 8 | 2 |
 | [nurus.personal.resolutions](../../../src/nurus/personal/resolutions.py) | CONSERVAR | P0 | 10 | 8 |
 | [nurus.personal.results_view](../../../src/nurus/personal/results_view.py) | ADAPTAR entrada local después de G3/G5 | P5/P6 | 12 | 1 |
 | [nurus.personal.roster](../../../src/nurus/personal/roster.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.personal.rus_capture](../../../src/nurus/personal/rus_capture.py) | CONSERVAR | P0 | 0 | 1 |
-| [nurus.personal.rus_capture_app](../../../src/nurus/personal/rus_capture_app.py) | CONSERVAR | P0 | 1 | 0 |
+| nurus.personal.rus_capture (`src/nurus/personal/rus_capture.py`, retirado en WP-22) | CONSERVAR | P0 | 0 | 1 |
+| nurus.personal.rus_capture_app (`src/nurus/personal/rus_capture_app.py`, retirado en WP-22) | CONSERVAR | P0 | 1 | 0 |
 | [nurus.personal.selection](../../../src/nurus/personal/selection.py) | CONSERVAR | P0 | 0 | 6 |
 | [nurus.personal.session](../../../src/nurus/personal/session.py) | CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional | P5/P8 | 5 | 3 |
 | [nurus.personal.sitfa](../../../src/nurus/personal/sitfa.py) | CONSERVAR Excel/procedencia; ADAPTAR consumo local v1 | P5 | 1 | 5 |
@@ -111,20 +111,20 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.rus.columns](../../../src/nurus/rus/columns.py) | CONSERVAR | P0 | 1 | 25 |
 | [nurus.rus.models](../../../src/nurus/rus/models.py) | CONSERVAR | P0 | 0 | 7 |
 | [nurus.rus.reader](../../../src/nurus/rus/reader.py) | CONSERVAR | P0 | 2 | 6 |
-| [nurus.rus.rules](../../../src/nurus/rus/rules.py) | CONSERVAR | P0 | 3 | 14 |
-| [nurus.rus.service](../../../src/nurus/rus/service.py) | CONSERVAR | P0 | 4 | 1 |
+| nurus.rus.rules (`src/nurus/rus/rules.py`, retirado en WP-21) | CONSERVAR | P0 | 3 | 14 |
+| nurus.rus.service (`src/nurus/rus/service.py`, retirado en WP-21) | CONSERVAR | P0 | 4 | 1 |
 | [nurus.services](../../../src/nurus/services/__init__.py) | CONSERVAR | P0 | 0 | 0 |
-| [nurus.services.communications](../../../src/nurus/services/communications.py) | CONSERVAR | P0 | 7 | 0 |
-| [nurus.services.contacts](../../../src/nurus/services/contacts.py) | CONSERVAR | P0 | 2 | 1 |
-| [nurus.services.delivery](../../../src/nurus/services/delivery.py) | CONSERVAR | P0 | 2 | 0 |
+| nurus.services.communications (`src/nurus/services/communications.py`, retirado en WP-21) | CONSERVAR | P0 | 7 | 0 |
+| nurus.services.contacts (`src/nurus/services/contacts.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 1 |
+| nurus.services.delivery (`src/nurus/services/delivery.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 0 |
 | [nurus.services.exports](../../../src/nurus/services/exports.py) | CONSERVAR | P0 | 2 | 1 |
 | [nurus.services.file_output](../../../src/nurus/services/file_output.py) | CONSERVAR | P0 | 0 | 15 |
 | [nurus.services.policy](../../../src/nurus/services/policy.py) | CONSERVAR | P0 | 0 | 2 |
-| [nurus.services.products](../../../src/nurus/services/products.py) | CONSERVAR | P0 | 4 | 2 |
-| [nurus.services.rendering](../../../src/nurus/services/rendering.py) | CONSERVAR | P0 | 2 | 3 |
-| [nurus.services.resolutions](../../../src/nurus/services/resolutions.py) | CONSERVAR | P0 | 6 | 0 |
-| [nurus.services.review_import](../../../src/nurus/services/review_import.py) | CONSERVAR | P0 | 2 | 0 |
-| [nurus.services.statistics](../../../src/nurus/services/statistics.py) | CONSERVAR | P0 | 1 | 0 |
-| [nurus.services.workflow](../../../src/nurus/services/workflow.py) | CONSERVAR | P0 | 3 | 0 |
-| [nurus.storage](../../../src/nurus/storage/__init__.py) | CONSERVAR | P0 | 0 | 0 |
-| [nurus.storage.database](../../../src/nurus/storage/database.py) | CONSERVAR | P0 | 2 | 5 |
+| nurus.services.products (`src/nurus/services/products.py`, retirado en WP-21) | CONSERVAR | P0 | 4 | 2 |
+| nurus.services.rendering (`src/nurus/services/rendering.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 3 |
+| nurus.services.resolutions (`src/nurus/services/resolutions.py`, retirado en WP-21) | CONSERVAR | P0 | 6 | 0 |
+| nurus.services.review_import (`src/nurus/services/review_import.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 0 |
+| nurus.services.statistics (`src/nurus/services/statistics.py`, retirado en WP-21) | CONSERVAR | P0 | 1 | 0 |
+| nurus.services.workflow (`src/nurus/services/workflow.py`, retirado en WP-21) | CONSERVAR | P0 | 3 | 0 |
+| nurus.storage (`src/nurus/storage/__init__.py`, retirado en WP-21) | CONSERVAR | P0 | 0 | 0 |
+| nurus.storage.database (`src/nurus/storage/database.py`, retirado en WP-21) | CONSERVAR | P0 | 2 | 5 |

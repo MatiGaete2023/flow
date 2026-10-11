@@ -251,7 +251,7 @@ Con tu sesión autorizada, utiliza un solo tribunal y una sola modalidad. Primer
 | Seguimiento de litigantes / órdenes | Elige su pantalla, carga las opciones y selecciona Estado de órdenes. La lectura de bitácoras de este manual no acredita soporte de observaciones de órdenes. |
 | Carga · resoluciones firmadas | Es una consulta independiente con período de fechas. No forma parte de la descarga conjunta actual ni acredita historia judicial completa. |
 | CSV, Calendario ICS y comparar lotes | Están en Resultados. ICS necesita fechas reconocidas; comparar exige lotes con alcance compatible. No sustituyen al paquete para el Asistente. |
-| Favoritos, apariencia y solicitud de antecedentes | Favoritos y apariencia están en los menús superiores. Abrir solicitud de antecedentes… muestra qué pidió el Asistente; no ejecuta consultas automáticamente. |
+| Favoritos y apariencia | Favoritos y apariencia están en los menús superiores. |
 
 
 **Ten presente:** El camino principal que necesitas es: hojas → bitácoras nuevas o anteriores → Resultados → Crear paquete para Asistente (ZIP) → Trabajo → Importar paquete. Puedes regresar a las páginas 9–12 para repetir la parte local sin volver a descargar todo.

@@ -1,12 +1,9 @@
-"""Inicio del descargador y devolución recuperable de un flujo completo."""
+"""Devolución recuperable de un flujo completo; el Asistente no inicia el Descargador (WP-23)."""
 from pathlib import Path
 import hashlib
 import json
-import subprocess
-import sys
-from tkinter import filedialog
 
-from .download_transfer import Transfer, transfers, recovery_work
+from .download_transfer import transfers, recovery_work
 
 
 def verify_reply(path, *, expected_mode=None):
@@ -27,18 +24,6 @@ def verify_reply(path, *, expected_mode=None):
         raise ValueError('La devolución no corresponde al modo de esta solicitud.')
     return source, data['modo']
 
-
-def launch_command(executable):
-    executable = Path(executable).resolve()
-    if not executable.is_file():
-        raise ValueError('El descargador seleccionado no existe.')
-    if executable.suffix.lower() == '.exe':
-        if executable == Path(sys.executable).resolve():
-            raise ValueError('Selecciona SITFA_Descargador.exe; esta ruta apunta al propio CSMP.')
-        return [str(executable)]
-    if executable.name.lower() == 'descargador.py' and not getattr(sys, 'frozen', False):
-        return [sys.executable, str(executable)]
-    raise ValueError('El CSMP instalado requiere SITFA_Descargador.exe de la carpeta del descargador.')
 
 
 def incorporate(app, transfer):
@@ -88,54 +73,6 @@ def incorporate(app, transfer):
         app._export_current()
     app._run('Incorporando descarga comprobada…', analyze, done)
 
-
-def start(app):
-    if app.busy:
-        raise ValueError('Espera a que termine la operación actual.')
-    mode = app.mode.get()
-    if mode not in ('ESPERA', 'CUMPLIMIENTO'):
-        raise ValueError('Selecciona Espera o Cumplimiento para el flujo conjunto.')
-    active = getattr(app, '_download_process', None)
-    if active is not None and active.poll() is None:
-        raise ValueError('El descargador ya está abierto. Continúa o cierra esa ventana antes de abrir otra.')
-    executable = app.cfg.data.get('descargador_integral', '')
-    try:
-        command = launch_command(executable)
-    except ValueError:
-        types = [('Descargador Windows', '*.exe')]
-        if not getattr(sys, 'frozen', False):
-            types.append(('Descargador Python', 'descargador.py'))
-        executable = filedialog.askopenfilename(parent=app, title='Elegir SITFA_Descargador.exe', filetypes=types)
-        if not executable:
-            return
-        command = launch_command(executable)
-        app.cfg.data['descargador_integral'] = executable
-        app.cfg.save(app.cfg.data)
-    transfer = Transfer.create(app.cfg.directory / 'intercambio', mode, app.folder.get())
-    command += ['--csmp-reply', str(transfer.reply), '--modo', mode, '--destino', transfer.data['destination']]
-    try:
-        process = subprocess.Popen(command, cwd=str(Path(executable).resolve().parent),
-                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-    except OSError as exc:
-        transfer.update('ERROR_INICIO', error=str(exc))
-        raise
-    app._download_process = process
-    app.status.set('Descargador abierto. Selecciona tribunales/modalidades y pulsa Descarga conjunta CSMP.')
-    def poll():
-        if not app.winfo_exists():
-            return
-        if transfer.reply.exists():
-            if app.busy:
-                app.after(600, poll)
-            else:
-                app._guard(lambda: incorporate(app, transfer))
-            return
-        if process.poll() is not None:
-            transfer.update('CERRADA_SIN_RESULTADO')
-            app.status.set('Descargador cerrado sin resultado. La solicitud se conserva en Resultados → Recuperar descarga.')
-            return
-        app.after(600, poll)
-    app.after(600, poll)
 
 
 def resume(app):

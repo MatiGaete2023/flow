@@ -2,9 +2,8 @@
 
 Único flujo operativo del producto; app_base contiene sus controles compartidos.
 """
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids, remember
 from copy import deepcopy
-from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox
@@ -12,8 +11,8 @@ import customtkinter as ctk
 from .ui import Textbox as ScrolledText
 
 from .app_base import App as _BaseApp
-from .mail_view import build_mail_page
-from .mail_controls import alcance_modalidades, selected_court_record_ids, empty_preparation_message
+from .mail_view import build_mail_page, update_mail_actions
+from .mail_controls import alcance_modalidades, selected_court_record_ids, empty_preparation_message, require_mail_action
 from .outputs import prepare_drafts, prepare_required_drafts, create_drafts, drafts_for_scope, value
 from .resolutions import automatic_project_selections, unique_case_selections, resolution_selection_source, _case_key, kind_code, kind_label
 from .statistics import summarize
@@ -114,6 +113,7 @@ class App(_BaseApp):
         if drafts and not keep_source and hasattr(self,'mail_tabs'):self.mail_tabs.select(self.mail_compose_tab)
         if hasattr(self,'save_all_button'):self.save_all_button.configure(text=f'Guardar {len(drafts)} en Outlook')
         self.status.set(empty_message if not drafts and empty_message else message.format(count=len(drafts)))
+        update_mail_actions(self)
 
     def _prepare_mail(self):
         work=self._require_work();self._capture_mail();self._sync_mail_config(work)
@@ -144,7 +144,7 @@ class App(_BaseApp):
 
     def _send_all(self):
         work=self._require_work();self._capture_mail()
-        if not self.drafts:raise ValueError('Prepara y revisa los borradores antes de guardarlos.')
+        require_mail_action(self,'guardar_todos')
         from .product_state import stale
         if any(d.roster and not d.roster_reviewed and not stale(work,d) for d in self.drafts):
             from .roster import prepare_optional
@@ -170,7 +170,7 @@ class App(_BaseApp):
 
     def _attachment_all(self):
         self._capture_mail()
-        if not self.drafts:raise ValueError('Primero prepara los borradores.')
+        require_mail_action(self,'adjuntar_todos')
         paths=filedialog.askopenfilenames(title='Seleccionar adjuntos para todos los borradores')
         if not paths:return
         for draft in self.drafts:
@@ -184,7 +184,7 @@ class App(_BaseApp):
 
     def _preview_mail(self):
         self._capture_mail()
-        if self.draft_index is None:raise ValueError('Primero prepara y selecciona un borrador.')
+        require_mail_action(self,'vista_previa')
         draft=self.drafts[self.draft_index]
         win=ctk.CTkToplevel(self);win.title('Vista previa del borrador');win.geometry('820x640');win.transient(self)
         text=ScrolledText(win,wrap='word',font=('Segoe UI',10),padx=12,pady=12);text.pack(fill='both',expand=True)
@@ -225,10 +225,6 @@ class App(_BaseApp):
 
     def _show_work(self,reset_projects=True,on_ready=None):
         if not self.work:return
-        journal_path=self.cfg.directory/'registro_observaciones.sqlite'
-        if journal_path.is_file():
-            from .registration import Journal,attach_receipts
-            attach_receipts(self.work,Journal(journal_path))
         previous_selection=list(selected_ids(self,'records'))
         previous_words=list(selected_ids(self,'words'))
         self.mode.set(self.work.mode);self.file.set(self.work.path);self.observation_id=None
@@ -255,7 +251,7 @@ class App(_BaseApp):
             if row.excluded:tags.append('excluded')
             elif row.warnings:tags.append('warning')
             if row.id in resolution_ids:tags.append('resolution')
-            values=(state,value(self.work,row,'rit'),value(self.work,row,'nombre'),value(self.work,row,'tribunal'),value(self.work,row,'programa'),row.review.get('OBSERVACION',row.observation))
+            values=(state,row.review.get('OBSERVACION',row.observation),value(self.work,row,'rit'),value(self.work,row,'nombre'),value(self.work,row,'programa'),value(self.work,row,'tribunal'))
             jobs.append((self.records,row.id,values,tuple(tags)))
             self._work_all_iids.append(row.id)
             self._work_search_text[row.id]=' '.join(str(value(self.work,row,key) or '') for key in ('nombre','rut','rit','tribunal','programa'))
@@ -369,9 +365,6 @@ def main(argv=None):
     if args.verificar_paquete:
         from .package_check import check
         check(args.verificar_paquete);return
-    if args.verificar_integracion:
-        from .package_check import check_integral
-        check_integral(args.verificar_integracion,args.descargador_integral);return
     app=App()
     if args.archivo:
         app.work=None;app._clear_drafts();app._clear_projects();app.records.delete(*app.records.get_children())

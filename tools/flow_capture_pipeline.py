@@ -1,7 +1,6 @@
 """Corte vertical reproducible y benchmark: usa exclusivamente fixtures sintéticas."""
 import argparse
 from datetime import date
-from hashlib import sha256
 import json
 from pathlib import Path
 import sys

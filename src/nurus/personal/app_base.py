@@ -2,7 +2,6 @@
 from .selection import selected_ids, remember, restore_visible
 from pathlib import Path
 from datetime import date, datetime
-from dataclasses import replace
 from copy import deepcopy
 import os
 import queue
@@ -14,11 +13,13 @@ import customtkinter as ctk
 from . import ui as ttk
 from .ui import Textbox as ScrolledText
 
-from .config import Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES, emails
+from .config import CC, Configuration, PARAMETER_LABELS, VARIABLES, RETENCION_DIAS, SESIONES_ANTERIORES, emails
 from .widgets import ScrollPane, NamedChoice, Tooltip
 from .ux_support import case_detail_text, compact_case_detail_text, grouped_draft_detail, incident_ids, resume_available, resume_description, RES_HELP
 from .work import Work
 from .outputs import create_draft, import_contacts
+from .mail_controls import NO_WORK, require_mail_action
+from .mail_view import update_mail_actions
 from .resolutions import KINDS, kind_code, kind_label, prepare_projects, generate_projects, automatic_project_selections
 from .importing import SheetChoice
 from nurus.rus.reader import list_workbook_sheets
@@ -60,7 +61,10 @@ class App(ctk.CTk):
         build_results(self)
         contextbar=ctk.CTkFrame(self,corner_radius=0,fg_color=ttk.PANEL)
         contextbar.grid(row=1,column=0,columnspan=2,sticky='ew')
-        ctk.CTkLabel(contextbar,textvariable=self.context,anchor='w',text_color=ttk.MUTED,font=('Segoe UI',11)).pack(fill='x',padx=14,pady=4)
+        from .next_step import NextStepBar
+        # Una sola fila: la barra no le quita alto a los editores a 1024x650.
+        self.next_step=NextStepBar(contextbar,self);self.next_step.pack(side='left',padx=4)
+        ctk.CTkLabel(contextbar,textvariable=self.context,anchor='w',text_color=ttk.MUTED,font=('Segoe UI',11)).pack(side='left',fill='x',expand=True,padx=10,pady=4)
         statusbar=ctk.CTkFrame(self,corner_radius=0,fg_color=ttk.SIDEBAR)
         statusbar.grid(row=2,column=0,columnspan=2,sticky='ew');statusbar.grid_columnconfigure(0,weight=1)
         self.status_label=ctk.CTkLabel(statusbar,textvariable=self.status,anchor='w',wraplength=760)
@@ -220,7 +224,7 @@ class App(ctk.CTk):
     def _require_work(self):
         if self.busy or getattr(self,'rendering',False):raise ValueError('Hay una operación en curso.')
         self._capture_observation()
-        if not self.work or not self.work.output:raise ValueError('Procesa primero el Excel; se compartirá automáticamente con esta pestaña.')
+        if not self.work or not self.work.output:raise ValueError(NO_WORK)
         return self.work
 
     def _guard(self,action):
@@ -235,6 +239,9 @@ class App(ctk.CTk):
         else:messagebox.showinfo('Archivo disponible',str(path))
 
     def _update_context(self):
+        # Forzado: ediciones de revisión no cambian la firma barata pero sí dejan productos desactualizados.
+        if hasattr(self,'next_step'):self.next_step.refresh(force=True)
+        update_mail_actions(self)
         if not self.work:
             self.context.set('Sin trabajo activo · Ctrl+O para elegir un Excel')
             return
@@ -251,13 +258,27 @@ class App(ctk.CTk):
         folder.mkdir(parents=True,exist_ok=True)
         self._open(folder)
 
+    SHORTCUT_CLASSES=('Entry','TEntry','Text','Spinbox','TSpinbox','TCombobox')
+
     def _bind_shortcuts(self):
-        self.bind_all('<Control-s>',self._shortcut_save)
-        self.bind_all('<Control-o>',self._shortcut_open)
-        self.bind_all('<Control-f>',self._shortcut_find)
-        self.bind_all('<F5>',self._shortcut_refresh)
         from .commands import show_palette
-        self.bind_all('<Control-k>',lambda event:(show_palette(self),'break')[1])
+        shortcuts={'<Control-s>':self._shortcut_save,'<Control-o>':self._shortcut_open,'<Control-f>':self._shortcut_find,
+                   '<F5>':self._shortcut_refresh,'<Control-k>':lambda event:(show_palette(self),'break')[1]}
+        for sequence,handler in shortcuts.items():
+            guarded=self._unless_modal(handler)
+            self.bind_all(sequence,guarded)
+            # Las clases de texto de Tk ya usan Ctrl+K (borrar hasta el final), Ctrl+O o Ctrl+F y corren antes
+            # que bind_all: sin esto, el atajo editaría el campo antes de ejecutarse.
+            for widget_class in self.SHORTCUT_CLASSES:self.bind_class(widget_class,sequence,guarded)
+
+    def _unless_modal(self,handler):
+        def run(event=None):
+            # Con un diálogo modal abierto (p. ej. la fecha de corte) los atajos no hacen nada.
+            grab=self.grab_current()
+            if grab is not None and grab is not self:return 'break'
+            handler(event)
+            return 'break'
+        return run
 
     def _shortcut_save(self,event=None):
         self._guard(self._save_session)
@@ -362,9 +383,47 @@ class App(ctk.CTk):
     def _download_joint(self):
         raise ValueError('Las consultas se realizan en el Descargador. Importa aquí el paquete obtenido.')
 
-    def _import_capture(self):
+    def _ask_cut_date(self):
+        """Fecha de corte: hoy por defecto, botón «Usar hoy» y posibilidad de escribir otra."""
+        win=ctk.CTkToplevel(self);win.title('Fecha de corte');win.transient(self);win.resizable(False,False)
+        value=tk.StringVar(value=date.today().isoformat());error=tk.StringVar();result=[]
+        ttk.Label(win,text='Fecha de análisis (AAAA-MM-DD)').grid(row=0,column=0,columnspan=3,sticky='w',padx=12,pady=(12,4))
+        entry=ttk.Entry(win,textvariable=value,width=16);entry.grid(row=1,column=0,padx=(12,6),pady=4)
+        today=ttk.Button(win,text='Usar hoy',width=90,command=lambda:(value.set(date.today().isoformat()),error.set('')))
+        today.grid(row=1,column=1,padx=6)
+        win.cut_value,win.today_button=value,today
+        ttk.Label(win,textvariable=error,text_color=ttk.MUTED).grid(row=2,column=0,columnspan=3,sticky='w',padx=12)
+        def accept(event=None):
+            try:result.append(date.fromisoformat(value.get().strip()))
+            except ValueError:error.set('Escribe la fecha como AAAA-MM-DD, por ejemplo '+date.today().isoformat()+'.');return
+            win.destroy()
+        ttk.Button(win,text='Aceptar',width=90,command=accept).grid(row=3,column=1,padx=6,pady=12)
+        ttk.Button(win,text='Cancelar',width=90,fg_color='transparent',border_width=1,command=win.destroy).grid(row=3,column=2,padx=(6,12),pady=12)
+        win.bind('<Return>',accept);win.bind('<Escape>',lambda event:win.destroy())
+        win.accept,win.cancel=accept,win.destroy
+        self.cut_date_dialog=win
+        win.after(50,lambda:entry.focus_set() if win.winfo_exists() else None)
+        try:win.wait_visibility();win.grab_set()
+        except tk.TclError:pass  # cerrado antes de mostrarse
+        if win.winfo_exists():self.wait_window(win)
+        return result[0] if result else None
+
+    def _import_latest_capture(self):
+        """Busca el último paquete del Descargador en sus carpetas locales (solo lectura) y lo importa."""
         if self.busy:return
-        path=filedialog.askopenfilename(parent=self,title='Importar paquete del Descargador',filetypes=[('Captura CSMP','*.zip')])
+        from .latest_capture import latest_capture,search_folders
+        path=latest_capture()
+        if path is None:
+            folders='\n'.join(str(f) for f in search_folders()) or 'ninguna carpeta del Descargador en este equipo'
+            messagebox.showinfo('Importar último paquete','No se encontró un paquete CSMP válido en:\n'+folders+'\n\nUsa «Importar paquete» para elegirlo.',parent=self)
+            return
+        stamp=datetime.fromtimestamp(path.stat().st_mtime).strftime('%d-%m-%Y %H:%M')
+        if not messagebox.askyesno('Importar último paquete',f'{path.name}\n{stamp}\n{path.parent}\n\n¿Importar este paquete?',parent=self):return
+        self._import_capture(path)
+
+    def _import_capture(self,path=None):
+        if self.busy:return
+        path=path or filedialog.askopenfilename(parent=self,title='Importar paquete del Descargador',filetypes=[('Captura CSMP','*.zip')])
         if not path:return
         self._capture_observation();self._capture_mail();self._capture_project()
         from .capture_input import import_capture
@@ -373,9 +432,8 @@ class App(ctk.CTk):
             capture(self)
         previous=deepcopy(self.work) if self.work else None
         config=deepcopy(self.cfg.data)
-        text=simpledialog.askstring('Fecha de corte','Fecha de análisis AAAA-MM-DD:',initialvalue=date.today().isoformat(),parent=self)
-        if text is None:return
-        cut=date.fromisoformat(text)
+        cut=self._ask_cut_date()
+        if cut is None:return
         def done(candidate):
             reused=bool(previous and (candidate.capture_digest==getattr(previous,'capture_digest','') or
                         getattr(candidate,'capture_reconciliation',{}).get('continued')))
@@ -406,12 +464,6 @@ class App(ctk.CTk):
     def _capture_evidence(self):
         from .capture_products import show_evidence
         show_evidence(self)
-
-    def _capture_requests(self):
-        if not self.work:raise ValueError('Importa un trabajo primero.')
-        from .capture_products import export_requests
-        target=filedialog.asksaveasfilename(parent=self,title='Solicitud para uso manual en Descargador',initialfile='solicitud_antecedentes.json',defaultextension='.json')
-        if target:self._run('Preparando solicitud local…',lambda:export_requests(self.work,target),lambda result:self.status.set('Solicitud declarativa guardada: '+str(result)))
 
     def _select_folder(self,var):
         path=filedialog.askdirectory()
@@ -567,7 +619,7 @@ class App(ctk.CTk):
 
     def _clear_drafts(self):
         self.drafts=[];self._draft_scope_source=[];self.draft_index=None;self.mail_list.delete(0,'end')
-        self._clear_mail_editor();self._clear_projects()
+        self._clear_mail_editor();self._clear_projects();update_mail_actions(self)
     def _clear_projects(self):
         self.projects=[];self.project_index=None
         self.project_list.delete(0,'end');self.project_editor.delete('1.0','end')
@@ -590,14 +642,14 @@ class App(ctk.CTk):
         self.draft_index=self.mail_list.curselection()[0];d=self.drafts[self.draft_index]
         self.to.set(d.to);self.cc.set(d.cc);self.subject.set(d.subject);self.body.delete('1.0','end');self.body.insert('1.0',d.body);self.attach.set('\n'.join(d.attachments))
         self.body._textbox.edit_reset()
-        self._update_mail_case_detail();
+        self._update_mail_case_detail();update_mail_actions(self)
     def _attachment(self):
         paths=filedialog.askopenfilenames()
         if paths:self.attach.set('\n'.join([p for p in self.attach.get().split('\n') if p]+list(paths)))
 
     def _send_draft(self):
         work=self._require_work();self._capture_mail()
-        if self.draft_index is None:raise ValueError('Primero prepara una vista previa.')
+        require_mail_action(self,'guardar_este')
         target=self.drafts[self.draft_index]
         from .product_state import stale
         if target.roster and not target.roster_reviewed and not stale(work,target):
@@ -697,6 +749,19 @@ class App(ctk.CTk):
         self.status.set(f'{len(removed)} sesiones anteriores borradas. El trabajo vigente se conserva.')
         return removed
 
+    def _export_anonymous_case(self):
+        source=filedialog.askopenfilename(parent=self,title='Excel original (no se modifica)',filetypes=[('Excel','*.xls *.xlsx *.xlsm')])
+        if not source:return
+        target=filedialog.asksaveasfilename(parent=self,title='Guardar copia anónima',defaultextension='.xlsx',
+                                            initialfile=Path(source).stem+'_anonimo.xlsx',filetypes=[('Excel','*.xlsx')],confirmoverwrite=False)
+        if not target:return
+        from .anonymize import anonymize
+        report=anonymize(source,target)
+        notes=''.join('\n'+warning for warning in report.warnings)
+        messagebox.showinfo('Caso de prueba anónimo',f'Copia creada: {Path(target).name}\n{report.changed} celdas reemplazadas. '
+                            'El original no se modificó. Revisa la copia antes de compartirla.'+notes,parent=self)
+        self.status.set('Copia anónima creada: '+Path(target).name)
+
     def _show_saved_data(self):
         if self.busy or getattr(self,'rendering',False):
             self.status.set('Espera a que termine la operación para revisar los datos guardados.');return
@@ -724,6 +789,7 @@ class App(ctk.CTk):
         basic=ttk.Frame(level,padding=5);advanced=ttk.Frame(level,padding=5)
         level.add(basic,text='Básico');level.add(advanced,text='Avanzado')
         ttk.Button(basic,text='Datos guardados en este equipo',command=lambda:self._guard(self._show_saved_data)).pack(anchor='w',pady=5)
+        ttk.Button(basic,text='Exportar caso de prueba anónimo',command=lambda:self._guard(self._export_anonymous_case)).pack(anchor='w',pady=(0,5))
         basic_nb=ttk.Notebook(basic);basic_nb.pack(fill='both',expand=True)
         advanced_nb=ttk.Notebook(advanced);advanced_nb.pack(fill='both',expand=True)
 
@@ -787,7 +853,7 @@ class App(ctk.CTk):
         office=ttk.Frame(basic_nb,padding=8);basic_nb.add(office,text='Outlook y CC')
         self.account=tk.StringVar(value=self.cfg.data.get('cuenta_outlook',''));self.signature=tk.StringVar(value=self.cfg.data.get('firma',''));self.additional=tk.StringVar(value=self.cfg.data['correos'].get('cc_adicional',''))
         self._field(office,'Cuenta Outlook (vacío: predeterminada)',self.account,0);self._field(office,'Firma de texto adicional',self.signature,1);self._field(office,'CC adicional',self.additional,2)
-        ttk.Label(office,text='Copia institucional siempre incluida: ucc_concepcion@pjud.cl').grid(row=3,column=0,columnspan=2,sticky='w',pady=10)
+        ttk.Label(office,text='Copia institucional siempre incluida: '+CC).grid(row=3,column=0,columnspan=2,sticky='w',pady=10)
         ttk.Button(office,text='Guardar Outlook y CC',command=lambda:self._guard(self._save_office)).grid(row=4,column=0)
 
         texts=ttk.Frame(advanced_nb,padding=8);advanced_nb.add(texts,text='Textos de observación')

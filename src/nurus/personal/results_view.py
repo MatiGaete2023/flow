@@ -1,7 +1,5 @@
 """Current products, next action and preflight in one place."""
 import tkinter as tk
-from datetime import date
-from tkinter import filedialog
 from . import ui
 from .widgets import ScrollPane
 from .current_tools import deliver,export_diagnosis
@@ -40,8 +38,8 @@ def build(app):
     section=ui.Frame(advanced);section.pack(fill='x',pady=(8,4))
     ui.Label(section,text='Fuentes locales y cobertura',font=('Segoe UI',13,'bold')).pack(anchor='w')
     ui.Button(section,text='Importar paquete',command=lambda:app._guard(app._import_capture)).pack(anchor='w',pady=4)
+    ui.Button(section,text='Importar último paquete del Descargador',command=lambda:app._guard(app._import_latest_capture)).pack(anchor='w',pady=4)
     ui.Button(section,text='Ver cobertura y antecedentes',command=lambda:app._guard(app._capture_evidence)).pack(anchor='w',pady=4)
-    ui.Button(section,text='Solicitar antecedentes faltantes',command=lambda:app._guard(app._capture_requests)).pack(anchor='w',pady=4)
     ui.Button(advanced,text='Diagnóstico de instalación',command=lambda:app._guard(lambda:export_diagnosis(app))).pack(anchor='w',pady=4)
     from .download_link import resume
     app.results_download_button=ui.Button(advanced,text='Recuperar resultado local legado',command=lambda:app._guard(lambda:resume(app)));app.results_download_button.pack(anchor='w',pady=4)

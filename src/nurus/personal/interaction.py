@@ -26,3 +26,7 @@ def unlock(app):
     for widget,state in getattr(app,'_locked_inputs',[]):
         if widget.winfo_exists():widget.configure(state=state)
     app._locked_inputs=[]
+    # El estado guardado al bloquear puede ser viejo (p. ej. tras procesar un Excel o
+    # restaurar borradores durante el bloqueo): se recalcula con la misma condición.
+    from .mail_view import update_mail_actions
+    update_mail_actions(app)

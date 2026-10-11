@@ -7,7 +7,6 @@ No consulta SITFA ni abre datos de usuarios. Rechaza destinos de práctica exist
 from __future__ import annotations
 
 import argparse
-import ast
 import asyncio
 import json
 from pathlib import Path
@@ -170,13 +169,7 @@ def desktop(demo: Path):
 async def browser(browser_path=None):
     from playwright.async_api import async_playwright, expect
     from puente import Bridge
-    from test_lotes import CATALOG
-    from perfiles import TABS
-    import motor as m
-    tree = ast.parse((ROOT / 'descargador/verificar_chrome_ficticio.py').read_text(encoding='utf-8'))
-    node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'master')
-    namespace = {'CATALOG': CATALOG, 'TABS': TABS, 'm': m}
-    exec(compile(ast.Module(body=[node], type_ignores=[]), 'fixture', 'exec'), namespace)
+    from formulario_ficticio import master
     bridge = Bridge()
     try:
         with tempfile.TemporaryDirectory(prefix='manual-chrome-ficticio-') as profile:
@@ -191,7 +184,7 @@ async def browser(browser_path=None):
                         if r.request.url.endswith('/fixture'):
                             await r.fulfill(body='<html><iframe src="/fixture-form"></iframe></html>', content_type='text/html')
                         elif r.request.url.endswith('/fixture-form'):
-                            await r.fulfill(body=namespace['master'](), content_type='text/html')
+                            await r.fulfill(body=master(), content_type='text/html')
                         else:
                             await r.abort()
                             raise AssertionError('No se permiten peticiones institucionales: ' + r.request.url)

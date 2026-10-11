@@ -2,12 +2,11 @@
 from datetime import datetime, date
 from hashlib import sha256
 import json
-from pathlib import Path
 from csmp_shared import parser
 parser()
 from nurus.capture.contract import COMMON,TABLES,write_capture
 from nurus.capture.diaries import import_lotes,diary_paths
-from resultados import tables,table_mode,read_json,inside,headers_and_rows
+from resultados import tables,table_mode,inside,headers_and_rows
 import motor as m
 from nurus.capture.coverage import aggregate
 

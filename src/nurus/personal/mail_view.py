@@ -5,8 +5,34 @@ import tkinter as tk
 import customtkinter as ctk
 
 from . import ui
-from .widgets import NamedChoice, CaseDetailPanel
+from .widgets import NamedChoice, CaseDetailPanel, Tooltip
 from .modalities import MODALITIES
+from .mail_controls import NO_DRAFTS, NO_DRAFTS_ATTACH, NO_ROSTER, NO_SELECTED, NO_WORK, mail_block
+
+SHORT_REASONS={NO_WORK:'Falta Excel',NO_DRAFTS:'Sin borradores',NO_DRAFTS_ATTACH:'Sin borradores',
+               NO_SELECTED:'Sin elegir',NO_ROSTER:'Sin nómina'}
+
+
+def action_button(app,parent,key,**kwargs):
+    """Botón con su motivo al lado cuando no está disponible (misma condición que la acción)."""
+    holder=ctk.CTkFrame(parent,fg_color='transparent')
+    button=ui.Button(holder,**kwargs);button.pack(side='left')
+    reason=ui.Label(holder,text='',text_color=ui.MUTED)
+    tip=Tooltip(reason,'')
+    if not hasattr(app,'mail_action_buttons'):app.mail_action_buttons={};app.mail_action_reasons={}
+    app.mail_action_buttons[key]=button;app.mail_action_reasons[key]=(reason,tip)
+    return holder,button
+
+
+def update_mail_actions(app):
+    if getattr(app,'busy',False) or getattr(app,'rendering',False):return
+    for key,button in getattr(app,'mail_action_buttons',{}).items():
+        if not button.winfo_exists():continue
+        reason=mail_block(app,key);label,tip=app.mail_action_reasons[key]
+        button.configure(state='disabled' if reason else 'normal')
+        label.configure(text=SHORT_REASONS.get(reason,reason));tip.text=reason
+        if reason and not label.winfo_manager():label.pack(side='left',padx=(5,0))
+        elif not reason and label.winfo_manager():label.pack_forget()
 
 
 class DraftCards(ctk.CTkScrollableFrame):
@@ -110,22 +136,25 @@ def build_mail_page(app):
     app.mail_kind=tk.StringVar(value='programa_por_vencer')
     app.kind_box=NamedChoice(top,keyvariable=app.mail_kind,names=lambda:{k:v['nombre'] for k,v in app.cfg.data['correos']['plantillas'].items() if not v.get('archivada',False)},state='readonly',width=32)
     app.kind_box.grid(row=0,column=1,sticky='ew');app.kind_box.bind('<<ComboboxSelected>>',app._mail_kind_changed)
-    ui.Button(top,text='Preparar tipo',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_mail)).grid(row=0,column=2,padx=7)
+    action_button(app,top,'preparar_tipo',text='Preparar tipo',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_mail))[0].grid(row=0,column=2,padx=7)
     def toggle():
         tabs.select(compose if tabs.select()==str(options) else options)
     ui.Button(top,text='Filtros / opciones',fg_color='transparent',border_width=1,command=toggle).grid(row=0,column=3)
     toolbar=ctk.CTkFrame(page,fg_color='transparent');toolbar.grid(row=1,column=0,sticky='ew',padx=8,pady=(2,6))
-    ui.Button(toolbar,text='Preparar todos',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_all_mail)).pack(side='left')
+    action_button(app,toolbar,'preparar_todos',text='Preparar todos',fg_color='transparent',border_width=1,command=lambda:app._guard(app._prepare_all_mail))[0].pack(side='left')
     ui.Button(toolbar,text='Cargar planilla',fg_color='transparent',border_width=1,command=lambda:app._guard(app._external)).pack(side='left',padx=7)
     from .manual import open_editor
     from .roster import review
     ui.Button(toolbar,text='Correo libre',width=110,command=lambda:app._guard(lambda:open_editor(app,'mail'))).pack(side='left')
-    ui.Button(toolbar,text='Editar adjunto (opcional)',width=180,command=lambda:app._guard(lambda:review(app))).pack(side='left',padx=4)
-    app.mail_note=tk.StringVar();ui.Label(toolbar,textvariable=app.mail_note,wraplength=380,text_color=ui.MUTED).pack(side='left',padx=7)
+    action_button(app,toolbar,'editar_adjunto',text='Editar adjunto (opcional)',width=180,command=lambda:app._guard(lambda:review(app)))[0].pack(side='left',padx=4)
+    # Fuera de la barra (con motivos visibles no cabe a 1024x650) y en la fila del resumen, sin restar alto.
+    app.mail_note=tk.StringVar()
 
     app.mail_scope=tk.StringVar()
-    app.mail_filters_summary=ui.Label(page,textvariable=app.mail_scope,text_color=ui.MUTED,anchor='w')
-    app.mail_filters_summary.grid(row=2,column=0,sticky='ew',padx=8)
+    summary_row=ctk.CTkFrame(page,fg_color='transparent');summary_row.grid(row=2,column=0,sticky='ew',padx=8)
+    app.mail_filters_summary=ui.Label(summary_row,textvariable=app.mail_scope,text_color=ui.MUTED,anchor='w')
+    app.mail_filters_summary.pack(side='left')
+    ui.Label(summary_row,textvariable=app.mail_note,wraplength=420,text_color=ui.MUTED,anchor='e').pack(side='right')
 
     content=ctk.CTkFrame(page,fg_color='transparent');content.grid(row=3,column=0,sticky='nsew',padx=8,pady=(0,8))
     content.grid_rowconfigure(0,weight=1);content.grid_columnconfigure(1,weight=1)
@@ -140,7 +169,7 @@ def build_mail_page(app):
     tabs.add(compose,text='Correo')
     compose.grid_columnconfigure(1,weight=1);compose.grid_rowconfigure(4,weight=1,minsize=120)
     ui.Label(compose,text='Correo editable',font=('Segoe UI',16,'bold')).grid(row=0,column=0,columnspan=2,sticky='w',padx=12,pady=(8,4))
-    ui.Button(compose,text='Vista previa',width=100,fg_color='transparent',border_width=1,command=lambda:app._guard(app._preview_mail)).grid(row=0,column=1,sticky='e',padx=12,pady=5)
+    action_button(app,compose,'vista_previa',text='Vista previa',width=100,fg_color='transparent',border_width=1,command=lambda:app._guard(app._preview_mail))[0].grid(row=0,column=1,sticky='e',padx=12,pady=5)
     app.to=tk.StringVar();app.cc=tk.StringVar();app.subject=tk.StringVar();app.attach=tk.StringVar()
     for row,label,var in [(1,'Para',app.to),(2,'CC',app.cc),(3,'Asunto',app.subject)]:
         ui.Label(compose,text=label).grid(row=row,column=0,sticky='w',padx=(12,5))
@@ -150,8 +179,8 @@ def build_mail_page(app):
     app.attachment_chips=AttachmentChips(compose,app.attach);app.attachment_chips.grid(row=5,column=0,columnspan=2,sticky='ew',padx=12,pady=(0,4))
     actions=ctk.CTkFrame(editor,fg_color='transparent');actions.grid(row=1,column=0,sticky='ew',padx=8,pady=(3,10))
     ui.Button(actions,text='Adjuntar…',width=82,fg_color='transparent',border_width=1,command=app._attachment).pack(side='left')
-    ui.Button(actions,text='Guardar este',width=106,fg_color='transparent',border_width=1,command=lambda:app._guard(app._send_draft)).pack(side='left',padx=5)
-    app.save_all_button=ui.Button(actions,text='Guardar borradores',width=145,command=lambda:app._guard(app._send_all));app.save_all_button.pack(side='right')
+    action_button(app,actions,'guardar_este',text='Guardar este',width=106,fg_color='transparent',border_width=1,command=lambda:app._guard(app._send_draft))[0].pack(side='left',padx=5)
+    holder,app.save_all_button=action_button(app,actions,'guardar_todos',text='Guardar borradores',width=145,command=lambda:app._guard(app._send_all));holder.pack(side='right')
     from .widgets import ScrollPane
     details=ScrollPane(tabs);tabs.add(details,text='Registros incluidos')
     app.mail_case_detail=CaseDetailPanel(details.body);app.mail_case_detail.pack(fill='x',padx=8,pady=8)
@@ -163,6 +192,7 @@ def build_mail_page(app):
     app.mail_options_tab=options
     build_mail_options(app,options.body,cfg)
     app._mail_kind_changed();app._mail_modality_changed()
+    update_mail_actions(app)
 
 
 def build_mail_options(app,options,cfg):
@@ -184,4 +214,4 @@ def build_mail_options(app,options,cfg):
     app.manual_mail=tk.BooleanVar()
     app.manual_mail.trace_add('write',lambda *_:app._mail_modality_changed())
     ui.Checkbutton(modes,text='Solo filas seleccionadas en Trabajo',variable=app.manual_mail).pack(anchor='w',pady=4)
-    ui.Button(modes,text='Adjuntar a todos…',fg_color='transparent',border_width=1,command=lambda:app._guard(app._attachment_all)).pack(anchor='w')
+    action_button(app,modes,'adjuntar_todos',text='Adjuntar a todos…',fg_color='transparent',border_width=1,command=lambda:app._guard(app._attachment_all))[0].pack(anchor='w')
