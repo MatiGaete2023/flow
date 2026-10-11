@@ -597,3 +597,5 @@ La implementación termina cuando los 34 WP están `INTEGRADO` (o descartados po
 | Actas de uso real firmadas por el usuario | 0 | ≥ 2 (inicio, WP-02, y cierre, WP-70) |
 
 **Lo que no mide este plan:** el valor jurídico de las observaciones, que sigue siendo decisión del usuario, ni la aceptación institucional formal, que no es requisito de esta implementación.
+
+WP-82: [ficha](wp/WP-82.md) y [reporte](REPORTE_WP82.md). CI aprobada, E3 pendiente.
