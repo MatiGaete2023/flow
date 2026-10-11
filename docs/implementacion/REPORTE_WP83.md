@@ -28,13 +28,15 @@ no solo una bandera busy. Ninguna prueba retirada ni skip/xfail nuevo.
 
 El bloqueo alcanza controles editables de ventanas existentes al iniciarse la operación. No es
 un sistema general para interceptar cualquier ventana creada después ni sustituye los guardas
-funcionales/deepcopy de las operaciones. Cerrar una ventana sigue permitido; sus widgets destruidos
+funcionales/deepcopy de las operaciones. No se cambia la política de cierre de cada ventana; los widgets que ya se destruyeron
 se omiten al liberar. No se modifica el comportamiento de cancelación ni las reglas de dominio.
 
 ## Verificación
 
-Seis regresiones GUI PASA en Linux con Xvfb. Verificación completa y Windows pendientes
-sobre SHA limpio. Motor/textos y golden17 intactos; no se acreditan Office/SITFA real ni actas.
+Seis regresiones GUI PASA en Linux con Xvfb. Primera verificación completa PASA en d7aa476
+(802/240); se refuerza el caso de ventana cerrada con un control efectivamente bloqueado
+y destruido. Se repetirá sobre ese test final y SHA limpio, sin cambiar el código funcional.
+Windows pendiente. Motor/textos y golden17 intactos; no se acreditan Office/SITFA real ni actas.
 
 ## Continuación
 
