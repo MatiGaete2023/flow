@@ -48,8 +48,17 @@ def _key(source):
     )
 
 
+def _decided(decisions):
+    """analyze siempre deja {'structured': True, 'mail': {}, 'resolution': 'auto'}: eso no es una edición."""
+    return (
+        decisions.get('resolution', 'auto') != 'auto'
+        or any(value != 'auto' for value in decisions.get('mail', {}).values())
+        or any(value for key, value in decisions.items() if key not in ('structured', 'mail', 'resolution'))
+    )
+
+
 def _edited(row):
-    return any(getattr(row, field) for field in EDIT_FIELDS)
+    return any(_decided(row.decisions) if field == 'decisions' else getattr(row, field) for field in EDIT_FIELDS)
 
 
 def _remap_session(session, id_map):
