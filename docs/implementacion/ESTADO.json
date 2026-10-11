@@ -57,14 +57,14 @@
       "origen": "WP-30",
       "fecha": "10 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
-      "respuesta": null
+      "respuesta": "Usuario, 11 de octubre de 2026: «Conservarlo». cc_obligatorio queda sin lector; el CC fijo sigue aplicándose por código."
     },
     {
       "id": "WP-34-motor-f401",
       "origen": "WP-34",
       "fecha": "10 de octubre de 2026",
       "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-34 pide ruff F401/F841 sobre src completo, pero src/nurus/personal/motor/ tiene 4 F401 y es intocable salvo decisión expresa. La CI lo excluye con --extend-exclude.",
-      "respuesta": null
+      "respuesta": "Usuario, 11 de octubre de 2026: «Dejar como está». motor/ intacto; F401 excluido en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla."
     }
   ],
   "paquetes": {
@@ -324,7 +324,8 @@
       "integrado_en": null,
       "notas": [
         "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas.",
-        "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions."
+        "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions.",
+        "11 de octubre de 2026: 607 artefactos de Actions previos a la purga borrados por la API (autorización escrita). Las 2 etiquetas no se pueden borrar desde el proxy (403): las borra el usuario. Falta además refs/pull vía Soporte de GitHub."
       ]
     },
     "WP-20": {
