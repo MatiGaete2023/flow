@@ -89,3 +89,13 @@ assert not getattr(app,'rendering',False)
 for clave in ('vista_previa','guardar_este','guardar_todos','preparar_todos','preparar_tipo'):
     assert mail_block(app,clave)=='' and app.mail_action_buttons[clave].cget('state')=='normal',clave
 """)
+
+
+def test_paleta_usa_la_misma_condicion_que_el_boton_guardar_borradores(tmp_path):
+    run_gui(tmp_path, """
+from nurus.personal.commands import commands
+from nurus.personal.mail_controls import mail_block
+comando=next(c for c in commands(app) if c.name.startswith('Revisar y guardar borradores'))
+app.drafts=[object()];app.work=None
+assert mail_block(app,'guardar_todos') and not comando.available()
+""")

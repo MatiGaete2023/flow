@@ -14,6 +14,7 @@ class Command:
 
 
 def commands(app):
+    from .mail_controls import mail_block  # misma condición que el botón de Correos
     ready=lambda:bool(app.work and getattr(app.work,'output',''))
     items=[Command('Elegir Excel · Ctrl+O',app._choose,lambda:True),
            Command('Guardar trabajo · Ctrl+S',app._save_session,lambda:bool(app.work),'Carga un trabajo primero.'),
@@ -23,7 +24,8 @@ def commands(app):
     for name,page in app.pages.items():
         items.append(Command('Ir a '+name,lambda p=page:app.tabs.select(p),lambda:True))
     items.extend([Command('Preparar todos los correos',app._prepare_all_mail,ready,'Carga un trabajo primero.'),
-                  Command('Revisar y guardar borradores en Outlook',app._send_all,lambda:bool(app.drafts),'Prepara los correos primero.'),
+                  Command('Revisar y guardar borradores en Outlook',app._send_all,lambda:not mail_block(app,'guardar_todos'),
+                          'Genera la copia de trabajo y prepara los correos primero.'),
                   Command('Preparar proyectos Word',app._prepare_words,ready,'Carga un trabajo primero.'),
                   Command('Generar Word revisado',app._generate_words,lambda:bool(app.projects),'Prepara los proyectos primero.')])
     from .current_tools import deliver
