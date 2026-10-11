@@ -382,7 +382,8 @@
         "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas.",
         "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions.",
         "11 de octubre de 2026: 607 artefactos de Actions previos a la purga borrados por la API (autorización escrita). Las 2 etiquetas no se pueden borrar desde el proxy (403): las borra el usuario. Falta además refs/pull vía Soporte de GitHub.",
-        "Continuación del 11 de octubre: DELETE de ambas etiquetas por API exitoso; ls-remote --tags vacío. Se mantiene EN_VERIFICACION por refs de PR/cachés externas."
+        "Continuación del 11 de octubre: DELETE de ambas etiquetas por API exitoso; ls-remote --tags vacío. Se mantiene EN_VERIFICACION por refs de PR/cachés externas.",
+        "Clon nuevo de ramas: check_real_ids --historia = 0. Los 96 artefactos actuales tienen 19 commits alcanzables en ramas saneadas. No se descargaron refs de PR."
       ]
     },
     "WP-20": {
@@ -1326,12 +1327,12 @@
         }
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "Codex /root",
       "tomado": "11 de octubre de 2026",
       "rama": "wp/84-huellas-consulta-20261011",
-      "pr": null,
-      "verificacion": "9 regresiones focales PASA; verificación completa y CI pendientes.",
+      "pr": 39,
+      "verificacion": "PASA en 98f9cb0b8dea3cc7fa93c0b6e9449475ecce0a45: Asistente 805/11/6 xfail; Descargador 240/62. Nueve controles; procedencia limpia y estable; CI Windows en el PR.",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
