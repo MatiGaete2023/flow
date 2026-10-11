@@ -36,8 +36,20 @@ def test_failure_during_publication_removes_only_owned_partial(tmp_path, monkeyp
         output.write(b"partial")
         raise OSError("copy failure")
 
+    # Sistema de archivos sin enlaces duros: se usa la copia exclusiva de respaldo.
+    monkeypatch.setattr("nurus.services.file_output.os.link", lambda *a: (_ for _ in ()).throw(OSError("sin enlaces")))
     monkeypatch.setattr("nurus.services.file_output.shutil.copyfileobj", fail)
     with pytest.raises(OSError):
         write_new_file(destination, lambda path: path.write_bytes(b"complete"))
     assert not destination.exists()
     assert list(tmp_path.iterdir()) == []
+
+
+def test_publication_is_a_single_atomic_link(tmp_path, monkeypatch):
+    destination = tmp_path / "report.xlsx"
+    monkeypatch.setattr(
+        "nurus.services.file_output.shutil.copyfileobj", lambda *a: (_ for _ in ()).throw(AssertionError("copia"))
+    )
+    assert write_new_file(destination, lambda path: path.write_bytes(b"complete")) == destination
+    assert destination.read_bytes() == b"complete"
+    assert list(tmp_path.iterdir()) == [destination]

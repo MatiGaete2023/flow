@@ -1,5 +1,6 @@
 """Escritura de productos nuevos sin sobrescribir ni dejar resultados truncados."""
 
+import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -20,12 +21,20 @@ def write_new_file(destination, writer):
         writer(temporary)
         if not temporary.is_file() or temporary.stat().st_size == 0:
             raise ValueError("No se produjo un archivo completo.")
-        # La apertura exclusiva protege también frente a un destino creado después
-        # de la primera comprobación. Solo se publica después de generar el producto.
-        with target.open("xb") as output:
+        # Publicación atómica: os.link crea el nombre final completo de una vez y falla si ya existe,
+        # de modo que un corte a mitad nunca deja un producto truncado con el nombre final.
+        try:
+            os.link(temporary, target)
             created = True
-            with temporary.open("rb") as source:
-                shutil.copyfileobj(source, output)
+        except FileExistsError:
+            # Destino creado por otro durante la generación: se conserva intacto.
+            raise
+        except OSError:
+            # Sistemas de archivos sin enlaces duros: copia exclusiva como respaldo.
+            with target.open("xb") as output:
+                created = True
+                with temporary.open("rb") as source:
+                    shutil.copyfileobj(source, output)
     except BaseException:
         if created:
             target.unlink(missing_ok=True)

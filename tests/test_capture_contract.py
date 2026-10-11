@@ -236,3 +236,38 @@ def test_cause_scope_event_and_unassociated_calendar_are_kept_separate(tmp_path)
     ctx = chronology(capture, r, date(2026, 10, 8), fixture_preview=True)
     assert 'cause-event' not in [e['event_id'] for e in ctx['later']]
     assert capture.rows('calendarios')[0]['association'] == 'NO_ASOCIADO'
+
+
+@pytest.mark.parametrize(
+    'change',
+    [
+        lambda m, t: t['consultas'][0].update(expected_pages='²'),
+        lambda m, t: t['registros'][0].update(original_row='²'),
+        lambda m, t: t['consultas'][0].update(
+            period_from='2026-10-01T09:00:00+00:00', period_to='2026-10-01T10:00:00+05:00'
+        ),
+    ],
+)
+def test_malformed_values_raise_capture_error_not_crude_exceptions(tmp_path, change):
+    m, t = fixture()
+    change(m, t)
+    with pytest.raises(CaptureError):
+        write_capture(tmp_path / 'x.zip', m, t)
+
+
+def test_equal_page_counts_and_ordered_period_with_zones_are_accepted(tmp_path):
+    m, t = fixture()
+    t['consultas'][0].update(expected_pages='01', saved_pages='1')
+    t['consultas'][0].update(period_from='2026-10-01T10:00:00+05:00', period_to='2026-10-01T09:00:00+00:00')
+    read_capture(write_capture(tmp_path / 'ok.zip', m, t))
+
+
+def test_lowercase_content_types_is_read_not_keyerror():
+    from io import BytesIO
+    from nurus.capture.contract import check_workbook
+
+    out = BytesIO()
+    with zipfile.ZipFile(out, 'w') as book:
+        book.writestr('[content_types].xml', '<Types/>')
+        book.writestr('xl/workbook.xml', '<workbook/>')
+    check_workbook(out.getvalue())
