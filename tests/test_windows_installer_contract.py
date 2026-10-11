@@ -51,6 +51,11 @@ def test_downloader_prefers_python_312_and_requires_hash_lock(tmp_path, monkeypa
     source = (root / "descargador" / "preparar_entorno.py").read_text(encoding="utf-8")
     assert "'--require-hashes','-r'" in source and "requirements.txt" not in source
     monkeypatch.setattr(module, "HERE", tmp_path / "descargador")
+    # Copia sin requirements/: no es problema de la versión de Python, así que no es código 3 ni borra el .venv.
+    with pytest.raises(RuntimeError, match="Falta la carpeta requirements") as error:
+        module.lock_file()
+    assert not isinstance(error.value, module.FaltaLock)
+    (tmp_path / "requirements").mkdir()
     with pytest.raises(module.FaltaLock, match="Falta windows-py312.lock"):
         module.lock_file()
     assert "raise SystemExit(3)" in source
