@@ -7,8 +7,8 @@
   "decisiones": {
     "D1": {
       "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
-      "respuesta": null,
-      "fecha": null
+      "respuesta": "Reescribir historial",
+      "fecha": "11 de octubre de 2026"
     },
     "D2": {
       "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",

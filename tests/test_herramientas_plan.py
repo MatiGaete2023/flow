@@ -31,14 +31,16 @@ def test_estado_ida_y_vuelta_identica_y_validacion(tmp_path):
 
 
 def test_estado_detecta_incoherencias():
-    vista = {'conflictos_abiertos': [{'id': 'X', 'respuesta': None}], 'paquetes': {
+    vista = {'conflictos_abiertos': [{'id': 'X', 'descripcion': 'abierto', 'respuesta': None}, {'respuesta': None}],
+             '_sin_archivo': ['WP-04'], 'paquetes': {
         'WP-01': {'estado': 'INTEGRADO', 'depende_de': ['WP-02'], 'verificacion': 'PASA'},
         'WP-02': {'estado': 'EN_VERIFICACION', 'depende_de': ['WP-99'], 'ejecutor': None, 'rama': None},
         'WP-03': {'estado': 'PENDIENTE', 'depende_de': ['TODAS_LAS_DEMAS']}}}
     problemas = '\n'.join(estado.problems(vista))
     for texto in ('INTEGRADO con la dependencia WP-02', 'depende de WP-99', 'sin ejecutor', 'sin rama',
-                  'TODAS_LAS_DEMAS', 'sin dueño'):
+                  'TODAS_LAS_DEMAS', 'falta id o descripción', 'WP-04: listado en orden_paquetes sin archivo'):
         assert texto in problemas
+    assert "'X'" not in problemas  # un conflicto abierto con id y descripción espera al usuario: no es error
 
 
 def test_estado_dependencia_de_archivo_no_bloquea_integracion():
@@ -81,3 +83,31 @@ def test_lista_de_eliminadas_reemplaza_conteos_a_mano(tmp_path, monkeypatch):
     assert controles['Pruebas eliminadas listadas']['resultado'] == 'FALLA'
     sin_lista = {c['control']: c for c in verificar.compare(ahora, base, 2, 0)}
     assert 'sin lista verificable' in sin_lista['Suite asistente']['detalle']
+
+
+def test_controles_que_no_se_pudieron_medir(monkeypatch):
+    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (1, 'Traceback: no es un repositorio git'))
+    assert verificar.count_real_ids() is None
+    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (2, 'error: configuración inválida'))
+    assert verificar.ruff_count() is None
+    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (0, 'src\\nurus\\x.py:1:1: F821 nombre'))
+    assert verificar.ruff_count() == 1
+    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (3, '10 passed in 1.0s'))
+    assert verificar.pytest_counts([])['fallidas'] == 1
+
+
+def test_lista_de_eliminadas_rechaza_nodos_inventados_o_repetidos(tmp_path, monkeypatch):
+    lista = tmp_path / 'eliminadas.txt'
+    lista.write_text('tests/test_a.py::test_real\ntests/inventado.py::x\ntests/inventado.py::x\n', encoding='utf-8')
+    monkeypatch.setattr(verificar, 'collected_nodeids', lambda suite: set())
+    monkeypatch.setattr(verificar, 'existed_in_base', lambda node, commit: node == 'tests/test_a.py::test_real')
+    _, problemas = verificar.removed_from_lists([lista], 'abc1234')
+    assert 'tests/inventado.py::x está repetido' in problemas
+    assert any('tests/inventado.py::x no existía en la línea base' in p for p in problemas)
+    assert not any('test_real' in p for p in problemas)
+
+
+def test_existed_in_base_lee_el_archivo_de_la_linea_base():
+    assert verificar.existed_in_base('tests/test_herramientas_plan.py::test_control_sin_medir_da_falla', 'HEAD')
+    assert not verificar.existed_in_base('tests/test_herramientas_plan.py::test_que_no_existe', 'HEAD')
+    assert not verificar.existed_in_base('tests/no_existe.py::test_x', 'HEAD')
