@@ -469,10 +469,13 @@ class Work:
             obj.rows.append(row)
         return obj
 
-    def save(self, directory):
+    def save(self, directory, *, snapshot=False):
+        """snapshot=True guarda una copia de respaldo sin cambiar la sesión principal (storage_directory),
+        donde los recibos de borradores y proyectos siguen persistiéndose."""
         directory = Path(directory)
         directory.mkdir(parents=True, exist_ok=True)
-        self.storage_directory = str(directory)
+        if not snapshot:
+            self.storage_directory = str(directory)
         source = directory / (self.source_hash + '.bin')
         from .session import archive_bytes
 

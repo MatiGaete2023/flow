@@ -45,7 +45,7 @@ def incorporate(app, transfer):
         # La sesión única puede cambiar después: conservar también la anterior.
         from uuid import uuid4
 
-        app.work.save(transfer.recovery_folder / 'anteriores' / uuid4().hex)
+        app.work.save(transfer.recovery_folder / 'anteriores' / uuid4().hex, snapshot=True)
 
     def analyze():
         from .sitfa import inspect_input
@@ -71,7 +71,7 @@ def incorporate(app, transfer):
         app.sheet.set(mode)
         app._show_work()
         app._save_session()
-        work.save(transfer.recovery_folder / 'incorporada')
+        work.save(transfer.recovery_folder / 'incorporada', snapshot=True)
         # Un fallo posterior de Excel no provoca otro análisis ni otra descarga.
         transfer.update('INCORPORADA', source_hash=expected, source=str(source))
         app._export_current()

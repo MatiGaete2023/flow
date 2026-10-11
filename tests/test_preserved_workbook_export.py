@@ -260,3 +260,12 @@ def test_native_savecopyas_separates_input_output_and_closes_excel(tmp_path, mon
     pythoncom.CoUninitialize.assert_called_once()
     assert sheet.Range.return_value.Interior.Color == 255 + 242 * 256 + 204 * 65536
     assert opened and not opened[0].exists()
+
+
+def test_snapshot_save_keeps_primary_session(tmp_path):
+    # Un respaldo (anteriores/incorporada) no desvía los recibos de borradores fuera de la sesión principal.
+    work, _ = _work(tmp_path / "entrada.xlsx")
+    work.save(tmp_path / "sesion")
+    work.save(tmp_path / "respaldo", snapshot=True)
+    assert work.storage_directory == str(tmp_path / "sesion")
+    assert (tmp_path / "respaldo" / "trabajo.json").is_file()

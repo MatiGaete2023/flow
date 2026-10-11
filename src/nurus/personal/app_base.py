@@ -648,7 +648,7 @@ class App(ctk.CTk):
             if previous and candidate.capture_digest != getattr(previous, 'capture_digest', ''):
                 from uuid import uuid4
 
-                previous.save(self.cfg.directory / 'sesion' / 'anteriores' / uuid4().hex)
+                previous.save(self.cfg.directory / 'sesion' / 'anteriores' / uuid4().hex, snapshot=True)
                 self._prune_previous_sessions()
             self.work = candidate
             if not reused:
