@@ -1028,19 +1028,20 @@
         "WP-62"
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "Codex /root con subagentes de apoyo",
       "tomado": "11 de octubre de 2026",
       "rama": "wp/auditoria-refactor-20261011",
       "pr": null,
-      "verificacion": "Pruebas focales y revisión de apoyo pasan; corrida completa pendiente antes de publicar el PR.",
+      "verificacion": "PASA en 473175c25b24e1d8f7fb3163ed95b1d3076443e9: Asistente 767 aprobadas/11 omitidas/6 xfail estrictos; Descargador 235 aprobadas/62 subpruebas; 9 controles PASA, golden17 y procedencia limpia. Evidencia: docs/implementacion/verificacion/WP-63.json. CI Windows pendiente en el PR.",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Alcance autorizado por la petición del usuario: auditar, corregir, simplificar y actualizar el repositorio y el plan.",
         "Base limpia 2cf8ca893e85a0203b1c051026b87f16ff6be964. Medición previa: 592/11/6 xfail y 231/62; golden17 y controles PASA.",
-        "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar."
+        "La excepción E3 anterior solo cubre PR #4/#8/#11/#12–#32; WP-63 espera revisión de otra raíz antes de integrar.",
+        "La primera corrida detectó 5 regresiones antiguas del verificador; se ajustaron al contrato E2 conservando nodeids. Evidencia FALLA conservada en WP-63-falla-api.json."
       ]
     },
     "WP-70": {

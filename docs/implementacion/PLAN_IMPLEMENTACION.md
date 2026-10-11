@@ -489,7 +489,7 @@ La memoria del proyecto vive en el repositorio, no en las conversaciones. Tres a
 
 | Archivo | Quién escribe | Contenido |
 | --- | --- | --- |
-| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los 34 WP, conflictos abiertos, traspasos |
+| `docs/implementacion/ESTADO.json` | Solo el Orquestador (los demás proponen cambios en su PR) | Decisiones D1–D9, estado de los 35 WP, conflictos abiertos, traspasos |
 | `docs/implementacion/wp/<ID>.md` | El Ejecutor del WP | Qué hizo, archivos tocados, pruebas agregadas o borradas, dudas |
 | `docs/implementacion/auditoria/<ID>.md` | El Auditor | Lista de control y veredicto |
 

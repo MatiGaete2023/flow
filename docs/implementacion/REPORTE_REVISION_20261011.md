@@ -85,12 +85,25 @@ rectores. Las siete fuentes originales se conservan.
 
 ## 5. Validación
 
-La ficha WP-63 y el informe de verificación final registran el commit medido y los resultados del conjunto.
-Se ejecutan suites completas, golden17, control de identidades, lint/formato, estado, enlaces y restricciones.
+Verificación final **PASA**, medida sobre `473175c25b24e1d8f7fb3163ed95b1d3076443e9`, con árbol Git limpio
+y sin cambios durante la ejecución. [Evidencia final](verificacion/WP-63.json).
+
+| Medición | Resultado |
+| --- | --- |
+| Asistente | 767 aprobadas, 11 omitidas, 6 xfail estrictos preexistentes |
+| Descargador | 235 aprobadas y 62 subpruebas |
+| Inventario de la base | Sin bajas no declaradas; todos los nodeids originales presentes |
+| Paridad | 17 productos golden sin cambios |
+| Identidades, lint, módulos no alcanzables y enlaces rotos | 0 hallazgos en cada control |
+| Restricciones y procedencia | PASA; mismo SHA/árbol limpio antes y después |
+
+Los nueve controles pasan. Formato y estado se comprueban también por separado. La CI Windows se observará en el
+PR; su resultado no certifica Excel ni Outlook reales. Los commits posteriores al medido solo completan documentación
+y evidencia; el código/configuración/pruebas verificados permanecen idénticos.
 Las regresiones focales y la revisión de apoyo sirven de diagnóstico; no reemplazan esa corrida completa ni el acta.
 La primera corrida conjunta detectó cinco pruebas antiguas acopladas a la API privada retirada del verificador.
 Se actualizaron sus fixtures y aserciones al contrato E2 (inventario medido, código de proceso y JSON de Ruff),
-preservando todos sus nodeids y su propósito. El informe FALLA se conserva para trazabilidad.
+preservando todos sus nodeids y su propósito. El [informe FALLA](verificacion/WP-63-falla-api.json) se conserva para trazabilidad.
 Ninguna prueba existente se retira ni se omite para ocultar un fallo. Los seis xfail son los conflictos estrictos
 preexistentes de WP-60; no se convierten en aceptación.
 
