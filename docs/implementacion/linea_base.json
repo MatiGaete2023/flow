@@ -1,14 +1,14 @@
 {
-  "commit": "4470ff32bb9d479f0ad4a6774948038bc6729c02",
+  "commit": "c58de60fc9654a10d027765fa7202865f222c456",
   "asistente": {
-    "aprobadas": 830,
+    "aprobadas": 841,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "830 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "841 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 240,
@@ -343,6 +343,17 @@
       "tests/test_download_transfer.py::test_request_path_escape_or_unknown_state_cannot_select_other_reply",
       "tests/test_download_transfer.py::test_result_after_csmp_restart_is_selected_without_starting_downloader",
       "tests/test_download_transfer.py::test_starting_another_work_does_not_erase_edits_to_returned_download",
+      "tests/test_draft_preview_performance.py::test_actual_mail_cards_read_shared_attachment_once_per_redraw[False]",
+      "tests/test_draft_preview_performance.py::test_actual_mail_cards_read_shared_attachment_once_per_redraw[True]",
+      "tests/test_draft_preview_performance.py::test_cards_without_receipts_still_warn_about_invalid_addresses[cc]",
+      "tests/test_draft_preview_performance.py::test_cards_without_receipts_still_warn_about_invalid_addresses[to]",
+      "tests/test_draft_preview_performance.py::test_display_without_scope_always_reads_current_bytes",
+      "tests/test_draft_preview_performance.py::test_equal_size_and_mtime_edit_is_seen_by_next_query",
+      "tests/test_draft_preview_performance.py::test_failed_read_does_not_leak_scope_into_next_query",
+      "tests/test_draft_preview_performance.py::test_nested_scopes_share_only_attachment_digests",
+      "tests/test_draft_preview_performance.py::test_one_attachment_read_for_a_hundred_drafts_per_preflight",
+      "tests/test_draft_preview_performance.py::test_saving_identity_ignores_active_display_cache",
+      "tests/test_draft_preview_performance.py::test_worker_thread_cannot_reuse_tk_query_cache",
       "tests/test_exportacion_segura.py::test_copia_portable_no_muestra_apostrofo_en_la_propuesta",
       "tests/test_exportacion_segura.py::test_copia_portable_revisada_conserva_observacion_literal_sin_apostrofo",
       "tests/test_exportacion_segura.py::test_exportacion_fallida_no_deja_archivo_y_restaura_output",

@@ -1,8 +1,7 @@
 # WP-84 · G-5 y limpieza restante del historial
 
-Estado actual: #36–38 integrados en feat 9fbb08c con excepción E3 expresa del usuario.
-#39 actualizado contra esa base; excepción E3 autorizada por el usuario («Haz la excepcion y termina tu»).
-Corrección final de avisos de dirección inválida; verificación de integración en curso.
+Estado actual: #36–39 integrados en feat con excepciones E3 expresas del usuario.
+G-5 resuelto; verificación posterior PASA 841/240 en c58de60fc9654a10d027765fa7202865f222c456.
 Las evidencias y notas anteriores de preparación son históricas.
 
 
@@ -88,3 +87,22 @@ GUI adicionales fallaron antes de corregir; se valida con emails sin leer adjunt
 Once regresiones focales PASA; se conservan las nueve originales y la reducción 100→1.
 Usuario autoriza excepción E3 para #39: «Haz la excepcion y termina tu». No se autoriza main
 ni se sustituye el acta real. Verificación completa posterior a integración en curso.
+
+## Cierre técnico — 11 de octubre de 2026
+
+Integración de #39 en c58de60fc9654a10d027765fa7202865f222c456, con excepción E3 explícita del usuario («Haz la excepcion y termina tu»).
+Verificación posterior PASA contra base 830/240: 841 aprobadas, 11 omitidas y 6 xfail estrictos en
+Asistente; 240 aprobadas y 62 subpruebas en Descargador. Nueve controles PASA, identidad Git
+limpia/estable y línea base regenerada en este SHA. Once regresiones focales; dos correcciones GUI
+adicionales conservan los avisos sin recibos y sin lectura de bytes. Ninguna prueba retirada.
+
+Código, pruebas y configuración permanecen iguales en el commit posterior de documentos.
+Controles Windows, ejecutable e instalador: ver resultados definitivos en el PR #39.
+Sin revisión ni auditoría de otra raíz; no presentar esta excepción como aprobación independiente.
+
+Etiquetas antiguas borradas en remoto y copia de trabajo. Checker actualizado --historia = 0
+sobre ramas del clon nuevo y copia de trabajo; se conserva pre-WP-63 saneado. Refs de PR/cachés
+requieren Soporte GitHub. No purga completa ni aceptación de uso real.
+
+Pendientes del plan general: Soporte GitHub (WP-17), pruebas reales Excel/Outlook y acta (WP-02),
+diez ingresos de cronología (WP-50), cierre final WP-70 tras acta. Motor/textos/golden17 intactos.
