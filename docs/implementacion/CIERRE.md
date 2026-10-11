@@ -1,7 +1,7 @@
 # Cierre de la implementación (WP-70) — borrador de métricas
 
-11 de octubre de 2026 · punta medida: `feat/ejecucion-plan-20261008` en `51b2477` (historial purgado). **WP-70 no está
-cerrado:** faltan el paquete compilado en CI, el acta de uso real del usuario y D2.
+11 de octubre de 2026 · punta medida: `feat/ejecucion-plan-20261008` en `51b2477` (historial purgado); CI verde en
+`14f679d`. **WP-70 no está cerrado:** faltan el acta de uso real del usuario y D2.
 
 ## Métricas de término (PLAN_IMPLEMENTACION.md, «Criterio de término y métricas»)
 
@@ -21,12 +21,14 @@ cerrado:** faltan el paquete compilado en CI, el acta de uso real del usuario y 
 | Actas de uso real firmadas | 0 | 0 | ≥ 2 | **No** (WP-02 y WP-70, del usuario) |
 
 Suites en la punta: asistente 592 aprobadas, 11 omitidas y 6 xfail; descargador 231 aprobadas y 62 subpruebas
-(`verificar_wp.py`: PASA). Medido en local: la CI quedó sin runners desde la madrugada del 11 de octubre.
+(`verificar_wp.py`: PASA). CI en `14f679d` (11 de octubre, tras habilitar presupuesto): asistente Windows en Python
+3.12, 3.13 y 3.14 verde (3.12: 600 aprobadas, 1 omitida, 6 xfail); descargador verde. Run 38136720831.
 
 ## Para cerrar WP-70
 
-1. **CI:** cuando haya runners, ejecutar el workflow del paquete conjunto (instalador y Descargador) sobre `feat`. El
-   usuario recibe los artefactos.
+1. **CI (hecho):** paquete conjunto compilado en `14f679d` (run 38136720831): `CSMP-Instalador-Windows-0.5.0.dev5`,
+   `CSMP-Integral-Windows-0.5.0.dev5` y `CSMP-Descargador-Integral-0.5.0.dev5-SITFA-2.7.6`. Plantilla del acta para
+   ese commit en la rama `wp/02-acta-uso-real`.
 2. **Uso real:** el usuario prueba con datos reales en su PC autorizado y firma el acta
    `docs/aceptacion/ACTA_USO_REAL_<fecha>.json`. Solo él la crea; el agente no la redacta ni la presume.
 3. **D2 y WP-02:** listar los casos D-T y A-T que pasaron. WP-50 depende de eso y del acta de 10 ingresos (D5).
