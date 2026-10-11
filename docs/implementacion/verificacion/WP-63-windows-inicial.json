@@ -1,0 +1,22 @@
+{
+  "commit": "7a39a5f48f49c2a2a1818cea257ab296c11b5667",
+  "plataforma": "windows-latest, Python 3.12.10",
+  "veredicto": "FALLA",
+  "controles": [
+    {
+      "control": "Asistente Windows",
+      "resultado": "FALLA",
+      "run": 38145603855,
+      "url": "https://github.com/MatiGaete2023/flow/actions/runs/38145603855",
+      "detalle": "7 fallidas, 770 aprobadas, 1 omitida, 6 xfail estrictos; 8 advertencias. Fixtures Unicode, lectura de YAML y JSON usaban encoding implícito cp1252."
+    },
+    {
+      "control": "Descargador Windows",
+      "resultado": "PASA",
+      "run": 38145604043,
+      "url": "https://github.com/MatiGaete2023/flow/actions/runs/38145604043",
+      "detalle": "Suite y extensión aprobadas; compilación/Playwright omitidos en PR según E4."
+    }
+  ],
+  "nota": "No se modifica el resultado ni se omiten casos. Evidencia conservada antes de corregir la portabilidad de las nuevas regresiones; Office real no probado."
+}

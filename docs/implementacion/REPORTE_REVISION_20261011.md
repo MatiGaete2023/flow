@@ -46,6 +46,7 @@ resultado obsoleto o gasto evitable. Cada grupo de errores de código tiene regr
 | Alta | Pytest/procesos con fallo o salida ilegible podían dar PASA; una medición fallida podía reemplazar la línea base | Exigir código, resumen y datos válidos; timeout/ausencia son FALLA; baseline solo se publica si todo pasa |
 | Alta | Bajas numéricas y nodeids inventados daban holgura al verificador | Rechazar bajas numéricas positivas; exigir pertenencia exacta al inventario de la base y ausencia actual con recolección válida |
 | Alta | RUT dividido entre runs OOXML o dentro de un XLSX anidado escapaba al scanner; un ZIP corrupto se consideraba limpio | Unir segmentos visibles, recorrer ZIP/OOXML anidados con límites y devolver error si no se puede medir; enmascarar diagnósticos |
+| Alta | Texto cp1252 o UTF-16 podía perder caracteres al escanear como UTF-8 ignorando errores | Decodificar estrictamente UTF-8/cp1252/UTF-16 con BOM, respetar el encoding XML y fallar ante texto ilegible o ambiguo |
 | Alta | Informe sin árbol exacto podía referirse a código local distinto; «integrable» podía ignorar controles fallidos | SHA completo, árbol Git, cambios locales e igualdad antes/después; elegibilidad exige procedencia y todos los controles PASA |
 | Media | Estado admitía ciclos funcionales o podía regenerarse con fuentes incoherentes | Detectar ciclos y validar antes de agregar; dependencias de archivo mantienen su semántica |
 | Media | CI ejecutaba compilaciones/Playwright en PR, invirtiendo E4 | PR con pruebas mínimas 3.12; matriz y pasos pesados al integrar o ejecutar manualmente |
@@ -86,8 +87,8 @@ rectores. Las siete fuentes originales se conservan.
 
 ## 5. Validación
 
-Verificación final **PASA**, medida sobre `473175c25b24e1d8f7fb3163ed95b1d3076443e9`, con árbol Git limpio
-y sin cambios durante la ejecución. [Evidencia final](verificacion/WP-63.json).
+Primera verificación Linux **PASA**, medida sobre `473175c25b24e1d8f7fb3163ed95b1d3076443e9`, con árbol Git limpio
+y sin cambios durante la ejecución. [Evidencia inicial Linux](verificacion/WP-63-linux-inicial.json).
 
 | Medición | Resultado |
 | --- | --- |
@@ -99,8 +100,11 @@ y sin cambios durante la ejecución. [Evidencia final](verificacion/WP-63.json).
 | Restricciones y procedencia | PASA; mismo SHA/árbol limpio antes y después |
 
 Los nueve controles pasan. Formato y estado se comprueban también por separado. La CI Windows se observará en el
-PR; su resultado no certifica Excel ni Outlook reales. Los commits posteriores al medido solo completan documentación
-y evidencia; el código/configuración/pruebas verificados permanecen idénticos.
+PR; su resultado no certifica Excel ni Outlook reales. La primera CI Windows detectó siete regresiones de codificación en las nuevas pruebas: fixtures Unicode, lectura YAML
+y lectura del informe JSON. Se hicieron explícitas las codificaciones UTF-8 sin modificar nodeids, activar PYTHONUTF8
+ni agregar skips. [Evidencia Windows FALLA](verificacion/WP-63-windows-inicial.json).
+Además se corrigió la decodificación del scanner para el texto Windows y miembros ZIP/XML, con 13 nuevas regresiones;
+148 pruebas focales pasan. La nueva verificación completa y CI están en curso.
 Las regresiones focales y la revisión de apoyo sirven de diagnóstico; no reemplazan esa corrida completa ni el acta.
 La primera corrida conjunta detectó cinco pruebas antiguas acopladas a la API privada retirada del verificador.
 Se actualizaron sus fixtures y aserciones al contrato E2 (inventario medido, código de proceso y JSON de Ruff),
