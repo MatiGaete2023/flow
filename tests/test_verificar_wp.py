@@ -223,11 +223,11 @@ def test_valid_historical_debt_can_initialize_and_update(monkeypatch, baseline_f
     assert verifier.main(["--linea-base"]) == 0
     healthy["asistente"]["aprobadas"] += 1
     assert verifier.main(["--linea-base"]) == 0
-    assert json.loads(baseline_file.read_text())["asistente"]["aprobadas"] == 11
+    assert json.loads(baseline_file.read_text(encoding="utf-8"))["asistente"]["aprobadas"] == 11
 
 
 def test_output_cannot_overwrite_baseline(monkeypatch, baseline_file, healthy):
-    baseline_file.write_text(json.dumps(healthy))
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
     monkeypatch.setattr(verifier, "collect", lambda: pytest.fail("must reject before running"))
     with pytest.raises(SystemExit) as exc:
         verifier.main(["--salida", str(baseline_file)])
@@ -257,7 +257,7 @@ def test_changed_or_dirty_worktree_not_integrable(monkeypatch, baseline_file, he
     report_file = tmp_path / "report.json"
     assert verifier.main(["--linea-base", "--salida", str(report_file)]) == 1
     assert not baseline_file.exists()
-    report = json.loads(report_file.read_text())
+    report = json.loads(report_file.read_text(encoding="utf-8"))
     assert report["elegible_integracion"] is False
     assert report["veredicto"] == "FALLA"
     assert len(report["controles"]) == 9
@@ -270,25 +270,25 @@ def test_cli_removed_list_uses_exact_baseline_inventory(
 ):
     node = 'tests/test_synthetic.py::test_known[synthetic]'
     healthy['pruebas_recolectadas'] = {'asistente': [node], 'descargador': []}
-    baseline_file.write_text(json.dumps(healthy))
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
     now = copy.deepcopy(healthy)
     now['asistente']['aprobadas'] -= 1
     now['pruebas_recolectadas']['asistente'] = []
     monkeypatch.setattr(verifier, 'collect', lambda: now)
     monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
     manifest = tmp_path / 'removed.txt'
-    manifest.write_text('tests/test_synthetic.py::' + declared)
+    manifest.write_text('tests/test_synthetic.py::' + declared, encoding="utf-8")
     assert verifier.main(['--lista-eliminadas', str(manifest)]) == expected
 
 
 def test_clean_source_with_failed_control_is_not_integrable(monkeypatch, baseline_file, healthy, tmp_path):
-    baseline_file.write_text(json.dumps(healthy))
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
     now = copy.deepcopy(healthy)
     now['asistente']['fallidas'] = 1
     monkeypatch.setattr(verifier, 'collect', lambda: now)
     report_file = tmp_path / 'report.json'
     assert verifier.main(['--salida', str(report_file)]) == 1
-    report = json.loads(report_file.read_text())
+    report = json.loads(report_file.read_text(encoding="utf-8"))
     assert report['procedencia_verificada'] is True
     assert report['elegible_integracion'] is False
     assert report['veredicto'] == 'FALLA'
