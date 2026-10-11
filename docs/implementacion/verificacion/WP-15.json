@@ -1,0 +1,406 @@
+{
+  "commit": "ba18ff1",
+  "base": "a19f306",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "612 passed, 11 skipped in 44.00s (mínimo 612 aprobadas; base 612)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "204 passed, 62 subtests passed in 40.48s (mínimo 198 aprobadas; base 198)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "12 hallazgos (límite 18)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "12 (base 12)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "26 (base 26)"
+    }
+  ],
+  "veredicto": "PASA",
+  "verificacion_independiente": {
+    "verificador_codigo": 0,
+    "mediciones": {
+      "commit": "ba18ff1",
+      "asistente": {
+        "aprobadas": 612,
+        "omitidas": 11,
+        "fallidas": 0,
+        "subpruebas": 0,
+        "codigo": 0,
+        "resumen": "612 passed, 11 skipped in 44.00s"
+      },
+      "descargador": {
+        "aprobadas": 204,
+        "omitidas": 0,
+        "fallidas": 0,
+        "subpruebas": 62,
+        "codigo": 0,
+        "resumen": "204 passed, 62 subtests passed in 40.48s"
+      },
+      "identidades_reales": 12,
+      "paridad_golden": "PASA",
+      "restricciones": [],
+      "ruff_src": 0,
+      "modulos_no_alcanzables": 12,
+      "enlaces_rotos": 26
+    },
+    "ejecuciones": [
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "descargador"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "/workspace/flow-wp15/tools/check_real_ids.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "/workspace/flow-wp15/tools/flow_baseline_golden.py",
+          "--output",
+          "/tmp/tmp4gsnrk55/golden",
+          "--expected",
+          "/workspace/flow-wp15/docs/evidencia_p0/golden/semantic.json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "--select",
+          "E9,F63,F7,F82",
+          "--output-format",
+          "concise",
+          "src"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "/workspace/flow-wp15/tools/modulos_no_alcanzables.py",
+          "--json"
+        ],
+        "codigo": 0,
+        "ejecucion_esperada": true
+      },
+      {
+        "comando": [
+          "/workspace/flow-wp15-verify-venv/bin/python",
+          "/workspace/flow-wp15/tools/check_links.py"
+        ],
+        "codigo": 1,
+        "ejecucion_esperada": true
+      }
+    ],
+    "aceptacion_especifica": {
+      "archivos_nuevos_hallazgos": 0,
+      "pruebas_HAR_incluidas_en_suite": [
+        "test_metadatos_con_texto_no_se_comparten",
+        "test_no_sobrescribe_salida",
+        "test_no_sobrescribe_salida_creada_durante_lectura",
+        "test_nombres_arbitrarios_no_se_comparten",
+        "test_parametros_post_y_rutas_parcialmente_conocidas",
+        "test_salida_sin_valores_y_con_acciones"
+      ],
+      "minimo_asistente_independiente": 612,
+      "minimo_descargador_independiente": 204,
+      "CI_Windows": "PENDIENTE: no se acredita aceptación de Descargador ni integración con esta verificación Linux",
+      "cabeza_completa": "ba18ff1f989ba6d931baa1b4e5b2fa71969ef10a",
+      "fecha_verificacion": "2026-10-10T00:08:29.670198+00:00",
+      "base_real_de_rama": "f2ae588104587bf6d53f3ecd48354fcb4be09425",
+      "archivos_diff": [
+        "descargador/extraer_estructura_har.py",
+        "descargador/test_extraer_estructura_har.py",
+        "docs/implementacion/verificacion/WP-15.json",
+        "docs/implementacion/wp/WP-15.md"
+      ],
+      "motor_textos_y_golden_sin_diff": true,
+      "productos_golden_versionados": 17,
+      "identidades_heredadas": {
+        "cantidad": 12,
+        "solo_variantes": true
+      },
+      "privacidad": "Suite incluye nombres arbitrarios en host/ruta/campos/onclick, parámetros post, prefijos de rutas y metadatos; los desconocidos se sustituyen por marcadores.",
+      "sobrescritura": "Suite incluye salida previa y creación concurrente durante lectura; apertura exclusiva x.",
+      "verificacion_Linux": "PASA",
+      "aceptacion_total_WP": "PENDIENTE: falta CI Windows verde según controles adicionales del plan"
+    },
+    "codigos_validos": true
+  },
+  "nota_deuda_baseline": "12 hallazgos de identidades y 26 enlaces rotos; sus códigos 1 representan hallazgos contabilizados contra la deuda basal, sin acreditar que esté resuelta.",
+  "historial_verificaciones": [
+    {
+      "commit": "f2ae588",
+      "base": "a19f306",
+      "controles": [
+        {
+          "control": "Suite asistente",
+          "resultado": "PASA",
+          "detalle": "612 passed, 11 skipped in 42.07s (mínimo 612 aprobadas; base 612)"
+        },
+        {
+          "control": "Suite descargador",
+          "resultado": "PASA",
+          "detalle": "201 passed, 59 subtests passed in 37.51s (mínimo 198 aprobadas; base 198)"
+        },
+        {
+          "control": "Identidades reales",
+          "resultado": "PASA",
+          "detalle": "12 hallazgos (límite 18)"
+        },
+        {
+          "control": "Paridad golden",
+          "resultado": "PASA",
+          "detalle": "PASA"
+        },
+        {
+          "control": "Restricciones absolutas",
+          "resultado": "PASA",
+          "detalle": "sin infracciones"
+        },
+        {
+          "control": "Ruff E9/F63/F7/F82",
+          "resultado": "PASA",
+          "detalle": "0 (base 0)"
+        },
+        {
+          "control": "Módulos no alcanzables",
+          "resultado": "PASA",
+          "detalle": "12 (base 12)"
+        },
+        {
+          "control": "Enlaces rotos",
+          "resultado": "PASA",
+          "detalle": "26 (base 26)"
+        }
+      ],
+      "veredicto": "PASA"
+    },
+    {
+      "commit": "d40a655",
+      "base": "a19f306",
+      "controles": [
+        {
+          "control": "Suite asistente",
+          "resultado": "PASA",
+          "detalle": "612 passed, 11 skipped in 44.75s (mínimo 612 aprobadas; base 612)"
+        },
+        {
+          "control": "Suite descargador",
+          "resultado": "PASA",
+          "detalle": "201 passed, 59 subtests passed in 36.94s (mínimo 198 aprobadas; base 198)"
+        },
+        {
+          "control": "Identidades reales",
+          "resultado": "PASA",
+          "detalle": "12 hallazgos (límite 18)"
+        },
+        {
+          "control": "Paridad golden",
+          "resultado": "PASA",
+          "detalle": "PASA"
+        },
+        {
+          "control": "Restricciones absolutas",
+          "resultado": "PASA",
+          "detalle": "sin infracciones"
+        },
+        {
+          "control": "Ruff E9/F63/F7/F82",
+          "resultado": "PASA",
+          "detalle": "0 (base 0)"
+        },
+        {
+          "control": "Módulos no alcanzables",
+          "resultado": "PASA",
+          "detalle": "12 (base 12)"
+        },
+        {
+          "control": "Enlaces rotos",
+          "resultado": "PASA",
+          "detalle": "26 (base 26)"
+        }
+      ],
+      "veredicto": "PASA",
+      "verificacion_independiente": {
+        "verificador_codigo": 0,
+        "mediciones": {
+          "commit": "d40a655",
+          "asistente": {
+            "aprobadas": 612,
+            "omitidas": 11,
+            "fallidas": 0,
+            "subpruebas": 0,
+            "codigo": 0,
+            "resumen": "612 passed, 11 skipped in 44.75s"
+          },
+          "descargador": {
+            "aprobadas": 201,
+            "omitidas": 0,
+            "fallidas": 0,
+            "subpruebas": 59,
+            "codigo": 0,
+            "resumen": "201 passed, 59 subtests passed in 36.94s"
+          },
+          "identidades_reales": 12,
+          "paridad_golden": "PASA",
+          "restricciones": [],
+          "ruff_src": 0,
+          "modulos_no_alcanzables": 12,
+          "enlaces_rotos": 26
+        },
+        "ejecuciones": [
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "descargador"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "/workspace/flow-wp15/tools/check_real_ids.py"
+            ],
+            "codigo": 1,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "/workspace/flow-wp15/tools/flow_baseline_golden.py",
+              "--output",
+              "/tmp/tmpu7xpvxh1/golden",
+              "--expected",
+              "/workspace/flow-wp15/docs/evidencia_p0/golden/semantic.json"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "-m",
+              "ruff",
+              "check",
+              "--select",
+              "E9,F63,F7,F82",
+              "--output-format",
+              "concise",
+              "src"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "/workspace/flow-wp15/tools/modulos_no_alcanzables.py",
+              "--json"
+            ],
+            "codigo": 0,
+            "ejecucion_esperada": true
+          },
+          {
+            "comando": [
+              "/workspace/flow-wp15-verify-venv/bin/python",
+              "/workspace/flow-wp15/tools/check_links.py"
+            ],
+            "codigo": 1,
+            "ejecucion_esperada": true
+          }
+        ],
+        "aceptacion_especifica": {
+          "archivos_nuevos_hallazgos": 0,
+          "pruebas_HAR_incluidas_en_suite": [
+            "test_no_sobrescribe_salida",
+            "test_no_sobrescribe_salida_creada_durante_lectura",
+            "test_salida_sin_valores_y_con_acciones"
+          ],
+          "minimo_asistente_independiente": 612,
+          "minimo_descargador_independiente": 201
+        },
+        "codigos_validos": true
+      },
+      "nota_deuda_baseline": "12 hallazgos de identidades y 26 enlaces rotos; sus códigos 1 representan hallazgos contabilizados contra la deuda basal, sin acreditar que esté resuelta.",
+      "atribucion_historial_verificaciones": "Las mediciones previas sin bloque verificacion_independiente pertenecen al Ejecutor; el presente informe instrumentado es la verificación independiente de la cabeza actual."
+    }
+  ],
+  "atribucion_historial_verificaciones": "Las mediciones previas sin bloque verificacion_independiente pertenecen al Ejecutor; el presente informe instrumentado es la verificación independiente de la cabeza actual."
+}
