@@ -8,7 +8,7 @@ Uso:
         --lista-eliminadas: archivo con un nodeid de pytest por línea (p. ej.
         tests/test_x.py::test_y o descargador/test_z.py::Clase::test_w). Cada nodo debe estar
         ausente ahora; su cantidad reemplaza a los conteos declarados a mano.
-    --pruebas-eliminadas-asistente/-descargador N siguen aceptados por compatibilidad, pero
+    --pruebas-eliminadas-asistente/-descargador N siguen aceptados por compatibilidad, pero dan FALLA (E2);
         el control queda marcado «sin lista verificable».
 
 Controles:
@@ -250,12 +250,14 @@ def compare(now, base, removed_a, removed_d, lists=None):
     listed, problems = lists if lists else ({}, [])
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
         n, b = now[key], base[key]
+        # E2: un número sin lista de nodeids no se puede medir, así que no rebaja el mínimo sin fallar.
+        unlisted = removed
         removed += listed.get(key, 0)
         minimum = b["aprobadas"] - removed
-        origin = "" if not removed or listed.get(key) else "; eliminadas sin lista verificable"
+        origin = "; eliminadas sin lista verificable (E2: FALLA)" if unlisted else ""
         add(
             f"Suite {key}",
-            n["fallidas"] == 0 and n["aprobadas"] >= minimum,
+            n["fallidas"] == 0 and n["aprobadas"] >= minimum and not unlisted,
             f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']}{origin})",
         )
     if lists:

@@ -110,6 +110,8 @@ def test_lista_de_eliminadas_reemplaza_conteos_a_mano(tmp_path, monkeypatch):
     assert controles['Pruebas eliminadas listadas']['resultado'] == 'FALLA'
     sin_lista = {c['control']: c for c in verificar.compare(ahora, base, 2, 0)}
     assert 'sin lista verificable' in sin_lista['Suite asistente']['detalle']
+    # E2: el número sin lista no rebaja el mínimo en silencio.
+    assert sin_lista['Suite asistente']['resultado'] == 'FALLA'
 
 
 def test_controles_que_no_se_pudieron_medir(monkeypatch):
@@ -138,3 +140,28 @@ def test_existed_in_base_lee_el_archivo_de_la_linea_base():
     assert verificar.existed_in_base('tests/test_herramientas_plan.py::test_control_sin_medir_da_falla', 'HEAD')
     assert not verificar.existed_in_base('tests/test_herramientas_plan.py::test_que_no_existe', 'HEAD')
     assert not verificar.existed_in_base('tests/no_existe.py::test_x', 'HEAD')
+
+
+def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
+    import importlib.util
+    import io
+    import zipfile
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    # El dígito verificador se calcula aquí: el archivo de prueba no contiene un RUT válido literal.
+    rut = '12345678-' + ids.check_digit('12345678')
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as book:
+        book.writestr('xl/sharedStrings.xml', '<t>RUT ' + rut + '</t>')
+    session = tmp_path / 'abc.bin'
+    session.write_bytes(buffer.getvalue())
+    script = tmp_path / 'instalar.ps1'
+    script.write_text('$rut = "' + rut + '"', encoding='utf-8')
+    image = tmp_path / 'logo.png'
+    image.write_bytes(b'\x89PNG\x00\x00')
+    found = {name: text for path in (session, script, image) for name, text in ids.texts(path)}
+    assert any(rut in text for name, text in found.items() if '.bin!' in name)
+    assert any(rut in text for name, text in found.items() if name.endswith('.ps1'))
+    assert not any(name.endswith('.png') for name in found)

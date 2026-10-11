@@ -10,3 +10,4 @@ dist/
 build/
 *.egg-info/
 pytest-cache-files-*/
+src/nurus/personal/_build_meta.py
