@@ -300,12 +300,6 @@
   ],
   "ramas": [
     {
-      "rama": "origin",
-      "sha": "52c6359ade4b31cc2773734d6cbf1566d7dc169c",
-      "incluida_al_inicio": true,
-      "incluida_al_final": true
-    },
-    {
       "rama": "origin/ccr-4116db41-nm8g0r",
       "sha": "0b3990d1beaeb22f0ee8ccc2c39b1e5d27c90706",
       "incluida_al_inicio": true,
@@ -580,5 +574,8 @@
   "consolidacion_fuentes": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a",
   "commit_verificado": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
   "resultado": "PASA",
-  "total_incorporadas": 45
+  "total_incorporadas": 45,
+  "alias_excluidos": [
+    "origin/HEAD (alias simbólico de main)"
+  ]
 }
