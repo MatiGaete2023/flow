@@ -2,8 +2,13 @@
 
 La matriz distingue implementación, pruebas locales y aceptación institucional.
 No declara gates aprobados a partir de que un archivo de test exista.
+
+python tools/flow_plan_progress.py              # solo comprueba y dice qué archivos difieren
+python tools/flow_plan_progress.py --escribir   # reescribe la evidencia y la trazabilidad
 """
+import argparse
 import csv
+import io
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -37,8 +42,11 @@ DEPENDENCIES={
 }
 
 
-def main():
-    OUT.mkdir(exist_ok=True)
+def main(argv=None):
+    parser=argparse.ArgumentParser(description='Seguimiento acumulativo del plan.')
+    parser.add_argument('--escribir',action='store_true',help='reescribe los archivos; sin esto solo comprueba')
+    write=parser.parse_args(argv).escribir
+    outputs={}
     hashes=json.loads((ROOT/'docs/evidencia_p0/adjuntos_sha256.json').read_text(encoding='utf-8'))
     for name,digest in hashes.items():
         if sha256((ROOT/'docs/plan_20261008'/name).read_bytes()).hexdigest()!=digest:
@@ -113,9 +121,10 @@ def main():
                 if path not in RETIRADAS and not (ROOT/path).is_file():raise ValueError('Ruta de evidencia inexistente: '+path)
         if row['state'] not in STATES:raise ValueError('Estado inválido')
     fields=list(records[0])
-    with (OUT/'matriz_actual.csv').open('w',encoding='utf-8',newline='') as stream:
-        writer=csv.DictWriter(stream,fieldnames=fields,lineterminator='\n');writer.writeheader();writer.writerows(records)
-    (OUT/'matriz_actual.json').write_text(json.dumps(records,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    stream=io.StringIO()
+    writer=csv.DictWriter(stream,fieldnames=fields,lineterminator='\n');writer.writeheader();writer.writerows(records)
+    outputs[OUT/'matriz_actual.csv']=stream.getvalue()
+    outputs[OUT/'matriz_actual.json']=json.dumps(records,ensure_ascii=False,indent=2)+'\n'
     tasks=[];phase=None;ordinal=0
     for number,line in enumerate(PLAN.read_text(encoding='utf-8').splitlines(),1):
         header=re.match(r'^### (P\d+) —',line)
@@ -135,7 +144,7 @@ def main():
         # Sus entregables están expresados en prosa en el plan, no como subtareas.
         tasks.append({'id':phase+'-ACEPTACION','phase':phase,'description':'Aceptación integral según gate '+phase.replace('P','G'),
                       'source_line':341 if phase=='P11' else 349,'state':PHASES[phase],'open_dependency':DEPENDENCIES[phase]})
-    (OUT/'tareas_plan.json').write_text(json.dumps(tasks,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    outputs[OUT/'tareas_plan.json']=json.dumps(tasks,ensure_ascii=False,indent=2)+'\n'
     lines=['# Trazabilidad acumulativa — ejecución 2026-10-08','',
            'El usuario difirió SITFA/RUS: no hay entorno/evidencia disponibles en esta etapa.',
            '115 requisitos conservados. P0 permanece como evidencia histórica. Los IDs Pn-Enn',
@@ -154,7 +163,12 @@ def main():
     lines+=['','CSV/JSON adjuntos contienen requisito, aceptación, rutas de código/tests y línea',
             'de la especificación. NO EJECUTADO también se usa cuando los tests son parciales:',
             'su existencia o que la suite pase no demuestra el escenario integral completo.','']
-    (ROOT/'docs/TRAZABILIDAD_EJECUCION_20261008.md').write_text('\n'.join(lines),encoding='utf-8')
+    outputs[ROOT/'docs/TRAZABILIDAD_EJECUCION_20261008.md']='\n'.join(lines)
+    changed=[path for path,text in outputs.items() if not path.is_file() or path.read_text(encoding='utf-8')!=text]
+    if write:
+        OUT.mkdir(exist_ok=True)
+        for path in changed:path.write_text(outputs[path],encoding='utf-8',newline='')
+    for path in changed:print(('Reescrito: ' if write else 'Difiere (usa --escribir): ')+str(path.relative_to(ROOT)))
     print(f'{len(records)} requisitos, {len(tasks)} tareas/entregables; 7 originales verificados.')
 
 
