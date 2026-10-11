@@ -184,3 +184,36 @@ def test_heavy_ci_steps_run_after_integration_and_skip_pr():
                 )
                 assert eval(expression, {'__builtins__': {}}, {}) == expected
     assert found == names
+
+
+@pytest.mark.parametrize(
+    'node',
+    [
+        'tests/test_x.py::InventedClass::test_exists',
+        'tests/test_x.py::test_exists[invented]',
+        '../tests/test_x.py::test_exists',
+    ],
+)
+def test_invented_removed_node_cannot_borrow_existing_function(monkeypatch, tmp_path, node):
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text(node)
+    monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
+    inventory = {'asistente': ['tests/test_x.py::test_exists[synthetic]'], 'descargador': []}
+    assert verifier.removed_from_lists([manifest], 'commit', inventory)[1]
+
+
+def test_exact_baseline_collection_supports_parameterized_removals(monkeypatch, tmp_path):
+    node = 'tests/test_x.py::test_exists[synthetic]'
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text(node)
+    monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
+    inventory = {'asistente': [node], 'descargador': []}
+    assert verifier.removed_from_lists([manifest], 'commit', inventory) == ({'asistente': 1, 'descargador': 0}, [])
+    assert verifier.removed_from_lists([manifest], 'commit', {})[1]
+
+
+def test_absence_of_exact_baseline_collection_cannot_certify_removal(monkeypatch, tmp_path):
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text('tests/test_x.py::test_exists')
+    monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
+    assert verifier.removed_from_lists([manifest], 'commit')[1]
