@@ -2,6 +2,7 @@
 from datetime import datetime, date
 from hashlib import sha256
 import json
+from pathlib import Path
 from csmp_shared import parser
 parser()
 from nurus.capture.contract import COMMON,TABLES,write_capture
