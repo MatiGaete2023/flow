@@ -11,6 +11,9 @@ from resultados import load_lot, export_book, publish, mapping, check_file
 from perfiles import Selection
 
 
+# Estado final de un conjunto terminado (la consulta de firmas salió del flujo).
+FLOW_DONE = 'PREPARADO_SIN_CONSULTA_FIRMAS'
+
 def months(today):
     following = (today.replace(day=28) + timedelta(days=4)).replace(day=1)
     return ((str(today.month), str(today.year)), (str(following.month), str(following.year)))
@@ -282,7 +285,7 @@ class JointRunner:
             }
             final = assemble(inputs, [], covers, root)
             data.update(
-                estado='PREPARADO_SIN_CONSULTA_FIRMAS',
+                estado=FLOW_DONE,
                 archivo=final.name,
                 sha256=hashlib.sha256(final.read_bytes()).hexdigest(),
                 cobertura=covers,
