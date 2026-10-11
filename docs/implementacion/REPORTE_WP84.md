@@ -1,7 +1,7 @@
 # WP-84 · G-5 y limpieza restante del historial
 
 Estado actual: #36–38 integrados en feat 9fbb08c con excepción E3 expresa del usuario.
-#39 actualizado contra esa base (830/240); verificación vigente en curso. E3 de #39 pendiente.
+#39 actualizado contra esa base (830/240); verificación vigente PASA 839/240. E3 de #39 pendiente.
 Las evidencias y notas anteriores de preparación son históricas.
 
 
@@ -69,3 +69,12 @@ siguen sujetos a las pruebas reales y al acta del usuario.
 PASA en `eae6b499b16f41960aa570538d857d335cdef9ec`: 839/11/6 y 240/62, nueve
 controles y procedencia limpia/estable. La resolución posterior de documentos no modifica
 código, pruebas ni configuración. Los cuatro paquetes siguen EN_REVISION, sin E3.
+
+## Verificación después de integrar #36–38
+
+PASA en `9518d9bcc667b915dd46c751561bf740fdceafd5`, contra la línea base integrada
+`4470ff32bb9d479f0ad4a6774948038bc6729c02` (830/240). Resultado 839/11/6 y 240/62;
+nueve controles y procedencia limpia/estable. Commit posterior: solo documentos/evidencia.
+La rama conserva estados de integración, excepción E3 limitada a #36–38 y dependencia
+de archivo WP-82 explícita. CI actual en el PR #39; las corridas de preparación son históricas.
+No se integra #39 sin revisión E3 propia. No cambios de motor, textos, golden ni línea base.

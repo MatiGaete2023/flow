@@ -6,7 +6,7 @@ Línea base regenerada. Pendientes autorizados: ninguno de #36–38.
 Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39.
 
 G-5: [PR #39](https://github.com/MatiGaete2023/flow/pull/39), código y CI aprobados;
-rama actualizada a feat 9fbb08c, documentos resueltos; verificar contra la línea base 830/240
+rama actualizada a feat 9fbb08c, documentos resueltos; verificación PASA 839/240 en 9518d9b
 antes de revisar E3. No integrado.
 
 WP-17: etiquetas antiguas eliminadas; ramas nuevas sin RUT reales; 607 artefactos antiguos
