@@ -35,6 +35,13 @@ promesas de rendimiento institucional.
 Originales excluidos por defecto. Solo `originals_authorized=true` admite inclusión
 explícita; nunca se publica un original real en GitHub. XML/PDF incluidos se
 verifican como bytes sin interpretarlos, sin XXE, macros ni contenido activo.
+Versión 1.1.0 (aditiva, D6): el paquete puede incluir un único libro `consolidado/consolidado.xlsx` (tipo
+`consolidated_workbook`), el mismo que el Descargador exporta para CSMP. Es opcional: sin él el productor sigue
+escribiendo 1.0.0 y los paquetes 1.0.0 se importan igual. El lector rechaza el libro si no es xlsx o trae macros,
+objetos incrustados, HTML o PDF, y lo verifica por hash como cualquier archivo. Un manifiesto 1.0.0 no puede declararlo.
+El Asistente lo usa como base de la copia solo si cada registro aparece una vez, por `SITFA_SHA256`, `SITFA_ARCHIVO`
+y `SITFA_FILA`, en una misma hoja; si no, la copia queda portable de fidelidad reducida.
+
 CSV técnico conserva literal completo, incluidas cadenas que comienzan por `=`;
 no debe abrirse directamente como hoja. Excel derivado escribe esas cadenas como
 texto. Texto extenso se conserva en CSV y las salidas Excel usan partición/sidecar.
