@@ -729,15 +729,17 @@
         "D5"
       ],
       "estado": "BLOQUEADO_USUARIO",
-      "ejecutor": null,
-      "tomado": null,
-      "rama": null,
-      "pr": null,
-      "verificacion": null,
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/50-cronologia-solo-mostrar",
+      "pr": 33,
+      "verificacion": "PASA (verificar_wp.py y CI del PR, 11 de octubre de 2026)",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
-      "notas": []
+      "notas": [
+        "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02."
+      ]
     },
     "WP-51": {
       "titulo": "Fidelidad nativa desde ZIP",
