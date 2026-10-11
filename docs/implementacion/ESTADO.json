@@ -125,14 +125,15 @@
       "estado": "BLOQUEADO_USUARIO",
       "ejecutor": null,
       "tomado": null,
-      "rama": null,
+      "rama": "wp/02-acta-uso-real",
       "pr": null,
       "verificacion": null,
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "D2: «Ninguna todavía» (11 de octubre de 2026)."
+        "D2: «Ninguna todavía» (11 de octubre de 2026).",
+        "Plantilla docs/aceptacion/ACTA_USO_REAL_20261011.json generada con flow_acceptance.py init (40 casos D-T/A-T, todos NO_EJECUTADO, commit c3ec462). Solo el usuario completa resultados."
       ]
     },
     "WP-10": {
