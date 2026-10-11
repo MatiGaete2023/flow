@@ -594,9 +594,11 @@ def _export_preserved_payload(
             _native_preserved(content, temporary, snapshot)
         else:
             _portable_preserved(content, temporary, snapshot)
-        with target.open("xb") as output, temporary.open("rb") as source:
+        digest = _hash(temporary)
+        with target.open("xb") as output:
             target_created = True
-            shutil.copyfileobj(source, output)
+            with temporary.open("rb") as source:
+                shutil.copyfileobj(source, output)
     except OSError as exc:
         if target_created:
             target.unlink(missing_ok=True)
@@ -604,4 +606,4 @@ def _export_preserved_payload(
     finally:
         temporary.unlink(missing_ok=True)
 
-    return ExportResult(target, _hash(target), len(snapshot["records"]))
+    return ExportResult(target, digest, len(snapshot["records"]))

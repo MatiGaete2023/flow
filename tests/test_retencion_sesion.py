@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import pytest
 from hashlib import sha256
 from types import SimpleNamespace
 
@@ -130,3 +131,37 @@ def test_fuentes_originales_legacy_y_backup_se_conservan(tmp_path):
         assert (session / (previous[field] + '.bin')).exists()
     # La excepción legacy conserva cuatro referencias; el flujo actual normal usa dos.
     assert len(list(session.glob('*.bin'))) == 4
+
+
+@pytest.mark.parametrize(
+    'drafts',
+    [
+        None,
+        {},
+        [None],
+        [{'attachments': None}],
+        [{'attachments': 'archivo.xlsx'}],
+        [{'attachments': ['\x00archivo', '', None]}],
+    ],
+)
+def test_inventario_tolera_datos_parciales_sin_borrar_la_sesion(tmp_path, drafts):
+    session = tmp_path / 'sesion'
+    session.mkdir()
+    data = json.dumps({'session': {'drafts': drafts}})
+    path = session / 'trabajo.json'
+    path.write_text(data)
+    report = saved_data_summary(tmp_path)
+    assert report['sesiones']['count'] == 1
+    assert report['adjuntos'] == {'count': 0, 'bytes': 0}
+    assert path.read_text() == data
+
+
+def test_inventario_ignora_json_vigente_que_es_un_enlace(tmp_path):
+    external = tmp_path / 'externo.json'
+    external.write_text('{}')
+    session = tmp_path / 'sesion'
+    session.mkdir()
+    (session / 'trabajo.json').symlink_to(external)
+    report = saved_data_summary(tmp_path)
+    assert report['sesiones']['count'] == 0
+    assert external.read_text() == '{}'

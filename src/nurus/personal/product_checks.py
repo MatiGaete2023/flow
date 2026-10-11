@@ -45,12 +45,15 @@ def check_products(work, drafts, projects):
                 issue = institutional_statement_issue(work, draft)
                 if issue:
                     issues.append(issue)
+            addresses_valid = True
             try:
                 if not emails(draft.to):
                     issues.append('Completar destinatario')
+                    addresses_valid = False
                 emails(draft.cc)
             except ValueError as exc:
                 issues.append(str(exc))
+                addresses_valid = False
             if not draft.subject.strip():
                 issues.append('Completar asunto')
             if not draft.body.strip():
@@ -65,7 +68,7 @@ def check_products(work, drafts, projects):
             if work and stale(work, draft):
                 issues.append('Actualizar producto: cambiaron sus datos o plantilla')
             receipt = None
-            if work and not any(not Path(p).is_file() for p in draft.attachments):
+            if work and addresses_valid and not any(not Path(p).is_file() for p in draft.attachments):
                 receipt = work.receipts.get(draft_fingerprint(draft))
             state = 'Por corregir' if issues else 'Listo para revisar'
             if receipt:

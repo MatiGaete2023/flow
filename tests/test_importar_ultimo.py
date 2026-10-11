@@ -1,10 +1,14 @@
 """WP-44: «Importar último paquete» (solo lectura) y fecha de corte con «Usar hoy». Datos ficticios."""
 
 import json
+import lzma
 import os
 import subprocess
 import time
 import zipfile
+import zlib
+
+import pytest
 
 from nurus.capture import write_capture
 from nurus.personal import latest_capture as modulo
@@ -48,6 +52,52 @@ def test_elige_el_mas_reciente_valido_e_ignora_ajenos_y_danados(tmp_path, monkey
     assert modulo.latest_capture([tmp_path / 'vacio']) is None
 
 
+@pytest.mark.parametrize('problema', ['deflate_corrupto', 'lzma_corrupto', 'cifrado'])
+def test_zip_nuevo_ilegible_no_oculta_paquete_valido_anterior(tmp_path, problema):
+    esperado = paquete(tmp_path / 'valido_anterior.zip', 600)
+    ilegible = tmp_path / 'nuevo_ilegible.zip'
+    compresion = zipfile.ZIP_LZMA if problema == 'lzma_corrupto' else zipfile.ZIP_DEFLATED
+    with zipfile.ZipFile(ilegible, 'w', compression=compresion) as archivo:
+        archivo.writestr('manifest.json', json.dumps({'schema_id': 'CSMP_CAPTURE'}))
+    contenido = bytearray(ilegible.read_bytes())
+    if problema in {'deflate_corrupto', 'lzma_corrupto'}:
+        nombre = int.from_bytes(contenido[26:28], 'little')
+        extra = int.from_bytes(contenido[28:30], 'little')
+        inicio = 30 + nombre + extra
+        if problema == 'deflate_corrupto':
+            # Bloque DEFLATE de tipo reservado: el contenedor ZIP sigue siendo reconocible.
+            contenido[inicio] = (contenido[inicio] & ~7) | 7
+            error = zlib.error
+        else:
+            # Propiedades LZMA inválidas tras la cabecera de cuatro bytes.
+            contenido[inicio + 4] = 255
+            error = lzma.LZMAError
+    else:
+        # Marcar el archivo ficticio como cifrado basta para exigir una contraseña.
+        central = contenido.index(b'PK\x01\x02')
+        contenido[6] |= 1
+        contenido[central + 8] |= 1
+        error = RuntimeError
+    ilegible.write_bytes(contenido)
+    with zipfile.ZipFile(ilegible) as archivo, pytest.raises(error):
+        archivo.read('manifest.json')
+    assert modulo.latest_capture([tmp_path]) == esperado
+
+
+def test_manifest_truncado_se_ignora_sin_ocultar_otro_paquete(tmp_path, monkeypatch):
+    esperado = paquete(tmp_path / 'valido_anterior.zip', 600)
+    ilegible = ajeno(tmp_path / 'nuevo_ilegible.zip')
+    leer = zipfile.ZipFile.read
+
+    def truncado(archivo, *args, **kwargs):
+        if archivo.filename == str(ilegible):
+            raise EOFError('manifiesto ficticio truncado')
+        return leer(archivo, *args, **kwargs)
+
+    monkeypatch.setattr(zipfile.ZipFile, 'read', truncado)
+    assert modulo.latest_capture([tmp_path]) == esperado
+
+
 def test_boton_importa_el_ultimo_y_fecha_de_corte_usar_hoy(tmp_path):
     run_gui(
         tmp_path,
@@ -63,6 +113,9 @@ importados=[]
 app._import_capture=lambda path=None:importados.append(path)
 with patch('nurus.personal.app_base.messagebox.askyesno',return_value=True):
     app._import_latest_capture()
+    limite=time.monotonic()+5
+    while app.busy and time.monotonic()<limite:
+        app.update();time.sleep(0.01)
 assert importados==[ruta]
 for c in app.pages['Trabajo'].winfo_children():pass
 from nurus.personal.commands import commands
@@ -89,5 +142,49 @@ def invalida_y_cancelar(win):
     assert win.winfo_exists()
     win.cancel()
 assert preguntar(invalida_y_cancelar) is None
+""",
+    )
+
+
+def test_busqueda_del_ultimo_paquete_no_bloquea_tk_y_confirma_en_tk(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+import threading,time
+from unittest.mock import patch
+entrada=threading.Event();continuar=threading.Event()
+principal=threading.get_ident();hilos=[];confirmados=[];importados=[]
+archivo=root/'captura.zip';archivo.write_bytes(b'ficticio')
+def buscar():
+    hilos.append(threading.get_ident());entrada.set()
+    assert continuar.wait(2),'Tk no pudo liberar la búsqueda'
+    return archivo
+def confirmar(*args,**kwargs):
+    assert threading.get_ident()==principal
+    confirmados.append(True);return True
+app._import_capture=lambda path=None:importados.append(path)
+with patch('nurus.personal.latest_capture.latest_capture',side_effect=buscar), patch('nurus.personal.app_base.messagebox.askyesno',side_effect=confirmar):
+    try:
+        app._import_latest_capture()
+        assert entrada.wait(1) and app.busy and hilos!=[principal]
+        pulsos=[];app.after(0,lambda:pulsos.append(True));app.update()
+        assert pulsos and not confirmados and not importados
+        continuar.set()
+        limite=time.monotonic()+5
+        while app.busy and time.monotonic()<limite:
+            app.update();time.sleep(0.01)
+        assert not app.busy and confirmados and importados==[archivo]
+        assert app.cancel_button.cget('state')=='disabled'
+        entrada.clear();continuar.clear()
+        app._import_latest_capture()
+        assert entrada.wait(1) and app.busy
+        app._cancel_operation();continuar.set()
+        limite=time.monotonic()+5
+        while app.busy and time.monotonic()<limite:
+            app.update();time.sleep(0.01)
+        assert not app.busy and confirmados==[True] and importados==[archivo]
+        assert 'detenida' in app.status.get().lower()
+    finally:
+        continuar.set()
 """,
     )

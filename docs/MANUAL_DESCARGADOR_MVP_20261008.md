@@ -5,10 +5,10 @@ Para aprender el recorrido con imágenes, consulta el
 [PDF](manual_descargador_2_7_4/Manual_ilustrado_Descargador_SITFA_2.7.4.pdf).
 La página 14 propone una práctica completa con datos ficticios, sin entrar a SITFA.
 
-Versión 2.7.5, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
+Versión 2.7.6, con intercambio CSMP_CAPTURE 1.0.0. El SHA identifica cada
 compilación. El Asistente no necesita estar abierto ni instalado.
 
-La extensión 2.7.5 debe cargarse y recargarse junto con esta versión. Las
+La extensión 2.7.6 debe cargarse y recargarse junto con esta versión. Las
 bitácoras admiten UTF-8 y Windows-1252/Latin-1 y conservan sus bytes originales.
 Los PDF vacíos muestran la consulta solicitada, con tribunal, modalidad,
 pestaña y fechas o «Sin filtro de fechas». Ese contexto se restituye localmente;
@@ -44,13 +44,16 @@ la tabla vacía se comprueba en la respuesta y no acredita un historial completo
    ingreso difieren, se elige la captura posterior con fecha inequívoca; en un
    conflicto sin orden verificable, quitar uno de los lotes. Añadirlo de nuevo
    lo reincorpora. Los hashes originales se comprueban antes de exportar. El ZIP
-   contiene tablas y metadatos; no adjunta las copias HTML/XLS originales.
+   contiene tablas y metadatos; la casilla **Incluir XLSX consolidado** permite
+   añadir la base para una copia nativa del Asistente. No adjunta HTML, PDF
+   ni las copias XLS originales. Si el consolidado no es compatible, se
+   informa y se conserva el paquete portable.
    En 2.7.5 aplica a todas las filas seleccionadas. Las referencias ausentes
    aparecen como **NO_DISPONIBLE**; antes de exportar, **Revisar referencias no
    disponibles…** permite localizar sus controles o excluirlas explícitamente.
    Pulsa **Continuar** para guardar el paquete. [Instrucciones de recuperación](CORRECCION_REFERENCIAS_ZIP_20261009.md).
-8. Abrir la solicitud de antecedentes del Asistente para revisar ingresos y fuentes
-   solicitadas. El archivo no ejecuta consultas; el operador decide el alcance.
+8. El operador decide manualmente qué consultas faltan y ejecuta una captura
+   complementaria. El botón de solicitudes de antecedentes fue retirado (D9).
 
 El Excel de bitácoras contiene copia íntegra, fuentes, ingresos, lecturas,
 consultas, lote y textos extensos partidos con hashes. Ausencias, errores y

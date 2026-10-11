@@ -64,6 +64,25 @@ def _explicit(value):
 
 
 SERVICE_SHEETS = {'Resumen', 'SITFA_ARCHIVOS', 'Vencimientos'}
+SOURCE_DATE_FIELDS = frozenset(
+    {'nacimiento', 'oido', 'resolucion', 'prox_aud', 'ingreso', 'egreso_proy', 'ficha_ind', 'ficha_fae', 'vencimiento'}
+)
+SOURCE_NUMBER_FIELDS = frozenset({'espera', 'dias_cumpl', 'dias_egresar'})
+
+
+def _source_cell_key(field, value):
+    """Compara representaciones de la misma celda sin cambiar cómo el motor las lee."""
+    from .motor.utilidades import get_date, get_int
+
+    if field in SOURCE_DATE_FIELDS:
+        parsed = get_date(value)
+        if parsed is not None:
+            return ('date', parsed.isoformat())
+    elif field in SOURCE_NUMBER_FIELDS:
+        parsed = get_int(value)
+        if parsed is not None:
+            return ('number', parsed)
+    return ('text', '' if value is None else str(value).strip())
 
 
 def _consolidated_base(work):
@@ -94,8 +113,13 @@ def _consolidated_base(work):
 
 def _map_consolidated(work, capture, book):
     """(bytes, hoja, filas) si cada registro está una sola vez en una misma hoja de datos; si no, None."""
+    from nurus.rus.columns import map_columns, normalize
+    from .sync import IDENTITY_FIELDS
+
     index = {}
     duplicated = set()
+    identity_fields = [key for key in IDENTITY_FIELDS if work.mapping.get(key)]
+    modes = set(getattr(work, 'capture_modes', {}).values()) or {work.mode}
     for sheet in book.worksheets:
         if sheet.title in SERVICE_SHEETS:
             continue
@@ -103,12 +127,28 @@ def _map_consolidated(work, capture, book):
         header = next(rows, None)
         if not header or not {'SITFA_ARCHIVO', 'SITFA_FILA', 'SITFA_SHA256'} <= set(header):
             continue
+        headers = [
+            str(value).strip() if value is not None and str(value).strip() else f'__col_{i}'
+            for i, value in enumerate(header)
+        ]
+        if len({normalize(value) for value in headers}) != len(headers):
+            continue
+        mapping = {}
+        for mode in modes:
+            mapping.update(map_columns(headers, mode))
+        if not all(mapping.get(key) for key in {*identity_fields, 'rit', 'tribunal', 'nombre'}):
+            continue
+        source_columns = {field: headers.index(column) for field, column in mapping.items() if field in work.mapping}
         file_col, row_col, hash_col = (header.index(name) for name in ('SITFA_ARCHIVO', 'SITFA_FILA', 'SITFA_SHA256'))
         for number, values in enumerate(rows, 2):
             key = (str(values[hash_col]), str(values[file_col]), str(values[row_col]))
             if key in index:
                 duplicated.add(key)
-            index[key] = (sheet.title, number)
+            index[key] = (
+                sheet.title,
+                number,
+                {field: _source_cell_key(field, values[col]) for field, col in source_columns.items()},
+            )
     positions = {}
     sheets = set()
     for row in work.rows:
@@ -116,7 +156,15 @@ def _map_consolidated(work, capture, book):
         key = (record['source_sha256'], record['original_file'], record['original_row']) if record else None
         if key is None or key not in index or key in duplicated:
             return None
-        sheet, number = index[key]
+        sheet, number, source_values = index[key]
+        # Las modalidades mixtas comparten encabezados, pero cada fila conserva solo sus campos de origen.
+        # Las ediciones humanas (review/overrides) se aplican después; no forman parte de esta comparación.
+        if any(
+            source_values.get(field) != _source_cell_key(field, row.values[column])
+            for field, column in work.mapping.items()
+            if column in row.values
+        ):
+            return None
         sheets.add(sheet)
         positions[row.id] = number
     if len(sheets) != 1:

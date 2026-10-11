@@ -146,3 +146,21 @@ def test_evento_que_falla_no_detiene_la_cola(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_paquete_genera_el_consolidado_una_sola_vez(tmp_path, monkeypatch):
+    import export_csmp_capture
+
+    lote = bound_lot(tmp_path / 'principal')
+    manifiesto = diaries(tmp_path / 'Bitacoras 2026-10-10', 1)
+    calls = []
+    original = export_csmp_capture.consolidated_workbook
+
+    def counted(lots):
+        calls.append(True)
+        return original(lots)
+
+    monkeypatch.setattr(export_csmp_capture, 'consolidated_workbook', counted)
+    resultado = package_current_lot(lote.folder, manifiesto, tmp_path / 'p.zip', consolidated=True)
+    assert read_capture(resultado['path']).consolidated
+    assert len(calls) == 1

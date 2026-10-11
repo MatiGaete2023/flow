@@ -1,6 +1,6 @@
 # Asistente — manual de la entrega MVP
 
-Versión 0.5.0.dev4, con intercambio CSMP_CAPTURE 1.0.0. No requiere Chrome,
+Versión 0.5.0.dev5, con intercambio CSMP_CAPTURE 1.0.0. No requiere Chrome,
 extensión ni Descargador para importar y producir archivos de un paquete local.
 
 1. Trabajo → Importar paquete: seleccionar ZIP y fecha de corte del análisis.
@@ -13,6 +13,8 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
    Las decisiones humanas se conservan al reimportar la misma captura. Una nueva
    fecha de corte conserva decisiones, pero puede dejar productos obsoletos.
 4. Exportar copia actual a XLSX. Para paquetes nuevos funciona sin Excel/Office.
+   Si el ZIP incluye consolidado y Excel está disponible, usa la copia nativa;
+   si no, informa la fidelidad reducida de la copia portable.
    Abrir Excel legado conserva el motor y la exportación anteriores, con alcance
    SOLO_PLANILLA. Guardar/recuperar sesión conserva edición y configuración.
 5. Correos: Preparar genera los adjuntos automáticamente. **Editar adjunto
@@ -26,8 +28,9 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
    requieren preparar nuevamente los productos obsoletos.
 6. Resoluciones: revisar plantilla y variables, elegir proyectos y guardar Word
    editable. Correo libre, Word manual y edición libre siguen disponibles.
-7. Resultados: consultar detalle de hechos/fuentes y exportar una solicitud de
-   antecedentes. Abrirla manualmente en Descargador para una nueva captura.
+7. Resultados: consultar productos, incidencias, hechos y fuentes. Para una
+   captura nueva, elegir el alcance manualmente en el Descargador y volver a importar.
+   El Asistente no inicia el Descargador ni genera solicitudes de antecedentes (D9).
 
 OBSERVACION, FECHA_OBS, TT, CC y RES reflejan trabajo local revisado. No son
 constancia de registro RUS, recepción de informes, firma o envío de correo.
@@ -63,7 +66,5 @@ refrescar Excel y recuperar sesión mantienen los hallazgos alineados con la reg
 vigente. Fuentes/cobertura muestran las incidencias generales y del ingreso; el
 Excel de evidencia incluye una hoja Incidencias.
 
-Las solicitudes usan cobertura por ingreso y rechazan exceder 4 MiB antes de
-publicarse. Si se supera, reducir la selección o dividir la captura de origen.
 Para un vacío por ingreso se requiere una consulta con alcance explícito; un
 estado vacío de toda la tabla no se aplica automáticamente a cada persona.
