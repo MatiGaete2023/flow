@@ -111,8 +111,8 @@ class ChromeTransport:
 
 
 class BatchRunner:
-    def __init__(self,bridge,catalog,emit,cancel):
-        self.bridge=bridge;self.catalog=catalog;self.emit=emit;self.cancel=cancel
+    def __init__(self,bridge,catalog,emit,cancel,pause=0.0):
+        self.bridge=bridge;self.catalog=catalog;self.emit=emit;self.cancel=cancel;self.pause=max(0.0,float(pause))
 
     def run(self,batch,destination,plan_override=None):
         plan=batch.plan(self.catalog) if plan_override is None else list(plan_override)
@@ -142,6 +142,9 @@ class BatchRunner:
             self.bridge.call('lock');locked=True
             for index,selection in enumerate(plan,1):
                 if self.cancel.is_set():raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
+                # La pausa también separa una consulta de la siguiente, no solo las páginas de una misma consulta.
+                if index>1 and self.pause and self.cancel.wait(self.pause):
+                    raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
                 desired=selection_profile(selection,self.catalog)
                 self.emit('query',{'index':index,'total':len(plan),'label':desired.label})
                 prepared=self.bridge.call('prepare',{'selection':selection.__dict__,
@@ -215,7 +218,7 @@ class BatchRunner:
                         suffix=f' {ordinals[base]}' if total>1 or bases[base]>1 else ''
                         return base+suffix+'.xls'
                     transport.profile=profile
-                    result=m.run_sequence(transport,pairs,first,folder,profile=profile,cancel=self.cancel,
+                    result=m.run_sequence(transport,pairs,first,folder,profile=profile,cancel=self.cancel,pause=self.pause,
                         folder_ready=True,manifest_name=manifest,filename_factory=filename,
                         progress=lambda item,path:self.emit('progress',{**item,'consulta':profile.label}))
                     pages=first.total

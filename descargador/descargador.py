@@ -140,6 +140,7 @@ class Application:
                               ('Resultados e historial',self.show_results),('Limpiar pendientes preparados',self.clear_pending),
                               ('Configurar ejecutable CSMP…',self.configure_csmp)]:tools.add_command(label=label,command=command)
         tools.add_command(label='Retomar descarga conjunta…',command=self.resume_joint)
+        tools.add_command(label='Pausa entre consultas…',command=self.configure_pause)
         self.sound=tk.BooleanVar(value=self.prefs.data['aviso_sonoro'])
         tools.add_checkbutton(label='Aviso sonoro al terminar',variable=self.sound,command=self.save_preferences)
         root.geometry(f'1000x{min(900,max(600,root.winfo_screenheight()-120))}');root.minsize(880,600)
@@ -256,6 +257,16 @@ class Application:
         except tk.TclError:pass
         try:self.prefs.save()
         except OSError:self.status.set('E_CONFIG: no se pudo guardar la configuración local.')
+    def _paced_batch_runner(self,*args,**kwargs):
+        return BatchRunner(*args,pause=self.prefs.data['pausa_consultas'],**kwargs)
+    def configure_pause(self):
+        from preferencias import PAUSA_MAXIMA_S,PAUSA_MINIMA_S,clamp_pause
+        value=simpledialog.askfloat('Pausa entre consultas',
+            f'Segundos entre bitácoras y entre páginas ({PAUSA_MINIMA_S:g} a {PAUSA_MAXIMA_S:g}):',
+            parent=self.root,initialvalue=self.prefs.data['pausa_consultas'],minvalue=PAUSA_MINIMA_S,maxvalue=PAUSA_MAXIMA_S)
+        if value is None:return
+        self.prefs.data['pausa_consultas']=clamp_pause(value);self.save_preferences()
+        self.status.set(f"Pausa entre consultas: {self.prefs.data['pausa_consultas']:g} s.")
     def configure_csmp(self):
         executable=filedialog.askopenfilename(parent=self.root,title='CSMP experimental: ejecutable o Python de su entorno',filetypes=[('Ejecutables','*.exe')])
         if executable:self.prefs.data['csmp']=executable;self.save_preferences()
@@ -490,17 +501,17 @@ class Application:
                     verify_extension(self.bridge)
                 if command=='open':open_chrome(m.START);self.emit('status','SITFA abierto en tu Chrome. Entra a Seguimiento y conecta su extensión.')
                 elif command=='catalog':self.emit('catalog',self.bridge.call('catalog',{'screen':arg}))
-                elif command=='download':BatchRunner(self.bridge,self.catalog,self.emit,self.cancel).run(*arg)
+                elif command=='download':BatchRunner(self.bridge,self.catalog,self.emit,self.cancel,pause=self.prefs.data['pausa_consultas']).run(*arg)
                 elif command=='diary':
                     from lectura_bitacoras import DiaryRunner
-                    DiaryRunner(self.bridge,self.catalog,self.emit,self.cancel).run(*arg)
+                    DiaryRunner(self.bridge,self.catalog,self.emit,self.cancel,pause=self.prefs.data['pausa_consultas']).run(*arg)
                 elif command=='joint':
                     from flujo_csmp import JointRunner
-                    JointRunner(self.bridge,self.emit,self.cancel).run(*arg)
+                    JointRunner(self.bridge,self.emit,self.cancel,runner_factory=self._paced_batch_runner).run(*arg)
                 elif command=='resume_joint':
                     from flujo_csmp import JointRunner
                     selection,folder=arg
-                    JointRunner(self.bridge,self.emit,self.cancel).run(tuple(selection['tribunales']),tuple(selection['modalidades']),selection['modo'],folder.parent,
+                    JointRunner(self.bridge,self.emit,self.cancel,runner_factory=self._paced_batch_runner).run(tuple(selection['tribunales']),tuple(selection['modalidades']),selection['modo'],folder.parent,
                         selection['dias_firmas'],today=date.fromisoformat(selection['corte']),resume=folder)
                 elif command in ('disconnect','exit'):
                     if self.bridge.connected:

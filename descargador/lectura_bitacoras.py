@@ -130,159 +130,231 @@ def anonymous_diagnostic(data):
         'contiene_identificadores_personales':False
     }
 
+PAUSA_SITFA_S=1.0
+CHECKPOINT_CADA=25
+MAX_LECTURAS_POR_LOTE=300
+
+
+class LimiteLecturas(m.PocError):
+    """Detiene todo el lote (no solo la consulta) al alcanzar MAX_LECTURAS_POR_LOTE."""
+
+class _Lectura:
+    """Estado de una ejecución de DiaryRunner.run: carpeta, manifiesto, reutilización y contadores."""
+
+    def __init__(self,runner,batch,destination,resume):
+        self.runner=runner;self.read=parser()  # parser() agrega src/ a sys.path; debe ir antes de importar nurus.
+        from nurus.bitacora_html import visible_identity_warnings
+        self.visible=visible_identity_warnings
+        self.old={};self.previous_records=[]
+        if resume:
+            self.folder=Path(resume).resolve();previous=load(self.folder/MANIFEST)
+            if asdict(batch)!=asdict(saved_batch(previous)):raise m.PocError('El alcance no coincide con el lote recuperado.')
+            # Lo leído en ejecuciones anteriores se reutiliza esté en registros o en anteriores_no_reenumeradas.
+            self.previous_records=previous.get('registros',[])+previous.get('anteriores_no_reenumeradas',[])
+            self.old={}
+            for record in reversed(self.previous_records):
+                if record.get('estado')=='LEIDA':self.old[record['clave']]=record
+        else:
+            self.folder=Path(destination).resolve()/('Bitacoras '+m.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+            self.folder.mkdir(parents=True,exist_ok=False)
+        self.state={'version':1,'tipo':'BITACORAS_LECTURA','estado':'EN_CURSO','seleccion':asdict(batch),
+                    'fecha':m.now().isoformat(),'consultas':[],'registros':[]}
+        try:
+            from _build_meta import BUILD_VERSION,BUILD_COMMIT
+            self.state['origen']={'version':BUILD_VERSION,'commit':BUILD_COMMIT}
+        except ImportError:self.state['origen']={'version':'desarrollo','commit':'sin metadatos'}
+        self.manifest=self.folder/MANIFEST
+        self.pending=0;self.openings=0;self.phase='';self.locked=False
+
+    def persistir(self,lazy=False):
+        """Escribe el manifiesto; con lazy=True solo cada CHECKPOINT_CADA llamadas."""
+        if lazy:
+            self.pending+=1
+            if self.pending<CHECKPOINT_CADA:return
+            self.pending=0
+        if self.previous_records:
+            # Al retomar, cada escritura conserva lo ya leído que aún no se volvió a enumerar: si el proceso
+            # muere antes de cerrar, el manifiesto no pierde esas lecturas.
+            current={r['clave'] for r in self.state['registros']}
+            retained={r['clave']:r for r in self.previous_records if r['clave'] not in current}
+            self.state['anteriores_no_reenumeradas']=list(retained.values())
+        write(self.manifest,self.state)
+
+    def detener_si_cancelada(self):
+        if self.runner.cancel.is_set():raise m.PocError('Lectura cancelada. Se conserva lo ya comprobado.')
+
+    def anotar(self,record,snapshot):
+        notes=self.visible(snapshot,record['rit'],record['nombre'])
+        record['advertencias']=notes
+        record['error']=' '.join(notes)
+
+    def reutilizar(self,record):
+        previous=self.old.get(record['clave'])
+        if not previous or previous.get('params')!=record.get('params'):return False
+        name=previous.get('archivo','')
+        if Path(name).name!=name or not name.endswith('.html'):return False
+        path=self.folder/name
+        if not path.is_file() or path.stat().st_size>8*1024*1024:return False
+        data=path.read_bytes()
+        if hashlib.sha256(data).hexdigest()!=previous.get('sha256'):return False
+        snapshot=self.read(data,record['params'])
+        self.anotar(record,snapshot)
+        record.update({k:previous[k] for k in ('archivo','sha256','capturada','entradas')})
+        record['estado']='LEIDA';record['reutilizada']=True
+        return True
+
+
 class DiaryRunner:
-    def __init__(self,bridge,catalog,emit,cancel):
+    def __init__(self,bridge,catalog,emit,cancel,pause=PAUSA_SITFA_S):
         self.bridge,self.catalog,self.emit,self.cancel=bridge,catalog,emit,cancel
+        self.pause=max(0.0,float(pause))
 
     def run(self,batch,destination,resume=None):
         if batch.screen!='seguimiento':raise m.PocError('Las bitácoras se consultan desde Seguimiento.')
-        plan=batch.plan(self.catalog);read=parser()
-        from nurus.bitacora_html import visible_identity_warnings
-        def annotate_visible(record,snapshot):
-            notes=visible_identity_warnings(snapshot,record['rit'],record['nombre'])
-            record['advertencias']=notes
-            record['error']=' '.join(notes)
-        old={};previous_records=[]
-        if resume:
-            folder=Path(resume).resolve();previous=load(folder/MANIFEST)
-            if asdict(batch)!=asdict(saved_batch(previous)):raise m.PocError('El alcance no coincide con el lote recuperado.')
-            old={r['clave']:r for r in previous.get('registros',[]) if r.get('estado')=='LEIDA'}
-            previous_records=previous.get('registros',[])+previous.get('anteriores_no_reenumeradas',[])
-        else:
-            folder=Path(destination).resolve()/('Bitacoras '+m.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
-            folder.mkdir(parents=True,exist_ok=False)
-        state={'version':1,'tipo':'BITACORAS_LECTURA','estado':'EN_CURSO','seleccion':asdict(batch),
-               'fecha':m.now().isoformat(),'consultas':[],'registros':[]}
-        try:
-            from _build_meta import BUILD_VERSION,BUILD_COMMIT
-            state['origen']={'version':BUILD_VERSION,'commit':BUILD_COMMIT}
-        except ImportError:state['origen']={'version':'desarrollo','commit':'sin metadatos'}
-        manifest=folder/MANIFEST
-        def checkpoint():write(manifest,state)
-        def stopped():
-            if self.cancel.is_set():raise m.PocError('Lectura cancelada. Se conserva lo ya comprobado.')
-        def reuse(record):
-            previous=old.get(record['clave'])
-            if not previous or previous.get('params')!=record.get('params'):return False
-            name=previous.get('archivo','')
-            if Path(name).name!=name or not name.endswith('.html'):return False
-            path=folder/name
-            if not path.is_file() or path.stat().st_size>8*1024*1024:return False
-            data=path.read_bytes()
-            if hashlib.sha256(data).hexdigest()!=previous.get('sha256'):return False
-            snapshot=read(data,record['params'])
-            annotate_visible(record,snapshot)
-            record.update({k:previous[k] for k in ('archivo','sha256','capturada','entradas')})
-            record['estado']='LEIDA';record['reutilizada']=True
-            return True
-        checkpoint();self.emit('folder',str(folder));locked=False
+        plan=batch.plan(self.catalog)
+        session=_Lectura(self,batch,destination,resume);state=session.state
+        session.persistir();self.emit('folder',str(session.folder))
         try:
             from contrato_integral import verify_extension
-            state['extension']=verify_extension(self.bridge);checkpoint()
-            self.bridge.call('lock');locked=True
+            state['extension']=verify_extension(self.bridge);session.persistir()
+            self.bridge.call('lock');session.locked=True
             for index,selection in enumerate(plan,1):
-                stopped();profile=selection_profile(selection,self.catalog)
-                query={**asdict(selection),'tribunal_nombre':self.catalog['tribunales'][selection.tribunal],
-                       'modalidad_nombre':MODALITIES[selection.modality],'estado':'EN_CURSO','paginas':0,'registros':0}
-                state['consultas'].append(query);checkpoint()
-                self.emit('query',{'index':index,'total':len(plan),'label':profile.label})
-                phase='PREPARAR_FORMULARIO'
-                try:
-                    prepared=self.bridge.call('prepare',{'selection':asdict(selection),'dates':asdict(batch.dates) if batch.dates else None,'keep_filters':batch.keep_filters})
-                    wire=prepared['pairs']
-                    if not isinstance(wire,list) or len(wire)>100 or any(not isinstance(p,(list,tuple)) or len(p)!=2 or any(not isinstance(v,str) for v in p) for p in wire):
-                        raise m.PocError('El formulario no entregó parámetros válidos.')
-                    pairs=m.query_pairs(urlencode([tuple(p) for p in wire]),profile)
-                    fields=dict(pairs)
-                    if fields.get('FLG_Consulta')!=('1' if batch.dates else '0'):raise m.PocError('El filtro de fechas no coincide.')
-                    if batch.dates:
-                        from urllib.parse import unquote_plus
-                        if any(unquote_plus(fields.get(k,''))!=v for k,v in (('FEC_Inicio',batch.dates.start),('FEC_Fin',batch.dates.end))):raise m.PocError('Las fechas enviadas no coinciden.')
-                    phase='CONSULTAR_LISTADO'
-                    transport=ChromeTransport(self.bridge,profile);body=transport.search(pairs,60000)
-                    phase='VALIDAR_LISTADO'
-                    profile,current=response_profile(body,pairs,selection,self.catalog);transport.profile=profile
-                    if current is None:query['estado']='SIN_REGISTROS';checkpoint();continue
-                    if current.current!=1:raise m.PocError('La consulta no comenzó en la primera página.')
-                    total=current.total;original=m.invariant(pairs);seen=set()
-                    for number in range(1,total+1):
-                        stopped()
-                        if number>1:
-                            pairs=[(k,str(number) if k==profile.page_field else current.pagination.get(k,v)) for k,v in pairs]
-                            if m.invariant(pairs)!=original:raise m.PocError('Cambió la consulta entre páginas.')
-                            phase='CONSULTAR_LISTADO'
-                            body=transport.search(pairs,60000)
-                            phase='VALIDAR_LISTADO'
-                            current=m.search_page(body,pairs,number,total,profile)
-                        phase='LEER_FILAS'
-                        for item in listing_rows(body,profile):
-                            stopped()
-                            record={**item,'tribunal_codigo':selection.tribunal,'tribunal_nombre':query['tribunal_nombre'],
-                                    'modalidad':selection.modality,'modalidad_nombre':query['modalidad_nombre'],
-                                    'pestana':selection.tab,'pagina':number,'estado':'PENDIENTE','error':''}
-                            identity=(selection.tribunal,item.get('causa_id',''),item.get('ingreso_id',''))
-                            if all(identity):
-                                if identity in seen:raise m.PocError('Un ingreso está repetido en el listado; se detuvo esta consulta.')
-                                seen.add(identity)
-                            record['clave']=hashlib.sha256(json.dumps([selection.tab,selection.modality,identity,item['rit'],item['nombre'],item['programa'],item['rut'],item['fila'] if not all(identity) else ''],ensure_ascii=False).encode()).hexdigest()
-                            state['registros'].append(record);query['registros']+=1
-                            if not all(identity):
-                                record.update(estado='SIN_VINCULO',error='La fila no tiene un enlace de bitácora inequívoco. No se construyó una consulta por RIT. Diagnóstico: '+item.get('vinculo_diagnostico','NO_VERIFICADO'))
-                            else:
-                                record['params']={'tipo_popUp':item['tipo_popup'],'CRR_IdCausa':item['causa_id'],'COD_Tribunal':selection.tribunal,
-                                    'TIP_Consulta':selection.modality,'ID_Ingreso':item['ingreso_id'],'COD_Etapa':item['etapa'],'FLG_MejorNinez':item['antiguo']}
-                                checkpoint()
-                                try:
-                                    if not reuse(record):
-                                        result=self.bridge.call('diary_open',{'params':record['params'],'timeout':60000})
-                                        data=ChromeTransport.body(result)
-                                        digest=hashlib.sha256(data).hexdigest()
-                                        if len(data)>8*1024*1024 or digest!=result.get('digest') or result.get('params')!=record['params']:
-                                            raise m.PocError('La respuesta de bitácora no coincide con la solicitud.')
-                                        from datetime import datetime
-                                        datetime.fromisoformat(result['startedAt'].replace('Z','+00:00'))
-                                        snapshot=read(data,record['params'])
-                                        annotate_visible(record,snapshot)
-                                        name='bitacora-'+record['clave'][:24]+'-'+digest[:16]+'.html'
-                                        path=folder/name
-                                        if path.exists():
-                                            if path.read_bytes()!=data:raise m.PocError('El archivo local de bitácora cambió.')
-                                        else:m.save_exclusive(path,data)
-                                        record.update(estado='LEIDA',archivo=name,sha256=digest,capturada=result['startedAt'],entradas=len(snapshot['entries']))
-                                except (m.PocError,ValueError,KeyError,OSError,RuntimeError) as exc:
-                                    record.update(estado='FALLIDA',error=str(exc) if isinstance(exc,(m.PocError,ValueError)) else 'No se pudo comprobar o guardar esta bitácora.')
-                                    if getattr(exc,'code',None):record['diagnostico']={'codigo_extension':exc.code}
-                            checkpoint()
-                            self.emit('diary_progress',{'pagina':number,'registros':1,'archivo':record.get('archivo',record['estado']),'rit':record['rit'],'estado':record['estado']})
-                            if self.cancel.wait(.15):stopped()
-                        query['paginas']=number;checkpoint()
-                    query['estado']='ENUMERADA';checkpoint()
-                except (m.PocError,ValueError,KeyError,OSError) as exc:
-                    import traceback
-                    trace=traceback.extract_tb(exc.__traceback__)
-                    diagnostic={'fase':phase,'tipo':type(exc).__name__,
-                        'ubicacion':[{'modulo':Path(t.filename).name,'linea':t.lineno} for t in trace]}
-                    if isinstance(exc,KeyError) and len(exc.args)==1 and str(exc.args[0]) in m.ALLOWED_FIELDS|{'pairs','body','status','type','rit','nombre','ingreso_id'}:
-                        diagnostic['campo']=str(exc.args[0])
-                    query.update(estado='FALLIDA',diagnostico=diagnostic,error=str(exc) if isinstance(exc,m.PocError) else
-                        'No se pudo comprobar esta consulta · '+phase+' · '+type(exc).__name__+'. Revisa el diagnóstico del lote.')
-                    self.emit('warning',query['error'])
-                    checkpoint()
-                    if self.cancel.is_set() or not self.bridge.connected:break
+                if not self.enumerar_listado(session,batch,selection,index,len(plan)):break
             complete=len(state['consultas'])==len(plan) and all(q['estado'] in ('ENUMERADA','SIN_REGISTROS') for q in state['consultas'])
             state['estado']='CANCELADA' if self.cancel.is_set() else 'COMPLETA' if complete and all(r['estado']=='LEIDA' for r in state['registros']) else 'INCOMPLETA'
         except m.PocError as exc:
             state.update(estado='CANCELADA' if self.cancel.is_set() else 'INCOMPLETA',error=str(exc))
         finally:
-            current_keys={r['clave'] for r in state['registros']}
-            retained={r['clave']:r for r in previous_records if r['clave'] not in current_keys}
-            state['anteriores_no_reenumeradas']=list(retained.values())
-            checkpoint()
-            # Archivo independiente para soporte técnico sin datos judiciales de NNA.
-            write(folder/'diagnostico_bitacoras.json',anonymous_diagnostic(state))
-            if locked:
-                try:self.bridge.call('unlock',timeout=8)
-                except Exception:pass
+            self._cerrar(session)
+        return self._resultado(session)
+
+    def enumerar_listado(self,session,batch,selection,index,total_queries):
+        """Una consulta: formulario, páginas del listado y lectura de cada fila. False = detener el lote."""
+        session.detener_si_cancelada();profile=selection_profile(selection,self.catalog)
+        query={**asdict(selection),'tribunal_nombre':self.catalog['tribunales'][selection.tribunal],
+               'modalidad_nombre':MODALITIES[selection.modality],'estado':'EN_CURSO','paginas':0,'registros':0}
+        session.state['consultas'].append(query);session.persistir()
+        self.emit('query',{'index':index,'total':total_queries,'label':profile.label})
+        session.phase='PREPARAR_FORMULARIO'
+        try:
+            transport,pairs,body,profile,current=self._listado_inicial(session,batch,selection,profile)
+            if current is None:query['estado']='SIN_REGISTROS';session.persistir();return True
+            if current.current!=1:raise m.PocError('La consulta no comenzó en la primera página.')
+            total=current.total;original=m.invariant(pairs);seen=set()
+            for number in range(1,total+1):
+                session.detener_si_cancelada()
+                if number>1:
+                    pairs=[(k,str(number) if k==profile.page_field else current.pagination.get(k,v)) for k,v in pairs]
+                    if m.invariant(pairs)!=original:raise m.PocError('Cambió la consulta entre páginas.')
+                    session.phase='CONSULTAR_LISTADO'
+                    body=transport.search(pairs,60000)
+                    session.phase='VALIDAR_LISTADO'
+                    current=m.search_page(body,pairs,number,total,profile)
+                session.phase='LEER_FILAS'
+                for item in listing_rows(body,profile):
+                    self.leer_bitacora(session,selection,query,number,item,seen)
+                query['paginas']=number;session.persistir()
+            query['estado']='ENUMERADA';session.persistir()
+        except (m.PocError,ValueError,KeyError,OSError) as exc:
+            if isinstance(exc,LimiteLecturas):
+                query['estado']='INCOMPLETA';self.emit('warning',str(exc));raise
+            self._consulta_fallida(session,query,exc)
+            if self.cancel.is_set() or not self.bridge.connected:return False
+        return True
+
+    def _listado_inicial(self,session,batch,selection,profile):
+        prepared=self.bridge.call('prepare',{'selection':asdict(selection),'dates':asdict(batch.dates) if batch.dates else None,'keep_filters':batch.keep_filters})
+        wire=prepared['pairs']
+        if not isinstance(wire,list) or len(wire)>100 or any(not isinstance(p,(list,tuple)) or len(p)!=2 or any(not isinstance(v,str) for v in p) for p in wire):
+            raise m.PocError('El formulario no entregó parámetros válidos.')
+        pairs=m.query_pairs(urlencode([tuple(p) for p in wire]),profile)
+        fields=dict(pairs)
+        if fields.get('FLG_Consulta')!=('1' if batch.dates else '0'):raise m.PocError('El filtro de fechas no coincide.')
+        if batch.dates:
+            from urllib.parse import unquote_plus
+            if any(unquote_plus(fields.get(k,''))!=v for k,v in (('FEC_Inicio',batch.dates.start),('FEC_Fin',batch.dates.end))):raise m.PocError('Las fechas enviadas no coinciden.')
+        session.phase='CONSULTAR_LISTADO'
+        transport=ChromeTransport(self.bridge,profile);body=transport.search(pairs,60000)
+        session.phase='VALIDAR_LISTADO'
+        profile,current=response_profile(body,pairs,selection,self.catalog);transport.profile=profile
+        return transport,pairs,body,profile,current
+
+    def _consulta_fallida(self,session,query,exc):
+        import traceback
+        phase=session.phase
+        trace=traceback.extract_tb(exc.__traceback__)
+        diagnostic={'fase':phase,'tipo':type(exc).__name__,
+            'ubicacion':[{'modulo':Path(t.filename).name,'linea':t.lineno} for t in trace]}
+        if isinstance(exc,KeyError) and len(exc.args)==1 and str(exc.args[0]) in m.ALLOWED_FIELDS|{'pairs','body','status','type','rit','nombre','ingreso_id'}:
+            diagnostic['campo']=str(exc.args[0])
+        query.update(estado='FALLIDA',diagnostico=diagnostic,error=str(exc) if isinstance(exc,m.PocError) else
+            'No se pudo comprobar esta consulta · '+phase+' · '+type(exc).__name__+'. Revisa el diagnóstico del lote.')
+        self.emit('warning',query['error'])
+        session.persistir()
+
+    def leer_bitacora(self,session,selection,query,number,item,seen):
+        """Una fila del listado: identidad, reutilización o lectura de su bitácora, y pausa."""
+        session.detener_si_cancelada()
+        record={**item,'tribunal_codigo':selection.tribunal,'tribunal_nombre':query['tribunal_nombre'],
+                'modalidad':selection.modality,'modalidad_nombre':query['modalidad_nombre'],
+                'pestana':selection.tab,'pagina':number,'estado':'PENDIENTE','error':''}
+        identity=(selection.tribunal,item.get('causa_id',''),item.get('ingreso_id',''))
+        if all(identity):
+            if identity in seen:raise m.PocError('Un ingreso está repetido en el listado; se detuvo esta consulta.')
+            seen.add(identity)
+        record['clave']=hashlib.sha256(json.dumps([selection.tab,selection.modality,identity,item['rit'],item['nombre'],item['programa'],item['rut'],item['fila'] if not all(identity) else ''],ensure_ascii=False).encode()).hexdigest()
+        session.state['registros'].append(record);query['registros']+=1
+        if not all(identity):
+            record.update(estado='SIN_VINCULO',error='La fila no tiene un enlace de bitácora inequívoco. No se construyó una consulta por RIT. Diagnóstico: '+item.get('vinculo_diagnostico','NO_VERIFICADO'))
+        else:
+            record['params']={'tipo_popUp':item['tipo_popup'],'CRR_IdCausa':item['causa_id'],'COD_Tribunal':selection.tribunal,
+                'TIP_Consulta':selection.modality,'ID_Ingreso':item['ingreso_id'],'COD_Etapa':item['etapa'],'FLG_MejorNinez':item['antiguo']}
+            session.persistir(lazy=True)
+            if record['clave'] not in session.old and session.openings>=MAX_LECTURAS_POR_LOTE:
+                record.update(estado='PENDIENTE',error='Pendiente: se alcanzó el máximo de lecturas del lote.')
+                raise LimiteLecturas(f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
+                                     'Divide el período o los tribunales y usa «Retomar» para continuar.')
+            try:
+                if not session.reutilizar(record):self._abrir_bitacora(session,record)
+            except (m.PocError,ValueError,KeyError,OSError,RuntimeError) as exc:
+                record.update(estado='FALLIDA',error=str(exc) if isinstance(exc,(m.PocError,ValueError)) else 'No se pudo comprobar o guardar esta bitácora.')
+                if getattr(exc,'code',None):record['diagnostico']={'codigo_extension':exc.code}
+        session.persistir(lazy=True)
+        self.emit('diary_progress',{'pagina':number,'registros':1,'archivo':record.get('archivo',record['estado']),'rit':record['rit'],'estado':record['estado']})
+        if self.cancel.wait(self.pause if record['estado']!='SIN_VINCULO' and not record.get('reutilizada') else .05):session.detener_si_cancelada()
+
+    def _abrir_bitacora(self,session,record):
+        session.openings+=1
+        result=self.bridge.call('diary_open',{'params':record['params'],'timeout':60000})
+        data=ChromeTransport.body(result)
+        digest=hashlib.sha256(data).hexdigest()
+        if len(data)>8*1024*1024 or digest!=result.get('digest') or result.get('params')!=record['params']:
+            raise m.PocError('La respuesta de bitácora no coincide con la solicitud.')
+        from datetime import datetime
+        datetime.fromisoformat(result['startedAt'].replace('Z','+00:00'))
+        snapshot=session.read(data,record['params'])
+        session.anotar(record,snapshot)
+        name='bitacora-'+record['clave'][:24]+'-'+digest[:16]+'.html'
+        path=session.folder/name
+        if path.exists():
+            if path.read_bytes()!=data:raise m.PocError('El archivo local de bitácora cambió.')
+        else:m.save_exclusive(path,data)
+        record.update(estado='LEIDA',archivo=name,sha256=digest,capturada=result['startedAt'],entradas=len(snapshot['entries']))
+
+    def _cerrar(self,session):
+        state=session.state
+        current_keys={r['clave'] for r in state['registros']}
+        retained={r['clave']:r for r in session.previous_records if r['clave'] not in current_keys}
+        state['anteriores_no_reenumeradas']=list(retained.values())
+        session.persistir()
+        # Archivo independiente para soporte técnico sin datos judiciales de NNA.
+        write(session.folder/'diagnostico_bitacoras.json',anonymous_diagnostic(state))
+        if session.locked:
+            try:self.bridge.call('unlock',timeout=8)
+            except Exception:pass
+
+    def _resultado(self,session):
+        state,folder,manifest=session.state,session.folder,session.manifest
         value={'folder':str(folder),'manifest':str(manifest),'sha256':hashlib.sha256(manifest.read_bytes()).hexdigest(),
                'estado':state['estado'],'leidas':sum(r['estado']=='LEIDA' for r in state['registros']),
                'fallidas':sum(r['estado']!='LEIDA' for r in state['registros']),

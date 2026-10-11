@@ -54,12 +54,12 @@ async def main():
                     await connector.locator('#code').fill(bridge.connection_code);await connector.locator('#connect').click()
                     await expect(connector.locator('#status')).to_contain_text('Conectado.')
                     catalog=await asyncio.to_thread(bridge.call,'catalog',{'screen':'seguimiento'})
-                    result=await asyncio.to_thread(DiaryRunner(bridge,catalog,lambda *a:None,threading.Event()).run,
+                    result=await asyncio.to_thread(DiaryRunner(bridge,catalog,lambda *a:None,threading.Event(),pause=0).run,
                         Batch(('49','113'),('1','2','3','4'),('Espera','Cumplimiento')),Path(tmp)/'copias')
                     assert result['estado']=='COMPLETA' and result['leidas']==32,result
                     assert len(seen)==32 and {p['TIP_Consulta'] for p in seen}=={'1','2','3','4'}
                     for kind in ('1','2','3'):
-                        result=await asyncio.to_thread(DiaryRunner(bridge,catalog,lambda *a:None,threading.Event()).run,
+                        result=await asyncio.to_thread(DiaryRunner(bridge,catalog,lambda *a:None,threading.Event(),pause=0).run,
                             Batch(('49','113'),('1','2','3','4'),('Informes',),report=kind),Path(tmp)/'copias')
                         assert result['estado']=='COMPLETA' and result['leidas']==16,result
                     assert len(seen)==80 and {p['tipo_popUp'] for p in seen}=={'11','12','13'}
