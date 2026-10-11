@@ -91,6 +91,9 @@ def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
         # Decisión del usuario (11 de octubre de 2026): texto literal sin apóstrofo visible, nunca fórmula.
         assert sheet.cell(2, observation).value == "=texto de prueba"
         assert sheet.cell(2, observation).data_type == "s"
+        # La columna OBSERVACION revisada tampoco lleva apóstrofo visible (auditoría 11 de octubre de 2026).
+        reviewed = sheet.cell(2, headers.index("OBSERVACION") + 1)
+        assert (reviewed.value, reviewed.data_type) == ("=texto de prueba", "s")
         assert sheet.cell(2, state).value == "REVISADO"
         assert sheet.cell(3, state).value == "EXCLUIDO"
         rules = list(sheet.conditional_formatting)

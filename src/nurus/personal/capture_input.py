@@ -139,7 +139,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         if number % 100 == 0:
             checkpoint()
             progress('Construyendo copia Excel', number - 1, len(canonical))
-        append_literal_row(sheet, (row.get(k, '') for k in headers), row_number=number)
+        append_literal_row(sheet, (row.get(k, '') for k in headers))
     sheet.freeze_panes = 'A2'
     sheet.auto_filter.ref = sheet.dimensions
     out = BytesIO()

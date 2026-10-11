@@ -266,10 +266,11 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             if row <= header_row or row > source_last_row:
                 raise ExportError(f"La fila {row} no existe en la hoja procesada.")
             observation, state = _annotation_values(record, stage)
-            sheet.cell(row, columns["NURUS_ID_REGISTRO"]).value = _safe_cell(record["record_id"])
-            sheet.cell(row, columns["NURUS_REGLAS"]).value = _safe_cell(record["rule_ids_json"])
+            # Copia portable: texto literal sin apóstrofo visible (decisión del usuario del 11 de octubre de 2026).
+            _write_text(sheet.cell(row, columns["NURUS_ID_REGISTRO"]), record["record_id"])
+            _write_text(sheet.cell(row, columns["NURUS_REGLAS"]), record["rule_ids_json"])
             if 'NURUS_DECISIONES' in columns:
-                sheet.cell(row, columns['NURUS_DECISIONES']).value = _safe_cell(record.get('decisions_json', ''))
+                _write_text(sheet.cell(row, columns['NURUS_DECISIONES']), record.get('decisions_json', ''))
             _write_text(sheet.cell(row, observation_column), observation)
             _write_text(sheet.cell(row, state_column), state)
             existing = sheet.cell(row, columns["OBSERVACION"])
@@ -279,7 +280,7 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
                 _write_text(existing, existing.value)
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
-                    sheet.cell(row, columns[title]).value = _safe_cell(value)
+                    _write_text(sheet.cell(row, columns[title]), value)
 
         sheet.column_dimensions[get_column_letter(columns["NURUS_REGLAS"])].hidden = True
         if 'NURUS_DECISIONES' in columns:
@@ -297,8 +298,10 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         )
 
         trace = book.create_sheet(_trace_name(set(book.sheetnames)))
+        from nurus.services.excel_cells import append_literal_row
+
         for values in _trace_rows(snapshot):
-            trace.append([_safe_cell(value) for value in values])
+            append_literal_row(trace, values)
         trace.sheet_state = "hidden"
         book.save(target)
     finally:
