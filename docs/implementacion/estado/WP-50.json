@@ -19,6 +19,8 @@
   "auditoria": null,
   "integrado_en": null,
   "notas": [
-    "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02."
-  ]
+    "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02.",
+    "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional."
+  ],
+  "consolidado_en": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
 }

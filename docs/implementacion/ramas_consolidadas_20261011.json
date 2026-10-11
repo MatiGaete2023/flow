@@ -302,232 +302,280 @@
     {
       "rama": "origin",
       "sha": "52c6359ade4b31cc2773734d6cbf1566d7dc169c",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/ccr-4116db41-nm8g0r",
       "sha": "0b3990d1beaeb22f0ee8ccc2c39b1e5d27c90706",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/e3/wp-80-revision",
       "sha": "283f77d1a421cc004b5455140b18a39016cc8a20",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/feat/ejecucion-plan-20261008",
       "sha": "c39f94d11b5997036ce0672440fb2c6de8d0ef0c",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/integracion/prueba-20261011",
       "sha": "32795695d6f98dbb7e31566cf2fff4075bc6eff6",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/main",
       "sha": "52c6359ade4b31cc2773734d6cbf1566d7dc169c",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/plan/revision-20261010",
       "sha": "ce64463045f7525cac1386c4e6498a0efc07ff78",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/revision/integracion-36-38-20261011",
       "sha": "82b2d1e5a740453a0ea3ffdce86ab3281c1e0781",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/02-acta-uso-real",
       "sha": "6d228517d55d8471e1d644ce1590baf5bb74c5fe",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/50-cronologia-solo-mostrar",
       "sha": "62201aff1114cf6cd5e8585272c2fb500e56df3e",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/80-auditoria",
       "sha": "54bb56f25be96c096c42afbc39bf671062781ce4",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/81-revision-propia-20261011",
       "sha": "1e12371e560af1386f7896306be27f71ed0f3994",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/82-pendientes-correo-20261011",
       "sha": "421febba3e894b99a84594cff6afb6348bfe9b81",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/83-bloqueo-editores-20261011",
       "sha": "9d6cbe7a34b57e21083855ce4e5a33c732f05a42",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/84-huellas-consulta-20261011",
       "sha": "038d017b105dcbded86000295bd9fc8666972294",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-00-kit",
       "sha": "0ed2363904bd6580426834f54deafe586f0e3594",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-01-gobernanza",
       "sha": "41d53b01ce67b4417a077efb183045da6c560109",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-10-identidades",
       "sha": "bddde13b26cfdf5179083a8fbe21b37c0bce5ea7",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-11-ci-ensayo",
       "sha": "4a144d559d4ffa80bfe2ad4dfa5d44974975b2d1",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-11-identidades-ci",
       "sha": "7ad07ea511535fa13fce390c8337f90c0be8967f",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-12-contactos-locales",
       "sha": "b9263079d99cb507dadcd09eedf0652288232ad8",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-13-retencion-asistente",
       "sha": "7b03bc88a1e101e10114091761c86e85c6958c48",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-14-retencion-descargador",
       "sha": "af65fbd1547199ea903de8be7cd6cda3c64ab972",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-15-har",
       "sha": "9a6d96f48489ed8e57f12c41f3a96c40d05155f5",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-16-anonimizador",
       "sha": "db25252c9de70becaedd0d91f94c2105a1e32266",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-21-capa-legado",
       "sha": "0c9cc7862e5d276624f7fbec1dc0dd4c3e1866d2",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-22-inspector-rus",
       "sha": "70d09addf9758dd5a07f5e9eb76762433ca9c0e8",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-23-lanzamiento",
       "sha": "2951899b7287bee2985d75953b566a1ff8277c04",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-24-documentacion",
       "sha": "bd7c4bdfb43af362c45caf0c2a52b5e56393c6b5",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-30-cc-unico",
       "sha": "1af645f34edc981cfa85f13305f6c368e35912ac",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-31-version",
       "sha": "e40613bafa26f3d16e759f05cce4c5dcf8b18256",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-32-exportacion",
       "sha": "d3c8c9cd1b1b6084703c5d16e69673d5b1ac25a4",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-33-ritmo-checkpoint",
       "sha": "8e29fe8a42626582401b75a6ceb111edf815cc21",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-34-ci",
       "sha": "800bfe3a26077a0d27b4ac6effc9423429b0c370",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-35-instaladores",
       "sha": "bc3064f642da5a2774892d7a873542c66aebfcc1",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-40-trabajo-legible",
       "sha": "20a2e227ec0735a496a9e9a52f1ad97b91be854c",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-41-siguiente-paso",
       "sha": "1861f3605e43e2ac726448dbeb708853f5914d53",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-42-resoluciones-correos",
       "sha": "1010dd77486bdb64e703e03d2a62d15cd0d4fa8a",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-43-paquete-lote",
       "sha": "fd0eefde1dc3fb8278efa1103a3d2e8df36f4936",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-44-importar-ultimo",
       "sha": "68d41dbbe74ca03f34369e69b1bc414c61897ba6",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-45-retirar-solicitud",
       "sha": "6cba49b40b9ac30f263364744b556c21888d24f8",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-51-fidelidad-nativa",
       "sha": "e9063dee87b87dd213ea9f2b251d061fed661a17",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-60-reglas-limites",
       "sha": "30a7d64a437c7e53db19acbb61ad815817291c44",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-61-formato",
       "sha": "3ded1e382c9d39cce582ed38220adee531467c43",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/WP-62-dividir-diaryrunner",
       "sha": "7f7186e80858d3f260b3988faa42d293ad089a59",
-      "incluida_al_inicio": true
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
     },
     {
       "rama": "origin/wp/auditoria-refactor-20261011",
       "sha": "3184a7186321854f020551b867d51e6135f46387",
-      "incluida_al_inicio": false
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
     }
-  ]
+  ],
+  "rama_canonica": "feat/ejecucion-plan-20261008",
+  "consolidacion_fuentes": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
 }

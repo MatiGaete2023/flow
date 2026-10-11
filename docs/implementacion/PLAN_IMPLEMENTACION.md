@@ -601,3 +601,9 @@ WP-82: [ficha](wp/WP-82.md), [reporte](REPORTE_WP82.md); integración autorizada
 WP-83: [ficha](wp/WP-83.md), [reporte](REPORTE_WP83.md); integración autorizada en verificación.
 
 WP-84: [ficha](wp/WP-84.md) y [reporte](REPORTE_WP84.md), integrado con excepción E3 expresa.
+
+## Consolidación ordenada — 11 de octubre de 2026
+
+Usuario: fusionar todas las ramas y entregar reporte. [WP-85](wp/WP-85.md) integra los
+45 encabezados en feat y conserva correcciones actuales; cronología/plantilla quedan
+consolidadas sin declarar uso real. [Reporte](REPORTE_CONSOLIDACION_20261011.md).
