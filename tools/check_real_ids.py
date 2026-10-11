@@ -9,6 +9,8 @@ Uso:
 
 Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
 Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
+Acepta UTF-8 con o sin BOM, UTF-16 con BOM y cp1252 estricto como respaldo.
+Contenido ilegible, codificación ambigua o revisión incompleta termina con código 2.
 """
 
 import argparse
