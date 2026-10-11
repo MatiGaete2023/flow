@@ -1,4 +1,5 @@
 """Reglas de mayoría de edad en Espera y Cumplimiento, con fecha de corte fija."""
+
 from datetime import date
 
 import pytest

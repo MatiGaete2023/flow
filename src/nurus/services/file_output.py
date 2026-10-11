@@ -1,4 +1,5 @@
 """Escritura de productos nuevos sin sobrescribir ni dejar resultados truncados."""
+
 from pathlib import Path
 import shutil
 import tempfile
@@ -9,8 +10,9 @@ def write_new_file(destination, writer):
     if target.exists():
         raise ValueError("El archivo ya existe; elige un destino nuevo.")
     target.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(prefix="nurus-producto-", suffix=target.suffix,
-                                         dir=target.parent, delete=False)
+    handle = tempfile.NamedTemporaryFile(
+        prefix="nurus-producto-", suffix=target.suffix, dir=target.parent, delete=False
+    )
     temporary = Path(handle.name)
     handle.close()
     created = False

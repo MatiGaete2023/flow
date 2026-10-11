@@ -41,5 +41,3 @@ def test_failure_during_publication_removes_only_owned_partial(tmp_path, monkeyp
         write_new_file(destination, lambda path: path.write_bytes(b"complete"))
     assert not destination.exists()
     assert list(tmp_path.iterdir()) == []
-
-

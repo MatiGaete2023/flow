@@ -1,4 +1,5 @@
 """Contrato de rangos simulado: preservación de celdas y límite de llamadas."""
+
 from nurus.services.exports import _native_resolution_validation, _native_write_column
 
 
@@ -97,6 +98,7 @@ def test_res_validation_uses_hidden_named_range_without_locale_call():
         def __call__(self, column):
             class Column:
                 ColumnWidth = 10
+
             return Column()
 
     class Sheet:

@@ -24,6 +24,7 @@ Controles:
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
 """
+
 import argparse
 import ast
 import json
@@ -51,15 +52,23 @@ def run(command, cwd=ROOT, timeout=1800):
 def pytest_counts(args):
     code, out = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", *args])
     tail = out.strip().splitlines()[-1] if out.strip() else ""
+
     def number(word):
         match = re.search(r"(\d+) " + word, tail)
         return int(match.group(1)) if match else 0
+
     failed = number("failed") + number("error")
     if code not in (0, 1) and not failed:
         # Interrupción, error de recolección o caída al cerrar: no se cuenta como suite sana.
         failed, tail = 1, f"{tail} (pytest terminó con código {code})"
-    return {"aprobadas": number("passed"), "omitidas": number("skipped"), "fallidas": failed,
-            "subpruebas": number("subtests passed"), "codigo": code, "resumen": tail}
+    return {
+        "aprobadas": number("passed"),
+        "omitidas": number("skipped"),
+        "fallidas": failed,
+        "subpruebas": number("subtests passed"),
+        "codigo": code,
+        "resumen": tail,
+    }
 
 
 def count_real_ids():
@@ -99,21 +108,40 @@ def restrictions():
         if not submits:
             problems.append("registration.py existe pero no se encontró submit: no se pudo medir")
         for submit in submits:
-            body = [n for n in submit.body if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))]
+            body = [
+                n
+                for n in submit.body
+                if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))
+            ]
             if not (body and isinstance(body[0], ast.Raise)):
                 problems.append("registration.submit ya no lanza error al inicio")
     # Sin automatización, red ni procesos en el Asistente: no escribe en RUS/SATURNO,
     # no navega SITFA y no inicia el Descargador (control negativo; vale aunque falte registration.py).
-    banned = ("subprocess", "webbrowser", "playwright", "selenium", "pywinauto", "requests", "httpx",
-              "urllib.request", "http.client", "socket")
+    banned = (
+        "subprocess",
+        "webbrowser",
+        "playwright",
+        "selenium",
+        "pywinauto",
+        "requests",
+        "httpx",
+        "urllib.request",
+        "http.client",
+        "socket",
+    )
     for path in (ROOT / "src").rglob("*.py"):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
         except SyntaxError:
             continue
         for node in ast.walk(tree):
-            names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
-                [node.module or ""] if isinstance(node, ast.ImportFrom) and not node.level else []
+            names = (
+                [a.name for a in node.names]
+                if isinstance(node, ast.Import)
+                else [node.module or ""]
+                if isinstance(node, ast.ImportFrom) and not node.level
+                else []
+            )
             for name in names:
                 if any(name == b or name.startswith(b + ".") for b in banned):
                     problems.append(f"{path.relative_to(ROOT)} importa {name}")
@@ -138,7 +166,7 @@ def unreachable_count():
         return None
     code, out = run([PY, str(script), "--json"])
     try:
-        return len(json.loads(out[out.index("{"):])["no_alcanzables"])
+        return len(json.loads(out[out.index("{") :])["no_alcanzables"])
     except (ValueError, KeyError):
         return None
 
@@ -154,7 +182,9 @@ def broken_links():
 
 def collect():
     return {
-        "commit": subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip(),
+        "commit": subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True
+        ).stdout.strip(),
         "asistente": pytest_counts([]),
         "descargador": pytest_counts(["descargador"]),
         "identidades_reales": count_real_ids(),
@@ -200,8 +230,11 @@ def removed_from_lists(paths, commit=None):
     for suite, nodes in removed.items():
         problems += [f"{node} está repetido" for node in sorted({n for n in nodes if nodes.count(n) > 1})]
         if commit:
-            problems += [f"{node} no existía en la línea base {commit}" for node in sorted(set(nodes))
-                         if not existed_in_base(node, commit)]
+            problems += [
+                f"{node} no existía en la línea base {commit}"
+                for node in sorted(set(nodes))
+                if not existed_in_base(node, commit)
+            ]
         if nodes:
             present = collected_nodeids(suite)
             problems += [f"{node} sigue presente" for node in nodes if node in present]
@@ -210,19 +243,27 @@ def removed_from_lists(paths, commit=None):
 
 def compare(now, base, removed_a, removed_d, lists=None):
     checks = []
+
     def add(name, ok, detail):
         checks.append({"control": name, "resultado": "PASA" if ok else "FALLA", "detalle": detail})
+
     listed, problems = lists if lists else ({}, [])
     for key, removed in (("asistente", removed_a), ("descargador", removed_d)):
         n, b = now[key], base[key]
         removed += listed.get(key, 0)
         minimum = b["aprobadas"] - removed
         origin = "" if not removed or listed.get(key) else "; eliminadas sin lista verificable"
-        add(f"Suite {key}", n["fallidas"] == 0 and n["aprobadas"] >= minimum,
-            f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']}{origin})")
+        add(
+            f"Suite {key}",
+            n["fallidas"] == 0 and n["aprobadas"] >= minimum,
+            f"{n['resumen']} (mínimo {minimum} aprobadas; base {b['aprobadas']}{origin})",
+        )
     if lists:
-        add("Pruebas eliminadas listadas", not problems,
-            "; ".join(problems) or f"{sum(listed.values())} nodos ausentes como se declaró")
+        add(
+            "Pruebas eliminadas listadas",
+            not problems,
+            "; ".join(problems) or f"{sum(listed.values())} nodos ausentes como se declaró",
+        )
     ids_now, ids_base = now["identidades_reales"], base["identidades_reales"]
     if ids_now is None:
         add("Identidades reales", False, "NO_MEDIDO: falta tools/check_real_ids.py o su salida no se pudo leer")
@@ -231,7 +272,11 @@ def compare(now, base, removed_a, removed_d, lists=None):
         add("Identidades reales", ids_now <= limit, f"{ids_now} hallazgos (límite {limit})")
     add("Paridad golden", now["paridad_golden"] == "PASA", now["paridad_golden"])
     add("Restricciones absolutas", not now["restricciones"], "; ".join(now["restricciones"]) or "sin infracciones")
-    for key, label in (("ruff_src", "Ruff E9/F63/F7/F82"), ("modulos_no_alcanzables", "Módulos no alcanzables"), ("enlaces_rotos", "Enlaces rotos")):
+    for key, label in (
+        ("ruff_src", "Ruff E9/F63/F7/F82"),
+        ("modulos_no_alcanzables", "Módulos no alcanzables"),
+        ("enlaces_rotos", "Enlaces rotos"),
+    ):
         if now[key] is None or base.get(key) is None:
             add(label, False, f"NO_MEDIDO (ahora {now[key]}, base {base.get(key)})")
         else:
@@ -260,8 +305,12 @@ def main(argv):
     base = json.loads(BASE_FILE.read_text(encoding="utf-8"))
     lists = removed_from_lists(args.lista_eliminadas, base.get("commit")) if args.lista_eliminadas else None
     checks = compare(now, base, args.pruebas_eliminadas_asistente, args.pruebas_eliminadas_descargador, lists)
-    report = {"commit": now["commit"], "base": base["commit"], "controles": checks,
-              "veredicto": "PASA" if all(c["resultado"] == "PASA" for c in checks) else "FALLA"}
+    report = {
+        "commit": now["commit"],
+        "base": base["commit"],
+        "controles": checks,
+        "veredicto": "PASA" if all(c["resultado"] == "PASA" for c in checks) else "FALLA",
+    }
     for check in checks:
         print(f"[{check['resultado']}] {check['control']}: {check['detalle']}")
     print("VEREDICTO:", report["veredicto"])

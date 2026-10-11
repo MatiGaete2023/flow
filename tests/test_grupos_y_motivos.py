@@ -1,4 +1,5 @@
 """WP-42: Resoluciones en tres grupos y motivos visibles en los botones de Correos."""
+
 from test_integral_ui import run_gui
 
 COMUN = """
@@ -13,7 +14,10 @@ def textos(widget):
 
 
 def test_resoluciones_tres_grupos_y_mismas_acciones(tmp_path):
-    run_gui(tmp_path, COMUN + """
+    run_gui(
+        tmp_path,
+        COMUN
+        + """
 assert list(app.resolution_groups)==['1 Preparar','2 Revisar','3 Generar','Más']
 grupo=lambda nombre:set(textos(app.resolution_groups[nombre]))
 assert {'Aplicar tipo','Agregar desde Trabajo','Preparar / actualizar proyectos'}<=grupo('1 Preparar')
@@ -27,11 +31,15 @@ assert antes<=set(textos(app.pages['Resoluciones']))
 app.tabs.select(app.pages['Resoluciones']);app.update()
 for linea in {w.master.master for w in app.resolution_groups.values()}:
     assert linea.winfo_reqwidth()<=app.pages['Resoluciones'].winfo_width()+2, linea.winfo_reqwidth()
-""")
+""",
+    )
 
 
 def test_correos_muestra_motivo_con_y_sin_excel(tmp_path):
-    run_gui(tmp_path, COMUN + """
+    run_gui(
+        tmp_path,
+        COMUN
+        + """
 from nurus.personal.mail_controls import MAIL_ACTIONS, NO_WORK, NO_SELECTED, mail_block, require_mail_action
 from nurus.personal.mail_view import SHORT_REASONS
 from nurus.personal.outputs import Draft
@@ -62,13 +70,17 @@ assert not mail_block(app,'guardar_todos') and not mail_block(app,'vista_previa'
 assert mail_block(app,'editar_adjunto')
 revisar()
 assert {'Correo libre','Cargar planilla','Adjuntar…','Filtros / opciones'}<=set(textos(app.pages['Correos']))
-""")
+""",
+    )
 
 
 def test_render_por_trozos_no_deja_botones_con_estado_viejo(tmp_path):
     # Con más de 500 filas la tabla se dibuja en trozos con la interfaz bloqueada;
     # al desbloquear se recalcula la disponibilidad (antes quedaban deshabilitados).
-    run_gui(tmp_path, COMUN + """
+    run_gui(
+        tmp_path,
+        COMUN
+        + """
 import time
 from openpyxl import Workbook
 from nurus.personal.mail_controls import mail_block
@@ -88,14 +100,18 @@ app.update()
 assert not getattr(app,'rendering',False)
 for clave in ('vista_previa','guardar_este','guardar_todos','preparar_todos','preparar_tipo'):
     assert mail_block(app,clave)=='' and app.mail_action_buttons[clave].cget('state')=='normal',clave
-""")
+""",
+    )
 
 
 def test_paleta_usa_la_misma_condicion_que_el_boton_guardar_borradores(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 from nurus.personal.commands import commands
 from nurus.personal.mail_controls import mail_block
 comando=next(c for c in commands(app) if c.name.startswith('Revisar y guardar borradores'))
 app.drafts=[object()];app.work=None
 assert mail_block(app,'guardar_todos') and not comando.available()
-""")
+""",
+    )

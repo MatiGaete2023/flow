@@ -1,4 +1,5 @@
 """Solicitudes locales de descarga, conservadas aunque se cierre CSMP."""
+
 from datetime import datetime
 from pathlib import Path
 import json
@@ -48,10 +49,17 @@ class Transfer:
     def create(cls, folder, mode, destination):
         if mode not in ('ESPERA', 'CUMPLIMIENTO'):
             raise ValueError('La descarga conjunta requiere Espera o Cumplimiento.')
-        item = cls(folder, uuid4().hex, {
-            'version': 1, 'mode': mode, 'destination': str(Path(destination).resolve()),
-            'created_at': datetime.now().astimezone().isoformat(), 'state': 'PENDIENTE',
-        })
+        item = cls(
+            folder,
+            uuid4().hex,
+            {
+                'version': 1,
+                'mode': mode,
+                'destination': str(Path(destination).resolve()),
+                'created_at': datetime.now().astimezone().isoformat(),
+                'state': 'PENDIENTE',
+            },
+        )
         item.update('PENDIENTE')
         return item
 
@@ -60,7 +68,7 @@ class Transfer:
         folder = Path(folder).resolve()
         path = Path(path).resolve()
         suffix = '.solicitud.json'
-        identifier = path.name[:-len(suffix)] if path.name.endswith(suffix) else ''
+        identifier = path.name[: -len(suffix)] if path.name.endswith(suffix) else ''
         if path.parent != folder or not re.fullmatch(r'[0-9a-f]{32}', identifier):
             raise ValueError('La solicitud no pertenece al intercambio de este prototipo.')
         if path.stat().st_size > 16_000:
@@ -107,6 +115,7 @@ def archive_current(work, configuration_folder):
 def recovery_work(transfer, current=None, config=None):
     """Prefiere las ediciones actuales o guardadas; no vuelve a analizar el origen."""
     from .work import Work
+
     snapshot = transfer.recovery_folder / 'incorporada'
     interrupted = (snapshot / 'trabajo.json').is_file()
     if transfer.data['state'] != 'INCORPORADA' and not interrupted:
@@ -115,8 +124,10 @@ def recovery_work(transfer, current=None, config=None):
     if not re.fullmatch(r'[0-9a-f]{64}', expected):
         raise ValueError('La recuperación no conserva la huella de la descarga.')
     mode = transfer.data['mode']
+
     def matches(work):
         return work is not None and work.source_hash == expected and work.mode == mode
+
     # El archivo propio demuestra que el análisis terminó incluso si falló la
     # actualización del estado después de guardar esa sesión.
     config = config if config is not None else (current.config if current is not None else None)

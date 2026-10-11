@@ -1,4 +1,5 @@
 """One grammar for editable templates, validation and preview."""
+
 from string import Formatter
 
 
@@ -12,8 +13,10 @@ def variables(text, allowed):
         if name is None:
             continue
         if not name or name not in allowed or spec or conversion:
-            raise ValueError('Variable de plantilla inválida: {' + str(name) + '}. '
-                             'Usa solo los nombres ofrecidos, sin formatos ni conversiones.')
+            raise ValueError(
+                'Variable de plantilla inválida: {' + str(name) + '}. '
+                'Usa solo los nombres ofrecidos, sin formatos ni conversiones.'
+            )
         result.add(name)
     return result
 

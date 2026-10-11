@@ -1,4 +1,5 @@
 """Barra «Siguiente paso»: solo lee el estado del trabajo y de los productos; no crea datos ni reglas."""
+
 from pathlib import Path
 
 from . import ui
@@ -49,11 +50,19 @@ def _signature(app):
     if not work:
         return None
     output = getattr(work, 'output', '')
-    return (id(work), len(work.rows), sum(bool(r.warnings) for r in work.rows), output,
-            Path(output).is_file() if output else False, len(getattr(work, 'receipts', {}) or {}),
-            tuple((d.product_id, d.subject, bool(d.to), bool(d.body.strip()), len(d.attachments), d.roster_reviewed)
-                  for d in drafts),
-            tuple((p.key, p.review_required) for p in projects))
+    return (
+        id(work),
+        len(work.rows),
+        sum(bool(r.warnings) for r in work.rows),
+        output,
+        Path(output).is_file() if output else False,
+        len(getattr(work, 'receipts', {}) or {}),
+        tuple(
+            (d.product_id, d.subject, bool(d.to), bool(d.body.strip()), len(d.attachments), d.roster_reviewed)
+            for d in drafts
+        ),
+        tuple((p.key, p.review_required) for p in projects),
+    )
 
 
 class NextStepBar(ui.Frame):
@@ -71,8 +80,15 @@ class NextStepBar(ui.Frame):
         for index, (key, name, page) in enumerate(STEPS):
             if index:
                 ui.Label(self, text='→', text_color=ui.MUTED).pack(side='left', padx=2)
-            button = ui.Button(self, text=name, width=40, height=22, fg_color='transparent', border_width=1,
-                               command=lambda page=page: self.open(page))
+            button = ui.Button(
+                self,
+                text=name,
+                width=40,
+                height=22,
+                fg_color='transparent',
+                border_width=1,
+                command=lambda page=page: self.open(page),
+            )
             button.pack(side='left', padx=1, pady=1)
             self.buttons[key] = button
         self.refresh(force=True)

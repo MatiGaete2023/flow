@@ -4,6 +4,7 @@ Uso: python tools/flow_baseline_inventory.py --output docs/evidencia_p0/inventar
 El grafo incluye imports dentro de funciones. Los imports calculados, el
 empaquetado y las llamadas entre procesos requieren inspección adicional.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,13 @@ def check_baseline(root):
             path = root / "docs/historico" / Path(name).name
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             changed.append(name)
-    return {"source_sha": manifest["sha"], "files": len(manifest["files_sha256"]),
-            "changed": changed, "readme_relocation": APPROVED_EXCEPTIONS,
-            "ok": not changed}
+    return {
+        "source_sha": manifest["sha"],
+        "files": len(manifest["files_sha256"]),
+        "changed": changed,
+        "readme_relocation": APPROVED_EXCEPTIONS,
+        "ok": not changed,
+    }
 
 
 def module_name(path):
@@ -52,8 +57,9 @@ def module_name(path):
 
 def graph(root):
     files = sorted((root / "src/nurus").rglob("*.py"))
-    files += sorted(p for p in (root / "descargador").glob("*.py")
-                    if not p.name.startswith(("test_", "verificar_", "prueba_")))
+    files += sorted(
+        p for p in (root / "descargador").glob("*.py") if not p.name.startswith(("test_", "verificar_", "prueba_"))
+    )
     index = {module_name(p.relative_to(root)): p for p in files}
     nodes = []
     for name, path in sorted(index.items()):
@@ -68,11 +74,13 @@ def graph(root):
                 base = node.module or ""
                 if node.level:
                     levels = package.split(".")
-                    base = ".".join(levels[:len(levels) - node.level + 1] + ([base] if base else []))
+                    base = ".".join(levels[: len(levels) - node.level + 1] + ([base] if base else []))
                 targets = [base] + [base + "." + a.name for a in node.names]
             elif isinstance(node, ast.Call) and (
-                isinstance(node.func, ast.Name) and node.func.id == "__import__"
-                or isinstance(node.func, ast.Attribute) and node.func.attr == "import_module"
+                isinstance(node.func, ast.Name)
+                and node.func.id == "__import__"
+                or isinstance(node.func, ast.Attribute)
+                and node.func.attr == "import_module"
             ):
                 computed.append(node.lineno)
             for target in targets:
@@ -106,9 +114,17 @@ def graph(root):
             action, phase = "AISLAR infraestructura de escritura; preservar recuperación de comprobantes", "P6"
         elif name in {"nurus.personal.session", "nurus.personal.product_state", "nurus.personal.sync"}:
             action, phase = "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional", "P5/P8"
-        nodes.append({"module": name, "path": relative, "imports": sorted(imports),
-                      "local_imports": sorted(edges), "dynamic_import_lines": computed,
-                      "action": action, "phase": phase})
+        nodes.append(
+            {
+                "module": name,
+                "path": relative,
+                "imports": sorted(imports),
+                "local_imports": sorted(edges),
+                "dynamic_import_lines": computed,
+                "action": action,
+                "phase": phase,
+            }
+        )
     by_name = {n["module"]: n for n in nodes}
     incoming = {name: [] for name in by_name}
     for node in nodes:
@@ -134,8 +150,7 @@ def test_inventory(root):
         tree = ast.parse(path.read_text(encoding="utf-8-sig"))
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
-                result.append({"path": path.relative_to(root).as_posix(), "line": node.lineno,
-                               "test": node.name})
+                result.append({"path": path.relative_to(root).as_posix(), "line": node.lineno, "test": node.name})
     return result
 
 
@@ -154,17 +169,28 @@ def main():
         writer = csv.DictWriter(stream, fieldnames=["path", "line", "test"], lineterminator="\n")
         writer.writeheader()
         writer.writerows(tests)
-    lines = ["# Inventario estático P0", "", f"Código de origen: `{baseline['source_sha']}`.", "",
-             "Incluye imports en funciones y grafo transitivo. No prueba disponibilidad en Windows,",
-             "imports calculados ni invocaciones por subprocess. Las acciones son propuestas para fases posteriores.", "",
-             "| Módulo | Acción propuesta | Fase | Imports locales directos | Importado por |",
-             "|---|---|---|---|---|"]
+    lines = [
+        "# Inventario estático P0",
+        "",
+        f"Código de origen: `{baseline['source_sha']}`.",
+        "",
+        "Incluye imports en funciones y grafo transitivo. No prueba disponibilidad en Windows,",
+        "imports calculados ni invocaciones por subprocess. Las acciones son propuestas para fases posteriores.",
+        "",
+        "| Módulo | Acción propuesta | Fase | Imports locales directos | Importado por |",
+        "|---|---|---|---|---|",
+    ]
     for node in modules:
         link = f"[{node['module']}](../../../{node['path']})"
-        lines.append(f"| {link} | {node['action']} | {node['phase']} | {len(node['local_imports'])} | {len(node['imported_by'])} |")
+        lines.append(
+            f"| {link} | {node['action']} | {node['phase']} | {len(node['local_imports'])} | {len(node['imported_by'])} |"
+        )
     (args.output / "modulos.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(json.dumps({"baseline_ok": baseline["ok"], "modules": len(modules),
-                      "test_functions": len(tests)}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"baseline_ok": baseline["ok"], "modules": len(modules), "test_functions": len(tests)}, ensure_ascii=False
+        )
+    )
     if not baseline["ok"]:
         raise SystemExit("Hay diferencias con el origen: " + ", ".join(baseline["changed"]))
 

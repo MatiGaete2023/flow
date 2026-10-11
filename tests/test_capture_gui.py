@@ -1,9 +1,12 @@
 """El cambio de trabajo en GUI ocurre solo después de validación completa."""
+
 from test_integral_ui import run_gui
 
 
 def test_import_without_remote_launcher_and_rejected_zip_keeps_edits(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from unittest.mock import patch
 import contextlib
 patcher=patch.object(app,'_ask_cut_date',return_value=date(2026,10,8));patcher.start()
@@ -34,11 +37,14 @@ try:app._download_joint()
 except ValueError:pass
 else:raise AssertionError('Lanzador remoto activo')
 app._capture_evidence();app.update()
-""")
+""",
+    )
 
 
 def test_complementary_import_restores_live_products_after_large_redraw(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from unittest.mock import patch
 from nurus.capture import write_capture
 from nurus.capture.fixtures import fixture
@@ -75,4 +81,5 @@ restored=Work.load(app.cfg.directory/'sesion')
 assert restored.session['drafts'][0]['record_ids']==['new-r0']
 assert restored.session['drafts'][0]['body']=='Edición humana todavía abierta'
 assert len(list((app.cfg.directory/'sesion'/'anteriores').iterdir()))==1
-""")
+""",
+    )

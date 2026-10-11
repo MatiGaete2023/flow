@@ -1,4 +1,5 @@
 """Progress and cooperative cancellation, isolated from Tk and Office calls."""
+
 from contextvars import ContextVar
 from contextlib import contextmanager
 from dataclasses import dataclass, field

@@ -9,6 +9,7 @@ Uso:
 Lista blanca: tools/real_ids_allowlist.txt (un RUT sintético por línea, formato 11111111-1).
 Revisa texto plano y el XML interno de .docx/.xlsx/.zip. Código de salida 1 si hay hallazgos.
 """
+
 import argparse
 import io
 import os
@@ -20,7 +21,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ALLOWLIST = ROOT / "tools" / "real_ids_allowlist.txt"
-TEXT_SUFFIXES = {".py", ".json", ".md", ".txt", ".csv", ".html", ".js", ".xml", ".yml", ".yaml", ".b64", ".toml", ".cjs"}
+TEXT_SUFFIXES = {
+    ".py",
+    ".json",
+    ".md",
+    ".txt",
+    ".csv",
+    ".html",
+    ".js",
+    ".xml",
+    ".yml",
+    ".yaml",
+    ".b64",
+    ".toml",
+    ".cjs",
+}
 ZIP_SUFFIXES = {".docx", ".xlsx", ".zip"}
 ZIP_MEMBER_SUFFIXES = (".xml", ".csv", ".json", ".txt", ".html", ".md")
 PATTERN = re.compile(r"(?<![\d.])(\d{1,2}\.?\d{3}\.?\d{3})-([\dkK])(?![\w])")
@@ -52,8 +67,7 @@ def load_allowlist(*, stage: bool = False) -> set[str]:
         if not ALLOWLIST.is_file():
             return set()
         content = ALLOWLIST.read_text(encoding="utf-8")
-    return {line.strip().upper() for line in content.splitlines()
-            if line.strip() and not line.startswith("#")}
+    return {line.strip().upper() for line in content.splitlines() if line.strip() and not line.startswith("#")}
 
 
 def tracked_files() -> list[Path]:
@@ -64,7 +78,11 @@ def tracked_files() -> list[Path]:
 def texts(path: Path, staged: bytes | None = None):
     suffix = path.suffix.lower()
     if suffix in TEXT_SUFFIXES:
-        content = staged.decode("utf-8", errors="ignore") if staged is not None else path.read_text(encoding="utf-8", errors="ignore")
+        content = (
+            staged.decode("utf-8", errors="ignore")
+            if staged is not None
+            else path.read_text(encoding="utf-8", errors="ignore")
+        )
         yield str(path), content
     elif suffix in ZIP_SUFFIXES:
         try:
@@ -99,7 +117,9 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
 def staged_files() -> list[Path]:
     output = subprocess.run(
         ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMRT", "-z"],
-        cwd=ROOT, capture_output=True, check=True,
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
     ).stdout
     return [ROOT / name for name in output.decode("utf-8", errors="surrogateescape").split("\0") if name]
 
@@ -116,7 +136,11 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     if args.stage and args.rutas:
         parser.error("--stage no acepta rutas; revisa los archivos del índice.")
-    paths = staged_files() if args.stage else ([Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files())
+    paths = (
+        staged_files()
+        if args.stage
+        else ([Path(arg).resolve() for arg in args.rutas] if args.rutas else tracked_files())
+    )
     if not args.stage and args.rutas:
         paths = [candidate for path in paths for candidate in (path.rglob("*") if path.is_dir() else [path])]
     prefixes = [Path(os.path.abspath(ROOT / prefix)) for prefix in args.excluir]
@@ -125,8 +149,10 @@ def main(argv: list[str]) -> int:
     for label, line, masked in findings:
         print(f"{label}:{line}: RUT con dígito verificador válido ({masked})")
     if findings:
-        print(f"{len(findings)} posibles identidades reales. Reemplázalas por datos sintéticos "
-              "o agrega el RUT sintético a tools/real_ids_allowlist.txt.")
+        print(
+            f"{len(findings)} posibles identidades reales. Reemplázalas por datos sintéticos "
+            "o agrega el RUT sintético a tools/real_ids_allowlist.txt."
+        )
         return 1
     print("Sin RUT reales detectados.")
     return 0

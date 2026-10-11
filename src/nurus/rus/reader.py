@@ -39,15 +39,11 @@ def list_workbook_sheets(path: str | Path) -> tuple[str, ...]:
 
 def _snapshot_file(path: Path, *, max_file_size_bytes: int | None = None) -> tuple[Path, str]:
     if max_file_size_bytes is not None and path.stat().st_size > max_file_size_bytes:
-        raise WorkbookReadError(
-            f"El archivo supera el límite configurado de {max_file_size_bytes} bytes."
-        )
+        raise WorkbookReadError(f"El archivo supera el límite configurado de {max_file_size_bytes} bytes.")
     digest = hashlib.sha256()
     temp_path: Path | None = None
     try:
-        with path.open("rb") as source, tempfile.NamedTemporaryFile(
-            suffix=path.suffix, delete=False
-        ) as target:
+        with path.open("rb") as source, tempfile.NamedTemporaryFile(suffix=path.suffix, delete=False) as target:
             temp_path = Path(target.name)
             total = 0
             for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -63,13 +59,22 @@ def _snapshot_file(path: Path, *, max_file_size_bytes: int | None = None) -> tup
         raise WorkbookReadError(f"No se pudo crear una copia estable del archivo: {exc}") from exc
 
 
-def _engine(path: Path,content: bytes | None = None) -> str:
+def _engine(path: Path, content: bytes | None = None) -> str:
     if content is None:
-        with path.open('rb') as source:content=source.read(4096)
-    if content.startswith(b'PK\x03\x04'):return 'openpyxl'
-    if content.startswith(bytes.fromhex('d0cf11e0a1b11ae1')):return 'xlrd'
-    if b'<html' in content[:4096].lower() or b'<table' in content[:4096].lower() or b'urn:schemas-microsoft-com:office:spreadsheet' in content[:4096]:
-        raise WorkbookReadError('Este .xls contiene HTML/XML, no un libro Excel convencional. Usa Exportar para CSMP en Download para convertirlo a XLSX real.')
+        with path.open('rb') as source:
+            content = source.read(4096)
+    if content.startswith(b'PK\x03\x04'):
+        return 'openpyxl'
+    if content.startswith(bytes.fromhex('d0cf11e0a1b11ae1')):
+        return 'xlrd'
+    if (
+        b'<html' in content[:4096].lower()
+        or b'<table' in content[:4096].lower()
+        or b'urn:schemas-microsoft-com:office:spreadsheet' in content[:4096]
+    ):
+        raise WorkbookReadError(
+            'Este .xls contiene HTML/XML, no un libro Excel convencional. Usa Exportar para CSMP en Download para convertirlo a XLSX real.'
+        )
     return "xlrd" if path.suffix.lower() == ".xls" else "openpyxl"
 
 
@@ -97,10 +102,7 @@ def _records(
         # Totales, pies y notas pertenecen a la estructura del libro. Solo se
         # convierten en registros las filas con algún dato mapeado de caso.
         # Esto conserva en Excel las fórmulas originales sin pedir su revisión.
-        if not any(
-            column in values and not _is_empty(values[column])
-            for column in mapping.values()
-        ):
+        if not any(column in values and not _is_empty(values[column]) for column in mapping.values()):
             continue
         records.append(
             SourceRecord(
@@ -137,9 +139,7 @@ def _validate_headers(values: list[str], sheet_name: str) -> list[str]:
             seen[normalized] = header
     if duplicates:
         unique = list(dict.fromkeys(duplicates))
-        raise WorkbookReadError(
-            f"Encabezados duplicados o equivalentes en {sheet_name!r}: {', '.join(unique)}."
-        )
+        raise WorkbookReadError(f"Encabezados duplicados o equivalentes en {sheet_name!r}: {', '.join(unique)}.")
     return values
 
 
@@ -156,9 +156,7 @@ def _headers(pd, workbook, sheet_name: str, header_row: int) -> list[str]:
     except Exception as exc:
         raise WorkbookReadError(f"No se pudieron leer los encabezados de {sheet_name!r}: {exc}") from exc
     if raw.empty or len(raw.index) < header_row:
-        raise WorkbookReadError(
-            f"La hoja {sheet_name!r} no contiene la fila de encabezado {header_row}."
-        )
+        raise WorkbookReadError(f"La hoja {sheet_name!r} no contiene la fila de encabezado {header_row}.")
     return _validate_headers(raw.iloc[header_row - 1].tolist(), sheet_name)
 
 
@@ -167,7 +165,9 @@ def _has_required_mapping(mapping: dict[str, str], mode: Mode) -> bool:
     return required.issubset(mapping) and any(key in mapping for key in _HEADER_IDENTITY_KEYS)
 
 
-def _resolve_header_row(pd, workbook, sheet_name: str, mode: Mode, header_row: int) -> tuple[int, list[str], dict[str, str]]:
+def _resolve_header_row(
+    pd, workbook, sheet_name: str, mode: Mode, header_row: int
+) -> tuple[int, list[str], dict[str, str]]:
     """Usa la fila indicada o detecta una cabecera desplazada solo si es inequívoca."""
     initial_error: Exception | None = None
     try:
@@ -244,9 +244,14 @@ def _detect_primary_sheet(pd, workbook, names: list[str], selected_mode: Mode, h
     usable = [name for name in names if normalize(name) not in {"ob", "medidas vencidas"}]
     candidates: list[tuple[int, Mode, str, int, list[str], dict[str, str]]] = []
     for name in usable:
-        raw = pd.read_excel(workbook, sheet_name=name, header=None,
-                            nrows=max(header_row, _AUTO_DETECT_HEADER_SCAN_ROWS),
-                            dtype=object, keep_default_na=False)
+        raw = pd.read_excel(
+            workbook,
+            sheet_name=name,
+            header=None,
+            nrows=max(header_row, _AUTO_DETECT_HEADER_SCAN_ROWS),
+            dtype=object,
+            keep_default_na=False,
+        )
         for index in range(len(raw.index)):
             if header_row != 1 and index != header_row - 1:
                 continue
@@ -302,8 +307,14 @@ def _select_cross(pd, workbook, names: list[str], requested: str | None, warning
     candidates = []
     ambiguous = False
     for name in checked:
-        raw = pd.read_excel(workbook, sheet_name=name, header=None,
-                            nrows=_AUTO_DETECT_HEADER_SCAN_ROWS, dtype=object, keep_default_na=False)
+        raw = pd.read_excel(
+            workbook,
+            sheet_name=name,
+            header=None,
+            nrows=_AUTO_DETECT_HEADER_SCAN_ROWS,
+            dtype=object,
+            keep_default_na=False,
+        )
         for index in range(len(raw.index)):
             try:
                 headers = _validate_headers(raw.iloc[index].tolist(), name)
@@ -372,12 +383,10 @@ def read_workbook(
             source_bytes = snapshot.read_bytes()
             if hashlib.sha256(source_bytes).hexdigest() != digest:
                 raise WorkbookReadError("La copia de origen no coincide con su hash.")
-            workbook = pd.ExcelFile(BytesIO(source_bytes), engine=_engine(source,source_bytes[:4096]))
+            workbook = pd.ExcelFile(BytesIO(source_bytes), engine=_engine(source, source_bytes[:4096]))
         except ImportError as exc:
             dependency = "xlrd" if source.suffix.lower() == ".xls" else "openpyxl"
-            raise WorkbookReadError(
-                f"No se puede leer {source.suffix}: instala {dependency}."
-            ) from exc
+            raise WorkbookReadError(f"No se puede leer {source.suffix}: instala {dependency}.") from exc
         except Exception as exc:
             raise WorkbookReadError(f"No se pudo abrir el libro: {exc}") from exc
 
@@ -393,9 +402,7 @@ def read_workbook(
             elif len(names) == 1:
                 primary_name = names[0]
             else:
-                detected_structure = _detect_primary_sheet(
-                    pd, workbook, names, selected_mode, header_row
-                )
+                detected_structure = _detect_primary_sheet(pd, workbook, names, selected_mode, header_row)
                 selected_mode, primary_name, actual_header_row, primary_headers, primary_mapping = detected_structure
             if normalize(primary_name) in {"ob", "medidas vencidas"}:
                 raise WorkbookReadError("OB y Medidas vencidas no se procesan como Espera, Cumplimiento o Informes.")
@@ -436,7 +443,11 @@ def read_workbook(
                 if chosen:
                     cross = _records(
                         _read_sheet(pd, workbook, chosen, cross_header),
-                        source.name, digest, chosen, cross_header, cross_mapping,
+                        source.name,
+                        digest,
+                        chosen,
+                        cross_header,
+                        cross_mapping,
                     )
                     if cross_header != 1:
                         warnings.append(f"CROSS_HEADER_AUTODETECTED: {chosen}, fila {cross_header}.")

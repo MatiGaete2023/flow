@@ -1,4 +1,5 @@
 """Utilidades de lectura RUS que usa el Asistente (antes en rus/rules.py, retirado en WP-21)."""
+
 from __future__ import annotations
 
 import math
@@ -10,9 +11,7 @@ from .columns import normalize
 _EMPTY = {"", "---", "-", "nan", "nat", "none"}
 _PARENS = re.compile(r"\(.*?\)|[()]")
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_ISO_DATETIME = re.compile(
-    r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$"
-)
+_ISO_DATETIME = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$")
 
 
 def as_date(value: object, excel_epoch: str = "1900") -> date | None:

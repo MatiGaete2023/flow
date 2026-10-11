@@ -5,6 +5,7 @@
 El directorio de práctica debe proceder de manual_descargador_capturas.py.
 Se publica únicamente la lista cerrada de fixtures; no se empaquetan datos ajenos.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,46 +23,74 @@ PRACTICE_NAME = 'Practica_ficticia_Descargador_2.7.4.zip'
 
 
 def markdown(data):
-    lines = ['# ' + data['titulo'], '', data['subtitulo'] + '.', '',
-             '**Versión ' + data['version'] + ' · ' + data['fecha'] + '**', '',
-             '[Descargar PDF](' + PDF_NAME + ') · [Abrir HTML sin conexión](' + HTML_NAME + ') · '
-             '[Práctica ficticia](' + PRACTICE_NAME + ')', '',
-             'En HTML puedes ampliar las imágenes. El PDF tiene una página por sección.', '', '## Índice', '']
+    lines = [
+        '# ' + data['titulo'],
+        '',
+        data['subtitulo'] + '.',
+        '',
+        '**Versión ' + data['version'] + ' · ' + data['fecha'] + '**',
+        '',
+        '[Descargar PDF](' + PDF_NAME + ') · [Abrir HTML sin conexión](' + HTML_NAME + ') · '
+        '[Práctica ficticia](' + PRACTICE_NAME + ')',
+        '',
+        'En HTML puedes ampliar las imágenes. El PDF tiene una página por sección.',
+        '',
+        '## Índice',
+        '',
+    ]
     if (ROOT / 'docs/CORRECCION_REFERENCIAS_ZIP_20261009.md').is_file():
-        lines[6:6] = ['**Complemento de la versión 2.7.5:** si el paquete indica que falta un '
-                      '`bitacoras.json` antiguo, consulta [cómo recuperar o excluir referencias no disponibles]'
-                      '(../CORRECCION_REFERENCIAS_ZIP_20261009.md). Las imágenes de este manual corresponden a 2.7.4.', '']
+        lines[6:6] = [
+            '**Complemento de la versión 2.7.5:** si el paquete indica que falta un '
+            '`bitacoras.json` antiguo, consulta [cómo recuperar o excluir referencias no disponibles]'
+            '(../CORRECCION_REFERENCIAS_ZIP_20261009.md). Las imágenes de este manual corresponden a 2.7.4.',
+            '',
+        ]
     for i, page in enumerate(data['paginas'], 1):
         lines.append(f"- {page['titulo']} (página {i} del PDF)")
     for page in data['paginas']:
         lines += ['', '## ' + page['titulo'], '']
-        if page.get('intro'): lines += [page['intro'], '']
+        if page.get('intro'):
+            lines += [page['intro'], '']
         if page.get('tabla'):
             table = page['tabla']
-            lines += ['| ' + ' | '.join(table['cabecera']) + ' |',
-                      '| ' + ' | '.join('---' for _ in table['cabecera']) + ' |']
+            lines += [
+                '| ' + ' | '.join(table['cabecera']) + ' |',
+                '| ' + ' | '.join('---' for _ in table['cabecera']) + ' |',
+            ]
             lines += ['| ' + ' | '.join(row) + ' |' for row in table['filas']]
             lines += ['']
-        for i, step in enumerate(page.get('pasos', []), 1): lines.append(f'{i}. {step}')
+        for i, step in enumerate(page.get('pasos', []), 1):
+            lines.append(f'{i}. {step}')
         if page.get('imagen'):
             lines += ['', f"![{page['pie']}](imagenes/{page['imagen']})", '', '*' + page['pie'] + '*']
-        if page.get('nota'): lines += ['', '**Ten presente:** ' + page['nota']]
-    lines += ['', '## Alcance y reproducción', '',
-              'Capturas de la interfaz 2.7.4 en escritorio de prueba y Chromium. '
-              'La conexión de demostración usa respuestas locales ficticias: cero consultas institucionales. '
-              'Las instrucciones se contrastaron con los botones y exportaciones de esta versión. '
-              'La práctica confirma 800 ingresos en Excel y un paquete con 4 registros de hojas '
-              'y 2 bitácoras correspondientes; no sustituye la aceptación en SITFA real.', '',
-              'Vista completa de la ventana principal (datos ficticios):', '',
-              '![Ventana principal del Descargador](imagenes/01_ventana_principal.png)', '',
-              'El bloque de conexión del Descargador:', '',
-              '![Bloque Tu Chrome habitual](imagenes/04_conexion_descargador.png)', '',
-              'Fuentes: [manual breve](../MANUAL_DESCARGADOR_MVP_20261008.md), '
-              '[README del Descargador](../../descargador/README.md) y '
-              '[correcciones de esta entrega](../REGRESIONES_PRUEBAS_USUARIO_20261009.md).', '',
-              'Para actualizar capturas: `tools/manual_descargador_capturas.py`. '
-              'Para regenerar este documento, HTML y PDF: `tools/manual_descargador_publicar.py`. '
-              'El contenido editable está en `contenido.json`; los generadores requieren el entorno de desarrollo.']
+        if page.get('nota'):
+            lines += ['', '**Ten presente:** ' + page['nota']]
+    lines += [
+        '',
+        '## Alcance y reproducción',
+        '',
+        'Capturas de la interfaz 2.7.4 en escritorio de prueba y Chromium. '
+        'La conexión de demostración usa respuestas locales ficticias: cero consultas institucionales. '
+        'Las instrucciones se contrastaron con los botones y exportaciones de esta versión. '
+        'La práctica confirma 800 ingresos en Excel y un paquete con 4 registros de hojas '
+        'y 2 bitácoras correspondientes; no sustituye la aceptación en SITFA real.',
+        '',
+        'Vista completa de la ventana principal (datos ficticios):',
+        '',
+        '![Ventana principal del Descargador](imagenes/01_ventana_principal.png)',
+        '',
+        'El bloque de conexión del Descargador:',
+        '',
+        '![Bloque Tu Chrome habitual](imagenes/04_conexion_descargador.png)',
+        '',
+        'Fuentes: [manual breve](../MANUAL_DESCARGADOR_MVP_20261008.md), '
+        '[README del Descargador](../../descargador/README.md) y '
+        '[correcciones de esta entrega](../REGRESIONES_PRUEBAS_USUARIO_20261009.md).',
+        '',
+        'Para actualizar capturas: `tools/manual_descargador_capturas.py`. '
+        'Para regenerar este documento, HTML y PDF: `tools/manual_descargador_publicar.py`. '
+        'El contenido editable está en `contenido.json`; los generadores requieren el entorno de desarrollo.',
+    ]
     (DOCS / 'README.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
@@ -70,23 +99,50 @@ def webpage(data):
     toc = ''.join(f'<a href="#paso-{i}">{escape(page["titulo"])}</a>' for i, page in enumerate(data['paginas'], 1))
     sections = []
     for i, page in enumerate(data['paginas'], 1):
-        body = [f'<section id="paso-{i}"><p class="eyebrow">SECCIÓN {i} / {len(data["paginas"])}</p>',
-                '<h2>' + escape(page['titulo']) + '</h2>']
-        if page.get('intro'): body.append('<p class="intro">' + escape(page['intro']) + '</p>')
+        body = [
+            f'<section id="paso-{i}"><p class="eyebrow">SECCIÓN {i} / {len(data["paginas"])}</p>',
+            '<h2>' + escape(page['titulo']) + '</h2>',
+        ]
+        if page.get('intro'):
+            body.append('<p class="intro">' + escape(page['intro']) + '</p>')
         if page.get('tabla'):
-            table = page['tabla']; body.append('<div class="table-wrap"><table><thead><tr>')
+            table = page['tabla']
+            body.append('<div class="table-wrap"><table><thead><tr>')
             body += ['<th>' + escape(value) + '</th>' for value in table['cabecera']]
             body.append('</tr></thead><tbody>')
-            for row in table['filas']: body.append('<tr>' + ''.join('<td>' + escape(value) + '</td>' for value in row) + '</tr>')
+            for row in table['filas']:
+                body.append('<tr>' + ''.join('<td>' + escape(value) + '</td>' for value in row) + '</tr>')
             body.append('</tbody></table></div>')
-        if page.get('pasos'): body.append('<ol>' + ''.join('<li>' + escape(step) + '</li>' for step in page['pasos']) + '</ol>')
+        if page.get('pasos'):
+            body.append('<ol>' + ''.join('<li>' + escape(step) + '</li>' for step in page['pasos']) + '</ol>')
         if page.get('imagen'):
             image = base64.b64encode((DOCS / 'imagenes' / page['imagen']).read_bytes()).decode()
-            body.append('<figure><button class="ampliar" aria-label="Ampliar captura" onclick="ampliar(this)"><img src="data:image/png;base64,' + image + '" alt="' + escape(page['pie'], quote=True) + '"></button><figcaption>' + escape(page['pie']) + ' Pulsa la imagen para ampliarla.</figcaption></figure>')
-        if page.get('nota'): body.append('<aside><strong>Ten presente</strong><p>' + escape(page['nota']) + '</p></aside>')
+            body.append(
+                '<figure><button class="ampliar" aria-label="Ampliar captura" onclick="ampliar(this)"><img src="data:image/png;base64,'
+                + image
+                + '" alt="'
+                + escape(page['pie'], quote=True)
+                + '"></button><figcaption>'
+                + escape(page['pie'])
+                + ' Pulsa la imagen para ampliarla.</figcaption></figure>'
+            )
+        if page.get('nota'):
+            body.append('<aside><strong>Ten presente</strong><p>' + escape(page['nota']) + '</p></aside>')
         body.append('<a class="volver" href="#indice">Volver al índice ↑</a></section>')
         sections.append(''.join(body))
-    overview = ''.join('<details><summary>' + label + '</summary><figure><img src="data:image/png;base64,' + base64.b64encode((DOCS / 'imagenes' / name).read_bytes()).decode() + '" alt="' + label + '"></figure></details>' for label, name in [('Ver la ventana principal completa (ejemplo ficticio)', '01_ventana_principal.png'), ('Ver dónde copiar el código en el Descargador', '04_conexion_descargador.png')])
+    overview = ''.join(
+        '<details><summary>'
+        + label
+        + '</summary><figure><img src="data:image/png;base64,'
+        + base64.b64encode((DOCS / 'imagenes' / name).read_bytes()).decode()
+        + '" alt="'
+        + label
+        + '"></figure></details>'
+        for label, name in [
+            ('Ver la ventana principal completa (ejemplo ficticio)', '01_ventana_principal.png'),
+            ('Ver dónde copiar el código en el Descargador', '04_conexion_descargador.png'),
+        ]
+    )
     sections[0] = sections[0].replace('</section>', overview + '</section>')
     source = '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manual ilustrado del Descargador SITFA 2.7.4</title><style>
@@ -103,26 +159,51 @@ def pdf(data):
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
+
     fontdir = Path('/usr/share/fonts/truetype/dejavu')
     if fontdir.is_dir():
         regular, bold = fontdir / 'DejaVuSans.ttf', fontdir / 'DejaVuSans-Bold.ttf'
     else:
         import os
+
         fontdir = Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts'
         regular, bold = fontdir / 'segoeui.ttf', fontdir / 'segoeuib.ttf'
     pdfmetrics.registerFont(TTFont('Manual', str(regular)))
     pdfmetrics.registerFont(TTFont('ManualBold', str(bold)))
-    pdfmetrics.registerFontFamily('Manual', normal='Manual', bold='ManualBold', italic='Manual', boldItalic='ManualBold')
-    ink = colors.HexColor('#17324d'); teal = colors.HexColor('#007e84')
+    pdfmetrics.registerFontFamily(
+        'Manual', normal='Manual', bold='ManualBold', italic='Manual', boldItalic='ManualBold'
+    )
+    ink = colors.HexColor('#17324d')
+    teal = colors.HexColor('#007e84')
     styles = {
-        'heading': ParagraphStyle('heading', fontName='ManualBold', fontSize=21, leading=27, textColor=ink, spaceAfter=12),
+        'heading': ParagraphStyle(
+            'heading', fontName='ManualBold', fontSize=21, leading=27, textColor=ink, spaceAfter=12
+        ),
         'body': ParagraphStyle('body', fontName='Manual', fontSize=11, leading=15, textColor=ink, spaceAfter=8),
-        'step': ParagraphStyle('step', fontName='Manual', fontSize=11, leading=15, textColor=ink, leftIndent=20, firstLineIndent=-20, spaceAfter=7),
+        'step': ParagraphStyle(
+            'step',
+            fontName='Manual',
+            fontSize=11,
+            leading=15,
+            textColor=ink,
+            leftIndent=20,
+            firstLineIndent=-20,
+            spaceAfter=7,
+        ),
         'cell': ParagraphStyle('cell', fontName='Manual', fontSize=10.5, leading=14, textColor=ink),
         'th': ParagraphStyle('th', fontName='ManualBold', fontSize=10.5, leading=14, textColor=colors.white),
-        'caption': ParagraphStyle('caption', fontName='Manual', fontSize=9, leading=12, textColor=colors.HexColor('#526b83'), spaceBefore=5, spaceAfter=8),
+        'caption': ParagraphStyle(
+            'caption',
+            fontName='Manual',
+            fontSize=9,
+            leading=12,
+            textColor=colors.HexColor('#526b83'),
+            spaceBefore=5,
+            spaceAfter=8,
+        ),
         'note': ParagraphStyle('note', fontName='Manual', fontSize=10.5, leading=14, textColor=ink, alignment=TA_LEFT),
     }
+
     class ManualDocument(SimpleDocTemplate):
         def afterFlowable(self, flowable):
             if isinstance(flowable, Paragraph) and flowable.style.name == 'heading':
@@ -130,62 +211,118 @@ def pdf(data):
                 self.canv.bookmarkPage(key)
                 self.canv.addOutlineEntry(flowable.getPlainText(), key, level=0)
 
-    doc = ManualDocument(str(DOCS / PDF_NAME), pagesize=landscape(A4),
-        rightMargin=32, leftMargin=32, topMargin=47, bottomMargin=38,
-        title=data['titulo'] + ' · ' + data['version'], author='Flow · documentación de uso',
-        subject='Guía ilustrada con práctica ficticia; sin datos institucionales')
+    doc = ManualDocument(
+        str(DOCS / PDF_NAME),
+        pagesize=landscape(A4),
+        rightMargin=32,
+        leftMargin=32,
+        topMargin=47,
+        bottomMargin=38,
+        title=data['titulo'] + ' · ' + data['version'],
+        author='Flow · documentación de uso',
+        subject='Guía ilustrada con práctica ficticia; sin datos institucionales',
+    )
     width = doc.width - 12
     frame_height = doc.height - 12
     elements = []
 
-    def paragraph(text, style='body'): return Paragraph(html.escape(text), styles[style])
+    def paragraph(text, style='body'):
+        return Paragraph(html.escape(text), styles[style])
+
     def height(items):
         return sum(item.wrap(width, frame_height)[1] + item.getSpaceBefore() + item.getSpaceAfter() for item in items)
+
     for page in data['paginas']:
         before = [paragraph(page['titulo'], 'heading')]
-        if page.get('intro'): before.append(paragraph(page['intro']))
+        if page.get('intro'):
+            before.append(paragraph(page['intro']))
         if page.get('tabla'):
-            table = page['tabla']; count = len(table['cabecera'])
-            cols = [width * .28, width * .72] if count == 2 else ([width * .08, width * .49, width * .43] if table['cabecera'][0] == 'Paso' else [width * .28, width * .42, width * .30])
-            rows = [[paragraph(v, 'th') for v in table['cabecera']]] + [[paragraph(v, 'cell') for v in row] for row in table['filas']]
+            table = page['tabla']
+            count = len(table['cabecera'])
+            cols = (
+                [width * 0.28, width * 0.72]
+                if count == 2
+                else (
+                    [width * 0.08, width * 0.49, width * 0.43]
+                    if table['cabecera'][0] == 'Paso'
+                    else [width * 0.28, width * 0.42, width * 0.30]
+                )
+            )
+            rows = [[paragraph(v, 'th') for v in table['cabecera']]] + [
+                [paragraph(v, 'cell') for v in row] for row in table['filas']
+            ]
             t = Table(rows, colWidths=cols, hAlign='LEFT')
-            t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), ink), ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#f1f5f9')]),
-                ('VALIGN', (0,0), (-1,-1), 'TOP'), ('TOPPADDING', (0,0), (-1,-1), 7), ('BOTTOMPADDING', (0,0), (-1,-1), 7),
-                ('LEFTPADDING', (0,0), (-1,-1), 9), ('RIGHTPADDING', (0,0), (-1,-1), 9), ('LINEBELOW', (0,0), (-1,-1), .4, colors.HexColor('#dce6ee'))]))
+            t.setStyle(
+                TableStyle(
+                    [
+                        ('BACKGROUND', (0, 0), (-1, 0), ink),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f1f5f9')]),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('TOPPADDING', (0, 0), (-1, -1), 7),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 9),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 9),
+                        ('LINEBELOW', (0, 0), (-1, -1), 0.4, colors.HexColor('#dce6ee')),
+                    ]
+                )
+            )
             before += [t, Spacer(1, 10)]
-        for i, step in enumerate(page.get('pasos', []), 1): before.append(paragraph(f'{i}. {step}', 'step'))
+        for i, step in enumerate(page.get('pasos', []), 1):
+            before.append(paragraph(f'{i}. {step}', 'step'))
         after = []
-        if page.get('imagen'): after.append(paragraph(page['pie'], 'caption'))
+        if page.get('imagen'):
+            after.append(paragraph(page['pie'], 'caption'))
         if page.get('nota'):
-            note = Table([[Paragraph('<b>Ten presente:</b> ' + html.escape(page['nota']), styles['note'])]], colWidths=[width])
-            note.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#eaf7f6')), ('LINEBEFORE', (0,0), (0,0), 3, teal),
-                ('TOPPADDING', (0,0), (-1,-1), 9), ('BOTTOMPADDING', (0,0), (-1,-1), 9), ('LEFTPADDING', (0,0), (-1,-1), 12), ('RIGHTPADDING', (0,0), (-1,-1), 12)]))
+            note = Table(
+                [[Paragraph('<b>Ten presente:</b> ' + html.escape(page['nota']), styles['note'])]], colWidths=[width]
+            )
+            note.setStyle(
+                TableStyle(
+                    [
+                        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eaf7f6')),
+                        ('LINEBEFORE', (0, 0), (0, 0), 3, teal),
+                        ('TOPPADDING', (0, 0), (-1, -1), 9),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+                    ]
+                )
+            )
             after.append(note)
         elements += before
         available = frame_height - height(before) - height(after) - 12
         if page.get('imagen'):
             from PIL import Image as PILImage
+
             path = DOCS / 'imagenes' / page['imagen']
-            with PILImage.open(path) as original: iw, ih = original.size
+            with PILImage.open(path) as original:
+                iw, ih = original.size
             image_height = min(page.get('alto_imagen', 280), available, width * ih / iw)
-            if image_height < 135: raise ValueError('Texto excesivo junto a imagen: ' + page['titulo'])
+            if image_height < 135:
+                raise ValueError('Texto excesivo junto a imagen: ' + page['titulo'])
             img = Image(str(path), width=iw * image_height / ih, height=image_height, hAlign='LEFT')
             elements += [Spacer(1, 4), img]
-        elif available < 0: raise ValueError('Texto excede una página: ' + page['titulo'])
+        elif available < 0:
+            raise ValueError('Texto excede una página: ' + page['titulo'])
         elements += after
         elements.append(PageBreak())
 
     def footer(canvas, document):
         canvas.saveState()
         page_width, page_height = landscape(A4)
-        canvas.setFillColor(ink); canvas.rect(0, page_height - 30, page_width, 30, fill=1, stroke=0)
-        canvas.setFillColor(colors.white); canvas.setFont('ManualBold', 9)
+        canvas.setFillColor(ink)
+        canvas.rect(0, page_height - 30, page_width, 30, fill=1, stroke=0)
+        canvas.setFillColor(colors.white)
+        canvas.setFont('ManualBold', 9)
         canvas.drawString(32, page_height - 19, 'DESCARGADOR SITFA · MANUAL DE USO')
-        canvas.setFont('Manual', 9); canvas.drawRightString(page_width - 32, page_height - 19, '2.7.4 / ' + data['fecha'])
-        canvas.setFillColor(colors.HexColor('#526b83')); canvas.setFont('Manual', 8)
+        canvas.setFont('Manual', 9)
+        canvas.drawRightString(page_width - 32, page_height - 19, '2.7.4 / ' + data['fecha'])
+        canvas.setFillColor(colors.HexColor('#526b83'))
+        canvas.setFont('Manual', 8)
         canvas.drawString(32, 20, 'Capturas y práctica con datos ficticios · Flow')
         canvas.drawRightString(page_width - 32, 20, f'{document.page} / {len(data["paginas"])}')
         canvas.restoreState()
+
     doc.build(elements, onFirstPage=footer, onLaterPages=footer)
 
 
@@ -216,21 +353,30 @@ Conserva los originales, especialmente resumen.json, verificación y HTML.
 '''
     with zipfile.ZipFile(DOCS / PRACTICE_NAME, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('Practica_ficticia/LEEME.txt', instructions)
-        z.writestr('Practica_ficticia/VERIFICACION_FICTICIA.json', json.dumps(verification, indent=2, ensure_ascii=False))
+        z.writestr(
+            'Practica_ficticia/VERIFICACION_FICTICIA.json', json.dumps(verification, indent=2, ensure_ascii=False)
+        )
         for name in names:
             for path in sorted((demo / name).iterdir()):
-                if not path.is_file() or path.is_symlink(): raise ValueError('Fixture inesperada')
+                if not path.is_file() or path.is_symlink():
+                    raise ValueError('Fixture inesperada')
                 z.write(path, 'Practica_ficticia/' + name + '/' + path.name)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--demo-dir', type=Path, help='Práctica producida por el capturador; opcional al regenerar texto/PDF')
+    parser.add_argument(
+        '--demo-dir', type=Path, help='Práctica producida por el capturador; opcional al regenerar texto/PDF'
+    )
     args = parser.parse_args()
     data = json.loads((DOCS / 'contenido.json').read_text(encoding='utf-8'))
-    markdown(data); webpage(data); pdf(data)
-    if args.demo_dir: practice(args.demo_dir.resolve())
+    markdown(data)
+    webpage(data)
+    pdf(data)
+    if args.demo_dir:
+        practice(args.demo_dir.resolve())
     print('Manual generado: Markdown, HTML autónomo, PDF' + (' y práctica ficticia.' if args.demo_dir else '.'))
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()

@@ -1,4 +1,5 @@
 """Reproducible bytes for generated spreadsheets; manual attachments stay intact."""
+
 from io import BytesIO
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 from lxml import etree

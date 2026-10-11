@@ -1,4 +1,5 @@
 """WP-43: «Crear paquete de este lote» sin abrir Resultados. Datos ficticios."""
+
 import os
 import subprocess
 import sys
@@ -27,11 +28,18 @@ def test_paquete_del_lote_actual_igual_a_la_ruta_de_resultados(tmp_path):
     lote = bound_lot(tmp_path / 'principal')
     manifiesto = diaries(tmp_path / 'Bitacoras 2026-10-10', 2)
     nuevo = package_current_lot(lote.folder, manifiesto, tmp_path / 'nuevo.zip')
-    actual = export_capture(load_sources([lote.folder]), tmp_path / 'actual.zip', diaries=[manifiesto], match_diaries=True)
+    actual = export_capture(
+        load_sources([lote.folder]), tmp_path / 'actual.zip', diaries=[manifiesto], match_diaries=True
+    )
     assert tablas(nuevo['path']) == tablas(actual)
     assert len(read_capture(nuevo['path']).rows('bitacoras')) == 2
-    validado = subprocess.run([sys.executable, str(ROOT / 'tools' / 'flow_capture_cli.py'), 'validate', nuevo['path']],
-                              capture_output=True, text=True, cwd=ROOT, check=False)
+    validado = subprocess.run(
+        [sys.executable, str(ROOT / 'tools' / 'flow_capture_cli.py'), 'validate', nuevo['path']],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        check=False,
+    )
     assert validado.returncode == 0, validado.stdout + validado.stderr
     with pytest.raises(PocError, match='ya existe'):
         package_current_lot(lote.folder, manifiesto, tmp_path / 'nuevo.zip')
@@ -69,9 +77,15 @@ def test_boton_se_habilita_tras_lote_y_bitacoras_y_no_abre_resultados(tmp_path):
             assert 'ya existe' in app.status.get() and len(pedidos)==1
         finally:dispose_interface(app,root)
     ''')
-    result = subprocess.run([sys.executable, '-c', source, str(lote.folder), str(manifiesto.parent), str(tmp_path / 'p.zip')],
-                            cwd=Path(__file__).parent, env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
-                            capture_output=True, text=True, encoding='utf-8', timeout=60)
+    result = subprocess.run(
+        [sys.executable, '-c', source, str(lote.folder), str(manifiesto.parent), str(tmp_path / 'p.zip')],
+        cwd=Path(__file__).parent,
+        env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        timeout=60,
+    )
     assert result.returncode == 0, result.stderr
 
 

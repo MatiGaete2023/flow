@@ -1,4 +1,5 @@
 """WP-33: pausa entre consultas, checkpoint por lotes y máximo de lecturas por lote."""
+
 import json
 import threading
 import time
@@ -12,12 +13,17 @@ from preferencias import PAUSA_DEFECTO_S, PAUSA_MINIMA_S, Preferences, clamp_pau
 
 
 def listing_many(court='777', count=30):
-    rows = ''.join(f'''<tr><td>X-{i}-2026</td><td>11111111-1</td><td>Persona ficticia {i}</td><td>PRM Centro ficticio</td><td>
+    rows = ''.join(
+        f'''<tr><td>X-{i}-2026</td><td>11111111-1</td><td>Persona ficticia {i}</td><td>PRM Centro ficticio</td><td>
         <a onclick="ShowHistoria('{court}','X-{i}-2026','{100 + i}')">Causa</a>
         <a onclick="ShowObservaciones('{100 + i}','{court}','{5000 + i}','12','3','0')">Obs</a>
-        </td></tr>''' for i in range(count))
-    return html.fromstring('<table><thead><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th>'
-                           '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table>')
+        </td></tr>'''
+        for i in range(count)
+    )
+    return html.fromstring(
+        '<table><thead><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th>'
+        '<th>Acciones</th></tr></thead><tbody>' + rows + '</tbody></table>'
+    )
 
 
 class Bridge30(tlb.Bridge):
@@ -41,7 +47,8 @@ def run_many(tmp_path, monkeypatch, count, pause=0):
     bridge = Bridge30(count)
     tlb.parser()
     result = lb.DiaryRunner(bridge, tlb.CATALOG, lambda *a: None, threading.Event(), pause=pause).run(
-        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path)
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+    )
     return result, bridge, writes
 
 
@@ -84,6 +91,7 @@ def test_descarga_paginada_espera_la_misma_pausa_entre_paginas(monkeypatch, tmp_
     import motor as m
     from lotes import BatchRunner
     from test_lotes import CATALOG, FakeBridge
+
     seen = []
     original = m.run_sequence
 
@@ -100,7 +108,8 @@ def test_descarga_paginada_espera_la_misma_pausa_entre_paginas(monkeypatch, tmp_
             return False
 
     BatchRunner(FakeBridge(total=3), CATALOG, lambda *a: None, Gate(), pause=0.7).run(
-        Batch(('49',), ('1',), ('Espera',)), tmp_path)
+        Batch(('49',), ('1',), ('Espera',)), tmp_path
+    )
     assert seen == [0.7] and waits.count(0.7) == 2
 
 
@@ -117,13 +126,14 @@ class EsperaRegistrada(threading.Event):
 def test_pausa_entre_consultas_y_entre_paginas(tmp_path):
     from lotes import BatchRunner
     from test_lotes import CATALOG, FakeBridge
+
     cancel = EsperaRegistrada()
     resultado = BatchRunner(FakeBridge(), CATALOG, lambda *a: None, cancel, pause=0.5).run(
-        Batch(('49',), ('1', '4'), ('Espera', 'Cumplimiento')), tmp_path)
+        Batch(('49',), ('1', '4'), ('Espera', 'Cumplimiento')), tmp_path
+    )
     paginas = sum(item['paginas'] for item in resultado)
     # Una espera antes de cada página n>1 de cada consulta y otra antes de cada consulta salvo la primera.
     assert cancel.esperas == [0.5] * ((paginas - len(resultado)) + (len(resultado) - 1))
-
 
 
 def test_al_retomar_ninguna_escritura_pierde_lo_ya_leido(tmp_path, monkeypatch):
@@ -143,6 +153,7 @@ def test_al_retomar_ninguna_escritura_pierde_lo_ya_leido(tmp_path, monkeypatch):
     monkeypatch.setattr(lb, 'MAX_LECTURAS_POR_LOTE', 300)
     bridge = Bridge30(20)
     result = lb.DiaryRunner(bridge, tlb.CATALOG, lambda *a: None, threading.Event(), pause=0).run(
-        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path, resume=folder)
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path, resume=folder
+    )
     assert snapshots and min(snapshots) >= 12, snapshots
     assert result['leidas'] == 20 and len(bridge.openings) == 8

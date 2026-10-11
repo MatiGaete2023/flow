@@ -82,7 +82,7 @@ def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
         assert sheet.column_dimensions["B"].width == 31
         assert sheet["A1"].font.bold is True
         assert sheet["C2"].fill.fgColor.rgb == "0092D050"
-        validations=sheet.data_validations.dataValidation
+        validations = sheet.data_validations.dataValidation
         assert len(validations) == 2
         assert any('PC_IE,PC_INFO,NOMENCL' in str(item.formula1) for item in validations)
         headers = [cell.value for cell in sheet[1]]
@@ -221,12 +221,26 @@ def test_native_savecopyas_separates_input_output_and_closes_excel(tmp_path, mon
     monkeypatch.setitem(sys.modules, "win32com.client", win32com.client)
     monkeypatch.setattr("platform.system", lambda: "Windows")
     snapshot = {
-        "batch": {"primary_sheet": "Espera", "header_row": 1, "source_hash": "hash",
-                  "mode": "ESPERA", "export_stage": "proposal"},
-        "records": [{"record_id": "id", "source_sheet": "Espera", "source_row": 2,
-                     "decision": "excluded", "evaluation_status": "excluded",
-                     "edited_observation": "Propuesta", "edit_reason": "", "rule_ids_json": "[]",
-                     "source_hash": "hash"}],
+        "batch": {
+            "primary_sheet": "Espera",
+            "header_row": 1,
+            "source_hash": "hash",
+            "mode": "ESPERA",
+            "export_stage": "proposal",
+        },
+        "records": [
+            {
+                "record_id": "id",
+                "source_sheet": "Espera",
+                "source_row": 2,
+                "decision": "excluded",
+                "evaluation_status": "excluded",
+                "edited_observation": "Propuesta",
+                "edit_reason": "",
+                "rule_ids_json": "[]",
+                "source_hash": "hash",
+            }
+        ],
     }
     if failure:
         with pytest.raises(ExportError, match="guardar la copia"):

@@ -1,9 +1,12 @@
 """WP-40: Trabajo legible (orden de columnas, observación completa, editor plegado, excluidas)."""
+
 from test_integral_ui import run_gui
 
 
 def test_columnas_editor_plegado_tooltip_excluidas_y_atajos(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 from nurus.personal.work_view import WORK_COLUMNS
 assert WORK_COLUMNS==('Estado','Observación','RIT','Nombre','Programa','Tribunal')
 assert tuple(app.records['columns'])==WORK_COLUMNS
@@ -35,11 +38,14 @@ assert app.observation_tip.text_at(caja[0]+caja[2]//2,caja[1]+caja[3]//2)[1]==te
 assert str(app.records.tag_configure('excluded','foreground'))=='#7a7a7a'
 assert str(app.records.tag_configure('excluded','background'))=='#eeeeee'
 assert all(app.bind_all(sequence) for sequence in atajos)
-""")
+""",
+    )
 
 
 def test_preferencia_antigua_respeta_el_orden_nuevo(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 from nurus.personal.work_view import build
 cfg=dict(app.cfg.data);cfg['vista']={'columnas_trabajo':['Estado','RIT','Nombre','Tribunal','Programa','Observación']}
 app.cfg.save(cfg)
@@ -48,11 +54,14 @@ build(app);app.update()
 assert tuple(app.records['displaycolumns'])==('Estado','Observación','RIT','Nombre','Programa','Tribunal')
 from nurus.personal.commands import commands
 assert any('Preferencias de vista' in c.name for c in commands(app))
-""")
+""",
+    )
 
 
 def test_atajos_no_editan_campos_ni_actuan_con_un_dialogo_modal(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 import tkinter as tk
 llamadas=[]
 app._choose=lambda:llamadas.append('choose')
@@ -70,4 +79,5 @@ dialogo.grab_set();fecha.focus_force();app.update()
 fecha.event_generate('<Control-o>');fecha.event_generate('<Control-k>');app.update()
 assert llamadas==['choose'] and fecha.get()=='2026-10-11'
 dialogo.grab_release();dialogo.destroy()
-""")
+""",
+    )

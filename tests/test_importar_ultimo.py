@@ -1,4 +1,5 @@
 """WP-44: «Importar último paquete» (solo lectura) y fecha de corte con «Usar hoy». Datos ficticios."""
+
 import json
 import os
 import subprocess
@@ -48,7 +49,9 @@ def test_elige_el_mas_reciente_valido_e_ignora_ajenos_y_danados(tmp_path, monkey
 
 
 def test_boton_importa_el_ultimo_y_fecha_de_corte_usar_hoy(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 import os,time
 from unittest.mock import patch
 from nurus.capture import write_capture
@@ -86,4 +89,5 @@ def invalida_y_cancelar(win):
     assert win.winfo_exists()
     win.cancel()
 assert preguntar(invalida_y_cancelar) is None
-""")
+""",
+    )

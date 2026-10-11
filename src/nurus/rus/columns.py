@@ -12,8 +12,7 @@ class ColumnMappingError(ValueError):
         self.logical_key = logical_key
         self.candidates = candidates
         super().__init__(
-            f"Columna ambigua para {logical_key}: {', '.join(candidates)}. "
-            "Seleccione una columna explícitamente."
+            f"Columna ambigua para {logical_key}: {', '.join(candidates)}. Seleccione una columna explícitamente."
         )
 
 
@@ -28,16 +27,46 @@ COMMON: dict[str, tuple[str, ...]] = {
     "tribunal": ("TRIBUNAL",),
     "nombre": ("NOMBRE", "NOMBRE COMPLETO", "NOMBRE MENOR"),
     "nacimiento": ("FEC. NACIMIENTO", "FEC.NACIMIENTO", "FECHA NACIMIENTO", "FEC NACIMIENTO"),
-    "curador": ("CURADOR", "CURADOR AD LITEM", "CURADOR AD-LITEM", "CURADOR AD LITEM.", "CUR. AD LITEM", "CURADOR/A AD LITEM", "CURADOR/A AD-LITEM"),
+    "curador": (
+        "CURADOR",
+        "CURADOR AD LITEM",
+        "CURADOR AD-LITEM",
+        "CURADOR AD LITEM.",
+        "CUR. AD LITEM",
+        "CURADOR/A AD LITEM",
+        "CURADOR/A AD-LITEM",
+    ),
     "oido": ("FEC. OIDO", "FEC.OIDO", "FEC OIDO", "FECHAOIDO", "FEC. OÍDO", "FEC.OÍDO"),
-    "resolucion": ("FEC. RESOLUCIÓN", "FEC.RESOLUCIÓN", "FEC. RESOLUCION", "FEC.RESOLUCION", "FECHA RESOLUCION", "FEC RESOLUCION"),
-    "prox_aud": ("PROXS. AUDS.", "PROXS AUDS", "PROX AUD", "PROXIMA AUDIENCIA", "PRÓXIMA AUDIENCIA", "PROX. AUD.", "PROX. AUDS."),
+    "resolucion": (
+        "FEC. RESOLUCIÓN",
+        "FEC.RESOLUCIÓN",
+        "FEC. RESOLUCION",
+        "FEC.RESOLUCION",
+        "FECHA RESOLUCION",
+        "FEC RESOLUCION",
+    ),
+    "prox_aud": (
+        "PROXS. AUDS.",
+        "PROXS AUDS",
+        "PROX AUD",
+        "PROXIMA AUDIENCIA",
+        "PRÓXIMA AUDIENCIA",
+        "PROX. AUD.",
+        "PROX. AUDS.",
+    ),
     "rit": ("RIT",),
     "rut": ("RUT", "RUT MENOR", "RUT NNA", "RUT LITIGANTE"),
 }
 
-VENCIMIENTO_ALIASES = ("FECHA VENCIMIENTO", "FEC.VENCIMIENTO", "FEC. VENCIMIENTO",
-                       "F. VENCIMIENTO", "F.VENCIMIENTO", "FVENCIMIENTO", "FECHA DE VENCIMIENTO")
+VENCIMIENTO_ALIASES = (
+    "FECHA VENCIMIENTO",
+    "FEC.VENCIMIENTO",
+    "FEC. VENCIMIENTO",
+    "F. VENCIMIENTO",
+    "F.VENCIMIENTO",
+    "FVENCIMIENTO",
+    "FECHA DE VENCIMIENTO",
+)
 
 MODE_COLUMNS: dict[Mode, dict[str, tuple[str, ...]]] = {
     Mode.ESPERA: {"espera": ("T ESPERA", "T_ESPERA", "DIAS_ESPERA", "TESPERA", "DÍAS DE ESPERA", "DIAS DE ESPERA")},
@@ -46,7 +75,13 @@ MODE_COLUMNS: dict[Mode, dict[str, tuple[str, ...]]] = {
         "dias_egresar": ("DIAS PARA EGRESAR", "DÍAS PARA EGRESAR", "DIAS EGRESAR"),
         "ingreso": ("FEC.INGRESO EFECTIVO", "FEC. INGRESO EFECTIVO", "FEC INGRESO EFECTIVO"),
         "egreso_proy": ("FEC.EGRESO PROYECTADO", "FEC. EGRESO PROYECTADO", "FEC EGRESO PROYECTADO"),
-        "ficha_fae": ("FEC.ACT.F.FAE", "FEC. ACT. F. FAE", "FEC ACT F FAE", "FEC.ACT.F.FAE/FAS", "FEC. ACT. F. FAE/FAS"),
+        "ficha_fae": (
+            "FEC.ACT.F.FAE",
+            "FEC. ACT. F. FAE",
+            "FEC ACT F FAE",
+            "FEC.ACT.F.FAE/FAS",
+            "FEC. ACT. F. FAE/FAS",
+        ),
         "ficha_ind": ("FEC.ACT.F.INDIVIDUAL", "FEC. ACT. F. INDIVIDUAL", "FEC ACT F INDIVIDUAL"),
     },
     Mode.INFORMES: {

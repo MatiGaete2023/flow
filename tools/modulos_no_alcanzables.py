@@ -8,6 +8,7 @@ Raíces: nurus.personal.app (Asistente) y, además, los módulos nurus.* importa
 por descargador/ y tools/. Las importaciones bajo `if TYPE_CHECKING:` no cuentan.
 Los paquetes (__init__) y los módulos raíz no se informan.
 """
+
 import ast
 import json
 import sys
@@ -32,7 +33,8 @@ def module_map():
 def is_type_checking(node):
     test = node.test
     return (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
-        isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING")
+        isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+    )
 
 
 def imports_of(path, module, mods):
@@ -111,8 +113,12 @@ def main(argv):
     packages = {name for name, path in mods.items() if path.name == "__init__.py"}
     missing = sorted(set(mods) - app - extra - packages - {"nurus"})
     only_tools = sorted((extra - app) - packages)
-    result = {"total": len(mods), "alcanzables_app": len(app), "no_alcanzables": missing,
-              "solo_herramientas_o_descargador": only_tools}
+    result = {
+        "total": len(mods),
+        "alcanzables_app": len(app),
+        "no_alcanzables": missing,
+        "solo_herramientas_o_descargador": only_tools,
+    }
     if "--json" in argv:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:

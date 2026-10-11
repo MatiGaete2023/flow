@@ -1,4 +1,5 @@
 """WP-12: contactos fuera del paquete y sesiones sin copia de la configuración."""
+
 from datetime import date
 import json
 
@@ -27,10 +28,15 @@ def test_sin_archivo_local_se_usa_el_ejemplo_y_se_avisa(tmp_path):
 def test_archivo_local_con_programas_y_tribunales(tmp_path):
     local = tmp_path / 'CSMP_Personal'
     local.mkdir()
-    (local / 'contactos.json').write_text(json.dumps([
-        {'Nombre': 'PRM FICTICIO', 'Mail': 'prm@example.test'},
-        {'Nombre': 'Tribunal: LAJA', 'Mail': 'uno@example.test; dos@example.test'},
-    ]), encoding='utf-8')
+    (local / 'contactos.json').write_text(
+        json.dumps(
+            [
+                {'Nombre': 'PRM FICTICIO', 'Mail': 'prm@example.test'},
+                {'Nombre': 'Tribunal: LAJA', 'Mail': 'uno@example.test; dos@example.test'},
+            ]
+        ),
+        encoding='utf-8',
+    )
     datos = defaults(local)
     assert datos['contactos'] == {'PRM FICTICIO': 'prm@example.test'}
     assert datos['correos']['tribunales']['LAJA']['para'] == ['uno@example.test', 'dos@example.test']
@@ -90,7 +96,10 @@ def test_sesion_antigua_con_config_todavia_carga(tmp_path):
 
 def test_boton_importar_contactos_json_guarda_copia_local(tmp_path):
     from test_integral_ui import run_gui
-    run_gui(tmp_path, """
+
+    run_gui(
+        tmp_path,
+        """
 import json
 from unittest.mock import patch
 origen=root/'contactos_base.json'
@@ -111,7 +120,8 @@ assert app.cfg.data['correos']['tribunales']['TOME']['para']==['tome@example.tes
 guardado=json.loads((app.cfg.contacts_directory/'contactos.json').read_text(encoding='utf-8'))
 assert guardado==[{'Nombre':'PRM FICTICIO','Mail':'prm@example.test'},{'Nombre':'Tribunal: TOME','Mail':'tome@example.test'}]
 assert not app.cfg.contacts_missing and app.contacts_notice.get()==''
-""")
+""",
+    )
 
 
 def test_perfil_historico_usa_directorio_contactos_csmp_personal(tmp_path):
@@ -128,6 +138,7 @@ def test_recuperacion_sin_trabajo_activo_usa_configuracion_vigente(tmp_path):
     from test_download_transfer import App, ready
     from nurus.personal import download_link
     from current_fixture import source
+
     path = source(tmp_path)
     anterior = App(tmp_path)
     solicitud = ready(anterior, path)
@@ -165,10 +176,13 @@ def test_perfil_anterior_conserva_contactos_al_pedir_importacion(tmp_path):
     assert recuperada.data['firma'] == 'Edición local ficticia'
 
 
-@pytest.mark.parametrize('formato',['json','xlsx'])
+@pytest.mark.parametrize('formato', ['json', 'xlsx'])
 def test_importacion_parcial_conserva_perfil_anterior_y_conflictos(tmp_path, formato):
     from test_integral_ui import run_gui
-    run_gui(tmp_path, """
+
+    run_gui(
+        tmp_path,
+        """
 import json
 from unittest.mock import patch
 actual=app.cfg.data
@@ -204,4 +218,5 @@ assert {item['Nombre']:item['Mail'] for item in guardado}=={
     'PRM NUEVO FICTICIO':'nuevo@example.invalid',
     'Tribunal: LAJA':'tribunal-conservado@example.invalid',
 }
-""".replace('FORMATO_PRUEBA',formato))
+""".replace('FORMATO_PRUEBA', formato),
+    )

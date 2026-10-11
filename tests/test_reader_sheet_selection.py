@@ -18,11 +18,14 @@ def make_book(path, names):
     book.save(path)
 
 
-@pytest.mark.parametrize("mode,title", [
-    (Mode.ESPERA, "Espera"),
-    (Mode.CUMPLIMIENTO, "Cumplimiento"),
-    (Mode.INFORMES, "Informes"),
-])
+@pytest.mark.parametrize(
+    "mode,title",
+    [
+        (Mode.ESPERA, "Espera"),
+        (Mode.CUMPLIMIENTO, "Cumplimiento"),
+        (Mode.INFORMES, "Informes"),
+    ],
+)
 def test_mode_selects_its_sheet_and_preserves_source(tmp_path, mode, title):
     path = tmp_path / "multi.xlsx"
     make_book(path, ["OB", "Espera", "Cumplimiento", "Informes", "Medidas vencidas"])
@@ -64,14 +67,28 @@ def test_autodetects_displaced_header_and_preserves_physical_rows(tmp_path):
     sheet.title = "informe_1"
     for _ in range(13):
         sheet.append(["REPORTE DE CUMPLIMIENTO"])
-    sheet.append([
-        "RIT", "TRIBUNAL", "RUT", "NOMBRE", "DERIVACIÓN",
-        "DÍAS DE CUMPLIMIENTO", "DÍAS PARA EGRESAR",
-    ])
-    sheet.append([
-        "X-1-2026", "Jgdo. L. y G. de Laja", "11.111.111-1", "NNA Prueba",
-        "PRM Prueba", 120, 60,
-    ])
+    sheet.append(
+        [
+            "RIT",
+            "TRIBUNAL",
+            "RUT",
+            "NOMBRE",
+            "DERIVACIÓN",
+            "DÍAS DE CUMPLIMIENTO",
+            "DÍAS PARA EGRESAR",
+        ]
+    )
+    sheet.append(
+        [
+            "X-1-2026",
+            "Jgdo. L. y G. de Laja",
+            "11.111.111-1",
+            "NNA Prueba",
+            "PRM Prueba",
+            120,
+            60,
+        ]
+    )
     book.save(path)
 
     result = read_workbook(path, Mode.CUMPLIMIENTO)
@@ -91,14 +108,21 @@ def test_displaced_header_scans_loaded_rows_without_reopening_each_prefix(tmp_pa
     sheet.title = "informe_1"
     for _ in range(13):
         sheet.append(["REPORTE DE CUMPLIMIENTO"])
-    sheet.append([
-        "RIT", "TRIBUNAL", "NOMBRE", "DERIVACION",
-        "DIAS DE CUMPLIMIENTO", "DIAS PARA EGRESAR",
-    ])
+    sheet.append(
+        [
+            "RIT",
+            "TRIBUNAL",
+            "NOMBRE",
+            "DERIVACION",
+            "DIAS DE CUMPLIMIENTO",
+            "DIAS PARA EGRESAR",
+        ]
+    )
     sheet.append(["X-1", "Laja", "Persona", "PRM", 50, 50])
     book.save(path)
 
     import pandas as pd
+
     with patch("pandas.read_excel", wraps=pd.read_excel) as reader:
         result = read_workbook(path, Mode.CUMPLIMIENTO)
 
@@ -127,10 +151,17 @@ def test_reports_preserves_both_ingress_dates_without_ambiguity(tmp_path):
     book = Workbook()
     sheet = book.active
     sheet.title = "INFORMES"
-    sheet.append([
-        "DERIVACION", "TRIBUNAL", "NOMBRE", "RIT", "FECHA VENCIMIENTO",
-        "FECHA INGRESO", "FEC. INGRESO EFECTIVO",
-    ])
+    sheet.append(
+        [
+            "DERIVACION",
+            "TRIBUNAL",
+            "NOMBRE",
+            "RIT",
+            "FECHA VENCIMIENTO",
+            "FECHA INGRESO",
+            "FEC. INGRESO EFECTIVO",
+        ]
+    )
     sheet.append(["PRM Norte", "Laja", "Persona", "X-1", "20/09/2026", "01/01/2025", "02/02/2025"])
     book.save(path)
 
@@ -194,6 +225,7 @@ def test_generic_espera_with_notes_detects_header_once_per_sheet(tmp_path):
     book.create_sheet("Notas").append(["No contiene casos"])
     book.save(path)
     import pandas as pd
+
     with patch("pandas.read_excel", wraps=pd.read_excel) as reader:
         result = read_workbook(path, Mode.ESPERA)
     assert result.primary_sheet == "informe_1"
@@ -203,6 +235,7 @@ def test_generic_espera_with_notes_detects_header_once_per_sheet(tmp_path):
 
 def test_sheet_inspection_lists_exact_names_without_analysis(tmp_path):
     from nurus.rus.reader import list_workbook_sheets
+
     path = tmp_path / "source.xlsx"
     make_book(path, ["OB", "Primera", "Segunda"])
     original = path.read_bytes()

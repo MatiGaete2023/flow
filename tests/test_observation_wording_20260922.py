@@ -36,80 +36,125 @@ APPROVED = {
 
 
 def flat(catalog):
-    return {scope+'.'+key: entry['texto'] for scope, entries in catalog.items()
-            if not scope.startswith('_') for key, entry in entries.items()}
+    return {
+        scope + '.' + key: entry['texto']
+        for scope, entries in catalog.items()
+        if not scope.startswith('_')
+        for key, entry in entries.items()
+    }
 
 
 def test_approved_wording_is_exact_and_active_catalogs_are_synchronized():
     import json
     from nurus.personal.config import BASE
-    personal=json.loads((BASE/'textos_base.json').read_text(encoding='utf-8'))
-    rus=json.loads((BASE.parent/'rus'/'textos_observaciones.json').read_text(encoding='utf-8'))
-    p=flat(personal);r=flat(rus)
-    for key,text in APPROVED.items():
-        assert p[key]==text
-        assert r[key]==text
-    assert p.keys()==r.keys()
+
+    personal = json.loads((BASE / 'textos_base.json').read_text(encoding='utf-8'))
+    rus = json.loads((BASE.parent / 'rus' / 'textos_observaciones.json').read_text(encoding='utf-8'))
+    p = flat(personal)
+    r = flat(rus)
+    for key, text in APPROVED.items():
+        assert p[key] == text
+        assert r[key] == text
+    assert p.keys() == r.keys()
 
 
 def test_text_revision_migrates_only_unchanged_previous_defaults(tmp_path):
-    conf=Configuration(tmp_path/'cfg')
-    cfg=deepcopy(conf.data)
-    cfg['revision_textos']=TEXT_REVISION-1
-    cfg['textos']['COMUN']['MAYORIA_EDAD']['texto']=LEGACY_TEXTS_REV2['COMUN.MAYORIA_EDAD']
-    custom='Oído específicamente el {FECHA_OIDO}.'
-    cfg['textos']['COMUN']['OIDO']['texto']=custom
+    conf = Configuration(tmp_path / 'cfg')
+    cfg = deepcopy(conf.data)
+    cfg['revision_textos'] = TEXT_REVISION - 1
+    cfg['textos']['COMUN']['MAYORIA_EDAD']['texto'] = LEGACY_TEXTS_REV2['COMUN.MAYORIA_EDAD']
+    custom = 'Oído específicamente el {FECHA_OIDO}.'
+    cfg['textos']['COMUN']['OIDO']['texto'] = custom
     conf.save(cfg)
 
-    migrated=Configuration(conf.directory)
-    assert migrated.data['revision_textos']==TEXT_REVISION
-    assert migrated.data['textos']['COMUN']['MAYORIA_EDAD']['texto']==APPROVED['COMUN.MAYORIA_EDAD']
-    assert migrated.data['textos']['COMUN']['OIDO']['texto']==custom
+    migrated = Configuration(conf.directory)
+    assert migrated.data['revision_textos'] == TEXT_REVISION
+    assert migrated.data['textos']['COMUN']['MAYORIA_EDAD']['texto'] == APPROVED['COMUN.MAYORIA_EDAD']
+    assert migrated.data['textos']['COMUN']['OIDO']['texto'] == custom
 
 
 def test_expired_reports_generate_pc_info_but_upcoming_reports_do_not(tmp_path):
-    general=Work(defaults()).analyze(source(tmp_path,'INFORMES',program='PRM CENTRO'),'INFORMES',as_of=date(2026,9,13))
-    assert general.rows[0].actions==['programa_vencido','PC_INFO']
+    general = Work(defaults()).analyze(
+        source(tmp_path, 'INFORMES', program='PRM CENTRO'), 'INFORMES', as_of=date(2026, 9, 13)
+    )
+    assert general.rows[0].actions == ['programa_vencido', 'PC_INFO']
     assert 'proyecto de resolución pidiendo cuenta del informe de avance vencido' in general.rows[0].observation
 
-    dce_path=source(tmp_path,'INFORMES',program='DCE CENTRO')
-    dce=Work(defaults()).analyze(dce_path,'INFORMES',as_of=date(2026,9,13))
-    assert dce.rows[0].actions==['programa_vencido','PC_INFO']
+    dce_path = source(tmp_path, 'INFORMES', program='DCE CENTRO')
+    dce = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 13))
+    assert dce.rows[0].actions == ['programa_vencido', 'PC_INFO']
     assert 'informe diagnóstico vencido' in dce.rows[0].observation
 
-    upcoming=Work(defaults()).analyze(dce_path,'INFORMES',as_of=date(2026,9,8))
-    assert upcoming.rows[0].actions==['programa_por_vencer']
+    upcoming = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 8))
+    assert upcoming.rows[0].actions == ['programa_por_vencer']
     assert 'PC_INFO' not in upcoming.rows[0].actions
     assert 'debe ser remitido a más tardar el 12 de septiembre de 2026' in upcoming.rows[0].observation
 
 
 def test_compliance_combines_state_then_milestones_then_suggestion(tmp_path):
-    path=tmp_path/'cumplimiento_orden.xlsx'
-    book=Workbook();sheet=book.active;sheet.title='Cumplimiento'
-    sheet.append([
-        'DERIVACION','TRIBUNAL','NOMBRE','RIT','DIAS DE CUMPLIMIENTO','DIAS PARA EGRESAR',
-        'FEC.EGRESO PROYECTADO','FEC. OIDO','PROXS. AUDS.','CURADOR'
-    ])
-    sheet.append(['PRM CENTRO','LAJA','Persona Ejemplo','X-1',100,17,date(2026,9,30),date(2026,9,5),date(2026,10,15),''])
+    path = tmp_path / 'cumplimiento_orden.xlsx'
+    book = Workbook()
+    sheet = book.active
+    sheet.title = 'Cumplimiento'
+    sheet.append(
+        [
+            'DERIVACION',
+            'TRIBUNAL',
+            'NOMBRE',
+            'RIT',
+            'DIAS DE CUMPLIMIENTO',
+            'DIAS PARA EGRESAR',
+            'FEC.EGRESO PROYECTADO',
+            'FEC. OIDO',
+            'PROXS. AUDS.',
+            'CURADOR',
+        ]
+    )
+    sheet.append(
+        [
+            'PRM CENTRO',
+            'LAJA',
+            'Persona Ejemplo',
+            'X-1',
+            100,
+            17,
+            date(2026, 9, 30),
+            date(2026, 9, 5),
+            date(2026, 10, 15),
+            '',
+        ]
+    )
     book.save(path)
-    work=Work(defaults()).analyze(path,'CUMPLIMIENTO',as_of=date(2026,9,13))
-    text=work.rows[0].observation
-    expected=[
+    work = Work(defaults()).analyze(path, 'CUMPLIMIENTO', as_of=date(2026, 9, 13))
+    text = work.rows[0].observation
+    expected = [
         'Medida próxima a vencer en RUS el 30 de septiembre de 2026.',
         'Oído el 5 de septiembre de 2026.',
         'Audiencia fijada para el 15 de octubre de 2026.',
         'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.',
     ]
-    positions=[text.index(part) for part in expected]
-    assert positions==sorted(positions)
+    positions = [text.index(part) for part in expected]
+    assert positions == sorted(positions)
     assert 'Medida revisada.' not in text
 
 
 def test_compliance_without_findings_keeps_reviewed_without_observations(tmp_path):
-    path=tmp_path/'cumplimiento_limpio.xlsx'
-    book=Workbook();sheet=book.active;sheet.title='Cumplimiento'
-    sheet.append(['DERIVACION','TRIBUNAL','NOMBRE','RIT','DIAS DE CUMPLIMIENTO','DIAS PARA EGRESAR','FEC.EGRESO PROYECTADO'])
-    sheet.append(['AFT CENTRO','LAJA','Persona Ejemplo','X-1',100,100,date(2026,12,31)])
+    path = tmp_path / 'cumplimiento_limpio.xlsx'
+    book = Workbook()
+    sheet = book.active
+    sheet.title = 'Cumplimiento'
+    sheet.append(
+        [
+            'DERIVACION',
+            'TRIBUNAL',
+            'NOMBRE',
+            'RIT',
+            'DIAS DE CUMPLIMIENTO',
+            'DIAS PARA EGRESAR',
+            'FEC.EGRESO PROYECTADO',
+        ]
+    )
+    sheet.append(['AFT CENTRO', 'LAJA', 'Persona Ejemplo', 'X-1', 100, 100, date(2026, 12, 31)])
     book.save(path)
-    work=Work(defaults()).analyze(path,'CUMPLIMIENTO',as_of=date(2026,9,13))
+    work = Work(defaults()).analyze(path, 'CUMPLIMIENTO', as_of=date(2026, 9, 13))
     assert work.rows[0].observation.endswith('Medida revisada, sin observaciones.')

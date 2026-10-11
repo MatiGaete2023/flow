@@ -1,4 +1,5 @@
 """Transactional workbook synchronization by identity, never by row position."""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -25,8 +26,10 @@ class Conflict:
 class SyncConflict(ValueError):
     def __init__(self, conflicts):
         self.conflicts = conflicts
-        super().__init__(f'Hay {len(conflicts)} campos editados aquí y en Excel. '
-                         'Resuelve las diferencias; no se aplicó ningún cambio.')
+        super().__init__(
+            f'Hay {len(conflicts)} campos editados aquí y en Excel. '
+            'Resuelve las diferencias; no se aplicó ningún cambio.'
+        )
 
 
 def comparable(value):
@@ -62,7 +65,9 @@ def associate(work, data):
         else:
             candidates = by_identity.get(identity(values, data['mapping']), [])
             if len(candidates) != 1:
-                raise ValueError('Falta la columna de identidad y hay registros ambiguos o modificados; no se aplicaron cambios.')
+                raise ValueError(
+                    'Falta la columna de identidad y hay registros ambiguos o modificados; no se aplicaron cambios.'
+                )
             row = candidates[0]
         if row.id in result:
             raise ValueError('Hay identidades duplicadas en la copia; no se aplicaron cambios.')
@@ -75,7 +80,7 @@ def associate(work, data):
 
 
 def remember_export(work):
-    data = read_copy(work,work.output)
+    data = read_copy(work, work.output)
     records = associate(work, data)
     for row in work.rows:
         row.sync_base = deepcopy(records[row.id][2])
@@ -83,13 +88,14 @@ def remember_export(work):
         row.sync_state = str(records[row.id][1].get('NURUS_DECISIONES', '') or '')
 
 
-def read_copy(work,path):
-    data=read_external(path,work.mode,work.sheet)
-    if getattr(work,'capture_digest','') and data['records']:
+def read_copy(work, path):
+    data = read_external(path, work.mode, work.sheet)
+    if getattr(work, 'capture_digest', '') and data['records']:
         from nurus.rus.columns import map_columns
-        headers=data['records'][0][1]
-        for mode in ('ESPERA','CUMPLIMIENTO','INFORMES'):
-            data['mapping'].update(map_columns(headers,mode))
+
+        headers = data['records'][0][1]
+        for mode in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+            data['mapping'].update(map_columns(headers, mode))
     return data
 
 
@@ -104,20 +110,22 @@ def refresh(work, resolutions=None):
     path = Path(work.output)
     if not path.exists():
         raise ValueError('La copia fue movida. Usa Localizar copia para indicar su nueva ubicación.')
-    data = read_copy(work,path)
+    data = read_copy(work, path)
     if data['digest'] == work.output_hash:
         return False
     incoming = associate(work, data)
     from copy import copy
-    recalculation=copy(work)
-    recalculation.mapping=data['mapping']
-    recalculation.header=data['header']
-    recalculation.sheet=data['sheet']
+
+    recalculation = copy(work)
+    recalculation.mapping = data['mapping']
+    recalculation.header = data['header']
+    recalculation.sheet = data['sheet']
     conflicts = []
     updated = deepcopy(work.rows)
     for row in updated:
         number, values, review, _ = incoming[row.id]
         from .record_edits import decode, encode, restore, recalculate
+
         technical = str(values.get('NURUS_DECISIONES', '') or '')
         technical_data = decode(technical)
         baseline_data = decode(row.sync_state)
@@ -137,8 +145,9 @@ def refresh(work, resolutions=None):
             base = (row.sync_base or {}).get(field, '')
             local = row.review.get(field, base)
             # Absence of a local review is not a command to erase a source cell.
-            local_changed = (field in row.review and
-                             comparable(local) != comparable((row.sync_local or {}).get(field, base)))
+            local_changed = field in row.review and comparable(local) != comparable(
+                (row.sync_local or {}).get(field, base)
+            )
             if row.sync_base is None:
                 # Old sessions have no baseline: never silently overwrite a local value.
                 local_changed = field in row.review and comparable(local) != comparable(remote)
@@ -151,25 +160,30 @@ def refresh(work, resolutions=None):
                     conflicts.append(Conflict(row.id, field, base, local, remote))
             elif remote_changed:
                 merged[field] = remote
-        if comparable(review.get('RES','')) != comparable((row.sync_base or {}).get('RES','')):
-            row.decisions['resolution']='review'
+        if comparable(review.get('RES', '')) != comparable((row.sync_base or {}).get('RES', '')):
+            row.decisions['resolution'] = 'review'
         row.review = merged
         row.sync_base = deepcopy(review)
         # Track the remote baseline, not the retained local edits.
         row.sync_local = deepcopy(review)
         row.sync_state = str(values.get('NURUS_DECISIONES', '') or '')
         row.source_row = number
-        changed_source = any(comparable(row.values.get(column, '')) != comparable(values.get(data['mapping'].get(key, ''), ''))
-                             for key, column in work.mapping.items() if key not in IDENTITY_FIELDS)
+        changed_source = any(
+            comparable(row.values.get(column, '')) != comparable(values.get(data['mapping'].get(key, ''), ''))
+            for key, column in work.mapping.items()
+            if key not in IDENTITY_FIELDS
+        )
         row.values = values
         if changed_source and (row.rules or not getattr(work, 'external_input', False)):
             recalculate(recalculation, row, update_findings=False)
     if conflicts:
         raise SyncConflict(conflicts)
     from .work import _sync_resolution_warning
+
     for row in updated:
         _sync_resolution_warning(row)
     from .capture_findings import updated_contexts
+
     contexts = updated_contexts(recalculation, updated)
     if not getattr(work, 'original_hash', ''):
         work.original_hash = work.source_hash
@@ -195,4 +209,6 @@ def require_current_copy(work):
     if not path.is_file():
         raise ValueError('La copia fue movida. Usa Localizar copia antes de preparar productos.')
     if sha256(path.read_bytes()).hexdigest() != work.output_hash:
-        raise ValueError('Excel tiene cambios pendientes. Usa Actualizar desde Excel antes de preparar o guardar productos.')
+        raise ValueError(
+            'Excel tiene cambios pendientes. Usa Actualizar desde Excel antes de preparar o guardar productos.'
+        )

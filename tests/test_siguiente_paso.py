@@ -1,16 +1,20 @@
 """WP-41: barra «Siguiente paso» con los mismos conteos de cada página."""
+
 from nurus.personal.next_step import counts, text
 from test_integral_ui import run_gui
 
 
 def test_texto_sin_trabajo():
     assert counts(None, [], []) == {'revisar': 0, 'exportar': False, 'correos': 0, 'resoluciones': 0, 'resultados': 0}
-    assert text(counts(None, [], [])) == ('1 Revisar (0) → 2 Exportar copia → 3 Correos (0) → '
-                                          '4 Resoluciones (0) → 5 Resultados (0)')
+    assert text(counts(None, [], [])) == (
+        '1 Revisar (0) → 2 Exportar copia → 3 Correos (0) → 4 Resoluciones (0) → 5 Resultados (0)'
+    )
 
 
 def test_conteos_coinciden_con_cada_pagina_y_se_actualizan(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 import re,time
 from nurus.personal.outputs import Draft
 from nurus.personal.resolutions import prepare_projects, automatic_project_selections
@@ -39,11 +43,14 @@ for clave,pagina in [('correos','Correos'),('resoluciones','Resoluciones'),('res
     bar.buttons[clave].invoke();app.update()
     assert app.tabs.select()==str(app.pages[pagina])
 assert bar._after is not None
-""")
+""",
+    )
 
 
 def test_tick_con_error_no_se_repite_ni_detiene_la_barra(tmp_path):
-    run_gui(tmp_path, """
+    run_gui(
+        tmp_path,
+        """
 bar=app.next_step
 llamadas=[]
 def falla(force=False):
@@ -52,4 +59,5 @@ bar.refresh=falla
 bar._tick();bar._tick()
 assert len(llamadas)==2 and isinstance(bar.error,OSError) and bar._after is not None
 assert 'No se pudieron actualizar' in app.status.get()
-""")
+""",
+    )

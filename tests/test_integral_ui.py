@@ -1,15 +1,17 @@
 """Each GUI scenario owns its process and Tcl interpreter, like a CSMP launch."""
+
 import os
 from pathlib import Path
 import subprocess
 import sys
 
-ROOT=Path(__file__).parents[1]
+ROOT = Path(__file__).parents[1]
 
 
 def run_gui(tmp_path, scenario):
-    environment=dict(os.environ,PYTHONPATH=os.pathsep.join([str(ROOT/'src'),str(ROOT/'tests'),*sys.path]))
-    script='''
+    environment = dict(os.environ, PYTHONPATH=os.pathsep.join([str(ROOT / 'src'), str(ROOT / 'tests'), *sys.path]))
+    script = (
+        '''
 from datetime import date
 from pathlib import Path
 import sys
@@ -21,27 +23,36 @@ root=Path(sys.argv[1])
 app=App(Configuration(root/'config'))
 app.geometry('1024x650')
 try:
-'''+''.join('    '+line+'\n' for line in scenario.splitlines())+'''
+'''
+        + ''.join('    ' + line + '\n' for line in scenario.splitlines())
+        + '''
 finally:
     app.destroy()
 '''
-    result=subprocess.run([sys.executable,'-c',script,str(tmp_path)],env=environment,
-                          capture_output=True,text=True,timeout=45)
-    assert result.returncode==0,result.stdout+'\n'+result.stderr
+    )
+    result = subprocess.run(
+        [sys.executable, '-c', script, str(tmp_path)], env=environment, capture_output=True, text=True, timeout=45
+    )
+    assert result.returncode == 0, result.stdout + '\n' + result.stderr
 
 
 def test_current_results_and_manual_editors_are_reachable(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 app.tabs.select(app.pages['Resultados']);app.update()
 assert set(app.pages)=={'Trabajo','Correos','Resoluciones','Resultados','Configuración'}
 assert app.results_download_button.winfo_exists()
 from nurus.personal.manual import open_editor
 open_editor(app,'mail');open_editor(app,'word');app.update()
-""")
+""",
+    )
 
 
 def test_save_mail_batch_with_excel_and_roster_files_excludes_only_invalid_mail(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from types import SimpleNamespace
 from unittest.mock import patch
 from shutil import copyfile
@@ -85,11 +96,14 @@ with patch('nurus.personal.current_tools.confirm_drafts') as confirm, patch.obje
     try:app._send_all();raise AssertionError('No debe ofrecer guardar archivos como correos')
     except ValueError as error:assert 'No hay borradores completos' in str(error)
     assert not confirm.called
-""")
+""",
+    )
 
 
 def test_hidden_selection_and_view_preferences_survive_refresh(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2));app._show_work()
 id=app.work.rows[0].id
 app.records.selection_set(id);app.work_search.set('no coincidencia');app._apply_work_filter();app.update()
@@ -99,11 +113,14 @@ app._show_work();app.update();from nurus.personal.selection import selected_ids
 assert id in selected_ids(app,'records')
 app.records.configure(displaycolumns=('Nombre','RIT'));app.work_search.set('');app._apply_work_filter()
 assert tuple(app.records['displaycolumns'])==('Nombre','RIT')
-""")
+""",
+    )
 
 
 def test_themes_result_identity_and_command_palette(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from nurus.personal.outputs import Draft
 from nurus.personal.commands import show_palette
 for theme in ('Claro','Oscuro','Sistema'):
@@ -116,11 +133,14 @@ second='draft:'+app.drafts[1].product_id
 app.results_tree.selection_set(second);app.open_result();app.update()
 assert app.body.get('1.0','end-1c')=='Segundo'
 show_palette(app);app.update();assert app.command_palette.winfo_exists()
-""")
+""",
+    )
 
 
 def test_large_table_yields_and_retains_hidden_selection(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from copy import deepcopy
 import time
 app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
@@ -138,11 +158,14 @@ app.records.selection_set('row-1099');app.work_search.set('no-match');app._apply
 from nurus.personal.selection import selected_ids
 assert 'row-1099' in selected_ids(app,'records')
 app.work_search.set('');app._apply_work_filter();assert 'row-1099' in app.records.selection()
-""")
+""",
+    )
 
 
 def test_25_mail_attachments_are_automatic_and_editing_one_is_optional(tmp_path):
-    run_gui(tmp_path,"""
+    run_gui(
+        tmp_path,
+        """
 from copy import deepcopy
 from hashlib import sha256
 from types import SimpleNamespace
@@ -208,4 +231,5 @@ app.work.receipts.clear();app.drafts=pending();app.draft_index=9
 with patch('nurus.personal.current_tools.confirm_drafts',return_value=True), patch('nurus.personal.outputs.save_draft',return_value=SimpleNamespace(entry_id='FAKE',store_id='FAKE')), patch.object(app,'_capture_mail'), patch.object(app,'_save_session'), patch.object(app,'_run',side_effect=run):
     app._send_draft()
 assert len(app.work.receipts)==1 and app.drafts[9].roster_reviewed
-""")
+""",
+    )

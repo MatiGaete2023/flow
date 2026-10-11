@@ -14,11 +14,12 @@ def residential_work(tmp_path):
     book = Workbook()
     book.active.append(['RIT', 'TRIBUNAL', 'NOMBRE', 'DERIVACION', 'OBSERVACION'])
     for i, code in enumerate(['RTA', 'RTA', 'RTT', 'RTT', 'RTT', 'RTT', 'RTT']):
-        book.active.append([f'X-{i}', 'Jgdo. L. y G. de Mulchén', 'Persona de prueba',
-                            code + ' - Residencia de prueba', 'Revisado'])
+        book.active.append(
+            [f'X-{i}', 'Jgdo. L. y G. de Mulchén', 'Persona de prueba', code + ' - Residencia de prueba', 'Revisado']
+        )
     book.active.append(['X-8', 'LAJA', 'Otra persona', 'REM - Residencia de prueba', 'Revisado'])
     book.active.append(['X-9', 'MULCHEN', 'Otra persona', 'AFT - Programa de prueba', 'Revisado'])
-    path = tmp_path/'residencial.xlsx'
+    path = tmp_path / 'residencial.xlsx'
     book.save(path)
     return Work.external(path, defaults(), 'CUMPLIMIENTO')
 
@@ -27,8 +28,7 @@ def residential_work(tmp_path):
 def test_mulchen_residential_rows_prepare_one_draft_with_res_filter(tmp_path, manual):
     work = residential_work(tmp_path)
     ids = selected_court_record_ids(work, ['MULCHEN'])
-    options = dict(selected=ids, modalities=MODALITIES['RES'], modality_keys=['RES'],
-                   recipient_scope='tribunales')
+    options = dict(selected=ids, modalities=MODALITIES['RES'], modality_keys=['RES'], recipient_scope='tribunales')
     drafts = prepare_drafts(work, 'cumplimiento', manual_selection=manual, **options)
     assert len(drafts) == 1
     assert drafts[0].record_ids == [row.id for row in work.rows[:7]]
@@ -38,8 +38,17 @@ def test_mulchen_residential_rows_prepare_one_draft_with_res_filter(tmp_path, ma
     assert automatic[0].record_ids == drafts[0].record_ids
 
 
-@pytest.mark.parametrize('name', ['RTA - Casa de prueba', 'rtt residencia', 'RVA CASA DE PRUEBA',
-                                  'REM - Residencia', 'RFA - Residencia', MODALITIES['RES']])
+@pytest.mark.parametrize(
+    'name',
+    [
+        'RTA - Casa de prueba',
+        'rtt residencia',
+        'RVA CASA DE PRUEBA',
+        'REM - Residencia',
+        'RFA - Residencia',
+        MODALITIES['RES'],
+    ],
+)
 def test_residential_modalities(name):
     assert modality(name) == 'RES'
 
@@ -59,6 +68,8 @@ def test_corrected_program_is_used_by_modality_filter():
     assert not selected_row(work, row, ['AMB'])
 
 
-@pytest.mark.parametrize('program', ['RZZ - Desconocido', 'Nombre sin código', 'AFT - Residencia', 'FAE - Prueba', 'DCE - Prueba'])
+@pytest.mark.parametrize(
+    'program', ['RZZ - Desconocido', 'Nombre sin código', 'AFT - Residencia', 'FAE - Prueba', 'DCE - Prueba']
+)
 def test_residential_filter_does_not_include_other_or_unknown_modalities(program):
     assert modality(program) != 'RES'

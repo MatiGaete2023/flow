@@ -12,6 +12,7 @@ Uso:
 Dos PR de WP distintos ya no tocan el mismo archivo, así que pueden ir directo contra la
 rama base sin apilarse. La CI corre `validar`.
 """
+
 import argparse
 import json
 import re
@@ -21,8 +22,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VIEW = ROOT / "docs" / "implementacion" / "ESTADO.json"
 SOURCES = ROOT / "docs" / "implementacion" / "estado"
-STATES = {"PENDIENTE", "LISTO", "TOMADO", "EN_VERIFICACION", "EN_REVISION", "EN_AUDITORIA", "INTEGRADO",
-          "REVERTIDO", "BLOQUEADO", "BLOQUEADO_USUARIO"}
+STATES = {
+    "PENDIENTE",
+    "LISTO",
+    "TOMADO",
+    "EN_VERIFICACION",
+    "EN_REVISION",
+    "EN_AUDITORIA",
+    "INTEGRADO",
+    "REVERTIDO",
+    "BLOQUEADO",
+    "BLOQUEADO_USUARIO",
+}
 WP_ID = re.compile(r"^WP-\d{2}$")
 ORDER = "orden_paquetes"
 DEP_TYPES = {"funcional", "archivo"}
