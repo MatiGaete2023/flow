@@ -1,0 +1,25 @@
+{
+  "titulo": "Consultas de estado sin lecturas repetidas y cierre técnico de etiquetas",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/84-huellas-consulta-20261011",
+  "pr": null,
+  "verificacion": "9 regresiones focales PASA; verificación completa y CI pendientes.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "G-5 autorizado por el usuario. Sin cache persistente ni cambio de identidad al guardar.",
+    "WP-81–83 pendientes de E3; ensayo separado, sin integrar en feat."
+  ]
+}

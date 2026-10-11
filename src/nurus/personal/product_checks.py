@@ -7,7 +7,7 @@ import json
 from zipfile import BadZipFile
 from lxml.etree import XMLSyntaxError
 from .product_state import stale, dependency_scope
-from .outputs import emails, draft_fingerprint
+from .outputs import emails, draft_fingerprint_for_display as draft_fingerprint, draft_preview_scope
 
 
 @dataclass
@@ -36,7 +36,7 @@ def project_hash(project):
 
 def check_products(work, drafts, projects):
     checks = []
-    with dependency_scope(work):
+    with dependency_scope(work), draft_preview_scope():
         for index, draft in enumerate(drafts):
             issues = []
             if work:

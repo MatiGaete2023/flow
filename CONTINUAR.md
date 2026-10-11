@@ -1,17 +1,20 @@
 # Continuar — 11 de octubre de 2026
 
-Esta rama ensaya la integración de #36–38. No está integrada en feat.
-Base remota comprobada: `286c28f`. WP-63/#34 y WP-80/#35 integrados.
-WP-81/#36, WP-82/#37 y WP-83/#38: CI aprobada; revisión E3 pendiente.
-Conservar estados EN_REVISION; no presentar este ensayo como aprobación independiente.
+Base feat: `286c28f`. WP-63/#34 y WP-80/#35 integrados.
+#36–38: CI aprobada; ensayo conjunto en revisión/integracion-36-38-20261011.
+No hay revisión E3 de otra raíz; no se ha integrado el ensayo en feat.
 
-1. Obtener revisión de otra raíz y auditoría E3 antes de integrar en feat.
-2. Verificar juntos los tres PR, resolver documentos y regenerar ESTADO desde sus fuentes.
-3. G-5: reducir lecturas repetidas de adjuntos en consultas de estado, conservando bytes frescos al guardar.
-4. WP-17: eliminar las dos etiquetas antiguas; referencias de PR requieren Soporte GitHub.
-5. WP-02: pruebas reales de Excel/Outlook y acta; WP-50: diez ingresos; WP-70: cierre tras acta.
+WP-84: G-5, hashes de adjuntos compartidos solo durante consultas síncronas de lectura;
+identidad de guardado siempre fresca. [Ficha](docs/implementacion/wp/WP-84.md),
+[reporte](docs/implementacion/REPORTE_WP84.md). Verificación en preparación.
 
-Motor/textos/golden17 intactos, seis xfail estrictos; Outlook solo Save y CC fijo.
-Sin main, releases ni force. Decisiones D1–D9 conservadas.
+WP-17: etiquetas antiguas eliminadas por API y ls-remote sin etiquetas. 607 artefactos
+anteriores ya borrados. Referencias de PR/cachés pendientes de Soporte GitHub; no purga completa.
 
-[Historial](docs/HISTORIAL.md). [Plan](docs/implementacion/PLAN_IMPLEMENTACION.md).
+1. E3 independiente; integrar #36–38 y WP-84 aprobados, resolver documentos, generar ESTADO.
+2. Verificar y regenerar línea base después de cada integración.
+3. Confirmación de Soporte GitHub para WP-17.
+4. Excel/Outlook reales y acta WP-02; diez ingresos WP-50; cierre WP-70 tras acta.
+
+Motor/textos/golden17 intactos; seis xfail estrictos. Sin main, release ni force.
+No publicar desde clones previos a purga. [Historial](docs/HISTORIAL.md).

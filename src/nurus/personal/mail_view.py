@@ -6,6 +6,7 @@ import tkinter as tk
 import customtkinter as ctk
 
 from . import ui
+from .outputs import draft_fingerprint_for_display, draft_preview_scope
 from .widgets import NamedChoice, CaseDetailPanel, Tooltip
 from .modalities import MODALITIES
 from .mail_controls import NO_DRAFTS, NO_DRAFTS_ATTACH, NO_ROSTER, NO_SELECTED, NO_WORK, mail_block
@@ -90,6 +91,7 @@ class DraftCards(ctk.CTkScrollableFrame):
         if self._callback:
             self._callback(None)
 
+    @draft_preview_scope()
     def set_drafts(self, drafts, receipts=None, empty_message=None):
         self.delete()
         self.drafts = list(drafts)
@@ -126,11 +128,11 @@ class DraftCards(ctk.CTkScrollableFrame):
             badges = ctk.CTkFrame(card, fg_color='transparent')
             badges.pack(fill='x', padx=12, pady=(2, 10))
             expired = bool(draft.due and draft.due < date.today().isoformat())
-            from .outputs import draft_fingerprint
-
             problem = False
             try:
-                receipt = (receipts or {}).get(draft_fingerprint(draft), {}).get('state')
+                receipt = (
+                    (receipts or {}).get(draft_fingerprint_for_display(draft), {}).get('state') if receipts else None
+                )
             except (ValueError, OSError):
                 receipt = None
                 problem = True
