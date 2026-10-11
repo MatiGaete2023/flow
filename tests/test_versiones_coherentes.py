@@ -1,4 +1,5 @@
 """Cada versión se escribe en un solo lugar; las demás ocurrencias derivan de él."""
+
 import importlib.util
 import json
 import re
@@ -18,7 +19,13 @@ def _texto(relativa):
 
 def test_fuentes_unicas():
     assert meta.assistant_version() == nurus.__version__
-    assert meta.downloader_version() == re.search(r"^VERSION='([^']+)'", _texto('descargador/contrato_integral.py'), re.M).group(1)
+    # Comportamiento, no texto: el valor que expone el módulo del Descargador.
+    spec_contrato = importlib.util.spec_from_file_location(
+        'contrato_integral', ROOT / 'descargador' / 'contrato_integral.py'
+    )
+    contrato = importlib.util.module_from_spec(spec_contrato)
+    spec_contrato.loader.exec_module(contrato)
+    assert meta.downloader_version() == contrato.VERSION
     pyproject = _texto('pyproject.toml')
     assert 'dynamic = ["version"]' in pyproject and 'version = {attr = "nurus.__version__"}' in pyproject
     assert not re.search(r'^version\s*=\s*"', pyproject, re.M)
@@ -34,12 +41,25 @@ def test_extension_coincide_con_el_descargador():
 
 def test_sin_versiones_escritas_a_mano():
     asistente, descargador = meta.assistant_version(), meta.downloader_version()
-    archivos = ['installer/CSMP.iss', 'descargador/descargador.py', 'tools/build_integral.ps1',
-                '.github/workflows/tests.yml', '.github/workflows/descargador-integral.yml',
-                '.github/workflows/verify-delivered-installer.yml']
+    archivos = [
+        'installer/CSMP.iss',
+        'descargador/descargador.py',
+        'tools/build_integral.ps1',
+        '.github/workflows/tests.yml',
+        '.github/workflows/descargador-integral.yml',
+        '.github/workflows/verify-delivered-installer.yml',
+    ]
     for relativa in archivos:
         texto = _texto(relativa)
-        for literal in (asistente, asistente.replace('.dev', '-dev'), descargador, 'dev4', '2.7.4', '2.7.5', 'SITFA-27'):
+        for literal in (
+            asistente,
+            asistente.replace('.dev', '-dev'),
+            descargador,
+            'dev4',
+            '2.7.4',
+            '2.7.5',
+            'SITFA-27',
+        ):
             assert literal not in texto, (relativa, literal)
 
 
@@ -55,6 +75,7 @@ def test_sincronizar_no_cambia_archivos_ya_coherentes(tmp_path):
 
 def test_sincronizar_extension_respeta_la_carpeta_indicada(tmp_path, monkeypatch):
     import sys
+
     destino = tmp_path / 'descargador'
     (destino / 'extension').mkdir(parents=True)
     for nombre in ('contrato_integral.py', 'extension/manifest.json', 'extension/pagina.js'):
