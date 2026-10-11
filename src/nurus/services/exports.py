@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
-import os
 import shutil
 import tempfile
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 from zipfile import ZipFile
-
-from nurus.services.file_output import write_new_file
-
-if TYPE_CHECKING:
-    from nurus.storage.database import Database
 
 
 class ExportError(ValueError):
@@ -40,38 +33,18 @@ def _safe_cell(value: object) -> object:
     return value
 
 
+def _write_text(cell, value: object) -> None:
+    """Escribe texto literal: un valor que empieza con «=» no se guarda como fórmula."""
+    cell.value = value
+    if isinstance(value, str) and cell.data_type == "f":
+        cell.data_type = "s"
+
+
 def _is_blank_excel_value(value: object) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
 
-def _snapshot_rows(db: Database, batch_id: str) -> tuple[object, list[dict[str, object]]]:
-    try:
-        snapshot = db.get_snapshot(batch_id)
-    except ValueError as exc:
-        raise ExportError(str(exc)) from exc
-    batch = snapshot["batch"]
-    rows: list[dict[str, object]] = []
-    for item in snapshot["records"]:
-        if item["decision"] != "approved":
-            continue
-        values = json.loads(item["values_json"])
-        values["NURUS_OBSERVACION"] = item["edited_observation"]
-        values["NURUS_HOJA_ORIGEN"] = item["source_sheet"]
-        values["NURUS_FILA_ORIGEN"] = item["source_row"]
-        values["NURUS_HASH_ORIGEN"] = item["source_hash"]
-        rows.append(values)
-    if not rows:
-        raise ExportError("El lote no contiene registros aprobados exportables.")
-    return batch, rows
 
-
-def _headers(rows: list[dict[str, object]]) -> list[str]:
-    result: list[str] = []
-    for row in rows:
-        for key in row:
-            if key not in result:
-                result.append(key)
-    return result
 
 
 def _hash(path: Path) -> str:
@@ -101,79 +74,6 @@ def _validate_destination(
         raise ExportError("El archivo de destino ya existe; confirma un nombre distinto o sobrescritura.")
 
 
-def export_review_snapshot(
-    db: Database,
-    batch_id: str,
-    destination: str | Path,
-    *,
-    overwrite: bool = False,
-) -> ExportResult:
-    """Exporta una tabla de revisión; no conserva la estructura del libro original."""
-    target = Path(destination).expanduser().resolve()
-    if target.suffix.lower() not in {".xlsx", ".csv"}:
-        raise ExportError("La exportación debe ser .xlsx o .csv.")
-    batch, rows = _snapshot_rows(db, batch_id)
-    _validate_destination(batch, target, allow_overwrite=overwrite)
-    target.parent.mkdir(parents=True, exist_ok=True)
-
-    headers = _headers(rows)
-    suffix = target.suffix.lower()
-    temp_path: Path | None = None
-    try:
-        if suffix == ".xlsx":
-            from openpyxl import Workbook
-
-            handle = tempfile.NamedTemporaryFile(
-                prefix=target.stem + ".", suffix=".tmp.xlsx", dir=target.parent, delete=False
-            )
-            handle.close()
-            temp_path = Path(handle.name)
-            workbook = Workbook()
-            sheet = workbook.active
-            sheet.title = "Revision"
-            sheet.append(headers)
-            for row in rows:
-                sheet.append([_safe_cell(row.get(header, "")) for header in headers])
-            trace = workbook.create_sheet("Trazabilidad")
-            trace.append(["CAMPO", "VALOR"])
-            for key, value in [
-                ("batch_id", batch["id"]),
-                ("snapshot_hash", batch["snapshot_hash"]),
-                ("source_name", batch["source_name"]),
-                ("source_hash", batch["source_hash"]),
-                ("mode", batch["mode"]),
-                ("as_of", batch["as_of"]),
-                ("engine_version", batch["engine_version"]),
-                ("catalog_hash", batch["catalog_hash"]),
-            ]:
-                trace.append([key, value])
-            trace.sheet_state = "hidden"
-            workbook.save(temp_path)
-            workbook.close()
-        else:
-            handle = tempfile.NamedTemporaryFile(
-                mode="w", encoding="utf-8-sig", newline="", prefix=target.stem + ".",
-                suffix=".tmp.csv", dir=target.parent, delete=False
-            )
-            temp_path = Path(handle.name)
-            with handle:
-                writer = csv.writer(handle, delimiter=";", quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(headers)
-                for row in rows:
-                    writer.writerow([_safe_cell(row.get(header, "")) for header in headers])
-        if overwrite:
-            os.replace(temp_path, target)
-        else:
-            write_new_file(target, lambda output: shutil.copyfile(temp_path, output))
-            temp_path.unlink(missing_ok=True)
-        temp_path = None
-    except (OSError, ValueError) as exc:
-        raise ExportError(f"No se pudo escribir la exportación: {exc}") from exc
-    finally:
-        if temp_path is not None:
-            temp_path.unlink(missing_ok=True)
-
-    return ExportResult(target, _hash(target), len(rows))
 
 
 def _normalized_header(value: object) -> str:
@@ -353,10 +253,13 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             sheet.cell(row, columns["NURUS_REGLAS"]).value = _safe_cell(record["rule_ids_json"])
             if 'NURUS_DECISIONES' in columns:
                 sheet.cell(row, columns['NURUS_DECISIONES']).value = _safe_cell(record.get('decisions_json', ''))
-            sheet.cell(row, observation_column).value = observation
-            sheet.cell(row, state_column).value = state
-            if stage == "proposal" and _is_blank_excel_value(sheet.cell(row, columns["OBSERVACION"]).value):
-                sheet.cell(row, columns["OBSERVACION"]).value = observation
+            _write_text(sheet.cell(row, observation_column), observation)
+            _write_text(sheet.cell(row, state_column), state)
+            existing = sheet.cell(row, columns["OBSERVACION"])
+            if stage == "proposal" and _is_blank_excel_value(existing.value):
+                _write_text(existing, observation)
+            elif stage == "proposal":
+                _write_text(existing, existing.value)
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
                     sheet.cell(row, columns[title]).value = _safe_cell(value)
@@ -522,8 +425,7 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         if any('decisions_json' in record for record in snapshot['records']):
             titles = (*titles, 'NURUS_DECISIONES')
         columns = _column_plan(headers, titles)
-        observation_column = columns[observation_title]
-        state_column = columns["NURUS_ESTADO_REVISION"]
+        columns[observation_title], columns["NURUS_ESTADO_REVISION"]  # exige ambas columnas (KeyError)
         for title, column in columns.items():
             if sheet.Cells(header_row, column).Value2 in (None, ""):
                 sheet.Cells(header_row, column).Value2 = title
@@ -657,51 +559,5 @@ def _export_preserved_payload(
     return ExportResult(target, _hash(target), len(snapshot["records"]))
 
 
-def export_proposal_workbook(
-    db: Database,
-    batch_id: str,
-    destination: str | Path,
-    *,
-    backend: Literal["native", "portable"] = "native",
-    allow_reduced_fidelity: bool = False,
-) -> ExportResult:
-    """Exporta la propuesta del motor antes de la revisión humana."""
-    try:
-        proposal = db.get_proposal_payload(batch_id)
-        content = db.get_original_workbook(batch_id)
-    except (KeyError, ValueError) as exc:
-        raise ExportError(str(exc)) from exc
-    result = _export_preserved_payload(
-        content,
-        proposal,
-        destination,
-        backend=backend,
-        allow_reduced_fidelity=allow_reduced_fidelity,
-    )
-    db.remember_working_workbook(batch_id, result.path)
-    return result
 
 
-def export_preserved_workbook(
-    db: Database,
-    batch_id: str,
-    destination: str | Path,
-    *,
-    backend: Literal["native", "portable"] = "native",
-    allow_reduced_fidelity: bool = False,
-) -> ExportResult:
-    """Crea una salida nueva desde los bytes congelados y el snapshot vigente."""
-    try:
-        snapshot = db.get_snapshot(batch_id)
-        content = db.get_original_workbook(batch_id, snapshot_hash=snapshot["batch"]["snapshot_hash"])
-    except ValueError as exc:
-        raise ExportError(str(exc)) from exc
-
-    snapshot["batch"]["export_stage"] = "reviewed"
-    return _export_preserved_payload(
-        content,
-        snapshot,
-        destination,
-        backend=backend,
-        allow_reduced_fidelity=allow_reduced_fidelity,
-    )

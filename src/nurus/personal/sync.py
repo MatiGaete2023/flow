@@ -6,7 +6,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from nurus.rus.columns import normalize
-from nurus.rus.rules import historical_match
+from nurus.rus.util import historical_match
 from .importing import read_external
 
 REVIEW_FIELDS = ('OBSERVACION', 'FECHA_OBS', 'TT', 'CC', 'RES')

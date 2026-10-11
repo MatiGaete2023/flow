@@ -8,7 +8,7 @@ import json
 
 from nurus.rus.columns import normalize
 from nurus.rus.reader import read_workbook
-from nurus.rus.rules import as_date, as_int, tribunal, historical_match
+from nurus.rus.util import as_date, as_int, tribunal, historical_match
 from nurus.services.exports import _export_preserved_payload
 from .config import atomic_json
 from .motor.contexto import current
@@ -223,10 +223,17 @@ class Work:
                 'resolution_value':_review_value(row,'RES'),
             })
         result=_export_preserved_payload(self.content,{'batch':batch,'records':records,'exceptions':[self.exception] if self.exception else []},destination,backend=backend,allow_reduced_fidelity=reduced_fidelity)
-        self.output=str(result.path)
-        self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
+        previous=(self.output,self.output_hash)
         from .sync import remember_export
-        remember_export(self)
+        try:
+            # Todo lo que puede fallar (lectura del archivo bloqueado, registro) queda dentro del try.
+            self.output=str(result.path)
+            self.output_hash=sha256(Path(self.output).read_bytes()).hexdigest()
+            remember_export(self)
+        except Exception:
+            self.output,self.output_hash=previous
+            Path(result.path).unlink(missing_ok=True)
+            raise
         return self.output
 
     def refresh(self, resolutions=None):

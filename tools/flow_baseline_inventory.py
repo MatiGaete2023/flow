@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-APPROVED_EXCEPTIONS = {"README.md": "Portada flow; original en docs/README_NURUS_BASELINE.md"}
+APPROVED_EXCEPTIONS = {"README.md": "Portada flow; original en docs/historico/README_NURUS_BASELINE.md"}
 
 
 def write_json(path, value):
@@ -28,9 +28,12 @@ def check_baseline(root):
         path = root / name
         # También se verifica la copia del README original, cuando existe.
         if name in APPROVED_EXCEPTIONS:
-            alternate = root / "docs/README_NURUS_BASELINE.md"
+            alternate = root / "docs/historico/README_NURUS_BASELINE.md"
             if alternate.exists():
                 path = alternate
+        # WP-24 trasladó documentos de época a docs/historico sin modificarlos.
+        if not path.is_file() and name.startswith("docs/") and (root / "docs/historico" / Path(name).name).is_file():
+            path = root / "docs/historico" / Path(name).name
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             changed.append(name)
     return {"source_sha": manifest["sha"], "files": len(manifest["files_sha256"]),
@@ -85,7 +88,7 @@ def graph(root):
         relative = path.relative_to(root).as_posix()
         action = "CONSERVAR"
         phase = "P0"
-        if any(part in relative for part in ("download_link", "download_transfer", "bitacora_link", "integral_contract")):
+        if any(part in relative for part in ("download_link", "download_transfer")):
             action, phase = "DESACOPLAR TRAS G3/G5; conservar recuperación", "P6"
         elif name in {"nurus.personal.bitacoras", "nurus.personal.bitacora_lote", "nurus.personal.bitacora_har"}:
             action, phase = "SEPARAR exportación/análisis sin cambiar reglas", "P3"
@@ -99,7 +102,7 @@ def graph(root):
             action, phase = "AMPLIAR por adaptador; conservar reglas/ediciones; aislar marcas históricas", "P5/P6/P7"
         elif name == "nurus.personal.sitfa":
             action, phase = "CONSERVAR Excel/procedencia; ADAPTAR consumo local v1", "P5"
-        elif name in {"nurus.personal.registration", "nurus.personal.registration_excel"}:
+        elif name in {"nurus.personal.registration"}:
             action, phase = "AISLAR infraestructura de escritura; preservar recuperación de comprobantes", "P6"
         elif name in {"nurus.personal.session", "nurus.personal.product_state", "nurus.personal.sync"}:
             action, phase = "CONSERVAR sesiones/ediciones/huellas; ADAPTAR importación transaccional", "P5/P8"

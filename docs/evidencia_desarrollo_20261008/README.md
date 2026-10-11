@@ -2,7 +2,7 @@
 
 La verificación vigente de las nueve correcciones y tres mejoras está en
 [el informe de cierre](../CORRECCIONES_REVISION_20261009.md) y
-[su evidencia](../evidencia_correcciones_20261009/). Los resultados enumerados
+[su evidencia](../evidencia_correcciones_20261009). Los resultados enumerados
 a continuación conservan las etapas históricas del desarrollo.
 
 Entrega del MVP autorizada por «continua con el plan hasta completar todas las

@@ -1,7 +1,6 @@
 """Nuevas pantallas y selección múltiple; datos ficticios, sin acceder a SITFA."""
 import base64
 from collections import Counter
-from dataclasses import replace
 import io
 import json
 from pathlib import Path
@@ -11,8 +10,8 @@ from urllib.parse import urlencode
 from openpyxl import Workbook
 
 import motor as m
-from perfiles import Selection,selection_profile,response_profile,TABS
-from lotes import Batch,BatchRunner,Dates,file_base
+from perfiles import Selection,selection_profile,response_profile
+from lotes import Batch,BatchRunner,file_base
 from test_lotes import CATALOG as OLD_CATALOG
 from test_lotes import dispose_interface
 import test_poc as old

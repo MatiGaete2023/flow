@@ -1,11 +1,9 @@
 """Genera capturas exclusivamente ficticias para aceptación y benchmark."""
 from pathlib import Path
 import argparse
-from hashlib import sha256
-import json
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
-from nurus.capture.contract import COMMON, TABLES, write_capture
+from nurus.capture.contract import write_capture
 
 
 from nurus.capture.fixtures import fixture

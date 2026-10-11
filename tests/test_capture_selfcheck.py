@@ -22,7 +22,7 @@ outlook.save_draft=forbidden
 from nurus.personal.capture_selfcheck import check_pipeline
 result=check_pipeline(Path(sys.argv[2])/'productos')
 assert result['ok'] and result['institutional_reads']==result['institutional_writes']==result['outlook_saved']==0
-assert not any(n in sys.modules for n in ('nurus.personal.app','nurus.personal.download_link','nurus.personal.bitacora_link','export_csmp_capture'))
+assert not any(n in sys.modules for n in ('nurus.personal.app','nurus.personal.download_link','export_csmp_capture'))
 print(json.dumps(result))
 '''
     # Una carpeta nueva evita depender de imports accidentales desde el repositorio.

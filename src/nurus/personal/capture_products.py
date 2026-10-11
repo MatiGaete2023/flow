@@ -1,9 +1,5 @@
 """Productos de evidencia y solicitudes declarativas; sin consultas institucionales."""
-from datetime import datetime
 import json
-import os
-from pathlib import Path
-import tempfile
 
 
 def request_document(work):

@@ -9,10 +9,10 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from nurus.rus import Mode
-from nurus.services.exports import ExportError, export_preserved_workbook, export_proposal_workbook
-from nurus.services.workflow import WorkController
-from nurus.storage.database import Database
+from nurus.personal.config import defaults
+from nurus.personal.record_edits import apply
+from nurus.personal.work import Work
+from nurus.services.exports import ExportError
 
 
 def _source(path):
@@ -42,33 +42,32 @@ def _source(path):
     return path.read_bytes()
 
 
-def _approved_excluded(db, path):
+def _work(path):
+    # WP-21: la exportación vigente es Work.export (personal), sin la base SQLite retirada.
     original = _source(path)
-    controller = WorkController(db)
-    batch = controller.analyze(path, Mode.ESPERA, as_of=date(2026, 9, 8))
-    first, second = controller.rows_from_batch(batch)
-    controller.approve_record(
-        batch.batch_id, first.record_id, observation="=texto de prueba", reason="Validación"
-    )
-    controller.exclude_record(batch.batch_id, second.record_id, reason="Duplicado confirmado")
-    controller.approve_batch(batch.batch_id)
-    return batch, original
+    work = Work(defaults())
+    work.analyze(path, "ESPERA", as_of=date(2026, 9, 8))
+    return work, original
+
+
+def _approved_excluded(path):
+    work, original = _work(path)
+    first, second = work.rows
+    apply(work, [first.id], review={"OBSERVACION": "=texto de prueba"})
+    apply(work, [second.id], excluded=True)
+    return work, original
 
 
 def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
-    db = Database(tmp_path / "nurus.sqlite3")
     source = tmp_path / "entrada.xlsx"
-    batch, original = _approved_excluded(db, source)
+    work, original = _approved_excluded(source)
     source.write_bytes(b"cambio externo")
     source.unlink()
 
     target = tmp_path / "salida.xlsx"
-    result = export_preserved_workbook(
-        db, batch.batch_id, target, backend="portable", allow_reduced_fidelity=True
-    )
+    result = work.export(target, backend="portable", reduced_fidelity=True)
 
-    assert result.path == target.resolve()
-    assert result.row_count == 2
+    assert result == str(target.resolve())
     expected = load_workbook(BytesIO(original), data_only=False)
     generated = load_workbook(target, data_only=False)
     try:
@@ -98,25 +97,20 @@ def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
         trace = generated["NURUS_TRAZABILIDAD"]
         assert trace.sheet_state == "hidden"
         assert trace["B2"].value == "CONSTANCIA_REVISADA"
-        assert trace["B4"].value == db.get_batch(batch.batch_id)["snapshot_hash"]
+        assert trace["B5"].value == work.source_hash
     finally:
         expected.close()
         generated.close()
 
 
 def test_proposal_export_does_not_require_human_approval(tmp_path):
-    db = Database(tmp_path / "nurus.sqlite3")
     source = tmp_path / "entrada.xlsx"
-    original = _source(source)
-    controller = WorkController(db)
-    batch = controller.analyze(source, Mode.ESPERA, as_of=date(2026, 9, 8))
-    assert db.get_batch(batch.batch_id)["status"] == "review"
+    work, original = _work(source)
+    assert not any(row.review for row in work.rows)
 
     source.unlink()
     target = tmp_path / "propuestas.xlsx"
-    result = export_proposal_workbook(
-        db, batch.batch_id, target, backend="portable", allow_reduced_fidelity=True
-    )
+    work.export(target, backend="portable", reduced_fidelity=True)
 
     expected = load_workbook(BytesIO(original), data_only=False)
     generated = load_workbook(target, data_only=False)
@@ -131,43 +125,36 @@ def test_proposal_export_does_not_require_human_approval(tmp_path):
         assert sheet.cell(2, state).value == "PROPUESTA"
         trace = generated["NURUS_TRAZABILIDAD"]
         assert trace["B2"].value == "PROPUESTA_NO_REVISADA"
-        assert trace["B3"].value == db.get_batch(batch.batch_id)["evaluation_hash"]
-        assert result.row_count == 2
+        assert [sheet.cell(row, state).value for row in (2, 3)] == ["PROPUESTA", "PROPUESTA"]
     finally:
         expected.close()
         generated.close()
 
 
 def test_preserved_export_requires_explicit_portable_confirmation(tmp_path):
-    db = Database(tmp_path / "nurus.sqlite3")
-    batch, _ = _approved_excluded(db, tmp_path / "entrada.xlsx")
+    work, _ = _approved_excluded(tmp_path / "entrada.xlsx")
     with pytest.raises(ExportError, match="fidelidad reducida"):
-        export_preserved_workbook(db, batch.batch_id, tmp_path / "salida.xlsx", backend="portable")
+        work.export(tmp_path / "salida.xlsx", backend="portable")
 
 
 def test_preserved_export_rejects_source_and_existing_destination(tmp_path):
-    db = Database(tmp_path / "nurus.sqlite3")
     source = tmp_path / "entrada.xlsx"
-    batch, _ = _approved_excluded(db, source)
-    with pytest.raises(ExportError, match="archivo de origen"):
-        export_preserved_workbook(
-            db, batch.batch_id, source, backend="portable", allow_reduced_fidelity=True
-        )
+    work, _ = _approved_excluded(source)
+    # Work.export rechaza el origen antes de llegar a services.exports (mismo resguardo, otro mensaje).
+    with pytest.raises(ValueError, match="origen se conserva intacto"):
+        work.export(source, backend="portable", reduced_fidelity=True)
     existing = tmp_path / "existente.xlsx"
     existing.write_bytes(b"keep")
     with pytest.raises(ExportError, match="ya existe"):
-        export_preserved_workbook(
-            db, batch.batch_id, existing, backend="portable", allow_reduced_fidelity=True
-        )
+        work.export(existing, backend="portable", reduced_fidelity=True)
     assert existing.read_bytes() == b"keep"
 
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="requiere Excel de escritorio real")
 def test_native_backend_requires_windows_excel_environment(tmp_path):
-    db = Database(tmp_path / "nurus.sqlite3")
-    batch, _ = _approved_excluded(db, tmp_path / "entrada.xlsx")
+    work, _ = _approved_excluded(tmp_path / "entrada.xlsx")
     with pytest.raises(ExportError, match="Windows"):
-        export_preserved_workbook(db, batch.batch_id, tmp_path / "salida.xlsx")
+        work.export(tmp_path / "salida.xlsx")
 
 
 @pytest.mark.parametrize("suffix", [".xls", ".xlsx", ".xlsm"])
