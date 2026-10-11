@@ -1,0 +1,24 @@
+{
+  "titulo": "Consolidación de todas las ramas en feat",
+  "ola": 7,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-84",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "TOMADO",
+  "ejecutor": "Codex /root (Orquestador)",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/85-consolidacion-20261011",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Orden expresa de consolidar todas las ramas. No convierte plantillas ni pruebas ficticias en aceptación real."
+  ]
+}
