@@ -88,6 +88,8 @@ def test_pytest_summary_is_complete_and_distinguishes_xfail(monkeypatch, output,
         valid,
     )
     assert "private-marker" not in result["resumen"]
+    published = verifier.suite_report(result | {"stdout": "private-marker", "traceback": "private-marker"})
+    assert "private-marker" not in json.dumps(published)
 
 
 @pytest.mark.parametrize(
@@ -290,6 +292,10 @@ def test_clean_source_with_failed_control_is_not_integrable(monkeypatch, baselin
     assert report['procedencia_verificada'] is True
     assert report['elegible_integracion'] is False
     assert report['veredicto'] == 'FALLA'
+    assert report['suites']['asistente']['fallidas'] == 1
+    assert report['suites']['asistente']['codigo'] == 0
+    assert 'resumen' not in report['suites']['asistente']
+    assert 'controles' not in report['suites']['asistente']
 
 
 @pytest.mark.parametrize(

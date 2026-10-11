@@ -71,8 +71,22 @@ def test_estado_dependencia_de_archivo_no_bloquea_integracion():
 
 
 def base_y_ahora():
-    suite = {'aprobadas': 10, 'fallidas': 0, 'resumen': '10 passed'}
+    suite = {
+        'aprobadas': 10,
+        'fallidas': 0,
+        'omitidas': 0,
+        'subpruebas': 0,
+        'codigo': 0,
+        'medicion_valida': True,
+        'resumen': '10 passed',
+    }
     base = {
+        'commit': 'f' * 40,
+        'pruebas_recolectadas': {
+            'asistente': ['tests/test_a.py::test_uno', 'tests/test_a.py::test_dos', 'tests/test_a.py::test_tres']
+            + [f'tests/test_a.py::test_ficticio_{i}' for i in range(7)],
+            'descargador': [f'descargador/test_synthetic.py::test_ficticio_{i}' for i in range(10)],
+        },
         'asistente': dict(suite),
         'descargador': dict(suite),
         'identidades_reales': 0,
@@ -90,26 +104,40 @@ def test_control_sin_medir_da_falla():
     ahora['enlaces_rotos'] = None
     ahora['identidades_reales'] = None
     controles = {c['control']: c for c in verificar.compare(ahora, base, 0, 0)}
-    assert controles['Enlaces rotos']['resultado'] == 'FALLA' and 'NO_MEDIDO' in controles['Enlaces rotos']['detalle']
+    assert (
+        controles['Enlaces rotos']['resultado'] == 'FALLA' and 'no disponible' in controles['Enlaces rotos']['detalle']
+    )
     assert controles['Identidades reales']['resultado'] == 'FALLA'
 
 
 def test_lista_de_eliminadas_reemplaza_conteos_a_mano(tmp_path, monkeypatch):
     base, ahora = base_y_ahora()
     ahora['asistente'].update(aprobadas=8, resumen='8 passed')
+    ahora['pruebas_recolectadas']['asistente'] = base['pruebas_recolectadas']['asistente'][2:]
     lista = tmp_path / 'eliminadas.txt'
     lista.write_text(
         'tests/test_a.py::test_uno\ntests/test_a.py::test_dos  # solo cubría código retirado\n', encoding='utf-8'
     )
     monkeypatch.setattr(verificar, 'collected_nodeids', lambda suite: {'tests/test_a.py::test_tres'})
-    controles = {c['control']: c for c in verificar.compare(ahora, base, 0, 0, verificar.removed_from_lists([lista]))}
+    controles = {
+        c['control']: c
+        for c in verificar.compare(
+            ahora, base, 0, 0, verificar.removed_from_lists([lista], base['commit'], base['pruebas_recolectadas'])
+        )
+    }
     assert controles['Suite asistente']['resultado'] == 'PASA'
     assert controles['Pruebas eliminadas listadas']['resultado'] == 'PASA'
     monkeypatch.setattr(verificar, 'collected_nodeids', lambda suite: {'tests/test_a.py::test_uno'})
-    controles = {c['control']: c for c in verificar.compare(ahora, base, 0, 0, verificar.removed_from_lists([lista]))}
+    controles = {
+        c['control']: c
+        for c in verificar.compare(
+            ahora, base, 0, 0, verificar.removed_from_lists([lista], base['commit'], base['pruebas_recolectadas'])
+        )
+    }
     assert controles['Pruebas eliminadas listadas']['resultado'] == 'FALLA'
     sin_lista = {c['control']: c for c in verificar.compare(ahora, base, 2, 0)}
-    assert 'sin lista verificable' in sin_lista['Suite asistente']['detalle']
+    assert sin_lista['Suite asistente']['resultado'] == 'FALLA'
+    assert '--lista-eliminadas' in sin_lista['Suite asistente']['detalle']
 
 
 def test_controles_que_no_se_pudieron_medir(monkeypatch):
@@ -117,24 +145,42 @@ def test_controles_que_no_se_pudieron_medir(monkeypatch):
     assert verificar.count_real_ids() is None
     monkeypatch.setattr(verificar, 'run', lambda command, **kw: (2, 'error: configuración inválida'))
     assert verificar.ruff_count() is None
-    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (0, 'src\\nurus\\x.py:1:1: F821 nombre'))
+    monkeypatch.setattr(verificar, 'run', lambda command, **kw: (1, '[{"code": "F821"}]'))
     assert verificar.ruff_count() == 1
     monkeypatch.setattr(verificar, 'run', lambda command, **kw: (3, '10 passed in 1.0s'))
-    assert verificar.pytest_counts([])['fallidas'] == 1
+    suite = verificar.pytest_counts([])
+    assert suite['codigo'] == 3
+    assert not verificar.suite_valid(suite)
 
 
 def test_lista_de_eliminadas_rechaza_nodos_inventados_o_repetidos(tmp_path, monkeypatch):
     lista = tmp_path / 'eliminadas.txt'
     lista.write_text('tests/test_a.py::test_real\ntests/inventado.py::x\ntests/inventado.py::x\n', encoding='utf-8')
     monkeypatch.setattr(verificar, 'collected_nodeids', lambda suite: set())
-    monkeypatch.setattr(verificar, 'existed_in_base', lambda node, commit: node == 'tests/test_a.py::test_real')
-    _, problemas = verificar.removed_from_lists([lista], 'abc1234')
+    inventario = {'asistente': ['tests/test_a.py::test_real'], 'descargador': []}
+    _, problemas, declaradas = verificar.removed_from_lists([lista], 'abc1234', inventario)
     assert 'tests/inventado.py::x está repetido' in problemas
     assert any('tests/inventado.py::x no existía en la línea base' in p for p in problemas)
     assert not any('test_real' in p for p in problemas)
 
 
-def test_existed_in_base_lee_el_archivo_de_la_linea_base():
-    assert verificar.existed_in_base('tests/test_herramientas_plan.py::test_control_sin_medir_da_falla', 'HEAD')
-    assert not verificar.existed_in_base('tests/test_herramientas_plan.py::test_que_no_existe', 'HEAD')
-    assert not verificar.existed_in_base('tests/no_existe.py::test_x', 'HEAD')
+def test_existed_in_base_lee_el_archivo_de_la_linea_base(tmp_path, monkeypatch):
+    # E2 replaces Git/source inference with exact nodeids measured in the baseline.
+    # Keep this historical nodeid so the inventory continues to track its coverage.
+    known = 'tests/test_herramientas_plan.py::test_control_sin_medir_da_falla'
+    invented = 'tests/test_herramientas_plan.py::test_que_no_existe'
+    absent_file = 'tests/no_existe.py::test_x'
+    baseline = tmp_path / 'linea_base.json'
+    baseline.write_text(
+        json.dumps({'commit': 'f' * 40, 'pruebas_recolectadas': {'asistente': [known], 'descargador': []}})
+    )
+    recorded = json.loads(baseline.read_text())
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text('\n'.join([known, invented, absent_file]))
+    monkeypatch.setattr(verificar, 'collected_nodeids', lambda suite: set())
+    _, problems, declared = verificar.removed_from_lists(
+        [manifest], recorded['commit'], recorded['pruebas_recolectadas']
+    )
+    assert not any(known in problem for problem in problems)
+    assert any(invented in problem for problem in problems)
+    assert any(absent_file in problem for problem in problems)
