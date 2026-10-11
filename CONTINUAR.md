@@ -6,7 +6,7 @@ No hay revisión E3 de otra raíz; no se ha integrado el ensayo en feat.
 
 WP-84: G-5, hashes de adjuntos compartidos solo durante consultas síncronas de lectura;
 identidad de guardado siempre fresca. [Ficha](docs/implementacion/wp/WP-84.md),
-[reporte](docs/implementacion/REPORTE_WP84.md). Verificación en preparación.
+[reporte](docs/implementacion/REPORTE_WP84.md). Verificación completa PASA en 98f9cb0: 805/11/6 y 240/62. E3 pendiente; CI en el PR.
 
 WP-17: etiquetas antiguas eliminadas por API y ls-remote sin etiquetas. 607 artefactos
 anteriores ya borrados. Referencias de PR/cachés pendientes de Soporte GitHub; no purga completa.
