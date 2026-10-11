@@ -164,14 +164,14 @@ Datos adicionales:
 
 | WP | Revisión de código | Alineación | Comentario |
 | --- | --- | --- | --- |
-| **WP-63** | **PARCIAL: sin bloqueos detectados.** Leídos completos `src/`, CI y `contract`; pruebas y herramientas nuevas (~4.000 líneas) por muestreo. | **CONFORME CON OBSERVACIONES** | Antes de integrar falta completar la lectura de `tools/verificar_wp.py`, `tools/check_real_ids.py` y `tests/test_audit_tools.py` (otra raíz o esta misma sesión). Observaciones: H-1; D7 y `EN_CURSO` en `lectura_bitacoras`; costo por pulso de `next_step._signature` (medir con `benchmark_interface.py`). |
+| **WP-63** | **APROBADO CON OBSERVACIONES** (revisión completa; ver §5.1) | **CONFORME** (con las decisiones del §8) | Sin bloqueos. Observaciones no bloqueantes en §5.1. |
 | **WP-80** | **CAMBIOS** | **NO CONFORME (formal)** | Abiertos: §4.5 (C7, E4, prueba de A3), A2r, etiqueta `pre-WP-80`, regla 11 (2/18 commits con prefijo, 0/18 con «Verificación»). |
 
 Observaciones de alineación de WP-63:
 
 - Edita el plan fuera de su propio archivo de estado: `PLAN_IMPLEMENTACION.md`, `PLAN_VIGENTE.md`, `global.json` y
   `WP-70.json`.
-- Convierte las dependencias de WP-70 en funcionales; eso necesita confirmación del usuario.
+- Convierte las dependencias de WP-70 en funcionales: confirmado por el usuario (§8.2).
 - Regla 11 parcial: 9/20 commits con prefijo, 10/20 con «Verificación».
 - Commits de Codex firmados con el nombre del usuario.
 
@@ -182,17 +182,43 @@ Ambas cumplen las restricciones absolutas 1–7:
 - Sin datos reales.
 - `motor/` y `textos_base.json` intactos; golden PASA.
 
+### 5.1 Cierre de la E3 de WP-63 (lectura íntegra de las herramientas)
+
+Leídos completos `tools/verificar_wp.py` (583 líneas), `tools/check_real_ids.py` (286) y
+`tests/test_audit_tools.py` (322).
+
+- **Lo comprobado está bien.** El diseño falla cerrado:
+  - un control no medible da FALLA;
+  - las bajas de pruebas se aceptan solo con nodeids del inventario exacto;
+  - la procedencia exige SHA, árbol limpio e igualdad antes y después de medir;
+  - la línea base no se sobrescribe si la medición falla;
+  - los diagnósticos no copian contenido.
+- **Restricciones.** El control de restricciones de WP-63 es más estricto: prohíbe en `src/` los imports de red,
+  procesos y automatización, además de `.Send`. N1: **WP-80 también lo pasa** (`restrictions() == []`), y pasa el
+  ruff ampliado (F401/F841 en `src`, `descargador` y `tools`).
+- **Pruebas.** Las de `test_audit_tools.py` ejercitan comportamiento real, con RUT calculado en tiempo de ejecución.
+- **Observaciones no bloqueantes:**
+
+| # | Sev. | Ubicación (rama WP-63) | Observación | Evidencia | Arreglo |
+| --- | --- | --- | --- | --- | --- |
+| O1 | baja | `tools/check_real_ids.py:280` | Un DOCX/XLSX con deflate corrupto termina con traceback `zlib.error` y **código 1** («hallazgos»), no con el 2 que promete su docstring («revisión incompleta») | N1: reproducido con un DOCX sintético. Sigue fallando cerrado: `verificar_wp.count_real_ids` lo trata como no medible → FALLA | Agregar `zlib.error` (y `lzma.LZMAError`) al `except` de `main` y una prueba |
+| O2 | media | `check_real_ids.texts` / `history_blobs` | Omite sufijos desconocidos (`.bin`, `.ps1`, `.iss`) en el árbol y en `--historia` | N1 (código) | Unir con T3 de WP-80 al fusionar (§7.4) y extenderlo a `--historia` (H-1) |
+| O3 | nit | `tools/verificar_wp.py:24-25` | Control «9.» duplicado en el docstring | N1 | Dejar una línea |
+| O4 | nit | `tests/test_audit_tools.py:185` | `eval` de condiciones del workflow (sin builtins) | N1. Es contenido versionado, por lo que el riesgo es bajo, pero la prueba es frágil | Comparar el texto de la condición |
+| O5 | baja | `lectura_bitacoras.py:509,525` | Dos `persistir(lazy)` por registro (D7) y `EN_CURSO` tras un error de disco | N1 | Lo trae WP-80 al fusionar |
+| O6 | baja | `next_step._signature` | Serializa todos los recibos y hace `stat` de los archivos en cada pulso | N2 | Medir con `benchmark_interface.py --rows 10000` |
+
 ## 6. Proceso
 
 Se ejecutaron dos WP de auditoría simultáneos sobre la misma base, sin coordinación del Orquestador. Eso duplicó
 trabajo y dejó 8 conflictos. Además, el plan de WP-63 cuenta «35 WP» sin WP-80.
 
-Regla propuesta (decisión del usuario): **un solo WP correctivo transversal activo a la vez**.
+Regla adoptada por el usuario (§8.5): **un solo WP correctivo transversal activo a la vez**.
 
 ## 7. Plan para continuar (en este orden)
 
-1. **Completar la E3 de WP-63**: leer íntegros `verificar_wp.py`, `check_real_ids.py` y `test_audit_tools.py`.
-   - Sin bloqueos → APROBADO y CONFORME.
+1. ~~Completar la E3 de WP-63~~ **Hecho** (§5.1): APROBADO CON OBSERVACIONES / CONFORME. O1 y O3 son opcionales antes
+   de integrar.
 2. **Decisiones del usuario** (§8).
 3. **Integrar WP-63** en `feat`. Regenerar `ESTADO.json` (`estado.py agregar`) y la línea base (E2).
 4. **Actualizar WP-80** fusionando `feat` (sin rebase ni `--force`) y resolver así los conflictos:
@@ -215,11 +241,22 @@ Regla propuesta (decisión del usuario): **un solo WP correctivo transversal act
    - prioridad media: G-1, G-7, G-8 y H-1;
    - prioridad baja: G-2 a G-6 y A2r.
 
-## 8. Decisiones del usuario
+## 8. Decisiones del usuario (respondidas el 11 de octubre de 2026)
 
-1. Orden **WP-63 → WP-80**: sí o no.
-2. Dependencias de WP-70 como «funcional» (WP-02, WP-17, WP-50 y WP-63), según el cambio de WP-63: confirmar o
-   rechazar.
-3. Regla 11: aceptar el historial tal cual o exigir mensajes de integración con el formato.
-4. Firma de commits de Codex con tu nombre: aceptarla o exigir una marca de ejecutor.
-5. Un solo WP correctivo transversal a la vez (§6): sí o no.
+Respuestas literales del usuario en esta sesión. El Orquestador debe registrarlas en `estado/global.json` →
+`decisiones`.
+
+| # | Pregunta | Respuesta |
+| --- | --- | --- |
+| 1 | Orden de integración | «WP-63 → WP-80 (Recomendado)» |
+| 2 | Dependencias de WP-70 como funcionales (WP-02, WP-17, WP-50, WP-63) | «Confirmar (Recomendado)» |
+| 3 | Regla 11 | «Exigir en integración (Recomendado)»: se acepta el historial; el commit de integración lleva «WP-XX: …» y «Verificación: PASA», sin `--force` |
+| 4 | Commits de Codex firmados con el nombre del usuario | «Aceptar»: la ficha WP y el estado bastan para identificar al Ejecutor |
+| 5 | Un solo WP correctivo transversal a la vez | «Sí, uno a la vez (Recomendado)» |
+
+Efecto en los veredictos:
+
+- **WP-63** queda **CONFORME**: los cambios al plan quedan confirmados, la firma es aceptada y la regla 11 se exige en
+  la integración.
+- **WP-80** sigue **NO CONFORME (formal)** hasta cumplir el §7.5. E4 queda subsanado si se adopta la CI de WP-63 al
+  fusionar; la regla 11 se cumple en el commit de integración.
