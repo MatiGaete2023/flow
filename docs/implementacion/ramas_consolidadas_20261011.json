@@ -577,5 +577,8 @@
     }
   ],
   "rama_canonica": "feat/ejecucion-plan-20261008",
-  "consolidacion_fuentes": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
+  "consolidacion_fuentes": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a",
+  "commit_verificado": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+  "resultado": "PASA",
+  "total_incorporadas": 45
 }

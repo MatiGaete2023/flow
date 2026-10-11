@@ -201,7 +201,7 @@
     "WP-81",
     "WP-70"
   ],
-  "commit_integracion": "c58de60fc9654a10d027765fa7202865f222c456",
+  "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",
@@ -220,6 +220,16 @@
         39
       ],
       "alcance": "Excepción E3 para WP-84/#39 solicitada en el mensaje anterior. Sin revisión de otra raíz. No autoriza main, release ni sustituye acta real."
+    }
+  ],
+  "rama_canonica": "feat/ejecucion-plan-20261008",
+  "consolidaciones": [
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Fusiona todas las ramas, que todo quede consolidado en una rama, luego haz tu reporte",
+      "ramas": 45,
+      "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+      "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
     }
   ]
 }

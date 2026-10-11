@@ -140,9 +140,9 @@ Excepciones E3 expresas del usuario: #36–38 («Autorizar excepción E3 para #3
 se extienden a main, releases ni paquetes futuros. Línea base vigente: 841/240 en c58de60fc9654a10d027765fa7202865f222c456.
 
 Orden pendiente: confirmar retiro de referencias/cachés mediante Soporte GitHub (WP-17);
-recibir resultados de Excel/Outlook reales y acta WP-02; contrastar diez ingresos e integrar
-cronología WP-50/#33 tras WP-02; cerrar WP-70 tras acta final. Sus dependencias funcionales
-se conservan exactamente. Sin pruebas reales ni actas presumidas.
+recibir resultados de Excel/Outlook y acta WP-02; validar diez ingresos para aceptación de
+WP-50/#33, cuyo código está consolidado; cerrar WP-70 tras acta final. Dependencias
+funcionales conservadas. Consolidación WP-85 de 45 ramas terminada técnicamente.
 
 Motor/textos/golden17 intactos; seis xfail estrictos. D3/D9 retirados, D4 60 días/10 sesiones,
 D5 cuatro meses, D6 consolidado en ZIP, D8 sin fallos observados. E3 general continúa vigente.

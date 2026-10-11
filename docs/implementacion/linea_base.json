@@ -1,14 +1,14 @@
 {
-  "commit": "c58de60fc9654a10d027765fa7202865f222c456",
+  "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
   "asistente": {
-    "aprobadas": 841,
+    "aprobadas": 848,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "841 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "848 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 240,
@@ -301,6 +301,13 @@
       "tests/test_copia_desde_consolidado.py::test_paquete_sin_consolidado_sigue_igual",
       "tests/test_copia_desde_consolidado.py::test_reimportar_el_mismo_paquete_movido_conserva_la_base_y_ediciones",
       "tests/test_copia_desde_consolidado.py::test_valor_nuevo_en_una_celda_analizada_vacia_utiliza_portable",
+      "tests/test_cronologia_solo_mostrar.py::test_catalogo_coincide_con_reglas_solo_mostrar",
+      "tests/test_cronologia_solo_mostrar.py::test_empate_sin_hora_queda_incierto_y_posterior_se_lista",
+      "tests/test_cronologia_solo_mostrar.py::test_fuera_de_horizonte_no_se_busca_ni_se_afirma_ausencia",
+      "tests/test_cronologia_solo_mostrar.py::test_hora_cierta_ordena_dentro_del_mismo_dia",
+      "tests/test_cronologia_solo_mostrar.py::test_origen_no_acreditado_es_origen_desconocido",
+      "tests/test_cronologia_solo_mostrar.py::test_reimportar_sesion_previa_sin_vista_la_recalcula",
+      "tests/test_cronologia_solo_mostrar.py::test_vista_no_cambia_observaciones_hallazgos_ni_productos",
       "tests/test_cross_sheet_exception.py::test_cross_and_primary_headers_can_be_on_different_rows",
       "tests/test_cross_sheet_exception.py::test_hoja2_name_does_not_override_two_valid_cross_sheets",
       "tests/test_cross_sheet_exception.py::test_invalid_hoja2_does_not_hide_a_valid_cross",

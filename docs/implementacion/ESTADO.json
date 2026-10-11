@@ -793,13 +793,14 @@
       "tomado": "11 de octubre de 2026",
       "rama": "wp/50-cronologia-solo-mostrar",
       "pr": 33,
-      "verificacion": "PASA (verificar_wp.py y CI del PR, 11 de octubre de 2026)",
+      "verificacion": "Código consolidado por orden expresa; verificación técnica PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288: 848/11/6 y 240/62; 29 focales (incluidas 7 cronología), golden17 intacto. Aceptación real de diez ingresos y WP-02 pendientes.",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02.",
-        "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional."
+        "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional.",
+        "PR #33 queda incorporado técnicamente al historial; BLOQUEADO_USUARIO no significa que falte su código, sino la validación funcional real."
       ],
       "consolidado_en": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
     },
@@ -1366,15 +1367,15 @@
         }
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root (Orquestador)",
       "tomado": "11 de octubre de 2026",
       "rama": "wp/85-consolidacion-20261011",
       "pr": null,
-      "verificacion": "29 focales PASA; 45/45 SHA de ramas remotas son ancestros del resultado. Verificación completa en curso.",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "verificacion": "PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288 contra base 841/240: Asistente 848/11/6 xfail; Descargador 240/62; nueve controles, procedencia limpia/estable y 45/45 encabezados incluidos. Línea base regenerada.",
+      "revision": "Revisión propia del Orquestador; orden expresa del usuario de fusionar todas las ramas. Se conservaron versiones vigentes y verificaron nuevas aportaciones.",
+      "auditoria": "Sin informe de otra raíz para esta consolidación solicitada directamente. Restricciones absolutas y golden17 PASA; actas reales y aceptación funcional no presumidas.",
+      "integrado_en": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
       "notas": [
         "Orden expresa de consolidar todas las ramas. No convierte plantillas ni pruebas ficticias en aceptación real."
       ]
@@ -1419,7 +1420,7 @@
       "fecha": "11 de octubre de 2026"
     }
   },
-  "commit_integracion": "c58de60fc9654a10d027765fa7202865f222c456",
+  "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",
@@ -1438,6 +1439,16 @@
         39
       ],
       "alcance": "Excepción E3 para WP-84/#39 solicitada en el mensaje anterior. Sin revisión de otra raíz. No autoriza main, release ni sustituye acta real."
+    }
+  ],
+  "rama_canonica": "feat/ejecucion-plan-20261008",
+  "consolidaciones": [
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Fusiona todas las ramas, que todo quede consolidado en una rama, luego haz tu reporte",
+      "ramas": 45,
+      "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+      "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
     }
   ]
 }
