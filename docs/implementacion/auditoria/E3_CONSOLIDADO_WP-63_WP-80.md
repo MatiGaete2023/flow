@@ -165,7 +165,7 @@ Datos adicionales:
 | WP | Revisión de código | Alineación | Comentario |
 | --- | --- | --- | --- |
 | **WP-63** | **APROBADO CON OBSERVACIONES** (revisión completa; ver §5.1) | **CONFORME** (con las decisiones del §8) | Sin bloqueos. Observaciones no bloqueantes en §5.1. |
-| **WP-80** | **CAMBIOS** | **NO CONFORME (formal)** | Abiertos: §4.5 (C7, E4, prueba de A3), A2r, etiqueta `pre-WP-80`, regla 11 (2/18 commits con prefijo, 0/18 con «Verificación»). |
+| **WP-80** | **APROBADO** en `672146f` (re-revisión; ver [WP-80.md](WP-80.md), al final) | **CONFORME**, sujeto a: etiqueta `pre-WP-80` antes de integrar y commit de integración con formato de la regla 11 | La Ejecutora aplicó los ítems de §4.5, A2r, G-1, G-2 y G-6 (`168ce0d`, `92d7ba8`). Verificación PASA 608/236. Nuevo conflicto con WP-63: `decode_text` en `check_real_ids` (ver WP-80.md). |
 
 Observaciones de alineación de WP-63:
 
