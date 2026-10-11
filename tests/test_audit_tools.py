@@ -273,6 +273,35 @@ def test_identifier_in_filename_is_redacted_in_diagnostics(tmp_path, identity, c
     assert identity not in capsys.readouterr().out
 
 
+@pytest.mark.parametrize('suffix', ['.txt', '.png'])
+def test_identity_in_filename_without_sensitive_contents_is_detected(tmp_path, identity, suffix, capsys):
+    sample = tmp_path / (identity + suffix)
+    sample.write_bytes(b'innocuous fixture')
+    assert scanner.main([str(sample)]) == 1
+    assert identity not in capsys.readouterr().out
+
+
+def test_identity_in_tracked_directory_name_is_detected(monkeypatch, tmp_path, identity, capsys):
+    folder = tmp_path / identity
+    folder.mkdir()
+    sample = folder / 'fixture.png'
+    sample.write_bytes(b'innocuous fixture')
+    monkeypatch.setattr(scanner, 'ROOT', tmp_path)
+    monkeypatch.setattr(scanner, 'ALLOWLIST', tmp_path / 'allowlist.txt')
+    monkeypatch.setattr(scanner, 'tracked_files', lambda: [sample])
+    assert scanner.main([]) == 1
+    assert identity not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('member', ['{identity}.txt', '{identity}.png', '{identity}/innocuous.txt'])
+def test_identity_in_zip_member_name_is_detected(tmp_path, identity, member, capsys):
+    sample = tmp_path / 'fixture.zip'
+    with zipfile.ZipFile(sample, 'w') as archive:
+        archive.writestr(member.format(identity=identity), b'innocuous fixture')
+    assert scanner.main([str(sample)]) == 1
+    assert identity not in capsys.readouterr().out
+
+
 @pytest.mark.parametrize('encoding', ['utf-8', 'utf-8-sig', 'cp1252', 'utf-16', 'utf-16-be'])
 def test_identity_detection_preserves_explicit_text_encodings(tmp_path, identity, encoding):
     text = identity.replace('-', '\u2013')

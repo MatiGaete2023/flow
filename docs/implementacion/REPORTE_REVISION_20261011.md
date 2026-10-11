@@ -85,9 +85,9 @@ rectores. Las siete fuentes originales se conservan.
 6. **E3 se conserva:** revisión de otra raíz antes de integrar. Los subagentes de esta revisión son apoyo;
    no se declara APROBADO/CONFORME formal. La excepción anterior solo cubría los PR ya integrados.
 
-## 5. Validación
+## 5. Validación de la auditoría inicial
 
-Verificación final **PASA**, medida sobre `d25fe2f4852bb657d5f5c0caacb766590eaf097e`, con árbol Git limpio y estable.
+Verificación inicial **PASA**, medida sobre `d25fe2f4852bb657d5f5c0caacb766590eaf097e`, con árbol Git limpio y estable.
 [Evidencia local](verificacion/WP-63.json) y [CI Windows](verificacion/WP-63-windows.json).
 
 | Medición | Resultado |
@@ -103,8 +103,8 @@ Verificación final **PASA**, medida sobre `d25fe2f4852bb657d5f5c0caacb766590eaf
 
 Los nueve controles locales pasan; formato y estado se comprobaron por separado. La diferencia entre suites Linux/Windows
 corresponde a pruebas habilitadas según plataforma. La CI mínima E4 pasa sobre el mismo código; compilaciones, instalador,
-Playwright y matriz completa se ejecutarán al integrar/manual. Office real no se probó aquí. Los commits posteriores al
-medido solo completan documentación/evidencia; código, configuración, pruebas y línea base permanecen idénticos.
+Playwright y matriz completa se ejecutarán al integrar/manual. Office real no se probó aquí. El commit `84b92e4` solo completó documentación/evidencia y su CI también pasó.
+La revisión propia posterior cambia las herramientas y añade regresiones; se registra por separado en la sección 8.
 
 La primera corrida conjunta detectó cinco pruebas antiguas acopladas a la API privada retirada del verificador.
 Se actualizaron fixtures/aserciones al contrato E2 preservando nodeids y propósito; se conserva el
@@ -139,7 +139,7 @@ revisión E3 ni el acta de uso real.
 
 El anonimizador reconoce identidades por estructura y valores relacionados; un nombre presente únicamente en una
 columna de texto libre desconocida requiere revisión local. No se garantiza una anonimización universal por patrones.
-El scanner de CI controla RUT en texto y OOXML; sus resultados no prueban ausencia de cualquier tipo de dato personal.
+El scanner de CI controla RUT en texto, OOXML y nombres de rutas/miembros ZIP; sus resultados no prueban ausencia de cualquier tipo de dato personal.
 
 La cancelación de Importar último se comprueba antes/después de la búsqueda; no interrumpe una lectura ZIP en progreso.
 Si los lotes reales justifican más optimización, incorporar puntos de cancelación entre candidatos, conservando la
@@ -155,3 +155,33 @@ historia/PDF ni cambios de motor como consecuencia implícita de esta auditoría
 Las pruebas de fechas seriales ejercitan el lector vigente del motor y emiten una advertencia de deprecación
 de NumPy. Se conserva ese código por decisión expresa; revisar compatibilidad al actualizar dependencias,
 con paridad y autorización antes de editar motor/. No impide la verificación actual.
+
+
+## 8. Revisión propia solicitada por el usuario
+
+11 de octubre de 2026. Solicitud literal: «Sin perjuicio de la regla e3, ejecuta tu propia revisión».
+Revisor: Codex /root, el mismo Ejecutor. Punto de partida: PR #34, `84b92e49ed8d784c85e7735e6fbc3ec2b0144734`;
+base de integración `2cf8ca8`. Esta revisión no se registra como aprobación E3 ni aceptación de uso real.
+
+Se contrastaron el diff de la auditoría, sus pruebas, plan/estado y evidencia. El razonamiento de los cambios de
+anonimización, publicación exclusiva, coherencia del consolidado, protección de fuentes y uso del trabajador existente
+se mantiene. No se confirmó otro defecto en esos flujos. La revisión encontró tres omisiones en las herramientas:
+
+| Prioridad | Defecto confirmado | Corrección y comprobación |
+| --- | --- | --- |
+| Alta | `--salida` podía excluir un archivo de código/configuración de la huella y luego reemplazarlo por el informe | Admitir solo JSON externos o bajo `docs/implementacion/verificacion/`; resolver rutas antes de comprobar y proteger también la API de procedencia. La prueba modifica un archivo de un repositorio Git ficticio y comprueba que no pueda ocultarse |
+| Media | Ante fallo de escritura JSON, se intentaba borrar el temporal mientras el handle seguía abierto | Cerrar siempre el handle antes de reemplazar/borrar; conservar el informe anterior y el error original. Regresión con comprobación del handle cerrado para reproducir la restricción Windows |
+| Alta | Un RUT únicamente en el nombre de un archivo o miembro ZIP no se detectaba | Analizar metadatos de rutas y miembros, incluso archivos binarios y carpetas del ZIP, manteniendo diagnósticos enmascarados. Casos de fichero, carpeta Git y miembro ZIP sin datos sensibles en el contenido |
+
+Pasos ejecutados:
+
+1. Reproducir las omisiones con datos ficticios: **11 regresiones fallaron antes de corregir**; se añadió además
+   el caso de carpeta Git para cubrir el alcance de las rutas versionadas.
+2. Corregir dos herramientas y simplificar el cierre/escritura atómica; eliminar la entrada duplicada del control 9
+   en el docstring. No se modifican reglas, productos ni decisiones.
+3. Comprobar **160 pruebas focales**, formato, lint, identidades y estado/enlaces. Ninguna prueba original se elimina.
+4. Ejecutar la verificación completa y CI sobre el commit limpio de las correcciones. Resultado pendiente al publicar
+   esta actualización; se añadirá la evidencia medida antes de cerrar la revisión.
+
+Después: revisión/auditoría de otra raíz E3, integración del PR y nueva línea base sobre `feat`; luego WP-17, pruebas y
+actas del usuario, WP-50 y cierre. La revisión propia no altera ese orden ni presume autorización para integrar.
