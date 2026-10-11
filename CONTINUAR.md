@@ -1,7 +1,8 @@
 # Continuar — 11 de octubre de 2026
 
 Base feat: `286c28f`. WP-63/#34 y WP-80/#35 integrados.
-#36–38: CI aprobada; ensayo conjunto en revisión/integracion-36-38-20261011.
+#36–38 y #39: ensayo conjunto PASA en eae6b499b16f41960aa570538d857d335cdef9ec,
+839/11/6 y 240/62; rama revision/integracion-36-38-20261011.
 No hay revisión E3 de otra raíz; no se ha integrado el ensayo en feat.
 
 WP-84: G-5, hashes de adjuntos compartidos solo durante consultas síncronas de lectura;
