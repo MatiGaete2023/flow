@@ -91,6 +91,21 @@ def restrictions():
         body = [n for n in (submit.body if submit else []) if not (isinstance(n, ast.Expr) and isinstance(getattr(n, "value", None), ast.Constant))]
         if submit and not (body and isinstance(body[0], ast.Raise)):
             problems.append("registration.submit ya no lanza error al inicio")
+    # Sin automatización, red ni procesos en el Asistente: no escribe en RUS/SATURNO,
+    # no navega SITFA y no inicia el Descargador (control negativo; vale aunque falte registration.py).
+    banned = ("subprocess", "webbrowser", "playwright", "selenium", "pywinauto", "requests", "httpx",
+              "urllib.request", "http.client", "socket")
+    for path in (ROOT / "src").rglob("*.py"):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
+                [node.module or ""] if isinstance(node, ast.ImportFrom) and not node.level else []
+            for name in names:
+                if any(name == b or name.startswith(b + ".") for b in banned):
+                    problems.append(f"{path.relative_to(ROOT)} importa {name}")
     for path in (ROOT / "descargador" / "extension").glob("*.js"):
         if re.search(r"document\.cookie\s*[=;.)\[]", path.read_text(encoding="utf-8", errors="ignore")):
             problems.append(f"{path.relative_to(ROOT)} accede a document.cookie")

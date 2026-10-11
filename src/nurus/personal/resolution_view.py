@@ -1,6 +1,7 @@
 """One case list and four focused project panels."""
-from .selection import selected_ids, remember, restore_visible
+from .selection import selected_ids
 import tkinter as tk
+import customtkinter as ctk
 from . import ui
 from .widgets import CaseDetailPanel, ScrollPane
 from .resolutions import KINDS, KIND_LABELS, _case_key
@@ -18,12 +19,6 @@ class ProjectSelection:
 
 def build(app):
     page=app.pages['Resoluciones']
-    actions=ui.Frame(page);actions.pack(fill='x',pady=4)
-    app.manual_word=tk.StringVar(value=KIND_LABELS['PC_IE'])
-    app.word_type_box=ui.Combobox(actions,textvariable=app.manual_word,values=[KIND_LABELS[k] for k in KINDS],state='readonly',width=36)
-    app.word_type_box.pack(side='left')
-    ui.Button(actions,text='Aplicar tipo',width=100,command=lambda:app._guard(app._assign_word_type)).pack(side='left',padx=5)
-    ui.Button(actions,text='Agregar desde Trabajo',width=145,command=lambda:app._guard(app._add_words)).pack(side='left')
     def set_decision(mode):
         work=app._require_work()
         selected=selected_ids(app,'words')
@@ -34,15 +29,45 @@ def build(app):
         from .record_edits import apply
         apply(work,ids,decisions={'resolution':mode})
         app._show_work();app._save_session()
-    ui.Button(actions,text='Quitar del lote',width=105,command=lambda:app._guard(lambda:set_decision('none'))).pack(side='right')
-    bar=ui.Frame(page);bar.pack(fill='x',pady=4)
-    ui.Button(bar,text='Preparar / actualizar proyectos',width=205,command=lambda:app._guard(app._prepare_words)).pack(side='left')
     from .manual import open_editor
-    ui.Button(bar,text='Word manual',width=120,command=lambda:app._guard(lambda:open_editor(app,'word'))).pack(side='left',padx=4)
-    ui.Button(bar,text='Restaurar automático',width=150,command=lambda:app._guard(lambda:set_decision('auto'))).pack(side='left',padx=5)
-    app.generate_word_button=ui.Button(bar,text='Generar Word',width=135,command=lambda:app._guard(app._generate_words))
-    app.generate_word_button.pack(side='right')
-    ui.Button(bar,text='Abrir Word',width=95,command=lambda:app._guard(lambda:app._open(app.last_word))).pack(side='right',padx=5)
+    from .word_preview import preview
+    lines=[ui.Frame(page),ui.Frame(page)]
+    for line in lines:line.pack(fill='x',pady=2)
+    app.resolution_groups={}
+    def group(title,line=1):
+        frame=ui.Frame(lines[line]);frame.pack(side='left',fill='y',padx=(0,14))
+        ui.Label(frame,text=title,text_color=ui.MUTED).pack(anchor='w')
+        row=ui.Frame(frame);row.pack(anchor='w')
+        app.resolution_groups[title]=row
+        return row
+    prepare=group('1 Preparar',0)
+    app.manual_word=tk.StringVar(value=KIND_LABELS['PC_IE'])
+    app.word_type_box=ui.Combobox(prepare,textvariable=app.manual_word,values=[KIND_LABELS[k] for k in KINDS],state='readonly',width=30)
+    app.word_type_box.pack(side='left')
+    ui.Button(prepare,text='Aplicar tipo',width=95,command=lambda:app._guard(app._assign_word_type)).pack(side='left',padx=4)
+    ui.Button(prepare,text='Agregar desde Trabajo',width=145,command=lambda:app._guard(app._add_words)).pack(side='left')
+    ui.Button(prepare,text='Preparar / actualizar proyectos',width=205,command=lambda:app._guard(app._prepare_words)).pack(side='left',padx=4)
+    review=group('2 Revisar')
+    ui.Button(review,text='Vista PDF',width=90,fg_color='transparent',border_width=1,command=lambda:app._guard(lambda:preview(app))).pack(side='left')
+    ui.Button(review,text='Restaurar automático',width=150,fg_color='transparent',border_width=1,command=lambda:app._guard(lambda:set_decision('auto'))).pack(side='left',padx=4)
+    generate=group('3 Generar')
+    app.generate_word_button=ui.Button(generate,text='Generar Word',width=135,command=lambda:app._guard(app._generate_words))
+    app.generate_word_button.pack(side='left')
+    ui.Button(generate,text='Abrir Word',width=95,command=lambda:app._guard(lambda:app._open(app.last_word))).pack(side='left',padx=4)
+    more_row=group('Más')
+    app.resolution_more_menu=menu=tk.Menu(page,tearoff=False,font=('Segoe UI',11))
+    def theme_menu():
+        dark=ctk.get_appearance_mode()=='Dark'
+        menu.configure(bg='#2b2b2b' if dark else '#ffffff',fg='#f2f2f2' if dark else '#1f1f1f',
+                       activebackground='#1f6aa5',activeforeground='#ffffff')
+    menu.add_command(label='Word manual',command=lambda:app._guard(lambda:open_editor(app,'word')))
+    menu.add_command(label='Quitar del lote',command=lambda:app._guard(lambda:set_decision('none')))
+    def show_more():
+        theme_menu()
+        try:menu.tk_popup(app.resolution_more_button.winfo_rootx(),app.resolution_more_button.winfo_rooty()+app.resolution_more_button.winfo_height())
+        finally:menu.grab_release()
+    app.resolution_more_button=ui.Button(more_row,text='Más ▾',width=70,fg_color='transparent',border_width=1,command=show_more)
+    app.resolution_more_button.pack(side='left')
     filters=ui.Frame(page);filters.pack(fill='x',pady=5)
     app.resolution_search=tk.StringVar();app.resolution_filter=tk.StringVar(value='Todos')
     app.resolution_search_entry=ui.Entry(filters,textvariable=app.resolution_search,width=28,placeholder_text='Buscar causa o persona')
@@ -70,7 +95,6 @@ def build(app):
     app.words.bind('<<TreeviewSelect>>',select)
     tabs=ui.Notebook(right);tabs.pack(fill='both',expand=True)
     text=ui.Frame(tabs);tabs.add(text,text='Texto')
-    from .word_preview import preview
     ui.Button(text,text='Vista PDF del Word generado',command=lambda:app._guard(lambda:preview(app))).pack(anchor='w',pady=4)
     ui.Label(text,text='Texto editable · revisa el formato final en Word',text_color=ui.MUTED).pack(anchor='w')
     app.project_editor=ui.Textbox(text,wrap='word',height=18,font=('Segoe UI',11),undo=True);app.project_editor.pack(fill='both',expand=True)

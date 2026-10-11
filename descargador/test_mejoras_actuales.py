@@ -1,14 +1,11 @@
 from datetime import date
-from pathlib import Path
-import threading,time
+import threading
 import unittest
 from preferencias import Preferences
 from lotes import Batch,Dates
 from pausa import PauseGate
 from motor import PocError
 from flujo_csmp import plan
-from test_resultados import fixture
-from resultados import export_ics,load_lot
 from test_lotes import CATALOG
 
 

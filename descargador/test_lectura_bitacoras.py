@@ -8,10 +8,11 @@ from pathlib import Path
 import pytest
 from perfiles import Selection,selection_profile
 from lotes import Batch
-from lectura_bitacoras import DiaryRunner,MANIFEST
+from lectura_bitacoras import DiaryRunner
 from test_lotes import CATALOG,FakeBridge,document
 from test_vinculos import listing
 from csmp_shared import parser
+from contrato_integral import VERSION
 
 def popup(params,wrong=False):
     from nurus.bitacora_html import HEADERS
@@ -164,8 +165,8 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     assert data['tipo']=='BITACORAS_DIAGNOSTICO_ANONIMO'
     assert data['estados']=={'SIN_VINCULO':2}
     assert data['registros']==2
-    assert data['descargador_version'] in ('NO_VERIFICADA','2.7.5')
-    assert data['extension_version']=='2.7.5'
+    assert data['descargador_version'] in ('NO_VERIFICADA',VERSION)
+    assert data['extension_version']==VERSION
     assert data['descargador_commit']=='NO_VERIFICADO' or len(data['descargador_commit'])==40
     assert data['diagnosticos_sin_vinculo']['SIN_ACCION_OBSERVACIONES']==2
     assert data['consultas'][0]['registros']==2
@@ -182,7 +183,6 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
 
 
 def test_extension_declared_version_matches_manifest():
-    import re
     from contrato_integral import VERSION
     folder=Path(__file__).parent/'extension'
     manifest=json.loads((folder/'manifest.json').read_text(encoding='utf-8'))

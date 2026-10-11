@@ -1,8 +1,6 @@
 """Control de una sesion Chrome. Todos los datos de sesion permanecen en memoria."""
 from dataclasses import dataclass
-from pathlib import Path
 import re
-import threading
 from urllib.parse import urlencode, urlsplit
 
 import motor as m

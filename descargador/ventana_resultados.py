@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import filedialog,messagebox,ttk
 
 import motor as m
-from resultados import load_lot,export_book,export_csv,export_ics,export_zip,compare_lots,inside,read_json,tables,compatibility
+from resultados import load_lot,export_book,export_csv,export_ics,export_zip,compare_lots,inside,tables,compatibility
 
 
 class MissingDiariesWindow(tk.Toplevel):
@@ -114,7 +114,6 @@ class ResultsWindow(tk.Toplevel):
         ttk.Button(row,text='Excel bitácoras autónomo…',command=self.diary_excel).pack(side='left',padx=(0,6))
         ttk.Button(row,text='Crear paquete para Asistente (ZIP)…',command=self.capture_package).pack(side='left',padx=(0,6))
         ttk.Button(row,text='Ver descarga conjunta…',command=self.show_joint).pack(side='left',padx=(0,6))
-        ttk.Button(row,text='Abrir solicitud de antecedentes…',command=self.open_request).pack(side='left',padx=(0,6))
         self.collection=tk.StringVar()
         ttk.Label(self,textvariable=self.collection,wraplength=1050).pack(fill='x',padx=12,pady=4)
         ttk.Button(self,text='Archivar o borrar lotes antiguos',command=self.manage_old_batches).pack(anchor='w',padx=12,pady=4)
@@ -343,14 +342,6 @@ class ResultsWindow(tk.Toplevel):
             if items and items[0].get('archivo'):open_local(inside(self.lot.folder,items[0]['archivo']))
         self.safe(action)
     def csmp(self):self.safe(lambda:self.start(lambda:export_book([self.lot],csmp=True)))
-
-    def open_request(self):
-        if self.busy:return
-        path=filedialog.askopenfilename(parent=self,title='Solicitud declarativa del Asistente',filetypes=[('Solicitud local','*.json')])
-        if not path:return
-        from solicitud_antecedentes import summarize_request
-        try:messagebox.showinfo('Antecedentes solicitados',summarize_request(path),parent=self)
-        except (ValueError,OSError) as exc:self.status.set(str(exc))
 
     def diary_excel(self):
         if self.busy:return

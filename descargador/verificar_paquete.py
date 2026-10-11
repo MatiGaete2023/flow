@@ -1,7 +1,7 @@
 """Comprobación del ejecutable y su extensión, sin sesión ni datos del usuario."""
 from pathlib import Path
 from hashlib import sha256
-import gc,json,sys,re
+import gc,json,sys
 import shutil
 import tkinter as tk
 from uuid import uuid4
@@ -12,7 +12,7 @@ def check(destination):
     import motor as m
     from collections import Counter
     from dataclasses import replace
-    import xlrd,openpyxl,reportlab
+    import xlrd,openpyxl,reportlab  # noqa: F401  (comprueba que el paquete trae estas dependencias)
     try:from _build_meta import BUILD_COMMIT,BUILD_VERSION
     except ImportError:BUILD_COMMIT=BUILD_VERSION='unknown'
     destination=Path(destination).resolve();destination.parent.mkdir(parents=True,exist_ok=True)

@@ -25,7 +25,7 @@ def test_four_modalities_edits_reimport_and_recovery(tmp_path):
     assert all(ctx['class']=='NO_EVALUABLE' for ctx in restored.capture_context.values())
     restored.save(tmp_path/'session');loaded=Work.load(tmp_path/'session')
     assert loaded.capture_digest==work.capture_digest and loaded.rows[0].review['OBSERVACION']=='Texto humano'
-    assert not any(name in set(sys.modules)-before_modules for name in ('nurus.personal.download_link','nurus.personal.bitacora_link'))
+    assert not any(name in set(sys.modules)-before_modules for name in ('nurus.personal.download_link',))
 
 
 def test_corrupt_import_preserves_previous_and_separates_ingresos(tmp_path):

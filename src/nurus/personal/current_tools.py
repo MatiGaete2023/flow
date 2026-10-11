@@ -1,7 +1,6 @@
 """Herramientas del trabajo actual: pendientes, revisión, diagnóstico y entrega."""
 from pathlib import Path
-import json, os, sys, zipfile
-from datetime import datetime
+import json, os, sys
 from tkinter import messagebox, filedialog
 from .outputs import emails, CC, draft_fingerprint
 from .product_state import stale

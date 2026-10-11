@@ -11,7 +11,7 @@ import unicodedata
 from urllib.parse import urlencode,unquote_plus
 
 import motor as m
-from perfiles import Selection,TABS,response_profile,selection_profile
+from perfiles import Selection,response_profile,selection_profile
 from evidencias import screenshot_pdf
 
 MODALITIES={'1':'Residencia','2':'Ambulatorio','3':'FAE','4':'DCE'}

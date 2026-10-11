@@ -4,6 +4,45 @@ from . import ui
 from .widgets import CaseDetailPanel, ScrollPane
 from .record_view import RecordForm
 
+WORK_COLUMNS=('Estado','Observación','RIT','Nombre','Programa','Tribunal')
+WORK_WIDTHS={'Estado':110,'Observación':260,'RIT':85,'Nombre':180,'Programa':160,'Tribunal':95}
+
+
+class ObservationTip:
+    """Muestra el texto completo de la observación al pasar el cursor por su celda."""
+    def __init__(self,tree,column='Observación'):
+        self.tree=tree;self.column=column;self.tip=None;self.cell=None;self.text=''
+        tree.bind('<Motion>',self.motion,add='+');tree.bind('<Leave>',self.hide,add='+')
+
+    def text_at(self,x,y):
+        iid=self.tree.identify_row(y);col=self.tree.identify_column(x)
+        if not iid or not col.startswith('#'):return None,''
+        shown=self.tree['displaycolumns']
+        names=self.tree['columns'] if tuple(shown) in (('#all',),('',)) or not shown else shown
+        index=int(col[1:])-1
+        if not 0<=index<len(names) or names[index]!=self.column:return None,''
+        return (iid,col),str(self.tree.set(iid,self.column) or '')
+
+    def motion(self,event):
+        cell,text=self.text_at(event.x,event.y)
+        if cell==self.cell:return
+        self.hide();self.cell=cell;self.text=text
+        if not cell or not text.strip():return
+        try:
+            self.tip=tk.Toplevel(self.tree);self.tip.wm_overrideredirect(True)
+            self.tip.wm_geometry(f'+{self.tree.winfo_rootx()+event.x+16}+{self.tree.winfo_rooty()+event.y+18}')
+            tk.Label(self.tip,text=text,justify='left',wraplength=520,background='#fffbe6',foreground='#202020',
+                     relief='solid',borderwidth=1,font=('Segoe UI',10)).pack(ipadx=6,ipady=4)
+        except tk.TclError:
+            self.tip=None
+
+    def hide(self,event=None):
+        if self.tip:
+            try:self.tip.destroy()
+            except tk.TclError:pass
+        self.tip=None
+        if event is not None:self.cell=None;self.text=''
+
 
 def build(app):
     page=app.pages['Trabajo']
@@ -22,7 +61,8 @@ def build(app):
         if top.winfo_manager():top.pack_forget()
         else:top.pack(fill='x',after=bar,pady=5)
     ui.Button(bar,text='Archivo / opciones',width=145,command=toggle_file).pack(side='left',padx=5)
-    ui.Button(bar,text='Importar paquete',width=130,command=lambda:app._guard(app._import_capture)).pack(side='left',padx=5)
+    ui.Button(bar,text='Importar paquete',width=130,command=lambda:app._guard(app._import_capture)).pack(side='left',padx=(5,2))
+    ui.Button(bar,text='Último',width=60,fg_color='transparent',border_width=1,command=lambda:app._guard(app._import_latest_capture)).pack(side='left',padx=(0,5))
     ui.Button(bar,text='Actualizar Excel · F5',width=145,fg_color='transparent',border_width=1,command=lambda:app._guard(app._refresh)).pack(side='left')
     app.work_primary_button=ui.Button(bar,text='Procesar Excel',command=lambda:app._guard(app._export_current if app.work else app._process))
     app.work_primary_button.pack(side='right')
@@ -54,18 +94,34 @@ def build(app):
     app.work_search.trace_add('write',schedule)
     ui.Button(filters,text='Aviso anterior',width=95,command=lambda:app._next_incident(-1)).pack(side='left',padx=3)
     ui.Button(filters,text='Siguiente aviso',width=110,command=lambda:app._next_incident(1)).pack(side='left')
-    app.records=app._tree(table,('Estado','RIT','Nombre','Tribunal','Programa','Observación'))
+    app.records=app._tree(table,WORK_COLUMNS)
     app.records.configure(height=5)
     columns=app.cfg.data.get('vista',{}).get('columnas_trabajo')
-    if columns and all(c in app.records['columns'] for c in columns):app.records.configure(displaycolumns=columns)
-    for name,width in [('Estado',110),('RIT',85),('Nombre',180),('Tribunal',95),('Programa',160),('Observación',220)]:
+    # La preferencia guarda qué columnas se ven; el orden siempre es el de WORK_COLUMNS.
+    if columns and all(c in WORK_COLUMNS for c in columns):app.records.configure(displaycolumns=[c for c in WORK_COLUMNS if c in columns])
+    for name,width in WORK_WIDTHS.items():
         app.records.column(name,width=width,minwidth=65)
-    app.records.tag_configure('excluded',background='#665220',foreground='#fff2cc')
+    app.observation_tip=ObservationTip(app.records)
+    # Excluidas: texto gris sobre fondo claro, distinguibles sin competir con los avisos.
+    app.records.tag_configure('excluded',background='#eeeeee',foreground='#7a7a7a')
     app.records.tag_configure('warning',background='#653b29',foreground='#ffe2cd')
     app.records.tag_configure('signed',background='#243c56',foreground='#ddebf7')
-    app.records.bind('<<TreeviewSelect>>',lambda event:None if app.busy or getattr(app,'rendering',False) else app._guard(app._detail))
-    footer=ui.Frame(edit);footer.pack(side='bottom',fill='x',pady=(5,0))
+    def editor_open():
+        return str(edit) in split.panes()
+    def unfold():
+        if not editor_open():
+            split.add(edit,weight=3);split.update_idletasks();fit();app.after_idle(fit)
+    def fold():
+        if editor_open() and str(table) in split.panes():split.forget(edit)
+    app.work_editor_open=editor_open;app._unfold_work_editor=unfold;app._fold_work_editor=fold
+    def selected(event):
+        if app.records.selection():unfold()
+        if not (app.busy or getattr(app,'rendering',False)):app._guard(app._detail)
+    app.records.bind('<<TreeviewSelect>>',selected)
+    # Las acciones quedan visibles aunque el editor esté plegado.
+    footer=ui.Frame(page);footer.pack(side='bottom',fill='x',pady=(5,0),before=split)
     def maximize():
+        if not editor_open():unfold();return
         if str(table) in split.panes():split.forget(table)
         else:
             split.insert(0,table,weight=2)
@@ -96,3 +152,5 @@ def build(app):
     split.bind('<Configure>',fit)
     split.bind('<Map>',lambda event:app.after_idle(fit))
     split.bind('<ButtonRelease-1>',remember)
+    # Editor plegado hasta que se selecciona una fila.
+    fold()
