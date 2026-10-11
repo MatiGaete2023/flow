@@ -142,8 +142,9 @@ class _Lectura:
     """Estado de una ejecución de DiaryRunner.run: carpeta, manifiesto, reutilización y contadores."""
 
     def __init__(self,runner,batch,destination,resume):
+        self.runner=runner;self.read=parser()  # parser() agrega src/ a sys.path; debe ir antes de importar nurus.
         from nurus.bitacora_html import visible_identity_warnings
-        self.runner=runner;self.read=parser();self.visible=visible_identity_warnings
+        self.visible=visible_identity_warnings
         self.old={};self.previous_records=[]
         if resume:
             self.folder=Path(resume).resolve();previous=load(self.folder/MANIFEST)
