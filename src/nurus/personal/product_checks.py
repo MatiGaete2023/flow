@@ -68,7 +68,7 @@ def check_products(work, drafts, projects):
             if work and stale(work, draft):
                 issues.append('Actualizar producto: cambiaron sus datos o plantilla')
             receipt = None
-            if work and addresses_valid and not any(not Path(p).is_file() for p in draft.attachments):
+            if work and work.receipts and addresses_valid and not any(not Path(p).is_file() for p in draft.attachments):
                 receipt = work.receipts.get(draft_fingerprint(draft))
             state = 'Por corregir' if issues else 'Listo para revisar'
             if receipt:
