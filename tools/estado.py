@@ -49,16 +49,21 @@ def aggregate(sources=SOURCES):
     found = sorted(p.stem for p in sources.glob("WP-*.json"))
     names = order + [wp for wp in found if wp not in order]
     packages = {}
+    missing = []
     for wp in names:
         path = sources / f"{wp}.json"
         if path.is_file():
             packages[wp] = json.loads(path.read_text(encoding="utf-8"))
+        else:
+            missing.append(wp)
     result = {}
     for key, value in data.items():
         result[key] = value
         if key == "conflictos_abiertos":
             result["paquetes"] = packages
     result.setdefault("paquetes", packages)
+    if missing:
+        result["_sin_archivo"] = missing  # se informa en validar y no se escribe en la vista
     return result
 
 
@@ -72,7 +77,7 @@ def dependencies(entry):
 
 
 def problems(state):
-    found = []
+    found = [f"{wp}: listado en orden_paquetes sin archivo de estado" for wp in state.get("_sin_archivo", [])]
     packages = state["paquetes"]
     for wp, entry in packages.items():
         if not WP_ID.match(wp):
@@ -98,8 +103,9 @@ def problems(state):
                 if kind == "funcional" and packages.get(dep, {}).get("estado") != "INTEGRADO":
                     found.append(f"{wp}: INTEGRADO con la dependencia {dep} sin integrar")
     for conflict in state.get("conflictos_abiertos", []):
-        if not conflict.get("respuesta") and not conflict.get("dueño"):
-            found.append(f"conflicto {conflict.get('id')}: sin dueño ni respuesta")
+        # Un conflicto abierto espera la respuesta del usuario: no es error. Sí lo es uno sin id o sin descripción.
+        if not conflict.get("id") or not conflict.get("descripcion"):
+            found.append(f"conflicto {conflict.get('id')!r}: falta id o descripción")
     return found
 
 
@@ -110,13 +116,20 @@ def main(argv=None):
     if args.accion == "dividir":
         print(f"{split()} paquetes en {SOURCES.relative_to(ROOT)}")
         return 0
+    if not (SOURCES / "global.json").is_file():
+        print(f"Faltan las fuentes en {SOURCES.relative_to(ROOT)}: ejecuta primero `python tools/estado.py dividir`.")
+        return 1
     state = aggregate()
     if args.accion == "agregar":
+        if state.get("_sin_archivo"):
+            print("No se regeneró: listados sin archivo:", ", ".join(state["_sin_archivo"]))
+            return 1
         VIEW.write_text(dump(state), encoding="utf-8")
         print(f"{VIEW.relative_to(ROOT)} regenerado ({len(state['paquetes'])} paquetes)")
         return 0
     issues = problems(state)
-    if VIEW.read_text(encoding="utf-8") != dump(state):
+    view = {k: v for k, v in state.items() if k != "_sin_archivo"}
+    if VIEW.read_text(encoding="utf-8") != dump(view):
         issues.insert(0, "ESTADO.json no coincide con las fuentes: ejecuta `python tools/estado.py agregar`")
     for issue in issues:
         print("-", issue)
