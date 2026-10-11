@@ -1108,6 +1108,25 @@
         "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2.",
         "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2."
       ]
+    },
+    "WP-80": {
+      "titulo": "Auditoría de código, correcciones y refactor",
+      "ola": 6,
+      "tipo": "M",
+      "depende_de": [],
+      "decisiones": [],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "11 de octubre de 2026",
+      "rama": "wp/80-auditoria",
+      "pr": null,
+      "verificacion": "PASA (verificar_wp.py, 11 de octubre de 2026)",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Pedido expreso del usuario (11 de octubre de 2026). Revisión y auditoría E3 por otra raíz de agente, también pedida por el usuario."
+      ]
     }
   },
   "traspasos": [
