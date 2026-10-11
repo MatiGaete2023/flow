@@ -57,3 +57,6 @@ SHA/archivos están preservados en el historial. No hay cambios pendientes exclu
 de las ramas inventariadas. No se declara revisión independiente ni aceptación real.
 El commit posterior solo modifica documentación/evidencia; el código coincide con el SHA medido.
 CI final, ejecutable e instalador: ver resultado observado en PR #33.
+
+El inventario excluye el alias simbólico origin/HEAD: no es una rama adicional.
+El conteo verificado de ramas reales es 45/45.
