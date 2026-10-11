@@ -14,10 +14,14 @@ class FaltaLock(RuntimeError):
 def lock_file():
     """Lock con hashes de la versión de Python en uso. Sin lock no se instala nada sin verificar."""
     platform='windows' if sys.platform=='win32' else 'linux'
-    lock=HERE.parent/'requirements'/f'{platform}-py{sys.version_info[0]}{sys.version_info[1]}.lock'
+    folder=HERE.parent/'requirements'
+    lock=folder/f'{platform}-py{sys.version_info[0]}{sys.version_info[1]}.lock'
+    if not folder.is_dir():
+        # Copia sin la raíz del repositorio: cambiar de Python no lo arregla (código 1, no 3).
+        raise RuntimeError('Falta la carpeta requirements junto al descargador: usa el ejecutable entregado o '
+                           'una copia completa del repositorio.')
     if not lock.is_file():
-        raise FaltaLock(f'Falta {lock.name}: usa el ejecutable entregado o una copia completa del repositorio '
-                           'con Python 3.12, 3.13 o 3.14.')
+        raise FaltaLock(f'Falta {lock.name}: esta versión de Python no tiene lock; usa Python 3.12, 3.13 o 3.14.')
     return lock
 
 
