@@ -158,7 +158,9 @@ def _annotation_values(record: dict, stage: str) -> tuple[str, str]:
         state = "REVISADO"
     else:
         state = "PENDIENTE"
-    return str(_safe_cell(record["edited_observation"])), state
+    # Texto crudo: la copia portable lo escribe literal con _write_text (sin apóstrofo visible; decisión del
+    # usuario del 11 de octubre de 2026); la nativa aplica _safe_cell, que Excel no muestra.
+    return str(record["edited_observation"]), state
 
 
 def _reviewed_fields(record: dict) -> dict[str, object]:
@@ -444,10 +446,10 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             writes["NURUS_REGLAS"].append((row, str(record["rule_ids_json"])))
             if 'NURUS_DECISIONES' in columns:
                 writes['NURUS_DECISIONES'].append((row, str(record.get('decisions_json', ''))))
-            writes[observation_title].append((row, observation))
+            writes[observation_title].append((row, _safe_cell(observation)))
             writes["NURUS_ESTADO_REVISION"].append((row, state))
             if stage == "proposal":
-                writes["OBSERVACION"].append((row, observation))
+                writes["OBSERVACION"].append((row, _safe_cell(observation)))
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
                     writes[title].append((row, _safe_cell(value)))
