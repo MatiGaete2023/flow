@@ -592,61 +592,69 @@ class ResultsWindow(tk.Toplevel):
                 if error:
                     self.status.set(error)
                     continue
-                if kind == 'load':
-                    self.lot, aptitudes = result
-                    self.detail.delete(*self.detail.get_children())
-                    for i, (q, manifest) in enumerate(self.lot.queries):
-                        self.detail.insert(
-                            '',
-                            'end',
-                            iid=str(i),
-                            values=(
-                                q['consulta'],
-                                manifest['estado'],
-                                sum(v['registros'] for v in manifest.get('archivos', [])),
-                                '; '.join(dict.fromkeys(aptitudes.get(q['consulta'], ['Sin registros']))),
-                            ),
-                        )
-                    self.status.set(
-                        ('INCOMPLETO · ' if self.lot.partial else '')
-                        + self.lot.folder.name
-                        + ' · Doble clic en una consulta para abrir su primer archivo verificado.'
-                    )
-                elif kind == 'diary_load':
-                    self.diary_capture = result
-                    self.detail.delete(*self.detail.get_children())
-                    for i, query in enumerate(result['queries']):
-                        self.detail.insert(
-                            '',
-                            'end',
-                            iid=str(i),
-                            values=(
-                                query['rit'] + ' · ' + query['persona'],
-                                query['coverage'],
-                                len(query['entries']),
-                                'Identidad de tribunal/causa/ingreso conservada',
-                            ),
-                        )
-                    self.status.set(
-                        f'{len(result["queries"])} ingresos recuperados de bitácoras anteriores. Excel bitácoras autónomo genera su consolidado sin Chrome.'
-                    )
-                elif kind == 'capture':
-                    self.status.set(
-                        'Paquete creado: '
-                        + str(result['path'])
-                        + ' · '
-                        + result['reuse']
-                        + ' Importa este ZIP en Trabajo → Importar paquete del Asistente.'
-                    )
-                else:
-                    self.status.set(
-                        'Creado: ' + ('; '.join(str(p) for p in result) if isinstance(result, list) else str(result))
-                    )
-                    if kind == 'csmp':
-                        self.launch_csmp(result)
+                try:
+                    self.show_result(kind, result)
+                except Exception as exc:
+                    # Un resultado que no se puede mostrar no detiene la cola ni deja la ventana ocupada.
+                    self.status.set(f'No se pudo completar la operación: {exc}')
         except queue.Empty:
             pass
-        self.after(100, self.poll)
+        finally:
+            self.after(100, self.poll)
+
+    def show_result(self, kind, result):
+        if kind == 'load':
+            self.lot, aptitudes = result
+            self.detail.delete(*self.detail.get_children())
+            for i, (q, manifest) in enumerate(self.lot.queries):
+                self.detail.insert(
+                    '',
+                    'end',
+                    iid=str(i),
+                    values=(
+                        q['consulta'],
+                        manifest['estado'],
+                        sum(v['registros'] for v in manifest.get('archivos', [])),
+                        '; '.join(dict.fromkeys(aptitudes.get(q['consulta'], ['Sin registros']))),
+                    ),
+                )
+            self.status.set(
+                ('INCOMPLETO · ' if self.lot.partial else '')
+                + self.lot.folder.name
+                + ' · Doble clic en una consulta para abrir su primer archivo verificado.'
+            )
+        elif kind == 'diary_load':
+            self.diary_capture = result
+            self.detail.delete(*self.detail.get_children())
+            for i, query in enumerate(result['queries']):
+                self.detail.insert(
+                    '',
+                    'end',
+                    iid=str(i),
+                    values=(
+                        query['rit'] + ' · ' + query['persona'],
+                        query['coverage'],
+                        len(query['entries']),
+                        'Identidad de tribunal/causa/ingreso conservada',
+                    ),
+                )
+            self.status.set(
+                f'{len(result["queries"])} ingresos recuperados de bitácoras anteriores. Excel bitácoras autónomo genera su consolidado sin Chrome.'
+            )
+        elif kind == 'capture':
+            self.status.set(
+                'Paquete creado: '
+                + str(result['path'])
+                + ' · '
+                + result['reuse']
+                + ' Importa este ZIP en Trabajo → Importar paquete del Asistente.'
+            )
+        else:
+            self.status.set(
+                'Creado: ' + ('; '.join(str(p) for p in result) if isinstance(result, list) else str(result))
+            )
+            if kind == 'csmp':
+                self.launch_csmp(result)
 
     def open_source(self):
         if self.diary_capture:
@@ -735,6 +743,8 @@ class ResultsWindow(tk.Toplevel):
         self.app.last_folder = self.folder
         try:
             JointWindow(self.app)
+        except (m.PocError, OSError, ValueError, KeyError) as exc:
+            self.status.set('No se pudo abrir el conjunto: ' + str(exc))
         finally:
             self.app.last_folder = previous
 
