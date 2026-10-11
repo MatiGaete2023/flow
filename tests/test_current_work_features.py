@@ -12,7 +12,7 @@ from nurus.personal.work import Work
 from nurus.personal.outputs import Draft, create_draft, CC
 from nurus.personal.roster import snapshot, generate
 from nurus.personal.manual import ManualContext, generate_word
-from nurus.personal.current_tools import summary, selected_zip, pending
+from nurus.personal.current_tools import summary, selected_zip
 from nurus.personal.work_tools import quality, deadlines, matching_contacts
 from current_fixture import source
 
