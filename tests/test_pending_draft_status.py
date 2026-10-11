@@ -68,3 +68,39 @@ def test_no_receipts_do_not_require_reading_attachment_bytes(work, tmp_path, mon
     draft = Draft('Ficticio', 'Contenido ficticio', to='a@example.test', attachments=[str(attachment)])
     monkeypatch.setattr(checks, 'draft_fingerprint', lambda draft: pytest.fail('No hay recibos que buscar'))
     assert ('Correo', draft.subject, 'Revisar y guardar borrador') in pending(work, [draft], [])
+
+
+@pytest.mark.parametrize('edit', ['subject', 'body', 'attachment'])
+def test_row_indicator_does_not_reuse_saved_key_after_draft_edit(work, tmp_path, edit):
+    from nurus.personal.ux_support import product_indicators
+    from nurus.personal.work import Row
+
+    row = Row('r1', 2, {}, '', [], [], [], False, {})
+    attachment = tmp_path / 'ficticio.txt'
+    attachment.write_text('antes', encoding='utf-8')
+    draft = Draft(
+        'Ficticio', 'Contenido ficticio', to='a@example.test', record_ids=[row.id], attachments=[str(attachment)]
+    )
+    draft.key = draft_fingerprint(draft)
+    work.receipts[draft.key] = {'kind': 'draft', 'state': 'created'}
+    assert 'Correo ✓' in product_indicators(work, row, [draft])
+    if edit == 'attachment':
+        attachment.write_text('otros', encoding='utf-8')
+    else:
+        setattr(draft, edit, getattr(draft, edit) + ' editado')
+    assert 'Correo ✓' not in product_indicators(work, row, [draft])
+    assert 'Correo preparado' in product_indicators(work, row, [draft])
+
+
+def test_row_indicator_stays_prepared_after_recipient_becomes_invalid(work):
+    from nurus.personal.ux_support import product_indicators
+    from nurus.personal.work import Row
+
+    row = Row('r1', 2, {}, '', [], [], [], False, {})
+    draft = Draft('Ficticio', 'Contenido ficticio', to='a@example.test', record_ids=[row.id])
+    draft.key = draft_fingerprint(draft)
+    work.receipts[draft.key] = {'kind': 'draft', 'state': 'created'}
+    draft.to = 'correo inválido'
+    indicators = product_indicators(work, row, [draft])
+    assert 'Correo ✓' not in indicators
+    assert 'Correo preparado' in indicators

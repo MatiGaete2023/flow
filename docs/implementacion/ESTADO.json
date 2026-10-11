@@ -1245,14 +1245,15 @@
       "tomado": "11 de octubre de 2026",
       "rama": "wp/82-pendientes-correo-20261011",
       "pr": null,
-      "verificacion": "Suite focal en curso; verificación completa pendiente",
+      "verificacion": "53 pruebas focales PASA; verificación completa posterior al indicador pendiente",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
         "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente.",
-        "Diez regresiones nuevas; siete fallaron antes de unificar y una antes de optimizar. Sin pruebas retiradas ni nuevos skips."
+        "Catorce regresiones nuevas; cuatro indicadores y siete casos del ayudante fallaron antes de corregir; una optimización falló antes de aplicarse. Sin pruebas retiradas ni nuevos skips.",
+        "pending() es ayudante legado sin llamadas GUI; G-4 visible corregido en ux_support.product_indicators."
       ]
     }
   },

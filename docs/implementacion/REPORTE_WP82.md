@@ -13,13 +13,18 @@ Se continúa el pendiente G-4 de WP-80, independiente de WP-81, en rama propia d
 | Contenido vacío y adjunto ausente no tenían su aviso concreto | Mostrar issues de la revisión común; no confundir existencia de recibo con producto utilizable |
 | Huella de cada adjunto se calculaba sin haber recibos | Omitir esa búsqueda cuando receipts está vacío, manteniendo la comprobación de existencia |
 
-Pendientes ya no mantiene un segundo criterio de correo guardado. Se conservan los pendientes de
+El indicador de fila calcula la identidad efectiva del borrador, incluso si conserva una key antigua;
+editar asunto/cuerpo/adjunto retira «Correo ✓». Un destinatario editado inválido deja «Correo preparado»
+sin bloquear la fila. Pendientes ya no mantiene un segundo criterio de correo guardado. Se conservan los pendientes de
 observaciones/Word y las categorías Contacto/Nómina/Correo. El estado confirmed/created sin problemas
 no solicita repetir; los recibos inciertos requieren comprobar Outlook, nunca repetición automática.
 
-Diez casos nuevos. Siete regresiones fallaron antes de unificar y la optimización falló antes de
+Catorce casos nuevos. Cuatro regresiones del indicador fallaron antes de corregir su clave. Siete regresiones fallaron antes de unificar y la optimización falló antes de
 aplicarse. Solo datos ficticios. No se modifica el guardado Outlook, la huella efectiva ni el bloqueo
 contra duplicados; no se introduce caché de adjuntos que pueda ocultar cambios de contenido.
+La búsqueda de llamadas confirmó que pending() es un ayudante legado sin lector GUI actual,
+aunque importado por pruebas previas. Se conserva su API sin presentar sus fallos como incidentes
+observados en la interfaz. El efecto visible de G-4 se corrige en ux_support.product_indicators.
 La optimización resuelve solo el caso sin recibos de G-5; el resto continúa pendiente.
 
 ## Verificación
