@@ -54,6 +54,12 @@ class CaptureExportTests(unittest.TestCase):
                 export_capture(lots, root / 'bad.zip')
             self.assertFalse((root / 'bad.zip').exists())
 
+    def test_egresados_tab_is_typed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            capture = read_capture(export_capture([load_lot(fixture(root / 'eg', mode='Egresados'))], root / 'e.zip'))
+            self.assertEqual({r['record_type'] for r in capture.rows('registros')}, {'EGRESADOS'})
+
 
 if __name__ == '__main__':
     unittest.main()
