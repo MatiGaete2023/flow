@@ -88,7 +88,9 @@ def test_preserved_export_uses_archived_bytes_and_marks_excluded(tmp_path):
         headers = [cell.value for cell in sheet[1]]
         observation = headers.index("NURUS_OBSERVACION_FINAL") + 1
         state = headers.index("NURUS_ESTADO_REVISION") + 1
-        assert sheet.cell(2, observation).value == "'=texto de prueba"
+        # Decisión del usuario (11 de octubre de 2026): texto literal sin apóstrofo visible, nunca fórmula.
+        assert sheet.cell(2, observation).value == "=texto de prueba"
+        assert sheet.cell(2, observation).data_type == "s"
         assert sheet.cell(2, state).value == "REVISADO"
         assert sheet.cell(3, state).value == "EXCLUIDO"
         rules = list(sheet.conditional_formatting)
