@@ -9,9 +9,18 @@ from csmp_shared import parser
 parser()
 from nurus.capture.contract import COMMON, TABLES, write_capture
 from nurus.capture.diaries import import_lotes, diary_paths
-from resultados import tables, table_mode, inside, headers_and_rows
+from resultados import tables, table_mode, inside, headers_and_rows, parse_day
 import motor as m
 from nurus.capture.coverage import aggregate
+
+
+def calendar_date(normalized):
+    """Fecha de vencimiento ISO de una fila de calendario de informes; vacía si no se reconoce."""
+    from nurus.rus.columns import map_columns
+
+    column = map_columns(list(normalized), 'INFORMES').get('vencimiento')
+    day = parse_day(normalized.get(column, '')) if column else None
+    return day.isoformat() if day else ''
 
 
 def literal(value):
@@ -198,7 +207,7 @@ def export_capture(
                         {
                             **common,
                             'calendar_id': 'cal-' + rid,
-                            'event_at': '',
+                            'event_at': calendar_date(normalized),
                             'event_type': 'INFORME',
                             'status': 'SEGUN_FUENTE',
                             'association': 'VERIFICADA' if verified else 'NO_ASOCIADO',

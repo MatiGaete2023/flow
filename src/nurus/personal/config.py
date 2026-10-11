@@ -306,7 +306,9 @@ class Configuration:
                 if scope.startswith('_'):
                     continue
                 for key, entry in entries.items():
-                    original = entry['texto']
+                    # El texto rev2 de las claves que cambiaron en rev3 es LEGACY_TEXTS_REV2, no la base actual;
+                    # rev3 lo migra después en el paso siguiente.
+                    original = LEGACY_TEXTS_REV2.get(scope + '.' + key, entry['texto'])
                     previous = (
                         original.replace('Se remite correo electrónico', 'Se sugiere remitir correo electrónico')
                         .replace('se remite correo electrónico', 'se sugiere remitir correo electrónico')

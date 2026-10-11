@@ -6,6 +6,8 @@ from .widgets import CaseDetailPanel, ScrollPane
 from .record_view import RecordForm
 
 WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro')
+# Columnas que existían antes de WP-50: una preferencia sin «columnas_conocidas» se guardó con estas.
+WORK_COLUMNS_BEFORE_WP50 = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal')
 WORK_WIDTHS = {
     'Estado': 110,
     'Observación': 260,
@@ -212,10 +214,13 @@ def build(app):
     ui.Button(filters, text='Siguiente aviso', width=110, command=lambda: app._next_incident(1)).pack(side='left')
     app.records = app._tree(table, WORK_COLUMNS)
     app.records.configure(height=5)
-    columns = app.cfg.data.get('vista', {}).get('columnas_trabajo')
-    # La preferencia guarda qué columnas se ven; el orden siempre es el de WORK_COLUMNS.
+    vista = app.cfg.data.get('vista', {})
+    columns = vista.get('columnas_trabajo')
+    # La preferencia guarda qué columnas se ven; el orden siempre es el de WORK_COLUMNS. Las columnas creadas
+    # después de guardarla (no conocidas entonces) se muestran: ocultarlas sería decidir por el usuario.
+    known = vista.get('columnas_conocidas') or WORK_COLUMNS_BEFORE_WP50
     if columns and all(c in WORK_COLUMNS for c in columns):
-        app.records.configure(displaycolumns=[c for c in WORK_COLUMNS if c in columns])
+        app.records.configure(displaycolumns=[c for c in WORK_COLUMNS if c in columns or c not in known])
     for name, width in WORK_WIDTHS.items():
         app.records.column(name, width=width, minwidth=65)
     app.observation_tip = ObservationTip(app.records)

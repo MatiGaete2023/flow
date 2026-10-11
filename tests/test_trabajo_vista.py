@@ -58,7 +58,15 @@ cfg=dict(app.cfg.data);cfg['vista']={'columnas_trabajo':['Estado','RIT','Nombre'
 app.cfg.save(cfg)
 for child in app.pages['Trabajo'].winfo_children():child.destroy()
 build(app);app.update()
-assert tuple(app.records['displaycolumns'])==('Estado','Observación','RIT','Nombre','Programa','Tribunal')
+# C4 (revisión integral): la columna creada después de guardar la preferencia se muestra.
+assert tuple(app.records['displaycolumns'])==('Estado','Observación','RIT','Nombre','Programa','Tribunal','Última obs. centro')
+from nurus.personal.work_view import WORK_COLUMNS
+cfg=dict(app.cfg.data);cfg['vista']={'columnas_trabajo':['Estado','RIT'],'columnas_conocidas':list(WORK_COLUMNS)}
+app.cfg.save(cfg)
+for child in app.pages['Trabajo'].winfo_children():child.destroy()
+build(app);app.update()
+# Una columna conocida y desmarcada por el usuario sigue oculta.
+assert tuple(app.records['displaycolumns'])==('Estado','RIT')
 from nurus.personal.commands import commands
 assert any('Preferencias de vista' in c.name for c in commands(app))
 """,
