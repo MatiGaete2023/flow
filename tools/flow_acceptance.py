@@ -25,7 +25,8 @@ def main():
     create.add_argument('--extension-version', required=True)
     create.add_argument('--case', choices=CASES, action='append')
     create.add_argument('--gate', choices=[f'G{i}' for i in range(14)], default='')
-    create.add_argument('--kind', choices=KINDS, default='INSTITUCIONAL')
+    # Vacío por defecto: el usuario elige el tipo de evidencia al ejecutar cada caso.
+    create.add_argument('--kind', choices=('', *KINDS), default='')
     check = commands.add_parser('validate', help='Valida estructura, no autenticidad de evidencias ni aceptación.')
     check.add_argument('input', type=Path)
     args = parser.parse_args()

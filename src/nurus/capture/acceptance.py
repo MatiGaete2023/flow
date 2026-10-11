@@ -101,7 +101,13 @@ def validate_acta(data):
             fail('tipo de campo inválido.')
         if record['case'] not in CASES or record['gate'] not in ('', *(f'G{i}' for i in range(14))):
             fail('caso/gate desconocido.')
-        if record['evidence_kind'] not in KINDS or record['result'] not in RESULTS:
+        if record['result'] not in RESULTS:
+            fail('tipo de evidencia/resultado desconocido.')
+        # Un caso no ejecutado puede dejar el tipo vacío: lo elige el usuario al ejecutarlo (los agentes no
+        # marcan nada como «institucional»). Todo caso ejecutado o NO_APLICA declara su tipo.
+        if record['evidence_kind'] not in KINDS and not (
+            record['evidence_kind'] == '' and record['result'] == 'NO_EJECUTADO'
+        ):
             fail('tipo de evidencia/resultado desconocido.')
         key = (record['case'], record['gate'], record['evidence_kind'])
         if key in seen:
@@ -185,7 +191,7 @@ def validate_acta(data):
     return data
 
 
-def template(artifact, *, cases=CASES, gate='', evidence_kind='INSTITUCIONAL'):
+def template(artifact, *, cases=CASES, gate='', evidence_kind=''):
     now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     data = {
         'schema_id': 'CSMP_ACCEPTANCE',
@@ -240,7 +246,8 @@ def summary(data):
         'source_commit': data['artifact']['source_commit'],
         'records': len(data['records']),
         'reported_results': {
-            kind: dict(Counter(r['result'] for r in data['records'] if r['evidence_kind'] == kind)) for kind in KINDS
+            kind or 'SIN_TIPO': dict(Counter(r['result'] for r in data['records'] if r['evidence_kind'] == kind))
+            for kind in ('', *KINDS)
         },
         'validation_scope': 'ESTRUCTURA_Y_COHERENCIA_DECLARADA',
         'gate_acceptance': 'PENDIENTE_REVISION_HUMANA',

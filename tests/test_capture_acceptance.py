@@ -35,7 +35,9 @@ def test_all_source_requirements_pending_and_no_implicit_acceptance():
     source = json.loads((Path(__file__).parents[1] / 'docs/evidencia_p0/requisitos.json').read_text(encoding='utf-8'))
     assert set(CASES) == {r['id'] for r in source} and len(CASES) == 115
     pending = summary(template(ARTIFACT))
-    assert pending['reported_results']['INSTITUCIONAL'] == {'NO_EJECUTADO': 115}
+    # La plantilla no marca ningún tipo de evidencia: lo elige el usuario al ejecutar cada caso.
+    assert pending['reported_results']['SIN_TIPO'] == {'NO_EJECUTADO': 115}
+    assert pending['reported_results']['INSTITUCIONAL'] == {}
     assert pending['gate_acceptance'] == 'PENDIENTE_REVISION_HUMANA'
 
 
@@ -44,7 +46,7 @@ def test_synthetic_windows_pass_is_separate_from_institutional_acceptance():
     data['records'].extend(template(ARTIFACT, cases=['INT-24'], gate='G6')['records'])
     report = summary(data)
     assert report['reported_results']['SINTETICA_WINDOWS'] == {'PASÓ': 1}
-    assert report['reported_results']['INSTITUCIONAL'] == {'NO_EJECUTADO': 1}
+    assert report['reported_results']['SIN_TIPO'] == {'NO_EJECUTADO': 1}
     assert report['gate_acceptance'] == 'PENDIENTE_REVISION_HUMANA'
 
 
@@ -133,7 +135,7 @@ def test_cli_creates_pending_acta_and_never_echoes_invalid_sensitive_input(tmp_p
         timeout=30,
     )
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)['reported_results']['INSTITUCIONAL'] == {'NO_EJECUTADO': 1}
+    assert json.loads(result.stdout)['reported_results']['SIN_TIPO'] == {'NO_EJECUTADO': 1}
     invalid = tmp_path / 'datos.json'
     invalid.write_text('{"secret":"NO_DEBE_IMPRIMIRSE"}', encoding='utf-8')
     rejected = subprocess.run(
@@ -149,7 +151,8 @@ def test_cli_creates_pending_acta_and_never_echoes_invalid_sensitive_input(tmp_p
 
 def test_no_aplica_has_reason_but_is_not_execution():
     data = template(ARTIFACT, cases=['D-T13'], gate='G9')
-    data['records'][0].update(result='NO_APLICA', limitations=['NO_APLICA_AL_ARTEFACTO'])
+    # Quien marca NO_APLICA declara también el tipo de evidencia.
+    data['records'][0].update(result='NO_APLICA', limitations=['NO_APLICA_AL_ARTEFACTO'], evidence_kind='INSTITUCIONAL')
     assert summary(data)['reported_results']['INSTITUCIONAL'] == {'NO_APLICA': 1}
 
 
@@ -161,3 +164,11 @@ def test_duplicate_json_keys_and_oversize_input_rejected(tmp_path):
     p.write_bytes(b' ' * (1024 * 1024 + 1))
     with pytest.raises(CaptureError):
         read_acta(p)
+
+
+def test_executed_case_requires_evidence_kind():
+    # Revisión integral D3: el tipo puede quedar vacío solo mientras el caso no se ejecuta.
+    data = executed()
+    data['records'][0]['evidence_kind'] = ''
+    with pytest.raises(CaptureError):
+        summary(data)
