@@ -201,5 +201,17 @@
     "WP-81",
     "WP-70"
   ],
-  "commit_integracion": "8ccdc5d"
+  "commit_integracion": "8ccdc5d",
+  "excepciones_e3": [
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Autorizar excepción E3 para #36–38",
+      "pr": [
+        36,
+        37,
+        38
+      ],
+      "alcance": "Solo WP-81, WP-82 y WP-83. No se extiende a #39, main ni releases."
+    }
+  ]
 }

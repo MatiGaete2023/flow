@@ -62,3 +62,11 @@ y demostrar golden17 antes de integrar. No eliminar motores, plantillas ni códi
 por parecer duplicado: comprobar alcanzabilidad, finalidad y decisiones pendientes.
 
 Motor/textos, restricciones de envío/registro, CC obligatorio y seis xfail estrictos se conservan.
+
+## Integración autorizada — 11 de octubre de 2026
+
+Usuario: «Autorizar excepción E3 para #36–38». Sin revisión ni auditoría de otra raíz;
+no se extiende a #39. Integrado en feat mediante c2a5d807578c69a506fe8f338f3fe69186367195; verificación posterior PASA
+(810/11/6 y 240/62), procedencia limpia/estable y línea base regenerada. La evidencia
+actual en verificacion/WP-81.json corresponde a esta medición; la evidencia previa se conserva
+en la historia de la rama del PR. Main y releases no autorizados antes del acta.
