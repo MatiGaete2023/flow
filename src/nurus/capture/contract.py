@@ -103,6 +103,11 @@ def check_workbook(raw):
                 if info.file_size/max(1,info.compress_size)>MAX_RATIO: fail('Expansión del consolidado excede límite.')
                 if low.endswith(('.html','.htm','.pdf','.bin','.exe','.dll')) or 'vbaproject' in low or low.startswith(('xl/embeddings/','xl/activex/')):
                     fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
+                if low.startswith(('xl/externallinks/','xl/querytables/')) or low=='xl/connections.xml':
+                    fail('El consolidado no puede traer vínculos ni conexiones a datos externos.')
+            types=book.read('[Content_Types].xml').decode('utf-8','ignore').casefold()
+            if 'macroenabled' in types or 'vbaproject' in types or 'activex' in types:
+                fail('El consolidado no puede incluir macros, objetos incrustados, HTML ni PDF.')
     except zipfile.BadZipFile as exc: raise CaptureError('El consolidado no es un libro xlsx.') from exc
 
 
