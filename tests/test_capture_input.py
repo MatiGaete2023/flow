@@ -188,3 +188,23 @@ def test_reimportar_sin_conflictos_rechaza_respuestas_ajenas_incluso_en_cache(tm
     with pytest.raises(ValueError, match='ajena o innecesaria'):
         import_capture(path, defaults(), as_of=date(2026, 10, 8), previous=previous, resolutions={'r0': 'RESET'})
     assert previous.__dict__ == before
+
+
+def test_unrequested_sources_are_not_reported_as_missing(tmp_path):
+    # F2 (revisión integral): calendarios/historia/documentos NO_SOLICITADA no son fuentes faltantes.
+    m, t = fixture()
+    work = import_capture(write_capture(tmp_path / 'c.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    assert {v for v in m['table_states'].values()} >= {'NO_SOLICITADA'}
+    assert not any(w.startswith('Fuentes faltantes') for w in work.warnings)
+
+
+def test_egresados_group_adds_no_false_column_warning(tmp_path):
+    # F3: un grupo solo de EGRESADOS no pasa por el motor; sin aviso de columnas funcionales ausentes.
+    m, t = fixture()
+    record = t['registros'][0]
+    raw = {k: v for k, v in json.loads(record['normalized_json']).items() if k != 'T ESPERA'}
+    record.update(record_type='EGRESADOS', raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    work = import_capture(write_capture(tmp_path / 'e.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    assert not any('Columnas funcionales ausentes' in w for w in work.warnings)
+    egresado = next(row for row in work.rows if row.id == record['record_id'])
+    assert 'Tipo de fuente fuera del motor tradicional; no evaluado.' in egresado.warnings

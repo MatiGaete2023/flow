@@ -136,6 +136,8 @@ def test_con_registros_en_varias_hojas_o_duplicados_no_hay_base_y_queda_portable
         destino = carpeta / 'copia.xlsx'
         work.export(destino)
         assert load_workbook(destino).sheetnames[0] == 'Trabajo'
+        # F1 (revisión integral): el descarte del consolidado se informa, como promete el manual.
+        assert 'fidelidad reducida' in work.export_notice
 
 
 def test_paquete_sin_consolidado_sigue_igual(tmp_path):
@@ -145,6 +147,8 @@ def test_paquete_sin_consolidado_sigue_igual(tmp_path):
     destino = tmp_path / 'copia.xlsx'
     work.export(destino)
     assert load_workbook(destino).sheetnames[0] == 'Trabajo'
+    # Sin consolidado no hay nada descartado: no se avisa.
+    assert work.export_notice == ''
 
 
 def test_reimportar_el_mismo_paquete_movido_conserva_la_base_y_ediciones(tmp_path):

@@ -30,6 +30,9 @@ for columns in MODE_COLUMNS.values():
 MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite agregado del contrato.
 
 
+# Tipos de registro que evalúa el motor tradicional; EGRESADOS/OTRO quedan sin evaluar.
+ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -115,7 +118,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             progress('Relacionando fuentes por ingreso', number - 1, len(records))
         raw = json.loads(record['normalized_json'])
         mode = record['record_type']
-        if mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+        if mode not in ENGINE_TYPES:
             mode = 'ESPERA'
         mapping = map_columns(raw, mode)
         values = {CANONICAL[key]: raw[column] for key, column in mapping.items()}
@@ -198,11 +201,13 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             source_bytes=content,
         )
         analyzed = Work(config).analyze(path, mode, as_of=as_of, batch=batch, cross_by_record=cross)
-        candidate.warnings.extend(analyzed.warnings)
+        # Un grupo solo de EGRESADOS/OTRO no pasa por el motor: sus avisos de columnas serían falsos.
+        if any(record['record_type'] in ENGINE_TYPES for record, _, _, _ in items):
+            candidate.warnings.extend(analyzed.warnings)
         candidate.cross_dates.update(analyzed.cross_dates)
         for row in analyzed.rows:
             record = provenance[row.id]
-            if record['record_type'] not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+            if record['record_type'] not in ENGINE_TYPES:
                 row.observation = ''
                 row.rules = []
                 row.actions = []
@@ -233,8 +238,11 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     from .capture_findings import updated_contexts
 
     candidate.capture_context = updated_contexts(candidate, candidate.rows)
+    # NO_SOLICITADA no falta: el usuario no pidió esa fuente (p. ej. bitácoras de un lote sin lectura).
     missing = [
-        k + ': ' + v for k, v in capture.manifest['table_states'].items() if v not in ('COMPLETA', 'VACIA_COMPROBADA')
+        k + ': ' + v
+        for k, v in capture.manifest['table_states'].items()
+        if v not in ('COMPLETA', 'VACIA_COMPROBADA', 'NO_SOLICITADA')
     ]
     if missing:
         candidate.warnings.append('Fuentes faltantes: ' + ', '.join(missing))
