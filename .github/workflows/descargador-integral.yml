@@ -1,9 +1,18 @@
 name: Descargador integral y bitácoras
 on:
-  push:
-    branches: ['feat/**', main]
   pull_request:
     branches: ['feat/**']
+    paths:
+      - 'src/**'
+      - 'descargador/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'contracts/**'
+      - 'installer/**'
+      - '*.spec'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 # Una corrida nueva del mismo evento y rama cancela la anterior. El evento va en el grupo
@@ -15,6 +24,7 @@ permissions:
   contents: read
 jobs:
   descargador:
+    timeout-minutes: 20
     runs-on: windows-latest
     defaults:
       run:
@@ -41,9 +51,9 @@ jobs:
         run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
       - run: python -m pytest -q -p no:cacheprovider
       - run: node test_bitacoras_extension.cjs
-      # E4: pruebas unitarias en PR; Playwright y PyInstaller al integrar o a pedido.
+      # E4: pruebas unitarias en PR; Playwright solo en candidato explícito.
       - name: Extensión y servidor ficticios
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           python -m playwright install chromium
           if ($LASTEXITCODE -ne 0) { throw 'Falló Chromium de pruebas' }
@@ -51,23 +61,4 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Falló la lectura ficticia desde la extensión' }
           python verificar_pdf_extension.py
           if ($LASTEXITCODE -ne 0) { throw 'Falló la evidencia PDF con extensión real' }
-      - name: Ejecutable y contrato compartido
-        if: github.event_name != 'pull_request'
-        run: |
-          python ../tools/write_build_meta.py --descargador .
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del paquete' }
-          python -m PyInstaller --noconfirm SITFA_Descargador.spec
-          if ($LASTEXITCODE -ne 0) { throw 'Falló el empaquetado' }
-          . ../tools/windows_process_check.ps1
-          Invoke-CheckedProcess -FilePath (Resolve-Path dist/SITFA_Descargador/SITFA_Descargador.exe).Path -Arguments @('--verificar-paquete','artifacts/package-check.json') -Label 'EXE Descargador'
-          $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
-          if (-not $proof.ok -or -not $proof.bitacora_button_verified -or -not $proof.shared_bitacora_parser_verified -or -not $proof.capture_v1_verified) { throw 'Paquete incompleto' }
-      - uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
-        with:
-          retention-days: 14
-          name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows
-          path: |
-            descargador/dist/SITFA_Descargador/
-            descargador/artifacts/dependencies.json
-          if-no-files-found: error
+      # El integral del workflow tests.yml construye y verifica ambos EXE una sola vez.

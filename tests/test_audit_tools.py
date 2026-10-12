@@ -181,7 +181,6 @@ def test_heavy_ci_steps_run_after_integration_and_skip_pr():
         'Build and verify Windows installer',
         'Verificar lector y empaquetado integral SITFA',
         'Extensión y servidor ficticios',
-        'Ejecutable y contrato compartido',
     }
     found = set()
     for workflow in ['tests.yml', 'descargador-integral.yml']:
@@ -194,7 +193,7 @@ def test_heavy_ci_steps_run_after_integration_and_skip_pr():
             condition = next(
                 line.strip().removeprefix('if: ') for line in block.splitlines() if line.strip().startswith('if: ')
             )
-            for event, expected in [('pull_request', False), ('push', True), ('workflow_dispatch', True)]:
+            for event, expected in [('pull_request', False), ('push', False), ('workflow_dispatch', True)]:
                 expression = (
                     condition.replace('github.event_name', repr(event))
                     .replace('matrix.python', repr('3.12'))
@@ -367,3 +366,27 @@ def test_unknown_xml_encoding_fails_with_sanitized_diagnostic(tmp_path, identity
     assert marker not in output.out + output.err
     assert identity not in output.out + output.err
     assert 'Traceback' not in output.out + output.err
+
+
+def test_ci_budget_has_no_automatic_windows_build_or_duplicate_exe():
+    root = Path(__file__).resolve().parents[1]
+    for name in ['tests.yml', 'descargador-integral.yml']:
+        source = (root / '.github/workflows' / name).read_text()
+        events = source.split('permissions:')[0].split('concurrency:')[0]
+        assert '  push:' not in events
+        assert "branches: ['feat/**']" in events and '    paths:' in events
+        assert 'timeout-minutes:' in source
+        assert 'python -m PyInstaller' not in source
+    assistant = (root / '.github/workflows/tests.yml').read_text()
+    assert assistant.count('./tools/build_integral.ps1') == 1
+    assert 'path: dist/integral/CSMP_Integral/' in assistant
+    assert 'path: dist/integral/SITFA_Descargador/' in assistant
+    assert 'retention-days: 90' not in assistant
+    linux = (root / '.github/workflows/ci-rapida.yml').read_text()
+    assert 'requirements/linux-py312.lock' in linux
+    assert linux.index('python tools/check_real_ids.py') < linux.index('python -m pip install')
+    assert 'python tools/estado.py validar' in linux
+    assert 'python tools/check_links.py' in linux
+    assert 'git diff --name-only "$BASE_SHA" HEAD' in linux
+    assert 'xvfb-run -a python -m pytest -q tests' in linux
+    assert 'xvfb-run -a python -m pytest -q descargador' in linux

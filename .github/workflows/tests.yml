@@ -1,16 +1,20 @@
 name: CSMP Assistant Windows
 
 on:
-  # Las ramas wp/** se prueban en su PR; el push solo corre en las ramas de integración.
-  push:
-    branches:
-      - main
-      - 'feat/**'
-  # E4: todo PR corre la CI mínima (3.12), también feat → main, que prueba la fusión con main.
+  # E4 revisada: código en PR; entrega completa solo bajo demanda.
   pull_request:
-    branches:
-      - main
-      - 'feat/**'
+    branches: ['feat/**']
+    paths:
+      - 'src/**'
+      - 'descargador/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'contracts/**'
+      - 'installer/**'
+      - '*.spec'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
@@ -24,12 +28,13 @@ concurrency:
 
 jobs:
   test:
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
         # Presupuesto de minutos Windows: cada PR corre 3.12; la matriz completa corre al
-        # integrar (push a feat/** o main) y a pedido (workflow_dispatch).
+        # validar candidato a pedido (workflow_dispatch).
         python: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.12","3.13","3.14"]') }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -135,9 +140,9 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: ignore
 
-      # E4: distribuciones, ejecutables e instaladores se producen al integrar o a pedido.
+      # E4: distribuciones, ejecutables e instaladores solo en candidato explícito.
       - name: Build Windows distribution
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         shell: pwsh
         run: |
           @'
@@ -169,30 +174,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Falló la selección segura de archivos fuente' }
 
       - name: Source distribution
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
           retention-days: 14
           path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
 
-      - name: Windows executable
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
-        timeout-minutes: 10
-        run: |
-          . ./tools/windows_process_check.ps1
-          python -c "import PyInstaller"
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del empaquetador' }
-          python tools/write_build_meta.py
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la identificación del ejecutable CSMP' }
-          python -m PyInstaller --noconfirm CSMP_Experimental.spec
-          if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del ejecutable CSMP' }
-          Invoke-CheckedProcess -FilePath (Resolve-Path dist/CSMP_Integral/CSMP_Integral.exe).Path -Arguments @('--verificar-paquete','artifacts/package-check.json') -Label 'EXE autónomo CSMP'
-          $proof = Get-Content artifacts/package-check.json -Raw | ConvertFrom-Json
-          if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
-
       - name: Verificar lector y empaquetado integral SITFA
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         timeout-minutes: 15
         shell: pwsh
         # pip check ya corrió en este job; pruebas del Descargador y de la extensión: workflow descargador-integral.
@@ -200,22 +190,41 @@ jobs:
           ./tools/build_integral.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Falló paquete CSMP-Descargador' }
 
+      - name: Windows executable
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        shell: pwsh
+        run: |
+          $proof = Get-Content dist/integral/VERIFICACION_CSMP.json -Raw | ConvertFrom-Json
+          if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
+          $downloader = Get-Content dist/integral/VERIFICACION_DESCARGADOR.json -Raw | ConvertFrom-Json
+          if (-not $downloader.ok -or -not $downloader.bitacora_button_verified -or -not $downloader.shared_bitacora_parser_verified -or -not $downloader.capture_v1_verified) { throw 'Paquete Descargador incompleto' }
+          Copy-Item dist/integral/VERIFICACION_CSMP.json artifacts/package-check.json
+
+      - name: Descargador executable artifact
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows
+          retention-days: 14
+          path: dist/integral/SITFA_Descargador/
+          if-no-files-found: error
+
       - name: Artefacto integral CSMP y Descargador
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
-          retention-days: 90
+          retention-days: 30
           path: dist/integral/
           if-no-files-found: error
 
       - name: Executable artifact
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
           retention-days: 14
-          path: dist/CSMP_Integral/
+          path: dist/integral/CSMP_Integral/
           if-no-files-found: error
 
       - name: Wheel artifact
@@ -229,11 +238,11 @@ jobs:
             requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
 
       - name: Measure native table redraws
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         run: python tools/benchmark_interface.py --rows 1000 10000 --repeats 10
 
       - name: Build and verify Windows installer
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         timeout-minutes: 10
         shell: pwsh
         run: |
@@ -257,7 +266,7 @@ jobs:
           Invoke-InstallerVerification -Installer $installer.FullName -ExpectedSourceCommit $expectedCommit -Destination $destination -EvidenceDirectory 'artifacts'
 
       - name: Installer diagnostics
-        if: always() && github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: always() && github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Installer-diagnostics
@@ -271,11 +280,11 @@ jobs:
           if-no-files-found: ignore
 
       - name: Installer and measurements
-        if: github.event_name != 'pull_request' && matrix.python == '3.12'
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
-          retention-days: 90
+          retention-days: 30
           path: |
             dist/Instalar_CSMP_*_Windows.exe
             artifacts/performance.json

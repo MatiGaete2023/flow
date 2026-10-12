@@ -16,7 +16,7 @@ El estado de los WP vive en `estado/*.json`, agregado en [ESTADO.json](ESTADO.js
 | Flujo integrado / WP-88 | Autoexportar tras importar; consulta y paquete en un paso; preferencia XLSX única; retiro de campo firmas; intermedios en respaldo; lanzador con dos modos. Se comprobó que faltaban en e91e360; el usuario autorizó completarlos en WP-88. | Integrado en WP-88/#42; uso real y Windows pendientes |
 | UX-02 | Asistente: extender barra existente a cuatro etapas y siguiente acción; jerarquía contextual; vacíos y resultados persistentes; contratos de widget intactos. | Integrado en WP-88/#42; uso real y Windows pendientes |
 | UX-03 | Descargador: grupos principal/lote/avanzado, pausa visible, progreso con ETA honesta y ruta final accesible. | Integrado en WP-88/#42; uso real y Windows pendientes |
-| EF-01 | CI rápida separada de construcción, documentos de continuación generados y reutilización segura de mediciones. Validar links/estado en documentación; Windows en candidato y cambios nativos. | Propuesta a implementar; workflows actuales siguen vigentes |
+| EF-01 | CI rápida separada de construcción, documentos de continuación generados y reutilización segura de mediciones. Validar links/estado en documentación; Windows en candidato y cambios nativos. | CI en WP-89; generación de continuación y reutilización segura de mediciones siguen pendientes |
 | EF-02 | Medir edición/exportación con datos sintéticos; reducir duplicación y cálculo conservando dependencias y paridad. | Obtener benchmark antes de optimizar |
 | EF-03 | Optimizar borradores y adjuntos conservando persistencia previa/posterior a COM, `uncertain` y referencias de sesiones; E3 por riesgo. | Pendiente; no cabe en una ficha de solo interfaz |
 | EF-04 | Reutilización SITFA por identidad/alcance/fecha/hashes, con pausas intactas y prueba real. | Pendiente de evidencia del puesto |
@@ -31,7 +31,7 @@ WP-87 queda reservado a UX-01: los dos informes anteriores proponían el mismo n
 - No implementar «guardar Outlook solo al final»: conservar durabilidad de cada efecto y resultado incierto. Caché de presentación no sirve para autorizar un guardado.
 - Una rama y PR para el alcance concreto de WP-87. Agrupar commits compatibles dentro de ese alcance; cambios de riesgo tienen ficha separada.
 - Durante desarrollo: pruebas focales. Comprobar primero imports y pantalla con rutas absolutas al worktree; revisar el diff y congelar el candidato antes de medir. Sobre candidato limpio: una ejecución completa del verificador que también puede actualizar la línea base. Repetir solo ante cambios de código, fallo o preocupación pendiente.
-- La reducción de CI es trabajo pendiente: no utilizar `[skip ci]` para esconder cambios de código. No monitorear CI periódicamente.
+- La reducción de CI se implementa en WP-89 con E4 revisada: no utilizar `[skip ci]` para esconder cambios de código. No monitorear CI periódicamente.
 
 ## Aceptación
 

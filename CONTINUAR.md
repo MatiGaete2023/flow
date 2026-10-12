@@ -8,7 +8,7 @@ Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los 
 
 ## Pendiente inmediato
 
-Habilitar facturación/límite de Actions: jobs de WP-88 no iniciaron. Luego ejecutar la CI Windows sobre el commit vigente para verificar el instalador integral y los dos modos del lanzador. Las pruebas locales pasan; el uso real Excel/Outlook/SITFA y actas siguen pendientes. Eficiencia de CI/estado (EF-01) es la siguiente fase de código; no repetir los cambios de WP-88.
+Usuario informó facturación actualizada. WP-89 ajusta E4 para evitar push Windows, duplicación de ejecutables y construcciones por documentación. Ejecutar ambos workflows Windows por workflow_dispatch sobre el candidato vigente para verificar el instalador integral y los dos modos del lanzador. Las pruebas locales pasan; el uso real Excel/Outlook/SITFA y actas siguen pendientes. Eficiencia de CI/estado (EF-01) es la siguiente fase de código; no repetir los cambios de WP-88.
 
 ## Consolidación anterior
 

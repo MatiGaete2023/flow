@@ -37,7 +37,7 @@ def test_workflow_and_distribution_match_current_release():
     assert "'wp/**'" not in workflow and "'codex/**'" not in workflow and "'feat/**'" in workflow
     assert '${{ github.event_name }}-${{ github.head_ref || github.ref_name }}' in workflow
     assert 'permissions:\n  contents: read' in workflow
-    assert 'retention-days: 14' in workflow and 'retention-days: 90' in workflow
+    assert 'retention-days: 14' in workflow and 'retention-days: 30' in workflow
 
 
 def test_gitignore_covers_local_csmp_environment_and_build_outputs():

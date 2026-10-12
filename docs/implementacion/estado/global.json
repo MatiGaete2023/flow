@@ -236,6 +236,7 @@
     "WP-86",
     "WP-87",
     "WP-88",
+    "WP-89",
     "WP-70"
   ],
   "commit_integracion": "9c8049035a5bc850e0d6ca2811f9476f9a2f2c54",
@@ -274,7 +275,7 @@
       "estado": "PENDIENTE",
       "motivo": "GitHub no inicia jobs: pagos fallidos o límite de gasto.",
       "evidencia": "Anotación check-run 114668230322; runs PR42 38205584519 y 38205584494.",
-      "accion": "Responsable de la cuenta habilita facturación/límite; después ejecutar CI Windows sobre commit vigente. No reintentar mientras persista la causa."
+      "accion": "Usuario informa facturación actualizada el 12 de octubre de 2026; confirmar con ejecución del candidato WP-89, sin reintentar candidatos obsoletos."
     }
   }
 }
