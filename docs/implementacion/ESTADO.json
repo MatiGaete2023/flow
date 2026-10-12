@@ -190,7 +190,7 @@
       "integrado_en": null,
       "notas": [
         "D2: «Ninguna todavía» (11 de octubre de 2026).",
-        "Plantilla docs/aceptacion/ACTA_USO_REAL_20261011.json generada con flow_acceptance.py init (40 casos D-T/A-T, todos NO_EJECUTADO, commit 14f679d, paquete compilado en CI). Solo el usuario completa resultados."
+        "Plantilla docs/aceptacion/ACTA_USO_REAL_20261012.json generada con flow_acceptance.py init (40 casos D-T/A-T, NO_EJECUTADO, tipo de evidencia vacío, commit 5a8f68e). Reemplaza la de 14f679d. Solo el usuario completa resultados."
       ]
     },
     "WP-10": {
@@ -1230,21 +1230,22 @@
       "tipo": "M/C",
       "depende_de": [],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "11 de octubre de 2026",
-      "rama": "wp/86-correctivo",
+      "rama": "consolidacion/20261012",
       "pr": null,
-      "verificacion": "PASA (verificar_wp.py, 11 de octubre de 2026): asistente 856, descargador 240, inventario sin bajas",
-      "revision": null,
-      "auditoria": null,
-      "integrado_en": null,
+      "verificacion": "PASA (verificar_wp.py, 12 de octubre de 2026, 5a8f68e): asistente 858/11/6, descargador 240/62, inventario sin bajas",
+      "revision": "CAMBIOS (E3, docs/implementacion/auditoria/WP-86.md); 3 cambios aplicados en 5a8f68e",
+      "auditoria": "docs/implementacion/auditoria/WP-86.md",
+      "integrado_en": "5a8f68e",
       "notas": [
         "Autorizado por el usuario («Sí, todo», decisión i del 11 de octubre de 2026), con revisión E3 antes de integrar.",
         "Origen: docs/implementacion/REVISION_INTEGRAL_20261011.md sobre 32dd14c (línea base 848/11/6 y 240/62).",
         "Código: F1, F2, F3, F4, F5, F7, C1, C2, C3, C4 y C5; acta de uso real con tipo de evidencia vacío (D3).",
         "Documentación: armonización D1–D14; CIERRE.md rehecho; decisiones del 11 de octubre registradas en PLAN_VIGENTE.md y global.json.",
-        "Sin cambio intencional: F6 (aviso temporal por fila), DeprecationWarning de motor/ (decisión del usuario) y base consolidada multihoja (solo se avisa)."
+        "Sin cambio intencional: F6 (aviso temporal por fila), DeprecationWarning de motor/ (decisión del usuario) y base consolidada multihoja (solo se avisa).",
+        "12 de octubre de 2026: integrado por fast-forward en feat (5a8f68e) a pedido del usuario («Consolida todo en una rama y refactoriza»); incluye refactor menor (earliest único, write_state reutilizado, importaciones sin uso). PR #40 queda sin monitoreo."
       ]
     },
     "WP-70": {
