@@ -38,9 +38,10 @@ def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False):
                 cancel.set()
 
     class Diaries:
-        def __init__(self, bridge, catalog, emit, gate, pause):
+        def __init__(self, bridge, catalog, emit, gate, pause, reuse_base=None):
             self.emit = emit
             used.append(('bitacoras', pause, gate is cancel))
+            Diaries.reuse_base = reuse_base
 
         def run(self, batch, destination):
             manifest = diaries(destination / 'bitacoras', 2)

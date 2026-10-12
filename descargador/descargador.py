@@ -419,6 +419,15 @@ class Application:
             primary, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=self.save_preferences
         )
         self.package_choice.pack(side='left', padx=12)
+        # EF-04: menos aperturas en SITFA; solo lecturas del mismo día y de menos de 12 h, con hash comprobado.
+        self.reuse_diaries = tk.BooleanVar(value=self.prefs.data['reutilizar_bitacoras'])
+        self.reuse_choice = ttk.Checkbutton(
+            primary,
+            text='Reutilizar bitácoras leídas hoy',
+            variable=self.reuse_diaries,
+            command=self.save_preferences,
+        )
+        self.reuse_choice.pack(side='left', padx=12)
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
@@ -538,6 +547,7 @@ class Application:
             tribunales=None if self.selected_tribunals is None else list(self.selected_tribunals),
             aviso_sonoro=self.sound.get(),
             paquete_consolidado=self.package_consolidated.get(),
+            reutilizar_bitacoras=self.reuse_diaries.get(),
         )
         try:
             self.prefs.save()
@@ -1153,13 +1163,21 @@ class Application:
                         self.cancel,
                         *arg,
                         pause=self.prefs.data['pausa_consultas'],
+                        reuse=self.prefs.data['reutilizar_bitacoras'],
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
 
+                    batch, destination, resume = arg
+                    reuse_base = destination if self.prefs.data['reutilizar_bitacoras'] and not resume else None
                     DiaryRunner(
-                        self.bridge, self.catalog, self.emit, self.cancel, pause=self.prefs.data['pausa_consultas']
-                    ).run(*arg)
+                        self.bridge,
+                        self.catalog,
+                        self.emit,
+                        self.cancel,
+                        pause=self.prefs.data['pausa_consultas'],
+                        reuse_base=reuse_base,
+                    ).run(batch, destination, resume)
                 elif command == 'joint':
                     from flujo_csmp import JointRunner
 

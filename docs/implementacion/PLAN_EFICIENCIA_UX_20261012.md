@@ -19,7 +19,7 @@ El estado de los WP vive en `estado/*.json`, agregado en [ESTADO.json](ESTADO.js
 | EF-01 | CI rápida separada de construcción, documentos de continuación generados y reutilización segura de mediciones. Validar links/estado en documentación; Windows en candidato y cambios nativos. | CI en WP-89; continuación generada y reutilización segura de mediciones en WP-90 |
 | EF-02 | Medir edición/exportación con datos sintéticos; reducir duplicación y cálculo conservando dependencias y paridad. | Benchmark y primera optimización en WP-91; queda la relectura de exportación |
 | EF-03 | Optimizar borradores y adjuntos conservando persistencia previa/posterior a COM, `uncertain` y referencias de sesiones; E3 por riesgo. | Pendiente; no cabe en una ficha de solo interfaz |
-| EF-04 | Reutilización SITFA por identidad/alcance/fecha/hashes, con pausas intactas y prueba real. | Pendiente de evidencia del puesto |
+| EF-04 | Reutilización SITFA por identidad/alcance/fecha/hashes, con pausas intactas y prueba real. | WP-93 implementado, en E3; falta prueba en SITFA real |
 
 WP-87 queda reservado a UX-01: los dos informes anteriores proponían el mismo número para alcances distintos sin haber creado fichas. WP-88 fue asignado después de comprobar el remoto y recibir «Efectua los cambuos del otro agente que no esten y continua». No duplica trabajo integrado. Cada fase futura obtiene su ficha y alcance en el estado canónico al confirmar base y responsable.
 

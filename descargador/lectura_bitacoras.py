@@ -1,6 +1,7 @@
 """Consulta secuencial de bitácoras: no dispone de operaciones de escritura RUS."""
 
 import hashlib
+from datetime import datetime, timedelta
 import json
 from collections import Counter
 from copy import deepcopy
@@ -193,6 +194,50 @@ def anonymous_diagnostic(data):
 PAUSA_SITFA_S = 1.0
 CHECKPOINT_CADA = 25
 MAX_LECTURAS_POR_LOTE = 300
+REUTILIZAR_HORAS = 12  # EF-04: solo lecturas del mismo día local y de menos de 12 h
+REUTILIZAR_CARPETAS = 10  # D4: hasta 10 sesiones anteriores
+
+
+def carpetas_previas(base, actual=None, limite=REUTILIZAR_CARPETAS):
+    """Carpetas de lectura de bitácoras anteriores bajo el destino del usuario (lotes y paquetes)."""
+    base = Path(base)
+    if not base.is_dir():
+        return []
+    found = {}
+    for pattern in ('Bitacoras *', '*/respaldo/Bitacoras *'):
+        for folder in base.glob(pattern):
+            manifest = folder / MANIFEST
+            if folder.is_dir() and not folder.is_symlink() and manifest.is_file():
+                resolved = folder.resolve()
+                if actual is None or resolved != Path(actual).resolve():
+                    found[resolved] = manifest.stat().st_mtime_ns
+    return sorted(found, key=found.get, reverse=True)[:limite]
+
+
+def lecturas_reutilizables(carpetas, ahora, horas=REUTILIZAR_HORAS):
+    """clave → (carpeta, registro) de lecturas LEIDA recientes; gana la más reciente."""
+    result = {}
+    for folder in carpetas:
+        try:
+            data = load(folder / MANIFEST)
+        except (OSError, ValueError, m.PocError):
+            continue
+        for record in data.get('registros', []) + data.get('anteriores_no_reenumeradas', []):
+            if not isinstance(record, dict) or record.get('estado') != 'LEIDA' or record.get('clave') in result:
+                continue
+            try:
+                captured = datetime.fromisoformat(str(record.get('capturada', '')).replace('Z', '+00:00'))
+            except ValueError:
+                continue
+            if captured.tzinfo is None:
+                continue
+            age = ahora - captured
+            if (
+                timedelta(0) <= age <= timedelta(hours=horas)
+                and captured.astimezone(ahora.tzinfo).date() == ahora.date()
+            ):
+                result[record['clave']] = (folder, record)
+    return result
 
 
 class LimiteLecturas(m.PocError):
@@ -202,7 +247,7 @@ class LimiteLecturas(m.PocError):
 class _Lectura:
     """Estado de una ejecución de DiaryRunner.run: carpeta, manifiesto, reutilización y contadores."""
 
-    def __init__(self, runner, batch, destination, resume):
+    def __init__(self, runner, batch, destination, resume, reuse_base=None):
         self.runner = runner
         self.read = parser()  # parser() agrega src/ a sys.path; debe ir antes de importar nurus.
         from nurus.bitacora_html import visible_identity_warnings
@@ -240,6 +285,8 @@ class _Lectura:
         except ImportError:
             self.state['origen'] = {'version': 'desarrollo', 'commit': 'sin metadatos'}
         self.manifest = self.folder / MANIFEST
+        # EF-04: lecturas de otros lotes del mismo día, solo si el usuario no pidió volver a leer todo.
+        self.cross = lecturas_reutilizables(carpetas_previas(reuse_base, self.folder), m.now()) if reuse_base else {}
         self.pending = 0
         self.openings = 0
         self.phase = ''
@@ -270,6 +317,37 @@ class _Lectura:
         record['error'] = ' '.join(notes)
 
     def reutilizar(self, record):
+        return self._reutilizar_retomada(record) or self._reutilizar_de_otro_lote(record)
+
+    def _reutilizar_de_otro_lote(self, record):
+        """Copia al lote actual una lectura reciente de otro lote, comprobando identidad, parámetros y hash."""
+        folder, previous = self.cross.get(record['clave'], (None, None))
+        if not previous or previous.get('params') != record.get('params'):
+            return False
+        name = previous.get('archivo', '')
+        if Path(name).name != name or not name.endswith('.html'):
+            return False
+        source = folder / name
+        if not source.is_file() or source.is_symlink() or source.stat().st_size > 8 * 1024 * 1024:
+            return False
+        data = source.read_bytes()
+        if hashlib.sha256(data).hexdigest() != previous.get('sha256'):
+            return False
+        snapshot = self.read(data, record['params'])
+        target = self.folder / name
+        if target.exists():
+            if target.read_bytes() != data:
+                raise m.PocError('El archivo local de bitácora cambió.')
+        else:
+            m.save_exclusive(target, data)
+        self.anotar(record, snapshot)
+        record.update({k: previous[k] for k in ('archivo', 'sha256', 'capturada', 'entradas')})
+        record['estado'] = 'LEIDA'
+        record['reutilizada'] = True
+        record['reutilizada_de'] = {'carpeta': folder.name, 'capturada': previous['capturada']}
+        return True
+
+    def _reutilizar_retomada(self, record):
         previous = self.old.get(record['clave'])
         if not previous or previous.get('params') != record.get('params'):
             return False
@@ -291,15 +369,16 @@ class _Lectura:
 
 
 class DiaryRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S):
+    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None):
         self.bridge, self.catalog, self.emit, self.cancel = bridge, catalog, emit, cancel
         self.pause = max(0.0, float(pause))
+        self.reuse_base = reuse_base
 
     def run(self, batch, destination, resume=None):
         if batch.screen != 'seguimiento':
             raise m.PocError('Las bitácoras se consultan desde Seguimiento.')
         plan = batch.plan(self.catalog)
-        session = _Lectura(self, batch, destination, resume)
+        session = _Lectura(self, batch, destination, resume, self.reuse_base)
         state = session.state
         session.persistir()
         self.emit('folder', str(session.folder))
