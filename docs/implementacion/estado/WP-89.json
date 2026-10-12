@@ -9,16 +9,17 @@
     }
   ],
   "decisiones": [],
-  "estado": "TOMADO",
+  "estado": "EN_VERIFICACION",
   "ejecutor": "Codex /root",
   "tomado": "12 de octubre de 2026",
   "rama": "wp/89-ci-eficiente",
-  "pr": null,
-  "verificacion": null,
-  "revision": null,
+  "pr": 43,
+  "verificacion": "PASA: verificacion/WP-89.json; candidato limpio 62f98cd23f0b95acd63fb73b47475debc6c82afc; inventario sin bajas, golden intacto.",
+  "revision": "Revisión propia conforme y actionlint PASA; E3 independiente no aplica por decisión j.",
   "auditoria": null,
   "integrado_en": null,
   "notas": [
-    "Usuario autoriza optimizar facturación Actions; no cambia aceptación ni reglas de negocio."
+    "Usuario autoriza optimizar facturación Actions; no cambia aceptación ni reglas de negocio.",
+    "60 focales PASA; medición completa PASA. CI PR: runs 38257245371, 38257245501 y 38257245645 iniciaron realmente. Entrega Windows completa pendiente."
   ]
 }
