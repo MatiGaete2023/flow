@@ -21,6 +21,7 @@
   "notas": [
     "Autorizado: «Actualiza los planes en el repositorio y comienza a implementar».",
     "Primera fase: tema compartido sin cambios de negocio ni duplicación de desarrollos ajenos. E3 independiente no exigida por decisión j; no acredita aceptación real.",
-    "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente."
+    "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente.",
+    "Medición a3f3af6 PASA con PYTHONPATH absoluto; candidato posterior corrige contraste de botones transparentes y foco ttk de 2 px, con prueba que falla antes del cambio. La medición final está pendiente."
   ]
 }

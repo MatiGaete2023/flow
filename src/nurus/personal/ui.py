@@ -84,7 +84,7 @@ class Label(ctk.CTkLabel):
 
 class Button(ctk.CTkButton):
     def __init__(self, parent, **kwargs):
-        role = kwargs.pop('role', 'primary')
+        role = kwargs.pop('role', 'secondary' if kwargs.get('fg_color') == 'transparent' else 'primary')
         for key, value in button_options(role).items():
             kwargs.setdefault(key, value)
         kwargs.setdefault('width', 110)

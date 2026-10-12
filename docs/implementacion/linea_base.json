@@ -1,14 +1,14 @@
 {
-  "commit": "7b4feb959a3717794a527ca1bf5d694cee98a6b6",
+  "commit": "a3f3af6479a12175b41f561153bdd67e5a76e7d2",
   "asistente": {
-    "aprobadas": 858,
+    "aprobadas": 863,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "858 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "863 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 240,
@@ -777,6 +777,11 @@
       "tests/test_trabajo_vista.py::test_atajos_no_editan_campos_ni_actuan_con_un_dialogo_modal",
       "tests/test_trabajo_vista.py::test_columnas_editor_plegado_tooltip_excluidas_y_atajos",
       "tests/test_trabajo_vista.py::test_preferencia_antigua_respeta_el_orden_nuevo",
+      "tests/test_ui_theme.py::test_asistente_conserva_preferencias_y_estilos_al_cambiar_tema",
+      "tests/test_ui_theme.py::test_descargador_comparte_tokens_sin_cambiar_preferencias_o_controles",
+      "tests/test_ui_theme.py::test_paletas_independientes_y_tema_sistema_resuelto_por_la_app",
+      "tests/test_ui_theme.py::test_texto_y_estados_interactivos_tienen_contraste_aa[Claro]",
+      "tests/test_ui_theme.py::test_texto_y_estados_interactivos_tienen_contraste_aa[Oscuro]",
       "tests/test_ux_iteration_20260922.py::test_case_detail_uses_existing_state_and_products_only",
       "tests/test_ux_iteration_20260922.py::test_incident_navigation_source_is_only_existing_warnings",
       "tests/test_ux_iteration_20260922.py::test_res_help_is_minimal_and_operational",
