@@ -1,0 +1,24 @@
+{
+  "titulo": "CI eficiente y validación de entrega Windows",
+  "ola": 6,
+  "tipo": "M/C",
+  "depende_de": [
+    {
+      "wp": "WP-88",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "TOMADO",
+  "ejecutor": "Codex /root",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/89-ci-eficiente",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Usuario autoriza optimizar facturación Actions; no cambia aceptación ni reglas de negocio."
+  ]
+}
