@@ -1,7 +1,6 @@
 from datetime import date
 from hashlib import sha256
 import json
-from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 from test_bitacora_har import popup, PARAMS

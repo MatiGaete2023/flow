@@ -1,4 +1,3 @@
-from copy import deepcopy
 from datetime import date
 import json
 import pytest
@@ -8,7 +7,7 @@ from nurus.capture.diaries import export_diaries
 from nurus.capture.requests import read_request, write_request
 from nurus.capture.temporal import chronology
 from nurus.personal.capture_input import import_capture
-from nurus.personal.capture_products import request_document, export_requests, evidence_text
+from nurus.personal.capture_products import export_requests, evidence_text
 from nurus.personal.config import defaults
 from nurus.personal.product_state import stamp, stale
 from nurus.personal.outputs import Draft

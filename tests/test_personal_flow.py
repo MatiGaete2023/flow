@@ -1,7 +1,5 @@
 from datetime import date
 from pathlib import Path
-from copy import deepcopy
-import json
 import pytest
 from openpyxl import Workbook, load_workbook
 from docx import Document

@@ -4,6 +4,8 @@ from datetime import date
 import json
 from pathlib import Path
 
+import pytest
+
 from nurus.capture import write_capture
 from nurus.capture.temporal import DISPLAY_RULES, display_chronology
 from nurus.personal.capture_findings import last_center_label, novelties_text
@@ -159,3 +161,28 @@ def test_paquete_sin_bitacoras_muestra_no_solicitadas(tmp_path):
     fila = work.rows[0]
     assert last_center_label(work, fila) == 'Bitácoras no solicitadas'
     assert 'no solicitó bitácoras' in novelties_text(work, fila)
+
+
+def test_version_nueva_de_la_vista_reutiliza_la_cache_sin_reevaluar(tmp_path, monkeypatch):
+    # C5 (revisión E3 de WP-86): mismos bytes con display_version antigua → se recalcula solo la vista.
+    from nurus.personal import work as work_module
+
+    work, _ = importar(tmp_path)
+    work.display_version = 'solo-mostrar-1'
+    for contexto in work.capture_context.values():
+        contexto.pop('display')
+    monkeypatch.setattr(work_module.Work, 'analyze', lambda *a, **k: pytest.fail('no debe reevaluar'))
+    m, t = fixture()
+    nuevo = import_capture(write_capture(tmp_path / 'otra.zip', m, t), defaults(), as_of=CORTE, previous=work)
+    assert all(c['display']['version'] == nuevo.display_version for c in nuevo.capture_context.values())
+
+
+def test_rollback_quita_la_vista_guardada(tmp_path, monkeypatch):
+    from nurus.capture import temporal
+
+    work, _ = importar(tmp_path)
+    work.display_version = 'solo-mostrar-1'
+    monkeypatch.setattr(temporal, 'DISPLAY_RULES', ())
+    m, t = fixture()
+    nuevo = import_capture(write_capture(tmp_path / 'otra.zip', m, t), defaults(), as_of=CORTE, previous=work)
+    assert not any('display' in c for c in nuevo.capture_context.values())

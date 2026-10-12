@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from openpyxl import Workbook, load_workbook
 
 from nurus.personal.config import defaults

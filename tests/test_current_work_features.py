@@ -1,13 +1,12 @@
 from pathlib import Path
 from dataclasses import asdict
 from unittest.mock import Mock
-from datetime import date
 import json
 import zipfile
 import pytest
 from openpyxl import load_workbook
 from docx import Document
-from nurus.personal.config import defaults, Configuration
+from nurus.personal.config import defaults
 from nurus.personal.work import Work
 from nurus.personal.outputs import Draft, create_draft, CC
 from nurus.personal.roster import snapshot, generate
