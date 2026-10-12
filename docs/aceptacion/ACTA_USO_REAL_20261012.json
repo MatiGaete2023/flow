@@ -1,9 +1,9 @@
 {
   "schema_id": "CSMP_ACCEPTANCE",
   "schema_version": "1.0.0",
-  "created_at": "2026-10-11T11:56:48Z",
+  "created_at": "2026-10-12T00:17:29Z",
   "artifact": {
-    "source_commit": "14f679d1d82daeef393a1bed121bab4c2a630ef8",
+    "source_commit": "5a8f68e81d932be7ad077d8afbcd5e22c65043ac",
     "assistant_version": "0.5.0.dev5",
     "downloader_version": "2.7.6",
     "extension_version": "2.7.6"
@@ -12,7 +12,7 @@
     {
       "case": "D-T01",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -25,7 +25,7 @@
     {
       "case": "D-T02",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -38,7 +38,7 @@
     {
       "case": "D-T03",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -51,7 +51,7 @@
     {
       "case": "D-T04",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -64,7 +64,7 @@
     {
       "case": "D-T05",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -77,7 +77,7 @@
     {
       "case": "D-T06",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -90,7 +90,7 @@
     {
       "case": "D-T07",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -103,7 +103,7 @@
     {
       "case": "D-T08",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -116,7 +116,7 @@
     {
       "case": "D-T09",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -129,7 +129,7 @@
     {
       "case": "D-T10",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -142,7 +142,7 @@
     {
       "case": "D-T11",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -155,7 +155,7 @@
     {
       "case": "D-T12",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -168,7 +168,7 @@
     {
       "case": "D-T13",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -181,7 +181,7 @@
     {
       "case": "D-T14",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -194,7 +194,7 @@
     {
       "case": "D-T15",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -207,7 +207,7 @@
     {
       "case": "D-T16",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -220,7 +220,7 @@
     {
       "case": "D-T17",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -233,7 +233,7 @@
     {
       "case": "D-T18",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -246,7 +246,7 @@
     {
       "case": "D-T19",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -259,7 +259,7 @@
     {
       "case": "D-T20",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -272,7 +272,7 @@
     {
       "case": "A-T01",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -285,7 +285,7 @@
     {
       "case": "A-T02",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -298,7 +298,7 @@
     {
       "case": "A-T03",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -311,7 +311,7 @@
     {
       "case": "A-T04",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -324,7 +324,7 @@
     {
       "case": "A-T05",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -337,7 +337,7 @@
     {
       "case": "A-T06",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -350,7 +350,7 @@
     {
       "case": "A-T07",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -363,7 +363,7 @@
     {
       "case": "A-T08",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -376,7 +376,7 @@
     {
       "case": "A-T09",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -389,7 +389,7 @@
     {
       "case": "A-T10",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -402,7 +402,7 @@
     {
       "case": "A-T11",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -415,7 +415,7 @@
     {
       "case": "A-T12",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -428,7 +428,7 @@
     {
       "case": "A-T13",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -441,7 +441,7 @@
     {
       "case": "A-T14",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -454,7 +454,7 @@
     {
       "case": "A-T15",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -467,7 +467,7 @@
     {
       "case": "A-T16",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -480,7 +480,7 @@
     {
       "case": "A-T17",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -493,7 +493,7 @@
     {
       "case": "A-T18",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -506,7 +506,7 @@
     {
       "case": "A-T19",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
@@ -519,7 +519,7 @@
     {
       "case": "A-T20",
       "gate": "",
-      "evidence_kind": "INSTITUCIONAL",
+      "evidence_kind": "",
       "environment": "",
       "result": "NO_EJECUTADO",
       "executed_at": "",
