@@ -4,8 +4,8 @@
 ## Estado generado
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
-- Línea base: `c752c6b3d1a9`; asistente 902 aprobadas, 11 omitidas, 6 xfail; descargador 246 aprobadas, 62 subpruebas.
-- Paquetes integrados: 44 de 49; último en el orden: WP-92.
+- Línea base: `fe4c2258ef42`; asistente 914 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
+- Paquetes integrados: 45 de 50; último en el orden: WP-94.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -16,7 +16,7 @@
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
-[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md).
+[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md). [Informe para revisor externo](docs/implementacion/INFORME_REVISOR_EXTERNO_20261012.md) y [su prompt](docs/implementacion/PROMPT_REVISOR_EXTERNO.md).
 
 ## Trabajo actual: eficiencia y UX
 

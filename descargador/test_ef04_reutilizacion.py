@@ -260,3 +260,21 @@ def test_falla_leyendo_la_copia_previa_se_relee(tmp_path, monkeypatch):
     again = Bridge()
     result, _ = _run(tmp_path, again)
     assert result['estado'] == 'COMPLETA' and again.openings
+
+
+@pytest.mark.parametrize('valor', [None, 7])
+def test_retomar_con_archivo_invalido_en_el_propio_manifiesto_se_relee(tmp_path, monkeypatch, valor):
+    # E3 WP-94 (observación H4): «Retomar» aplica la misma validación de estructura.
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    first_result, _ = _run(tmp_path, Bridge())
+    manifest = Path(first_result['manifest'])
+    data = json.loads(manifest.read_text(encoding='utf-8'))
+    for record in data['registros']:
+        if record['estado'] == 'LEIDA':
+            record['archivo'] = valor
+    manifest.write_text(json.dumps(data), encoding='utf-8')
+    parser()
+    again = Bridge()
+    runner = lb.DiaryRunner(again, CATALOG, lambda *a: None, threading.Event(), pause=0)
+    result = runner.run(BATCH, tmp_path / 'destino', manifest.parent)
+    assert result['estado'] == 'COMPLETA' and again.openings

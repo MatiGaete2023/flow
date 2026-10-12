@@ -144,6 +144,33 @@ def onedrive_warning(path):
     )
 
 
+PACKAGE_PREFIX = 'Paquete CSMP '
+
+
+def _package_controls(folder):
+    """Paquete de «Consultar y crear paquete» (revisión externa H3): controles bajo respaldo/ y el ZIP.
+
+    Solo cuenta si respaldo/proceso.json existe; ignora enlaces en cualquier tramo de la ruta.
+    """
+    backup = folder / 'respaldo'
+    process = backup / 'proceso.json'
+    if (
+        not folder.name.startswith(PACKAGE_PREFIX)  # E3 WP-94 C4: una carpeta ajena no se toma por paquete
+        or backup.is_symlink()
+        or not backup.is_dir()
+        or process.is_symlink()
+        or not process.is_file()
+    ):
+        return []
+    controls = [process]
+    for name in ('resumen.json', 'bitacoras.json', 'flujo.json'):
+        for path in backup.glob('*/' + name):
+            if not path.is_symlink() and not path.parent.is_symlink() and path.is_file():
+                controls.append(path)
+    controls += [path for path in folder.glob('*.zip') if path.is_file() and not path.is_symlink()]
+    return controls
+
+
 def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     """Lista controles antiguos directos: ignora enlaces, carpetas ajenas y lotes vigentes."""
     import time
@@ -165,10 +192,14 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
             folder / name
             for name in ('resumen.json', 'bitacoras.json', 'flujo.json')
             if (folder / name).is_file() and not (folder / name).is_symlink()
-        ]
+        ] + _package_controls(folder)
         if not controls:
             continue
         modified = max(path.stat().st_mtime for path in controls)
+        if folder.name.startswith(PACKAGE_PREFIX) and _package_controls(folder):
+            # E3 WP-94 C4: en un paquete, cualquier archivo reciente (p. ej. del usuario) lo mantiene vigente.
+            files = [p for p in folder.rglob('*') if p.is_file() and not p.is_symlink()]
+            modified = max([modified, *(p.stat().st_mtime for p in files)])
         if modified >= limit:
             continue
         size = sum(path.stat().st_size for path in folder.rglob('*') if path.is_file() and not path.is_symlink())
@@ -205,9 +236,12 @@ def manage_old_batches(
             target.mkdir(parents=True, exist_ok=True)
             shutil.move(str(path), str(target / path.name))
         elif preserve:
+            package = bool(_package_controls(path))
             for child in path.iterdir():
                 if child.name in PRESERVABLES and child.is_file() and not child.is_symlink():
                     continue
+                if package and child.suffix.lower() == '.zip' and child.is_file() and not child.is_symlink():
+                    continue  # E3 WP-94 C2: en un paquete, las bitácoras viven en el ZIP; «conservar» lo conserva
                 if child.is_dir() and not child.is_symlink():
                     shutil.rmtree(child)
                 else:

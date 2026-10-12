@@ -588,6 +588,10 @@ def create_drafts(work, drafts):
     result = {'created': 0, 'skipped': 0, 'errors': [], 'processed': 0}
     from .operations import checkpoint, progress, OperationCancelled
 
+    if getattr(work, '_save_journal_blocked', ''):
+        from .work import journal_blocked_message
+
+        raise ValueError(journal_blocked_message())
     if drafts and getattr(work, 'storage_directory', None):
         # Precondición previa a cualquier efecto COM (E3 WP-92 #1): verifica la copia .bin, conserva en disco las
         # ediciones en memoria y deja la base del diario sobre la versión vigente. Si falla, no se toca Outlook.
@@ -636,6 +640,10 @@ def _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled
 def create_draft(work, draft, *, confirmed=False, _digests=None):
     if not confirmed:
         raise ValueError('Revisa destinatarios, texto y adjuntos antes de crear el borrador.')
+    if getattr(work, '_save_journal_blocked', ''):
+        from .work import journal_blocked_message
+
+        raise ValueError(journal_blocked_message())
     from .product_state import require_fresh
 
     require_fresh(work, draft)

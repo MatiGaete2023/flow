@@ -401,9 +401,9 @@ class _Lectura:
         previous = self.old.get(record['clave'])
         if not previous or previous.get('params') != record.get('params'):
             return False
-        name = previous.get('archivo', '')
-        if Path(name).name != name or not name.endswith('.html'):
-            return False
+        if not _estructura_reutilizable(previous):
+            return False  # E3 WP-94, observación H4: el propio manifiesto con tipos inválidos se relee
+        name = previous['archivo']
         path = self.folder / name
         if not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
             return False

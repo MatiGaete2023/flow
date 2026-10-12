@@ -450,3 +450,23 @@ def test_incomplete_measurement_is_never_cached(monkeypatch, baseline_file, heal
     monkeypatch.setattr(verifier, "collect", lambda: copy.deepcopy(broken))
     assert verifier.main([]) == 1
     assert not isolated_cache.exists() or not list(isolated_cache.glob("*.json"))
+
+
+def test_falla_de_suite_informa_nodeids_sin_mensajes(monkeypatch, healthy):
+    # Revisión externa H8: el control dice qué prueba falló, sin copiar el mensaje (puede traer datos).
+    output = (
+        "FAILED tests/test_x.py::test_ficticio[a-b] - AssertionError: dato-privado-ficticio\n"
+        "ERROR tests/test_y.py::Clase::test_z\n"
+        "1 failed, 9 passed, 1 error in 0.10s"
+    )
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (1, output))
+    now = copy.deepcopy(healthy)
+    now["asistente"] = verifier.pytest_counts([])
+    assert now["asistente"]["fallidas_nodeids"] == [
+        "tests/test_x.py::test_ficticio[a-b]",
+        "tests/test_y.py::Clase::test_z",
+    ]
+    detail = next(c["detalle"] for c in verifier.compare(now, healthy, 0, 0) if c["control"] == "Suite asistente")
+    assert "tests/test_x.py::test_ficticio[a-b]" in detail and "dato-privado-ficticio" not in detail
+    report = verifier.suite_report(now["asistente"])
+    assert report["fallidas_nodeids"] == now["asistente"]["fallidas_nodeids"]

@@ -212,6 +212,57 @@ def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
     assert [text for name, text in found.items() if name.endswith('.png')] == ['logo.png']
 
 
+def test_check_real_ids_reads_renamed_member_inside_zip(tmp_path):
+    # Revisión externa H5: un XLSX guardado como sesion.bin dentro de otro ZIP se revisa por contenido.
+    import importlib.util
+    import io
+    import zipfile
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    rut = '12345678-' + ids.check_digit('12345678')
+    inner = io.BytesIO()
+    with zipfile.ZipFile(inner, 'w') as book:
+        book.writestr('xl/sharedStrings.xml', '<t>RUT ' + rut + '</t>')
+    outer = tmp_path / 'anidado.zip'
+    with zipfile.ZipFile(outer, 'w') as container:
+        container.writestr('sesion.bin', inner.getvalue())
+        container.writestr('notas.dat', 'RUT ' + rut)
+        container.writestr('logo.png', b'\x89PNG\x00\x00')
+    found = dict(ids.texts(outer))
+    assert any(rut in text for name, text in found.items() if 'sesion.bin!' in name)
+    assert any(rut in text for name, text in found.items() if name.endswith('notas.dat'))
+    assert not any(rut in text for name, text in found.items() if name.endswith('logo.png'))
+
+
+def test_check_real_ids_declares_incomplete_for_gzip_and_utf16_without_bom(tmp_path):
+    # E3 WP-94 C6: un formato no inspeccionable es «control incompleto», nunca «sin hallazgos».
+    import gzip
+    import importlib.util
+    import zipfile
+
+    import pytest
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    rut = '12345678-' + ids.check_digit('12345678')
+    packed = tmp_path / 'sesion.bin'
+    packed.write_bytes(gzip.compress(('RUT ' + rut).encode()))
+    wide = tmp_path / 'notas.dat'
+    wide.write_bytes(('Texto ficticio con RUT ' + rut).encode('utf-16-le'))
+    outer = tmp_path / 'anidado.zip'
+    with zipfile.ZipFile(outer, 'w') as container:
+        container.writestr('sesion.bin', gzip.compress(b'contenido ficticio'))
+    for path in (packed, wide, outer):
+        with pytest.raises(ValueError, match='control incompleto'):
+            list(ids.texts(path))
+    image = tmp_path / 'logo.png'
+    image.write_bytes(b'\x89PNG\r\n\x1a\n' + bytes(range(256)))
+    assert [text for _, text in ids.texts(image)] == ['logo.png']
+
+
 def test_check_real_ids_decodes_utf16_and_cp1252():
     import importlib.util
 

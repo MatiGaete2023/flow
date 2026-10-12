@@ -176,3 +176,67 @@ def test_lote_antiguo_con_fuente_anidada_en_uso_se_conserva(tmp_path):
     with pytest.raises(PocError):
         manage_old_batches(tmp_path, [joint], confirmed=True, protected=[source])
     assert (source / 'original.xls').read_bytes() == b'fuente ficticia en uso'
+
+
+def _paquete_por_flujo(tmp_path, monkeypatch, days):
+    # Revisión externa H3: paquete creado por «Consultar y crear paquete» real, con runners ficticios.
+    from threading import Event
+
+    import flujo_paquete
+    from test_flujo_paquete import Scope, runners
+
+    runners(monkeypatch, Event())
+    result = flujo_paquete.run(None, {}, lambda *a: None, Event(), Scope(), tmp_path)
+    folder = Path(result['path']).parent
+    age = time.time() - days * 86400
+    for path in [folder, *folder.rglob('*')]:
+        os.utime(path, (age, age))
+    return folder
+
+
+def test_paquete_del_flujo_principal_entra_en_la_retencion(tmp_path, monkeypatch):
+    folder = _paquete_por_flujo(tmp_path, monkeypatch, 61)
+    assert [item['folder'] for item in old_batches(tmp_path)] == [folder]
+    manage_old_batches(tmp_path, [folder], confirmed=True)
+    assert not folder.exists()
+
+
+def test_paquete_reciente_o_protegido_no_se_ofrece(tmp_path, monkeypatch):
+    recent = _paquete_por_flujo(tmp_path / 'a', monkeypatch, 10)
+    assert old_batches(tmp_path / 'a') == []
+    old = _paquete_por_flujo(tmp_path / 'b', monkeypatch, 61)
+    assert old_batches(tmp_path / 'b', protected=[old / 'Captura_CSMP.zip']) == []
+    assert recent.exists() and old.exists()
+
+
+def test_respaldo_enlazado_no_cuenta_como_paquete(tmp_path):
+    outside = tmp_path / 'fuera'
+    (outside).mkdir()
+    (outside / 'proceso.json').write_text('{}')
+    folder = tmp_path / 'destino' / 'Paquete CSMP x'
+    folder.mkdir(parents=True)
+    (folder / 'respaldo').symlink_to(outside, target_is_directory=True)
+    age = time.time() - 70 * 86400
+    os.utime(outside / 'proceso.json', (age, age))
+    assert old_batches(tmp_path / 'destino') == []
+
+
+def test_conservar_en_un_paquete_conserva_su_zip(tmp_path, monkeypatch):
+    # E3 WP-94 C2: en un paquete las bitácoras están en el ZIP; «conservar» no puede borrarlo.
+    folder = _paquete_por_flujo(tmp_path, monkeypatch, 61)
+    manage_old_batches(tmp_path, [folder], confirmed=True, preserve=True)
+    assert (folder / 'Captura_CSMP.zip').is_file() and not (folder / 'respaldo').exists()
+
+
+def test_paquete_con_archivo_reciente_o_carpeta_ajena_no_se_ofrece(tmp_path, monkeypatch):
+    # E3 WP-94 C4.
+    folder = _paquete_por_flujo(tmp_path, monkeypatch, 61)
+    (folder / 'nota_del_usuario.txt').write_text('ficticia')
+    assert old_batches(tmp_path) == []
+    alien = tmp_path / 'otra' / 'Mi carpeta'
+    (alien / 'respaldo').mkdir(parents=True)
+    (alien / 'respaldo' / 'proceso.json').write_text('{}')
+    age = time.time() - 70 * 86400
+    for path in [alien, *alien.rglob('*')]:
+        os.utime(path, (age, age))
+    assert old_batches(tmp_path / 'otra') == []
