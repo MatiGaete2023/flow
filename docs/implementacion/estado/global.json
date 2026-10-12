@@ -239,7 +239,7 @@
     "WP-89",
     "WP-70"
   ],
-  "commit_integracion": "9c8049035a5bc850e0d6ca2811f9476f9a2f2c54",
+  "commit_integracion": "321413ea7afb949e27114f796c626aa4cbc944b3",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",
@@ -275,7 +275,7 @@
       "estado": "RESUELTO",
       "motivo": "Facturación actualizada por usuario; jobs efectivamente iniciados.",
       "evidencia": "Runs PR43 38257245371/38257245501/38257245645 con pasos ejecutados el 12 de octubre de 2026.",
-      "accion": "Validar entrega candidata completa mediante workflow_dispatch; no implica uso real ni aceptación."
+      "accion": "Entrega Windows completa e instalador PASA en run 38259239456; continuar eficiencia sin push Windows ni repetir construcciones por documentación. Actas reales pendientes."
     }
   }
 }
