@@ -1332,7 +1332,8 @@
         "Windows mínimo detectó editor de 110px a 1024×650; corrección de fila de aviso duplicada. Cancelado full 38257627697; Descargador/navegador full 38257631987 PASA. Nueva medición y Windows mínimo antes de construcción.",
         "Corrección medida PASA en dc45582; enlace histórico corregido tras control Linux 38258410555 (falló antes de instalar). Cifras en línea base/informe; Windows mínimo 38258410423 pendiente.",
         "Windows mínimo correctivo 38258410423 PASA. Entrega completa 38259239456 PASA. Sin aceptación Office/SITFA real.",
-        "PR #43 integrado en feat en 321413e; fuente comparada con dc45582 sin cambios de código. Push inicia solo Linux 38261053010; PR permanente feat→main Linux se omite (38261060734), sin duplicar Windows."
+        "PR #43 integrado en feat en 321413e; fuente comparada con dc45582 sin cambios de código. Push inicia solo Linux 38261053010; PR permanente feat→main Linux se omite (38261060734), sin duplicar Windows.",
+        "CI de integración Linux 38261053010 PASA. Duraciones full Windows: 12.65, 6.77 y 6.08 minutos de job; total 25.50, no importe facturado."
       ],
       "validacion_windows": {
         "estado": "PASA",
@@ -1344,6 +1345,12 @@
           "commit": "280a785bdf45544132cdbde326f9f0fb1c994108",
           "reutilizacion": "Código Descargador/tema común/contratos/dependencias y workflow específico sin diferencias; correctivo posterior solo aviso Asistente y documentos."
         }
+      },
+      "ci_integracion": {
+        "estado": "PASA",
+        "run": 38261053010,
+        "commit": "321413ea7afb949e27114f796c626aa4cbc944b3",
+        "alcance": "Linux: privacidad, estado, enlaces, locks, lint/formato, ambas suites y Node. Sin jobs Windows por integración."
       }
     },
     "WP-70": {
