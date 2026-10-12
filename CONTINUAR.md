@@ -8,7 +8,9 @@ Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los 
 
 ## Pendiente inmediato
 
-Usuario informó facturación actualizada. WP-89 ajusta E4 para evitar push Windows, duplicación de ejecutables y construcciones por documentación. Ejecutar ambos workflows Windows por workflow_dispatch sobre el candidato vigente para verificar el instalador integral y los dos modos del lanzador. Las pruebas locales pasan; el uso real Excel/Outlook/SITFA y actas siguen pendientes. Eficiencia de CI/estado (EF-01) es la siguiente fase de código; no repetir los cambios de WP-88.
+WP-89 completa CI eficiente y resuelve la validación Windows de WP-88: run 38259239456 PASA, más navegador/Descargador 38257631987 PASA. Facturación confirmada por ejecución real. Consultar [ficha WP-89](docs/implementacion/wp/WP-89.md) y estado antes de repetir pruebas/construcciones: no push Windows; entrega por workflow_dispatch tras mínimo aprobado; compilación única de ambos EXE y retención 30 días. Correctivo del aviso evita una segunda fila duplicada y mantiene el editor a 1024×650. No repetir seis cambios de WP-88.
+
+Siguiente código: resto EF-01 (generar continuación desde estado y estudiar caché de mediciones con procedencia), luego benchmark sintético EF-02 antes de optimizar. Obtener nueva ficha; no asumir que quedaron implementados. EF-03 requiere E3 por Outlook/retención; EF-04 requiere evidencia del puesto. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
 
 ## Consolidación anterior
 
