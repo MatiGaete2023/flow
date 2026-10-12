@@ -1490,6 +1490,12 @@
         "h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.",
         "i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar."
       ]
+    },
+    "decisiones_20261012": {
+      "j_E3_solo_riesgosos": {
+        "texto": "E3 obligatoria solo si el diff toca: motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto: verificar_wp.py PASA.",
+        "fuente": "Usuario, 12 de octubre de 2026: «Sí, para los cambios riesgosos»."
+      }
     }
   },
   "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",

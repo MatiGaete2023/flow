@@ -8,7 +8,7 @@ Verificación PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288: 848/11/6 y 240/6
 historia sin hallazgos y 29 focales PASA. CI verde en 32dd14c (runs 38182127247 y 38182124001; PR #1).
 12 de octubre: WP-86 (revisión integral), su E3 (CAMBIOS aplicados) y refactor menor integrados en 5a8f68e
 vía `consolidacion/20261012`; PASA 858/11/6 y 240/62; línea base regenerada. Sin monitoreo de CI por pedido del usuario.
-[Reporte](docs/implementacion/REPORTE_CONSOLIDACION_20261011.md). [Eficiencia del proceso](docs/implementacion/EFICIENCIA_PROCESO_20261012.md).
+[Reporte](docs/implementacion/REPORTE_CONSOLIDACION_20261011.md). [Eficiencia del proceso](docs/implementacion/EFICIENCIA_PROCESO_20261012.md) y [de los productos](docs/implementacion/EFICIENCIA_PRODUCTOS_20261012.md).
 [Inventario con SHA](docs/implementacion/ramas_consolidadas_20261011.json).
 
 Pendiente real: Soporte GitHub (refs/cachés, WP-17), pruebas Excel/Outlook y actas del usuario

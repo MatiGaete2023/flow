@@ -45,6 +45,10 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 - h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.
 - i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar.
 
+## Decisiones del 12 de octubre de 2026
+- j) E3 solo para cambios riesgosos: diffs que tocan motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto se integra con `verificar_wp.py` PASA, sin
+  sesión revisora aparte. Fuente: «Sí, para los cambios riesgosos» (respuesta a EFICIENCIA_PROCESO_20261012.md).
+
 ## Documentos
 - Plan de implementación: docs/implementacion/PLAN_IMPLEMENTACION.md
 - Estado: docs/implementacion/ESTADO.json
