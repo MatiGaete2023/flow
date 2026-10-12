@@ -25,5 +25,5 @@
     "Verificación final PASA; cifras y procedencia en línea base/informe. Corrección del arranque autónomo, recuperaciones legadas, preferencia compartida y ruta de paquete probadas localmente. Windows/instalador y uso real pendientes.",
     "PR #42 fusionado en feat; código idéntico al candidato 14aa8af medido PASA. Integración técnica; CI Windows sigue bloqueada por facturación y no acredita aceptación funcional."
   ],
-  "validacion_windows": "EN CURSO: bloqueo de facturación resuelto; PR43 valida código integrado de WP-88 y candidato WP-89. Entrega/instalador completo pendiente."
+  "validacion_windows": "PASA: run 38259239456 (c896b0f, código WP-88 más correctivo UI WP-89), Python 3.12–3.14, ambos EXE y ciclo de instalación. Navegador/Descargador run 38257631987 PASA. Solo sintéticos; Office/SITFA y acta real pendientes."
 }
