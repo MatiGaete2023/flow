@@ -1,0 +1,26 @@
+{
+  "titulo": "Flujo integrado y siguientes acciones de UX",
+  "ola": 6,
+  "tipo": "M/C",
+  "depende_de": [
+    {
+      "wp": "WP-87",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/88-flujo-integrado",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+    "Los seis comportamientos anunciados no están en e91e360; se implementan sin cambiar reglas, Outlook, contratos ni extensión.",
+    "38 focales del flujo/compatibilidad PASA; 18 focales de arranque y 9 de UX final PASA. Verificación completa del candidato pendiente."
+  ]
+}

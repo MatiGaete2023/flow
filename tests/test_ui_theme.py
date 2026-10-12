@@ -110,7 +110,8 @@ try:
         assert style.lookup('Warning.TLabel','background')==palette['warning_background']
         assert str(app.download_button.cget('state'))=='disabled'
         assert app.download_button.cget('text')=='Descargar el lote completo'
-        assert app.download_button.cget('style')=='Primary.TButton'
+        assert app.download_button.cget('style')=='Secondary.TButton'
+        assert app.pipeline_button.cget('style')=='Primary.TButton'
         assert app.package_button.cget('text')=='Crear paquete de este lote…'
         assert app.package_consolidated.get()
     from preferencias import Preferences

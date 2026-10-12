@@ -194,10 +194,10 @@ class ResultsWindow(tk.Toplevel):
         ttk.Checkbutton(
             controls, text='Permitir resultados INCOMPLETOS', variable=self.partial, command=self.load
         ).pack(side='left')
-        self.package_consolidated = tk.BooleanVar(value=True)
-        ttk.Checkbutton(controls, text='Paquete con XLSX consolidado', variable=self.package_consolidated).pack(
-            side='left', padx=(8, 0)
-        )
+        self.package_consolidated = app.package_consolidated
+        ttk.Checkbutton(
+            controls, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=app.save_preferences
+        ).pack(side='left', padx=(8, 0))
         self.detail = ttk.Treeview(self, columns=('consulta', 'estado', 'filas', 'aptitud'), show='headings', height=8)
         for col, label in [
             ('consulta', 'Consulta'),
@@ -394,8 +394,11 @@ class ResultsWindow(tk.Toplevel):
             if label == 'Bitácoras' and state not in ('NO_DISPONIBLE', 'ERROR_CONTROL'):
                 remember(self.app.prefs, folder)
         self.update_collection()
-        if load_current and (getattr(self, 'folder', None) or self.app.last_folder):
-            self.folder = getattr(self, 'folder', None) or self.app.last_folder
+        current = self.app.last_folder
+        if current and (current / 'respaldo/proceso.json').is_file():
+            current = getattr(self.app, 'last_sheets_folder', None) or current
+        if load_current and (getattr(self, 'folder', None) or current):
+            self.folder = getattr(self, 'folder', None) or current
             self.load()
 
     def update_collection(self):

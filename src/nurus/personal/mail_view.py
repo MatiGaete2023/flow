@@ -6,11 +6,15 @@ import tkinter as tk
 import customtkinter as ctk
 
 from . import ui
+from functools import partial
+
 from .config import CC, emails
 from .outputs import draft_fingerprint_for_display, draft_preview_scope
 from .widgets import NamedChoice, CaseDetailPanel, Tooltip
 from .modalities import MODALITIES
 from .mail_controls import NO_DRAFTS, NO_DRAFTS_ATTACH, NO_ROSTER, NO_SELECTED, NO_WORK, mail_block
+
+view_button = partial(ui.Button, role='secondary')
 
 SHORT_REASONS = {
     NO_WORK: 'Falta Excel',
@@ -24,7 +28,7 @@ SHORT_REASONS = {
 def action_button(app, parent, key, **kwargs):
     """Botón con su motivo al lado cuando no está disponible (misma condición que la acción)."""
     holder = ctk.CTkFrame(parent, fg_color='transparent')
-    button = ui.Button(holder, **kwargs)
+    button = view_button(holder, **kwargs)
     button.pack(side='left')
     reason = ui.Label(holder, text='', text_color=ui.MUTED)
     tip = Tooltip(reason, '')
@@ -43,6 +47,8 @@ def update_mail_actions(app):
         if not button.winfo_exists():
             continue
         reason = mail_block(app, key)
+        primary = 'guardar_todos' if app.drafts else 'preparar_todos'
+        button.set_role('primary' if key == primary else 'secondary')
         label, tip = app.mail_action_reasons[key]
         button.configure(state='disabled' if reason else 'normal')
         label.configure(text=SHORT_REASONS.get(reason, reason))
@@ -272,7 +278,7 @@ def build_mail_page(app):
     def toggle():
         tabs.select(compose if tabs.select() == str(options) else options)
 
-    ui.Button(top, text='Filtros / opciones', fg_color='transparent', border_width=1, command=toggle).grid(
+    view_button(top, text='Filtros / opciones', fg_color='transparent', border_width=1, command=toggle).grid(
         row=0, column=3
     )
     toolbar = ctk.CTkFrame(page, fg_color='transparent')
@@ -286,7 +292,7 @@ def build_mail_page(app):
         border_width=1,
         command=lambda: app._guard(app._prepare_all_mail),
     )[0].pack(side='left')
-    ui.Button(
+    view_button(
         toolbar,
         text='Cargar planilla',
         fg_color='transparent',
@@ -296,7 +302,7 @@ def build_mail_page(app):
     from .manual import open_editor
     from .roster import review
 
-    ui.Button(
+    view_button(
         toolbar, text='Correo libre', width=110, command=lambda: app._guard(lambda: open_editor(app, 'mail'))
     ).pack(side='left')
     action_button(
@@ -365,7 +371,7 @@ def build_mail_page(app):
     app.attachment_chips.grid(row=5, column=0, columnspan=2, sticky='ew', padx=12, pady=(0, 4))
     actions = ctk.CTkFrame(editor, fg_color='transparent')
     actions.grid(row=1, column=0, sticky='ew', padx=8, pady=(3, 10))
-    ui.Button(
+    view_button(
         actions, text='Adjuntar…', width=82, fg_color='transparent', border_width=1, command=app._attachment
     ).pack(side='left')
     action_button(
@@ -390,7 +396,7 @@ def build_mail_page(app):
     app.mail_case_detail.pack(fill='x', padx=8, pady=8)
     from .work_tools import contact_search
 
-    ui.Button(details.body, text='Buscar destinatario', command=lambda: app._guard(lambda: contact_search(app))).pack(
+    view_button(details.body, text='Buscar destinatario', command=lambda: app._guard(lambda: contact_search(app))).pack(
         anchor='w'
     )
     app.mail_records_panel = ui.Frame(details.body)

@@ -1277,6 +1277,32 @@
         "PR #41 fusionado en feat. La integración conserva exactamente el código medido en dbcedca; el estado final se publica en commit exclusivamente documental."
       ]
     },
+    "WP-88": {
+      "titulo": "Flujo integrado y siguientes acciones de UX",
+      "ola": 6,
+      "tipo": "M/C",
+      "depende_de": [
+        {
+          "wp": "WP-87",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "Codex /root",
+      "tomado": "12 de octubre de 2026",
+      "rama": "wp/88-flujo-integrado",
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+        "Los seis comportamientos anunciados no están en e91e360; se implementan sin cambiar reglas, Outlook, contratos ni extensión.",
+        "38 focales del flujo/compatibilidad PASA; 18 focales de arranque y 9 de UX final PASA. Verificación completa del candidato pendiente."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -1528,6 +1554,11 @@
       "k_eficiencia_ux": {
         "texto": "Actualizar los planes y comenzar la implementación de eficiencia y UX; conservar los dos botones de preparación y la ubicación de productos secundarios.",
         "fuente": "Usuario: «Actualiza los planes en el repositorio y comienza a implementar», junto con restricciones expresas del encargo de UX."
+      },
+      "l_completar_flujo": {
+        "texto": "Completar cambios anunciados que no estén integrados y continuar con UX.",
+        "fuente": "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+        "limites": "Conservar botones de preparación y ubicación de productos secundarios; motor, Outlook, contratos, retención y extensión intactos."
       }
     }
   },

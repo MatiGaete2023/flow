@@ -47,7 +47,8 @@ Copy-Item -LiteralPath (Join-Path $csmpRoot 'docs/GUIA_ENTREGA_MVP_20261008.md')
 foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP_20261008.md','ACEPTACION_INSTITUCIONAL_PENDIENTE.md','REGRESIONES_PRUEBAS_USUARIO_20261009.md','CORRECCION_REFERENCIAS_ZIP_20261009.md')) {
     Copy-Item -LiteralPath (Join-Path $csmpRoot "docs/$manual") -Destination $outputRoot -Force
 }
-'@echo off', 'start "" "%~dp0CSMP_Integral\CSMP_Integral.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_CSMP.cmd') -Encoding ascii
+'@echo off', 'start "" "%~dp0CSMP_Integral\CSMP_Integral.exe" --asistente' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_CSMP.cmd') -Encoding ascii
+'@echo off', 'start "" "%~dp0CSMP_Integral\CSMP_Integral.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_Flow.cmd') -Encoding ascii
 '@echo off', 'start "" "%~dp0SITFA_Descargador\SITFA_Descargador.exe"' | Set-Content -LiteralPath (Join-Path $outputRoot 'Abrir_Descargador.cmd') -Encoding ascii
 $checks = @(
     @('SITFA_Descargador/SITFA_Descargador.exe','--verificar-paquete','VERIFICACION_DESCARGADOR.json'),
