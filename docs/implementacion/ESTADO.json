@@ -1449,12 +1449,12 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "12 de octubre de 2026",
       "rama": "wp/94-revision-externa",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA: verificacion/WP-94.json sobre 708cf0d limpio; asistente 909/11/6, descargador 249/62, inventario sin bajas, golden intacto.",
       "revision": "E3 obligatoria (decisión j: anonimizador/detector, Outlook y borrado de lotes).",
       "auditoria": null,
       "integrado_en": null,

@@ -12,7 +12,7 @@
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-94 | EN_VERIFICACION | Correcciones de la revisión externa (H1–H3, H5, H6, H8) |
+| WP-94 | EN_REVISION | Correcciones de la revisión externa (H1–H3, H5, H6, H8) |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
