@@ -31,13 +31,12 @@ verificados de las inferencias.
      contrato de captura, el borrado o la retención de datos, el anonimizador o check_real_ids, o la extensión
      SITFA (decisión j).
 3. Siguiente trabajo, en orden (verifica antes en estado/*.json que siga pendiente):
-   a. EF-02b: la exportación relee su propio archivo (sync.remember_export → read_external, cerca del 50 % del
-      tiempo). Primero escribe una prueba que demuestre que el estado recordado en memoria es igual al leído (fechas,
-      números, apóstrofos). Solo después optimiza y mide con tools/benchmark_ef02.py antes y después.
-   b. EF-03 (riesgoso, E3): borradores y adjuntos. Un hash por archivo en cada lote, un solo guardado de sesión,
-      persistencia antes y después de cada efecto COM y `uncertain`; nunca borrar adjuntos de borradores guardados.
-   c. EF-04 (riesgoso, E3, requiere prueba del usuario en SITFA real): reutilizar lecturas de bitácoras por
-      identidad, alcance, fecha y hashes, con las pausas intactas.
+   a. WP-93 (EF-04, rama wp/93-ef04, E3 con cambios aplicados): integrar en feat SOLO después de que el usuario
+      informe la prueba en SITFA real (pasos en docs/implementacion/wp/WP-93.md). EF-01..03 y WP-94 ya están
+      integrados y EF-02b se cerró sin cambio de código: no repetirlos.
+   b. Pendientes sin datos de WP-94: H7 (capturas 1024×650) y diferencia de color de tema con Tk 9; requieren
+      Windows o la versión de Tk soportada.
+   c. Decisiones opcionales del usuario: los 6 conflictos R-T en xfail y la advertencia de pandas en motor/.
    d. Lo que depende del usuario (WP-02 y WP-50: actas y pruebas reales; WP-17: Soporte GitHub; WP-70: cierre) no se
       ejecuta: solo se prepara.
 4. Disciplina por paquete:
@@ -64,10 +63,10 @@ verificados de las inferencias.
 ## Varios agentes en paralelo
 
 - Un agente por paquete, cada uno en su propio worktree (`git worktree add ../wt/NN -b wp/NN-tema feat`).
-- Los paquetes no deben compartir archivos: EF-02b toca `personal/sync.py` y `work.py`; EF-03 toca `outputs.py`,
-  `roster.py` y `product_state.py`; EF-04 toca `descargador/lectura_bitacoras.py`.
+- Los paquetes no deben compartir archivos: antes de repartir, compara los archivos que tocará cada ficha y
+  asigna los que se solapen a un solo agente.
 - Integra uno a la vez, con `verificar_wp.py` en cada integración.
-- E3 en EF-03 y EF-04: lo hace una sesión o un modelo distinto del que ejecutó el paquete. Los subagentes de una
+- E3 en cambios riesgosos (decisión j): lo hace una sesión o un modelo distinto del que ejecutó el paquete. Los subagentes de una
   misma raíz cuentan como el mismo agente.
 - Hay límites de uso por sesión. Si un agente se corta, retoma desde su rama: el trabajo con commit no se pierde.
   Haz commit temprano.

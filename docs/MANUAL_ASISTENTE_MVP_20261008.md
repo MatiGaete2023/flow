@@ -28,7 +28,10 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
    Un contacto desconocido queda vacío con aviso. Outlook clásico puede guardar
    borradores; el envío es decisión humana. Sesiones anteriores con nóminas
    pendientes generan sus adjuntos al guardar. Cambios en los datos del trabajo
-   requieren preparar nuevamente los productos obsoletos.
+   requieren preparar nuevamente los productos obsoletos. Si el archivo de
+   recibos de la sesión (`recibos.diario.json`) existe pero no se puede leer, el
+   Asistente no guarda borradores nuevos: revisa la carpeta Borradores de Outlook
+   y luego repara el acceso al archivo o muévelo fuera de la carpeta de la sesión.
 6. Resoluciones: revisar plantilla y variables, elegir proyectos y guardar Word
    editable. Correo libre, Word manual y edición libre siguen disponibles.
 7. Resultados: consultar productos, incidencias, hechos y fuentes. Para una

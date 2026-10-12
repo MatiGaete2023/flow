@@ -28,7 +28,7 @@ Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los 
 
 WP-89 completa CI eficiente y resuelve la validación Windows de WP-88: run 38259239456 PASA, más navegador/Descargador 38257631987 PASA. Facturación confirmada por ejecución real. Consultar [ficha WP-89](docs/implementacion/wp/WP-89.md) y estado antes de repetir pruebas/construcciones: no push Windows; entrega por workflow_dispatch tras mínimo aprobado; compilación única de ambos EXE y retención 30 días. Correctivo del aviso evita una segunda fila duplicada y mantiene el editor a 1024×650. No repetir seis cambios de WP-88.
 
-EF-01 completado en WP-90 (`estado.py continuacion`, `verificar_wp.py --reutilizar-medicion`). EF-02 en WP-91: benchmark (`tools/benchmark_ef02.py`) y edición/importación optimizadas; siguiente candidato: relectura en la exportación (ver ficha WP-91). Obtener nueva ficha; no asumir que quedaron implementados. EF-03 requiere E3 por Outlook/retención; EF-04 requiere evidencia del puesto. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
+Integrados: EF-01 (WP-90), EF-02 (WP-91; EF-02b cerrado sin cambio de código), EF-03 (WP-92, tras E3) y las correcciones de la [revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) en WP-94 (`fe4c225`, tras E3 con C1–C6 aplicados). EF-04 es WP-93: rama `wp/93-ef04`, no integrado, espera la prueba del usuario en SITFA real. Pendientes sin datos: H7 (capturas 1024×650) y color de tema con Tk 9. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
 
 ## Consolidación anterior
 
