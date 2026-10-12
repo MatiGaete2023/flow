@@ -1,14 +1,14 @@
 {
-  "commit": "883af7d3e812b0f2dc74f5df49ebfd660a7624ca",
+  "commit": "f5c0d98c23ddbf1a6c83a4e254f4ae3c14ce9f2b",
   "asistente": {
-    "aprobadas": 887,
+    "aprobadas": 890,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "887 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "890 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 246,
@@ -371,6 +371,9 @@
       "tests/test_draft_preview_performance.py::test_one_attachment_read_for_a_hundred_drafts_per_preflight",
       "tests/test_draft_preview_performance.py::test_saving_identity_ignores_active_display_cache",
       "tests/test_draft_preview_performance.py::test_worker_thread_cannot_reuse_tk_query_cache",
+      "tests/test_ef02_rendimiento.py::test_deshacer_tras_edicion_parcial_restaura_contextos",
+      "tests/test_ef02_rendimiento.py::test_editar_un_registro_equivale_a_recalcular_todos",
+      "tests/test_ef02_rendimiento.py::test_normalize_memorizada_conserva_resultado_y_tipos",
       "tests/test_estado_continuacion.py::test_bloque_lista_solo_pendientes_y_cifras_de_la_linea_base",
       "tests/test_estado_continuacion.py::test_render_inserta_y_luego_reemplaza_sin_tocar_el_resto",
       "tests/test_estado_continuacion.py::test_validar_detecta_bloque_desactualizado",
