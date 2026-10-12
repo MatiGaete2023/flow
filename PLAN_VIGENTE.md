@@ -49,6 +49,16 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 - j) E3 solo para cambios riesgosos: diffs que tocan motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto se integra con `verificar_wp.py` PASA, sin
   sesión revisora aparte. Fuente: «Sí, para los cambios riesgosos» (respuesta a EFICIENCIA_PROCESO_20261012.md).
 
+## Ola de eficiencia y experiencia — 12 de octubre de 2026
+
+Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
+- [Plan de la ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md): fuente de alcance y orden.
+- WP-87 inicia el tema compartido de ambas apps. No duplica los cinco cambios anunciados por otro agente; confirmar sus commits antes de integrar la siguiente fase de UX.
+- Conservar separados «Preparar tipo»/«Preparar todos» y conservar la ubicación de ZIP, resumen, ICS y recuperación legado.
+- Outlook mantiene persistencia antes/después de cada efecto y el estado incierto. Una caché de presentación no autoriza un guardado externo.
+- Una medición completa por versión candidata; pruebas focales durante desarrollo. Estado estructurado y línea base son fuente de resultados vigentes; los informes históricos conservan su fecha/SHA.
+- CI rápida y construcción bajo demanda son una mejora pendiente, no un workflow ya modificado. Mantener la verificación Windows de la entrega candidata.
+
 ## Documentos
 - Plan de implementación: docs/implementacion/PLAN_IMPLEMENTACION.md
 - Estado: docs/implementacion/ESTADO.json

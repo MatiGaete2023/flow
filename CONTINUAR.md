@@ -1,5 +1,13 @@
 # Continuar — consolidado del 12 de octubre de 2026
 
+## Trabajo actual: eficiencia y UX
+
+[Orden y límites de la nueva ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md). WP-87 empieza el tema común; consultar `docs/implementacion/estado/WP-87.json` para su estado. No repetir autoexportación, consulta/paquete, retiro de firmas, respaldo ni lanzador anunciados por otro agente: aún no están comprobados en `adeb6ec`; obtener sus commits antes de la siguiente fase.
+
+Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los párrafos siguientes registran antecedentes históricos. E3 por riesgo (decisión j). Sin monitorización pasiva.
+
+## Consolidación anterior
+
 **Usar feat/ejecucion-plan-20261008.** Las 45 ramas inventariadas quedaron incorporadas
 al historial; referencias antiguas son respaldo. Código de #33/WP-50 y plantilla WP-02
 incluidos. G-3/G-4/G-5 preservados. No repetir fusiones ni correcciones ya consolidadas.
