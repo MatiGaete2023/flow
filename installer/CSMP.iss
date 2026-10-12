@@ -26,7 +26,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; GroupDescription: "Accesos directos:"; Flags: unchecked
 [Files]
-Source: "..\dist\CSMP_Integral\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\integral\CSMP_Integral\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\integral\SITFA_Descargador\*"; DestDir: "{app}\SITFA_Descargador"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\integral\extension\*"; DestDir: "{app}\extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]

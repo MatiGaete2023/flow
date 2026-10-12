@@ -195,9 +195,14 @@ class ResultsWindow(tk.Toplevel):
             controls, text='Permitir resultados INCOMPLETOS', variable=self.partial, command=self.load
         ).pack(side='left')
         self.package_consolidated = app.package_consolidated
-        ttk.Checkbutton(
-            controls, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=app.save_preferences
-        ).pack(side='left', padx=(8, 0))
+        self.package_choice = ttk.Checkbutton(
+            controls,
+            text='Incluir XLSX consolidado',
+            variable=self.package_consolidated,
+            command=app.save_preferences,
+            state='disabled' if app.busy else 'normal',
+        )
+        self.package_choice.pack(side='left', padx=(8, 0))
         self.detail = ttk.Treeview(self, columns=('consulta', 'estado', 'filas', 'aptitud'), show='headings', height=8)
         for col, label in [
             ('consulta', 'Consulta'),
@@ -588,6 +593,7 @@ class ResultsWindow(tk.Toplevel):
         self.safe(lambda: self.start(action))
 
     def poll(self):
+        self.package_choice.configure(state='disabled' if self.busy or self.app.busy else 'normal')
         try:
             while True:
                 kind, result, error = self.events.get_nowait()
