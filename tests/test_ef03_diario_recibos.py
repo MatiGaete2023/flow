@@ -33,7 +33,7 @@ def test_lote_guarda_sesion_completa_una_vez_y_recibos_en_diario(tmp_path, monke
     result = create_drafts(work, _drafts(3))
     assert result['created'] == 3 and not result['errors']
     assert len(journal) == 6  # antes y después de cada efecto
-    assert len(full) == 1  # un solo guardado completo al final
+    assert len(full) == 2  # uno previo al primer efecto (E3 #1) y uno al final; nunca por borrador
     assert not (folder / RECEIPT_JOURNAL).exists()
     loaded = Work.load(folder, work.config)
     assert sorted(r['state'] for r in loaded.receipts.values() if r.get('kind') == 'draft') == ['created'] * 3
@@ -116,3 +116,78 @@ def test_cada_adjunto_se_lee_una_vez_por_borrador(tmp_path, monkeypatch):
     result = create_drafts(work, [draft])
     assert result['created'] == 1 and not result['errors']
     assert len(reads) == 1  # antes: 3 (clave del lote, clave del borrador y producto)
+
+
+def test_bin_danado_impide_el_primer_efecto_de_outlook(tmp_path, monkeypatch):
+    # E3 WP-92 #1: el guardado completo previo al lote verifica la copia de recuperación.
+    work, folder = _session(tmp_path)
+    (folder / (work.source_hash + '.bin')).write_bytes(b'copia ficticia alterada')
+    calls = []
+    monkeypatch.setattr(outputs, 'save_draft', lambda *a, **k: calls.append(1))
+    with pytest.raises(ValueError, match='recuperación está dañado'):
+        create_drafts(work, _drafts(2))
+    assert calls == []
+
+
+def test_ediciones_en_memoria_quedan_en_disco_antes_del_lote(tmp_path, monkeypatch):
+    work, folder = _session(tmp_path)
+    work.rows[0].review['OBSERVACION'] = 'Edición ficticia sin autoguardado.'
+
+    def cut(*a, **k):
+        raise KeyboardInterrupt  # corte durante el primer efecto de Outlook
+
+    monkeypatch.setattr(outputs, 'save_draft', cut)
+    with pytest.raises(KeyboardInterrupt):
+        create_drafts(work, _drafts(1))
+    assert Work.load(folder, work.config).rows[0].review['OBSERVACION'] == 'Edición ficticia sin autoguardado.'
+
+
+def test_error_no_os_en_el_guardado_final_se_informa_sin_perder_el_resumen(tmp_path, monkeypatch):
+    work, folder = _session(tmp_path)
+    monkeypatch.setattr(outputs, 'save_draft', lambda *a, **k: SimpleNamespace(entry_id='e', store_id='s'))
+    original = Work.save
+    calls = []
+
+    def save(self, *a, **k):
+        calls.append(1)
+        if len(calls) > 1:  # el guardado inicial pasa; el final falla
+            raise ValueError('falla ficticia')
+        return original(self, *a, **k)
+
+    monkeypatch.setattr(Work, 'save', save)
+    result = create_drafts(work, _drafts(2))
+    assert result['created'] == 2 and any('diario' in e for e in result['errors'])
+    monkeypatch.setattr(Work, 'save', original)
+    loaded = Work.load(folder, work.config)
+    assert sorted(r['state'] for r in loaded.receipts.values() if r.get('kind') == 'draft') == ['created'] * 2
+
+
+def test_lote_sin_cambios_netos_no_deja_diario_residual(tmp_path, monkeypatch):
+    # E3 WP-92 #2: todos fallan de forma no incierta y el guardado final sale por el atajo de huella.
+    work, folder = _session(tmp_path)
+
+    def fail(*a, **k):
+        raise RuntimeError('Outlook ficticio no disponible')
+
+    monkeypatch.setattr(outputs, 'save_draft', fail)
+    create_drafts(work, _drafts(2))
+    assert not (folder / RECEIPT_JOURNAL).exists()
+
+
+def test_diario_bloqueado_no_hace_fallar_un_guardado_ya_escrito(tmp_path, monkeypatch):
+    # E3 WP-92 #3: en Windows el unlink puede fallar; la trabajo.json nueva vuelve obsoleto el diario.
+    work, folder = _session(tmp_path)
+    work.receipts['k'] = {'kind': 'draft', 'state': 'created'}
+    work.save_receipts()
+    original = Path.unlink
+
+    def locked(self, *a, **k):
+        if self.name == RECEIPT_JOURNAL:
+            raise PermissionError('bloqueo ficticio')
+        return original(self, *a, **k)
+
+    monkeypatch.setattr(Path, 'unlink', locked)
+    work.receipts['k2'] = {'kind': 'draft', 'state': 'created'}
+    work.save(folder)
+    monkeypatch.setattr(Path, 'unlink', original)
+    assert set(Work.load(folder, work.config).receipts) >= {'k', 'k2'}
