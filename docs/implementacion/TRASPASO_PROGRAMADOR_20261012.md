@@ -2,6 +2,10 @@
 
 12 de octubre de 2026. Repositorio: [MatiGaete2023/flow](https://github.com/MatiGaete2023/flow). Rama de trabajo consolidada: `feat/ejecucion-plan-20261008`.
 
+> **Histórico (tramo WP-89).** Desde entonces se integraron EF-01 (WP-90), EF-02 (WP-91), EF-03 (WP-92) y las
+> correcciones de la revisión externa (WP-94); EF-04 está en la rama `wp/93-ef04`. La tabla «Qué falta» de abajo ya no
+> es vigente: usar el bloque generado de `CONTINUAR.md` y `PROMPT_CONTINUAR_IA.md`.
+
 Este informe describe el tramo WP-89 y contextualiza lo heredado. Referencia al comenzar este traspaso: `42df402`; añadir este documento no cambia el código comprobado. Los estados actuales se consultan en los JSON, no se deducen de notas históricas que dicen «pendiente».
 
 ## 1. Dónde retomé el trabajo

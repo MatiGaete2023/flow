@@ -1,6 +1,11 @@
 # Informe de avance y estado para revisión externa
 
 12 de octubre de 2026 · Repositorio `MatiGaete2023/flow` · rama canónica `feat/ejecucion-plan-20261008` en `b63070d`.
+
+> **Documento histórico** (estado al `98a9f82`, antes de la revisión externa). Cifras, estados y pendientes vigentes:
+> bloque generado de [CONTINUAR.md](../../CONTINUAR.md), `estado/*.json` y `linea_base.json`. La sección 9 rectifica lo
+> que la revisión externa contradijo; WP-94 se integró después en `fe4c225`.
+
 Este informe orienta la revisión; las fuentes de verdad son los archivos que cita. Niveles: **N1** = verificable ahora
 en el repositorio o en la CI; **N2** = inferencia con el supuesto indicado.
 
@@ -121,7 +126,7 @@ Orden de lectura sugerido:
 3. `CONTINUAR.md`;
 4. este informe;
 5. `docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md`;
-6. las fichas WP-86 a WP-93 y sus auditorías;
+6. las fichas WP-86 a WP-92 y WP-94 con sus auditorías (WP-93 vive en la rama `wp/93-ef04`);
 7. los manuales `docs/MANUAL_ASISTENTE_MVP_20261008.md` y `docs/MANUAL_DESCARGADOR_MVP_20261008.md`.
 
 El entorno se instala con `requirements/*.lock` (`pip install --require-hashes`).
@@ -154,7 +159,8 @@ evidencia N1 varias afirmaciones de este informe. Correcciones:
   - H2: un diario ilegible permitía repetir borradores;
   - H3: la retención ignoraba los paquetes del flujo principal.
 
-  Se corrigen en [WP-94](wp/WP-94.md), con E3 obligatoria. H4 se corrige en WP-93.
+  Se corrigieron en [WP-94](wp/WP-94.md), integrado en `fe4c225` tras E3 (C1–C6 aplicados). H4 se corrigió en WP-93
+  (rama `wp/93-ef04`, aprobado por E3).
 - **D4 «Implementado» (§2): era incompleto** para los paquetes del flujo nuevo (H3).
 - **Sin datos reales «Cumple» (§2):** el detector `check_real_ids` solo busca RUT con dígito válido y omitía
   contenedores renombrados (H5). Cero hallazgos no certifica la ausencia de datos personales.

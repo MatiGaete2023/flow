@@ -74,7 +74,7 @@ secciones siguientes, prevalecen estas enmiendas.
 
 La nueva ola se describe en [PLAN_EFICIENCIA_UX_20261012.md](PLAN_EFICIENCIA_UX_20261012.md) y la [especificación de interfaz](ESPECIFICACION_UX_20261012.md). WP-87 reserva únicamente tema compartido, adaptadores, pruebas y actualización documental. Las propuestas antiguas que también usaban WP-87 son propuestas sin ficha: no crean paquetes ni autorizan repetir cambios ajenos. WP-88 completa los cambios anunciados ausentes y UX-02/03 por instrucción expresa posterior; su alcance y evidencia están en la ficha y estado canónico. Las siguientes fichas se numeran al tomar su alcance.
 
-La decisión j prevalece sobre la descripción histórica de roles: los cambios sin riesgo se integran con el verificador PASA, sin fingir revisión independiente. Una sola medición completa del candidato sirve para verificar y actualizar línea base; otra requiere cambios posteriores, fallos o una preocupación nueva. WP-89 implementa E4 revisada. Generación de continuación y reutilización segura de mediciones quedan para una ficha posterior.
+La decisión j prevalece sobre la descripción histórica de roles: los cambios sin riesgo se integran con el verificador PASA, sin fingir revisión independiente. Una sola medición completa del candidato sirve para verificar y actualizar línea base; otra requiere cambios posteriores, fallos o una preocupación nueva. WP-89 implementa E4 revisada. Generación de continuación y reutilización segura de mediciones quedaron implementadas en WP-90.
 
 ## Roles y ciclo de vida de un WP
 

@@ -1,5 +1,8 @@
 # Eficiencia del proceso de agentes (12 de octubre de 2026)
 
+> **Propuesta histórica.** La numeración WP-87/WP-88 que aparece aquí fue sustituida; el alcance real de cada WP
+> está en [PLAN_EFICIENCIA_UX_20261012.md](PLAN_EFICIENCIA_UX_20261012.md) y en `estado/*.json`.
+
 Respuesta a «¿hay una forma más eficiente que la que estás usando?». **Sí.** Más de la mitad del costo (tiempo,
 tokens y minutos de Actions) se va en repetir trabajo, no en el cambio en sí.
 

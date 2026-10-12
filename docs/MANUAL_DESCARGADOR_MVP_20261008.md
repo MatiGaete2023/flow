@@ -25,6 +25,13 @@ la tabla vacía se comprueba en la respuesta y no acredita un historial completo
 
 La consulta de firmas continúa retirada: no hay campo activo de días ni hoja vacía «Resoluciones firmadas». Las recuperaciones antiguas conservan sus metadatos, sin consultar firmas. El lanzador no reduce todavía los dos runtimes empaquetados; el instalador ahora incluye ambas apps y la extensión.
 
+## Lotes antiguos (retención de 60 días)
+
+En **Resultados e historial**, **Archivar o borrar lotes antiguos** ofrece los lotes y paquetes («Paquete CSMP …») sin
+cambios en 60 días. No ofrece los que estén en uso ni los que tengan un archivo reciente. Nada se borra sin
+confirmar. Con la casilla de conservar, un lote clásico conserva `Bitacoras_RUS.xlsx` y `diagnostico_bitacoras.json`,
+y un paquete conserva solo su ZIP (la carpeta `respaldo/` se borra). Para guardar todo, usa **Archivar**.
+
 ## Recuperación, consultas separadas y productos disponibles
 
 1. Iniciar sesión institucional manualmente y definir tribunales, modalidades,
