@@ -4,15 +4,14 @@
 ## Estado generado
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
-- Línea base: `c752c6b3d1a9`; asistente 902 aprobadas, 11 omitidas, 6 xfail; descargador 246 aprobadas, 62 subpruebas.
-- Paquetes integrados: 44 de 49; último en el orden: WP-92.
+- Línea base: `fe4c2258ef42`; asistente 914 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
+- Paquetes integrados: 45 de 49; último en el orden: WP-94.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-94 | EN_REVISION | Correcciones de la revisión externa (H1–H3, H5, H6, H8) |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
