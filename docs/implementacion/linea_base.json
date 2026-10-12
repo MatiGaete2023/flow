@@ -1,14 +1,14 @@
 {
-  "commit": "14aa8af609a06e09287f401648e1af56b7c9e700",
+  "commit": "62f98cd23f0b95acd63fb73b47475debc6c82afc",
   "asistente": {
-    "aprobadas": 873,
+    "aprobadas": 874,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "873 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "874 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 246,
@@ -96,6 +96,7 @@
       "tests/test_audit_tools.py::test_archive_resource_limits_fail_closed[depth]",
       "tests/test_audit_tools.py::test_archive_resource_limits_fail_closed[expansion]",
       "tests/test_audit_tools.py::test_archive_resource_limits_fail_closed[members]",
+      "tests/test_audit_tools.py::test_ci_budget_has_no_automatic_windows_build_or_duplicate_exe",
       "tests/test_audit_tools.py::test_cli_help_does_not_rewrite_documents",
       "tests/test_audit_tools.py::test_collection_failure_does_not_prove_removed_node",
       "tests/test_audit_tools.py::test_corrupt_compressed_member_fails_without_traceback[LZMAError]",
