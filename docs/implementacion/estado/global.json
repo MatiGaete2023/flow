@@ -238,7 +238,7 @@
     "WP-88",
     "WP-70"
   ],
-  "commit_integracion": "43b8789497caaa6de6b38ea0aa3b8307a761ab60",
+  "commit_integracion": "9c8049035a5bc850e0d6ca2811f9476f9a2f2c54",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",
@@ -268,5 +268,13 @@
       "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
       "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
     }
-  ]
+  ],
+  "bloqueos_externos": {
+    "actions_windows": {
+      "estado": "PENDIENTE",
+      "motivo": "GitHub no inicia jobs: pagos fallidos o límite de gasto.",
+      "evidencia": "Anotación check-run 114668230322; runs PR42 38205584519 y 38205584494.",
+      "accion": "Responsable de la cuenta habilita facturación/límite; después ejecutar CI Windows sobre commit vigente. No reintentar mientras persista la causa."
+    }
+  }
 }

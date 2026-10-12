@@ -13,9 +13,9 @@ El estado de los WP vive en `estado/*.json`, agregado en [ESTADO.json](ESTADO.js
 | Fase | Alcance y criterio de término | Estado inicial |
 |---|---|---|
 | UX-01 / WP-87 | Tokens y estilos comunes claro/oscuro; adaptadores CTk y ttk compatibles con preferencias actuales; pruebas de contraste y de ambas apps. Sin cambios de negocio. | Implementado y verificado; integración en estado WP-87 |
-| Flujo integrado / WP-88 | Autoexportar tras importar; consulta y paquete en un paso; preferencia XLSX única; retiro de campo firmas; intermedios en respaldo; lanzador con dos modos. Se comprobó que faltaban en e91e360; el usuario autorizó completarlos en WP-88. | Implementación en WP-88; consultar estado canónico |
-| UX-02 | Asistente: extender barra existente a cuatro etapas y siguiente acción; jerarquía contextual; vacíos y resultados persistentes; contratos de widget intactos. | Implementación en WP-88; consultar estado canónico |
-| UX-03 | Descargador: grupos principal/lote/avanzado, pausa visible, progreso con ETA honesta y ruta final accesible. | Implementación en WP-88; consultar estado canónico |
+| Flujo integrado / WP-88 | Autoexportar tras importar; consulta y paquete en un paso; preferencia XLSX única; retiro de campo firmas; intermedios en respaldo; lanzador con dos modos. Se comprobó que faltaban en e91e360; el usuario autorizó completarlos en WP-88. | Integrado en WP-88/#42; uso real y Windows pendientes |
+| UX-02 | Asistente: extender barra existente a cuatro etapas y siguiente acción; jerarquía contextual; vacíos y resultados persistentes; contratos de widget intactos. | Integrado en WP-88/#42; uso real y Windows pendientes |
+| UX-03 | Descargador: grupos principal/lote/avanzado, pausa visible, progreso con ETA honesta y ruta final accesible. | Integrado en WP-88/#42; uso real y Windows pendientes |
 | EF-01 | CI rápida separada de construcción, documentos de continuación generados y reutilización segura de mediciones. Validar links/estado en documentación; Windows en candidato y cambios nativos. | Propuesta a implementar; workflows actuales siguen vigentes |
 | EF-02 | Medir edición/exportación con datos sintéticos; reducir duplicación y cálculo conservando dependencias y paridad. | Obtener benchmark antes de optimizar |
 | EF-03 | Optimizar borradores y adjuntos conservando persistencia previa/posterior a COM, `uncertain` y referencias de sesiones; E3 por riesgo. | Pendiente; no cabe en una ficha de solo interfaz |
