@@ -48,6 +48,10 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 ## Decisiones del 12 de octubre de 2026
 - j) E3 solo para cambios riesgosos: diffs que tocan motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto se integra con `verificar_wp.py` PASA, sin
   sesión revisora aparte. Fuente: «Sí, para los cambios riesgosos» (respuesta a EFICIENCIA_PROCESO_20261012.md).
+- k) Actualizar los planes y comenzar la ola de eficiencia y UX, conservando los dos botones de preparación y la
+  ubicación de los productos secundarios. Fuente: «Actualiza los planes en el repositorio y comienza a implementar».
+- l) Completar los cambios anunciados que no estuvieran integrados y continuar con UX; motor, Outlook, contratos,
+  retención y extensión intactos. Fuente: «Efectua los cambuos del otro agente que no esten y continua».
 
 ## Ola de eficiencia y experiencia — 12 de octubre de 2026
 

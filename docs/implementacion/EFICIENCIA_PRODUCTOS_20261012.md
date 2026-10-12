@@ -1,5 +1,8 @@
 # Eficiencia de los productos (12 de octubre de 2026)
 
+> **Propuesta histórica.** La numeración WP-87/WP-88 que aparece aquí fue sustituida; el alcance real de cada WP
+> está en [PLAN_EFICIENCIA_UX_20261012.md](PLAN_EFICIENCIA_UX_20261012.md) y en `estado/*.json`.
+
 Complemento de [EFICIENCIA_PROCESO_20261012.md](EFICIENCIA_PROCESO_20261012.md). Mira la eficiencia del Descargador
 SITFA, del Asistente CSMP y de lo que entregan al funcionario.
 
