@@ -16,7 +16,7 @@
   "tomado": "12 de octubre de 2026",
   "rama": "wp/93-ef04",
   "pr": null,
-  "verificacion": "PASA: verificacion/WP-93.json sobre 6f91337 limpio; asistente 890/11/6, descargador 251/62, inventario sin bajas, golden intacto. Línea base al integrar tras E3 y prueba SITFA.",
+  "verificacion": "PASA: verificacion/WP-93.json sobre 3a421f4 limpio (incluye WP-92 de feat); asistente 902/11/6, descargador 263/62, inventario sin bajas, golden intacto.",
   "revision": "E3 CAMBIOS (sesión independiente): hallazgos 1–5 corregidos con 12 pruebas nuevas y nota de manual (6); condición de código del revisor cumplida. Falta la prueba del usuario en SITFA real.",
   "auditoria": "docs/implementacion/auditoria/WP-93.md",
   "integrado_en": null,

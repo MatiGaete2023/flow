@@ -1,16 +1,16 @@
 {
-  "commit": "6f91337ac5a212a09cf60f670f473ac4784d70af",
-  "base": "f5c0d98c23ddbf1a6c83a4e254f4ae3c14ce9f2b",
+  "commit": "3a421f466d76fdca26b1ab5bdf91bae2eb61c079",
+  "base": "c752c6b3d1a9425bdf2b0e4d50c6380c56621f50",
   "controles": [
     {
       "control": "Suite asistente",
       "resultado": "PASA",
-      "detalle": "890 aprobadas; mínimo 890; base 890; código 0"
+      "detalle": "902 aprobadas; mínimo 902; base 902; código 0"
     },
     {
       "control": "Suite descargador",
       "resultado": "PASA",
-      "detalle": "251 aprobadas; mínimo 246; base 246; código 0"
+      "detalle": "263 aprobadas; mínimo 246; base 246; código 0"
     },
     {
       "control": "Inventario de pruebas",
@@ -50,7 +50,7 @@
   ],
   "suites": {
     "asistente": {
-      "aprobadas": 890,
+      "aprobadas": 902,
       "omitidas": 11,
       "fallidas": 0,
       "subpruebas": 0,
@@ -59,7 +59,7 @@
       "medicion_valida": true
     },
     "descargador": {
-      "aprobadas": 251,
+      "aprobadas": 263,
       "omitidas": 0,
       "fallidas": 0,
       "subpruebas": 62,
@@ -69,13 +69,13 @@
     }
   },
   "procedencia_inicio": {
-    "commit": "6f91337ac5a212a09cf60f670f473ac4784d70af",
-    "arbol_git": "cc086e4fbf8cab5b93ac651fd90786bb74937ca3",
+    "commit": "3a421f466d76fdca26b1ab5bdf91bae2eb61c079",
+    "arbol_git": "08d5115f72363dd1052e280d381205d260279ce2",
     "cambios_locales": false
   },
   "procedencia_fin": {
-    "commit": "6f91337ac5a212a09cf60f670f473ac4784d70af",
-    "arbol_git": "cc086e4fbf8cab5b93ac651fd90786bb74937ca3",
+    "commit": "3a421f466d76fdca26b1ab5bdf91bae2eb61c079",
+    "arbol_git": "08d5115f72363dd1052e280d381205d260279ce2",
     "cambios_locales": false
   },
   "procedencia_verificada": true,

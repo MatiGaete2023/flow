@@ -12,7 +12,7 @@
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-93 | EN_REVISION | EF-04: reutilizar bitácoras leídas hoy en otros lotes |
+| WP-93 | BLOQUEADO_USUARIO | EF-04: reutilizar bitácoras leídas hoy en otros lotes |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
