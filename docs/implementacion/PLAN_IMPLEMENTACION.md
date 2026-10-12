@@ -71,6 +71,12 @@ secciones siguientes, prevalecen estas enmiendas.
   `funcional` o `archivo`. Una dependencia de archivo no impide ejecutar el WP contra `feat`; solo obliga a resolver
   el conflicto textual al integrar. WP-61 excluye `src/nurus/personal/motor/` salvo decisión expresa.
 
+## Ola autorizada de eficiencia y UX — 12 de octubre de 2026
+
+La nueva ola se describe en [PLAN_EFICIENCIA_UX_20261012.md](PLAN_EFICIENCIA_UX_20261012.md) y la [especificación de interfaz](ESPECIFICACION_UX_20261012.md). WP-87 reserva únicamente tema compartido, adaptadores, pruebas y actualización documental. Las propuestas antiguas que también usaban WP-87 son propuestas sin ficha: no crean paquetes ni autorizan repetir cambios ajenos. Las siguientes fichas se numeran al confirmar responsables y commits en el estado canónico.
+
+La decisión j prevalece sobre la descripción histórica de roles: los cambios sin riesgo se integran con el verificador PASA, sin fingir revisión independiente. Una sola medición completa del candidato sirve para verificar y actualizar línea base; otra requiere cambios posteriores, fallos o una preocupación nueva. La propuesta de CI de bajo costo permanece pendiente de implementación; E4 continúa aplicándose al workflow existente.
+
 ## Roles y ciclo de vida de un WP
 
 Cinco roles de agente y el usuario. Un mismo agente puede asumir varios roles en distintos WP, pero **nunca revisa ni audita un WP que él mismo ejecutó**. Revisor y Auditor pertenecen a una raíz de agente distinta de la del Ejecutor; los subagentes de una misma raíz cuentan como el mismo agente (E3).
@@ -138,7 +144,7 @@ Desde E6, el gate real es por dependencias: un WP pasa a `LISTO` cuando sus depe
 WP-63/#34, WP-80/#35 y WP-81–84/#36–39 integrados en feat. G-3, G-4 y G-5 resueltos.
 Excepciones E3 expresas del usuario: #36–38 («Autorizar excepción E3 para #36–38») y
 #39 («Haz la excepcion y termina tu»). No acreditan revisión/auditoría independiente y no
-se extienden a main, releases ni paquetes futuros. Línea base vigente: 848/11/6 y 240/62 en `4dc54e9` (WP-85); CI verde en `32dd14c` (PR #1).
+se extienden a main, releases ni paquetes futuros. Medición histórica WP-85: `4dc54e9`; CI verde en `32dd14c` (PR #1). La línea base vigente se consulta en [linea_base.json](linea_base.json); WP-86 ya está integrado.
 
 Orden pendiente: confirmar retiro de referencias/cachés mediante Soporte GitHub (WP-17);
 recibir resultados de Excel/Outlook y acta WP-02; validar diez ingresos para aceptación de
@@ -146,7 +152,7 @@ WP-50/#33, cuyo código está consolidado; cerrar WP-70 tras acta final. Depende
 funcionales conservadas. Consolidación WP-85 de 45 ramas terminada técnicamente.
 
 Motor/textos/golden17 intactos; seis xfail estrictos. D3/D9 retirados, D4 60 días/10 sesiones,
-D5 cuatro meses, D6 consolidado en ZIP, D8 sin fallos observados. E3 general continúa vigente.
+D5 cuatro meses, D6 consolidado en ZIP, D8 sin fallos observados. E3 se aplica por riesgo según decisión j del 12 de octubre.
 
 ## Paquetes de trabajo
 

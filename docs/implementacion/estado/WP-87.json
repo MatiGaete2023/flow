@@ -1,0 +1,26 @@
+{
+  "titulo": "Tema visual compartido y planificación de eficiencia/UX",
+  "ola": 6,
+  "tipo": "M/C",
+  "depende_de": [
+    {
+      "wp": "WP-86",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/87-ux-tema-compartido",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Autorizado: «Actualiza los planes en el repositorio y comienza a implementar».",
+    "Primera fase: tema compartido sin cambios de negocio ni duplicación de desarrollos ajenos. E3 independiente no exigida por decisión j; no acredita aceptación real.",
+    "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente."
+  ]
+}
