@@ -1407,6 +1407,34 @@
         "Integrado por fast-forward en feat; el push del commit de código dispara la CI rápida (sin [skip ci])."
       ]
     },
+    "WP-93": {
+      "titulo": "EF-04: reutilizar bitácoras leídas hoy en otros lotes",
+      "ola": 6,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-91",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "12 de octubre de 2026",
+      "rama": "wp/93-ef04",
+      "pr": null,
+      "verificacion": "PASA: verificacion/WP-93.json sobre 6f91337 limpio; asistente 890/11/6, descargador 251/62, inventario sin bajas, golden intacto. Línea base al integrar tras E3 y prueba SITFA.",
+      "revision": "E3 obligatoria (decisión j: lectura SITFA vía extensión); pendiente por otra raíz. Además requiere prueba del usuario en SITFA real.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Reutiliza solo lecturas LEIDA de las 10 carpetas de bitácoras más recientes del mismo destino (lotes y paquetes), con misma clave y parámetros, capturadas el mismo día local y hace ≤12 h, y SHA-256 del HTML coincidente; copia el archivo al lote nuevo y anota reutilizada_de.",
+        "Pausas, tope de 300 aperturas, checkpoints y retomar sin cambios. Preferencia reutilizar_bitacoras (por defecto sí) con casilla «Reutilizar bitácoras leídas hoy».",
+        "Riesgo residual: una actuación registrada en SITFA después de la lectura reutilizada no aparece; mitigado por el límite de 12 h/mismo día y la casilla para volver a leer todo."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
