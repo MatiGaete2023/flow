@@ -16,7 +16,7 @@
   "tomado": "12 de octubre de 2026",
   "rama": "wp/92-ef03",
   "pr": null,
-  "verificacion": null,
+  "verificacion": "PASA: verificacion/WP-92.json sobre 9bb83dc limpio; asistente 897/11/6, descargador 246/62, inventario sin bajas, golden intacto. Línea base sin regenerar hasta integrar tras E3.",
   "revision": "E3 obligatoria (decisión j: Outlook/borradores y persistencia de recibos); pendiente por otra raíz.",
   "auditoria": null,
   "integrado_en": null,
