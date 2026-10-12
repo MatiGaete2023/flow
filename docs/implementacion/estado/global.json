@@ -2,7 +2,7 @@
   "version": 1,
   "rama_base": "feat/ejecucion-plan-20261008",
   "commit_inicio": "2765b47",
-  "actualizado": "11 de octubre de 2026",
+  "actualizado": "12 de octubre de 2026",
   "orquestador": "Codex /root",
   "decisiones": {
     "D1": {
@@ -232,7 +232,7 @@
     "WP-87",
     "WP-70"
   ],
-  "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+  "commit_integracion": "43b8789497caaa6de6b38ea0aa3b8307a761ab60",
   "excepciones_e3": [
     {
       "fecha": "11 de octubre de 2026",

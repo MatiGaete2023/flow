@@ -9,7 +9,7 @@
     }
   ],
   "decisiones": [],
-  "estado": "EN_REVISION",
+  "estado": "INTEGRADO",
   "ejecutor": "Codex /root",
   "tomado": "12 de octubre de 2026",
   "rama": "wp/87-ux-tema-compartido",
@@ -17,12 +17,13 @@
   "verificacion": "PASA: docs/implementacion/verificacion/WP-87.json; candidato dbcedca7597f91004764f89a72a045e5db0fb915 con procedencia limpia e inventario sin bajas.",
   "revision": "Revisión propia del diff y contraste: conforme. E3 independiente no exigida por decisión j; no acredita revisión de otra raíz.",
   "auditoria": null,
-  "integrado_en": null,
+  "integrado_en": "43b8789497caaa6de6b38ea0aa3b8307a761ab60",
   "notas": [
     "Autorizado: «Actualiza los planes en el repositorio y comienza a implementar».",
     "Primera fase: tema compartido sin cambios de negocio ni duplicación de desarrollos ajenos. E3 independiente no exigida por decisión j; no acredita aceptación real.",
     "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente.",
     "Medición a3f3af6 PASA con PYTHONPATH absoluto; candidato posterior corrige contraste de botones transparentes y foco ttk de 2 px, con prueba que falla antes del cambio. La medición final está pendiente.",
-    "Candidato final corregido: medición completa PASA con PYTHONPATH absoluto. Resultados numéricos solo en línea base e informe. PR #41 hacia feat; Windows/Office y aceptación real siguen pendientes."
+    "Candidato final corregido: medición completa PASA con PYTHONPATH absoluto. Resultados numéricos solo en línea base e informe. PR #41 hacia feat; Windows/Office y aceptación real siguen pendientes.",
+    "PR #41 fusionado en feat. La integración conserva exactamente el código medido en dbcedca; el estado final se publica en commit exclusivamente documental."
   ]
 }
