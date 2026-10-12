@@ -119,8 +119,9 @@ def _leida(clave, capturada):
         'estado': 'LEIDA',
         'capturada': capturada,
         'archivo': 'x.html',
-        'sha256': '0',
+        'sha256': '0' * 64,
         'entradas': 1,
+        'params': {},
     }
 
 
@@ -216,3 +217,46 @@ def test_respaldo_enlazado_fuera_del_destino_se_ignora(tmp_path):
     (base / 'Paquete CSMP x').mkdir(parents=True)
     (base / 'Paquete CSMP x' / 'respaldo').symlink_to(outside.parent, target_is_directory=True)
     assert lb.carpetas_previas(base) == []
+
+
+@pytest.mark.parametrize(
+    'campo,valor',
+    [
+        ('archivo', None),
+        ('archivo', ['x.html']),
+        ('sha256', None),
+        ('entradas', '3'),
+        ('params', None),
+        ('capturada', 5),
+    ],
+)
+def test_registro_previo_con_tipos_invalidos_se_relee(tmp_path, monkeypatch, campo, valor):
+    # Revisión externa H4: un campo previo de tipo inválido no aborta el lote; se lee en SITFA.
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    first_result, _ = _run(tmp_path, Bridge())
+    manifest = Path(first_result['manifest'])
+    data = json.loads(manifest.read_text(encoding='utf-8'))
+    for record in data['registros']:
+        if record['estado'] == 'LEIDA':
+            record[campo] = valor
+    manifest.write_text(json.dumps(data), encoding='utf-8')
+    again = Bridge()
+    result, _ = _run(tmp_path, again)
+    assert result['estado'] == 'COMPLETA' and again.openings
+
+
+def test_falla_leyendo_la_copia_previa_se_relee(tmp_path, monkeypatch):
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    first_result, _ = _run(tmp_path, Bridge())
+    previous = Path(first_result['manifest']).parent
+    original = Path.read_bytes
+
+    def locked(self):
+        if self.parent == previous and self.suffix == '.html':
+            raise PermissionError('bloqueo ficticio')
+        return original(self)
+
+    monkeypatch.setattr(Path, 'read_bytes', locked)
+    again = Bridge()
+    result, _ = _run(tmp_path, again)
+    assert result['estado'] == 'COMPLETA' and again.openings

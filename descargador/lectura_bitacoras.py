@@ -235,12 +235,31 @@ def _registros_previos(folder):
     return records
 
 
+def _estructura_reutilizable(record):
+    """Tipos completos de un registro previo antes de usarlo (revisión externa H4): ante cualquier duda, se relee."""
+    name = record.get('archivo')
+    digest = record.get('sha256')
+    entries = record.get('entradas')
+    return (
+        isinstance(name, str)
+        and name.endswith('.html')
+        and Path(name).name == name
+        and isinstance(digest, str)
+        and len(digest) == 64
+        and all(c in '0123456789abcdef' for c in digest)
+        and type(entries) is int
+        and entries >= 0
+        and isinstance(record.get('params'), dict)
+        and isinstance(record.get('capturada'), str)
+    )
+
+
 def lecturas_reutilizables(carpetas, ahora, horas=REUTILIZAR_HORAS):
     """clave → (carpeta, registro) de lecturas LEIDA recientes; gana la de `capturada` más reciente (E3 #2)."""
     result = {}
     for folder in carpetas:
         for record in _registros_previos(folder):
-            if not isinstance(record, dict) or record.get('estado') != 'LEIDA':
+            if not isinstance(record, dict) or record.get('estado') != 'LEIDA' or not _estructura_reutilizable(record):
                 continue
             key = record.get('clave')
             if not isinstance(key, str) or not key:
@@ -346,13 +365,17 @@ class _Lectura:
         folder, previous = self.cross.get(record['clave'], (None, None))
         if not previous or previous.get('params') != record.get('params'):
             return False
-        name = previous.get('archivo', '')
-        if Path(name).name != name or not name.endswith('.html'):
+        if not _estructura_reutilizable(previous):
             return False
+        name = previous['archivo']
         source = folder / name
-        if not source.is_file() or source.is_symlink() or source.stat().st_size > 8 * 1024 * 1024:
+        try:
+            # Una falla leyendo la fuente anterior no es una falla del lote actual: se lee en SITFA (H4).
+            if not source.is_file() or source.is_symlink() or source.stat().st_size > 8 * 1024 * 1024:
+                return False
+            data = source.read_bytes()
+        except OSError:
             return False
-        data = source.read_bytes()
         if hashlib.sha256(data).hexdigest() != previous.get('sha256'):
             return False
         if not all(previous.get(k) is not None for k in ('capturada', 'entradas')):
