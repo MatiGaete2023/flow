@@ -134,7 +134,7 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
             name = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
         yield str(path), str(name)
     suffix = path.suffix.lower()
-    if suffix not in TEXT_SUFFIXES and suffix not in ZIP_SUFFIXES and depth == 0:
+    if suffix not in TEXT_SUFFIXES and suffix not in ZIP_SUFFIXES:
         suffix, staged = sniff(path, staged)
     if suffix in TEXT_SUFFIXES:
         data = staged if staged is not None else path.read_bytes()
@@ -154,12 +154,16 @@ def texts(path: Path, staged: bytes | None = None, *, depth=0, budget=None):
                         continue
                     name = member.filename
                     member_suffix = Path(name).suffix.lower()
-                    if member_suffix not in TEXT_SUFFIXES | ZIP_SUFFIXES:
-                        continue
                     budget["bytes"] += member.file_size
                     if budget["bytes"] > MAX_ARCHIVE_BYTES:
                         raise ValueError("Expansión de contenedores excedida; control incompleto")
                     data = archive.read(member)
+                    if member_suffix not in TEXT_SUFFIXES | ZIP_SUFFIXES:
+                        # Revisión externa H5: un miembro renombrado (sesión .bin que es un XLSX) se revisa por
+                        # su contenido, igual que un archivo suelto de sufijo desconocido.
+                        member_suffix, data = sniff(Path(name), data)
+                        if not member_suffix:
+                            continue
                     if member_suffix in ZIP_SUFFIXES:
                         yield from texts(Path(f"{path}!{name}"), data, depth=depth + 1, budget=budget)
                     else:

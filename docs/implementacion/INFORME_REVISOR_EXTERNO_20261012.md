@@ -143,3 +143,26 @@ evidencia de funcionamiento real, pedir al usuario resultados agregados o el ext
 
 N2: ya no queda trabajo de programación que bloquee el cierre. El plazo depende de cuándo se hagan las pruebas
 reales y de Soporte GitHub; no hay datos para estimarlo.
+
+## 9. Rectificación tras la revisión externa (12 de octubre de 2026)
+
+La [revisión externa](auditoria/REVISION_EXTERNA_20261012.md) dio **NO APTO** (N2 del revisor) y contradijo con
+evidencia N1 varias afirmaciones de este informe. Correcciones:
+
+- **«Ya no queda trabajo de programación que bloquee el cierre» (§8): falso.** Hallazgos:
+  - H1: el anonimizador dejaba pasar texto libre;
+  - H2: un diario ilegible permitía repetir borradores;
+  - H3: la retención ignoraba los paquetes del flujo principal.
+
+  Se corrigen en [WP-94](wp/WP-94.md), con E3 obligatoria. H4 se corrige en WP-93.
+- **D4 «Implementado» (§2): era incompleto** para los paquetes del flujo nuevo (H3).
+- **Sin datos reales «Cumple» (§2):** el detector `check_real_ids` solo busca RUT con dígito válido y omitía
+  contenedores renombrados (H5). Cero hallazgos no certifica la ausencia de datos personales.
+- **CI Windows «PASA en 3.12–3.14» (§4):** las suites pasan en las tres versiones, pero los EXE, el instalador y las
+  capturas se construyen y verifican **solo en el job 3.12**.
+- **CI rápida:** no ejecuta los nueve controles de `verificar_wp.py` (línea base, golden, inventario); no son
+  equivalentes.
+- **Archivos versionados:** 821 en `98a9f82`; la meta orientativa de unos 600 sigue sin cumplirse.
+- **Pendientes sin datos:**
+  - capturas de 1024×650 con franjas cortadas (H7);
+  - la prueba de tema falla con Tk 9.0.4 en el entorno del revisor, en la comparación de color y no en el foco.

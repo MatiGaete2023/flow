@@ -78,6 +78,23 @@ def run(command, cwd=None, timeout=1800):
     return result.returncode, result.stdout + result.stderr
 
 
+NODEID = re.compile(r"[\w./\\-]+\.py(?:::[\w\[\]().,=\- ]+?)*")
+MAX_NODEIDS = 20
+
+
+def failed_nodeids(output):
+    """Nodeids de FAILED/ERROR del resumen corto de pytest (revisión externa H8).
+
+    Solo el identificador de la prueba, nunca el mensaje: el detalle puede contener datos de la falla.
+    """
+    found = []
+    for line in output.splitlines():
+        match = re.match(r"(?:FAILED|ERROR) (\S.*?)(?: - .*)?$", line.strip())
+        if match and NODEID.fullmatch(match.group(1)) and match.group(1) not in found:
+            found.append(match.group(1))
+    return found[:MAX_NODEIDS]
+
+
 def pytest_counts(args):
     code, out = run([PY, "-m", "pytest", "-q", "-p", "no:cacheprovider", *args])
     tail = out.strip().splitlines()[-1].strip("= ") if out.strip() else ""
@@ -108,6 +125,7 @@ def pytest_counts(args):
         "codigo": code,
         "medicion_valida": bool(valid),
     }
+    result["fallidas_nodeids"] = failed_nodeids(out)
     result["resumen"] = (
         f"{result['aprobadas']} aprobadas, {result['omitidas']} omitidas, "
         f"{result['fallidas']} fallidas, {result['subpruebas']} subpruebas; código {code}"
@@ -377,11 +395,16 @@ def compare(now, base, removed_a, removed_d, lists=None):
                 f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; código 0",
             )
         else:
-            add(
-                f"Suite {key}",
-                False,
-                "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos",
+            failed = (
+                [x for x in (n or {}).get("fallidas_nodeids", []) if isinstance(x, str)] if isinstance(n, dict) else []
             )
+            if isinstance(n, dict) and nonnegative(n.get("fallidas")) and n["fallidas"]:
+                detail = f"{n['fallidas']} prueba(s) fallida(s)" + (": " + ", ".join(failed) if failed else "")
+            else:
+                detail = (
+                    "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos"
+                )
+            add(f"Suite {key}", False, detail)
     baseline_inventory, current_inventory = base.get("pruebas_recolectadas"), now.get("pruebas_recolectadas")
     inventory_ok = inventory_valid(baseline_inventory) and inventory_valid(current_inventory)
     inventory_details = []
@@ -606,6 +629,12 @@ def suite_report(value):
     result["codigo"] = value.get("codigo") if type(value.get("codigo")) is int else None
     measured = value.get("medicion_valida", True)
     result["medicion_valida"] = measured if type(measured) is bool else False
+    nodeids = value.get("fallidas_nodeids", [])
+    result["fallidas_nodeids"] = (
+        [x for x in nodeids if isinstance(x, str) and NODEID.fullmatch(x)][:MAX_NODEIDS]
+        if isinstance(nodeids, list)
+        else []
+    )
     return result
 
 

@@ -212,6 +212,30 @@ def test_check_real_ids_reads_unknown_suffix_by_content(tmp_path):
     assert [text for name, text in found.items() if name.endswith('.png')] == ['logo.png']
 
 
+def test_check_real_ids_reads_renamed_member_inside_zip(tmp_path):
+    # Revisión externa H5: un XLSX guardado como sesion.bin dentro de otro ZIP se revisa por contenido.
+    import importlib.util
+    import io
+    import zipfile
+
+    spec = importlib.util.spec_from_file_location('ids', Path(__file__).parents[1] / 'tools/check_real_ids.py')
+    ids = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ids)
+    rut = '12345678-' + ids.check_digit('12345678')
+    inner = io.BytesIO()
+    with zipfile.ZipFile(inner, 'w') as book:
+        book.writestr('xl/sharedStrings.xml', '<t>RUT ' + rut + '</t>')
+    outer = tmp_path / 'anidado.zip'
+    with zipfile.ZipFile(outer, 'w') as container:
+        container.writestr('sesion.bin', inner.getvalue())
+        container.writestr('notas.dat', 'RUT ' + rut)
+        container.writestr('logo.png', b'\x89PNG\x00\x00')
+    found = dict(ids.texts(outer))
+    assert any(rut in text for name, text in found.items() if 'sesion.bin!' in name)
+    assert any(rut in text for name, text in found.items() if name.endswith('notas.dat'))
+    assert not any(rut in text for name, text in found.items() if name.endswith('logo.png'))
+
+
 def test_check_real_ids_decodes_utf16_and_cp1252():
     import importlib.util
 
