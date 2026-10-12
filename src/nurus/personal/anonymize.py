@@ -14,8 +14,12 @@ resultado. El texto libre fuera de las columnas que lee el motor (observaciones,
 hojas sin encabezado reconocido) se reemplaza por «[texto omitido]»: puede nombrar a personas que no
 aparecen en ninguna columna de identidad.
 
-Falla cerrado: antes de entregar la copia se revisa completa. Si queda un dato original,
-un RUT con dígito válido, un teléfono o un correo real, la copia se borra y se informa.
+Falla cerrado ante lo conocido: antes de entregar la copia se revisa completa; si queda un nombre de
+una columna de identidad, un RUT con dígito válido, un teléfono o un correo, no se crea y se informa.
+Límites (no detecta lo que no conoce): los títulos de hoja se conservan solo si son estructurales
+(ESPERA, informe_1…), la fila de encabezado se copia tal cual y las columnas que lee el motor
+conservan su texto para que las reglas den el mismo resultado. Revisa esos tres lugares antes de
+compartir.
 Nunca sobrescribe archivos ni modifica el original.
 """
 
@@ -141,6 +145,10 @@ ADDRESS_RE = re.compile(
 DIGITS_RE = re.compile(r"(?<![\d.\-])\d{7,9}(?![\d\-])")
 FAKE_DOMAIN = "@example.invalid"
 OMITTED = "[texto omitido]"
+SAFE_TITLE = re.compile(
+    r"(espera|cumplimiento|informes?|egresados?|otros?|original|consolidado|trabajo|resumen|hoja ?\d*|sheet ?\d*"
+    r"|informe[ _]?\d+|nurus[ _][\w ]+|cruce|hoja2|vencimientos?)"
+)
 SUFFIXES = {".xls", ".xlsx", ".xlsm"}
 HEADER_LIMIT = 60
 _FOLD = {"a": "aáàäâ", "e": "eéèëê", "i": "iíìïî", "o": "oóòöô", "u": "uúùüû", "n": "nñ", "c": "cç"}
@@ -568,7 +576,8 @@ def anonymize(source, target, shift_days=0):
     for number, (title, rows, merged) in enumerate(sheets, 1):
         index, kinds = _sheet_plan(rows)
         others = {t for t, _, _ in sheets if t != title}
-        new_title = replacer.text(title)[:31] or f"Hoja{number}"
+        # E3 WP-94 C3: un título puede nombrar a una persona; solo se conservan los títulos estructurales.
+        new_title = title if SAFE_TITLE.fullmatch(normalize(title)) else f"Hoja{number}"
         if new_title in used_titles or (new_title != title and new_title in others):
             new_title = f"Hoja{number}"
         used_titles.add(new_title)

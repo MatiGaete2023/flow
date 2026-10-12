@@ -222,9 +222,17 @@ RECEIPT_JOURNAL = 'recibos.diario.json'
 
 def _discard_journal(directory, work=None):
     """Retira el diario tras un guardado completo. Si no se puede (bloqueo en Windows), queda obsoleto: su base ya no
-    coincide con la trabajo.json nueva y load lo ignora, así que no debe hacer fallar un guardado ya escrito."""
-    if work is not None and getattr(work, '_save_journal_blocked', ''):
-        return  # un diario ilegible es evidencia de borradores posiblemente guardados: no se borra
+    coincide con la trabajo.json nueva y load lo ignora, así que no debe hacer fallar un guardado ya escrito.
+
+    Un diario ilegible es evidencia de borradores posiblemente guardados: se decide por el archivo, no por la
+    instancia (E3 WP-94 C1), y la instancia que guarda queda bloqueada igual que la que lo cargó.
+    """
+    try:
+        _receipt_journal(directory, None)
+    except JournalUnreadable as exc:
+        if work is not None:
+            work._save_journal_blocked = str(exc)
+        return
     try:
         (Path(directory) / RECEIPT_JOURNAL).unlink(missing_ok=True)
     except OSError:
@@ -256,8 +264,17 @@ def _receipt_journal(directory, base):
         data = json.loads(path.read_text(encoding='utf-8'))
     except (OSError, ValueError) as exc:
         raise JournalUnreadable(str(path)) from exc
-    if not isinstance(data, dict) or data.get('version') != 1 or not isinstance(data.get('receipts'), dict):
-        raise JournalUnreadable(str(path))
+    receipts = data.get('receipts') if isinstance(data, dict) else None
+    journal_base = data.get('base') if isinstance(data, dict) else None
+    if (
+        not isinstance(data, dict)
+        or data.get('version') != 1
+        or not isinstance(receipts, dict)
+        or not all(isinstance(key, str) and isinstance(value, dict) for key, value in receipts.items())
+        or not isinstance(journal_base, str)
+        or len(journal_base) != 64
+    ):
+        raise JournalUnreadable(str(path))  # estructura inválida (E3 WP-94 C5)
     if data.get('base') != base:
         return None
     return data['receipts']

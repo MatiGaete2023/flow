@@ -309,6 +309,7 @@ def test_persona_solo_en_texto_libre_no_sobrevive(tmp_path):
     hoja.cell(3, 7, 'OBSERVACION')
     hoja.cell(4, 7, 'Contacto: ' + PERSONAS[3])
     libro.create_sheet('Notas').cell(1, 1, 'Visita de ' + PERSONAS[3])
+    libro.create_sheet('Visita ' + PERSONAS[3].split()[-1])  # E3 WP-94 C3: nombre en el título de una hoja
     libro.save(origen)
     destino = tmp_path / 'anon.xlsx'
     anonymize(origen, destino)

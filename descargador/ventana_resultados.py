@@ -316,7 +316,9 @@ class ResultsWindow(tk.Toplevel):
 
         preserve = tk.BooleanVar(value=True)
         ttk.Checkbutton(
-            window, text='Al borrar, conservar Bitacoras_RUS.xlsx y diagnostico_bitacoras.json', variable=preserve
+            window,
+            text='Al borrar, conservar Bitacoras_RUS.xlsx, diagnostico_bitacoras.json y el ZIP de cada paquete',
+            variable=preserve,
         ).pack(anchor='w', padx=12, pady=5)
         actions = ttk.Frame(window)
         actions.pack(fill='x', padx=12, pady=10)
@@ -349,7 +351,11 @@ class ResultsWindow(tk.Toplevel):
         from preferencias import manage_old_batches, RETENCION_DIAS
 
         action = 'archivarán completos' if archive else 'borrarán'
-        note = ' Se conservarán Bitacoras_RUS.xlsx y diagnostico_bitacoras.json.' if preserve and not archive else ''
+        note = (
+            ' Se conservarán Bitacoras_RUS.xlsx, diagnostico_bitacoras.json y el ZIP de cada paquete.'
+            if preserve and not archive
+            else ''
+        )
         confirmed = messagebox.askyesno(
             'Confirmar gestión local',
             f'Se {action} {len(selected)} lotes de más de {RETENCION_DIAS} días.{note} ¿Continuar?',
