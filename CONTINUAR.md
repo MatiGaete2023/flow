@@ -4,8 +4,8 @@
 ## Estado generado
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
-- Línea base: `f5c0d98c23dd`; asistente 890 aprobadas, 11 omitidas, 6 xfail; descargador 246 aprobadas, 62 subpruebas.
-- Paquetes integrados: 43 de 48; último en el orden: WP-91.
+- Línea base: `c752c6b3d1a9`; asistente 902 aprobadas, 11 omitidas, 6 xfail; descargador 246 aprobadas, 62 subpruebas.
+- Paquetes integrados: 44 de 49; último en el orden: WP-92.
 
 | WP | Estado | Título |
 | --- | --- | --- |

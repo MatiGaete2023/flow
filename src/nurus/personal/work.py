@@ -217,6 +217,30 @@ def _sync_resolution_warning(row):
         row.warnings.append(issue)
 
 
+RECEIPT_JOURNAL = 'recibos.diario.json'
+
+
+def _discard_journal(directory):
+    """Retira el diario tras un guardado completo. Si no se puede (bloqueo en Windows), queda obsoleto: su base ya no
+    coincide con la trabajo.json nueva y load lo ignora, así que no debe hacer fallar un guardado ya escrito."""
+    try:
+        (Path(directory) / RECEIPT_JOURNAL).unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def _receipt_journal(directory, base):
+    """Recibos más recientes que trabajo.json, solo si el diario se escribió sobre esa misma versión."""
+    try:
+        data = json.loads((Path(directory) / RECEIPT_JOURNAL).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get('version') != 1 or data.get('base') != base:
+        return None
+    receipts = data.get('receipts')
+    return receipts if isinstance(receipts, dict) else None
+
+
 class Work:
     def __init__(self, config):
         self.config = deepcopy(config)
@@ -534,6 +558,20 @@ class Work:
             obj.rows.append(row)
         return obj
 
+    def save_receipts(self):
+        """Diario de recibos (EF-03): persiste solo los recibos, ligado a la trabajo.json vigente.
+
+        Sustituye al guardado completo antes y después de cada efecto de Outlook dentro de un lote.
+        Load solo lo aplica si `base` coincide con la trabajo.json en disco; save() completo lo retira.
+        """
+        directory = Path(self.storage_directory)
+        main = directory / 'trabajo.json'
+        if not main.is_file():
+            self.save(directory)
+            return
+        base = sha256(main.read_bytes()).hexdigest()
+        atomic_json(directory / RECEIPT_JOURNAL, {'version': 1, 'base': base, 'receipts': self.receipts})
+
     def save(self, directory, *, snapshot=False):
         """snapshot=True guarda una copia de respaldo sin cambiar la sesión principal (storage_directory),
         donde los recibos de borradores y proyectos siguen persistiéndose."""
@@ -567,6 +605,7 @@ class Work:
         if previous.is_file():
             info = previous.stat()
             if saved.get(key) == digest and stats.get(key) == (info.st_mtime_ns, info.st_size):
+                _discard_journal(directory)  # la principal ya contiene estos recibos (E3 WP-92 #2)
                 return
         if previous.exists():
             try:
@@ -576,6 +615,8 @@ class Work:
             else:
                 atomic_json(directory / 'trabajo.json.bak', old)
         atomic_json(previous, data)
+        # La trabajo.json recién escrita ya contiene los recibos: el diario queda obsoleto.
+        _discard_journal(directory)
         # Conserva también todas las copias que necesita la recuperación anterior.
         keep = {self.source_hash + '.bin'}
         if self.original_hash:
@@ -602,7 +643,11 @@ class Work:
     def load(cls, directory, config=None):
         """Sesiones nuevas usan la configuración vigente; las antiguas conservan la que traían."""
         directory = Path(directory)
-        data = json.loads((directory / 'trabajo.json').read_text(encoding='utf-8'))
+        raw = (directory / 'trabajo.json').read_bytes()
+        data = json.loads(raw.decode('utf-8'))
+        journal = _receipt_journal(directory, sha256(raw).hexdigest())
+        if journal is not None:
+            data['receipts'] = journal
         if 'config' not in data:
             from .config import defaults
 

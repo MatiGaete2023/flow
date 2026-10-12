@@ -247,6 +247,17 @@ def _table(work, rows, path, kind=''):
 
 
 _PREVIEW_DIGESTS = ContextVar('csmp_draft_preview_digests', default=None)
+_RECEIPT_JOURNAL = ContextVar('csmp_receipt_journal', default=False)
+
+
+def _persist(work):
+    """Antes y después de cada efecto de Outlook. En un lote, diario de recibos; si no, sesión completa."""
+    if not getattr(work, 'storage_directory', None):
+        return
+    if _RECEIPT_JOURNAL.get() and hasattr(work, 'save_receipts'):
+        work.save_receipts()
+    else:
+        work.save(work.storage_directory)
 
 
 @contextmanager
@@ -577,6 +588,28 @@ def create_drafts(work, drafts):
     result = {'created': 0, 'skipped': 0, 'errors': [], 'processed': 0}
     from .operations import checkpoint, progress, OperationCancelled
 
+    if drafts and getattr(work, 'storage_directory', None):
+        # Precondición previa a cualquier efecto COM (E3 WP-92 #1): verifica la copia .bin, conserva en disco las
+        # ediciones en memoria y deja la base del diario sobre la versión vigente. Si falla, no se toca Outlook.
+        work.save(work.storage_directory)
+    token = _RECEIPT_JOURNAL.set(True)
+    try:
+        _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled)
+    finally:
+        _RECEIPT_JOURNAL.reset(token)
+        if getattr(work, 'storage_directory', None) and result['processed']:
+            try:
+                # Un solo guardado completo por lote; si falla, el diario conserva los recibos.
+                work.save(work.storage_directory)
+            except Exception as exc:
+                result['errors'].append(
+                    'No se pudo guardar la sesión completa; los recibos quedaron en el diario: ' + str(exc)
+                )
+    progress('Borradores procesados', result['processed'], len(drafts))
+    return result
+
+
+def _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled):
     for index, draft in enumerate(drafts):
         try:
             checkpoint()
@@ -586,22 +619,21 @@ def create_drafts(work, drafts):
         progress('Guardando borradores en Outlook', index, len(drafts))
         result['processed'] = index + 1
         try:
-            draft.key = draft_fingerprint(draft)
+            digests = {}  # una lectura por adjunto en este borrador
+            draft.key = _draft_fingerprint(draft, digests)
             if draft.key in work.receipts:
                 state = work.receipts[draft.key].get('state')
                 result['skipped'] += 1
                 if state != 'created':
                     result['errors'].append(draft.subject + ': guardado previo incierto; revisa Borradores.')
                 continue
-            create_draft(work, draft, confirmed=True)
+            create_draft(work, draft, confirmed=True, _digests=digests)
             result['created'] += 1
         except Exception as exc:
             result['errors'].append(draft.subject + ': ' + str(exc))
-    progress('Borradores procesados', result['processed'], len(drafts))
-    return result
 
 
-def create_draft(work, draft, *, confirmed=False):
+def create_draft(work, draft, *, confirmed=False, _digests=None):
     if not confirmed:
         raise ValueError('Revisa destinatarios, texto y adjuntos antes de crear el borrador.')
     from .product_state import require_fresh
@@ -614,7 +646,9 @@ def create_draft(work, draft, *, confirmed=False):
         raise ValueError(issue)
     if not draft.roster_reviewed:
         raise ValueError('Genera o actualiza el adjunto de nómina antes de guardar el correo.')
-    draft.key = draft_fingerprint(draft)
+    # Misma lectura de cada adjunto para la clave y para el producto: sin releer entre ambos.
+    digests = {} if _digests is None else _digests
+    draft.key = _draft_fingerprint(draft, digests)
     if draft.key in work.receipts:
         raise ValueError('Este borrador ya se creó o su guardado quedó incierto; revisa Outlook antes de repetir.')
     to = '; '.join(emails(draft.to))
@@ -624,9 +658,10 @@ def create_draft(work, draft, *, confirmed=False):
     attachments = []
     for file in draft.attachments:
         path = Path(file).resolve()
-        if not path.is_file():
+        if not path.is_file() or digests.get(Path(file)) == 'MISSING':
             raise ValueError('Adjunto no disponible: ' + str(path))
-        attachments.append((str(path), sha256(path.read_bytes()).hexdigest()))
+        digest = digests.get(Path(file)) or sha256(path.read_bytes()).hexdigest()
+        attachments.append((str(path), digest))
     tpl = Template('personal', 'Correo revisado', ProductKind.EMAIL, '', '', ())
     product = Product(
         ProductKind.EMAIL,
@@ -652,8 +687,7 @@ def create_draft(work, draft, *, confirmed=False):
         type=draft.kind,
     )
     work.receipts[draft.key] = activity
-    if getattr(work, 'storage_directory', None):
-        work.save(work.storage_directory)
+    _persist(work)
     try:
         receipt = save_draft(
             product,
@@ -664,17 +698,14 @@ def create_draft(work, draft, *, confirmed=False):
         )
     except DraftSaveUncertain:
         activity['state'] = 'uncertain'
-        if getattr(work, 'storage_directory', None):
-            work.save(work.storage_directory)
+        _persist(work)
         raise
     except Exception:
         work.receipts.pop(draft.key, None)
-        if getattr(work, 'storage_directory', None):
-            work.save(work.storage_directory)
+        _persist(work)
         raise
     activity.update(state='created', entry_id=receipt.entry_id, store_id=receipt.store_id)
-    if getattr(work, 'storage_directory', None):
-        work.save(work.storage_directory)
+    _persist(work)
     return receipt
 
 
