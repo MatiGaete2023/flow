@@ -9,19 +9,20 @@
     }
   ],
   "decisiones": [],
-  "estado": "EN_VERIFICACION",
+  "estado": "EN_REVISION",
   "ejecutor": "Codex /root",
   "tomado": "12 de octubre de 2026",
   "rama": "wp/87-ux-tema-compartido",
-  "pr": null,
-  "verificacion": null,
-  "revision": null,
+  "pr": 41,
+  "verificacion": "PASA: docs/implementacion/verificacion/WP-87.json; candidato dbcedca7597f91004764f89a72a045e5db0fb915 con procedencia limpia e inventario sin bajas.",
+  "revision": "Revisión propia del diff y contraste: conforme. E3 independiente no exigida por decisión j; no acredita revisión de otra raíz.",
   "auditoria": null,
   "integrado_en": null,
   "notas": [
     "Autorizado: «Actualiza los planes en el repositorio y comienza a implementar».",
     "Primera fase: tema compartido sin cambios de negocio ni duplicación de desarrollos ajenos. E3 independiente no exigida por decisión j; no acredita aceptación real.",
     "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente.",
-    "Medición a3f3af6 PASA con PYTHONPATH absoluto; candidato posterior corrige contraste de botones transparentes y foco ttk de 2 px, con prueba que falla antes del cambio. La medición final está pendiente."
+    "Medición a3f3af6 PASA con PYTHONPATH absoluto; candidato posterior corrige contraste de botones transparentes y foco ttk de 2 px, con prueba que falla antes del cambio. La medición final está pendiente.",
+    "Candidato final corregido: medición completa PASA con PYTHONPATH absoluto. Resultados numéricos solo en línea base e informe. PR #41 hacia feat; Windows/Office y aceptación real siguen pendientes."
   ]
 }
