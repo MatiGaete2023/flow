@@ -236,3 +236,40 @@ def test_diario_obsoleto_valido_sigue_ignorandose_sin_bloquear(tmp_path, monkeyp
     loaded = Work.load(folder, work.config)
     monkeypatch.setattr(outputs, 'save_draft', lambda *a, **k: SimpleNamespace(entry_id='e', store_id='s'))
     assert create_drafts(loaded, _drafts(1))['created'] == 1
+
+
+def test_otra_instancia_no_borra_un_diario_ilegible(tmp_path, monkeypatch):
+    # E3 WP-94 C1: guardar otro Work en la misma carpeta no destruye la evidencia ni levanta el bloqueo.
+    work, folder = _session(tmp_path)
+    monkeypatch.setattr(outputs, 'save_draft', lambda *a, **k: SimpleNamespace(entry_id='e', store_id='s'))
+    token = outputs._RECEIPT_JOURNAL.set(True)
+    try:
+        create_draft(work, _drafts(1)[0], confirmed=True)
+    finally:
+        outputs._RECEIPT_JOURNAL.reset(token)
+    journal = folder / RECEIPT_JOURNAL
+    journal.write_text('{"truncado', encoding='utf-8')
+    (tmp_path / 'otra').mkdir()
+    other = exported(tmp_path / 'otra')
+    other.save(folder)
+    assert journal.exists()
+    with pytest.raises(ValueError, match='diario de recibos'):
+        create_drafts(other, _drafts(1))
+    with pytest.raises(ValueError, match='diario de recibos'):
+        create_drafts(Work.load(folder, work.config), _drafts(1))
+
+
+@pytest.mark.parametrize(
+    'contenido',
+    [
+        {'version': 1, 'base': None, 'receipts': {}},
+        {'version': 1, 'receipts': {}},
+        {'version': 1, 'base': '0' * 64, 'receipts': {'k': 'no es un recibo'}},
+    ],
+)
+def test_diario_con_base_o_recibos_invalidos_bloquea(tmp_path, contenido):
+    # E3 WP-94 C5.
+    work, folder = _session(tmp_path)
+    (folder / RECEIPT_JOURNAL).write_text(json.dumps(contenido), encoding='utf-8')
+    with pytest.raises(ValueError, match='diario de recibos'):
+        create_drafts(Work.load(folder, work.config), _drafts(1))

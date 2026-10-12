@@ -106,6 +106,21 @@ def decode_text(data: bytes) -> str:
     return content
 
 
+def _utf16_without_bom(raw: bytes) -> bool:
+    """Texto UTF-16 sin BOM: decodifica limpio y casi todo es imprimible (una imagen no lo es)."""
+    if len(raw) < 16 or len(raw) % 2:
+        return False
+    for codec in ("utf-16-le", "utf-16-be"):
+        try:
+            text = raw.decode(codec)
+        except UnicodeDecodeError:
+            continue
+        printable = sum(ch.isprintable() or ch in "\r\n\t" for ch in text)
+        if printable / len(text) > 0.95:
+            return True
+    return False
+
+
 def sniff(path: Path, staged: bytes | None) -> tuple[str, bytes | None]:
     """Sufijo efectivo de un archivo de sufijo desconocido según su contenido (WP-80).
 
@@ -115,6 +130,10 @@ def sniff(path: Path, staged: bytes | None) -> tuple[str, bytes | None]:
     raw = staged if staged is not None else path.read_bytes()
     if zipfile.is_zipfile(io.BytesIO(raw)):
         return ".zip", raw
+    if raw.startswith(b"\x1f\x8b"):
+        raise ValueError("Contenido gzip no inspeccionable; control incompleto")  # E3 WP-94 C6
+    if b"\0" in raw and _utf16_without_bom(raw):
+        raise ValueError("Texto UTF-16 sin BOM no inspeccionable; control incompleto")
     if raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)) or b"\0" not in raw:
         try:
             decode_text(raw)

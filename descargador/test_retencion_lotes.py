@@ -219,3 +219,24 @@ def test_respaldo_enlazado_no_cuenta_como_paquete(tmp_path):
     age = time.time() - 70 * 86400
     os.utime(outside / 'proceso.json', (age, age))
     assert old_batches(tmp_path / 'destino') == []
+
+
+def test_conservar_en_un_paquete_conserva_su_zip(tmp_path, monkeypatch):
+    # E3 WP-94 C2: en un paquete las bitácoras están en el ZIP; «conservar» no puede borrarlo.
+    folder = _paquete_por_flujo(tmp_path, monkeypatch, 61)
+    manage_old_batches(tmp_path, [folder], confirmed=True, preserve=True)
+    assert (folder / 'Captura_CSMP.zip').is_file() and not (folder / 'respaldo').exists()
+
+
+def test_paquete_con_archivo_reciente_o_carpeta_ajena_no_se_ofrece(tmp_path, monkeypatch):
+    # E3 WP-94 C4.
+    folder = _paquete_por_flujo(tmp_path, monkeypatch, 61)
+    (folder / 'nota_del_usuario.txt').write_text('ficticia')
+    assert old_batches(tmp_path) == []
+    alien = tmp_path / 'otra' / 'Mi carpeta'
+    (alien / 'respaldo').mkdir(parents=True)
+    (alien / 'respaldo' / 'proceso.json').write_text('{}')
+    age = time.time() - 70 * 86400
+    for path in [alien, *alien.rglob('*')]:
+        os.utime(path, (age, age))
+    assert old_batches(tmp_path / 'otra') == []
