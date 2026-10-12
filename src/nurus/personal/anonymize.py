@@ -10,7 +10,9 @@ domicilios, teléfonos y correos se reemplazan por valores ficticios estables (e
 dato recibe siempre el mismo reemplazo, así se conservan hermanos y causas). Los RUT
 ficticios tienen dígito verificador inválido y el mismo formato que el original.
 Tribunal, programa, fechas y números se conservan para que las reglas den el mismo
-resultado.
+resultado. El texto libre fuera de las columnas que lee el motor (observaciones, glosas, títulos,
+hojas sin encabezado reconocido) se reemplaza por «[texto omitido]»: puede nombrar a personas que no
+aparecen en ninguna columna de identidad.
 
 Falla cerrado: antes de entregar la copia se revisa completa. Si queda un dato original,
 un RUT con dígito válido, un teléfono o un correo real, la copia se borra y se informa.
@@ -138,6 +140,7 @@ ADDRESS_RE = re.compile(
 )
 DIGITS_RE = re.compile(r"(?<![\d.\-])\d{7,9}(?![\d\-])")
 FAKE_DOMAIN = "@example.invalid"
+OMITTED = "[texto omitido]"
 SUFFIXES = {".xls", ".xlsx", ".xlsm"}
 HEADER_LIMIT = 60
 _FOLD = {"a": "aáàäâ", "e": "eéèëê", "i": "iíìïî", "o": "oóòöô", "u": "uúùüû", "n": "nñ", "c": "cç"}
@@ -594,8 +597,13 @@ def anonymize(source, target, shift_days=0):
                 elif _long_number(value):
                     # Fuera de columnas que lee el motor, un entero de 7 a 9 dígitos puede ser RUT o teléfono.
                     new = "#" * len(str(int(value)))
+                elif isinstance(value, str) and body and kind == "curador":
+                    new = replacer.text(value)
                 elif isinstance(value, str):
-                    new = replacer.text(value, free=kind != "rit")
+                    # Revisión externa H1: el texto libre puede nombrar a personas que no figuran en ninguna
+                    # columna de identidad, y entonces no hay reemplazo conocido. Ninguna columna que lee el
+                    # motor llega aquí (esas van por protected_cols), así que omitirlo no cambia las reglas.
+                    new = OMITTED
                 if new != value:
                     report.changed += 1
                 cell = sheet.cell(r + 1, c + 1, new)

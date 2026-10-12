@@ -191,3 +191,48 @@ def test_diario_bloqueado_no_hace_fallar_un_guardado_ya_escrito(tmp_path, monkey
     work.save(folder)
     monkeypatch.setattr(Path, 'unlink', original)
     assert set(Work.load(folder, work.config).receipts) >= {'k', 'k2'}
+
+
+@pytest.mark.parametrize('damage', ['permiso', 'truncado', 'estructura'])
+def test_diario_existente_ilegible_bloquea_repetir_borradores(tmp_path, monkeypatch, damage):
+    # Revisión externa H2: un diario que existe pero no se puede leer no equivale a «sin diario».
+    work, folder = _session(tmp_path)
+    calls = []
+    monkeypatch.setattr(
+        outputs, 'save_draft', lambda *a, **k: calls.append(1) or SimpleNamespace(entry_id='e', store_id='s')
+    )
+    token = outputs._RECEIPT_JOURNAL.set(True)  # corte: el recibo solo quedó en el diario
+    try:
+        create_draft(work, _drafts(1)[0], confirmed=True)
+    finally:
+        outputs._RECEIPT_JOURNAL.reset(token)
+    journal = folder / RECEIPT_JOURNAL
+    if damage == 'truncado':
+        journal.write_text(journal.read_text(encoding='utf-8')[:20], encoding='utf-8')
+    elif damage == 'estructura':
+        journal.write_text('{"version": 1, "receipts": []}', encoding='utf-8')
+    original = Path.read_text
+
+    def locked(self, *a, **k):
+        if damage == 'permiso' and self.name == RECEIPT_JOURNAL:
+            raise PermissionError('bloqueo ficticio')
+        return original(self, *a, **k)
+
+    monkeypatch.setattr(Path, 'read_text', locked)
+    recovered = Work.load(folder, work.config)
+    with pytest.raises(ValueError, match='diario de recibos'):
+        create_drafts(recovered, _drafts(1))
+    with pytest.raises(ValueError, match='diario de recibos'):
+        create_draft(recovered, _drafts(1)[0], confirmed=True)
+    recovered.save(folder)  # un guardado completo no destruye la evidencia
+    assert journal.exists() and calls == [1]
+
+
+def test_diario_obsoleto_valido_sigue_ignorandose_sin_bloquear(tmp_path, monkeypatch):
+    work, folder = _session(tmp_path)
+    (folder / RECEIPT_JOURNAL).write_text(
+        json.dumps({'version': 1, 'base': '0' * 64, 'receipts': {}}), encoding='utf-8'
+    )
+    loaded = Work.load(folder, work.config)
+    monkeypatch.setattr(outputs, 'save_draft', lambda *a, **k: SimpleNamespace(entry_id='e', store_id='s'))
+    assert create_drafts(loaded, _drafts(1))['created'] == 1

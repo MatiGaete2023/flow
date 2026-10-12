@@ -10,7 +10,7 @@ import pytest
 from openpyxl import Workbook, load_workbook
 from openpyxl.comments import Comment
 
-from nurus.personal.anonymize import anonymize, check_digit, main
+from nurus.personal.anonymize import OMITTED, anonymize, check_digit, main
 from nurus.personal.config import defaults
 from nurus.personal.work import Work
 
@@ -146,7 +146,8 @@ def test_sonda_sin_filtraciones_mismas_reglas_y_check_real_ids(tmp_path):
     hoja = load_workbook(destino)['ESPERA']
     rits = [hoja.cell(fila, 1).value for fila in range(3, 7)]
     assert rits[0] == rits[1] != rits[2] and len(set(rits)) == 3
-    assert hoja.cell(5, 9).value.endswith(rits[3])
+    # H1 (revisión externa): el texto libre fuera de las columnas del motor se omite, no se pseudonimiza.
+    assert hoja.cell(5, 9).value == OMITTED
     assert 'Institución: CAJ Biobío' == hoja.cell(6, 8).value
     resultado = subprocess.run(
         [sys.executable, str(ROOT / 'tools' / 'check_real_ids.py'), str(destino)],
@@ -191,7 +192,8 @@ def test_texto_literal_no_se_convierte_en_formula(tmp_path, texto_literal):
     copia = load_workbook(destino, data_only=False)
     try:
         celda = copia['ESPERA']['I3']
-        assert celda.value == texto_literal and celda.data_type == 's'
+        # La columna es texto libre (H1): se omite; lo que importa aquí es que nunca sea fórmula.
+        assert celda.value == OMITTED and celda.data_type == 's'
         assert not any(c.data_type == 'f' for h in copia for f in h for c in f)
     finally:
         copia.close()
@@ -295,3 +297,21 @@ def test_boton_configuracion_crea_copia_y_no_sobrescribe(tmp_path, monkeypatch):
     with pytest.raises(FileExistsError):
         app_base.App._export_anonymous_case(app)
     assert destino.read_bytes() == copia and origen.read_bytes() == huella
+
+
+def test_persona_solo_en_texto_libre_no_sobrevive(tmp_path):
+    # Revisión externa H1: un nombre que no figura en ninguna columna de identidad no tiene reemplazo conocido.
+    from test_personal_flow import source
+
+    origen = source(tmp_path)
+    libro = load_workbook(origen)
+    hoja = libro['informe_1']
+    hoja.cell(3, 7, 'OBSERVACION')
+    hoja.cell(4, 7, 'Contacto: ' + PERSONAS[3])
+    libro.create_sheet('Notas').cell(1, 1, 'Visita de ' + PERSONAS[3])
+    libro.save(origen)
+    destino = tmp_path / 'anon.xlsx'
+    anonymize(origen, destino)
+    assert PERSONAS[3].lower() not in texto(destino).lower()
+    copia = load_workbook(destino)
+    assert copia['informe_1'].cell(4, 7).value == OMITTED

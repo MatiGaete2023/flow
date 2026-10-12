@@ -143,6 +143,24 @@ def onedrive_warning(path):
     )
 
 
+def _package_controls(folder):
+    """Paquete de «Consultar y crear paquete» (revisión externa H3): controles bajo respaldo/ y el ZIP.
+
+    Solo cuenta si respaldo/proceso.json existe; ignora enlaces en cualquier tramo de la ruta.
+    """
+    backup = folder / 'respaldo'
+    process = backup / 'proceso.json'
+    if backup.is_symlink() or not backup.is_dir() or process.is_symlink() or not process.is_file():
+        return []
+    controls = [process]
+    for name in ('resumen.json', 'bitacoras.json', 'flujo.json'):
+        for path in backup.glob('*/' + name):
+            if not path.is_symlink() and not path.parent.is_symlink() and path.is_file():
+                controls.append(path)
+    controls += [path for path in folder.glob('*.zip') if path.is_file() and not path.is_symlink()]
+    return controls
+
+
 def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     """Lista controles antiguos directos: ignora enlaces, carpetas ajenas y lotes vigentes."""
     import time
@@ -164,7 +182,7 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
             folder / name
             for name in ('resumen.json', 'bitacoras.json', 'flujo.json')
             if (folder / name).is_file() and not (folder / name).is_symlink()
-        ]
+        ] + _package_controls(folder)
         if not controls:
             continue
         modified = max(path.stat().st_mtime for path in controls)

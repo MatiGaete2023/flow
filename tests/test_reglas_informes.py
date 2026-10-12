@@ -277,6 +277,15 @@ def test_rt23_mismo_dia_sin_hora_es_incierto_y_focalizado(tmp_path):
     assert not resultado['later'] and resultado['class'] == 'FOCALIZADA'
 
 
+def debe(condicion, motivo):
+    """Invariante previa al conflicto (revisión externa H6).
+
+    pytest.fail no es AssertionError: un xfail estricto con raises=AssertionError no puede absorber su falla.
+    """
+    if not condicion:
+        pytest.fail('Invariante previa al conflicto R-T: ' + motivo)
+
+
 FUERA_DE_ALCANCE = (
     '[CONFLICTO_ABIERTO] {caso}: falta el hallazgo {regla}; historia SITFA/PDF y CT-03..CT-10 '
     'siguen fuera del alcance de PLAN_VIGENTE; se prueba la expectativa, sin activar reglas.'
@@ -306,11 +315,14 @@ def test_rt24_informe_vencido_y_tramite_exigen_cotejo(tmp_path):
 
     captura, ruta = _captura(tmp_path, modificar)
     trabajo = import_capture(ruta, defaults(), as_of=CORTE)
-    assert 'INFORMES.I01_VENCIDO_GENERAL' in trabajo.rows[0].rules
+    debe(
+        'INFORMES.I01_VENCIDO_GENERAL' in trabajo.rows[0].rules,
+        "'INFORMES.I01_VENCIDO_GENERAL' in trabajo.rows[0].rules",
+    )
     resultado = _contexto(captura)
-    assert resultado['class'] == 'FOCALIZADA'
-    assert 'tramite-informe' in _ids(resultado['later'])
-    assert 'subsanado' not in resultado['reason'].lower()
+    debe(resultado['class'] == 'FOCALIZADA', "resultado['class'] == 'FOCALIZADA'")
+    debe('tramite-informe' in _ids(resultado['later']), "'tramite-informe' in _ids(resultado['later'])")
+    debe('subsanado' not in resultado['reason'].lower(), "'subsanado' not in resultado['reason'].lower()")
     assert any(
         h['rule_id'] == 'CT-05' and 'tramite-informe' in h['source_ids'] and 'cotej' in h['reason'].lower()
         for h in resultado['findings']
@@ -331,9 +343,12 @@ def test_rt25_firma_parcial_no_acredita_ausencia_de_actividad(tmp_path):
 
     captura, _ = _captura(tmp_path, modificar)
     resultado = _contexto(captura)
-    assert _ids(resultado['later']) == ['firma-parcial']
-    assert resultado['later'][0]['coverage'] == 'PARCIAL'
-    assert 'historia completa' in resultado['reason'] and 'no acredita' in resultado['reason']
+    debe(_ids(resultado['later']) == ['firma-parcial'], "_ids(resultado['later']) == ['firma-parcial']")
+    debe(resultado['later'][0]['coverage'] == 'PARCIAL', "resultado['later'][0]['coverage'] == 'PARCIAL'")
+    debe(
+        'historia completa' in resultado['reason'] and 'no acredita' in resultado['reason'],
+        "'historia completa' in resultado['reason'] and 'no acredita' in resultado['reason']",
+    )
     assert any(
         h['rule_id'] == 'CT-08' and h['status'] == 'NO_EVALUABLE' and 'firma-parcial' in h['source_ids']
         for h in resultado['findings']
@@ -356,10 +371,13 @@ def test_rt26_reiteracion_senalada_sin_suprimir_propuesta(tmp_path):
 
     captura, ruta = _captura(tmp_path, modificar)
     trabajo = import_capture(ruta, defaults(), as_of=CORTE)
-    assert trabajo.rows[0].observation and trabajo.rows[0].actions
+    debe(
+        trabajo.rows[0].observation and trabajo.rows[0].actions,
+        'trabajo.rows[0].observation and trabajo.rows[0].actions',
+    )
     resultado = _contexto(captura)
-    assert set(_ids(resultado['recent'])) == {'e0', 'reiterada'}
-    assert _ids(resultado['last_center']) == ['reiterada']
+    debe(set(_ids(resultado['recent'])) == {'e0', 'reiterada'}, "set(_ids(resultado['recent'])) == {'e0', 'reiterada'}")
+    debe(_ids(resultado['last_center']) == ['reiterada'], "_ids(resultado['last_center']) == ['reiterada']")
     assert any(
         h['rule_id'] == 'CT-07'
         and set(h['source_ids']) == {'e0', 'reiterada'}
@@ -460,11 +478,14 @@ def test_rt32_reglas_contextuales_desactivadas_explican_exclusion(tmp_path):
     trabajo = import_capture(ruta, configuracion, as_of=CORTE)
     apply(trabajo, [trabajo.rows[0].id], decisions={'resolution': 'none', 'mail': {'programa_espera': 'omit'}})
     nueva = import_capture(ruta, configuracion, as_of=CORTE, previous=trabajo)
-    assert nueva.config['desactivadas'] == ['CT-01', 'CT-02']
-    assert nueva.config['umbrales']['mayoria'] == 61
-    assert nueva.rows[0].decisions == trabajo.rows[0].decisions
+    debe(nueva.config['desactivadas'] == ['CT-01', 'CT-02'], "nueva.config['desactivadas'] == ['CT-01', 'CT-02']")
+    debe(nueva.config['umbrales']['mayoria'] == 61, "nueva.config['umbrales']['mayoria'] == 61")
+    debe(nueva.rows[0].decisions == trabajo.rows[0].decisions, 'nueva.rows[0].decisions == trabajo.rows[0].decisions')
     hallazgos = nueva.capture_context[nueva.rows[0].id]['findings']
-    assert not any(h['rule_id'] in ('CT-01', 'CT-02') and h['status'] == 'APLICA' for h in hallazgos)
+    debe(
+        not any(h['rule_id'] in ('CT-01', 'CT-02') and h['status'] == 'APLICA' for h in hallazgos),
+        "not any(h['rule_id'] in ('CT-01', 'CT-02') and h['status'] == 'APLICA' for h in hallazgos)",
+    )
     assert all(
         any(h['rule_id'] == regla and 'desactiv' in h['reason'].lower() for h in hallazgos)
         for regla in ('CT-01', 'CT-02')

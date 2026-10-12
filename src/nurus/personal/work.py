@@ -220,25 +220,47 @@ def _sync_resolution_warning(row):
 RECEIPT_JOURNAL = 'recibos.diario.json'
 
 
-def _discard_journal(directory):
+def _discard_journal(directory, work=None):
     """Retira el diario tras un guardado completo. Si no se puede (bloqueo en Windows), queda obsoleto: su base ya no
     coincide con la trabajo.json nueva y load lo ignora, así que no debe hacer fallar un guardado ya escrito."""
+    if work is not None and getattr(work, '_save_journal_blocked', ''):
+        return  # un diario ilegible es evidencia de borradores posiblemente guardados: no se borra
     try:
         (Path(directory) / RECEIPT_JOURNAL).unlink(missing_ok=True)
     except OSError:
         pass
 
 
+def journal_blocked_message():
+    return (
+        'No se pudo leer el diario de recibos de la sesión (recibos.diario.json). Puede haber borradores ya '
+        'guardados en Outlook que esta sesión no ve. Revisa la carpeta Borradores; para continuar, corrige el '
+        'acceso al archivo o muévelo fuera de la carpeta de la sesión y vuelve a abrirla.'
+    )
+
+
+class JournalUnreadable(Exception):
+    """Existe un diario de recibos que no se puede leer o validar: podría contener borradores ya guardados."""
+
+
 def _receipt_journal(directory, base):
-    """Recibos más recientes que trabajo.json, solo si el diario se escribió sobre esa misma versión."""
+    """Recibos más recientes que trabajo.json, solo si el diario se escribió sobre esa misma versión.
+
+    Ausente u obsoleto (otra base) → None. Existente pero ilegible o con estructura inválida → JournalUnreadable:
+    nunca se trata como ausente, porque perder sus recibos permitiría repetir un borrador (revisión externa H2).
+    """
+    path = Path(directory) / RECEIPT_JOURNAL
+    if not path.exists():
+        return None
     try:
-        data = json.loads((Path(directory) / RECEIPT_JOURNAL).read_text(encoding='utf-8'))
-    except (OSError, ValueError):
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError) as exc:
+        raise JournalUnreadable(str(path)) from exc
+    if not isinstance(data, dict) or data.get('version') != 1 or not isinstance(data.get('receipts'), dict):
+        raise JournalUnreadable(str(path))
+    if data.get('base') != base:
         return None
-    if not isinstance(data, dict) or data.get('version') != 1 or data.get('base') != base:
-        return None
-    receipts = data.get('receipts')
-    return receipts if isinstance(receipts, dict) else None
+    return data['receipts']
 
 
 class Work:
@@ -565,6 +587,8 @@ class Work:
         Load solo lo aplica si `base` coincide con la trabajo.json en disco; save() completo lo retira.
         """
         directory = Path(self.storage_directory)
+        if getattr(self, '_save_journal_blocked', ''):
+            raise ValueError(journal_blocked_message())
         main = directory / 'trabajo.json'
         if not main.is_file():
             self.save(directory)
@@ -605,7 +629,7 @@ class Work:
         if previous.is_file():
             info = previous.stat()
             if saved.get(key) == digest and stats.get(key) == (info.st_mtime_ns, info.st_size):
-                _discard_journal(directory)  # la principal ya contiene estos recibos (E3 WP-92 #2)
+                _discard_journal(directory, self)  # la principal ya contiene estos recibos (E3 WP-92 #2)
                 return
         if previous.exists():
             try:
@@ -616,7 +640,7 @@ class Work:
                 atomic_json(directory / 'trabajo.json.bak', old)
         atomic_json(previous, data)
         # La trabajo.json recién escrita ya contiene los recibos: el diario queda obsoleto.
-        _discard_journal(directory)
+        _discard_journal(directory, self)
         # Conserva también todas las copias que necesita la recuperación anterior.
         keep = {self.source_hash + '.bin'}
         if self.original_hash:
@@ -645,7 +669,13 @@ class Work:
         directory = Path(directory)
         raw = (directory / 'trabajo.json').read_bytes()
         data = json.loads(raw.decode('utf-8'))
-        journal = _receipt_journal(directory, sha256(raw).hexdigest())
+        try:
+            journal = _receipt_journal(directory, sha256(raw).hexdigest())
+        except JournalUnreadable as exc:
+            journal = None
+            blocked = str(exc)
+        else:
+            blocked = ''
         if journal is not None:
             data['receipts'] = journal
         if 'config' not in data:
@@ -655,6 +685,8 @@ class Work:
         data.pop('config_sha256', None)
         obj = cls(data['config'])
         obj.__dict__.update(data)
+        # Se conserva el diario como evidencia y se bloquean nuevos borradores hasta resolverlo (H2).
+        obj._save_journal_blocked = blocked
         obj.activity_reviewed = {}
         obj.signed_activity = {}
         if getattr(obj, 'needs_cross', False):
