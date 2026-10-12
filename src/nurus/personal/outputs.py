@@ -588,6 +588,10 @@ def create_drafts(work, drafts):
     result = {'created': 0, 'skipped': 0, 'errors': [], 'processed': 0}
     from .operations import checkpoint, progress, OperationCancelled
 
+    if drafts and getattr(work, 'storage_directory', None):
+        # Precondición previa a cualquier efecto COM (E3 WP-92 #1): verifica la copia .bin, conserva en disco las
+        # ediciones en memoria y deja la base del diario sobre la versión vigente. Si falla, no se toca Outlook.
+        work.save(work.storage_directory)
     token = _RECEIPT_JOURNAL.set(True)
     try:
         _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled)
@@ -597,7 +601,7 @@ def create_drafts(work, drafts):
             try:
                 # Un solo guardado completo por lote; si falla, el diario conserva los recibos.
                 work.save(work.storage_directory)
-            except OSError as exc:
+            except Exception as exc:
                 result['errors'].append(
                     'No se pudo guardar la sesión completa; los recibos quedaron en el diario: ' + str(exc)
                 )

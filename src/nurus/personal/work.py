@@ -220,6 +220,15 @@ def _sync_resolution_warning(row):
 RECEIPT_JOURNAL = 'recibos.diario.json'
 
 
+def _discard_journal(directory):
+    """Retira el diario tras un guardado completo. Si no se puede (bloqueo en Windows), queda obsoleto: su base ya no
+    coincide con la trabajo.json nueva y load lo ignora, así que no debe hacer fallar un guardado ya escrito."""
+    try:
+        (Path(directory) / RECEIPT_JOURNAL).unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def _receipt_journal(directory, base):
     """Recibos más recientes que trabajo.json, solo si el diario se escribió sobre esa misma versión."""
     try:
@@ -596,6 +605,7 @@ class Work:
         if previous.is_file():
             info = previous.stat()
             if saved.get(key) == digest and stats.get(key) == (info.st_mtime_ns, info.st_size):
+                _discard_journal(directory)  # la principal ya contiene estos recibos (E3 WP-92 #2)
                 return
         if previous.exists():
             try:
@@ -606,7 +616,7 @@ class Work:
                 atomic_json(directory / 'trabajo.json.bak', old)
         atomic_json(previous, data)
         # La trabajo.json recién escrita ya contiene los recibos: el diario queda obsoleto.
-        (directory / RECEIPT_JOURNAL).unlink(missing_ok=True)
+        _discard_journal(directory)
         # Conserva también todas las copias que necesita la recuperación anterior.
         keep = {self.source_hash + '.bin'}
         if self.original_hash:
