@@ -11,18 +11,19 @@
   "decisiones": [
     "j"
   ],
-  "estado": "EN_REVISION",
+  "estado": "INTEGRADO",
   "ejecutor": "claude-sesion-012yjVgL",
   "tomado": "12 de octubre de 2026",
   "rama": "wp/92-ef03",
   "pr": null,
-  "verificacion": "PASA: verificacion/WP-92.json sobre 9bb83dc limpio; asistente 897/11/6, descargador 246/62, inventario sin bajas, golden intacto. Línea base sin regenerar hasta integrar tras E3.",
-  "revision": "E3 obligatoria (decisión j: Outlook/borradores y persistencia de recibos); pendiente por otra raíz.",
-  "auditoria": null,
-  "integrado_en": null,
+  "verificacion": "PASA: verificacion/WP-92.json sobre c752c6b limpio; asistente 902/11/6, descargador 246/62, inventario sin bajas, golden intacto; línea base regenerada.",
+  "revision": "E3 CAMBIOS (sesión independiente, auditoria/WP-92.md): hallazgo 1 (media) y 2–3 (baja) corregidos en c752c6b con 5 pruebas; condición de APROBADO del revisor cumplida.",
+  "auditoria": "docs/implementacion/auditoria/WP-92.md",
+  "integrado_en": "c752c6b",
   "notas": [
     "Lote de 30 borradores con 3000 filas: 123,8 s → 4,2 s (Outlook simulado, mismo equipo).",
     "Persistencia antes y después de cada efecto COM se conserva: dentro de create_drafts se escribe recibos.diario.json (recibos + hash de la trabajo.json base) en vez de la sesión completa; un save completo al final retira el diario. Load aplica el diario solo si el hash coincide.",
-    "Cada adjunto se lee una vez por borrador; la misma lectura da la clave y el hash del producto. Sin cambios en mail.Save(), CC fijo, require_fresh ni la regla de no repetir borradores inciertos."
+    "Cada adjunto se lee una vez por borrador; la misma lectura da la clave y el hash del producto. Sin cambios en mail.Save(), CC fijo, require_fresh ni la regla de no repetir borradores inciertos.",
+    "Tras E3: guardado completo previo al lote (≈0,8 s por lote, no por borrador); 30 borradores con 3000 filas: 4,3 s."
   ]
 }
