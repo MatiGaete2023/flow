@@ -17,8 +17,8 @@ El estado de los WP vive en `estado/*.json`, agregado en [ESTADO.json](ESTADO.js
 | UX-02 | Asistente: extender barra existente a cuatro etapas y siguiente acción; jerarquía contextual; vacíos y resultados persistentes; contratos de widget intactos. | Integrado en WP-88/#42; uso real pendiente; Windows PASA en WP-89/run 38259239456 |
 | UX-03 | Descargador: grupos principal/lote/avanzado, pausa visible, progreso con ETA honesta y ruta final accesible. | Integrado en WP-88/#42; uso real pendiente; Windows PASA en WP-89/run 38259239456 |
 | EF-01 | CI rápida separada de construcción, documentos de continuación generados y reutilización segura de mediciones. Validar links/estado en documentación; Windows en candidato y cambios nativos. | CI en WP-89; continuación generada y reutilización segura de mediciones en WP-90 |
-| EF-02 | Medir edición/exportación con datos sintéticos; reducir duplicación y cálculo conservando dependencias y paridad. | Benchmark y primera optimización en WP-91; queda la relectura de exportación |
-| EF-03 | Optimizar borradores y adjuntos conservando persistencia previa/posterior a COM, `uncertain` y referencias de sesiones; E3 por riesgo. | Pendiente; no cabe en una ficha de solo interfaz |
+| EF-02 | Medir edición/exportación con datos sintéticos; reducir duplicación y cálculo conservando dependencias y paridad. | Benchmark y optimización en WP-91; EF-02b (relectura de exportación) medido y descartado |
+| EF-03 | Optimizar borradores y adjuntos conservando persistencia previa/posterior a COM, `uncertain` y referencias de sesiones; E3 por riesgo. | WP-92 (diario de recibos), en E3 |
 | EF-04 | Reutilización SITFA por identidad/alcance/fecha/hashes, con pausas intactas y prueba real. | Pendiente de evidencia del puesto |
 
 WP-87 queda reservado a UX-01: los dos informes anteriores proponían el mismo número para alcances distintos sin haber creado fichas. WP-88 fue asignado después de comprobar el remoto y recibir «Efectua los cambuos del otro agente que no esten y continua». No duplica trabajo integrado. Cada fase futura obtiene su ficha y alcance en el estado canónico al confirmar base y responsable.
