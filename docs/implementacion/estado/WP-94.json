@@ -11,18 +11,19 @@
   "decisiones": [
     "j"
   ],
-  "estado": "EN_REVISION",
+  "estado": "INTEGRADO",
   "ejecutor": "claude-sesion-012yjVgL",
   "tomado": "12 de octubre de 2026",
   "rama": "wp/94-revision-externa",
   "pr": null,
-  "verificacion": "PASA: verificacion/WP-94.json sobre 708cf0d limpio; asistente 909/11/6, descargador 249/62, inventario sin bajas, golden intacto.",
-  "revision": "E3 obligatoria (decisión j: anonimizador/detector, Outlook y borrado de lotes).",
-  "auditoria": null,
-  "integrado_en": null,
+  "verificacion": "PASA: verificacion/WP-94.json sobre fe4c225 limpio; asistente 914/11/6, descargador 251/62, inventario sin bajas, golden intacto; línea base regenerada.",
+  "revision": "E3 CAMBIOS (sesión independiente): C1–C3 (media) y C4–C6 (baja) corregidos en fe4c225 con pruebas; condición del revisor cumplida.",
+  "auditoria": "docs/implementacion/auditoria/WP-94.md",
+  "integrado_en": "fe4c225",
   "notas": [
     "Origen: docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md (veredicto NO APTO por H1–H3).",
     "H4 se corrige en wp/93-ef04 (WP-93). H7 (capturas 1024×650) y la diferencia de color de tema con Tk 9 requieren Windows/Tk soportado: pendientes sin datos.",
-    "Cada corrección con prueba que reproduce la sonda del revisor."
+    "Cada corrección con prueba que reproduce la sonda del revisor.",
+    "Integrado por fast-forward en feat tras E3. Pendiente sin datos: H7 (capturas 1024×650) y diferencia de color de tema con Tk 9."
   ]
 }
