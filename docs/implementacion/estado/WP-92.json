@@ -1,0 +1,28 @@
+{
+  "titulo": "EF-03: lotes de borradores con diario de recibos y una lectura por adjunto",
+  "ola": 6,
+  "tipo": "C",
+  "depende_de": [
+    {
+      "wp": "WP-91",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [
+    "j"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/92-ef03",
+  "pr": null,
+  "verificacion": null,
+  "revision": "E3 obligatoria (decisión j: Outlook/borradores y persistencia de recibos); pendiente por otra raíz.",
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Lote de 30 borradores con 3000 filas: 123,8 s → 4,2 s (Outlook simulado, mismo equipo).",
+    "Persistencia antes y después de cada efecto COM se conserva: dentro de create_drafts se escribe recibos.diario.json (recibos + hash de la trabajo.json base) en vez de la sesión completa; un save completo al final retira el diario. Load aplica el diario solo si el hash coincide.",
+    "Cada adjunto se lee una vez por borrador; la misma lectura da la clave y el hash del producto. Sin cambios en mail.Save(), CC fijo, require_fresh ni la regla de no repetir borradores inciertos."
+  ]
+}
