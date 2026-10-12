@@ -1,7 +1,5 @@
 from copy import deepcopy
-from pathlib import Path
 from hashlib import sha256
-from threading import Event
 from queue import Queue
 import json
 from zipfile import ZipFile
@@ -12,7 +10,7 @@ from nurus.personal.config import defaults, Configuration
 from nurus.personal.work import Work
 from nurus.personal.outputs import Draft
 from nurus.personal.product_checks import check_products
-from nurus.personal.product_state import fingerprint, dependency_scope, stamp, stale
+from nurus.personal.product_state import fingerprint, dependency_scope
 from nurus.personal.delivery import selected_zip, validate_product
 from nurus.personal.grid_edit import paste_plan, apply_plan
 from nurus.personal.mail_presentation import body_html, insert_before_signature

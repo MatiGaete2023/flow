@@ -1,6 +1,5 @@
 """Ataques y coherencia del contrato; todos los datos son ficticios."""
 
-from copy import deepcopy
 from hashlib import sha256
 import importlib.util
 import json

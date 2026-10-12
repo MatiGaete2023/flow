@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from pathlib import Path
 
 from nurus.personal.app import App
-from nurus.personal.config import Configuration, defaults, LEGACY_CORREO_BODIES
+from nurus.personal.config import Configuration, LEGACY_CORREO_BODIES
 from nurus.personal.outputs import prepare_drafts, prepare_required_drafts
 from test_personal_flow import exported
 

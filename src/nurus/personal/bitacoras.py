@@ -1,6 +1,5 @@
 """Análisis común de bitácoras: hechos consultados, sin proponer ni registrar texto."""
 
-from calendar import monthrange
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -9,6 +8,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
+from nurus.capture.temporal import earliest
 from nurus.rus.columns import normalize
 
 
@@ -69,12 +69,6 @@ def _externalize_text(text, *, key, entry_id, field, identity, sidecar_name, ite
         parts_rows.append([*identity, entry_id, field, number, len(pieces), piece, sidecar_name, key, digest])
     reference = f'Texto extenso en hoja «Textos largos», clave {key}'
     return reference, sidecar_name, key, digest
-
-
-def earliest(today):
-    month = today.year * 12 + today.month - 1 - 4
-    year, zero = divmod(month, 12)
-    return date(year, zero + 1, min(today.day, monthrange(year, zero + 1)[1]))
 
 
 def validate_period(start, end, today=None):

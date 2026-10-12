@@ -6,6 +6,7 @@ from pathlib import Path
 import hashlib, json
 
 import motor as m
+from lectura_bitacoras import write as write_state
 from lotes import Batch, BatchRunner
 from resultados import load_lot, export_book, publish, mapping, check_file
 from perfiles import Selection
@@ -39,12 +40,6 @@ def plan(tribunals, modalities, mode, today, days=60):
     # validada y bloqueaba el retorno incluso con principal e informes completos.
     # `days` se conserva únicamente para recuperar las selecciones anteriores.
     return result
-
-
-def write_state(path, data):
-    temp = path.with_suffix('.tmp')
-    temp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    temp.replace(path)
 
 
 def source_folder(root, name):

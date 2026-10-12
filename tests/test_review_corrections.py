@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 from datetime import date
-from io import BytesIO
 import json
 import random
 import string
@@ -12,7 +11,6 @@ import pytest
 
 from nurus.capture import CaptureError, read_capture, write_capture
 from nurus.capture.acceptance import validate_acta
-from nurus.capture.coverage import record_coverages
 from nurus.capture.fixtures import fixture
 from nurus.capture.requests import MAX_BYTES, read_request, write_request
 from nurus.personal.capture_input import import_capture

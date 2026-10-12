@@ -123,7 +123,7 @@ def test_sonda_sin_filtraciones_mismas_reglas_y_check_real_ids(tmp_path):
     origen = sonda(tmp_path)
     huella = origen.read_bytes()
     destino = tmp_path / 'copia.xlsx'
-    informe = anonymize(origen, destino)
+    anonymize(origen, destino)
     assert origen.read_bytes() == huella
     contenido = texto(destino)
     sensibles = [

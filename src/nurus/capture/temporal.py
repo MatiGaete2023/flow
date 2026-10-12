@@ -132,8 +132,13 @@ def display_chronology(events, as_of, *, requested=True):
 
 
 def attach_displays(capture, contexts, records, as_of):
-    """Agrega la vista «solo mostrar» a cada contexto con identidad verificada (no toca hallazgos)."""
+    """Agrega la vista «solo mostrar» a cada contexto con identidad verificada (no toca hallazgos).
+
+    Con DISPLAY_RULES vacío (rollback documentado) quita la vista que una sesión anterior haya guardado.
+    """
     if not DISPLAY_RULES:
+        for context in contexts.values():
+            context.pop('display', None)
         return
     requested = capture.manifest['table_states'].get('bitacoras') != 'NO_SOLICITADA'
     diaries = {}
