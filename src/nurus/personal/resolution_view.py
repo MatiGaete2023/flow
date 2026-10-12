@@ -4,8 +4,12 @@ from .selection import selected_ids
 import tkinter as tk
 import customtkinter as ctk
 from . import ui
+from functools import partial
+
 from .widgets import CaseDetailPanel, ScrollPane
 from .resolutions import KINDS, KIND_LABELS, _case_key
+
+view_button = partial(ui.Button, role='secondary')
 
 
 class ProjectSelection:
@@ -73,17 +77,22 @@ def build(app):
         prepare, textvariable=app.manual_word, values=[KIND_LABELS[k] for k in KINDS], state='readonly', width=30
     )
     app.word_type_box.pack(side='left')
-    ui.Button(prepare, text='Aplicar tipo', width=95, command=lambda: app._guard(app._assign_word_type)).pack(
+    view_button(prepare, text='Aplicar tipo', width=95, command=lambda: app._guard(app._assign_word_type)).pack(
         side='left', padx=4
     )
-    ui.Button(prepare, text='Agregar desde Trabajo', width=145, command=lambda: app._guard(app._add_words)).pack(
+    view_button(prepare, text='Agregar desde Trabajo', width=145, command=lambda: app._guard(app._add_words)).pack(
         side='left'
     )
-    ui.Button(
-        prepare, text='Preparar / actualizar proyectos', width=205, command=lambda: app._guard(app._prepare_words)
-    ).pack(side='left', padx=4)
+    app.prepare_word_button = view_button(
+        prepare,
+        text='Preparar / actualizar proyectos',
+        width=205,
+        role='primary',
+        command=lambda: app._guard(app._prepare_words),
+    )
+    app.prepare_word_button.pack(side='left', padx=4)
     review = group('2 Revisar')
-    ui.Button(
+    view_button(
         review,
         text='Vista PDF',
         width=90,
@@ -91,7 +100,7 @@ def build(app):
         border_width=1,
         command=lambda: app._guard(lambda: preview(app)),
     ).pack(side='left')
-    ui.Button(
+    view_button(
         review,
         text='Restaurar automático',
         width=150,
@@ -100,13 +109,13 @@ def build(app):
         command=lambda: app._guard(lambda: set_decision('auto')),
     ).pack(side='left', padx=4)
     generate = group('3 Generar')
-    app.generate_word_button = ui.Button(
+    app.generate_word_button = view_button(
         generate, text='Generar Word', width=135, command=lambda: app._guard(app._generate_words)
     )
     app.generate_word_button.pack(side='left')
-    ui.Button(generate, text='Abrir Word', width=95, command=lambda: app._guard(lambda: app._open(app.last_word))).pack(
-        side='left', padx=4
-    )
+    view_button(
+        generate, text='Abrir Word', width=95, command=lambda: app._guard(lambda: app._open(app.last_word))
+    ).pack(side='left', padx=4)
     more_row = group('Más')
     app.resolution_more_menu = menu = tk.Menu(page, tearoff=False, font=('Segoe UI', 11))
 
@@ -132,7 +141,7 @@ def build(app):
         finally:
             menu.grab_release()
 
-    app.resolution_more_button = ui.Button(
+    app.resolution_more_button = view_button(
         more_row, text='Más ▾', width=70, fg_color='transparent', border_width=1, command=show_more
     )
     app.resolution_more_button.pack(side='left')
@@ -185,7 +194,7 @@ def build(app):
     tabs.pack(fill='both', expand=True)
     text = ui.Frame(tabs)
     tabs.add(text, text='Texto')
-    ui.Button(text, text='Vista PDF del Word generado', command=lambda: app._guard(lambda: preview(app))).pack(
+    view_button(text, text='Vista PDF del Word generado', command=lambda: app._guard(lambda: preview(app))).pack(
         anchor='w', pady=4
     )
     ui.Label(text, text='Texto editable · revisa el formato final en Word', text_color=ui.MUTED).pack(anchor='w')
@@ -202,21 +211,21 @@ def build(app):
         app.project_review_status.set('Cambios revisados.')
         app._save_session()
 
-    ui.Button(text, text='Confirmar revisión de cambios', command=lambda: app._guard(accept)).pack(anchor='e', pady=4)
+    view_button(text, text='Confirmar revisión de cambios', command=lambda: app._guard(accept)).pack(anchor='e', pady=4)
     data = ScrollPane(tabs)
     tabs.add(data, text='Datos')
     app.resolution_case_detail = CaseDetailPanel(data.body)
     app.resolution_case_detail.pack(fill='x', pady=5)
     app.project_data_fields = ui.Frame(data.body)
     app.project_data_fields.pack(fill='x')
-    ui.Button(data.body, text='Aplicar datos al proyecto', command=lambda: app._guard(lambda: apply_values(app))).pack(
-        anchor='e', pady=8
-    )
+    view_button(
+        data.body, text='Aplicar datos al proyecto', command=lambda: app._guard(lambda: apply_values(app))
+    ).pack(anchor='e', pady=8)
     matrix = ScrollPane(tabs)
     tabs.add(matrix, text='Matriz')
     app.project_matrix_text = tk.StringVar()
     ui.Label(matrix.body, textvariable=app.project_matrix_text, wraplength=420, justify='left').pack(fill='x', pady=8)
-    ui.Button(
+    view_button(
         matrix.body,
         text='Abrir matriz en Word',
         command=lambda: app._guard(

@@ -7,6 +7,7 @@ from pathlib import Path
 import queue
 import subprocess
 import threading
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -192,7 +193,13 @@ class Application:
         self.query_index = 0
         self.query_total = 0
         self.result_windows = []
-        self.signature_days = tk.IntVar(value=self.prefs.data.get('dias_firmas', 60))
+        self.last_package = None
+        self.phase_name = tk.StringVar(value='Listo para preparar una consulta')
+        self.progress_detail = tk.StringVar(value='Sin operación en curso')
+        self.result_notice = tk.StringVar()
+        self._phase_started = None
+        self._pause_started = None
+        self._phase_paused = 0.0
         self.csmp_reply = None
         self.csmp_mode = None
         self.bitacoras_reply = None
@@ -398,14 +405,24 @@ class Application:
         ttk.Label(destination, textvariable=self.destination_warning, foreground='#b45309', wraplength=800).grid(
             row=2, column=0, columnspan=2, sticky='w', pady=(4, 0)
         )
-        results = ttk.Frame(body)
-        results.grid(row=5, column=0, sticky='ew')
+        results = ttk.Frame(root, padding=(12, 8))
+        results.pack(side='bottom', fill='x', before=container)
         results.columnconfigure(0, weight=1)
-        actions = ttk.Frame(results)
+        primary = ttk.Frame(results)
+        primary.grid(row=0, column=0, sticky='ew')
+        self.pipeline_button = ttk.Button(
+            primary, text='Consultar y crear paquete', style='Primary.TButton', command=self.start_pipeline
+        )
+        self.pipeline_button.pack(side='left')
+        self.package_consolidated = tk.BooleanVar(value=self.prefs.data['paquete_consolidado'])
+        ttk.Checkbutton(
+            primary, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=self.save_preferences
+        ).pack(side='left', padx=12)
+        actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
         self.download_button = ttk.Button(
-            actions, text='Descargar el lote completo', style='Primary.TButton', command=self.start_download
+            actions, text='Descargar el lote completo', style='Secondary.TButton', command=self.start_download
         )
         self.download_button.grid(row=0, column=0, sticky='w')
         self.cancel_button = ttk.Button(actions, text='Cancelar', command=self.request_cancel)
@@ -427,16 +444,33 @@ class Application:
         self.package_button = ttk.Button(actions, text='Crear paquete de este lote…', command=self.create_package)
         self.package_button.grid(row=3, column=1, columnspan=2, sticky='w', padx=8)
         # D6: el paquete puede llevar solo el XLSX consolidado (nunca HTML ni PDF) para la copia nativa del Asistente.
-        self.package_consolidated = tk.BooleanVar(value=True)
-        ttk.Checkbutton(actions, text='Incluir XLSX consolidado', variable=self.package_consolidated).grid(
-            row=3, column=3, sticky='w'
+        actions.grid(row=1, column=0, sticky='ew', pady=(8, 0))
+        self.advanced_actions = actions
+        self.advanced_toggle = ttk.Button(primary, text='Avanzado / recuperación', command=self.toggle_advanced)
+        self.advanced_toggle.pack(side='right')
+        actions.grid_remove()
+        lot_controls = ttk.Frame(results)
+        lot_controls.grid(row=2, column=0, sticky='ew', pady=6)
+        # Copias de acceso al mismo comando; originales preservados para recuperación y pruebas.
+        self.live_cancel = ttk.Button(lot_controls, text='Cancelar', command=self.request_cancel)
+        self.live_cancel.pack(side='left')
+        self.live_pause = ttk.Button(lot_controls, text='Pausar / continuar', command=self.toggle_pause)
+        self.live_pause.pack(side='left', padx=8)
+        self.package_folder_button = ttk.Button(
+            lot_controls, text='Abrir carpeta del paquete', command=self.open_folder
         )
+        self.package_folder_button.pack(side='left', padx=8)
+        self.copy_path_button = ttk.Button(lot_controls, text='Copiar ruta', command=self.copy_package_path)
+        self.copy_path_button.pack(side='left')
+        ttk.Button(lot_controls, text='Resultados…', command=self.show_results).pack(side='right')
+        ttk.Label(results, textvariable=self.phase_name, style='Section.TLabel').grid(row=3, column=0, sticky='w')
+        ttk.Label(results, textvariable=self.progress_detail).grid(row=4, column=0, sticky='w')
         self.progress = ttk.Progressbar(results)
-        self.progress.grid(row=1, column=0, sticky='ew', pady=10)
+        self.progress.grid(row=5, column=0, sticky='ew', pady=10)
         table = ttk.Frame(results)
-        table.grid(row=2, column=0, sticky='ew')
+        table.grid(row=6, column=0, sticky='ew')
         table.columnconfigure(0, weight=1)
-        self.tree = ttk.Treeview(table, columns=('page', 'rows', 'file'), show='headings', height=5)
+        self.tree = ttk.Treeview(table, columns=('page', 'rows', 'file'), show='headings', height=3)
         for col, label, width in [('page', 'Página', 80), ('rows', 'Registros', 85), ('file', 'Archivo guardado', 690)]:
             self.tree.heading(col, text=label)
             self.tree.column(col, width=width, stretch=col == 'file')
@@ -445,8 +479,9 @@ class Application:
         bar.grid(row=0, column=1, sticky='ns')
         self.tree.configure(yscrollcommand=bar.set)
         self.tree.bind('<Double-1>', self.open_selected)
-        ttk.Label(results, textvariable=self.count).grid(row=3, column=0, sticky='w', pady=(6, 0))
-        ttk.Label(results, textvariable=self.context).grid(row=4, column=0, sticky='w')
+        ttk.Label(results, textvariable=self.count).grid(row=7, column=0, sticky='w', pady=(6, 0))
+        ttk.Label(results, textvariable=self.context).grid(row=8, column=0, sticky='w')
+        ttk.Label(results, textvariable=self.result_notice, wraplength=860).grid(row=9, column=0, sticky='ew')
         ttk.Label(body, textvariable=self.status, wraplength=910).grid(row=6, column=0, sticky='ew', pady=(12, 0))
         for combo in (
             self.mod_combo,
@@ -480,10 +515,18 @@ class Application:
             self.cancel.resume()
             self.status.set('Descarga reanudada.')
             self.pause_button.configure(text='Pausar / continuar')
+            self.live_pause.configure(text='Pausar / continuar')
+            if self._pause_started is not None:
+                self._phase_paused += time.monotonic() - self._pause_started
+                self._pause_started = None
+            self.progress_detail.set('Continuando · tiempo restante: estimando…')
         else:
             self.cancel.pause()
             self.status.set('Pausa solicitada: se completará la página en curso.')
             self.pause_button.configure(text='Continuar descarga')
+            self.live_pause.configure(text='Continuar descarga')
+            self._pause_started = time.monotonic()
+            self.progress_detail.set('Pausa solicitada · continuará en el límite seguro de la consulta.')
 
     def emit(self, name, value):
         self.events.put((name, value))
@@ -493,13 +536,8 @@ class Application:
             destino=self.dest.get(),
             tribunales=None if self.selected_tribunals is None else list(self.selected_tribunals),
             aviso_sonoro=self.sound.get(),
+            paquete_consolidado=self.package_consolidated.get(),
         )
-        try:
-            days = self.signature_days.get()
-            if 60 <= days <= 730:
-                self.prefs.data['dias_firmas'] = days
-        except tk.TclError:
-            pass
         try:
             self.prefs.save()
         except OSError:
@@ -776,6 +814,7 @@ class Application:
             (self.copy_button, idle),
             (self.browse_button, idle),
             (self.download_button, ready and bool(self.selected_tribunals)),
+            (self.pipeline_button, ready and followup and bool(self.selected_tribunals) and self.recovery is None),
             (self.joint_button, ready and followup and bool(self.selected_tribunals)),
             (self.diary_button, ready and followup and bool(self.selected_tribunals)),
             (self.diary_retry_button, ready and followup),
@@ -783,13 +822,13 @@ class Application:
             (
                 self.cancel_button,
                 self.busy
-                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary')
+                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary', 'pipeline')
                 and not self.quitting,
             ),
             (
                 self.pause_button,
                 self.busy
-                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary')
+                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary', 'pipeline')
                 and not self.quitting,
             ),
             (self.folder_button, self.last_folder is not None and not self.quitting),
@@ -801,6 +840,11 @@ class Application:
             (self.filter_check, ready and not calendar_screen),
         ]:
             button.configure(state='normal' if enabled else 'disabled')
+        self.live_cancel.configure(state=self.cancel_button.cget('state'))
+        self.live_pause.configure(state=self.pause_button.cget('state'))
+        package_ready = bool(self.last_package and self.last_package.is_file() and not self.busy)
+        self.copy_path_button.configure(state='normal' if package_ready else 'disabled')
+        self.package_folder_button.configure(state='normal' if self.last_folder and not self.quitting else 'disabled')
         for combo in (self.mod_combo, self.tab_combo):
             combo.configure(state='readonly' if ready and followup else 'disabled')
         self.state_combo.configure(state='readonly' if ready and screen == 'litigantes' else 'disabled')
@@ -855,6 +899,41 @@ class Application:
                 *self.date_widgets,
             ):
                 widget.configure(state='disabled')
+
+    def toggle_advanced(self):
+        if self.advanced_actions.winfo_manager():
+            self.advanced_actions.grid_remove()
+        else:
+            self.advanced_actions.grid()
+
+    def copy_package_path(self):
+        if self.last_package and self.last_package.is_file() and not self.busy:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(str(self.last_package.resolve()))
+            self.status.set('Ruta del paquete copiada.')
+
+    def start_pipeline(self):
+        if self.busy or self.quitting:
+            return
+        try:
+            batch = self.batch()
+            if batch.screen != 'seguimiento' or self.recovery is not None:
+                raise m.PocError(
+                    'Para crear paquete usa Seguimiento; recuperaciones y otras consultas están en Avanzado.'
+                )
+            batch.plan(self.catalog)
+            destination = Path(self.dest.get()).resolve()
+            destination.mkdir(parents=True, exist_ok=True)
+        except (m.PocError, OSError, KeyError, TypeError) as exc:
+            messagebox.showerror('Revisa el alcance del paquete', str(exc), parent=self.root)
+            return
+        self.cancel.clear()
+        self.last_folder = self.last_package = None
+        self.last_sheets_folder = self.last_diary_manifest = None
+        self.result_notice.set('')
+        self.tree.delete(*self.tree.get_children())
+        self.save_preferences()
+        self.enqueue('pipeline', (batch, destination, self.package_consolidated.get()))
 
     def create_package(self):
         """Paquete del Asistente con el lote de hojas y las bitácoras recién leídas, sin abrir Resultados."""
@@ -956,7 +1035,7 @@ class Application:
             self.check_csmp_mode(batch.tabs[0])
             from flujo_csmp import plan
 
-            plan(batch.tribunals, batch.modalities, batch.tabs[0], m.now().date(), self.signature_days.get())
+            plan(batch.tribunals, batch.modalities, batch.tabs[0], m.now().date())
             destination = Path(self.dest.get()).resolve()
             destination.mkdir(parents=True, exist_ok=True)
         except (m.PocError, ValueError, tk.TclError, OSError) as exc:
@@ -969,9 +1048,7 @@ class Application:
             'Descargando principal completa e informes del mes actual y siguiente. Al terminar se entrega el libro a CSMP.'
         )
         self.save_preferences()
-        self.enqueue(
-            'joint', (batch.tribunals, batch.modalities, batch.tabs[0], destination, self.signature_days.get())
-        )
+        self.enqueue('joint', (batch.tribunals, batch.modalities, batch.tabs[0], destination))
 
     def check_csmp_mode(self, mode):
         if self.csmp_reply and self.csmp_mode and mode.upper() != self.csmp_mode:
@@ -997,7 +1074,7 @@ class Application:
             from flujo_csmp import plan
 
             cutoff = date.fromisoformat(s['corte'])
-            plan(tuple(s['tribunales']), tuple(s['modalidades']), s['modo'], cutoff, s['dias_firmas'])
+            plan(tuple(s['tribunales']), tuple(s['modalidades']), s['modo'], cutoff, s.get('dias_firmas', 60))
         except (m.PocError, ValueError, KeyError, OSError) as exc:
             self.status.set('No se puede recuperar el flujo: ' + str(exc))
             return
@@ -1027,7 +1104,7 @@ class Application:
         while True:
             command, arg = self.commands.get()
             try:
-                if command in ('download', 'joint', 'resume_joint'):
+                if command in ('download', 'joint', 'resume_joint', 'pipeline'):
                     from contrato_integral import verify_extension
 
                     verify_extension(self.bridge)
@@ -1042,6 +1119,17 @@ class Application:
                     ).run(*arg)
                 elif command == 'package':
                     self.emit('package_done', package_current_lot(*arg))
+                elif command == 'pipeline':
+                    from flujo_paquete import run
+
+                    run(
+                        self.bridge,
+                        self.catalog,
+                        self.emit,
+                        self.cancel,
+                        *arg,
+                        pause=self.prefs.data['pausa_consultas'],
+                    )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
 
@@ -1061,7 +1149,7 @@ class Application:
                         tuple(selection['modalidades']),
                         selection['modo'],
                         folder.parent,
-                        selection['dias_firmas'],
+                        selection.get('dias_firmas', 60),
                         today=date.fromisoformat(selection['corte']),
                         resume=folder,
                     )
@@ -1090,6 +1178,30 @@ class Application:
                 self.emit('idle', None)
 
     def process_event(self, name, value):
+        if name == 'pipeline_folder':
+            self.last_folder = Path(value)
+            self.refresh()
+            return True
+        if name == 'pipeline_source':
+            from archivo_local import remember
+
+            remember(self.prefs, value['folder'])
+            if value['fase'] == 'consultas':
+                self.last_sheets_folder = Path(value['folder'])
+            else:
+                self.last_diary_manifest = Path(value['folder']) / 'bitacoras.json'
+            return True
+        if name == 'phase':
+            self.phase_name.set(
+                {'consultas': '1 Consultar SITFA', 'bitacoras': '2 Leer bitácoras', 'paquete': '3 Crear paquete'}[value]
+            )
+            self._phase_started = time.monotonic()
+            self._phase_paused = 0.0
+            self.progress_detail.set('Fase iniciada · tiempo restante: estimando…')
+            self.progress.stop()
+            self.progress.configure(value=0, maximum=1, mode='indeterminate')
+            self.progress.start()
+            return True
         if name in ('diary_done', 'joint_done', 'done') and value.get('folder'):
             from archivo_local import remember
 
@@ -1098,7 +1210,11 @@ class Application:
             except (m.PocError, OSError, ValueError):
                 pass
         if name == 'package_done':
+            self.last_package = Path(value['path'])
             self.last_folder = Path(value['path']).parent
+            if value.get('sheets_folder'):
+                self.last_sheets_folder = Path(value['sheets_folder'])
+                self.last_diary_manifest = Path(value['diary_manifest'])
             self.status.set(
                 'Paquete creado: '
                 + Path(value['path']).name
@@ -1106,6 +1222,13 @@ class Application:
                 + value['reuse']
                 + ' Ábrelo en el Asistente con «Importar paquete».'
             )
+            if value.get('partial'):
+                self.status.set(self.status.get() + ' Cobertura parcial: revisa incidencias y fuentes antes de usarlo.')
+            self.result_notice.set(self.status.get() + '\n' + str(self.last_package))
+            self.phase_name.set('Paquete parcial · revisar' if value.get('partial') else 'Paquete creado')
+            self.progress.stop()
+            self.progress.configure(mode='determinate', maximum=1, value=1)
+            self.progress_detail.set('Puedes abrir la carpeta o copiar la ruta del ZIP.')
             self.refresh()
             return True
         if name == 'diary_done':
@@ -1224,8 +1347,11 @@ class Application:
             self.status.set('Consultando SITFA…')
             self.count.set('Consultando…')
             self.progress.configure(value=0, maximum=1)
+            self._phase_started = time.monotonic()
+            self._phase_paused = 0.0
         elif name == 'total':
-            self.progress.configure(maximum=value, value=0)
+            self.progress.stop()
+            self.progress.configure(maximum=value, value=0, mode='determinate')
         elif name == 'progress':
             self.tree.insert(
                 '', 'end', values=(f'{value["pagina"]}/{value["total"]}', value['registros'], value['archivo'])
@@ -1253,11 +1379,16 @@ class Application:
                 self.root.bell()
         elif name in ('status', 'error', 'warning'):
             self.status.set(value)
+            if name in ('error', 'warning'):
+                self.result_notice.set(value)
+            if 'pausa' in str(value).lower() or 'espera' in str(value).lower():
+                self.progress_detail.set(str(value))
             if name == 'error' and self.sound.get():
                 self.root.bell()
         elif name == 'idle':
             self.busy = False
             self.operation = None
+            self.progress.stop()
         elif name == 'exit':
             try:
                 if self.root.clipboard_get() == self.code.get():
@@ -1270,6 +1401,16 @@ class Application:
         return True
 
     def poll(self):
+        if self.busy and self._phase_started is not None and not self.cancel.paused:
+            elapsed = max(0, time.monotonic() - self._phase_started - self._phase_paused)
+            n, total = float(self.progress.cget('value')), float(self.progress.cget('maximum'))
+            if str(self.progress.cget('mode')) == 'determinate' and n >= 2 and total > n:
+                eta = int(elapsed * (total - n) / n)
+                self.progress_detail.set(
+                    f'{int(n)}/{int(total)} páginas · {int(elapsed)} s transcurridos · aprox. {eta} s restantes'
+                )
+            elif not any(word in self.progress_detail.get().lower() for word in ('pausa', 'espera sitfa')):
+                self.progress_detail.set(f'{int(elapsed)} s transcurridos · tiempo restante: estimando…')
         while True:
             try:
                 event = self.events.get_nowait()

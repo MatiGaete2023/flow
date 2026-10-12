@@ -1,6 +1,9 @@
 """Windows desktop palette for ttk and native controls."""
 
 import tkinter as tk
+from csmp_shared import parser
+
+parser()  # Desarrollo desde ZIP/monorrepositorio, también sin paquete instalado.
 from nurus.ui_theme import install_ttk
 
 

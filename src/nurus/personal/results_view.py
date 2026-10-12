@@ -2,9 +2,13 @@
 
 import tkinter as tk
 from . import ui
+from functools import partial
+
 from .widgets import ScrollPane
 from .current_tools import deliver, export_diagnosis
 from .product_checks import check_products, current_drafts
+
+view_button = partial(ui.Button, role='secondary')
 
 
 def build(app):
@@ -15,7 +19,7 @@ def build(app):
     header = ui.Frame(page)
     header.pack(fill='x', pady=8)
     ui.Label(header, text='Resultados del trabajo', font=('Segoe UI', 20, 'bold')).pack(side='left')
-    ui.Button(header, text='Actualizar', width=100, command=lambda: app._guard(lambda: refresh())).pack(side='right')
+    view_button(header, text='Actualizar', width=100, command=lambda: app._guard(lambda: refresh())).pack(side='right')
     app.results_summary = tk.StringVar(value='Carga un Excel para comenzar.')
     ui.Label(page, textvariable=app.results_summary, anchor='w').pack(fill='x', pady=6)
     app.results_empty = ui.Frame(page)
@@ -23,7 +27,7 @@ def build(app):
     ui.Label(app.results_empty, text='Aquí aparecerán los productos y lo que falta para terminarlos.').pack(
         anchor='w', padx=12, pady=8
     )
-    ui.Button(app.results_empty, text='Elegir Excel · Ctrl+O', command=app._choose).pack(
+    view_button(app.results_empty, text='Elegir Excel · Ctrl+O', command=app._choose).pack(
         anchor='w', padx=12, pady=(0, 10)
     )
     split = ui.Panedwindow(page, orient='horizontal')
@@ -43,12 +47,14 @@ def build(app):
     label = ui.Label(detail, textvariable=app.results_detail, anchor='nw', justify='left', wraplength=270)
     label.pack(fill='both', expand=True, padx=12, pady=12)
     label.bind('<Configure>', lambda e: label.configure(wraplength=max(150, e.width - 16)), add='+')
-    app.results_action = ui.Button(detail, text='Abrir producto', command=lambda: app._guard(open_selected))
+    app.results_action = view_button(
+        detail, text='Abrir producto', role='primary', command=lambda: app._guard(open_selected)
+    )
     app.results_action.pack(fill='x', padx=12, pady=12)
     actions = ui.Frame(page)
     actions.pack(fill='x', pady=8)
-    ui.Button(actions, text='Preparar ZIP', command=lambda: app._guard(lambda: deliver(app))).pack(side='left')
-    ui.Button(actions, text='Abrir carpeta', command=lambda: app._guard(app._open_output_folder)).pack(
+    view_button(actions, text='Preparar ZIP', command=lambda: app._guard(lambda: deliver(app))).pack(side='left')
+    view_button(actions, text='Abrir carpeta', command=lambda: app._guard(app._open_output_folder)).pack(
         side='left', padx=8
     )
     advanced = ui.Frame(page)
@@ -60,31 +66,31 @@ def build(app):
             advanced.pack(fill='x', pady=6)
 
     app.results_more = more
-    ui.Button(actions, text='Más acciones', command=more).pack(side='right')
+    view_button(actions, text='Más acciones', command=more).pack(side='right')
     section = ui.Frame(advanced)
     section.pack(fill='x', pady=(8, 4))
     ui.Label(section, text='Fuentes locales y cobertura', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-    ui.Button(section, text='Importar paquete', command=lambda: app._guard(app._import_capture)).pack(
+    view_button(section, text='Importar paquete', command=lambda: app._guard(app._import_capture)).pack(
         anchor='w', pady=4
     )
-    ui.Button(
+    view_button(
         section, text='Importar último paquete del Descargador', command=lambda: app._guard(app._import_latest_capture)
     ).pack(anchor='w', pady=4)
-    ui.Button(section, text='Ver cobertura y antecedentes', command=lambda: app._guard(app._capture_evidence)).pack(
+    view_button(section, text='Ver cobertura y antecedentes', command=lambda: app._guard(app._capture_evidence)).pack(
         anchor='w', pady=4
     )
-    ui.Button(
+    view_button(
         advanced, text='Diagnóstico de instalación', command=lambda: app._guard(lambda: export_diagnosis(app))
     ).pack(anchor='w', pady=4)
     from .download_link import resume
 
-    app.results_download_button = ui.Button(
+    app.results_download_button = view_button(
         advanced, text='Recuperar resultado local legado', command=lambda: app._guard(lambda: resume(app))
     )
     app.results_download_button.pack(anchor='w', pady=4)
     from .work_tools import show_deadlines
 
-    ui.Button(
+    view_button(
         advanced, text='Vencimientos / egreso proyectado', command=lambda: app._guard(lambda: show_deadlines(app))
     ).pack(anchor='w', pady=4)
 

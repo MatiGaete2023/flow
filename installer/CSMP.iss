@@ -4,7 +4,7 @@
 #endif
 [Setup]
 AppId={{AB37C9B2-69F7-47B3-9D78-3BA9D86A63A9}
-AppName=CSMP Assistant
+AppName=Flow CSMP
 AppVersion={#AppVersion}
 AppPublisher=NuRus
 DefaultDirName={localappdata}\Programs\CSMP_Assistant
@@ -27,8 +27,10 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; GroupDescription: "Accesos directos:"; Flags: unchecked
 [Files]
 Source: "..\dist\CSMP_Integral\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\integral\SITFA_Descargador\*"; DestDir: "{app}\SITFA_Descargador"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\integral\extension\*"; DestDir: "{app}\extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
-Name: "{autoprograms}\CSMP Assistant"; Filename: "{app}\CSMP_Integral.exe"
-Name: "{autodesktop}\CSMP Assistant"; Filename: "{app}\CSMP_Integral.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Flow CSMP"; Filename: "{app}\CSMP_Integral.exe"
+Name: "{autodesktop}\Flow CSMP"; Filename: "{app}\CSMP_Integral.exe"; Tasks: desktopicon
 [Run]
-Filename: "{app}\CSMP_Integral.exe"; Description: "Abrir CSMP Assistant"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\CSMP_Integral.exe"; Description: "Abrir Flow (Asistente / Descargador)"; Flags: nowait postinstall skipifsilent

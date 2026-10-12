@@ -68,7 +68,9 @@ class App(ctk.CTk):
         self.template_dir = self.cfg.directory / 'plantillas_word'
         self.template_dir.mkdir(parents=True, exist_ok=True)
         self._install_templates()
-        self.status = tk.StringVar(value='Selecciona un Excel para comenzar.')
+        self.status = tk.StringVar(value='Importa un paquete o elige un Excel para comenzar.')
+        self.result_notice = tk.StringVar(value='')
+        self.status.trace_add('write', self._remember_status)
         self.context = tk.StringVar(value='Sin trabajo activo · Ctrl+O para elegir un Excel')
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -117,6 +119,16 @@ class App(ctk.CTk):
         self.cancel_button = ttk.Button(statusbar, text='Detener', width=90, height=24, command=self._cancel_operation)
         self.cancel_button.grid(row=0, column=2, padx=(0, 12))
         self.cancel_button.configure(state='disabled')
+        self.result_notice_label = ctk.CTkLabel(statusbar, textvariable=self.result_notice, anchor='w', wraplength=840)
+        self.result_notice_label.grid(row=1, column=0, columnspan=2, sticky='ew', padx=14)
+        ttk.Button(
+            statusbar,
+            text='Ocultar aviso',
+            role='secondary',
+            width=90,
+            height=24,
+            command=lambda: self.result_notice.set(''),
+        ).grid(row=1, column=2, padx=(0, 12))
         self.operation_timings = []
         self._theme_mode = ctk.get_appearance_mode()
         self.after(700, self._watch_theme)
@@ -164,6 +176,11 @@ class App(ctk.CTk):
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 if not dst.exists():
                     shutil.copyfile(path, dst)
+
+    def _remember_status(self, *_):
+        value = self.status.get()
+        if not self.busy and value and value != 'Operación terminada.':
+            self.result_notice.set(value)
 
     def _run(self, label, action, done=None):
         if self.busy or getattr(self, 'rendering', False):
@@ -672,7 +689,7 @@ class App(ctk.CTk):
                     + (
                         'Ediciones conservadas; revisa productos obsoletos.'
                         if reused
-                        else 'Revisa cobertura y exporta la copia para preparar productos.'
+                        else 'Revisa cobertura y fuentes. La copia Excel se genera automáticamente.'
                     )
                     + (
                         ' Limpieza de sesiones anteriores pendiente: no se borró ningún dato.'
@@ -680,6 +697,9 @@ class App(ctk.CTk):
                         else ''
                     )
                 )
+
+                if not candidate.output or not Path(candidate.output).is_file():
+                    self._export_current()
 
             changed = bool(previous and candidate.capture_digest != getattr(previous, 'capture_digest', ''))
             self._show_work(reset_projects=not reused or changed, on_ready=ready)

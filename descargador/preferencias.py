@@ -49,7 +49,7 @@ class Preferences:
             'tribunales': None,
             'aviso_sonoro': False,
             'csmp': '',
-            'dias_firmas': 60,
+            'paquete_consolidado': True,
             'tema': 'Sistema',
             'historial_lotes': [],
             'historial_bitacoras': [],

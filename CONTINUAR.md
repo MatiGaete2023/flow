@@ -2,7 +2,7 @@
 
 ## Trabajo actual: eficiencia y UX
 
-[Orden y límites de la nueva ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md). WP-87 integró el tema común en el PR #41; consultar `docs/implementacion/estado/WP-87.json` para su estado. No repetir autoexportación, consulta/paquete, retiro de firmas, respaldo ni lanzador anunciados por otro agente: aún no están comprobados en `adeb6ec`; obtener sus commits antes de la siguiente fase.
+[Orden y límites de la nueva ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md). WP-87 integró el tema común en el PR #41; consultar `docs/implementacion/estado/WP-87.json` para su estado. WP-88 los completa junto con el flujo contextual: consulta su estado antes de repetir autoexportación, consulta/paquete, preferencia XLSX, retiro de firmas, respaldo o lanzador. El usuario autorizó completar lo ausente tras comprobar `e91e360`.
 
 Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los párrafos siguientes registran antecedentes históricos. E3 por riesgo (decisión j). Sin monitorización pasiva.
 

@@ -53,7 +53,7 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 
 Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
 - [Plan de la ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md): fuente de alcance y orden.
-- WP-87 inicia el tema compartido de ambas apps. No duplica los cinco cambios anunciados por otro agente; confirmar sus commits antes de integrar la siguiente fase de UX.
+- WP-87 integró el tema compartido. WP-88 completa los cambios anunciados ausentes y continúa UX-02/03, por instrucción expresa del usuario. Estado vigente en las fichas JSON.
 - Conservar separados «Preparar tipo»/«Preparar todos» y conservar la ubicación de ZIP, resumen, ICS y recuperación legado.
 - Outlook mantiene persistencia antes/después de cada efecto y el estado incierto. Una caché de presentación no autoriza un guardado externo.
 - Una medición completa por versión candidata; pruebas focales durante desarrollo. Estado estructurado y línea base son fuente de resultados vigentes; los informes históricos conservan su fecha/SHA.
