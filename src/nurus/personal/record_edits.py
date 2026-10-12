@@ -146,7 +146,8 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
         updated.append(row)
     from .capture_findings import updated_contexts
 
-    contexts = updated_contexts(work, updated)
+    # Solo las filas editadas cambian sus hallazgos; las demás conservan su contexto vigente (EF-02).
+    contexts = updated_contexts(work, [row for row in updated if row.id in ids])
     work.rows = updated
     if hasattr(work, 'capture_context'):
         work.capture_context = contexts

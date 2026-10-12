@@ -5,13 +5,14 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `883af7d3e812`; asistente 887 aprobadas, 11 omitidas, 6 xfail; descargador 246 aprobadas, 62 subpruebas.
-- Paquetes integrados: 42 de 46; último en el orden: WP-90.
+- Paquetes integrados: 42 de 47; último en el orden: WP-90.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
+| WP-91 | EN_VERIFICACION | EF-02: benchmark sintético y optimización de edición e importación |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
@@ -27,7 +28,7 @@ Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los 
 
 WP-89 completa CI eficiente y resuelve la validación Windows de WP-88: run 38259239456 PASA, más navegador/Descargador 38257631987 PASA. Facturación confirmada por ejecución real. Consultar [ficha WP-89](docs/implementacion/wp/WP-89.md) y estado antes de repetir pruebas/construcciones: no push Windows; entrega por workflow_dispatch tras mínimo aprobado; compilación única de ambos EXE y retención 30 días. Correctivo del aviso evita una segunda fila duplicada y mantiene el editor a 1024×650. No repetir seis cambios de WP-88.
 
-EF-01 completado en WP-90 (`estado.py continuacion`, `verificar_wp.py --reutilizar-medicion`). Siguiente código: benchmark sintético EF-02 antes de optimizar. Obtener nueva ficha; no asumir que quedaron implementados. EF-03 requiere E3 por Outlook/retención; EF-04 requiere evidencia del puesto. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
+EF-01 completado en WP-90 (`estado.py continuacion`, `verificar_wp.py --reutilizar-medicion`). EF-02 en WP-91: benchmark (`tools/benchmark_ef02.py`) y edición/importación optimizadas; siguiente candidato: relectura en la exportación (ver ficha WP-91). Obtener nueva ficha; no asumir que quedaron implementados. EF-03 requiere E3 por Outlook/retención; EF-04 requiere evidencia del puesto. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
 
 ## Consolidación anterior
 

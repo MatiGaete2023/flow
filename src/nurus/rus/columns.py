@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Iterable
+from functools import lru_cache
 
 from .models import Mode
 
@@ -17,7 +18,13 @@ class ColumnMappingError(ValueError):
 
 
 def normalize(value: object) -> str:
-    text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode()
+    # Función pura del texto: la exportación la llama cientos de miles de veces con pocos valores distintos (EF-02).
+    return _normalize_text(str(value or ""))
+
+
+@lru_cache(maxsize=1 << 16)
+def _normalize_text(value: str) -> str:
+    text = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
     text = re.sub(r"[-().]+", " ", text.lower().strip())
     return re.sub(r"\s+", " ", text)
 
