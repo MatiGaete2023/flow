@@ -1,5 +1,7 @@
 # Continuar — consolidado del 12 de octubre de 2026
 
+[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación.
+
 ## Trabajo actual: eficiencia y UX
 
 [Orden y límites de la nueva ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md). WP-87 integró el tema común en el PR #41; consultar `docs/implementacion/estado/WP-87.json` para su estado. WP-88 los integró en PR #42 junto con el flujo contextual: consulta su estado antes de repetir autoexportación, consulta/paquete, preferencia XLSX, retiro de firmas, respaldo o lanzador. El usuario autorizó completar lo ausente tras comprobar `e91e360`.
