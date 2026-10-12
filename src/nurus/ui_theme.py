@@ -86,7 +86,14 @@ def install_ttk(root, mode):
         ('Danger.TButton', p['danger'], p['danger_hover'], p['on_primary']),
     ):
         focus = p['focus'] if name in ('TButton', 'Secondary.TButton') or mode == 'Oscuro' else p['on_primary']
-        style.configure(name, background=background, foreground=foreground, borderwidth=1, focuscolor=focus)
+        style.configure(
+            name,
+            background=background,
+            foreground=foreground,
+            borderwidth=1,
+            focuscolor=focus,
+            focusthickness=2,
+        )
         style.map(
             name,
             background=[('disabled', p['heading']), ('pressed', hover), ('active', hover)],

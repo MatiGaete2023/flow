@@ -60,6 +60,8 @@ from nurus.personal import ui
 from nurus.ui_theme import tokens
 secondary=ui.Button(app.pages['Trabajo'],text='Prueba secundaria',role='secondary')
 danger=ui.Button(app.pages['Trabajo'],text='Prueba peligro',role='danger')
+transparent=ui.Button(app.pages['Trabajo'],text='Acción secundaria existente',fg_color='transparent')
+assert transparent.cget('text_color')==ui.COLORS['text']
 secondary.pack(side='bottom');app.update()
 for choice in ('Claro','Oscuro','Sistema','Claro'):
     app.theme_choice.set(choice);app.apply_appearance();app.update()
@@ -69,6 +71,7 @@ for choice in ('Claro','Oscuro','Sistema','Claro'):
     assert style.lookup('Primary.TButton','background')==palette['primary']
     assert style.lookup('Danger.TButton','foreground')==palette['on_primary']
     assert style.lookup('OK.TLabel','foreground')==palette['ok_text']
+    assert int(style.lookup('Primary.TButton','focusthickness'))==2
     assert style.lookup('Treeview','background',('selected',))==palette['primary']
     assert style.lookup('Primary.TButton','background',('disabled','active'))==palette['heading']
     assert style.lookup('Secondary.TButton','foreground',('disabled',))==palette['muted']
