@@ -180,6 +180,10 @@
       "j_E3_solo_riesgosos": {
         "texto": "E3 obligatoria solo si el diff toca: motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto: verificar_wp.py PASA.",
         "fuente": "Usuario, 12 de octubre de 2026: «Sí, para los cambios riesgosos»."
+      },
+      "k_eficiencia_ux": {
+        "texto": "Actualizar los planes y comenzar la implementación de eficiencia y UX; conservar los dos botones de preparación y la ubicación de productos secundarios.",
+        "fuente": "Usuario: «Actualiza los planes en el repositorio y comienza a implementar», junto con restricciones expresas del encargo de UX."
       }
     }
   },
@@ -225,6 +229,7 @@
     "WP-84",
     "WP-85",
     "WP-86",
+    "WP-87",
     "WP-70"
   ],
   "commit_integracion": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",

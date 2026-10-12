@@ -404,7 +404,9 @@ class Application:
         actions = ttk.Frame(results)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
-        self.download_button = ttk.Button(actions, text='Descargar el lote completo', command=self.start_download)
+        self.download_button = ttk.Button(
+            actions, text='Descargar el lote completo', style='Primary.TButton', command=self.start_download
+        )
         self.download_button.grid(row=0, column=0, sticky='w')
         self.cancel_button = ttk.Button(actions, text='Cancelar', command=self.request_cancel)
         self.cancel_button.grid(row=0, column=1, padx=8)
