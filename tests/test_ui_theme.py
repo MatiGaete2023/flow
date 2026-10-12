@@ -77,7 +77,14 @@ for choice in ('Claro','Oscuro','Sistema','Claro'):
     assert style.lookup('Secondary.TButton','foreground',('disabled',))==palette['muted']
 calls=[]
 secondary.configure(command=lambda:calls.append('invocado'))
-secondary._canvas.focus_force();app.update()
+import time
+# El foco lo concede el gestor de ventanas de forma asíncrona (Windows CI, xvfb): se confirma antes del teclado.
+for _ in range(40):
+    app.deiconify();app.lift();app.focus_force();secondary._canvas.focus_force();app.update()
+    if app.focus_get() is secondary._canvas:
+        break
+    time.sleep(0.05)
+assert app.focus_get() is secondary._canvas, 'el botón no recibió el foco'
 secondary._canvas.event_generate('<Return>');app.update()
 assert calls==['invocado']
 assert secondary.cget('border_width')>=2
