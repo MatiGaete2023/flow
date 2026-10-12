@@ -15,7 +15,7 @@
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
-[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md). [Informe para revisor externo](docs/implementacion/INFORME_REVISOR_EXTERNO_20261012.md).
+[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md). [Informe para revisor externo](docs/implementacion/INFORME_REVISOR_EXTERNO_20261012.md) y [su prompt](docs/implementacion/PROMPT_REVISOR_EXTERNO.md).
 
 ## Trabajo actual: eficiencia y UX
 
