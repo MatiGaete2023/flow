@@ -203,27 +203,47 @@ def carpetas_previas(base, actual=None, limite=REUTILIZAR_CARPETAS):
     base = Path(base)
     if not base.is_dir():
         return []
+    root = base.resolve()
     found = {}
     for pattern in ('Bitacoras *', '*/respaldo/Bitacoras *'):
         for folder in base.glob(pattern):
             manifest = folder / MANIFEST
-            if folder.is_dir() and not folder.is_symlink() and manifest.is_file():
-                resolved = folder.resolve()
-                if actual is None or resolved != Path(actual).resolve():
-                    found[resolved] = manifest.stat().st_mtime_ns
+            if not folder.is_dir() or folder.is_symlink() or not manifest.is_file():
+                continue
+            resolved = folder.resolve()
+            # E3 WP-93 #5: un enlace o unión intermedia no puede llevar la búsqueda fuera del destino.
+            if not resolved.is_relative_to(root):
+                continue
+            if actual is None or resolved != Path(actual).resolve():
+                found[resolved] = manifest.stat().st_mtime_ns
     return sorted(found, key=found.get, reverse=True)[:limite]
 
 
+def _registros_previos(folder):
+    """Registros de un manifiesto anterior; cualquier estructura inválida cuenta como «nada reutilizable» (E3 #1)."""
+    try:
+        data = load(folder / MANIFEST)
+    except Exception:  # noqa: BLE001 - un lote ajeno nunca debe impedir leer el lote actual
+        return []
+    if not isinstance(data, dict):
+        return []
+    records = []
+    for key in ('registros', 'anteriores_no_reenumeradas'):
+        value = data.get(key, [])
+        if isinstance(value, list):
+            records.extend(value)
+    return records
+
+
 def lecturas_reutilizables(carpetas, ahora, horas=REUTILIZAR_HORAS):
-    """clave → (carpeta, registro) de lecturas LEIDA recientes; gana la más reciente."""
+    """clave → (carpeta, registro) de lecturas LEIDA recientes; gana la de `capturada` más reciente (E3 #2)."""
     result = {}
     for folder in carpetas:
-        try:
-            data = load(folder / MANIFEST)
-        except (OSError, ValueError, m.PocError):
-            continue
-        for record in data.get('registros', []) + data.get('anteriores_no_reenumeradas', []):
-            if not isinstance(record, dict) or record.get('estado') != 'LEIDA' or record.get('clave') in result:
+        for record in _registros_previos(folder):
+            if not isinstance(record, dict) or record.get('estado') != 'LEIDA':
+                continue
+            key = record.get('clave')
+            if not isinstance(key, str) or not key:
                 continue
             try:
                 captured = datetime.fromisoformat(str(record.get('capturada', '')).replace('Z', '+00:00'))
@@ -232,12 +252,14 @@ def lecturas_reutilizables(carpetas, ahora, horas=REUTILIZAR_HORAS):
             if captured.tzinfo is None:
                 continue
             age = ahora - captured
-            if (
+            if not (
                 timedelta(0) <= age <= timedelta(hours=horas)
                 and captured.astimezone(ahora.tzinfo).date() == ahora.date()
             ):
-                result[record['clave']] = (folder, record)
-    return result
+                continue
+            if key not in result or captured > result[key][2]:
+                result[key] = (folder, record, captured)
+    return {key: (folder, record) for key, (folder, record, _captured) in result.items()}
 
 
 class LimiteLecturas(m.PocError):
@@ -333,7 +355,12 @@ class _Lectura:
         data = source.read_bytes()
         if hashlib.sha256(data).hexdigest() != previous.get('sha256'):
             return False
-        snapshot = self.read(data, record['params'])
+        if not all(previous.get(k) is not None for k in ('capturada', 'entradas')):
+            return False
+        try:
+            snapshot = self.read(data, record['params'])
+        except (ValueError, KeyError):
+            return False  # E3 #4: una copia ajena ilegible se resuelve leyendo en SITFA, no como FALLIDA
         target = self.folder / name
         if target.exists():
             if target.read_bytes() != data:

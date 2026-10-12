@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import pytest
+
 import lectura_bitacoras as lb
 from lotes import Batch
 from test_lectura_bitacoras import CATALOG, Bridge
@@ -102,3 +104,115 @@ def test_carpetas_previas_limita_a_diez_y_excluye_la_actual(tmp_path):
     found = lb.carpetas_previas(base, actual=folders[0])
     assert len(found) == 10 and folders[0] not in found
     assert packaged.resolve() in lb.carpetas_previas(base, limite=20)
+
+
+def _manifest(folder, records):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / lb.MANIFEST).write_text(
+        json.dumps({'version': 1, 'tipo': 'BITACORAS_LECTURA', 'registros': records}), encoding='utf-8'
+    )
+
+
+def _leida(clave, capturada):
+    return {
+        'clave': clave,
+        'estado': 'LEIDA',
+        'capturada': capturada,
+        'archivo': 'x.html',
+        'sha256': '0',
+        'entradas': 1,
+    }
+
+
+@pytest.mark.parametrize(
+    'contents',
+    [
+        '[]',
+        '{"version": 1, "tipo": "BITACORAS_LECTURA", "registros": {"no": "lista"}}',
+        '{"version": 1, "tipo": "BITACORAS_LECTURA", "registros": [{"estado": "LEIDA", "clave": ["no", "hashable"]}]}',
+        '{"version": 1, "tipo": "BITACORAS_LECTURA", "registros": [{"estado": "LEIDA"}]}',
+    ],
+)
+def test_manifiesto_previo_malformado_no_bloquea_el_lote(tmp_path, monkeypatch, contents):
+    # E3 WP-93 #1: un lote ajeno inválido se omite; el lote actual se lee normalmente.
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    bad = tmp_path / 'destino' / 'Bitacoras malformada'
+    bad.mkdir(parents=True)
+    (bad / lb.MANIFEST).write_text(contents, encoding='utf-8')
+    bridge = Bridge()
+    result, _ = _run(tmp_path, bridge)
+    assert result['estado'] == 'COMPLETA' and bridge.openings
+
+
+def test_gana_la_captura_mas_reciente_no_la_carpeta_tocada_al_final(tmp_path):
+    # E3 WP-93 #2: A (08:00) se modificó después que B (13:00); debe ganar B.
+    now = datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO)
+    a, b = tmp_path / 'A', tmp_path / 'B'
+    _manifest(b, [_leida('k', '2026-10-08T13:00:00-03:00')])
+    _manifest(a, [_leida('k', '2026-10-08T08:00:00-03:00')])
+    found = lb.lecturas_reutilizables([a, b], now)
+    assert found['k'][0] == b
+
+
+@pytest.mark.parametrize(
+    'capturada,now,expected',
+    [
+        ('2026-10-08T23:30:00-03:00', datetime(2026, 10, 9, 0, 30, tzinfo=SANTIAGO), False),  # 1 h, otro día
+        ('2026-10-08T07:00:00-03:00', datetime(2026, 10, 8, 20, 0, tzinfo=SANTIAGO), False),  # 13 h, mismo día
+        ('2026-10-08T09:00:00-03:00', datetime(2026, 10, 8, 20, 0, tzinfo=SANTIAGO), True),  # 11 h, mismo día
+        ('2026-10-08T16:00:00-03:00', datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO), False),  # futura
+    ],
+)
+def test_guardas_de_mismo_dia_y_doce_horas_por_separado(tmp_path, capturada, now, expected):
+    _manifest(tmp_path / 'A', [_leida('k', capturada)])
+    assert ('k' in lb.lecturas_reutilizables([tmp_path / 'A'], now)) is expected
+
+
+def test_misma_clave_con_otros_parametros_se_vuelve_a_leer(tmp_path, monkeypatch):
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    first_result, first_data = _run(tmp_path, Bridge())
+    manifest = Path(first_result['manifest'])
+    data = json.loads(manifest.read_text(encoding='utf-8'))
+    target = next(r for r in data['registros'] if r['estado'] == 'LEIDA')
+    target['params'] = {**target['params'], 'COD_Etapa': 'otra-etapa-ficticia'}
+    manifest.write_text(json.dumps(data), encoding='utf-8')
+    again = Bridge()
+    _, second = _run(tmp_path, again)
+    reread = next(r for r in second['registros'] if r['clave'] == target['clave'])
+    assert not reread.get('reutilizada') and reread['estado'] == 'LEIDA'
+
+
+def test_copia_previa_ilegible_se_lee_en_sitfa_y_no_queda_fallida(tmp_path, monkeypatch):
+    # E3 WP-93 #4: hash correcto pero contenido que el lector rechaza → se abre en SITFA, no queda FALLIDA.
+    _clock(monkeypatch, datetime(2026, 10, 8, 15, 0, tzinfo=SANTIAGO))
+    first_result, _ = _run(tmp_path, Bridge())
+    manifest = Path(first_result['manifest'])
+    data = json.loads(manifest.read_text(encoding='utf-8'))
+    garbage = b'contenido ficticio ilegible'
+    for record in data['registros']:
+        if record['estado'] == 'LEIDA':
+            (manifest.parent / record['archivo']).write_bytes(garbage)
+            record['sha256'] = hashlib.sha256(garbage).hexdigest()
+    manifest.write_text(json.dumps(data), encoding='utf-8')
+    real = lb.parser()
+
+    def reader(content, params):
+        if content == garbage:
+            raise ValueError('ilegible')
+        return real(content, params)
+
+    monkeypatch.setattr(lb, 'parser', lambda: reader)
+    again = Bridge()
+    result, second = _run(tmp_path, again)
+    assert result['estado'] == 'COMPLETA' and again.openings
+    assert all(r['estado'] == 'LEIDA' and not r.get('reutilizada') for r in second['registros'] if r.get('params'))
+
+
+def test_respaldo_enlazado_fuera_del_destino_se_ignora(tmp_path):
+    # E3 WP-93 #5.
+    base = tmp_path / 'destino'
+    outside = tmp_path / 'fuera' / 'respaldo' / 'Bitacoras ajena'
+    _manifest(outside, [])
+    (base / 'Paquete CSMP x').mkdir(parents=True)
+    (base / 'Paquete CSMP x' / 'respaldo').symlink_to(outside.parent, target_is_directory=True)
+    assert lb.carpetas_previas(base) == []
