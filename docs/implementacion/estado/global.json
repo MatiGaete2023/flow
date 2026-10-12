@@ -236,6 +236,7 @@
     "WP-86",
     "WP-87",
     "WP-88",
+    "WP-89",
     "WP-70"
   ],
   "commit_integracion": "9c8049035a5bc850e0d6ca2811f9476f9a2f2c54",
@@ -271,10 +272,10 @@
   ],
   "bloqueos_externos": {
     "actions_windows": {
-      "estado": "PENDIENTE",
-      "motivo": "GitHub no inicia jobs: pagos fallidos o límite de gasto.",
-      "evidencia": "Anotación check-run 114668230322; runs PR42 38205584519 y 38205584494.",
-      "accion": "Responsable de la cuenta habilita facturación/límite; después ejecutar CI Windows sobre commit vigente. No reintentar mientras persista la causa."
+      "estado": "RESUELTO",
+      "motivo": "Facturación actualizada por usuario; jobs efectivamente iniciados.",
+      "evidencia": "Runs PR43 38257245371/38257245501/38257245645 con pasos ejecutados el 12 de octubre de 2026.",
+      "accion": "Validar entrega candidata completa mediante workflow_dispatch; no implica uso real ni aceptación."
     }
   }
 }

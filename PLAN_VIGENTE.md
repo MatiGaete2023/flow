@@ -57,7 +57,7 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
 - Conservar separados «Preparar tipo»/«Preparar todos» y conservar la ubicación de ZIP, resumen, ICS y recuperación legado.
 - Outlook mantiene persistencia antes/después de cada efecto y el estado incierto. Una caché de presentación no autoriza un guardado externo.
 - Una medición completa por versión candidata; pruebas focales durante desarrollo. Estado estructurado y línea base son fuente de resultados vigentes; los informes históricos conservan su fecha/SHA.
-- CI rápida y construcción bajo demanda son una mejora pendiente, no un workflow ya modificado. Mantener la verificación Windows de la entrega candidata.
+- WP-89 implementa CI Linux automática, Windows mínimo en PR de código a feat y construcción única bajo demanda; E4 revisada en el plan general. Mantener verificación Windows completa de entrega candidata. Facturación confirmada mediante jobs ejecutados. Windows completo e instalador PASA en run 38259239456; evidencia y límites en WP-89.
 
 ## Documentos
 - Plan de implementación: docs/implementacion/PLAN_IMPLEMENTACION.md
