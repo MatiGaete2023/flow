@@ -60,7 +60,8 @@ secciones siguientes, prevalecen estas enmiendas.
 - **E2 · Verificación sin holgura.** Las pruebas retiradas se declaran con `--lista-eliminadas` (nodeids). Un control
   que no se puede medir es FALLA. Ningún WP se integra sobre una línea base anterior a la última integración.
 - **E3 · Revisión cruzada.** Revisor y Auditor pertenecen siempre a una raíz de agente distinta de la del Ejecutor.
-  Los subagentes de una misma raíz cuentan como el mismo agente.
+  Los subagentes de una misma raíz cuentan como el mismo agente. Desde el 12 de octubre de 2026 (decisión j) E3 es
+  obligatoria solo si el diff toca motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA; en los demás WP basta `verificar_wp.py` PASA.
 - **E4 · Presupuesto de CI.** Cada PR corre la CI mínima (Python 3.12). La matriz 3.12–3.14, Playwright, PyInstaller
   y el instalador corren al integrar en `feat` o a pedido (`workflow_dispatch`).
 - **E5 · Privacidad del historial.** No se sube una etiqueta o rama cuyo árbol contenga datos reales; WP-17 cubre
