@@ -102,6 +102,10 @@ try:
     assert not hasattr(app,'signature_days')
     window=ResultsWindow(app);app.result_windows.append(window)
     assert window.package_consolidated is app.package_consolidated
+    app.busy=True;app.refresh();window.poll()
+    assert str(app.package_choice.cget('state'))=='disabled'
+    assert str(window.package_choice.cget('state'))=='disabled'
+    app.busy=False;app.refresh();window.poll()
     app.package_consolidated.set(False);app.save_preferences()
     from preferencias import Preferences
     assert Preferences(folder/'prefs.json').data['paquete_consolidado'] is False
@@ -115,6 +119,11 @@ try:
     assert str(app.copy_path_button.cget('state'))=='normal'
     app.copy_package_path();assert root.clipboard_get()==str(target.resolve())
     assert 'Captura.zip' in app.result_notice.get()
+    from unittest.mock import patch
+    opened=[];app.last_folder=folder/'otra-descarga';app.last_folder.mkdir()
+    with patch('ventana_resultados.open_local',side_effect=lambda path:opened.append(path)):
+        app.open_package_folder()
+    assert opened==[target.parent]
     window.close()
     root.deiconify();root.geometry('1000x650');root.update()
     for control in (app.pipeline_button,app.live_pause,app.live_cancel,app.copy_path_button):

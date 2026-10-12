@@ -415,9 +415,10 @@ class Application:
         )
         self.pipeline_button.pack(side='left')
         self.package_consolidated = tk.BooleanVar(value=self.prefs.data['paquete_consolidado'])
-        ttk.Checkbutton(
+        self.package_choice = ttk.Checkbutton(
             primary, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=self.save_preferences
-        ).pack(side='left', padx=12)
+        )
+        self.package_choice.pack(side='left', padx=12)
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
@@ -457,7 +458,7 @@ class Application:
         self.live_pause = ttk.Button(lot_controls, text='Pausar / continuar', command=self.toggle_pause)
         self.live_pause.pack(side='left', padx=8)
         self.package_folder_button = ttk.Button(
-            lot_controls, text='Abrir carpeta del paquete', command=self.open_folder
+            lot_controls, text='Abrir carpeta del paquete', command=self.open_package_folder
         )
         self.package_folder_button.pack(side='left', padx=8)
         self.copy_path_button = ttk.Button(lot_controls, text='Copiar ruta', command=self.copy_package_path)
@@ -840,11 +841,12 @@ class Application:
             (self.filter_check, ready and not calendar_screen),
         ]:
             button.configure(state='normal' if enabled else 'disabled')
+        self.package_choice.configure(state='normal' if idle else 'disabled')
         self.live_cancel.configure(state=self.cancel_button.cget('state'))
         self.live_pause.configure(state=self.pause_button.cget('state'))
         package_ready = bool(self.last_package and self.last_package.is_file() and not self.busy)
         self.copy_path_button.configure(state='normal' if package_ready else 'disabled')
-        self.package_folder_button.configure(state='normal' if self.last_folder and not self.quitting else 'disabled')
+        self.package_folder_button.configure(state='normal' if package_ready and not self.quitting else 'disabled')
         for combo in (self.mod_combo, self.tab_combo):
             combo.configure(state='readonly' if ready and followup else 'disabled')
         self.state_combo.configure(state='readonly' if ready and screen == 'litigantes' else 'disabled')
@@ -906,6 +908,12 @@ class Application:
         else:
             self.advanced_actions.grid()
 
+    def open_package_folder(self):
+        if self.last_package and self.last_package.is_file() and not self.busy:
+            from ventana_resultados import open_local
+
+            open_local(self.last_package.parent)
+
     def copy_package_path(self):
         if self.last_package and self.last_package.is_file() and not self.busy:
             self.root.clipboard_clear()
@@ -964,6 +972,22 @@ class Application:
             arg = SCREENS[self.screen.get()]
         self.busy = True
         self.operation = command
+        if command in ('download', 'joint', 'resume_joint', 'diary', 'package', 'pipeline'):
+            self._phase_started = time.monotonic()
+            self._phase_paused = 0.0
+            self._pause_started = None
+            self.phase_name.set(
+                {
+                    'download': 'Consultar SITFA',
+                    'joint': 'Descarga conjunta',
+                    'resume_joint': 'Recuperar conjunto',
+                    'diary': 'Leer bitácoras',
+                    'package': 'Crear paquete',
+                    'pipeline': 'Preparar paquete',
+                }[command]
+            )
+            self.progress_detail.set('Operación iniciada · tiempo restante: estimando…')
+            self.result_notice.set('')
         self.refresh()
         self.commands.put((command, arg))
 

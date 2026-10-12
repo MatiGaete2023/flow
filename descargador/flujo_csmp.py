@@ -24,6 +24,9 @@ def months(today):
 def plan(tribunals, modalities, mode, today, days=60):
     if mode not in ('Espera', 'Cumplimiento'):
         raise m.PocError('El flujo conjunto admite Espera o Cumplimiento.')
+    if not isinstance(days, int) or not 60 <= days <= 730:
+        # Compatibilidad de recuperaciones antiguas; sin campo activo ni consulta de firmas.
+        raise m.PocError('Metadato legado de firmas fuera de rango (60–730).')
     if not tribunals or not modalities:
         raise m.PocError('Selecciona tribunales y modalidades.')
     result = [('principal', Batch(tuple(tribunals), tuple(modalities), (mode,), report='0'))]
