@@ -1,0 +1,84 @@
+{
+  "commit": "e413c1b0ab3840bba92ab789fa3c61960c225273",
+  "base": "dbcedca7597f91004764f89a72a045e5db0fb915",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "873 aprobadas; mínimo 863; base 863; código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "FALLA",
+      "detalle": "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 873,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "codigo": 0,
+      "medicion_valida": true
+    },
+    "descargador": {
+      "aprobadas": 245,
+      "omitidas": 0,
+      "fallidas": 1,
+      "subpruebas": 62,
+      "xfail": 0,
+      "codigo": 1,
+      "medicion_valida": true
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "e413c1b0ab3840bba92ab789fa3c61960c225273",
+    "arbol_git": "b7e3d079ae364f503f21529116ea28146118f5ad",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "e413c1b0ab3840bba92ab789fa3c61960c225273",
+    "arbol_git": "b7e3d079ae364f503f21529116ea28146118f5ad",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": false,
+  "veredicto": "FALLA"
+}

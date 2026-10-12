@@ -14,6 +14,19 @@ Los PDF vacíos muestran la consulta solicitada, con tribunal, modalidad,
 pestaña y fechas o «Sin filtro de fechas». Ese contexto se restituye localmente;
 la tabla vacía se comprueba en la respuesta y no acredita un historial completo.
 
+## Recorrido habitual
+
+1. Abrir **Flow CSMP** y elegir Descargador; conectar la extensión a tu sesión Chrome habitual.
+2. Cargar opciones y definir el alcance en **Seguimiento**: tribunales, modalidades, registros y período. Las otras consultas y recuperaciones siguen disponibles en **Avanzado / recuperación**.
+3. Revisar el alcance y pulsar **Consultar y crear paquete**. Ejecuta las consultas elegidas, lee sus bitácoras y crea el ZIP. La casilla **Incluir XLSX consolidado** es una sola preferencia guardada, compartida con Resultados.
+4. Consultar fase, páginas y tiempos aproximados. Pausar y Cancelar están siempre visibles; la detención espera el límite seguro de la operación. Tiempo desconocido aparece como «estimando», sin prometer una duración.
+5. Al terminar, **Abrir carpeta del paquete** o **Copiar ruta**. El ZIP queda en la carpeta principal; originales, HTML, controles y Excel auxiliares se conservan en **respaldo/**. No mover estos archivos ni cambiar sus controles. Una lectura fallida/parcial se avisa; no acredita ausencia de actuaciones.
+6. Importar el ZIP en el Asistente: su copia Excel se genera automáticamente. Ante error se conservan fuentes verificadas y el control en respaldo; recuperarlas desde Resultados o Avanzado. No se crea el ZIP si se canceló antes de la fase de exportación; una escritura ya iniciada termina en su punto seguro.
+
+La consulta de firmas continúa retirada: no hay campo activo de días ni hoja vacía «Resoluciones firmadas». Las recuperaciones antiguas conservan sus metadatos, sin consultar firmas. El lanzador no reduce todavía los dos runtimes empaquetados; el instalador ahora incluye ambas apps y la extensión.
+
+## Recuperación, consultas separadas y productos disponibles
+
 1. Iniciar sesión institucional manualmente y definir tribunales, modalidades,
    pestañas y período autorizado. Enlazar la extensión del mismo paquete.
 2. Ejecutar consultas y revisar el control de lote: páginas esperadas/guardadas,
@@ -44,10 +57,10 @@ la tabla vacía se comprueba en la respuesta y no acredita un historial completo
    ingreso difieren, se elige la captura posterior con fecha inequívoca; en un
    conflicto sin orden verificable, quitar uno de los lotes. Añadirlo de nuevo
    lo reincorpora. Los hashes originales se comprueban antes de exportar. El ZIP
-   contiene tablas y metadatos; en esta ventana, la casilla **Paquete con XLSX
+   contiene tablas y metadatos; en esta ventana, la casilla **Incluir XLSX
    consolidado** añade la base para una copia nativa del Asistente. En la ventana
    principal, **Crear paquete de este lote…** usa la casilla **Incluir XLSX
-   consolidado**. Ambas vienen marcadas. No adjunta HTML, PDF
+   consolidado**. Es la misma preferencia persistente en ambas ventanas; inicialmente viene marcada. No adjunta HTML, PDF
    ni las copias XLS originales. Si el consolidado no es compatible, se
    informa y se conserva el paquete portable.
    En 2.7.5 aplica a todas las filas seleccionadas. Las referencias ausentes

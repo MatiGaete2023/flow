@@ -25,7 +25,8 @@ def plan(tribunals, modalities, mode, today, days=60):
     if mode not in ('Espera', 'Cumplimiento'):
         raise m.PocError('El flujo conjunto admite Espera o Cumplimiento.')
     if not isinstance(days, int) or not 60 <= days <= 730:
-        raise m.PocError('Selecciona entre 60 y 730 días para firmas.')
+        # Compatibilidad de recuperaciones antiguas; sin campo activo ni consulta de firmas.
+        raise m.PocError('Metadato legado de firmas fuera de rango (60–730).')
     if not tribunals or not modalities:
         raise m.PocError('Selecciona tribunales y modalidades.')
     result = [('principal', Batch(tuple(tribunals), tuple(modalities), (mode,), report='0'))]
@@ -146,14 +147,16 @@ def assemble(lots, signature_rows, coverage_by_court, destination):
                     auxiliary.cell(
                         cells[0].row, column + 1, 'Identidad única RIT/tribunal/persona/centro de hoja principal'
                     )
-    details = book.create_sheet('Resoluciones firmadas')
-    labels = ('tribunal_codigo', 'tribunal', 'rit', 'tramite', 'firma', 'hora', 'documento', 'identidad', 'huella')
-    details.append(labels)
-    for item in signature_rows:
-        details.append([item.get(k, '') for k in labels])
-        for cell in details[details.max_row]:
-            if isinstance(cell.value, str):
-                cell.data_type = 's'
+    if signature_rows:
+        # Conservar firmas legadas suministradas; no generar una hoja vacía sin consulta.
+        details = book.create_sheet('Resoluciones firmadas')
+        labels = ('tribunal_codigo', 'tribunal', 'rit', 'tramite', 'firma', 'hora', 'documento', 'identidad', 'huella')
+        details.append(labels)
+        for item in signature_rows:
+            details.append([item.get(k, '') for k in labels])
+            for cell in details[details.max_row]:
+                if isinstance(cell.value, str):
+                    cell.data_type = 's'
     status = book.create_sheet('SITFA_COBERTURA')
     status.append(('tribunal_codigo', 'desde', 'hasta', 'estado', 'criterio_temporal', 'sin_coincidencias'))
     for code, item in coverage_by_court.items():

@@ -2,8 +2,12 @@
 
 import tkinter as tk
 from . import ui
+from functools import partial
+
 from .widgets import CaseDetailPanel, ScrollPane
 from .record_view import RecordForm
+
+view_button = partial(ui.Button, role='secondary')
 
 WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro')
 # Columnas que existían antes de WP-50: una preferencia sin «columnas_conocidas» se guardó con estas.
@@ -87,8 +91,10 @@ def build(app):
     app.resume_frame = ui.Frame(page)
     app.resume_text = tk.StringVar()
     ui.Label(app.resume_frame, textvariable=app.resume_text).pack(side='left', fill='x', expand=True)
-    ui.Button(app.resume_frame, text='Continuar', command=lambda: app._guard(app._continue_resume)).pack(side='right')
-    ui.Button(app.resume_frame, text='Elegir otro archivo', command=app._choose_other_resume).pack(side='right', padx=5)
+    view_button(app.resume_frame, text='Continuar', command=lambda: app._guard(app._continue_resume)).pack(side='right')
+    view_button(app.resume_frame, text='Elegir otro archivo', command=app._choose_other_resume).pack(
+        side='right', padx=5
+    )
     bar = ui.Frame(page)
     bar.pack(fill='x', pady=(0, 4))
     app.mode = tk.StringVar(value='ESPERA')
@@ -108,11 +114,12 @@ def build(app):
         else:
             top.pack(fill='x', after=bar, pady=5)
 
-    ui.Button(bar, text='Archivo / opciones', width=145, command=toggle_file).pack(side='left', padx=5)
-    ui.Button(bar, text='Importar paquete', width=130, command=lambda: app._guard(app._import_capture)).pack(
-        side='left', padx=(5, 2)
+    view_button(bar, text='Archivo / opciones', width=145, command=toggle_file).pack(side='left', padx=5)
+    app.import_button = view_button(
+        bar, text='Importar paquete', width=130, role='primary', command=lambda: app._guard(app._import_capture)
     )
-    ui.Button(
+    app.import_button.pack(side='left', padx=(5, 2))
+    view_button(
         bar,
         text='Último',
         width=60,
@@ -120,7 +127,7 @@ def build(app):
         border_width=1,
         command=lambda: app._guard(app._import_latest_capture),
     ).pack(side='left', padx=(0, 5))
-    ui.Button(
+    view_button(
         bar,
         text='Actualizar Excel · F5',
         width=145,
@@ -128,17 +135,17 @@ def build(app):
         border_width=1,
         command=lambda: app._guard(app._refresh),
     ).pack(side='left')
-    app.work_primary_button = ui.Button(
+    app.work_primary_button = view_button(
         bar, text='Procesar Excel', command=lambda: app._guard(app._export_current if app.work else app._process)
     )
     app.work_primary_button.pack(side='right')
     app._field(top, 'Archivo', app.file, 0)
-    ui.Button(top, text='Buscar', command=app._choose).grid(row=0, column=2)
+    view_button(top, text='Buscar', command=app._choose).grid(row=0, column=2)
     ui.Label(top, text='Hoja · vacía = automática').grid(row=1, column=0, sticky='w')
     app.sheet_box = ui.Combobox(top, textvariable=app.sheet, state='readonly')
     app.sheet_box.grid(row=1, column=1, sticky='ew', padx=6)
     app._field(top, 'Carpeta de salida', app.folder, 2)
-    ui.Button(top, text='Cambiar', command=lambda: app._select_folder(app.folder)).grid(row=2, column=2)
+    view_button(top, text='Cambiar', command=lambda: app._select_folder(app.folder)).grid(row=2, column=2)
     extra = ui.Frame(top)
     extra.grid(row=3, column=0, columnspan=3, sticky='ew', pady=5)
     for index, (label, command) in enumerate(
@@ -151,7 +158,7 @@ def build(app):
             ('Resumen', app._export_statistics),
         ]
     ):
-        ui.Button(
+        view_button(
             extra,
             text=label,
             width=110,
@@ -166,7 +173,7 @@ def build(app):
             ('Abrir original SITFA', app._open_sitfa_source),
         ]
     ):
-        ui.Button(
+        view_button(
             extra,
             text=label,
             width=110,
@@ -208,10 +215,10 @@ def build(app):
         app._search_after = app.after(180, app._apply_work_filter)
 
     app.work_search.trace_add('write', schedule)
-    ui.Button(filters, text='Aviso anterior', width=95, command=lambda: app._next_incident(-1)).pack(
+    view_button(filters, text='Aviso anterior', width=95, command=lambda: app._next_incident(-1)).pack(
         side='left', padx=3
     )
-    ui.Button(filters, text='Siguiente aviso', width=110, command=lambda: app._next_incident(1)).pack(side='left')
+    view_button(filters, text='Siguiente aviso', width=110, command=lambda: app._next_incident(1)).pack(side='left')
     app.records = app._tree(table, WORK_COLUMNS)
     app.records.configure(height=5)
     vista = app.cfg.data.get('vista', {})
@@ -268,13 +275,13 @@ def build(app):
             split.insert(0, table, weight=2)
             app.after(50, lambda: split.sashpos(0, max(120, int(split.winfo_height() * 0.42))))
 
-    ui.Button(
+    view_button(
         footer, text='Ampliar / reducir editor', width=160, fg_color='transparent', border_width=1, command=maximize
     ).pack(side='left')
-    ui.Button(footer, text='Guardar local · Ctrl+S', width=150, command=lambda: app._guard(app._save_session)).pack(
+    view_button(footer, text='Guardar local · Ctrl+S', width=150, command=lambda: app._guard(app._save_session)).pack(
         side='right'
     )
-    ui.Button(
+    view_button(
         footer,
         text='Aplicar · Ctrl+Enter',
         width=135,
@@ -301,7 +308,7 @@ def build(app):
         ('Explicar sugerencia', explain),
         ('Preferencias de vista', preferences),
     ]:
-        ui.Button(detail.body, text=label, command=lambda action=fn: app._guard(lambda: action(app))).pack(
+        view_button(detail.body, text=label, command=lambda action=fn: app._guard(lambda: action(app))).pack(
             anchor='w', pady=3
         )
     app.work_case_detail = CaseDetailPanel(detail.body)
