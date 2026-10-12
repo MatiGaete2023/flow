@@ -74,6 +74,9 @@ assert app.tabs.select()==str(app.pages['Correos'])
 with patch.object(app,'_send_all',side_effect=AssertionError('No guardar')),patch.object(app,'_generate_words',side_effect=AssertionError('No generar')):
     app.mail_target.set('todos')
     app._display_prepared_drafts([Draft('Ficticio','Cuerpo',to='a@example.test')],'{count} preparados')
+    app.geometry('1024x650');app.update()
+    assert not app.result_notice_label.winfo_ismapped()
+    assert app.body.winfo_height()>=120
     app.next_step.next_action();app.update()
 assert app.tabs.select()==str(app.pages['Resoluciones'])
 assert app.mail_action_buttons['guardar_todos'].visual_role=='primary'
@@ -83,7 +86,12 @@ assert set(app.next_step.buttons)=={'revisar','exportar','correos','resoluciones
 for label in app.next_step.flow_labels.values():
     assert label.winfo_rootx()+label.winfo_width()<=app.winfo_rootx()+app.winfo_width()
 app.status.set('Producto ficticio terminado');app.busy=True;app.status.set('Nueva fase en curso')
-assert app.result_notice.get()=='Producto ficticio terminado';app.busy=False
+app.update()
+assert app.result_notice.get()=='Producto ficticio terminado'
+assert app.result_notice_label.winfo_ismapped()
+app.result_notice.set('');app.update()
+assert not app.result_notice_label.winfo_ismapped()
+app.busy=False
 """,
     )
 
