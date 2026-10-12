@@ -8,6 +8,7 @@ Uso:
     python tools/estado.py dividir    # una vez: crea las fuentes desde el ESTADO.json actual
     python tools/estado.py agregar    # regenera ESTADO.json desde las fuentes
     python tools/estado.py validar    # código 1 si la vista no coincide o hay incoherencias
+    python tools/estado.py continuacion  # regenera el bloque generado de CONTINUAR.md
 
 Dos PR de WP distintos ya no tocan el mismo archivo, así que pueden ir directo contra la
 rama base sin apilarse. La CI corre `validar`.
@@ -37,6 +38,10 @@ STATES = {
 WP_ID = re.compile(r"^WP-\d{2}$")
 ORDER = "orden_paquetes"
 DEP_TYPES = {"funcional", "archivo"}
+CONTINUE = ROOT / "CONTINUAR.md"
+BASELINE = ROOT / "docs" / "implementacion" / "linea_base.json"
+BLOCK_START = "<!-- estado:inicio (generado por tools/estado.py continuacion; no editar) -->"
+BLOCK_END = "<!-- estado:fin -->"
 
 
 def dump(value):
@@ -138,9 +143,63 @@ def problems(state):
     return found
 
 
+def _suite(value):
+    if not isinstance(value, dict):
+        return "sin medición"
+    parts = [f"{value.get('aprobadas')} aprobadas"]
+    for key, label in (("omitidas", "omitidas"), ("xfail", "xfail"), ("subpruebas", "subpruebas")):
+        if value.get(key):
+            parts.append(f"{value[key]} {label}")
+    return ", ".join(parts)
+
+
+def continuation(state, baseline):
+    """Bloque determinista de CONTINUAR.md: solo datos de las fuentes, sin fechas de ejecución."""
+    packages = state.get("paquetes", {})
+    integrated = [wp for wp, entry in packages.items() if entry.get("estado") == "INTEGRADO"]
+    open_wps = [wp for wp, entry in packages.items() if entry.get("estado") != "INTEGRADO"]
+    lines = [
+        BLOCK_START,
+        "## Estado generado",
+        "",
+        f"- Rama canónica: `{state.get('rama_canonica', 'NO_DISPONIBLE')}`.",
+        f"- Línea base: `{str(baseline.get('commit', 'NO_DISPONIBLE'))[:12]}`; asistente {_suite(baseline.get('asistente'))};"
+        f" descargador {_suite(baseline.get('descargador'))}.",
+        f"- Paquetes integrados: {len(integrated)} de {len(packages)}"
+        + (f"; último en el orden: {integrated[-1]}." if integrated else "."),
+    ]
+    if open_wps:
+        lines += ["", "| WP | Estado | Título |", "| --- | --- | --- |"]
+        for wp in open_wps:
+            entry = packages[wp]
+            title = str(entry.get("titulo", "")).replace("|", "/")
+            lines.append(f"| {wp} | {entry.get('estado')} | {title} |")
+    blocks = {k: v for k, v in (state.get("bloqueos_externos") or {}).items() if isinstance(v, dict)}
+    pending = {k: v for k, v in blocks.items() if v.get("estado") != "RESUELTO"}
+    if pending:
+        lines += ["", "Bloqueos externos abiertos:"]
+        lines += [f"- {k}: {str(v.get('motivo', '')).strip()}" for k, v in sorted(pending.items())]
+    lines.append(BLOCK_END)
+    return "\n".join(lines) + "\n"
+
+
+def render_continue(text, block):
+    """Sustituye el bloque generado; si no existe, lo inserta tras el título."""
+    if BLOCK_START in text and BLOCK_END in text:
+        head, rest = text.split(BLOCK_START, 1)
+        tail = rest.split(BLOCK_END, 1)[1].lstrip("\n")
+        return head + block + "\n" + tail
+    first, _, rest = text.partition("\n")
+    return first + "\n\n" + block + "\n" + rest.lstrip("\n")
+
+
+def _baseline():
+    return json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.is_file() else {}
+
+
 def _main(argv=None):
     parser = argparse.ArgumentParser(description="Estado compartido por WP.")
-    parser.add_argument("accion", choices=("dividir", "agregar", "validar"))
+    parser.add_argument("accion", choices=("dividir", "agregar", "validar", "continuacion"))
     args = parser.parse_args(argv)
     if args.accion == "dividir":
         print(f"{split()} paquetes en {SOURCES.relative_to(ROOT)}")
@@ -149,6 +208,14 @@ def _main(argv=None):
         print(f"Faltan las fuentes en {SOURCES.relative_to(ROOT)}: ejecuta primero `python tools/estado.py dividir`.")
         return 1
     state = aggregate()
+    if args.accion == "continuacion":
+        if problems(state):
+            print("No se regeneró: fuentes incoherentes; ejecuta `python tools/estado.py validar`.")
+            return 1
+        text = CONTINUE.read_text(encoding="utf-8")
+        CONTINUE.write_text(render_continue(text, continuation(state, _baseline())), encoding="utf-8")
+        print(f"{CONTINUE.name}: bloque generado actualizado")
+        return 0
     if args.accion == "agregar":
         issues = problems(state)
         if issues:
@@ -163,6 +230,10 @@ def _main(argv=None):
     view = {k: v for k, v in state.items() if k != "_sin_archivo"}
     if VIEW.read_text(encoding="utf-8") != dump(view):
         issues.insert(0, "ESTADO.json no coincide con las fuentes: ejecuta `python tools/estado.py agregar`")
+    if CONTINUE.is_file():
+        text = CONTINUE.read_text(encoding="utf-8")
+        if BLOCK_START in text and render_continue(text, continuation(view, _baseline())) != text:
+            issues.append("CONTINUAR.md desactualizado: ejecuta `python tools/estado.py continuacion`")
     for issue in issues:
         print("-", issue)
     print("ESTADO:", "FALLA" if issues else "PASA")

@@ -30,6 +30,14 @@ def clean_provenance(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def isolated_cache(monkeypatch, tmp_path):
+    # Ninguna prueba escribe la caché real del repositorio ni hereda la de CI.
+    monkeypatch.setattr(verifier, "CACHE_DIR", tmp_path / "cache")
+    monkeypatch.delenv("CI", raising=False)
+    return tmp_path / "cache"
+
+
 @pytest.fixture
 def healthy():
     suite = {
@@ -388,3 +396,57 @@ def test_inventory_prevents_new_tests_from_hiding_unreported_deletions(healthy, 
     assert inventory['resultado'] == expected
     if scenario == 'new_tests_mask_deletions':
         assert next(check for check in checks if check['control'] == 'Suite asistente')['resultado'] == 'PASA'
+
+
+def test_reused_measurement_skips_collect_only_on_same_clean_tree(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main([]) == 0 and len(calls) == 1
+    assert len(list(isolated_cache.glob("*.json"))) == 1
+    report = isolated_cache.parent / "informe.json"
+    monkeypatch.setattr(verifier, "report_path", lambda output: Path(output))
+    assert verifier.main(["--reutilizar-medicion", "--salida", str(report)]) == 0
+    assert len(calls) == 1
+    assert json.loads(report.read_text(encoding="utf-8"))["medicion_reutilizada"] is True
+
+
+@pytest.mark.parametrize("change", ["dirty", "ci", "pythonpath", "tree", "flag"])
+def test_reuse_requires_identical_clean_context(monkeypatch, baseline_file, healthy, change):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main([]) == 0
+    state = {"commit": "a" * 40, "arbol_git": "b" * 40, "cambios_locales": False, "huella_trabajo": "c" * 64}
+    if change == "dirty":
+        state["cambios_locales"] = True
+    elif change == "tree":
+        state["arbol_git"] = "d" * 40
+    elif change == "ci":
+        monkeypatch.setenv("CI", "true")
+    elif change == "pythonpath":
+        monkeypatch.setenv("PYTHONPATH", "/otra/copia/src")
+    monkeypatch.setattr(verifier, "provenance", lambda output=None: dict(state))
+    verifier.main([] if change == "flag" else ["--reutilizar-medicion"])
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("contents", [b"not JSON", b"{}", b'{"clave": "x", "medicion": {}}'])
+def test_corrupt_or_incomplete_cache_is_measured_again(monkeypatch, baseline_file, healthy, isolated_cache, contents):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    key = verifier.environment_key("b" * 40)
+    isolated_cache.mkdir()
+    (isolated_cache / f"{key}.json").write_bytes(contents)
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main(["--reutilizar-medicion"]) == 0
+    assert calls == [1]
+
+
+def test_incomplete_measurement_is_never_cached(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    broken = copy.deepcopy(healthy)
+    broken["ruff_src"] = None
+    monkeypatch.setattr(verifier, "collect", lambda: copy.deepcopy(broken))
+    assert verifier.main([]) == 1
+    assert not isolated_cache.exists() or not list(isolated_cache.glob("*.json"))
