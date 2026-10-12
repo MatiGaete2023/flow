@@ -24,15 +24,23 @@ Controles:
   7. Módulos no alcanzables: nunca más que la base.
   8. Enlaces Markdown rotos: nunca más que la base.
   9. Inventario de pruebas: ninguna baja sin declaración exacta, aunque se agreguen otras pruebas.
+Reutilización (opcional, nunca en CI):
+    --reutilizar-medicion toma la medición guardada en .verificacion/ (ignorado por git) si coinciden
+    el árbol Git limpio, el intérprete, la plataforma, los paquetes instalados, PYTHONPATH, la
+    disponibilidad de pantalla y esta herramienta. Cualquier diferencia vuelve a medir todo. Los
+    controles se recalculan siempre contra la línea base; el informe marca «medicion_reutilizada».
 Un control que no se puede medir (herramienta ausente o salida ilegible) da FALLA, no se omite.
 En Linux sin pantalla usa xvfb-run si está disponible.
 """
 
 import argparse
 import ast
+import copy
 import json
 import hashlib
+import importlib.metadata
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -43,6 +51,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BASE_FILE = ROOT / "docs" / "implementacion" / "linea_base.json"
 PY = sys.executable
+CACHE_DIR = ROOT / ".verificacion"
+CACHE_VERSION = 1
+MEASURED_KEYS = (
+    "asistente",
+    "descargador",
+    "identidades_reales",
+    "paridad_golden",
+    "restricciones",
+    "ruff_src",
+    "modulos_no_alcanzables",
+    "enlaces_rotos",
+)
 
 
 def run(command, cwd=None, timeout=1800):
@@ -521,6 +541,57 @@ def provenance(output=None):
         return None
 
 
+def environment_key(tree):
+    """Huella de todo lo que puede cambiar una medición además del código versionado."""
+    packages = sorted(
+        f"{(dist.metadata['Name'] or '').lower()}=={dist.version}" for dist in importlib.metadata.distributions()
+    )
+    display = bool(os.environ.get("DISPLAY")) or bool(shutil.which("xvfb-run"))
+    payload = {
+        "version": CACHE_VERSION,
+        "arbol_git": tree,
+        "python": sys.version,
+        "interprete": str(Path(PY).resolve()),
+        "plataforma": [sys.platform, platform.machine(), platform.release()],
+        "paquetes": packages,
+        "pythonpath": os.environ.get("PYTHONPATH", ""),
+        "pantalla": display,
+        "herramienta": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def complete(measurement):
+    """Solo se guarda o reutiliza una medición sin controles ausentes."""
+    if not isinstance(measurement, dict) or any(measurement.get(key) is None for key in MEASURED_KEYS):
+        return False
+    inventory = measurement.get("pruebas_recolectadas")
+    return (
+        all(suite_valid(measurement.get(suite)) for suite in ("asistente", "descargador"))
+        and isinstance(inventory, dict)
+        and all(isinstance(inventory.get(suite), list) for suite in ("asistente", "descargador"))
+    )
+
+
+def load_cached(key):
+    try:
+        data = json.loads((CACHE_DIR / f"{key}.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get("clave") != key or not complete(data.get("medicion")):
+        return None
+    return data["medicion"]
+
+
+def store_cached(key, measurement):
+    if not complete(measurement):
+        return
+    try:
+        write_json(CACHE_DIR / f"{key}.json", {"clave": key, "medicion": measurement})
+    except OSError:
+        pass  # La caché es una optimización: fallar al escribirla no cambia el veredicto.
+
+
 def public_provenance(value):
     return {key: value[key] for key in ("commit", "arbol_git", "cambios_locales")} if value else None
 
@@ -545,6 +616,7 @@ def main(argv):
     parser.add_argument("--pruebas-eliminadas-descargador", type=nonnegative_argument, default=0)
     parser.add_argument("--lista-eliminadas", type=Path, action="append", default=[])
     parser.add_argument("--salida", type=Path)
+    parser.add_argument("--reutilizar-medicion", action="store_true")
     args = parser.parse_args(argv)
     if args.salida:
         try:
@@ -559,9 +631,20 @@ def main(argv):
         except (ValueError, UnicodeError, OSError):
             base = {}
     before = provenance(args.salida)
-    now = collect()
+    clean = bool(before and not before["cambios_locales"])
+    key = None
+    if clean:
+        try:
+            key = environment_key(before["arbol_git"])
+        except (OSError, ValueError, TypeError):
+            key = None
+    cached = load_cached(key) if key and args.reutilizar_medicion and not os.environ.get("CI") else None
+    reused = cached is not None
+    now = copy.deepcopy(cached) if reused else collect()
     after = provenance(args.salida)
     eligible = bool(before and after and before == after and not before["cambios_locales"])
+    if eligible and key and not reused:
+        store_cached(key, now)
     if before:
         now["commit"] = before["commit"]
     # Only an absent baseline may be initialized against the current healthy
@@ -587,8 +670,11 @@ def main(argv):
         "procedencia_fin": public_provenance(after),
         "procedencia_verificada": eligible,
         "elegible_integracion": eligible and all(c["resultado"] == "PASA" for c in checks),
+        "medicion_reutilizada": reused,
         "veredicto": "PASA" if eligible and all(c["resultado"] == "PASA" for c in checks) else "FALLA",
     }
+    if reused:
+        print("[INFO] Medición reutilizada: mismo árbol limpio y mismo entorno (caché local).")
     for check in checks:
         print(f"[{check['resultado']}] {check['control']}: {check['detalle']}")
     if not eligible:
