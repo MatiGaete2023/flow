@@ -1,14 +1,14 @@
 {
-  "commit": "f5c0d98c23ddbf1a6c83a4e254f4ae3c14ce9f2b",
+  "commit": "c752c6b3d1a9425bdf2b0e4d50c6380c56621f50",
   "asistente": {
-    "aprobadas": 890,
+    "aprobadas": 902,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
     "xfail": 6,
     "codigo": 0,
     "medicion_valida": true,
-    "resumen": "890 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "902 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 246,
@@ -374,6 +374,18 @@
       "tests/test_ef02_rendimiento.py::test_deshacer_tras_edicion_parcial_restaura_contextos",
       "tests/test_ef02_rendimiento.py::test_editar_un_registro_equivale_a_recalcular_todos",
       "tests/test_ef02_rendimiento.py::test_normalize_memorizada_conserva_resultado_y_tipos",
+      "tests/test_ef03_diario_recibos.py::test_bin_danado_impide_el_primer_efecto_de_outlook",
+      "tests/test_ef03_diario_recibos.py::test_cada_adjunto_se_lee_una_vez_por_borrador",
+      "tests/test_ef03_diario_recibos.py::test_corte_despues_de_outlook_recupera_el_recibo_desde_el_diario[created]",
+      "tests/test_ef03_diario_recibos.py::test_corte_despues_de_outlook_recupera_el_recibo_desde_el_diario[uncertain]",
+      "tests/test_ef03_diario_recibos.py::test_diario_bloqueado_no_hace_fallar_un_guardado_ya_escrito",
+      "tests/test_ef03_diario_recibos.py::test_diario_de_otra_version_se_ignora",
+      "tests/test_ef03_diario_recibos.py::test_ediciones_en_memoria_quedan_en_disco_antes_del_lote",
+      "tests/test_ef03_diario_recibos.py::test_error_no_os_en_el_guardado_final_se_informa_sin_perder_el_resumen",
+      "tests/test_ef03_diario_recibos.py::test_fallo_no_incierto_retira_el_recibo_tambien_del_diario",
+      "tests/test_ef03_diario_recibos.py::test_guardado_completo_retira_el_diario",
+      "tests/test_ef03_diario_recibos.py::test_lote_guarda_sesion_completa_una_vez_y_recibos_en_diario",
+      "tests/test_ef03_diario_recibos.py::test_lote_sin_cambios_netos_no_deja_diario_residual",
       "tests/test_estado_continuacion.py::test_bloque_lista_solo_pendientes_y_cifras_de_la_linea_base",
       "tests/test_estado_continuacion.py::test_render_inserta_y_luego_reemplaza_sin_tocar_el_resto",
       "tests/test_estado_continuacion.py::test_validar_detecta_bloque_desactualizado",
