@@ -12,7 +12,7 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
 3. Filtrar y seleccionar registros, revisar observaciones y corregir TT/CC/RES.
    Las decisiones humanas se conservan al reimportar la misma captura. Una nueva
    fecha de corte conserva decisiones, pero puede dejar productos obsoletos.
-4. Exportar copia actual a XLSX. Para paquetes nuevos funciona sin Excel/Office.
+4. La copia XLSX se genera automáticamente después de importar. **Exportar copia actual** sirve para actualizarla o reintentar una exportación fallida: la importación y sesión se conservan. Una reimportación idéntica reutiliza la copia existente y conserva ediciones. Para paquetes nuevos funciona sin Excel/Office.
    Si el ZIP incluye consolidado y Excel está disponible, usa la copia nativa;
    si no, informa la fidelidad reducida de la copia portable.
    **Elegir Excel · Ctrl+O** y luego **Procesar Excel** conservan el motor y la
@@ -95,3 +95,9 @@ Excel de evidencia incluye una hoja Incidencias.
 
 Para un vacío por ingreso se requiere una consulta con alcance explícito; un
 estado vacío de toda la tabla no se aplica automáticamente a cada persona.
+
+## Siguiente acción y acceso común
+
+La barra muestra Importar → Revisar → Correos → Resoluciones, con estado visible. **Siguiente acción** abre la pantalla o enfoca la preparación pendiente; no guarda Outlook ni genera Word sin tu acción. **Detalle** conserva los conteos de productos. También disponible en Ctrl+K. «Preparado» no acredita envío, firma ni registro. Los avisos finales permanecen visibles hasta ocultarlos o terminar otra acción.
+
+En Windows, el acceso **Flow CSMP** o **Abrir_Flow.cmd** permite elegir Asistente o Descargador antes de abrir la app. El Asistente por sí solo sigue funcionando sin Descargador; los accesos directos anteriores conservan su función.

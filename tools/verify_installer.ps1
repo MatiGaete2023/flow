@@ -28,6 +28,8 @@ function Invoke-InstallerVerification {
     Invoke-CheckedProcess -FilePath $installerPath -Arguments ($arguments + ('/LOG="'+(Join-Path $evidence 'installer-install.log')+'"')) -Label 'instalación del build actual'
     $exe = Join-Path $Destination 'CSMP_Integral.exe'
     if (-not (Test-Path -LiteralPath $exe)) { throw 'La instalación no creó el ejecutable.' }
+    if (-not (Test-Path -LiteralPath (Join-Path $Destination 'SITFA_Descargador/SITFA_Descargador.exe'))) { throw 'La instalación no incluyó el Descargador.' }
+    if (-not (Test-Path -LiteralPath (Join-Path $Destination 'extension/manifest.json'))) { throw 'La instalación no incluyó la extensión.' }
     $check = Join-Path $evidence 'installed-package-check.json'
     Invoke-CheckedProcess -FilePath $exe -Arguments @('--verificar-paquete',('"'+$check+'"')) -WorkingDirectory $evidence -Label 'productos desde EXE instalado'
     $proof = Get-Content -LiteralPath $check -Raw | ConvertFrom-Json

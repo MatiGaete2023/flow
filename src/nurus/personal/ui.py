@@ -89,17 +89,31 @@ class Button(ctk.CTkButton):
             kwargs.setdefault(key, value)
         kwargs.setdefault('width', 110)
         super().__init__(parent, **kwargs)
+        self.visual_role = role
         self._canvas.configure(takefocus=1)
-        border = self.cget('border_width')
-        focus = COLORS['focus'] if role == 'secondary' else (COLORS['on_primary'][0], COLORS['focus'][1])
+        self._resting_border = self.cget('border_width')
         self.bind(
             '<FocusIn>',
-            lambda e: self.configure(border_width=max(2, border), border_color=focus),
+            lambda e: self.configure(border_width=max(2, self._resting_border), border_color=self._focus_colors()),
             add='+',
         )
-        self.bind('<FocusOut>', lambda e: self.configure(border_width=border, border_color=LINE), add='+')
+        self.bind('<FocusOut>', lambda e: self.configure(border_width=self._resting_border, border_color=LINE), add='+')
         self.bind('<Return>', lambda e: self.invoke(), add='+')
         self.bind('<space>', lambda e: self.invoke(), add='+')
+
+    def _focus_colors(self):
+        return COLORS['focus'] if self.visual_role == 'secondary' else (COLORS['on_primary'][0], COLORS['focus'][1])
+
+    def set_role(self, role):
+        options = button_options(role)
+        options.pop('height')
+        if role == self.visual_role and all(self.cget(key) == options[key] for key in ('fg_color', 'text_color')):
+            return
+        self.configure(**options)
+        self.visual_role = role
+        self._resting_border = options.get('border_width', self._resting_border)
+        if self._canvas.focus_get() is self._canvas:
+            self.configure(border_width=max(2, self._resting_border), border_color=self._focus_colors())
 
 
 class Entry(ctk.CTkEntry):

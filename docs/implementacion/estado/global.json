@@ -184,6 +184,11 @@
       "k_eficiencia_ux": {
         "texto": "Actualizar los planes y comenzar la implementación de eficiencia y UX; conservar los dos botones de preparación y la ubicación de productos secundarios.",
         "fuente": "Usuario: «Actualiza los planes en el repositorio y comienza a implementar», junto con restricciones expresas del encargo de UX."
+      },
+      "l_completar_flujo": {
+        "texto": "Completar cambios anunciados que no estén integrados y continuar con UX.",
+        "fuente": "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+        "limites": "Conservar botones de preparación y ubicación de productos secundarios; motor, Outlook, contratos, retención y extensión intactos."
       }
     }
   },
@@ -230,6 +235,7 @@
     "WP-85",
     "WP-86",
     "WP-87",
+    "WP-88",
     "WP-70"
   ],
   "commit_integracion": "43b8789497caaa6de6b38ea0aa3b8307a761ab60",

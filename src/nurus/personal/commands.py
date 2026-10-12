@@ -19,6 +19,11 @@ def commands(app):
 
     ready = lambda: bool(app.work and getattr(app.work, 'output', ''))
     items = [
+        Command(
+            'Siguiente acción del flujo',
+            app.next_step.next_action,
+            lambda: not app.busy and not getattr(app, 'rendering', False),
+        ),
         Command('Elegir Excel · Ctrl+O', app._choose, lambda: True),
         Command('Importar último paquete del Descargador', app._import_latest_capture, lambda: True),
         Command('Guardar trabajo · Ctrl+S', app._save_session, lambda: bool(app.work), 'Carga un trabajo primero.'),
