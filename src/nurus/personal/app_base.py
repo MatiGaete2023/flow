@@ -121,14 +121,18 @@ class App(ctk.CTk):
         self.cancel_button.configure(state='disabled')
         self.result_notice_label = ctk.CTkLabel(statusbar, textvariable=self.result_notice, anchor='w', wraplength=840)
         self.result_notice_label.grid(row=1, column=0, columnspan=2, sticky='ew', padx=14)
-        ttk.Button(
+        self.result_notice_button = ttk.Button(
             statusbar,
             text='Ocultar aviso',
             role='secondary',
             width=90,
             height=24,
             command=lambda: self.result_notice.set(''),
-        ).grid(row=1, column=2, padx=(0, 12))
+        )
+        self.result_notice_button.grid(row=1, column=2, padx=(0, 12))
+        self.result_notice.trace_add('write', self._show_result_notice)
+        self.status.trace_add('write', self._show_result_notice)
+        self._show_result_notice()
         self.operation_timings = []
         self._theme_mode = ctk.get_appearance_mode()
         self.after(700, self._watch_theme)
@@ -176,6 +180,15 @@ class App(ctk.CTk):
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 if not dst.exists():
                     shutil.copyfile(path, dst)
+
+    def _show_result_notice(self, *_):
+        # El aviso sigue guardado, pero no ocupa otra fila si ya lo muestra el estado.
+        visible = bool(self.result_notice.get()) and self.result_notice.get() != self.status.get()
+        for widget in (self.result_notice_label, self.result_notice_button):
+            if visible:
+                widget.grid()
+            else:
+                widget.grid_remove()
 
     def _remember_status(self, *_):
         value = self.status.get()

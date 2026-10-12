@@ -62,8 +62,7 @@ secciones siguientes, prevalecen estas enmiendas.
 - **E3 · Revisión cruzada.** Revisor y Auditor pertenecen siempre a una raíz de agente distinta de la del Ejecutor.
   Los subagentes de una misma raíz cuentan como el mismo agente. Desde el 12 de octubre de 2026 (decisión j) E3 es
   obligatoria solo si el diff toca motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA; en los demás WP basta `verificar_wp.py` PASA.
-- **E4 · Presupuesto de CI.** Cada PR corre la CI mínima (Python 3.12). La matriz 3.12–3.14, Playwright, PyInstaller
-  y el instalador corren al integrar en `feat` o a pedido (`workflow_dispatch`).
+- **E4 · Presupuesto de CI.** Desde WP-89, Linux automático comprueba privacidad/estado/enlaces; cambios de código añaden suites sintéticas. PR de código hacia feat corre Windows mínimo 3.12. No hay push Windows ni duplicación por PR permanente feat→main. Matriz 3.12–3.14, Playwright, construcción integral única e instalador solo mediante `workflow_dispatch` sobre candidato vigente; obligatorios antes de certificar entrega nativa. Esperar primero Windows mínimo aprobado; si falla, corregir antes de gastar en la matriz/construcción. Retención entrega 30 días y diagnósticos 14; timeouts y caché pip, sin caché de resultados. Usuario autorizó optimizar facturación el 12 de octubre de 2026.
 - **E5 · Privacidad del historial.** No se sube una etiqueta o rama cuyo árbol contenga datos reales; WP-17 cubre
   también etiquetas `pre-*`, ramas legado y `ccr-*`. Las pruebas con datos reales se hacen solo en el PC autorizado y
   devuelven al agente un resultado binario o agregado, nunca contenido.
@@ -75,7 +74,7 @@ secciones siguientes, prevalecen estas enmiendas.
 
 La nueva ola se describe en [PLAN_EFICIENCIA_UX_20261012.md](PLAN_EFICIENCIA_UX_20261012.md) y la [especificación de interfaz](ESPECIFICACION_UX_20261012.md). WP-87 reserva únicamente tema compartido, adaptadores, pruebas y actualización documental. Las propuestas antiguas que también usaban WP-87 son propuestas sin ficha: no crean paquetes ni autorizan repetir cambios ajenos. WP-88 completa los cambios anunciados ausentes y UX-02/03 por instrucción expresa posterior; su alcance y evidencia están en la ficha y estado canónico. Las siguientes fichas se numeran al tomar su alcance.
 
-La decisión j prevalece sobre la descripción histórica de roles: los cambios sin riesgo se integran con el verificador PASA, sin fingir revisión independiente. Una sola medición completa del candidato sirve para verificar y actualizar línea base; otra requiere cambios posteriores, fallos o una preocupación nueva. La propuesta de CI de bajo costo permanece pendiente de implementación; E4 continúa aplicándose al workflow existente.
+La decisión j prevalece sobre la descripción histórica de roles: los cambios sin riesgo se integran con el verificador PASA, sin fingir revisión independiente. Una sola medición completa del candidato sirve para verificar y actualizar línea base; otra requiere cambios posteriores, fallos o una preocupación nueva. WP-89 implementa E4 revisada. Generación de continuación y reutilización segura de mediciones quedan para una ficha posterior.
 
 ## Roles y ciclo de vida de un WP
 
