@@ -6,6 +6,10 @@
 
 Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los párrafos siguientes registran antecedentes históricos. E3 por riesgo (decisión j). Sin monitorización pasiva.
 
+## Pendiente inmediato
+
+Habilitar facturación/límite de Actions: jobs de WP-88 no iniciaron. Luego ejecutar la CI Windows sobre el commit vigente para verificar el instalador integral y los dos modos del lanzador. Las pruebas locales pasan; el uso real Excel/Outlook/SITFA y actas siguen pendientes. Eficiencia de CI/estado (EF-01) es la siguiente fase de código; no repetir los cambios de WP-88.
+
 ## Consolidación anterior
 
 **Usar feat/ejecucion-plan-20261008.** Las 45 ramas inventariadas quedaron incorporadas
