@@ -2,17 +2,18 @@
 
 from tkinter import ttk
 import customtkinter as ctk
+from nurus.ui_theme import COLORS, button_options, install_ttk
 
 # Every pair is (light, dark); CTk applies changes to existing widgets.
-BG = ('#edf2f6', '#15191f')
-PANEL = ('#ffffff', '#20262e')
-FIELD = ('#f8fafc', '#171d24')
-TEXT = ('#203248', '#edf2f7')
-MUTED = ('#536b7c', '#a5b3c2')
-BLUE = ('#176d8c', '#277595')
-LINE = ('#cbd7e0', '#394451')
-SIDEBAR = ('#f8fafc', '#11161c')
-HEADING = ('#e8f0f5', '#2b3541')
+BG = COLORS['background']
+PANEL = COLORS['panel']
+FIELD = COLORS['field']
+TEXT = COLORS['text']
+MUTED = COLORS['muted']
+BLUE = COLORS['primary']
+LINE = COLORS['line']
+SIDEBAR = COLORS['sidebar']
+HEADING = COLORS['heading']
 THEMES = {'Claro': 'Light', 'Oscuro': 'Dark', 'Sistema': 'System'}
 
 
@@ -21,16 +22,8 @@ def color(value):
 
 
 def install_theme(root):
-    style = ttk.Style(root)
-    style.theme_use('clam')
-    panel, field, text, blue = map(color, (PANEL, FIELD, TEXT, BLUE))
-    style.configure('.', background=panel, foreground=text, font=('Segoe UI', 10))
-    style.configure('Treeview', background=field, fieldbackground=field, foreground=text, rowheight=30, borderwidth=0)
-    style.configure('Treeview.Heading', background=color(HEADING), foreground=text, padding=6)
-    style.map('Treeview', background=[('selected', blue)], foreground=[('selected', 'white')])
-    style.configure('TNotebook', background=panel, borderwidth=0)
-    style.configure('TNotebook.Tab', background=color(HEADING), foreground=text, padding=(9, 7))
-    style.map('TNotebook.Tab', background=[('selected', blue)], foreground=[('selected', 'white')])
+    install_ttk(root, 'Oscuro' if ctk.get_appearance_mode() == 'Dark' else 'Claro')
+    field, text, blue = map(color, (FIELD, TEXT, BLUE))
     for key, value in [
         ('background', field),
         ('foreground', text),
@@ -91,16 +84,17 @@ class Label(ctk.CTkLabel):
 
 class Button(ctk.CTkButton):
     def __init__(self, parent, **kwargs):
-        kwargs.setdefault('height', 30)
+        role = kwargs.pop('role', 'secondary' if kwargs.get('fg_color') == 'transparent' else 'primary')
+        for key, value in button_options(role).items():
+            kwargs.setdefault(key, value)
         kwargs.setdefault('width', 110)
-        kwargs.setdefault('fg_color', BLUE)
-        kwargs.setdefault('hover_color', ('#125974', '#1f607e'))
         super().__init__(parent, **kwargs)
         self._canvas.configure(takefocus=1)
         border = self.cget('border_width')
+        focus = COLORS['focus'] if role == 'secondary' else (COLORS['on_primary'][0], COLORS['focus'][1])
         self.bind(
             '<FocusIn>',
-            lambda e: self.configure(border_width=max(2, border), border_color=('#a36c10', '#e7bc55')),
+            lambda e: self.configure(border_width=max(2, border), border_color=focus),
             add='+',
         )
         self.bind('<FocusOut>', lambda e: self.configure(border_width=border, border_color=LINE), add='+')

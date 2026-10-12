@@ -1,5 +1,7 @@
 # CSMP Windows · 0.5.0.dev3 · Diseño, velocidad y entregas
 
+> Referencia histórica del 7 de octubre. El inspector/registro RUS fue retirado por D3; las menciones al adaptador no describen la app vigente. Para la nueva ola visual consultar [plan actual](implementacion/PLAN_EFICIENCIA_UX_20261012.md).
+
 Implementación de las 16 propuestas del informe GitHub del 7 de octubre de 2026.
 
 | Propuesta | Cambio aplicado | Comprobación |

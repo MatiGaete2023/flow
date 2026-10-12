@@ -1248,6 +1248,34 @@
         "12 de octubre de 2026: integrado por fast-forward en feat (5a8f68e) a pedido del usuario («Consolida todo en una rama y refactoriza»); incluye refactor menor (earliest único, write_state reutilizado, importaciones sin uso). PR #40 queda sin monitoreo."
       ]
     },
+    "WP-87": {
+      "titulo": "Tema visual compartido y planificación de eficiencia/UX",
+      "ola": 6,
+      "tipo": "M/C",
+      "depende_de": [
+        {
+          "wp": "WP-86",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "EN_REVISION",
+      "ejecutor": "Codex /root",
+      "tomado": "12 de octubre de 2026",
+      "rama": "wp/87-ux-tema-compartido",
+      "pr": 41,
+      "verificacion": "PASA: docs/implementacion/verificacion/WP-87.json; candidato dbcedca7597f91004764f89a72a045e5db0fb915 con procedencia limpia e inventario sin bajas.",
+      "revision": "Revisión propia del diff y contraste: conforme. E3 independiente no exigida por decisión j; no acredita revisión de otra raíz.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Autorizado: «Actualiza los planes en el repositorio y comienza a implementar».",
+        "Primera fase: tema compartido sin cambios de negocio ni duplicación de desarrollos ajenos. E3 independiente no exigida por decisión j; no acredita aceptación real.",
+        "12 pruebas focales PASA (temas, teclado, preferencias y barra existente); verificación completa pendiente.",
+        "Medición a3f3af6 PASA con PYTHONPATH absoluto; candidato posterior corrige contraste de botones transparentes y foco ttk de 2 px, con prueba que falla antes del cambio. La medición final está pendiente.",
+        "Candidato final corregido: medición completa PASA con PYTHONPATH absoluto. Resultados numéricos solo en línea base e informe. PR #41 hacia feat; Windows/Office y aceptación real siguen pendientes."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -1495,6 +1523,10 @@
       "j_E3_solo_riesgosos": {
         "texto": "E3 obligatoria solo si el diff toca: motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto: verificar_wp.py PASA.",
         "fuente": "Usuario, 12 de octubre de 2026: «Sí, para los cambios riesgosos»."
+      },
+      "k_eficiencia_ux": {
+        "texto": "Actualizar los planes y comenzar la implementación de eficiencia y UX; conservar los dos botones de preparación y la ubicación de productos secundarios.",
+        "fuente": "Usuario: «Actualiza los planes en el repositorio y comienza a implementar», junto con restricciones expresas del encargo de UX."
       }
     }
   },
