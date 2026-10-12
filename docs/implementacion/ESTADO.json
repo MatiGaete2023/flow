@@ -1380,6 +1380,32 @@
         "Integrado por fast-forward en feat (sin PR, como WP-86) para no disparar Windows por cambios de herramientas; CI rápida corre en el push."
       ]
     },
+    "WP-91": {
+      "titulo": "EF-02: benchmark sintético y optimización de edición e importación",
+      "ola": 6,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-90",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "12 de octubre de 2026",
+      "rama": "wp/91-ef02",
+      "pr": null,
+      "verificacion": null,
+      "revision": "Revisión propia; E3 no aplica (decisión j: sin Outlook, retención, contrato, motor ni SITFA).",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Benchmark antes de optimizar (traspaso 5.2): tools/benchmark_ef02.py; resultados en verificacion/EF-02_benchmark.json.",
+        "Editar 1 registro con 3000 filas: 0,245 s → 0,001 s (solo filas editadas recalculan hallazgos; equivalencia probada contra recálculo completo). Importar 3000: 2,51 → 2,04 s (normalize memorizada).",
+        "No optimizado: la exportación relee su propio archivo (sync.remember_export → read_external, ~50 % del tiempo) porque esa lectura alimenta la detección de ediciones externas; cambiarla exige demostrar equivalencia del estado recordado."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,

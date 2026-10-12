@@ -1,0 +1,205 @@
+{
+  "descripcion": "EF-02: medianas de 3 repeticiones, datos ficticios (tools/benchmark_ef02.py), mismo equipo Linux; referencia relativa, no requisito.",
+  "python": "3.12.13",
+  "antes": [
+    {
+      "filas": 200,
+      "mediana_s": {
+        "importar": 0.1872,
+        "editar_1_registro": 0.0275,
+        "exportar": 0.3192,
+        "guardar_sesion": 0.0676
+      }
+    },
+    {
+      "filas": 1000,
+      "mediana_s": {
+        "importar": 0.7766,
+        "editar_1_registro": 0.0948,
+        "exportar": 0.9631,
+        "guardar_sesion": 0.2507
+      }
+    },
+    {
+      "filas": 3000,
+      "mediana_s": {
+        "importar": 2.5147,
+        "editar_1_registro": 0.2447,
+        "exportar": 2.656,
+        "guardar_sesion": 0.8052
+      }
+    }
+  ],
+  "despues": [
+    {
+      "filas": 200,
+      "mediana_s": {
+        "importar": 0.1111,
+        "editar_1_registro": 0.0002,
+        "exportar": 0.2109,
+        "guardar_sesion": 0.0697
+      }
+    },
+    {
+      "filas": 1000,
+      "mediana_s": {
+        "importar": 0.5327,
+        "editar_1_registro": 0.0004,
+        "exportar": 0.8165,
+        "guardar_sesion": 0.27
+      }
+    },
+    {
+      "filas": 3000,
+      "mediana_s": {
+        "importar": 2.0377,
+        "editar_1_registro": 0.001,
+        "exportar": 2.655,
+        "guardar_sesion": 0.8651
+      }
+    }
+  ],
+  "perfil_antes_3000": {
+    "editar_1_registro": [
+      {
+        "funcion": "personal/record_edits.py:apply",
+        "llamadas": 1,
+        "acumulado_s": 1.1266
+      },
+      {
+        "funcion": "personal/capture_findings.py:updated_contexts",
+        "llamadas": 1,
+        "acumulado_s": 1.1187
+      },
+      {
+        "funcion": "personal/capture_findings.py:traditional_findings",
+        "llamadas": 3000,
+        "acumulado_s": 0.0871
+      },
+      {
+        "funcion": "capture/temporal.py:identity",
+        "llamadas": 3000,
+        "acumulado_s": 0.0741
+      },
+      {
+        "funcion": "capture/temporal.py:<genexpr>",
+        "llamadas": 15000,
+        "acumulado_s": 0.0684
+      },
+      {
+        "funcion": "personal/work.py:_sync_resolution_warning",
+        "llamadas": 1,
+        "acumulado_s": 0.0
+      },
+      {
+        "funcion": "personal/record_edits.py:validate_review",
+        "llamadas": 1,
+        "acumulado_s": 0.0
+      },
+      {
+        "funcion": "personal/resolutions.py:resolution_review_issue",
+        "llamadas": 1,
+        "acumulado_s": 0.0
+      },
+      {
+        "funcion": "personal/work.py:_explicit",
+        "llamadas": 1,
+        "acumulado_s": 0.0
+      }
+    ],
+    "exportar": [
+      {
+        "funcion": "personal/work.py:export",
+        "llamadas": 1,
+        "acumulado_s": 9.6071
+      },
+      {
+        "funcion": "personal/sync.py:remember_export",
+        "llamadas": 1,
+        "acumulado_s": 4.8224
+      },
+      {
+        "funcion": "personal/sync.py:read_copy",
+        "llamadas": 1,
+        "acumulado_s": 3.5015
+      },
+      {
+        "funcion": "personal/importing.py:read_external",
+        "llamadas": 1,
+        "acumulado_s": 3.4843
+      },
+      {
+        "funcion": "services/exports.py:_export_preserved_payload",
+        "llamadas": 1,
+        "acumulado_s": 2.9999
+      },
+      {
+        "funcion": "services/exports.py:_portable_preserved",
+        "llamadas": 1,
+        "acumulado_s": 2.9981
+      },
+      {
+        "funcion": "rus/columns.py:normalize",
+        "llamadas": 283995,
+        "acumulado_s": 2.1106
+      },
+      {
+        "funcion": "personal/work.py:_review_value",
+        "llamadas": 15000,
+        "acumulado_s": 1.2757
+      },
+      {
+        "funcion": "personal/work.py:_source_value",
+        "llamadas": 12000,
+        "acumulado_s": 1.2666
+      },
+      {
+        "funcion": "personal/sync.py:associate",
+        "llamadas": 1,
+        "acumulado_s": 1.1927
+      },
+      {
+        "funcion": "personal/sync.py:<genexpr>",
+        "llamadas": 6000,
+        "acumulado_s": 0.8713
+      },
+      {
+        "funcion": "personal/work.py:_consolidated_base",
+        "llamadas": 1,
+        "acumulado_s": 0.3071
+      }
+    ],
+    "guardar_sesion": [
+      {
+        "funcion": "personal/work.py:save",
+        "llamadas": 1,
+        "acumulado_s": 6.7984
+      },
+      {
+        "funcion": "personal/config.py:atomic_json",
+        "llamadas": 1,
+        "acumulado_s": 6.0468
+      },
+      {
+        "funcion": "personal/session.py:archive_bytes",
+        "llamadas": 1,
+        "acumulado_s": 0.0012
+      },
+      {
+        "funcion": "services/file_output.py:write_new_file",
+        "llamadas": 1,
+        "acumulado_s": 0.001
+      },
+      {
+        "funcion": "personal/session.py:<lambda>",
+        "llamadas": 1,
+        "acumulado_s": 0.0003
+      },
+      {
+        "funcion": "services/file_output.py:_umask",
+        "llamadas": 1,
+        "acumulado_s": 0.0002
+      }
+    ]
+  }
+}
