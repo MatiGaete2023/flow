@@ -80,6 +80,13 @@ def last_center_label(work, row):
     if display['status'] == 'NO_SOLICITADA':
         return 'Bitácoras no solicitadas'
     if display['status'] != 'ACREDITADA':
+        # Distingue «no hay bitácora» de «la bitácora solo tiene entradas fuera de la ventana de 4 meses».
+        if display.get('outside_horizon'):
+            return f"Sin entradas en 4 meses · {display['outside_horizon']} anterior" + (
+                'es' if display['outside_horizon'] > 1 else ''
+            )
+        if display.get('after_cutoff'):
+            return f"Sin entradas en el período · {display['after_cutoff']} tras el corte"
         return 'Sin entradas capturadas'
     label = _when(display['last_center'][0])[:10]
     pending = len(display['later']) + len(display['uncertain'])
