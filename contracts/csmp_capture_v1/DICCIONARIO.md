@@ -160,6 +160,22 @@ Estados de tablas y consultas no prueban historia completa.
 | `document_id` | ID de texto; query/record/event/document/calendar/incident únicos. IDs remotos solo de fuente. |
 | `identity_status` | VERIFICADA exige tribunal+causa+ingreso remotos; INCIERTA o CAUSA no autoriza cruce individual. |
 
+### Extensión aditiva (Descargador 2.8.0)
+
+Columnas opcionales **al final** de `historia_tramites`; solo se escriben si alguna fila las trae. Un lector que
+conozca solo las columnas base las ignora (se leen `fields[:len(TABLES)]`). No cambia `schema_version`.
+
+| Columna | Tipo / semántica |
+|---|---|
+| `folio` | Folio visible del trámite, texto. |
+| `stage` | Etapa visible del trámite, texto. |
+| `annex_visible` | `true` o `false`: hay icono de anexo; no se abrió ni descargó el documento. |
+| `raw_json` | Objeto JSON con Folio, Etapa, Trámite, Desc. Trámite, Referencia y Fecha Tram tal como se leyeron. |
+
+Filas de historia: `scope=CAUSA`, `ingreso_id`, `person_id` y `program_id` vacíos, `identity_status=CAUSA`,
+`time_precision=DIA`. La consulta no lleva `remote_identity`; declara `historia_causa`
+(`source_system`, `court_code`, `cause_id`) y `ventana` (`criterio`, `desde`, `hasta`).
+
 ## documentos
 
 | Columna | Tipo / semántica |

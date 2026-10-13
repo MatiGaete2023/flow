@@ -11,7 +11,7 @@ Entorno: `.venv` (ver guía paso 0); `tools/ci_local.sh <pruebas>` antes de cada
 | 53.3 extensión `history_open` | HECHO | ver git log | prueba `test_historia_extension.cjs` pasa; descargador 293 OK |
 | 53.4 `LectorHistoria` + gancho | HECHO | ver git log | `cerrar(lote_estado)` recibe estado del lote (desvío menor) |
 | 53.5 Excel `historias.py` | HECHO | ver git log | `cargar()` reutilizable por 53.6; `literal` local (no importa de descargador); textos >30000 se recortan con aviso |
-| 53.6 contrato + paquete | PENDIENTE | | |
+| 53.6 contrato + paquete | HECHO | ver git log | `historia=` en export_capture y package_current_lot; EXTENSIONS en contract.py; DICCIONARIO actualizado |
 | 53.7 retención + spec | PENDIENTE | | |
 | Cierre WP-53 (ci_local, verificar_wp, E3) | PENDIENTE | | E3 la hace otra sesión |
 | WP-54 UI/flujo/docs | PENDIENTE | | |

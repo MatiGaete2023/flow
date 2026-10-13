@@ -1467,7 +1467,7 @@ class Application:
         self.root.after(100, self.poll)
 
 
-def package_current_lot(sheets_folder, diary_manifest, target, consolidated=False):
+def package_current_lot(sheets_folder, diary_manifest, target, consolidated=False, historia=None):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
     from export_csmp_capture import export_capture_with_note
@@ -1478,7 +1478,7 @@ def package_current_lot(sheets_folder, diary_manifest, target, consolidated=Fals
         raise m.PocError('El destino ya existe; elige un nombre nuevo.')
     lots = load_sources([sheets_folder])
     path, note = export_capture_with_note(
-        lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=consolidated
+        lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=consolidated, historia=historia
     )
     capture = read_capture(path)
     summary = next(
