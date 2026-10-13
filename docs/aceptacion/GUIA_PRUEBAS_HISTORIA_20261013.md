@@ -16,7 +16,7 @@ Alcance pequeño: un tribunal, Cumplimiento y Espera, período habitual. Anotar 
 | H-06 | 5 causas (2 de Espera): comparar con la ventana SITFA | Mismos folios, fechas, trámites, descripciones y referencias de los últimos 4 meses |
 | H-07 | En esas causas, «Trámites anteriores» | Coincide con lo que la ventana muestra antes de «Desde» |
 | H-08 | Causa con varios ingresos del lote | Una fila en Causas, varias en Vínculos, trámites sin repetir |
-| H-09 | Cancelar a mitad y volver a «Consultar y crear paquete» | Conserva lo leído; solo abre faltantes/fallidas |
+| H-09 | Cancelar; usar «Reintentar lecturas fallidas…» y elegir el mismo lote; luego iniciar una consulta nueva | El reintento conserva historias verificadas del lote elegido; la consulta nueva vuelve a leer todas sus causas |
 | H-10 | Revisar Descargas y carpeta del lote | Cero PDF de trámites |
 | H-11 | Importar el ZIP en el Asistente | Importa; mismo trabajo que sin historia |
 | H-12 | Cerrar sesión SITFA a mitad (opcional) | Restantes FALLIDA con motivo; nada «vacío» |

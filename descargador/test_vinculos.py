@@ -120,3 +120,12 @@ def test_extract_historia_ingreso_de_otro_tribunal_o_no_numerico_se_ignora_y_rit
     assert found[('X-1-2026', '100')]['ingreso_id'] == '' and found[('X-2-2026', '101')]['ingreso_id'] == ''
     assert found[('X-3-2026', '102')]['identidad'] == found[('X-3-2026', '103')]['identidad'] == 'INCIERTA'
     assert found[('X-1-2026', '100')]['identidad'] == 'VERIFICADA'
+
+
+def test_historia_no_se_extrae_de_literales_comentarios_regex():
+    from vinculos import calls
+
+    accion = "ShowHistoria(49,'X-1-2099',100)"
+    for falso in (f'"{accion}"', f'`{accion}`', f'/* {accion} */', f'// {accion}', f'if(x) /{accion}/.test(x)'):
+        assert calls(falso, 'ShowHistoria') == []
+    assert calls(f'/* texto */ {accion}', 'ShowHistoria') == [['49', 'X-1-2099', '100']]

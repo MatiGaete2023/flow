@@ -349,6 +349,28 @@ def _historia(manifest, data, query, incident, cid, captured):
     vinculos = {}
     for v in estado['vinculos']:
         vinculos.setdefault(v['clave'], v)
+    fallos = list(estado.get('errores_listado', []))
+    if estado.get('estado') != 'COMPLETA' and not fallos:
+        fallos = [{'error': 'HISTORIA_ENUMERACION_INCOMPLETA'}]
+    for n, fallo in enumerate(fallos, 1):
+        qid = f'hist-listado-{n}'
+        query(
+            qid,
+            {'tab': 'HISTORIA', 'capture_tables': ['historia_tramites']},
+            'FALLIDA',
+            captured,
+            screen='historia_tramites',
+            error='HISTORIA_ENUMERACION_FALLIDA',
+        )
+        incident(qid, 'HISTORIA_ENUMERACION_FALLIDA', 'No se pudo enumerar toda la historia solicitada.')
+    if not causas and not fallos:
+        query(
+            'hist-listado-vacio',
+            {'tab': 'HISTORIA', 'capture_tables': ['historia_tramites']},
+            'VACIA_COMPROBADA',
+            captured,
+            screen='historia_tramites',
+        )
     for n, item in enumerate(causas, 1):
         causa = item['causa']
         qid = f'hist-{n}'

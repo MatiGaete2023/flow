@@ -5,7 +5,7 @@ const source=fs.readFileSync(__dirname+'/extension/pagina.js','utf8');
 const CIFRADO={crr_causa:'AAA%2BBBB',tip_causa:'CCC',rol_causa:'DDD',era_causa:'EEE',cod_tribunal:'FFF'};
 async function main(){
   assert.ok(!source.replace(/\/\*[\s\S]*?\*\//g,'').includes('document.cookie'));
-  let calls=[],step1=null;
+  let calls=[],step1=null,step2={body:'<html>ventana ficticia</html>',type:'text/html'},cancelled=false;
   const run={diaryPairs:[['COD_Tribunal_sel','49'],['TIP_Consulta','2'],['COD_Lengueta','tdCumplimiento']],diaryDocument:null};
   const link=t=>({getAttribute:a=>a==='onclick'?t:''});
   let elements=[link("ShowHistoria(49,'X-1-2026',100)")];
@@ -13,11 +13,12 @@ async function main(){
   const form={name:'InformesPpalForm',action:'https://familia.pjud.cl/SITFAWEB/InformesDAction.do',method:'post',querySelector:s=>s==='[name="COD_Lengueta"]'?{}:null};
   const context=vm.createContext({location:{origin:'https://familia.pjud.cl',href:'https://familia.pjud.cl/fixture'},
     document:{querySelector:()=>form,getElementById:()=>({})},window:{__sitfaRun:run},URL,URLSearchParams,TextEncoder,TextDecoder,Uint8Array,AbortSignal,
-    crypto:webcrypto,btoa:s=>Buffer.from(s,'binary').toString('base64'),fetch:async(url,options)=>{
+    Headers,ReadableStream,crypto:webcrypto,btoa:s=>Buffer.from(s,'binary').toString('base64'),fetch:async(url,options)=>{
       calls.push({url,options});
       if(url.includes('Encrypt_AjaxAccion.do')){const r=step1===null?JSON.stringify(CIFRADO):step1;
         return new Response(r.body??r,{status:r.status??200,headers:{'content-type':'text/html'}});}
-      return new Response('<html>ventana ficticia</html>',{status:200,headers:{'content-type':'text/html'}});
+      if(step2.streaming)return {status:200,headers:new Headers({'content-type':step2.type}),body:new ReadableStream({pull(controller){controller.enqueue(new Uint8Array(1024*1024));},cancel(){cancelled=true;}})};
+      return new Response(step2.body,{status:200,headers:{'content-type':step2.type}});
     }});
   vm.runInContext(source,context);
   const params={tribunal:'49',rit:'X-1-2026',causa:'100'};
@@ -41,12 +42,32 @@ async function main(){
   elements=[link("ShowHistoria(49,'X-1-2026',100)")];
   // respuesta intermedia inválida: 1 fetch
   const malas=['no es json',JSON.stringify({...CIFRADO,crr_causa:undefined}),JSON.stringify({...CIFRADO,rol_causa:'a&b'}),
-    JSON.stringify(CIFRADO)+' '.repeat(5000),{status:500,body:JSON.stringify(CIFRADO)},'[]'];
+    JSON.stringify({...CIFRADO,extra:'valor ficticio'}),JSON.stringify(CIFRADO)+' '.repeat(5000),{status:500,body:JSON.stringify(CIFRADO)},'[]'];
   for(const mala of malas){
     calls=[];step1=mala;
     assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_RESPONSE');assert.equal(calls.length,1);
   }
   step1=null;
+  elements=[link("ShowHistoria(49,'X-1-2026',100)"),link("ShowHistoria(49,'X-1-2026',100)")];
+  assert.equal((await context.sitfaTask('history_open',{params})).status,200);
+  const action="ShowHistoria(49,'X-1-2026',100)";
+  for(const text of [`"${action}"`,`\`${action}\``,`/* ${action} */`,`// ${action}`,`if(x) /${action}/.test(x)`]) {
+    elements=[link(text)];calls=[];
+    assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_LINK',text);
+    assert.equal(calls.length,0);
+  }
+  elements=[link(action)];
+  for(const body of ['<html><input type="hidden" value="AAA%2BBBB"></html>',
+                     '<html><input value="AAA+BBB"></html>',
+                     '<html><input value="&#65;&#65;&#65;%2BBBB"></html>']) {
+    step2={body,type:'text/html'};
+    const out=await context.sitfaTask('history_open',{params});
+    assert.equal(out.__sitfaError,'HISTORY_RESPONSE');assert.equal(out.body,undefined);
+  }
+  step2={body:'contenido ficticio',type:'application/json'};
+  assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_RESPONSE');
+  step2={streaming:true,type:'text/html'};cancelled=false;
+  assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_RESPONSE');assert.ok(cancelled);
   console.log('OK: history_open: 2 peticiones exactas, identidad, enlace y respuestas inválidas; sin valores cifrados en el resultado.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

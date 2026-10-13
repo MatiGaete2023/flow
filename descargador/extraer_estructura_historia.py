@@ -22,6 +22,8 @@ import sys
 import unicodedata
 from urllib.parse import parse_qsl, urlsplit
 
+from vinculos import javascript_tokens
+
 VERSION = 1
 MAX_BYTES = 40 * 1024 * 1024
 MAX_HAR = 400 * 1024 * 1024  # un HAR «con contenido» de DevTools incluye imágenes y scripts
@@ -178,28 +180,42 @@ def forma_parametro(valor):
 EMITIDOS = set()  # identificadores de código que la salida conserva a propósito (ids, clases, campos, funciones)
 
 
-def nombre_campo(nombre):
-    if isinstance(nombre, str) and IDENT.fullmatch(nombre):
-        EMITIDOS.add(nombre)
-        return nombre
-    return 'CAMPO_NO_RECONOCIDO'
-
-
-PARAMETROS_CONOCIDOS = frozenset(
-    {'opcion', 'rit', 'causa', 'doc', 'anexo', 'tipo', 'id', 'accion', 'pagina', 'rut', 'nombre', 'era', 'rol'}
+ESTRUCTURA_CONOCIDA = frozenset(
+    """
+ShowHistoria ShowObservaciones ShowInformesProgramados ShowPDF ShowPDFO ShowAnexos
+ShowPopUpLengueta Reservado InformeHistoria Lengueta alerta
+InformesPpalForm AtPublicoPpalForm tablaEspera tablaCumplimiento tablaInforme tablaEgresados
+COD_Lengueta COD_Tribunal_sel table table-sm table-bordered table-hover textoBarra
+hidden text password submit button select textarea input radio checkbox
+opcion rit causa doc anexo tipo id accion pagina rut nombre era rol TipoPopup a1 b2 c3 d4 e5 B4 FLG_Encripta
+TIP_Causa ROL_Causa ERA_Causa crr_idcausaUrl cod_tribunalUrl tipo_popUp CRR_IdCausa
+COD_Tribunal ID_Ingreso COD_Etapa FLG_MejorNinez TIP_Consulta
+function var let const return if else new false true null undefined
+window open location href document getElementById forms elements value name method action
+$ ajax post get fetch XMLHttpRequest submit split done type url async cache dataType data
+crr_causa tip_causa rol_causa era_causa cod_tribunal
+""".split()
 )
+RUTAS_CONOCIDAS = frozenset(
+    '/SITFAWEB/' + ruta
+    for ruta in (
+        'ConsultaDetalleAtPublicoAccion.do',
+        'Encrypt_AjaxAccion.do',
+        'InformesDAction.do',
+        'AtPublicoDAction.do',
+        'IrPopUpInformesAccion.do',
+        'HistoriaIntermediaAccion.do',
+        'X.do',
+    )
+) | {'buscar.do'}
+
+
+def nombre_campo(nombre):
+    return nombre if isinstance(nombre, str) and nombre in ESTRUCTURA_CONOCIDA else 'CAMPO_NO_RECONOCIDO'
 
 
 def nombre_parametro(nombre):
-    """Nombre de parámetro de URL/POST: solo con forma de código (guion bajo, dígito, camelCase) o conocido.
-
-    Una palabra suelta como «Clotilde» podría ser un dato puesto como nombre; sale como CAMPO_NO_RECONOCIDO.
-    """
-    if not isinstance(nombre, str) or not IDENT.fullmatch(nombre):
-        return 'CAMPO_NO_RECONOCIDO'
-    if nombre.lower() in PARAMETROS_CONOCIDOS or re.search(r'[_\d]|[a-z][A-Z]', nombre):
-        return nombre_campo(nombre)
-    return 'CAMPO_NO_RECONOCIDO'
+    return nombre_campo(nombre)
 
 
 def resumir_url(valor, sensibles):
@@ -215,11 +231,13 @@ def resumir_url(valor, sensibles):
     host = url.hostname or ''
     origen = 'RELATIVA' if not host else 'SITFA' if host == 'familia.pjud.cl' else 'OTRO_HOST'
     ruta = url.path
-    if RUTA.fullmatch(ruta):
+    if ruta in RUTAS_CONOCIDAS:
         ruta_segura = ruta
     elif '.' in ruta.rsplit('/', 1)[-1]:
         extension = ruta.rsplit('.', 1)[-1].lower()
-        ruta_segura = 'ARCHIVO.' + (extension if re.fullmatch(r'[a-z0-9]{1,5}', extension) else 'otro')
+        ruta_segura = 'ARCHIVO.' + (
+            extension if extension in ('js', 'css', 'html', 'xls', 'pdf', 'gif', 'png', 'do', 'jsp') else 'otro'
+        )
     else:
         ruta_segura = 'RUTA_NO_RECONOCIDA' if ruta not in ('', '/') else ruta
     parametros = []
@@ -234,14 +252,13 @@ def llamadas(codigo, sensibles):
 
     Los literales se retiran antes de buscar llamadas: un texto entre comillas no puede aportar «nombres».
     """
-    literales = []
-
-    def guardar(match):
-        literales.append(match.group(0)[1:-1])
-        sensibles.add(match.group(0)[1:-1])
-        return '"S"'
-
-    sin_literales = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', guardar, str(codigo or ''))
+    tokens = list(javascript_tokens(codigo))
+    for kind, value, _, _ in tokens:
+        if kind in ('string', 'comment', 'regex'):
+            sensibles.add(value[1:-1])
+    sin_literales = ''.join(
+        '"S"' if kind == 'string' else ' ' if kind in ('comment', 'regex') else value for kind, value, _, _ in tokens
+    )
     salida = Counter()
     for nombre, argumentos in LLAMADA.findall(sin_literales):
         partes = [p.strip() for p in argumentos.split(',')] if argumentos.strip() else []
@@ -340,14 +357,10 @@ def resumen_tabla(tabla, sensibles):
 
 
 def enmascarar_literal(valor):
-    """Literal de JS enmascarado: conserva rutas .do/.jsp y nombres de parámetros; nunca valores."""
-    ruta = valor.split('?', 1)[0]
-    if RUTA.fullmatch(ruta.split('://', 1)[-1].split('/', 1)[-1] if '://' in ruta else ruta):
-        consulta = valor.split('?', 1)[1] if '?' in valor else ''
+    ruta, _, consulta = valor.partition('?')
+    if ruta in RUTAS_CONOCIDAS:
         campos = [p.split('=', 1)[0] for p in consulta.split('&') if p]
         return '"' + ruta + ('?' + '&'.join(nombre_parametro(c) + '=VALOR' for c in campos) if consulta else '') + '"'
-    if re.fullmatch(r'&?[A-Za-z_][\w]{0,40}=', valor):
-        return '"' + valor[: -len(valor.lstrip('&'))] + nombre_parametro(valor.lstrip('&')[:-1]) + '="'
     if re.fullmatch(r'(?:&?[A-Za-z_]\w{0,40}=[^&]*)+', valor):
         campos = [p.split('=', 1)[0] for p in valor.split('&') if p]
         return (
@@ -356,74 +369,19 @@ def enmascarar_literal(valor):
             + '&'.join(nombre_parametro(c) + '=VALOR' for c in campos)
             + '"'
         )
-    if re.fullmatch(r'[A-Za-z_][\w]{0,40}', valor) and normalizar(valor) not in PERMITIDOS:
-        return '"IDENT"'
     return '"TEXTO"'
 
 
 def limpiar_js(fuente, sensibles):
-    """Recorre el código respetando comillas: enmascara literales, quita comentarios y reemplaza expresiones regulares.
-
-    El texto de comentarios y expresiones regulares entra al control de fugas como dato (puede contener nombres);
-    los literales entran como código (nombres de campos, métodos).
-    """
-    codigo = getattr(sensibles, 'codigo', sensibles)
     salida = []
-    previo = ''
-    i, n = 0, len(fuente)
-    while i < n:
-        c = fuente[i]
-        if c in '"\'`':
-            j = i + 1
-            while j < n and fuente[j] != c and not (c != '`' and fuente[j] == '\n'):
-                j += 2 if fuente[j] == '\\' else 1
-            valor = fuente[i + 1 : min(j, n)]
-            codigo.add(valor)
-            salida.append(enmascarar_literal(valor))
-            i, previo = j + 1, '"'
-            continue
-        if fuente.startswith('//', i):
-            j = fuente.find('\n', i)
-            j = n if j < 0 else j
-            sensibles.add(fuente[i + 2 : j].strip())
-            i = j
-            continue
-        if fuente.startswith('/*', i):
-            j = fuente.find('*/', i + 2)
-            j = n if j < 0 else j + 2
-            sensibles.add(fuente[i + 2 : j - 2].strip())
-            salida.append(' ')
-            i = j
-            continue
-        if c == '/':
-            palabra = re.search(r'([A-Za-z_$][\w$]*)\s*$', ''.join(salida[-30:]))
-            if previo in ('', *'(,=:[!&|?{};+-*%<>~^') or (
-                palabra and palabra.group(1) in ('return', 'typeof', 'case')
-            ):
-                j, clase = i + 1, False
-                while j < n and fuente[j] != '\n':
-                    if fuente[j] == '\\':
-                        j += 2
-                        continue
-                    if fuente[j] == '[':
-                        clase = True
-                    elif fuente[j] == ']':
-                        clase = False
-                    elif fuente[j] == '/' and not clase:
-                        break
-                    j += 1
-                if j < n and fuente[j] == '/':
-                    sensibles.add(fuente[i + 1 : j])
-                    j += 1
-                    while j < n and fuente[j].isalpha():
-                        j += 1
-                    salida.append('/REGEX/')
-                    i, previo = j, '/'
-                    continue
-        salida.append(c)
-        if not c.isspace():
-            previo = c
-        i += 1
+    for kind, value, _, _ in javascript_tokens(fuente):
+        if kind in ('string', 'comment', 'regex'):
+            sensibles.add(value[1:-1])
+            salida.append(enmascarar_literal(value[1:-1]) if kind == 'string' else ' ')
+        elif kind == 'identifier':
+            salida.append(value if value in ESTRUCTURA_CONOCIDA else 'IDENT')
+        else:
+            salida.append(value if value.isascii() else ' ')
     return ''.join(salida)
 
 
@@ -453,7 +411,12 @@ def resumen_script(fuente, sensibles):
     esqueletos = {}
     for match in re.finditer(r'function\s+([A-Za-z_$][\w$]*)\s*\(', limpio):
         nombre = match.group(1)
-        if INTERES.search(nombre) and nombre not in esqueletos and len(esqueletos) < 40:
+        if (
+            nombre in ESTRUCTURA_CONOCIDA
+            and INTERES.search(nombre)
+            and nombre not in esqueletos
+            and len(esqueletos) < 40
+        ):
             esqueletos[nombre_campo(nombre)] = esqueleto(limpio, match.start())
     return {
         'funciones_definidas': dict(sorted(definidas.items())),
@@ -548,7 +511,9 @@ def resumen_html(texto, sensibles):
     declarados = list(documento.xpath('//meta[@charset]/@charset')) + [
         c.lower().split('charset=')[-1] for c in documento.xpath('//meta[@content]/@content') if 'charset=' in c.lower()
     ]
-    charset = next((c.strip().lower() for c in declarados if re.fullmatch(r'[a-z0-9_\-]{1,20}', c.strip().lower())), '')
+    charset = next(
+        (c.strip().lower() for c in declarados if c.strip().lower() in ('utf-8', 'windows-1252', 'iso-8859-1')), ''
+    )
     return {
         'titulo': etiqueta(texto_visible(documento.xpath('//title')[0])) if documento.xpath('//title') else '',
         'charset_declarado': charset,
@@ -601,7 +566,22 @@ def resumen_har(datos, sensibles):
             'campos_post': campos_post,
             'estado_http': respuesta.get('status') if isinstance(respuesta.get('status'), int) else None,
             'redireccion': resumir_url(ubicacion, sensibles) if ubicacion else None,
-            'tipo_contenido': tipo if re.fullmatch(r'[a-z]+/[a-z0-9.+\-]+', tipo) else 'NO_RECONOCIDO',
+            'tipo_contenido': tipo
+            if tipo
+            in (
+                'text/html',
+                'application/javascript',
+                'text/javascript',
+                'application/json',
+                'text/plain',
+                'text/css',
+                'image/png',
+                'image/gif',
+                'image/jpeg',
+                'application/pdf',
+                'application/octet-stream',
+            )
+            else 'NO_RECONOCIDO',
             'bytes': contenido.get('size') if isinstance(contenido.get('size'), int) else None,
         }
         cuerpo = contenido.get('text') or ''
@@ -656,18 +636,18 @@ def fugas(salida, sensibles):
     valores de campos, argumentos de enlaces y literales con espacios, guiones o dígitos se controlan siempre.
     """
     encontradas = []
-    codigo = {v for v in getattr(sensibles, 'codigo', ()) if not IDENT.fullmatch(str(v or '').strip())}
+    codigo = set(getattr(sensibles, 'codigo', ()))
     for valor in set(sensibles) | codigo:
         valor = ' '.join(str(valor or '').split())
         if len(valor) < 4 or normalizar(valor) in PERMITIDOS:
             continue
         # Conteos y tamaños son números de la salida; rutas y nombres de campo se conservan a propósito.
-        if valor in ('null', 'true', 'false') or (IDENT.fullmatch(valor) and valor in EMITIDOS):
+        if valor in ('null', 'true', 'false') or valor in ESTRUCTURA_CONOCIDA:
             continue
         if (
             re.fullmatch(r'\d{1,6}', valor)
-            or RUTA.fullmatch(valor.split('?', 1)[0])
-            or re.fullmatch(r'&?[A-Za-z_]\w{0,40}=', valor)
+            or valor.split('?', 1)[0] in RUTAS_CONOCIDAS
+            or valor.lstrip('&').rstrip('=') in ESTRUCTURA_CONOCIDA
         ):
             continue
         # Palabra completa: «Historial» dentro de `ShowHistorialFichas` es código, no una fuga.

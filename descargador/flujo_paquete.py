@@ -1,27 +1,10 @@
 """Orquesta runners existentes; conserva fuentes y entrega un ZIP sin pasos manuales."""
 
-from datetime import datetime
 from pathlib import Path
 
 import motor as m
 from lotes import BatchRunner
 from lectura_bitacoras import DiaryRunner, write
-
-
-def _historia_anterior(destination):
-    """Control de historia más reciente del mismo destino, leído hoy y hace menos de 12 h; None si no hay."""
-    import time
-
-    limite = time.time() - 12 * 3600
-    hoy = m.now().date()
-    candidatos = []
-    for ruta in Path(destination).glob('Paquete CSMP */respaldo/*/historia/historias.json'):
-        if ruta.is_symlink() or not ruta.is_file():
-            continue
-        modificado = ruta.stat().st_mtime
-        if modificado >= limite and datetime.fromtimestamp(modificado, m.now().tzinfo).date() == hoy:
-            candidatos.append((modificado, ruta))
-    return max(candidatos)[1] if candidatos else None
 
 
 def run(
@@ -81,9 +64,7 @@ def run(
         if historia:
             from lectura_historia import LectorHistoria
 
-            lector = LectorHistoria(
-                bridge, relay, cancel, pause=pause, anterior=_historia_anterior(destination) if reuse else None
-            )
+            lector = LectorHistoria(bridge, relay, cancel, pause=pause)
         extra = {'historia': lector} if lector else {}
         diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra).run(
             batch, backup
@@ -107,11 +88,11 @@ def run(
             result = package_current_lot(
                 sheets, manifest, target, consolidated, **({'historia': ruta_historia} if ruta_historia else {})
             )
-        except (m.PocError, ValueError, OSError) as exc:
+        except (m.PocError, ValueError, OSError):
             if not ruta_historia:
                 raise
             # Un fallo de la historia nunca impide el paquete de siempre.
-            emit('warning', 'La historia no pudo incluirse en el paquete: ' + str(exc))
+            emit('warning', 'La historia no pudo incluirse en el paquete; las bitácoras se conservan.')
             historia_ok = False
             result = package_current_lot(sheets, manifest, target, consolidated)
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])

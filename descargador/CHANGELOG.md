@@ -12,7 +12,12 @@ Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado 
 - Un error, sesión vencida o tabla distinta queda como FALLIDA con su motivo; nunca como «sin trámites».
 - Extensión 2.8.0: comando `history_open` (dos peticiones al mismo origen, sin permisos nuevos, sin exponer valores cifrados).
   Hay que recargar la extensión y el Descargador juntos.
-- Retención de 60 días incluye `historias.json`.
+- Retención de 60 días incluye `historias.json` y rechaza enlaces simbólicos intermedios; revalida antes del borrado.
+- Correcciones E3: extracción anónima con listas cerradas y análisis léxico; cifrado reflejado rechazado en la extensión;
+  esquema JSON exacto y streaming de 8 MiB; índices de identidad globales y cotejo del tribunal visible.
+- Historia aislada ante fallos de disco; consulta nueva sin reutilización entre lotes; reintento explícito del lote elegido.
+  Enumeración fallida degrada la cobertura del ZIP; diagnósticos con códigos constantes; textos largos íntegros
+  en columnas de continuación y advertencia para fechas posteriores. La prueba de extensión corre en CI y local.
 
 **2.7.6, 11 de octubre de 2026** (Descargador y extensión; Asistente 0.5.0.dev5). Cambios visibles desde 2.7.5:
 - **Crear paquete de este lote…** en la ventana principal, con la casilla **Incluir XLSX consolidado**; en

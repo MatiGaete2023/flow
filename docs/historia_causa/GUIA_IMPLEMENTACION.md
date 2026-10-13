@@ -218,6 +218,9 @@ encabezado fijo (`excel_presentacion.configure_sheet`).
 | Control | — (pares Campo/Valor) | Versión Descargador, Versión extensión, Commit, Fecha de lectura, Criterio (`ventana_4_meses`), Desde, Hasta, Causas por estado, Tope alcanzado (Sí/No) y 3 leyendas: «Sin PDF: no se abrieron documentos.» · «La historia es de la causa, no de un ingreso.» · «Solo trámites entre DESDE y HASTA; no acredita ausencia de trámites fuera de ese rango.» |
 
 Orden en «Trámites»: Tribunal, RIT, Fecha Tram descendente, Folio descendente.
+Para textos que superan 30.000 unidades UTF-16, conservar la primera parte en la columna original y añadir
+columnas «<campo> (parte 2)», «<campo> (parte 3)», etc. Concatenarlas reconstruye el texto íntegro sin crear
+trámites duplicados ni una quinta hoja. Todas las partes siguen siendo texto literal.
 
 **B. `historia_tramites` dentro de `Captura_CSMP.zip`** (solo si la casilla «Incluir historia en el paquete»
 está marcada). Una fila por trámite dentro de la ventana; ver mapeo exacto en el paso 53.6.
@@ -278,7 +281,7 @@ página evita repetir consultas a SITFA.
 
 - Prueba primero: escribe la prueba con fixtures ficticios, verla fallar, luego el código.
 - Un commit por paso: `WP-53: <qué cambia>`; cuerpo con «Verificación: <resultado>».
-- No cambies pruebas existentes salvo las que fijan versión `2.7.6` o `PROTOCOLS` (paso 53.3).
+- Conservar las aserciones existentes; se permite corregir fixtures de identidad discordante para probar una respuesta válida y añadir regresiones negativas explícitas.
 - Formato: `ruff format` en los archivos tocados (la CI lo exige).
 - Datos de prueba: solo canarios (`NOMBRECANARIO`, `C-99999-2099`, fechas 2099). RUT ficticio permitido:
   `11.111.111-1`. Corre `python tools/check_real_ids.py` antes de cada push.
@@ -309,69 +312,27 @@ Marca el paquete como tomado: en `docs/implementacion/estado/WP-53.json` pon `"e
 `src/nurus/historia_html.py` y `tests/test_historia_html.py`. No lo cambies salvo error demostrado con una prueba.
 
 #### 53.2 Vínculo del listado — **HECHO**
-`extract_historia` en `descargador/vinculos.py`. No cambies `extract`.
+`extract_historia` en `descargador/vinculos.py`. El analizador léxico compartido por `calls()` también protege `extract`; conservar su comportamiento válido.
 
 #### 53.3 Comando `history_open` en la extensión
 
 **Archivos:** `pagina.js`, `conexion.js`, `manifest.json`, `puente.py`, `contrato_integral.py`, prueba nueva
 `descargador/test_historia_extension.cjs`.
 
-1. En `pagina.js`, dentro de `sitfaTask`, ubica el final del bloque `diary_open`:
-   ```js
-       init={method:"GET"};
-     } else
-     if (command === "search") {
-   ```
-   Inserta el bloque siguiente **entre** `init={method:"GET"};` y `} else` (empieza con `} else if` y termina
-   sin llave: la llave `} else` existente lo cierra). Código de referencia; respeta el estilo compacto del archivo:
+1. El bloque `history_open` y los auxiliares locales de `sitfaTask` en
+   `descargador/extension/pagina.js` son la implementación de referencia. Mantener estas fronteras:
+   - Parámetros exactos `tribunal`, `rit`, `causa`; tribunal del listado vigente.
+   - Reconocer llamadas reales mediante análisis léxico: excluir strings, backticks, comentarios y regex.
+     Una misma causa puede tener varios enlaces idénticos por sus ingresos.
+   - Las dos peticiones mantienen las rutas exactas, `credentials:'include'`, `redirect:'error'` y timeout.
+   - La respuesta intermedia se lee en streaming con tope de **4096 bytes** y exige exactamente las cinco
+     claves `crr_causa`, `tip_causa`, `rol_causa`, `era_causa`, `cod_tribunal`, todas strings válidas.
+   - La ventana se lee en streaming con tope de **8 MiB**; cancelar el lector al sobrepasarlo. Exigir HTTP 200,
+     contenido no vacío y `text/html`. Python conserva una segunda validación.
+   - Rechazar HTML que refleje cualquiera de los cinco valores cifrados, incluidos valores ocultos y variantes
+     URL/entidades HTML, **antes** de devolver bytes a Python. Nunca devolver la URL intermedia ni el JSON cifrado.
+   - Devolver solo `status`, `type`, `body`, `params`, `startedAt`, `digest`; errores con códigos cerrados.
 
-```js
-  } else if(command==="history_open") {
-    const run=window.__sitfaRun,p=payload.params;
-    if(screen!=="seguimiento"||!run?.diaryDocument||!p||typeof p!=="object")throw new Error("HISTORY_CONTEXT");
-    diaryPhase='IDENTIDAD';
-    if(Object.keys(p).length!==3||!["tribunal","rit","causa"].every(k=>typeof p[k]==="string")||
-       !/^\d{1,4}$/.test(p.tribunal)||!/^[A-Z]{1,3}-\d{1,7}-\d{4}$/.test(p.rit)||!/^\d{1,20}$/.test(p.causa))
-      throw new Error("HISTORY_IDENTITY");
-    const selected=new Map(run.diaryPairs);
-    if(p.tribunal!==selected.get("COD_Tribunal_sel"))throw new Error("HISTORY_IDENTITY");
-    const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
-    const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
-    if(!table)throw new Error("HISTORY_CONTEXT");
-    let found=false;   // la misma causa puede repetirse en varias filas: basta un enlace idéntico
-    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"])
-      for(const m of (el.getAttribute(attr)||"").matchAll(/\bShowHistoria\s*\(([^()]*)\)/g)) {
-        const a=m[1].split(",").map(s=>{const x=/^(?:(\d{1,20})|'([^'\\]*)'|"([^"\\]*)")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
-        if(a.length===3&&a[0]===p.tribunal&&a[1]===p.rit&&a[2]===p.causa)found=true;
-      }
-    if(!found)throw new Error("HISTORY_LINK");
-    const [tip,rol,era]=p.rit.split("-");
-    const base="https://familia.pjud.cl/SITFAWEB/";
-    diaryPhase='RED';
-    const enc=await fetch(base+"Encrypt_AjaxAccion.do?opcion=1&TIP_Causa="+tip+"&ROL_Causa="+rol+"&ERA_Causa="+era+
-      "&crr_idcausaUrl="+p.causa+"&cod_tribunalUrl="+p.tribunal,
-      {method:"POST",credentials:"include",cache:"no-store",redirect:"error",
-       headers:{"X-Requested-With":"XMLHttpRequest"},signal:AbortSignal.timeout(60000)});
-    diaryPhase='RESPUESTA';
-    const encText=await enc.text();
-    if(enc.status!==200||encText.length>4096)throw new Error("HISTORY_RESPONSE");
-    let data;try{data=JSON.parse(encText);}catch(_){throw new Error("HISTORY_RESPONSE");}
-    const keys=["crr_causa","tip_causa","rol_causa","era_causa","cod_tribunal"];
-    if(!data||typeof data!=="object"||Array.isArray(data)||
-       keys.some(k=>typeof data[k]!=="string"||!/^[A-Za-z0-9%+/=._-]{1,512}$/.test(data[k])))throw new Error("HISTORY_RESPONSE");
-    url=base+"ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1="+data.crr_causa+"&b2="+data.tip_causa+"&c3="+data.rol_causa+
-      "&d4="+data.era_causa+"&e5="+data.cod_tribunal+"&B4=1&FLG_Encripta=1";
-    const u=new URL(url);
-    if(u.origin!=="https://familia.pjud.cl"||u.pathname!=="/SITFAWEB/ConsultaDetalleAtPublicoAccion.do"||u.hash||
-       [...u.searchParams.keys()].join()!=="TipoPopup,a1,b2,c3,d4,e5,B4,FLG_Encripta")throw new Error("HISTORY_RESPONSE");
-    init={method:"GET"};
-    diaryParams=p;     // reutiliza la lectura común: devuelve params, startedAt y digest
-```
-
-   Notas: la lectura común que sigue (`fetch(url,{...init,credentials:"include",redirect:"error"...})`) ya hace
-   el GET y calcula SHA-256. Su tope es 80 MB y no revisa el `content-type`: el tope de 8 MB y el control de que
-   sea HTML se aplican en Python (`LectorHistoria._leer` y `ChromeTransport.body`). **No** devuelvas `data` ni `url`: el resultado solo lleva `body`,
-   `params` (tribunal, rit, causa), `startedAt`, `digest`.
 2. En el `catch` final de `sitfaTask`, junto al caso `diary_open`, añade:
 
 ```js
@@ -402,7 +363,9 @@ Marca el paquete como tomado: en `docs/implementacion/estado/WP-53.json` pon `"e
      luego GET a `.../ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=…&B4=1&FLG_Encripta=1`; ambos con
      `credentials:'include'`; resultado con `digest` de 64 hex y `params` iguales a los pedidos; **sin** los valores cifrados.
    - Sin enlace en listado / RIT distinto / tribunal distinto / clave extra / RIT mal formado ⇒ error y **0** `fetch`.
-   - JSON inválido, clave faltante, valor con `&`, cuerpo > 4096 o estado ≠ 200 en el paso 1 ⇒ `HISTORY_RESPONSE` y **1** `fetch`.
+   - JSON inválido, clave faltante o adicional, valor con `&`, cuerpo > 4096 o estado ≠ 200 en el paso 1 ⇒ `HISTORY_RESPONSE` y **1** `fetch`.
+   - Llamadas dentro de literales/comentarios/regex ⇒ cero peticiones; HTML con cifrado reflejado o tipo no HTML ⇒
+     `HISTORY_RESPONSE` sin `body`; respuesta >8 MiB ⇒ cancelación del streaming.
    - El código fuente no contiene `document.cookie`.
 10. Verifica: `node descargador/test_bitacoras_extension.cjs && node descargador/test_historia_extension.cjs` y
     `tools/ci_local.sh descargador/test_poc.py descargador/test_flujos.py` (o las pruebas que tocaste).
@@ -418,139 +381,23 @@ Marca el paquete como tomado: en `docs/implementacion/estado/WP-53.json` pon `"e
 **Archivos:** `descargador/lectura_historia.py` (nuevo), `descargador/lectura_bitacoras.py` (gancho),
 `descargador/test_lectura_historia.py` (nuevo).
 
-1. Gancho en `lectura_bitacoras.py` (solo esto):
-   - `DiaryRunner.__init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, historia=None)`
-     y `self.historia = historia`.
-   - En `enumerar_listado`, justo **después** del `for item in listing_rows(body, profile): self.leer_bitacora(...)`:
-     `if self.historia: self.historia.pagina(selection, query, number, body, profile)`.
-   - En `run`, después de `session.locked = True`: `if self.historia: self.historia.abrir(session.folder)`;
-     en el `finally`, **antes** de `self._cerrar(session)`: `if self.historia: self.historia.cerrar()` (envuelto
-     en `try/except Exception` que solo registra el error en el lector; nunca debe impedir cerrar bitácoras).
-2. `lectura_historia.py` (referencia; completa los detalles con el estilo del archivo de bitácoras):
+1. Gancho en `lectura_bitacoras.py`: todas las llamadas opcionales pasan por
+   `DiaryRunner._historia('abrir'|'pagina'|'cerrar', ...)`. Aislar también fallos de disco y del aviso de error;
+   ninguna frontera de historia debe abortar ni marcar fallida una consulta de bitácoras.
+2. `descargador/lectura_historia.py` es la implementación de referencia:
+   - Inicializar un manifiesto nuevo por consulta. `anterior` se admite solo como reintento explícito del lote
+     elegido; nunca buscar historias recientes del destino. Activar únicamente causas presentes en el listado
+     de ese reintento y cuyo HTML conserva su SHA-256; FALLIDA/PENDIENTE se releen.
+   - Mantener índices RIT → causas y causa → RIT durante **todo el lote**, separados por tribunal. Ante conflicto
+     entre páginas, marcar todas las causas y vínculos afectados `IDENTIDAD_INCIERTA` y excluir sus trámites.
+   - Cotejar RIT y tribunal visibles contra el listado/catálogo antes de guardar el HTML.
+   - Tope 600 y pausa solo tras lectura real; cancelación y límite de bitácoras dejan pendientes sin leer.
+   - Persistencia protegida en apertura, página y cierre. Un fallo deja historia `INCOMPLETA`; las bitácoras
+     continúan. Diagnóstico con códigos cerrados, nunca `str(exc)` ni rutas de usuario.
+   - Registrar `HISTORIA_FECHA_POSTERIOR` al conservar filas posteriores al día de lectura.
+   - Cerrar con diagnóstico anónimo y Excel. Un fallo de diagnóstico, Excel o persistencia final deja el
+     resultado de historia incompleto y el paquete puede conservar las bitácoras.
 
-```python
-"""Historia de la causa en la misma pasada del listado; solo lectura, sin PDF, sin valores cifrados."""
-
-import hashlib
-import json
-from datetime import datetime
-from pathlib import Path
-
-import motor as m
-from lotes import ChromeTransport
-from lectura_bitacoras import write
-from vinculos import extract_historia
-from nurus.historia_html import read_historia, separar_ventana
-
-MANIFEST = 'historias.json'
-MAX_HISTORIAS_POR_LOTE = 600  # decisión p (P3), separado del tope de bitácoras
-MAX_BYTES = 8 * 1024 * 1024
-
-
-def _tabla_listado(body, profile):
-    """La misma tabla que usa listing_rows (lectura_bitacoras.py:46-58)."""
-    if isinstance(body, bytes):
-        try:
-            body = body.decode('utf-8-sig')
-        except UnicodeDecodeError:
-            pass
-    tablas = m.root_html(body).xpath(
-        '//form[@name=$form]//table[@id=$table]', form=profile.form_name, table=profile.table_id
-    )
-    if len(tablas) != 1:
-        raise m.PocError('No se identifica una tabla única de registros.')
-    return tablas[0]
-
-
-class LectorHistoria:
-    def __init__(self, bridge, emit, cancel, pause=1.0, anterior=None):
-        self.bridge, self.emit, self.cancel, self.pause = bridge, emit, cancel, pause
-        self.anterior = anterior  # ruta a un historias.json previo: solo se releen FALLIDA/PENDIENTE
-        self.estado = None
-
-    def abrir(self, carpeta_lote):
-        self.carpeta = Path(carpeta_lote) / 'historia'
-        self.carpeta.mkdir(parents=True, exist_ok=True)
-        self.estado = {'version': 1, 'tipo': 'HISTORIA_LECTURA', 'estado': 'EN_CURSO',
-                       'criterio_temporal': 'ventana_4_meses', 'causas': {}, 'vinculos': [], 'lecturas': 0}
-        # Si hay `anterior`: cargar sus causas LEIDA con su fecha y archivo; marcar las demás como PENDIENTE.
-        self._persistir()
-
-    def pagina(self, selection, query, number, body, profile):
-        # Regla (b): ningún error de historia sale de aquí; la consulta de bitácoras no se entera.
-        try:
-            tabla = _tabla_listado(body, profile)
-            for fila in extract_historia(tabla, selection.tribunal):
-                clave = f"RUS|{selection.tribunal}|{fila['causa_id']}"
-                self.estado['vinculos'].append({**fila, 'pestana': selection.tab, 'modalidad': selection.modality,
-                                                'clave': clave})
-                causa = self.estado['causas'].get(clave)
-                if causa is None:
-                    causa = self.estado['causas'][clave] = {'tribunal': selection.tribunal, 'rit': fila['rit'],
-                                                            'causa_id': fila['causa_id'], 'estado': 'PENDIENTE'}
-                elif m.normalized(causa['rit']) != m.normalized(fila['rit']):
-                    fila['identidad'] = 'INCIERTA'            # la misma causa con otro RIT en otra página
-                if fila['identidad'] != 'VERIFICADA':
-                    causa.update(estado='IDENTIDAD_INCIERTA', error='El listado asocia esta causa a más de un RIT o al revés.')
-                    continue
-                if causa['estado'] == 'PENDIENTE' and not self.cancel.is_set():
-                    self._leer(causa)
-        except (m.PocError, ValueError, KeyError, OSError) as exc:
-            self.estado.setdefault('errores_listado', []).append({'pagina': number, 'error': str(exc)})
-        self._persistir()
-
-    def _leer(self, causa):
-        if self.estado['lecturas'] >= MAX_HISTORIAS_POR_LOTE:
-            causa.update(estado='PENDIENTE', error='Tope de 600 historias por lote.')
-            self.estado['tope_alcanzado'] = True
-            return
-        self.estado['lecturas'] += 1
-        params = {'tribunal': causa['tribunal'], 'rit': causa['rit'], 'causa': causa['causa_id']}
-        try:
-            result = self.bridge.call('history_open', {'params': params, 'timeout': 60000})
-            data = ChromeTransport.body(result)
-            digest = hashlib.sha256(data).hexdigest()
-            if len(data) > MAX_BYTES or digest != result.get('digest') or result.get('params') != params:
-                raise m.PocError('La respuesta de historia no coincide con la solicitud.')
-            leida = datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00')).astimezone()
-            lectura = read_historia(data)
-            visible = lectura['encabezado'].get('RIT', '')
-            if m.normalized(visible) != m.normalized(causa['rit']):
-                # La ventana no es la causa pedida: no se guarda como suya.
-                raise ValueError('HISTORIA_IDENTIDAD_VISIBLE')
-            nombre = 'historia-' + hashlib.sha256(json.dumps(params).encode()).hexdigest()[:24] + '-' + digest[:16] + '.html'
-            ruta = self.carpeta / nombre
-            if not ruta.exists():
-                m.save_exclusive(ruta, data)
-            elif ruta.read_bytes() != data:
-                raise m.PocError('El archivo local de historia cambió.')
-            dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date())
-            causa.update(estado='VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'LEIDA', error='',
-                         archivo=nombre, sha256=digest, leida=leida.isoformat(),
-                         en_ventana=len(dentro) + len(posteriores) + len(sin_fecha), anteriores=len(anteriores),
-                         incompletas=sum(a['codigo'] == 'HISTORIA_FILA_INCOMPLETA' for a in lectura['advertencias']),
-                         advertencias=[a['codigo'] for a in lectura['advertencias']])
-        except ValueError as exc:                       # códigos del lector (HISTORIA_*)
-            causa.update(estado='FALLIDA', error=str(exc))
-        except (m.PocError, KeyError, OSError) as exc:  # extensión, red, disco
-            causa.update(estado='FALLIDA', error=getattr(exc, 'code', '') or str(exc))
-        self.emit('history_progress', {'causa': causa['rit'], 'estado': causa['estado']})
-        self.cancel.wait(self.pause)
-
-    def cerrar(self):
-        # estado final: COMPLETA si todas LEIDA/VACIA_COMPROBADA; CANCELADA si cancel; si no, INCOMPLETA.
-        # escribir diagnostico_historia.json (solo conteos por estado y códigos) y generar Historia_SITFA.xlsx
-        # con nurus.capture.historias.export_historias (paso 53.5); un error de Excel queda en 'excel_error'.
-        ...
-
-    def _persistir(self):
-        write(self.carpeta / MANIFEST, self.estado)
-```
-
-   Reglas: (a) nunca guardar `a1`…`e5` (no llegan a Python; compruébalo en prueba); (b) un error de historia
-   nunca se propaga al `DiaryRunner`: envuelve todo `pagina()` en `try/except (m.PocError, ValueError, OSError)` que
-   anota el error en `self.estado['errores_listado']` y sigue; (c) la pausa solo tras una lectura real; (d) `LimiteLecturas` de bitácoras
-   detiene el lote completo: entonces las causas restantes quedan `PENDIENTE`.
 3. Pruebas `descargador/test_lectura_historia.py` — usa un `Bridge` falso que responde a `history_open` con el
    fixture `ventana_historia.html` en base64:
    `{'status': 200, 'type': 'text/html; charset=windows-1252', 'body': b64, 'digest': sha, 'params': params, 'startedAt': '2099-10-13T12:00:00Z'}`
@@ -631,7 +478,8 @@ class LectorHistoria:
    'historia_causa': {'source_system':'RUS','court_code':…,'cause_id':…}, 'ventana': {'criterio':'ventana_4_meses','desde':…,'hasta':…}}`.
    **No uses `remote_identity`** (exige `ingreso_id`). Cobertura de la consulta: `LEIDA→COMPLETA`,
    `VACIA_COMPROBADA→VACIA_COMPROBADA`, `FALLIDA→FALLIDA` (+ incidencia `HISTORIA_FALLIDA`),
-   `IDENTIDAD_INCIERTA→IDENTIDAD_INCIERTA` (+ incidencia), `PENDIENTE/CANCELADA→CANCELADA`. `table_states['historia_tramites']` = `aggregate` de esas coberturas (función
+   `IDENTIDAD_INCIERTA→IDENTIDAD_INCIERTA` (+ incidencia), `PENDIENTE/CANCELADA→CANCELADA`. Crear además consultas/incidencias `HISTORIA_ENUMERACION_FALLIDA` cuando falle una página o el
+   lote no termine de enumerarse, incluso sin causas leídas. `table_states['historia_tramites']` = `aggregate` de todas esas coberturas (función
    `aggregate` de `src/nurus/capture/coverage.py`). Sin `historia` ⇒ salida idéntica a la de hoy.
 3. `descargador.py` → `package_current_lot(sheets_folder, diary_manifest, target, consolidated=False, historia=None)`
    pasa `historia` a `export_capture_with_note`/`export_capture`.
@@ -644,7 +492,8 @@ class LectorHistoria:
 
 1. `preferencias.py`: añade `'historias.json'` a las dos tuplas `('resumen.json', 'bitacoras.json', 'flujo.json')`
    (en `_package_controls` el patrón es `backup.glob('*/' + name)`: la historia vive en `respaldo/historia/`, por
-   lo que queda cubierta). Prueba nueva en `descargador/test_retencion_lotes.py`: un paquete con solo
+   lo que queda cubierta). Rechazar enlaces simbólicos en todos los componentes de la ruta y revalidar cada
+   candidato inmediatamente antes de archivar o borrar. Prueba nueva en `descargador/test_retencion_lotes.py`: un paquete con solo
    `historias.json` antiguo es elegible; reciente, no.
 2. `SITFA_Descargador.spec`: `hiddenimports` += `'nurus.historia_html'`, `'nurus.capture.temporal'`, `'nurus.capture.historias'`.
 
@@ -668,8 +517,10 @@ Ambos PASA. Pide la revisión E3 (sección 12). Con APROBADA, actualiza `docs/im
    2.8.0 para leer la historia» si `capabilities` no trae `historia_lectura`. Muestra en el progreso existente
    los eventos `history_progress` («Historia: N leídas · F fallidas»).
 3. `flujo_paquete.py` → `run(..., historia=False, historia_en_paquete=True)`: si `historia`, crea
-   `LectorHistoria(bridge, relay, cancel, pause=pause, anterior=<historias.json reciente del mismo destino o None>)`
-   y pásalo a `DiaryRunner(..., historia=lector)`. Pasa `respaldo/historia/historias.json` a `package_current_lot`
+   `LectorHistoria(bridge, relay, cancel, pause=pause)` (sin reutilización entre consultas nuevas)
+   y pásalo a `DiaryRunner(..., historia=lector)`. El botón existente «Reintentar lecturas fallidas…»
+   puede pasar `anterior` del lote elegido explícitamente; la casilla de reutilización de bitácoras no autoriza
+   reutilizar historias de otro lote. Pasa `respaldo/historia/historias.json` a `package_current_lot`
    si `historia_en_paquete`. `partial` debe ser `True` si la historia no quedó `COMPLETA`. Un fallo de historia
    **nunca** impide crear el paquete.
 4. Pruebas en `descargador/test_flujo_paquete.py`: apagada ⇒ paquete idéntico; encendida ⇒ `Historia_SITFA.xlsx` +
@@ -717,7 +568,7 @@ Alcance pequeño: un tribunal, Cumplimiento y Espera, período habitual. Anotar 
 | H-06 | 5 causas (2 de Espera): comparar con la ventana SITFA | Mismos folios, fechas, trámites, descripciones y referencias de los últimos 4 meses |
 | H-07 | En esas causas, «Trámites anteriores» | Coincide con lo que la ventana muestra antes de «Desde» |
 | H-08 | Causa con varios ingresos del lote | Una fila en Causas, varias en Vínculos, trámites sin repetir |
-| H-09 | Cancelar a mitad y volver a «Consultar y crear paquete» | Conserva lo leído; solo abre faltantes/fallidas |
+| H-09 | Cancelar; usar «Reintentar lecturas fallidas…» y elegir el mismo lote; luego iniciar una consulta nueva | El reintento conserva historias verificadas del lote elegido; la consulta nueva vuelve a leer todas sus causas |
 | H-10 | Revisar Descargas y carpeta del lote | Cero PDF de trámites |
 | H-11 | Importar el ZIP en el Asistente | Importa; mismo trabajo que sin historia |
 | H-12 | Cerrar sesión SITFA a mitad (opcional) | Restantes FALLIDA con motivo; nada «vacío» |

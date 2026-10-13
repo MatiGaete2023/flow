@@ -1,42 +1,48 @@
 # AVANCE — traspaso entre IAs (WP-53/WP-54)
 
-Fuente de verdad del procedimiento: [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md). Este archivo solo dice **dónde quedó el trabajo**.
-PR abierto: https://github.com/MatiGaete2023/flow/pull/45 (cada push a la rama lo actualiza; no crear otro).
-Retomar: `git log --oneline -8` + este archivo; siguiente paso = primera fila no `HECHO`.
-Entorno: `.venv` (ver guía paso 0); `tools/ci_local.sh <pruebas>` antes de cada push. Commits locales por paso; push cada 2–3 pasos.
+Fuente del procedimiento: [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md).
+Rama: `feat/historia-causa-sitfa`. PR existente: https://github.com/MatiGaete2023/flow/pull/45.
 
-| Paso | Estado | Commit | Notas |
-|---|---|---|---|
-| 53.1 lector | HECHO | previo | — |
-| 53.2 vínculo | HECHO | previo | — |
-| 53.3 extensión `history_open` | HECHO | ver git log | prueba `test_historia_extension.cjs` pasa; descargador 293 OK |
-| 53.4 `LectorHistoria` + gancho | HECHO | ver git log | `cerrar(lote_estado)` recibe estado del lote (desvío menor) |
-| 53.5 Excel `historias.py` | HECHO | ver git log | `cargar()` reutilizable por 53.6; `literal` local (no importa de descargador); textos >30000 se recortan con aviso |
-| 53.6 contrato + paquete | HECHO | ver git log | `historia=` en export_capture y package_current_lot; EXTENSIONS en contract.py; DICCIONARIO actualizado |
-| 53.7 retención + spec | HECHO | ver git log | CONTROLES en preferencias.py incluye historia/historias.json |
-| Cierre WP-53 (ci_local, verificar_wp, E3) | PASA; E3 PENDIENTE | ver git log | verificar_wp PASA; E3 la hace otra sesión (guía §12) |
-| WP-54 UI/flujo/docs | HECHO (falta 54.7 y acta) | ver git log | casillas, flujo, manual, CHANGELOG, guía de prueba. Desvío: casillas deshabilitadas según capabilities |
+## Correcciones E3 — 13 de octubre de 2026
 
-## Notas de desvío respecto de la guía
-- 53.4: `cerrar(lote_estado)` recibe el estado del lote (si no es COMPLETA, la historia queda INCOMPLETA).
-- 53.5: Excel sin `excel_presentacion` (src no puede importar descargador): freeze_panes + autofiltro como `export_diaries`; `literal` vive en `nurus/capture/historias.py` y `export_csmp_capture` lo importa; textos >30000 se recortan con aviso y se cuentan en Control.
-- 53.7: `tools/write_build_meta.py` VERSION_NAME cambió a «bitácoras e historia» (lo exige tests/test_versiones_coherentes).
-- 53.6: `original_file` de las filas es `respaldo/<lote>/historia/<archivo>` (ruta real; la guía decía `respaldo/historia/`).
-- WP-54: casillas se deshabilitan según `capabilities` de la extensión (evento `extension_caps`, emitido tras `catalog`). Resuelto el desvío anterior.
+Veredicto recibido: **CAMBIOS**, sobre `9310d60`, contra `origin/feat/ejecucion-plan-20261008`.
+El directorio `/tmp/e3-review` del revisor no existe en esta máquina. Las regresiones añadidas al repositorio
+usan exclusivamente datos ficticios y comprueban los escenarios del informe.
 
-## E3 (13 de octubre)
-- Primera E3 (sobre `b44442a`: lector, vínculo, extractor, guía) → CAMBIOS; corregidos en `5af87f9`: respuesta sin
-  `</html>` = `HISTORIA_RESPUESTA_INCOMPLETA`; encabezado repetido; `extract_historia` con `identidad`
-  (VERIFICADA/INCIERTA) e ingreso solo del mismo tribunal; extractor H0 endurecido; se revirtió el cambio de
-  condición de `ci-rapida.yml`.
-- Integrado con WP-53/WP-54 (merge, sin conflictos) y aplicado a su código: `LectorHistoria` no abre causas
-  `INCIERTA` (estado `IDENTIDAD_INCIERTA`), coteja el RIT visible (`HISTORIA_IDENTIDAD_VISIBLE`, sin guardar
-  archivo) y no repite una FALLIDA dentro del mismo lote; el paquete lleva `IDENTIDAD_INCIERTA` con incidencia.
-- Segunda E3 sobre el diff completo de la rama: en curso.
+| Hallazgo | Corrección y regresión |
+|---|---|
+| Privacidad del extractor | Listas cerradas de nombres/rutas/tipos; léxico compartido; excluye strings, backticks, comentarios y regex; sin exención por forma de código. |
+| Cifrado reflejado | La extensión rechaza valores cifrados reflejados, incluidos valores ocultos y variantes URL/HTML, antes de devolver `body`. |
+| Reutilización ajena al lote | Consulta nueva siempre fresca; solo el reintento explícito del lote elegido permite conservar causas verificadas que reaparecen. |
+| Historia afecta bitácoras | Fronteras abrir/página/cerrar aisladas, incluyendo persistencia y error del propio aviso. |
+| Cobertura del ZIP | Consultas/incidencias de enumeración fallida participan en el agregado, también sin causas leídas. |
+| Identidad insuficiente | Llamadas reales; índices bidireccionales globales por tribunal; cotejo de RIT y tribunal visibles antes de guardar. |
+| Retención mediante enlaces | Rechaza enlaces y junctions en todos los componentes; revalida cada lote antes de actuar. |
+| Diagnóstico no anónimo | Códigos cerrados y mensajes constantes; sin texto de excepciones ni rutas de usuario. |
+| Límites y CI | Esquema JSON exacto; streaming de 4096 bytes y 8 MiB; `test_historia_extension.cjs` en CI rápida y CI local. |
+| Excel y fechas | Textos íntegros en columnas de continuación, conservando cuatro hojas; incidencia `HISTORIA_FECHA_POSTERIOR`. |
 
-## Pendiente (en orden)
-0. Autorrevisión adversarial hecha (13-oct): sin `.Send(`/cookies/almacenes en el diff; corregida la ruta de procedencia. No sustituye la E3.
-1. **E3** de WP-53 por otra sesión/persona (guía §12; foco del diff `git diff feat/ejecucion-plan-20261008...HEAD`). Si APROBADA: poner `revision: APROBADO` en `estado/WP-53.json`, estado `INTEGRADO` solo cuando el usuario integre.
-2. **Prueba real y acta** del usuario (`docs/aceptacion/GUIA_PRUEBAS_HISTORIA_20261013.md`); solo el usuario firma.
-3. **WP-54.7** solo si el usuario lo pide: PR `feat/historia-causa-sitfa → feat/ejecucion-plan-20261008` + `workflow_dispatch` «CSMP Assistant Windows». No fusionar sin autorización escrita.
-4. (HECHO) deshabilitar casillas sin `historia_lectura`.
+WP-53.1–53.7 y WP-54 interfaz/flujo/documentación están implementados; la nueva E3 y la aceptación siguen pendientes.
+Las reglas del motor, textos y efectos Outlook permanecen fuera del cambio.
+
+## Verificación
+
+- Regresiones focales y `tools/ci_local.sh` focal: PASA; ambas pruebas `.cjs`: PASA.
+- Retención gráfica: 20 PASA con Xvfb; ambos ZIP de contrato válidos.
+- Primera medición completa: 958 PASA, 11 omitidas, 6 xfail y 2 fallos en Asistente; 11 fallos en Descargador.
+  Los 13 fallos fueron por intentar guardar preferencias fuera del área escribible. Los 13 pasan con
+  `LOCALAPPDATA=/workspace/cloud-tools/appdata`. Medición inicial no certificada por árbol modificado.
+- Repetición final de `verificar_wp.py` sobre commit limpio: EN CURSO.
+
+Entorno de esta máquina: activar `/workspace/flow-venv/bin` y `/workspace/cloud-tools/root/usr/bin` en `PATH`;
+usar `LOCALAPPDATA=/workspace/cloud-tools/appdata`. `tools/ci_local.sh` elige `xvfb-run` automáticamente sin pantalla.
+No crear worktrees: cada tarea de nube ya está aislada.
+
+## Pendiente
+
+1. Finalizar la medición completa y registrar su evidencia en `docs/implementacion/verificacion/WP-53.json`.
+2. Nueva **E3 independiente** del diff corregido. El ejecutor no puede aprobar su propia revisión.
+3. Windows candidato e instalador: Git funciona, pero la API de GitHub responde `Forbidden` tanto a GraphQL
+   como a REST. No se afirma que ningún workflow remoto se haya ejecutado o aprobado.
+4. Prueba real y acta del usuario: [guía](../aceptacion/GUIA_PRUEBAS_HISTORIA_20261013.md).
+   No fusionar ni publicar release antes de la autorización correspondiente.

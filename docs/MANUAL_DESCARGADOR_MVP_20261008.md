@@ -101,3 +101,10 @@ Si un hash cambia, falta un original o la identidad no coincide, conservar
 el lote y registrar el error. No corregir a mano los IDs para hacer pasar el ZIP.
 Para soporte comunicar SHA, etapa, mensaje y estado de consulta; no adjuntar
 NNA, cookies, tokens, HAR, HTML ni PDFs institucionales al repositorio.
+
+Historia: cada «Consultar y crear paquete» inicia una lectura nueva de sus causas, aunque esté marcada
+«Reutilizar bitácoras leídas hoy». Para reintentar un lote interrumpido, usar «Reintentar lecturas fallidas…»
+y seleccionar ese lote: solo se conservan historias verificadas que siguen presentes en su listado.
+Los conflictos entre páginas o con el tribunal visible quedan advertidos; una falla de historia no impide
+las bitácoras. Textos largos del Excel continúan en columnas «(parte N)», sin recortes; fechas posteriores
+al día de lectura llevan una advertencia.

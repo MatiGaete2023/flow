@@ -152,6 +152,26 @@ PACKAGE_PREFIX = 'Paquete CSMP '
 CONTROLES = ('resumen.json', 'bitacoras.json', 'flujo.json', 'historias.json', 'historia/historias.json')
 
 
+def _es_enlace(path):
+    return path.is_symlink() or (hasattr(path, 'is_junction') and path.is_junction())
+
+
+def _sin_enlaces(path, root):
+    path, root = Path(path), Path(root)
+    try:
+        partes = path.relative_to(root).parts
+    except ValueError:
+        return False
+    actual = root
+    if _es_enlace(actual) or any(_es_enlace(p) for p in actual.absolute().parents):
+        return False
+    for parte in partes:
+        actual = actual / parte
+        if _es_enlace(actual):
+            return False
+    return True
+
+
 def _package_controls(folder):
     """Paquete de «Consultar y crear paquete» (revisión externa H3): controles bajo respaldo/ y el ZIP.
 
@@ -161,7 +181,7 @@ def _package_controls(folder):
     process = backup / 'proceso.json'
     if (
         not folder.name.startswith(PACKAGE_PREFIX)  # E3 WP-94 C4: una carpeta ajena no se toma por paquete
-        or backup.is_symlink()
+        or not _sin_enlaces(backup, folder)
         or not backup.is_dir()
         or process.is_symlink()
         or not process.is_file()
@@ -170,7 +190,7 @@ def _package_controls(folder):
     controls = [process]
     for name in CONTROLES:
         for path in backup.glob('*/' + name):
-            if not path.is_symlink() and not path.parent.is_symlink() and path.is_file():
+            if _sin_enlaces(path, folder) and path.is_file():
                 controls.append(path)
     controls += [path for path in folder.glob('*.zip') if path.is_file() and not path.is_symlink()]
     return controls
@@ -181,7 +201,7 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     import time
 
     root = Path(root)
-    if not root.is_dir() or root.is_symlink():
+    if not root.is_dir() or not _sin_enlaces(root, root):
         return []
     excluded = {Path(path).resolve() for path in protected if path}
     limit = time.time() - max_days * 86400
@@ -191,10 +211,11 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
             folder.is_symlink()
             or not folder.is_dir()
             or any(path.is_relative_to(folder.resolve()) for path in excluded)
+            or any(_es_enlace(p) for p in folder.rglob('*'))
         ):
             continue
         controls = [
-            folder / name for name in CONTROLES if (folder / name).is_file() and not (folder / name).is_symlink()
+            folder / name for name in CONTROLES if (folder / name).is_file() and _sin_enlaces(folder / name, folder)
         ] + _package_controls(folder)
         if not controls:
             continue
@@ -218,6 +239,8 @@ def manage_old_batches(
 
     if not confirmed:
         return []
+    if not _sin_enlaces(Path(root), Path(root)) or any(not _sin_enlaces(Path(path), Path(root)) for path in selected):
+        raise PocError('La selección contiene enlaces; actualiza la lista.')
     root = Path(root).resolve()
     available = {
         item['folder'].resolve(): item['folder'] for item in old_batches(root, max_days=max_days, protected=protected)
@@ -229,12 +252,16 @@ def manage_old_batches(
         )
     target = Path(archive).resolve() if archive else None
     if target:
+        if not _sin_enlaces(Path(archive), Path(archive)):
+            raise PocError('La carpeta de archivo contiene enlaces; elige otra carpeta.')
         if target == root or any(target == path or target.is_relative_to(path) for path in selected):
             raise PocError('La carpeta de archivo debe estar fuera de los lotes seleccionados.')
         if any((target / path.name).exists() for path in selected):
             raise PocError('La carpeta de archivo ya contiene un lote con el mismo nombre.')
     changed = []
     for path in selected:
+        if path not in {item['folder'].resolve() for item in old_batches(root, max_days=max_days, protected=protected)}:
+            raise PocError('La selección cambió; actualiza la lista antes de borrar.')
         if target:
             target.mkdir(parents=True, exist_ok=True)
             shutil.move(str(path), str(target / path.name))

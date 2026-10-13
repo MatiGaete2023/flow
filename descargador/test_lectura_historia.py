@@ -21,7 +21,7 @@ VENTANA = (FIXTURES / 'ventana_historia.html').read_bytes()
 LISTADO = (FIXTURES / 'listado_seguimiento.html').read_bytes()
 SELECCION = Selection('49', 'Cumplimiento', '2')
 PERFIL = selection_profile(SELECCION, CATALOG)
-QUERY = {'tribunal_nombre': 'Juzgado ficticio'}
+QUERY = {'tribunal_nombre': 'Juzgado Canario de Prueba'}
 
 
 class FakeBridge:
@@ -77,7 +77,7 @@ def test_dos_filas_misma_causa_una_llamada_y_ventana(tmp_path):
     datos = estado(item)
     (causa,) = datos['causas'].values()
     assert causa['estado'] == 'LEIDA' and causa['en_ventana'] == 3 and causa['anteriores'] == 0
-    assert causa['incompletas'] == 1 and causa['tribunal_nombre'] == 'Juzgado ficticio'
+    assert causa['incompletas'] == 1 and causa['tribunal_nombre'] == QUERY['tribunal_nombre']
     assert len(datos['vinculos']) == 2
     assert (item.carpeta / causa['archivo']).read_bytes() == VENTANA
 
@@ -194,7 +194,11 @@ class BridgeConHistoria(BridgeBitacoras):
             self.events.append((command, None))
             # La ventana ficticia muestra el mismo RIT pedido (el lector coteja el RIT visible).
             rit = payload['params']['rit'].encode()
-            return FakeBridge(respuesta=VENTANA.replace(b'C-99999-2099</div>', rit + b'</div>')).call(command, payload)
+            return FakeBridge(
+                respuesta=VENTANA.replace(b'C-99999-2099</div>', rit + b'</div>').replace(
+                    b'Juzgado Canario de Prueba', CATALOG['tribunales'][payload['params']['tribunal']].encode()
+                )
+            ).call(command, payload)
         return super().call(command, payload, timeout)
 
 
@@ -257,3 +261,87 @@ def test_e3_rit_con_dos_causas_no_se_abre(tmp_path):
     item.pagina(SELECCION, QUERY, 1, cuerpo, PERFIL)
     assert bridge.calls == []
     assert {c['estado'] for c in estado(item)['causas'].values()} == {'IDENTIDAD_INCIERTA'}
+
+
+@pytest.mark.parametrize('cambio', [b'causa', b'rit'])
+def test_e3_conflicto_de_identidad_entre_paginas_invalida_ambas(tmp_path, cambio):
+    item = lector(tmp_path)
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    siguiente = (
+        LISTADO.replace(b',100)', b',101)') if cambio == b'causa' else LISTADO.replace(b'C-99999-2099', b'C-99998-2099')
+    )
+    item.pagina(SELECCION, QUERY, 2, siguiente, PERFIL)
+    assert len(item.bridge.calls) == 1
+    assert {c['estado'] for c in estado(item)['causas'].values()} == {'IDENTIDAD_INCIERTA'}
+    assert all(v['identidad'] == 'INCIERTA' for v in estado(item)['vinculos'])
+    assert item.cerrar()['estado'] == 'INCOMPLETA'
+
+
+def test_e3_tribunal_visible_distinto_no_guarda_html(tmp_path):
+    item = lector(tmp_path)
+    item.pagina(SELECCION, {'tribunal_nombre': 'Otro juzgado ficticio'}, 1, LISTADO, PERFIL)
+    assert next(iter(estado(item)['causas'].values()))['error'] == 'HISTORIA_TRIBUNAL_VISIBLE'
+    assert not list(item.carpeta.glob('*.html'))
+
+
+def test_e3_permission_error_no_revela_ruta_en_diagnostico(tmp_path):
+    item = lector(tmp_path, FakeBridge(error=PermissionError('/home/UsuarioCanario/archivo')))
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    item.cerrar()
+    diagnostico = (item.carpeta / 'diagnostico_historia.json').read_text()
+    assert 'UsuarioCanario' not in diagnostico and '/home/' not in diagnostico
+    assert json.loads(diagnostico)['codigos_error'] == {'HISTORIA_PERSISTENCIA': 1}
+
+
+@pytest.mark.parametrize('operacion', ['abrir', 'pagina', 'cerrar'])
+def test_e3_fallo_historia_no_afecta_bitacoras(tmp_path, monkeypatch, operacion):
+    puente = BridgeConHistoria()
+    item = LectorHistoria(puente, lambda *a: None, threading.Event(), pause=0)
+
+    def falla(*args):
+        raise PermissionError('/home/UsuarioCanario/no-escribible')
+
+    monkeypatch.setattr(item, operacion, falla)
+    parser()
+    result = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, historia=item).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+    )
+    assert result['estado'] == 'COMPLETA' and result['consultas_fallidas'] == 0
+    assert item.resultado['estado'] == 'INCOMPLETA'
+    assert 'UsuarioCanario' not in json.dumps(item.estado)
+
+
+def test_e3_persistencia_historia_no_afecta_bitacoras(tmp_path, monkeypatch):
+    original = lectura_historia.write
+
+    def falla(path, datos):
+        if Path(path).name == 'historias.json':
+            raise PermissionError('/home/UsuarioCanario/no-escribible')
+        return original(path, datos)
+
+    monkeypatch.setattr(lectura_historia, 'write', falla)
+    puente = BridgeConHistoria()
+    item = LectorHistoria(puente, lambda *a: None, threading.Event(), pause=0)
+    parser()
+    result = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, historia=item).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+    )
+    assert result['estado'] == 'COMPLETA' and result['consultas_fallidas'] == 0
+    assert item.resultado['estado'] == 'INCOMPLETA'
+    assert 'UsuarioCanario' not in json.dumps(item.estado)
+
+
+def test_e3_reintento_explicito_solo_conserva_causas_del_listado_actual(tmp_path):
+    primero = lector(tmp_path / 'uno')
+    primero.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    primero.cerrar()
+    segundo = lector(tmp_path / 'dos', anterior=primero.carpeta / 'historias.json')
+    listado = LISTADO.replace(b',100)', b',101)').replace(b'C-99999-2099', b'C-99998-2099')
+    segundo.pagina(SELECCION, QUERY, 1, listado, PERFIL)
+    assert set(estado(segundo)['causas']) == {'RUS|49|101'}
+
+
+def test_e3_fecha_posterior_tiene_advertencia(tmp_path):
+    item = lector(tmp_path, FakeBridge(VENTANA.replace(b'13/10/2099</td>', b'14/10/2099</td>')))
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    assert 'HISTORIA_FECHA_POSTERIOR' in next(iter(estado(item)['causas'].values()))['advertencias']

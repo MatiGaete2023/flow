@@ -1,6 +1,27 @@
 /* Esta funcion se ejecuta en el formulario. No usa document.cookie ni almacenes. */
 async function sitfaTask(command, payload) {
   let diaryPhase='CONTEXTO';
+  let encryptedValues=[];
+  // Léxico conservador: nunca reconocer una llamada dentro de texto, plantilla, comentario o regex.
+  const realCode = text => text.replace(
+    /\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|`(?:\\[\s\S]|[^`\\])*(?:`|$)|\/(?![/*])(?:\\[^\n]|\[(?:\\[^\n]|[^\]\\\n])*\]|[^/\\\n])+\/[a-z]*/g,
+    value => ' '.repeat(value.length));
+  const boundedBytes = async (response, limit) => {
+    const reader=response.body?.getReader();
+    if(!reader)throw new Error("HISTORY_RESPONSE");
+    const received=[];let length=0;
+    try {
+      while(true) {
+        const {done,value}=await reader.read();if(done)break;
+        length+=value.byteLength;
+        if(length>limit){await reader.cancel();throw new Error("HISTORY_RESPONSE");}
+        received.push(value);
+      }
+    } finally {reader.releaseLock();}
+    const bytes=new Uint8Array(length);let offset=0;
+    for(const value of received){bytes.set(value,offset);offset+=value.length;}
+    return bytes;
+  };
   try {
   if (location.origin !== "https://familia.pjud.cl") return null;
   const form = document.querySelector('form[name="InformesPpalForm"],form[name="MaoPpalForm"]');
@@ -429,12 +450,16 @@ async function sitfaTask(command, payload) {
     const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
     const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
     if(!table)throw new Error("HISTORY_CONTEXT");
-    let found=false;
-    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"])
-      for(const m of (el.getAttribute(attr)||"").matchAll(/\bShowHistoria\s*\(([^()]*)\)/g)) {
-        const a=m[1].split(",").map(s=>{const x=/^(?:(\d{1,20})|'([^'\\]*)'|"([^"\\]*)")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
-        if(a.length===3&&a[0]===p.tribunal&&a[1]===p.rit&&a[2]===p.causa)found=true;
+    let found=0;
+    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"]) {
+      const text=(el.getAttribute(attr)||"").replace(/^javascript:/i,'');
+      for(const match of realCode(text).matchAll(/(?<![\w$.])ShowHistoria\s*\(/g)) {
+        const tail=text.slice(match.index+match[0].length);
+        const end=tail.indexOf(')');if(end<0)continue;
+        const a=tail.slice(0,end).split(",").map(s=>{const x=/^(?:(\d{1,20})|'([^'\\]*)'|"([^"\\]*)")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
+        if(a.length===3&&a[0]===p.tribunal&&a[1]===p.rit&&a[2]===p.causa)found++;
       }
+    }
     if(!found)throw new Error("HISTORY_LINK");
     const [tip,rol,era]=p.rit.split("-");
     const base="https://familia.pjud.cl/SITFAWEB/";
@@ -444,12 +469,13 @@ async function sitfaTask(command, payload) {
       {method:"POST",credentials:"include",cache:"no-store",redirect:"error",
        headers:{"X-Requested-With":"XMLHttpRequest"},signal:AbortSignal.timeout(60000)});
     diaryPhase='RESPUESTA';
-    const encText=await enc.text();
+    const encText=new TextDecoder("utf-8",{fatal:true}).decode(await boundedBytes(enc,4096));
     if(enc.status!==200||encText.length>4096)throw new Error("HISTORY_RESPONSE");
     let data;try{data=JSON.parse(encText);}catch(_){throw new Error("HISTORY_RESPONSE");}
     const keys=["crr_causa","tip_causa","rol_causa","era_causa","cod_tribunal"];
-    if(!data||typeof data!=="object"||Array.isArray(data)||
+    if(!data||typeof data!=="object"||Array.isArray(data)||Object.keys(data).length!==keys.length||
        keys.some(k=>typeof data[k]!=="string"||!/^[A-Za-z0-9%+/=._-]{1,512}$/.test(data[k])))throw new Error("HISTORY_RESPONSE");
+    encryptedValues=keys.map(k=>data[k]);
     url=base+"ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1="+data.crr_causa+"&b2="+data.tip_causa+"&c3="+data.rol_causa+
       "&d4="+data.era_causa+"&e5="+data.cod_tribunal+"&B4=1&FLG_Encripta=1";
     const u=new URL(url);
@@ -474,20 +500,25 @@ async function sitfaTask(command, payload) {
   const response=await fetch(url,{...init,credentials:"include",cache:"no-store",redirect:"error",
     signal:AbortSignal.timeout(Math.min(payload.timeout||60000,60000))});
   diaryPhase='RESPUESTA';
-  const reader=response.body?.getReader();
-  if(!reader)throw new Error("estructura");
-  const received=[];let length=0;
-  try {
-    while(true) {
-      const {done,value}=await reader.read();if(done)break;
-      length+=value.byteLength;
-      if(length>80*1024*1024){await reader.cancel();throw new Error("estructura");}
-      received.push(value);
+  const maxBytes=command==="history_open"?8*1024*1024:80*1024*1024;
+  if(command==="history_open"&&!/^text\/html(?:\s*;|$)/i.test(response.headers.get("content-type")||""))
+    throw new Error("HISTORY_RESPONSE");
+  const bytes=await boundedBytes(response,maxBytes);
+  if(response.status!==200||!bytes.length)throw new Error("sesion");
+  if(command==="history_open") {
+    let html;
+    try{html=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}
+    catch(_){html=new TextDecoder("windows-1252").decode(bytes);}
+    // No devolver valores cifrados reflejados, ni sus variantes URL/HTML, a Python.
+    const decoded=html.replace(/&#(?:x([0-9a-f]+)|(\d+));?/gi,(_,hex,dec)=>String.fromCodePoint(parseInt(hex||dec,hex?16:10)))
+      .replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&apos;/gi,"'");
+    const views=[html,decoded];
+    for(const value of [...views]){try{views.push(decodeURIComponent(value));}catch(_){}}
+    for(const token of encryptedValues) {
+      const variants=[token];try{variants.push(decodeURIComponent(token));}catch(_){}
+      if(views.some(view=>variants.some(value=>view.includes(value))))throw new Error("HISTORY_RESPONSE");
     }
-  } finally {reader.releaseLock();}
-  const bytes=new Uint8Array(length);let offset=0;
-  for(const value of received){bytes.set(value,offset);offset+=value.length;}
-  if (response.status!==200 || !bytes.length || bytes.length>80*1024*1024) throw new Error("sesion");
+  }
   const chunks=[];
   for (let i=0;i<bytes.length;i+=32768) chunks.push(String.fromCharCode(...bytes.subarray(i,i+32768)));
   if(command==="search" && screen==="seguimiento") {

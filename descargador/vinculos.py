@@ -13,10 +13,34 @@ def visible_cell_text(cell):
     return ' '.join(' '.join(parts).split())
 
 
+def javascript_tokens(text):
+    """Tokens léxicos conservadores. Plantillas y regex nunca aportan llamadas.
+
+    Ante una barra ambigua se descarta el posible literal completo: preferimos no
+    reconocer una acción a atribuir una identidad tomada de texto.
+    """
+    pattern = re.compile(
+        r"(?P<comment>//[^\n]*|/\*[\s\S]*?(?:\*/|$))"
+        r"|(?P<string>\"(?:\\[\s\S]|[^\"\\])*?(?:\"|$)|'(?:\\[\s\S]|[^'\\])*?(?:'|$)|`(?:\\[\s\S]|[^`\\])*?(?:`|$))"
+        r"|(?P<regex>/(?![/*])(?:\\[^\n]|\[(?:\\[^\n]|[^\]\\\n])*\]|[^/\\\n])+/[a-z]*)"
+        r"|(?P<identifier>[A-Za-z_$][\w$]*)"
+        r"|(?P<other>[\s\S])"
+    )
+    for match in pattern.finditer(str(text or '')):
+        yield match.lastgroup, match.group(), match.start(), match.end()
+
+
+def javascript_code(text):
+    return ''.join(
+        value if kind not in ('string', 'comment', 'regex') else ' ' * len(value)
+        for kind, value, _, _ in javascript_tokens(text)
+    )
+
+
 def calls(text, name):
     """Lectura de argumentos literales, respetando comas/paréntesis en textos."""
     result = []
-    for match in re.finditer(r'\b' + re.escape(name) + r'\s*\(', text):
+    for match in re.finditer(r'(?<![\w$.])' + re.escape(name) + r'\s*\(', javascript_code(text)):
         start = match.end()
         items = []
         token = ''

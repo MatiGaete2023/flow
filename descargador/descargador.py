@@ -1208,6 +1208,19 @@ class Application:
 
                     batch, destination, resume = arg
                     reuse_base = destination if self.prefs.data['reutilizar_bitacoras'] and not resume else None
+                    historia = None
+                    if resume:
+                        anterior = Path(resume) / 'historia' / 'historias.json'
+                        if anterior.is_file():
+                            from lectura_historia import LectorHistoria
+
+                            historia = LectorHistoria(
+                                self.bridge,
+                                self.emit,
+                                self.cancel,
+                                pause=self.prefs.data['pausa_consultas'],
+                                anterior=anterior,
+                            )
                     DiaryRunner(
                         self.bridge,
                         self.catalog,
@@ -1215,6 +1228,7 @@ class Application:
                         self.cancel,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse_base=reuse_base,
+                        **({'historia': historia} if historia else {}),
                     ).run(batch, destination, resume)
                 elif command == 'joint':
                     from flujo_csmp import JointRunner

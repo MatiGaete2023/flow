@@ -128,3 +128,20 @@ def test_html_alterado_y_destino_existente(tmp_path):
     export_historias(ruta, tmp_path / 'x.xlsx')
     with pytest.raises(ValueError):
         export_historias(ruta, tmp_path / 'x.xlsx')
+
+
+def test_e3_texto_largo_se_conserva_integro_en_cuatro_hojas(tmp_path):
+    texto = ('=' + 'Texto ficticio 😀 ' * 5000).rstrip()
+    html = FIXTURE.read_bytes().replace(b'windows-1252', b'utf-8').replace(b'Tengase presente canario', texto.encode())
+    wb = libro(tmp_path, html=html)
+    assert wb.sheetnames == ['Trámites', 'Causas', 'Vínculos', 'Control']
+    hoja = wb['Trámites']
+    encabezados = [c.value for c in hoja[1]]
+    indices = [encabezados.index('Desc. Trámite')] + [
+        i for i, e in enumerate(encabezados) if e.startswith('Desc. Trámite (parte ')
+    ]
+    fila = next(r for r in hoja.iter_rows(min_row=2) if r[2].value == '9120')
+    partes = [fila[i].value for i in indices]
+    assert ''.join(partes) == texto
+    assert all(len(p.encode('utf-16-le')) // 2 <= 30000 for p in partes)
+    assert all(fila[i].data_type == 's' for i in indices)

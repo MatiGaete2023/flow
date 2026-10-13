@@ -21,5 +21,6 @@ else
   run $xvfb python -m pytest -q -p no:cacheprovider tests
   run $xvfb python -m pytest -q -p no:cacheprovider descargador
   run node descargador/test_bitacoras_extension.cjs
+  run node descargador/test_historia_extension.cjs
 fi
 echo "CI local: PASA"

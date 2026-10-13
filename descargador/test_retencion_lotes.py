@@ -257,3 +257,40 @@ def test_lote_con_solo_historias_json_es_elegible_si_es_antiguo(tmp_path):
     antiguo = _lote_solo_historia(tmp_path, 'antiguo', 70)
     _lote_solo_historia(tmp_path, 'reciente', 5)
     assert [item['folder'] for item in old_batches(tmp_path)] == [antiguo]
+
+
+def test_e3_enlace_intermedio_historia_no_ofrece_carpeta_ajena(tmp_path):
+    root = tmp_path / 'descargas'
+    ajeno = tmp_path / 'ajeno'
+    ajeno.mkdir()
+    control = ajeno / 'historias.json'
+    control.write_text('{}')
+    age = time.time() - 70 * 86400
+    os.utime(control, (age, age))
+    folder = root / 'carpeta ajena'
+    folder.mkdir(parents=True)
+    (folder / 'historia').symlink_to(ajeno, target_is_directory=True)
+    assert old_batches(root) == []
+    with pytest.raises(PocError):
+        manage_old_batches(root, [folder], confirmed=True)
+    assert control.exists()
+
+
+def test_e3_borrado_revalida_enlace_insertado_despues_de_enumerar(tmp_path, monkeypatch):
+    import preferencias
+
+    old = _lote(tmp_path, 'antiguo', 70)
+    original = preferencias.old_batches
+    calls = []
+
+    def listar(*args, **kwargs):
+        result = original(*args, **kwargs)
+        calls.append(1)
+        if len(calls) == 1:
+            (old / 'historia').symlink_to(tmp_path / 'ajeno', target_is_directory=True)
+        return result
+
+    monkeypatch.setattr(preferencias, 'old_batches', listar)
+    with pytest.raises(PocError):
+        manage_old_batches(tmp_path, [old], confirmed=True)
+    assert old.exists()

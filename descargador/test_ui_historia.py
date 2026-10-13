@@ -47,3 +47,43 @@ def test_casillas_de_historia(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_e3_worker_solo_reintenta_historia_del_lote_elegido(tmp_path, monkeypatch):
+    from queue import Queue
+    from threading import Event
+    from types import SimpleNamespace
+    import lectura_bitacoras
+    from descargador import Application
+
+    control = tmp_path / 'historia' / 'historias.json'
+    control.parent.mkdir()
+    control.write_text('{}')
+    recibidas = []
+
+    class Runner:
+        def __init__(self, *args, **kwargs):
+            recibidas.append(kwargs)
+
+        def run(self, *args):
+            pass
+
+    monkeypatch.setattr(lectura_bitacoras, 'DiaryRunner', Runner)
+    for resume in (None, tmp_path):
+        commands = Queue()
+        commands.put(('diary', ('lote ficticio', tmp_path, resume)))
+        commands.put(('exit', None))
+        eventos = []
+        app = SimpleNamespace(
+            commands=commands,
+            bridge=SimpleNamespace(connected=False, close=lambda: None),
+            catalog={},
+            emit=lambda *e: eventos.append(e),
+            cancel=Event(),
+            prefs=SimpleNamespace(data={'pausa_consultas': 0, 'reutilizar_bitacoras': True}),
+        )
+        Application.worker(app)
+        assert not any(e[0] == 'error' for e in eventos)
+    assert 'historia' not in recibidas[0]
+    assert recibidas[1]['historia'].anterior == control
+    assert recibidas[1]['reuse_base'] is None

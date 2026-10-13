@@ -255,3 +255,42 @@ function ShowHistoria(a, b, c){ var z = 'Petronila Canaria'; window.open('/SITFA
     formulario = copia['formularios'][0]
     assert formulario['metodo'] == 'OTRO'
     assert [p['nombre'] for p in formulario['accion']['parametros']] == ['CAMPO_NO_RECONOCIDO', 'TIP_Causa']
+
+
+def test_e3_privacidad_listas_cerradas_y_lexico(tmp_path):
+    pagina = tmp_path / 'lexico.html'
+    pagina.write_text(
+        '''<html><script>
+if (true) /RosalindaCanaria(foo)/.test('x');
+function ShowHistoria(a){ const x=`BacktickCanaria(Fulana)`; var Nombre_Apellido='x';
+window.open('https://UsuarioCanaria@familia.pjud.cl/SITFAWEB/RutaCanaria.do?Nombre_Apellido=x'); }
+</script><form name="Nombre_Apellido" action="/SITFAWEB/RutaCanaria.do?Nombre_Apellido=1&nombrePersona=2">
+<input name="Persona123" value="x"></form>
+<a onclick="/* ComentarioCanaria(Fulana) */ ShowHistoria(49,'X-1-2099',100); `PlantillaCanaria(Fulana)`">Ver</a>
+</html>''',
+        encoding='utf-8',
+    )
+    texto = ejecutar(tmp_path, pagina)
+    for canario in (
+        'RosalindaCanaria',
+        'BacktickCanaria',
+        'Nombre_Apellido',
+        'UsuarioCanaria',
+        'RutaCanaria',
+        'nombrePersona',
+        'Persona123',
+        'ComentarioCanaria',
+        'PlantillaCanaria',
+        'Fulana',
+    ):
+        assert canario not in texto
+    assert json.loads(texto)['copias'][0]['acciones_onclick']['ShowHistoria/3:num,str,num'] == 1
+
+
+def test_e3_literal_con_forma_de_codigo_no_exime_fuga():
+    import extraer_estructura_historia as modulo
+
+    sensibles = modulo.Sensibles()
+    sensibles.codigo.add('Nombre_Apellido')
+    modulo.EMITIDOS.add('Nombre_Apellido')
+    assert modulo.fugas('Nombre_Apellido', sensibles)

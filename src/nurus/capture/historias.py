@@ -7,6 +7,7 @@ import tempfile
 from datetime import date, datetime
 from pathlib import Path
 
+from nurus.capture.diaries import text_parts
 from nurus.historia_html import read_historia, separar_ventana
 
 LEIDAS = ('LEIDA', 'VACIA_COMPROBADA')
@@ -101,18 +102,14 @@ def cargar(manifest_path):
             lectura = read_historia(data)
             leida = datetime.fromisoformat(causa['leida'])
             dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date())
+            if posteriores:
+                causa['advertencias'] = list(
+                    dict.fromkeys([*causa.get('advertencias', []), 'HISTORIA_FECHA_POSTERIOR'])
+                )
             item.update(lectura=lectura, anteriores=anteriores)
             item['ventana'] = sorted(dentro + posteriores + sin_fecha, key=lambda f: f['fila'])
         causas.append(item)
     return estado, causas
-
-
-def _texto(valor, recortes):
-    texto = literal(valor)
-    if len(texto) > LIMITE_TEXTO:
-        recortes.append(1)
-        return texto[:LIMITE_TEXTO] + ' […texto recortado; íntegro en el HTML respaldado]'
-    return texto
 
 
 def _folio_clave(folio):
@@ -131,16 +128,37 @@ def export_historias(manifest_path, destination):
         raise ValueError('El destino ya existe; elige otra copia.')
     estado, causas = cargar(manifest_path)
     nombres = {c['clave']: c['causa'].get('tribunal_nombre') or c['causa']['tribunal'] for c in causas}
-    recortes = []
+    divididos = []
     book = Workbook()
     book.remove(book.active)
     hojas = {nombre: book.create_sheet(nombre) for nombre in (*HOJAS, 'Control')}
     for nombre, columnas in HOJAS.items():
         hojas[nombre].append(columnas)
 
+    continuaciones = {}
+
     def agregar(hoja, valores):
-        hoja.append(list(valores))
+        valores = list(valores)
+        extra = {}
+        for indice, valor in enumerate(valores):
+            if not isinstance(valor, str):
+                continue
+            partes = text_parts(valor, LIMITE_TEXTO)
+            valores[indice] = partes[0]
+            if len(partes) > 1:
+                divididos.append(1)
+            for numero, parte in enumerate(partes[1:], 2):
+                clave = (hoja.title, indice, numero)
+                if clave not in continuaciones:
+                    columna = max(len(valores), hoja.max_column) + 1
+                    continuaciones[clave] = columna
+                    encabezado = hoja.cell(1, indice + 1).value
+                    hoja.cell(1, columna, f'{encabezado} (parte {numero})').data_type = 's'
+                extra[continuaciones[clave]] = parte
+        hoja.append(valores)
         numero = hoja.max_row
+        for columna, valor in extra.items():
+            hoja.cell(numero, columna, valor).data_type = 's'
         for columna in range(1, len(valores) + 1):
             celda = hoja.cell(numero, columna)
             if isinstance(celda.value, str):
@@ -160,10 +178,10 @@ def export_historias(manifest_path, destination):
                 causa['rit'],
                 fila['folio'],
                 fila['fecha_texto'],
-                _texto(fila['etapa'], recortes),
-                _texto(fila['tramite'], recortes),
-                _texto(fila['descripcion'], recortes),
-                _texto(fila['referencia'], recortes),
+                literal(fila['etapa']),
+                literal(fila['tramite']),
+                literal(fila['descripcion']),
+                literal(fila['referencia']),
                 _si_no(fila['anexo']),
                 causa['causa_id'],
                 causa['archivo'],
@@ -189,7 +207,7 @@ def export_historias(manifest_path, destination):
                 causa.get('hasta', ''),
                 avisos,
                 *(
-                    _texto(cabecera.get(k, ''), recortes)
+                    literal(cabecera.get(k, ''))
                     for k in (
                         'RIT',
                         'RUC',
@@ -245,7 +263,7 @@ def export_historias(manifest_path, destination):
         ('Hasta', hastas[-1] if hastas else ''),
         ('Causas por estado', '; '.join(f'{k}: {v}' for k, v in sorted(conteo.items())) or 'ninguna'),
         ('Tope alcanzado', _si_no(estado.get('tope_alcanzado'))),
-        ('Textos recortados', len(recortes)),
+        ('Textos divididos en columnas de continuación', len(divididos)),
         *(('Leyenda', texto) for texto in LEYENDAS),
     ]
     agregar(hojas['Control'], ('Campo', 'Valor'))

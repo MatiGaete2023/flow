@@ -3,7 +3,7 @@
 import hashlib
 import json
 import shutil
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -19,6 +19,38 @@ MANIFEST = 'historias.json'
 MAX_HISTORIAS_POR_LOTE = 600
 MAX_BYTES = 8 * 1024 * 1024
 LEIDAS = ('LEIDA', 'VACIA_COMPROBADA')
+
+
+CODIGOS_ERROR = frozenset(
+    {
+        'HISTORY_CONTEXT',
+        'HISTORY_LINK',
+        'HISTORY_IDENTITY',
+        'HISTORY_RESPONSE',
+        'HISTORY_TIMEOUT',
+        'HISTORY_NETWORK',
+        'HISTORIA_IDENTIDAD_VISIBLE',
+        'HISTORIA_TRIBUNAL_VISIBLE',
+        'HISTORIA_RESPUESTA_INCOMPLETA',
+        'HISTORIA_SESION',
+        'HISTORIA_TABLA_NO_RECONOCIDA',
+        'HISTORIA_ENCABEZADO_DISTINTO',
+        'HISTORIA_TABLA_AMBIGUA',
+        'HISTORIA_VACIO_NO_COMPROBADO',
+        'HISTORIA_PAGINACION',
+    }
+)
+
+
+def codigo_error(exc, fallback='HISTORIA_LECTURA_ERROR'):
+    if isinstance(exc, OSError):
+        return 'HISTORIA_PERSISTENCIA'
+    code = getattr(exc, 'code', None)
+    if isinstance(code, str) and code in CODIGOS_ERROR:
+        return code
+    if isinstance(exc, ValueError) and exc.args and isinstance(exc.args[0], str) and exc.args[0] in CODIGOS_ERROR:
+        return exc.args[0]
+    return fallback
 
 
 def _tabla_listado(body, profile):
@@ -43,11 +75,14 @@ class LectorHistoria:
         self.estado = None
         self.carpeta = None
         self.resultado = None
+        self._anteriores = {}
+        self._causas_por_rit = defaultdict(set)
+        self._rits_por_causa = defaultdict(set)
+        self._fallo_persistencia = False
 
     def abrir(self, carpeta_lote):
         self.lote = Path(carpeta_lote)
         self.carpeta = self.lote / 'historia'
-        self.carpeta.mkdir(parents=True, exist_ok=True)
         self.estado = {
             'version': 1,
             'tipo': 'HISTORIA_LECTURA',
@@ -63,6 +98,7 @@ class LectorHistoria:
         info = capabilities()
         self.estado['descargador'] = {'version': info['version'], 'commit': info['commit']}
         self.estado['extension_version'] = VERSION
+        self.carpeta.mkdir(parents=True, exist_ok=True)
         self._cargar_anterior()
         self._persistir()
 
@@ -79,6 +115,8 @@ class LectorHistoria:
                 origen = ruta.parent / str(causa.get('archivo', ''))
                 if (
                     causa.get('estado') in LEIDAS
+                    and origen.name == causa.get('archivo')
+                    and not origen.is_symlink()
                     and origen.is_file()
                     and origen.stat().st_size <= MAX_BYTES
                     and hashlib.sha256(origen.read_bytes()).hexdigest() == causa.get('sha256')
@@ -86,9 +124,9 @@ class LectorHistoria:
                     destino = self.carpeta / origen.name
                     if not destino.exists():
                         shutil.copyfile(origen, destino)
-                    self.estado['causas'][clave] = {**causa, 'reutilizada': True}
+                    self._anteriores[clave] = {**causa, 'reutilizada': True}
         except (OSError, ValueError, KeyError, AttributeError):
-            self.estado['causas'] = {}
+            self._anteriores = {}
 
     def pagina(self, selection, query, number, body, profile):
         """Una llamada por página del listado vigente; un error aquí nunca detiene las bitácoras."""
@@ -99,6 +137,8 @@ class LectorHistoria:
                 self.estado['vinculos'].append(
                     {**fila, 'pestana': selection.tab, 'modalidad': selection.modality, 'clave': clave}
                 )
+                if clave not in self.estado['causas'] and clave in self._anteriores:
+                    self.estado['causas'][clave] = self._anteriores[clave]
                 causa = self.estado['causas'].setdefault(
                     clave,
                     {
@@ -109,25 +149,39 @@ class LectorHistoria:
                         'estado': 'PENDIENTE',
                     },
                 )
-                if m.normalized(causa['rit']) != m.normalized(fila['rit']):
-                    fila['identidad'] = 'INCIERTA'  # la misma causa con otro RIT en otra página
-                if fila.get('identidad', 'VERIFICADA') != 'VERIFICADA':
-                    # E3: el listado asocia un RIT a dos causas (o al revés); no se abre por suposición.
-                    causa.update(
-                        estado='IDENTIDAD_INCIERTA', error='El listado asocia esta causa a más de un RIT o al revés.'
-                    )
+                rit = m.normalized(fila['rit'])
+                rit_key = (selection.tribunal, rit)
+                self._causas_por_rit[rit_key].add(clave)
+                self._rits_por_causa[clave].add(rit)
+                conflicto = (
+                    fila.get('identidad') != 'VERIFICADA'
+                    or len(self._causas_por_rit[rit_key]) > 1
+                    or len(self._rits_por_causa[clave]) > 1
+                    or m.normalized(causa['rit']) != rit
+                )
+                if conflicto:
+                    afectadas = set(self._causas_por_rit[rit_key]) | {clave}
+                    for otra in afectadas:
+                        self.estado['causas'][otra].update(
+                            estado='IDENTIDAD_INCIERTA', error='HISTORIA_IDENTIDAD_INCIERTA'
+                        )
+                    for vinculo in self.estado['vinculos']:
+                        if vinculo['clave'] in afectadas:
+                            vinculo['identidad'] = 'INCIERTA'
                     continue
                 # Una FALLIDA de este lote no se repite al reaparecer en otra página; se reintenta en la
                 # corrida siguiente (`anterior` solo conserva las leídas).
-                if causa['estado'] == 'PENDIENTE' and not self.cancel.is_set():
+                if causa['estado'] == 'PENDIENTE' and not self.cancel.is_set() and not self._fallo_persistencia:
                     self._leer(causa)
         except (m.PocError, ValueError, OSError) as exc:
-            self.estado['errores_listado'].append({'pagina': number, 'error': getattr(exc, 'code', '') or str(exc)})
+            self.estado['errores_listado'].append(
+                {'pagina': number, 'error': codigo_error(exc, 'HISTORIA_LISTADO_ERROR')}
+            )
         self._persistir()
 
     def _leer(self, causa):
         if self.estado['lecturas'] >= MAX_HISTORIAS_POR_LOTE:
-            causa.update(estado='PENDIENTE', error=f'Tope de {MAX_HISTORIAS_POR_LOTE} historias por lote.')
+            causa.update(estado='PENDIENTE', error='HISTORIA_TOPE')
             self.estado['tope_alcanzado'] = True
             return
         self.estado['lecturas'] += 1
@@ -137,12 +191,19 @@ class LectorHistoria:
             data = ChromeTransport.body(result)
             digest = hashlib.sha256(data).hexdigest()
             if len(data) > MAX_BYTES or digest != result.get('digest') or result.get('params') != params:
-                raise m.PocError('La respuesta de historia no coincide con la solicitud.')
+                raise ValueError('HISTORY_RESPONSE')
             leida = datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00')).astimezone()
             lectura = read_historia(data)
             if m.normalized(lectura['encabezado'].get('RIT', '')) != m.normalized(causa['rit']):
                 # E3: la ventana no es la causa pedida; no se guarda como suya.
                 raise ValueError('HISTORIA_IDENTIDAD_VISIBLE')
+            tribunal_visible = lectura['encabezado'].get('Tribunal', '')
+            if (
+                not tribunal_visible
+                or not causa.get('tribunal_nombre')
+                or m.normalized(tribunal_visible) != m.normalized(causa['tribunal_nombre'])
+            ):
+                raise ValueError('HISTORIA_TRIBUNAL_VISIBLE')
             nombre = (
                 'historia-' + hashlib.sha256(json.dumps(params).encode()).hexdigest()[:24] + '-' + digest[:16] + '.html'
             )
@@ -164,12 +225,11 @@ class LectorHistoria:
                 en_ventana=len(dentro) + len(posteriores) + len(sin_fecha),
                 anteriores=len(anteriores),
                 incompletas=sum(a['codigo'] == 'HISTORIA_FILA_INCOMPLETA' for a in lectura['advertencias']),
-                advertencias=[a['codigo'] for a in lectura['advertencias']],
+                advertencias=[a['codigo'] for a in lectura['advertencias']]
+                + (['HISTORIA_FECHA_POSTERIOR'] if posteriores else []),
             )
-        except ValueError as exc:
-            causa.update(estado='FALLIDA', error=str(exc))
-        except (m.PocError, KeyError, OSError) as exc:
-            causa.update(estado='FALLIDA', error=getattr(exc, 'code', '') or str(exc))
+        except (ValueError, m.PocError, KeyError, OSError) as exc:
+            causa.update(estado='FALLIDA', error=codigo_error(exc))
         self.emit('history_progress', {'causa': causa['rit'], 'estado': causa['estado']})
         self.cancel.wait(self.pause)
 
@@ -182,6 +242,7 @@ class LectorHistoria:
         completa = (
             lote_estado == 'COMPLETA'
             and not self.estado['errores_listado']
+            and not self._fallo_persistencia
             and all(c['estado'] in LEIDAS for c in causas)
         )
         self.estado['estado'] = 'CANCELADA' if self.cancel.is_set() else 'COMPLETA' if completa else 'INCOMPLETA'
@@ -208,8 +269,9 @@ class LectorHistoria:
                     'tope_alcanzado': bool(self.estado.get('tope_alcanzado')),
                 },
             )
-        except OSError as exc:
-            self.estado['diagnostico_error'] = str(exc)
+        except OSError:
+            self.estado['diagnostico_error'] = 'HISTORIA_PERSISTENCIA'
+            self.estado['estado'] = 'INCOMPLETA'
         try:
             from nurus.capture.historias import export_historias
 
@@ -218,11 +280,19 @@ class LectorHistoria:
                 destino = self.lote / ('Historia_SITFA_' + uuid4().hex[:8] + '.xlsx')
             resultado['excel'] = str(export_historias(self.carpeta / MANIFEST, destino))
         except (ValueError, OSError) as exc:
-            resultado['excel_error'] = self.estado['excel_error'] = str(exc)
+            resultado['excel_error'] = self.estado['excel_error'] = codigo_error(exc, 'HISTORIA_EXCEL_ERROR')
+            self.estado['estado'] = 'INCOMPLETA'
         self._persistir()
+        resultado['estado'] = self.estado['estado']
         self.resultado = resultado
         self.emit('history_done', resultado)
         return resultado
 
     def _persistir(self):
-        write(self.carpeta / MANIFEST, self.estado)
+        try:
+            write(self.carpeta / MANIFEST, self.estado)
+        except OSError:
+            self._fallo_persistencia = True
+            if self.estado['estado'] != 'EN_CURSO':
+                self.estado['estado'] = 'INCOMPLETA'
+            self.estado['persistencia_error'] = 'HISTORIA_PERSISTENCIA'

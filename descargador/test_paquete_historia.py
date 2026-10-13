@@ -121,3 +121,24 @@ def test_e3_identidad_incierta_viaja_como_incidencia_sin_filas(tmp_path):
     captura = read_capture(ruta)
     assert captura.rows('historia_tramites') == []
     assert {i['code'] for i in captura.rows('incidencias')} >= {'HISTORIA_IDENTIDAD_INCIERTA'}
+
+
+def test_e3_error_enumeracion_degrada_cobertura_con_y_sin_causas(tmp_path):
+    for leida in (True, False):
+        base = tmp_path / str(leida)
+        base.mkdir()
+        ruta = historia(base)
+        datos = json.loads(ruta.read_text())
+        datos['estado'] = 'INCOMPLETA'
+        datos['errores_listado'] = [{'pagina': 2, 'error': 'HISTORIA_LISTADO_ERROR'}]
+        if not leida:
+            datos['causas'] = {}
+            datos['vinculos'] = []
+        ruta.write_text(json.dumps(datos))
+        captura = read_capture(paquete(base, 'incompleta', historia=ruta))
+        assert captura.manifest['table_states']['historia_tramites'] == ('PARCIAL' if leida else 'FALLIDA')
+        assert any(
+            q['query_id'].startswith('hist-listado-') and q['coverage'] == 'FALLIDA'
+            for q in captura.manifest['queries']
+        )
+        assert any(i['code'] == 'HISTORIA_ENUMERACION_FALLIDA' for i in captura.rows('incidencias'))

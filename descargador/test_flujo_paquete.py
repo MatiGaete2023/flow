@@ -229,3 +229,20 @@ def test_error_al_incluir_historia_reintenta_sin_ella(monkeypatch, tmp_path):
     assert Path(result['path']).is_file() and result['partial']
     assert len(read_capture(result['path']).rows('historia_tramites')) == 0
     assert any(name == 'warning' for name, _ in avisos)
+
+
+def test_e3_consulta_nueva_no_reutiliza_historia_de_otro_lote(monkeypatch, tmp_path):
+    import test_lectura_historia as fixtures
+
+    primero = fixtures.FakeBridge()
+    runners_historia(monkeypatch, Event())
+    flujo_paquete.run(primero, {}, lambda *e: None, Event(), Scope(), tmp_path, pause=0, historia=True)
+    assert len(primero.calls) == 1
+    monkeypatch.setattr(fixtures, 'LISTADO', fixtures.LISTADO.replace(b',100)', b',101)'))
+    segundo = fixtures.FakeBridge()
+    runners_historia(monkeypatch, Event())
+    result = flujo_paquete.run(segundo, {}, lambda *e: None, Event(), Scope(), tmp_path, pause=0, historia=True)
+    assert len(segundo.calls) == 1 and segundo.calls[0]['causa'] == '101'
+    manifest = Path(result['historia']['manifiesto'])
+    assert set(json.loads(manifest.read_text())['causas']) == {'RUS|49|101'}
+    assert {f['cause_id'] for f in read_capture(result['path']).rows('historia_tramites')} == {'101'}
