@@ -24,6 +24,16 @@ Entorno: `.venv` (ver guía paso 0); `tools/ci_local.sh <pruebas>` antes de cada
 - 53.6: `original_file` de las filas es `respaldo/<lote>/historia/<archivo>` (ruta real; la guía decía `respaldo/historia/`).
 - WP-54: casillas se deshabilitan según `capabilities` de la extensión (evento `extension_caps`, emitido tras `catalog`). Resuelto el desvío anterior.
 
+## E3 (13 de octubre)
+- Primera E3 (sobre `b44442a`: lector, vínculo, extractor, guía) → CAMBIOS; corregidos en `5af87f9`: respuesta sin
+  `</html>` = `HISTORIA_RESPUESTA_INCOMPLETA`; encabezado repetido; `extract_historia` con `identidad`
+  (VERIFICADA/INCIERTA) e ingreso solo del mismo tribunal; extractor H0 endurecido; se revirtió el cambio de
+  condición de `ci-rapida.yml`.
+- Integrado con WP-53/WP-54 (merge, sin conflictos) y aplicado a su código: `LectorHistoria` no abre causas
+  `INCIERTA` (estado `IDENTIDAD_INCIERTA`), coteja el RIT visible (`HISTORIA_IDENTIDAD_VISIBLE`, sin guardar
+  archivo) y no repite una FALLIDA dentro del mismo lote; el paquete lleva `IDENTIDAD_INCIERTA` con incidencia.
+- Segunda E3 sobre el diff completo de la rama: en curso.
+
 ## Pendiente (en orden)
 0. Autorrevisión adversarial hecha (13-oct): sin `.Send(`/cookies/almacenes en el diff; corregida la ruta de procedencia. No sustituye la E3.
 1. **E3** de WP-53 por otra sesión/persona (guía §12; foco del diff `git diff feat/ejecucion-plan-20261008...HEAD`). Si APROBADA: poner `revision: APROBADO` en `estado/WP-53.json`, estado `INTEGRADO` solo cuando el usuario integre.

@@ -98,3 +98,26 @@ def test_asistente_produce_el_mismo_trabajo_con_y_sin_historia(tmp_path):
     assert [(r.observation, r.review, r.decisions) for r in con.rows] == [
         (r.observation, r.review, r.decisions) for r in sin.rows
     ]
+
+
+def test_e3_identidad_incierta_viaja_como_incidencia_sin_filas(tmp_path):
+    fila = LISTADO.decode().split('<tr><td><a href="#" onclick="ShowHistoria')[1].split('</tr>')[0]
+    cuerpo = LISTADO.replace(
+        b'</table></form>',
+        (
+            '<tr><td><a href="#" onclick="ShowHistoria' + fila.replace(',100)', ',101)') + '</tr></table></form>'
+        ).encode(),
+    )
+    carpeta = tmp_path / 'lote-historia'
+    carpeta.mkdir()
+    bridge = FakeBridge()
+    lector = LectorHistoria(bridge, lambda *a: None, threading.Event(), pause=0)
+    lector.abrir(carpeta)
+    lector.pagina(SELECCION, QUERY, 1, cuerpo, PERFIL)
+    lector.cerrar()
+    assert bridge.calls == []
+    ruta = paquete(tmp_path, 'incierta', historia=carpeta / 'historia' / 'historias.json')
+    validar(ruta)
+    captura = read_capture(ruta)
+    assert captura.rows('historia_tramites') == []
+    assert {i['code'] for i in captura.rows('incidencias')} >= {'HISTORIA_IDENTIDAD_INCIERTA'}

@@ -109,7 +109,17 @@ class LectorHistoria:
                         'estado': 'PENDIENTE',
                     },
                 )
-                if causa['estado'] in ('PENDIENTE', 'FALLIDA') and not self.cancel.is_set():
+                if m.normalized(causa['rit']) != m.normalized(fila['rit']):
+                    fila['identidad'] = 'INCIERTA'  # la misma causa con otro RIT en otra página
+                if fila.get('identidad', 'VERIFICADA') != 'VERIFICADA':
+                    # E3: el listado asocia un RIT a dos causas (o al revés); no se abre por suposición.
+                    causa.update(
+                        estado='IDENTIDAD_INCIERTA', error='El listado asocia esta causa a más de un RIT o al revés.'
+                    )
+                    continue
+                # Una FALLIDA de este lote no se repite al reaparecer en otra página; se reintenta en la
+                # corrida siguiente (`anterior` solo conserva las leídas).
+                if causa['estado'] == 'PENDIENTE' and not self.cancel.is_set():
                     self._leer(causa)
         except (m.PocError, ValueError, OSError) as exc:
             self.estado['errores_listado'].append({'pagina': number, 'error': getattr(exc, 'code', '') or str(exc)})
@@ -130,6 +140,9 @@ class LectorHistoria:
                 raise m.PocError('La respuesta de historia no coincide con la solicitud.')
             leida = datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00')).astimezone()
             lectura = read_historia(data)
+            if m.normalized(lectura['encabezado'].get('RIT', '')) != m.normalized(causa['rit']):
+                # E3: la ventana no es la causa pedida; no se guarda como suya.
+                raise ValueError('HISTORIA_IDENTIDAD_VISIBLE')
             nombre = (
                 'historia-' + hashlib.sha256(json.dumps(params).encode()).hexdigest()[:24] + '-' + digest[:16] + '.html'
             )

@@ -192,7 +192,9 @@ class BridgeConHistoria(BridgeBitacoras):
     def call(self, command, payload=None, timeout=75):
         if command == 'history_open':
             self.events.append((command, None))
-            return FakeBridge().call(command, payload)
+            # La ventana ficticia muestra el mismo RIT pedido (el lector coteja el RIT visible).
+            rit = payload['params']['rit'].encode()
+            return FakeBridge(respuesta=VENTANA.replace(b'C-99999-2099</div>', rit + b'</div>')).call(command, payload)
         return super().call(command, payload, timeout)
 
 
@@ -225,3 +227,33 @@ def test_bitacoras_identicas_con_y_sin_historia_y_excel(tmp_path):
     ).is_file()
     assert (carpeta / 'Historia_SITFA.xlsx').is_file() and 'excel_error' not in estado_historia(carpeta)
     assert not (Path(sin['folder']) / 'historia').exists()
+
+
+def test_e3_rit_visible_distinto_falla_sin_guardar(tmp_path):
+    bridge = FakeBridge(respuesta=VENTANA.replace(b'C-99999-2099</div>', b'C-11111-2099</div>'))
+    item = lector(tmp_path, bridge)
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    (causa,) = estado(item)['causas'].values()
+    assert causa['estado'] == 'FALLIDA' and causa['error'] == 'HISTORIA_IDENTIDAD_VISIBLE'
+    assert not list(item.carpeta.glob('historia-*.html'))
+
+
+def test_e3_respuesta_cortada_falla(tmp_path):
+    item = lector(tmp_path, FakeBridge(respuesta=VENTANA.split(b'</tbody>')[0]))
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    (causa,) = estado(item)['causas'].values()
+    assert causa['estado'] == 'FALLIDA' and causa['error'] == 'HISTORIA_RESPUESTA_INCOMPLETA'
+
+
+def test_e3_rit_con_dos_causas_no_se_abre(tmp_path):
+    parser()
+    fila = LISTADO.decode().split('<tr><td><a href="#" onclick="ShowHistoria')[1].split('</tr>')[0]
+    otra = fila.replace(',100)', ',101)')
+    cuerpo = LISTADO.replace(
+        b'</table></form>', ('<tr><td><a href="#" onclick="ShowHistoria' + otra + '</tr></table></form>').encode()
+    )
+    bridge = FakeBridge()
+    item = lector(tmp_path, bridge)
+    item.pagina(SELECCION, QUERY, 1, cuerpo, PERFIL)
+    assert bridge.calls == []
+    assert {c['estado'] for c in estado(item)['causas'].values()} == {'IDENTIDAD_INCIERTA'}

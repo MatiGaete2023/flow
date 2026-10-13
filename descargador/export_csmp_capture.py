@@ -335,6 +335,7 @@ HISTORIA_COBERTURA = {
     'LEIDA': 'COMPLETA',
     'VACIA_COMPROBADA': 'VACIA_COMPROBADA',
     'FALLIDA': 'FALLIDA',
+    'IDENTIDAD_INCIERTA': 'IDENTIDAD_INCIERTA',
     'PENDIENTE': 'CANCELADA',
     'CANCELADA': 'CANCELADA',
 }
@@ -380,6 +381,8 @@ def _historia(manifest, data, query, incident, cid, captured):
         )
         if cobertura == 'FALLIDA':
             incident(qid, 'HISTORIA_FALLIDA', causa.get('error') or 'No se pudo leer la historia.')
+        elif cobertura == 'IDENTIDAD_INCIERTA':
+            incident(qid, 'HISTORIA_IDENTIDAD_INCIERTA', causa.get('error') or 'Identidad de la causa no verificable.')
         elif cobertura == 'CANCELADA':
             incident(qid, 'HISTORIA_NO_LEIDA', 'La historia no se leyó (lote cancelado o con tope).')
         for codigo in causa.get('advertencias', []):
