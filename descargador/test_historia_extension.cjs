@@ -32,11 +32,16 @@ async function main(){
   const dump=JSON.stringify(ok);for(const v of Object.values(CIFRADO))assert.ok(!dump.includes(v));
   // identidad / enlace: error y ningún fetch
   const casos=[[{rit:'X-2-2026'},'HISTORY_LINK'],[{causa:'101'},'HISTORY_LINK'],[{tribunal:'113'},'HISTORY_IDENTITY'],
-    [{extra:'1'},'HISTORY_IDENTITY'],[{rit:'x-1-2026'},'HISTORY_IDENTITY'],[{rit:'X-1-26'},'HISTORY_IDENTITY']];
+    [{extra:'1'},'HISTORY_IDENTITY'],[{rit:'x-1-2026'},'HISTORY_LINK'],[{rit:'X-1-26'},'HISTORY_IDENTITY']];
   for(const [cambio,codigo] of casos){
     calls=[];const out=await context.sitfaTask('history_open',{params:{...params,...cambio}});
     assert.equal(out.__sitfaError,codigo,JSON.stringify(cambio));assert.equal(calls.length,0);
   }
+  // E3 menor 7: el RIT se compara tal como lo trae el enlace, también en minúsculas
+  elements=[link("ShowHistoria(49,'x-1-2026',100)")];calls=[];
+  const minus=await context.sitfaTask('history_open',{params:{...params,rit:'x-1-2026'}});
+  assert.equal(minus.status,200);assert.equal(calls.length,2);assert.ok(calls[0].url.includes('TIP_Causa=x&'));
+  elements=[link("ShowHistoria(49,'X-1-2026',100)")];
   elements=[];calls=[];
   assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_LINK');assert.equal(calls.length,0);
   elements=[link("ShowHistoria(49,'X-1-2026',100)")];
@@ -62,7 +67,7 @@ async function main(){
                      '<html><input value="&#65;&#65;&#65;%2BBBB"></html>']) {
     step2={body,type:'text/html'};
     const out=await context.sitfaTask('history_open',{params});
-    assert.equal(out.__sitfaError,'HISTORY_RESPONSE');assert.equal(out.body,undefined);
+    assert.equal(out.__sitfaError,'HISTORY_REFLECTED');assert.equal(out.body,undefined);
   }
   step2={body:'contenido ficticio',type:'application/json'};
   assert.equal((await context.sitfaTask('history_open',{params})).__sitfaError,'HISTORY_RESPONSE');

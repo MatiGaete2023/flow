@@ -195,7 +195,9 @@ def extract_historia(table, tribunal_code):
         if court != tribunal_code or m.normalized(linked_rit) != rit or not re.fullmatch(r'\d{1,20}', cause):
             continue
         entry = {k: values[i] for k, i in headers.items()}
-        entry.update(tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='', identidad='VERIFICADA')
+        entry.update(
+            tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='', identidad='VERIFICADA', rit_enlace=linked_rit
+        )
         observation = calls(text, 'ShowObservaciones')
         if (
             len(observation) == 1

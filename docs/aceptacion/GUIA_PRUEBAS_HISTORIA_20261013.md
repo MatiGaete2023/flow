@@ -30,3 +30,14 @@ Acta `docs/aceptacion/ACTA_HISTORIA_<fecha>.json`:
  "conteos": {"LEIDA": 0, "FALLIDA": 0, "PENDIENTE": 0, "tramites_en_ventana": 0},
  "observaciones": "", "firmado_por": "", "decision": ""}
 ```
+
+
+## Riesgos que solo se confirman con SITFA real (E3, 13-oct)
+
+Si al probar aparece alguno de estos códigos en la columna «Advertencias / error» de la hoja Causas, anótalo (sin pegar datos) y avisa; no se corrige a ciegas.
+
+| Código | Qué significa | Qué hacer |
+|---|---|---|
+| `HISTORY_REFLECTED` | La ventana real repite los valores cifrados (`a1`…`e5`), por ejemplo en campos ocultos para cambiar de pestaña. La extensión descarta la ventana para no exponerlos. | Si ocurre en todas las causas: informar. Se evaluará enmascarar esos valores en vez de rechazar. |
+| `HISTORIA_TRIBUNAL_VISIBLE` | El nombre del tribunal en la ventana no coincide con el del menú (p. ej. «de» de más o de menos). | Si ocurre en todas las causas: informar ambos nombres tal como se ven (solo el nombre del tribunal). Se evaluará una comparación más tolerante. |
+| `HISTORIA_POSIBLE_PAGINACION` | La ventana trae indicios de paginación (clase, campo de página o enlace «Siguiente»). La lectura sigue como LEIDA pero puede estar incompleta. | Comparar el total de trámites con SITFA en esa causa (H-06) y avisar. |

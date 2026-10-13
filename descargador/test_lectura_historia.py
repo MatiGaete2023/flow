@@ -274,6 +274,7 @@ def test_e3_conflicto_de_identidad_entre_paginas_invalida_ambas(tmp_path, cambio
     assert len(item.bridge.calls) == 1
     assert {c['estado'] for c in estado(item)['causas'].values()} == {'IDENTIDAD_INCIERTA'}
     assert all(v['identidad'] == 'INCIERTA' for v in estado(item)['vinculos'])
+    assert all('en_ventana' not in c and 'anteriores' not in c for c in estado(item)['causas'].values())
     assert item.cerrar()['estado'] == 'INCOMPLETA'
 
 
@@ -345,3 +346,38 @@ def test_e3_fecha_posterior_tiene_advertencia(tmp_path):
     item = lector(tmp_path, FakeBridge(VENTANA.replace(b'13/10/2099</td>', b'14/10/2099</td>')))
     item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
     assert 'HISTORIA_FECHA_POSTERIOR' in next(iter(estado(item)['causas'].values()))['advertencias']
+
+
+def test_e3_rit_del_enlace_distinto_en_mayusculas_se_envia_tal_cual(tmp_path):
+    cuerpo = LISTADO.replace(b"ShowHistoria(49,'C-99999-2099',100)", b"ShowHistoria(49,'c-99999-2099',100)")
+    bridge = FakeBridge()
+    item = lector(tmp_path, bridge)
+    item.pagina(SELECCION, QUERY, 1, cuerpo, PERFIL)
+    assert bridge.calls == [{'tribunal': '49', 'rit': 'c-99999-2099', 'causa': '100'}]
+    assert next(iter(estado(item)['causas'].values()))['estado'] == 'LEIDA'
+
+
+def test_e3_posible_paginacion_queda_como_advertencia_visible(tmp_path):
+    paginada = VENTANA.replace(b'</body>', b'<ul class="pagination"><li>2</li></ul></body>')
+    item = lector(tmp_path, FakeBridge(paginada))
+    item.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    (causa,) = estado(item)['causas'].values()
+    assert causa['estado'] == 'LEIDA' and 'HISTORIA_POSIBLE_PAGINACION' in causa['advertencias']
+
+
+def test_e3_error_inesperado_en_el_lote_igual_genera_excel_y_diagnostico(tmp_path):
+    puente = BridgeConHistoria()
+    lector_ = LectorHistoria(puente, lambda *a: None, threading.Event(), pause=0)
+
+    class Falla(DiaryRunner):
+        def leer_bitacora(self, *args, **kwargs):
+            raise RuntimeError('inesperado ficticio')
+
+    with pytest.raises(RuntimeError):
+        Falla(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, historia=lector_).run(
+            Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+        )
+    (lote,) = tmp_path.glob('Bitacoras *')
+    assert (lote / 'Historia_SITFA.xlsx').is_file() and (lote / 'historia' / 'diagnostico_historia.json').is_file()
+    assert json.loads((lote / 'historia' / 'historias.json').read_text(encoding='utf-8'))['estado'] == 'INCOMPLETA'
+    assert json.loads((lote / 'bitacoras.json').read_text(encoding='utf-8'))['estado'] != 'EN_CURSO'

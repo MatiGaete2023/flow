@@ -27,6 +27,7 @@ CODIGOS_ERROR = frozenset(
         'HISTORY_LINK',
         'HISTORY_IDENTITY',
         'HISTORY_RESPONSE',
+        'HISTORY_REFLECTED',
         'HISTORY_TIMEOUT',
         'HISTORY_NETWORK',
         'HISTORIA_IDENTIDAD_VISIBLE',
@@ -145,6 +146,7 @@ class LectorHistoria:
                         'tribunal': selection.tribunal,
                         'tribunal_nombre': query.get('tribunal_nombre', ''),
                         'rit': fila['rit'],
+                        'rit_enlace': fila.get('rit_enlace', fila['rit']),
                         'causa_id': fila['causa_id'],
                         'estado': 'PENDIENTE',
                     },
@@ -162,9 +164,10 @@ class LectorHistoria:
                 if conflicto:
                     afectadas = set(self._causas_por_rit[rit_key]) | {clave}
                     for otra in afectadas:
-                        self.estado['causas'][otra].update(
-                            estado='IDENTIDAD_INCIERTA', error='HISTORIA_IDENTIDAD_INCIERTA'
-                        )
+                        incierta = self.estado['causas'][otra]
+                        for campo in ('en_ventana', 'anteriores', 'incompletas', 'advertencias', 'desde', 'hasta'):
+                            incierta.pop(campo, None)
+                        incierta.update(estado='IDENTIDAD_INCIERTA', error='HISTORIA_IDENTIDAD_INCIERTA')
                     for vinculo in self.estado['vinculos']:
                         if vinculo['clave'] in afectadas:
                             vinculo['identidad'] = 'INCIERTA'
@@ -185,7 +188,11 @@ class LectorHistoria:
             self.estado['tope_alcanzado'] = True
             return
         self.estado['lecturas'] += 1
-        params = {'tribunal': causa['tribunal'], 'rit': causa['rit'], 'causa': causa['causa_id']}
+        params = {
+            'tribunal': causa['tribunal'],
+            'rit': causa.get('rit_enlace') or causa['rit'],
+            'causa': causa['causa_id'],
+        }
         try:
             result = self.bridge.call('history_open', {'params': params, 'timeout': 60000})
             data = ChromeTransport.body(result)

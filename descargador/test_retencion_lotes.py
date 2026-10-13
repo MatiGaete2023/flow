@@ -294,3 +294,14 @@ def test_e3_borrado_revalida_enlace_insertado_despues_de_enumerar(tmp_path, monk
     with pytest.raises(PocError):
         manage_old_batches(tmp_path, [old], confirmed=True)
     assert old.exists()
+
+
+def test_conservar_protege_excel_y_diagnostico_de_historia(tmp_path):
+    antiguo = _lote_solo_historia(tmp_path, 'antiguo', 70)
+    (antiguo / 'historia' / 'diagnostico_historia.json').write_text('{}')
+    (antiguo / 'historia' / 'historias.json').write_text('{}')
+    age = time.time() - 70 * 86400
+    os.utime(antiguo / 'historia' / 'historias.json', (age, age))
+    (antiguo / 'historia' / 'historia-x.html').write_bytes(b'ficticio')
+    manage_old_batches(tmp_path, [antiguo], confirmed=True, preserve=True)
+    assert {p.name for p in antiguo.iterdir()} == {'Historia_SITFA.xlsx', 'diagnostico_historia.json'}

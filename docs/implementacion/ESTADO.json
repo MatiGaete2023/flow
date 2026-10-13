@@ -1665,14 +1665,15 @@
       "rama": "feat/historia-causa-sitfa",
       "pr": 45,
       "verificacion": "PASA Linux sobre 2af78a5: verificar_wp, 960 Asistente + 338 Descargador + 62 subpruebas; 11 omitidas y 6 xfail conocidos; CI local focal y ambas pruebas cjs PASA. Evidencia: docs/implementacion/verificacion/WP-53.json",
-      "revision": "CAMBIOS sobre 9310d60; correctivos aplicados, nueva revisión E3 pendiente",
+      "revision": "APROBADO",
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Guía vigente: docs/historia_causa/GUIA_IMPLEMENTACION.md; traspaso en docs/historia_causa/AVANCE.md.",
         "Aplicadas las diez correcciones E3 con regresiones sintéticas, sin cambios en motor, textos tradicionales ni Outlook.",
         "Medición final sobre commit limpio 2af78a5: PASA, cero fallos. Fallos iniciales de entorno corregidos con LOCALAPPDATA escribible y Xvfb.",
-        "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno."
+        "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno.",
+        "E3 APROBADA (13-oct, sobre ea3005e). Riesgos mayores 1-2 y workflow Windows (menor 9) pendientes; ver AVANCE.md."
       ]
     },
     "WP-54": {

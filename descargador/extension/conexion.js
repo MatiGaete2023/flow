@@ -14,6 +14,7 @@ const messages={
   HISTORY_NETWORK:"Falló el contacto con SITFA al abrir la historia. Comprueba la sesión.",
   HISTORY_TIMEOUT:"SITFA no respondió a tiempo al abrir la historia.",
   HISTORY_RESPONSE:"SITFA no entregó una historia válida. Revisa la sesión.",
+  HISTORY_REFLECTED:"La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.",
   CONNECTION_CODE:"El descargador rechazó el código. Copia el código actual de la ventana que está abierta; cambia al reiniciar o desconectar.",
   EXTENSION_ORIGIN:"El descargador rechazó el origen de la extensión. Actualiza el descargador y recarga la extensión en chrome://extensions.",
   EXTENSION_CHANGED:"Este descargador está vinculado a otra copia de la extensión. Pulsa Desconectar en el descargador y usa el nuevo código.",

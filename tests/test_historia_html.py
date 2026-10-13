@@ -111,3 +111,21 @@ def test_encabezado_repetido_no_se_lee_como_tramite():
     resultado = read_historia(html.replace('<tbody>', '<tbody>' + encabezado, 1))
     assert [f['folio'] for f in resultado['filas']] == ['9120', '9119', '9117']
     assert resultado['advertencias'][0]['codigo'] == 'HISTORIA_ENCABEZADO_REPETIDO'
+
+
+@pytest.mark.parametrize(
+    'marca',
+    [
+        '<ul class="pagination"><li>2</li></ul>',
+        '<input type="hidden" name="nroPagina" value="1">',
+        '<a href="#" onclick="x()">Siguiente</a>',
+    ],
+)
+def test_posible_paginacion_se_advierte_y_la_muestra_sin_paginacion_no(marca):
+    assert all(
+        a['codigo'] != 'HISTORIA_POSIBLE_PAGINACION' for a in read_historia(base().encode('cp1252'))['advertencias']
+    )
+    paginada = base().replace('</body>', marca + '</body>')
+    codigos = [a['codigo'] for a in read_historia(paginada.encode('cp1252'))['advertencias']]
+    assert 'HISTORIA_POSIBLE_PAGINACION' in codigos
+    assert 'Siguiente' not in base()

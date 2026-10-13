@@ -34,6 +34,7 @@ INCOMPLETA = 'HISTORIA_RESPUESTA_INCOMPLETA'
 FECHA_ILEGIBLE = 'HISTORIA_FECHA_ILEGIBLE'
 FILA_INCOMPLETA = 'HISTORIA_FILA_INCOMPLETA'
 ENCABEZADO_REPETIDO = 'HISTORIA_ENCABEZADO_REPETIDO'
+POSIBLE_PAGINACION = 'HISTORIA_POSIBLE_PAGINACION'
 MENSAJES = {
     TABLA_NO_RECONOCIDA: 'La respuesta no contiene la tabla de historia; puede ser otra página o un cambio de SITFA.',
     ENCABEZADO_DISTINTO: 'Cambió la estructura de la tabla de historia; no se leyó para no perder trámites.',
@@ -74,6 +75,22 @@ def _cabecera(documento):
         'reservada' in normalize(t) for t in documento.xpath('//*[contains(@class,"panel-heading")]//text()')
     )
     return datos, reservada
+
+
+def _hay_paginacion(documento):
+    """Indicios visibles de paginación fuera de scripts: clases típicas, campos de página o enlaces Siguiente."""
+    clases = 'pagination|paginacion|paginador|pager'
+    if documento.xpath(
+        '//*[not(ancestor::script)][@class]['
+        + ' or '.join(f'contains(concat(" ",@class," ")," {c} ")' for c in clases.split('|'))
+        + ']'
+    ):
+        return True
+    if documento.xpath(
+        '//input[@name and (contains(@name,"pagina") or contains(@name,"nroPag") or contains(@name,"numPag"))]'
+    ):
+        return True
+    return bool(documento.xpath('//a[translate(normalize-space(.),"SIGUENT","siguent")="siguiente"]'))
 
 
 def read_historia(data, *, source='', captured_at=''):
@@ -129,6 +146,9 @@ def read_historia(data, *, source='', captured_at=''):
                 'anexo': bool(celdas[3].xpath('.//img')),
             }
         )
+    if _hay_paginacion(documento):
+        # La única muestra (H0) no estaba paginada; si SITFA paginara, la primera página no es la historia completa.
+        advertencias.append({'codigo': POSIBLE_PAGINACION, 'fila': 0, 'folio': ''})
     encabezado, reservada = _cabecera(documento)
     return {
         'encabezado': encabezado,

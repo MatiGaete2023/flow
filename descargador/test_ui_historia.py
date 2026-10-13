@@ -69,7 +69,7 @@ def test_e3_worker_solo_reintenta_historia_del_lote_elegido(tmp_path, monkeypatc
             pass
 
     monkeypatch.setattr(lectura_bitacoras, 'DiaryRunner', Runner)
-    for resume in (None, tmp_path):
+    for resume, leer in ((None, True), (tmp_path, True), (tmp_path, False)):
         commands = Queue()
         commands.put(('diary', ('lote ficticio', tmp_path, resume)))
         commands.put(('exit', None))
@@ -80,10 +80,12 @@ def test_e3_worker_solo_reintenta_historia_del_lote_elegido(tmp_path, monkeypatc
             catalog={},
             emit=lambda *e: eventos.append(e),
             cancel=Event(),
-            prefs=SimpleNamespace(data={'pausa_consultas': 0, 'reutilizar_bitacoras': True}),
+            prefs=SimpleNamespace(data={'pausa_consultas': 0, 'reutilizar_bitacoras': True, 'leer_historia': leer}),
         )
         Application.worker(app)
         assert not any(e[0] == 'error' for e in eventos)
     assert 'historia' not in recibidas[0]
     assert recibidas[1]['historia'].anterior == control
     assert recibidas[1]['reuse_base'] is None
+    # §3.11: con «Leer historia» desmarcada el reintento no abre historias aunque exista un control previo.
+    assert 'historia' not in recibidas[2]

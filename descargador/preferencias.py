@@ -135,7 +135,30 @@ def pending_plan(folder):
 
 
 RETENCION_DIAS = 60
-PRESERVABLES = frozenset({'Bitacoras_RUS.xlsx', 'diagnostico_bitacoras.json'})
+PRESERVABLES = frozenset({'Bitacoras_RUS.xlsx', 'diagnostico_bitacoras.json', 'diagnostico_historia.json'})
+
+
+def _es_preservable(child):
+    nombre = child.name
+    return nombre in PRESERVABLES or (nombre.startswith('Historia_SITFA') and nombre.endswith('.xlsx'))
+
+
+def _subir_historia(path):
+    """Antes de «conservar»: lleva el Excel y el diagnóstico de historia a la raíz del lote o paquete."""
+    import shutil
+
+    respaldo = path / 'respaldo'
+    carpetas = [path]
+    if respaldo.is_dir() and not respaldo.is_symlink():
+        carpetas += [c for c in respaldo.iterdir() if c.is_dir() and not c.is_symlink()]
+    for carpeta in carpetas:
+        candidatos = list(carpeta.glob('Historia_SITFA*.xlsx')) + [carpeta / 'historia' / 'diagnostico_historia.json']
+        for origen in candidatos:
+            if not origen.is_file() or origen.is_symlink():
+                continue
+            destino = path / origen.name
+            if origen != destino and not destino.exists():
+                shutil.move(str(origen), str(destino))
 
 
 def onedrive_warning(path):
@@ -267,8 +290,9 @@ def manage_old_batches(
             shutil.move(str(path), str(target / path.name))
         elif preserve:
             package = bool(_package_controls(path))
+            _subir_historia(path)
             for child in path.iterdir():
-                if child.name in PRESERVABLES and child.is_file() and not child.is_symlink():
+                if _es_preservable(child) and child.is_file() and not child.is_symlink():
                     continue
                 if package and child.suffix.lower() == '.zip' and child.is_file() and not child.is_symlink():
                     continue  # E3 WP-94 C2: en un paquete, las bitácoras viven en el ZIP; «conservar» lo conserva

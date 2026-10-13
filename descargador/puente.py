@@ -224,6 +224,7 @@ class Bridge:
                     'HISTORY_NETWORK': 'Falló el contacto con SITFA al abrir la historia. Comprueba la sesión.',
                     'HISTORY_TIMEOUT': 'SITFA no respondió a tiempo al abrir la historia.',
                     'HISTORY_RESPONSE': 'SITFA no entregó una historia válida. Revisa la sesión.',
+                    'HISTORY_REFLECTED': 'La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.',
                     'FOLLOWUP_REQUIRED': 'El enlace con Chrome funciona, pero no se encuentra Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y vuelve a Cargar opciones.',
                     'SITE_ACCESS': 'Chrome no permite acceder a la pestaña SITFA. Revisa que siga abierta y que la extensión tenga acceso a familia.pjud.cl; abre de nuevo la conexión desde esa pestaña.',
                     'MULTIPLE_FORMS': 'Hay más de un formulario de Seguimiento en esa pestaña. Abre la conexión desde una pestaña con un solo formulario.',

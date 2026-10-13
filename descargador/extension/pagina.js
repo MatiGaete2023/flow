@@ -443,7 +443,7 @@ async function sitfaTask(command, payload) {
     if(screen!=="seguimiento"||!run?.diaryDocument||!p||typeof p!=="object")throw new Error("HISTORY_CONTEXT");
     diaryPhase='IDENTIDAD';
     if(Object.keys(p).length!==3||!["tribunal","rit","causa"].every(k=>typeof p[k]==="string")||
-       !/^\d{1,4}$/.test(p.tribunal)||!/^[A-Z]{1,3}-\d{1,7}-\d{4}$/.test(p.rit)||!/^\d{1,20}$/.test(p.causa))
+       !/^\d{1,4}$/.test(p.tribunal)||!/^[A-Za-z]{1,3}-\d{1,7}-\d{4}$/.test(p.rit)||!/^\d{1,20}$/.test(p.causa))
       throw new Error("HISTORY_IDENTITY");
     const selected=new Map(run.diaryPairs);
     if(p.tribunal!==selected.get("COD_Tribunal_sel"))throw new Error("HISTORY_IDENTITY");
@@ -516,7 +516,7 @@ async function sitfaTask(command, payload) {
     for(const value of [...views]){try{views.push(decodeURIComponent(value));}catch(_){}}
     for(const token of encryptedValues) {
       const variants=[token];try{variants.push(decodeURIComponent(token));}catch(_){}
-      if(views.some(view=>variants.some(value=>view.includes(value))))throw new Error("HISTORY_RESPONSE");
+      if(views.some(view=>variants.some(value=>view.includes(value))))throw new Error("HISTORY_REFLECTED");
     }
   }
   const chunks=[];
@@ -540,7 +540,7 @@ async function sitfaTask(command, payload) {
       return {__sitfaError:code};
     }
     if(command==='history_open') {
-      const explicit=['HISTORY_CONTEXT','HISTORY_LINK','HISTORY_IDENTITY','HISTORY_RESPONSE'].includes(error?.message)?error.message:null;
+      const explicit=['HISTORY_CONTEXT','HISTORY_LINK','HISTORY_IDENTITY','HISTORY_RESPONSE','HISTORY_REFLECTED'].includes(error?.message)?error.message:null;
       return {__sitfaError: explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'HISTORY_TIMEOUT':'HISTORY_NETWORK'):
         diaryPhase==='IDENTIDAD'?'HISTORY_IDENTITY':'HISTORY_RESPONSE')};
     }

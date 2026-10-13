@@ -1209,7 +1209,7 @@ class Application:
                     batch, destination, resume = arg
                     reuse_base = destination if self.prefs.data['reutilizar_bitacoras'] and not resume else None
                     historia = None
-                    if resume:
+                    if resume and self.prefs.data['leer_historia']:
                         anterior = Path(resume) / 'historia' / 'historias.json'
                         if anterior.is_file():
                             from lectura_historia import LectorHistoria
