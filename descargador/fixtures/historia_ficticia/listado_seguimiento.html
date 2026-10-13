@@ -1,0 +1,20 @@
+<html><head><meta charset="utf-8"><title>Seguimiento</title>
+<script>
+var personaCanario = 'NOMBRECANARIO APELLIDOCANARIO';
+function cifrarCanario(texto){ return texto; }
+function ShowHistoria(tribunal, rit, causa){
+  // Supuesto de prueba: la URL real se confirma en H0.
+  var url = '/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=' + escape(cifrarCanario(tribunal + '|' + rit + '|' + causa));
+  window.open(url, 'historia', 'width=1000,height=700');
+}
+function ShowObservaciones(causa, tribunal, ingreso, tipo, etapa, antiguo){
+  window.open('/SITFAWEB/IrPopUpInformesAccion.do?tipo_popUp=' + tipo + '&CRR_IdCausa=' + causa, 'obs');
+}
+</script></head><body>
+<form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do" method="post">
+<input type="hidden" name="COD_Lengueta" value="tdCumplimiento"><input type="hidden" name="COD_Tribunal_sel" value="49">
+<table id="tablaCumplimiento">
+<tr><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivaci&oacute;n</td><td>Obs.</td></tr>
+<tr><td><a onclick="ShowHistoria('49','C-99999-2099','100')">C-99999-2099</a></td><td>11.111.111-1</td><td>NOMBRECANARIO APELLIDOCANARIO</td><td>Centro Canario de Prueba</td>
+<td><a onclick="ShowObservaciones('100','49','201','12','3','0')">Obs.</a></td></tr>
+</table></form></body></html>
