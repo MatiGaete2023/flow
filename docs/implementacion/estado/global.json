@@ -288,7 +288,7 @@
       "respuesta": "consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca",
       "ramas": 60,
       "commit": "f073e22",
-      "alcance": "wp/93-ef04 integrada; e3/wp-94 y e3/wp-92-93 unidas sin contenido (superadas); las 56 ramas auxiliares quedan contenidas en feat. Su retiro del remoto espera autorización; main intacta."
+      "alcance": "wp/93-ef04 integrada; e3/wp-94 y e3/wp-92-93 unidas sin contenido (superadas). Las 56 ramas auxiliares, todas contenidas en feat, fueron retiradas del remoto por el usuario; quedan feat y main (intacta)."
     }
   ],
   "bloqueos_externos": {

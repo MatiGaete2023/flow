@@ -16,8 +16,8 @@
 <!-- estado:fin -->
 
 **Una sola rama de trabajo: `feat/ejecucion-plan-20261008`.** Todo el código y la documentación están aquí; `main`
-no se toca sin acta del usuario. Las 56 ramas auxiliares ya están contenidas en feat y quedan solo como respaldo histórico; su
-retiro del remoto espera autorización del usuario. No trabajar en ellas. Trabajar con commits directos en feat; ramas `wp/NN` solo si hace falta revisión E3 (decisión j).
+no se toca sin acta del usuario. El 13-oct el usuario retiró del remoto las 56 ramas auxiliares (todas contenidas en feat) y la de sesión;
+en el remoto quedan solo `feat/ejecucion-plan-20261008` y `main`. Trabajar con commits directos en feat; ramas `wp/NN` solo si hace falta revisión E3 (decisión j).
 
 ## Estado del plan
 
