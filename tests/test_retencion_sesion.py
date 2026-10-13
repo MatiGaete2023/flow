@@ -51,9 +51,7 @@ def test_guardar_sesion_deja_solo_las_dos_copias_recuperables(tmp_path):
 def test_copia_invalida_no_impide_guardar_ni_borra_bins(tmp_path, backup):
     sesion = tmp_path / 'sesion'
     sesion.mkdir()
-    (sesion / 'trabajo.json.bak').write_text(
-        backup if backup == '{' else json.dumps(backup), encoding='utf-8'
-    )
+    (sesion / 'trabajo.json.bak').write_text(backup if backup == '{' else json.dumps(backup), encoding='utf-8')
     preservada = sesion / 'recuperable.bin'
     preservada.write_bytes(b'ficticio')
     trabajo = Work(defaults())

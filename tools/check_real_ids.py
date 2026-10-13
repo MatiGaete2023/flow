@@ -226,9 +226,7 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
     findings = []
     index = {}
     if stage:
-        entries = subprocess.run(
-            ["git", "ls-files", "--stage", "-z"], cwd=ROOT, capture_output=True, check=True
-        ).stdout
+        entries = subprocess.run(["git", "ls-files", "--stage", "-z"], cwd=ROOT, capture_output=True, check=True).stdout
         for entry in entries.decode("utf-8", errors="surrogateescape").split("\0"):
             if entry:
                 metadata, name = entry.split("\t", 1)
@@ -245,9 +243,7 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
                 raise ValueError("Submódulo en el índice: requiere control separado; revisión incompleta")
             if level != "0":
                 raise ValueError("Conflicto en el índice; revisión incompleta")
-            staged = subprocess.run(
-                ["git", "cat-file", "blob", oid], cwd=ROOT, capture_output=True, check=True
-            ).stdout
+            staged = subprocess.run(["git", "cat-file", "blob", oid], cwd=ROOT, capture_output=True, check=True).stdout
         elif not path.is_file():
             continue
         for label, content in texts(path, staged):
