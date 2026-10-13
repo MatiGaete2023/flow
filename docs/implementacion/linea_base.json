@@ -1,7 +1,7 @@
 {
-  "commit": "256fcaeb7599f907950d5726e2c3d11062dd3cf5",
+  "commit": "16d1d10437b6c618e4a111c87783b9d5e617cdae",
   "asistente": {
-    "aprobadas": 918,
+    "aprobadas": 927,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
@@ -9,7 +9,7 @@
     "codigo": 0,
     "medicion_valida": true,
     "fallidas_nodeids": [],
-    "resumen": "918 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "927 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 251,
@@ -124,6 +124,8 @@
       "tests/test_audit_tools.py::test_identity_spaces_and_unicode_hyphens[-]",
       "tests/test_audit_tools.py::test_identity_spaces_and_unicode_hyphens[\\u2013]",
       "tests/test_audit_tools.py::test_identity_spaces_and_unicode_hyphens[\\u2212]",
+      "tests/test_audit_tools.py::test_indice_lee_blob_indexado_con_sufijo_desconocido",
+      "tests/test_audit_tools.py::test_indice_lee_blob_por_oid_y_rechaza_gitlink",
       "tests/test_audit_tools.py::test_invalid_json_reports_failure_without_traceback",
       "tests/test_audit_tools.py::test_invalid_or_ambiguous_text_encoding_fails_closed[\\x81]",
       "tests/test_audit_tools.py::test_invalid_or_ambiguous_text_encoding_fails_closed[\\xef\\xbb\\xbf\\x81]",
@@ -286,6 +288,7 @@
       "tests/test_consolidado_paquete.py::test_paquete_1_0_0_sigue_igual_y_sin_consolidado",
       "tests/test_contactos_locales.py::test_archivo_local_con_programas_y_tribunales",
       "tests/test_contactos_locales.py::test_boton_importar_contactos_json_guarda_copia_local",
+      "tests/test_contactos_locales.py::test_contactos_solo_tribunal_guardados_no_piden_reimportar",
       "tests/test_contactos_locales.py::test_defaults_y_golden_no_cargan_directorio_local_del_usuario",
       "tests/test_contactos_locales.py::test_formato_historico_de_objetos_separados_por_coma",
       "tests/test_contactos_locales.py::test_importacion_parcial_conserva_perfil_anterior_y_conflictos[json]",
@@ -732,6 +735,11 @@
       "tests/test_resolution_case_view_20260916.py::test_resolution_list_deduplicates_same_case_and_kind_but_keeps_other_kind",
       "tests/test_resolution_order_regression_20260914.py::test_reviewed_resolution_types_follow_workbook_order",
       "tests/test_retencion_sesion.py::test_borrado_por_fecha_no_aplica_limite_de_cantidad",
+      "tests/test_retencion_sesion.py::test_copia_invalida_no_impide_guardar_ni_borra_bins[None]",
+      "tests/test_retencion_sesion.py::test_copia_invalida_no_impide_guardar_ni_borra_bins[backup1]",
+      "tests/test_retencion_sesion.py::test_copia_invalida_no_impide_guardar_ni_borra_bins[backup3]",
+      "tests/test_retencion_sesion.py::test_copia_invalida_no_impide_guardar_ni_borra_bins[texto]",
+      "tests/test_retencion_sesion.py::test_copia_invalida_no_impide_guardar_ni_borra_bins[{]",
       "tests/test_retencion_sesion.py::test_fuentes_originales_legacy_y_backup_se_conservan",
       "tests/test_retencion_sesion.py::test_guardar_sesion_deja_solo_las_dos_copias_recuperables",
       "tests/test_retencion_sesion.py::test_interfaz_cancelada_no_borra_y_confirmada_preserva_vigente",
@@ -743,6 +751,7 @@
       "tests/test_retencion_sesion.py::test_inventario_tolera_datos_parciales_sin_borrar_la_sesion[drafts3]",
       "tests/test_retencion_sesion.py::test_inventario_tolera_datos_parciales_sin_borrar_la_sesion[drafts4]",
       "tests/test_retencion_sesion.py::test_inventario_tolera_datos_parciales_sin_borrar_la_sesion[drafts5]",
+      "tests/test_retencion_sesion.py::test_json_principal_no_objeto_no_sobrescribe_respaldo",
       "tests/test_retencion_sesion.py::test_limite_decidido_conserva_diez_y_sesenta_dias_tras_confirmar",
       "tests/test_retencion_sesion.py::test_poda_ignora_carpetas_desconocidas_y_enlaces",
       "tests/test_review_20260929.py::test_close_keeps_window_open_when_recovery_cannot_be_written",
