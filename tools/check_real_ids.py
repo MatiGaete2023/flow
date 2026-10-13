@@ -3,7 +3,6 @@
 Uso:
     python tools/check_real_ids.py            # revisa archivos versionados
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
-    python tools/check_real_ids.py --stage  # revisa el contenido del índice
     python tools/check_real_ids.py --stage  # revisa blobs del índice, no el árbol de trabajo
     python tools/check_real_ids.py --historia  # revisa todos los blobs alcanzables (git rev-list --all)
 
@@ -246,12 +245,9 @@ def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list
                 raise ValueError("Submódulo en el índice: requiere control separado; revisión incompleta")
             if level != "0":
                 raise ValueError("Conflicto en el índice; revisión incompleta")
-            if path.suffix.lower() in BINARY_SUFFIXES:
-                staged = b""  # texts conserva el control del nombre sin cargar imágenes o fuentes.
-            else:
-                staged = subprocess.run(
-                    ["git", "cat-file", "blob", oid], cwd=ROOT, capture_output=True, check=True
-                ).stdout
+            staged = subprocess.run(
+                ["git", "cat-file", "blob", oid], cwd=ROOT, capture_output=True, check=True
+            ).stdout
         elif not path.is_file():
             continue
         for label, content in texts(path, staged):
