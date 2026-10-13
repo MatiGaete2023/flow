@@ -43,10 +43,18 @@ def har(path):
         },
     }
     previa = {
-        'request': {'method': 'POST', 'url': 'https://familia.pjud.cl/SITFAWEB/HistoriaIntermediaAccion.do',
-                    'postData': {'mimeType': 'application/x-www-form-urlencoded', 'text': 'rit=C-99999-2099&causa=100'}},
-        'response': {'status': 302, 'headers': [{'name': 'Location', 'value': '/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=TOKENCANARIO'}],
-                     'content': {'mimeType': 'text/html', 'size': 0}},
+        'request': {
+            'method': 'POST',
+            'url': 'https://familia.pjud.cl/SITFAWEB/HistoriaIntermediaAccion.do',
+            'postData': {'mimeType': 'application/x-www-form-urlencoded', 'text': 'rit=C-99999-2099&causa=100'},
+        },
+        'response': {
+            'status': 302,
+            'headers': [
+                {'name': 'Location', 'value': '/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=TOKENCANARIO'}
+            ],
+            'content': {'mimeType': 'text/html', 'size': 0},
+        },
     }
     path.write_text(json.dumps({'log': {'entries': [previa, entrada]}}), encoding='utf-8')
     return path
@@ -64,7 +72,17 @@ def test_ventana_historia_sin_valores(tmp_path):
         assert canario not in texto, canario
     copia = json.loads(texto)['copias'][0]
     tabla = next(t for t in copia['tablas'] if t['id'] == 'tablaHistoria')
-    assert tabla['encabezado'] == ['Folio', 'Doc.', 'Sel', 'Anexo', 'Etapa', 'Trámite', 'Desc. Trámite', 'Referencia', 'Fecha Tram']
+    assert tabla['encabezado'] == [
+        'Folio',
+        'Doc.',
+        'Sel',
+        'Anexo',
+        'Etapa',
+        'Trámite',
+        'Desc. Trámite',
+        'Referencia',
+        'Fecha Tram',
+    ]
     columnas = {c['etiqueta']: c for c in tabla['columnas']}
     assert columnas['Fecha Tram']['formas'] == {'FECHA_DD/MM/AAAA': 3}
     assert columnas['Folio']['formas'] == {'ENTERO_1-3': 3}
@@ -134,3 +152,23 @@ def test_carpeta_y_comodines(tmp_path):
     copias = json.loads(texto)['copias']
     assert [c['tipo'] for c in copias] == ['JS', 'HTML', 'HTML']
     assert 'ShowHistoria' in copias[0]['esqueletos']
+
+
+def test_har_con_html_windows1252_en_base64(tmp_path):
+    import base64
+
+    html = (FIXTURES / 'ventana_historia.html').read_text(encoding='utf-8').encode('cp1252')
+    entrada = {
+        'request': {'method': 'GET', 'url': 'https://familia.pjud.cl/SITFAWEB/ConsultaDetalleAtPublicoAccion.do'},
+        'response': {
+            'status': 200,
+            'content': {'mimeType': 'text/html', 'encoding': 'base64', 'text': base64.b64encode(html).decode()},
+        },
+    }
+    path = tmp_path / 'b.har'
+    path.write_text(json.dumps({'log': {'entries': [entrada]}}), encoding='utf-8')
+    texto = ejecutar(tmp_path, path)
+    for canario in CANARIOS:
+        assert canario not in texto, canario
+    tablas = json.loads(texto)['copias'][0]['peticiones'][0]['html']['tablas']
+    assert any(t['encabezado'][:1] == ['Folio'] for t in tablas)

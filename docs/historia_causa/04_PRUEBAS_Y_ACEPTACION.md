@@ -25,13 +25,13 @@ Usar un alcance pequeño: un tribunal, Cumplimiento + Espera, período habitual.
 |---|---|---|---|
 | H-01 | Actualizar extensión a 2.8.0 y abrir el Descargador | Casilla de historia habilitada | PASA/FALLA |
 | H-02 | Con la casilla **desmarcada**, «Consultar y crear paquete» | Igual que antes: mismo ZIP, sin `Historia_SITFA.xlsx` | PASA/FALLA |
-| H-03 | Marcar historia; iniciar | Aviso «N registros → M causas» antes de abrir historias | N, M |
+| H-03 | Marcar historia; iniciar | Aviso «una historia por causa, hasta 600»; el progreso muestra causas leídas | Causas leídas |
 | H-04 | Dejar terminar | Progreso por causa; termina con resumen | Conteos por estado |
 | H-05 | Abrir `Historia_SITFA.xlsx` | Hojas Trámites, Causas, Vínculos, Control | PASA/FALLA |
 | H-06 | Elegir 5 causas (2 de Espera) y comparar con la ventana SITFA | Mismos folios, fechas, trámites, descripciones y referencias **dentro de los 4 meses**; nada fuera | Coincidencias x/5 |
 | H-07 | En esas 5, revisar «Trámites anteriores» | Conteo coherente con lo que se ve antes de la fecha «Desde» | PASA/FALLA |
 | H-08 | Causa con varios ingresos del lote | 1 sola causa en «Causas»; varios en «Vínculos»; trámites no repetidos | PASA/FALLA |
-| H-09 | Cancelar a mitad y «Reintentar historias fallidas…» | Conserva lo leído; no repite causas leídas | PASA/FALLA |
+| H-09 | Cancelar a mitad y volver a «Consultar y crear paquete» (con «Reutilizar bitácoras leídas hoy») | Conserva lo leído; solo abre las causas faltantes o fallidas | PASA/FALLA |
 | H-10 | Confirmar que no hubo descargas de PDF (carpeta Descargas y carpeta del lote) | Cero PDF de trámites | PASA/FALLA |
 | H-11 | Importar el ZIP en el Asistente | Importa sin error; observaciones y productos iguales a un paquete sin historia | PASA/FALLA |
 | H-12 | Cerrar sesión SITFA a mitad de lectura (opcional) | Causas restantes `FALLIDA` con motivo de sesión; nada aparece «vacío» | PASA/FALLA |

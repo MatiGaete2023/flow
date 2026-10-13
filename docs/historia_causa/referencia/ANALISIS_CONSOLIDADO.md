@@ -26,10 +26,10 @@ Convención: **N1** verificado en código/documento · **N2** inferencia con sup
 |---|---|---|---|
 | Ventana temporal | Ventana de 4 meses | No heredar en silencio los 4 meses; elegir y declarar | **Decisión H-e del usuario: 4 meses**, declarada en cada producto (criterio, desde, hasta). No es herencia silenciosa. |
 | Producto primero | Excel + tabla en ZIP | Visor local primero; Excel complementario; ZIP opcional | **Excel primero** (cubre «ver», menos código); **ZIP sí** porque el usuario quiere análisis posterior (H-d). Visor: pendiente P5. |
-| Numeración | WP-100 | Ojo: `tools/estado.py` solo acepta `WP-\d{2}` | **WP-52 a WP-56** (números libres, junto a WP-50/51 «Nuevas funciones»); no se toca `estado.py`. |
+| Numeración | WP-100 | Ojo: `tools/estado.py` solo acepta `WP-\d{2}` | **WP-52 a WP-54** (números libres, junto a WP-50/51 «Nuevas funciones»); no se toca `estado.py`. (Primera versión: WP-52 a WP-56; reducida a 3 por eficiencia, ver `../README.md`.) |
 | Extractor H0 | Nuevo extractor | `extraer_estructura_har.py` oculta rutas nuevas (`RUTA_NO_RECONOCIDA`); `extraer_estructura_bitacora.py` no sirve | **Nuevo `extraer_estructura_historia.py`** (entregado en esta rama) que conserva rutas `.do/.jsp`, nombres de campos/funciones y esqueletos de funciones, y bloquea la salida si detecta un valor de entrada. |
-| Runner | `HistoriaRunner` análogo | `HistoryRunner` independiente, sin duplicar supuestos de bitácoras | **Independiente** (`lectura_historia.py`), reutilizando el recorrido del listado mediante un gancho mínimo en `DiaryRunner` (ver 03, WP-53). |
-| Esfuerzo | 5,5–8 días | 9–16 jornadas MVP con visor; 11–19 con ZIP | Sin visor y con escenario A/B: **8–12 jornadas**. Recalcular tras H0. |
+| Runner | `HistoriaRunner` análogo | `HistoryRunner` independiente, sin duplicar supuestos de bitácoras | **Una sola pasada**: la historia se lee en el mismo recorrido del listado que las bitácoras (sin repetir consultas), con estado y manifiesto propios (`lectura_historia.py`); ver `../wp/WP-53.md`. |
+| Esfuerzo | 5,5–8 días | 9–16 jornadas MVP con visor; 11–19 con ZIP | Sin visor, una pasada y 3 WP: **7–11 jornadas**. Recalcular tras H0. |
 | Vínculo de historia | `vinculos.extract` | El extractor actual exige `ShowObservaciones` y descarta filas solo con historia | **Nuevo `extract_historia`** en `vinculos.py` que no dependa de `ShowObservaciones`. |
 
 ## 3. Hechos nuevos del repositorio (N1) que fijan el diseño
@@ -43,7 +43,7 @@ Convención: **N1** verificado en código/documento · **N2** inferencia con sup
 4. Contrato: `historia_tramites` ya existe, **sin** columnas para folio, etapa, anexo ni `raw_json`
    (`contract.py:94-107`). El lector acepta columnas adicionales al final (`contract.py:578`:
    `fields[:len(TABLES[table])]`), pero el escritor no (`csv.DictWriter(fieldnames=TABLES[table])`, línea 267).
-   → extensión aditiva del contrato en WP-55 (E3).
+   → extensión aditiva del contrato en WP-53 (E3).
 5. Una consulta con `remote_identity` exige los cuatro campos no vacíos, incluido `ingreso_id`
    (`coverage.py:61-66`). → las consultas de historia **no** llevan `remote_identity`; usan `capture_tables` y una
    clave informativa propia.

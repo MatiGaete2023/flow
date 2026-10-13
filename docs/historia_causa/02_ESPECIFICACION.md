@@ -89,9 +89,17 @@ paginación). Requisitos comunes, idénticos a `diary_open`:
 
 ## 7. Lectura (Python)
 
-- Módulo nuevo `descargador/lectura_historia.py` con `HistoryRunner`: recorre el listado como `DiaryRunner`
-  (mismas consultas, pausa `PAUSA_SITFA_S = 1.0`, cancelación, `lock/unlock`, `verify_extension`) y, por cada causa
-  nueva de la página vigente, llama `history_open`.
+- **Una sola pasada.** La historia se lee dentro del mismo recorrido del listado que hace `DiaryRunner` para las
+  bitácoras: misma consulta, mismas páginas, mismo `lock/unlock` y `verify_extension`. Así no se repiten consultas
+  del listado a SITFA, el enlace de historia se valida contra la página vigente y un `a1` de vida corta se usa
+  apenas aparece. Por cada fila: bitácora (como hoy) y, si la opción está activa y la causa es nueva en el lote,
+  historia.
+- Estado propio: módulo nuevo `descargador/lectura_historia.py` con `LectorHistoria` (sesión, manifiesto,
+  lecturas, resultado); `DiaryRunner` solo recibe un colaborador opcional `historia=None` y lo llama por fila.
+  Un fallo de historia **nunca** cambia el estado de una bitácora ni detiene el lote.
+- Reintento: «Consultar y crear paquete» de nuevo con «Reutilizar bitácoras leídas hoy» (EF-04) hace casi gratis
+  la parte de bitácoras; `LectorHistoria` recibe el `historias.json` anterior y solo lee causas `FALLIDA`/`PENDIENTE`.
+- Pausa `PAUSA_SITFA_S = 1.0` entre lecturas reales; cancelación con el mismo evento.
 - Tope `MAX_HISTORIAS_POR_LOTE = 600` (P3), independiente de `MAX_LECTURAS_POR_LOTE`.
 - Valida: `digest` = SHA-256 del cuerpo; `params` devueltos = pedidos; tamaño ≤ 8 MB; `startedAt` ISO.
 - Guarda `respaldo/historia/historia-<clave24>-<sha16>.html` con `m.save_exclusive`; si existe y difiere ⇒ error.
@@ -123,7 +131,7 @@ Orden en «Trámites»: Tribunal, RIT, Fecha Tram descendente, Folio descendente
 
 ### 8.2 Tabla `historia_tramites` en `Captura_CSMP.zip` (análisis posterior del Asistente)
 
-Solo si el usuario marca «Incluir historia en el paquete». Mapeo por fila (contrato v1 + extensión aditiva de WP-55):
+Solo si el usuario marca «Incluir historia en el paquete». Mapeo por fila (contrato v1 + extensión aditiva de WP-53):
 
 | Columna | Valor |
 |---|---|
@@ -173,9 +181,10 @@ productos ni paridad golden; los paquetes sin historia siguen idénticos.
 - Casilla «Leer también la historia de la causa (últimos 4 meses)» junto a «Reutilizar bitácoras leídas hoy»;
   desmarcada por defecto; preferencia persistente en `preferencias.py`.
 - Casilla «Incluir historia en el paquete» (visible solo si la anterior está marcada).
-- Antes de empezar: «N registros remiten a M causas; se abrirán hasta M historias (tope 600).» con Aceptar/Cancelar.
-- Progreso: «Historia: causa i de M · estado». Pausa/Cancelar existentes.
-- Avanzado: botón «Leer historia del lote» y «Reintentar historias fallidas…».
+- Al marcarla, aviso único: «Se abrirá una historia por causa (no por registro), hasta 600 por lote. Aumenta el
+  tiempo de la consulta.»
+- Progreso dentro del existente: «Historia: N causas leídas · F fallidas». Pausa/Cancelar existentes.
+- Sin botones nuevos en Avanzado: el reintento es volver a «Consultar y crear paquete» (ver §7).
 - Fin: resumen con conteos por estado y botón «Abrir Historia_SITFA.xlsx».
 - Si la extensión no declara `historia_lectura`, las casillas quedan deshabilitadas con el texto «Actualiza la
   extensión a 2.8.0 para leer la historia». Hasta el acta, la opción lleva la marca «(prueba)».

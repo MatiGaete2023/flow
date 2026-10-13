@@ -34,18 +34,83 @@ INTERES = re.compile(r'(?i)histor|detalle|popup|causa|show|abrir|ventana|tramite
 LLAMADA = re.compile(r'([A-Za-z_$][\w$]*)\s*\(([^()]*)\)')
 
 ETIQUETAS = (
-    'Información de la Causa', 'Causa Reservada', 'RIT', 'RUC', 'Caratulado', 'F. Ingreso', 'Fecha Ingreso',
-    'Proc.', 'Forma Inicio', 'Est. Adm.', 'Etapa', 'Estado Proc.', 'Tribunal', 'Texto Requerimiento',
-    'Litigantes', 'Materias', 'Plazos', 'Remisión', 'Historia', 'Notificación', 'Diligencias', 'Escritos',
-    'Folio', 'Doc.', 'Sel', 'Anexo', 'Trámite', 'Desc. Trámite', 'Referencia', 'Fecha Tram', 'Fecha Trámite',
-    'Fecha', 'Descripción', 'Estado', 'Tipo', 'Página', 'Siguiente', 'Anterior', 'Primera', 'Última', 'Cerrar',
-    'Imprimir', 'Volver', 'Nombre', 'Nombre Menor', 'RUT', 'RUT (->RCEI)', 'Derivación', 'Programa',
-    'Nombre Centro', 'Obs.', 'Observaciones', 'Causa', 'Historia Causa', 'Ver', 'Buscar',
+    'Información de la Causa',
+    'Causa Reservada',
+    'RIT',
+    'RUC',
+    'Caratulado',
+    'F. Ingreso',
+    'Fecha Ingreso',
+    'Proc.',
+    'Forma Inicio',
+    'Est. Adm.',
+    'Etapa',
+    'Estado Proc.',
+    'Tribunal',
+    'Texto Requerimiento',
+    'Litigantes',
+    'Materias',
+    'Plazos',
+    'Remisión',
+    'Historia',
+    'Notificación',
+    'Diligencias',
+    'Escritos',
+    'Folio',
+    'Doc.',
+    'Sel',
+    'Anexo',
+    'Trámite',
+    'Desc. Trámite',
+    'Referencia',
+    'Fecha Tram',
+    'Fecha Trámite',
+    'Fecha',
+    'Descripción',
+    'Estado',
+    'Tipo',
+    'Página',
+    'Siguiente',
+    'Anterior',
+    'Primera',
+    'Última',
+    'Cerrar',
+    'Imprimir',
+    'Volver',
+    'Nombre',
+    'Nombre Menor',
+    'RUT',
+    'RUT (->RCEI)',
+    'Derivación',
+    'Programa',
+    'Nombre Centro',
+    'Obs.',
+    'Observaciones',
+    'Causa',
+    'Historia Causa',
+    'Ver',
+    'Buscar',
 )
 VALORES_CONOCIDOS = (
-    'Espera', 'Cumplimiento', 'Informes', 'Egresados', 'Resolución', 'Escrito', 'Actuación', 'Audiencia',
-    'Notificación', 'Diligencia', 'Certificación', 'Oficio', 'Acta', 'Sin referencia', 'Sin archivar',
-    'Concluido', 'Tramitación', 'Requerimiento', 'Demanda',
+    'Espera',
+    'Cumplimiento',
+    'Informes',
+    'Egresados',
+    'Resolución',
+    'Escrito',
+    'Actuación',
+    'Audiencia',
+    'Notificación',
+    'Diligencia',
+    'Certificación',
+    'Oficio',
+    'Acta',
+    'Sin referencia',
+    'Sin archivar',
+    'Concluido',
+    'Tramitación',
+    'Requerimiento',
+    'Demanda',
 )
 
 
@@ -201,10 +266,14 @@ def resumen_tabla(tabla, sensibles):
         sensibles.update(textos)
         etiquetas = [etiqueta(t) for t in textos]
         reconocidas = sum(e != 'ETIQUETA_NO_RECONOCIDA' for e in etiquetas)
-        if encabezado is None and celdas and (
-            fila.xpath('./th')
-            or all(e != 'ETIQUETA_NO_RECONOCIDA' or not t for e, t in zip(etiquetas, textos))
-            or (len(celdas) >= 3 and reconocidas >= 0.6 * len(celdas))
+        if (
+            encabezado is None
+            and celdas
+            and (
+                fila.xpath('./th')
+                or all(e != 'ETIQUETA_NO_RECONOCIDA' or not t for e, t in zip(etiquetas, textos))
+                or (len(celdas) >= 3 and reconocidas >= 0.6 * len(celdas))
+            )
         ):
             encabezado = etiquetas[:MAX_COLUMNAS]
             perfiles = [{'formas': Counter(), 'rasgos': Counter(), 'acciones': Counter()} for _ in encabezado]
@@ -369,7 +438,11 @@ def resumen_html(texto, sensibles):
         'titulo': etiqueta(texto_visible(documento.xpath('//title')[0])) if documento.xpath('//title') else '',
         'charset_declarado': charset,
         'etiquetas_reconocidas': dict(
-            sorted(Counter(etiqueta(t) for t in documento.xpath('//text()') if etiqueta(t) != 'ETIQUETA_NO_RECONOCIDA').items())
+            sorted(
+                Counter(
+                    etiqueta(t) for t in documento.xpath('//text()') if etiqueta(t) != 'ETIQUETA_NO_RECONOCIDA'
+                ).items()
+            )
         ),
         'pestanas_visibles': dict(sorted(pestanas.items())),
         'indicios_paginacion': dict(sorted(paginacion.items())),
@@ -416,7 +489,17 @@ def resumen_har(datos, sensibles):
             'bytes': contenido.get('size') if isinstance(contenido.get('size'), int) else None,
         }
         cuerpo = contenido.get('text') or ''
-        if isinstance(cuerpo, str) and cuerpo and contenido.get('encoding') != 'base64':
+        textual = tipo in ('text/html', 'application/javascript', 'text/javascript')
+        if isinstance(cuerpo, str) and cuerpo and contenido.get('encoding') == 'base64' and textual:
+            # Chrome guarda en base64 algunas respuestas Windows-1252 de SITFA.
+            import base64
+            import binascii
+
+            try:
+                cuerpo = decodificar(base64.b64decode(cuerpo, validate=True))
+            except (binascii.Error, ValueError):
+                cuerpo = ''
+        if isinstance(cuerpo, str) and cuerpo and (contenido.get('encoding') != 'base64' or textual):
             if tipo == 'text/html':
                 item['html'] = resumen_html(cuerpo, sensibles)
             elif tipo in ('application/javascript', 'text/javascript'):
@@ -450,7 +533,11 @@ def fugas(salida, sensibles):
         if len(valor) < 4 or normalizar(valor) in PERMITIDOS:
             continue
         # Conteos y tamaños son números de la salida; rutas y nombres de campo se conservan a propósito.
-        if re.fullmatch(r'\d{1,6}', valor) or RUTA.fullmatch(valor.split('?', 1)[0]) or re.fullmatch(r'&?[A-Za-z_]\w{0,40}=', valor):
+        if (
+            re.fullmatch(r'\d{1,6}', valor)
+            or RUTA.fullmatch(valor.split('?', 1)[0])
+            or re.fullmatch(r'&?[A-Za-z_]\w{0,40}=', valor)
+        ):
             continue
         if valor in salida:
             encontradas.append(len(valor))
@@ -465,7 +552,9 @@ def expandir(archivos):
     for archivo in archivos:
         ruta = Path(archivo)
         if ruta.is_dir():
-            salida += sorted(p for p in ruta.iterdir() if p.is_file() and p.suffix.lower() in ('.html', '.htm', '.js', '.har'))
+            salida += sorted(
+                p for p in ruta.iterdir() if p.is_file() and p.suffix.lower() in ('.html', '.htm', '.js', '.har')
+            )
         elif any(c in archivo for c in '*?['):
             salida += sorted(Path(p) for p in glob(archivo) if Path(p).is_file())
         else:
@@ -506,7 +595,9 @@ def main(argv):
     except FileExistsError:
         print('El archivo de salida ya existe; elige otro nombre.')
         return 1
-    print(f'Estructura guardada en {destino}. Revísala y comparte solo ese archivo; los originales quedan en este equipo.')
+    print(
+        f'Estructura guardada en {destino}. Revísala y comparte solo ese archivo; los originales quedan en este equipo.'
+    )
     return 0
 
 

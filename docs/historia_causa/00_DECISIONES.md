@@ -30,6 +30,7 @@ añadir la decisión del 13 de octubre (H-a…H-f) en `PLAN_VIGENTE.md` y en `do
 | P5 | ¿Visor dentro del Descargador además del Excel? | No en la primera entrega; Excel con filtros | Prioridad 2 del plan (simplificar); el Excel cubre «ver» |
 | P6 | ¿Conservar el HTML íntegro de cada historia en `respaldo/historia/`? | Sí (local, 60 días) | Permite reprocesar y auditar sin volver a SITFA; nunca va en el ZIP |
 | P7 | Si H0 muestra que `a1` solo se obtiene ejecutando la función de la página (escenario C) | Decidir tras ver el esqueleto; requiere E3 | Implica ejecutar código de SITFA en la página del usuario |
+| P8 | ¿Trabajar directo en esta rama, sin PR por WP? | Sí; un solo PR al final | Menos corridas de Actions (Windows solo una vez) y menos sesiones; coherente con la decisión n |
 
 Fecha de corte de la ventana: la fecha local de la lectura (no la fecha de corte del Asistente). Queda escrita en
 cada producto.
