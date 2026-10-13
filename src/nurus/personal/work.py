@@ -670,6 +670,7 @@ class Work:
         if backup.is_file():
             try:
                 old = json.loads(backup.read_text(encoding='utf-8'))
+                old = old if isinstance(old, dict) else {}  # un .bak que no es objeto no aporta copias que conservar
                 for field in ('source_hash', 'original_hash'):
                     if old.get(field):
                         keep.add(old[field] + '.bin')

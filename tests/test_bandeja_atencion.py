@@ -1,4 +1,3 @@
-from pathlib import Path
 from types import SimpleNamespace
 
 from nurus.personal.attention import attention_items, case_statuses
