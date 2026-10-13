@@ -39,7 +39,7 @@ Revisó `ea3005e`. Riesgos mayores (solo confirmables con SITFA real) y menores;
 | 6 | Causa incierta conserva conteos | Corregido: se borran conteos/fechas/advertencias al pasar a IDENTIDAD_INCIERTA + prueba. |
 | 7 | Se envía el RIT de la celda, no el del enlace | Corregido: `rit_enlace` desde `vinculos.extract_historia`; la extensión admite letras en minúscula + pruebas Python y `.cjs`. |
 | 8 | Paginación no detectada | Advertencia `HISTORIA_POSIBLE_PAGINACION` (clase/campo/enlace «Siguiente», fuera de scripts) visible en Causas e incidencias; la causa sigue LEIDA. Documentada en la guía. |
-| 9 | `descargador-integral.yml` no corre `test_historia_extension.cjs` en Windows | **PENDIENTE: toca un workflow; requiere autorización del usuario.** |
+| 9 | `descargador-integral.yml` no corre `test_historia_extension.cjs` en Windows | Corregido con autorización del usuario (13-oct): paso `node test_historia_extension.cjs` tras el de bitácoras. Falta ver su ejecución en Windows. |
 
 Verificación local tras estos cambios: `tools/ci_local.sh` completo PASA (963 + 342 pruebas, ambas `.cjs`).
 
