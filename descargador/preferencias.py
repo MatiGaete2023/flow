@@ -51,6 +51,8 @@ class Preferences:
             'csmp': '',
             'paquete_consolidado': True,
             'reutilizar_bitacoras': True,
+            'leer_historia': False,
+            'historia_en_paquete': True,
             'tema': 'Sistema',
             'historial_lotes': [],
             'historial_bitacoras': [],

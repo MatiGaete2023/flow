@@ -428,6 +428,25 @@ class Application:
             command=self.save_preferences,
         )
         self.reuse_choice.pack(side='left', padx=12)
+        # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
+        self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
+        self.history_choice = ttk.Checkbutton(
+            primary,
+            text='Leer también la historia de la causa (últimos 4 meses) (prueba)',
+            variable=self.read_history,
+            command=self.toggle_history,
+        )
+        self.history_choice.pack(side='left', padx=12)
+        self.history_in_package = tk.BooleanVar(value=self.prefs.data['historia_en_paquete'])
+        self.history_package_choice = ttk.Checkbutton(
+            primary,
+            text='Incluir historia en el paquete',
+            variable=self.history_in_package,
+            command=self.save_preferences,
+        )
+        if self.read_history.get():
+            self.history_package_choice.pack(side='left', padx=12)
+        self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
@@ -541,6 +560,16 @@ class Application:
     def emit(self, name, value):
         self.events.put((name, value))
 
+    def toggle_history(self):
+        if self.read_history.get():
+            self.history_package_choice.pack(side='left', padx=12)
+            self.status.set(
+                'Se abrirá una historia por causa (no por registro), hasta 600 por lote. La consulta tardará más.'
+            )
+        else:
+            self.history_package_choice.pack_forget()
+        self.save_preferences()
+
     def save_preferences(self):
         self.prefs.data.update(
             destino=self.dest.get(),
@@ -548,6 +577,8 @@ class Application:
             aviso_sonoro=self.sound.get(),
             paquete_consolidado=self.package_consolidated.get(),
             reutilizar_bitacoras=self.reuse_diaries.get(),
+            leer_historia=self.read_history.get(),
+            historia_en_paquete=self.history_in_package.get(),
         )
         try:
             self.prefs.save()
@@ -949,6 +980,7 @@ class Application:
         self.last_folder = self.last_package = None
         self.last_sheets_folder = self.last_diary_manifest = None
         self.result_notice.set('')
+        self.history_counts = {'leidas': 0, 'fallidas': 0}
         self.tree.delete(*self.tree.get_children())
         self.save_preferences()
         self.enqueue('pipeline', (batch, destination, self.package_consolidated.get()))
@@ -1164,6 +1196,8 @@ class Application:
                         *arg,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse=self.prefs.data['reutilizar_bitacoras'],
+                        historia=self.prefs.data['leer_historia'],
+                        historia_en_paquete=self.prefs.data['historia_en_paquete'],
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
@@ -1296,6 +1330,19 @@ class Application:
 
                 write(Path(self.bitacoras_reply), {**value, 'id': self.bitacoras_id})
             self.refresh()
+            return True
+        if name == 'history_progress':
+            key = 'leidas' if value['estado'] in ('LEIDA', 'VACIA_COMPROBADA') else 'fallidas'
+            self.history_counts[key] += 1
+            self.status.set(
+                f"Historia: {self.history_counts['leidas']} leídas · {self.history_counts['fallidas']} fallidas"
+            )
+            return True
+        if name == 'history_done':
+            self.status.set(
+                f"Historia {value['estado']}: {value['leidas']} leídas · {value['fallidas']} fallidas · "
+                f"{value['tramites_en_ventana']} trámites en la ventana de 4 meses"
+            )
             return True
         if name == 'diary_progress':
             self.tree.insert(
