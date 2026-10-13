@@ -1,6 +1,6 @@
 import unittest
 from lxml import html, etree
-from vinculos import calls, extract, match_rows, visible_cell_text
+from vinculos import calls, extract, extract_historia, match_rows, visible_cell_text
 
 
 def listing(court='777', duplicate=False):
@@ -68,3 +68,33 @@ class BindingTests(unittest.TestCase):
         _, output = match_rows(headers, rows[:1], extract(listing(duplicate=True), '777'), '777')
         self.assertEqual(output[0][1][-1], 'Identidad ambigua')
         self.assertEqual(output[0][1][ingreso], '')
+
+
+def test_extract_historia_por_causa_con_forma_real_y_sin_observaciones():
+    # Forma observada en H0: números sin comillas, RIT entre comillas.
+    page = html.fromstring(
+        '<table><tr><td>Sel</td><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivación</td><td>Obs.</td></tr>'
+        '<tr><td></td><td><a href="#" onclick="ShowHistoria(777,\'X-1-2026\',100)">X-1-2026</a></td>'
+        '<td>11111111-1</td><td>Persona ficticia</td><td>PRM</td>'
+        '<td><a onclick="ShowObservaciones(100,777,\'200\',12,3,\'0\')">Obs</a></td></tr>'
+        '<tr><td></td><td><a onclick="ShowHistoria(777,\'X-2-2026\',101)">X-2-2026</a></td>'
+        '<td>11111111-1</td><td>Otra persona</td><td>PRM</td><td></td></tr></table>'
+    )
+    found = extract_historia(page, '777')
+    assert [(f['rit'], f['causa_id'], f['ingreso_id']) for f in found] == [
+        ('X-1-2026', '100', '200'),
+        ('X-2-2026', '101', ''),
+    ]
+
+
+def test_extract_historia_descarta_enlaces_ambiguos_o_discordantes():
+    assert len(extract_historia(listing(), '777')) == 1
+    assert extract_historia(listing(court='888'), '777') == []
+    doble = listing()
+    celda = doble.xpath('.//a[contains(@onclick,"ShowHistoria")]')[0]
+    celda.addnext(html.fromstring('<a onclick="ShowHistoria(\'777\',\'X-1-2026\',\'100\')">otra</a>'))
+    assert extract_historia(doble, '777') == []
+    otro_rit = html.fromstring(
+        etree.tostring(listing(), encoding='unicode').replace("'X-1-2026','100')", "'X-9-2026','100')")
+    )
+    assert extract_historia(otro_rit, '777') == []

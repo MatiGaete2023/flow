@@ -1,0 +1,24 @@
+{
+  "titulo": "Historia de causa: interfaz, flujo, entrega Windows y acta",
+  "ola": 5,
+  "tipo": "F",
+  "depende_de": [
+    "WP-53"
+  ],
+  "decisiones": [
+    "o",
+    "p"
+  ],
+  "estado": "PENDIENTE",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": "feat/historia-causa-sitfa",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md."
+  ]
+}

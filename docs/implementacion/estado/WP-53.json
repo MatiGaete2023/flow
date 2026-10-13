@@ -1,0 +1,24 @@
+{
+  "titulo": "Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención)",
+  "ola": 5,
+  "tipo": "F",
+  "depende_de": [
+    "WP-52"
+  ],
+  "decisiones": [
+    "o",
+    "p"
+  ],
+  "estado": "PENDIENTE",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": "feat/historia-causa-sitfa",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final."
+  ]
+}

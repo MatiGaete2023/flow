@@ -19,7 +19,7 @@
 añadir la decisión del 13 de octubre (H-a…H-f) en `PLAN_VIGENTE.md` y en `docs/implementacion/estado/global.json`
 → `decisiones_adicionales`, dejando explícito que **PDF y CT-03..10 siguen fuera de alcance**.
 
-## Pendientes (con recomendación; el usuario elige)
+## Recomendaciones P1–P8 — **aceptadas** el 13 de octubre (decisión p: «Sí a todo lo que me dices»)
 
 | ID | Pregunta | Recomendación | Por qué |
 |---|---|---|---|

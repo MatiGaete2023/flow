@@ -194,6 +194,16 @@
         "texto": "Subir MAX_LECTURAS_POR_LOTE de 300 a 600; pausa y checkpoints sin cambios.",
         "fuente": "Usuario: «Sube el limite a 600» (13 de octubre de 2026)."
       }
+    },
+    "decisiones_20261013_historia": {
+      "o_historia_causa": {
+        "texto": "Historia de la causa en el Descargador: solo la tabla de la pestaña Historia de la ventana «Información de la Causa» (folio, etapa, trámite, descripción, referencia, fecha y presencia de anexo), solo ventana de 4 meses, sin PDF, uso personal en Windows; el Asistente la analizará en otro paso. PDF y reglas CT-03..10 siguen fuera de alcance. Plan: docs/historia_causa/ (WP-52..WP-54).",
+        "fuente": "Usuario, 13 de octubre de 2026: «leer la historia de la causa», «no deseo descargar los pdf», «solo ver la descripción del trámite y el trámite, su fecha, folio», «solo en la ventana de 4 meses», «solo de uso personal en windows»."
+      },
+      "p_recomendaciones_historia": {
+        "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
+        "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
+      }
     }
   },
   "orden_paquetes": [
@@ -251,6 +261,9 @@
     "WP-97",
     "WP-98",
     "WP-99",
+    "WP-52",
+    "WP-53",
+    "WP-54",
     "WP-70"
   ],
   "commit_integracion": "fe4c225",

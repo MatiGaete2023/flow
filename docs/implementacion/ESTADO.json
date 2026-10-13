@@ -1625,6 +1625,77 @@
         "Registro: docs/aceptacion/REGISTRO_PRUEBAS_USUARIO_20261013.md."
       ]
     },
+    "WP-52": {
+      "titulo": "Historia de causa H0: caracterizar la ventana y registrar la decisión",
+      "ola": 5,
+      "tipo": "D",
+      "depende_de": [],
+      "decisiones": [
+        "o",
+        "p"
+      ],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude-sesion-01Ltq2nH",
+      "tomado": "13 de octubre de 2026",
+      "rama": "feat/historia-causa-sitfa",
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "H0 cerrado: contracts/csmp_capture_v1/HISTORIA_VENTANA.md; extractor descargador/extraer_estructura_historia.py; fixtures ficticios fieles.",
+        "Decisiones o y p registradas el 13 de octubre de 2026."
+      ]
+    },
+    "WP-53": {
+      "titulo": "Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención)",
+      "ola": 5,
+      "tipo": "F",
+      "depende_de": [
+        "WP-52"
+      ],
+      "decisiones": [
+        "o",
+        "p"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": "feat/historia-causa-sitfa",
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final."
+      ]
+    },
+    "WP-54": {
+      "titulo": "Historia de causa: interfaz, flujo, entrega Windows y acta",
+      "ola": 5,
+      "tipo": "F",
+      "depende_de": [
+        "WP-53"
+      ],
+      "decisiones": [
+        "o",
+        "p"
+      ],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": "feat/historia-causa-sitfa",
+      "pr": null,
+      "verificacion": null,
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -1885,6 +1956,16 @@
       "m_limite_lecturas": {
         "texto": "Subir MAX_LECTURAS_POR_LOTE de 300 a 600; pausa y checkpoints sin cambios.",
         "fuente": "Usuario: «Sube el limite a 600» (13 de octubre de 2026)."
+      }
+    },
+    "decisiones_20261013_historia": {
+      "o_historia_causa": {
+        "texto": "Historia de la causa en el Descargador: solo la tabla de la pestaña Historia de la ventana «Información de la Causa» (folio, etapa, trámite, descripción, referencia, fecha y presencia de anexo), solo ventana de 4 meses, sin PDF, uso personal en Windows; el Asistente la analizará en otro paso. PDF y reglas CT-03..10 siguen fuera de alcance. Plan: docs/historia_causa/ (WP-52..WP-54).",
+        "fuente": "Usuario, 13 de octubre de 2026: «leer la historia de la causa», «no deseo descargar los pdf», «solo ver la descripción del trámite y el trámite, su fecha, folio», «solo en la ventana de 4 meses», «solo de uso personal en windows»."
+      },
+      "p_recomendaciones_historia": {
+        "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
+        "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
       }
     }
   },

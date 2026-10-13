@@ -96,6 +96,27 @@ def test_ventana_historia_sin_valores(tmp_path):
     assert copia['charset_declarado'] == 'windows-1252'
     assert 'RIT' in copia['etiquetas_reconocidas'] and 'Tribunal' in copia['etiquetas_reconocidas']
     assert 'InformeHistoria' in copia['script_en_linea']['funciones_definidas']
+    assert copia['lector_historia'] == {
+        'filas': 3,
+        'vacio_explicito': False,
+        'advertencias': {'HISTORIA_FILA_INCOMPLETA': 1},
+        'campos_encabezado': sorted(
+            [
+                'RIT',
+                'RUC',
+                'Caratulado',
+                'F. Ingreso',
+                'Proc.',
+                'Forma Inicio',
+                'Est. Adm.',
+                'Etapa',
+                'Estado Proc.',
+                'Tribunal',
+            ]
+        ),
+        'reservada': True,
+        'anexos': 1,
+    }
 
 
 def test_listado_y_funcion_show_historia(tmp_path):

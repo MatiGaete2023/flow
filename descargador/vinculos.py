@@ -133,6 +133,51 @@ def extract(table, tribunal_code):
     return result
 
 
+def extract_historia(table, tribunal_code):
+    """Vínculo de historia por fila (alcance CAUSA): exactamente un ShowHistoria(tribunal, RIT, causa) concordante.
+
+    No exige ShowObservaciones. Si la fila trae además una observación de la misma causa, se informa su ingreso
+    solo para la hoja de vínculos; los trámites nunca se atribuyen al ingreso.
+    """
+    import motor as m
+
+    headers = None
+    result = []
+    for tr in table.xpath('./tr | ./tbody/tr | ./thead/tr'):
+        cells = tr.xpath('./th | ./td')
+        values = [visible_cell_text(c) for c in cells]
+        normalized = [m.normalized(v) for v in values]
+        if 'RIT' in normalized and any(v in ('NOMBRE', 'NOMBRE MENOR') for v in normalized):
+            keys = {
+                'rit': ['RIT'],
+                'nombre': ['NOMBRE', 'NOMBRE MENOR'],
+                'rut': ['RUT', 'RUT (->RCEI)'],
+                'programa': ['DERIVACION', 'NOMBRE CENTRO', 'PROGRAMA'],
+            }
+            found = {k: [i for i, v in enumerate(normalized) if v in aliases] for k, aliases in keys.items()}
+            headers = {k: items[0] for k, items in found.items()} if all(len(i) == 1 for i in found.values()) else None
+            continue
+        if not headers or len(values) <= max(headers.values()):
+            continue
+        rit = m.normalized(values[headers['rit']])
+        if not re.fullmatch(r'[A-Z]{1,3}-\d{1,7}-\d{4}', rit):
+            continue
+        text = ' '.join(n.get(attr, '') for n in tr.xpath('.//*[@onclick or @href]') for attr in ('onclick', 'href'))
+        history = calls(text, 'ShowHistoria')
+        if len(history) != 1 or len(history[0]) != 3:
+            continue
+        court, linked_rit, cause = history[0]
+        if court != tribunal_code or m.normalized(linked_rit) != rit or not re.fullmatch(r'\d{1,20}', cause):
+            continue
+        entry = {k: values[i] for k, i in headers.items()}
+        entry.update(tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='')
+        observation = calls(text, 'ShowObservaciones')
+        if len(observation) == 1 and len(observation[0]) == 6 and observation[0][0] == cause:
+            entry['ingreso_id'] = observation[0][2]
+        result.append(entry)
+    return result
+
+
 def identity(rit, rut, nombre, programa):
     import motor as m
 

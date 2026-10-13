@@ -399,6 +399,29 @@ def decodificar(datos):
         return datos.decode('cp1252', errors='replace')
 
 
+def lector_historia(texto, tablas):
+    """Cómo lee esta copia el lector real del Descargador: solo conteos y códigos, nunca valores."""
+    if not any(t['encabezado'][:1] == ['Folio'] for t in tablas):
+        return None
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+    try:
+        from nurus.historia_html import read_historia
+    except ImportError:
+        return {'error': 'LECTOR_NO_DISPONIBLE'}
+    try:
+        leido = read_historia(texto)
+    except ValueError as exc:
+        return {'error': str(exc) if str(exc).startswith('HISTORIA_') else 'ERROR_NO_RECONOCIDO'}
+    return {
+        'filas': len(leido['filas']),
+        'vacio_explicito': leido['vacio_explicito'],
+        'advertencias': dict(sorted(Counter(a['codigo'] for a in leido['advertencias']).items())),
+        'campos_encabezado': sorted(leido['encabezado']),
+        'reservada': leido['reservada'],
+        'anexos': sum(f['anexo'] for f in leido['filas']),
+    }
+
+
 def resumen_html(texto, sensibles):
     from lxml import html
 
@@ -467,6 +490,7 @@ def resumen_html(texto, sensibles):
         'marcos': marcos,
         'scripts_externos': scripts_externos,
         'script_en_linea': resumen_script(codigo, sensibles),
+        'lector_historia': lector_historia(texto, tablas),
     }
 
 

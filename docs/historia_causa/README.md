@@ -12,15 +12,15 @@ analice **en otro paso**. Sin PDF. Uso personal en Windows. 100 % local.
 | Factibilidad | Favorable. **H0 cerrado**: acceso (escenario B) y ventana caracterizados en [HISTORIA_VENTANA.md](../../contracts/csmp_capture_v1/HISTORIA_VENTANA.md). |
 | Decisiones | [00_DECISIONES.md](00_DECISIONES.md) (tomadas H-a…H-h; pendientes P1…P8). |
 | Entregado | `descargador/extraer_estructura_historia.py` (H0) + pruebas + fixtures ficticios; `tools/ci_local.sh`. |
-| Bloqueo | Ninguno técnico. Falta registrar la decisión «o» (WP-52 paso 1) y empezar WP-53. Muestra opcional: causa sin trámites o con acceso denegado. |
+| Bloqueo | Ninguno. Decisiones o y p registradas (13-oct). WP-53: pasos 53.1 y 53.2 hechos; sigue 53.3. Muestra opcional: causa sin trámites o con acceso denegado. |
 
 ## Qué leer (según el rol; nada más)
 
 | Rol | Archivos |
 |---|---|
 | Usuario | Este README · [05_GUIA_USUARIO_H0.md](05_GUIA_USUARIO_H0.md) · [04 §2–3](04_PRUEBAS_Y_ACEPTACION.md) |
-| Ejecutor de un WP | Este README · su ficha en `wp/` · las secciones de [02_ESPECIFICACION.md](02_ESPECIFICACION.md) que la ficha cite |
-| Revisor E3 | [wp/WP-53.md](wp/WP-53.md) · [02_ESPECIFICACION.md](02_ESPECIFICACION.md) · el diff |
+| Ejecutor (IA o desarrollador) | **Solo [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md)** (autosuficiente; manda sobre las fichas de `wp/`) |
+| Revisor E3 | [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md) §3, §5, §12 · el diff |
 | Contexto (opcional) | [referencia/](referencia/ANALISIS_CONSOLIDADO.md): análisis de ambos informes e informe previo |
 
 Paquetes: [WP-52](wp/WP-52.md) H0 y decisión → [WP-53](wp/WP-53.md) núcleo (única revisión E3) →

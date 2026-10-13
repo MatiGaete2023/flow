@@ -31,7 +31,7 @@ No hay otras puertas. Las pruebas automáticas no reemplazan el acta, y el acta 
 - D8 consultas 2.7.5: «No observé esos fallos»; se descarta la variante reaplicar tras Envio() de WP-33.
 - D9 solicitud de antecedentes: «Retirar botón»; retirado.
 - Decisiones adicionales del 11 de octubre: quitar apóstrofo visible preservando texto seguro; conservar cc_obligatorio; motor intacto.
-- Historia SITFA/PDF y reglas CT-03..10: fuera de alcance hasta nueva decisión.
+- PDF de trámites y reglas CT-03..10: fuera de alcance. Historia de la causa (solo tabla, 4 meses): decisión o, WP-52..WP-54.
 
 ## Decisiones del 11 de octubre de 2026
 Registradas también en docs/implementacion/estado/global.json → decisiones_adicionales.decisiones_20261011.
@@ -56,6 +56,8 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 ## Decisiones del 13 de octubre de 2026
 - n) Consolidar todo en una sola rama (`feat/ejecucion-plan-20261008`) y trabajar desde ahí. Fuente: «consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca».
 - m) Subir `MAX_LECTURAS_POR_LOTE` de 300 a 600: con 344 registros habituales cada corrida exigía «Retomar». La pausa entre lecturas y los checkpoints no cambian. Fuente: «Sube el limite a 600».
+- o) Historia de la causa en el Descargador: solo la tabla de la pestaña Historia de la ventana «Información de la Causa» (folio, etapa, trámite, descripción, referencia, fecha y presencia de anexo), solo ventana de 4 meses, sin PDF, uso personal en Windows; el Asistente la analizará en otro paso. Rama `feat/historia-causa-sitfa`; guía `docs/historia_causa/GUIA_IMPLEMENTACION.md`. Fuente: mensajes del usuario del 13-oct («no deseo descargar los pdf», «solo en la ventana de 4 meses», «solo de uso personal en windows»).
+- p) Aceptadas las recomendaciones P1–P8 de `docs/historia_causa/00_DECISIONES.md`. Fuente: «Sí a todo lo que me dices».
 
 ## Ola de eficiencia y experiencia — 12 de octubre de 2026
 
