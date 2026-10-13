@@ -3,7 +3,7 @@
 Uso:
     python tools/check_real_ids.py            # revisa archivos versionados
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
-    python tools/check_real_ids.py --excluir variantes/  # omite archivos bajo esa ruta (repetible)
+    python tools/check_real_ids.py --excluir RUTA/  # omite archivos bajo esa ruta (repetible; usar solo con motivo)
     python tools/check_real_ids.py --stage  # revisa blobs del índice, no el árbol de trabajo
     python tools/check_real_ids.py --historia  # revisa todos los blobs alcanzables (git rev-list --all)
 
