@@ -41,7 +41,8 @@ def test_indice_lee_blob_por_oid_y_rechaza_gitlink(tmp_path, monkeypatch, capsys
     assert not any('show' in command for command in commands)
     original(
         ['git', 'update-index', '--add', '--cacheinfo', '160000,' + 'a' * 40 + ',submodulo'],
-        cwd=tmp_path, check=True,
+        cwd=tmp_path,
+        check=True,
     )
     with pytest.raises(ValueError, match='Submódulo'):
         scanner.scan([tmp_path / 'submodulo'], set(), stage=True)
