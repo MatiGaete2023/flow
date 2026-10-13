@@ -303,6 +303,7 @@ class Work:
         self.signed_activity = {}
         self.activity_reviewed = {}
         self.source_scope = 'SOLO_PLANILLA'
+        self.capture_changes = None
 
     def analyze(self, path, mode, *, sheet=None, cross_sheet=None, as_of=None, batch=None, cross_by_record=None):
         from .operations import progress, checkpoint
@@ -529,6 +530,9 @@ class Work:
                 for row in self.rows:
                     row.source_row = base[2][row.id]
             remember_export(self)
+            from .review_metrics import record_export
+
+            record_export(self)
         except Exception:
             (self.output, self.output_hash, self.content, self.source_hash, self.sheet, self.header, rows) = saved
             for row, number in zip(self.rows, rows):

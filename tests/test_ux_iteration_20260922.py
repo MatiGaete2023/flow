@@ -46,7 +46,7 @@ def test_case_detail_uses_existing_state_and_products_only(tmp_path):
     assert labels['NNA'] == 'Persona Ejemplo'
     assert labels['Observación final'] == 'Texto final.'
     assert labels['TT'] == '1' and labels['CC'] == '0' and labels['RES'] == 'PC_INFO'
-    assert labels['Estado'] == 'Revisar aviso'
+    assert labels['Estado'] == 'REQUIERE_REVISION'
     assert 'Excel ✓' in labels['Productos']
     assert 'RES PC_INFO' in labels['Productos'] and 'Word pendiente' in labels['Productos']
     assert 'Modalidad' not in labels

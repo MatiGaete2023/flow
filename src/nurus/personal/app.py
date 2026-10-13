@@ -30,6 +30,7 @@ from .resolutions import (
 )
 from .statistics import summarize
 from .ux_support import incident_ids
+from . import capture_changes
 from .work import Work
 from nurus.rus.columns import normalize
 
@@ -417,6 +418,8 @@ class App(_BaseApp):
                 tags.append('warning')
             if row.id in resolution_ids:
                 tags.append('resolution')
+            if capture_changes.label(getattr(self.work, 'capture_changes', None), row.id):
+                tags.append('changed')
             values = (
                 state,
                 row.review.get('OBSERVACION', row.observation),
@@ -425,6 +428,7 @@ class App(_BaseApp):
                 value(self.work, row, 'programa'),
                 value(self.work, row, 'tribunal'),
                 last_center_label(self.work, row),
+                capture_changes.label(getattr(self.work, 'capture_changes', None), row.id),
             )
             jobs.append((self.records, row.id, values, tuple(tags)))
             self._work_all_iids.append(row.id)
@@ -490,6 +494,17 @@ class App(_BaseApp):
         if hasattr(self, 'incident_text'):
             count = len(incident_ids(self.work))
             self.incident_text.set(f'{count} incidencia' + ('s' if count != 1 else ''))
+        if hasattr(self, 'egresados_button'):
+            count = len((getattr(self.work, 'capture_changes', None) or {}).get('egresados', ()))
+            self.egresados_button.configure(
+                text=f'Ver egresados ({count})' if count else 'Ver egresados',
+                state='normal' if count else 'disabled',
+            )
+        if hasattr(self, 'attention_button'):
+            from .attention import attention_items
+
+            count = len(attention_items(self.work, getattr(self, 'drafts', []), getattr(self, 'projects', [])))
+            self.attention_button.configure(text=f'Qué requiere mi atención ({count})')
         if hasattr(self, 'work_case_detail'):
             self.work_case_detail.set_text('Selecciona un registro.')
         if hasattr(self, 'resolution_case_detail'):

@@ -5,10 +5,12 @@ from pathlib import Path
 from datetime import date, datetime
 from copy import deepcopy
 import os
+import json
 import queue
 import shutil
 import threading
 import tkinter as tk
+from tkinter import ttk as tk_ttk
 from tkinter import filedialog, messagebox, simpledialog
 import customtkinter as ctk
 from . import ui as ttk
@@ -40,6 +42,14 @@ CONTACTS_MISSING = (
     'tu contactos_base.json anterior o el catastro Excel. '
     'Las instalaciones nuevas usan tres contactos ficticios de ejemplo.'
 )
+
+
+def _attention_value(work, row, key):
+    if row is None:
+        return ''
+    from .outputs import value
+
+    return value(work, row, key)
 
 
 class App(ctk.CTk):
@@ -460,6 +470,11 @@ class App(ctk.CTk):
         remember(self, 'records', selected_ids(self, 'records'))
         search = normalize(self.work_search.get() if hasattr(self, 'work_search') else '')
         mode = self.work_filter.get() if hasattr(self, 'work_filter') else 'Todos'
+        if mode == 'Solo cambios' and getattr(getattr(self, 'work', None), 'capture_changes', None) is None:
+            apply_visibility(self.records, self._work_all_iids, set(self._work_all_iids))
+            self.status.set('Sin captura anterior para comparar.')
+            restore_visible(self, 'records')
+            return
         if not search and mode == 'Todos':
             apply_visibility(self.records, self._work_all_iids, set(self._work_all_iids))
             restore_visible(self, 'records')
@@ -475,6 +490,8 @@ class App(ctk.CTk):
             match = not search or search in haystack
             if mode == 'Con aviso':
                 match = match and 'warning' in tags
+            elif mode == 'Solo cambios':
+                match = match and 'changed' in tags
             elif mode == 'Con resolución':
                 match = match and 'resolution' in tags
             elif mode == 'Excluidos':
@@ -485,6 +502,96 @@ class App(ctk.CTk):
                 visible.add(iid)
         apply_visibility(self.records, self._work_all_iids, visible)
         restore_visible(self, 'records')
+
+    def _show_egresados(self):
+        changes = getattr(getattr(self, 'work', None), 'capture_changes', None) or {}
+        rows = changes.get('egresados', [])
+        if not rows:
+            return
+        window = tk.Toplevel(self)
+        window.title('Egresados de la captura anterior')
+        window.transient(self)
+        window.geometry('760x330')
+        columns = ('RIT', 'Nombre', 'Tribunal', 'Programa')
+        tree = tk_ttk.Treeview(window, columns=columns, show='headings', height=12)
+        for column in columns:
+            tree.heading(column, text=column)
+            tree.column(column, width=170 if column != 'RIT' else 100, anchor='w')
+        for row in rows:
+            tree.insert(
+                '',
+                'end',
+                values=(row.get('rit', ''), row.get('nombre', ''), row.get('tribunal', ''), row.get('programa', '')),
+            )
+        tree.pack(fill='both', expand=True, padx=8, pady=8)
+        tk_ttk.Button(window, text='Cerrar', command=window.destroy).pack(pady=(0, 8))
+
+    def _show_attention(self):
+        if not self.work:
+            return
+        from .attention import attention_items
+
+        items = attention_items(self.work, getattr(self, 'drafts', []), getattr(self, 'projects', []))
+        window = tk.Toplevel(self)
+        window.title('Qué requiere mi atención')
+        window.transient(self)
+        window.geometry('1100x390')
+        columns = ('Estado', 'Próxima acción', 'RIT', 'Nombre', 'Vence', 'Cambio', 'Motivo', 'Fuente')
+        tree = tk_ttk.Treeview(window, columns=columns, show='headings', height=14)
+        widths = {
+            'Estado': 140,
+            'Próxima acción': 250,
+            'RIT': 100,
+            'Nombre': 190,
+            'Vence': 95,
+            'Cambio': 75,
+            'Motivo': 230,
+            'Fuente': 130,
+        }
+        for column in columns:
+            tree.heading(column, text=column)
+            tree.column(column, width=widths[column], anchor='w')
+        by_id = {row.id: row for row in self.work.rows}
+        for item in items:
+            row = by_id.get(item.row_id)
+            tree.insert(
+                '',
+                'end',
+                iid=item.row_id,
+                values=(
+                    item.estado,
+                    item.proxima_accion,
+                    _attention_value(self.work, row, 'rit'),
+                    _attention_value(self.work, row, 'nombre'),
+                    item.vence,
+                    item.cambio,
+                    item.motivo,
+                    item.fuente,
+                ),
+            )
+        tree.pack(fill='both', expand=True, padx=8, pady=8)
+
+        def select(event=None):
+            chosen = tree.selection()
+            if not chosen:
+                return
+            rid = chosen[0]
+            item = next((entry for entry in items if entry.row_id == rid), None)
+            if not item:
+                return
+            window.destroy()
+            if self.records.exists(rid):
+                self.records.selection_set(rid)
+                self.records.focus(rid)
+                self.records.see(rid)
+                self._detail()
+            if item.estado in ('POR_PREPARAR', 'PREPARADO'):
+                target = 'Correos' if 'correo' in item.proxima_accion.lower() else 'Resoluciones'
+                self.tabs.select(self.pages[target])
+
+        tree.bind('<Double-1>', select)
+        tree.bind('<Return>', select)
+        tk_ttk.Button(window, text='Cerrar', command=window.destroy).pack(pady=(0, 8))
 
     def _apply_resolution_filter(self, *_):
         if not hasattr(self, 'words'):
@@ -697,8 +804,22 @@ class App(ctk.CTk):
 
                     restore(self)
                 self._save_session()
+                from .review_metrics import record_import
+
+                record_import(self.work)
+                from .capture_changes import summary as capture_summary
+
+                counts = capture_summary(getattr(candidate, 'capture_changes', None))
+                comparison = ''
+                if getattr(candidate, 'capture_changes', None) is not None:
+                    comparison = (
+                        f"Desde la captura anterior: {counts['NUEVO']} nuevas, "
+                        f"{counts['CAMBIO_FUENTE']} con cambios de fuente, {counts['CAMBIO_REGLAS']} de reglas, "
+                        f"{counts['EGRESADOS']} egresadas. "
+                    )
                 self.status.set(
-                    f'{len(candidate.rows)} registros importados. '
+                    comparison
+                    + f'{len(candidate.rows)} registros importados. '
                     + (
                         'Ediciones conservadas; revisa productos obsoletos.'
                         if reused
@@ -1495,6 +1616,24 @@ class App(ctk.CTk):
             wraplength=640,
         ).grid(row=3, column=0, columnspan=2, sticky='w')
 
+        metrics = ttk.Frame(advanced_nb, padding=8)
+        advanced_nb.add(metrics, text='Métricas locales')
+        self.metrics_choice = tk.BooleanVar(value=bool(self.cfg.data.get('metricas_locales', False)))
+        ttk.Checkbutton(
+            metrics,
+            text='Guardar métricas locales de revisión (solo conteos)',
+            variable=self.metrics_choice,
+        ).pack(anchor='w', pady=5)
+        ttk.Label(
+            metrics, text='No guarda nombres, RUT, RIT, textos ni rutas. Está apagado por defecto.', wraplength=600
+        ).pack(anchor='w')
+        ttk.Button(metrics, text='Guardar preferencia', command=lambda: self._guard(self._save_metrics)).pack(
+            anchor='w', pady=6
+        )
+        ttk.Button(metrics, text='Copiar resumen', command=lambda: self._guard(self._copy_metrics_summary)).pack(
+            anchor='w'
+        )
+
     def _filter_config_parameters(self, *_):
         query = normalize(self.config_search.get()) if hasattr(self, 'config_search') else ''
         for key, label, entry in getattr(self, '_config_parameter_widgets', []):
@@ -1515,6 +1654,30 @@ class App(ctk.CTk):
         cfg['desactivadas'] = hidden + [key for key, var in self.disabled.items() if not var.get()]
         self.cfg.save(cfg)
         self.status.set('Parámetros guardados. Se aplicarán al próximo análisis; el trabajo actual conserva su perfil.')
+
+    def _save_metrics(self):
+        from copy import deepcopy
+
+        cfg = deepcopy(self.cfg.data)
+        cfg['metricas_locales'] = bool(self.metrics_choice.get())
+        self.cfg.save(cfg)
+        self.status.set('Preferencia de métricas locales guardada.')
+
+    def _copy_metrics_summary(self):
+        from .review_metrics import summary
+
+        path = (
+            Path(
+                getattr(self.work, 'storage_directory', self.cfg.directory / 'sesion')
+                if self.work
+                else self.cfg.directory / 'sesion'
+            )
+            / 'metricas.json'
+        )
+        payload = json.dumps(summary(path), ensure_ascii=False, sort_keys=True)
+        self.clipboard_clear()
+        self.clipboard_append(payload)
+        self.status.set('Resumen de métricas copiado al portapapeles.')
 
     def _save_before_switch(self, attribute, variable, save):
         previous = getattr(self, attribute, None)

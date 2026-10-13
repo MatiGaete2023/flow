@@ -5,16 +5,13 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `fe4c2258ef42`; asistente 914 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
-- Paquetes integrados: 45 de 52; último en el orden: WP-94.
+- Paquetes integrados: 48 de 52; último en el orden: WP-97.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-95 | PENDIENTE | Fase A: comparación de capturas y revisión por excepción |
-| WP-96 | PENDIENTE | Fase A: estado por caso y bandeja «Qué requiere mi atención» |
-| WP-97 | PENDIENTE | Fase A: métrica local de revisión (opcional) |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
