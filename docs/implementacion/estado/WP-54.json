@@ -14,14 +14,14 @@
   "tomado": "2026-10-13",
   "rama": "feat/historia-causa-sitfa",
   "pr": 45,
-  "verificacion": "EN_CURSO: regresiones focales y CI local PASA; repetición completa tras corregir LOCALAPPDATA",
+  "verificacion": "PASA Linux sobre 2af78a5: verificar_wp, 960 Asistente + 338 Descargador + 62 subpruebas; 11 omitidas y 6 xfail conocidos; CI local focal y ambas pruebas cjs PASA. Evidencia: docs/implementacion/verificacion/WP-53.json",
   "revision": null,
   "auditoria": null,
   "integrado_en": null,
   "notas": [
     "Guía vigente: docs/historia_causa/GUIA_IMPLEMENTACION.md; traspaso en docs/historia_causa/AVANCE.md.",
     "Aplicadas las diez correcciones E3 con regresiones sintéticas, sin cambios en motor, textos tradicionales ni Outlook.",
-    "Verificación inicial: 13 fallos de interfaz por LOCALAPPDATA fuera del área escribible; los 13 pasan con configuración local.",
+    "Medición final sobre commit limpio 2af78a5: PASA, cero fallos. Fallos iniciales de entorno corregidos con LOCALAPPDATA escribible y Xvfb.",
     "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno."
   ]
 }

@@ -12,7 +12,7 @@ analice **en otro paso**. Sin PDF. Uso personal en Windows. 100 % local.
 | Factibilidad | Favorable. **H0 cerrado**: acceso (escenario B) y ventana caracterizados en [HISTORIA_VENTANA.md](../../contracts/csmp_capture_v1/HISTORIA_VENTANA.md). |
 | Decisiones | [00_DECISIONES.md](00_DECISIONES.md) (tomadas H-a…H-h; pendientes P1…P8). |
 | Entregado | `descargador/extraer_estructura_historia.py` (H0) + pruebas + fixtures ficticios; `tools/ci_local.sh`. |
-| Bloqueo | Correctivos E3 aplicados sobre `9310d60`; verificación final en curso y nueva revisión independiente pendiente. Código WP-53/WP-54 completo; ver [AVANCE.md](AVANCE.md). |
+| Bloqueo | Correctivos E3 aplicados sobre `9310d60`; verificación final Linux PASA y nueva revisión independiente pendiente. Código WP-53/WP-54 completo; ver [AVANCE.md](AVANCE.md). |
 
 ## Qué leer (según el rol; nada más)
 

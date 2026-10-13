@@ -1,7 +1,7 @@
 # AVANCE — traspaso entre IAs (WP-53/WP-54)
 
 Fuente del procedimiento: [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md).
-Rama: `feat/historia-causa-sitfa`. PR existente: https://github.com/MatiGaete2023/flow/pull/45.
+Rama: `feat/historia-causa-sitfa`; correctivos publicados en `2af78a5`. PR existente: https://github.com/MatiGaete2023/flow/pull/45.
 
 ## Correcciones E3 — 13 de octubre de 2026
 
@@ -32,7 +32,11 @@ Las reglas del motor, textos y efectos Outlook permanecen fuera del cambio.
 - Primera medición completa: 958 PASA, 11 omitidas, 6 xfail y 2 fallos en Asistente; 11 fallos en Descargador.
   Los 13 fallos fueron por intentar guardar preferencias fuera del área escribible. Los 13 pasan con
   `LOCALAPPDATA=/workspace/cloud-tools/appdata`. Medición inicial no certificada por árbol modificado.
-- Repetición final de `verificar_wp.py` sobre commit limpio: EN CURSO.
+- Repetición final de `verificar_wp.py` sobre commit limpio `2af78a5`: **PASA**.
+  Asistente: **960 PASA**, 11 omitidas, 6 xfail conocidos; Descargador: **338 PASA** y 62 subpruebas;
+  **cero fallos**. Inventario sin bajas, identidades cero, paridad golden, restricciones, Ruff, módulos y enlaces PASA.
+  Evidencia: [WP-53.json](../implementacion/verificacion/WP-53.json).
+- CI local focal final: **89 PASA** y controles PASA; ambas pruebas `.cjs` PASA.
 
 Entorno de esta máquina: activar `/workspace/flow-venv/bin` y `/workspace/cloud-tools/root/usr/bin` en `PATH`;
 usar `LOCALAPPDATA=/workspace/cloud-tools/appdata`. `tools/ci_local.sh` elige `xvfb-run` automáticamente sin pantalla.
@@ -40,9 +44,8 @@ No crear worktrees: cada tarea de nube ya está aislada.
 
 ## Pendiente
 
-1. Finalizar la medición completa y registrar su evidencia en `docs/implementacion/verificacion/WP-53.json`.
-2. Nueva **E3 independiente** del diff corregido. El ejecutor no puede aprobar su propia revisión.
-3. Windows candidato e instalador: Git funciona, pero la API de GitHub responde `Forbidden` tanto a GraphQL
+1. Nueva **E3 independiente** del diff corregido. El ejecutor no puede aprobar su propia revisión.
+2. Windows candidato e instalador: Git funciona, pero la API de GitHub responde `Forbidden` tanto a GraphQL
    como a REST. No se afirma que ningún workflow remoto se haya ejecutado o aprobado.
-4. Prueba real y acta del usuario: [guía](../aceptacion/GUIA_PRUEBAS_HISTORIA_20261013.md).
+3. Prueba real y acta del usuario: [guía](../aceptacion/GUIA_PRUEBAS_HISTORIA_20261013.md).
    No fusionar ni publicar release antes de la autorización correspondiente.
