@@ -92,7 +92,10 @@ def reconcile(candidate, previous, *, resolutions=None):
     """Confirmar solo un plan completo; RESET es siempre una decisión explícita."""
     if not previous or not getattr(previous, 'capture_digest', ''):
         candidate.capture_reconciliation = {'continued': False, 'id_map': {}}
+        candidate.capture_changes = None
         return
+    from . import capture_changes
+
     resolutions = resolutions or {}
     old_rows = {row.id: row for row in previous.rows}
     old_sources = previous.capture_sources
@@ -107,11 +110,13 @@ def reconcile(candidate, previous, *, resolutions=None):
     conflicts = []
     consumed = set()
     resolved = set()
+    changed_by_row = {}
     for row in candidate.rows:
         source = candidate.capture_sources[row.id]
         key = _key(source)
         prior_ids = [row.id] if same_bytes and row.id in old_rows else old_by_key.get(key, [])
         if not prior_ids:
+            changed_by_row[row.id] = ()
             continue
         unique = len(prior_ids) == 1 and (same_bytes or len(new_by_key[key]) == 1)
         changed = ()
@@ -119,6 +124,7 @@ def reconcile(candidate, previous, *, resolutions=None):
             old_data = _normalized(old_sources[prior_ids[0]])
             new_data = _normalized(source)
             changed = tuple(sorted(k for k in old_data.keys() | new_data.keys() if old_data.get(k) != new_data.get(k)))
+        changed_by_row[row.id] = changed
         has_edits = any(_edited(old_rows[rid]) for rid in prior_ids)
         conflict = (not unique or bool(changed)) and has_edits
         if conflict:
@@ -182,3 +188,4 @@ def reconcile(candidate, previous, *, resolutions=None):
     if same_bytes:
         candidate.output = previous.output
         candidate.output_hash = previous.output_hash
+    candidate.capture_changes = capture_changes.compare(candidate, previous, matches, changed_by_row)

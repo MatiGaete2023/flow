@@ -104,3 +104,22 @@ estado vacío de toda la tabla no se aplica automáticamente a cada persona.
 La barra muestra Importar → Revisar → Correos → Resoluciones, con estado visible. **Siguiente acción** abre la pantalla o enfoca la preparación pendiente; no guarda Outlook ni genera Word sin tu acción. **Detalle** conserva los conteos de productos. También disponible en Ctrl+K. «Preparado» no acredita envío, firma ni registro. Los avisos finales permanecen visibles hasta ocultarlos o terminar otra acción.
 
 En Windows, el acceso **Flow CSMP** o **Abrir_Flow.cmd** permite elegir Asistente o Descargador antes de abrir la app. El Asistente por sí solo sigue funcionando sin Descargador; los accesos directos anteriores conservan su función.
+
+## Revisar solo lo que cambió (WP-95)
+
+Al importar una captura teniendo una sesión anterior, Trabajo agrega la columna **Cambio** y el filtro **Solo cambios**.
+«Nueva» es una fila que no existía; «Fuente» cambia un dato de la captura; «Reglas» cambia la evaluación por fecha de corte.
+Las ediciones humanas se conservan. El resumen de importación indica también las filas egresadas; **Ver egresados** las muestra
+en modo de solo lectura.
+
+## Qué requiere mi atención (WP-96)
+
+La bandeja ordena los casos que requieren una decisión: incierto, obsoleto, con aviso, por preparar o preparado. «Borrador guardado»
+significa que el producto está en Outlook, pero el envío y la firma siguen siendo acciones humanas. Doble clic lleva al caso y a la
+pestaña de Correo o Resoluciones correspondiente. La bandeja solo lee la sesión.
+
+## Métricas locales opcionales (WP-97)
+
+Configuración › Avanzado › Métricas locales permite guardar únicamente conteos y horas en `metricas.json`. Está apagado por defecto,
+conserva como máximo 60 ciclos y no incluye nombres, RUT, RIT, textos ni rutas. **Copiar resumen** prepara el documento para entregarlo
+al programador.

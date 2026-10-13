@@ -40,7 +40,7 @@ def test_archivo_local_con_programas_y_tribunales(tmp_path):
     datos = defaults(local)
     assert datos['contactos'] == {'PRM FICTICIO': 'prm@example.test'}
     assert datos['correos']['tribunales']['LAJA']['para'] == ['uno@example.test', 'dos@example.test']
-    cfg = Configuration(tmp_path)
+    cfg = Configuration(tmp_path, contacts_directory=local)
     assert not cfg.contacts_missing
 
 
@@ -127,7 +127,7 @@ assert not app.cfg.contacts_missing and app.contacts_notice.get()==''
 def test_perfil_historico_usa_directorio_contactos_csmp_personal(tmp_path):
     destino = configuracion.user_directory()
     save_contacts({'PRM FICTICIO': 'prm@example.invalid'}, destino)
-    cfg = Configuration(tmp_path / 'CSMP_Personal_Prototipo_Integral')
+    cfg = Configuration(tmp_path / 'CSMP_Personal_Prototipo_Integral', contacts_directory=destino)
     assert cfg.directory != cfg.contacts_directory
     assert cfg.contacts_directory == tmp_path / 'CSMP_Personal'
     assert cfg.data['contactos'] == {'PRM FICTICIO': 'prm@example.invalid'}
@@ -160,7 +160,8 @@ def test_defaults_y_golden_no_cargan_directorio_local_del_usuario(tmp_path):
     assert len(base['contactos']) == 3
     assert 'PRM LOCAL FICTICIO' not in base['contactos']
     cfg = Configuration(tmp_path / 'perfil')
-    assert cfg.data['contactos'] == {'PRM LOCAL FICTICIO': 'usuario-local@example.invalid'}
+    assert cfg.data['contactos'] == base['contactos']
+    assert cfg.contacts_missing
 
 
 def test_perfil_anterior_conserva_contactos_al_pedir_importacion(tmp_path):
@@ -171,9 +172,16 @@ def test_perfil_anterior_conserva_contactos_al_pedir_importacion(tmp_path):
     datos['firma'] = 'Edición local ficticia'
     cfg.save(datos)
     recuperada = Configuration(profile)
-    assert recuperada.contacts_missing
+    assert not recuperada.contacts_missing
     assert recuperada.data['contactos'] == {'PRM CONSERVADO FICTICIO': 'conservado@example.invalid'}
     assert recuperada.data['firma'] == 'Edición local ficticia'
+
+
+def test_contactos_solo_tribunal_guardados_no_piden_reimportar(tmp_path):
+    cfg = Configuration(tmp_path / 'perfil')
+    cfg.data['correos']['tribunales']['LAJA']['para'] = ['tribunal@example.invalid']
+    cfg.save(cfg.data)
+    assert not Configuration(cfg.directory).contacts_missing
 
 
 @pytest.mark.parametrize('formato', ['json', 'xlsx'])
@@ -190,7 +198,7 @@ actual['contactos']={'PRM CONSERVADO FICTICIO':'conservado@example.invalid'}
 actual['correos']['tribunales']['LAJA']['para']=['tribunal-conservado@example.invalid']
 app.cfg.save(actual)
 app.cfg=Configuration(app.cfg.directory)
-assert app.cfg.contacts_missing
+assert not app.cfg.contacts_missing
 formato='FORMATO_PRUEBA'
 origen=root/('contactos_parciales.'+formato)
 entradas=[

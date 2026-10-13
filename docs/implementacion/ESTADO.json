@@ -403,13 +403,14 @@
       "tomado": "2026-10-10T09:00:00-03:00",
       "rama": "ccr-4116db41-nm8g0r",
       "pr": 12,
-      "verificacion": "PASA (verificacion/WP-20.json)",
+      "verificacion": "PASA histórico (verificacion/WP-20.json), medido sobre e80444e; no certifica el árbol actual. Medición vigente en linea_base.json.",
       "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
       "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
       "integrado_en": "463699f",
       "notas": [
         "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e.",
-        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3).",
+        "WP-98: referencias pre-WP-20 anteriores a la purga no disponibles en clon actual; no restaurar etiquetas eliminadas."
       ]
     },
     "WP-21": {
@@ -1494,6 +1495,81 @@
         "Integrado por fast-forward en feat tras E3. Pendiente sin datos: H7 (capturas 1024×650) y diferencia de color de tema con Tk 9."
       ]
     },
+    "WP-95": {
+      "titulo": "Fase A: comparación de capturas y revisión por excepción",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-94",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "feat/ejecucion-plan-20261008",
+      "pr": null,
+      "verificacion": "PASA: asistente 918/11, descargador 251/0, golden PASA; identidad real 0; ruff y restricciones PASAN.",
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
+    "WP-96": {
+      "titulo": "Fase A: estado por caso y bandeja «Qué requiere mi atención»",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-95",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "feat/ejecucion-plan-20261008",
+      "pr": null,
+      "verificacion": "PASA: asistente 918/11, descargador 251/0, golden PASA; identidad real 0; ruff y restricciones PASAN.",
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
+    "WP-97": {
+      "titulo": "Fase A: métrica local de revisión (opcional)",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-96",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "feat/ejecucion-plan-20261008",
+      "pr": null,
+      "verificacion": "PASA: asistente 918/11, descargador 251/0, golden PASA; identidad real 0; ruff y restricciones PASAN.",
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
@@ -1682,6 +1758,28 @@
         "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
         "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
+      ]
+    },
+    "WP-98": {
+      "titulo": "Correcciones de auditoría del merge histórico",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "wp/98-correcciones-auditoria",
+      "pr": null,
+      "verificacion": "PASA: verificacion/WP-98.json sobre el merge con feat; asistente 930, descargador 251, golden 17 sin cambios, identidades 0, ruff 0, enlaces 0.",
+      "revision": "E3 APROBADO (sesión Claude 012yjVgL, otra raíz): auditoria/WP-98.md.",
+      "auditoria": "auditoria/WP-98.md",
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
+        "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
       ]
     }
   },

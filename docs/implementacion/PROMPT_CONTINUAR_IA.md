@@ -31,6 +31,8 @@ verificados de las inferencias.
      contrato de captura, el borrado o la retención de datos, el anonimizador o check_real_ids, o la extensión
      SITFA (decisión j).
 3. Siguiente trabajo, en orden (verifica antes en estado/*.json que siga pendiente):
+   0. Fase A (WP-95 → WP-96 → WP-97): seguir docs/implementacion/PLAN_FASE_A_20261013.md y cada ficha al pie de la
+      letra (contratos, archivos y pruebas).
    a. WP-93 (EF-04, rama wp/93-ef04, E3 con cambios aplicados): integrar en feat SOLO después de que el usuario
       informe la prueba en SITFA real (pasos en docs/implementacion/wp/WP-93.md). EF-01..03 y WP-94 ya están
       integrados y EF-02b se cerró sin cambio de código: no repetirlos.

@@ -66,6 +66,14 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
 
         cached.capture_coverage = record_coverages(capture.manifest, capture.tables, cached.capture_sources)
         cached.capture_incidents = deepcopy(capture.rows('incidencias'))
+        from .capture_changes import compare
+
+        cached.capture_changes = compare(
+            cached,
+            previous,
+            {row.id: row.id for row in cached.rows},
+            {row.id: () for row in cached.rows},
+        )
         return cached
     records = list(capture.rows('registros'))
 

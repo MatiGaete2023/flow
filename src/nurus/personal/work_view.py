@@ -9,7 +9,7 @@ from .record_view import RecordForm
 
 view_button = partial(ui.Button, role='secondary')
 
-WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro')
+WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro', 'Cambio')
 # Columnas que existían antes de WP-50: una preferencia sin «columnas_conocidas» se guardó con estas.
 WORK_COLUMNS_BEFORE_WP50 = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal')
 WORK_WIDTHS = {
@@ -20,6 +20,7 @@ WORK_WIDTHS = {
     'Programa': 160,
     'Tribunal': 95,
     'Última obs. centro': 140,
+    'Cambio': 80,
 }
 
 
@@ -202,12 +203,18 @@ def build(app):
     box = ui.Combobox(
         filters,
         textvariable=app.work_filter,
-        values=['Todos', 'Con aviso', 'Con resolución', 'Excluidos', 'Sin incidencias'],
+        values=['Todos', 'Solo cambios', 'Con aviso', 'Con resolución', 'Excluidos', 'Sin incidencias'],
         state='readonly',
         width=17,
     )
     box.pack(side='left', padx=4)
     box.bind('<<ComboboxSelected>>', app._apply_work_filter)
+    app.egresados_button = view_button(filters, text='Ver egresados', width=105, command=app._show_egresados)
+    app.egresados_button.pack(side='left', padx=3)
+    app.attention_button = view_button(
+        filters, text='Qué requiere mi atención (0)', width=190, command=app._show_attention
+    )
+    app.attention_button.pack(side='left', padx=3)
 
     def schedule(*_):
         if getattr(app, '_search_after', None):
@@ -235,6 +242,7 @@ def build(app):
     app.records.tag_configure('excluded', background='#eeeeee', foreground='#7a7a7a')
     app.records.tag_configure('warning', background='#653b29', foreground='#ffe2cd')
     app.records.tag_configure('signed', background='#243c56', foreground='#ddebf7')
+    app.records.tag_configure('changed', font=('Segoe UI', 10, 'bold'))
 
     def editor_open():
         return str(edit) in split.panes()

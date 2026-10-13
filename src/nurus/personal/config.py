@@ -214,6 +214,7 @@ def defaults(directory=None):
         'firma': '',
         'vista': {'tema': 'Sistema'},
         'correo_html': True,
+        'metricas_locales': False,
     }
 
 
@@ -280,10 +281,10 @@ def complete_texts(cfg):
 
 
 class Configuration:
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, *, contacts_directory=None):
         self.directory = Path(directory) if directory else user_directory()
         self.path = self.directory / 'configuracion.json'
-        self.contacts_directory = user_directory()
+        self.contacts_directory = Path(contacts_directory) if contacts_directory is not None else self.directory
         if not self.path.exists():
             self.save(defaults(self.contacts_directory))
         try:
@@ -297,7 +298,15 @@ class Configuration:
         if added:
             self.save(self.data)
         # Sin contactos locales y con el ejemplo ficticio cargado: la app pide importar el directorio real.
-        self.contacts_missing = not contacts_file(self.contacts_directory).is_file()
+        example = defaults()
+        stored_contacts = self.data.get('contactos', {})
+        stored_courts = self.data.get('correos', {}).get('tribunales', {})
+        imported = bool(stored_contacts) and stored_contacts != example['contactos']
+        imported = imported or any(
+            court.get('para') and court.get('para') != example['correos']['tribunales'].get(name, {}).get('para')
+            for name, court in stored_courts.items()
+        )
+        self.contacts_missing = not contacts_file(self.contacts_directory).is_file() and not imported
 
         if self.data.get('revision_textos', 1) < 2:
             updated = deepcopy(self.data)
