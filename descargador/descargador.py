@@ -1179,6 +1179,10 @@ class Application:
                     self.emit('status', 'SITFA abierto en tu Chrome. Entra a Seguimiento y conecta su extensión.')
                 elif command == 'catalog':
                     self.emit('catalog', self.bridge.call('catalog', {'screen': arg}))
+                    try:
+                        self.emit('extension_caps', self.bridge.call('capabilities'))
+                    except m.PocError:
+                        pass
                 elif command == 'download':
                     BatchRunner(
                         self.bridge, self.catalog, self.emit, self.cancel, pause=self.prefs.data['pausa_consultas']
@@ -1330,6 +1334,16 @@ class Application:
 
                 write(Path(self.bitacoras_reply), {**value, 'id': self.bitacoras_id})
             self.refresh()
+            return True
+        if name == 'extension_caps':
+            soportada = isinstance(value, dict) and 'historia_lectura' in (value.get('protocolos') or {})
+            estado = 'normal' if soportada else 'disabled'
+            self.history_choice.configure(state=estado)
+            self.history_package_choice.configure(state=estado)
+            if not soportada:
+                from contrato_integral import VERSION
+
+                self.status.set(f'Actualiza la extensión a {VERSION} para leer la historia.')
             return True
         if name == 'history_progress':
             key = 'leidas' if value['estado'] in ('LEIDA', 'VACIA_COMPROBADA') else 'fallidas'

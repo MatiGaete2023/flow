@@ -8,7 +8,7 @@ Alcance pequeño: un tribunal, Cumplimiento y Espera, período habitual. Anotar 
 
 | Código | Operación | Esperado |
 |---|---|---|
-| H-01 | Recargar la extensión 2.8.0 y abrir el Descargador | Casilla de historia visible (la app no deshabilita según versión: una extensión vieja falla al iniciar con aviso claro) |
+| H-01 | Recargar la extensión 2.8.0 y abrir el Descargador | Casilla de historia habilitada tras «Cargar opciones» (con extensión vieja queda deshabilitada con aviso) |
 | H-02 | Casilla desmarcada; «Consultar y crear paquete» | Igual que antes; sin `Historia_SITFA.xlsx` |
 | H-03 | Marcar historia; iniciar | Aviso «una historia por causa, hasta 600» |
 | H-04 | Dejar terminar | Progreso de historia; resumen con conteos |

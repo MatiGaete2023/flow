@@ -31,6 +31,10 @@ def test_casillas_de_historia(tmp_path):
             assert 'INCOMPLETA' in app.status.get() and '3 trámites' in app.status.get()
             app.history_choice.invoke()
             assert not app.read_history.get() and not app.history_package_choice.winfo_manager()
+            app.process_event('extension_caps',{'protocolos':{'bitacoras_lectura':1}})
+            assert str(app.history_choice.cget('state'))=='disabled' and '2.8.0' in app.status.get()
+            app.process_event('extension_caps',{'protocolos':{'historia_lectura':1}})
+            assert str(app.history_choice.cget('state'))=='normal'
         finally:dispose_interface(app,root)
     """)
     result = subprocess.run(
