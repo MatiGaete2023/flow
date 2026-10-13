@@ -76,14 +76,15 @@ Nuevo comando `history_open` en `descargador/extension/pagina.js` (y `history_pa
 paginación). Requisitos comunes, idénticos a `diary_open`:
 
 - Pantalla `seguimiento` y listado vigente en `window.__sitfaRun.diaryDocument`; si no, `HISTORY_CONTEXT`.
-- Payload estricto: `{tribunal, rit, causa}` (o lo que H0 determine), cada valor validado por regex; claves extra ⇒ error.
+- Payload estricto: `{tribunal, rit, causa}` (regex en `contracts/csmp_capture_v1/HISTORIA_VENTANA.md` §1); claves extra ⇒ error.
 - Debe existir **exactamente un** enlace de historia en el listado vigente con esos valores; si no, `HISTORY_LINK`.
-- URL final: origen `https://familia.pjud.cl`, ruta exacta `/SITFAWEB/ConsultaDetalleAtPublicoAccion.do`, parámetros
-  exactamente `TipoPopup=3` y `a1` (regex de caracteres codificados, largo ≤ 512) **[H0]**.
-- `fetch` con `credentials:"include"`, `cache:"no-store"`, timeout ≤ 60 s, tope 8 MB, sin redirecciones salvo el
-  paso intermedio del escenario B (en lista blanca, mismo origen, `redirect:"manual"` y validación de `Location`).
+- **Escenario B confirmado en H0** (`HISTORIA_VENTANA.md` §1): (1) `POST /SITFAWEB/Encrypt_AjaxAccion.do?opcion=1&…`
+  con tribunal, partes del RIT e idCausa → JSON con 5 valores cifrados; (2) `GET
+  /SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1…e5&B4=1&FLG_Encripta=1` armada igual que la página.
+- `fetch` con `credentials:"include"`, `cache:"no-store"`, `redirect:"error"`, timeout ≤ 60 s; paso 1 ≤ 4 KB y JSON
+  estricto; paso 2 ≤ 8 MB y `html`. Sin ejecutar código de SITFA.
 - Respuesta: `{status, type, body(base64), params, startedAt, digest(SHA-256)}`.
-- `a1` **no** se guarda en manifiestos, diagnósticos ni logs (es un token).
+- Los valores cifrados (`a1`…`e5`) **no salen de la extensión**: no van a Python, manifiestos, diagnósticos ni logs.
 - `capabilities.protocolos.historia_lectura = 1`; versión 2.8.0 en `manifest.json`, `pagina.js` y `contrato_integral.py`.
 - Sin permisos nuevos en `manifest.json` (mismo origen). Si H0 mostrara otro host: detener (cambio E3 + decisión).
 

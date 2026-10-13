@@ -175,8 +175,14 @@ def forma_parametro(valor):
     return clase + '/' + tramo
 
 
+EMITIDOS = set()  # identificadores de código que la salida conserva a propósito (ids, clases, campos, funciones)
+
+
 def nombre_campo(nombre):
-    return nombre if isinstance(nombre, str) and IDENT.fullmatch(nombre) else 'CAMPO_NO_RECONOCIDO'
+    if isinstance(nombre, str) and IDENT.fullmatch(nombre):
+        EMITIDOS.add(nombre)
+        return nombre
+    return 'CAMPO_NO_RECONOCIDO'
 
 
 def resumir_url(valor, sensibles):
@@ -346,6 +352,14 @@ def esqueleto(fuente, inicio):
             return '"' + ruta + ('?' + '&'.join(nombre_campo(c) + '=VALOR' for c in campos) if consulta else '') + '"'
         if re.fullmatch(r'&?[A-Za-z_][\w]{0,40}=', valor):
             return '"' + valor + '"'
+        if re.fullmatch(r'(?:&?[A-Za-z_]\w{0,40}=[^&]*)+', valor):
+            campos = [p.split('=', 1)[0] for p in valor.split('&') if p]
+            return (
+                '"'
+                + ('&' if valor.startswith('&') else '')
+                + '&'.join(nombre_campo(c) + '=VALOR' for c in campos)
+                + '"'
+            )
         if re.fullmatch(r'[A-Za-z_][\w]{0,40}', valor) and normalizar(valor) not in PERMITIDOS:
             return '"IDENT"'
         return '"TEXTO"'
@@ -357,8 +371,9 @@ def esqueleto(fuente, inicio):
 
 
 def resumen_script(fuente, sensibles):
+    codigo = getattr(sensibles, 'codigo', sensibles)
     for match in re.finditer(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', fuente):
-        sensibles.add(match.group(0)[1:-1])
+        codigo.add(match.group(0)[1:-1])
     definidas = Counter(nombre_campo(n) for n in re.findall(r'function\s+([A-Za-z_$][\w$]*)\s*\(', fuente))
     esqueletos = {}
     for match in re.finditer(r'function\s+([A-Za-z_$][\w$]*)\s*\(', fuente):
@@ -525,21 +540,37 @@ def analizar(ruta, sensibles):
     raise ValueError('tipo de archivo no admitido (usa .html, .htm, .js o .har)')
 
 
+class Sensibles(set):
+    """Valores de entrada; `codigo` guarda aparte los literales de scripts (nombres de campos, métodos, tipos)."""
+
+    def __init__(self):
+        super().__init__()
+        self.codigo = set()
+
+
 def fugas(salida, sensibles):
-    """Textos de entrada (4+ caracteres, no etiquetas ni valores conocidos) que reaparecen en la salida."""
+    """Textos de entrada (4+ caracteres, no etiquetas ni valores conocidos) que reaparecen en la salida.
+
+    Un literal de script con forma de identificador (`COD_Lengueta`, `POST`) es código y puede aparecer; textos,
+    valores de campos, argumentos de enlaces y literales con espacios, guiones o dígitos se controlan siempre.
+    """
     encontradas = []
-    for valor in sensibles:
+    codigo = {v for v in getattr(sensibles, 'codigo', ()) if not IDENT.fullmatch(str(v or '').strip())}
+    for valor in set(sensibles) | codigo:
         valor = ' '.join(str(valor or '').split())
         if len(valor) < 4 or normalizar(valor) in PERMITIDOS:
             continue
         # Conteos y tamaños son números de la salida; rutas y nombres de campo se conservan a propósito.
+        if valor in ('null', 'true', 'false') or (IDENT.fullmatch(valor) and valor in EMITIDOS):
+            continue
         if (
             re.fullmatch(r'\d{1,6}', valor)
             or RUTA.fullmatch(valor.split('?', 1)[0])
             or re.fullmatch(r'&?[A-Za-z_]\w{0,40}=', valor)
         ):
             continue
-        if valor in salida:
+        # Palabra completa: «Historial» dentro de `ShowHistorialFichas` es código, no una fuga.
+        if re.search(r'(?<![\w])' + re.escape(valor) + r'(?![\w])', salida):
             encontradas.append(len(valor))
     return encontradas
 
@@ -571,7 +602,8 @@ def main(argv):
     if destino.exists():
         print('El archivo de salida ya existe; elige otro nombre.')
         return 1
-    sensibles = set()
+    sensibles = Sensibles()
+    EMITIDOS.clear()
     copias = []
     for numero, archivo in enumerate(expandir(args.archivos), 1):
         try:

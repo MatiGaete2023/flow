@@ -9,10 +9,10 @@ analice **en otro paso**. Sin PDF. Uso personal en Windows. 100 % local.
 
 | Elemento | Estado |
 |---|---|
-| Factibilidad | Favorable, condicionada a H0 (caracterizar la ventana real). |
+| Factibilidad | Favorable. **Acceso confirmado (escenario B)** con H0 parcial: [HISTORIA_VENTANA.md](../../contracts/csmp_capture_v1/HISTORIA_VENTANA.md). |
 | Decisiones | [00_DECISIONES.md](00_DECISIONES.md) (tomadas H-a…H-h; pendientes P1…P8). |
 | Entregado | `descargador/extraer_estructura_historia.py` (H0) + pruebas + fixtures ficticios; `tools/ci_local.sh`. |
-| Bloqueo | El usuario debe correr H0: [05_GUIA_USUARIO_H0.md](05_GUIA_USUARIO_H0.md). |
+| Bloqueo | Falta la estructura de la **ventana emergente** (tabla de Historia): [05_GUIA_USUARIO_H0.md](05_GUIA_USUARIO_H0.md) §2.3. |
 
 ## Qué leer (según el rol; nada más)
 

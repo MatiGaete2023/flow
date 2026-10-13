@@ -2,10 +2,15 @@
 <script>
 var personaCanario = 'NOMBRECANARIO APELLIDOCANARIO';
 function cifrarCanario(texto){ return texto; }
-function ShowHistoria(tribunal, rit, causa){
-  // Supuesto de prueba: la URL real se confirma en H0.
-  var url = '/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=' + escape(cifrarCanario(tribunal + '|' + rit + '|' + causa));
-  window.open(url, 'historia', 'width=1000,height=700');
+function ShowHistoria(cod_tribunal, rit, idCausa){
+  // Réplica ficticia de la forma observada en H0 (contracts/csmp_capture_v1/HISTORIA_VENTANA.md).
+  var separado = rit.split('-');
+  var tip_causaE = '', rol_causaE = '', era_causaE = '', cod_tribunalE = '', crr_causaE = '';
+  $.ajax({type: 'POST',
+    url: '/SITFAWEB/Encrypt_AjaxAccion.do?opcion=1&TIP_Causa=' + separado[0] + '&ROL_Causa=' + separado[1] + '&ERA_Causa=' + separado[2] + '&crr_idcausaUrl=' + idCausa + '&cod_tribunalUrl=' + cod_tribunal,
+    async: false, cache: false, dataType: 'json'
+  }).done(function (data) { tip_causaE = data.tip_causa; rol_causaE = data.rol_causa; era_causaE = data.era_causa; cod_tribunalE = data.cod_tribunal; crr_causaE = data.crr_causa; });
+  window.open('/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1=' + crr_causaE + '&b2=' + tip_causaE + '&c3=' + rol_causaE + '&d4=' + era_causaE + '&e5=' + cod_tribunalE + '&B4=1&FLG_Encripta=1', 'plantillaVentana1', 'width=1000,height=700');
 }
 function ShowObservaciones(causa, tribunal, ingreso, tipo, etapa, antiguo){
   window.open('/SITFAWEB/IrPopUpInformesAccion.do?tipo_popUp=' + tipo + '&CRR_IdCausa=' + causa, 'obs');
@@ -13,8 +18,8 @@ function ShowObservaciones(causa, tribunal, ingreso, tipo, etapa, antiguo){
 </script></head><body>
 <form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do" method="post">
 <input type="hidden" name="COD_Lengueta" value="tdCumplimiento"><input type="hidden" name="COD_Tribunal_sel" value="49">
-<table id="tablaCumplimiento">
+<table id="tablaCumplimiento"><tr><td><a onclick="Lengueta('tablaCumplimiento')">Espera</a></td></tr>
 <tr><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivaci&oacute;n</td><td>Obs.</td></tr>
-<tr><td><a onclick="ShowHistoria('49','C-99999-2099','100')">C-99999-2099</a></td><td>11.111.111-1</td><td>NOMBRECANARIO APELLIDOCANARIO</td><td>Centro Canario de Prueba</td>
-<td><a onclick="ShowObservaciones('100','49','201','12','3','0')">Obs.</a></td></tr>
+<tr><td><a href="#" onclick="ShowHistoria(49,'C-99999-2099',100)">C-99999-2099</a></td><td>11.111.111-1</td><td>NOMBRECANARIO APELLIDOCANARIO</td><td>Centro Canario de Prueba</td>
+<td><a onclick="ShowObservaciones(100,49,'201',12,3,'0')">Obs.</a></td></tr>
 </table></form></body></html>

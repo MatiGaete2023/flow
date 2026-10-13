@@ -99,11 +99,14 @@ def test_listado_y_funcion_show_historia(tmp_path):
     for canario in CANARIOS:
         assert canario not in texto, canario
     copia = json.loads(texto)['copias'][0]
-    assert copia['acciones_onclick']['ShowHistoria/3:str,str,str'] == 1
-    assert copia['acciones_onclick']['ShowObservaciones/6:str,str,str,str,str,str'] == 1
+    assert copia['acciones_onclick']['ShowHistoria/3:num,str,num'] == 1
+    assert copia['acciones_onclick']['ShowObservaciones/6:num,num,str,num,num,str'] == 1
     esqueleto = copia['script_en_linea']['esqueletos']['ShowHistoria']
     assert '/SITFAWEB/ConsultaDetalleAtPublicoAccion.do?TipoPopup=VALOR&a1=VALOR' in esqueleto
-    assert 'window.open' in esqueleto and 'cifrarCanario' in esqueleto
+    assert '/SITFAWEB/Encrypt_AjaxAccion.do?opcion=VALOR&TIP_Causa=VALOR' in esqueleto
+    # Un argumento de código igual a un id de tabla emitido (Lengueta('tablaCumplimiento')) no bloquea la salida.
+    assert copia['acciones_onclick']['Lengueta/1:str'] == 1
+    assert 'window.open' in esqueleto and '$.ajax' in esqueleto and '"&B4=VALOR&FLG_Encripta=VALOR"' in esqueleto
     assert copia['formularios'][0]['accion']['ruta'] == '/SITFAWEB/InformesDAction.do'
 
 
@@ -172,3 +175,16 @@ def test_har_con_html_windows1252_en_base64(tmp_path):
         assert canario not in texto, canario
     tablas = json.loads(texto)['copias'][0]['peticiones'][0]['html']['tablas']
     assert any(t['encabezado'][:1] == ['Folio'] for t in tablas)
+
+
+def test_fuga_de_dato_con_forma_de_identificador_sigue_bloqueando(tmp_path):
+    import extraer_estructura_historia as modulo
+
+    sensibles = modulo.Sensibles()
+    sensibles.add('ROJASCANARIO')
+    sensibles.codigo.update({'COD_Lengueta', 'texto con espacios canario'})
+    modulo.EMITIDOS.clear()
+    assert modulo.fugas('{"id": "ROJASCANARIO"}', sensibles) == [12]
+    assert modulo.fugas('{"campo": "COD_Lengueta"}', sensibles) == []
+    assert modulo.fugas('{"x": "texto con espacios canario"}', sensibles) == [26]
+    assert modulo.fugas('{"bytes": null, "x": "ShowHistorialFichas"}', {'null', 'Historial'}) == []
