@@ -198,6 +198,18 @@ def read_snapshot(text, params, *, source='', captured_at=''):
         )
     if set(hidden) != used:
         raise ValueError('Hay textos ocultos sin una fila correspondiente.')
+    # Prueba de usuario 13-oct: una tabla que el lector ve cortada no puede leerse como «sin entradas».
+    stray = [
+        node
+        for node in document.iter('input', 'img')
+        if not any(parent is table for parent in node.iterancestors())
+        and (
+            node.get('name', '').startswith(FULL_FIELDS)
+            or (node.tag == 'img' and node.get('id', '').isdigit() and node.get('onclick'))
+        )
+    ]
+    if stray:
+        raise ValueError('Hay observaciones fuera de la tabla de bitácora; estructura no reconocida.')
     # Una captura no acredita la cobertura actual del sitio ni una consulta completa de otros ingresos.
     return {
         **base,
