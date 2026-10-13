@@ -14,7 +14,7 @@ Convención epistemológica: **N1** hecho verificado en repo/documento (con ruta
 | Local (sin nube, sin credenciales) | **FACTIBLE, sin cambiar el modelo de seguridad** | Misma ruta: Chrome del usuario → extensión → puente `127.0.0.1` → archivos locales. Sin hosts ni permisos nuevos (N2: si el endpoint está bajo `familia.pjud.cl`). |
 | Datos (¿sabemos qué devuelve SITFA?) | **BLOQUEADO hoy** | N1: el repo **no contiene** URL, parámetros ni estructura HTML del popup de historia. Solo existe el enlace `ShowHistoria(...)`. Sin muestra anónima real no se puede programar un parser fiable (decisión ya tomada en el plan). |
 | Gobernanza | **BLOQUEADO hasta decisión expresa** | N1: `PLAN_VIGENTE.md` → «Historia SITFA/PDF y reglas CT-03..10: fuera de alcance hasta nueva decisión». Este pedido es esa decisión, pero debe quedar registrada por el usuario. |
-| PDFs por trámite | **FACTIBLE solo como fase separada, opcional y por selección** | Spec §8: nada de descarga masiva por defecto; contrato fuerza `content_read='false'`. |
+| PDFs por trámite | **EXCLUIDO por decisión del usuario (13-oct)** | No se descargan ni abren PDFs. Solo se lee lo que muestra la ventana de historia (trámite, descripción, fecha, folio, etc.). Elimina la fase PDF y el riesgo de custodia/volumen. |
 
 **Recomendación:** hacerlo, en fases, empezando por la fase 0 (obtener estructura anónima real; costo para el usuario ≈ 1 ejecución local). Ninguna línea de parser debe escribirse antes.
 
@@ -85,7 +85,7 @@ Listado Seguimiento (ya leído)
 | 3 | `src/nurus/historia_html.py` (nuevo) | Parser determinista (lxml) con el mismo rigor de `bitacora_html.py`: identidad, filas, fechas ISO sin inventar hora/zona, texto íntegro, enlaces a documento como **referencia** (no se abren). Error explícito ante estructura desconocida (nunca «0 trámites» silencioso — lección de la falla C-01). | 250-400 líneas + fixtures |
 | 4 | `descargador/lectura_historia.py` (nuevo) o extensión de `lectura_bitacoras.py` | `HistoriaRunner`: reutilizar `_Lectura`, pausa, tope, checkpoint, reutilización, cancelación. Estados `LEIDA/FALLIDA/SIN_VINCULO/NO_DISPONIBLE/PENDIENTE`. Manifiesto propio (`historias.json`) para no alterar `bitacoras.json` v1. | 300-450 líneas |
 | 5 | `src/nurus/capture/historias.py` (nuevo) | `export_historias` → `Historia_RUS.xlsx` (copia íntegra, hoja de control con cobertura/huellas) y filas de `historia_tramites`. | 200-300 líneas |
-| 6 | `descargador/export_csmp_capture.py` | Poblar `historia_tramites` (+ `documentos` solo con metadatos), `table_states['historia_tramites']` por consulta. Contrato v1 **sin cambio de esquema** (N2: `raw_json` absorbe columnas imprevistas). | ~60 líneas |
+| 6 | `descargador/export_csmp_capture.py` | Poblar `historia_tramites` (folio en `reference`, resto de columnas visibles en `raw_json`); **tabla `documentos` no se toca** (sin PDFs), `document_id` queda vacío; `table_states['historia_tramites']` por consulta. Contrato v1 **sin cambio de esquema** (N2: `raw_json` absorbe columnas imprevistas). | ~60 líneas |
 | 7 | `descargador/descargador.py` | Botón **«Leer historia de causas del lote»** (+ reintento de fallidas), casilla «Incluir historia en el paquete» (preferencia persistente como «Incluir XLSX consolidado»), progreso y resumen. **Oculto/deshabilitado hasta que `capabilities` y la aceptación G9 lo habiliten** (regla del plan). | ~100-150 líneas |
 | 8 | `ventana_resultados.py`, `resultados.py` | Mostrar lotes con historia, estado, apertura de carpeta; resumen de cobertura. | ~80 líneas |
 | 9 | `extraer_estructura_historia.py` (nuevo) | Igual a `extraer_estructura_bitacora.py`: conteos, códigos, encabezados normalizados, sin valores de celdas. **Es lo que desbloquea la fase 0.** | ~120 líneas |
@@ -163,7 +163,7 @@ Riesgo local residual: **volumen y sensibilidad**. La historia contiene trámite
 | **3. UI y flujo** | Botón/casilla/progreso/reintento, integración con «Consultar y crear paquete» (historia opcional, apagada por defecto), mensajes de cobertura. | Fase 2 | Prueba de UI (Tk) y flujo con puente simulado | 1 día |
 | **4. Revisión y entrega** | E3, `verificar_wp.py`, construcción Windows, versión 2.8.0 + SHA. | Fase 3 | Candidato congelado + línea base | 1 día |
 | **5. Prueba real (usuario)** | Guía tipo `GUIA_PRUEBAS_USUARIO` con casos H-01…H-0n (leer, reutilizar, cancelar/retomar, causa sin enlace, comparación contra pantalla, volumen) y acta. | Fase 4 | Acta: PASA/FALLA con conteos | 1 sesión usuario |
-| **6. (Opcional) PDFs** | `pdf_open` por selección explícita: ruta/tipo/tamaño en lista blanca, SHA-256, `documentos.download_state`, `originals_authorized`; nunca masivo. | Fase 5 aprobada + decisión de custodia | Aceptación aparte | 3-5 días (N3) |
+| ~~6. PDFs~~ | **Descartada por decisión del usuario.** Si un trámite muestra un enlace a documento, se ignora (no se sigue ni se descarga). | — | — | — |
 
 Total fases 0-4: **≈ 5,5-8 días de programación** (N2; supone que la estructura real es HTML tabular sin JS dinámico ni CAPTCHA). Subir a 10-15 días si la historia carga por XHR/JSON, paginación por formulario con estado de sesión, o múltiples variantes por tribunal.
 
@@ -181,7 +181,7 @@ Total fases 0-4: **≈ 5,5-8 días de programación** (N2; supone que la estruct
 | R6 | Filtración de datos en pruebas/CI | baja con proceso | Solo fixtures ficticios; extractor anónimo; escáner de identidades en CI. |
 | R7 | Desalineación extensión/app | media (instalación manual) | `PROTOCOLS` por igualdad + versión + SHA: la app ya rechaza extensión antigua con mensaje. |
 | R8 | Colisión con ramas/estado del plan | baja | Trabajar desde `feat/ejecucion-plan-20261008` (decisión n), un WP, sin tocar motor/Outlook/textos. |
-| R9 | PDF: tamaño, tipo, custodia | media | Fase 6 separada, selección explícita, sin lectura de contenido por el Descargador. |
+| R9 | PDF: tamaño, tipo, custodia | — | Eliminado: no hay descarga de PDFs. |
 
 ---
 
@@ -191,7 +191,7 @@ Total fases 0-4: **≈ 5,5-8 días de programación** (N2; supone que la estruct
 2. ¿Alcance temporal de la historia: completa o ventana (4 meses)?
 3. ¿Historia solo desde el listado del lote (causas visibles en la captura) o también consulta por causa suelta? **Recomendación:** solo desde el lote (cumple «sin fabricar consultas por RIT»).
 4. ¿Casilla «Incluir historia» apagada por defecto? **Recomendación:** sí (menos tráfico, menos datos sensibles).
-5. ¿PDFs: se difiere a fase 6? **Recomendación:** sí.
+5. ~~PDFs~~ Resuelto: excluidos (decisión del usuario).
 6. ¿Se espera cerrar C-01 antes de publicar al uso real? **Recomendación:** sí.
 
 ---
@@ -199,7 +199,6 @@ Total fases 0-4: **≈ 5,5-8 días de programación** (N2; supone que la estruct
 ## 8. Especulación (N3, no verificable hoy)
 
 - Que `ShowHistoria` abra un popup análogo a `IrPopUpInformesAccion.do` con otro `tipo_popUp` (reutilizaría casi todo el código de `diary_open`).
-- Que la historia incluya el folio/ID del documento PDF, lo que permitiría la fase 6 sin heurística.
 - Que la historia sirva luego para activar CT-03/CT-04/CT-08 (hoy desactivadas, sin aceptación), lo que requiere decisión y acta aparte; **este informe no lo propone**.
 
 ---
