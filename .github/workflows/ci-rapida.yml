@@ -12,9 +12,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   verificar:
-    # Un PR desde una rama feat/** ya tiene el control del push del mismo SHA (feat a main o feat a feat);
-    # los PR desde ramas wp/** u otras, que no corren en push, sí se verifican aquí.
-    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'feat/')
+    # El PR permanente de feat a main ya tiene el control del push del mismo SHA.
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'feat/')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

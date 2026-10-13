@@ -185,6 +185,23 @@ def nombre_campo(nombre):
     return 'CAMPO_NO_RECONOCIDO'
 
 
+PARAMETROS_CONOCIDOS = frozenset(
+    {'opcion', 'rit', 'causa', 'doc', 'anexo', 'tipo', 'id', 'accion', 'pagina', 'rut', 'nombre', 'era', 'rol'}
+)
+
+
+def nombre_parametro(nombre):
+    """Nombre de parámetro de URL/POST: solo con forma de código (guion bajo, dígito, camelCase) o conocido.
+
+    Una palabra suelta como «Clotilde» podría ser un dato puesto como nombre; sale como CAMPO_NO_RECONOCIDO.
+    """
+    if not isinstance(nombre, str) or not IDENT.fullmatch(nombre):
+        return 'CAMPO_NO_RECONOCIDO'
+    if nombre.lower() in PARAMETROS_CONOCIDOS or re.search(r'[_\d]|[a-z][A-Z]', nombre):
+        return nombre_campo(nombre)
+    return 'CAMPO_NO_RECONOCIDO'
+
+
 def resumir_url(valor, sensibles):
     valor = str(valor or '').strip()
     if valor.lower().startswith('javascript:'):
@@ -208,23 +225,28 @@ def resumir_url(valor, sensibles):
     parametros = []
     for nombre, dato in parse_qsl(url.query, keep_blank_values=True):
         sensibles.add(dato)
-        parametros.append({'nombre': nombre_campo(nombre), 'forma': forma_parametro(dato)})
+        parametros.append({'nombre': nombre_parametro(nombre), 'forma': forma_parametro(dato)})
     return {'tipo': 'URL', 'origen': origen, 'ruta': ruta_segura, 'parametros': parametros}
 
 
 def llamadas(codigo, sensibles):
+    """Funciones llamadas en un atributo (`onclick`, `javascript:`): nombre, aridad y tipos; nunca valores.
+
+    Los literales se retiran antes de buscar llamadas: un texto entre comillas no puede aportar «nombres».
+    """
+    literales = []
+
+    def guardar(match):
+        literales.append(match.group(0)[1:-1])
+        sensibles.add(match.group(0)[1:-1])
+        return '"S"'
+
+    sin_literales = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', guardar, str(codigo or ''))
     salida = Counter()
-    for nombre, argumentos in LLAMADA.findall(str(codigo or '')):
+    for nombre, argumentos in LLAMADA.findall(sin_literales):
         partes = [p.strip() for p in argumentos.split(',')] if argumentos.strip() else []
-        tipos = []
-        for parte in partes:
-            if re.fullmatch(r'\d+', parte):
-                tipos.append('num')
-            elif parte[:1] in ('"', "'"):
-                tipos.append('str')
-                sensibles.add(parte.strip('\'"'))
-            else:
-                tipos.append('expr')
+        tipos = ['num' if re.fullmatch(r'\d+', p) else 'str' if p == '"S"' else 'expr' for p in partes]
+        # Sin literales, el nombre solo puede venir de código: se registra como identificador emitido.
         salida[f'{nombre_campo(nombre)}/{len(partes)}:' + ','.join(tipos)] += 1
     return dict(sorted(salida.items()))
 
@@ -317,75 +339,128 @@ def resumen_tabla(tabla, sensibles):
     }
 
 
-def esqueleto(fuente, inicio):
-    """Cuerpo de una función con literales y números largos enmascarados; rutas .do/.jsp y nombres de campo se conservan."""
-    abre = fuente.find('{', inicio)
+def enmascarar_literal(valor):
+    """Literal de JS enmascarado: conserva rutas .do/.jsp y nombres de parámetros; nunca valores."""
+    ruta = valor.split('?', 1)[0]
+    if RUTA.fullmatch(ruta.split('://', 1)[-1].split('/', 1)[-1] if '://' in ruta else ruta):
+        consulta = valor.split('?', 1)[1] if '?' in valor else ''
+        campos = [p.split('=', 1)[0] for p in consulta.split('&') if p]
+        return '"' + ruta + ('?' + '&'.join(nombre_parametro(c) + '=VALOR' for c in campos) if consulta else '') + '"'
+    if re.fullmatch(r'&?[A-Za-z_][\w]{0,40}=', valor):
+        return '"' + valor[: -len(valor.lstrip('&'))] + nombre_parametro(valor.lstrip('&')[:-1]) + '="'
+    if re.fullmatch(r'(?:&?[A-Za-z_]\w{0,40}=[^&]*)+', valor):
+        campos = [p.split('=', 1)[0] for p in valor.split('&') if p]
+        return (
+            '"'
+            + ('&' if valor.startswith('&') else '')
+            + '&'.join(nombre_parametro(c) + '=VALOR' for c in campos)
+            + '"'
+        )
+    if re.fullmatch(r'[A-Za-z_][\w]{0,40}', valor) and normalizar(valor) not in PERMITIDOS:
+        return '"IDENT"'
+    return '"TEXTO"'
+
+
+def limpiar_js(fuente, sensibles):
+    """Recorre el código respetando comillas: enmascara literales, quita comentarios y reemplaza expresiones regulares.
+
+    El texto de comentarios y expresiones regulares entra al control de fugas como dato (puede contener nombres);
+    los literales entran como código (nombres de campos, métodos).
+    """
+    codigo = getattr(sensibles, 'codigo', sensibles)
+    salida = []
+    previo = ''
+    i, n = 0, len(fuente)
+    while i < n:
+        c = fuente[i]
+        if c in '"\'`':
+            j = i + 1
+            while j < n and fuente[j] != c and not (c != '`' and fuente[j] == '\n'):
+                j += 2 if fuente[j] == '\\' else 1
+            valor = fuente[i + 1 : min(j, n)]
+            codigo.add(valor)
+            salida.append(enmascarar_literal(valor))
+            i, previo = j + 1, '"'
+            continue
+        if fuente.startswith('//', i):
+            j = fuente.find('\n', i)
+            j = n if j < 0 else j
+            sensibles.add(fuente[i + 2 : j].strip())
+            i = j
+            continue
+        if fuente.startswith('/*', i):
+            j = fuente.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            sensibles.add(fuente[i + 2 : j - 2].strip())
+            salida.append(' ')
+            i = j
+            continue
+        if c == '/':
+            palabra = re.search(r'([A-Za-z_$][\w$]*)\s*$', ''.join(salida[-30:]))
+            if previo in ('', *'(,=:[!&|?{};+-*%<>~^') or (
+                palabra and palabra.group(1) in ('return', 'typeof', 'case')
+            ):
+                j, clase = i + 1, False
+                while j < n and fuente[j] != '\n':
+                    if fuente[j] == '\\':
+                        j += 2
+                        continue
+                    if fuente[j] == '[':
+                        clase = True
+                    elif fuente[j] == ']':
+                        clase = False
+                    elif fuente[j] == '/' and not clase:
+                        break
+                    j += 1
+                if j < n and fuente[j] == '/':
+                    sensibles.add(fuente[i + 1 : j])
+                    j += 1
+                    while j < n and fuente[j].isalpha():
+                        j += 1
+                    salida.append('/REGEX/')
+                    i, previo = j, '/'
+                    continue
+        salida.append(c)
+        if not c.isspace():
+            previo = c
+        i += 1
+    return ''.join(salida)
+
+
+def esqueleto(limpio, inicio):
+    """Cuerpo de una función ya limpia (sin comentarios ni literales originales), con números largos enmascarados."""
+    abre = limpio.find('{', inicio)
     if abre < 0:
         return ''
-    nivel, i, comilla = 0, abre, None
-    while i < len(fuente):
-        c = fuente[i]
-        if comilla:
-            if c == '\\':
-                i += 1
-            elif c == comilla:
-                comilla = None
-        elif c in ('"', "'", '`'):
-            comilla = c
-        elif c == '{':
+    nivel = 0
+    for i in range(abre, len(limpio)):
+        if limpio[i] == '{':
             nivel += 1
-        elif c == '}':
+        elif limpio[i] == '}':
             nivel -= 1
             if nivel == 0:
                 break
-        i += 1
-    cuerpo = fuente[inicio : i + 1]
-    cuerpo = re.sub(r'/\*.*?\*/', ' ', cuerpo, flags=re.S)
-    cuerpo = re.sub(r'(?m)//[^\n\'"]*$', ' ', cuerpo)
-
-    def literal(match):
-        valor = match.group(0)[1:-1]
-        ruta = valor.split('?', 1)[0]
-        if RUTA.fullmatch(ruta.split('://', 1)[-1].split('/', 1)[-1] if '://' in ruta else ruta):
-            consulta = valor.split('?', 1)[1] if '?' in valor else ''
-            campos = [p.split('=', 1)[0] for p in consulta.split('&') if p]
-            return '"' + ruta + ('?' + '&'.join(nombre_campo(c) + '=VALOR' for c in campos) if consulta else '') + '"'
-        if re.fullmatch(r'&?[A-Za-z_][\w]{0,40}=', valor):
-            return '"' + valor + '"'
-        if re.fullmatch(r'(?:&?[A-Za-z_]\w{0,40}=[^&]*)+', valor):
-            campos = [p.split('=', 1)[0] for p in valor.split('&') if p]
-            return (
-                '"'
-                + ('&' if valor.startswith('&') else '')
-                + '&'.join(nombre_campo(c) + '=VALOR' for c in campos)
-                + '"'
-            )
-        if re.fullmatch(r'[A-Za-z_][\w]{0,40}', valor) and normalizar(valor) not in PERMITIDOS:
-            return '"IDENT"'
-        return '"TEXTO"'
-
-    cuerpo = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`', literal, cuerpo)
+    cuerpo = limpio[inicio : i + 1]
     cuerpo = re.sub(r'\b\d{3,}\b', 'NUM', cuerpo)
     cuerpo = re.sub(r'[ \t]+', ' ', cuerpo)
+    cuerpo = re.sub(r'\n\s*\n+', '\n', cuerpo)
     return cuerpo[:MAX_ESQUELETO]
 
 
 def resumen_script(fuente, sensibles):
-    codigo = getattr(sensibles, 'codigo', sensibles)
-    for match in re.finditer(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', fuente):
-        codigo.add(match.group(0)[1:-1])
-    definidas = Counter(nombre_campo(n) for n in re.findall(r'function\s+([A-Za-z_$][\w$]*)\s*\(', fuente))
+    limpio = limpiar_js(fuente, sensibles)
+    definidas = Counter(nombre_campo(n) for n in re.findall(r'function\s+([A-Za-z_$][\w$]*)\s*\(', limpio))
     esqueletos = {}
-    for match in re.finditer(r'function\s+([A-Za-z_$][\w$]*)\s*\(', fuente):
+    for match in re.finditer(r'function\s+([A-Za-z_$][\w$]*)\s*\(', limpio):
         nombre = match.group(1)
         if INTERES.search(nombre) and nombre not in esqueletos and len(esqueletos) < 40:
-            esqueletos[nombre_campo(nombre)] = esqueleto(fuente, match.start())
+            esqueletos[nombre_campo(nombre)] = esqueleto(limpio, match.start())
     return {
         'funciones_definidas': dict(sorted(definidas.items())),
-        'window_open': len(re.findall(r'window\.open\s*\(', fuente)),
-        'location_asignaciones': len(re.findall(r'location(\.href)?\s*=', fuente)),
-        'submit': len(re.findall(r'\.submit\s*\(', fuente)),
-        'xhr_o_fetch': len(re.findall(r'XMLHttpRequest|\bfetch\s*\(|\$\.ajax|\$\.post|\$\.get', fuente)),
+        'window_open': len(re.findall(r'window\.open\s*\(', limpio)),
+        'location_asignaciones': len(re.findall(r'location(\.href)?\s*=', limpio)),
+        'submit': len(re.findall(r'\.submit\s*\(', limpio)),
+        'xhr_o_fetch': len(re.findall(r'XMLHttpRequest|\bfetch\s*\(|\$\.ajax|\$\.post|\$\.get', limpio)),
         'esqueletos': esqueletos,
     }
 
@@ -448,7 +523,9 @@ def resumen_html(texto, sensibles):
         formularios.append(
             {
                 'nombre': nombre_campo(formulario.get('name') or ''),
-                'metodo': (formulario.get('method') or 'get').lower()[:6],
+                'metodo': (formulario.get('method') or 'get').lower()
+                if (formulario.get('method') or 'get').lower() in ('get', 'post')
+                else 'OTRO',
                 'accion': resumir_url(formulario.get('action') or '', sensibles),
                 'campos': campos,
             }
@@ -511,7 +588,7 @@ def resumen_har(datos, sensibles):
                 sensibles.add(post['text'])
         for nombre, valor in pares:
             sensibles.add(valor)
-            campos_post.append({'nombre': nombre_campo(nombre), 'forma': forma_parametro(str(valor))})
+            campos_post.append({'nombre': nombre_parametro(nombre), 'forma': forma_parametro(str(valor))})
         ubicacion = next(
             (h.get('value', '') for h in respuesta.get('headers', []) if str(h.get('name', '')).lower() == 'location'),
             '',

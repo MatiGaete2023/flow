@@ -213,3 +213,45 @@ def test_fuga_de_dato_con_forma_de_identificador_sigue_bloqueando(tmp_path):
     assert modulo.fugas('{"campo": "COD_Lengueta"}', sensibles) == []
     assert modulo.fugas('{"x": "texto con espacios canario"}', sensibles) == [26]
     assert modulo.fugas('{"bytes": null, "x": "ShowHistorialFichas"}', {'null', 'Historial'}) == []
+
+
+def test_casos_adversariales_de_la_revision_e3(tmp_path):
+    pagina = tmp_path / 'adversarial.html'
+    pagina.write_text(
+        """<html><head><script>
+// revisar "x" caso de Zacarias Fulanito
+// nota: Ana Beltrana dijo 'ok'
+// O'Higgins Canario
+var patron = /Rigoberta Ficticia/g;
+/* bloque con Hermenegildo Canario */
+function ShowHistoria(a, b, c){ var z = 'Petronila Canaria'; window.open('/SITFAWEB/X.do?a1=' + a, 'v'); }
+</script></head><body>
+<form name="f" method="Clotildo" action="buscar.do?Clotilde=1&TIP_Causa=2"><input name="x" value="1"></form>
+<a onclick="alerta('Causa Menganito Ficticio(Zutanez)')">x</a>
+<table><tr><th>Folio</th></tr><tr><td>1</td></tr></table>
+</body></html>""",
+        encoding='utf-8',
+    )
+    texto = ejecutar(tmp_path, pagina)
+    for dato in (
+        'Zacarias',
+        'Fulanito',
+        'Beltrana',
+        'Higgins',
+        'Rigoberta',
+        'Hermenegildo',
+        'Petronila',
+        'Menganito',
+        'Ficticio',
+        'Zutanez',
+        'Clotilde',
+        'Clotildo',
+    ):
+        assert dato not in texto, dato
+    copia = json.loads(texto)['copias'][0]
+    assert copia['acciones_onclick'] == {'alerta/1:str': 1}
+    esqueleto = copia['script_en_linea']['esqueletos']['ShowHistoria']
+    assert 'window.open("/SITFAWEB/X.do?a1=VALOR"' in esqueleto
+    formulario = copia['formularios'][0]
+    assert formulario['metodo'] == 'OTRO'
+    assert [p['nombre'] for p in formulario['accion']['parametros']] == ['CAMPO_NO_RECONOCIDO', 'TIP_Causa']

@@ -148,17 +148,21 @@ Qué devuelve `read_historia(bytes)`:
             'fecha_iso': '2099-10-13', 'anexo': False}, ...],
  'vacio_explicito': False,                     # True solo si la tabla exacta existe y no tiene filas
  'advertencias': [{'codigo': 'HISTORIA_FILA_INCOMPLETA', 'fila': 4, 'folio': '9001'},
-                  {'codigo': 'HISTORIA_FECHA_ILEGIBLE', 'fila': 2, 'folio': '…'}],
+                  {'codigo': 'HISTORIA_FECHA_ILEGIBLE', 'fila': 2, 'folio': '…'},
+                  {'codigo': 'HISTORIA_ENCABEZADO_REPETIDO', 'fila': 1, 'folio': ''}],
  'sha256': '…64 hex…', 'source': '', 'captured_at': ''}
-# Errores: ValueError('HISTORIA_TABLA_NO_RECONOCIDA' | 'HISTORIA_ENCABEZADO_DISTINTO' | 'HISTORIA_SESION')
+# Errores: ValueError('HISTORIA_TABLA_NO_RECONOCIDA' | 'HISTORIA_ENCABEZADO_DISTINTO' | 'HISTORIA_SESION'
+#                     | 'HISTORIA_RESPUESTA_INCOMPLETA')   # este último: HTML sin </html> (respuesta cortada)
 ```
 
 `separar_ventana(filas, hasta_date)` → `(dentro, anteriores, posteriores, sin_fecha)`; usa
 `nurus.capture.temporal.earliest` (4 meses naturales).
 
-`extract_historia(table, '49')` → `[{'rit','nombre','rut','programa','tribunal_codigo','causa_id','ingreso_id'}]`,
-una entrada por fila con **un** enlace `ShowHistoria` concordante (tribunal y RIT). Varias filas pueden tener la
-misma causa: **deduplica tú** por `('RUS', tribunal, causa_id)`.
+`extract_historia(table, '49')` → `[{'rit','nombre','rut','programa','tribunal_codigo','causa_id','ingreso_id','identidad'}]`,
+una entrada por fila con **un** enlace `ShowHistoria` concordante (tribunal y RIT). `ingreso_id` solo si la fila
+trae `ShowObservaciones` de la misma causa y tribunal (si no, `''`). `identidad` es `'VERIFICADA'` o
+`'INCIERTA'` (el listado asocia un RIT a dos causas o una causa a dos RIT): **las INCIERTA no se leen** y su causa
+queda `IDENTIDAD_INCIERTA`. Varias filas pueden tener la misma causa: **deduplica tú** por `('RUS', tribunal, causa_id)`.
 
 ### 4.4 Código existente que reutilizas (modelos)
 
@@ -365,7 +369,8 @@ Marca el paquete como tomado: en `docs/implementacion/estado/WP-53.json` pon `"e
 ```
 
    Notas: la lectura común que sigue (`fetch(url,{...init,credentials:"include",redirect:"error"...})`) ya hace
-   el GET, limita tamaño y calcula SHA-256. **No** devuelvas `data` ni `url`: el resultado solo lleva `body`,
+   el GET y calcula SHA-256. Su tope es 80 MB y no revisa el `content-type`: el tope de 8 MB y el control de que
+   sea HTML se aplican en Python (`LectorHistoria._leer` y `ChromeTransport.body`). **No** devuelvas `data` ni `url`: el resultado solo lleva `body`,
    `params` (tribunal, rit, causa), `startedAt`, `digest`.
 2. En el `catch` final de `sitfaTask`, junto al caso `diary_open`, añade:
 
@@ -402,7 +407,11 @@ Marca el paquete como tomado: en `docs/implementacion/estado/WP-53.json` pon `"e
 10. Verifica: `node descargador/test_bitacoras_extension.cjs && node descargador/test_historia_extension.cjs` y
     `tools/ci_local.sh descargador/test_poc.py descargador/test_flujos.py` (o las pruebas que tocaste).
 
-**Salida:** ambas pruebas `.cjs` pasan; ninguna otra prueba falla.
+11. Agrega `node descargador/test_historia_extension.cjs` a `.github/workflows/ci-rapida.yml` (paso «Código y
+    ambas suites sintéticas», junto a `test_bitacoras_extension.cjs`) y a `tools/ci_local.sh` (misma posición).
+    Un archivo de prueba que la CI no ejecuta no protege nada.
+
+**Salida:** ambas pruebas `.cjs` pasan localmente y en la CI; ninguna otra prueba falla.
 
 #### 53.4 Lectura en una pasada — `LectorHistoria`
 
@@ -468,15 +477,26 @@ class LectorHistoria:
         self._persistir()
 
     def pagina(self, selection, query, number, body, profile):
-        tabla = _tabla_listado(body, profile)
-        for fila in extract_historia(tabla, selection.tribunal):
-            clave = f"RUS|{selection.tribunal}|{fila['causa_id']}"
-            self.estado['vinculos'].append({**fila, 'pestana': selection.tab, 'modalidad': selection.modality,
-                                            'clave': clave})
-            causa = self.estado['causas'].setdefault(clave, {'tribunal': selection.tribunal, 'rit': fila['rit'],
-                                                              'causa_id': fila['causa_id'], 'estado': 'PENDIENTE'})
-            if causa['estado'] in ('PENDIENTE', 'FALLIDA') and not self.cancel.is_set():
-                self._leer(causa)
+        # Regla (b): ningún error de historia sale de aquí; la consulta de bitácoras no se entera.
+        try:
+            tabla = _tabla_listado(body, profile)
+            for fila in extract_historia(tabla, selection.tribunal):
+                clave = f"RUS|{selection.tribunal}|{fila['causa_id']}"
+                self.estado['vinculos'].append({**fila, 'pestana': selection.tab, 'modalidad': selection.modality,
+                                                'clave': clave})
+                causa = self.estado['causas'].get(clave)
+                if causa is None:
+                    causa = self.estado['causas'][clave] = {'tribunal': selection.tribunal, 'rit': fila['rit'],
+                                                            'causa_id': fila['causa_id'], 'estado': 'PENDIENTE'}
+                elif m.normalized(causa['rit']) != m.normalized(fila['rit']):
+                    fila['identidad'] = 'INCIERTA'            # la misma causa con otro RIT en otra página
+                if fila['identidad'] != 'VERIFICADA':
+                    causa.update(estado='IDENTIDAD_INCIERTA', error='El listado asocia esta causa a más de un RIT o al revés.')
+                    continue
+                if causa['estado'] == 'PENDIENTE' and not self.cancel.is_set():
+                    self._leer(causa)
+        except (m.PocError, ValueError, KeyError, OSError) as exc:
+            self.estado.setdefault('errores_listado', []).append({'pagina': number, 'error': str(exc)})
         self._persistir()
 
     def _leer(self, causa):
@@ -494,6 +514,10 @@ class LectorHistoria:
                 raise m.PocError('La respuesta de historia no coincide con la solicitud.')
             leida = datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00')).astimezone()
             lectura = read_historia(data)
+            visible = lectura['encabezado'].get('RIT', '')
+            if m.normalized(visible) != m.normalized(causa['rit']):
+                # La ventana no es la causa pedida: no se guarda como suya.
+                raise ValueError('HISTORIA_IDENTIDAD_VISIBLE')
             nombre = 'historia-' + hashlib.sha256(json.dumps(params).encode()).hexdigest()[:24] + '-' + digest[:16] + '.html'
             ruta = self.carpeta / nombre
             if not ruta.exists():
@@ -528,13 +552,19 @@ class LectorHistoria:
    anota el error en `self.estado['errores_listado']` y sigue; (c) la pausa solo tras una lectura real; (d) `LimiteLecturas` de bitácoras
    detiene el lote completo: entonces las causas restantes quedan `PENDIENTE`.
 3. Pruebas `descargador/test_lectura_historia.py` — usa un `Bridge` falso que responde a `history_open` con el
-   fixture `ventana_historia.html` en base64 (`{'body': b64, 'digest': sha, 'params': params, 'startedAt': '2099-10-13T12:00:00Z'}`).
+   fixture `ventana_historia.html` en base64:
+   `{'status': 200, 'type': 'text/html; charset=windows-1252', 'body': b64, 'digest': sha, 'params': params, 'startedAt': '2099-10-13T12:00:00Z'}`
+   (`status` y `type` son obligatorios: `ChromeTransport.body` los exige). El RIT del fixture es `C-99999-2099`:
+   el listado falso debe usar ese RIT, o la lectura fallará con `HISTORIA_IDENTIDAD_VISIBLE` (eso también se prueba).
    Casos: dos filas misma causa ⇒ 1 llamada; fila sin enlace ⇒ no se llama y la causa no aparece; respuesta de
    login ⇒ `FALLIDA` con `HISTORIA_SESION`; digest distinto ⇒ `FALLIDA`; tope (pon el tope en 1 con monkeypatch)
    ⇒ resto `PENDIENTE` y `tope_alcanzado`; cancelar ⇒ no más llamadas; `anterior` ⇒ solo releer `FALLIDA`;
    con fecha de lectura 2099-10-13 ⇒ `en_ventana=3`, `anteriores=0`, `incompletas=1`; ningún archivo de la
    carpeta contiene `a1=`; las bitácoras del mismo lote son idénticas con y sin historia (usa el arnés de
-   `descargador/test_lectura_bitacoras.py`).
+   `descargador/test_lectura_bitacoras.py`); RIT visible distinto al pedido ⇒ `FALLIDA` con
+   `HISTORIA_IDENTIDAD_VISIBLE` y **sin** archivo guardado; respuesta sin `</html>` ⇒ `FALLIDA` con
+   `HISTORIA_RESPUESTA_INCOMPLETA`; fila con `identidad='INCIERTA'` ⇒ causa `IDENTIDAD_INCIERTA` sin llamada;
+   un `PocError` dentro de `pagina()` no cambia el estado de la consulta de bitácoras.
 
 **Salida:** `tools/ci_local.sh descargador/test_lectura_historia.py descargador/test_lectura_bitacoras.py` PASA.
 
@@ -601,7 +631,7 @@ class LectorHistoria:
    'historia_causa': {'source_system':'RUS','court_code':…,'cause_id':…}, 'ventana': {'criterio':'ventana_4_meses','desde':…,'hasta':…}}`.
    **No uses `remote_identity`** (exige `ingreso_id`). Cobertura de la consulta: `LEIDA→COMPLETA`,
    `VACIA_COMPROBADA→VACIA_COMPROBADA`, `FALLIDA→FALLIDA` (+ incidencia `HISTORIA_FALLIDA`),
-   `PENDIENTE/CANCELADA→CANCELADA`. `table_states['historia_tramites']` = `aggregate` de esas coberturas (función
+   `IDENTIDAD_INCIERTA→IDENTIDAD_INCIERTA` (+ incidencia), `PENDIENTE/CANCELADA→CANCELADA`. `table_states['historia_tramites']` = `aggregate` de esas coberturas (función
    `aggregate` de `src/nurus/capture/coverage.py`). Sin `historia` ⇒ salida idéntica a la de hoy.
 3. `descargador.py` → `package_current_lot(sheets_folder, diary_manifest, target, consolidated=False, historia=None)`
    pasa `historia` a `export_capture_with_note`/`export_capture`.

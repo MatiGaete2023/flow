@@ -63,6 +63,7 @@ def test_tabla_vacia_con_encabezado_exacto_es_vacio_explicito():
         (lambda h: h + h[h.index('<table') : h.index('</table>') + 8], 'HISTORIA_TABLA_NO_RECONOCIDA'),
         (lambda h: '<html><body><form><input type="password" name="clave"></form></body></html>', 'HISTORIA_SESION'),
         (lambda h: '', 'HISTORIA_TABLA_NO_RECONOCIDA'),
+        (lambda h: h.replace('</html>', ''), 'HISTORIA_RESPUESTA_INCOMPLETA'),
     ],
 )
 def test_desvios_son_error_nunca_vacio(cambio, codigo):
@@ -95,3 +96,18 @@ def test_ventana_de_cuatro_meses():
 
 def test_encabezados_publicados():
     assert len(HEADERS) == 9 and HEADERS[0] == 'Folio' and HEADERS[-1] == 'Fecha Tram'
+
+
+@pytest.mark.parametrize('corte', ['<tbody>', '9120</td>', '>9119</td>'])
+def test_respuesta_cortada_es_error_nunca_vacio_ni_fila_incompleta(corte):
+    html = base()
+    with pytest.raises(ValueError, match='HISTORIA_RESPUESTA_INCOMPLETA'):
+        read_historia(html[: html.index(corte) + len(corte)])
+
+
+def test_encabezado_repetido_no_se_lee_como_tramite():
+    html = base()
+    encabezado = html[html.index('<thead>') + 7 : html.index('</thead>')]
+    resultado = read_historia(html.replace('<tbody>', '<tbody>' + encabezado, 1))
+    assert [f['folio'] for f in resultado['filas']] == ['9120', '9119', '9117']
+    assert resultado['advertencias'][0]['codigo'] == 'HISTORIA_ENCABEZADO_REPETIDO'

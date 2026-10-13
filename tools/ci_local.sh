@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Los mismos controles de «CI rápida Linux», antes de hacer push (un push rojo cuesta una corrida).
+# Los mismos controles de código de «CI rápida Linux» (sin instalación ni inventario de dependencias),
+# antes de hacer push: un push rojo cuesta una corrida. Mantener sincronizado con .github/workflows/ci-rapida.yml.
 # Uso:
 #   tools/ci_local.sh                         # controles + ambas suites (como la CI)
 #   tools/ci_local.sh descargador/test_x.py   # controles + solo esas pruebas (mientras se desarrolla)
@@ -20,6 +21,5 @@ else
   run $xvfb python -m pytest -q -p no:cacheprovider tests
   run $xvfb python -m pytest -q -p no:cacheprovider descargador
   run node descargador/test_bitacoras_extension.cjs
-  if [ -f descargador/test_historia_extension.cjs ]; then run node descargador/test_historia_extension.cjs; fi
 fi
 echo "CI local: PASA"

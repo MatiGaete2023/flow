@@ -136,8 +136,9 @@ def extract(table, tribunal_code):
 def extract_historia(table, tribunal_code):
     """Vínculo de historia por fila (alcance CAUSA): exactamente un ShowHistoria(tribunal, RIT, causa) concordante.
 
-    No exige ShowObservaciones. Si la fila trae además una observación de la misma causa, se informa su ingreso
-    solo para la hoja de vínculos; los trámites nunca se atribuyen al ingreso.
+    No exige ShowObservaciones. Si la fila trae además una observación de la misma causa y tribunal, se informa su
+    ingreso solo para la hoja de vínculos; los trámites nunca se atribuyen al ingreso. `identidad` es 'INCIERTA'
+    cuando el listado asocia un RIT a dos causas o una causa a dos RIT: esas causas no se leen.
     """
     import motor as m
 
@@ -170,11 +171,25 @@ def extract_historia(table, tribunal_code):
         if court != tribunal_code or m.normalized(linked_rit) != rit or not re.fullmatch(r'\d{1,20}', cause):
             continue
         entry = {k: values[i] for k, i in headers.items()}
-        entry.update(tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='')
+        entry.update(tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='', identidad='VERIFICADA')
         observation = calls(text, 'ShowObservaciones')
-        if len(observation) == 1 and len(observation[0]) == 6 and observation[0][0] == cause:
+        if (
+            len(observation) == 1
+            and len(observation[0]) == 6
+            and observation[0][0] == cause
+            and observation[0][1] == tribunal_code
+            and re.fullmatch(r'\d{1,20}', observation[0][2])
+        ):
             entry['ingreso_id'] = observation[0][2]
         result.append(entry)
+    # Un RIT con dos causas, o una causa con dos RIT, en el mismo listado: no se abre ninguna de ellas.
+    causas_por_rit, rits_por_causa = defaultdict(set), defaultdict(set)
+    for entry in result:
+        causas_por_rit[m.normalized(entry['rit'])].add(entry['causa_id'])
+        rits_por_causa[entry['causa_id']].add(m.normalized(entry['rit']))
+    for entry in result:
+        if len(causas_por_rit[m.normalized(entry['rit'])]) > 1 or len(rits_por_causa[entry['causa_id']]) > 1:
+            entry['identidad'] = 'INCIERTA'
     return result
 
 

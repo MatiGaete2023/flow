@@ -6,6 +6,7 @@ no sigue enlaces de documentos ni ejecuta scripts. Ningún desvío se convierte 
 
 from datetime import date, datetime
 from hashlib import sha256
+import re
 
 from lxml import html
 
@@ -28,13 +29,16 @@ CABECERA = (
 TABLA_NO_RECONOCIDA = 'HISTORIA_TABLA_NO_RECONOCIDA'
 ENCABEZADO_DISTINTO = 'HISTORIA_ENCABEZADO_DISTINTO'
 SESION = 'HISTORIA_SESION'
+INCOMPLETA = 'HISTORIA_RESPUESTA_INCOMPLETA'
 # Advertencias: la lectura sigue siendo válida.
 FECHA_ILEGIBLE = 'HISTORIA_FECHA_ILEGIBLE'
 FILA_INCOMPLETA = 'HISTORIA_FILA_INCOMPLETA'
+ENCABEZADO_REPETIDO = 'HISTORIA_ENCABEZADO_REPETIDO'
 MENSAJES = {
     TABLA_NO_RECONOCIDA: 'La respuesta no contiene la tabla de historia; puede ser otra página o un cambio de SITFA.',
     ENCABEZADO_DISTINTO: 'Cambió la estructura de la tabla de historia; no se leyó para no perder trámites.',
     SESION: 'La respuesta parece la página de ingreso de SITFA; revisa la sesión.',
+    INCOMPLETA: 'La respuesta de historia llegó cortada (sin cierre del documento); se reintenta, no se lee como vacía.',
 }
 _CANON_HEADERS = tuple(normalize(h) for h in HEADERS)
 _CANON_CABECERA = {normalize(e): e for e in CABECERA}
@@ -78,6 +82,9 @@ def read_historia(data, *, source='', captured_at=''):
     texto = decode_snapshot(data)
     if not texto.strip():
         raise ValueError(TABLA_NO_RECONOCIDA)
+    # Igual que el lector de bitácoras: una respuesta cortada podría parecer vacía o con menos filas.
+    if not re.search(r'</html\s*>', texto, re.I):
+        raise ValueError(INCOMPLETA)
     documento = html.fromstring(texto)
     if documento.xpath('//input[translate(@type,"PASSWORD","password")="password"]'):
         raise ValueError(SESION)
@@ -96,6 +103,9 @@ def read_historia(data, *, source='', captured_at=''):
     advertencias = []
     for posicion, fila in enumerate(filas, 1):
         celdas = fila.xpath('./td | ./th')
+        if tuple(normalize(_texto(c)) for c in celdas) == _CANON_HEADERS:
+            advertencias.append({'codigo': ENCABEZADO_REPETIDO, 'fila': posicion, 'folio': ''})
+            continue
         if len(celdas) == 4 and posicion == len(filas):
             # SITFA entrega la última fila solo con Folio, Doc., Sel y Anexo (H0): se informa y no se exporta.
             advertencias.append({'codigo': FILA_INCOMPLETA, 'fila': posicion, 'folio': _texto(celdas[0])})

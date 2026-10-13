@@ -98,3 +98,25 @@ def test_extract_historia_descarta_enlaces_ambiguos_o_discordantes():
         etree.tostring(listing(), encoding='unicode').replace("'X-1-2026','100')", "'X-9-2026','100')")
     )
     assert extract_historia(otro_rit, '777') == []
+
+
+def test_extract_historia_ingreso_de_otro_tribunal_o_no_numerico_se_ignora_y_rit_con_dos_causas_es_incierto():
+    def fila(rit, causa, obs=''):
+        return (
+            f'<tr><td><a onclick="ShowHistoria(777,\'{rit}\',{causa})">{rit}</a></td><td>11111111-1</td>'
+            f'<td>Persona ficticia</td><td>PRM</td><td>{obs}</td></tr>'
+        )
+
+    cabecera = '<table><tr><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivación</td><td>Obs.</td></tr>'
+    page = html.fromstring(
+        cabecera
+        + fila('X-1-2026', 100, '<a onclick="ShowObservaciones(100,888,\'200\',12,3,\'0\')">o</a>')
+        + fila('X-2-2026', 101, '<a onclick="ShowObservaciones(101,777,\'abc def\',12,3,\'0\')">o</a>')
+        + fila('X-3-2026', 102)
+        + fila('X-3-2026', 103)
+        + '</table>'
+    )
+    found = {(f['rit'], f['causa_id']): f for f in extract_historia(page, '777')}
+    assert found[('X-1-2026', '100')]['ingreso_id'] == '' and found[('X-2-2026', '101')]['ingreso_id'] == ''
+    assert found[('X-3-2026', '102')]['identidad'] == found[('X-3-2026', '103')]['identidad'] == 'INCIERTA'
+    assert found[('X-1-2026', '100')]['identidad'] == 'VERIFICADA'

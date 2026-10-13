@@ -51,8 +51,8 @@ Paquetes: [WP-52](wp/WP-52.md) H0 y decisión → [WP-53](wp/WP-53.md) núcleo (
 - Agrupar commits y hacer un push por cada 2–3 subpasos; commits solo de documentos con `[skip ci]`.
 - Windows **una vez**, al final de WP-54: un único PR hacia `feat/ejecucion-plan-20261008` y un único
   `workflow_dispatch` para el instalador.
-- «CI rápida Linux» ya no repite la verificación en PR cuya rama de origen es `feat/**` (el push del mismo SHA ya
-  la hizo); PR desde otras ramas se siguen verificando.
+- La condición de «CI rápida Linux» no se cambia (la revisión E3 del 13-oct mostró que omitir PR `feat→feat` dejaba
+  un hueco); el único PR final sí corre la verificación.
 
 ## Reglas (mandan `AGENTS.md` y `PLAN_VIGENTE.md`)
 
