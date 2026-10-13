@@ -79,6 +79,8 @@ def last_center_label(work, row):
         return 'ORIGEN_DESCONOCIDO'
     if display['status'] == 'NO_SOLICITADA':
         return 'Bitácoras no solicitadas'
+    if display['status'] == 'NO_LEIDA':
+        return 'Bitácora no leída'
     if display['status'] != 'ACREDITADA':
         # Distingue «no hay bitácora» de «la bitácora solo tiene entradas fuera de la ventana de 4 meses».
         if display.get('outside_horizon'):
@@ -102,6 +104,11 @@ def novelties_text(work, row):
     lines = [f'Novedades posteriores · solo mostrar · período {period}']
     if display['status'] == 'NO_SOLICITADA':
         lines.append('El paquete no solicitó bitácoras: no hay entradas que mostrar.')
+    elif display['status'] == 'NO_LEIDA':
+        lines.append(
+            'La bitácora de este ingreso no se leyó (límite de lecturas, falla o lote incompleto). '
+            'En el Descargador usa «Retomar» sobre la carpeta de bitácoras y vuelve a crear el paquete.'
+        )
     elif display['status'] == 'SIN_ENTRADAS_CAPTURADAS':
         lines.append('No hay entradas capturadas en el período; no acredita ausencia de actuaciones.')
     elif display['status'] == 'ORIGEN_DESCONOCIDO':

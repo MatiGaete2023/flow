@@ -1,12 +1,13 @@
 """Cronología explicada; no atribuye revisiones locales a actuaciones oficiales."""
 
 from datetime import date, datetime
+import json
 from calendar import monthrange
 
 RULESET_VERSION = 'baseline-20261008+context-preview-2'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
 DISPLAY_RULES = ('CT-01', 'CT-02')
-DISPLAY_VERSION = 'solo-mostrar-2'
+DISPLAY_VERSION = 'solo-mostrar-3'
 CONTEXT_RULES = {
     'CT-01': ('bitacoras', 'Última observación atribuible al centro'),
     'CT-02': ('bitacoras', 'Entradas posteriores y empates inciertos'),
@@ -93,13 +94,14 @@ def order(related):
     return last, later, uncertain
 
 
-def display_chronology(events, as_of, *, requested=True):
+def display_chronology(events, as_of, *, requested=True, read=True):
     """CT-01/CT-02 en modo «solo mostrar» (D5): no genera hallazgos ni cambia observaciones.
 
     Solo bitácoras del ingreso dentro del horizonte de cuatro meses. Sin origen acreditado del
     centro se informa ORIGEN_DESCONOCIDO; sin entradas capturadas no se afirma ausencia. Si el
-    paquete no solicitó bitácoras se informa NO_SOLICITADA. Las entradas sin fecha y las posteriores
-    al corte se cuentan aparte: no son «anteriores al período».
+    paquete no solicitó bitácoras se informa NO_SOLICITADA. Si la bitácora del ingreso no se leyó
+    (límite de lecturas, falla o lote incompleto) se informa NO_LEIDA: nunca «sin entradas». Las
+    entradas sin fecha y las posteriores al corte se cuentan aparte: no son «anteriores al período».
     """
     start, end = earliest(as_of).isoformat(), as_of.isoformat()
     dated = [e for e in events if e.get('event_at', '')]
@@ -114,6 +116,8 @@ def display_chronology(events, as_of, *, requested=True):
         status = 'ORIGEN_DESCONOCIDO'
     elif not requested and not events:
         status = 'NO_SOLICITADA'
+    elif not read and not events:
+        status = 'NO_LEIDA'
     else:
         status = 'SIN_ENTRADAS_CAPTURADAS'
     return {
@@ -141,6 +145,19 @@ def attach_displays(capture, contexts, records, as_of):
             context.pop('display', None)
         return
     requested = capture.manifest['table_states'].get('bitacoras') != 'NO_SOLICITADA'
+    # Lectura por ingreso: el Descargador deja una consulta de bitácora con su identidad remota.
+    # Un paquete sin esas consultas (versiones anteriores, fixtures) no permite distinguir y no se marca.
+    read = {}
+    for query in capture.rows('consultas'):
+        if query.get('screen') != 'bitacoras':
+            continue
+        try:
+            scope = json.loads(query.get('filters_json') or '{}').get('remote_identity')
+        except ValueError:
+            scope = None
+        if isinstance(scope, dict):
+            key = identity(scope)
+            read[key] = read.get(key, False) or query.get('coverage') not in ('FALLIDA', 'NO_CONSULTADA')
     diaries = {}
     for event in capture.rows('bitacoras'):
         if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
@@ -148,7 +165,10 @@ def attach_displays(capture, contexts, records, as_of):
     for record_id, record in records.items():
         if record_id in contexts and all(identity(record)) and record.get('identity_status') == 'VERIFICADA':
             contexts[record_id]['display'] = display_chronology(
-                diaries.get(identity(record), ()), as_of, requested=requested
+                diaries.get(identity(record), ()),
+                as_of,
+                requested=requested,
+                read=read.get(identity(record), False) if read else True,
             )
 
 
