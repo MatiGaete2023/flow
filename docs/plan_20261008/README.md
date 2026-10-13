@@ -15,7 +15,7 @@ Las herramientas y avances nuevos se guardan en flow.
 Los siete adjuntos recibidos se copiaron sin editar. Las copias «(1)» del plan (05) y de
 la especificación 01 eran idénticas a sus originales según SHA-256 y se retiraron en WP-20
 (10 de octubre de 2026); sus huellas quedan en
-[adjuntos_sha256_retiradas.json](../evidencia_p0/adjuntos_sha256_retiradas.json) y pueden recuperarse desde la etiqueta `pre-WP-20`.
+[adjuntos_sha256_retiradas.json](../evidencia_p0/adjuntos_sha256_retiradas.json) como evidencia histórica. La etiqueta `pre-WP-20` no es una vía de recuperación disponible tras la purga; no restaurar referencias eliminadas.
 La matriz utiliza únicamente las cuatro especificaciones canónicas, evitando
 contar dos veces las copias. El documento 02 se analizó contra el baseline actual;
 su referencia a `0.4.0.dev23` no sustituye el código `0.5.0.dev4` de partida.

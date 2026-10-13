@@ -518,7 +518,7 @@ git config core.hooksPath tools/hooks
 El hook revisa el contenido del índice, incluidos los XML de Excel y Word;
 no lee las modificaciones que aún no agregaste. Ambos workflows ejecutan el
 control antes de instalar dependencias o producir artefactos, sobre todo el
-árbol: WP-20 retiró `variantes/` y las rutas personales (recuperables desde `pre-WP-20`).
+árbol: WP-20 retiró `variantes/` y las rutas personales (la referencia histórica `pre-WP-20` dejó de ser una vía de recuperación tras la purga).
 
 ## Traspaso sustituido por WP-81 — 11 de octubre de 2026
 

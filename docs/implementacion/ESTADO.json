@@ -403,13 +403,14 @@
       "tomado": "2026-10-10T09:00:00-03:00",
       "rama": "ccr-4116db41-nm8g0r",
       "pr": 12,
-      "verificacion": "PASA (verificacion/WP-20.json)",
+      "verificacion": "PASA histórico (verificacion/WP-20.json), medido sobre e80444e; no certifica el árbol actual. Medición vigente en linea_base.json.",
       "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
       "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
       "integrado_en": "463699f",
       "notas": [
         "Propuesta del Ejecutor en su PR (solo el Orquestador integra). Borrado autorizado por el usuario el 10 de octubre de 2026. Etiqueta pre-WP-20 en e80444e.",
-        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+        "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3).",
+        "WP-98: referencias pre-WP-20 anteriores a la purga no disponibles en clon actual; no restaurar etiquetas eliminadas."
       ]
     },
     "WP-21": {
@@ -1728,6 +1729,26 @@
         "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
         "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
+      ]
+    },
+    "WP-98": {
+      "titulo": "Correcciones de auditoría del merge histórico",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [],
+      "decisiones": [],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "wp/98-correcciones-auditoria",
+      "pr": null,
+      "verificacion": null,
+      "revision": "Pendiente E3: cambia retención de copias y check_real_ids.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
+        "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
       ]
     }
   },

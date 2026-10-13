@@ -658,7 +658,8 @@ class Work:
             except (ValueError, OSError):
                 pass
             else:
-                atomic_json(directory / 'trabajo.json.bak', old)
+                if isinstance(old, dict):
+                    atomic_json(directory / 'trabajo.json.bak', old)
         atomic_json(previous, data)
         # La trabajo.json recién escrita ya contiene los recibos: el diario queda obsoleto.
         _discard_journal(directory, self)
@@ -667,15 +668,20 @@ class Work:
         if self.original_hash:
             keep.add(self.original_hash + '.bin')
         backup = directory / 'trabajo.json.bak'
+        cleanup_safe = True
         if backup.is_file():
             try:
                 old = json.loads(backup.read_text(encoding='utf-8'))
+                if not isinstance(old, dict):
+                    raise ValueError('Copia de sesión sin objeto JSON')
                 for field in ('source_hash', 'original_hash'):
                     if old.get(field):
+                        if not isinstance(old[field], str):
+                            raise ValueError('Huella de copia inválida')
                         keep.add(old[field] + '.bin')
             except (ValueError, OSError):
-                pass
-        for stale in directory.glob('*.bin'):
+                cleanup_safe = False
+        for stale in directory.glob('*.bin') if cleanup_safe else ():
             if stale.name not in keep and not stale.is_symlink():
                 stale.unlink(missing_ok=True)
         saved[str(directory.resolve())] = digest

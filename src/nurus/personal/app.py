@@ -39,10 +39,11 @@ class App(_BaseApp):
     def __init__(self, configuration=None):
         if configuration is None:
             import os
-            from .config import Configuration
+            from .config import Configuration, user_directory
 
             configuration = Configuration(
-                Path(os.environ.get('LOCALAPPDATA') or Path.home()) / 'CSMP_Personal_Prototipo_Integral'
+                Path(os.environ.get('LOCALAPPDATA') or Path.home()) / 'CSMP_Personal_Prototipo_Integral',
+                contacts_directory=user_directory(),
             )
         super().__init__(configuration=configuration)
         scaling = self._get_window_scaling()

@@ -3,7 +3,7 @@
 Uso:
     python tools/check_real_ids.py            # revisa archivos versionados
     python tools/check_real_ids.py ruta1 ruta2 # revisa rutas indicadas (hook pre-commit)
-    python tools/check_real_ids.py --excluir variantes/  # omite archivos bajo esa ruta (repetible)
+    python tools/check_real_ids.py --stage  # revisa el contenido del índice
     python tools/check_real_ids.py --stage  # revisa blobs del índice, no el árbol de trabajo
     python tools/check_real_ids.py --historia  # revisa todos los blobs alcanzables (git rev-list --all)
 
@@ -225,11 +225,33 @@ def redact_label(label):
 
 def scan(paths: list[Path], allowlist: set[str], *, stage: bool = False) -> list[tuple[str, int, str]]:
     findings = []
+    index = {}
+    if stage:
+        entries = subprocess.run(
+            ["git", "ls-files", "--stage", "-z"], cwd=ROOT, capture_output=True, check=True
+        ).stdout
+        for entry in entries.decode("utf-8", errors="surrogateescape").split("\0"):
+            if entry:
+                metadata, name = entry.split("\t", 1)
+                mode, oid, level = metadata.split()
+                index[name] = (mode, oid, level)
     for path in paths:
         staged = None
         if stage:
             relative = path.relative_to(ROOT).as_posix()
-            staged = subprocess.run(["git", "show", f":{relative}"], cwd=ROOT, capture_output=True, check=True).stdout
+            if relative not in index:
+                raise ValueError("Ruta ausente del índice; revisión incompleta")
+            mode, oid, level = index[relative]
+            if mode == "160000":
+                raise ValueError("Submódulo en el índice: requiere control separado; revisión incompleta")
+            if level != "0":
+                raise ValueError("Conflicto en el índice; revisión incompleta")
+            if path.suffix.lower() in BINARY_SUFFIXES:
+                staged = b""  # texts conserva el control del nombre sin cargar imágenes o fuentes.
+            else:
+                staged = subprocess.run(
+                    ["git", "cat-file", "blob", oid], cwd=ROOT, capture_output=True, check=True
+                ).stdout
         elif not path.is_file():
             continue
         for label, content in texts(path, staged):

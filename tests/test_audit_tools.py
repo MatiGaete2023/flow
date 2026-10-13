@@ -21,6 +21,44 @@ scanner = tool('check_real_ids')
 verifier = tool('verificar_wp')
 
 
+def test_indice_omite_imagen_sin_leer_blob_y_rechaza_gitlink(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(scanner, 'ROOT', tmp_path)
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    image = tmp_path / 'imagen.png'
+    image.write_bytes(b'contenido binario ficticio')
+    subprocess.run(['git', 'add', 'imagen.png'], cwd=tmp_path, check=True)
+    original = scanner.subprocess.run
+    commands = []
+
+    def tracked(command, **kwargs):
+        commands.append(command)
+        return original(command, **kwargs)
+
+    monkeypatch.setattr(scanner.subprocess, 'run', tracked)
+    assert scanner.scan([image], set(), stage=True) == []
+    assert not any('cat-file' in command or 'show' in command for command in commands)
+    original(
+        ['git', 'update-index', '--add', '--cacheinfo', '160000,' + 'a' * 40 + ',submodulo'],
+        cwd=tmp_path, check=True,
+    )
+    assert scanner.main(['--stage']) == 2
+    assert 'Traceback' not in capsys.readouterr().err
+
+
+def test_indice_lee_blob_indexado_con_sufijo_desconocido(tmp_path, monkeypatch, identity):
+    monkeypatch.setattr(scanner, 'ROOT', tmp_path)
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    sample = tmp_path / 'sesion.bin'
+    sample.write_text(identity, encoding='utf-8')
+    subprocess.run(['git', 'add', 'sesion.bin'], cwd=tmp_path, check=True)
+    sample.write_text('árbol sin el identificador', encoding='utf-8')
+    assert len(scanner.scan([sample], set(), stage=True)) == 1
+    image = tmp_path / (identity + '.png')
+    image.write_bytes(b'imagen ficticia')
+    subprocess.run(['git', 'add', image.name], cwd=tmp_path, check=True)
+    assert len(scanner.scan([image], set(), stage=True)) == 1
+
+
 @pytest.fixture
 def identity():
     # Generated only in the temporary fixture; never stored as a real identifier.
