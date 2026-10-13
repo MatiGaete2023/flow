@@ -45,7 +45,8 @@ No crear worktrees: cada tarea de nube ya está aislada.
 ## Pendiente
 
 1. Nueva **E3 independiente** del diff corregido. El ejecutor no puede aprobar su propia revisión.
-2. Windows candidato e instalador: Git funciona, pero la API de GitHub responde `Forbidden` tanto a GraphQL
-   como a REST. No se afirma que ningún workflow remoto se haya ejecutado o aprobado.
+2. ~~Windows~~ HECHO el 13-oct: «CSMP Assistant Windows» por `workflow_dispatch` sobre `ea3005e` (run 38476339683,
+   https://github.com/MatiGaete2023/flow/actions/runs/38476339683): **éxito** en windows-latest con Python 3.12, 3.13 y 3.14.
+   «CI rápida Linux» sobre `2af78a5` (código): éxito. Este run no incluye el instalador firmado ni lo prueba el usuario.
 3. Prueba real y acta del usuario: [guía](../aceptacion/GUIA_PRUEBAS_HISTORIA_20261013.md).
    No fusionar ni publicar release antes de la autorización correspondiente.
