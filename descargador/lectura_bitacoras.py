@@ -419,8 +419,9 @@ class _Lectura:
 
 
 class DiaryRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None):
+    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, historia=None):
         self.bridge, self.catalog, self.emit, self.cancel = bridge, catalog, emit, cancel
+        self.historia = historia
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
 
@@ -439,6 +440,8 @@ class DiaryRunner:
             session.persistir()
             self.bridge.call('lock')
             session.locked = True
+            if self.historia:
+                self.historia.abrir(session.folder)
             for index, selection in enumerate(plan, 1):
                 if not self.enumerar_listado(session, batch, selection, index, len(plan)):
                     break
@@ -455,6 +458,11 @@ class DiaryRunner:
         except m.PocError as exc:
             state.update(estado='CANCELADA' if self.cancel.is_set() else 'INCOMPLETA', error=str(exc))
         finally:
+            if self.historia:
+                try:
+                    self.historia.cerrar(state['estado'])
+                except Exception as exc:
+                    self.emit('warning', 'No se pudo cerrar la historia: ' + str(exc))
             self._cerrar(session)
         return self._resultado(session)
 
@@ -500,6 +508,8 @@ class DiaryRunner:
                 session.phase = 'LEER_FILAS'
                 for item in listing_rows(body, profile):
                     self.leer_bitacora(session, selection, query, number, item, seen)
+                if self.historia:
+                    self.historia.pagina(selection, query, number, body, profile)
                 query['paginas'] = number
                 session.persistir()
             query['estado'] = 'ENUMERADA'

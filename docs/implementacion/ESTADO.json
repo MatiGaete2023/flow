@@ -1659,17 +1659,19 @@
         "o",
         "p"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude (sesión 01LxrxjuHGR5We6WK3bqbCJY)",
+      "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
-      "pr": null,
-      "verificacion": null,
+      "pr": 45,
+      "verificacion": "PASA",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final."
+        "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final.",
+        "Progreso por subpaso en docs/historia_causa/AVANCE.md (leer primero al retomar).",
+        "Código completo 53.1–53.7 y verificar_wp PASA. Falta revisión E3 (otra sesión) y WP-54. Ver docs/historia_causa/AVANCE.md."
       ]
     },
     "WP-54": {
@@ -1683,17 +1685,18 @@
         "o",
         "p"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude (sesión 01LxrxjuHGR5We6WK3bqbCJY)",
+      "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
-      "pr": null,
-      "verificacion": null,
+      "pr": 45,
+      "verificacion": "PASA",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md."
+        "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md.",
+        "Código y docs listos. Pendiente: acta del usuario (H-01..H-12) y, si lo autoriza, PR + workflow Windows (guía §9 WP-54.7). Ver docs/historia_causa/AVANCE.md."
       ]
     },
     "WP-70": {

@@ -288,3 +288,54 @@ def test_corrupt_deflate_in_workbook_is_capture_error():
         raw[i] ^= 0xFF
     with pytest.raises(CaptureError):
         check_workbook(bytes(raw))
+
+
+def _historia_con_extension(annex='true'):
+    m, t = fixture()
+    from nurus.capture.contract import COMMON
+
+    common = {k: t['registros'][0].get(k, '') for k in COMMON}
+    common['ingreso_id'] = ''
+    t['historia_tramites'] = [
+        {
+            **common,
+            'event_id': 'cause-event',
+            'event_at': '2026-09-20',
+            'time_precision': 'DIA',
+            'time_zone': 'DESCONOCIDA',
+            'scope': 'CAUSA',
+            'event_type': 'tramite',
+            'identity_status': 'CAUSA',
+            'folio': '9120',
+            'stage': 'Cumplimiento',
+            'annex_visible': annex,
+            'raw_json': '{"Folio": "9120"}',
+        }
+    ]
+    m['table_states'].update(historia_tramites='COMPLETA')
+    return m, t
+
+
+def test_historia_columnas_aditivas_se_escriben_al_final_y_se_leen(tmp_path):
+    m, t = _historia_con_extension()
+    capture = read_capture(write_capture(tmp_path / 'ext.zip', m, t))
+    (row,) = capture.rows('historia_tramites')
+    assert row['folio'] == '9120' and row['annex_visible'] == 'true' and row['stage'] == 'Cumplimiento'
+    with zipfile.ZipFile(tmp_path / 'ext.zip') as z:
+        header = z.read('data/historia_tramites.csv').decode().split('\n')[0]
+    assert header.endswith('identity_status,folio,stage,annex_visible,raw_json')
+
+
+def test_historia_sin_extension_conserva_el_encabezado_base(tmp_path):
+    m, t = _historia_con_extension()
+    for k in ('folio', 'stage', 'annex_visible', 'raw_json'):
+        t['historia_tramites'][0].pop(k)
+    write_capture(tmp_path / 'base.zip', m, t)
+    with zipfile.ZipFile(tmp_path / 'base.zip') as z:
+        assert z.read('data/historia_tramites.csv').decode().split('\n')[0].endswith('document_id,identity_status')
+
+
+def test_historia_anexo_visible_invalido_se_rechaza(tmp_path):
+    m, t = _historia_con_extension('quizá')
+    with pytest.raises(CaptureError):
+        write_capture(tmp_path / 'mal.zip', m, t)

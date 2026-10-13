@@ -141,3 +141,91 @@ assert tokens('Claro')['text']
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def runners_historia(monkeypatch, cancel):
+    """Diaries ficticio que, si recibe el lector de historia, lo usa como lo hace DiaryRunner real."""
+    from test_lectura_historia import LISTADO, PERFIL, QUERY, SELECCION
+
+    class Diaries:
+        def __init__(self, bridge, catalog, emit, gate, pause, reuse_base=None, historia=None):
+            self.historia = historia
+
+        def run(self, batch, destination):
+            manifest = diaries(destination / 'bitacoras', 2)
+            if self.historia:
+                self.historia.abrir(manifest.parent)
+                self.historia.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+                self.historia.cerrar('COMPLETA')
+            return {'manifest': str(manifest), 'estado': 'COMPLETA', 'fallidas': 0, 'consultas_fallidas': 0}
+
+    class Queries:
+        def __init__(self, bridge, catalog, emit, gate, pause):
+            self.emit = emit
+
+        def run(self, batch, destination):
+            self.emit('folder', str(bound_lot(destination / 'principal').folder))
+
+    monkeypatch.setattr(flujo_paquete, 'BatchRunner', Queries)
+    monkeypatch.setattr(flujo_paquete, 'DiaryRunner', Diaries)
+
+
+def test_historia_apagada_no_agrega_nada(monkeypatch, tmp_path):
+    runners_historia(monkeypatch, Event())
+    result = flujo_paquete.run(None, {}, lambda *e: None, Event(), Scope(), tmp_path)
+    assert 'historia' not in result and not result['partial']
+    assert not list(tmp_path.rglob('Historia_SITFA*.xlsx'))
+    assert len(read_capture(result['path']).rows('historia_tramites')) == 0
+
+
+def test_historia_encendida_crea_excel_y_tabla(monkeypatch, tmp_path):
+    from test_lectura_historia import FakeBridge
+
+    runners_historia(monkeypatch, Event())
+    result = flujo_paquete.run(FakeBridge(), {}, lambda *e: None, Event(), Scope(), tmp_path, pause=0, historia=True)
+    assert not result['partial'] and result['historia']['estado'] == 'COMPLETA'
+    assert len(list(Path(result['path']).parent.rglob('Historia_SITFA.xlsx'))) == 1
+    assert [f['folio'] for f in read_capture(result['path']).rows('historia_tramites')] == ['9120', '9119', '9117']
+
+
+def test_historia_sin_incluir_en_paquete_deja_el_excel_pero_no_la_tabla(monkeypatch, tmp_path):
+    from test_lectura_historia import FakeBridge
+
+    runners_historia(monkeypatch, Event())
+    result = flujo_paquete.run(
+        FakeBridge(), {}, lambda *e: None, Event(), Scope(), tmp_path, pause=0, historia=True, historia_en_paquete=False
+    )
+    assert len(list(Path(result['path']).parent.rglob('Historia_SITFA.xlsx'))) == 1
+    assert len(read_capture(result['path']).rows('historia_tramites')) == 0
+
+
+def test_historia_fallida_no_impide_el_paquete_y_lo_marca_parcial(monkeypatch, tmp_path):
+    from test_lectura_historia import FakeBridge
+
+    runners_historia(monkeypatch, Event())
+    bridge = FakeBridge(b'<html><table></table></html>')
+    result = flujo_paquete.run(bridge, {}, lambda *e: None, Event(), Scope(), tmp_path, pause=0, historia=True)
+    assert Path(result['path']).is_file() and result['partial']
+    assert read_capture(result['path']).manifest['table_states']['historia_tramites'] == 'FALLIDA'
+
+
+def test_error_al_incluir_historia_reintenta_sin_ella(monkeypatch, tmp_path):
+    from test_lectura_historia import FakeBridge
+    import descargador
+
+    runners_historia(monkeypatch, Event())
+    original = descargador.package_current_lot
+
+    def con_fallo(*args, **kwargs):
+        if kwargs.get('historia'):
+            raise ValueError('historia ficticia inconsistente')
+        return original(*args)
+
+    monkeypatch.setattr(descargador, 'package_current_lot', con_fallo)
+    avisos = []
+    result = flujo_paquete.run(
+        FakeBridge(), {}, lambda *e: avisos.append(e), Event(), Scope(), tmp_path, pause=0, historia=True
+    )
+    assert Path(result['path']).is_file() and result['partial']
+    assert len(read_capture(result['path']).rows('historia_tramites')) == 0
+    assert any(name == 'warning' for name, _ in avisos)

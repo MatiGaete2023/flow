@@ -1,5 +1,6 @@
 """Orquesta runners existentes; conserva fuentes y entrega un ZIP sin pasos manuales."""
 
+from datetime import datetime
 from pathlib import Path
 
 import motor as m
@@ -7,7 +8,36 @@ from lotes import BatchRunner
 from lectura_bitacoras import DiaryRunner, write
 
 
-def run(bridge, catalog, emit, cancel, batch, destination, consolidated=True, *, pause=1.0, reuse=True):
+def _historia_anterior(destination):
+    """Control de historia más reciente del mismo destino, leído hoy y hace menos de 12 h; None si no hay."""
+    import time
+
+    limite = time.time() - 12 * 3600
+    hoy = m.now().date()
+    candidatos = []
+    for ruta in Path(destination).glob('Paquete CSMP */respaldo/*/historia/historias.json'):
+        if ruta.is_symlink() or not ruta.is_file():
+            continue
+        modificado = ruta.stat().st_mtime
+        if modificado >= limite and datetime.fromtimestamp(modificado, m.now().tzinfo).date() == hoy:
+            candidatos.append((modificado, ruta))
+    return max(candidatos)[1] if candidatos else None
+
+
+def run(
+    bridge,
+    catalog,
+    emit,
+    cancel,
+    batch,
+    destination,
+    consolidated=True,
+    *,
+    pause=1.0,
+    reuse=True,
+    historia=False,
+    historia_en_paquete=True,
+):
     if batch.screen != 'seguimiento':
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
@@ -47,7 +77,17 @@ def run(bridge, catalog, emit, cancel, batch, destination, consolidated=True, *,
             raise m.PocError('La consulta no identificó sus originales; no se creó el paquete.')
         phase('bitacoras')
         reuse_base = Path(destination) if reuse else None
-        diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base).run(batch, backup)
+        lector = None
+        if historia:
+            from lectura_historia import LectorHistoria
+
+            lector = LectorHistoria(
+                bridge, relay, cancel, pause=pause, anterior=_historia_anterior(destination) if reuse else None
+            )
+        extra = {'historia': lector} if lector else {}
+        diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra).run(
+            batch, backup
+        )
         phase('paquete')
         from descargador import package_current_lot
 
@@ -55,8 +95,29 @@ def run(bridge, catalog, emit, cancel, batch, destination, consolidated=True, *,
         manifest = Path(diaries['manifest'])
         if not manifest.resolve().is_relative_to(backup.resolve()):
             raise m.PocError('El control de bitácoras quedó fuera de respaldo.')
-        result = package_current_lot(sheets, manifest, root / 'Captura_CSMP.zip', consolidated)
+        resumen = lector.resultado if lector else None
+        historia_ok = bool(lector and resumen and resumen['estado'] == 'COMPLETA')
+        ruta_historia = None
+        if lector and historia_en_paquete and lector.carpeta:
+            candidata = lector.carpeta / 'historias.json'
+            if candidata.is_file() and candidata.resolve().is_relative_to(backup.resolve()):
+                ruta_historia = candidata
+        target = root / 'Captura_CSMP.zip'
+        try:
+            result = package_current_lot(
+                sheets, manifest, target, consolidated, **({'historia': ruta_historia} if ruta_historia else {})
+            )
+        except (m.PocError, ValueError, OSError) as exc:
+            if not ruta_historia:
+                raise
+            # Un fallo de la historia nunca impide el paquete de siempre.
+            emit('warning', 'La historia no pudo incluirse en el paquete: ' + str(exc))
+            historia_ok = False
+            result = package_current_lot(sheets, manifest, target, consolidated)
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])
+        if historia:
+            partial = partial or not historia_ok
+            result['historia'] = resumen or {'estado': 'INCOMPLETA'}
         state.update(estado='PARCIAL' if partial else 'COMPLETO', paquete=Path(result['path']).name)
         write(control, state)
         result.update(sheets_folder=str(sheets), diary_manifest=str(manifest), partial=partial)
