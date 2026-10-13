@@ -4,6 +4,7 @@ Actualizado el 12 de octubre de 2026 (WP-94). Lo histórico está en [historico/
 
 | Documento | Para qué |
 | --- | --- |
+| [Proceso completo del proyecto](PROCESO_COMPLETO_PROYECTO_20261013.md) | Cómo funciona todo: materia prima, procesamiento, productos, problemas resueltos y estado al 13-oct |
 | [PLAN_VIGENTE.md](../PLAN_VIGENTE.md) | Esencia, prohibiciones, prioridades y decisiones D1–D9 |
 | [CONTINUAR.md](../CONTINUAR.md) | Estado y siguiente acción |
 | [Plan de implementación](implementacion/PLAN_IMPLEMENTACION.md) · [ESTADO.json](implementacion/ESTADO.json) | Paquetes de trabajo y su estado |

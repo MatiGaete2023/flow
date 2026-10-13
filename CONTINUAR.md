@@ -40,7 +40,7 @@ Sin datos: H7 (capturas 1024×650) y color de tema con Tk 9.
 
 ## Referencias
 
-[Plan vigente](PLAN_VIGENTE.md) · [Prompt para otra IA](docs/implementacion/PROMPT_CONTINUAR_IA.md) ·
+[Proceso completo del proyecto](docs/PROCESO_COMPLETO_PROYECTO_20261013.md) · [Plan vigente](PLAN_VIGENTE.md) · [Prompt para otra IA](docs/implementacion/PROMPT_CONTINUAR_IA.md) ·
 [Traspaso](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md) · [Fase A](docs/implementacion/PLAN_FASE_A_20261013.md) ·
 [Eficiencia y UX](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md) · [Revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) ·
 [Inventario de ramas 11-oct](docs/implementacion/ramas_consolidadas_20261011.json) · Cifras vigentes solo en
