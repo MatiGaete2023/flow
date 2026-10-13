@@ -1,6 +1,7 @@
 # AVANCE — traspaso entre IAs (WP-53/WP-54)
 
 Fuente de verdad del procedimiento: [GUIA_IMPLEMENTACION.md](GUIA_IMPLEMENTACION.md). Este archivo solo dice **dónde quedó el trabajo**.
+PR abierto: https://github.com/MatiGaete2023/flow/pull/45 (cada push a la rama lo actualiza; no crear otro).
 Retomar: `git log --oneline -8` + este archivo; siguiente paso = primera fila no `HECHO`.
 Entorno: `.venv` (ver guía paso 0); `tools/ci_local.sh <pruebas>` antes de cada push. Commits locales por paso; push cada 2–3 pasos.
 
