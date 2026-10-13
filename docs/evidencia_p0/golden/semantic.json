@@ -5485,7 +5485,8 @@
     "vista": {
       "tema": "Sistema"
     },
-    "correo_html": true
+    "correo_html": true,
+    "metricas_locales": false
   },
   "network_calls": 0,
   "outlook_executed": false,
