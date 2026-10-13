@@ -10,6 +10,7 @@ Actualizado el 12 de octubre de 2026 (WP-94). Lo histórico está en [historico/
 | [Trazabilidad de ejecución](TRAZABILIDAD_EJECUCION_20261008.md) | Referencia acumulativa de 115 requisitos; avance vigente en ESTADO.json |
 | [Documentos rectores 01–06](plan_20261008/README.md) | Especificaciones originales (referencia; prevalece PLAN_VIGENTE) |
 | [Revisión externa](implementacion/auditoria/REVISION_EXTERNA_20261012.md) | Revisión independiente del 12 de octubre (H1–H8); correcciones en [WP-94](implementacion/wp/WP-94.md) |
+| [Plan de la Fase A](implementacion/PLAN_FASE_A_20261013.md) | Revisión por excepción y bandeja de atención (WP-95..97), lista para ejecutar |
 | [Plan de la ola de eficiencia y UX](implementacion/PLAN_EFICIENCIA_UX_20261012.md) | UX-01..03 y EF-01..04: alcance, orden y estado |
 | [Manual del Asistente](MANUAL_ASISTENTE_MVP_20261008.md) · [Manual del Descargador](MANUAL_DESCARGADOR_MVP_20261008.md) | Uso vigente de ambos programas |
 | [Prompt para continuar](implementacion/PROMPT_CONTINUAR_IA.md) · [Prompt para revisor externo](implementacion/PROMPT_REVISOR_EXTERNO.md) | Arranque de otra IA, agentes o revisores |

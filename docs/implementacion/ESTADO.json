@@ -1465,6 +1465,81 @@
         "Integrado por fast-forward en feat tras E3. Pendiente sin datos: H7 (capturas 1024×650) y diferencia de color de tema con Tk 9."
       ]
     },
+    "WP-95": {
+      "titulo": "Fase A: comparación de capturas y revisión por excepción",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-94",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
+    "WP-96": {
+      "titulo": "Fase A: estado por caso y bandeja «Qué requiere mi atención»",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-95",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
+    "WP-97": {
+      "titulo": "Fase A: métrica local de revisión (opcional)",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-96",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [],
+      "estado": "PENDIENTE",
+      "ejecutor": null,
+      "tomado": null,
+      "rama": null,
+      "pr": null,
+      "verificacion": null,
+      "revision": "No riesgoso (decisión j): sin E3.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+        "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
     "WP-70": {
       "titulo": "Cierre de la implementación",
       "ola": 7,
