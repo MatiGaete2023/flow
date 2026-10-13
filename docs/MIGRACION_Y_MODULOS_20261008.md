@@ -19,7 +19,7 @@ lectura manual. No se eliminaron módulos.
 | `manual_products`, `manual_actions` citados por 02 | Ausentes en el árbol activo | Conservar funciones actuales en `manual.py`/`current_tools.py`, no recrear una UI duplicada | `test_current_work_features.py`, `test_personal_cleanup_20260921.py` |
 | `nurus.rus.rules`, `services`, `storage` | Motor y flujo alternativos/compatibilidad | **Retirados en WP-21** (se conservan `domain/models.py`, `rus/util.py`, `services/policy.py` y `exports.py`) | Historial Git |
 | `tools/rus_inspector_entry.py`, `rus_capture_extension` | Inspector RUS independiente | **Retirado en WP-22 por decisión D3** | Historial Git |
-| `variantes/ux_rules_20260922` | Copia histórica versionada (retirada en WP-20; recuperable desde la etiqueta `pre-WP-20` o los commits `39b6c06`/`3708930`) | No importar al camino nuevo | No fusionar automáticamente |
+| `variantes/ux_rules_20260922` | Copia histórica versionada (retirada en WP-20; las referencias anteriores a la purga no están disponibles en un clon actual) | No importar al camino nuevo | No fusionar automáticamente |
 
 ## Configuración, sesiones y rollback
 

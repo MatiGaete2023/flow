@@ -47,6 +47,36 @@ def test_guardar_sesion_deja_solo_las_dos_copias_recuperables(tmp_path):
     assert previous['source_hash'] + '.bin' in copias
 
 
+@pytest.mark.parametrize('backup', [None, [], 'texto', {'source_hash': 123}, '{'])
+def test_copia_invalida_no_impide_guardar_ni_borra_bins(tmp_path, backup):
+    sesion = tmp_path / 'sesion'
+    sesion.mkdir()
+    (sesion / 'trabajo.json.bak').write_text(
+        backup if backup == '{' else json.dumps(backup), encoding='utf-8'
+    )
+    preservada = sesion / 'recuperable.bin'
+    preservada.write_bytes(b'ficticio')
+    trabajo = Work(defaults())
+    trabajo.analyze(_libro(tmp_path / 'fuente.xlsx', 1), 'ESPERA')
+    trabajo.save(sesion)
+    assert Work.load(sesion).source_hash == trabajo.source_hash
+    assert preservada.exists()
+
+
+def test_json_principal_no_objeto_no_sobrescribe_respaldo(tmp_path):
+    sesion = tmp_path / 'sesion'
+    sesion.mkdir()
+    (sesion / 'trabajo.json').write_text('null', encoding='utf-8')
+    backup = sesion / 'trabajo.json.bak'
+    backup.write_text('{"source_hash": "anterior"}', encoding='utf-8')
+    (sesion / 'anterior.bin').write_bytes(b'ficticio')
+    trabajo = Work(defaults())
+    trabajo.analyze(_libro(tmp_path / 'fuente.xlsx', 1), 'ESPERA')
+    trabajo.save(sesion)
+    assert json.loads(backup.read_text()) == {'source_hash': 'anterior'}
+    assert (sesion / 'anterior.bin').exists()
+
+
 def test_limite_decidido_conserva_diez_y_sesenta_dias_tras_confirmar(tmp_path):
     assert (RETENCION_DIAS, SESIONES_ANTERIORES) == (60, 10)
     anteriores = tmp_path / 'sesion' / 'anteriores'

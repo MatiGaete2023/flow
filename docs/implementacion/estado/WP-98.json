@@ -1,0 +1,20 @@
+{
+  "titulo": "Correcciones de auditoría del merge histórico",
+  "ola": 7,
+  "tipo": "C",
+  "depende_de": [],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "13 de octubre de 2026",
+  "rama": "wp/98-correcciones-auditoria",
+  "pr": null,
+  "verificacion": null,
+  "revision": "Pendiente E3: cambia retención de copias y check_real_ids.",
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
+    "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
+  ]
+}
