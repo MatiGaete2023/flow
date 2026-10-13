@@ -343,6 +343,7 @@ HISTORIA_COBERTURA = {
 def _historia(manifest, data, query, incident, cid, captured):
     """Una consulta por causa (alcance CAUSA, sin remote_identity) y una fila por trámite dentro de la ventana."""
     estado, causas = cargar_historias(manifest)
+    lote = Path(manifest).resolve().parent.parent.name
     data['historia_tramites'] = []
     vinculos = {}
     for v in estado['vinculos']:
@@ -396,7 +397,7 @@ def _historia(manifest, data, query, incident, cid, captured):
                 modality_code=row['modality_code'],
                 tab=primera.get('pestana', ''),
                 captured_at=cuando,
-                original_file='respaldo/historia/' + causa['archivo'],
+                original_file=f'respaldo/{lote}/historia/' + causa['archivo'],
                 original_row=str(fila['fila']),
                 source_sha256=causa['sha256'],
                 coverage='COMPLETA',

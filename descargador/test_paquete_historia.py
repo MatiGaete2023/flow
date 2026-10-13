@@ -57,7 +57,7 @@ def test_historia_en_paquete_alcance_causa(tmp_path):
         and f['source_system'] == 'RUS'
         and f['cause_id'] == '100'
         and f['annex_visible'] in ('true', 'false')
-        and f['original_file'].startswith('respaldo/historia/')
+        and f['original_file'].startswith('respaldo/lote-historia/historia/historia-')
         for f in filas
     )
     assert json.loads(filas[0]['raw_json'])['Fecha Tram'] == '13/10/2099'
