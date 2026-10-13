@@ -1,5 +1,5 @@
 {
-  "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
+  "commit": "2f969da244e0aee5a0a71ff6f55622972cb23ec4",
   "base": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
   "controles": [
     {
@@ -71,18 +71,17 @@
     }
   },
   "procedencia_inicio": {
-    "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
-    "arbol_git": "d578bca80b91c0d8e6cd76f2f44cc67715e0ada7",
-    "cambios_locales": true
+    "commit": "2f969da244e0aee5a0a71ff6f55622972cb23ec4",
+    "arbol_git": "2d04c40d67116573dd48038fdaedf44256209a6c",
+    "cambios_locales": false
   },
   "procedencia_fin": {
-    "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
-    "arbol_git": "d578bca80b91c0d8e6cd76f2f44cc67715e0ada7",
-    "cambios_locales": true
+    "commit": "2f969da244e0aee5a0a71ff6f55622972cb23ec4",
+    "arbol_git": "2d04c40d67116573dd48038fdaedf44256209a6c",
+    "cambios_locales": false
   },
-  "procedencia_verificada": false,
-  "elegible_integracion": false,
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
   "medicion_reutilizada": false,
-  "veredicto": "FALLA",
-  "motivo_procedencia": "Árbol sin commit, modificado durante la medición o identidad Git no disponible"
+  "veredicto": "PASA"
 }

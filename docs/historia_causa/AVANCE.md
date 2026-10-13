@@ -13,7 +13,7 @@ Entorno: `.venv` (ver guía paso 0); `tools/ci_local.sh <pruebas>` antes de cada
 | 53.5 Excel `historias.py` | HECHO | ver git log | `cargar()` reutilizable por 53.6; `literal` local (no importa de descargador); textos >30000 se recortan con aviso |
 | 53.6 contrato + paquete | HECHO | ver git log | `historia=` en export_capture y package_current_lot; EXTENSIONS en contract.py; DICCIONARIO actualizado |
 | 53.7 retención + spec | HECHO | ver git log | CONTROLES en preferencias.py incluye historia/historias.json |
-| Cierre WP-53 (ci_local, verificar_wp, E3) | PENDIENTE | | E3 la hace otra sesión |
+| Cierre WP-53 (ci_local, verificar_wp, E3) | PASA; E3 PENDIENTE | ver git log | verificar_wp PASA; E3 la hace otra sesión (guía §12) |
 | WP-54 UI/flujo/docs | PENDIENTE | | |
 
 ## Notas de desvío respecto de la guía
