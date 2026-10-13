@@ -273,3 +273,13 @@ def test_diario_con_base_o_recibos_invalidos_bloquea(tmp_path, contenido):
     (folder / RECEIPT_JOURNAL).write_text(json.dumps(contenido), encoding='utf-8')
     with pytest.raises(ValueError, match='diario de recibos'):
         create_drafts(Work.load(folder, work.config), _drafts(1))
+
+
+@pytest.mark.parametrize('contenido', ['[]', 'null', '"texto"'])
+def test_respaldo_bak_que_no_es_objeto_no_rompe_el_guardado(tmp_path, contenido):
+    # Revisión de código 13-oct: trabajo.json.bak con JSON válido que no es diccionario.
+    work, folder = _session(tmp_path)
+    (folder / 'trabajo.json.bak').write_text(contenido, encoding='utf-8')
+    work.receipts['k'] = {'kind': 'draft', 'state': 'created'}
+    work.save(folder)
+    assert Work.load(folder, work.config).receipts['k']['state'] == 'created'
