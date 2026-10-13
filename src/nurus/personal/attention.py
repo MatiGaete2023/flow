@@ -60,6 +60,7 @@ def _batch_products(work, drafts, projects):
     receipts = getattr(work, 'receipts', {}) or {}
     mail_prepared, mail_created, due = {}, {}, {}
     uncertain = set()
+    by_id = {row.id: row for row in work.rows}
     with draft_preview_scope():
         for draft in drafts or ():
             ids = _ids(draft)
@@ -72,11 +73,8 @@ def _batch_products(work, drafts, projects):
                 mail_prepared[rid] = True
                 mail_created[rid] = mail_created.get(rid, False) or created
                 if rid not in due:
-                    due[rid] = (
-                        due_value(work, next((r for r in work.rows if r.id == rid), None), _get(draft, 'kind', ''))
-                        if next((r for r in work.rows if r.id == rid), None)
-                        else ''
-                    )
+                    row = by_id.get(rid)
+                    due[rid] = due_value(work, row, _get(draft, 'kind', '')) if row else ''
         words = {rid: [] for rid in (row.id for row in work.rows)}
         for project in projects or ():
             for rid in _ids(project):
@@ -97,7 +95,10 @@ def case_statuses(work, drafts, projects):
         word_products = words.get(row.id, [])
         products = drafts or []
         mail_products = [p for p in products if row.id in _ids(p)]
-        obsolete = any(stale(work, product) for product in mail_products + word_products)
+        try:
+            obsolete = any(stale(work, product) for product in mail_products + word_products)
+        except (OSError, ValueError, TypeError):
+            obsolete = False
         codes = _resolution_codes(row)
         need_mail = bool(getattr(row, 'actions', ()) or mail_products)
         need_word = bool(codes)
