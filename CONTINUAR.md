@@ -4,8 +4,8 @@
 ## Estado generado
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
-- Línea base: `16d1d10437b6`; asistente 927 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
-- Paquetes integrados: 48 de 53; último en el orden: WP-97.
+- Línea base: `9d94a6e9862a`; asistente 930 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
+- Paquetes integrados: 49 de 53; último en el orden: WP-98.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -13,7 +13,6 @@
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
-| WP-98 | EN_REVISION | Correcciones de auditoría del merge histórico |
 <!-- estado:fin -->
 
 [Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md). [Informe para revisor externo](docs/implementacion/INFORME_REVISOR_EXTERNO_20261012.md) y [su prompt](docs/implementacion/PROMPT_REVISOR_EXTERNO.md).

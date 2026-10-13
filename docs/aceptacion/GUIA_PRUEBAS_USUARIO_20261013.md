@@ -61,6 +61,8 @@ Usa un alcance pequeño: **un tribunal, una modalidad y el período habitual**.
 | A-11 | Resoluciones: prepara y genera 1 Word. | El Word se genera con las variables correctas; la bandeja lo marca generado | PASA/FALLA |
 | A-12 (Fase A) | Tras A-08 y A-11, abre de nuevo la bandeja. | Los casos guardados ya no aparecen como pendientes de preparar; el detalle dice «Pendiente de actuación: envío o firma (decisión humana)» | PASA/FALLA |
 | A-13 | Configuración › Avanzado: activa **Guardar métricas locales de revisión (solo conteos)** y haz 2 o 3 ciclos reales. Luego pulsa **Copiar resumen** y pégalo en tu registro. | El resumen solo trae conteos y fechas | El resumen copiado |
+| A-14 (WP-98) | Configuración › **Importar contactos** con tu archivo de contactos. Cierra y reabre el Asistente. | No vuelve a aparecer el aviso «Falta el archivo local de contactos»; los destinatarios por tribunal se mantienen | PASA/FALLA |
+| A-15 (WP-98) | Cierra el Asistente sin guardar a mitad de una edición, reábrelo y vuelve a guardar la sesión. | La sesión abre sin error y conserva lo guardado | PASA/FALLA |
 
 ## 4. Cronología de bitácoras (aceptación de WP-50)
 
