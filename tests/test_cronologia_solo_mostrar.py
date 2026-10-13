@@ -67,9 +67,27 @@ def test_fuera_de_horizonte_no_se_busca_ni_se_afirma_ausencia(tmp_path):
     display = work.capture_context['r0']['display']
     assert display['period_from'] == '2026-06-08' and display['period_to'] == '2026-10-08'
     assert display['status'] == 'SIN_ENTRADAS_CAPTURADAS' and display['outside_horizon'] == 1
-    assert last_center_label(work, rows['r0']) == 'Sin entradas capturadas'
+    # La columna no dice «Sin entradas capturadas» cuando la bitácora sí trajo entradas antiguas.
+    assert last_center_label(work, rows['r0']) == 'Sin entradas en 4 meses · 1 anterior'
     texto = novelties_text(work, rows['r0'])
     assert 'no acredita ausencia' in texto and '1 entrada(s) anteriores' in texto
+
+
+def test_sin_ninguna_entrada_dice_sin_entradas_capturadas(tmp_path):
+    def cambiar(t):
+        t['bitacoras'] = [e for e in t['bitacoras'] if e['event_id'] != 'e0']
+
+    work, rows = importar(tmp_path, cambiar)
+    assert work.capture_context['r0']['display']['status'] == 'SIN_ENTRADAS_CAPTURADAS'
+    assert last_center_label(work, rows['r0']) == 'Sin entradas capturadas'
+
+
+def test_solo_entradas_tras_el_corte_se_informan(tmp_path):
+    def cambiar(t):
+        t['bitacoras'][0]['event_at'] = '2026-10-09'
+
+    work, rows = importar(tmp_path, cambiar)
+    assert last_center_label(work, rows['r0']) == 'Sin entradas en el período · 1 tras el corte'
 
 
 def test_hora_cierta_ordena_dentro_del_mismo_dia():

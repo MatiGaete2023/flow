@@ -7,7 +7,7 @@ Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado 
   Resultados, **Paquete con XLSX consolidado**. El paquete lleva solo el XLSX consolidado (CSMP_CAPTURE 1.1.0),
   nunca HTML, PDF ni XLS originales (D6).
 - El consolidado se genera una sola vez por lectura.
-- Lecturas de bitácoras con pausa entre consultas, checkpoint cada 25 y máximo de 300 por lote; al retomar se
+- Lecturas de bitácoras con pausa entre consultas, checkpoint cada 25 y máximo de 600 por lote (300 hasta el 13-oct); al retomar se
   conserva lo ya leído y SITFA se desbloquea aunque falle el disco.
 - La pestaña Egresados se tipa como EGRESADOS en el paquete.
 - Una respuesta tardía de la extensión (`TASK_EXPIRED`) se descarta sin cortar la conexión.

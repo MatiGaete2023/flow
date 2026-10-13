@@ -61,9 +61,14 @@ corte. No cambian observaciones, hallazgos, TT/CC/RES ni productos.
 - La columna da la fecha de la última entrada atribuible al centro y cuántas hay
   después. Vacía si el trabajo no viene de un paquete.
 - **ORIGEN_DESCONOCIDO**: hay entradas, pero ninguna con origen del centro acreditado.
-- **Sin entradas capturadas**: se pidieron bitácoras y no hay entradas en el período;
+- **Sin entradas capturadas**: se pidieron bitácoras y la del ingreso no trae entradas;
   no acredita ausencia de actuaciones.
+- **Sin entradas en 4 meses · N anteriores**: la bitácora sí tiene entradas, pero todas
+  son anteriores al horizonte; el panel las cuenta y no las muestra.
 - **Bitácoras no solicitadas**: el paquete no pidió bitácoras.
+- **Bitácora no leída**: el paquete pidió bitácoras, pero la de este ingreso no se leyó
+  (límite de 600 lecturas, falla o lote incompleto). Usa «Retomar» en el Descargador y
+  vuelve a crear el paquete.
 - El panel da texto íntegro, fecha, origen y autor, y cuenta aparte las entradas
   sin fecha y las posteriores a la fecha de corte.
 

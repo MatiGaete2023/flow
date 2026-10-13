@@ -53,6 +53,9 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
 - l) Completar los cambios anunciados que no estuvieran integrados y continuar con UX; motor, Outlook, contratos,
   retención y extensión intactos. Fuente: «Efectua los cambuos del otro agente que no esten y continua».
 
+## Decisiones del 13 de octubre de 2026
+- m) Subir `MAX_LECTURAS_POR_LOTE` de 300 a 600: con 344 registros habituales cada corrida exigía «Retomar». La pausa entre lecturas y los checkpoints no cambian. Fuente: «Sube el limite a 600».
+
 ## Ola de eficiencia y experiencia — 12 de octubre de 2026
 
 Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
