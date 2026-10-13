@@ -1685,17 +1685,18 @@
         "o",
         "p"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "claude (sesión 01LxrxjuHGR5We6WK3bqbCJY)",
+      "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
       "pr": null,
-      "verificacion": null,
+      "verificacion": "PASA",
       "revision": null,
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md."
+        "Guía: docs/historia_causa/GUIA_IMPLEMENTACION.md.",
+        "Código y docs listos. Pendiente: acta del usuario (H-01..H-12) y, si lo autoriza, PR + workflow Windows (guía §9 WP-54.7). Ver docs/historia_causa/AVANCE.md."
       ]
     },
     "WP-70": {

@@ -2,6 +2,18 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**2.8.0, 13 de octubre de 2026** (Descargador y extensión; **prueba**, pendiente de acta del usuario). Cambios desde 2.7.6:
+- **Historia de la causa**: casilla «Leer también la historia de la causa (últimos 4 meses)» (apagada por defecto).
+  Se lee la tabla de la pestaña Historia una vez por causa, en la misma pasada del listado que las bitácoras.
+  Solo trámites de los últimos 4 meses; sin PDF ni anexos.
+- Productos: `Historia_SITFA.xlsx` (Trámites, Causas, Vínculos, Control) y, si se marca «Incluir historia en el paquete»,
+  la tabla `historia_tramites` en `Captura_CSMP.zip` (alcance CAUSA, columnas aditivas `folio`, `stage`,
+  `annex_visible`, `raw_json`; el Asistente no cambia).
+- Un error, sesión vencida o tabla distinta queda como FALLIDA con su motivo; nunca como «sin trámites».
+- Extensión 2.8.0: comando `history_open` (dos peticiones al mismo origen, sin permisos nuevos, sin exponer valores cifrados).
+  Hay que recargar la extensión y el Descargador juntos.
+- Retención de 60 días incluye `historias.json`.
+
 **2.7.6, 11 de octubre de 2026** (Descargador y extensión; Asistente 0.5.0.dev5). Cambios visibles desde 2.7.5:
 - **Crear paquete de este lote…** en la ventana principal, con la casilla **Incluir XLSX consolidado**; en
   Resultados, **Paquete con XLSX consolidado**. El paquete lleva solo el XLSX consolidado (CSMP_CAPTURE 1.1.0),

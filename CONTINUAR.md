@@ -14,7 +14,7 @@
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
 | WP-52 | EN_VERIFICACION | Historia de causa H0: caracterizar la ventana y registrar la decisión |
 | WP-53 | EN_VERIFICACION | Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención) |
-| WP-54 | PENDIENTE | Historia de causa: interfaz, flujo, entrega Windows y acta |
+| WP-54 | EN_VERIFICACION | Historia de causa: interfaz, flujo, entrega Windows y acta |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
