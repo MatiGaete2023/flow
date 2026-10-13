@@ -21,7 +21,7 @@ scanner = tool('check_real_ids')
 verifier = tool('verificar_wp')
 
 
-def test_indice_omite_imagen_sin_leer_blob_y_rechaza_gitlink(tmp_path, monkeypatch, capsys):
+def test_indice_lee_blob_por_oid_y_rechaza_gitlink(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(scanner, 'ROOT', tmp_path)
     subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
     image = tmp_path / 'imagen.png'
@@ -36,7 +36,8 @@ def test_indice_omite_imagen_sin_leer_blob_y_rechaza_gitlink(tmp_path, monkeypat
 
     monkeypatch.setattr(scanner.subprocess, 'run', tracked)
     assert scanner.scan([image], set(), stage=True) == []
-    assert not any('cat-file' in command or 'show' in command for command in commands)
+    assert any('cat-file' in command for command in commands)
+    assert not any('show' in command for command in commands)
     original(
         ['git', 'update-index', '--add', '--cacheinfo', '160000,' + 'a' * 40 + ',submodulo'],
         cwd=tmp_path, check=True,
@@ -57,6 +58,10 @@ def test_indice_lee_blob_indexado_con_sufijo_desconocido(tmp_path, monkeypatch, 
     image.write_bytes(b'imagen ficticia')
     subprocess.run(['git', 'add', image.name], cwd=tmp_path, check=True)
     assert len(scanner.scan([image], set(), stage=True)) == 1
+    renamed = tmp_path / 'renombrado.png'
+    renamed.write_text(identity, encoding='utf-8')
+    subprocess.run(['git', 'add', renamed.name], cwd=tmp_path, check=True)
+    assert len(scanner.scan([renamed], set(), stage=True)) == 1
 
 
 @pytest.fixture
