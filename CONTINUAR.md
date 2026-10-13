@@ -5,13 +5,16 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `fe4c2258ef42`; asistente 914 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
-- Paquetes integrados: 45 de 49; último en el orden: WP-94.
+- Paquetes integrados: 45 de 52; último en el orden: WP-94.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
+| WP-95 | PENDIENTE | Fase A: comparación de capturas y revisión por excepción |
+| WP-96 | PENDIENTE | Fase A: estado por caso y bandeja «Qué requiere mi atención» |
+| WP-97 | PENDIENTE | Fase A: métrica local de revisión (opcional) |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
@@ -27,7 +30,7 @@ Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los 
 
 WP-89 completa CI eficiente y resuelve la validación Windows de WP-88: run 38259239456 PASA, más navegador/Descargador 38257631987 PASA. Facturación confirmada por ejecución real. Consultar [ficha WP-89](docs/implementacion/wp/WP-89.md) y estado antes de repetir pruebas/construcciones: no push Windows; entrega por workflow_dispatch tras mínimo aprobado; compilación única de ambos EXE y retención 30 días. Correctivo del aviso evita una segunda fila duplicada y mantiene el editor a 1024×650. No repetir seis cambios de WP-88.
 
-Integrados: EF-01 (WP-90), EF-02 (WP-91; EF-02b cerrado sin cambio de código), EF-03 (WP-92, tras E3) y las correcciones de la [revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) en WP-94 (`fe4c225`, tras E3 con C1–C6 aplicados). EF-04 es WP-93: rama `wp/93-ef04`, no integrado, espera la prueba del usuario en SITFA real. Pendientes sin datos: H7 (capturas 1024×650) y color de tema con Tk 9. Uso real Excel/Outlook/SITFA y actas continúan pendientes.
+Integrados: EF-01 (WP-90), EF-02 (WP-91; EF-02b cerrado sin cambio de código), EF-03 (WP-92, tras E3) y las correcciones de la [revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) en WP-94 (`fe4c225`, tras E3 con C1–C6 aplicados). EF-04 es WP-93: rama `wp/93-ef04`, no integrado, espera la prueba del usuario en SITFA real. Pendientes sin datos: H7 (capturas 1024×650) y color de tema con Tk 9. Siguiente código planificado: [Fase A](docs/implementacion/PLAN_FASE_A_20261013.md) (WP-95 comparación de capturas, WP-96 bandeja de atención, WP-97 métrica local). Uso real Excel/Outlook/SITFA y actas continúan pendientes.
 
 ## Consolidación anterior
 

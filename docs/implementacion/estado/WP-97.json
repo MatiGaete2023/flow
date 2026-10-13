@@ -1,0 +1,25 @@
+{
+  "titulo": "Fase A: métrica local de revisión (opcional)",
+  "ola": 7,
+  "tipo": "C",
+  "depende_de": [
+    {
+      "wp": "WP-96",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "PENDIENTE",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": "No riesgoso (decisión j): sin E3.",
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+    "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+  ]
+}
