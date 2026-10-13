@@ -34,5 +34,7 @@ Guía: [GUIA_PRUEBAS_USUARIO_20261013.md](GUIA_PRUEBAS_USUARIO_20261013.md). Ano
 | A-11 | | | |
 | A-12 | | | |
 | A-13 | | (pegar resumen de métricas) | |
+| A-14 | | | |
+| A-15 | | | |
 | C-01 | | coincidencias de 10: · discrepancias por tipo: | |
 | N-01 | | | |

@@ -1,7 +1,7 @@
 {
-  "commit": "16d1d10437b6c618e4a111c87783b9d5e617cdae",
+  "commit": "9d94a6e9862a33dc5c729aab6d2f53477e7dc6e8",
   "asistente": {
-    "aprobadas": 927,
+    "aprobadas": 930,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
@@ -9,7 +9,7 @@
     "codigo": 0,
     "medicion_valida": true,
     "fallidas_nodeids": [],
-    "resumen": "927 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "930 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 251,
@@ -403,6 +403,9 @@
       "tests/test_ef03_diario_recibos.py::test_lote_guarda_sesion_completa_una_vez_y_recibos_en_diario",
       "tests/test_ef03_diario_recibos.py::test_lote_sin_cambios_netos_no_deja_diario_residual",
       "tests/test_ef03_diario_recibos.py::test_otra_instancia_no_borra_un_diario_ilegible",
+      "tests/test_ef03_diario_recibos.py::test_respaldo_bak_que_no_es_objeto_no_rompe_el_guardado[\"texto\"]",
+      "tests/test_ef03_diario_recibos.py::test_respaldo_bak_que_no_es_objeto_no_rompe_el_guardado[[]]",
+      "tests/test_ef03_diario_recibos.py::test_respaldo_bak_que_no_es_objeto_no_rompe_el_guardado[null]",
       "tests/test_estado_continuacion.py::test_bloque_lista_solo_pendientes_y_cifras_de_la_linea_base",
       "tests/test_estado_continuacion.py::test_render_inserta_y_luego_reemplaza_sin_tocar_el_resto",
       "tests/test_estado_continuacion.py::test_validar_detecta_bloque_desactualizado",
