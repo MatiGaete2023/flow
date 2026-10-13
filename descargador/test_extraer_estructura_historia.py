@@ -20,7 +20,8 @@ CANARIOS = (
     'Tengase presente canario',
     '13/10/2099',
     '01/01/2099',
-    '912',
+    '9120',
+    'TOKENDOCCANARIO4',
     '11.111.111-1',
 )
 
@@ -71,7 +72,7 @@ def test_ventana_historia_sin_valores(tmp_path):
     for canario in CANARIOS:
         assert canario not in texto, canario
     copia = json.loads(texto)['copias'][0]
-    tabla = next(t for t in copia['tablas'] if t['id'] == 'tablaHistoria')
+    tabla = next(t for t in copia['tablas'] if t['encabezado'][:1] == ['Folio'])
     assert tabla['encabezado'] == [
         'Folio',
         'Doc.',
@@ -83,15 +84,18 @@ def test_ventana_historia_sin_valores(tmp_path):
         'Referencia',
         'Fecha Tram',
     ]
+    assert tabla['id'] == '' and tabla['clase'].startswith('table ')
+    assert tabla['filas_de_datos'] == 4 and tabla['filas_con_celdas_distintas_al_encabezado'] == 1
     columnas = {c['etiqueta']: c for c in tabla['columnas']}
     assert columnas['Fecha Tram']['formas'] == {'FECHA_DD/MM/AAAA': 3}
-    assert columnas['Folio']['formas'] == {'ENTERO_1-3': 3}
+    assert columnas['Folio']['formas'] == {'ENTERO_4-6': 4}
     assert columnas['Referencia']['formas']['VALOR_CONOCIDO:Sin referencia'] == 1
-    assert columnas['Doc.']['acciones'] == {'verDocumento/1:str': 3}
-    assert columnas['Anexo']['acciones'] == {'verAnexo/1:str': 1}
+    assert columnas['Doc.']['acciones'] == {'Reservado/1:str': 1, 'ShowPDF/2:str,str': 3}
+    assert columnas['Anexo']['acciones'] == {'ShowAnexos/2:num,num': 1}
     assert copia['pestanas_visibles'] == {'Diligencias': 1, 'Escritos': 1, 'Historia': 1, 'Notificación': 1}
     assert copia['charset_declarado'] == 'windows-1252'
-    assert 'RIT: VALOR' in copia['etiquetas_reconocidas']
+    assert 'RIT' in copia['etiquetas_reconocidas'] and 'Tribunal' in copia['etiquetas_reconocidas']
+    assert 'InformeHistoria' in copia['script_en_linea']['funciones_definidas']
 
 
 def test_listado_y_funcion_show_historia(tmp_path):

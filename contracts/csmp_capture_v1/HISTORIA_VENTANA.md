@@ -45,10 +45,49 @@ historia de la causa. No se usan (prohibido consultar por RUT).
 - `ShowObservaciones` aridad 6, tipos `num,num,str,num,num,str` (columna Obs.).
 - Muestras pequeñas (3 filas Cumplimiento, 1 Espera): suficiente para el mecanismo, no para variantes.
 
-## 4. Ventana «Información de la Causa» — PENDIENTE
+## 4. Ventana «Información de la Causa» (N1, copia guardada de la ventana, Cumplimiento)
 
-No hay HAR de la ventana emergente. Rasgos visibles (descripción del usuario, N1 visual): pestañas Historia,
-Notificación, Diligencias, Escritos; botones Litigantes, Materias, Plazos, Remisión; tabla con columnas
-`Folio · Doc. · Sel · Anexo · Etapa · Trámite · Desc. Trámite · Referencia · Fecha Tram`; orden por fecha descendente.
-Falta, con una captura de la ventana (guía H0, paso 2.3): id/clase de la tabla, si las pestañas son locales o piden
-otra URL, paginación/«ver más», vacío explícito, charset y forma de las celdas.
+El usuario indica que la ventana es idéntica en Espera y Cumplimiento (decisión H-g); la segunda muestra de Espera
+confirmó el mismo flujo de acceso. Muestra: una causa con 269 trámites.
+
+**Documento:** `charset=windows-1252` (meta de la copia; el listado declara `iso-8859-1`; ambos se decodifican con
+`decode_snapshot`). Cierra `</html>`. Formulario `AtPublicoPpalForm` → `/SITFAWEB/AtPublicoDAction.do`.
+
+**Encabezado de causa:** `div.panel-heading > strong` («Información de la Causa» y, si aplica, «[Causa Reservada]»).
+Datos en `div.panel-body > div.row > div.col-xs-4|col-xs-8`, cada uno `<label class="form-check-label">ETIQUETA:</label> VALOR`
+(valor = texto que sigue a la etiqueta). Etiquetas: RIT, RUC, Caratulado, F. Ingreso, Proc., Forma Inicio, Est. Adm.,
+Etapa, Estado Proc., Tribunal, Texto Requerimiento (este último con imagen de documento: se ignora).
+
+**Pestañas:** `Lengueta('…')` ×4 (Historia, Notificación, Diligencias, Escritos). En la copia solo existe la tabla de
+Historia: las otras pestañas no vienen en el HTML (fuera de alcance). Botones Litigantes/Materias/Plazos/Remisión:
+`ShowPopUpCabecera(n, n)` (fuera de alcance).
+
+**Tabla de Historia:** la **única** `<table>` de la página; `class="table table-sm table-bordered table-hover"`,
+sin `id`. Ubicarla por su encabezado exacto, no por clases. `<thead>` con 9 `<th>`:
+`Folio · Doc. · Sel · Anexo · Etapa · Trámite · Desc. Trámite · Referencia · Fecha Tram`. `<tbody>` con una `<tr>` por
+trámite y un `<script>` entre filas (`historia[i] = new InformeHistoria(...)`): ignorar los scripts.
+
+| Columna | Forma observada | Regla del lector |
+|---|---|---|
+| Folio | entero de 4–6 dígitos | texto literal |
+| Doc. | `<img onclick="ShowPDF('…','…')">` o `Reservado('…')` | **ignorar** (sin PDF) |
+| Sel | `<img>`; a veces `ShowPopUpLengueta(n×6)` | **ignorar** |
+| Anexo | comentario HTML; a veces `<img onclick="ShowAnexos(n,n)">` | `annex_visible = true` si hay `img`; nunca abrir |
+| Etapa | «Cumplimiento» (todas en la muestra) | texto literal |
+| Trámite | Resolución, Escrito, Actuación | texto literal |
+| Desc. Trámite | texto corto (≤ 60) | texto íntegro |
+| Referencia | texto ≤ 60; «Sin referencia.» frecuente | texto íntegro, literal |
+| Fecha Tram | `dd/mm/aaaa`, sin hora | ISO, `time_precision=DIA` |
+
+**Orden y completitud:** todas las filas en una sola respuesta (269; **sin paginación**), orden por fecha
+**descendente** sin violaciones. En la muestra: 31 trámites dentro de 4 meses y 237 anteriores.
+
+**Fila final incompleta (N1, real):** la última `<tr>` trae solo 4 celdas (Folio, Doc., Sel, Anexo), sin etapa,
+trámite ni fecha, aunque el HTML cierra bien. Regla: no es error de lectura; registrar advertencia
+`HISTORIA_FILA_INCOMPLETA` con su folio, no exportarla como trámite (sin fecha no entra a la ventana) y contarla en la
+hoja «Causas». Cualquier otra fila con un número de celdas distinto de 9 ⇒ `HISTORIA_ENCABEZADO_DISTINTO` (error).
+
+**Tamaño:** ~690 KB para 269 trámites ⇒ el tope de 8 MB por respuesta alcanza.
+
+**Pendiente menor (no bloquea):** cómo se ve una causa sin trámites o con acceso denegado. Mientras no haya muestra:
+tabla sin filas ⇒ `VACIA_COMPROBADA` solo si el encabezado exacto está presente; sin tabla ⇒ `HISTORIA_TABLA_NO_RECONOCIDA`.

@@ -1,6 +1,7 @@
 # Guía H0 — estructura anónima de la ventana de historia (para el usuario)
 
-> **Estado (13 de octubre):** el listado ya está caracterizado (acceso confirmado). Falta **solo la ventana
+> **H0 cerrado el 13 de octubre** (listado y ventana caracterizados). Esta guía queda solo para repetir la
+> captura si SITFA cambia. Original: falta **solo la ventana
 > emergente**: haz los pasos 1, 2.2 y 2.3 con una causa de Cumplimiento y otra de Espera, y el paso 4 sobre esos
 > HAR. Si la ventana no abre sus propias herramientas (paso 1.2), usa en ella **Ctrl+S** → «Página web, completa»
 > y procesa el `.html`. **Comparte solo `estructura_historia.json`, no los HAR**: contienen datos reales y tu sesión.

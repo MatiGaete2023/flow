@@ -1,10 +1,15 @@
 # Fixtures ficticios de la historia de causa
 
-**Provisionales.** Reproducen solo lo visible en la ventana «Información de la Causa» (pestaña Historia) descrita por
-el usuario el 13 de octubre de 2026. Todos los valores son inventados (canarios: `NOMBRECANARIO`, `C-99999-2099`,
-`TOKENCANARIO`, fechas del año 2099). Los ids, clases y la forma exacta del HTML **no** son los de SITFA: se
-reemplazan por la estructura real anónima que entregue la fase H0 (`docs/historia_causa/wp/WP-52.md`).
+**Fieles a la estructura observada en H0** (`contracts/csmp_capture_v1/HISTORIA_VENTANA.md`, 13 de octubre de
+2026): mismas etiquetas, clases, anidamiento, funciones, aridades, charset y la fila final incompleta. Todos los
+**valores** son inventados (canarios: `NOMBRECANARIO`, `C-99999-2099`, `TOKENCANARIO`, `TOKENDOCCANARIO*`, fechas
+del año 2099). No contienen datos reales.
 
-- `ventana_historia.html`: encabezado de causa, botones, pestañas y tabla de trámites.
-- `listado_seguimiento.html`: fila de listado con `ShowObservaciones` y `ShowHistoria`, y una función
-  `ShowHistoria` que arma una URL con parámetro opaco `a1` (supuesto a confirmar en H0).
+- `ventana_historia.html`: ventana «Información de la Causa»: encabezado (`label.form-check-label`), botones,
+  pestañas y la única tabla (`table table-sm table-bordered table-hover`) con 3 trámites completos y una última fila
+  incompleta de 4 celdas, como la real.
+- `listado_seguimiento.html`: fila del listado con `ShowHistoria(num,'RIT',num)` y `ShowObservaciones`, y la función
+  `ShowHistoria` con el flujo `Encrypt_AjaxAccion.do` → `ConsultaDetalleAtPublicoAccion.do`.
+
+WP-53 deriva de aquí las variantes (0/1/30 filas, texto largo, fecha ilegible, encabezado distinto, login) en sus
+pruebas, modificando copias en memoria.
