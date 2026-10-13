@@ -240,3 +240,20 @@ def test_paquete_con_archivo_reciente_o_carpeta_ajena_no_se_ofrece(tmp_path, mon
     for path in [alien, *alien.rglob('*')]:
         os.utime(path, (age, age))
     assert old_batches(tmp_path / 'otra') == []
+
+
+def _lote_solo_historia(root, name, days):
+    folder = root / name
+    (folder / 'historia').mkdir(parents=True)
+    control = folder / 'historia' / 'historias.json'
+    control.write_text('{}')
+    (folder / 'Historia_SITFA.xlsx').write_bytes(b'ficticio')
+    age = time.time() - days * 86400
+    os.utime(control, (age, age))
+    return folder
+
+
+def test_lote_con_solo_historias_json_es_elegible_si_es_antiguo(tmp_path):
+    antiguo = _lote_solo_historia(tmp_path, 'antiguo', 70)
+    _lote_solo_historia(tmp_path, 'reciente', 5)
+    assert [item['folder'] for item in old_batches(tmp_path)] == [antiguo]

@@ -1,0 +1,88 @@
+{
+  "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
+  "base": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "954 aprobadas; mínimo 932; base 932; código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "308 aprobadas; mínimo 283; base 283; código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 954,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    },
+    "descargador": {
+      "aprobadas": 308,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
+    "arbol_git": "d578bca80b91c0d8e6cd76f2f44cc67715e0ada7",
+    "cambios_locales": true
+  },
+  "procedencia_fin": {
+    "commit": "a1c5f68fc0017b0e1e23055147c242e63dc872a4",
+    "arbol_git": "d578bca80b91c0d8e6cd76f2f44cc67715e0ada7",
+    "cambios_locales": true
+  },
+  "procedencia_verificada": false,
+  "elegible_integracion": false,
+  "medicion_reutilizada": false,
+  "veredicto": "FALLA",
+  "motivo_procedencia": "Árbol sin commit, modificado durante la medición o identidad Git no disponible"
+}

@@ -147,6 +147,9 @@ def onedrive_warning(path):
 PACKAGE_PREFIX = 'Paquete CSMP '
 
 
+CONTROLES = ('resumen.json', 'bitacoras.json', 'flujo.json', 'historias.json', 'historia/historias.json')
+
+
 def _package_controls(folder):
     """Paquete de «Consultar y crear paquete» (revisión externa H3): controles bajo respaldo/ y el ZIP.
 
@@ -163,7 +166,7 @@ def _package_controls(folder):
     ):
         return []
     controls = [process]
-    for name in ('resumen.json', 'bitacoras.json', 'flujo.json'):
+    for name in CONTROLES:
         for path in backup.glob('*/' + name):
             if not path.is_symlink() and not path.parent.is_symlink() and path.is_file():
                 controls.append(path)
@@ -189,9 +192,7 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
         ):
             continue
         controls = [
-            folder / name
-            for name in ('resumen.json', 'bitacoras.json', 'flujo.json')
-            if (folder / name).is_file() and not (folder / name).is_symlink()
+            folder / name for name in CONTROLES if (folder / name).is_file() and not (folder / name).is_symlink()
         ] + _package_controls(folder)
         if not controls:
             continue
