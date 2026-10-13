@@ -1659,9 +1659,9 @@
         "o",
         "p"
       ],
-      "estado": "PENDIENTE",
-      "ejecutor": null,
-      "tomado": null,
+      "estado": "TOMADO",
+      "ejecutor": "claude (sesión 01LxrxjuHGR5We6WK3bqbCJY)",
+      "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
       "pr": null,
       "verificacion": null,
@@ -1669,7 +1669,8 @@
       "auditoria": null,
       "integrado_en": null,
       "notas": [
-        "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final."
+        "Guía autosuficiente: docs/historia_causa/GUIA_IMPLEMENTACION.md. Riesgoso: una revisión E3 al final.",
+        "Progreso por subpaso en docs/historia_causa/AVANCE.md (leer primero al retomar)."
       ]
     },
     "WP-54": {
