@@ -1,50 +1,50 @@
-# Continuar — consolidado del 12 de octubre de 2026
+# Continuar — consolidado del 13 de octubre de 2026
 
 <!-- estado:inicio (generado por tools/estado.py continuacion; no editar) -->
 ## Estado generado
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
-- Línea base: `9d94a6e9862a`; asistente 930 aprobadas, 11 omitidas, 6 xfail; descargador 251 aprobadas, 62 subpruebas.
-- Paquetes integrados: 49 de 54; último en el orden: WP-98.
+- Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
+- Paquetes integrados: 51 de 55; último en el orden: WP-99.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-93 | BLOQUEADO_USUARIO | EF-04: reutilizar bitácoras leídas hoy en otros lotes |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 
-[Traspaso para otro programador](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md): punto de partida, cambios, razones, evidencias y orden de continuación. [Prompt para otra IA o agentes](docs/implementacion/PROMPT_CONTINUAR_IA.md). [Informe para revisor externo](docs/implementacion/INFORME_REVISOR_EXTERNO_20261012.md) y [su prompt](docs/implementacion/PROMPT_REVISOR_EXTERNO.md).
+**Una sola rama de trabajo: `feat/ejecucion-plan-20261008`.** Todo el código y la documentación están aquí; `main`
+no se toca sin acta del usuario. Las ramas auxiliares se retiraron del remoto el 13-oct (sus commits siguen en el
+historial de feat). Trabajar con commits directos en feat; ramas `wp/NN` solo si hace falta revisión E3 (decisión j).
 
-## Trabajo actual: eficiencia y UX
+## Estado del plan
 
-[Orden y límites de la nueva ola](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md). WP-87 integró el tema común en el PR #41; consultar `docs/implementacion/estado/WP-87.json` para su estado. WP-88 los integró en PR #42 junto con el flujo contextual: consulta su estado antes de repetir autoexportación, consulta/paquete, preferencia XLSX, retiro de firmas, respaldo o lanzador. El usuario autorizó completar lo ausente tras comprobar `e91e360`.
+- Código del plan: completo. 51 de 55 paquetes integrados; WP-93 (EF-04), WP-98 y WP-99 se integraron el 13-oct.
+- Prueba real del usuario del 13-oct ([registro](docs/aceptacion/REGISTRO_PRUEBAS_USUARIO_20261013.md)): instalación,
+  Descargador, reutilización de bitácoras, comparación, bandeja, borradores y resoluciones PASA; C-01 FALLA.
+- Lo que queda depende del usuario: ver la tabla de arriba y la sección siguiente.
 
-Cifras vigentes solo en [línea base](docs/implementacion/linea_base.json); los párrafos siguientes registran antecedentes históricos. E3 por riesgo (decisión j). Sin monitorización pasiva.
+## Pendiente, en orden
 
-## Pendiente inmediato
+1. **Bitácoras de Espera leídas sin entradas** ([WP-99](docs/implementacion/wp/WP-99.md)). El usuario entrega
+   `estructura.json` (`python descargador/extraer_estructura_bitacora.py ESPERA.html CUMPLIMIENTO.html > estructura.json`);
+   con eso se corrige el lector. Luego repetir C-01 (10 ingresos).
+2. WP-50: aceptación con C-01 PASA.
+3. WP-02: acta de uso real firmada por el usuario
+   ([plantilla](docs/aceptacion/ACTA_USO_REAL_20261012.json), [guía](docs/aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md)).
+4. WP-17: Soporte GitHub para refs de PR y cachés antiguas.
+5. WP-70: acta final; recién entonces, y con autorización escrita, fusión a `main`.
+Sin datos: H7 (capturas 1024×650) y color de tema con Tk 9.
 
-WP-89 completa CI eficiente y resuelve la validación Windows de WP-88: run 38259239456 PASA, más navegador/Descargador 38257631987 PASA. Facturación confirmada por ejecución real. Consultar [ficha WP-89](docs/implementacion/wp/WP-89.md) y estado antes de repetir pruebas/construcciones: no push Windows; entrega por workflow_dispatch tras mínimo aprobado; compilación única de ambos EXE y retención 30 días. Correctivo del aviso evita una segunda fila duplicada y mantiene el editor a 1024×650. No repetir seis cambios de WP-88.
+## Referencias
 
-Integrados: EF-01 (WP-90), EF-02 (WP-91; EF-02b cerrado sin cambio de código), EF-03 (WP-92, tras E3) y las correcciones de la [revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) en WP-94 (`fe4c225`, tras E3 con C1–C6 aplicados). EF-04 es WP-93: rama `wp/93-ef04`, no integrado, espera la prueba del usuario en SITFA real. Pendientes sin datos: H7 (capturas 1024×650) y color de tema con Tk 9. Siguiente código planificado: [Fase A](docs/implementacion/PLAN_FASE_A_20261013.md) (WP-95 comparación de capturas, WP-96 bandeja de atención, WP-97 métrica local). Uso real Excel/Outlook/SITFA y actas continúan pendientes: seguir la [guía de pruebas del usuario](docs/aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md).
+[Plan vigente](PLAN_VIGENTE.md) · [Prompt para otra IA](docs/implementacion/PROMPT_CONTINUAR_IA.md) ·
+[Traspaso](docs/implementacion/TRASPASO_PROGRAMADOR_20261012.md) · [Fase A](docs/implementacion/PLAN_FASE_A_20261013.md) ·
+[Eficiencia y UX](docs/implementacion/PLAN_EFICIENCIA_UX_20261012.md) · [Revisión externa](docs/implementacion/auditoria/REVISION_EXTERNA_20261012.md) ·
+[Inventario de ramas 11-oct](docs/implementacion/ramas_consolidadas_20261011.json) · Cifras vigentes solo en
+[línea base](docs/implementacion/linea_base.json).
 
-## Consolidación anterior
-
-**Usar feat/ejecucion-plan-20261008.** Las 45 ramas inventariadas quedaron incorporadas
-al historial; referencias antiguas son respaldo. Código de #33/WP-50 y plantilla WP-02
-incluidos. G-3/G-4/G-5 preservados. No repetir fusiones ni correcciones ya consolidadas.
-
-Verificación PASA en 4dc54e9b52bbca441ca4d43cd577e5c1cbcda288: 848/11/6 y 240/62; baseline regenerado, golden17 intacto,
-historia sin hallazgos y 29 focales PASA. CI verde en 32dd14c (runs 38182127247 y 38182124001; PR #1).
-12 de octubre: WP-86 (revisión integral), su E3 (CAMBIOS aplicados) y refactor menor integrados en 5a8f68e
-vía `consolidacion/20261012`; PASA 858/11/6 y 240/62; línea base regenerada. Sin monitoreo de CI por pedido del usuario.
-[Reporte](docs/implementacion/REPORTE_CONSOLIDACION_20261011.md). [Eficiencia del proceso](docs/implementacion/EFICIENCIA_PROCESO_20261012.md) y [de los productos](docs/implementacion/EFICIENCIA_PRODUCTOS_20261012.md).
-[Inventario con SHA](docs/implementacion/ramas_consolidadas_20261011.json).
-
-Pendiente real: Soporte GitHub (refs/cachés, WP-17), pruebas Excel/Outlook y actas del usuario
-(WP-02), contraste de diez ingresos (aceptación WP-50), acta final WP-70 antes de main.
-WP-50 tiene su código consolidado; su estado bloqueado es funcional. Plantilla WP-02: docs/aceptacion/ACTA_USO_REAL_20261012.json (5a8f68e, 40 NO_EJECUTADO, tipo vacío).
-Motor/textos/golden17 intactos; seis xfail estrictos; Outlook Save-only y CC fijo.
-No main/release antes de acta, no force ni publicaciones desde clones previos a purga.
+Invariantes: motor, textos y golden17 intactos; seis xfail estrictos; Outlook solo `Save()` y CC fijo; sin escritura
+en RUS/SATURNO; sin datos reales en el repositorio; sin `--force`, releases ni `main` sin autorización escrita.

@@ -22,7 +22,8 @@
     "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02.",
     "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional.",
     "PR #33 queda incorporado técnicamente al historial; BLOQUEADO_USUARIO no significa que falte su código, sino la validación funcional real.",
-    "11 de octubre de 2026 (decisión g del usuario): la cronología queda visible en feat desde 8c4036d mientras falta el acta de 10 ingresos; la aceptación sigue pendiente. integrado_en registra el código, no la aceptación. WP-86 corrige C2, C5 y F4."
+    "11 de octubre de 2026 (decisión g del usuario): la cronología queda visible en feat desde 8c4036d mientras falta el acta de 10 ingresos; la aceptación sigue pendiente. integrado_en registra el código, no la aceptación. WP-86 corrige C2, C5 y F4.",
+    "13 de octubre de 2026: C-01 FALLA en prueba real (límite de 300 lecturas y bitácoras de Espera leídas vacías). Correcciones y pendiente en WP-99."
   ],
   "consolidado_en": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
 }

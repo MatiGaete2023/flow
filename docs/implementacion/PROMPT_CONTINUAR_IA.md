@@ -31,19 +31,16 @@ verificados de las inferencias.
      contrato de captura, el borrado o la retención de datos, el anonimizador o check_real_ids, o la extensión
      SITFA (decisión j).
 3. Siguiente trabajo, en orden (verifica antes en estado/*.json que siga pendiente):
-   0. Fase A (WP-95 → WP-96 → WP-97): seguir docs/implementacion/PLAN_FASE_A_20261013.md y cada ficha al pie de la
-      letra (contratos, archivos y pruebas).
-   a. WP-93 (EF-04, rama wp/93-ef04, E3 con cambios aplicados): integrar en feat SOLO después de que el usuario
-      informe la prueba en SITFA real (pasos en docs/implementacion/wp/WP-93.md). EF-01..03 y WP-94 ya están
-      integrados y EF-02b se cerró sin cambio de código: no repetirlos.
-   b. Pendientes sin datos de WP-94: H7 (capturas 1024×650) y diferencia de color de tema con Tk 9; requieren
-      Windows o la versión de Tk soportada.
+   0. Una sola rama: feat/ejecucion-plan-20261008 (decisión n). No crear ramas salvo para E3.
+   a. WP-99: corregir el lector de bitácoras de Espera cuando el usuario entregue estructura.json
+      (descargador/extraer_estructura_bitacora.py). No pedir HTML reales.
+   b. Pendientes sin datos de WP-94: H7 (capturas 1024×650) y color de tema con Tk 9.
    c. Decisiones opcionales del usuario: los 6 conflictos R-T en xfail y la advertencia de pandas en motor/.
    d. Lo que depende del usuario (WP-02 y WP-50: actas y pruebas reales; WP-17: Soporte GitHub; WP-70: cierre) no se
       ejecuta: solo se prepara.
 4. Disciplina por paquete:
-   - Crea la rama wp/NN-tema desde feat, con una ficha nueva y estado/WP-NN.json, y agrégalo a orden_paquetes de
-     estado/global.json antes de WP-70.
+   - Trabaja en feat (rama wp/NN solo si requiere E3), con una ficha nueva y estado/WP-NN.json, y agrégalo a
+     orden_paquetes de estado/global.json antes de WP-70.
    - Durante el trabajo corre solo pruebas focales: PYTHONPATH=<ruta absoluta>/src, y xvfb-run -a para la
      interfaz.
    - Commit limpio y luego una sola medición:

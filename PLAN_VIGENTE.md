@@ -54,6 +54,7 @@ Registradas también en docs/implementacion/estado/global.json → decisiones_ad
   retención y extensión intactos. Fuente: «Efectua los cambuos del otro agente que no esten y continua».
 
 ## Decisiones del 13 de octubre de 2026
+- n) Consolidar todo en una sola rama (`feat/ejecucion-plan-20261008`) y trabajar desde ahí. Fuente: «consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca».
 - m) Subir `MAX_LECTURAS_POR_LOTE` de 300 a 600: con 344 registros habituales cada corrida exigía «Retomar». La pausa entre lecturas y los checkpoints no cambian. Fuente: «Sube el limite a 600».
 
 ## Ola de eficiencia y experiencia — 12 de octubre de 2026

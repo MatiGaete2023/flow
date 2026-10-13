@@ -249,6 +249,8 @@
     "WP-95",
     "WP-96",
     "WP-97",
+    "WP-98",
+    "WP-99",
     "WP-70"
   ],
   "commit_integracion": "fe4c225",
@@ -280,6 +282,13 @@
       "ramas": 45,
       "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
       "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
+    },
+    {
+      "fecha": "13 de octubre de 2026",
+      "respuesta": "consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca",
+      "ramas": 60,
+      "commit": "ver CONTINUAR.md",
+      "alcance": "wp/93-ef04 integrada; e3/wp-94 y e3/wp-92-93 unidas sin contenido (superadas); el resto ya contenido en feat. Ramas auxiliares retiradas del remoto; main intacta."
     }
   ],
   "bloqueos_externos": {

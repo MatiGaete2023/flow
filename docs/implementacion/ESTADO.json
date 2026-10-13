@@ -803,7 +803,8 @@
         "11 de octubre de 2026: implementado en su rama (PR #33), sin integrar. Falta el acta de 10 ingresos (usuario) y WP-02.",
         "Usuario ordena fusionar todas las ramas: código de #33 consolidado en 8c4036dee65b8ff46948c776ab4a48ddd5ba610a. Estado BLOQUEADO_USUARIO conservado por WP-02 y prueba real de diez ingresos; no aceptación funcional.",
         "PR #33 queda incorporado técnicamente al historial; BLOQUEADO_USUARIO no significa que falte su código, sino la validación funcional real.",
-        "11 de octubre de 2026 (decisión g del usuario): la cronología queda visible en feat desde 8c4036d mientras falta el acta de 10 ingresos; la aceptación sigue pendiente. integrado_en registra el código, no la aceptación. WP-86 corrige C2, C5 y F4."
+        "11 de octubre de 2026 (decisión g del usuario): la cronología queda visible en feat desde 8c4036d mientras falta el acta de 10 ingresos; la aceptación sigue pendiente. integrado_en registra el código, no la aceptación. WP-86 corrige C2, C5 y F4.",
+        "13 de octubre de 2026: C-01 FALLA en prueba real (límite de 300 lecturas y bitácoras de Espera leídas vacías). Correcciones y pendiente en WP-99."
       ],
       "consolidado_en": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a"
     },
@@ -1450,20 +1451,21 @@
       "decisiones": [
         "j"
       ],
-      "estado": "BLOQUEADO_USUARIO",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-012yjVgL",
       "tomado": "12 de octubre de 2026",
       "rama": "wp/93-ef04",
       "pr": null,
       "verificacion": "PASA: verificacion/WP-93.json sobre 3a421f4 limpio (incluye WP-92 de feat); asistente 902/11/6, descargador 263/62, inventario sin bajas, golden intacto.",
-      "revision": "E3 CAMBIOS (sesión independiente): hallazgos 1–5 corregidos con 12 pruebas nuevas y nota de manual (6); condición de código del revisor cumplida. Falta la prueba del usuario en SITFA real.",
+      "revision": "E3 CAMBIOS (sesión independiente): hallazgos 1–5 corregidos con 12 pruebas nuevas y nota de manual (6); condición de código del revisor cumplida. Falta la prueba del usuario en SITFA real. Prueba del usuario en SITFA real informada el 13-oct: D-04 y D-05 PASA (registro 20261013).",
       "auditoria": "docs/implementacion/auditoria/WP-93.md",
-      "integrado_en": null,
+      "integrado_en": "feat/ejecucion-plan-20261008",
       "notas": [
         "Reutiliza solo lecturas LEIDA de las 10 carpetas de bitácoras más recientes del mismo destino (lotes y paquetes), con misma clave y parámetros, capturadas el mismo día local y hace ≤12 h, y SHA-256 del HTML coincidente; copia el archivo al lote nuevo y anota reutilizada_de.",
         "Pausas, tope de 300 aperturas, checkpoints y retomar sin cambios. Preferencia reutilizar_bitacoras (por defecto sí) con casilla «Reutilizar bitácoras leídas hoy».",
         "Riesgo residual: una actuación registrada en SITFA después de la lectura reutilizada no aparece; mitigado por el límite de 12 h/mismo día y la casilla para volver a leer todo.",
-        "Bloqueado por usuario: integrar solo tras la prueba en SITFA real (ficha, pasos 1-5, solo conteos)."
+        "Bloqueado por usuario: integrar solo tras la prueba en SITFA real (ficha, pasos 1-5, solo conteos).",
+        "Tope de aperturas elevado a 600 por decisión m (WP-99)."
       ]
     },
     "WP-94": {
@@ -1568,6 +1570,59 @@
       "notas": [
         "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
         "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+      ]
+    },
+    "WP-98": {
+      "titulo": "Correcciones de auditoría del merge histórico",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "INTEGRADO",
+      "ejecutor": "Codex /root",
+      "tomado": "13 de octubre de 2026",
+      "rama": "wp/98-correcciones-auditoria",
+      "pr": null,
+      "verificacion": "PASA: verificacion/WP-98.json sobre el merge con feat; asistente 930, descargador 251, golden 17 sin cambios, identidades 0, ruff 0, enlaces 0.",
+      "revision": "E3 APROBADO (sesión Claude 012yjVgL, otra raíz): auditoria/WP-98.md.",
+      "auditoria": "auditoria/WP-98.md",
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
+        "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
+      ]
+    },
+    "WP-99": {
+      "titulo": "Correcciones de la prueba de usuario del 13 de octubre",
+      "ola": 7,
+      "tipo": "C",
+      "depende_de": [
+        {
+          "wp": "WP-50",
+          "tipo": "archivo"
+        },
+        {
+          "wp": "WP-93",
+          "tipo": "funcional"
+        }
+      ],
+      "decisiones": [
+        "m"
+      ],
+      "estado": "INTEGRADO",
+      "ejecutor": "claude-sesion-012yjVgL",
+      "tomado": "13 de octubre de 2026",
+      "rama": "feat/ejecucion-plan-20261008",
+      "pr": null,
+      "verificacion": "PASA: verificacion/WP-99.json; asistente 932, descargador 283, golden y restricciones PASA, identidades 0.",
+      "revision": "No riesgoso según decisión j (lector de bitácoras, vista solo mostrar y tope de lecturas; sin motor, Outlook, contrato, retención ni extensión).",
+      "auditoria": null,
+      "integrado_en": "feat/ejecucion-plan-20261008",
+      "notas": [
+        "Pendiente: causa raíz de Espera (36/40 bitácoras leídas sin entradas); requiere estructura.json del usuario.",
+        "Registro: docs/aceptacion/REGISTRO_PRUEBAS_USUARIO_20261013.md."
       ]
     },
     "WP-70": {
@@ -1759,28 +1814,6 @@
         "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
       ]
-    },
-    "WP-98": {
-      "titulo": "Correcciones de auditoría del merge histórico",
-      "ola": 7,
-      "tipo": "C",
-      "depende_de": [],
-      "decisiones": [
-        "j"
-      ],
-      "estado": "INTEGRADO",
-      "ejecutor": "Codex /root",
-      "tomado": "13 de octubre de 2026",
-      "rama": "wp/98-correcciones-auditoria",
-      "pr": null,
-      "verificacion": "PASA: verificacion/WP-98.json sobre el merge con feat; asistente 930, descargador 251, golden 17 sin cambios, identidades 0, ruff 0, enlaces 0.",
-      "revision": "E3 APROBADO (sesión Claude 012yjVgL, otra raíz): auditoria/WP-98.md.",
-      "auditoria": "auditoria/WP-98.md",
-      "integrado_en": "feat/ejecucion-plan-20261008",
-      "notas": [
-        "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
-        "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
-      ]
     }
   },
   "traspasos": [
@@ -1884,6 +1917,13 @@
       "ramas": 45,
       "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
       "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
+    },
+    {
+      "fecha": "13 de octubre de 2026",
+      "respuesta": "consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca",
+      "ramas": 60,
+      "commit": "ver CONTINUAR.md",
+      "alcance": "wp/93-ef04 integrada; e3/wp-94 y e3/wp-92-93 unidas sin contenido (superadas); el resto ya contenido en feat. Ramas auxiliares retiradas del remoto; main intacta."
     }
   ],
   "bloqueos_externos": {
