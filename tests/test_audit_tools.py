@@ -23,6 +23,7 @@ verifier = tool('verificar_wp')
 
 def test_indice_lee_blob_por_oid_y_rechaza_gitlink(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(scanner, 'ROOT', tmp_path)
+    monkeypatch.setattr(scanner, 'ALLOWLIST', tmp_path / 'allowlist.txt')
     subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
     image = tmp_path / 'imagen.png'
     image.write_bytes(b'contenido binario ficticio')
@@ -42,6 +43,8 @@ def test_indice_lee_blob_por_oid_y_rechaza_gitlink(tmp_path, monkeypatch, capsys
         ['git', 'update-index', '--add', '--cacheinfo', '160000,' + 'a' * 40 + ',submodulo'],
         cwd=tmp_path, check=True,
     )
+    with pytest.raises(ValueError, match='Submódulo'):
+        scanner.scan([tmp_path / 'submodulo'], set(), stage=True)
     assert scanner.main(['--stage']) == 2
     assert 'Traceback' not in capsys.readouterr().err
 
