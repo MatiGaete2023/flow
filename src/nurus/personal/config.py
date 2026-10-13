@@ -214,6 +214,7 @@ def defaults(directory=None):
         'firma': '',
         'vista': {'tema': 'Sistema'},
         'correo_html': True,
+        'metricas_locales': False,
     }
 
 

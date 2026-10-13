@@ -714,6 +714,9 @@ def create_draft(work, draft, *, confirmed=False, _digests=None):
         raise
     activity.update(state='created', entry_id=receipt.entry_id, store_id=receipt.store_id)
     _persist(work)
+    from .review_metrics import record_draft
+
+    record_draft(work)
     return receipt
 
 

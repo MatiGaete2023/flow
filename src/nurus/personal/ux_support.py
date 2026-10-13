@@ -110,17 +110,52 @@ def case_detail_lines(work, row, drafts=None):
         ('CC', technical_value(row, 'CC')),
         ('RES', technical_value(row, 'RES')),
     ]
-    state = (
-        'Excluido'
-        if getattr(row, 'excluded', False)
-        else 'Revisar aviso'
-        if getattr(row, 'warnings', None)
-        else 'Propuesta'
-    )
+    try:
+        from .attention import case_statuses
+
+        status = case_statuses(work, drafts or [], getattr(work, 'projects', []))[row.id]
+        state = status.estado
+    except (KeyError, ValueError, OSError):
+        state = (
+            'EXCLUIDO'
+            if getattr(row, 'excluded', False)
+            else 'REQUIERE_REVISION'
+            if getattr(row, 'warnings', None)
+            else 'SIN_ACCION'
+        )
     fields.append(('Estado', state))
     fields.append(('Productos', ' · '.join(product_indicators(work, row, drafts))))
     if getattr(row, 'warnings', None):
         fields.append(('Incidencias', '; '.join(dict.fromkeys(str(x) for x in row.warnings))))
+    change = (getattr(work, 'capture_changes', None) or {}).get('filas', {}).get(row.id, {})
+    kind = change.get('tipo')
+    if kind == 'NUEVO':
+        fields.append(('Cambio', 'Nueva en esta captura'))
+    elif kind == 'CAMBIO_FUENTE':
+        detail = 'Cambió: ' + ', '.join(change.get('campos', ()))
+        if change.get('reglas_antes') or change.get('reglas_despues'):
+            detail += (
+                ' · Reglas: '
+                + ', '.join(change.get('reglas_antes', ()))
+                + ' → '
+                + ', '.join(change.get('reglas_despues', ()))
+            )
+        fields.append(('Cambio', detail))
+    elif kind == 'CAMBIO_REGLAS':
+        fields.append(
+            (
+                'Cambio',
+                'Reglas: '
+                + ', '.join(change.get('reglas_antes', ()))
+                + ' → '
+                + ', '.join(change.get('reglas_despues', ())),
+            )
+        )
+    try:
+        fields.append(('Próxima acción', status.proxima_accion))
+        fields.append(('Fuente', status.fuente))
+    except UnboundLocalError:
+        pass
     return [(label, str(data)) for label, data in fields if str(data or '').strip()]
 
 
@@ -134,7 +169,7 @@ def compact_case_detail_text(work, row, drafts=None):
     groups = [
         ('RIT', 'NNA', 'Tribunal'),
         ('Programa', 'Modalidad'),
-        ('TT', 'CC', 'RES', 'Estado', 'Productos'),
+        ('TT', 'CC', 'RES', 'Estado', 'Productos', 'Próxima acción', 'Fuente'),
         ('Incidencias',),
     ]
     lines = []
