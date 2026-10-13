@@ -1,7 +1,7 @@
 {
-  "commit": "fe4c2258ef4245ec59638ebc8189c80681dfdc59",
+  "commit": "242e6ed9a6160761c31bab1ad8f98596d03077cf",
   "asistente": {
-    "aprobadas": 914,
+    "aprobadas": 918,
     "omitidas": 11,
     "fallidas": 0,
     "subpruebas": 0,
@@ -9,7 +9,7 @@
     "codigo": 0,
     "medicion_valida": true,
     "fallidas_nodeids": [],
-    "resumen": "914 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
+    "resumen": "918 aprobadas, 11 omitidas, 0 fallidas, 0 subpruebas; código 0"
   },
   "descargador": {
     "aprobadas": 251,
@@ -144,6 +144,7 @@
       "tests/test_audit_tools.py::test_unreadable_container_cannot_certify_clean[None]",
       "tests/test_audit_tools.py::test_unreadable_container_cannot_certify_clean[not zip]",
       "tests/test_audit_tools.py::test_zip_capture_checks_consolidated_xlsx",
+      "tests/test_bandeja_atencion.py::test_bandeja_prioriza_aviso_y_no_modifica_recibos",
       "tests/test_bitacora_har.py::test_base64_legacy_html_keeps_accents_and_original_hash",
       "tests/test_bitacora_har.py::test_conflicting_snapshots_rejected",
       "tests/test_bitacora_har.py::test_empty_har_not_success",
@@ -259,6 +260,8 @@
       "tests/test_catalog_integrity.py::test_catalog_and_hash_come_from_one_read",
       "tests/test_cc_fuente_unica.py::test_config_reexporta_la_constante_y_nadie_lee_cc_obligatorio",
       "tests/test_cc_fuente_unica.py::test_direccion_literal_solo_en_la_fuente",
+      "tests/test_comparar_capturas.py::test_compara_nuevas_fuente_reglas_y_egresadas",
+      "tests/test_comparar_capturas.py::test_sin_anterior_no_inventa_cambios",
       "tests/test_config_migration_regressions_20260914.py::test_email_migration_is_idempotent_after_repair",
       "tests/test_config_migration_regressions_20260914.py::test_email_migration_restores_missing_template_without_overwriting_custom_text",
       "tests/test_config_migration_regressions_20260914.py::test_missing_text_key_is_added_from_base_without_touching_others",
@@ -481,6 +484,7 @@
       "tests/test_mayoria_edad.py::test_rt02_limites_1_60_61_dias_y_formatos_sitfa[ESPERA]",
       "tests/test_mayoria_edad.py::test_rt03_mayoria_cumplida_sugiere_sin_ejecutar_egreso",
       "tests/test_mayoria_edad.py::test_umbral_de_proxima_mayoria_respeta_configuracion",
+      "tests/test_metricas_locales.py::test_metricas_solo_conteos_y_tope",
       "tests/test_mulchen_mail.py::test_conflicting_legacy_aliases_require_resolution",
       "tests/test_mulchen_mail.py::test_court_filter_normalizes_selection_as_well_as_excel_values[Jgdo. L. y G. de Mulch\\xe9n                          ]",
       "tests/test_mulchen_mail.py::test_court_filter_normalizes_selection_as_well_as_excel_values[Juzgado de Letras y Garant\\xeda de Mulch\\xe9n]",
