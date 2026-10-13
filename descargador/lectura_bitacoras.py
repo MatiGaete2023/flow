@@ -192,7 +192,7 @@ def anonymous_diagnostic(data):
 
 PAUSA_SITFA_S = 1.0
 CHECKPOINT_CADA = 25
-MAX_LECTURAS_POR_LOTE = 300
+MAX_LECTURAS_POR_LOTE = 600  # decisión m (13-oct): la carga habitual (344) superaba 300
 
 
 class LimiteLecturas(m.PocError):

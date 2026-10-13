@@ -1819,6 +1819,10 @@
         "texto": "Completar cambios anunciados que no estén integrados y continuar con UX.",
         "fuente": "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
         "limites": "Conservar botones de preparación y ubicación de productos secundarios; motor, Outlook, contratos, retención y extensión intactos."
+      },
+      "m_limite_lecturas": {
+        "texto": "Subir MAX_LECTURAS_POR_LOTE de 300 a 600; pausa y checkpoints sin cambios.",
+        "fuente": "Usuario: «Sube el limite a 600» (13 de octubre de 2026)."
       }
     }
   },

@@ -67,7 +67,7 @@ corte. No cambian observaciones, hallazgos, TT/CC/RES ni productos.
   son anteriores al horizonte; el panel las cuenta y no las muestra.
 - **Bitácoras no solicitadas**: el paquete no pidió bitácoras.
 - **Bitácora no leída**: el paquete pidió bitácoras, pero la de este ingreso no se leyó
-  (límite de 300 lecturas, falla o lote incompleto). Usa «Retomar» en el Descargador y
+  (límite de 600 lecturas, falla o lote incompleto). Usa «Retomar» en el Descargador y
   vuelve a crear el paquete.
 - El panel da texto íntegro, fecha, origen y autor, y cuenta aparte las entradas
   sin fecha y las posteriores a la fecha de corte.
