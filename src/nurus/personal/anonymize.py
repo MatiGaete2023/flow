@@ -553,7 +553,25 @@ def _scan(book, pseudonyms, replacer, protected_cells):
     return sorted(found), residual
 
 
-def anonymize(source, target, shift_days=0):
+
+# Protección adicional para nombres no presentes en las columnas de identidad.
+_UNKNOWN_FULL_NAME = re.compile(r'(?<!\\w)[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}){1,3}(?!\\w)')
+_UNKNOWN_AFTER_ROLE = re.compile(r'(?i)(\\b(?:sr\\.?|sra\\.?|don|doña|nna|madre|padre|curador(?:a)?|contactar a)\\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})')
+
+
+def scrub_observation(value, replacer):
+    """Retiene contexto procesal; seudonimiza identidades conocidas y candidatos desconocidos."""
+    if not isinstance(value, str) or not value.strip():
+        return value
+    text = replacer.text(value, free=True)
+    text = _UNKNOWN_AFTER_ROLE.sub(lambda m: m.group(1) + '[identidad omitida]', text)
+    text = _UNKNOWN_FULL_NAME.sub('[identidad omitida]', text)
+    return text
+
+def anonymize(source, target, shift_days=0, *, text_mode='estricto', pseudonyms=None, replacer=None, field_transform=None):
+    """Modo conservador opcional; por defecto se preserva el comportamiento seguro anterior."""
+    if text_mode not in ('estricto', 'conservador'):
+        raise ValueError('Modo de anonimización desconocido.')
     source, target = Path(source), Path(target)
     if source.suffix.lower() not in SUFFIXES:
         raise ValueError("El origen debe ser un Excel (.xls, .xlsx o .xlsm).")
@@ -565,8 +583,8 @@ def anonymize(source, target, shift_days=0):
         raise ValueError("El destino debe ser distinto del original.")
     sheets = _load(source)
     report = Report(target)
-    pseudonyms = Pseudonyms(_original_rits(sheets))
-    replacer = Replacer(pseudonyms)
+    pseudonyms = pseudonyms if pseudonyms is not None else Pseudonyms(_original_rits(sheets))
+    replacer = replacer if replacer is not None else Replacer(pseudonyms)
     _collect_names(sheets, replacer)
     protected_headers = _protected_headers()
     book = Workbook()
@@ -598,6 +616,8 @@ def anonymize(source, target, shift_days=0):
                     new = value + timedelta(days=shift_days)
                 elif index is not None and r == index:
                     new = value
+                elif body and field_transform is not None and (transformed := field_transform(rows[index][c], value)) is not None:
+                    new = transformed
                 elif body and c in protected_cols:
                     new = replacer.identifiers(value, free=False, phones=True) if isinstance(value, str) else value
                     protected_cells.add((new_title, r + 1, c + 1))
@@ -609,10 +629,10 @@ def anonymize(source, target, shift_days=0):
                 elif isinstance(value, str) and body and kind == "curador":
                     new = replacer.text(value)
                 elif isinstance(value, str):
-                    # Revisión externa H1: el texto libre puede nombrar a personas que no figuran en ninguna
-                    # columna de identidad, y entonces no hay reemplazo conocido. Ninguna columna que lee el
-                    # motor llega aquí (esas van por protected_cols), así que omitirlo no cambia las reglas.
-                    new = OMITTED
+                    # Los textos libres se omiten por defecto. Solo observaciones reconocidas pueden
+                    # conservar contenido parcial; ninguna modalidad promete anonimización infalible.
+                    new = (scrub_observation(value, replacer) if text_mode == 'conservador' and body
+                           and kind == 'texto' else OMITTED)
                 if new != value:
                     report.changed += 1
                 cell = sheet.cell(r + 1, c + 1, new)
@@ -661,7 +681,8 @@ def anonymize(source, target, shift_days=0):
         report.warnings.append(
             "Las fechas se desplazaron: usa la fecha de corte desplazada; las reglas pueden diferir del original."
         )
-    report.warnings.append("Revisa la copia antes de compartirla; no conserva formato, fórmulas ni objetos.")
+    report.warnings.append("Revisa manualmente la copia antes de compartirla: los textos libres pueden contener identificadores no reconocidos.")
+    report.warnings.append("No conserva formato, fórmulas ni objetos; se conserva la estructura tabular.")
     return report
 
 
