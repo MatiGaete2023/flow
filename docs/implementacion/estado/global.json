@@ -76,7 +76,7 @@
       "descripcion": "C-08 declara falta de ficha FAE aunque no exista su columna.",
       "estado": "ABIERTO",
       "responsable": "Usuario: decisión específica por regla",
-      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+      "tratamiento": "Corrección preparada en WP-64 por autorización de Fase B: sin columna FAE no se afirma ausencia y se advierte NO_EVALUABLE. La prueba deja de ser xfail y PASA. Pendiente E3 e integración; no declara aceptación."
     },
     {
       "id": "WP-60-R-T19",

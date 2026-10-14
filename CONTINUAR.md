@@ -16,7 +16,7 @@
 | WP-53 | EN_REVISION | Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención) |
 | WP-54 | EN_VERIFICACION | Historia de causa: interfaz, flujo, entrega Windows y acta |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
-| WP-64 | EN_VERIFICACION | Fase B: correcciones de auditoría final |
+| WP-64 | EN_REVISION | Fase B: correcciones de auditoría final |
 | WP-71 | EN_REVISION | Reglas de historia R1: camino de datos (historia y bitácora hasta el motor) |
 | WP-72 | EN_REVISION | Reglas de historia R2: textos del scope HISTORIA |
 | WP-73 | EN_REVISION | Reglas de historia R3: cambios deliberados a reglas originales |

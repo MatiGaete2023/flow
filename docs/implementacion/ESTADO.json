@@ -76,7 +76,7 @@
       "descripcion": "C-08 declara falta de ficha FAE aunque no exista su columna.",
       "estado": "ABIERTO",
       "responsable": "Usuario: decisión específica por regla",
-      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+      "tratamiento": "Corrección preparada en WP-64 por autorización de Fase B: sin columna FAE no se afirma ausencia y se advierte NO_EVALUABLE. La prueba deja de ser xfail y PASA. Pendiente E3 e integración; no declara aceptación."
     },
     {
       "id": "WP-60-R-T19",
@@ -1909,19 +1909,20 @@
         "v",
         "w"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "EN_REVISION",
       "ejecutor": "Codex /root — Fase B autorizada por usuario",
       "tomado": "14 de octubre de 2026",
       "rama": "wp/WP-64-auditoria-fase-b",
-      "pr": null,
-      "verificacion": "Focales PASA; verificación completa en curso, con nueve sustituciones declaradas.",
-      "revision": null,
+      "pr": 46,
+      "verificacion": "PASA sobre b69d1ed: Asistente 1090/11 omitidas/5 xfail; Descargador 343/62 subpruebas; controles completos y nueve sustituciones declaradas PASA. verificacion/WP-64.json.",
+      "revision": "PENDIENTE E3: otra raíz de agente, según PLAN_IMPLEMENTACION.md y decisión j.",
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Usuario: «Pasa a la fase B». Alcance y evidencia en wp/WP-64.md.",
         "Base de código candidata: 4f572ed; rama de integración permanece en 1a2dd0f. E3 externa necesaria antes de integrar.",
-        "Decisión de informes tempranos aplicada: conservar acciones y advertir posible entrega, sin umbral inventado."
+        "Decisión de informes tempranos aplicada: conservar acciones y advertir posible entrega, sin umbral inventado.",
+        "CI del commit b69d1ed: Linux, Descargador Windows y Asistente Windows Python 3.12 aprobados. No integrado ni aceptado."
       ]
     },
     "WP-71": {
