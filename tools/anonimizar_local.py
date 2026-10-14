@@ -3,6 +3,7 @@
 Windows 10 + Python 3.12–3.14 + dependencias instaladas de flow.
 Sin navegador, red, credenciales, registros ni escritura en RUS/SITFA.
 """
+
 from __future__ import annotations
 
 import queue
@@ -42,26 +43,37 @@ class App:
         frame = ttk.Frame(root, padding=18)
         frame.pack(fill='both', expand=True)
         ttk.Label(frame, text='Anonimizar una copia local', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-        ttk.Label(frame, text='El original no se modifica. No se utilizan servicios externos.').pack(anchor='w', pady=(4, 10))
+        ttk.Label(frame, text='El original no se modifica. No se utilizan servicios externos.').pack(
+            anchor='w', pady=(4, 10)
+        )
         self.select = ttk.Button(frame, text='Seleccionar Excel o ZIP', command=self.pick)
         self.select.pack(anchor='w')
         ttk.Label(frame, textvariable=self.chosen).pack(anchor='w', pady=(5, 12))
-        ttk.Radiobutton(frame, text='Conservar observaciones útiles (sustituir identidades detectables)',
-                        value='conservador', variable=self.mode).pack(anchor='w')
-        ttk.Radiobutton(frame, text='Estricto: omitir textos libres completos',
-                        value='estricto', variable=self.mode).pack(anchor='w', pady=(5, 10))
+        ttk.Radiobutton(
+            frame,
+            text='Conservar observaciones útiles (sustituir identidades detectables)',
+            value='conservador',
+            variable=self.mode,
+        ).pack(anchor='w')
+        ttk.Radiobutton(
+            frame, text='Estricto: omitir textos libres completos', value='estricto', variable=self.mode
+        ).pack(anchor='w', pady=(5, 10))
         self.go = ttk.Button(frame, text='Anonimizar', command=self.start)
         self.go.pack(anchor='w')
         ttk.Label(frame, textvariable=self.status, wraplength=495).pack(anchor='w', pady=(10, 0))
-        ttk.Label(frame, text='Revisa manualmente la copia antes de compartirla.\n'
-                             'El modo conservador no garantiza anonimización absoluta.',
-                  foreground='#6b4d09', wraplength=495).pack(anchor='w', pady=(9, 0))
+        ttk.Label(
+            frame,
+            text='Revisa manualmente la copia antes de compartirla.\n'
+            'El modo conservador no garantiza anonimización absoluta.',
+            foreground='#6b4d09',
+            wraplength=495,
+        ).pack(anchor='w', pady=(9, 0))
 
     def pick(self):
         filename = filedialog.askopenfilename(
-            parent=self.root, title='Selecciona un archivo local',
-            filetypes=[('Captura CSMP o Excel', '*.zip *.xlsx *.xls *.xlsm'),
-                       ('Todos los archivos', '*.*')],
+            parent=self.root,
+            title='Selecciona un archivo local',
+            filetypes=[('Captura CSMP o Excel', '*.zip *.xlsx *.xls *.xlsm'), ('Todos los archivos', '*.*')],
         )
         if filename:
             source = Path(filename)
@@ -81,6 +93,7 @@ class App:
         self.go.state(['disabled'])
         self.select.state(['disabled'])
         self.status.set('Procesando localmente; ningún dato se envía fuera del equipo.')
+
         def work():
             try:
                 target = destination(source)
@@ -95,6 +108,7 @@ class App:
                 self.events.put(('error', None))
             else:
                 self.events.put(('ok', target.name))
+
         threading.Thread(target=work, daemon=True).start()
         self.root.after(100, self.poll)
 
@@ -107,12 +121,15 @@ class App:
         self.go.state(['!disabled'])
         self.select.state(['!disabled'])
         if event == 'ok':
-            self.status.set('Copia creada en la misma carpeta: ' + value +
-                            '. Revisión humana obligatoria antes de compartir.')
+            self.status.set(
+                'Copia creada en la misma carpeta: ' + value + '. Revisión humana obligatoria antes de compartir.'
+            )
         else:
-            self.status.set('No se creó una copia válida. Comprueba que el Excel/ZIP corresponda al '
-                            'formato admitido, que el ZIP no contenga originales o binarios y que '
-                            'el destino pueda escribirse. El original sigue intacto.')
+            self.status.set(
+                'No se creó una copia válida. Comprueba que el Excel/ZIP corresponda al '
+                'formato admitido, que el ZIP no contenga originales o binarios y que '
+                'el destino pueda escribirse. El original sigue intacto.'
+            )
 
 
 def main():
