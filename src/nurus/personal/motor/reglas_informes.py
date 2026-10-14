@@ -5,7 +5,9 @@ from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import fecha_es, titulo_programa, es_derivacion_sin_seg, es_dce
 from .textos import render
-from .reglas_espera import _audiencia
+from .reglas_espera import _audiencia, _oido_historia, _pnombre
+from .utilidades import tiene_curador_real
+from . import reglas_historia as H
 
 def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_excel=None):
     if incidencias is None:
@@ -20,8 +22,22 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     if dias < 0: key='I01_VENCIDO_DCE' if es_dce(programa) else 'I01_VENCIDO_GENERAL'
     elif 0 <= dias <= parametro('informe'): key='I02_POR_VENCER_DCE' if es_dce(programa) else 'I02_POR_VENCER_GENERAL'
     else: return ''
-    fr=[render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv))]
+    vencido = dias < 0
+    mn = H.deja_sin_efecto_mn()
+    i1 = H.informe_historia(H.V.INGRESO_INFORME_X, fv, vencido)
+    i2 = H.informe_historia(H.V.PRORROGA, fv, vencido)
+    i3 = H.escrito_sin_ingreso(programa)
+    if vencido and (i1 or i2 or i3):
+        H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
+        principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))
+    else:
+        principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv))
+    fr = [principal] + i1 + i2 + i3 + H.informes_acumulados()
+    fr += mn + H.continuidad() + H.curador_designaciones()
+    fr += _oido_historia(row, cols)
     audiencia = _audiencia(row, cols)
     if audiencia:
         fr.append(audiencia)
+    if cols.get('curador') and tiene_curador_real(row.get(cols.get('curador'))):
+        fr += H.curador_instituciones(row.get(cols.get('curador')), _pnombre(nombre))
     return componer(pfx, fr)
