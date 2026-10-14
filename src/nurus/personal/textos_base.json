@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "v9.2.0",
+    "version": "v9.3.0",
     "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
   },
   "COMUN": {
@@ -251,6 +251,11 @@
       "texto": "Informe diagnóstico ordenado en autos, se encuentra a folio {FOLIO} de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
       "confirmado": false,
       "nota": "Cumplimiento, C9 — doc reglas 14-oct-2026"
+    },
+    "P_FINALIZADA": {
+      "texto": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+      "confirmado": false,
+      "nota": "Causa P con Conciliación o Dictación de sentencia sin Egreso de servicio — regla dada por el usuario el 14-oct-2026"
     },
     "C10_ESCRITO": {
       "texto": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",

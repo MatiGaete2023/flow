@@ -16,6 +16,10 @@ FICHA_INDIVIDUAL = 'Ficha individual'
 FICHA_FAE = 'Ficha FAE'
 SERVICIO = 'Ing.Serv. protección especializada y otras redes'
 
+CONCILIACION = 'Conciliacion'
+DICTACION_SENTENCIA = 'Dictación de sentencia'
+EGRESO_SERVICIO = 'Egreso de servicio protección especializada y otras redes'
+
 DCE = (
     'SPE. Resp. Solicitud DCE (escrito)',
     'SPE. Resp. Rectificación DCE (escrito)',

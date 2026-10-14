@@ -30,9 +30,11 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         frags=[render('COMUN','NO_SEGUIMIENTO', PROGRAMA=prog)]
         if vencida: frags.append(render('HISTORIA','MEDIDA_SIN_VIGENCIA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
         return componer(pfx, frags)
+    finalizada=H.causa_finalizada(_rit(row, cols))
+    if finalizada: return componer(pfx, finalizada)
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
-        marcar(3, 'REVISAR_MAYORIA', 'NNA mayor de edad')
+        marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad')
         return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))])
     H.marcar_duplicidad()
     mn=H.deja_sin_efecto_mn()

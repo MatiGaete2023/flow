@@ -316,6 +316,20 @@ def informes_acumulados():
     return [render('HISTORIA', 'J2_ACUMULADOS', N=dato[0], FECHA=fecha_es(dato[1]))]
 
 
+def causa_finalizada(rit):
+    """Causa P con «Conciliacion» o «Dictación de sentencia» sin «Egreso de servicio…» en esa fecha o posterior.
+    La ausencia exige cobertura que la permita (G3)."""
+    if not str(rit or '').strip().upper().startswith('P'):
+        return []
+    h = historia()
+    if h is None or not h.permite_ausencia:
+        return []
+    cierre = ultimo(h.buscar(V.CONCILIACION, V.DICTACION_SENTENCIA))
+    if cierre is None or any(t.fecha >= cierre.fecha for t in h.buscar(V.EGRESO_SERVICIO)):
+        return []
+    return [render('HISTORIA', 'P_FINALIZADA')]
+
+
 def vencida_valida(vencida):
     """La medida vencida sigue siendo afirmable (no hay contradicción días negativos / egreso futuro)."""
     ctx = current.get()

@@ -152,6 +152,9 @@
     "C9_DCE": {
       "texto": "Informe diagnóstico ordenado en autos, se encuentra a folio {FOLIO} de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva."
     },
+    "P_FINALIZADA": {
+      "texto": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa."
+    },
     "C10_ESCRITO": {
       "texto": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."
     },

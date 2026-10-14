@@ -22,6 +22,8 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     if dias < 0: key='I01_VENCIDO_DCE' if es_dce(programa) else 'I01_VENCIDO_GENERAL'
     elif 0 <= dias <= parametro('informe'): key='I02_POR_VENCER_DCE' if es_dce(programa) else 'I02_POR_VENCER_GENERAL'
     else: return ''
+    finalizada = H.causa_finalizada(row.get(cols.get('rit'), '') if cols.get('rit') else '')
+    if finalizada: return componer(pfx, finalizada)
     vencido = dias < 0
     mn = H.deja_sin_efecto_mn()
     i1 = H.informe_historia(H.V.INGRESO_INFORME_X, fv, vencido)
