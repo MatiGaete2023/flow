@@ -371,6 +371,7 @@ class Work:
             'CUMPLIMIENTO': generar_observacion_cumplimiento,
             'INFORMES': generar_observacion_informes,
         }[self.mode]
+        duplicity, accumulated = self._prepass(batch, cols, historia_by_record is not None)
         for number, record in enumerate(batch.records):
             if number % 100 == 0:
                 checkpoint()
@@ -398,6 +399,8 @@ class Work:
                 'historia': (historia_by_record or {}).get(record.record_id),
                 'bitacora': (bitacora_by_record or {}).get(record.record_id, ()),
                 'marcas': [],
+                'duplicidad': duplicity.get(record.record_id),
+                'acumulado': accumulated.get(record.record_id),
             }
             token = current.set(ctx)
             inc = Incidencias()
@@ -451,6 +454,34 @@ class Work:
             self.rows[-1].avisos = list(dict.fromkeys(ctx['marcas']))
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
+
+    def _prepass(self, batch, cols, with_history):
+        """Duplicidad de ingreso (Espera/Cumplimiento) e informes vencidos acumulados (Informes), por causa."""
+        if not with_history or self.mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+            return {}, {}
+        from .motor.analisis_historia import duplicidades
+
+        def cell(record, field):
+            return str(record.values.get(cols.get(field, ''), '') or '').strip()
+
+        if self.mode != 'INFORMES':
+            rows = [(r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'programa')) for r in batch.records]
+            return duplicidades(rows), {}
+        today = date.fromisoformat(self.as_of)
+        groups = {}
+        for r in batch.records:
+            due = as_date(r.values.get(cols.get('vencimiento', '')), batch.excel_epoch)
+            if not due or due >= today:
+                continue
+            ident = tuple(historical_match(cell(r, f)) for f in ('tribunal', 'rit', 'rut', 'programa'))
+            if ident[1]:
+                groups.setdefault(ident, []).append((r.record_id, due))
+        accumulated = {}
+        for items in groups.values():
+            if len(items) > 1:
+                oldest = min(due for _, due in items)
+                accumulated.update({rid: (len(items), oldest) for rid, _ in items})
+        return {}, accumulated
 
     def document_exception(self, reason):
         """Compatibilidad con sesiones antiguas; ya no es requisito para exportar."""
