@@ -147,7 +147,8 @@ FAKE_DOMAIN = "@example.invalid"
 OMITTED = "[texto omitido]"
 SAFE_TITLE = re.compile(
     r"(espera|cumplimiento|informes?|egresados?|otros?|original|consolidado|trabajo|resumen|hoja ?\d*|sheet ?\d*"
-    r"|informe[ _]?\d+|nurus[ _][\w ]+|cruce|hoja2|vencimientos?)"
+    r"|informe[ _]?\d+|nurus[ _][\w ]+|cruce|hoja2|vencimientos?"
+    r"|observaciones?(?:[ ](?:espera|cumplimiento|informes?|residencial|ambulatorio|fae|dce|laja|mulchen|tome))*)"
 )
 SUFFIXES = {".xls", ".xlsx", ".xlsm"}
 HEADER_LIMIT = 60
@@ -554,9 +555,9 @@ def _scan(book, pseudonyms, replacer, protected_cells):
 
 
 # Protección adicional para nombres no presentes en las columnas de identidad.
-_UNKNOWN_FULL_NAME = re.compile(r'(?<!\\w)[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}){1,3}(?!\\w)')
+_UNKNOWN_FULL_NAME = re.compile(r'(?<!\w)[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}){1,3}(?!\w)')
 _UNKNOWN_AFTER_ROLE = re.compile(
-    r'(?i)(\\b(?:sr\\.?|sra\\.?|don|doña|nna|madre|padre|curador(?:a)?|contactar a)\\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})'
+    r'(?i)(\b(?:sr\.?|sra\.?|don|doña|nna|madre|padre|curador(?:a)?|contactar a)\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})'
 )
 
 
