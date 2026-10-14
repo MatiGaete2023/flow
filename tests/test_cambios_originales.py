@@ -56,14 +56,15 @@ def test_espera_mayor_de_edad_sale_solo_la_mayoria_y_marca_nivel_3(tmp_path):
     assert [a[:2] for a in r.avisos] == [(3, 'REVISAR_MAYORIA')]
 
 
-def test_cumplimiento_mayor_de_edad_vigente(tmp_path):
+def test_cumplimiento_mayor_de_edad_marca(tmp_path):
     r = cum(tmp_path, cumplimiento(1, nac='2000-01-01'))
     assert r.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in r.avisos] == [(3, 'REVISAR_MAYORIA')]
 
 
-def test_cumplimiento_mayor_de_edad_vencida_no_marca(tmp_path):
+def test_cumplimiento_mayor_de_edad_marca_aunque_la_medida_este_vencida(tmp_path):
     r = cum(tmp_path, cumplimiento(1, dc=-5, dpe=-5, egreso='2026-10-01', nac='2000-01-01'))
-    assert r.rules == ['COMUN.MAYORIA_EDAD'] and r.avisos == []
+    marcas = [a[:2] for a in r.avisos]
+    assert r.rules == ['COMUN.MAYORIA_EDAD'] and marcas == [(3, 'REVISAR_MAYORIA')]
 
 
 def test_sin_seguimiento_vencida_agrega_medida_sin_vigencia(tmp_path):

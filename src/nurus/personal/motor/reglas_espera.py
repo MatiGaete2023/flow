@@ -71,7 +71,7 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
         frags.append(render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
-        marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad con la medida vigente')
+        marcar(3, 'REVISAR_MAYORIA', 'NNA mayor de edad')
         return componer(pfx, frags)
     dm=dias_para_mayoria(fn) if fn else None
     if dm is not None and 1 <= dm <= parametro('mayoria'):

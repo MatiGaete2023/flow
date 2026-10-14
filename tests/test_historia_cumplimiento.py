@@ -105,8 +105,8 @@ def test_medida_revisada_cuando_solo_hay_reglas_nuevas(tmp_path):
     assert 'Medida revisada. En la historia' not in con_original.observation
 
 
-def test_mayoria_de_edad_marca_solo_con_la_medida_vigente(tmp_path):
+def test_mayoria_de_edad_marca_siempre_por_la_edad(tmp_path):
     vigente = cum(tmp_path, cumplimiento(1, nac='2008-01-01'))
     assert vigente.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in vigente.avisos] == [(3, 'REVISAR_MAYORIA')]
     vencida = cum(tmp_path, cumplimiento(1, dpe=-5, dc=-5, egreso='2026-09-01', nac='2008-01-01'))
-    assert vencida.rules == ['COMUN.MAYORIA_EDAD'] and vencida.avisos == []
+    assert vencida.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in vencida.avisos] == [(3, 'REVISAR_MAYORIA')]

@@ -9,7 +9,7 @@ Rama de trabajo: `claude/hopeful-hamilton-k2tcqp` (base `feat/historia-causa-sit
 | R0 | — | — | Línea base: `estado.py validar` PASA; 49 pruebas focales pasan (+6 xfail); golden PARIDAD PASÓ |
 | R1 | WP-71 | e6d35a0 | `motor/historia.py`; contexto (historia, bitácora, marcar); `capture_input` arma historia por causa y bitácora por ingreso; `Work.analyze` las inyecta; `Row.avisos`; `RULESET_VERSION` +historia-1 |
 | R2 | WP-72 | 2ad22c1 | Scope `HISTORIA` (32 textos, `confirmado:false`), `_meta.version` v9.2.0, espejo RUS |
-| R3 | WP-73 | 6025bb6, fae7032 | Umbrales `espera_dce=0`, `espera_tome=60`; `TEXT_REVISION=4` con migración; «Audiencia decretada»; mayoría de edad sola + marca nivel 3; E-05 + días; sin seguimiento vencida; C-03 ampliado; golden regenerado (30 diferencias explicadas) |
+| R3 | WP-73 | 6025bb6, fae7032 | Umbrales `espera_dce=0`, `espera_tome=60`; `TEXT_REVISION=4` con migración; «Audiencia decretada»; mayoría de edad sola + marca nivel 3 (por edad); E-05 + días; sin seguimiento vencida; C-03 ampliado; golden regenerado (30 diferencias explicadas) |
 | R4 | WP-74 | 2f86824 | `vocabulario.py`, `analisis_historia.py`, `reglas_historia.py` |
 | R5 | WP-75 | fd1adff | Espera: reglas 1, 3, 5, 6, 7, 8, E9, E10, R9, R11, C3, T2, T3, T5; `Work._prepass` |
 | R6 | WP-76 | 3f291ad | Cumplimiento: C1, C2, C-03 con folio, C4, C5, C6, C8, C9, C10 |
@@ -44,7 +44,7 @@ Rama de trabajo: `claude/hopeful-hamilton-k2tcqp` (base `feat/historia-causa-sit
 
 - **Revisión E3** por otra sesión o modelo (el diff toca `motor/`, `textos_base.json` y `capture/`). No se sustituye con revisión propia.
 - **Aprobar redacciones (P)**: `R3_MULTI`, `MATERIA_CURADOR/SIN_FICHA/SIN_FAE/VENCIDA`, `C1_RUS`, `C3_CON_FOLIO`, `EGRESO_PROYECTADO`, `C4_FICHA_RUS/SIN_RUS/FOLIO`, `C8_NO_USO`, `I1_VENCIDO/POR_VENCER`, `T2_MN`. Todas `confirmado:false`.
-- **Confirmar**: «medida vigente» (mayoría de edad) = «RUS no la muestra vencida», solo Espera y Cumplimiento.
+- Corregido el 14-oct por indicación del usuario: la marca de mayoría de edad (nivel 3, `REVISAR_MAYORIA`) depende solo de la edad del NNA, sin relación con la vigencia de la medida; sale siempre que sale `MAYORIA_EDAD` (Espera y Cumplimiento).
 - **Verificar la clave de unión historia↔registro** `(source_system, court_code, cause_id)` con un paquete real (extracto anónimo).
 - Repetir `verificar_wp.py` y la suite completa en un entorno con tkinter; confirmar la CI Windows.
 - Decidir si el trabajo pasa a `feat/ejecucion-plan-20261008` (decisión n) y cuándo.
