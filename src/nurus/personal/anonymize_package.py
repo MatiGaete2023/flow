@@ -4,6 +4,7 @@ Los datos libres del modo conservador requieren revisión humana. Las tablas, ID
 relacionales, procedencia y XLSX consolidado se reescriben coherentemente; los
 documentos y originales binarios se rechazan antes de publicar la copia.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -18,8 +19,14 @@ from tempfile import TemporaryDirectory
 from nurus.capture import read_capture, write_capture
 from nurus.capture.contract import MAPPING_VERSION, TABLES
 from .anonymize import (
-    OMITTED, Pseudonyms, Replacer, _identity_value, _protected_headers,
-    column_kind, normalize, scrub_observation,
+    OMITTED,
+    Pseudonyms,
+    Replacer,
+    _identity_value,
+    _protected_headers,
+    column_kind,
+    normalize,
+    scrub_observation,
 )
 
 # Las claves técnicas no son textos libres y deben mantener sus uniones.
@@ -32,19 +39,46 @@ TECHNICAL = {
     'SITFA_ARCHIVO': 'original_file',
     'SITFA_HOJA': 'original_sheet',
 }
-FIELDS_ID = {'query_id', 'record_id', 'event_id', 'incident_id', 'calendar_id',
-             'document_id', 'parent_event_id'}
+FIELDS_ID = {'query_id', 'record_id', 'event_id', 'incident_id', 'calendar_id', 'document_id', 'parent_event_id'}
 REMOTE_ID = {'cause_id', 'ingreso_id', 'person_id', 'program_id'}
 FREE_FIELDS = {'text', 'response', 'description', 'reference', 'message', 'error'}
 CONTROL_FIELDS = {
-    'capture_id', 'source_system', 'screen', 'tab', 'court_code', 'court_name',
-    'modality_code', 'modality_raw', 'record_type', 'identity_status',
-    'coverage', 'event_type', 'event_at', 'response_at', 'captured_at',
-    'time_precision', 'time_zone', 'scope', 'origin', 'origin_verified',
-    'status', 'association', 'phase', 'code', 'severity', 'recoverable',
-    'period_from', 'period_to', 'history_complete', 'institutional_verified',
-    'expected_pages', 'saved_pages', 'original_row', 'download_state',
-    'content_read', 'history_complete',
+    'capture_id',
+    'source_system',
+    'screen',
+    'tab',
+    'court_code',
+    'court_name',
+    'modality_code',
+    'modality_raw',
+    'record_type',
+    'identity_status',
+    'coverage',
+    'event_type',
+    'event_at',
+    'response_at',
+    'captured_at',
+    'time_precision',
+    'time_zone',
+    'scope',
+    'origin',
+    'origin_verified',
+    'status',
+    'association',
+    'phase',
+    'code',
+    'severity',
+    'recoverable',
+    'period_from',
+    'period_to',
+    'history_complete',
+    'institutional_verified',
+    'expected_pages',
+    'saved_pages',
+    'original_row',
+    'download_state',
+    'content_read',
+    'history_complete',
 }
 _JSON_LIMIT = 30
 _SENSITIVE_WORDS = re.compile(r'(?i)(rut|run|nombre|apellido|curador|litigante|domicilio|direccion|telefono|correo)')
@@ -78,11 +112,11 @@ class Mapper:
                 ext = Path(key).suffix.lower()
                 if ext not in ('.xls', '.xlsx', '.html', '.htm', '.csv'):
                     ext = '.xls'
-                bucket[key] = f'fuente_{len(bucket)+1}{ext}'
+                bucket[key] = f'fuente_{len(bucket) + 1}{ext}'
             elif kind == 'original_sheet':
-                bucket[key] = f'Hoja{len(bucket)+1}'
+                bucket[key] = f'Hoja{len(bucket) + 1}'
             else:
-                bucket[key] = f'{kind[:3]}_anon_{len(bucket)+1}'
+                bucket[key] = f'{kind[:3]}_anon_{len(bucket) + 1}'
         return bucket[key]
 
     def free(self, value):
@@ -128,6 +162,7 @@ class Mapper:
         if kind in ('persona', 'curador'):
             if isinstance(value, str):
                 from .anonymize import curator_name
+
                 self.replacer.add_person(curator_name(value) if kind == 'curador' else value)
                 return self.replacer.text(value)
             return self.token('persona', value)
@@ -147,6 +182,7 @@ class Mapper:
 
     def json_field(self, raw, *, filters=False):
         from nurus.capture.contract import json_object
+
         obj = json_object(raw)
 
         def visit(value, key='', depth=0):
@@ -159,16 +195,24 @@ class Mapper:
                         raise UnsafePackage('Clave JSON incompatible.')
                     if _SENSITIVE_WORDS.search(label) and len(label) > 100:
                         raise UnsafePackage('Clave JSON sospechosa.')
-                    result[label] = visit(child, label, depth+1)
+                    result[label] = visit(child, label, depth + 1)
                 return result
             if isinstance(value, list):
                 if len(value) > 10000:
                     raise UnsafePackage('Lista JSON excesiva.')
-                return [visit(child, key, depth+1) for child in value]
+                return [visit(child, key, depth + 1) for child in value]
             if isinstance(value, (dict, list)):
                 raise UnsafePackage('Estructura JSON incompatible.')
-            if filters and key in ('tribunal', 'tribunal_nombre', 'modality', 'screen',
-                                   'tab', 'source_system', 'court_code', 'capture_tables'):
+            if filters and key in (
+                'tribunal',
+                'tribunal_nombre',
+                'modality',
+                'screen',
+                'tab',
+                'source_system',
+                'court_code',
+                'capture_tables',
+            ):
                 # Filtros de operación: no son identidad personal.
                 return value
             return self.value(key, value)
@@ -195,6 +239,7 @@ def _seed_names(tables, mapper):
                 if field not in row:
                     continue
                 from nurus.capture.contract import json_object
+
                 obj = json_object(row[field])
                 for key, value in obj.items():
                     if not isinstance(value, str):
@@ -204,6 +249,7 @@ def _seed_names(tables, mapper):
                         mapper.replacer.add_person(value)
                     elif kind == 'curador':
                         from .anonymize import curator_name
+
                         mapper.replacer.add_person(curator_name(value))
 
 
@@ -222,8 +268,15 @@ def _new_tables(tables, mapper):
             for key, val in row.items():
                 if key in ('raw_json', 'normalized_json', 'filters_json'):
                     out[key] = mapper.json_field(val, filters=key == 'filters_json')
-                elif key in ('document_id', 'parent_event_id', 'record_id', 'query_id',
-                             'event_id', 'incident_id', 'calendar_id'):
+                elif key in (
+                    'document_id',
+                    'parent_event_id',
+                    'record_id',
+                    'query_id',
+                    'event_id',
+                    'incident_id',
+                    'calendar_id',
+                ):
                     out[key] = mapper.token(key, val)
                 else:
                     out[key] = mapper.value(key, val)
@@ -236,13 +289,19 @@ def _new_tables(tables, mapper):
 def _consolidated(raw, mapper):
     """Reconstituye el XLSX sin propiedades, enlaces, imágenes ni objetos."""
     from .anonymize import anonymize
+
     with TemporaryDirectory(prefix='csmp-anon-') as folder:
         original = Path(folder) / 'origen.xlsx'
         target = Path(folder) / 'salida.xlsx'
         original.write_bytes(raw)
-        anonymize(original, target, text_mode=mapper.mode,
-                  pseudonyms=mapper.pseudonyms, replacer=mapper.replacer,
-                  field_transform=mapper.excel_value)
+        anonymize(
+            original,
+            target,
+            text_mode=mapper.mode,
+            pseudonyms=mapper.pseudonyms,
+            replacer=mapper.replacer,
+            field_transform=mapper.excel_value,
+        )
         return target.read_bytes()
 
 
