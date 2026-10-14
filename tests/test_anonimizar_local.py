@@ -1,4 +1,5 @@
 """Pruebas exclusivamente sintéticas: Excel, ZIP, consolidado y rechazo seguro."""
+
 from io import BytesIO
 import json
 from hashlib import sha256
@@ -19,8 +20,15 @@ def book_fixture(path):
     sh = wb.active
     sh.title = 'ESPERA'
     sh.append(['RIT', 'NOMBRE', 'TRIBUNAL', 'T ESPERA', 'OBSERVACION'])
-    sh.append(['P-432-2026', 'Martina Lagos Durán', 'LAJA', 45,
-               'Se reitera observación respecto de Martina Lagos Durán, RIT P-432-2026.'])
+    sh.append(
+        [
+            'P-432-2026',
+            'Martina Lagos Durán',
+            'LAJA',
+            45,
+            'Se reitera observación respecto de Martina Lagos Durán, RIT P-432-2026.',
+        ]
+    )
     wb.properties.creator = 'Martina Lagos Durán'
     wb.save(path)
     wb.close()
@@ -72,22 +80,46 @@ def zip_fixture(path, *, consolidated=False, originals=False):
         wb = Workbook()
         sh = wb.active
         sh.title = 'ESPERA'
-        sh.append(['RIT', 'NOMBRE', 'RUT', 'OBSERVACION', 'SITFA_SHA256',
-                   'SITFA_ARCHIVO', 'SITFA_CAUSA_RUS', 'SITFA_INGRESO_RUS', 'SITFA_FILA'])
+        sh.append(
+            [
+                'RIT',
+                'NOMBRE',
+                'RUT',
+                'OBSERVACION',
+                'SITFA_SHA256',
+                'SITFA_ARCHIVO',
+                'SITFA_CAUSA_RUS',
+                'SITFA_INGRESO_RUS',
+                'SITFA_FILA',
+            ]
+        )
         row = tables['registros'][0]
-        sh.append(['P-432-2026', 'Martina Lagos Durán', '15284731-5',
-                   'Se reitera observación a Martina Lagos Durán.',
-                   row['source_sha256'], row['original_file'], row['cause_id'],
-                   row['ingreso_id'], int(row['original_row'])])
+        sh.append(
+            [
+                'P-432-2026',
+                'Martina Lagos Durán',
+                '15284731-5',
+                'Se reitera observación a Martina Lagos Durán.',
+                row['source_sha256'],
+                row['original_file'],
+                row['cause_id'],
+                row['ingreso_id'],
+                int(row['original_row']),
+            ]
+        )
         wb.properties.creator = 'Martina Lagos Durán'
         output = BytesIO()
         wb.save(output)
         wb.close()
     if originals:
         metadata['originals_authorized'] = True
-    write_capture(path, metadata, tables,
-                  consolidated=output.getvalue() if output else None,
-                  originals={'originales/documento.pdf': b'%PDF-1.4 FICTICIO'} if originals else None)
+    write_capture(
+        path,
+        metadata,
+        tables,
+        consolidated=output.getvalue() if output else None,
+        originals={'originales/documento.pdf': b'%PDF-1.4 FICTICIO'} if originals else None,
+    )
 
 
 @pytest.mark.parametrize('mode', ['conservador', 'estricto'])
