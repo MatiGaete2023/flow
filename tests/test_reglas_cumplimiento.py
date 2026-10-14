@@ -1,7 +1,5 @@
 """R-T09 a R-T15: reglas tradicionales de Cumplimiento con fecha de corte fija."""
 
-import pytest
-
 from test_mayoria_edad import analizar, persona
 
 BASE = [

@@ -144,10 +144,26 @@ def apply(work, record_ids, *, review=None, decisions=None, overrides=None, word
 
         _sync_resolution_warning(row)
         updated.append(row)
+    changed = set(ids)
+    if overrides is not None:
+        # Una edición puede crear o deshacer una duplicidad (R6) o un acumulado (J2) en otra fila de la causa:
+        # esas filas se recalculan con las demás ya editadas, en la misma operación (y se deshacen con ella).
+        from copy import copy
+
+        view = copy(work)
+        view.rows = updated
+        peers = _prepass_peers(work, work.rows, updated, ids)
+        for index, peer in enumerate(updated):
+            if peer.id in peers:
+                before[peer.id] = deepcopy(peer)
+                candidate = deepcopy(peer)
+                recalculate(view, candidate, update_findings=False)
+                updated[index] = candidate
+                changed.add(peer.id)
     from .capture_findings import updated_contexts
 
-    # Solo las filas editadas cambian sus hallazgos; las demás conservan su contexto vigente (EF-02).
-    contexts = updated_contexts(work, [row for row in updated if row.id in ids])
+    # Solo las filas editadas (y sus pares afectados) cambian sus hallazgos; las demás conservan su contexto (EF-02).
+    contexts = updated_contexts(work, [row for row in updated if row.id in changed])
     work.rows = updated
     if hasattr(work, 'capture_context'):
         work.capture_context = contexts
@@ -175,6 +191,34 @@ def recalculate(work, row, *, update_findings=True):
     row.__dict__.update(candidate.__dict__)
     if update_findings and hasattr(work, 'capture_context'):
         work.capture_context = contexts
+
+
+def _rows_prepass(work, rows, mode, mapping):
+    """Pre-pase RUS (duplicidad R6, informes acumulados J2) sobre las filas de una etapa, con sus correcciones."""
+    from nurus.rus.models import Mode, ReadBatch, SourceRecord, SourceReference
+
+    records = []
+    for item in rows:
+        if getattr(work, 'capture_modes', {}).get(item.id, work.mode) != mode:
+            continue
+        data = dict(item.values)
+        data.update({work.mapping[k]: v for k, v in item.overrides.items()})
+        records.append(SourceRecord(data, SourceReference('', '', '', item.source_row), item.id))
+    return work._prepass(ReadBatch(Mode(mode), tuple(records)), mapping, mode=mode)
+
+
+def _prepass_peers(work, before_rows, after_rows, ids):
+    """Filas no editadas cuya duplicidad o acumulado cambia por la edición (p. ej. RUT, RIT o vencimiento)."""
+    modes = {getattr(work, 'capture_modes', {}).get(row.id, work.mode) for row in after_rows if row.id in ids}
+    peers = set()
+    for mode in modes:
+        if mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+            continue
+        old = _rows_prepass(work, before_rows, mode, dict(work.mapping))
+        new = _rows_prepass(work, after_rows, mode, dict(work.mapping))
+        for table_old, table_new in zip(old, new):
+            peers.update(rid for rid in set(table_old) | set(table_new) if table_old.get(rid) != table_new.get(rid))
+    return peers - set(ids)
 
 
 def _recalculate(work, row):
@@ -206,19 +250,11 @@ def _recalculate(work, row):
     for key, value in row.overrides.items():
         values[mapping[key]] = value
     from .capture_input import captured_rule_context
-    from nurus.rus.models import Mode, ReadBatch, SourceRecord, SourceReference
 
     corte = date.fromisoformat(work.as_of)
     history, diary = captured_rule_context(work, source)
-    records = []
-    for original in work.rows:
-        if getattr(work, 'capture_modes', {}).get(original.id, work.mode) != mode:
-            continue
-        edited = row if original.id == row.id else original
-        data = dict(edited.values)
-        data.update({work.mapping[k]: v for k, v in edited.overrides.items()})
-        records.append(SourceRecord(data, SourceReference('', '', '', edited.source_row), edited.id))
-    duplicity, accumulated = work._prepass(ReadBatch(Mode(mode), tuple(records)), mapping, mode=mode)
+    rows = [row if original.id == row.id else original for original in work.rows]
+    duplicity, accumulated = _rows_prepass(work, rows, mode, mapping)
     ctx = dict(
         config=work.config,
         events=[],

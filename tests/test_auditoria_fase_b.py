@@ -102,3 +102,28 @@ def test_edicion_y_recuperacion_no_pierden_contexto_ni_dependen_del_zip_original
     restored = Work.load(tmp_path / 'sesion', defaults())
     apply(restored, [restored.rows[0].id], overrides={'espera': '47'})
     assert restored.rows[0].rules == original and restored.rows[0].actions == []
+
+
+def test_editar_rut_actualiza_la_duplicidad_del_par_y_se_deshace_junto(tmp_path):
+    from historia_fixtures import ESPERA, correr
+    from nurus.personal.record_edits import undo
+
+    filas = [fila(1, rit='C-1-2026', rut='11111111-1') + [45], fila(2, rit='C-1-2026', rut='22222222-2') + [45]]
+    work = correr(tmp_path, 'ESPERA', ESPERA, filas, paquete=False)
+    assert [r.avisos for r in work.rows] == [[], []]
+    before = apply(work, [work.rows[1].id], overrides={'rut': '11111111-1'})
+    assert [[a[1] for a in r.avisos] for r in work.rows] == [['R6_DUPLICIDAD'], ['R6_DUPLICIDAD']]
+    undo(work, before)
+    assert [r.avisos for r in work.rows] == [[], []]
+
+
+def test_editar_vencimiento_actualiza_el_acumulado_del_par(tmp_path):
+    from historia_fixtures import INFORMES, correr
+
+    filas = [fila(1, rit='C-1-2026') + ['2026-08-20'], fila(2, rit='C-1-2026') + ['2026-11-20']]
+    filas[1][2] = filas[0][2]
+    work = correr(tmp_path, 'INFORMES', INFORMES, filas, paquete=False)
+    assert 'HISTORIA.J2_ACUMULADOS' not in work.rows[0].rules
+    apply(work, [work.rows[1].id], overrides={'vencimiento': '2026-09-20'})
+    assert all('HISTORIA.J2_ACUMULADOS' in r.rules for r in work.rows)
+    assert 'el más antiguo venció el 20 de agosto de 2026' in work.rows[0].observation
