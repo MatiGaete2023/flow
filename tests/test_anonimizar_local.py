@@ -189,3 +189,31 @@ def test_nunca_sobrescribe(tmp_path):
     with pytest.raises(FileExistsError):
         anonymize_capture(origin, origin)
     assert target.read_bytes() == b'no modificar'
+
+
+def test_zip_no_colisiona_rit_original_con_sustituto(tmp_path):
+    metadata, tables = fixture(count=2)
+    tables['registros'][0]['rit_original'] = 'P-1-2026'
+    tables['registros'][1]['rit_original'] = 'P-2-2026'
+    origin, target = tmp_path / 'colision.zip', tmp_path / 'colision_anon.zip'
+    write_capture(origin, metadata, tables)
+    anonymize_capture(origin, target)
+    result = read_capture(target)
+    rits = {row['rit_original'] for row in result.rows('registros')}
+    assert not rits.intersection({'P-1-2026', 'P-2-2026'})
+    assert len(rits) == 2
+
+
+def test_excel_observacion_nombre_ajeno_a_campos_identidad(tmp_path):
+    source, target = tmp_path / 'origen.xlsx', tmp_path / 'salida.xlsx'
+    book_fixture(source)
+    wb = load_workbook(source)
+    wb.active['E2'] = 'Se reitera observación de Camila Aguilera Contreras sobre curador ad litem.'
+    wb.save(source)
+    wb.close()
+    anonymize(source, target, text_mode='conservador')
+    copy = load_workbook(target)
+    observation = copy.active['E2'].value
+    copy.close()
+    assert 'Camila Aguilera Contreras' not in observation
+    assert 'Se reitera observación' in observation
