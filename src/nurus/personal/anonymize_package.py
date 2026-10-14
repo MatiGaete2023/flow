@@ -305,6 +305,37 @@ def _consolidated(raw, mapper):
         return target.read_bytes()
 
 
+def _reserve_original_rits(capture, mapper):
+    """Reserva todos los RIT originales para evitar colisiones con causas ficticias."""
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+    from .anonymize import RIT_FREE_RE
+
+    def collect(value):
+        if not isinstance(value, str):
+            return
+        for match in RIT_FREE_RE.finditer(value):
+            mapper.pseudonyms.reserved_rits.add(
+                f"{(match.group(1) or 'X').upper()}-{int(match.group(2))}-{match.group(3)}"
+            )
+
+    for rows in capture.tables.values():
+        for row in rows:
+            for value in row.values():
+                collect(value)
+    if capture.consolidated:
+        book = load_workbook(BytesIO(capture.consolidated), data_only=True, read_only=True, keep_links=False)
+        try:
+            for sheet in book.worksheets:
+                collect(sheet.title)
+                for row in sheet.iter_rows(values_only=True):
+                    for value in row:
+                        collect(value)
+        finally:
+            book.close()
+
+
 def anonymize_capture(source, target, *, mode='conservador'):
     """Publica copia ZIP validada, conservando vínculos y sin filtrar binarios."""
     source, target = Path(source), Path(target)
@@ -323,6 +354,7 @@ def anonymize_capture(source, target, *, mode='conservador'):
     if capture.manifest.get('required_features'):
         raise UnsafePackage('El paquete requiere funcionalidades desconocidas.')
     mapper = Mapper(mode)
+    _reserve_original_rits(capture, mapper)
     _seed_names(capture.tables, mapper)
     tables = _new_tables(capture.tables, mapper)
     if tables.get('consultas') is None:
