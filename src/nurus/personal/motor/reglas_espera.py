@@ -81,7 +81,8 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     principal=False
     H.marcar_duplicidad()
     mn=H.deja_sin_efecto_mn()
-    r3=H.ingreso_efectivo_espera(hoy)
+    espera=get_int(row.get(cols.get('espera'))) if cols.get('espera') else None
+    r3=H.ingreso_efectivo_espera(hoy, espera)
     fres=fecha_valida(row.get(cols.get('resolucion'))) if cols.get('resolucion') else None
     if r3 is None and fres:
         d=(hoy-_date(fres)).days
@@ -90,7 +91,6 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
             if folio: frags.append(render('HISTORIA','E04_CON_FOLIO', PROGRAMA=titulo_programa(programa), FECHA_RESOLUCION=fecha_es(fres), FOLIO=folio))
             else: frags.append(render('ESPERA','E04_RESOLUCION_RECIENTE', PROGRAMA=titulo_programa(programa), FECHA_RESOLUCION=fecha_es(fres)))
             principal=True
-    espera=get_int(row.get(cols.get('espera'))) if cols.get('espera') else None
     if cols.get('espera') and (espera is None or espera < 0):
         incidencias.agregar(fila_excel, _rit(row, cols), 'E-05/E-06',
                             'tiempo de espera ausente o inválido (G-05)')

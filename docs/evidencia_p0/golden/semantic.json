@@ -5665,6 +5665,113 @@
   },
   "network_calls": 0,
   "outlook_executed": false,
+  "reglas_rus": {
+    "ESPERA": [
+      {
+        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Al 8 de octubre de 2026, RUS registra 120 días de espera. Registra 120 días en lista de espera. Atendido a que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+        "rules": [
+          "ESPERA.E05_PROYECTO_Y_CORREO",
+          "HISTORIA.E05_DIAS",
+          "HISTORIA.E10_LISTA",
+          "HISTORIA.T5_INSTITUCIONES"
+        ],
+        "actions": [
+          "programa_espera",
+          "PC_IE"
+        ],
+        "avisos": [
+          [
+            1,
+            "T5_INSTITUCIONES",
+            "Curador con varias instituciones en RUS"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": [
+          [
+            1,
+            "R6_DUPLICIDAD",
+            "Más de un ingreso del mismo NNA al mismo programa"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": [
+          [
+            1,
+            "R6_DUPLICIDAD",
+            "Más de un ingreso del mismo NNA al mismo programa"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": []
+      }
+    ],
+    "INFORMES": [
+      {
+        "observation": "Persona AFT: Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el 20 de agosto de 2026. De igual manera, se remite correo al programa AFT Ficticio requiriendo su envío. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL",
+          "HISTORIA.J2_ACUMULADOS"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": []
+      },
+      {
+        "observation": "Persona AFT: Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el 20 de septiembre de 2026. De igual manera, se remite correo al programa AFT Ficticio requiriendo su envío. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL",
+          "HISTORIA.J2_ACUMULADOS"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": []
+      },
+      {
+        "observation": "Persona AFT: Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el 20 de septiembre de 2026. De igual manera, se remite correo al programa AFT Ficticio requiriendo su envío. Atendido a que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL",
+          "HISTORIA.T5_INSTITUCIONES"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": [
+          [
+            1,
+            "T5_INSTITUCIONES",
+            "Curador con varias instituciones en RUS"
+          ]
+        ]
+      }
+    ]
+  },
   "diary_workbook": [
     {
       "sheet": "Resumen",

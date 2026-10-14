@@ -371,7 +371,7 @@ class Work:
             'CUMPLIMIENTO': generar_observacion_cumplimiento,
             'INFORMES': generar_observacion_informes,
         }[self.mode]
-        duplicity, accumulated = self._prepass(batch, cols, historia_by_record is not None)
+        duplicity, accumulated = self._prepass(batch, cols)
         for number, record in enumerate(batch.records):
             if number % 100 == 0:
                 checkpoint()
@@ -455,9 +455,10 @@ class Work:
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
 
-    def _prepass(self, batch, cols, with_history):
-        """Duplicidad de ingreso (Espera/Cumplimiento) e informes vencidos acumulados (Informes), por causa."""
-        if not with_history or self.mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+    def _prepass(self, batch, cols):
+        """Duplicidad de ingreso (Espera/Cumplimiento) e informes vencidos acumulados (Informes), por causa.
+        Solo usa datos de RUS: corre igual con Excel o con paquete, haya o no historia (decisión u, 14-oct)."""
+        if self.mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
             return {}, {}
         from .motor.analisis_historia import duplicidades
 
@@ -465,7 +466,10 @@ class Work:
             return str(record.values.get(cols.get(field, ''), '') or '').strip()
 
         if self.mode != 'INFORMES':
-            rows = [(r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'programa')) for r in batch.records]
+            rows = [
+                (r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'rut'), cell(r, 'programa'))
+                for r in batch.records
+            ]
             return duplicidades(rows), {}
         today = date.fromisoformat(self.as_of)
         groups = {}

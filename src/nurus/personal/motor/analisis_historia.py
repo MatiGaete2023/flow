@@ -32,7 +32,7 @@ def busqueda(historia):
     pares = []
     for cierre in cierres:
         previas = [o for o in ordenes if posterior(cierre, o)]
-        pares.append((cierre, max(previas, key=lambda o: (o.folio, o.fecha)) if previas else None))
+        pares.append((cierre, max(previas, key=lambda o: (o.fecha, o.folio)) if previas else None))
     vigentes = [o for o in ordenes if not any(posterior(c, o) for c in cierres)]
     return pares, vigentes
 
@@ -63,19 +63,26 @@ def primera_observacion(bitacora, materia, antes_de):
     return None
 
 
+def rut_clave(rut):
+    """RUT comparable: solo dígitos y K, sin puntos, guion ni espacios."""
+    return re.sub(r'[^0-9K]', '', str(rut or '').upper())
+
+
 def duplicidades(registros):
-    """registros: iterable de (record_id, tribunal, rit, programa) de UNA etapa.
-    Devuelve {record_id: 'MISMO_PROGRAMA' | 'OTRO_PROGRAMA'} solo para causas con más de un registro."""
+    """registros: iterable de (record_id, tribunal, rit, rut, programa) de UNA etapa.
+    Devuelve {record_id: 'MISMO_PROGRAMA' | 'OTRO_REGISTRO'} solo para causas con más de un registro.
+    MISMO_PROGRAMA: el mismo NNA (RUT) tiene otro registro en el mismo programa (regla 6, por NNA; sin RUT no
+    se afirma). OTRO_REGISTRO: la causa tiene otros registros (otro programa u otro NNA, p. ej. hermanos)."""
     causas = {}
-    for record_id, tribunal, rit, programa in registros:
+    for record_id, tribunal, rit, rut, programa in registros:
         if not clave(rit):
             continue
-        causas.setdefault((clave(tribunal), clave(rit)), []).append((record_id, clave(programa)))
+        causas.setdefault((clave(tribunal), clave(rit)), []).append((record_id, rut_clave(rut), clave(programa)))
     salida = {}
     for items in causas.values():
         if len(items) < 2:
             continue
-        for record_id, programa in items:
-            repetido = sum(1 for _, otro in items if otro == programa) > 1
-            salida[record_id] = 'MISMO_PROGRAMA' if repetido else 'OTRO_PROGRAMA'
+        for record_id, rut, programa in items:
+            repetido = bool(rut) and sum(1 for _, otro_rut, otro in items if otro_rut == rut and otro == programa) > 1
+            salida[record_id] = 'MISMO_PROGRAMA' if repetido else 'OTRO_REGISTRO'
     return salida

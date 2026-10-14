@@ -8,7 +8,7 @@ Rama de trabajo: `claude/hopeful-hamilton-k2tcqp` (base `feat/historia-causa-sit
 | --- | --- | --- | --- |
 | R0 | — | — | Línea base: `estado.py validar` PASA; 49 pruebas focales pasan (+6 xfail); golden PARIDAD PASÓ |
 | R1 | WP-71 | e6d35a0 | `motor/historia.py`; contexto (historia, bitácora, marcar); `capture_input` arma historia por causa y bitácora por ingreso; `Work.analyze` las inyecta; `Row.avisos`; `RULESET_VERSION` +historia-1 |
-| R2 | WP-72 | 2ad22c1 | Scope `HISTORIA` (33 textos con P_FINALIZADA, `confirmado:false`), `_meta.version` v9.2.0, espejo RUS |
+| R2 | WP-72 | 2ad22c1 | Scope `HISTORIA` (34 textos con P_FINALIZADA; `confirmado:false` salvo las aprobadas en s y t), `_meta.version` v9.2.0, espejo RUS |
 | R3 | WP-73 | 6025bb6, fae7032 | Umbrales `espera_dce=0`, `espera_tome=60`; `TEXT_REVISION=4` con migración; «Audiencia decretada»; mayoría de edad sola + marca nivel 3 (por edad); E-05 + días; sin seguimiento vencida; C-03 ampliado; golden regenerado (30 diferencias explicadas) |
 | R4 | WP-74 | 2f86824 | `vocabulario.py`, `analisis_historia.py`, `reglas_historia.py` |
 | R5 | WP-75 | fd1adff | Espera: reglas 1, 3, 5, 6, 7, 8, E9, E10, R9, R11, C3, T2, T3, T5; `Work._prepass` |
@@ -65,3 +65,19 @@ C6 modalidad incompatible (solo programa duplicado); T4 con varias fechas (prime
 
 - N2: las 6 decisiones de WP-R4 y el orden de fragmentos de WP-R5 se tomaron del parche de referencia y del plan; las pruebas pasan, pero no hay paquete real que las contraste.
 - N3: la regla 3 puede dar avisos de nivel 2 que no corresponden (sin filtro de fecha), riesgo aceptado en el doc de reglas.
+
+## 8. Correcciones tras la revisión E3 (decisión u, 14 de octubre)
+
+Revisión: `docs/implementacion/revision/E3_REGLAS_HISTORIA_20261014.md`. Decisiones del usuario: 1A, 2B, 3A, 4B.
+Rama: `claude/lucid-sagan-hw9ul4` (base `feat/reglas-historia-asistente` @ 35234c0).
+
+- **1A** E10, T5, J2 y R6 son reglas RUS: `Work._prepass` corre siempre (Excel y paquete). Corrige la afirmación de §3:
+  A3 («sin historia, idéntico al original») vale salvo WP-73 y estas cuatro reglas. Golden: sección `reglas_rus`.
+- **2B** `informe_historia` (I1) filtra, con el informe vencido, los ingresos anteriores al vencimiento; I2 (`prorroga_informe`)
+  es solo constancia y no recorta I-01 ni sus acciones.
+- **3A** `duplicidades` recibe el RUT: `MISMO_PROGRAMA` solo para el mismo NNA; `OTRO_REGISTRO` para el resto de la causa
+  (incluye hermanos; mantiene `R3_MULTI`). Sin RUT no se afirma duplicidad.
+- **4B** `ingreso_efectivo_espera(corte, espera)`: solo cuenta el ingreso efectivo desde `corte - T ESPERA`.
+- **H5** `constancia`, `prorroga` y `diagnostico_dce` omiten trámites ya citados; `busqueda` empareja por `(fecha, folio)`.
+- **H7/H8** documentados (WP-78, WP-72, PLAN_VIGENTE q).
+- Pendiente: H6 (regla 1, folio de cualquier trámite de esa fecha) espera el nombre exacto de la resolución de ingreso.

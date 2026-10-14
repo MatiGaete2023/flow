@@ -141,6 +141,71 @@ def source_book(folder, mode):
     return path
 
 
+CURADORES_FICTICIOS = (
+    "(00411111-1)ABOGADO FICTICIO A - Institución: Programa Ficticio Uno#"
+    "(00511111-1)ABOGADO FICTICIO B - Institución: Corporación Ficticia Dos"
+)
+
+
+def rus_rules_snapshot():
+    """Reglas RUS de la decisión u (E10, T5, J2, R6): corren sin historia y por el camino Excel.
+    Los libros van a una carpeta temporal: no agregan productos al golden."""
+    from tempfile import TemporaryDirectory
+    from openpyxl import Workbook
+    from nurus.personal.config import defaults
+    from nurus.personal.work import Work
+
+    books = {
+        "ESPERA": (
+            ["RIT", "TRIBUNAL", "NOMBRE", "RUT", "DERIVACION", "T ESPERA", "CURADOR"],
+            [
+                ["X-11-2026", "LAJA", "Persona ficticia 11", "00611111-1", "RVA FICTICIO", 120, CURADORES_FICTICIOS],
+                ["X-12-2026", "LAJA", "Persona ficticia 12", "00711111-1", "AFT FICTICIO", 10, ""],
+                ["X-12-2026", "LAJA", "Persona ficticia 12", "00711111-1", "AFT FICTICIO", 10, ""],
+                ["X-12-2026", "LAJA", "Persona ficticia 13", "00811111-1", "AFT FICTICIO", 10, ""],
+            ],
+        ),
+        "INFORMES": (
+            ["RIT", "TRIBUNAL", "NOMBRE", "RUT", "DERIVACION", "FECHA VENCIMIENTO", "CURADOR"],
+            [
+                ["X-21-2026", "LAJA", "Persona ficticia 21", "00911111-1", "AFT FICTICIO", date(2026, 8, 20), ""],
+                ["X-21-2026", "LAJA", "Persona ficticia 21", "00911111-1", "AFT FICTICIO", date(2026, 9, 20), ""],
+                [
+                    "X-22-2026",
+                    "LAJA",
+                    "Persona ficticia 22",
+                    "00311111-1",
+                    "AFT FICTICIO",
+                    date(2026, 9, 20),
+                    CURADORES_FICTICIOS,
+                ],
+            ],
+        ),
+    }
+    result = {}
+    with TemporaryDirectory() as temp:
+        for mode, (headers, rows) in books.items():
+            book = Workbook()
+            sheet = book.active
+            sheet.title = mode
+            sheet.append(headers)
+            for row in rows:
+                sheet.append(row)
+            path = Path(temp) / f"reglas_rus_{mode}.xlsx"
+            book.save(path)
+            work = Work(defaults()).analyze(path, mode, as_of=date(2026, 10, 8))
+            result[mode] = [
+                {
+                    "observation": row.observation,
+                    "rules": row.rules,
+                    "actions": row.actions,
+                    "avisos": [list(a) for a in row.avisos],
+                }
+                for row in work.rows
+            ]
+    return result
+
+
 def generate(folder):
     from nurus.personal.config import defaults, BASE
     from nurus.personal.work import Work
@@ -212,6 +277,7 @@ def generate(folder):
         assert all(not d.to or d.to.endswith(".test") for d in drafts), "Destinatario no ficticio"
         assert "PC_IE" not in work.rows[1].actions if mode == "ESPERA" else True, "DCE Espera no puede producir PC_IE"
         generated.extend([source, exported, *[Path(a) for d in drafts for a in d.attachments]])
+    semantic["reglas_rus"] = rus_rules_snapshot()
     # Reutiliza únicamente la fixture sintética del baseline; no captura HTML remoto.
     sys.path.insert(0, str(ROOT / "tests"))
     from test_bitacora_lote import manifest

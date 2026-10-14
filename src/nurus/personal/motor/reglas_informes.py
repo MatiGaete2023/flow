@@ -26,10 +26,10 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     if finalizada: return componer(pfx, finalizada)
     vencido = dias < 0
     mn = H.deja_sin_efecto_mn()
-    i1 = H.informe_historia(H.V.INGRESO_INFORME_X, fv, vencido)
-    i2 = H.informe_historia(H.V.PRORROGA, fv, vencido)
+    i1 = H.informe_historia(fv, vencido)
+    i2 = H.prorroga_informe()
     i3 = H.escrito_sin_ingreso(programa)
-    if vencido and (i1 or i2 or i3):
+    if vencido and (i1 or i3):
         H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
         principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))
     else:

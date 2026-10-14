@@ -77,19 +77,37 @@ def test_primera_observacion_es_la_mas_antigua_de_la_materia_antes_del_corte():
     assert primera_observacion(b, 'VENCIDA', date(2026, 10, 14)) is None
 
 
-def test_duplicidades_mismo_programa_otro_programa_y_causas_sin_repeticion():
+def test_duplicidades_por_nna_hermanos_y_causas_sin_repeticion():
     registros = [
-        ('a', 'LAJA', 'C-1-2026', 'PRM UNO'),
-        ('b', 'laja', 'c-1-2026', 'prm uno'),
-        ('c', 'LAJA', 'C-2-2026', 'PRM UNO'),
-        ('d', 'LAJA', 'C-2-2026', 'PRM DOS'),
-        ('e', 'LAJA', 'C-3-2026', 'PRM UNO'),
-        ('f', 'LAJA', '', 'PRM UNO'),
-        ('g', 'LAJA', '', 'PRM UNO'),
+        ('a', 'LAJA', 'C-1-2026', '11.111.111-1', 'PRM UNO'),
+        ('b', 'laja', 'c-1-2026', '11111111-1', 'prm uno'),
+        ('c', 'LAJA', 'C-2-2026', '11111111-1', 'PRM UNO'),
+        ('d', 'LAJA', 'C-2-2026', '11111111-1', 'PRM DOS'),
+        ('e', 'LAJA', 'C-3-2026', '11111111-1', 'PRM UNO'),
+        ('f', 'LAJA', '', '11111111-1', 'PRM UNO'),
+        ('g', 'LAJA', '', '11111111-1', 'PRM UNO'),
+        ('h', 'LAJA', 'C-4-2026', '11111111-1', 'PRM UNO'),  # hermanos: misma causa y programa, otro RUT
+        ('i', 'LAJA', 'C-4-2026', '22222222-2', 'PRM UNO'),
+        ('j', 'LAJA', 'C-5-2026', '', 'PRM UNO'),  # sin RUT no se afirma duplicidad
+        ('k', 'LAJA', 'C-5-2026', '', 'PRM UNO'),
     ]
     assert duplicidades(registros) == {
         'a': 'MISMO_PROGRAMA',
         'b': 'MISMO_PROGRAMA',
-        'c': 'OTRO_PROGRAMA',
-        'd': 'OTRO_PROGRAMA',
+        'c': 'OTRO_REGISTRO',
+        'd': 'OTRO_REGISTRO',
+        'h': 'OTRO_REGISTRO',
+        'i': 'OTRO_REGISTRO',
+        'j': 'OTRO_REGISTRO',
+        'k': 'OTRO_REGISTRO',
     }
+
+
+def test_busqueda_empareja_con_la_orden_mas_cercana_aunque_tenga_folio_no_numerico():
+    h = hist(
+        ('Orden de búsqueda', '2026-07-01', 10),
+        ('Orden de búsqueda', '2026-08-01', 's/f'),
+        ('Termino de búsqueda', '2026-08-10', 30),
+    )
+    pares, vigentes = busqueda(h)
+    assert pares[0][1].folio_txt == 's/f' and vigentes == []

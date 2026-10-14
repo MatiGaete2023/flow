@@ -48,8 +48,30 @@ def test_regla6_duplicidad_mismo_programa_nivel1_otro_programa_sin_marca(tmp_pat
     trabajo = correr(tmp_path, 'ESPERA', ESPERA, filas, {})
     assert [[a[1] for a in r.avisos] for r in trabajo.rows] == [['R6_DUPLICIDAD'], ['R6_DUPLICIDAD'], [], []]
     assert 'Persona Ficticia 3' not in ''.join(r.observation for r in trabajo.rows[:2])
-    sin = correr(tmp_path, 'ESPERA', ESPERA, filas[:2], paquete=False)
-    assert all(r.avisos == [] for r in sin.rows)
+    # Decisión u (14-oct): la regla 6 usa solo datos de RUS; con Excel (sin paquete) da lo mismo.
+    excel = correr(tmp_path, 'ESPERA', ESPERA, filas, paquete=False)
+    assert [r.avisos for r in excel.rows] == [r.avisos for r in trabajo.rows]
+
+
+def test_regla6_hermanos_en_la_misma_causa_y_programa_no_son_duplicidad(tmp_path):
+    filas = [fila(1, rit='C-1-2026', rut='11111111-1') + [45], fila(2, rit='C-1-2026', rut='22222222-2') + [45]]
+    trabajo = correr(tmp_path, 'ESPERA', ESPERA, filas, {})
+    assert all(r.avisos == [] for r in trabajo.rows)
+    h = hist(('Ingreso efectivo', '2026-10-02', 41))
+    con = correr(tmp_path, 'ESPERA', ESPERA, filas, {0: h, 1: h}).rows[0]
+    assert 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.' in con.observation
+    assert [a[1] for a in con.avisos] == ['R3_INGRESO_EFECTIVO']
+
+
+def test_regla3_ignora_ingreso_efectivo_anterior_al_inicio_de_la_espera(tmp_path):
+    # Corte 14-oct, 40 días de espera: la espera empezó el 4-sep; un ingreso del 20-jun es de otra medida.
+    viejo = esp(tmp_path, fila(1) + [40], hist(('Ingreso efectivo', '2026-06-20', 3)))
+    assert 'ESPERA.E05_PROYECTO_Y_CORREO' in viejo.rules and viejo.actions == ['programa_espera', 'PC_IE']
+    assert viejo.avisos == [] and 'Medida revisada. En la historia' not in viejo.observation
+    borde = esp(tmp_path, fila(1) + [40], hist(('Ingreso efectivo', '2026-09-04', 3)))
+    assert borde.actions == [] and [a[1] for a in borde.avisos] == ['R3_INGRESO_EFECTIVO']
+    sin_dias = esp(tmp_path, fila(1) + [''], hist(('Ingreso efectivo', '2026-06-20', 3)))
+    assert [a[1] for a in sin_dias.avisos] == ['R3_INGRESO_EFECTIVO']
 
 
 def test_regla3_multi_ingreso_agrega_aclaracion(tmp_path):
@@ -172,3 +194,16 @@ def test_continuidad_se_cita_una_sola_vez_en_dce(tmp_path):
 def test_designacion_de_curador_se_cita(tmp_path):
     f = esp(tmp_path, fila(1) + [3], hist(('Designa abogado', '2026-10-01', 4)), extra=[''], encabezados=['CURADOR'])
     assert '«Designa abogado»' in f.observation and 'Se sugiere asociarlo informáticamente.' in f.observation
+
+
+def test_un_tramite_ya_citado_por_t2_no_se_vuelve_a_citar_en_la_regla3(tmp_path):
+    h = hist(
+        ('Ingreso efectivo', '2026-09-10', 10),
+        ('Ingreso efectivo', '2026-09-20', 20),
+        ('Deja sin efecto medida interconexión M.N.', '2026-09-25', 25),
+    )
+    f = esp(tmp_path, fila(1) + [40], h)
+    assert f.observation.count('folio 20') == 1
+    assert 'consta un trámite descrito como «Ingreso efectivo», de fecha 10 de septiembre de 2026, folio 10.' in (
+        f.observation
+    )
