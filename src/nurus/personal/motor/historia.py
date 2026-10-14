@@ -1,0 +1,90 @@
+"""Historia de la causa y bitácora vistas por el motor: solo datos y búsquedas, sin reglas."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+
+from nurus.rus.columns import normalize
+
+PRESENCIA = frozenset(('COMPLETA', 'PARCIAL'))
+AUSENCIA = frozenset(('COMPLETA', 'VACIA_COMPROBADA'))
+
+
+def clave(texto):
+    return ' '.join(normalize(texto).split())
+
+
+@dataclass(frozen=True)
+class Tramite:
+    desc: str
+    clave: str
+    fecha: date
+    folio_txt: str
+    folio: int
+
+
+@dataclass(frozen=True)
+class Observacion:
+    fecha: date
+    texto: str
+
+
+@dataclass(frozen=True)
+class Historia:
+    cobertura: str
+    desde: date | None
+    hasta: date | None
+    tramites: tuple
+
+    @property
+    def con_datos(self):
+        return self.cobertura in PRESENCIA
+
+    @property
+    def permite_ausencia(self):
+        return self.cobertura in AUSENCIA
+
+    def buscar(self, *nombres):
+        claves = {clave(n) for n in nombres}
+        return [t for t in self.tramites if t.clave in claves]
+
+
+def _folio(valor):
+    texto = str(valor or '').strip()
+    return int(texto) if texto.isdigit() else -1
+
+
+def _dia(valor):
+    try:
+        return date.fromisoformat(str(valor or '')[:10])
+    except ValueError:
+        return None
+
+
+def ultimo(tramites):
+    return max(tramites, key=lambda t: (t.fecha, t.folio)) if tramites else None
+
+
+def construir(filas, cobertura, desde=None, hasta=None):
+    """filas: dicts de la tabla historia_tramites. Descarta filas sin fecha ISO o sin descripción."""
+    tramites = []
+    for fila in filas:
+        fecha = _dia(fila.get('event_at'))
+        desc = str(fila.get('description', '')).strip()
+        if fecha is None or not desc:
+            continue
+        folio_txt = str(fila.get('folio', '')).strip()
+        tramites.append(Tramite(desc, clave(desc), fecha, folio_txt, _folio(folio_txt)))
+    tramites.sort(key=lambda t: (t.fecha, t.folio))
+    return Historia(cobertura, desde, hasta, tuple(tramites))
+
+
+def observaciones(filas):
+    """filas: dicts de la tabla bitacoras (campos event_at y text), ordenadas por fecha."""
+    salida = []
+    for fila in filas:
+        fecha = _dia(fila.get('event_at'))
+        if fecha is not None:
+            salida.append(Observacion(fecha, str(fila.get('text', ''))))
+    return tuple(sorted(salida, key=lambda o: o.fecha))

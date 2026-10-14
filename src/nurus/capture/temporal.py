@@ -4,7 +4,7 @@ from datetime import date, datetime
 import json
 from calendar import monthrange
 
-RULESET_VERSION = 'baseline-20261008+context-preview-2'
+RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-1'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
 DISPLAY_RULES = ('CT-01', 'CT-02')
 DISPLAY_VERSION = 'solo-mostrar-3'

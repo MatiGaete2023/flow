@@ -20,6 +20,7 @@ from nurus.capture.temporal import (
 from nurus.rus.columns import COMMON, MODE_COLUMNS, map_columns
 from nurus.rus.models import ReadBatch, SourceRecord, SourceReference, Mode
 from nurus.rus.util import as_date
+from .motor.historia import construir, observaciones
 from .work import Work
 from nurus.services.excel_cells import append_literal_row
 
@@ -31,6 +32,38 @@ MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite a
 
 # Tipos de registro que evalúa el motor tradicional; EGRESADOS/OTRO quedan sin evaluar.
 ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
+
+
+def _historias_por_causa(capture):
+    """{(source_system, court_code, cause_id): Historia}; vacío si la fuente no se solicitó."""
+    rango = {'COMPLETA': 3, 'PARCIAL': 2, 'VACIA_COMPROBADA': 1}
+    filas = defaultdict(list)
+    for fila in capture.rows('historia_tramites'):
+        filas[fila['query_id']].append(fila)
+    resultado, mejor = {}, {}
+    for consulta in capture.manifest['queries']:
+        if consulta['screen'] != 'historia_tramites':
+            continue
+        filtros = json.loads(consulta['filters_json'])
+        causa = filtros.get('historia_causa')
+        if not causa:
+            continue
+        clave = (causa['source_system'], causa['court_code'], causa['cause_id'])
+        puntaje = rango.get(consulta['coverage'], 0)
+        if clave in mejor and mejor[clave] >= puntaje:
+            continue
+        ventana = filtros.get('ventana') or {}
+        desde, hasta = (_dia(ventana.get(k)) for k in ('desde', 'hasta'))
+        resultado[clave] = construir(filas.get(consulta['query_id'], ()), consulta['coverage'], desde, hasta)
+        mejor[clave] = puntaje
+    return resultado
+
+
+def _dia(valor):
+    try:
+        return date.fromisoformat(str(valor or '')[:10])
+    except ValueError:
+        return None
 
 
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
@@ -116,10 +149,16 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             calendars[identity(row)].append(row)
     cross = {}
     event_index = defaultdict(list)
+    bitacora_index = defaultdict(list)
+    historias = _historias_por_causa(capture)
+    historia_by_record = {}
+    bitacora_by_record = {}
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
             if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
                 event_index[identity(event)].append(event)
+                if table == 'bitacoras':
+                    bitacora_index[identity(event)].append(event)
     for number, record in enumerate(records, 2):
         if number % 100 == 0:
             checkpoint()
@@ -145,6 +184,11 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         provenance[record['record_id']] = record
         row_modes[record['record_id']] = mode
         contexts[record['record_id']] = chronology(capture, record, as_of, event_index=event_index)
+        historia_by_record[record['record_id']] = historias.get(
+            (record['source_system'], record['court_code'], record['cause_id'])
+        )
+        if record['identity_status'] == 'VERIFICADA':
+            bitacora_by_record[record['record_id']] = observaciones(bitacora_index.get(identity(record), ()))
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
         for cal in matching:
@@ -205,7 +249,15 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             column_mapping=mapping,
             source_bytes=content,
         )
-        analyzed = Work(config).analyze(path, mode, as_of=as_of, batch=batch, cross_by_record=cross)
+        analyzed = Work(config).analyze(
+            path,
+            mode,
+            as_of=as_of,
+            batch=batch,
+            cross_by_record=cross,
+            historia_by_record=historia_by_record,
+            bitacora_by_record=bitacora_by_record,
+        )
         # Un grupo solo de EGRESADOS/OTRO no pasa por el motor: sus avisos de columnas serían falsos.
         if any(record['record_type'] in ENGINE_TYPES for record, _, _, _ in items):
             candidate.warnings.extend(analyzed.warnings)

@@ -15,3 +15,20 @@ class datetime(RealDatetime):
 
 def parametro(name):
     return current.get()['config']['umbrales'][name]
+
+def historia():
+    ctx = current.get()
+    return ctx.get('historia') if ctx else None
+
+def duplicidad():
+    ctx = current.get()
+    return ctx.get('duplicidad') if ctx else None
+
+def bitacora():
+    ctx = current.get()
+    return ctx.get('bitacora', ()) if ctx else ()
+
+def marcar(nivel, codigo, texto):
+    ctx = current.get()
+    if ctx is not None:
+        ctx.setdefault('marcas', []).append((nivel, codigo, texto))

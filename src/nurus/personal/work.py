@@ -36,6 +36,7 @@ class Row:
     decisions: dict = field(default_factory=dict)
     overrides: dict = field(default_factory=dict)
     word_overrides: dict = field(default_factory=dict)
+    avisos: list = field(default_factory=list)
 
 
 def actions_for(events):
@@ -305,7 +306,19 @@ class Work:
         self.source_scope = 'SOLO_PLANILLA'
         self.capture_changes = None
 
-    def analyze(self, path, mode, *, sheet=None, cross_sheet=None, as_of=None, batch=None, cross_by_record=None):
+    def analyze(
+        self,
+        path,
+        mode,
+        *,
+        sheet=None,
+        cross_sheet=None,
+        as_of=None,
+        batch=None,
+        cross_by_record=None,
+        historia_by_record=None,
+        bitacora_by_record=None,
+    ):
         from .operations import progress, checkpoint
 
         checkpoint()
@@ -377,7 +390,15 @@ class Work:
                 column = cols.get(name)
                 if column and isinstance(values.get(column), (int, float)):
                     values[column] = as_date(values[column], batch.excel_epoch)
-            ctx = {'config': self.config, 'events': [], 'date': date.fromisoformat(self.as_of), 'invalid': []}
+            ctx = {
+                'config': self.config,
+                'events': [],
+                'date': date.fromisoformat(self.as_of),
+                'invalid': [],
+                'historia': (historia_by_record or {}).get(record.record_id),
+                'bitacora': (bitacora_by_record or {}).get(record.record_id, ()),
+                'marcas': [],
+            }
             token = current.set(ctx)
             inc = Incidencias()
             warnings = []
@@ -427,6 +448,7 @@ class Work:
                 )
             )
             self.rows[-1].decisions = {'structured': True, 'mail': {}, 'resolution': 'auto'}
+            self.rows[-1].avisos = list(dict.fromkeys(ctx['marcas']))
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
 
