@@ -318,11 +318,11 @@ def informes_acumulados():
 
 def causa_finalizada(rit):
     """Causa P con «Conciliacion» o «Dictación de sentencia» sin «Egreso de servicio…» en esa fecha o posterior.
-    La ausencia exige cobertura que la permita (G3)."""
+    Solo con la cobertura disponible (completa o parcial): el egreso debe ser posterior al cierre."""
     if not str(rit or '').strip().upper().startswith('P'):
         return []
-    h = historia()
-    if h is None or not h.permite_ausencia:
+    h = _h()
+    if h is None:
         return []
     cierre = ultimo(h.buscar(V.CONCILIACION, V.DICTACION_SENTENCIA))
     if cierre is None or any(t.fecha >= cierre.fecha for t in h.buscar(V.EGRESO_SERVICIO)):

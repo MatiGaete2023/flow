@@ -59,20 +59,24 @@ def test_rit_en_minuscula_cuenta(tmp_path):
     assert _espera(tmp_path, hist(SENTENCIA), rit='p-1-2026').rules == ['HISTORIA.P_FINALIZADA']
 
 
-@pytest.mark.parametrize('cobertura', ['PARCIAL', 'FALLIDA', 'NO_CONSULTADA'])
-def test_la_ausencia_de_egreso_exige_cobertura_completa(tmp_path, cobertura):
+@pytest.mark.parametrize('cobertura', ['FALLIDA', 'NO_CONSULTADA', 'CANCELADA'])
+def test_sin_cobertura_de_presencia_rigen_las_reglas_originales(tmp_path, cobertura):
     base = _espera(tmp_path, None)
     f = _espera(tmp_path, hist(SENTENCIA, cobertura=cobertura))
     assert (f.observation, f.rules) == (base.observation, base.rules)
+
+
+def test_cobertura_parcial_alcanza(tmp_path):
+    assert _espera(tmp_path, hist(SENTENCIA, cobertura='PARCIAL')).rules == ['HISTORIA.P_FINALIZADA']
 
 
 def test_sin_historia_rigen_las_reglas_originales(tmp_path):
     assert 'HISTORIA.P_FINALIZADA' not in _espera(tmp_path, None).rules
 
 
-def test_la_constancia_reemplaza_la_mayoria_de_edad(tmp_path):
+def test_la_mayoria_de_edad_va_sobre_la_constancia(tmp_path):
     f = _espera(tmp_path, hist(SENTENCIA), extra=['2000-01-01'], encabezados=['FEC. NACIMIENTO'])
-    assert f.rules == ['HISTORIA.P_FINALIZADA'] and f.avisos == []
+    assert f.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in f.avisos] == [(3, 'REVISAR_MAYORIA')]
 
 
 def test_cumplimiento(tmp_path):
@@ -91,3 +95,9 @@ def test_informes(tmp_path):
     assert f.rules == ['HISTORIA.P_FINALIZADA'] and f.observation.endswith(': ' + TEXTO)
     ok = inf(tmp_path, datos, hist(SENTENCIA, (EGRESO, '2026-10-02', 40)))
     assert 'HISTORIA.P_FINALIZADA' not in ok.rules
+
+
+def test_cumplimiento_la_mayoria_de_edad_va_sobre_la_constancia(tmp_path):
+    datos = fila(1, rit='P-1-2026') + cumplimiento(1, nac='2000-01-01')[5:]
+    f = cum(tmp_path, datos, hist(CONCILIACION))
+    assert f.rules == ['COMUN.MAYORIA_EDAD']

@@ -22,7 +22,7 @@ Rama de trabajo: `claude/hopeful-hamilton-k2tcqp` (base `feat/historia-causa-sit
 
 - **Condición**: RIT que parte con P (sin distinguir mayúscula) y la historia trae «Conciliacion» o «Dictación de sentencia», sin «Egreso de servicio protección especializada y otras redes» en esa fecha o posterior (se compara contra el cierre más reciente, por fecha).
 - **Observación**: solo «La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.» Sin acciones ni marca. Aplica a Espera, Cumplimiento e Informes.
-- **Decisiones N2 mías (corregibles)**: (a) precede a la mayoría de edad y a las demás reglas, salvo «derivación sin seguimiento», porque dijiste «la observación debe ser»; (b) la ausencia del egreso exige cobertura COMPLETA de la historia (guardia G3; con PARCIAL no se afirma ausencia); (c) en Informes solo se evalúa en filas que ya generan observación; (d) escribí «informáticamente» con tilde y comillas «» como en C10 (tu texto traía comillas “” y sin tilde); (e) texto `confirmado:false`.
+- **Decisiones confirmadas por el usuario (14-oct)**: (a) la mayoría de edad va sobre todas las observaciones nuevas, incluida esta (la «derivación sin seguimiento» conserva su lugar original, primero); (b) se evalúa con la cobertura disponible (completa o parcial), porque el egreso debe ser posterior al cierre; (c) en Informes solo se evalúa en filas que ya generan observación. Quedan mías: (d) escribí «informáticamente» con tilde y comillas «» como en C10 (tu texto traía comillas “” y sin tilde); (e) texto `confirmado:false`.
 - **[CONFLICTO_ABIERTO]**: no tengo el nombre exacto, en Desc. Trámite, del trámite de egreso; se usa el que indicaste. Si la columna trae otra forma (p. ej. abreviada como «Ing.Serv. …»), la regla no verá el egreso y disparará de más.
 
 ## 2. Cómo se hizo
@@ -51,7 +51,7 @@ Rama de trabajo: `claude/hopeful-hamilton-k2tcqp` (base `feat/historia-causa-sit
 ## 5. Falta por hacer (requiere al usuario)
 
 - **Revisión E3** por otra sesión o modelo (el diff toca `motor/`, `textos_base.json` y `capture/`). No se sustituye con revisión propia.
-- **Aprobar redacciones (P)**: `R3_MULTI`, `MATERIA_CURADOR/SIN_FICHA/SIN_FAE/VENCIDA`, `C1_RUS`, `C3_CON_FOLIO`, `EGRESO_PROYECTADO`, `C4_FICHA_RUS/SIN_RUS/FOLIO`, `C8_NO_USO`, `I1_VENCIDO/POR_VENCER`, `T2_MN`. Todas `confirmado:false`.
+- **Redacciones (P)**: aprobadas por el usuario el 14-oct (`confirmado:true`, versión de textos v9.3.1): `R3_MULTI`, `MATERIA_CURADOR/SIN_FICHA/SIN_FAE/VENCIDA`, `C1_RUS`, `C3_CON_FOLIO`, `EGRESO_PROYECTADO`, `C4_FICHA_RUS/SIN_RUS/FOLIO`, `C8_NO_USO`, `I1_VENCIDO/POR_VENCER`, `T2_MN`. El resto de los textos y `P_FINALIZADA` (que ajusté de tilde y comillas) siguen `confirmado:false`.
 - Corregido el 14-oct por indicación del usuario: la marca de mayoría de edad (nivel 3, `REVISAR_MAYORIA`) depende solo de la edad del NNA, sin relación con la vigencia de la medida; sale siempre que sale `MAYORIA_EDAD` (Espera y Cumplimiento).
 - **Verificar la clave de unión historia↔registro** `(source_system, court_code, cause_id)` con un paquete real (extracto anónimo).
 - Repetir `verificar_wp.py` y la suite completa en un entorno con tkinter; confirmar la CI Windows.

@@ -5,6 +5,24 @@ import string
 
 from nurus.personal.config import BASE, Configuration, defaults, validate
 
+APROBADOS = {
+    'C4_FOLIO',
+    'C8_NO_USO',
+    'T2_MN',
+    'I1_POR_VENCER',
+    'C4_FICHA_RUS',
+    'MATERIA_SIN_FICHA',
+    'MATERIA_CURADOR',
+    'EGRESO_PROYECTADO',
+    'C3_CON_FOLIO',
+    'C1_RUS',
+    'I1_VENCIDO',
+    'MATERIA_VENCIDA',
+    'R3_MULTI',
+    'MATERIA_SIN_FAE',
+    'C4_FICHA_SIN_RUS',
+}  # redacciones (P) aprobadas por el usuario el 14-oct-2026
+
 ESPERADO = {
     'BASE_TRAMITE': {'DESC', 'FECHA', 'FOLIO'},
     'VARIOS': {'DESC', 'FECHA', 'FOLIO', 'N'},
@@ -52,7 +70,7 @@ def test_claves_y_variables_coinciden_exactamente():
     assert set(textos) == set(ESPERADO)
     for clave, entrada in textos.items():
         assert _campos(entrada['texto']) == ESPERADO[clave], clave
-        assert entrada['confirmado'] is False and entrada['nota'], clave
+        assert entrada['confirmado'] is (clave in APROBADOS) and entrada['nota'], clave
 
 
 def test_la_configuracion_valida_y_una_guardada_sin_el_scope_queda_completa(tmp_path):
