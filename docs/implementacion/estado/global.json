@@ -204,6 +204,11 @@
         "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
         "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
       }
+    },
+    "fase_b_auditoria_20261014": {
+      "autorizacion": "Usuario: «Pasa a la fase B».",
+      "informes_tempranos": "Conservar acciones y advertir la posible entrega (recomendado)",
+      "alcance": "WP-64; sin aceptación, integración en feat, main ni release; revisión E3 pendiente."
     }
   },
   "orden_paquetes": [

@@ -5,7 +5,7 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 67; último en el orden: WP-99.
+- Paquetes integrados: 51 de 68; último en el orden: WP-99.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -16,6 +16,7 @@
 | WP-53 | EN_REVISION | Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención) |
 | WP-54 | EN_VERIFICACION | Historia de causa: interfaz, flujo, entrega Windows y acta |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
+| WP-64 | EN_VERIFICACION | Fase B: correcciones de auditoría final |
 | WP-71 | EN_REVISION | Reglas de historia R1: camino de datos (historia y bitácora hasta el motor) |
 | WP-72 | EN_REVISION | Reglas de historia R2: textos del scope HISTORIA |
 | WP-73 | EN_REVISION | Reglas de historia R3: cambios deliberados a reglas originales |

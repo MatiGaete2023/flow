@@ -1,0 +1,31 @@
+{
+  "titulo": "Fase B: correcciones de auditoría final",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    {
+      "wp": "WP-79",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j",
+    "u",
+    "v",
+    "w"
+  ],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root — Fase B autorizada por usuario",
+  "tomado": "14 de octubre de 2026",
+  "rama": "wp/WP-64-auditoria-fase-b",
+  "pr": null,
+  "verificacion": "Focales PASA; verificación completa en curso, con nueve sustituciones declaradas.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Usuario: «Pasa a la fase B». Alcance y evidencia en wp/WP-64.md.",
+    "Base de código candidata: 4f572ed; rama de integración permanece en 1a2dd0f. E3 externa necesaria antes de integrar.",
+    "Decisión de informes tempranos aplicada: conservar acciones y advertir posible entrega, sin umbral inventado."
+  ]
+}

@@ -1893,6 +1893,37 @@
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
       ]
     },
+    "WP-64": {
+      "titulo": "Fase B: correcciones de auditoría final",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        {
+          "wp": "WP-79",
+          "tipo": "archivo"
+        }
+      ],
+      "decisiones": [
+        "j",
+        "u",
+        "v",
+        "w"
+      ],
+      "estado": "EN_VERIFICACION",
+      "ejecutor": "Codex /root — Fase B autorizada por usuario",
+      "tomado": "14 de octubre de 2026",
+      "rama": "wp/WP-64-auditoria-fase-b",
+      "pr": null,
+      "verificacion": "Focales PASA; verificación completa en curso, con nueve sustituciones declaradas.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Usuario: «Pasa a la fase B». Alcance y evidencia en wp/WP-64.md.",
+        "Base de código candidata: 4f572ed; rama de integración permanece en 1a2dd0f. E3 externa necesaria antes de integrar.",
+        "Decisión de informes tempranos aplicada: conservar acciones y advertir posible entrega, sin umbral inventado."
+      ]
+    },
     "WP-71": {
       "titulo": "Reglas de historia R1: camino de datos (historia y bitácora hasta el motor)",
       "ola": 8,
@@ -2199,6 +2230,11 @@
         "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
         "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
       }
+    },
+    "fase_b_auditoria_20261014": {
+      "autorizacion": "Usuario: «Pasa a la fase B».",
+      "informes_tempranos": "Conservar acciones y advertir la posible entrega (recomendado)",
+      "alcance": "WP-64; sin aceptación, integración en feat, main ni release; revisión E3 pendiente."
     }
   },
   "commit_integracion": "fe4c225",

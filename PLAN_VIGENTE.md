@@ -85,3 +85,15 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   2. Informes: un «Ingreso informe de cumplimiento X» solo desmiente el vencimiento si es del día del vencimiento o posterior; la «Prorroga» nunca lo desmiente, queda solo como constancia y se mantienen las acciones.
   3. Regla 6 (duplicidad) es por NNA (RUT): hermanos en la misma causa y programa no son duplicidad; sin RUT no se afirma.
   4. Regla 3: solo cuenta el «Ingreso efectivo» desde el inicio de la espera (corte menos T ESPERA); sin T ESPERA válido no se filtra.
+
+## Fase B de auditoría final — 14 de octubre de 2026
+
+- v) Usuario: «Pasa a la fase B», tras el informe de auditoría de esta sesión. Autoriza correcciones localizadas de
+  WP-64 y sus regresiones. No autoriza aceptación, integración de cambios riesgosos sin E3, fusión a main ni release.
+- w) Informes ingresados antes del vencimiento sin período acreditado: «Conservar acciones y advertir la posible
+  entrega (recomendado)». Se conserva I-01 y se agrega advertencia de revisión; sin ventana de días inventada ni
+  modificación de textos institucionales. El mismo límite inferior aprobado para I1 se aplica a I3 al desmentir vencimiento.
+- Corrección FAE autorizada: una columna no capturada es NO_EVALUABLE, nunca prueba de inexistencia de ficha.
+- Identidad y tiempo: fuentes conservadas, uso sustantivo de historia solo con vínculo VERIFICADA y hasta el corte.
+
+Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sigue en `1a2dd0f`.
