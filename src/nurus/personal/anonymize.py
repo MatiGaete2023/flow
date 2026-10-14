@@ -553,10 +553,11 @@ def _scan(book, pseudonyms, replacer, protected_cells):
     return sorted(found), residual
 
 
-
 # Protección adicional para nombres no presentes en las columnas de identidad.
 _UNKNOWN_FULL_NAME = re.compile(r'(?<!\\w)[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}){1,3}(?!\\w)')
-_UNKNOWN_AFTER_ROLE = re.compile(r'(?i)(\\b(?:sr\\.?|sra\\.?|don|doña|nna|madre|padre|curador(?:a)?|contactar a)\\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})')
+_UNKNOWN_AFTER_ROLE = re.compile(
+    r'(?i)(\\b(?:sr\\.?|sra\\.?|don|doña|nna|madre|padre|curador(?:a)?|contactar a)\\s+)([A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})'
+)
 
 
 def scrub_observation(value, replacer):
@@ -568,7 +569,10 @@ def scrub_observation(value, replacer):
     text = _UNKNOWN_FULL_NAME.sub('[identidad omitida]', text)
     return text
 
-def anonymize(source, target, shift_days=0, *, text_mode='estricto', pseudonyms=None, replacer=None, field_transform=None):
+
+def anonymize(
+    source, target, shift_days=0, *, text_mode='estricto', pseudonyms=None, replacer=None, field_transform=None
+):
     """Modo conservador opcional; por defecto se preserva el comportamiento seguro anterior."""
     if text_mode not in ('estricto', 'conservador'):
         raise ValueError('Modo de anonimización desconocido.')
@@ -616,7 +620,11 @@ def anonymize(source, target, shift_days=0, *, text_mode='estricto', pseudonyms=
                     new = value + timedelta(days=shift_days)
                 elif index is not None and r == index:
                     new = value
-                elif body and field_transform is not None and (transformed := field_transform(rows[index][c], value)) is not None:
+                elif (
+                    body
+                    and field_transform is not None
+                    and (transformed := field_transform(rows[index][c], value)) is not None
+                ):
                     new = transformed
                 elif body and c in protected_cols:
                     new = replacer.identifiers(value, free=False, phones=True) if isinstance(value, str) else value
@@ -631,8 +639,11 @@ def anonymize(source, target, shift_days=0, *, text_mode='estricto', pseudonyms=
                 elif isinstance(value, str):
                     # Los textos libres se omiten por defecto. Solo observaciones reconocidas pueden
                     # conservar contenido parcial; ninguna modalidad promete anonimización infalible.
-                    new = (scrub_observation(value, replacer) if text_mode == 'conservador' and body
-                           and kind == 'texto' else OMITTED)
+                    new = (
+                        scrub_observation(value, replacer)
+                        if text_mode == 'conservador' and body and kind == 'texto'
+                        else OMITTED
+                    )
                 if new != value:
                     report.changed += 1
                 cell = sheet.cell(r + 1, c + 1, new)
@@ -681,7 +692,9 @@ def anonymize(source, target, shift_days=0, *, text_mode='estricto', pseudonyms=
         report.warnings.append(
             "Las fechas se desplazaron: usa la fecha de corte desplazada; las reglas pueden diferir del original."
         )
-    report.warnings.append("Revisa manualmente la copia antes de compartirla: los textos libres pueden contener identificadores no reconocidos.")
+    report.warnings.append(
+        "Revisa manualmente la copia antes de compartirla: los textos libres pueden contener identificadores no reconocidos."
+    )
     report.warnings.append("No conserva formato, fórmulas ni objetos; se conserva la estructura tabular.")
     return report
 
