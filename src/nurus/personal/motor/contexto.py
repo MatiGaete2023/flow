@@ -32,3 +32,16 @@ def marcar(nivel, codigo, texto):
     ctx = current.get()
     if ctx is not None:
         ctx.setdefault('marcas', []).append((nivel, codigo, texto))
+
+def emitidos():
+    ctx = current.get()
+    return ctx.setdefault('emitidos', set()) if ctx is not None else set()
+
+def evento(clave):
+    ctx = current.get()
+    if ctx is not None:
+        ctx['events'].append(clave)
+
+def acumulado():
+    ctx = current.get()
+    return ctx.get('acumulado') if ctx else None
