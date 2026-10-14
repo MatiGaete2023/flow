@@ -5234,7 +5234,7 @@
     "desactivadas": [],
     "textos": {
       "_meta": {
-        "version": "v9.3.0",
+        "version": "v9.3.1",
         "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
       },
       "COMUN": {
@@ -5398,8 +5398,8 @@
         },
         "R3_MULTI": {
           "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado.",
-          "confirmado": false,
-          "nota": "Espera, regla 3 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Espera, regla 3 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "REITERA": {
           "texto": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
@@ -5408,23 +5408,23 @@
         },
         "MATERIA_CURADOR": {
           "texto": "la ausencia de curador ad litem en RUS",
-          "confirmado": false,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "MATERIA_SIN_FICHA": {
           "texto": "la ausencia de ficha individual en RUS",
-          "confirmado": false,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "MATERIA_SIN_FAE": {
           "texto": "la ausencia de ficha FAE en RUS",
-          "confirmado": false,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "MATERIA_VENCIDA": {
           "texto": "la medida vencida en RUS",
-          "confirmado": false,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "E05_DIAS": {
           "texto": "Al {CORTE}, RUS registra {N} días de espera.",
@@ -5443,8 +5443,8 @@
         },
         "C1_RUS": {
           "texto": "RUS registra el ingreso efectivo el {FECHA_INGRESO}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C1 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C1 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C2_PRORROGA": {
           "texto": "En la historia de la causa consta un trámite descrito como «Prórroga», de fecha {FECHA}, folio {FOLIO}. Al {CORTE}, RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
@@ -5453,33 +5453,33 @@
         },
         "C3_CON_FOLIO": {
           "texto": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}, folio {FOLIO}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C-03 con folio (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C-03 con folio (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "EGRESO_PROYECTADO": {
           "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C-03 ampliado (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C-03 ampliado (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C4_FICHA_RUS": {
           "texto": "RUS registra la ficha con fecha {FECHA_FICHA}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C4_FICHA_SIN_RUS": {
           "texto": "RUS no registra la ficha.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C4_FOLIO": {
           "texto": "Consta en la historia de la causa a folio {FOLIO}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C8_NO_USO": {
           "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prórroga». Medida vencida en RUS desde el {FECHA}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, C8 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, C8 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "C9_DCE": {
           "texto": "Informe diagnóstico ordenado en autos, se encuentra a folio {FOLIO} de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
@@ -5498,13 +5498,13 @@
         },
         "I1_VENCIDO": {
           "texto": "RUS registra el informe vencido desde el {FECHA_VENCIMIENTO}.",
-          "confirmado": false,
-          "nota": "Informes, I1 e I2 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Informes, I1 e I2 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "I1_POR_VENCER": {
           "texto": "RUS registra el informe por vencer el {FECHA_VENCIMIENTO}.",
-          "confirmado": false,
-          "nota": "Informes, I1 e I2 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Informes, I1 e I2 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "J2_ACUMULADOS": {
           "texto": "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}.",
@@ -5533,8 +5533,8 @@
         },
         "T2_MN": {
           "texto": "En la historia de la causa consta un trámite descrito como «Deja sin efecto medida interconexión M.N.», de fecha {FECHA}, folio {FOLIO}, posterior al trámite descrito como «{DESC_ANTERIOR}», de fecha {FECHA_ANTERIOR}, folio {FOLIO_ANTERIOR}.",
-          "confirmado": false,
-          "nota": "Transversal T2 (propuesta) — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Transversal T2 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
         },
         "T5_INSTITUCIONES": {
           "texto": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",

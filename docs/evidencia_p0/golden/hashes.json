@@ -2,12 +2,12 @@
   "Bitacora_ficticia/bitacoras.json": "d17adf7289cb17e77cbf591d726669c3cd245f91c76a1cae154e0497813788a8",
   "Bitacora_ficticia/captura.html": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
   "Bitacoras_RUS_baseline.xlsx": "6b56e70c0cc5e4de9c853ffd7ec817cfadef5decc46aabac7de94647b69bd95b",
-  "Nominas_ESPERA/adjuntos/372416c9481841cbba454f76de7f793a/DCE FICTICIO.xlsx": "4a86a89606f2c9a3437f554ced0ea77322825f2950aaefbbbe5671ab72a6953d",
-  "Nominas_ESPERA/adjuntos/37a21b46b6494181b4e194a3227407c7/AFT FICTICIO.xlsx": "bd4f6e20bdcaef143a23066a83a4c2adee6d5b48b68064b0aa2a270483d3f846",
-  "Nominas_ESPERA/adjuntos/7c72077d7ffd4d50822ed596aa0b7737/AFT FICTICIO.xlsx": "91b593ff2a6ca04a89afb4019c1a2e41f200bf1385324e2d0342f9daae1656b7",
-  "Nominas_INFORMES/adjuntos/4a0e4ad579df43c78f124ec639c114b2/DCE FICTICIO.xlsx": "ea2d70b069096da6872f36ddc06884a49ccbf8ea9daa7cfba3143dc450a6bb3c",
-  "Nominas_INFORMES/adjuntos/6637c92d1e174b83b7ccec88540d7cb9/AFT FICTICIO.xlsx": "658351e782e33e49703f8a8b31748587af39a0ccd22c8b7fd23ecdc6dd066ba0",
-  "Nominas_INFORMES/adjuntos/69d154ccbabf4b218f9510c994103852/AFT FICTICIO.xlsx": "fa680fa729a7e0b0aa866cc64019cf9d2d40d547198c0870e75a456fd11d4b4e",
+  "Nominas_ESPERA/adjuntos/427fab5206764ca2b5706fa334a25fba/AFT FICTICIO.xlsx": "bd4f6e20bdcaef143a23066a83a4c2adee6d5b48b68064b0aa2a270483d3f846",
+  "Nominas_ESPERA/adjuntos/6c1cd5097bb84169aec2e65208a31126/DCE FICTICIO.xlsx": "4a86a89606f2c9a3437f554ced0ea77322825f2950aaefbbbe5671ab72a6953d",
+  "Nominas_ESPERA/adjuntos/fd4d6141158042d490d842a7eb22a055/AFT FICTICIO.xlsx": "91b593ff2a6ca04a89afb4019c1a2e41f200bf1385324e2d0342f9daae1656b7",
+  "Nominas_INFORMES/adjuntos/40449a66ee154ab7b4289d64370f9af2/AFT FICTICIO.xlsx": "658351e782e33e49703f8a8b31748587af39a0ccd22c8b7fd23ecdc6dd066ba0",
+  "Nominas_INFORMES/adjuntos/7490ab9650754c52b722ec09db793890/AFT FICTICIO.xlsx": "fa680fa729a7e0b0aa866cc64019cf9d2d40d547198c0870e75a456fd11d4b4e",
+  "Nominas_INFORMES/adjuntos/f6b398f0585743d4a0c2e561cb979a17/DCE FICTICIO.xlsx": "ea2d70b069096da6872f36ddc06884a49ccbf8ea9daa7cfba3143dc450a6bb3c",
   "Observaciones_CUMPLIMIENTO.xlsx": "b43229bec67022a81aa08d8b53ef226eb8e595b7b53c685f257747abb87974f1",
   "Observaciones_ESPERA.xlsx": "1d81d1083b270ebc475fe93508f0e2318e5e02b5c8e4f3d53b9b2640bf9d637e",
   "Observaciones_INFORMES.xlsx": "5c9650c0ff5c58473fd0c5de258274b73881bdd6c75d792fab73f7c973d3d534",
@@ -15,5 +15,5 @@
   "Origen_ESPERA.xlsx": "150b751b7022853c145f03e4014310fed9bc0575d153d90dadd13919461cdb0e",
   "Origen_INFORMES.xlsx": "4bf9f5e42953c2d7735fb8bf4c44c2dc9986f389b25b2edbe9d737bf353d256c",
   "Proyectos_ESPERA.docx": "fcce434c610dbade795aebe893981d67b3bb2a06e4c244c533c425d68f00b184",
-  "semantic.json": "3365bf06f90a652a6933fcc577a9bd239c42ec06db08354be487ec30258ef2e6"
+  "semantic.json": "f93318f44384005d3f58866d84f2cd71f9283336f9fee5a9edfe420a083e556a"
 }
