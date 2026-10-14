@@ -125,7 +125,7 @@ def test_rt32_regla_desactivada_se_omite_y_se_conserva_la_configuracion(tmp_path
     umbrales = dict(configuracion['umbrales'])
     trabajo = analizar(tmp_path, 'ESPERA', ESPERA, [persona(1) + [45, '']], configuracion=configuracion)
     assert 'COMUN.CURADOR' not in trabajo.rows[0].rules
-    assert trabajo.rows[0].rules == ['ESPERA.E05_PROYECTO_Y_CORREO']
+    assert trabajo.rows[0].rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS']
     assert configuracion['umbrales'] == umbrales and configuracion['desactivadas'] == ['COMUN.CURADOR']
     activo = analizar(tmp_path, 'ESPERA', ESPERA, [persona(1) + [45, '']])
     assert 'COMUN.CURADOR' in activo.rows[0].rules

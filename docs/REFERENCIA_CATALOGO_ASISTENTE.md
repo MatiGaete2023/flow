@@ -193,7 +193,7 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 **Texto aprobado:**
 
-> *Audiencia fijada para el {FECHA_AUDIENCIA}.*
+> *Audiencia decretada para el {FECHA_AUDIENCIA}.*
 
 ---
 

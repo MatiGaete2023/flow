@@ -13,7 +13,7 @@ APPROVED = {
     'COMUN.PROXIMA_MAYORIA': '{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.',
     'COMUN.CURADOR': 'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.',
     'COMUN.OIDO': 'Oído el {FECHA_OIDO}.',
-    'COMUN.PROX_AUDIENCIA': 'Audiencia fijada para el {FECHA_AUDIENCIA}.',
+    'COMUN.PROX_AUDIENCIA': 'Audiencia decretada para el {FECHA_AUDIENCIA}.',
     'ESPERA.E04_RESOLUCION_RECIENTE': 'Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}. (Observación administrativa; no requiere gestión del Tribunal).',
     'ESPERA.E05_SOLO_CORREO': 'Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.',
     'ESPERA.E05_PROYECTO_Y_CORREO': 'Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.',
@@ -130,7 +130,7 @@ def test_compliance_combines_state_then_milestones_then_suggestion(tmp_path):
     expected = [
         'Medida próxima a vencer en RUS el 30 de septiembre de 2026.',
         'Oído el 5 de septiembre de 2026.',
-        'Audiencia fijada para el 15 de octubre de 2026.',
+        'Audiencia decretada para el 15 de octubre de 2026.',
         'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.',
     ]
     positions = [text.index(part) for part in expected]

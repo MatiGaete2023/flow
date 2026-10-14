@@ -16,7 +16,7 @@
       "texto": "Oído el {FECHA_OIDO}."
     },
     "PROX_AUDIENCIA": {
-      "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}."
+      "texto": "Audiencia decretada para el {FECHA_AUDIENCIA}."
     }
   },
   "ESPERA": {

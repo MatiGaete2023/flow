@@ -30,7 +30,7 @@
       "nota": "Catálogo v2 2026-07-14 — T-02"
     },
     "PROX_AUDIENCIA": {
-      "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+      "texto": "Audiencia decretada para el {FECHA_AUDIENCIA}.",
       "confirmado": true,
       "nota": "Catálogo v2 2026-07-14 — T-03"
     }

@@ -17,10 +17,10 @@ RETENCION_DIAS = 60
 SESIONES_ANTERIORES = 10
 VARIABLES = {'TRIBUNAL', 'ALCANCE_MODALIDADES', 'PERIODO', 'FECHA', 'PROGRAMA', 'TABLA_REGISTROS'}
 UMBRALES = dict(
-    espera_dce=30,
+    espera_dce=0,
     espera_laja=30,
     espera_mulchen=30,
-    espera_tome=30,
+    espera_tome=60,
     proyecto_tome=60,
     mayoria=60,
     oido=45,
@@ -48,7 +48,9 @@ PARAMETER_LABELS = {
     'ficha_reciente': 'Ficha individual reciente: hasta',
     'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
 }
-TEXT_REVISION = 3
+TEXT_REVISION = 4
+LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
+LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
 LEGACY_TEXTS_REV2 = {
     "COMUN.MAYORIA_EDAD": "Se hace presente que {PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}, se sugiere egresar la medida.",
@@ -329,6 +331,18 @@ class Configuration:
                             updated['textos'][scope][key]['texto'] = original
                             break
             updated['revision_textos'] = 2
+            self.save(updated)
+
+        if self.data.get('revision_textos', 1) < 4:
+            updated = deepcopy(self.data)
+            for key, previous in LEGACY_UMBRALES_REV3.items():
+                if updated['umbrales'].get(key) == previous:
+                    updated['umbrales'][key] = UMBRALES[key]
+            if updated['umbrales']['espera_tome'] > updated['umbrales']['proyecto_tome']:
+                updated['umbrales']['espera_tome'] = updated['umbrales']['proyecto_tome']
+            audiencia = updated['textos']['COMUN']['PROX_AUDIENCIA']
+            if audiencia['texto'] == LEGACY_PROX_AUDIENCIA_REV3:
+                audiencia['texto'] = defaults()['textos']['COMUN']['PROX_AUDIENCIA']['texto']
             self.save(updated)
 
         if self.data.get('revision_textos', 1) < TEXT_REVISION:

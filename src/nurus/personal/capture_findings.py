@@ -5,6 +5,10 @@ from typing import TypedDict
 from nurus.capture.temporal import identity
 
 
+# Alcances del catálogo de textos: sus hallazgos se reconstruyen desde Row.rules en cada actualización.
+RULE_SCOPES = ('COMUN.', 'ESPERA.', 'CUMPLIMIENTO.', 'INFORMES.', 'HISTORIA.')
+
+
 class Finding(TypedDict):
     rule_id: str
     rule_version: str
@@ -30,7 +34,11 @@ def traditional_findings(work, row) -> list[Finding]:
             record_identity=list(identity(source)),
             detected_at=work.as_of,
             fact=row.observation,
-            condition='Regla tradicional conservada; no acredita actuaciones remotas.',
+            condition=(
+                'Constancia de historia de la causa; no acredita actuaciones remotas.'
+                if rule.startswith('HISTORIA.')
+                else 'Regla tradicional conservada; no acredita actuaciones remotas.'
+            ),
             coverage=source['coverage'],
             status='APLICA',
             reason='Evaluación del motor tradicional.',
@@ -48,9 +56,7 @@ def updated_contexts(work, rows):
         if row.id not in contexts:
             continue
         context = deepcopy(contexts[row.id])
-        contextual = [
-            f for f in context['findings'] if not f['rule_id'].startswith(('ESPERA.', 'CUMPLIMIENTO.', 'INFORMES.'))
-        ]
+        contextual = [f for f in context['findings'] if not f['rule_id'].startswith(RULE_SCOPES)]
         context['findings'] = contextual + traditional_findings(work, row)
         contexts[row.id] = context
     return contexts

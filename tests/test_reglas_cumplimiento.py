@@ -33,7 +33,7 @@ def test_rt09_ingreso_reciente_solo_en_intervalo_y_con_fecha(tmp_path):
             (10, 100, '', LEJANO),
         ],
     ).rows
-    assert [f.rules for f in filas[:3]] == [['CUMPLIMIENTO.C03_INGRESO_RECIENTE']] * 2 + [
+    assert [f.rules for f in filas[:3]] == [['CUMPLIMIENTO.C03_INGRESO_RECIENTE', 'HISTORIA.EGRESO_PROYECTADO']] * 2 + [
         ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES']
     ]
     assert filas[3].rules == ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES']

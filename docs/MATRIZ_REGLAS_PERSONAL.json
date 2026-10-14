@@ -43,7 +43,7 @@
     "id": "COMUN.PROX_AUDIENCIA",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+    "texto_inicial": "Audiencia decretada para el {FECHA_AUDIENCIA}.",
     "acciones": [],
     "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
   },

@@ -1,4 +1,4 @@
-from .contexto import parametro
+from .contexto import marcar, parametro
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from .contexto import datetime as Clock
@@ -62,7 +62,7 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
         frags.append(render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
-        frags += _complementarias(row, cols)
+        marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad con la medida vigente')
         return componer(pfx, frags)
     dm=dias_para_mayoria(fn) if fn else None
     if dm is not None and 1 <= dm <= parametro('mayoria'):
@@ -82,10 +82,13 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     if espera is not None and espera >= threshold:
         if es_dce(programa):
             frags.append(render('ESPERA','E05_SOLO_CORREO')); principal=True
+            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal in ('LAJA','MULCHEN'):
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO')); principal=True
+            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal == 'TOME':
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO' if espera >= parametro('proyecto_tome') else 'E05_SOLO_CORREO')); principal=True
+            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         else:
             incidencias.agregar(fila_excel, _rit(row, cols), 'E-05', 'tribunal no reconocido — regla omitida (G-06)')
     # E-06 es el fallback del §9.1: dispara siempre que no haya principal
