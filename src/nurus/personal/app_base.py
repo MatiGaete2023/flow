@@ -144,8 +144,6 @@ class App(ctk.CTk):
         self.status.trace_add('write', self._show_result_notice)
         self._show_result_notice()
         self.operation_timings = []
-        self._theme_mode = ctk.get_appearance_mode()
-        self.after(700, self._watch_theme)
         self.protocol('WM_DELETE_WINDOW', self._close)
         self._bind_shortcuts()
         self.after(100, self._poll)
@@ -240,12 +238,11 @@ class App(ctk.CTk):
             self.status.set('Detención solicitada. Se completará la escritura actual antes de detener el resto.')
             self.cancel_button.configure(state='disabled')
 
-    def _watch_theme(self):
-        mode = ctk.get_appearance_mode()
-        if mode != self._theme_mode:
-            self._theme_mode = mode
-            ttk.install_theme(self)
-        self.after(700, self._watch_theme)
+    def _set_appearance_mode(self, mode_string):
+        # CTk notifica también cambios asíncronos del tema Sistema. Los estilos
+        # nativos deben cambiar en el mismo callback, antes del siguiente dibujo.
+        super()._set_appearance_mode(mode_string)
+        ttk.install_theme(self)
 
     def _poll(self):
         try:
