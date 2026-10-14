@@ -6,6 +6,7 @@ import string
 from nurus.personal.config import BASE, Configuration, defaults, validate
 
 APROBADOS = {
+    'P_FINALIZADA',
     'C4_FOLIO',
     'C8_NO_USO',
     'T2_MN',
