@@ -294,10 +294,13 @@ def diagnostico_dce(programa, vencida):
     return [render('HISTORIA', 'C9_DCE', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
-def escrito_sin_ingreso(programa):
+def escrito_sin_ingreso(programa, desde=None):
     """C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior (por folio)."""
     nombre = V.ESCRITOS.get(intervencion(programa))
-    escrito = ultimo(tramites(nombre)) if nombre else None
+    candidatos = tramites(nombre) if nombre else []
+    if desde is not None:
+        candidatos = [t for t in candidatos if t.fecha >= _d(desde)]
+    escrito = ultimo(candidatos)
     if escrito is None or _id(escrito) in emitidos():
         return []
     if any(posterior(i, escrito) for i in tramites(V.INGRESO_INFORME_X)):
@@ -318,6 +321,15 @@ def informe_historia(fecha_vencimiento, vencido):
         return []
     llave = 'I1_VENCIDO' if vencido else 'I1_POR_VENCER'
     return [texto, render('HISTORIA', llave, FECHA_VENCIMIENTO=fecha_es(fecha_vencimiento))]
+
+
+def informe_previo(programa, fecha_vencimiento):
+    """Presencia anterior al vencimiento, sin inferir a qué período corresponde."""
+    nombres = [V.INGRESO_INFORME_X]
+    escrito = V.ESCRITOS.get(intervencion(programa))
+    if escrito:
+        nombres.append(escrito)
+    return any(t.fecha < _d(fecha_vencimiento) for t in tramites(*nombres))
 
 
 def prorroga_informe():

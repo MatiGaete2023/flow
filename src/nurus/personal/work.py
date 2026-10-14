@@ -391,13 +391,15 @@ class Work:
                 column = cols.get(name)
                 if column and isinstance(values.get(column), (int, float)):
                     values[column] = as_date(values[column], batch.excel_epoch)
+            historia = (historia_by_record or {}).get(record.record_id)
+            corte = date.fromisoformat(self.as_of)
             ctx = {
                 'config': self.config,
                 'events': [],
-                'date': date.fromisoformat(self.as_of),
+                'date': corte,
                 'invalid': [],
-                'historia': (historia_by_record or {}).get(record.record_id),
-                'bitacora': (bitacora_by_record or {}).get(record.record_id, ()),
+                'historia': historia.al_corte(corte) if historia is not None else None,
+                'bitacora': tuple(o for o in (bitacora_by_record or {}).get(record.record_id, ()) if o.fecha <= corte),
                 'marcas': [],
                 'duplicidad': duplicity.get(record.record_id),
                 'acumulado': accumulated.get(record.record_id),
@@ -455,17 +457,18 @@ class Work:
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
 
-    def _prepass(self, batch, cols):
+    def _prepass(self, batch, cols, *, mode=None):
         """Duplicidad de ingreso (Espera/Cumplimiento) e informes vencidos acumulados (Informes), por causa.
         Solo usa datos de RUS: corre igual con Excel o con paquete, haya o no historia (decisión u, 14-oct)."""
-        if self.mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+        mode = mode or self.mode
+        if mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
             return {}, {}
         from .motor.analisis_historia import duplicidades
 
         def cell(record, field):
             return str(record.values.get(cols.get(field, ''), '') or '').strip()
 
-        if self.mode != 'INFORMES':
+        if mode != 'INFORMES':
             rows = [
                 (r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'rut'), cell(r, 'programa'))
                 for r in batch.records

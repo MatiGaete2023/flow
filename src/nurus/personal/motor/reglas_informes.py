@@ -28,7 +28,10 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     mn = H.deja_sin_efecto_mn()
     i1 = H.informe_historia(fv, vencido)
     i2 = H.prorroga_informe()
-    i3 = H.escrito_sin_ingreso(programa)
+    i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None)
+    if vencido and not (i1 or i3) and H.informe_previo(programa, fv):
+        incidencias.agregar(fila_excel, row.get(cols.get('rit'), '') if cols.get('rit') else '', 'I-01/I-03',
+                            'Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión.')
     if vencido and (i1 or i3):
         H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
         principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))

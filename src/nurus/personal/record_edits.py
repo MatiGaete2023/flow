@@ -205,7 +205,31 @@ def _recalculate(work, row):
     values = dict(row.values)
     for key, value in row.overrides.items():
         values[mapping[key]] = value
-    ctx = dict(config=work.config, events=[], date=date.fromisoformat(work.as_of), invalid=[])
+    from .capture_input import captured_rule_context
+    from nurus.rus.models import Mode, ReadBatch, SourceRecord, SourceReference
+
+    corte = date.fromisoformat(work.as_of)
+    history, diary = captured_rule_context(work, source)
+    records = []
+    for original in work.rows:
+        if getattr(work, 'capture_modes', {}).get(original.id, work.mode) != mode:
+            continue
+        edited = row if original.id == row.id else original
+        data = dict(edited.values)
+        data.update({work.mapping[k]: v for k, v in edited.overrides.items()})
+        records.append(SourceRecord(data, SourceReference('', '', '', edited.source_row), edited.id))
+    duplicity, accumulated = work._prepass(ReadBatch(Mode(mode), tuple(records)), mapping, mode=mode)
+    ctx = dict(
+        config=work.config,
+        events=[],
+        date=corte,
+        invalid=[],
+        marcas=[],
+        historia=history.al_corte(corte) if history is not None else None,
+        bitacora=tuple(o for o in diary if o.fecha <= corte),
+        duplicidad=duplicity.get(row.id),
+        acumulado=accumulated.get(row.id),
+    )
     token = current.set(ctx)
     incidences = Incidencias()
     warnings = []
@@ -235,6 +259,7 @@ def _recalculate(work, row):
         current.reset(token)
     row.rules = list(dict.fromkeys(event for event in ctx['events'] if event not in work.config['desactivadas']))
     row.actions = actions_for(row.rules)
+    row.avisos = list(dict.fromkeys(ctx['marcas']))
     context = getattr(work, 'capture_context', {}).get(row.id)
     if context:
         warnings.append(context['reason'])

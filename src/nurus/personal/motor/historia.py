@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 
 from nurus.rus.columns import normalize
@@ -48,6 +48,13 @@ class Historia:
     def buscar(self, *nombres):
         claves = {clave(n) for n in nombres}
         return [t for t in self.tramites if t.clave in claves]
+
+    def al_corte(self, corte):
+        """Vista sustantiva: conserva la fuente y nunca acredita ausencia antes de su ventana."""
+        if self.desde is not None and corte < self.desde:
+            return Historia('NO_CONSULTADA', None, None, ())
+        hasta = min(self.hasta, corte) if self.hasta is not None else None
+        return replace(self, hasta=hasta, tramites=tuple(t for t in self.tramites if t.fecha <= corte))
 
 
 def _folio(valor):

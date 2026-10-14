@@ -46,4 +46,4 @@ def test_cobertura_parcial_cuenta_como_presencia(tmp_path):
 
 def test_importar_de_nuevo_con_otra_regla_no_reutiliza_un_trabajo_antiguo(tmp_path):
     trabajo = _importar(tmp_path, [INGRESO])
-    assert trabajo.ruleset_version.endswith('+historia-1')
+    assert trabajo.ruleset_version.endswith('+historia-2')

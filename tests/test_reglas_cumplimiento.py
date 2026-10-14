@@ -106,12 +106,6 @@ def test_rt13_fae_sin_ficha_con_columna(tmp_path):
     assert 'CUMPLIMIENTO.C08_FICHA_FAE' not in filas[1].rules
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason='[CONFLICTO_ABIERTO] 03 §6 C-08: sin columna de ficha FAE el código afirma '
-    '«no registra ficha»; el documento pide NO_EVALUABLE. No se cambia la regla sin decisión del usuario.',
-)
 def test_rt13_fae_sin_columna_no_afirma_ausencia(tmp_path):
     fila = _cumplimiento(tmp_path, [(200, 100, '2026-01-01', LEJANO)], programa='FAE UNO').rows[0]
     assert 'CUMPLIMIENTO.C08_FICHA_FAE' not in fila.rules

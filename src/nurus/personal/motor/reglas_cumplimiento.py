@@ -89,7 +89,9 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         frags += H.fichas(H.V.FICHA_INDIVIDUAL, fi, orig)
     ffae=fecha_valida(row.get(cols.get('ficha_fae'))) if cols.get('ficha_fae') else None
     if contiene_token(programa,'fae','fas'):
-        orig=bool(fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae)
+        if not cols.get('ficha_fae'):
+            incidencias.agregar(fila_excel, _rit(row, cols), 'C-08', 'ficha FAE no evaluable: sin columna disponible (G-05)')
+        orig=bool(cols.get('ficha_fae') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae)
         if orig: frags.append(H.reitera('SIN_FAE') or render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
         if cols.get('ficha_fae'): frags += H.fichas(H.V.FICHA_FAE, ffae, orig)
     if not principal and not frags:

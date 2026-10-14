@@ -66,6 +66,31 @@ def _dia(valor):
         return None
 
 
+def captured_rule_context(work, source):
+    """Fuentes de la sesión para recalcular una fila, sin reabrir el ZIP ni elevar identidad."""
+    if not source or source['identity_status'] != 'VERIFICADA':
+        return None, ()
+    tables = getattr(work, 'capture_rule_sources', None)
+    if tables is None:
+        raise ValueError(
+            'La sesión anterior no conserva fuentes del motor. Reimporta el paquete antes de editar datos.'
+        )
+    cached = getattr(work, '_save_rule_source_index', None)
+    if cached is None or cached[0] != work.capture_digest:
+        from nurus.capture.contract import Capture
+
+        capture = Capture(work.capture_manifest, tables, work.capture_digest)
+        diaries = defaultdict(list)
+        for event in capture.rows('bitacoras'):
+            if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
+                diaries[identity(event)].append(event)
+        cached = (work.capture_digest, _historias_por_causa(capture), {k: observaciones(v) for k, v in diaries.items()})
+        work._save_rule_source_index = cached  # índice derivado; Work.save excluye los campos _save_*.
+    return cached[1].get((source['source_system'], source['court_code'], source['cause_id'])), cached[2].get(
+        identity(source), ()
+    )
+
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -116,6 +141,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         return tuple(row[k] for k in ('query_id', 'source_sha256', 'original_file', 'original_sheet', 'original_row'))
 
     represented = {physical(row) for row in records}
+    record_ids = {row['record_id'] for row in records}
     for calendar in capture.rows('calendarios'):
         if physical(calendar) in represented:
             continue
@@ -130,9 +156,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             source_table='calendarios',
             calendar_id=calendar['calendar_id'],
         )
-        if any(row['record_id'] == record['record_id'] for row in records):
+        if record['record_id'] in record_ids:
             raise ValueError('Identificador de calendario colisiona con registro; trabajo anterior intacto.')
         records.append(record)
+        record_ids.add(record['record_id'])
     if len(records) > MAX_ANALYSIS_RECORDS:
         raise ValueError(
             'La captura excede el límite operativo de 20.000 registros; '
@@ -184,10 +211,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         provenance[record['record_id']] = record
         row_modes[record['record_id']] = mode
         contexts[record['record_id']] = chronology(capture, record, as_of, event_index=event_index)
-        historia_by_record[record['record_id']] = historias.get(
-            (record['source_system'], record['court_code'], record['cause_id'])
-        )
         if record['identity_status'] == 'VERIFICADA':
+            historia_by_record[record['record_id']] = historias.get(
+                (record['source_system'], record['court_code'], record['cause_id'])
+            )
             bitacora_by_record[record['record_id']] = observaciones(bitacora_index.get(identity(record), ()))
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
@@ -277,6 +304,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash
     candidate.capture_manifest = capture.manifest
+    candidate.capture_rule_sources = {table: capture.rows(table) for table in ('historia_tramites', 'bitacoras')}
     candidate.capture_sources = provenance
     candidate.capture_context = contexts
     candidate.capture_modes = row_modes
