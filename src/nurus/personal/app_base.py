@@ -559,7 +559,7 @@ class App(ctk.CTk):
                 'end',
                 iid=item.row_id,
                 values=(
-                    item.estado,
+                    f'{item.marca} · {item.estado}' if item.marca else item.estado,
                     item.proxima_accion,
                     _attention_value(self.work, row, 'rit'),
                     _attention_value(self.work, row, 'nombre'),
