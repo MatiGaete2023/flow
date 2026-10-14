@@ -19,7 +19,7 @@ from nurus.capture import read_capture, write_capture
 from nurus.capture.contract import MAPPING_VERSION, TABLES
 from .anonymize import (
     OMITTED, Pseudonyms, Replacer, _identity_value, _protected_headers,
-    column_kind, normalize, scrub_observation, anonymize as anonymize_excel,
+    column_kind, normalize, scrub_observation,
 )
 
 # Las claves técnicas no son textos libres y deben mantener sus uniones.
