@@ -217,3 +217,17 @@ def test_excel_observacion_nombre_ajeno_a_campos_identidad(tmp_path):
     copy.close()
     assert 'Camila Aguilera Contreras' not in observation
     assert 'Se reitera observación' in observation
+
+
+def test_zip_anonimizado_se_importa_en_asistente(tmp_path):
+    from datetime import date
+
+    from nurus.personal.capture_input import import_capture
+    from nurus.personal.config import defaults
+
+    origin, target = tmp_path / 'captura.zip', tmp_path / 'importable_anon.zip'
+    zip_fixture(origin, consolidated=True)
+    anonymize_capture(origin, target, mode='estricto')
+    work = import_capture(target, defaults(), as_of=date(2026, 10, 8))
+    assert len(work.rows) == 4
+    assert all(row.id for row in work.rows)
