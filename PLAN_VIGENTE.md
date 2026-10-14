@@ -74,3 +74,6 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
 - Estado: docs/implementacion/ESTADO.json
 - Continuación: CONTINUAR.md; informe de recuperación: docs/implementacion/wp/WP-01.md
 - Referencia histórica: docs/plan_20261008/01–06 y docs/HISTORIAL.md (donde difieran, prevalece este archivo).
+
+## Decisiones del 14 de octubre de 2026
+- q) Reglas de historia del Asistente (doc «Reglas del Asistente», 28 reglas): implementadas en `claude/hopeful-hamilton-k2tcqp` (WP-71..WP-79, plan WP-R1..R9), en revisión E3. Textos en el scope `HISTORIA` de `textos_base.json` con `confirmado:false`; las redacciones (P) (`R3_MULTI`, `MATERIA_*`, `C1_RUS`, `C3_CON_FOLIO`, `EGRESO_PROYECTADO`, `C4_*`, `C8_NO_USO`, `I1_*`, `T2_MN`) esperan aprobación del usuario. Cambios deliberados a reglas originales: `espera_dce=0`, `espera_tome=60`, «Audiencia decretada», mayoría de edad sola. Nada está aceptado.

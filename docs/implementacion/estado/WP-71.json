@@ -1,0 +1,25 @@
+{
+  "titulo": "Reglas de historia R1: camino de datos (historia y bitácora hasta el motor)",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-54"
+  ],
+  "decisiones": [
+    "j",
+    "o"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+  "tomado": "2026-10-14",
+  "rama": "claude/hopeful-hamilton-k2tcqp",
+  "pr": null,
+  "verificacion": "test_historia_datos + test_capture_input + test_reglas_espera: 29 pasan; golden PARIDAD PASÓ; ruff limpio.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R1.",
+    "Commits: e6d35a0"
+  ]
+}

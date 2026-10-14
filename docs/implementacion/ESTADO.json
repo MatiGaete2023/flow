@@ -1892,6 +1892,231 @@
         "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
       ]
+    },
+    "WP-71": {
+      "titulo": "Reglas de historia R1: camino de datos (historia y bitácora hasta el motor)",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-54"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_historia_datos + test_capture_input + test_reglas_espera: 29 pasan; golden PARIDAD PASÓ; ruff limpio.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R1.",
+        "Commits: e6d35a0"
+      ]
+    },
+    "WP-72": {
+      "titulo": "Reglas de historia R2: textos del scope HISTORIA",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-71"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_historia_textos + migración + wording: 12 pasan. Desviación: el golden difiere solo en `config/textos/HISTORIA` y `_meta/version` (el plan esperaba paridad); se regenera en R3.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R2.",
+        "Commits: 2ad22c1"
+      ]
+    },
+    "WP-73": {
+      "titulo": "Reglas de historia R3: cambios deliberados a reglas originales",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-72"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_cambios_originales (24) + reglas + mayoría + config; suite completa = base (42 fallos GUI/tkinter idénticos); golden regenerado con PARIDAD PASÓ.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R3.",
+        "Commits: 6025bb6, fae7032"
+      ]
+    },
+    "WP-74": {
+      "titulo": "Reglas de historia R4: capa de análisis",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-73"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_analisis_historia + test_historia_datos: 17 pasan; ruff limpio.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R4.",
+        "Commits: 2f86824"
+      ]
+    },
+    "WP-75": {
+      "titulo": "Reglas de historia R5: Espera",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-74"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "Pruebas focales (100); suite completa = base; golden PARIDAD PASÓ (A3).",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R5.",
+        "Commits: fd1adff"
+      ]
+    },
+    "WP-76": {
+      "titulo": "Reglas de historia R6: Cumplimiento",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-75"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_historia_cumplimiento + reglas + cambios + mayoría: 45 pasan, 1 xfail previo.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R6.",
+        "Commits: 3f291ad"
+      ]
+    },
+    "WP-77": {
+      "titulo": "Reglas de historia R7: Informes",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-76"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_historia_informes + test_reglas_informes: 21 pasan, 5 xfail previos.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R7.",
+        "Commits: a574a45"
+      ]
+    },
+    "WP-78": {
+      "titulo": "Reglas de historia R8: bandeja de atención y vista",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-77"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "test_bandeja_atencion + test_review_corrections + test_ef02_rendimiento: 31 pasan.",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R8.",
+        "Commits: ab71972"
+      ]
+    },
+    "WP-79": {
+      "titulo": "Reglas de historia R9: integración y cierre",
+      "ola": 8,
+      "tipo": "C/M",
+      "depende_de": [
+        "WP-78"
+      ],
+      "decisiones": [
+        "j",
+        "o"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+      "tomado": "2026-10-14",
+      "rama": "claude/hopeful-hamilton-k2tcqp",
+      "pr": null,
+      "verificacion": "verificar_wp: identidades 0, golden, restricciones, ruff, módulos y enlaces PASAN; las suites reportan FALLA solo por falta de tkinter en el entorno (8 módulos sin recolectar en el Asistente, 4 en el Descargador).",
+      "revision": null,
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R9.",
+        "Commits: (este commit)"
+      ]
     }
   },
   "traspasos": [

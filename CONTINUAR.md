@@ -5,7 +5,7 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 58; último en el orden: WP-99.
+- Paquetes integrados: 51 de 67; último en el orden: WP-99.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -16,6 +16,15 @@
 | WP-53 | EN_REVISION | Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención) |
 | WP-54 | EN_VERIFICACION | Historia de causa: interfaz, flujo, entrega Windows y acta |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
+| WP-71 | EN_REVISION | Reglas de historia R1: camino de datos (historia y bitácora hasta el motor) |
+| WP-72 | EN_REVISION | Reglas de historia R2: textos del scope HISTORIA |
+| WP-73 | EN_REVISION | Reglas de historia R3: cambios deliberados a reglas originales |
+| WP-74 | EN_REVISION | Reglas de historia R4: capa de análisis |
+| WP-75 | EN_REVISION | Reglas de historia R5: Espera |
+| WP-76 | EN_REVISION | Reglas de historia R6: Cumplimiento |
+| WP-77 | EN_REVISION | Reglas de historia R7: Informes |
+| WP-78 | EN_REVISION | Reglas de historia R8: bandeja de atención y vista |
+| WP-79 | EN_REVISION | Reglas de historia R9: integración y cierre |
 <!-- estado:fin -->
 
 **Una sola rama de trabajo: `feat/ejecucion-plan-20261008`.** Todo el código y la documentación están aquí; `main`
