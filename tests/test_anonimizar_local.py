@@ -231,3 +231,11 @@ def test_zip_anonimizado_se_importa_en_asistente(tmp_path):
     work = import_capture(target, defaults(), as_of=date(2026, 10, 8))
     assert len(work.rows) == 4
     assert all(row.id for row in work.rows)
+
+
+def test_conservador_no_omite_nombre_de_institucion_curador_ad_litem():
+    from nurus.personal.anonymize import Pseudonyms, Replacer, scrub_observation
+
+    text = 'Se reitera observación respecto del curador ad litem.'
+    result = scrub_observation(text, Replacer(Pseudonyms()))
+    assert 'curador ad litem' in result
