@@ -1,7 +1,7 @@
 name: CI rápida Linux
 on:
   push:
-    branches: ['feat/**', main]
+    branches: ['feat/ejecucion-plan-20261008', main]
   pull_request:
     branches: ['feat/**', main]
   workflow_dispatch:
