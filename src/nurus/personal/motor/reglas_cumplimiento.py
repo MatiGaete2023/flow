@@ -7,7 +7,8 @@ from .utilidades import (fecha_es, limpiar_nombre, normalizar, es_derivacion_sin
     get_int, calcular_edad_exacta, dias_para_mayoria, fecha_mayoria,
     titulo_programa, contiene_token)
 from .textos import render
-from .reglas_espera import _oido, _curador, _audiencia
+from . import reglas_historia as H
+from .reglas_espera import _oido, _oido_historia, _curador, _audiencia
 
 _RES=('rta','rtt','res','rfa','rva')
 def _d(v): return v.date() if hasattr(v,'date') else v
@@ -33,7 +34,9 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
         if not vencida: marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad con la medida vigente')
         return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))])
-    frags=[]; principal=False; c03=False
+    H.marcar_duplicidad()
+    mn=H.deja_sin_efecto_mn()
+    frags=[]; principal=False; c03=False; c03_folio=False
     dm=dias_para_mayoria(fn) if fn else None
     if dm is not None and 1 <= dm <= parametro('mayoria'):
         frags.append(render('COMUN','PROXIMA_MAYORIA', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
@@ -43,13 +46,17 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     fing=fecha_valida(row.get(cols.get('ingreso'))) if cols.get('ingreso') else None
     if dc is not None and 0 <= dc <= parametro('ingreso_reciente'):
         if fing:
-            frags.append(render('CUMPLIMIENTO','C03_INGRESO_RECIENTE', PROGRAMA=prog, FECHA_INGRESO=fecha_es(fing))); principal=True; c03=True
+            folio=H.folio_ingreso(fing)
+            if folio: frags.append(render('HISTORIA','C3_CON_FOLIO', PROGRAMA=prog, FECHA_INGRESO=fecha_es(fing), FOLIO=folio))
+            else: frags.append(render('CUMPLIMIENTO','C03_INGRESO_RECIENTE', PROGRAMA=prog, FECHA_INGRESO=fecha_es(fing)))
+            principal=True; c03=True; c03_folio=bool(folio)
             if fegr: frags.append(render('HISTORIA','EGRESO_PROYECTADO', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
         else: incidencias.agregar(fila_excel, _rit(row, cols), 'C-03', 'sin fecha de ingreso — regla omitida (G-05)')
     if cols.get('dias_egresar') and dpe is None:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04/C-05',
                             'días para egresar ausentes o inválidos (G-05)')
-    if vencida: frags.append(render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
+    vok=H.vencida_valida(vencida)
+    if vencida: frags.append((H.reitera('VENCIDA') if vok else '') or render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
     elif ((dpe is not None and dpe < 0) or (dc is not None and dc < 0)) and not fegr:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04', 'sin egreso proyectado (G-05)')
     c05=bool(fegr and dpe is not None and 0 <= dpe <= parametro('medida') and not vencida)
@@ -57,22 +64,34 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         frags.append(render('CUMPLIMIENTO','C05_VENCE_HOY' if dpe == 0 else 'C05_POR_VENCER', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
     if fecha_hoja2 and ((not vencida and not c05) or c03):
         frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
-    # Orden aprobado: estado principal; hitos procesales; acciones/sugerencias.
-    frags += _oido(row, cols)
+    # Orden aprobado: estado principal; constancias de la etapa; transversales; hitos; curador; fichas.
+    if not c03_folio: frags += H.ingreso_efectivo_c1(fing)
+    frags += H.prorroga(hoy, fegr)
+    if vok: frags += H.no_uso_prorroga(fegr)
+    frags += H.diagnostico_dce(programa, vok) + H.escrito_sin_ingreso(programa)
+    frags += mn + H.busqueda_historia() + H.continuidad() + H.curador_designaciones()
+    frags += _oido(row, cols) or _oido_historia(row, cols)
     aud=_audiencia(row, cols)
     if aud: frags.append(aud)
     frags += _curador(row, cols)
     pnrm=normalizar(programa)
     fi=fecha_valida(row.get(cols.get('ficha_ind'))) if cols.get('ficha_ind') else None
     if pnrm.startswith(_RES) and cols.get('ficha_ind'):
-        if not fi: frags.append(render('CUMPLIMIENTO','C07_SIN_FICHA'))
+        orig=True
+        if not fi: frags.append(H.reitera('SIN_FICHA') or render('CUMPLIMIENTO','C07_SIN_FICHA'))
         else:
             dd=(hoy-_d(fi)).days
             if dd > parametro('ficha_antigua'): frags.append(render('CUMPLIMIENTO','C07_FICHA_ANTIGUA', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
             elif 0 <= dd <= parametro('ficha_reciente'): frags.append(render('CUMPLIMIENTO','C07_FICHA_RECIENTE', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
+            else: orig=False
+        frags += H.fichas(H.V.FICHA_INDIVIDUAL, fi, orig)
     ffae=fecha_valida(row.get(cols.get('ficha_fae'))) if cols.get('ficha_fae') else None
-    if contiene_token(programa,'fae','fas') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae:
-        frags.append(render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
+    if contiene_token(programa,'fae','fas'):
+        orig=bool(fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae)
+        if orig: frags.append(H.reitera('SIN_FAE') or render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
+        if cols.get('ficha_fae'): frags += H.fichas(H.V.FICHA_FAE, ffae, orig)
     if not principal and not frags:
         return componer(pfx, [render('CUMPLIMIENTO','C09_SIN_OBSERVACIONES')])
+    if not principal and H.solo_historia():
+        frags.insert(0, render('HISTORIA','MEDIDA_REVISADA'))
     return componer(pfx, frags)
