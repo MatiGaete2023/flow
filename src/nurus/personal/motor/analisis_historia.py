@@ -86,3 +86,17 @@ def duplicidades(registros):
             repetido = bool(rut) and sum(1 for _, otro_rut, otro in items if otro_rut == rut and otro == programa) > 1
             salida[record_id] = 'MISMO_PROGRAMA' if repetido else 'OTRO_REGISTRO'
     return salida
+
+
+def causas_con_varios(registros):
+    """registros: iterable de (record_id, tribunal, rit, rut, programa). Para Informes, donde cada fila es un informe:
+    {record_id: 'OTRO_REGISTRO'} si la causa tiene más de un niño o programa en la nómina (no más de un informe)."""
+    causas = {}
+    items = []
+    for record_id, tribunal, rit, rut, programa in registros:
+        if not clave(rit):
+            continue
+        causa = (clave(tribunal), clave(rit))
+        causas.setdefault(causa, set()).add((rut_clave(rut), clave(programa)))
+        items.append((record_id, causa))
+    return {record_id: 'OTRO_REGISTRO' for record_id, causa in items if len(causas[causa]) > 1}

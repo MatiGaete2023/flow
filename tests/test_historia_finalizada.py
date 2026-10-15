@@ -4,7 +4,7 @@ import pytest
 from historia_fixtures import cum, cumplimiento, esp, fila, hist, inf
 
 TEXTO = (
-    'La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica '
+    'La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica '
     'nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.'
 )
 EGRESO = 'Egreso de servicio protección especializada y otras redes'

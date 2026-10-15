@@ -463,16 +463,16 @@ class Work:
         mode = mode or self.mode
         if mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
             return {}, {}
-        from .motor.analisis_historia import duplicidades
+        from .motor.analisis_historia import causas_con_varios, duplicidades
 
         def cell(record, field):
             return str(record.values.get(cols.get(field, ''), '') or '').strip()
 
+        rows = [
+            (r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'rut'), cell(r, 'programa'))
+            for r in batch.records
+        ]
         if mode != 'INFORMES':
-            rows = [
-                (r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'rut'), cell(r, 'programa'))
-                for r in batch.records
-            ]
             return duplicidades(rows), {}
         today = date.fromisoformat(self.as_of)
         groups = {}
@@ -488,7 +488,8 @@ class Work:
             if len(items) > 1:
                 oldest = min(due for _, due in items)
                 accumulated.update({rid: (len(items), oldest) for rid, _ in items})
-        return {}, accumulated
+        # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
+        return causas_con_varios(rows), accumulated
 
     def document_exception(self, reason):
         """Compatibilidad con sesiones antiguas; ya no es requisito para exportar."""

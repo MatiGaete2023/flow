@@ -27,7 +27,7 @@ def _oido(row, cols):
     fo=fecha_valida(row.get(cols.get('oido'))) if cols.get('oido') else None
     if fo:
         d=(hoy-_date(fo)).days
-        if 0 <= d <= parametro('oido'):
+        if 0 <= d <= parametro('oido') and not H.oido_en_bitacora(fo):
             return [render('COMUN','OIDO', FECHA_OIDO=fecha_es(fo))]
     return []
 
@@ -35,6 +35,11 @@ def _oido(row, cols):
 def _oido_historia(row, cols):
     fo=fecha_valida(row.get(cols.get('oido'))) if cols.get('oido') else None
     return [] if fo else H.derecho_oido(fo)
+
+
+def _rus_sin_curador(row, cols):
+    """True solo si la nómina trae la columna de curador y RUS no registra uno vigente."""
+    return bool(cols.get('curador')) and not tiene_curador_real(row.get(cols.get('curador')))
 
 
 def _curador(row, cols):
@@ -94,18 +99,20 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     if cols.get('espera') and (espera is None or espera < 0):
         incidencias.agregar(fila_excel, _rit(row, cols), 'E-05/E-06',
                             'tiempo de espera ausente o inválido (G-05)')
+    # «Registra N días en lista de espera» (residencial, más de 100) dice lo mismo que los días de espera: se dice una vez.
+    larga=H.lista_larga(programa, espera)
     threshold = (parametro('espera_dce') if es_dce(programa) else
                  parametro('espera_' + tribunal.lower()) if tribunal in ('LAJA','MULCHEN','TOME') else 30)
     if r3 is None and espera is not None and espera >= threshold:
         if es_dce(programa):
             frags.append(render('ESPERA','E05_SOLO_CORREO')); principal=True
-            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
+            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal in ('LAJA','MULCHEN'):
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO')); principal=True
-            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
+            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal == 'TOME':
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO' if espera >= parametro('proyecto_tome') else 'E05_SOLO_CORREO')); principal=True
-            frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
+            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         else:
             incidencias.agregar(fila_excel, _rit(row, cols), 'E-05', 'tribunal no reconocido — regla omitida (G-06)')
     # E-06 es el fallback del §9.1: dispara siempre que no haya principal
@@ -115,8 +122,9 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     elif not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
     frags += H.lista_espera_larga(programa, espera)
-    frags += H.dce_espera(programa) + H.servicio()
+    frags += H.dce_espera(programa) + H.servicio(programa)
     frags += mn + H.direccion_regional() + H.busqueda_historia()
-    frags += H.continuidad() + H.curador_designaciones()
+    frags += H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _complementarias(row, cols)
+    frags += H.aclaracion_causa()
     return componer(pfx, frags)

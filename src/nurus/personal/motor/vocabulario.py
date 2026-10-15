@@ -42,4 +42,6 @@ ESCRITOS = {
     'RESIDENCIAL': 'Inf. Cump Centro Residencial',
 }
 E10_DIAS = 100
+PRORROGA_RECIENTE_DIAS = 90
+VENTANA_INGRESO_DIAS = 30
 RESIDENCIA_PREFIJOS = ('rta', 'rtt', 'res', 'rfa', 'rva')

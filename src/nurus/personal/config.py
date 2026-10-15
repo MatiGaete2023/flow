@@ -48,7 +48,7 @@ PARAMETER_LABELS = {
     'ficha_reciente': 'Ficha individual reciente: hasta',
     'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
 }
-TEXT_REVISION = 4
+TEXT_REVISION = 5
 LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
 LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
@@ -74,6 +74,14 @@ LEGACY_TEXTS_REV2 = {
     "INFORMES.I01_VENCIDO_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe de avance que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.",
     "INFORMES.I02_POR_VENCER_DCE": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el informe diagnóstico ordenado en autos debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
     "INFORMES.I02_POR_VENCER_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+}
+LEGACY_TEXTS_REV4 = {
+    "INFORMES.I01_VENCIDO_DCE": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "INFORMES.I01_VENCIDO_GENERAL": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "HISTORIA.REITERA": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
+    "HISTORIA.P_FINALIZADA": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C8_NO_USO": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prórroga». Medida vencida en RUS desde el {FECHA}.",
+    "HISTORIA.C10_ESCRITO": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
 }
 LEGACY_CORREO_BODIES = {
     'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
@@ -348,7 +356,8 @@ class Configuration:
         if self.data.get('revision_textos', 1) < TEXT_REVISION:
             updated = deepcopy(self.data)
             base = defaults()['textos']
-            for full_key, previous in LEGACY_TEXTS_REV2.items():
+            # Solo se reemplaza un texto que sigue igual al anterior: lo que el usuario editó se respeta.
+            for full_key, previous in (*LEGACY_TEXTS_REV2.items(), *LEGACY_TEXTS_REV4.items()):
                 scope, key = full_key.split('.', 1)
                 if updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous:
                     updated['textos'][scope][key]['texto'] = base[scope][key]['texto']

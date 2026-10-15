@@ -182,7 +182,7 @@
     "id": "INFORMES.I01_VENCIDO_DCE",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "texto_inicial": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
     "acciones": [
       "programa_vencido",
       "PC_INFO"
@@ -193,7 +193,7 @@
     "id": "INFORMES.I01_VENCIDO_GENERAL",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "texto_inicial": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
     "acciones": [
       "programa_vencido",
       "PC_INFO"

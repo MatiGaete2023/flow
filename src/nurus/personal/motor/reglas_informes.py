@@ -5,7 +5,7 @@ from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import fecha_es, titulo_programa, es_derivacion_sin_seg, es_dce
 from .textos import render
-from .reglas_espera import _audiencia, _oido_historia, _pnombre
+from .reglas_espera import _audiencia, _oido_historia, _pnombre, _rus_sin_curador
 from .utilidades import tiene_curador_real
 from . import reglas_historia as H
 
@@ -38,11 +38,12 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     else:
         principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv))
     fr = [principal] + i1 + i2 + i3 + H.informes_acumulados()
-    fr += mn + H.continuidad() + H.curador_designaciones()
+    fr += mn + H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     fr += _oido_historia(row, cols)
     audiencia = _audiencia(row, cols)
     if audiencia:
         fr.append(audiencia)
     if cols.get('curador') and tiene_curador_real(row.get(cols.get('curador'))):
         fr += H.curador_instituciones(row.get(cols.get('curador')), _pnombre(nombre))
+    fr += H.aclaracion_causa()
     return componer(pfx, fr)

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "v9.3.2",
+    "version": "v9.4.0",
     "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
   },
   "COMUN": {
@@ -116,14 +116,14 @@
   },
   "INFORMES": {
     "I01_VENCIDO_DCE": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
-      "confirmado": true,
-      "nota": "Catálogo v2 2026-07-14 — I-01"
+      "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; redacción por aprobar"
     },
     "I01_VENCIDO_GENERAL": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
-      "confirmado": true,
-      "nota": "Catálogo v2 2026-07-14 — I-01"
+      "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; redacción por aprobar"
     },
     "I02_POR_VENCER_DCE": {
       "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
@@ -168,9 +168,9 @@
       "nota": "Espera, regla 3 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
     },
     "REITERA": {
-      "texto": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
-      "confirmado": false,
-      "nota": "REITERA — doc reglas 14-oct-2026"
+      "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}.",
+      "confirmado": true,
+      "nota": "REITERA — redacción abreviada aprobada por el usuario el 15-oct-2026"
     },
     "MATERIA_CURADOR": {
       "texto": "la ausencia de curador ad litem en RUS",
@@ -207,21 +207,6 @@
       "confirmado": false,
       "nota": "Cumplimiento, sin seguimiento — doc reglas 14-oct-2026"
     },
-    "C1_RUS": {
-      "texto": "RUS registra el ingreso efectivo el {FECHA_INGRESO}.",
-      "confirmado": true,
-      "nota": "Cumplimiento, C1 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
-    },
-    "C2_PRORROGA": {
-      "texto": "En la historia de la causa consta un trámite descrito como «Prórroga», de fecha {FECHA}, folio {FOLIO}. Al {CORTE}, RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
-      "confirmado": false,
-      "nota": "Cumplimiento, C2 — doc reglas 14-oct-2026"
-    },
-    "C3_CON_FOLIO": {
-      "texto": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}, folio {FOLIO}.",
-      "confirmado": true,
-      "nota": "Cumplimiento, C-03 con folio (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
-    },
     "EGRESO_PROYECTADO": {
       "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
       "confirmado": true,
@@ -243,9 +228,9 @@
       "nota": "Cumplimiento, C4 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
     },
     "C8_NO_USO": {
-      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prórroga». Medida vencida en RUS desde el {FECHA}.",
+      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prorroga». Medida vencida en RUS desde el {FECHA}.",
       "confirmado": true,
-      "nota": "Cumplimiento, C8 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+      "nota": "Cumplimiento, C8 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026; nomenclatura literal de SITFA (15-oct-2026)"
     },
     "C9_DCE": {
       "texto": "Informe diagnóstico ordenado en autos, se encuentra a folio {FOLIO} de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
@@ -253,14 +238,14 @@
       "nota": "Cumplimiento, C9 — doc reglas 14-oct-2026"
     },
     "P_FINALIZADA": {
-      "texto": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+      "texto": "La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
       "confirmado": true,
-      "nota": "Causa P con Conciliación o Dictación de sentencia sin Egreso de servicio — regla dada por el usuario el 14-oct-2026; aprobada por el usuario el 14-oct-2026"
+      "nota": "Causa P con Conciliación o Dictación de sentencia sin Egreso de servicio — regla dada por el usuario el 14-oct-2026; «de que» aprobado el 15-oct-2026"
     },
     "C10_ESCRITO": {
-      "texto": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+      "texto": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
       "confirmado": false,
-      "nota": "Cumplimiento e Informes, C10 e I3 — doc reglas 14-oct-2026"
+      "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; «de que»; redacción por aprobar"
     },
     "I1_VENCIDO": {
       "texto": "RUS registra el informe vencido desde el {FECHA_VENCIMIENTO}.",
@@ -287,16 +272,6 @@
       "confirmado": false,
       "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026"
     },
-    "R11_TERMINO": {
-      "texto": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}, que pone término a la búsqueda decretada mediante «Orden de búsqueda» de fecha {FECHA_ORDEN}, folio {FOLIO_ORDEN}.",
-      "confirmado": false,
-      "nota": "Transversal R11 — doc reglas 14-oct-2026"
-    },
-    "R11_SIN_EFECTO": {
-      "texto": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}, que deja sin efecto la búsqueda decretada mediante «Orden de búsqueda» de fecha {FECHA_ORDEN}, folio {FOLIO_ORDEN}.",
-      "confirmado": false,
-      "nota": "Transversal R11 — doc reglas 14-oct-2026"
-    },
     "T2_MN": {
       "texto": "En la historia de la causa consta un trámite descrito como «Deja sin efecto medida interconexión M.N.», de fecha {FECHA}, folio {FOLIO}, posterior al trámite descrito como «{DESC_ANTERIOR}», de fecha {FECHA_ANTERIOR}, folio {FOLIO_ANTERIOR}.",
       "confirmado": true,
@@ -306,6 +281,61 @@
       "texto": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
       "confirmado": false,
       "nota": "Transversal T5 — doc reglas 14-oct-2026"
+    },
+    "C2_PRORROGA_HASTA": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+    },
+    "C2_PRORROGA_SIN_FECHA": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida.",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: variante sin repetir el egreso proyectado cuando otra frase ya lo dice; por aprobar"
+    },
+    "INGRESO_INFORMADO": {
+      "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}.",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+    },
+    "SERVICIO_INGRESO": {
+      "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de folio {FOLIO}, de fecha {FECHA}.",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+    },
+    "CURADOR_SIN_EFECTO": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se dejó sin efecto la designación de curador ad litem.",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción propuesta y aprobada por el usuario"
+    },
+    "CURADOR_DESIGNADO": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se designó curador ad litem.",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: redacción análoga a la anterior; por aprobar"
+    },
+    "C8_NO_USO_BREVE": {
+      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prorroga».",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: C8 sin repetir el vencimiento que ya dice la frase de la medida; por aprobar"
+    },
+    "R11_BUSQUEDA_SIN_EFECTO": {
+      "texto": "Búsqueda decretada el {FECHA_ORDEN} (folio {FOLIO_ORDEN}), dejada sin efecto el {FECHA} (folio {FOLIO}).",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción abreviada aprobada por el usuario"
+    },
+    "R11_BUSQUEDA_TERMINO": {
+      "texto": "Búsqueda decretada el {FECHA_ORDEN} (folio {FOLIO_ORDEN}), con término el {FECHA} (folio {FOLIO}).",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: variante de la anterior para «Termino de búsqueda»; por aprobar"
+    },
+    "EGRESO_POSTERIOR_MAYORIA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad.",
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: redacción aprobada por el usuario (cuando ya se informó la mayoría de edad)"
+    },
+    "EGRESO_POSTERIOR_MAYORIA_FECHA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad, que se alcanza el {FECHA_MAYORIA}.",
+      "confirmado": false,
+      "nota": "Decisión x, 15-oct-2026: variante con la fecha cuando no se informó antes; por aprobar"
     }
   }
 }

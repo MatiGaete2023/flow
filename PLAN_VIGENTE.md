@@ -86,6 +86,17 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   3. Regla 6 (duplicidad) es por NNA (RUT): hermanos en la misma causa y programa no son duplicidad; sin RUT no se afirma.
   4. Regla 3: solo cuenta el «Ingreso efectivo» desde el inicio de la espera (corte menos T ESPERA); sin T ESPERA válido no se filtra.
 
+- x) Segunda ronda de reglas de historia, a partir del cruce FAE ficticio de Cumplimiento. Fuente: usuario, 15 de octubre de 2026 (respuestas F-1 a F-6, R-1 a R-6 y A a F). Detalle y casos: `docs/implementacion/revision/ANTES_DESPUES_DECISION_X_20261015.md`.
+  1. Un dato se dice una vez: si varias reglas llegan a la misma conclusión, sale una sola (la fecha de vencimiento de la medida, el egreso proyectado, los días de espera).
+  2. Orden transversal a Espera, Cumplimiento e Informes: constancias, luego acciones del Centro (correos y proyectos de resolución) y al final la gestión del Tribunal (asociar curador, eliminar o verificar designaciones, fichas). Se autoriza dividir en dos los textos aprobados que mezclaban partes; las redacciones nuevas quedan por aprobar.
+  3. Redacción: «de que» en todos los textos (incluido `P_FINALIZADA`), REITERA y búsqueda abreviadas, nomenclatura literal de SITFA («Prorroga», «Ingreso Informe de Cumplimiento X»).
+  4. Prórroga: «Se hace presente que a folio N, de fecha F, se prorroga la medida hasta el {egreso proyectado}». Con la medida vencida, o con el egreso de RUS anterior a la prórroga, no se afirma: se marca prioritaria si la prórroga tiene hasta 90 días. Con la medida por vencer y una prórroga de hasta 90 días se afirma y se marca prioritaria (el correo de por vencer se mantiene). Si la bitácora ya la mencionó, se ignoran frase y marca.
+  5. Ingreso efectivo: un «Ingreso Efectivo» de la historia entre la fecha de RUS y 30 días después confirma la nomenclatura, sin contraste ni folio («La fecha de ingreso efectivo informada al Tribunal corresponde al…» si no hay ingreso reciente). Fuera de la ventana o sin trámite: silencio.
+  6. «Ing.Serv. protección especializada y otras redes» es la resolución de ingreso (solo Espera): «Tribunal dispone ingreso a {programa de RUS}, en resolución de folio N, de fecha {resolución}». Reemplaza la regla del folio por cualquier trámite de esa fecha.
+  7. Curador: la baja o la designación de la historia se dice solo si RUS no tiene curador, con marca de nivel 2; con curador en RUS se ignora.
+  8. La aclaración «La historia es de la causa…» pasa a ser transversal (una vez, al final) cuando la causa tiene varios niños en la nómina.
+  9. Ficha FAE: solo importa que exista (sin ficha de antigüedad). Oído: no se repite si la bitácora ya lo dejó. Si el egreso proyectado es posterior a la mayoría de edad, se dice. Informe por vencer con la fecha de la medida: solo la frase de la medida. E10 reemplaza a los días de espera cuando ambas dicen lo mismo.
+
 ## Fase B de auditoría final — 14 de octubre de 2026
 
 - v) Usuario: «Pasa a la fase B», tras el informe de auditoría de esta sesión. Autoriza correcciones localizadas de

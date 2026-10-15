@@ -70,10 +70,10 @@
   },
   "INFORMES": {
     "I01_VENCIDO_DCE": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío."
+      "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío."
     },
     "I01_VENCIDO_GENERAL": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío."
+      "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío."
     },
     "I02_POR_VENCER_DCE": {
       "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}."
@@ -102,7 +102,7 @@
       "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado."
     },
     "REITERA": {
-      "texto": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}."
+      "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}."
     },
     "MATERIA_CURADOR": {
       "texto": "la ausencia de curador ad litem en RUS"
@@ -125,15 +125,6 @@
     "MEDIDA_SIN_VIGENCIA": {
       "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}."
     },
-    "C1_RUS": {
-      "texto": "RUS registra el ingreso efectivo el {FECHA_INGRESO}."
-    },
-    "C2_PRORROGA": {
-      "texto": "En la historia de la causa consta un trámite descrito como «Prórroga», de fecha {FECHA}, folio {FOLIO}. Al {CORTE}, RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}."
-    },
-    "C3_CON_FOLIO": {
-      "texto": "Ingreso efectivo al programa {PROGRAMA} registrado el {FECHA_INGRESO}, folio {FOLIO}."
-    },
     "EGRESO_PROYECTADO": {
       "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}."
     },
@@ -147,16 +138,16 @@
       "texto": "Consta en la historia de la causa a folio {FOLIO}."
     },
     "C8_NO_USO": {
-      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prórroga». Medida vencida en RUS desde el {FECHA}."
+      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prorroga». Medida vencida en RUS desde el {FECHA}."
     },
     "C9_DCE": {
       "texto": "Informe diagnóstico ordenado en autos, se encuentra a folio {FOLIO} de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva."
     },
     "P_FINALIZADA": {
-      "texto": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa."
+      "texto": "La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa."
     },
     "C10_ESCRITO": {
-      "texto": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."
+      "texto": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."
     },
     "I1_VENCIDO": {
       "texto": "RUS registra el informe vencido desde el {FECHA_VENCIMIENTO}."
@@ -173,17 +164,44 @@
     "I01_SIN_ENVIO_DCE": {
       "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}."
     },
-    "R11_TERMINO": {
-      "texto": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}, que pone término a la búsqueda decretada mediante «Orden de búsqueda» de fecha {FECHA_ORDEN}, folio {FOLIO_ORDEN}."
-    },
-    "R11_SIN_EFECTO": {
-      "texto": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}, que deja sin efecto la búsqueda decretada mediante «Orden de búsqueda» de fecha {FECHA_ORDEN}, folio {FOLIO_ORDEN}."
-    },
     "T2_MN": {
       "texto": "En la historia de la causa consta un trámite descrito como «Deja sin efecto medida interconexión M.N.», de fecha {FECHA}, folio {FOLIO}, posterior al trámite descrito como «{DESC_ANTERIOR}», de fecha {FECHA_ANTERIOR}, folio {FOLIO_ANTERIOR}."
     },
     "T5_INSTITUCIONES": {
       "texto": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."
+    },
+    "C2_PRORROGA_HASTA": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}."
+    },
+    "C2_PRORROGA_SIN_FECHA": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida."
+    },
+    "INGRESO_INFORMADO": {
+      "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}."
+    },
+    "SERVICIO_INGRESO": {
+      "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de folio {FOLIO}, de fecha {FECHA}."
+    },
+    "CURADOR_SIN_EFECTO": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se dejó sin efecto la designación de curador ad litem."
+    },
+    "CURADOR_DESIGNADO": {
+      "texto": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se designó curador ad litem."
+    },
+    "C8_NO_USO_BREVE": {
+      "texto": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prorroga»."
+    },
+    "R11_BUSQUEDA_SIN_EFECTO": {
+      "texto": "Búsqueda decretada el {FECHA_ORDEN} (folio {FOLIO_ORDEN}), dejada sin efecto el {FECHA} (folio {FOLIO})."
+    },
+    "R11_BUSQUEDA_TERMINO": {
+      "texto": "Búsqueda decretada el {FECHA_ORDEN} (folio {FOLIO_ORDEN}), con término el {FECHA} (folio {FOLIO})."
+    },
+    "EGRESO_POSTERIOR_MAYORIA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad."
+    },
+    "EGRESO_POSTERIOR_MAYORIA_FECHA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad, que se alcanza el {FECHA_MAYORIA}."
     }
   }
 }

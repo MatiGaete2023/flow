@@ -16,7 +16,7 @@ def test_umbrales_y_revision_por_defecto():
     umbrales = defaults()['umbrales']
     assert umbrales['espera_dce'] == 0 and umbrales['espera_tome'] == 60
     assert umbrales['espera_tome'] <= umbrales['proyecto_tome']
-    assert defaults()['revision_textos'] == TEXT_REVISION == 4
+    assert defaults()['revision_textos'] == TEXT_REVISION == 5
 
 
 @pytest.mark.parametrize('espera', [0, 1, 29, 200])
@@ -43,7 +43,11 @@ def test_tome_desde_60_dias_sale_correo_y_proyecto(tmp_path, espera):
 
 def test_e05_agrega_los_dias_de_espera_con_la_fecha_de_corte(tmp_path):
     fila_ = esp(tmp_path, fila(1, 'PRM UNO', 'LAJA') + [45])
-    assert fila_.observation.endswith('Al 14 de octubre de 2026, RUS registra 45 días de espera.')
+    # Constancias primero (los días de espera) y la acción del Centro al final (decisión x).
+    assert fila_.observation.split(': ', 1)[1] == (
+        'Medida revisada, a la espera de ingreso efectivo. Al 14 de octubre de 2026, RUS registra 45 días de espera. '
+        'Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.'
+    )
 
 
 def test_texto_prox_audiencia():
@@ -136,9 +140,9 @@ def test_c03_con_c05_activa_y_cruce_emite_c10_hoja2(tmp_path):
 
     cruce = [CRUCE, ['X-1-2026', '11111111-0', 'Persona Ficticia 1', 'LAJA', 'PRM UNO', '2026-12-01']]
     fila_ = _cumplimiento(tmp_path, [(5, 10, '2026-10-09', '2026-10-24')], cruce=cruce).rows[0]
+    # El egreso proyectado lo dice la frase de la medida por vencer: no se repite en la de ingreso reciente.
     assert fila_.rules == [
         'CUMPLIMIENTO.C03_INGRESO_RECIENTE',
-        'HISTORIA.EGRESO_PROYECTADO',
         'CUMPLIMIENTO.C05_POR_VENCER',
         'CUMPLIMIENTO.C10_HOJA2',
     ]

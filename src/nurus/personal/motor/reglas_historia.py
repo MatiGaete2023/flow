@@ -1,5 +1,6 @@
 """Constancias de historia de la causa: cada función devuelve fragmentos de texto ([] si no aplica)."""
 
+import re
 from datetime import timedelta
 
 from . import vocabulario as V
@@ -7,8 +8,8 @@ from .analisis_historia import busqueda, duplicidades, instituciones, posterior,
 from .contexto import acumulado, bitacora, current, duplicidad, emitidos, evento, historia, marcar
 from .contexto import datetime as Clock
 from .historia import clave, ultimo
-from .textos import render
-from .utilidades import contiene_token, es_dce, fecha_es, normalizar
+from .textos import con_grupo, render
+from .utilidades import contiene_token, es_dce, fecha_es, fecha_mayoria, normalizar, titulo_programa
 
 ORIGINAL = {
     'CURADOR': ('COMUN.CURADOR', 'MATERIA_CURADOR'),
@@ -16,6 +17,29 @@ ORIGINAL = {
     'SIN_FAE': ('CUMPLIMIENTO.C08_FICHA_FAE', 'MATERIA_SIN_FAE'),
     'VENCIDA': ('CUMPLIMIENTO.C04_VENCIDA', 'MATERIA_VENCIDA'),
 }
+
+
+# Constancias que citan trámites de la historia de la causa; con ellas, una causa de varios registros lleva
+# la aclaración final de que la historia no se atribuye a un ingreso determinado (decisión x).
+CITAN = frozenset(
+    'HISTORIA.' + clave_texto
+    for clave_texto in (
+        'BASE_TRAMITE',
+        'VARIOS',
+        'E04_CON_FOLIO',
+        'C2_PRORROGA_HASTA',
+        'C2_PRORROGA_SIN_FECHA',
+        'SERVICIO_INGRESO',
+        'CURADOR_SIN_EFECTO',
+        'CURADOR_DESIGNADO',
+        'R11_BUSQUEDA_SIN_EFECTO',
+        'R11_BUSQUEDA_TERMINO',
+        'T2_MN',
+        'C9_DCE',
+        'C10_ESCRITO',
+        'C4_FOLIO',
+    )
+)
 
 
 def _h():
@@ -75,12 +99,16 @@ def constancias(*nombres):
 
 
 def folio_resolucion(fecha):
-    """Regla 1: folio único de los trámites con la fecha de la resolución de RUS; None si no es unívoco."""
+    """Regla 1: folio del trámite «Ing.Serv. …» (resolución de ingreso) fechado el día de la resolución de RUS.
+    None si no hay o si hay folios distintos ese día. El trámite queda citado."""
     h = _h()
     if h is None or fecha is None:
         return None
-    folios = {t.folio_txt for t in h.tramites if t.fecha == _d(fecha) and t.folio_txt}
-    return next(iter(folios)) if len(folios) == 1 else None
+    ingresos = [t for t in h.buscar(V.SERVICIO) if t.fecha == _d(fecha) and t.folio_txt]
+    if len({t.folio_txt for t in ingresos}) != 1:
+        return None
+    emitidos().update(_id(t) for t in ingresos)
+    return ingresos[0].folio_txt
 
 
 def ingreso_efectivo_espera(corte, espera=None):
@@ -95,13 +123,15 @@ def ingreso_efectivo_espera(corte, espera=None):
         return None
     marcar(2, 'R3_INGRESO_EFECTIVO', 'Historia con ingreso efectivo y RUS en Espera')
     frags = [render('HISTORIA', 'MEDIDA_REVISADA'), constancia(lista), render('HISTORIA', 'R3_CIERRE', CORTE=fecha_es(corte))]
-    if duplicidad() is not None:
-        frags.append(render('HISTORIA', 'R3_MULTI'))
     return [f for f in frags if f]
 
 
+def lista_larga(programa, espera):
+    return espera is not None and intervencion(programa) == 'RESIDENCIAL' and espera > V.E10_DIAS
+
+
 def lista_espera_larga(programa, espera):
-    if espera is not None and intervencion(programa) == 'RESIDENCIAL' and espera > V.E10_DIAS:
+    if lista_larga(programa, espera):
         return [render('HISTORIA', 'E10_LISTA', N=espera)]
     return []
 
@@ -125,11 +155,26 @@ def reitera(materia):
     )
     if texto:
         evento(original)
-    return texto
+    # Reiterar la ausencia de curador o de ficha es gestión del Tribunal; reiterar el vencimiento es constancia.
+    return con_grupo(str(texto), 'C' if materia == 'VENCIDA' else 'T')
 
 
-def curador_designaciones():
-    return constancias(*V.CURADOR)
+def curador_designaciones(rus_sin_curador):
+    """Última designación o baja de curador ad litem de la historia, solo si RUS no registra curador.
+    Con curador en RUS no se puede verificar la vigencia desde la historia y se ignora (decisión x)."""
+    if not rus_sin_curador:
+        return []
+    designa = ultimo(tramites(V.CURADOR[0]))
+    baja = ultimo(tramites(V.CURADOR[1]))
+    if designa is None and baja is None:
+        return []
+    ult = baja if designa is None else designa if baja is None or posterior(designa, baja) else baja
+    if _id(ult) in emitidos():
+        return []
+    emitidos().add(_id(ult))
+    llave = 'CURADOR_SIN_EFECTO' if ult is baja else 'CURADOR_DESIGNADO'
+    marcar(2, llave, 'Curador ad litem en la historia y RUS sin curador registrado')
+    return [render('HISTORIA', llave, FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
 def curador_instituciones(celda, pnombre):
@@ -148,8 +193,13 @@ def direccion_regional():
     return constancias(*V.DIRECCION_REGIONAL)
 
 
-def servicio():
-    return constancias(V.SERVICIO)
+def servicio(programa):
+    """Espera: resolución que dispone el ingreso al programa («Ing.Serv. …»); el programa es el de la fila de RUS."""
+    ult = ultimo([t for t in tramites(V.SERVICIO) if _id(t) not in emitidos()])
+    if ult is None:
+        return []
+    emitidos().add(_id(ult))
+    return [render('HISTORIA', 'SERVICIO_INGRESO', PROGRAMA=titulo_programa(programa), FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
 def continuidad():
@@ -192,9 +242,9 @@ def busqueda_historia():
             texto = constancia([cierre])
         else:
             emitidos().update((_id(cierre), _id(orden)))
-            llave = 'R11_TERMINO' if cierre.clave == clave(V.TERMINO_BUSQUEDA) else 'R11_SIN_EFECTO'
+            llave = 'R11_BUSQUEDA_TERMINO' if cierre.clave == clave(V.TERMINO_BUSQUEDA) else 'R11_BUSQUEDA_SIN_EFECTO'
             texto = render(
-                'HISTORIA', llave, DESC=cierre.desc, FECHA=fecha_es(cierre.fecha), FOLIO=_folio(cierre),
+                'HISTORIA', llave, FECHA=fecha_es(cierre.fecha), FOLIO=_folio(cierre),
                 FECHA_ORDEN=fecha_es(orden.fecha), FOLIO_ORDEN=_folio(orden),
             )
         if texto:
@@ -206,43 +256,75 @@ def busqueda_historia():
 def derecho_oido(fecha_rus):
     """C3: solo si RUS no tiene fecha de oído; usa la última aplicación de la historia."""
     lista = tramites(V.DERECHO_OIDO)
-    if fecha_rus or not lista:
+    if fecha_rus or not lista or oido_en_bitacora(ultimo(lista).fecha):
         return []
     return [render('COMUN', 'OIDO', FECHA_OIDO=fecha_es(ultimo(lista).fecha))]
 
 
-def folio_ingreso(fecha_ingreso):
-    """C-03 ampliado: folio del «Ingreso efectivo» cuya fecha coincide con la de RUS."""
-    if fecha_ingreso is None:
+def oido_en_bitacora(fecha):
+    """True si una observación anterior de la bitácora ya dejó constancia del oído en esa fecha."""
+    fecha = _d(fecha)
+    formas = (clave(fecha_es(fecha)), fecha.strftime('%d/%m/%Y'))
+    for obs in bitacora():
+        texto = clave(obs.texto)
+        if 'oido' in texto and any(forma in texto for forma in formas):
+            return True
+    return False
+
+
+def ingreso_verificado(fecha_ingreso):
+    """«Ingreso Efectivo» de la historia fechado entre la fecha de RUS y 30 días después: la nomenclatura se aplicó.
+    La diferencia de días es normal (RUS guarda el día real; la historia, la resolución que lo tiene presente)."""
+    h = _h()
+    if h is None or fecha_ingreso is None:
         return None
-    ult = ultimo(tramites(V.INGRESO_EFECTIVO))
-    if ult is not None and ult.fecha == _d(fecha_ingreso) and ult.folio_txt:
-        emitidos().add(_id(ult))
-        return ult.folio_txt
-    return None
+    inicio = _d(fecha_ingreso)
+    limite = inicio + timedelta(days=V.VENTANA_INGRESO_DIAS)
+    cercanos = [t for t in h.buscar(V.INGRESO_EFECTIVO) if inicio <= t.fecha <= limite]
+    return min(cercanos, key=lambda t: (t.fecha, t.folio)) if cercanos else None
 
 
-def ingreso_efectivo_c1(fecha_ingreso):
-    """C1: constancia del ingreso efectivo con la fecha que registra RUS (si difieren o falta C-03)."""
-    texto = constancia(tramites(V.INGRESO_EFECTIVO))
-    if not texto:
+def ingreso_informado(fecha_ingreso):
+    """Cumplimiento sin ingreso reciente: si la historia confirma el ingreso, se dice la fecha de RUS (sin contraste)."""
+    if ingreso_verificado(fecha_ingreso) is None:
         return []
-    salida = [texto]
-    if fecha_ingreso is not None:
-        salida.append(render('HISTORIA', 'C1_RUS', FECHA_INGRESO=fecha_es(fecha_ingreso)))
-    return [s for s in salida if s]
+    return [render('HISTORIA', 'INGRESO_INFORMADO', FECHA_INGRESO=fecha_es(fecha_ingreso))]
 
 
-def prorroga(corte, egreso_proyectado):
-    """C2: «Prorroga» presente en la historia junto al egreso proyectado de RUS."""
+def _prorroga_en_bitacora(prorroga):
+    """True si la bitácora ya menciona esa prórroga (su folio o su fecha): se revisó en una observación anterior."""
+    folio = re.escape(prorroga.folio_txt) if prorroga.folio_txt else None
+    fecha = clave(fecha_es(prorroga.fecha))
+    for obs in bitacora():
+        texto = clave(obs.texto)
+        if 'prorrog' in texto and ((folio and re.search(rf'(?<!\d){folio}(?!\d)', texto)) or fecha in texto):
+            return True
+    return False
+
+
+def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):
+    """C2 (decisión x). Con la medida vencida, o con el egreso de RUS anterior a la prórroga (RUS no la refleja), no
+    se afirma la prórroga: solo se marca para revisión prioritaria si es reciente (90 días). Con la medida por vencer
+    y una prórroga reciente se afirma y se marca. Si la bitácora ya la mencionó, se ignora todo."""
     lista = [t for t in tramites(V.PRORROGA) if _id(t) not in emitidos()]
     if not lista or egreso_proyectado is None:
         return []
-    emitidos().update(_id(t) for t in lista)
     ult = ultimo(lista)
+    if _prorroga_en_bitacora(ult):
+        return []
+    emitidos().update(_id(t) for t in lista)
+    reciente = (_d(corte) - ult.fecha).days <= V.PRORROGA_RECIENTE_DIAS
+    sin_reflejar = _d(egreso_proyectado) < ult.fecha
+    if vencida or sin_reflejar or (por_vencer and reciente):
+        if reciente:
+            marcar(1, 'PRORROGA_REVISAR', 'Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS')
+        if vencida or sin_reflejar:
+            return []
+    if egreso_dicho:
+        return [render('HISTORIA', 'C2_PRORROGA_SIN_FECHA', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
     return [
         render(
-            'HISTORIA', 'C2_PRORROGA', FECHA=fecha_es(ult.fecha), FOLIO=_folio(ult), CORTE=fecha_es(corte),
+            'HISTORIA', 'C2_PRORROGA_HASTA', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha),
             FECHA_EGRESO_PROYECTADO=fecha_es(egreso_proyectado),
         )
     ]
@@ -263,10 +345,12 @@ def fichas(nombre, fecha_rus, original_salio):
         return []
     if fecha_rus is not None:
         return [texto, render('HISTORIA', 'C4_FICHA_RUS', FECHA_FICHA=fecha_es(fecha_rus))]
+    if original_salio:
+        return [texto]  # la regla original ya dijo que RUS no registra la ficha: no se repite (decisión x)
     return [texto, render('HISTORIA', 'C4_FICHA_SIN_RUS')]
 
 
-def no_uso_prorroga(egreso_proyectado):
+def no_uso_prorroga(egreso_proyectado, vencimiento_dicho=False):
     """C8 con guardia G3: exige cobertura que permita ausencia y período consultado."""
     h = historia()
     if h is None or not h.permite_ausencia or h.desde is None or h.hasta is None or egreso_proyectado is None:
@@ -274,6 +358,8 @@ def no_uso_prorroga(egreso_proyectado):
     if h.buscar(V.PRORROGA):
         return []
     marcar(3, 'C8_NO_USO', 'Medida vencida sin Prórroga en el período consultado')
+    if vencimiento_dicho:
+        return [render('HISTORIA', 'C8_NO_USO_BREVE', DESDE=fecha_es(h.desde), HASTA=fecha_es(h.hasta))]
     return [
         render(
             'HISTORIA', 'C8_NO_USO', DESDE=fecha_es(h.desde), HASTA=fecha_es(h.hasta),
@@ -343,6 +429,30 @@ def informes_acumulados():
     if not dato or dato[0] < 2:
         return []
     return [render('HISTORIA', 'J2_ACUMULADOS', N=dato[0], FECHA=fecha_es(dato[1]))]
+
+
+def egreso_posterior_mayoria(nacimiento, egreso, mayoria_dicha):
+    """Cumplimiento: el egreso proyectado de RUS es posterior a la mayoría de edad de un niño que aún es menor."""
+    if nacimiento is None or egreso is None:
+        return []
+    mayoria = fecha_mayoria(nacimiento)
+    if _d(egreso) <= _d(mayoria):
+        return []
+    if mayoria_dicha:
+        return [render('HISTORIA', 'EGRESO_POSTERIOR_MAYORIA')]
+    return [render('HISTORIA', 'EGRESO_POSTERIOR_MAYORIA_FECHA', FECHA_MAYORIA=fecha_es(mayoria))]
+
+
+def aclaracion_causa():
+    """Transversal: la historia es de la causa; con varios registros en la nómina no se atribuye a un ingreso."""
+    ctx = current.get()
+    if ctx is None or duplicidad() is None:
+        return []
+    emitidos_ahora = {e for e in ctx['events'] if e not in ctx['config']['desactivadas']}
+    if not CITAN & emitidos_ahora:
+        return []
+    texto = render('HISTORIA', 'R3_MULTI')
+    return [texto] if texto else []
 
 
 def causa_finalizada(rit):

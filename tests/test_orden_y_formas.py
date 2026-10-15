@@ -1,0 +1,218 @@
+"""Decisión x (15-oct): orden de las observaciones, una sola vez cada dato y reglas nuevas de Cumplimiento."""
+
+import json
+import re
+from copy import deepcopy
+
+import pytest
+from historia_fixtures import CUMPLIMIENTO, ESPERA, bita, correr, cum, cumplimiento, esp, fila, hist
+
+from nurus.personal.config import LEGACY_TEXTS_REV4, TEXT_REVISION, Configuration, defaults
+from nurus.personal.motor.textos import ESTRUCTURA
+
+ACLARACION = 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.'
+
+
+def _cuerpo(fila_):
+    return fila_.observation.split(': ', 1)[1]
+
+
+def test_estructura_coincide_con_las_oraciones_de_cada_texto_base():
+    textos = defaults()['textos']
+    for clave, letras in ESTRUCTURA.items():
+        ambito, nombre = clave.split('.', 1)
+        oraciones = re.split(r'(?<=\.)\s+', textos[ambito][nombre]['texto'].strip())
+        assert len(oraciones) == len(letras), clave
+        assert set(letras) <= set('CATF'), clave
+
+
+def test_espera_ordena_constancias_luego_acciones_del_centro_y_al_final_el_tribunal(tmp_path):
+    f = esp(tmp_path, fila(1) + [45], extra=[''], encabezados=['CURADOR'])
+    assert _cuerpo(f) == (
+        'Medida revisada, a la espera de ingreso efectivo. Al 14 de octubre de 2026, RUS registra 45 días de espera. '
+        'No registra curador ad litem en RUS. '
+        'Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. '
+        'Se sugiere asociarlo informáticamente.'
+    )
+    assert f.actions == ['programa_espera', 'PC_IE']  # el orden del texto no cambia las acciones
+
+
+def test_informes_ordena_constancias_acciones_y_gestion_del_tribunal(tmp_path):
+    dos = (
+        '(11-1)ABOG A - Institución: Programa Mi Abogado#(22-2)ABOG B - Institución: Corporación de Asistencia Judicial'
+    )
+    f = correr(
+        tmp_path,
+        'INFORMES',
+        ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO', 'CURADOR'],
+        [fila(1) + ['2026-09-20', dos]],
+        {0: hist(('Prorroga', '2026-09-01', 7))},
+    ).rows[0]
+    cuerpo = _cuerpo(f)
+    assert (
+        cuerpo.index('Informe de avance vencido')
+        < cuerpo.index('«Prorroga»')
+        < cuerpo.index('Se deja constancia de que se remite')
+    )
+    assert cuerpo.index('Se deja constancia de que se remite') < cuerpo.index(
+        'se sugiere eliminar aquellas designaciones'
+    )
+    assert f.actions == ['programa_vencido', 'PC_INFO']
+
+
+def test_texto_editado_con_otra_cantidad_de_oraciones_se_conserva_entero(tmp_path):
+    config = deepcopy(defaults())
+    config['textos']['ESPERA']['E05_SOLO_CORREO']['texto'] = 'Texto propio. Con tres. Oraciones.'
+    f = correr(tmp_path, 'ESPERA', ESPERA, [fila(1, 'DCE UNO') + [45]], None, None, config).rows[0]
+    assert 'Texto propio. Con tres. Oraciones.' in f.observation
+
+
+def test_ficha_sin_registro_deja_la_sugerencia_al_tribunal_para_el_final(tmp_path):
+    f = cum(tmp_path, cumplimiento(1, 'RTA UNO', egreso='2027-03-01', dpe=100), hist(('Prorroga', '2026-10-07', 3)))
+    cuerpo = _cuerpo(f)
+    assert cuerpo.index('se prorroga la medida') < cuerpo.index('No registra ficha individual en RUS.')
+    assert cuerpo.endswith('Se sugiere confeccionarla.')
+
+
+def test_reiterar_ausencia_de_ficha_es_gestion_del_tribunal_y_va_al_final(tmp_path):
+    previa = bita(('2026-09-20', 'Persona X: Persona no registra ficha FAE en RUS. Se sugiere confeccionarla.'))
+    f = cum(
+        tmp_path,
+        cumplimiento(1, 'FAE UNO', ingreso='2026-01-01', egreso='2027-03-01', dpe=100, fae=''),
+        hist(('Prorroga', '2026-10-07', 3)),
+        previa,
+    )
+    cuerpo = _cuerpo(f)
+    assert cuerpo.index('se prorroga la medida') < cuerpo.index(
+        'Se reitera la observación del 20 de septiembre de 2026'
+    )
+    assert cuerpo.endswith('sobre la ausencia de ficha FAE en RUS.')
+
+
+def test_aclaracion_de_causa_en_cumplimiento_con_hermanos(tmp_path):
+    h = hist(('Prorroga', '2026-10-07', 3))
+    filas = [
+        fila(1, rit='C-1-2026', rut='11111111-1') + cumplimiento(1, egreso='2027-03-01', dpe=100)[5:],
+        fila(2, rit='C-1-2026', rut='22222222-2') + cumplimiento(1, egreso='2027-03-01', dpe=100)[5:],
+    ]
+    trabajo = correr(tmp_path, 'CUMPLIMIENTO', CUMPLIMIENTO, filas, {0: h, 1: h})
+    for f in trabajo.rows:
+        assert _cuerpo(f).endswith(ACLARACION) and _cuerpo(f).count(ACLARACION) == 1
+        assert f.avisos == []  # hermanos no son duplicidad
+    solo = correr(tmp_path, 'CUMPLIMIENTO', CUMPLIMIENTO, filas[:1], {0: h}).rows[0]
+    assert ACLARACION not in solo.observation
+
+
+def test_aclaracion_de_causa_en_informes_con_varios_registros(tmp_path):
+    filas = [
+        fila(1, rit='C-1-2026', rut='11111111-1') + ['2026-09-20'],
+        fila(2, rit='C-1-2026', rut='22222222-2') + ['2026-09-20'],
+    ]
+    h = hist(('Prorroga', '2026-09-01', 7))
+    trabajo = correr(
+        tmp_path,
+        'INFORMES',
+        ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO'],
+        filas,
+        {0: h, 1: h},
+    )
+    assert all(_cuerpo(f).endswith(ACLARACION) for f in trabajo.rows)
+
+
+def test_egreso_posterior_a_la_mayoria_de_edad(tmp_path):
+    # Mayoría el 1-dic-2026 (a 48 días): se informa la mayoría y luego el egreso, sin repetir la fecha.
+    cerca = cum(tmp_path, cumplimiento(1, egreso='2027-03-01', dpe=100, nac='2008-12-01'))
+    assert _cuerpo(cerca).startswith(
+        'Persona alcanzará la mayoría de edad el 1 de diciembre de 2026. El egreso proyectado es posterior a la mayoría de edad.'
+    )
+    # Mayoría lejana: la frase trae la fecha, porque no se había informado.
+    lejos = cum(tmp_path, cumplimiento(1, egreso='2027-09-01', dpe=100, nac='2009-05-01'))
+    assert (
+        'El egreso proyectado es posterior a la mayoría de edad, que se alcanza el 1 de mayo de 2027.'
+        in lejos.observation
+    )
+    # Egreso anterior a la mayoría o sin fecha de nacimiento: nada.
+    assert (
+        'posterior a la mayoría'
+        not in cum(tmp_path, cumplimiento(1, egreso='2027-03-01', dpe=100, nac='2009-05-01')).observation
+    )
+    assert 'posterior a la mayoría' not in cum(tmp_path, cumplimiento(1, egreso='2027-09-01', dpe=100)).observation
+
+
+def test_informe_por_vencer_con_la_fecha_de_egreso_no_se_repite(tmp_path):
+    from test_reglas_cumplimiento import CRUCE, _cumplimiento
+
+    def ejecutar(fecha):
+        cruce = [CRUCE, ['X-1-2026', '11111111-0', 'Persona Ficticia 1', 'LAJA', 'PRM UNO', fecha]]
+        return _cumplimiento(tmp_path, [(5, 10, '2026-10-09', '2026-10-24')], cruce=cruce).rows[0]
+
+    igual = ejecutar('2026-10-24')
+    assert 'CUMPLIMIENTO.C10_HOJA2' not in igual.rules and 'Próximo informe de avance' not in igual.observation
+    otra = ejecutar('2026-12-01')
+    assert 'CUMPLIMIENTO.C10_HOJA2' in otra.rules
+
+
+def test_oido_ya_dejado_en_la_bitacora_no_se_repite(tmp_path):
+    enc = ['FEC. OIDO']
+    previa = bita(('2026-10-02', 'Persona X: Oído el 1 de octubre de 2026.'))
+    con_rus = esp(tmp_path, fila(1) + [3], extra=['2026-10-01'], encabezados=enc, bitacora=previa)
+    assert 'Oído el' not in con_rus.observation
+    otra_fecha = esp(tmp_path, fila(1) + [3], extra=['2026-10-03'], encabezados=enc, bitacora=previa)
+    assert 'Oído el 3 de octubre de 2026.' in otra_fecha.observation
+    desde_historia = esp(
+        tmp_path,
+        fila(1) + [3],
+        hist(('Derecho a ser oído', '2026-10-01', 12)),
+        extra=[''],
+        encabezados=enc,
+        bitacora=previa,
+    )
+    assert 'Oído el' not in desde_historia.observation
+
+
+def test_servicio_solo_se_dice_en_espera(tmp_path):
+    h = hist(('Ing.Serv. protección especializada y otras redes', '2026-10-02', 7))
+    assert 'Tribunal dispone ingreso' in esp(tmp_path, fila(1) + [3], h).observation
+    assert 'Tribunal dispone ingreso' not in cum(tmp_path, cumplimiento(1), h).observation
+
+
+def _escribir(directorio, cambio):
+    conf = Configuration(directorio)
+    datos = json.loads(json.dumps(conf.data))
+    cambio(datos)
+    conf.path.write_text(json.dumps(datos, ensure_ascii=False), encoding='utf-8')
+    return Configuration(directorio).data
+
+
+def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
+    def antiguos(d):
+        d['revision_textos'] = 4
+        for clave, previo in LEGACY_TEXTS_REV4.items():
+            ambito, nombre = clave.split('.', 1)
+            d['textos'][ambito][nombre]['texto'] = previo
+        d['textos']['INFORMES']['I01_VENCIDO_GENERAL']['texto'] = 'Texto propio {FECHA_VENCIMIENTO} {PROGRAMA}.'
+
+    datos = _escribir(tmp_path / 'a', antiguos)
+    base = defaults()['textos']
+    assert datos['revision_textos'] == TEXT_REVISION == 5
+    for clave in LEGACY_TEXTS_REV4:
+        ambito, nombre = clave.split('.', 1)
+        esperado = (
+            'Texto propio {FECHA_VENCIMIENTO} {PROGRAMA}.'
+            if clave == 'INFORMES.I01_VENCIDO_GENERAL'
+            else base[ambito][nombre]['texto']
+        )
+        assert datos['textos'][ambito][nombre]['texto'] == esperado, clave
+    # Las claves nuevas se completan en una configuración que no las tiene.
+    assert (
+        'C2_PRORROGA_HASTA' in datos['textos']['HISTORIA'] and 'R11_BUSQUEDA_SIN_EFECTO' in datos['textos']['HISTORIA']
+    )
+
+
+@pytest.mark.parametrize('clave', sorted(LEGACY_TEXTS_REV4))
+def test_los_textos_antiguos_tienen_las_mismas_variables_que_los_nuevos(clave):
+    import string
+
+    ambito, nombre = clave.split('.', 1)
+    campos = lambda texto: {c for _, c, _, _ in string.Formatter().parse(texto) if c}  # noqa: E731
+    assert campos(LEGACY_TEXTS_REV4[clave]) == campos(defaults()['textos'][ambito][nombre]['texto'])

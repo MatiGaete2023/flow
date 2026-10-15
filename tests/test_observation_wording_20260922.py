@@ -28,8 +28,9 @@ APPROVED = {
     'CUMPLIMIENTO.C08_FICHA_FAE': '{PNOMBRE} no registra ficha FAE en RUS. Se sugiere confeccionarla.',
     'CUMPLIMIENTO.C09_SIN_OBSERVACIONES': 'Medida revisada, sin observaciones.',
     'CUMPLIMIENTO.C10_HOJA2': 'Próximo informe de avance de {PROGRAMA} vence el {FECHA_VENCIMIENTO}.',
-    'INFORMES.I01_VENCIDO_GENERAL': 'Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.',
-    'INFORMES.I01_VENCIDO_DCE': 'Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.',
+    # Decisión x (15-oct): dividido en constancia y acción del Centro; redacción por aprobar por el usuario.
+    'INFORMES.I01_VENCIDO_GENERAL': 'Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.',
+    'INFORMES.I01_VENCIDO_DCE': 'Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.',
     'INFORMES.I02_POR_VENCER_GENERAL': 'Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.',
     'INFORMES.I02_POR_VENCER_DCE': 'Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.',
 }
@@ -78,12 +79,15 @@ def test_expired_reports_generate_pc_info_but_upcoming_reports_do_not(tmp_path):
         source(tmp_path, 'INFORMES', program='PRM CENTRO'), 'INFORMES', as_of=date(2026, 9, 13)
     )
     assert general.rows[0].actions == ['programa_vencido', 'PC_INFO']
-    assert 'proyecto de resolución pidiendo cuenta del informe de avance vencido' in general.rows[0].observation
+    assert 'Informe de avance vencido desde el' in general.rows[0].observation
+    assert (
+        'proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo' in general.rows[0].observation
+    )
 
     dce_path = source(tmp_path, 'INFORMES', program='DCE CENTRO')
     dce = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 13))
     assert dce.rows[0].actions == ['programa_vencido', 'PC_INFO']
-    assert 'informe diagnóstico vencido' in dce.rows[0].observation
+    assert 'Informe diagnóstico vencido desde el' in dce.rows[0].observation
 
     upcoming = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 8))
     assert upcoming.rows[0].actions == ['programa_por_vencer']

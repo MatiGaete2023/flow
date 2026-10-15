@@ -4,6 +4,7 @@ from datetime import datetime
 from .contexto import datetime as Clock
 import re
 import pandas as pd
+from .textos import ORDEN_GRUPOS
 from .utilidades import prefijo_observacion, get_date
 
 def prefijo(nombre, programa) -> str:
@@ -20,8 +21,16 @@ def _normalizar_fragmento(fragmento):
     texto = re.sub(r"\.{2,}", ".", texto)
     return texto
 
+def _en_orden(fragmentos):
+    """Expande los fragmentos mixtos y ordena por grupo (constancia, acción del Centro, Tribunal, cierre)."""
+    piezas = []
+    for fragmento in fragmentos:
+        for texto, grupo in getattr(fragmento, "partes", None) or ((fragmento, getattr(fragmento, "grupo", "C")),):
+            piezas.append((ORDEN_GRUPOS[grupo], len(piezas), texto))
+    return [texto for _, _, texto in sorted(piezas, key=lambda pieza: pieza[:2])]
+
 def componer(pfx, fragmentos) -> str:
-    partes = [_normalizar_fragmento(f) for f in fragmentos]
+    partes = [_normalizar_fragmento(f) for f in _en_orden(fragmentos)]
     partes = [p for p in partes if p]
     if not partes:
         return ""
