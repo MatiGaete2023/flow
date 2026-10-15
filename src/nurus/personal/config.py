@@ -34,6 +34,7 @@ UMBRALES = dict(
     prorroga_reciente=90,
     ventana_ingreso=30,
     lista_espera_larga=100,
+    ventana_busqueda=60,
 )
 PARAMETER_LABELS = {
     'espera_dce': 'Espera DCE: consultar ingreso desde',
@@ -53,8 +54,9 @@ PARAMETER_LABELS = {
     'prorroga_reciente': 'Prórroga reciente (marcar para revisión): hasta',
     'ventana_ingreso': 'Ingreso efectivo en la historia: hasta',
     'lista_espera_larga': 'Lista de espera residencial larga: más de',
+    'ventana_busqueda': 'Órdenes de búsqueda: solo la historia de los últimos',
 }
-TEXT_REVISION = 5
+TEXT_REVISION = 6
 LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
 LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
@@ -89,6 +91,19 @@ LEGACY_TEXTS_REV4 = {
     "HISTORIA.REITERA": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
     "HISTORIA.P_FINALIZADA": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
     "HISTORIA.C10_ESCRITO": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+}
+LEGACY_TEXTS_REV5 = {
+    "HISTORIA.BASE_TRAMITE": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta el trámite «{DESC}».",
+    "HISTORIA.VARIOS": "Se hace presente que constan {N} trámites «{DESC}»; el último, a folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.C10_ESCRITO": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C2_PRORROGA_HASTA": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
+    "HISTORIA.SERVICIO_INGRESO": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.CURADOR_SIN_EFECTO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se dejó sin efecto la designación de curador ad litem.",
+    "HISTORIA.CURADOR_DESIGNADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se designó curador ad litem.",
+    "HISTORIA.SOLICITUD_DCE": "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa a folio {FOLIO}, de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
+    "HISTORIA.CONTINUIDAD_ATENCION": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta respuesta sobre la continuidad de atención.",
+    "HISTORIA.INFORME_INGRESADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se ingresa el informe de cumplimiento.",
+    "HISTORIA.E04_CON_FOLIO": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}, folio {FOLIO}. (Observación administrativa; no requiere gestión del Tribunal).",
 }
 LEGACY_CORREO_BODIES = {
     'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
@@ -375,7 +390,11 @@ class Configuration:
             updated = deepcopy(self.data)
             base = defaults()['textos']
             # Solo se reemplaza un texto que sigue igual al anterior: lo que el usuario editó se respeta.
-            for full_key, previous in (*LEGACY_TEXTS_REV2.items(), *LEGACY_TEXTS_REV4.items()):
+            for full_key, previous in (
+                *LEGACY_TEXTS_REV2.items(),
+                *LEGACY_TEXTS_REV4.items(),
+                *LEGACY_TEXTS_REV5.items(),
+            ):
                 scope, key = full_key.split('.', 1)
                 if (
                     key in base.get(scope, {})

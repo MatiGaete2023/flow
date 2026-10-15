@@ -35,7 +35,7 @@ def _prorroga(tmp_path, tramite, *, egreso, dpe, bitacora=None):
 def test_prorroga_vigente_dice_hasta_cuando_el_egreso_proyectado(tmp_path):
     f = _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2027-03-01', dpe=100)
     assert f.observation.split(': ', 1)[1] == (
-        'Medida revisada. Se hace presente que a folio 3, de fecha 7 de octubre de 2026, '
+        'Medida revisada. Se hace presente que en resolución de fecha 7 de octubre de 2026 (folio 3), '
         'se prorroga la medida hasta el 1 de marzo de 2027.'
     )
     assert f.avisos == [] and f.rules == ['HISTORIA.C2_PRORROGA_HASTA', 'HISTORIA.MEDIDA_REVISADA']
@@ -114,7 +114,7 @@ def test_solicitud_dce_en_cumplimiento_con_medida_vencida(tmp_path):
     f = cum(tmp_path, datos, hist(('SPE. Resp. Solicitud DCE (escrito)', '2026-09-05', 12)))
     assert f.observation.split(': ', 1)[1] == (
         'Medida vencida en RUS desde el 1 de septiembre de 2026. Informe clínico diagnóstico ordenado en autos, '
-        'se encuentra en la causa a folio 12, de fecha 5 de septiembre de 2026, a la espera de lo que se resuelva en la audiencia respectiva.'
+        'se encuentra en la causa en resolución de fecha 5 de septiembre de 2026 (folio 12), a la espera de lo que se resuelva en la audiencia respectiva.'
     )
     # Sin medida vencida, en otro programa, o con las otras nomenclaturas DCE: no se dice nada.
     solicitud = ('SPE. Resp. Solicitud DCE (escrito)', '2026-09-05', 12)
@@ -137,13 +137,13 @@ def test_c10_escrito_sin_ingreso_posterior(tmp_path):
     escrito = ('Inf. Cump Programa Ambulatorio', '2026-10-01', 30)
     f = cum(tmp_path, cumplimiento(1), hist(escrito))
     assert f.observation.split(': ', 1)[1] == (
-        'Medida revisada. Informe de avance recepcionado a folio 30, de fecha 1 de octubre de 2026. '
+        'Medida revisada. Informe de avance recepcionado en resolución de fecha 1 de octubre de 2026 (folio 30). '
         'Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura '
         '«Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.'
     )
     cerrado = cum(tmp_path, cumplimiento(1), hist(escrito, ('Ingreso informe de cumplimiento X', '2026-10-02', 31)))
     assert 'recepcionado' not in cerrado.observation
-    assert f.actions == []
+    assert f.actions == ['NOMENCL']
 
 
 def test_sin_seguimiento_vencida_y_mayoria_de_edad(tmp_path):
@@ -155,7 +155,7 @@ def test_sin_seguimiento_vencida_y_mayoria_de_edad(tmp_path):
 def test_medida_revisada_cuando_solo_hay_reglas_nuevas(tmp_path):
     f = cum(tmp_path, cumplimiento(1), hist(('Resp. continuidad de atención', '2026-10-01', 4)))
     assert f.observation.split(': ', 1)[1] == (
-        'Medida revisada. Se hace presente que a folio 4, de fecha 1 de octubre de 2026, '
+        'Medida revisada. Se hace presente que en resolución de fecha 1 de octubre de 2026 (folio 4), '
         'consta respuesta sobre la continuidad de atención.'
     )
     con_original = cum(
@@ -177,3 +177,14 @@ def test_ingreso_reciente_con_medida_por_vencer_dice_el_egreso_una_sola_vez(tmp_
         'Ingreso efectivo al programa PRM UNO registrado el 4 de octubre de 2026. '
         'Medida próxima a vencer en RUS el 29 de octubre de 2026.'
     )
+
+
+def test_la_columna_res_se_llena_con_el_tipo_de_proyecto_que_el_motor_identifica(tmp_path):
+    from nurus.personal.work import _automatic_resolution
+
+    escrito = cum(tmp_path, cumplimiento(1, 'FAE UNO', dc=100, dpe=100), hist(('Inf. Cump FAE/FAS', '2026-10-01', 30)))
+    assert _automatic_resolution(escrito) == 'NOMENCL'
+    escrito.decisions['resolution'] = 'none'
+    assert _automatic_resolution(escrito) is None
+    sin = cum(tmp_path, cumplimiento(2, 'FAE UNO', dc=100, dpe=100))
+    assert _automatic_resolution(sin) is None

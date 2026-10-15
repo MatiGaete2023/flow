@@ -9,7 +9,8 @@ def test_regla1_folio_de_la_resolucion_de_ingreso_solo_si_es_unico(tmp_path):
     enc = ['FEC. RESOLUCION']
     unico = esp(tmp_path, datos, hist((servicio, '2026-10-10', 77)), extra=['2026-10-10'], encabezados=enc)
     assert (
-        'HISTORIA.E04_CON_FOLIO' in unico.rules and 'ordenado el 10 de octubre de 2026, folio 77.' in unico.observation
+        'HISTORIA.E04_CON_FOLIO' in unico.rules
+        and 'ordenado en resolución de fecha 10 de octubre de 2026 (folio 77).' in unico.observation
     )
     # La resolución se dice una sola vez: no se repite con la frase de «Tribunal dispone ingreso».
     assert 'HISTORIA.SERVICIO_INGRESO' not in unico.rules and unico.observation.count('folio 77') == 1
@@ -106,7 +107,7 @@ def test_servicio_dice_lo_resuelto_y_las_constancias_dce_no_van_en_espera(tmp_pa
     sv = esp(tmp_path, fila(1) + [3], hist(('Ing.Serv. protección especializada y otras redes', '2026-10-02', 7)))
     # Servicio: se dice lo resuelto, con el programa de la fila de RUS y la fecha de la resolución.
     assert (
-        'Tribunal dispone ingreso a PRM UNO, en resolución de folio 7, de fecha 2 de octubre de 2026.' in sv.observation
+        'Tribunal dispone ingreso a PRM UNO, en resolución de fecha 2 de octubre de 2026 (folio 7).' in sv.observation
     )
     assert 'Ing.Serv.' not in sv.observation
 
@@ -165,30 +166,58 @@ def test_t5_exige_dos_instituciones_distintas(tmp_path):
     )
 
 
-def test_busqueda_termino_cita_la_orden_y_vigente_marca_nivel1(tmp_path):
-    cerrada = hist((ORDEN, '2026-09-01', 10), ('Termino de búsqueda', '2026-09-20', 20))
-    f = esp(tmp_path, fila(1) + [3], cerrada)
-    assert (
-        'Búsqueda decretada el 1 de septiembre de 2026 (folio 10), con término el 20 de septiembre de 2026 (folio 20).'
-        in (f.observation)
+def test_busqueda_nombra_primero_la_orden_y_luego_sus_tramites(tmp_path):
+    orden = (
+        'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 10), se decretó orden de búsqueda.'
     )
-    assert f.avisos == [] and f.observation.count('Búsqueda decretada') == 1
+    cerrada = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Termino de búsqueda', '2026-09-20', 20)))
+    termino = 'Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dispuso el término de la búsqueda.'
+    assert orden + ' ' + termino in cerrada.observation and cerrada.avisos == []
     sin_efecto = esp(
         tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Deja sin efecto búsqueda', '2026-09-20', 20))
     )
     assert (
-        'Búsqueda decretada el 1 de septiembre de 2026 (folio 10), dejada sin efecto el 20 de septiembre de 2026 (folio 20).'
-        in sin_efecto.observation
+        orden
+        + ' Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dejó sin efecto la búsqueda.'
+        in (sin_efecto.observation)
     )
+    completa = esp(
+        tmp_path,
+        fila(1) + [3],
+        hist(
+            ('Pide cuenta búsqueda', '2026-09-10', 15),
+            ('Deja sin efecto búsqueda', '2026-09-20', 20),
+            (ORDEN, '2026-09-01', 10),
+        ),
+    )
+    assert completa.observation.index('orden de búsqueda') < completa.observation.index('se pidió cuenta')
+    assert completa.observation.index('se pidió cuenta') < completa.observation.index('se dejó sin efecto la búsqueda')
     vigente = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10)))
     assert [a[:2] for a in vigente.avisos] == [(1, 'R11_BUSQUEDA_VIGENTE')]
     huerfano = esp(tmp_path, fila(1) + [3], hist(('Termino de búsqueda', '2026-09-20', 20)))
     assert (
-        'Se hace presente que a folio 20, de fecha 20 de septiembre de 2026, consta el trámite «Termino de búsqueda».'
-        in (huerfano.observation)
+        'Se hace presente que en resolución de fecha 20 de septiembre de 2026 (folio 20), consta el trámite «Termino de búsqueda».'
+        in huerfano.observation
     )
     citada = esp(tmp_path, fila(1) + [3], hist(('Pide cuenta búsqueda', '2026-09-25', 21)))
     assert 'consta el trámite «Pide cuenta búsqueda».' in citada.observation
+
+
+def test_busqueda_anterior_a_dos_meses_o_ya_observada_no_genera_texto(tmp_path):
+    antigua = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-08-01', 10), ('Termino de búsqueda', '2026-10-01', 20)))
+    assert 'búsqueda' not in antigua.observation
+    previa = bita(
+        (
+            '2026-10-02',
+            'Persona X: Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 10), se decretó orden de búsqueda.',
+        )
+    )
+    observada = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10)), previa)
+    assert 'orden de búsqueda' not in observada.observation
+    nueva = esp(
+        tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Termino de búsqueda', '2026-10-05', 20)), previa
+    )
+    assert 'se dispuso el término de la búsqueda' in nueva.observation
 
 
 def test_c3_derecho_oido_solo_sin_fecha_en_rus(tmp_path):
@@ -240,7 +269,7 @@ def test_mayoria_de_edad_sale_sola_y_marca_nivel3(tmp_path):
 
 
 def test_continuidad_de_atencion_se_hace_constar_una_sola_vez(tmp_path):
-    esperado = 'Se hace presente que a folio 4, de fecha 1 de octubre de 2026, consta respuesta sobre la continuidad de atención.'
+    esperado = 'Se hace presente que en resolución de fecha 1 de octubre de 2026 (folio 4), consta respuesta sobre la continuidad de atención.'
     for programa in ('DCE UNO', 'PRM UNO'):
         f = esp(tmp_path, fila(1, programa) + [3], hist(('Resp. continuidad de atención', '2026-10-01', 4)))
         assert f.observation.count(esperado) == 1
@@ -253,7 +282,7 @@ def test_curador_dado_de_baja_o_designado_solo_se_dice_si_rus_no_tiene_curador(t
     f = esp(tmp_path, fila(1) + [3], hist(baja), **sin_rus)
     assert f.observation.split(': ', 1)[1] == (
         'Medida revisada, a la espera de ingreso efectivo al programa PRM UNO. '
-        'Se hace presente que a folio 4, de fecha 1 de septiembre de 2026, se dejó sin efecto la designación de curador ad litem. '
+        'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 4), se dejó sin efecto la designación de curador ad litem. '
         'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.'
     )
     assert [a[:2] for a in f.avisos] == [(2, 'CURADOR_SIN_EFECTO')]

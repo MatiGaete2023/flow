@@ -5,9 +5,10 @@ import re
 from copy import deepcopy
 
 import pytest
+from types import SimpleNamespace
 from historia_fixtures import CUMPLIMIENTO, ESPERA, bita, correr, cum, cumplimiento, esp, fila, hist
 
-from nurus.personal.config import LEGACY_TEXTS_REV4, TEXT_REVISION, Configuration, defaults
+from nurus.personal.config import LEGACY_TEXTS_REV4, LEGACY_TEXTS_REV5, TEXT_REVISION, Configuration, defaults
 from nurus.personal.motor.textos import ESTRUCTURA
 
 ACLARACION = 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.'
@@ -180,7 +181,7 @@ def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
 
     datos = _escribir(tmp_path / 'a', antiguos)
     base = defaults()['textos']
-    assert datos['revision_textos'] == TEXT_REVISION == 5
+    assert datos['revision_textos'] == TEXT_REVISION == 6
     for clave in LEGACY_TEXTS_REV4:
         ambito, nombre = clave.split('.', 1)
         esperado = (
@@ -190,9 +191,7 @@ def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
         )
         assert datos['textos'][ambito][nombre]['texto'] == esperado, clave
     # Las claves nuevas se completan en una configuración que no las tiene.
-    assert (
-        'C2_PRORROGA_HASTA' in datos['textos']['HISTORIA'] and 'R11_BUSQUEDA_SIN_EFECTO' in datos['textos']['HISTORIA']
-    )
+    assert 'C2_PRORROGA_HASTA' in datos['textos']['HISTORIA'] and 'R11_SIN_EFECTO' in datos['textos']['HISTORIA']
 
 
 @pytest.mark.parametrize('clave', sorted(LEGACY_TEXTS_REV4))
@@ -202,6 +201,35 @@ def test_los_textos_antiguos_tienen_las_mismas_variables_que_los_nuevos(clave):
     ambito, nombre = clave.split('.', 1)
     campos = lambda texto: {c for _, c, _, _ in string.Formatter().parse(texto) if c}  # noqa: E731
     assert campos(LEGACY_TEXTS_REV4[clave]) == campos(defaults()['textos'][ambito][nombre]['texto'])
+
+
+def test_migracion_de_textos_rev5_adopta_el_formato_de_resolucion_y_respeta_lo_editado(tmp_path):
+    def antiguos(d):
+        d['revision_textos'] = 5
+        for clave, previo in LEGACY_TEXTS_REV5.items():
+            ambito, nombre = clave.split('.', 1)
+            d['textos'][ambito][nombre]['texto'] = previo
+        d['textos']['HISTORIA']['CURADOR_DESIGNADO']['texto'] = 'Texto propio {FECHA} {FOLIO}.'
+        for clave in ('R11_ORDEN', 'R11_SIN_EFECTO', 'R11_TERMINO', 'R11_PIDE_CUENTA'):
+            d['textos']['HISTORIA'].pop(clave)
+        d['umbrales'].pop('ventana_busqueda')
+
+    datos = _escribir(tmp_path / 'r5', antiguos)
+    base = defaults()['textos']['HISTORIA']
+    for clave in LEGACY_TEXTS_REV5:
+        nombre = clave.split('.', 1)[1]
+        esperado = 'Texto propio {FECHA} {FOLIO}.' if nombre == 'CURADOR_DESIGNADO' else base[nombre]['texto']
+        assert datos['textos']['HISTORIA'][nombre]['texto'] == esperado, nombre
+    assert datos['umbrales']['ventana_busqueda'] == 60 and 'R11_ORDEN' in datos['textos']['HISTORIA']
+
+
+@pytest.mark.parametrize('clave', sorted(LEGACY_TEXTS_REV5))
+def test_los_textos_rev5_tienen_las_mismas_variables_que_los_nuevos(clave):
+    import string
+
+    ambito, nombre = clave.split('.', 1)
+    campos = lambda texto: {c for _, c, _, _ in string.Formatter().parse(texto) if c}  # noqa: E731
+    assert campos(LEGACY_TEXTS_REV5[clave]) == campos(defaults()['textos'][ambito][nombre]['texto'])
 
 
 def _con_umbral(tmp_path, clave, valor, filas, historias, modo='CUMPLIMIENTO', encabezados=CUMPLIMIENTO):
@@ -246,3 +274,40 @@ def test_ingreso_efectivo_de_la_historia_en_espera_no_cambia_el_texto(tmp_path):
     base = esp(tmp_path, fila(1) + [45])
     f = esp(tmp_path, fila(1) + [45], hist(('Ingreso efectivo', '2026-10-02', 41)))
     assert f.observation == base.observation and f.actions == base.actions == ['programa_espera', 'PC_IE']
+
+
+@pytest.mark.parametrize(
+    'crudo,limpio',
+    [
+        ('Persona Ficticia (Reservado)', 'Persona Ficticia'),
+        ('Persona (A) Ficticia', 'Persona Ficticia'),
+        ('Persona Ficticia )(', 'Persona Ficticia'),
+        ('Persona Ficticia', 'Persona Ficticia'),
+    ],
+)
+def test_el_nombre_no_lleva_parentesis_en_correos_ni_proyectos(crudo, limpio):
+    from nurus.personal.outputs import value
+
+    work = SimpleNamespace(mapping={'nombre': 'NOMBRE'})
+    row = SimpleNamespace(values={'NOMBRE': crudo}, overrides={})
+    assert value(work, row, 'nombre') == limpio
+
+
+def test_un_dato_que_dos_reglas_dicen_se_escribe_una_sola_vez():
+    from nurus.personal.motor.composicion import componer
+    from nurus.personal.motor.textos import Frag
+
+    def frag(texto, dato=''):
+        f = Frag(texto)
+        f.dato = dato
+        return f
+
+    texto = componer(
+        'P: ',
+        [
+            frag('Ingreso efectivo registrado el 1 de octubre de 2026.', 'ingreso_efectivo'),
+            frag('La fecha de ingreso efectivo informada corresponde al 1 de octubre de 2026.', 'ingreso_efectivo'),
+            frag('Medida revisada.'),
+        ],
+    )
+    assert texto == 'P: Ingreso efectivo registrado el 1 de octubre de 2026. Medida revisada.'

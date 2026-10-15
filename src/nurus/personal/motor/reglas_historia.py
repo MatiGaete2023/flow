@@ -31,8 +31,10 @@ CITAN = frozenset(
         'SERVICIO_INGRESO',
         'CURADOR_SIN_EFECTO',
         'CURADOR_DESIGNADO',
-        'R11_BUSQUEDA_SIN_EFECTO',
-        'R11_BUSQUEDA_TERMINO',
+        'R11_ORDEN',
+        'R11_PIDE_CUENTA',
+        'R11_SIN_EFECTO',
+        'R11_TERMINO',
         'SOLICITUD_DCE',
         'CONTINUIDAD_ATENCION',
         'INFORME_INGRESADO',
@@ -219,30 +221,65 @@ def marcas_sin_efecto():
         marcar(2, 'DEJA_SIN_EFECTO_MN', 'Deja sin efecto medida interconexión M.N. en la historia')
 
 
+def _busqueda_en_bitacora(ultimo_tramite):
+    """True si la bitácora ya menciona la búsqueda hasta su último trámite (su folio o su fecha)."""
+    folio = re.escape(ultimo_tramite.folio_txt) if ultimo_tramite.folio_txt else None
+    fecha = clave(fecha_es(ultimo_tramite.fecha))
+    for obs in bitacora():
+        texto = clave(obs.texto)
+        if 'busqueda' in texto and ((folio and re.search(rf'(?<!\d){folio}(?!\d)', texto)) or fecha in texto):
+            return True
+    return False
+
+
+def _frase_busqueda(tramite, orden):
+    llaves = {
+        clave(V.PIDE_CUENTA_BUSQUEDA): 'R11_PIDE_CUENTA',
+        clave(V.SIN_EFECTO_BUSQUEDA): 'R11_SIN_EFECTO',
+        clave(V.TERMINO_BUSQUEDA): 'R11_TERMINO',
+    }
+    return render('HISTORIA', llaves[tramite.clave], FECHA=fecha_es(tramite.fecha), FOLIO=_folio(tramite))
+
+
 def busqueda_historia():
-    """R11: constancias de búsqueda; marca nivel 1 si hay una orden vigente."""
+    """R11: la observación nombra primero la Orden de búsqueda y luego sus trámites relacionados (pide cuenta, deja sin
+    efecto, término). Solo cuenta lo de los últimos `ventana_busqueda` días: una orden anterior, o una búsqueda que la
+    bitácora ya observó, no genera texto. Marca nivel 1 si hay una orden vigente."""
     h = _h()
     if h is None:
         return []
-    pares, vigentes = busqueda(h)
+    _, vigentes = busqueda(h)
     if vigentes:
         marcar(1, 'R11_BUSQUEDA_VIGENTE', 'Orden de búsqueda vigente')
-    salida = []
-    for cierre, orden in pares:
-        if _id(cierre) in emitidos():
-            continue
-        if orden is None:
-            texto = constancia([cierre])
+    desde = current.get()['date'] - timedelta(days=parametro('ventana_busqueda'))
+    desde = desde.date() if hasattr(desde, 'date') else desde
+    ordenes = sorted(h.buscar(V.ORDEN_BUSQUEDA), key=lambda t: (t.fecha, t.folio))
+    seguimiento = [t for t in h.buscar(*V.BUSQUEDA_SEGUIMIENTO)]
+    cadenas = {_id(o): [o] for o in ordenes}
+    huerfanos = []
+    for t in sorted(seguimiento, key=lambda t: (t.fecha, t.folio)):
+        previas = [o for o in ordenes if posterior(t, o)]
+        if previas:
+            cadenas[_id(max(previas, key=lambda o: (o.fecha, o.folio)))].append(t)
         else:
-            emitidos().update((_id(cierre), _id(orden)))
-            llave = 'R11_BUSQUEDA_TERMINO' if cierre.clave == clave(V.TERMINO_BUSQUEDA) else 'R11_BUSQUEDA_SIN_EFECTO'
-            texto = render(
-                'HISTORIA', llave, FECHA=fecha_es(cierre.fecha), FOLIO=_folio(cierre),
-                FECHA_ORDEN=fecha_es(orden.fecha), FOLIO_ORDEN=_folio(orden),
-            )
-        if texto:
-            salida.append(texto)
-    salida += constancias(*V.BUSQUEDA_CITADA)
+            huerfanos.append(t)
+    salida = []
+    for orden in ordenes:
+        cadena = cadenas[_id(orden)]
+        if orden.fecha < desde or _id(orden) in emitidos() or _busqueda_en_bitacora(cadena[-1]):
+            continue
+        emitidos().update(_id(t) for t in cadena)
+        texto = render('HISTORIA', 'R11_ORDEN', FECHA=fecha_es(orden.fecha), FOLIO=_folio(orden))
+        if not texto:
+            continue
+        salida.append(texto)
+        salida += [f for f in (_frase_busqueda(t, orden) for t in cadena[1:]) if f]
+    # Cierre o consulta sin la orden en la historia: constancia neutra, solo si es reciente y no se observó antes.
+    for t in huerfanos:
+        if t.fecha >= desde and not _busqueda_en_bitacora(t):
+            texto = constancia([t])
+            if texto:
+                salida.append(texto)
     return salida
 
 

@@ -25,7 +25,7 @@ EGRESO_SERVICIO = 'Egreso de servicio protección especializada y otras redes'
 # Sin regla ni marca (decisión x): Resp. Diagnóstico clínico especializado, Resp. Rectificación DCE (escrito),
 # Derivación Dirección Reg., Pide cuenta Derivación D.R. y Resp. Derivación dir. regional.
 CURADOR = ('Designa abogado', 'Deja sin efecto designación C. Ad-litem')
-BUSQUEDA_CITADA = (ORDEN_BUSQUEDA, PIDE_CUENTA_BUSQUEDA)
+BUSQUEDA_SEGUIMIENTO = (PIDE_CUENTA_BUSQUEDA, SIN_EFECTO_BUSQUEDA, TERMINO_BUSQUEDA)
 ESCRITOS = {
     'AMBULATORIO': 'Inf. Cump Programa Ambulatorio',
     'FAE': 'Inf. Cump FAE/FAS',

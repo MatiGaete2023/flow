@@ -20,7 +20,7 @@ def _espera(tmp_path, historia, rit='P-1-2026', extra=(), encabezados=()):
 def test_espera_causa_p_con_cierre_sin_egreso(tmp_path, tramite):
     f = _espera(tmp_path, hist(tramite))
     assert f.observation.endswith(': ' + TEXTO) and f.rules == ['HISTORIA.P_FINALIZADA']
-    assert f.actions == [] and f.avisos == []
+    assert f.actions == ['NOMENCL'] and f.avisos == []
 
 
 def test_ambos_cierres_dan_una_sola_constancia(tmp_path):

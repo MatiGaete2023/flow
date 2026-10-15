@@ -7,7 +7,7 @@ def test_i1_contradice_i01_sin_frase_de_envio_y_marca_nivel2(tmp_path):
     f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Ingreso informe de cumplimiento X', '2026-09-25', 58)))
     assert f.observation.split(': ', 1)[1] == (
         'Informe de avance vencido desde el 20 de septiembre de 2026. '
-        'Se hace presente que a folio 58, de fecha 25 de septiembre de 2026, se ingresa el informe de cumplimiento.'
+        'Se hace presente que en resolución de fecha 25 de septiembre de 2026 (folio 58), se ingresa el informe de cumplimiento.'
     )
     assert f.actions == [] and [a[:2] for a in f.avisos] == [(2, 'I01_CONTRADICHA')]
     dce = inf(
@@ -57,7 +57,9 @@ def test_informes_solo_hace_constar_lo_de_informes(tmp_path):
 
 def test_i3_escrito_sin_ingreso_en_informes(tmp_path):
     f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Inf. Cump Programa Ambulatorio', '2026-10-01', 30)))
-    assert 'recepcionado a folio 30' in f.observation and f.actions == []
+    assert 'recepcionado en resolución de fecha 1 de octubre de 2026 (folio 30)' in f.observation and f.actions == [
+        'NOMENCL'
+    ]
 
 
 def test_j2_informes_vencidos_acumulados(tmp_path):

@@ -45,3 +45,20 @@ def test_cobertura_parcial_cuenta_como_presencia(tmp_path):
 def test_importar_de_nuevo_con_otra_regla_no_reutiliza_un_trabajo_antiguo(tmp_path):
     trabajo = _importar(tmp_path, [INGRESO])
     assert trabajo.ruleset_version.endswith('+historia-4')
+
+
+def test_el_consolidado_exportado_trae_res_con_el_tipo_de_proyecto_sugerido(tmp_path):
+    from openpyxl import load_workbook
+
+    trabajo = _importar(tmp_path, [INGRESO])
+    tipos = [r.actions for r in trabajo.rows]
+    trabajo.export(tmp_path / 'Obs.xlsx', backend='portable', reduced_fidelity=True)
+    libro = load_workbook(trabajo.output)
+    try:
+        hoja = libro['Trabajo']
+        columnas = {c.value: c.column for c in hoja[1]}
+        valores = [hoja.cell(n, columnas['RES']).value for n in range(2, 2 + len(trabajo.rows))]
+    finally:
+        libro.close()
+    esperado = [next((k for k in a if k in ('PC_IE', 'PC_INFO', 'NOMENCL')), None) for a in tipos]
+    assert valores == esperado and 'PC_IE' in valores

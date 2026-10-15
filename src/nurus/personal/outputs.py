@@ -177,7 +177,12 @@ def value(work, row, key):
         return ''
     if isinstance(raw, (datetime, date)):
         return raw.strftime('%d/%m/%Y')
-    return str(raw)
+    return sin_parentesis(str(raw)) if key == 'nombre' else str(raw)
+
+
+def sin_parentesis(texto):
+    """Un nombre no lleva paréntesis ni lo escrito en ellos: contaminan correos y proyectos de resolución."""
+    return ' '.join(re.sub(r'[()]', ' ', re.sub(r'\([^()]*\)', ' ', texto)).split())
 
 
 def resolve_contact(cfg, name):

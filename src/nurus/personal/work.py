@@ -53,6 +53,9 @@ def actions_for(events):
         actions.append('programa_por_vencer')
     if any(e.startswith(('CUMPLIMIENTO.C04_', 'CUMPLIMIENTO.C05_')) for e in events):
         actions.append('medidas')
+    # Observaciones que remiten un proyecto para aplicar una nomenclatura (informe ingresado, causa finalizada).
+    if any(e in ('HISTORIA.C10_ESCRITO', 'HISTORIA.P_FINALIZADA') for e in events):
+        actions.append('NOMENCL')
     return actions
 
 
@@ -184,12 +187,27 @@ def _map_consolidated(work, capture, book):
     return capture.consolidated, sheets.pop(), positions
 
 
+def _automatic_resolution(row):
+    """Tipo de proyecto que el motor identificó (PC_IE, PC_INFO o NOMENCL) para llenar la columna RES; None si no hay."""
+    from .resolutions import KINDS
+
+    if row.excluded or row.decisions.get('resolution', 'auto') != 'auto':
+        return None
+    return next((kind for kind in row.actions if kind in KINDS), None)
+
+
 def _human_reviewed(row):
     """Distingue una edición humana real de columnas técnicas reimportadas vacías."""
     review = row.review or {}
     if 'OBSERVACION' in review and str(review.get('OBSERVACION', '')) != str(row.observation or ''):
         return True
-    return any(_explicit(review.get(key)) for key in ('FECHA_OBS', 'TT', 'CC', 'RES'))
+    if any(_explicit(review.get(key)) for key in ('FECHA_OBS', 'TT', 'CC')):
+        return True
+    # El tipo que el motor sugirió en RES no es una edición humana; cambiarlo o escribir otro sí lo es.
+    from .resolutions import resolution_kind
+
+    marcado = review.get('RES')
+    return _explicit(marcado) and (resolution_kind(marcado) or str(marcado).strip()) != _automatic_resolution(row)
 
 
 def _source_value(row, key, default=''):
@@ -555,7 +573,7 @@ class Work:
                     'review_date': _review_value(row, 'FECHA_OBS'),
                     'tt_value': _review_value(row, 'TT'),
                     'workload_value': _review_value(row, 'CC'),
-                    'resolution_value': _review_value(row, 'RES'),
+                    'resolution_value': _review_value(row, 'RES', _automatic_resolution(row)),
                 }
             )
         result = _export_preserved_payload(

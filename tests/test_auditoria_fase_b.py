@@ -93,7 +93,7 @@ def test_entrega_temprana_de_periodo_incierto_advierte_sin_cambiar_textos_ni_acc
 @pytest.mark.parametrize('fecha', ['2026-09-20', '2026-09-25'])
 def test_escrito_desde_vencimiento_conserva_contraste_aprobado(tmp_path, fecha):
     row = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Inf. Cump Programa Ambulatorio', fecha, 40)))
-    assert row.actions == [] and 'I01_CONTRADICHA' in [warning[1] for warning in row.avisos]
+    assert row.actions == ['NOMENCL'] and 'I01_CONTRADICHA' in [warning[1] for warning in row.avisos]
 
 
 def test_edicion_y_recuperacion_no_pierden_contexto_ni_dependen_del_zip_original(tmp_path):

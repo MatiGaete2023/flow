@@ -25,11 +25,27 @@ ESTRUCTURA = {
 }
 
 
+# Un dato se dice una sola vez (decisión x): si dos reglas llegan a la misma información (la fecha de ingreso efectivo,
+# la fecha de vencimiento de la medida, los días de espera), componer() conserva el primer fragmento y omite el resto.
+DATOS = {
+    'CUMPLIMIENTO.C03_INGRESO_RECIENTE': 'ingreso_efectivo',
+    'HISTORIA.INGRESO_INFORMADO': 'ingreso_efectivo',
+    'CUMPLIMIENTO.C04_VENCIDA': 'vencimiento',
+    'CUMPLIMIENTO.C05_VENCE_HOY': 'vencimiento',
+    'CUMPLIMIENTO.C05_POR_VENCER': 'vencimiento',
+    'HISTORIA.MEDIDA_SIN_VIGENCIA': 'vencimiento',
+    'HISTORIA.EGRESO_PROYECTADO': 'vencimiento',
+    'HISTORIA.E05_DIAS': 'dias_espera',
+    'HISTORIA.E10_LISTA': 'dias_espera',
+}
+
+
 class Frag(str):
     """Fragmento de observación con su grupo; `partes` lleva (texto, grupo) si el texto mezcla grupos."""
 
     grupo = 'C'
     partes = ()
+    dato = ''
 
 
 def con_grupo(texto, grupo):
@@ -61,4 +77,8 @@ def render(modo, id_regla, **datos):
         return ''
     ctx['events'].append(key)
     plantilla = ctx['config']['textos'][modo][id_regla]['texto']
-    return _armar(plantilla, ESTRUCTURA.get(key, 'C'), datos)
+    fragmento = _armar(plantilla, ESTRUCTURA.get(key, 'C'), datos)
+    if key in DATOS and fragmento:
+        fragmento = con_grupo(fragmento, getattr(fragmento, 'grupo', 'C'))
+        fragmento.dato = DATOS[key]
+    return fragmento
