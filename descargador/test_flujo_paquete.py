@@ -18,6 +18,7 @@ from test_reutilizacion_local import bound_lot, diaries
 
 class Scope:
     screen = 'seguimiento'
+    tribunals = ('113',)
 
     def plan(self, catalog):
         return ['consulta ficticia']
@@ -246,3 +247,135 @@ def test_e3_consulta_nueva_no_reutiliza_historia_de_otro_lote(monkeypatch, tmp_p
     manifest = Path(result['historia']['manifiesto'])
     assert set(json.loads(manifest.read_text())['causas']) == {'RUS|49|101'}
     assert {f['cause_id'] for f in read_capture(result['path']).rows('historia_tramites')} == {'101'}
+
+
+def test_periodo_a_recolectar_recorta_las_bitacoras_del_paquete(tmp_path):
+    from export_csmp_capture import export_capture
+
+    lot = bound_lot(tmp_path / 'principal')
+    manifest = diaries(tmp_path / 'bitacoras', 2)
+    largo = read_capture(export_capture([lot], tmp_path / 'cuatro.zip', diaries=[manifest], match_diaries=True))
+    corto = read_capture(export_capture([lot], tmp_path / 'uno.zip', diaries=[manifest], match_diaries=True, meses=1))
+    assert len(largo.rows('bitacoras')) == 2 and corto.rows('bitacoras') == []
+
+
+def test_periodo_fuera_de_rango_se_rechaza():
+    from nurus.capture.temporal import earliest
+    from datetime import date
+
+    for meses in (0, 5, True, '2'):
+        with pytest.raises(ValueError):
+            earliest(date(2026, 10, 14), meses)
+    assert earliest(date(2026, 10, 14), 1) == date(2026, 9, 14)
+    assert earliest(date(2026, 10, 14)) == date(2026, 6, 14)
+
+
+def runners_con_calendario(monkeypatch, cancel):
+    pantallas = []
+
+    class Queries:
+        def __init__(self, bridge, catalog, emit, gate, pause):
+            self.emit = emit
+
+        def run(self, batch, destination):
+            if batch.screen == 'calendario_informes':
+                pantallas.append((batch.month, batch.year))
+                lot = bound_lot(destination / f'calendario-{batch.year}-{batch.month}', mode='Informes')
+            else:
+                lot = bound_lot(destination / 'principal')
+            self.emit('folder', str(lot.folder))
+
+    class Diaries:
+        def __init__(self, bridge, catalog, emit, gate, pause, reuse_base=None):
+            self.emit = emit
+
+        def run(self, batch, destination):
+            manifest = diaries(destination / 'bitacoras', 2)
+            self.emit('folder', str(manifest.parent))
+            return {'manifest': str(manifest), 'estado': 'COMPLETA', 'fallidas': 0, 'consultas_fallidas': 0}
+
+    monkeypatch.setattr(flujo_paquete, 'BatchRunner', Queries)
+    monkeypatch.setattr(flujo_paquete, 'DiaryRunner', Diaries)
+    return pantallas
+
+
+class PuenteCatalogo:
+    def __init__(self):
+        self.llamadas = []
+
+    def call(self, name, args=None, **kwargs):
+        self.llamadas.append((name, args))
+        return {}
+
+
+def test_paquete_incluye_los_informes_por_vencer_tras_avisar_al_usuario(monkeypatch, tmp_path):
+    from datetime import date
+
+    cancel = Event()
+    pantallas = runners_con_calendario(monkeypatch, cancel)
+    avisos, eventos = [], []
+    puente = PuenteCatalogo()
+    result = flujo_paquete.run(
+        puente,
+        {},
+        lambda *event: eventos.append(event),
+        cancel,
+        Scope(),
+        tmp_path,
+        informes=True,
+        esperar_pantalla=avisos.append,
+        today=date(2026, 10, 14),
+    )
+    assert avisos == ['calendario_informes'] and puente.llamadas == [('catalog', {'screen': 'calendario_informes'})]
+    assert pantallas == [('10', '2026'), ('11', '2026')] and not result['partial']
+    assert [v for n, v in eventos if n == 'phase'] == ['consultas', 'bitacoras', 'informes', 'paquete']
+    consultas = read_capture(result['path']).rows('consultas')
+    assert len([q for q in consultas if q['screen'] != 'bitacoras']) == 3
+
+
+def test_si_el_usuario_omite_los_informes_el_paquete_se_crea_parcial(monkeypatch, tmp_path):
+    cancel = Event()
+    pantallas = runners_con_calendario(monkeypatch, cancel)
+    eventos = []
+
+    def omitir(pantalla):
+        raise PocError('El usuario omitió el calendario de informes.')
+
+    result = flujo_paquete.run(
+        PuenteCatalogo(),
+        {},
+        lambda *event: eventos.append(event),
+        cancel,
+        Scope(),
+        tmp_path,
+        informes=True,
+        esperar_pantalla=omitir,
+    )
+    assert pantallas == [] and result['partial'] and Path(result['path']).is_file()
+    assert any(n == 'warning' and 'informes por vencer' in v for n, v in eventos)
+
+
+def test_un_paquete_por_hoja_entrega_cada_hoja_por_separado(monkeypatch, tmp_path):
+    from datetime import date
+
+    cancel = Event()
+    pantallas = runners_con_calendario(monkeypatch, cancel)
+
+    avisos = []
+    batch = Batch(('113',), ('3',), ('Espera', 'Cumplimiento'))
+    monkeypatch.setattr(Batch, 'plan', lambda self, catalog: ['consulta ficticia'])
+    resultados = flujo_paquete.run_por_hoja(
+        PuenteCatalogo(),
+        {},
+        lambda *event: None,
+        cancel,
+        batch,
+        tmp_path,
+        informes=True,
+        esperar_pantalla=avisos.append,
+        today=date(2026, 10, 14),
+    )
+    assert len(resultados) == 2 and all(Path(r['path']).is_file() for r in resultados)
+    assert resultados[0]['path'] != resultados[1]['path']
+    # El calendario se descarga una vez, con la hoja de Cumplimiento.
+    assert avisos == ['calendario_informes'] and pantallas == [('10', '2026'), ('11', '2026')]

@@ -208,3 +208,52 @@ def test_egresados_group_adds_no_false_column_warning(tmp_path):
     assert not any('Columnas funcionales ausentes' in w for w in work.warnings)
     egresado = next(row for row in work.rows if row.id == record['record_id'])
     assert 'Tipo de fuente fuera del motor tradicional; no evaluado.' in egresado.warnings
+
+
+def _calendario(source, numero, vence):
+    from nurus.capture.contract import COMMON
+
+    calendar = {k: source[k] for k in COMMON}
+    raw = {
+        'RIT': source['rit_original'],
+        'NOMBRE': 'Persona Ficticia',
+        'NOMBRE CENTRO': 'PRM FICTICIO',
+        'FECHA VENCIMIENTO': vence,
+    }
+    calendar.update(
+        original_file='calendario.xls',
+        original_row=str(numero),
+        calendar_id=f'cal{numero}',
+        event_at=vence,
+        event_type='INFORME',
+        status='PENDIENTE',
+        association='VERIFICADA',
+        raw_json=json.dumps(raw),
+        normalized_json=json.dumps(raw),
+    )
+    return calendar
+
+
+def test_cumplimiento_con_calendario_observa_el_informe_por_vencer_y_alimenta_el_correo(tmp_path):
+    from nurus.personal.outputs import mail_metric_value
+
+    m, t = fixture()
+    t['registros'] = t['registros'][:2]
+    for record in t['registros']:
+        raw = json.loads(record['normalized_json'])
+        raw.update({'DIAS DE CUMPLIMIENTO': '200', 'DIAS PARA EGRESAR': '150', 'FEC.EGRESO PROYECTADO': '2027-03-01'})
+        record.update(record_type='CUMPLIMIENTO', raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    # r0: informe a 43 días (dentro de la ventana); r1: a 83 días (fuera).
+    t['calendarios'] = [
+        _calendario(t['registros'][0], 50, '2026-11-20'),
+        _calendario(t['registros'][1], 51, '2026-12-30'),
+    ]
+    m['table_states']['calendarios'] = 'COMPLETA'
+    work = import_capture(write_capture(tmp_path / 'cal.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    primera, segunda = work.rows[0], work.rows[1]
+    assert 'vence el 20 de noviembre de 2026' in primera.observation
+    assert 'programa_por_vencer' in primera.actions and 'programa_por_vencer' not in segunda.actions
+    assert (
+        'informe de avance' not in segunda.observation.lower() or 'vence el 30 de diciembre' not in segunda.observation
+    )
+    assert mail_metric_value(work, primera, 'vencimiento') == '20/11/2026'

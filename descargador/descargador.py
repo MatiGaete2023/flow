@@ -432,7 +432,7 @@ class Application:
         self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
         self.history_choice = ttk.Checkbutton(
             primary,
-            text='Leer también la historia de la causa (últimos 4 meses) (prueba)',
+            text='Leer también la historia de la causa (prueba)',
             variable=self.read_history,
             command=self.toggle_history,
         )
@@ -446,6 +446,29 @@ class Application:
         )
         if self.read_history.get():
             self.history_package_choice.pack(side='left', padx=12)
+        # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
+        self.months_back = tk.StringVar(value=str(self.prefs.data['meses_atras']))
+        ttk.Label(primary, text='Período a recolectar (meses)').pack(side='left', padx=(12, 2))
+        self.months_combo = ttk.Combobox(
+            primary, textvariable=self.months_back, values=('1', '2', '3', '4'), width=3, state='readonly'
+        )
+        self.months_combo.pack(side='left')
+        self.months_combo.bind('<<ComboboxSelected>>', lambda _event: self.save_preferences())
+        self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
+        self.reports_choice = ttk.Checkbutton(
+            primary,
+            text='Incluir informes por vencer (60 días)',
+            variable=self.reports_due,
+            command=self.save_preferences,
+        )
+        self.reports_choice.pack(side='left', padx=12)
+        self.package_per_sheet = tk.BooleanVar(value=self.prefs.data['paquete_por_hoja'])
+        ttk.Checkbutton(
+            primary,
+            text='Un paquete por hoja de RUS (muchos registros)',
+            variable=self.package_per_sheet,
+            command=self.save_preferences,
+        ).pack(side='left', padx=12)
         self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
@@ -570,6 +593,13 @@ class Application:
             self.history_package_choice.pack_forget()
         self.save_preferences()
 
+    def months(self):
+        try:
+            value = int(self.months_back.get())
+        except ValueError:
+            return 4
+        return value if 1 <= value <= 4 else 4
+
     def save_preferences(self):
         self.prefs.data.update(
             destino=self.dest.get(),
@@ -579,6 +609,9 @@ class Application:
             reutilizar_bitacoras=self.reuse_diaries.get(),
             leer_historia=self.read_history.get(),
             historia_en_paquete=self.history_in_package.get(),
+            informes_por_vencer=self.reports_due.get(),
+            paquete_por_hoja=self.package_per_sheet.get(),
+            meses_atras=self.months(),
         )
         try:
             self.prefs.save()
@@ -1190,9 +1223,9 @@ class Application:
                 elif command == 'package':
                     self.emit('package_done', package_current_lot(*arg))
                 elif command == 'pipeline':
-                    from flujo_paquete import run
+                    from flujo_paquete import run, run_por_hoja
 
-                    run(
+                    (run_por_hoja if self.prefs.data.get('paquete_por_hoja') else run)(
                         self.bridge,
                         self.catalog,
                         self.emit,
@@ -1202,6 +1235,9 @@ class Application:
                         reuse=self.prefs.data['reutilizar_bitacoras'],
                         historia=self.prefs.data['leer_historia'],
                         historia_en_paquete=self.prefs.data['historia_en_paquete'],
+                        meses=self.prefs.data.get('meses_atras', 4),
+                        informes=self.prefs.data.get('informes_por_vencer', False),
+                        esperar_pantalla=self.wait_for_screen,
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
@@ -1220,6 +1256,7 @@ class Application:
                                 self.cancel,
                                 pause=self.prefs.data['pausa_consultas'],
                                 anterior=anterior,
+                                meses=self.prefs.data.get('meses_atras', 4),
                             )
                     DiaryRunner(
                         self.bridge,
@@ -1271,6 +1308,29 @@ class Application:
             finally:
                 self.emit('idle', None)
 
+    def wait_for_screen(self, screen):
+        """Desde el trabajador: pide al usuario cambiar la pantalla de SITFA y espera su respuesta."""
+        gate = {'event': threading.Event(), 'ok': False, 'screen': screen}
+        self.emit('need_screen', gate)
+        while not gate['event'].wait(0.25):
+            if self.cancel.is_set():
+                raise m.PocError('Proceso detenido.')
+        if not gate['ok']:
+            raise m.PocError('El usuario omitió el calendario de informes.')
+
+    def ask_screen(self, gate):
+        label = {'calendario_informes': 'el calendario de informes (Informes por vencer)'}.get(
+            gate['screen'], gate['screen']
+        )
+        gate['ok'] = messagebox.askyesno(
+            'Cambia la pantalla de SITFA',
+            f'Para incluir los informes por vencer, en SITFA cambia a {label} y '
+            'luego pulsa «Sí». El Descargador actualizará sus opciones y seguirá solo.\n\n'
+            '«No» crea el paquete sin los informes por vencer.',
+            parent=self.root,
+        )
+        gate['event'].set()
+
     def process_event(self, name, value):
         if name == 'pipeline_folder':
             self.last_folder = Path(value)
@@ -1282,12 +1342,20 @@ class Application:
             remember(self.prefs, value['folder'])
             if value['fase'] == 'consultas':
                 self.last_sheets_folder = Path(value['folder'])
-            else:
+            elif value['fase'] == 'bitacoras':
                 self.last_diary_manifest = Path(value['folder']) / 'bitacoras.json'
+            return True
+        if name == 'need_screen':
+            self.ask_screen(value)
             return True
         if name == 'phase':
             self.phase_name.set(
-                {'consultas': '1 Consultar SITFA', 'bitacoras': '2 Leer bitácoras', 'paquete': '3 Crear paquete'}[value]
+                {
+                    'consultas': '1 Consultar SITFA',
+                    'bitacoras': '2 Leer bitácoras',
+                    'informes': '3 Informes por vencer',
+                    'paquete': '4 Crear paquete',
+                }.get(value, value)
             )
             self._phase_started = time.monotonic()
             self._phase_paused = 0.0
@@ -1369,7 +1437,7 @@ class Application:
         if name == 'history_done':
             self.status.set(
                 f"Historia {value['estado']}: {value['leidas']} leídas · {value['fallidas']} fallidas · "
-                f"{value['tramites_en_ventana']} trámites en la ventana de 4 meses"
+                f"{value['tramites_en_ventana']} trámites en el período recolectado"
             )
             return True
         if name == 'diary_progress':
@@ -1542,7 +1610,9 @@ class Application:
         self.root.after(100, self.poll)
 
 
-def package_current_lot(sheets_folder, diary_manifest, target, consolidated=False, historia=None):
+def package_current_lot(
+    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4
+):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
     from export_csmp_capture import export_capture_with_note
@@ -1551,9 +1621,15 @@ def package_current_lot(sheets_folder, diary_manifest, target, consolidated=Fals
     target = Path(target)
     if target.exists():
         raise m.PocError('El destino ya existe; elige un nombre nuevo.')
-    lots = load_sources([sheets_folder])
+    lots = load_sources([sheets_folder, *extra_folders])
     path, note = export_capture_with_note(
-        lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=consolidated, historia=historia
+        lots,
+        target,
+        diaries=[Path(diary_manifest)],
+        match_diaries=True,
+        consolidated=consolidated,
+        historia=historia,
+        meses=meses,
     )
     capture = read_capture(path)
     summary = next(

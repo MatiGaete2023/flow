@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date
+from datetime import date, timedelta
 from hashlib import sha256
 from io import BytesIO
 import json
@@ -28,6 +28,7 @@ CANONICAL = {key: names[0] for key, names in COMMON.items()}
 for columns in MODE_COLUMNS.values():
     CANONICAL.update({key: names[0] for key, names in columns.items()})
 MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite agregado del contrato.
+VENTANA_INFORMES_DIAS = 60  # Calendario de informes por vencer: mes actual y siguiente
 
 
 # Tipos de registro que evalúa el motor tradicional; EGRESADOS/OTRO quedan sin evaluar.
@@ -134,16 +135,26 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         )
         return cached
     records = list(capture.rows('registros'))
+    todos = list(records)
+    # Con Espera o Cumplimiento en la captura, el calendario de informes por vencer solo aporta fechas al cruce
+    # (C-10 y correo preventivo): sus filas no son registros propios, para no duplicar a la misma persona.
+    pantallas = {q['query_id']: q['screen'] for q in capture.rows('consultas')}
+    solo_cruce = any(
+        r['record_type'] in ('ESPERA', 'CUMPLIMIENTO') and pantallas.get(r['query_id']) != 'calendario_informes'
+        for r in records
+    )
+    if solo_cruce:
+        records = [r for r in records if pantallas.get(r['query_id']) != 'calendario_informes']
 
     # Un productor independiente puede aportar calendarios sin duplicarlos en
     # registros. Solo se omite una copia de la misma fila física, nunca por RIT.
     def physical(row):
         return tuple(row[k] for k in ('query_id', 'source_sha256', 'original_file', 'original_sheet', 'original_row'))
 
-    represented = {physical(row) for row in records}
-    record_ids = {row['record_id'] for row in records}
+    represented = {physical(row) for row in todos}
+    record_ids = {row['record_id'] for row in todos}
     for calendar in capture.rows('calendarios'):
-        if physical(calendar) in represented:
+        if physical(calendar) in represented or solo_cruce:
             continue
         record = {k: calendar[k] for k in SOURCE_FIELDS}
         is_report = calendar['event_type'].strip().upper() in ('INFORME', 'INFORMES')
@@ -222,7 +233,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             source = json.loads(cal['normalized_json'])
             cm = map_columns(source, 'INFORMES')
             due = as_date(source.get(cm.get('vencimiento', ''), ''))
-            if due and due > as_of:
+            if due and as_of < due <= as_of + timedelta(days=VENTANA_INFORMES_DIAS):
                 dates.append(due)
         if len(set(dates)) == 1:
             cross[record['record_id']] = dates[0]

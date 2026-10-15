@@ -338,12 +338,19 @@ def mail_metric_value(work, row, key):
     columna ambigua produce un error en lugar de elegir una fecha arbitraria.
     """
     if key in getattr(row, 'overrides', {}) or key in work.mapping:
-        return value(work, row, key).strip()
+        texto = value(work, row, key).strip()
+        if texto or key != 'vencimiento' or key in getattr(row, 'overrides', {}):
+            return texto
+        cruce = getattr(work, 'cross_dates', {}).get(row.id)
+        return cruce.strftime('%d/%m/%Y') if cruce else ''
     from nurus.rus.columns import map_columns
 
     mode = {'espera': 'ESPERA', 'vencimiento': 'INFORMES', 'egreso_proy': 'CUMPLIMIENTO'}[key]
     column = map_columns(row.values.keys(), mode).get(key)
     raw = row.values.get(column, '')
+    if key == 'vencimiento' and raw in (None, ''):
+        # Fila de Cumplimiento: el próximo informe viene del calendario de informes por vencer del paquete.
+        raw = getattr(work, 'cross_dates', {}).get(row.id)
     if raw is None:
         return ''
     if isinstance(raw, (date, datetime)):

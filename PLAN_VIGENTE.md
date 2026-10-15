@@ -99,6 +99,15 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   10. Umbrales configurables (`UMBRALES`): `prorroga_reciente` = 90, `ventana_ingreso` = 30, `lista_espera_larga` = 100.
   11. `C10_ESCRITO` aprobado por el usuario el 15 de octubre de 2026; Asistente `0.5.0.dev6`.
 
+- y) Ronda del usuario, 16 de octubre de 2026 (detalle en `docs/implementacion/wp/WP-66.md`).
+  1. La columna NOMBRE no lleva paréntesis ni lo escrito en ellos (Descargador y Asistente).
+  2. Toda constancia de la historia sigue el formato «en resolución de fecha F (folio N)». Una segunda constancia «Se hace presente que» se enlaza con «Asimismo».
+  3. Un dato que varias reglas dicen se escribe una sola vez.
+  4. Órdenes de búsqueda: primero la orden, luego sus trámites; solo los últimos 2 meses; nada si la bitácora ya lo observó.
+  5. Si la observación remite un proyecto y el motor identifica su tipo, se marca en RES (PC_IE, PC_INFO, NOMENCL).
+  6. El paquete incluye el calendario de informes por vencer (60 días); Cumplimiento observa los informes que vencen dentro de ese plazo y alimenta el correo preventivo.
+  7. El Descargador deja elegir el período a recolectar (1 a 4 meses) y entregar un paquete por hoja de RUS.
+
 ## Fase B de auditoría final — 14 de octubre de 2026
 
 - v) Usuario: «Pasa a la fase B», tras el informe de auditoría de esta sesión. Autoriza correcciones localizadas de

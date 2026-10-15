@@ -99,11 +99,12 @@ def check_products(work, drafts, projects):
             from .word_quality import unresolved_text, pending_fields
 
             matching = []
+            current_hash = project_hash(project) if work else ''
             if work:
                 for r in work.receipts.values():
                     if r.get('kind') != 'word' or r.get('state') != 'generated':
                         continue
-                    if r.get('product_id') == project.key and r.get('product_hash') == project_hash(project):
+                    if r.get('product_id') == project.key and r.get('product_hash') == current_hash:
                         matching.append(r)
                     elif (
                         not r.get('product_id')
@@ -119,7 +120,7 @@ def check_products(work, drafts, projects):
                     if r.get('kind') == 'word'
                     and r.get('state') == 'generated'
                     and r.get('product_id') == project.key
-                    and r.get('product_hash') != project_hash(project)
+                    and r.get('product_hash') != current_hash
                 ]
             if not matching and outdated:
                 matching = outdated

@@ -24,6 +24,54 @@ def calendar_date(normalized):
     return day.isoformat() if day else ''
 
 
+def asociar_calendarios(data):
+    """Calendarios de informes sin ids remotos: se asocian a un ingreso verificado solo si tribunal, RIT, nombre y
+    programa coinciden con exactamente un ingreso de las demás tablas de la captura (nunca por RIT solo ni con empate).
+    Devuelve los record_id resueltos."""
+    from collections import defaultdict
+    from nurus.rus.columns import map_columns
+
+    def clave(court, normalized, modo):
+        try:
+            columnas = map_columns(list(normalized), modo)
+        except Exception:
+            return None
+        partes = [m.normalized(normalized.get(columnas.get(k, ''), '')) for k in ('rit', 'nombre', 'programa')]
+        return (court, *partes) if all(partes) else None
+
+    ingresos = defaultdict(set)
+    for registro in data['registros']:
+        if registro['identity_status'] != 'VERIFICADA' or registro['record_type'] in ('INFORMES', 'OTRO', 'EGRESADOS'):
+            continue
+        k = clave(registro['court_code'], json.loads(registro['normalized_json']), registro['record_type'])
+        if k:
+            ingresos[k].add(tuple(registro[f] for f in ('cause_id', 'ingreso_id', 'person_id', 'program_id')))
+    por_fisica = {
+        (r['query_id'], r['source_sha256'], r['original_row']): r
+        for r in data['registros']
+        if r['record_type'] == 'INFORMES'
+    }
+    resueltos = []
+    for calendario in data.get('calendarios', []):
+        if calendario['association'] == 'VERIFICADA':
+            continue
+        k = clave(calendario['court_code'], json.loads(calendario['normalized_json']), 'INFORMES')
+        candidatos = ingresos.get(k, ())
+        if len(candidatos) != 1:
+            continue
+        ids = next(iter(candidatos))
+        registro = por_fisica.get((calendario['query_id'], calendario['source_sha256'], calendario['original_row']))
+        for destino in (calendario, registro):
+            if destino is None:
+                continue
+            destino.update(zip(('cause_id', 'ingreso_id', 'person_id', 'program_id'), ids))
+        calendario['association'] = 'VERIFICADA'
+        if registro is not None:
+            registro['identity_status'] = 'VERIFICADA'
+            resueltos.append(registro['record_id'])
+    return resueltos
+
+
 def consolidated_workbook(lots):
     """Libro CSMP de los lotes como bytes (D6): solo el XLSX, nunca HTML ni PDF. Falla si el lote no es apto."""
     from tempfile import TemporaryDirectory
@@ -58,6 +106,7 @@ def export_capture(
     consolidated=False,
     _consolidated_data=None,
     historia=None,
+    meses=4,
 ):
     lots = list(lots)
     if not lots:
@@ -211,6 +260,11 @@ def export_capture(
                             'normalized_json': json.dumps(normalized, ensure_ascii=False),
                         }
                     )
+    resueltos = set(asociar_calendarios(data))
+    if resueltos:
+        data['incidencias'] = [
+            i for i in data['incidencias'] if not (i['code'] == 'IDENTIDAD_INCIERTA' and i['record_id'] in resueltos)
+        ]
     if diaries:
         data['bitacoras'] = []
         identities = (
@@ -238,6 +292,15 @@ def export_capture(
                 screen='bitacoras',
                 error='Las bitácoras disponibles no tienen correspondencia remota verificada con los registros seleccionados.',
             )
+        from datetime import date as _date
+        from nurus.capture.temporal import earliest
+
+        # Período a recolectar (1 a 4 meses): las entradas anteriores a la ventana no pasan al paquete.
+        try:
+            corte = _date.fromisoformat(captured[:10])
+        except ValueError:
+            corte = _date.today()
+        primera_fecha = earliest(corte, meses).isoformat()
         for qi, snapshot in enumerate(batch['queries']):
             qid = f'diary-{qi}'
             selection = {
@@ -258,6 +321,8 @@ def export_capture(
             for warning in snapshot.get('warnings', []):
                 incident(qid, 'BITACORA_ADVERTENCIA', warning)
             for en, entry in enumerate(snapshot['entries'], 1):
+                if entry['fecha'][:10] < primera_fecha:
+                    continue
                 common = {k: '' for k in COMMON}
                 common.update(
                     capture_id=cid,

@@ -1,4 +1,4 @@
-"""Historia de la causa (ventana de 4 meses): lectura verificada del respaldo y Excel de revisión."""
+"""Historia de la causa (ventana de hasta 4 meses): lectura verificada del respaldo y Excel de revisión."""
 
 import hashlib
 import json
@@ -101,7 +101,9 @@ def cargar(manifest_path):
                 raise ValueError('El respaldo de una historia no coincide con su SHA-256.')
             lectura = read_historia(data)
             leida = datetime.fromisoformat(causa['leida'])
-            dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date())
+            dentro, anteriores, posteriores, sin_fecha = separar_ventana(
+                lectura['filas'], leida.date(), estado.get('meses', 4)
+            )
             if posteriores:
                 causa['advertencias'] = list(
                     dict.fromkeys([*causa.get('advertencias', []), 'HISTORIA_FECHA_POSTERIOR'])

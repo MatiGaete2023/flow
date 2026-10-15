@@ -53,6 +53,9 @@ class Preferences:
             'reutilizar_bitacoras': True,
             'leer_historia': False,
             'historia_en_paquete': True,
+            'informes_por_vencer': True,
+            'meses_atras': 4,
+            'paquete_por_hoja': False,
             'tema': 'Sistema',
             'historial_lotes': [],
             'historial_bitacoras': [],
@@ -65,6 +68,11 @@ class Preferences:
                     for key in self.data:
                         if key in value and isinstance(value[key], type(self.data[key])):
                             self.data[key] = value[key]
+                    meses = value.get('meses_atras')
+                    if isinstance(meses, int) and not isinstance(meses, bool) and 1 <= meses <= 4:
+                        self.data['meses_atras'] = meses
+                    else:
+                        self.data['meses_atras'] = 4
                     if isinstance(value.get('tribunales'), list):
                         self.data['tribunales'] = value['tribunales']
                     if isinstance(value.get('pausa_consultas'), (int, float)) and not isinstance(

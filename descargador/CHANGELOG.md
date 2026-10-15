@@ -2,6 +2,12 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**Sin cambio de versión, 16 de octubre de 2026** (prueba; extensión intacta). Sobre 2.8.0:
+- «Período a recolectar» de 1 a 4 meses para bitácoras e historia de la causa.
+- «Incluir informes por vencer (60 días)»: nueva fase que pide cambiar SITFA al calendario de informes, descarga el mes actual y el siguiente y los agrega al paquete.
+- «Un paquete por hoja de RUS»: cada hoja (Espera, Cumplimiento, Informes) se consulta y entrega por separado.
+- La columna NOMBRE del consolidado ya no lleva paréntesis.
+
 **2.8.0, 13 de octubre de 2026** (Descargador y extensión; **prueba**, pendiente de acta del usuario). Cambios desde 2.7.6:
 - **Historia de la causa**: casilla «Leer también la historia de la causa (últimos 4 meses)» (apagada por defecto).
   Se lee la tabla de la pestaña Historia una vez por causa, en la misma pasada del listado que las bitácoras.

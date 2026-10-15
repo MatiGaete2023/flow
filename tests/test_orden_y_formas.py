@@ -311,3 +311,34 @@ def test_un_dato_que_dos_reglas_dicen_se_escribe_una_sola_vez():
         ],
     )
     assert texto == 'P: Ingreso efectivo registrado el 1 de octubre de 2026. Medida revisada.'
+
+
+def test_pending_fields_no_relee_un_word_sin_cambios(tmp_path, monkeypatch):
+    from docx import Document
+    from nurus.personal import word_quality
+
+    ruta = tmp_path / 'p.docx'
+    documento = Document()
+    documento.add_paragraph('Sin campos pendientes')
+    documento.save(ruta)
+    llamadas = []
+    original = word_quality._pending_fields
+    monkeypatch.setattr(word_quality, '_pending_fields', lambda d: llamadas.append(d) or original(d))
+    word_quality._CACHE.clear()
+    assert word_quality.pending_fields(ruta) == [] and word_quality.pending_fields(ruta) == []
+    assert len(llamadas) == 1
+    documento.add_paragraph('Falta {{NOMBRE}}')
+    documento.save(ruta)
+    assert word_quality.pending_fields(ruta) == ['{{NOMBRE}}'] and len(llamadas) == 2
+
+
+def test_abrir_un_archivo_no_deja_pegada_la_ventana():
+    import threading
+    from nurus.personal.app_base import launch_without_blocking
+
+    liberar = threading.Event()
+    assert launch_without_blocking('x.xlsx', startfile=lambda _p: liberar.wait(5), wait=0.05) is True
+    liberar.set()
+    assert launch_without_blocking('x.xlsx', startfile=lambda _p: None, wait=1) is False
+    with pytest.raises(ValueError, match='No se pudo abrir'):
+        launch_without_blocking('x.xlsx', startfile=lambda _p: (_ for _ in ()).throw(OSError('bloqueado')), wait=1)

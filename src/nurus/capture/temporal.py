@@ -4,7 +4,7 @@ from datetime import date, datetime
 import json
 from calendar import monthrange
 
-RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-4'
+RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-5'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
 DISPLAY_RULES = ('CT-01', 'CT-02')
 DISPLAY_VERSION = 'solo-mostrar-3'
@@ -33,9 +33,11 @@ def moment(row):
     return datetime.fromisoformat(value.replace('Z', '+00:00')) if 'T' in value else date.fromisoformat(value)
 
 
-def earliest(as_of):
-    """Ventana de cuatro meses naturales; no busca antecedentes más antiguos."""
-    month = as_of.year * 12 + as_of.month - 1 - 4
+def earliest(as_of, meses=4):
+    """Ventana de hasta cuatro meses naturales (1 a 4, a elección del usuario); no busca antecedentes más antiguos."""
+    if not isinstance(meses, int) or isinstance(meses, bool) or not 1 <= meses <= 4:
+        raise ValueError('El período a recolectar va de 1 a 4 meses.')
+    month = as_of.year * 12 + as_of.month - 1 - meses
     year, zero_month = divmod(month, 12)
     return date(year, zero_month + 1, min(as_of.day, monthrange(year, zero_month + 1)[1]))
 

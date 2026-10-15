@@ -53,6 +53,9 @@ def actions_for(events):
         actions.append('programa_por_vencer')
     if any(e.startswith(('CUMPLIMIENTO.C04_', 'CUMPLIMIENTO.C05_')) for e in events):
         actions.append('medidas')
+    # Informe por vencer del calendario (cruce): el correo preventivo se alimenta de esa fecha.
+    if 'CUMPLIMIENTO.C10_HOJA2' in events:
+        actions.append('programa_por_vencer')
     # Observaciones que remiten un proyecto para aplicar una nomenclatura (informe ingresado, causa finalizada).
     if any(e in ('HISTORIA.C10_ESCRITO', 'HISTORIA.P_FINALIZADA') for e in events):
         actions.append('NOMENCL')

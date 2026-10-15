@@ -52,6 +52,27 @@ def _attention_value(work, row, key):
     return value(work, row, key)
 
 
+def launch_without_blocking(path, startfile=None, wait=0.5):
+    """Abre el archivo con el programa de Windows sin dejar pegada la ventana mientras Excel o Word arrancan.
+
+    Devuelve True si la apertura sigue en curso pasado `wait`; un error inmediato se informa como ValueError."""
+    startfile = startfile or os.startfile
+    result = {}
+
+    def launch():
+        try:
+            startfile(str(path))
+        except OSError as exc:
+            result['error'] = exc
+
+    thread = threading.Thread(target=launch, daemon=True)
+    thread.start()
+    thread.join(wait)
+    if 'error' in result:
+        raise ValueError('No se pudo abrir ' + str(path) + ': ' + str(result['error']))
+    return thread.is_alive()
+
+
 class App(ctk.CTk):
     def __init__(self, configuration=None):
         self.cfg = configuration or Configuration()
@@ -373,7 +394,8 @@ class App(ctk.CTk):
         if not Path(path).exists():
             raise ValueError('No se encuentra el archivo o carpeta: ' + str(path))
         if os.name == 'nt':
-            os.startfile(str(path))
+            if launch_without_blocking(path):
+                self.status.set('Abriendo el archivo… Windows lo mostrará cuando esté listo.')
         else:
             messagebox.showinfo('Archivo disponible', str(path))
 

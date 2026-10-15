@@ -70,8 +70,11 @@ def _tabla_listado(body, profile):
 
 
 class LectorHistoria:
-    def __init__(self, bridge, emit, cancel, pause=1.0, anterior=None):
+    def __init__(self, bridge, emit, cancel, pause=1.0, anterior=None, meses=4):
         self.bridge, self.emit, self.cancel, self.pause = bridge, emit, cancel, max(0.0, float(pause))
+        if not isinstance(meses, int) or isinstance(meses, bool) or not 1 <= meses <= 4:
+            raise m.PocError('El período de la historia va de 1 a 4 meses.')
+        self.meses = meses
         self.anterior = anterior
         self.estado = None
         self.carpeta = None
@@ -88,7 +91,8 @@ class LectorHistoria:
             'version': 1,
             'tipo': 'HISTORIA_LECTURA',
             'estado': 'EN_CURSO',
-            'criterio_temporal': 'ventana_4_meses',
+            'criterio_temporal': f'ventana_{self.meses}_meses',
+            'meses': self.meses,
             'causas': {},
             'vinculos': [],
             'lecturas': 0,
@@ -219,7 +223,7 @@ class LectorHistoria:
                 m.save_exclusive(ruta, data)
             elif ruta.read_bytes() != data:
                 raise m.PocError('El archivo local de historia cambió.')
-            dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date())
+            dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date(), self.meses)
             causa.pop('reutilizada', None)
             causa.update(
                 estado='VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'LEIDA',
@@ -227,7 +231,7 @@ class LectorHistoria:
                 archivo=nombre,
                 sha256=digest,
                 leida=leida.isoformat(),
-                desde=earliest(leida.date()).isoformat(),
+                desde=earliest(leida.date(), self.meses).isoformat(),
                 hasta=leida.date().isoformat(),
                 en_ventana=len(dentro) + len(posteriores) + len(sin_fecha),
                 anteriores=len(anteriores),

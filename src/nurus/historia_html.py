@@ -162,8 +162,8 @@ def read_historia(data, *, source='', captured_at=''):
     }
 
 
-def separar_ventana(filas, hasta):
-    """(dentro, anteriores, posteriores, sin_fecha) según la ventana de 4 meses que termina en `hasta`.
+def separar_ventana(filas, hasta, meses=4):
+    """(dentro, anteriores, posteriores, sin_fecha) según la ventana de `meses` (1 a 4) que termina en `hasta`.
 
     Usa la misma función que la cronología (WP-50). Las filas sin fecha legible se devuelven aparte para que
     el producto las muestre con su advertencia; nunca se descartan en silencio.
@@ -174,7 +174,7 @@ def separar_ventana(filas, hasta):
         hasta = hasta.date()
     if not isinstance(hasta, date):
         raise TypeError('hasta debe ser una fecha')
-    desde = earliest(hasta)
+    desde = earliest(hasta, meses)
     dentro, anteriores, posteriores, sin_fecha = [], [], [], []
     for fila in filas:
         if not fila['fecha_iso']:
