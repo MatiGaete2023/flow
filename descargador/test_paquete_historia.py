@@ -137,8 +137,12 @@ def test_productor_historia_asistente_y_productos_con_identidad_alineada(tmp_pat
     validar(ruta)
     trabajo = import_capture(ruta, defaults(), as_of=date(2026, 10, 14))
     primera, segunda = trabajo.rows
-    assert len(bridge.calls) == 1 and 'HISTORIA.R3_CIERRE' in primera.rules and primera.actions == []
-    assert 'HISTORIA.R3_CIERRE' not in segunda.rules and segunda.actions == ['programa_espera', 'PC_IE']
+    assert len(bridge.calls) == 1 and 'R3_INGRESO_EFECTIVO' in [a[1] for a in primera.avisos]
+    assert primera.actions == ['programa_espera', 'PC_IE']
+    assert 'R3_INGRESO_EFECTIVO' not in [a[1] for a in segunda.avisos] and segunda.actions == [
+        'programa_espera',
+        'PC_IE',
+    ]
     trabajo.export(tmp_path / 'Observaciones.xlsx', backend='portable', reduced_fidelity=True)
     book = load_workbook(trabajo.output)
     try:
@@ -150,7 +154,7 @@ def test_productor_historia_asistente_y_productos_con_identidad_alineada(tmp_pat
         book.close()
     drafts = prepare_required_drafts(trabajo, modalities='Ficticias', period='octubre 2026', defer_attachments=True)
     programa = [d for d in drafts if d.kind == 'programa_espera']
-    assert programa and all(d.record_ids == [segunda.id] for d in programa)
+    assert programa and {i for d in programa for i in d.record_ids} == {primera.id, segunda.id}
     projects, errors = prepare_projects(trabajo, [(segunda.id, 'PC_IE')], BASE / 'plantillas_word')
     assert projects and not errors
     word = tmp_path / 'Proyectos.docx'
