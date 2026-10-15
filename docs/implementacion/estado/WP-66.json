@@ -18,7 +18,7 @@
   "tomado": "16 de octubre de 2026",
   "rama": "claude/lucid-sagan-hw9ul4",
   "pr": null,
-  "verificacion": "PASA sobre 64e8649: Asistente 1.147 aprobadas, Descargador 350; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito: RES sugerido y configuración), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-66.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb; la fase de informes solo con simulacros.",
+  "verificacion": "PASA sobre 7f9ec0d: Asistente 1.148 aprobadas, Descargador 350; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-66.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb; la fase de informes solo con simulacros.",
   "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
   "auditoria": null,
   "integrado_en": null,
