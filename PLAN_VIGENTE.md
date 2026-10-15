@@ -107,6 +107,7 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   5. Si la observación remite un proyecto y el motor identifica su tipo, se marca en RES (PC_IE, PC_INFO, NOMENCL).
   6. El paquete incluye el calendario de informes por vencer (60 días); Cumplimiento observa los informes que vencen dentro de ese plazo y alimenta el correo preventivo.
   7. El Descargador deja elegir el período a recolectar (1 a 4 meses) y entregar un paquete por hoja de RUS.
+  8. Aprobados todos los textos pendientes (16-oct); búsqueda con «Posteriormente»/«Luego»; T5 con «Atendido que». Asistente `0.5.0.dev8`.
 
 ## Fase B de auditoría final — 14 de octubre de 2026
 

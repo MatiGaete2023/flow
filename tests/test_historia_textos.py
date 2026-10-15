@@ -5,31 +5,6 @@ import string
 
 from nurus.personal.config import BASE, Configuration, defaults, validate
 
-APROBADOS = {
-    'P_FINALIZADA',
-    'MATERIA_SIN_FICHA',
-    'MATERIA_CURADOR',
-    'EGRESO_PROYECTADO',
-    'MATERIA_VENCIDA',
-    'R3_MULTI',
-    'MATERIA_SIN_FAE',
-    # Decisión x, 15-oct-2026: redacciones dictadas o aprobadas por el usuario.
-    'REITERA',
-    'C2_PRORROGA_HASTA',
-    'INGRESO_INFORMADO',
-    'SERVICIO_INGRESO',
-    'CURADOR_SIN_EFECTO',
-    'EGRESO_POSTERIOR_MAYORIA',
-    'EGRESO_POSTERIOR_MAYORIA_FECHA',
-    'CURADOR_DESIGNADO',
-    'C10_ESCRITO',
-    'BASE_TRAMITE',
-    'VARIOS',
-    'SOLICITUD_DCE',
-    'CONTINUIDAD_ATENCION',
-    'INFORME_INGRESADO',
-}  # redacciones (P) aprobadas por el usuario el 14-oct-2026 y las de la decisión x
-
 ESPERADO = {
     'BASE_TRAMITE': {'DESC', 'FECHA', 'FOLIO'},
     'VARIOS': {'DESC', 'FECHA', 'FOLIO', 'N'},
@@ -77,7 +52,7 @@ def test_claves_y_variables_coinciden_exactamente():
     assert set(textos) == set(ESPERADO)
     for clave, entrada in textos.items():
         assert _campos(entrada['texto']) == ESPERADO[clave], clave
-        assert entrada['confirmado'] is (clave in APROBADOS) and entrada['nota'], clave
+        assert entrada['confirmado'] is True and entrada['nota'], clave
 
 
 def test_la_configuracion_valida_y_una_guardada_sin_el_scope_queda_completa(tmp_path):

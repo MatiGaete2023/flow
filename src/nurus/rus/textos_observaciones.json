@@ -141,7 +141,7 @@
       "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}."
     },
     "T5_INSTITUCIONES": {
-      "texto": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."
+      "texto": "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."
     },
     "C2_PRORROGA_HASTA": {
       "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}."
@@ -180,10 +180,10 @@
       "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda."
     },
     "R11_SIN_EFECTO": {
-      "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda."
+      "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda."
     },
     "R11_TERMINO": {
-      "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda."
+      "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda."
     }
   }
 }

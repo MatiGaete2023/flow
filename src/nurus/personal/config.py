@@ -56,7 +56,7 @@ PARAMETER_LABELS = {
     'lista_espera_larga': 'Lista de espera residencial larga: más de',
     'ventana_busqueda': 'Órdenes de búsqueda: solo la historia de los últimos',
 }
-TEXT_REVISION = 6
+TEXT_REVISION = 7
 LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
 LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
@@ -104,6 +104,11 @@ LEGACY_TEXTS_REV5 = {
     "HISTORIA.CONTINUIDAD_ATENCION": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta respuesta sobre la continuidad de atención.",
     "HISTORIA.INFORME_INGRESADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se ingresa el informe de cumplimiento.",
     "HISTORIA.E04_CON_FOLIO": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}, folio {FOLIO}. (Observación administrativa; no requiere gestión del Tribunal).",
+}
+LEGACY_TEXTS_REV6 = {
+    "HISTORIA.R11_SIN_EFECTO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
+    "HISTORIA.R11_TERMINO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+    "HISTORIA.T5_INSTITUCIONES": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
 }
 LEGACY_CORREO_BODIES = {
     'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
@@ -394,6 +399,7 @@ class Configuration:
                 *LEGACY_TEXTS_REV2.items(),
                 *LEGACY_TEXTS_REV4.items(),
                 *LEGACY_TEXTS_REV5.items(),
+                *LEGACY_TEXTS_REV6.items(),
             ):
                 scope, key = full_key.split('.', 1)
                 if (

@@ -5212,7 +5212,7 @@
   },
   "config": {
     "version": 1,
-    "revision_textos": 6,
+    "revision_textos": 7,
     "revision_correos": 3,
     "perfil": "Asistente v9.1; prioridad confirmada por usuario",
     "umbrales": {
@@ -5387,13 +5387,13 @@
         },
         "MEDIDA_REVISADA": {
           "texto": "Medida revisada.",
-          "confirmado": false,
-          "nota": "Espera, regla 3 — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Espera, regla 3 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "E04_CON_FOLIO": {
           "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado en resolución de fecha {FECHA_RESOLUCION} (folio {FOLIO}). (Observación administrativa; no requiere gestión del Tribunal).",
-          "confirmado": false,
-          "nota": "Espera, regla 1 — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Espera, regla 1 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "R3_MULTI": {
           "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado.",
@@ -5427,18 +5427,18 @@
         },
         "E05_DIAS": {
           "texto": "Al {CORTE}, RUS registra {N} días de espera.",
-          "confirmado": false,
-          "nota": "Espera, E-05 ampliada — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Espera, E-05 ampliada — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "E10_LISTA": {
           "texto": "Registra {N} días en lista de espera.",
-          "confirmado": false,
-          "nota": "Espera, E10 — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Espera, E10 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "MEDIDA_SIN_VIGENCIA": {
           "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
-          "confirmado": false,
-          "nota": "Cumplimiento, sin seguimiento — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Cumplimiento, sin seguimiento — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "EGRESO_PROYECTADO": {
           "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
@@ -5457,23 +5457,23 @@
         },
         "J2_ACUMULADOS": {
           "texto": "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}.",
-          "confirmado": false,
-          "nota": "Informes, J2 — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Informes, J2 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "I01_SIN_ENVIO_GENERAL": {
           "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}.",
-          "confirmado": false,
-          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "I01_SIN_ENVIO_DCE": {
           "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}.",
-          "confirmado": false,
-          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026"
+          "confirmado": true,
+          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "T5_INSTITUCIONES": {
-          "texto": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
-          "confirmado": false,
-          "nota": "Transversal T5 — doc reglas 14-oct-2026"
+          "texto": "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+          "confirmado": true,
+          "nota": "Transversal T5 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
         "C2_PRORROGA_HASTA": {
           "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
@@ -5527,23 +5527,23 @@
         },
         "R11_ORDEN": {
           "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se decretó orden de búsqueda.",
-          "confirmado": false,
-          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar"
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
         },
         "R11_PIDE_CUENTA": {
           "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda.",
-          "confirmado": false,
-          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar"
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
         },
         "R11_SIN_EFECTO": {
-          "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
-          "confirmado": false,
-          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar"
+          "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
         },
         "R11_TERMINO": {
-          "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
-          "confirmado": false,
-          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar"
+          "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
         }
       }
     },
@@ -5672,7 +5672,7 @@
   "reglas_rus": {
     "ESPERA": [
       {
-        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Registra 120 días en lista de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido a que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Registra 120 días en lista de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
         "rules": [
           "ESPERA.E05_PROYECTO_Y_CORREO",
           "HISTORIA.E10_LISTA",

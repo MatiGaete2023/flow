@@ -16,7 +16,7 @@ def test_umbrales_y_revision_por_defecto():
     umbrales = defaults()['umbrales']
     assert umbrales['espera_dce'] == 0 and umbrales['espera_tome'] == 60
     assert umbrales['espera_tome'] <= umbrales['proyecto_tome']
-    assert defaults()['revision_textos'] == TEXT_REVISION == 6
+    assert defaults()['revision_textos'] == TEXT_REVISION == 7
 
 
 @pytest.mark.parametrize('espera', [0, 1, 29, 200])

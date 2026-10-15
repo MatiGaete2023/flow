@@ -171,14 +171,13 @@ def test_busqueda_nombra_primero_la_orden_y_luego_sus_tramites(tmp_path):
         'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 10), se decretó orden de búsqueda.'
     )
     cerrada = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Termino de búsqueda', '2026-09-20', 20)))
-    termino = 'Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dispuso el término de la búsqueda.'
+    termino = 'Luego, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dispuso el término de la búsqueda.'
     assert orden + ' ' + termino in cerrada.observation and cerrada.avisos == []
     sin_efecto = esp(
         tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Deja sin efecto búsqueda', '2026-09-20', 20))
     )
     assert (
-        orden
-        + ' Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dejó sin efecto la búsqueda.'
+        orden + ' Luego, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dejó sin efecto la búsqueda.'
         in (sin_efecto.observation)
     )
     completa = esp(

@@ -8,7 +8,14 @@ import pytest
 from types import SimpleNamespace
 from historia_fixtures import CUMPLIMIENTO, ESPERA, bita, correr, cum, cumplimiento, esp, fila, hist
 
-from nurus.personal.config import LEGACY_TEXTS_REV4, LEGACY_TEXTS_REV5, TEXT_REVISION, Configuration, defaults
+from nurus.personal.config import (
+    LEGACY_TEXTS_REV4,
+    LEGACY_TEXTS_REV5,
+    LEGACY_TEXTS_REV6,
+    TEXT_REVISION,
+    Configuration,
+    defaults,
+)
 from nurus.personal.motor.textos import ESTRUCTURA
 
 ACLARACION = 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.'
@@ -181,7 +188,7 @@ def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
 
     datos = _escribir(tmp_path / 'a', antiguos)
     base = defaults()['textos']
-    assert datos['revision_textos'] == TEXT_REVISION == 6
+    assert datos['revision_textos'] == TEXT_REVISION == 7
     for clave in LEGACY_TEXTS_REV4:
         ambito, nombre = clave.split('.', 1)
         esperado = (
@@ -342,3 +349,19 @@ def test_abrir_un_archivo_no_deja_pegada_la_ventana():
     assert launch_without_blocking('x.xlsx', startfile=lambda _p: None, wait=1) is False
     with pytest.raises(ValueError, match='No se pudo abrir'):
         launch_without_blocking('x.xlsx', startfile=lambda _p: (_ for _ in ()).throw(OSError('bloqueado')), wait=1)
+
+
+def test_migracion_de_textos_rev6_ajusta_la_redaccion_aprobada_y_respeta_lo_editado(tmp_path):
+    def antiguos(d):
+        d['revision_textos'] = 6
+        for clave, previo in LEGACY_TEXTS_REV6.items():
+            ambito, nombre = clave.split('.', 1)
+            d['textos'][ambito][nombre]['texto'] = previo
+        d['textos']['HISTORIA']['R11_TERMINO']['texto'] = 'Texto propio {FECHA} {FOLIO}.'
+
+    datos = _escribir(tmp_path / 'r6', antiguos)
+    base = defaults()['textos']['HISTORIA']
+    assert datos['revision_textos'] == TEXT_REVISION == 7
+    assert datos['textos']['HISTORIA']['R11_TERMINO']['texto'] == 'Texto propio {FECHA} {FOLIO}.'
+    assert datos['textos']['HISTORIA']['R11_SIN_EFECTO']['texto'] == base['R11_SIN_EFECTO']['texto']
+    assert datos['textos']['HISTORIA']['T5_INSTITUCIONES']['texto'].startswith('Atendido que en sistema')
