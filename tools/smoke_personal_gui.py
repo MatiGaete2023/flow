@@ -170,7 +170,7 @@ with TemporaryDirectory() as directory:
         app._show_work()
         assert '2 registros' in app.context.get()
         assert 'Pide cuenta ingreso efectivo' in app.words.item('a|PC_IE', 'values')[2]
-        assert 'Definido en RES' == app.words.item('a|PC_IE', 'values')[3]
+        assert app.words.item('a|PC_IE', 'values')[3] == 'Definido en RES'
         app.work_search.set('NNA UNO')
         time.sleep(0.2)
         app.update()

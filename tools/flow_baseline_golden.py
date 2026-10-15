@@ -292,8 +292,7 @@ def generate(folder):
     generated.append(diary_excel)
     for path in generated:
         canonical_office(path)
-    semantic = json.loads(json.dumps(semantic, ensure_ascii=False, default=str))
-    return semantic
+    return json.loads(json.dumps(semantic, ensure_ascii=False, default=str))
 
 
 def main():
