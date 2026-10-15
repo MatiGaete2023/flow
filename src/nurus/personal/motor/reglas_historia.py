@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from . import vocabulario as V
 from .analisis_historia import busqueda, duplicidades, instituciones, posterior, primera_observacion  # noqa: F401
-from .contexto import acumulado, bitacora, current, duplicidad, emitidos, evento, historia, marcar
+from .contexto import acumulado, bitacora, current, duplicidad, emitidos, evento, historia, marcar, parametro
 from .contexto import datetime as Clock
 from .historia import clave, ultimo
 from .textos import con_grupo, render
@@ -28,16 +28,15 @@ CITAN = frozenset(
         'VARIOS',
         'E04_CON_FOLIO',
         'C2_PRORROGA_HASTA',
-        'C2_PRORROGA_SIN_FECHA',
         'SERVICIO_INGRESO',
         'CURADOR_SIN_EFECTO',
         'CURADOR_DESIGNADO',
         'R11_BUSQUEDA_SIN_EFECTO',
         'R11_BUSQUEDA_TERMINO',
-        'T2_MN',
-        'C9_DCE',
+        'SOLICITUD_DCE',
+        'CONTINUIDAD_ATENCION',
+        'INFORME_INGRESADO',
         'C10_ESCRITO',
-        'C4_FOLIO',
     )
 )
 
@@ -111,23 +110,20 @@ def folio_resolucion(fecha):
     return ingresos[0].folio_txt
 
 
-def ingreso_efectivo_espera(corte, espera=None):
-    """Regla 3. Devuelve los fragmentos que reemplazan E-04/E-05/E-06, o None.
-    Con T ESPERA válido solo cuenta el ingreso efectivo desde el inicio de la espera (corte - días); un ingreso
-    anterior es de otra medida y no desplaza E-05 ni sus acciones (decisión u, 14-oct). Sin T ESPERA no se filtra."""
+def ingreso_efectivo_en_espera(corte, espera=None):
+    """Espera (decisión x): «Ingreso efectivo» aparece solo en Cumplimiento; si la historia lo trae mientras RUS sigue
+    en Espera se aplican las reglas normales y solo se marca para revisión. Con T ESPERA válido cuenta únicamente el
+    ingreso efectivo desde el inicio de la espera (corte - días): uno anterior es de otra medida."""
     lista = tramites(V.INGRESO_EFECTIVO)
     if espera is not None and espera >= 0:
         inicio = _d(corte) - timedelta(days=espera)
         lista = [t for t in lista if t.fecha >= inicio]
-    if not lista:
-        return None
-    marcar(2, 'R3_INGRESO_EFECTIVO', 'Historia con ingreso efectivo y RUS en Espera')
-    frags = [render('HISTORIA', 'MEDIDA_REVISADA'), constancia(lista), render('HISTORIA', 'R3_CIERRE', CORTE=fecha_es(corte))]
-    return [f for f in frags if f]
+    if lista:
+        marcar(2, 'R3_INGRESO_EFECTIVO', 'Historia con ingreso efectivo y RUS en Espera')
 
 
 def lista_larga(programa, espera):
-    return espera is not None and intervencion(programa) == 'RESIDENCIAL' and espera > V.E10_DIAS
+    return espera is not None and intervencion(programa) == 'RESIDENCIAL' and espera > parametro('lista_espera_larga')
 
 
 def lista_espera_larga(programa, espera):
@@ -185,14 +181,6 @@ def curador_instituciones(celda, pnombre):
     return [render('HISTORIA', 'T5_INSTITUCIONES', N=cantidad, PNOMBRE=pnombre)]
 
 
-def dce_espera(programa):
-    return constancias(*V.DCE) if intervencion(programa) == 'DCE' else []
-
-
-def direccion_regional():
-    return constancias(*V.DIRECCION_REGIONAL)
-
-
 def servicio(programa):
     """Espera: resolución que dispone el ingreso al programa («Ing.Serv. …»); el programa es el de la fila de RUS."""
     ult = ultimo([t for t in tramites(V.SERVICIO) if _id(t) not in emitidos()])
@@ -203,27 +191,32 @@ def servicio(programa):
 
 
 def continuidad():
-    return constancias(V.CONTINUIDAD)
+    """Espera y Cumplimiento: respuesta sobre la continuidad de atención (se hace constar lo resuelto)."""
+    ult = ultimo([t for t in tramites(V.CONTINUIDAD) if _id(t) not in emitidos()])
+    if ult is None:
+        return []
+    emitidos().add(_id(ult))
+    return [render('HISTORIA', 'CONTINUIDAD_ATENCION', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
-def deja_sin_efecto_mn():
-    """T2: «Deja sin efecto M.N.» posterior a un ingreso o prórroga; cita ambos trámites."""
-    salida = []
-    anteriores = tramites(*V.ANTERIORES_MN)
-    for mn in sorted(tramites(V.SIN_EFECTO_MN), key=lambda t: (t.fecha, t.folio)):
-        previos = [a for a in anteriores if posterior(mn, a)]
-        if not previos or _id(mn) in emitidos():
-            continue
-        ant = max(previos, key=lambda a: (a.fecha, a.folio))
-        emitidos().update((_id(mn), _id(ant)))
-        marcar(2, 'T2_MN', 'Deja sin efecto M.N. posterior a un ingreso o prórroga')
-        salida.append(
-            render(
-                'HISTORIA', 'T2_MN', FECHA=fecha_es(mn.fecha), FOLIO=_folio(mn), DESC_ANTERIOR=ant.desc,
-                FECHA_ANTERIOR=fecha_es(ant.fecha), FOLIO_ANTERIOR=_folio(ant),
-            )
-        )
-    return [s for s in salida if s]
+def solicitud_dce(programa, vencida):
+    """Cumplimiento DCE con la medida vencida: informe clínico diagnóstico ordenado en autos (SPE. Resp. Solicitud DCE)."""
+    if not vencida or intervencion(programa) != 'DCE':
+        return []
+    ult = ultimo([t for t in tramites(V.SOLICITUD_DCE) if _id(t) not in emitidos()])
+    if ult is None:
+        return []
+    emitidos().add(_id(ult))
+    return [render('HISTORIA', 'SOLICITUD_DCE', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
+
+
+def marcas_sin_efecto():
+    """Espera y Cumplimiento: «Deja sin efecto derivación D.R.» y «Deja sin efecto medida interconexión M.N.» solo
+    marcan para revisión (nivel 2), sin texto (decisión x)."""
+    if tramites(V.SIN_EFECTO_DR):
+        marcar(2, 'DEJA_SIN_EFECTO_DR', 'Deja sin efecto derivación D.R. en la historia')
+    if tramites(V.SIN_EFECTO_MN):
+        marcar(2, 'DEJA_SIN_EFECTO_MN', 'Deja sin efecto medida interconexión M.N. en la historia')
 
 
 def busqueda_historia():
@@ -273,13 +266,13 @@ def oido_en_bitacora(fecha):
 
 
 def ingreso_verificado(fecha_ingreso):
-    """«Ingreso Efectivo» de la historia fechado entre la fecha de RUS y 30 días después: la nomenclatura se aplicó.
+    """«Ingreso Efectivo» de la historia fechado entre la fecha de RUS y 30 días después (umbral ventana_ingreso): la nomenclatura se aplicó.
     La diferencia de días es normal (RUS guarda el día real; la historia, la resolución que lo tiene presente)."""
     h = _h()
     if h is None or fecha_ingreso is None:
         return None
     inicio = _d(fecha_ingreso)
-    limite = inicio + timedelta(days=V.VENTANA_INGRESO_DIAS)
+    limite = inicio + timedelta(days=parametro('ventana_ingreso'))
     cercanos = [t for t in h.buscar(V.INGRESO_EFECTIVO) if inicio <= t.fecha <= limite]
     return min(cercanos, key=lambda t: (t.fecha, t.folio)) if cercanos else None
 
@@ -303,9 +296,10 @@ def _prorroga_en_bitacora(prorroga):
 
 
 def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):
-    """C2 (decisión x). Con la medida vencida, o con el egreso de RUS anterior a la prórroga (RUS no la refleja), no
-    se afirma la prórroga: solo se marca para revisión prioritaria si es reciente (90 días). Con la medida por vencer
-    y una prórroga reciente se afirma y se marca. Si la bitácora ya la mencionó, se ignora todo."""
+    """Cumplimiento (decisión x). Con la medida vencida, por vencer, o con el egreso de RUS anterior a la prórroga (RUS
+    no la refleja), no se afirma la prórroga: prevalece el texto de la medida y solo se marca para revisión
+    prioritaria si es reciente (prorroga_reciente, 90 días). Con la medida vigente se hace constar lo resuelto, salvo
+    que otra frase ya diga el egreso proyectado. Si la bitácora ya mencionó la prórroga, se ignoran frase y marca."""
     lista = [t for t in tramites(V.PRORROGA) if _id(t) not in emitidos()]
     if not lista or egreso_proyectado is None:
         return []
@@ -313,71 +307,18 @@ def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):
     if _prorroga_en_bitacora(ult):
         return []
     emitidos().update(_id(t) for t in lista)
-    reciente = (_d(corte) - ult.fecha).days <= V.PRORROGA_RECIENTE_DIAS
+    reciente = (_d(corte) - ult.fecha).days <= parametro('prorroga_reciente')
     sin_reflejar = _d(egreso_proyectado) < ult.fecha
-    if vencida or sin_reflejar or (por_vencer and reciente):
-        if reciente:
-            marcar(1, 'PRORROGA_REVISAR', 'Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS')
-        if vencida or sin_reflejar:
-            return []
-    if egreso_dicho:
-        return [render('HISTORIA', 'C2_PRORROGA_SIN_FECHA', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
+    if reciente and (vencida or por_vencer or sin_reflejar):
+        marcar(1, 'PRORROGA_REVISAR', 'Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS')
+    if vencida or por_vencer or sin_reflejar or egreso_dicho:
+        return []
     return [
         render(
             'HISTORIA', 'C2_PRORROGA_HASTA', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha),
             FECHA_EGRESO_PROYECTADO=fecha_es(egreso_proyectado),
         )
     ]
-
-
-def fichas(nombre, fecha_rus, original_salio):
-    """C4: ficha de la historia contra la de RUS. Ficha Ambulatoria queda fuera."""
-    ult = ultimo(tramites(nombre))
-    if ult is None:
-        return []
-    if original_salio and fecha_rus is not None and _d(fecha_rus) == ult.fecha:
-        if _id(ult) in emitidos():
-            return []
-        emitidos().add(_id(ult))
-        return [render('HISTORIA', 'C4_FOLIO', FOLIO=_folio(ult))]
-    texto = constancia([ult])
-    if not texto:
-        return []
-    if fecha_rus is not None:
-        return [texto, render('HISTORIA', 'C4_FICHA_RUS', FECHA_FICHA=fecha_es(fecha_rus))]
-    if original_salio:
-        return [texto]  # la regla original ya dijo que RUS no registra la ficha: no se repite (decisión x)
-    return [texto, render('HISTORIA', 'C4_FICHA_SIN_RUS')]
-
-
-def no_uso_prorroga(egreso_proyectado, vencimiento_dicho=False):
-    """C8 con guardia G3: exige cobertura que permita ausencia y período consultado."""
-    h = historia()
-    if h is None or not h.permite_ausencia or h.desde is None or h.hasta is None or egreso_proyectado is None:
-        return []
-    if h.buscar(V.PRORROGA):
-        return []
-    marcar(3, 'C8_NO_USO', 'Medida vencida sin Prórroga en el período consultado')
-    if vencimiento_dicho:
-        return [render('HISTORIA', 'C8_NO_USO_BREVE', DESDE=fecha_es(h.desde), HASTA=fecha_es(h.hasta))]
-    return [
-        render(
-            'HISTORIA', 'C8_NO_USO', DESDE=fecha_es(h.desde), HASTA=fecha_es(h.hasta),
-            FECHA=fecha_es(egreso_proyectado),
-        )
-    ]
-
-
-def diagnostico_dce(programa, vencida):
-    """C9: informe diagnóstico ordenado en autos con la medida vencida."""
-    if not vencida or intervencion(programa) != 'DCE':
-        return []
-    lista = [t for t in tramites(V.DIAGNOSTICO) if _id(t) not in emitidos()]
-    if not lista:
-        return []
-    emitidos().update(_id(t) for t in lista)
-    ult = ultimo(lista)
-    return [render('HISTORIA', 'C9_DCE', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
 def escrito_sin_ingreso(programa, desde=None):
@@ -396,17 +337,19 @@ def escrito_sin_ingreso(programa, desde=None):
 
 
 def informe_historia(fecha_vencimiento, vencido):
-    """I1: «Ingreso informe de cumplimiento X» y estado que RUS registra. [] si no aplica.
+    """Informes: «Ingreso Informe de Cumplimiento X» y estado que RUS registra. [] si no aplica.
     Con el informe vencido solo cuenta un ingreso del día del vencimiento o posterior: uno anterior es de otro
     período y no desmiente el vencimiento (decisión u, 14-oct)."""
     lista = tramites(V.INGRESO_INFORME_X)
     if vencido:
         lista = [t for t in lista if t.fecha >= _d(fecha_vencimiento)]
-    texto = constancia(lista)
-    if not texto:
+    lista = [t for t in lista if _id(t) not in emitidos()]
+    if not lista:
         return []
-    llave = 'I1_VENCIDO' if vencido else 'I1_POR_VENCER'
-    return [texto, render('HISTORIA', llave, FECHA_VENCIMIENTO=fecha_es(fecha_vencimiento))]
+    ult = ultimo(lista)
+    emitidos().update(_id(t) for t in lista)
+    # El vencimiento lo dice la frase principal del informe: no se repite (decisión x).
+    return [render('HISTORIA', 'INFORME_INGRESADO', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha))]
 
 
 def informe_previo(programa, fecha_vencimiento):
@@ -416,11 +359,6 @@ def informe_previo(programa, fecha_vencimiento):
     if escrito:
         nombres.append(escrito)
     return any(t.fecha < _d(fecha_vencimiento) for t in tramites(*nombres))
-
-
-def prorroga_informe():
-    """I2: la Prórroga queda solo como constancia; nunca desmiente el informe vencido (decisión u, 14-oct)."""
-    return constancias(V.PRORROGA)
 
 
 def informes_acumulados():

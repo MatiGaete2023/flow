@@ -85,11 +85,12 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
         frags.append(render('COMUN','PROXIMA_MAYORIA', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
     principal=False
     H.marcar_duplicidad()
-    mn=H.deja_sin_efecto_mn()
     espera=get_int(row.get(cols.get('espera'))) if cols.get('espera') else None
-    r3=H.ingreso_efectivo_espera(hoy, espera)
+    # «Ingreso efectivo» es de Cumplimiento: si la historia lo trae con RUS en Espera, reglas normales y solo marca.
+    H.ingreso_efectivo_en_espera(hoy, espera)
+    H.marcas_sin_efecto()
     fres=fecha_valida(row.get(cols.get('resolucion'))) if cols.get('resolucion') else None
-    if r3 is None and fres:
+    if fres:
         d=(hoy-_date(fres)).days
         if 0 <= d < parametro('resolucion_reciente'):
             folio=H.folio_resolucion(fres)
@@ -103,7 +104,7 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     larga=H.lista_larga(programa, espera)
     threshold = (parametro('espera_dce') if es_dce(programa) else
                  parametro('espera_' + tribunal.lower()) if tribunal in ('LAJA','MULCHEN','TOME') else 30)
-    if r3 is None and espera is not None and espera >= threshold:
+    if espera is not None and espera >= threshold:
         if es_dce(programa):
             frags.append(render('ESPERA','E05_SOLO_CORREO')); principal=True
             if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
@@ -117,13 +118,10 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
             incidencias.agregar(fila_excel, _rit(row, cols), 'E-05', 'tribunal no reconocido — regla omitida (G-06)')
     # E-06 es el fallback del §9.1: dispara siempre que no haya principal
     # (incluye T ESPERA ausente/ inválido y tribunal no reconocido — D11).
-    if r3 is not None:
-        frags += r3
-    elif not principal:
+    if not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
     frags += H.lista_espera_larga(programa, espera)
-    frags += H.dce_espera(programa) + H.servicio(programa)
-    frags += mn + H.direccion_regional() + H.busqueda_historia()
+    frags += H.servicio(programa) + H.busqueda_historia()
     frags += H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _complementarias(row, cols)
     frags += H.aclaracion_causa()

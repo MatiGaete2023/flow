@@ -12,14 +12,19 @@ from nurus.personal.record_edits import apply
 from nurus.personal.work import Work
 
 
+def _marcas(fila_):
+    return [aviso[1] for aviso in fila_.avisos]
+
+
 @pytest.mark.parametrize('corte,aplica', [('2026-10-09', False), ('2026-10-10', True), ('2026-10-14', True)])
 def test_historia_solo_usa_hechos_hasta_el_corte_y_preserva_la_fuente(tmp_path, corte, aplica):
     metadata, tables = captura_con_historia([('Ingreso efectivo', '2026-10-10', 40)])
     path = write_capture(tmp_path / 'captura.zip', metadata, tables)
     original = path.read_bytes()
     work = import_capture(path, defaults(), as_of=date.fromisoformat(corte))
-    assert ('HISTORIA.R3_CIERRE' in work.rows[0].rules) is aplica
-    assert (work.rows[0].actions == []) is aplica
+    # «Ingreso efectivo» con RUS en Espera: reglas normales y solo la marca, y solo con hechos hasta el corte.
+    assert ('R3_INGRESO_EFECTIVO' in _marcas(work.rows[0])) is aplica
+    assert work.rows[0].actions == ['programa_espera', 'PC_IE']
     assert read_capture(path).rows('historia_tramites')[0]['event_at'] == '2026-10-10'
     assert path.read_bytes() == original
 
@@ -30,9 +35,9 @@ def test_reimportar_con_otro_corte_recalcula_historia_sin_perder_edicion(tmp_pat
     previous = import_capture(path, defaults(), as_of=date(2026, 10, 14))
     previous.rows[0].review['OBSERVACION'] = 'Edición humana ficticia'
     updated = import_capture(path, defaults(), as_of=date(2026, 10, 9), previous=previous)
-    assert 'HISTORIA.R3_CIERRE' not in updated.rows[0].rules
+    assert 'R3_INGRESO_EFECTIVO' not in _marcas(updated.rows[0])
     assert updated.rows[0].review['OBSERVACION'] == 'Edición humana ficticia'
-    assert 'HISTORIA.R3_CIERRE' in previous.rows[0].rules
+    assert 'R3_INGRESO_EFECTIVO' in _marcas(previous.rows[0])
 
 
 @pytest.mark.parametrize('cause_id', ['causa-ficticia-0', ''])
@@ -41,10 +46,10 @@ def test_registro_incierto_no_recibe_historia_por_sus_ids_declarados(tmp_path, c
     tables['registros'][0].update(identity_status='INCIERTA', cause_id=cause_id)
     path = write_capture(tmp_path / 'captura.zip', metadata, tables)
     work = import_capture(path, defaults(), as_of=date(2026, 10, 14))
-    assert 'HISTORIA.R3_CIERRE' not in work.rows[0].rules
+    assert 'R3_INGRESO_EFECTIVO' not in _marcas(work.rows[0])
     assert work.rows[0].actions == ['programa_espera', 'PC_IE']
     # Otro ingreso de la misma causa mantiene su vínculo acreditado; no se suprime la fuente globalmente.
-    assert 'HISTORIA.R3_CIERRE' in work.rows[1].rules
+    assert 'R3_INGRESO_EFECTIVO' in _marcas(work.rows[1])
     assert read_capture(path).rows('historia_tramites')
 
 
@@ -80,7 +85,9 @@ def test_entrega_temprana_de_periodo_incierto_advierte_sin_cambiar_textos_ni_acc
     row = inf(tmp_path, fila(1) + ['2026-09-20'], hist((descripcion, '2026-09-15', 40)))
     assert row.actions == ['programa_vencido', 'PC_INFO']
     assert row.rules == ['INFORMES.I01_VENCIDO_GENERAL']
-    assert any('Posible entrega anterior' in w and 'período' in w for w in row.warnings)
+    # La advertencia es una marca de nivel 2 en la bandeja (decisión x), como el resto de las señales de revisión.
+    assert [aviso[:2] for aviso in row.avisos] == [(2, 'ENTREGA_ANTERIOR')]
+    assert 'período' in row.avisos[0][2]
 
 
 @pytest.mark.parametrize('fecha', ['2026-09-20', '2026-09-25'])
@@ -95,13 +102,14 @@ def test_edicion_y_recuperacion_no_pierden_contexto_ni_dependen_del_zip_original
     work = import_capture(path, defaults(), as_of=date(2026, 10, 14))
     original = list(work.rows[0].rules)
     apply(work, [work.rows[0].id], overrides={'espera': '46'})
-    assert work.rows[0].rules == original and work.rows[0].actions == []
-    assert any(a[1] == 'R3_INGRESO_EFECTIVO' for a in work.rows[0].avisos)
+    assert work.rows[0].rules == original and work.rows[0].actions == ['programa_espera', 'PC_IE']
+    assert 'R3_INGRESO_EFECTIVO' in _marcas(work.rows[0])
     work.save(tmp_path / 'sesion')
     path.unlink()  # La sesión conserva sus fuentes; no debe volver a abrir el archivo original.
     restored = Work.load(tmp_path / 'sesion', defaults())
     apply(restored, [restored.rows[0].id], overrides={'espera': '47'})
-    assert restored.rows[0].rules == original and restored.rows[0].actions == []
+    assert restored.rows[0].rules == original and restored.rows[0].actions == ['programa_espera', 'PC_IE']
+    assert 'R3_INGRESO_EFECTIVO' in _marcas(restored.rows[0])
 
 
 def test_editar_rut_actualiza_la_duplicidad_del_par_y_se_deshace_junto(tmp_path):

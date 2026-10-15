@@ -31,6 +31,9 @@ UMBRALES = dict(
     ficha_antigua=180,
     ficha_reciente=30,
     ficha_fae=120,
+    prorroga_reciente=90,
+    ventana_ingreso=30,
+    lista_espera_larga=100,
 )
 PARAMETER_LABELS = {
     'espera_dce': 'Espera DCE: consultar ingreso desde',
@@ -47,6 +50,9 @@ PARAMETER_LABELS = {
     'ficha_antigua': 'Ficha individual antigua: más de',
     'ficha_reciente': 'Ficha individual reciente: hasta',
     'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
+    'prorroga_reciente': 'Prórroga reciente (marcar para revisión): hasta',
+    'ventana_ingreso': 'Ingreso efectivo en la historia: hasta',
+    'lista_espera_larga': 'Lista de espera residencial larga: más de',
 }
 TEXT_REVISION = 5
 LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
@@ -76,11 +82,12 @@ LEGACY_TEXTS_REV2 = {
     "INFORMES.I02_POR_VENCER_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
 }
 LEGACY_TEXTS_REV4 = {
+    "HISTORIA.BASE_TRAMITE": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}.",
+    "HISTORIA.VARIOS": "En la historia de la causa constan {N} trámites descritos como «{DESC}»; el último, de fecha {FECHA}, folio {FOLIO}.",
     "INFORMES.I01_VENCIDO_DCE": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
     "INFORMES.I01_VENCIDO_GENERAL": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
     "HISTORIA.REITERA": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
     "HISTORIA.P_FINALIZADA": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
-    "HISTORIA.C8_NO_USO": "No consta en la historia de la causa, período consultado {DESDE} a {HASTA}, un trámite descrito como «Prórroga». Medida vencida en RUS desde el {FECHA}.",
     "HISTORIA.C10_ESCRITO": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
 }
 LEGACY_CORREO_BODIES = {
@@ -272,6 +279,17 @@ def validate(cfg):
     emails(cfg['correos'].get('cc_adicional', ''))
 
 
+def complete_umbrales(cfg):
+    """Agrega con su valor base los umbrales que una configuración anterior no tiene; nunca cambia los existentes."""
+    added = []
+    umbrales = cfg.setdefault('umbrales', {})
+    for key, value in UMBRALES.items():
+        if key not in umbrales:
+            umbrales[key] = value
+            added.append('umbrales.' + key)
+    return added
+
+
 def complete_texts(cfg):
     """Agrega con su texto base las claves que una configuración anterior no tiene; nunca cambia las existentes.
 
@@ -299,7 +317,7 @@ class Configuration:
             self.save(defaults(self.contacts_directory))
         try:
             self.data = json.loads(self.path.read_text(encoding='utf-8'))
-            added = complete_texts(self.data)
+            added = complete_texts(self.data) + complete_umbrales(self.data)
             validate(self.data)
         except Exception as exc:
             raise ValueError(
@@ -359,7 +377,10 @@ class Configuration:
             # Solo se reemplaza un texto que sigue igual al anterior: lo que el usuario editó se respeta.
             for full_key, previous in (*LEGACY_TEXTS_REV2.items(), *LEGACY_TEXTS_REV4.items()):
                 scope, key = full_key.split('.', 1)
-                if updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous:
+                if (
+                    key in base.get(scope, {})
+                    and updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous
+                ):
                     updated['textos'][scope][key]['texto'] = base[scope][key]['texto']
             updated['revision_textos'] = TEXT_REVISION
             self.save(updated)

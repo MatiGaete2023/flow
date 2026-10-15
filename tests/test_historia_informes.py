@@ -6,9 +6,8 @@ from historia_fixtures import correr, fila, hist, inf, INFORMES
 def test_i1_contradice_i01_sin_frase_de_envio_y_marca_nivel2(tmp_path):
     f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Ingreso informe de cumplimiento X', '2026-09-25', 58)))
     assert f.observation.split(': ', 1)[1] == (
-        'Informe de avance vencido desde el 20 de septiembre de 2026. En la historia de la causa consta un trámite '
-        'descrito como «Ingreso informe de cumplimiento X», de fecha 25 de septiembre de 2026, folio 58. '
-        'RUS registra el informe vencido desde el 20 de septiembre de 2026.'
+        'Informe de avance vencido desde el 20 de septiembre de 2026. '
+        'Se hace presente que a folio 58, de fecha 25 de septiembre de 2026, se ingresa el informe de cumplimiento.'
     )
     assert f.actions == [] and [a[:2] for a in f.avisos] == [(2, 'I01_CONTRADICHA')]
     dce = inf(
@@ -20,28 +19,40 @@ def test_i1_contradice_i01_sin_frase_de_envio_y_marca_nivel2(tmp_path):
 def test_i1_ingreso_anterior_al_vencimiento_no_desmiente(tmp_path):
     f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Ingreso informe de cumplimiento X', '2026-07-01', 30)))
     assert f.rules == ['INFORMES.I01_VENCIDO_GENERAL'] and f.actions == ['programa_vencido', 'PC_INFO']
-    assert f.avisos == [] and 'folio 30' not in f.observation
+    assert [a[:2] for a in f.avisos] == [(2, 'ENTREGA_ANTERIOR')] and 'folio 30' not in f.observation
 
 
-def test_i2_prorroga_vencido_es_solo_constancia_y_conserva_acciones(tmp_path):
-    f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Prorroga', '2026-09-25', 58)))
-    assert 'INFORMES.I01_VENCIDO_GENERAL' in f.rules and f.actions == ['programa_vencido', 'PC_INFO']
-    assert f.avisos == []
-    # Constancias primero (informe vencido y prórroga), acción del Centro al final.
-    assert f.observation.split(': ', 1)[1] == (
-        'Informe de avance vencido desde el 20 de septiembre de 2026. En la historia de la causa consta un trámite '
-        'descrito como «Prorroga», de fecha 25 de septiembre de 2026, folio 58. Se deja constancia de que se remite '
-        'proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM UNO requiriendo su envío.'
+def test_prorroga_no_agrega_nada_en_informes(tmp_path):
+    vencido = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Prorroga', '2026-09-25', 58)))
+    base = inf(tmp_path, fila(1) + ['2026-09-20'])
+    assert (vencido.observation, vencido.rules, vencido.actions, vencido.avisos) == (
+        base.observation,
+        base.rules,
+        base.actions,
+        base.avisos,
     )
-
-
-def test_i2_por_vencer_conserva_i02_y_no_marca(tmp_path):
-    f = inf(tmp_path, fila(1) + ['2026-10-20'], hist(('Prorroga', '2026-10-01', 9)))
-    assert 'INFORMES.I02_POR_VENCER_GENERAL' in f.rules and f.actions == ['programa_por_vencer']
-    assert f.avisos == [] and f.observation.split(': ', 1)[1] == (
-        'En la historia de la causa consta un trámite descrito como «Prorroga», de fecha 1 de octubre de 2026, folio 9. '
+    por_vencer = inf(tmp_path, fila(1) + ['2026-10-20'], hist(('Prorroga', '2026-10-01', 9)))
+    assert por_vencer.observation.split(': ', 1)[1] == (
         'Se remite correo al programa PRM UNO informando que el próximo informe de avance vence el 20 de octubre de 2026.'
     )
+    assert por_vencer.rules == ['INFORMES.I02_POR_VENCER_GENERAL'] and por_vencer.actions == ['programa_por_vencer']
+
+
+def test_informes_solo_hace_constar_lo_de_informes(tmp_path):
+    # Continuidad, interconexión, curador, oído y audiencia se hacen constar en Espera o Cumplimiento.
+    historia = hist(
+        ('Resp. continuidad de atención', '2026-10-01', 4),
+        ('Deja sin efecto medida interconexión M.N.', '2026-10-02', 5),
+        ('Designa abogado', '2026-10-03', 6),
+        ('Derecho a ser oído', '2026-10-04', 7),
+    )
+    columnas = [*INFORMES, 'CURADOR', 'PROXIMA AUDIENCIA']
+    dos = (
+        '(11-1)ABOG A - Institución: Programa Mi Abogado#(22-2)ABOG B - Institución: Corporación de Asistencia Judicial'
+    )
+    f = correr(tmp_path, 'INFORMES', columnas, [[*fila(1), '2026-09-20', dos, '2026-11-01']], {0: historia}).rows[0]
+    base = inf(tmp_path, fila(1) + ['2026-09-20'])
+    assert (f.observation, f.rules, f.actions, f.avisos) == (base.observation, base.rules, base.actions, base.avisos)
 
 
 def test_i3_escrito_sin_ingreso_en_informes(tmp_path):

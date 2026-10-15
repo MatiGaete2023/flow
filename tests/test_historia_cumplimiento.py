@@ -41,16 +41,13 @@ def test_prorroga_vigente_dice_hasta_cuando_el_egreso_proyectado(tmp_path):
     assert f.avisos == [] and f.rules == ['HISTORIA.C2_PRORROGA_HASTA', 'HISTORIA.MEDIDA_REVISADA']
 
 
-def test_prorroga_reciente_con_medida_por_vencer_no_repite_la_fecha_y_marca_prioritaria(tmp_path):
+def test_prorroga_con_medida_por_vencer_prevalece_el_texto_de_la_medida_y_marca_prioritaria(tmp_path):
     f = _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2026-10-29', dpe=15)
-    assert f.observation.split(': ', 1)[1] == (
-        'Medida próxima a vencer en RUS el 29 de octubre de 2026. '
-        'Se hace presente que a folio 3, de fecha 7 de octubre de 2026, se prorroga la medida.'
-    )
+    assert f.observation.split(': ', 1)[1] == 'Medida próxima a vencer en RUS el 29 de octubre de 2026.'
     assert [a[:2] for a in f.avisos] == [(1, 'PRORROGA_REVISAR')] and f.actions == ['medidas']
-    # Prórroga de más de 90 días: la frase sale, la marca no.
+    # Prórroga de más de 90 días: ni frase ni marca.
     antigua = _prorroga(tmp_path, ('Prorroga', '2026-07-01', 3), egreso='2026-10-29', dpe=15)
-    assert 'se prorroga la medida.' in antigua.observation and antigua.avisos == []
+    assert 'prorroga' not in antigua.observation.lower() and antigua.avisos == []
     limite = _prorroga(tmp_path, ('Prorroga', '2026-07-16', 3), egreso='2026-10-29', dpe=15)
     assert [a[1] for a in limite.avisos] == ['PRORROGA_REVISAR']  # exactamente 90 días
     fuera = _prorroga(tmp_path, ('Prorroga', '2026-07-15', 3), egreso='2026-10-29', dpe=15)
@@ -81,27 +78,20 @@ def test_prorroga_ya_mencionada_en_la_bitacora_se_ignora_con_su_marca(tmp_path):
     assert _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2026-10-29', dpe=15, bitacora=otra).avisos
 
 
-def test_c4_fichas_agrega_folio_o_constancia(tmp_path):
-    h = hist(('Ficha individual', '2026-10-01', 8))
-    coincide = cum(tmp_path, cumplimiento(1, 'RTA UNO', ind='2026-10-01'), h)
-    assert (
-        'Ficha individual actualizada el 1 de octubre de 2026. Consta en la historia de la causa a folio 8.'
-        in coincide.observation
+def test_fichas_de_la_historia_no_agregan_texto_a_la_observacion(tmp_path):
+    # Solo rigen las reglas originales: existencia (FAE, tras 120 días) y antigüedad (individual).
+    individual = cum(
+        tmp_path, cumplimiento(1, 'RTA UNO', ind='2026-10-01'), hist(('Ficha individual', '2026-10-01', 8))
     )
-    sin = cum(tmp_path, cumplimiento(1, 'RTA UNO'), h)
-    # La regla original ya dice que RUS no registra la ficha: la historia no lo repite.
-    assert sin.observation.split(': ', 1)[1] == (
-        'No registra ficha individual en RUS. En la historia de la causa consta un trámite descrito como '
-        '«Ficha individual», de fecha 1 de octubre de 2026, folio 8. Se sugiere confeccionarla.'
-    )
+    assert individual.observation.split(': ', 1)[1] == 'Ficha individual actualizada el 1 de octubre de 2026.'
+    sin = cum(tmp_path, cumplimiento(1, 'RTA UNO'), hist(('Ficha individual', '2026-10-01', 8)))
+    assert sin.observation.split(': ', 1)[1] == 'No registra ficha individual en RUS. Se sugiere confeccionarla.'
+    fae = cum(tmp_path, cumplimiento(1, 'FAE UNO', ingreso='2026-01-01', fae=''), hist(('Ficha FAE', '2026-10-01', 8)))
+    assert fae.observation.split(': ', 1)[1] == 'Persona no registra ficha FAE en RUS. Se sugiere confeccionarla.'
     reciente = cum(
         tmp_path, cumplimiento(1, 'FAE UNO', ingreso='2026-09-20', dc=24), hist(('Ficha FAE', '2026-10-01', 8))
     )
-    assert reciente.observation.endswith('RUS no registra la ficha.')
-    ambulatoria = cum(
-        tmp_path, cumplimiento(1, 'RTA UNO', ind='2026-10-01'), hist(('Ficha Ambulatoria', '2026-10-01', 8))
-    )
-    assert 'Ficha Ambulatoria' not in ambulatoria.observation
+    assert 'ficha' not in reciente.observation.lower()
 
 
 def test_c5_reitera_vencida_conserva_la_accion(tmp_path):
@@ -111,43 +101,36 @@ def test_c5_reitera_vencida_conserva_la_accion(tmp_path):
     assert 'Medida vencida en RUS desde' not in f.observation and f.actions == ['medidas']
 
 
-def test_c8_no_uso_exige_cobertura_que_permita_ausencia(tmp_path):
+def test_no_consta_prorroga_ya_no_se_aplica(tmp_path):
     datos = cumplimiento(1, dpe=-5, dc=-5, egreso='2026-09-01')
-    f = cum(tmp_path, datos, hist(('Ficha FAE', '2026-10-01', 1)))
-    # La frase de la medida ya dice el vencimiento: C8 no lo repite.
-    assert f.observation.split(': ', 1)[1] == (
-        'Medida vencida en RUS desde el 1 de septiembre de 2026. No consta en la historia de la causa, '
-        'período consultado 14 de junio de 2026 a 14 de octubre de 2026, un trámite descrito como «Prorroga».'
-    )
-    previa = bita(('2026-09-20', 'Persona X: Medida vencida en RUS desde el 1 de septiembre de 2026.'))
-    reiterada = cum(tmp_path, datos, hist(('Ficha FAE', '2026-10-01', 1)), previa)
-    assert reiterada.observation.split(': ', 1)[1] == (
-        'Se reitera la observación del 20 de septiembre de 2026 sobre la medida vencida en RUS. '
-        'No consta en la historia de la causa, período consultado 14 de junio de 2026 a 14 de octubre de 2026, '
-        'un trámite descrito como «Prorroga». Medida vencida en RUS desde el 1 de septiembre de 2026.'
-    )
-    assert any(a[:2] == (3, 'C8_NO_USO') for a in f.avisos)
-    assert (
-        'No consta' not in cum(tmp_path, datos, hist(('Ficha FAE', '2026-10-01', 1), cobertura='PARCIAL')).observation
-    )
-    assert 'No consta' not in cum(tmp_path, datos, hist(('Prorroga', '2026-10-01', 1))).observation
-    assert 'No consta' in cum(tmp_path, datos, hist(cobertura='VACIA_COMPROBADA')).observation
-    assert 'No consta' not in cum(tmp_path, datos, None).observation
+    for historia in (hist(('Ficha FAE', '2026-10-01', 1)), hist(cobertura='VACIA_COMPROBADA'), None):
+        f = cum(tmp_path, datos, historia)
+        assert f.observation.split(': ', 1)[1] == 'Medida vencida en RUS desde el 1 de septiembre de 2026.'
+        assert f.avisos == [] and f.actions == ['medidas']
 
 
-def test_c9_diagnostico_dce_con_medida_vencida(tmp_path):
+def test_solicitud_dce_en_cumplimiento_con_medida_vencida(tmp_path):
     datos = cumplimiento(1, 'DCE UNO', dpe=-5, dc=-5, egreso='2026-09-01')
-    f = cum(tmp_path, datos, hist(('Resp. Diagnóstico clínico especializado.', '2026-09-05', 12)))
-    assert (
-        'Informe diagnóstico ordenado en autos, se encuentra a folio 12 de fecha 5 de septiembre de 2026, a la espera de lo que se resuelva en la audiencia respectiva.'
-        in f.observation
+    f = cum(tmp_path, datos, hist(('SPE. Resp. Solicitud DCE (escrito)', '2026-09-05', 12)))
+    assert f.observation.split(': ', 1)[1] == (
+        'Medida vencida en RUS desde el 1 de septiembre de 2026. Informe clínico diagnóstico ordenado en autos, '
+        'se encuentra en la causa a folio 12, de fecha 5 de septiembre de 2026, a la espera de lo que se resuelva en la audiencia respectiva.'
     )
+    # Sin medida vencida, en otro programa, o con las otras nomenclaturas DCE: no se dice nada.
+    solicitud = ('SPE. Resp. Solicitud DCE (escrito)', '2026-09-05', 12)
+    assert 'Informe clínico' not in cum(tmp_path, cumplimiento(1, 'DCE UNO'), hist(solicitud)).observation
     assert (
-        'Informe diagnóstico ordenado'
+        'Informe clínico'
         not in cum(
-            tmp_path, cumplimiento(1, 'DCE UNO'), hist(('Resp. Diagnóstico clínico especializado.', '2026-09-05', 12))
+            tmp_path, cumplimiento(1, 'PRM UNO', dpe=-5, dc=-5, egreso='2026-09-01'), hist(solicitud)
         ).observation
     )
+    for ignorada in ('Resp. Diagnóstico clínico especializado.', 'SPE. Resp. Rectificación DCE (escrito)'):
+        g = cum(tmp_path, datos, hist((ignorada, '2026-09-05', 12)))
+        assert (
+            g.observation.split(': ', 1)[1] == 'Medida vencida en RUS desde el 1 de septiembre de 2026.'
+            and g.avisos == []
+        )
 
 
 def test_c10_escrito_sin_ingreso_posterior(tmp_path):
@@ -171,11 +154,14 @@ def test_sin_seguimiento_vencida_y_mayoria_de_edad(tmp_path):
 
 def test_medida_revisada_cuando_solo_hay_reglas_nuevas(tmp_path):
     f = cum(tmp_path, cumplimiento(1), hist(('Resp. continuidad de atención', '2026-10-01', 4)))
-    assert f.observation.split(': ', 1)[1].startswith('Medida revisada. En la historia de la causa consta')
+    assert f.observation.split(': ', 1)[1] == (
+        'Medida revisada. Se hace presente que a folio 4, de fecha 1 de octubre de 2026, '
+        'consta respuesta sobre la continuidad de atención.'
+    )
     con_original = cum(
         tmp_path, cumplimiento(1, egreso='2026-11-01', dpe=5), hist(('Resp. continuidad de atención', '2026-10-01', 4))
     )
-    assert 'Medida revisada. En la historia' not in con_original.observation
+    assert 'Medida revisada.' not in con_original.observation and 'continuidad de atención' in con_original.observation
 
 
 def test_mayoria_de_edad_marca_siempre_por_la_edad(tmp_path):

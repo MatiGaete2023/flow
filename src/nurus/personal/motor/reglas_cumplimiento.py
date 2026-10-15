@@ -37,7 +37,7 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     finalizada=H.causa_finalizada(_rit(row, cols))
     if finalizada: return componer(pfx, finalizada)
     H.marcar_duplicidad()
-    mn=H.deja_sin_efecto_mn()
+    H.marcas_sin_efecto()
     frags=[]; principal=False; c03=False
     c05=bool(fegr and dpe is not None and 0 <= dpe <= parametro('medida') and not vencida)
     dm=dias_para_mayoria(fn) if fn else None
@@ -77,9 +77,8 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     # Las frases se ordenan por grupo al componer: constancias, acciones del Centro, gestión del Tribunal.
     if not c03: frags += H.ingreso_informado(fing)
     frags += H.prorroga(hoy, fegr, bool(vencida and vok), c05, egreso_dicho)
-    if vok: frags += H.no_uso_prorroga(fegr, not reiterada)
-    frags += H.diagnostico_dce(programa, vok) + H.escrito_sin_ingreso(programa)
-    frags += mn + H.busqueda_historia() + H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
+    frags += H.solicitud_dce(programa, vok) + H.escrito_sin_ingreso(programa)
+    frags += H.busqueda_historia() + H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _oido(row, cols) or _oido_historia(row, cols)
     aud=_audiencia(row, cols)
     if aud: frags.append(aud)
@@ -87,21 +86,17 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     pnrm=normalizar(programa)
     fi=fecha_valida(row.get(cols.get('ficha_ind'))) if cols.get('ficha_ind') else None
     if pnrm.startswith(_RES) and cols.get('ficha_ind'):
-        orig=True
         if not fi: frags.append(H.reitera('SIN_FICHA') or render('CUMPLIMIENTO','C07_SIN_FICHA'))
         else:
             dd=(hoy-_d(fi)).days
             if dd > parametro('ficha_antigua'): frags.append(render('CUMPLIMIENTO','C07_FICHA_ANTIGUA', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
             elif 0 <= dd <= parametro('ficha_reciente'): frags.append(render('CUMPLIMIENTO','C07_FICHA_RECIENTE', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
-            else: orig=False
-        frags += H.fichas(H.V.FICHA_INDIVIDUAL, fi, orig)
     ffae=fecha_valida(row.get(cols.get('ficha_fae'))) if cols.get('ficha_fae') else None
     if contiene_token(programa,'fae','fas'):
         if not cols.get('ficha_fae'):
             incidencias.agregar(fila_excel, _rit(row, cols), 'C-08', 'ficha FAE no evaluable: sin columna disponible (G-05)')
-        orig=bool(cols.get('ficha_fae') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae)
-        if orig: frags.append(H.reitera('SIN_FAE') or render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
-        if cols.get('ficha_fae'): frags += H.fichas(H.V.FICHA_FAE, ffae, orig)
+        if cols.get('ficha_fae') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae:
+            frags.append(H.reitera('SIN_FAE') or render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
     if not principal and not frags:
         return componer(pfx, [render('CUMPLIMIENTO','C09_SIN_OBSERVACIONES')])
     if not principal and H.solo_historia():

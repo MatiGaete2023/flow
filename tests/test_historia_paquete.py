@@ -21,11 +21,9 @@ def _importar(tmp_path, tramites, cobertura='COMPLETA', nombre='h'):
 def test_la_historia_de_la_causa_llega_a_los_ingresos_de_esa_causa(tmp_path):
     trabajo = _importar(tmp_path, [INGRESO])
     r0, r1, r2, r3 = trabajo.rows
-    for fila in (r0, r1):  # causa-ficticia-0
-        assert (
-            'folio 41.' in fila.observation and 'Medida revisada. En la historia' in fila.observation.split(': ', 1)[1]
-        )
-        assert [a[:2] for a in fila.avisos] == [(2, 'R3_INGRESO_EFECTIVO')] and fila.actions == []
+    for fila in (r0, r1):  # causa-ficticia-0: «Ingreso efectivo» con RUS en Espera, reglas normales y marca
+        assert [a[:2] for a in fila.avisos] == [(2, 'R3_INGRESO_EFECTIVO')]
+        assert fila.actions == ['programa_espera', 'PC_IE'] and 'ESPERA.E05_PROYECTO_Y_CORREO' in fila.rules
     for fila in (r2, r3):  # causa-ficticia-1: sin historia, regla original
         assert 'ESPERA.E05_PROYECTO_Y_CORREO' in fila.rules and fila.avisos == []
 
@@ -46,4 +44,4 @@ def test_cobertura_parcial_cuenta_como_presencia(tmp_path):
 
 def test_importar_de_nuevo_con_otra_regla_no_reutiliza_un_trabajo_antiguo(tmp_path):
     trabajo = _importar(tmp_path, [INGRESO])
-    assert trabajo.ruleset_version.endswith('+historia-3')
+    assert trabajo.ruleset_version.endswith('+historia-4')

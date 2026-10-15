@@ -23,8 +23,9 @@
   "auditoria": null,
   "integrado_en": null,
   "notas": [
-    "Base: WP-64 (0cbd856), que también espera E3. Textos nuevos confirmado:false salvo los dictados o aprobados por el usuario.",
+    "Base: WP-64 (0cbd856), que también espera E3. Todos los textos nuevos quedan confirmado:true (dictados o aprobados por el usuario) salvo C10_ESCRITO.",
     "No integrado ni aceptado.",
-    "Sondeo aleatorio de 595 filas (3 etapas, historia y bitácora al azar): sin excepciones ni frases repetidas."
+    "Sondeo aleatorio de 595 filas (3 etapas, historia y bitácora al azar): sin excepciones ni frases repetidas.",
+    "Ronda final: respuestas 3C/5C, constancias genéricas, Ingreso efectivo solo en Cumplimiento, D.R. ignorada, umbrales configurables, RULESET historia-4 y TEXT_REVISION 5."
   ]
 }

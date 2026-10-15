@@ -37,26 +37,14 @@ def test_espera_ordena_constancias_luego_acciones_del_centro_y_al_final_el_tribu
     assert f.actions == ['programa_espera', 'PC_IE']  # el orden del texto no cambia las acciones
 
 
-def test_informes_ordena_constancias_acciones_y_gestion_del_tribunal(tmp_path):
-    dos = (
-        '(11-1)ABOG A - Institución: Programa Mi Abogado#(22-2)ABOG B - Institución: Corporación de Asistencia Judicial'
-    )
-    f = correr(
-        tmp_path,
-        'INFORMES',
-        ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO', 'CURADOR'],
-        [fila(1) + ['2026-09-20', dos]],
-        {0: hist(('Prorroga', '2026-09-01', 7))},
-    ).rows[0]
+def test_informes_ordena_constancias_y_deja_la_accion_del_centro_al_final(tmp_path):
+    columnas = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO']
+    filas = [fila(1, rit='C-1-2026') + ['2026-08-20'], fila(2, rit='C-1-2026') + ['2026-09-20']]
+    filas[1][2] = filas[0][2]
+    f = correr(tmp_path, 'INFORMES', columnas, filas, {}).rows[0]
     cuerpo = _cuerpo(f)
-    assert (
-        cuerpo.index('Informe de avance vencido')
-        < cuerpo.index('«Prorroga»')
-        < cuerpo.index('Se deja constancia de que se remite')
-    )
-    assert cuerpo.index('Se deja constancia de que se remite') < cuerpo.index(
-        'se sugiere eliminar aquellas designaciones'
-    )
+    assert cuerpo.index('Informe de avance vencido') < cuerpo.index('Registra 2 informes vencidos')
+    assert cuerpo.index('Registra 2 informes vencidos') < cuerpo.index('Se deja constancia de que se remite proyecto')
     assert f.actions == ['programa_vencido', 'PC_INFO']
 
 
@@ -103,20 +91,18 @@ def test_aclaracion_de_causa_en_cumplimiento_con_hermanos(tmp_path):
     assert ACLARACION not in solo.observation
 
 
-def test_aclaracion_de_causa_en_informes_con_varios_registros(tmp_path):
+def test_aclaracion_de_causa_en_informes_solo_con_varios_ninos_y_una_cita(tmp_path):
+    columnas = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO']
     filas = [
         fila(1, rit='C-1-2026', rut='11111111-1') + ['2026-09-20'],
         fila(2, rit='C-1-2026', rut='22222222-2') + ['2026-09-20'],
     ]
-    h = hist(('Prorroga', '2026-09-01', 7))
-    trabajo = correr(
-        tmp_path,
-        'INFORMES',
-        ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO'],
-        filas,
-        {0: h, 1: h},
-    )
+    h = hist(('Ingreso informe de cumplimiento X', '2026-09-25', 7))
+    trabajo = correr(tmp_path, 'INFORMES', columnas, filas, {0: h, 1: h})
     assert all(_cuerpo(f).endswith(ACLARACION) for f in trabajo.rows)
+    # Varios informes del mismo niño no son varios niños.
+    mismo = [fila(1, rit='C-1-2026') + ['2026-08-20'], fila(1, rit='C-1-2026') + ['2026-09-20']]
+    assert ACLARACION not in correr(tmp_path, 'INFORMES', columnas, mismo, {0: h, 1: h}).rows[0].observation
 
 
 def test_egreso_posterior_a_la_mayoria_de_edad(tmp_path):
@@ -216,3 +202,47 @@ def test_los_textos_antiguos_tienen_las_mismas_variables_que_los_nuevos(clave):
     ambito, nombre = clave.split('.', 1)
     campos = lambda texto: {c for _, c, _, _ in string.Formatter().parse(texto) if c}  # noqa: E731
     assert campos(LEGACY_TEXTS_REV4[clave]) == campos(defaults()['textos'][ambito][nombre]['texto'])
+
+
+def _con_umbral(tmp_path, clave, valor, filas, historias, modo='CUMPLIMIENTO', encabezados=CUMPLIMIENTO):
+    config = deepcopy(defaults())
+    config['umbrales'][clave] = valor
+    return correr(tmp_path, modo, encabezados, filas, historias, None, config).rows[0]
+
+
+def test_ventana_de_ingreso_efectivo_es_un_umbral(tmp_path):
+    fila_ = cumplimiento(1, dc=100, ingreso='2026-06-01')
+    h = hist(('Ingreso efectivo', '2026-06-20', 5))  # 19 días después
+    assert 'informada al Tribunal' in _cuerpo(_con_umbral(tmp_path, 'ventana_ingreso', 30, [fila_], {0: h}))
+    assert 'informada al Tribunal' not in _cuerpo(_con_umbral(tmp_path, 'ventana_ingreso', 10, [fila_], {0: h}))
+
+
+def test_prorroga_reciente_es_un_umbral(tmp_path):
+    fila_ = cumplimiento(1, egreso='2026-10-29', dpe=15)
+    h = hist(('Prorroga', '2026-08-14', 3))  # 61 días antes del corte
+    assert _con_umbral(tmp_path, 'prorroga_reciente', 90, [fila_], {0: h}).avisos
+    assert not _con_umbral(tmp_path, 'prorroga_reciente', 60, [fila_], {0: h}).avisos
+
+
+def test_una_configuracion_sin_los_umbrales_nuevos_se_completa(tmp_path):
+    def sin_umbrales(d):
+        for clave in ('prorroga_reciente', 'ventana_ingreso', 'lista_espera_larga'):
+            d['umbrales'].pop(clave)
+
+    datos = _escribir(tmp_path / 'u', sin_umbrales)
+    assert (datos['umbrales']['prorroga_reciente'], datos['umbrales']['ventana_ingreso']) == (90, 30)
+    assert datos['umbrales']['lista_espera_larga'] == 100
+
+
+def test_deja_sin_efecto_dr_y_mn_marcan_tambien_en_cumplimiento(tmp_path):
+    base = cum(tmp_path, cumplimiento(1))
+    f = cum(tmp_path, cumplimiento(1), hist(('Deja sin efecto derivación D.R.', '2026-09-15', 20)))
+    assert (f.observation, f.rules) == (base.observation, base.rules) and [a[:2] for a in f.avisos] == [
+        (2, 'DEJA_SIN_EFECTO_DR')
+    ]
+
+
+def test_ingreso_efectivo_de_la_historia_en_espera_no_cambia_el_texto(tmp_path):
+    base = esp(tmp_path, fila(1) + [45])
+    f = esp(tmp_path, fila(1) + [45], hist(('Ingreso efectivo', '2026-10-02', 41)))
+    assert f.observation == base.observation and f.actions == base.actions == ['programa_espera', 'PC_IE']
