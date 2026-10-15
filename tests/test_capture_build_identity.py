@@ -12,7 +12,9 @@ def test_frozen_build_rejects_missing_metadata(monkeypatch):
         build_identity()
 
 
-@pytest.mark.parametrize('commit,version', [('desarrollo', __version__), ('a' * 40, '0.0.0')])
+@pytest.mark.parametrize(
+    'commit,version', [('desarrollo', __version__), ('a' * 40, '0.0.0')], ids=['desarrollo', 'commit-completo']
+)
 def test_frozen_build_rejects_wrong_origin(monkeypatch, commit, version):
     meta = ModuleType('nurus.personal._build_meta')
     meta.BUILD_COMMIT = commit
