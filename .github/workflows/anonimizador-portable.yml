@@ -1,0 +1,53 @@
+name: Anonimizador CSMP portable Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [wp/anonimizador-portable-20261015]
+    paths: ['portable/**', '.github/workflows/anonimizador-portable.yml']
+permissions:
+  contents: read
+jobs:
+  portable:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Dependencias de pruebas del Asistente
+        shell: pwsh
+        run: |
+          python -m pip install -e '.[excel-legacy]' pytest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Regresiones sintéticas e importación
+        shell: pwsh
+        run: |
+          python -m pytest -q tests/test_anonimizar_local.py tests/test_anonimizar_casos.py tests/test_anonimizar_excel.py --junitxml=pruebas-anonimizador.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Entorno de compilación independiente
+        shell: pwsh
+        run: |
+          python -m venv .venv-portable
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv-portable/Scripts/python.exe -m pip install -r portable/requirements-build.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compilar y probar el EXE
+        shell: pwsh
+        run: ./portable/build.ps1 -Python (Resolve-Path .venv-portable/Scripts/python.exe).Path
+      - name: Preparar entrega y huellas
+        shell: pwsh
+        run: |
+          .venv-portable/Scripts/python.exe portable/package.py entrega
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item pruebas-anonimizador.xml entrega/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AnonimizadorCSMP-Windows-x64
+          path: |
+            entrega/*.zip
+            entrega/*.txt
+            entrega/*.xml
+          if-no-files-found: error
+          retention-days: 30
