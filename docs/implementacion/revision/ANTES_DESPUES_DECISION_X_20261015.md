@@ -140,7 +140,7 @@ Marcas de la bandeja: nivel 1 = prioritario, nivel 2 = requiere atención, nivel
 | INFORME_INGRESADO | aprobado por ti | Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se ingresa el informe de cumplimiento. |
 | EGRESO_POSTERIOR_MAYORIA_FECHA | aprobado por ti | El egreso proyectado es posterior a la mayoría de edad, que se alcanza el {FECHA_MAYORIA}. |
 | INFORMES.I01_VENCIDO_GENERAL / _DCE | aprobados por ti | Informe de avance (diagnóstico) vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución… |
-| C10_ESCRITO | **[por aprobar]** | Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura… |
+| C10_ESCRITO | aprobado por ti (15-oct-2026) | Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura… |
 
 **Eliminados** (ya no se aplican): regla «No consta Prorroga» y su marca nivel 3 (`C8_NO_USO*`), constancias de fichas (`C4_*`), `C9_DCE`, `T2_MN`,
 `R3_CIERRE`, `C2_PRORROGA_SIN_FECHA`, `I1_VENCIDO`, `I1_POR_VENCER`.

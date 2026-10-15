@@ -97,6 +97,7 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   8. Curador: la baja o la designación de la historia se dice solo si RUS no tiene curador, con marca de nivel 2; con curador en RUS se ignora. La aclaración «La historia es de la causa…» es transversal (una vez, al final) cuando la causa tiene varios niños en la nómina.
   9. Fichas: sin texto de la historia; rigen solo las reglas originales (FAE: existencia tras 120 días; individual: sin ficha, más de 180 días y reciente de 0 a 30). Informes solo hace constar lo de informes (vencido, por vencer, ingresado, acumulados J2) más correo y proyecto; la advertencia de posible entrega anterior pasa a marca nivel 2. Causa finalizada se mantiene en las tres etapas. Si el egreso proyectado es posterior a la mayoría de edad, se dice. E10 reemplaza a los días de espera cuando ambas dicen lo mismo.
   10. Umbrales configurables (`UMBRALES`): `prorroga_reciente` = 90, `ventana_ingreso` = 30, `lista_espera_larga` = 100.
+  11. `C10_ESCRITO` aprobado por el usuario el 15 de octubre de 2026; Asistente `0.5.0.dev6`.
 
 ## Fase B de auditoría final — 14 de octubre de 2026
 

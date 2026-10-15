@@ -214,8 +214,8 @@
     },
     "C10_ESCRITO": {
       "texto": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
-      "confirmado": false,
-      "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; «de que»; redacción por aprobar"
+      "confirmado": true,
+      "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; «de que»; aprobado por el usuario el 15-oct-2026"
     },
     "J2_ACUMULADOS": {
       "texto": "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}.",
