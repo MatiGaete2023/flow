@@ -1945,13 +1945,14 @@
       "tomado": "15 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
       "pr": null,
-      "verificacion": "Por completar con verificar_wp.py sobre el commit del cambio; ver verificacion/WP-65.json.",
+      "verificacion": "PASA sobre f08a7b9: Asistente 1.117 aprobadas, Descargador 343 y 62 subpruebas; inventario, 9 sustituciones declaradas (WP-64), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-65.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb.",
       "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
       "auditoria": null,
       "integrado_en": null,
       "notas": [
         "Base: WP-64 (0cbd856), que también espera E3. Textos nuevos confirmado:false salvo los dictados o aprobados por el usuario.",
-        "No integrado ni aceptado."
+        "No integrado ni aceptado.",
+        "Sondeo aleatorio de 595 filas (3 etapas, historia y bitácora al azar): sin excepciones ni frases repetidas."
       ]
     },
     "WP-71": {
