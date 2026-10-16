@@ -2,9 +2,12 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
-**Sin cambio de versión, 16 de octubre de 2026** (prueba; extensión intacta). Sobre 2.8.0:
+**Sin cambio de versión, 16 de octubre de 2026** (prueba). Sobre 2.8.0:
+- Extensión: la captura PDF de una consulta sin registros trae Chrome al frente y, si Chrome no pinta la pestaña en 5 s,
+  informa «Mantén SITFA visible» en vez de quedar esperando hasta «Chrome no respondió a tiempo». Hay que recargar la
+  extensión en chrome://extensions.
 - «Período a recolectar» de 1 a 4 meses para bitácoras e historia de la causa.
-- «Incluir informes por vencer (60 días)»: nueva fase que pide cambiar SITFA al calendario de informes, descarga el mes actual y el siguiente y los agrega al paquete.
+- «Incluir informes por vencer (60 días)»: nueva fase que cambia SITFA sola al calendario de informes, descarga los meses que cubren 60 días, vuelve a Seguimiento y los agrega al paquete.
 - «Un paquete por hoja de RUS»: cada hoja (Espera, Cumplimiento, Informes) se consulta y entrega por separado.
 - La columna NOMBRE del consolidado ya no lleva paréntesis.
 

@@ -234,7 +234,11 @@ async function sitfaTask(command, payload) {
     const rect=context?.getBoundingClientRect();
     if(!context?.isConnected || style.display==="none" || style.visibility!=="visible" || Number(style.opacity)!==1 ||
        rect.top<0 || rect.bottom>run.evidenceFrame.clientHeight || rect.width<300 || rect.height<20)throw new Error("pantalla");
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    // Sin cuadros pintados (pestaña oculta o ventana tapada) se informa en vez de esperar sin límite.
+    await new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error("pantalla")),5000);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{clearTimeout(timer);resolve();}));
+    });
     document.getElementById("sitfaDescargaLocal").style.visibility="hidden";
     return {ok:true};
   }

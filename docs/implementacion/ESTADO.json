@@ -1952,6 +1952,33 @@
         "No integrado ni aceptado."
       ]
     },
+    "WP-57": {
+      "titulo": "Captura PDF de consulta vacía sin espera indefinida",
+      "ola": 8,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-56",
+          "tipo": "archivo"
+        }
+      ],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+      "tomado": "16 de octubre de 2026",
+      "rama": "claude/lucid-sagan-hw9ul4",
+      "pr": null,
+      "verificacion": "PENDIENTE",
+      "revision": "PENDIENTE E3: toca la extensión SITFA (decisión j).",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Prueba del usuario 16-oct: E_PIPELINE «Chrome no respondió a tiempo» en la consulta 8/34, primera sin registros.",
+        "La prueba Playwright con extensión real no corre en este contenedor (Chromium sin Extensions.triggerAction); queda para la CI Windows con workflow_dispatch."
+      ]
+    },
     "WP-64": {
       "titulo": "Fase B: correcciones de auditoría final",
       "ola": 8,

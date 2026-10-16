@@ -66,7 +66,8 @@ async function execute(command,payload={}) {
       const tab=await chrome.tabs.get(tabId);windowId=tab.windowId;
       if(new URL(tab.url).origin!=="https://familia.pjud.cl" || tab.discarded)throw new Error("pestaña");
       const win=await chrome.windows.get(windowId);
-      if(win.state==="minimized")await chrome.windows.update(windowId,{state:"normal"});
+      // Chrome no pinta una ventana tapada por otra (p. ej., el descargador): se trae al frente para la captura.
+      await chrome.windows.update(windowId,{...(win.state==="minimized"?{state:"normal"}:{}),focused:true});
       await chrome.tabs.update(tabId,{active:true});
       chrome.tabs.onActivated.addListener(activated);
       await inject("evidence_show",payload);
