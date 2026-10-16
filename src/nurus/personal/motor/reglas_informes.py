@@ -1,6 +1,5 @@
 from .contexto import parametro
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import fecha_es, titulo_programa, es_derivacion_sin_seg, es_dce

@@ -13,7 +13,6 @@ MUTED = COLORS['muted']
 BLUE = COLORS['primary']
 LINE = COLORS['line']
 SIDEBAR = COLORS['sidebar']
-HEADING = COLORS['heading']
 THEMES = {'Claro': 'Light', 'Oscuro': 'Dark', 'Sistema': 'System'}
 
 

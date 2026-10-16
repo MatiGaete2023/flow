@@ -1,3 +1,5 @@
+> Documento histórico, trasladado desde `descargador/` en WP-68.
+
 # Revisión del Descargador SITFA
 
 **Actualización:** las mejoras se implementaron en una rama experimental, con

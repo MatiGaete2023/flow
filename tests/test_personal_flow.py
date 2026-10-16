@@ -46,8 +46,6 @@ def source(tmp_path, mode='ESPERA', program='AFT EJEMPLO', days=30):
 
 def exported(tmp_path, mode='ESPERA'):
     work = Work(defaults()).analyze(source(tmp_path, mode), mode, as_of=date(2026, 9, 13))
-    if work.needs_cross:
-        work.document_exception('Revisión parcial: descarga sin cruce.')
     work.export(tmp_path / 'salida.xlsx', backend='portable', reduced_fidelity=True)
     return work
 

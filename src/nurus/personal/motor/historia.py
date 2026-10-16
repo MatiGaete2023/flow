@@ -8,7 +8,6 @@ from datetime import date
 from nurus.rus.columns import normalize
 
 PRESENCIA = frozenset(('COMPLETA', 'PARCIAL'))
-AUSENCIA = frozenset(('COMPLETA', 'VACIA_COMPROBADA'))
 
 
 def clave(texto):
@@ -41,9 +40,6 @@ class Historia:
     def con_datos(self):
         return self.cobertura in PRESENCIA
 
-    @property
-    def permite_ausencia(self):
-        return self.cobertura in AUSENCIA
 
     def buscar(self, *nombres):
         claves = {clave(n) for n in nombres}
@@ -62,7 +58,8 @@ def _folio(valor):
     return int(texto) if texto.isdigit() else -1
 
 
-def _dia(valor):
+def dia_iso(valor):
+    """Fecha ISO (aaaa-mm-dd…) o None si no se puede leer."""
     try:
         return date.fromisoformat(str(valor or '')[:10])
     except ValueError:
@@ -77,7 +74,7 @@ def construir(filas, cobertura, desde=None, hasta=None):
     """filas: dicts de la tabla historia_tramites. Descarta filas sin fecha ISO o sin descripción."""
     tramites = []
     for fila in filas:
-        fecha = _dia(fila.get('event_at'))
+        fecha = dia_iso(fila.get('event_at'))
         desc = str(fila.get('description', '')).strip()
         if fecha is None or not desc:
             continue
@@ -91,7 +88,7 @@ def observaciones(filas):
     """filas: dicts de la tabla bitacoras (campos event_at y text), ordenadas por fecha."""
     salida = []
     for fila in filas:
-        fecha = _dia(fila.get('event_at'))
+        fecha = dia_iso(fila.get('event_at'))
         if fecha is not None:
             salida.append(Observacion(fecha, str(fila.get('text', ''))))
     return tuple(sorted(salida, key=lambda o: o.fecha))

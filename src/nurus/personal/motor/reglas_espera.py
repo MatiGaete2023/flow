@@ -1,6 +1,5 @@
 from .contexto import marcar, parametro
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import (fecha_es, limpiar_nombre, es_dce, es_derivacion_sin_seg,
@@ -49,11 +48,6 @@ def _curador(row, cols):
     if not tiene_curador_real(celda):
         return [H.reitera('CURADOR') or render('COMUN','CURADOR')]
     return H.curador_instituciones(celda, _pnombre(str(row.get(cols.get('nombre'), ''))))
-
-
-def _curador_oido(row, cols):
-    """Compatibilidad interna: hitos antes de sugerencias."""
-    return _oido(row, cols) + _curador(row, cols)
 
 
 def _complementarias(row, cols):

@@ -56,7 +56,7 @@ def test_registro_incierto_no_recibe_historia_por_sus_ids_declarados(tmp_path, c
 def test_historia_antes_de_la_ventana_no_acredita_ausencia():
     source = hist(('Ingreso efectivo', '2026-10-10', 40))
     view = source.al_corte(date(2026, 6, 1))
-    assert not view.con_datos and not view.permite_ausencia
+    assert not view.con_datos
     assert view.tramites == () and source.tramites
 
 
@@ -64,7 +64,7 @@ def test_historia_recorta_ventana_de_ausencia_sin_elevar_cobertura_parcial():
     source = hist(('Prorroga', '2026-10-10', 40), cobertura='PARCIAL')
     view = source.al_corte(date(2026, 10, 9))
     assert view.hasta == date(2026, 10, 9) and view.desde == source.desde
-    assert view.cobertura == 'PARCIAL' and not view.permite_ausencia and not view.tramites
+    assert view.cobertura == 'PARCIAL' and not view.tramites
 
 
 @pytest.mark.parametrize('descripcion', ['Ingreso informe de cumplimiento X', 'Inf. Cump Programa Ambulatorio'])

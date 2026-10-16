@@ -1,9 +1,11 @@
+> Documento histórico (1 de octubre de 2026), trasladado desde `descargador/` en WP-68. Las sondas `pruebas/` que cita ya no existen.
+
 # Download y NuRus: comparación e integración con CSMP
 
 **Actualización:** el exportador productivo y los cambios de NuRus están ahora
 en ramas experimentales separadas. Estado y uso:
 [GUIA_EXPERIMENTAL.md](GUIA_EXPERIMENTAL.md). Este documento conserva la comparación
-original; `pruebas/integracion_exportador_csmp.py` verifica el nuevo recorrido.
+original; `pruebas/integracion_exportador_csmp.py` verificaba el nuevo recorrido (retirada en WP-68).
 
 Fecha: 1 de octubre de 2026.
 
@@ -203,7 +205,7 @@ RIT/NOMBRE MENOR no basta.
 
 ## Evidencia y límites de esta revisión
 
-- Sonda reproducible en [`pruebas/compatibilidad_csmp.py`](pruebas/compatibilidad_csmp.py):
+- Sonda reproducible en `pruebas/compatibilidad_csmp.py` (retirada en WP-68):
   nueve conversiones, insuficiencia de columnas, cruce C-10 y diferencia entre
   análisis e importación externa. Crea/elimina sus libros ficticios temporales.
 - **77 pruebas de NuRus aprobadas** en Python 3.12/Linux: flujo personal,
@@ -237,5 +239,5 @@ versiones cambien la evidencia:
 - [Modalidades](https://github.com/MatiGaete2023/NuRus/blob/7d155e3f24083f97c2f3768d6ba98e3a2a323ca2/src/nurus/personal/modalities.py).
 - [Interfaz vigente y PROCESAR](https://github.com/MatiGaete2023/NuRus/blob/7d155e3f24083f97c2f3768d6ba98e3a2a323ca2/src/nurus/personal/app.py).
 - [Estado del producto y límites](https://github.com/MatiGaete2023/NuRus/blob/7d155e3f24083f97c2f3768d6ba98e3a2a323ca2/README.md).
-- Download: [lector y validación](motor.py), [lotes y manifiestos](lotes.py),
+- Download: [lector y validación](../../../descargador/motor.py), [lotes y manifiestos](../../../descargador/lotes.py),
   [mejoras funcionales propuestas](MEJORAS_USUARIO.md).

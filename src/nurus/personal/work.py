@@ -512,12 +512,6 @@ class Work:
         # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
         return causas_con_varios(rows), accumulated
 
-    def document_exception(self, reason):
-        """Compatibilidad con sesiones antiguas; ya no es requisito para exportar."""
-        if not reason.strip():
-            raise ValueError('Indica el motivo de la excepción de cruce.')
-        self.exception = reason.strip()
-
     def export(self, destination, *, backend='native', reduced_fidelity=False):
         """Exporta la propuesta o las ediciones humanas vigentes de Trabajo.
 

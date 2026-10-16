@@ -86,7 +86,7 @@ La exportación de calendario distingue vencimiento de informe y egreso proyecta
 **5 de octubre de 2026.** Esta rama incorpora la descarga conjunta para CSMP: principal completa, informes por vencer del mes actual y siguiente, y carga de al menos 60 días en bloques de hasta 30. Incluye recuperación por consulta, procedencia, vínculos de ingreso y cobertura explícita. La actividad se presenta como parcial hasta confirmar el criterio temporal del sistema. Consulta la [guía de pruebas integrales](docs/GUIA_PRUEBAS_INTEGRALES.md) y el [estado de los 32 elementos](docs/ESTADO_PLAN_INTEGRAL_20261005.md).
 
 **Rama experimental:** las mejoras funcionales y la integración con NuRus están
-implementadas aquí. Consulta [GUIA_EXPERIMENTAL.md](GUIA_EXPERIMENTAL.md) para
+implementadas aquí. Consulta [GUIA_EXPERIMENTAL.md](../docs/historico/descargador_20261001/GUIA_EXPERIMENTAL.md) para
 comparar con `main`, usar consolidación, favoritos, historial, CSV/ICS/ZIP y
 exportación para CSMP. La versión original se conserva en `main`; el texto de
 funcionamiento básico siguiente sigue describiendo su flujo de descarga.
@@ -227,14 +227,14 @@ Se incorporan los calendarios mensuales de informes y medidas por vencer y Consu
 El detalle y las limitaciones de las comprobaciones están en **VERIFICACION.md**.
 
 La revisión de código, las correcciones y las propuestas de mejoras están en
-[INFORME_REVISION.md](INFORME_REVISION.md).
+[INFORME_REVISION.md](../docs/historico/descargador_20261001/INFORME_REVISION.md).
 
 Las propuestas de funcionalidades, consolidación e integraciones para facilitar
-el trabajo del usuario están en [MEJORAS_USUARIO.md](MEJORAS_USUARIO.md).
+el trabajo del usuario están en [MEJORAS_USUARIO.md](../docs/historico/descargador_20261001/MEJORAS_USUARIO.md).
 Las propuestas se evaluaron en esos documentos; su estado de implementación en
-esta rama está en [GUIA_EXPERIMENTAL.md](GUIA_EXPERIMENTAL.md).
+esta rama está en [GUIA_EXPERIMENTAL.md](../docs/historico/descargador_20261001/GUIA_EXPERIMENTAL.md).
 
-La [comparación con NuRus / CSMP Assistant](COMPARACION_NURUS.md) detalla cómo
+La [comparación con NuRus / CSMP Assistant](../docs/historico/descargador_20261001/COMPARACION_NURUS.md) detalla cómo
 entregar libros compatibles, aprovechar su análisis, correos y resoluciones,
 y qué límites comprobar. Incluye una sonda offline con datos ficticios.
 

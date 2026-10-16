@@ -20,7 +20,7 @@ from nurus.capture.temporal import (
 from nurus.rus.columns import COMMON, MODE_COLUMNS, map_columns
 from nurus.rus.models import ReadBatch, SourceRecord, SourceReference, Mode
 from nurus.rus.util import as_date
-from .motor.historia import construir, observaciones
+from .motor.historia import construir, dia_iso, observaciones
 from .work import Work
 from nurus.services.excel_cells import append_literal_row
 
@@ -54,17 +54,10 @@ def _historias_por_causa(capture):
         if clave in mejor and mejor[clave] >= puntaje:
             continue
         ventana = filtros.get('ventana') or {}
-        desde, hasta = (_dia(ventana.get(k)) for k in ('desde', 'hasta'))
+        desde, hasta = (dia_iso(ventana.get(k)) for k in ('desde', 'hasta'))
         resultado[clave] = construir(filas.get(consulta['query_id'], ()), consulta['coverage'], desde, hasta)
         mejor[clave] = puntaje
     return resultado
-
-
-def _dia(valor):
-    try:
-        return date.fromisoformat(str(valor or '')[:10])
-    except ValueError:
-        return None
 
 
 def captured_rule_context(work, source):

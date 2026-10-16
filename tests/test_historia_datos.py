@@ -46,9 +46,8 @@ def test_ultimo_del_mismo_dia_es_el_de_mayor_folio():
 
 
 def test_cobertura_presencia_y_ausencia():
-    assert hist(cobertura='PARCIAL').con_datos and not hist(cobertura='PARCIAL').permite_ausencia
-    assert hist(cobertura='VACIA_COMPROBADA').permite_ausencia and not hist(cobertura='VACIA_COMPROBADA').con_datos
-    assert not hist(cobertura='FALLIDA').con_datos and not hist(cobertura='NO_CONSULTADA').permite_ausencia
+    assert hist(cobertura='PARCIAL').con_datos and not hist(cobertura='VACIA_COMPROBADA').con_datos
+    assert not hist(cobertura='FALLIDA').con_datos and not hist(cobertura='NO_CONSULTADA').con_datos
 
 
 def _consulta(qid, cobertura, causa='100'):

@@ -1,3 +1,5 @@
+> Documento histórico, trasladado desde `descargador/` en WP-68.
+
 # Funcionalidades e integraciones para el usuario
 
 **Actualización:** el estado implementado de esta rama y sus límites concretos

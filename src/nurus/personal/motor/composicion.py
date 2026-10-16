@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Composición segura de observaciones e incidencias de validación."""
 from datetime import datetime
-from .contexto import datetime as Clock
 import re
 import pandas as pd
 from .textos import ORDEN_GRUPOS
@@ -64,11 +63,6 @@ class Incidencias:
         self._items.append({"FILA_EXCEL": fila_excel, "RIT": rit or "", "REGLA": regla, "MOTIVO": motivo})
     def __len__(self):
         return len(self._items)
-    def extender(self, otra):
-        if otra:
-            self._items.extend(otra._items)
-    def como_dataframe(self):
-        return pd.DataFrame(self._items, columns=["FILA_EXCEL", "RIT", "REGLA", "MOTIVO"])
 
 def fecha_valida(valor):
     fec = get_date(valor)

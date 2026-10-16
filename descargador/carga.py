@@ -1,9 +1,7 @@
 """Contrato de carga capturado: lectura completa, sin inferir cobertura de firmas."""
 
 from collections import Counter
-from datetime import date, datetime, timedelta
-from hashlib import sha256
-import json
+from datetime import date, datetime
 import re
 
 HEADERS = (
@@ -31,17 +29,6 @@ HEADERS = (
     'FECHA FIRMA',
     'HORA FIRMA',
 )
-
-
-def date_blocks(start, end, maximum=30):
-    if not isinstance(start, date) or not isinstance(end, date) or start > end or not 1 <= maximum <= 30:
-        raise ValueError('Rango de carga inválido; cada bloque admite hasta 30 días inclusivos.')
-    result = []
-    while start <= end:
-        stop = min(end, start + timedelta(days=maximum - 1))
-        result.append((start, stop))
-        start = stop + timedelta(days=1)
-    return result
 
 
 def parse_day(value):
@@ -142,71 +129,3 @@ def result_records(form, profile):
     if len(candidates) > 1:
         raise m.PocError('Más de un listado de carga; revisar la estructura.')
     return Counter(candidates[0]) if candidates else Counter()
-
-
-def signatures(grid, tribunal_code, tribunal_name, start, end):
-    """Solo firma válida no invalidada. No convierte glosas en decisiones."""
-    import motor as m
-
-    candidates = []
-    occurrences = Counter()
-    legacy_ordinals = Counter()
-    group_sizes = Counter()
-    for row in record_rows(grid):
-        if row[1] != canonical(tribunal_name):
-            raise m.PocError('Una fila de carga pertenece a otro tribunal.')
-        signed = parse_day(row[21])
-        if row[5] not in ('', '--', 'NO') or signed is None or not start <= signed <= end:
-            continue
-        # Conservar el hash antiguo solo como alias exacto; su contenido original
-        # no puede reconstruirse desde un store que guardó únicamente el hash.
-        raw = json.dumps(row, ensure_ascii=False, separators=(',', ':'))
-        legacy_digest = sha256(raw.encode()).hexdigest()
-        legacy_ordinals[legacy_digest] += 1
-        hour = row[22] if re.fullmatch(r'\d{2}:\d{2}(?::\d{2})?', row[22]) else ''
-        # El portal no entrega un ID remoto de resolución. La clave local usa
-        # únicamente atributos de firma; cambios de funcionarios/flujo se excluyen.
-        identity = (canonical(tribunal_code), row[1], row[0], row[4], row[6], signed.isoformat(), hour)
-        identity_json = json.dumps(identity, ensure_ascii=False, separators=(',', ':'))
-        digest = sha256(('rus-load-signature-v2:' + identity_json).encode()).hexdigest()
-        occurrences[identity] += 1
-        group_sizes[identity] += 1
-        candidates.append(
-            {
-                'tribunal_codigo': tribunal_code,
-                'tribunal': tribunal_name,
-                'rit': row[0],
-                'tramite': row[4],
-                'firma': signed.isoformat(),
-                'hora': hour,
-                'documento': row[6],
-                '_identity': identity,
-                '_digest': digest,
-                '_occurrence': occurrences[identity],
-                '_legacy': legacy_digest + ':' + str(legacy_ordinals[legacy_digest]),
-            }
-        )
-    result = []
-    for item in candidates:
-        ambiguous = group_sizes[item['_identity']] > 1
-        alias_status = 'huella_compuesta_ambigua_sin_id_remoto' if ambiguous else 'huella_compuesta_local_sin_id_remoto'
-        item['identidad'] = alias_status + ';huella_legacy=' + item['_legacy']
-        item['huella'] = item['_digest'] + ':' + str(item['_occurrence'])
-        for key in ('_identity', '_digest', '_occurrence', '_legacy'):
-            item.pop(key)
-        result.append(item)
-    return result
-
-
-def coverage(start, end, queries, *, complete_history=False):
-    # Un rango del reporte de carga no acredita el rango de firmas de la historia.
-    valid = all(q.get('estado') in ('VALIDADA', 'SIN_RESULTADOS') for q in queries) and bool(queries)
-    return {
-        'desde': start.isoformat(),
-        'hasta': end.isoformat(),
-        'estado': 'COMPLETA' if valid and complete_history else 'PARCIAL',
-        'criterio_temporal': 'historia_firmas' if complete_history else 'filtro_carga_no_confirmado',
-        'sin_coincidencias': 'Sin firmas en el período'
-        if valid and complete_history
-        else 'Sin coincidencias en los informes consultados',
-    }

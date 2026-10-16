@@ -1,3 +1,5 @@
+> Documento histórico, trasladado desde `descargador/` en WP-68.
+
 # Comparar la versión actual y la experimental
 
 ## Ramas y configuración

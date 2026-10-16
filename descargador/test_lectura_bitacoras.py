@@ -54,7 +54,7 @@ def popup(params, wrong=False):
     )
     # Los campos completos pertenecen a la tabla, tal como en RUS.
     return (
-        f'<html><form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do">'
+        '<html><form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do">'
         + ''.join(f'<input type="hidden" name="{k}" value="{html.escape(v, quote=True)}">' for k, v in fields.items())
         + f'<table id="TablaInforme"><tr>{headers}</tr><tr>{row}</tr>'
         + ''.join(f'<input type="hidden" name="{k}44" value="{html.escape(v, quote=True)}">' for k, v in hidden.items())
