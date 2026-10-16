@@ -1,78 +1,78 @@
-# Meta 4 · Registros y bitácoras — 1.1
+# Meta 4 · Registros y bitácoras — 2.0
 
-Herramienta independiente para descargar los registros necesarios de SITFA y generar la planilla Meta 4 y sus consolidados. Basada en el generador Meta 4 v2.4 suministrado y en los componentes de lectura del Descargador SITFA 2.7.6 del entorno.
+Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
 ## Instalación y uso en Windows
 
 1. Descomprime la carpeta completa. Requiere Python 3.10 o superior con tkinter (incluido por defecto en Python para Windows).
 2. Ejecuta **Instalar dependencias.bat** una vez.
-3. En Chrome, abre `chrome://extensions`, activa Modo desarrollador y carga la carpeta **descargador/extension**. Si ya tienes esa misma extensión 2.7.6, puedes utilizarla; evita dejar dos copias activas.
+3. Con el **Descargador SITFA** descarga:
+   - Registros: Seguimiento → **Espera** y **Cumplimiento**, modalidades **FAE** y **Residencia**, **sin filtro de fechas ni filtros del formulario** y, en Cumplimiento, sin filtro de vencimiento.
+   - Bitácoras: lectura de bitácoras del mismo alcance.
 4. Ejecuta **Iniciar Meta 4.bat**.
-5. En tu Chrome, inicia sesión en SITFA y entra a **Seguimiento**. Pulsa el icono de la extensión y conecta usando el código de la ventana de Meta 4. Mantén abierta su pestaña de conexión.
-6. Pulsa **Cargar tribunales de SITFA** y selecciona uno o varios con Ctrl + clic (o **Seleccionar todos**).
-7. Revisa la fecha de corte y la carpeta de destino. Pulsa **Descargar y generar Meta 4**. Mantén la pestaña de SITFA sin navegar mientras trabaja.
-8. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. Si la lectura de bitácoras no quedó COMPLETA, el aviso final lo indica.
+5. Elige la carpeta del **lote de registros** (la que contiene `resumen.json`) y la carpeta de **bitácoras** (con `bitacoras.json` y sus HTML). Si las bitácoras están dentro de la carpeta de registros, deja vacío el segundo campo.
+6. Revisa la fecha de corte: al elegir las bitácoras se ajusta al día en que se leyeron si es anterior a hoy. Pulsa **Generar Meta 4**.
+7. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. El aviso final indica lectura incompleta, consultas sin bitácoras y lotes filtrados.
 
-No necesitas iniciar simultáneamente la aplicación del Descargador anterior: esta herramienta reutiliza su transporte y su extensión.
+## Qué lee y qué calcula
 
-## Qué descarga y qué calcula
-
-- Consulta Espera y Cumplimiento para FAE y Residencia, sin limitar la antigüedad de los ingresos. Un ingreso antiguo también necesita aparecer en Meta 4.
-- Incluye **todas las páginas verificadas** de cada consulta.
-- No consulta Informes, Egresados ni la historia de la causa.
-- Lee las bitácoras por el enlace del ingreso. Conserva en JSON solo las entradas del **mes calendario móvil** terminado en la fecha de corte, ambos extremos incluidos. Ejemplos: 16/09 a 16/10; 28/02 a 31/03. De cada entrada guarda solo identificador, fecha, etapa, tipo y texto del centro: no guarda la respuesta del tribunal ni el usuario autor.
+- **Registros**: el lote validado del Descargador (`resumen.json`, verificaciones por consulta y todas sus páginas XLS con control SHA256). Solo usa Espera y Cumplimiento de FAE y Residencia. Rechaza un lote incompleto o descargado con filtros, porque dejaría registros fuera sin aviso.
+- **Bitácoras**: uno o varios lotes `bitacoras.json` del Descargador, con sus HTML verificados por SHA256. Sirven varios lotes (por ejemplo, divididos por el límite de lecturas) y las lecturas conservadas de un lote retomado. También acepta `bitacoras_meta4.json` de Meta 4 1.0/1.1.
+- Usa solo las entradas del **mes calendario móvil** terminado en la fecha de corte, ambos extremos incluidos. Ejemplos: 16/09 a 16/10; 28/02 a 31/03. Los HTML originales no se modifican y no se copian a los resultados.
 - **FECHA OBS. es la fecha de la observación del centro** más reciente cuya columna Etapa sea Espera o Cumplimiento. La fecha de respuesta del tribunal no interviene. Tampoco intervienen las entradas de etapa Informes, aunque sean más recientes.
 - La selección compara fecha y hora, sin depender del orden visual de las filas. En Excel se muestra la fecha.
 - Si el registro pertenece a Cumplimiento y la última etapa válida es Espera, muestra una **alerta roja**, conservando su ubicación en Cumplimiento.
 - Sin observación válida en ese mes: deja FECHA OBS. vacía e informa el motivo. No recupera fechas del Excel original ni de meses anteriores.
 - Si dos etapas tienen exactamente la misma última fecha y hora, conserva esa fecha y pide revisión; no supone cuál fue la última.
 
-**Límite de SITFA:** el endpoint disponible devuelve la ventana de bitácora sin parámetro de fechas. La respuesta se valida y filtra en memoria; no se guarda HTML ni se conservan entradas anteriores al mes. Por ello no se promete que el servidor transfiera únicamente ese mes.
+Controles de bitácora (columna CONTROL BITÁCORA, filas amarillas):
+
+- `REVISAR: bitácora leída antes de la fecha de corte`: lo escrito entre la lectura y el corte no está en la bitácora guardada. Usa como corte el día de lectura o vuelve a leer.
+- `LECTURA NO COMPLETADA`: el Descargador no logró leerla (fallida, pendiente o sin enlace). Si otro lote tiene una lectura verificada del mismo ingreso, se usa esa.
+- `BITÁCORA NO VERIFICABLE`: el HTML cambió después de la descarga, falta o pertenece a otro ingreso. Bloquea la asociación aunque exista otra lectura.
+- `REVISAR IDENTIDAD VISIBLE`, `IDENTIDAD AMBIGUA`, `SIN BITÁCORA ASOCIADA`: diferencias o ausencia de identidad entre la fila y la bitácora.
+- Si los lotes de bitácoras declaran sus consultas, el reporte lista las consultas con registros que **ningún lote de bitácoras enumeró**.
 
 ## Resultados
 
-- **META 4 - actualizado AAAA-MM.xlsx**: las cuatro hojas tradicionales (FAE y Residencia, Espera y Cumplimiento), fechas actualizadas, filas rojas para la alerta y comentarios que explican el motivo. Amarillo indica revisión de bitácora. Incluye una hoja de explicación del período y colores.
-- **Registros.xlsx**: fuentes de Meta 4, FECHA OBS., etapa de última observación, control y alerta, inventario y matriz de cobertura.
-- **Registros consolidados.xlsx**: Espera, Cumplimiento, Duplicados y Alertas y revisión. Incluye FECHA OBS. y la alerta escrita. Duplicados conserva la comparación por RUT y nombre del consolidador suministrado.
+- **META 4 - actualizado AAAA-MM.xlsx**: las cuatro hojas tradicionales (FAE y Residencia, Espera y Cumplimiento), fechas actualizadas, filas rojas para la alerta y comentarios que explican el motivo. Amarillo indica revisión de bitácora. Incluye la hoja Control bitácoras con período, estado de lectura y consultas sin bitácoras.
+- **Registros.xlsx**: fuentes de Meta 4, FECHA OBS., etapa de última observación, control y alerta, inventario, matriz de cobertura y errores/advertencias.
+- **Registros consolidados.xlsx**: Espera, Cumplimiento, Duplicados y Alertas y revisión. Duplicados conserva la comparación por RUT y nombre del consolidador suministrado.
 - **Bitacoras_del_mes.xlsx**: observaciones del período con fecha y hora del centro, etapa, texto e identificadores del ingreso; incluye control de lecturas.
-- **Reporte META4.json**: período, totales, número de alertas y de registros que requieren revisión, conteo por control de bitácora, estado de la lectura de bitácoras (COMPLETA, INCOMPLETA, CANCELADA) e incidencias de las fuentes.
-- En la carpeta de descarga se conservan los Excel originales, sus controles de integridad y **bitacoras_meta4.json**, con las entradas del mes y el estado de cada lectura.
+- **Reporte META4.json**: período, totales, alertas, registros que requieren revisión, conteo por control, estado de lectura, consultas sin bitácoras, avisos de filtros e incidencias de las fuentes.
 
-Se mantiene el alcance de tribunales del generador v2.4 y las modalidades FAE/Residencia. La herramienta indica los archivos que no puede clasificar; no genera una planilla parcial si un reporte de entrada no se puede leer. Una lectura de bitácora fallida sí permite producir los registros, con fecha vacía y control visible para revisión. Revisar también la matriz para tribunales no consultados.
-
-## Usar una descarga existente
-
-Pulsa **Usar carpeta ya descargada…** y elige la carpeta de **un solo lote**, que contenga:
-
-- Los Excel originales y `resumen.json` con sus archivos de verificación.
-- La subcarpeta de bitácoras con `bitacoras.json` y sus HTML (descargador anterior), o `bitacoras_meta4.json` (esta herramienta).
-
-Si los Excel y las bitácoras están en carpetas hermanas, selecciona su carpeta común, siempre que incluya un solo lote de registros. Los originales no se modifican. También admite una carpeta de reportes Excel independientes con sus bitácoras; en ese caso mantiene la selección de versiones por combinación del generador original. Para asegurar todas las páginas, utiliza los controles del descargador.
-
-**El ZIP para el Asistente no sustituye esta carpeta:** su tabla de eventos no conserva la columna Etapa de la observación, necesaria para excluir Informes. Usa los originales y las bitácoras del lote o vuelve a descargar con esta herramienta.
+La carpeta de salida debe ser nueva; se rechaza antes de procesar si ya existe. Los archivos se escriben en una carpeta temporal hermana y solo se publican si la verificación final pasa: un error no deja una planilla parcial. No genera una planilla si un reporte de entrada no se puede leer.
 
 Para asociar una fila exige tribunal, RIT, persona (RUT o nombre si falta RUT) y programa. Usa además los identificadores remotos de causa e ingreso cuando el control de descarga los aporta inequívocamente. Si hay varios ingresos compatibles o una discrepancia de identidad, deja la fecha vacía y pide revisión.
 
-Las bitácoras guardadas por esta herramienta solo sirven para un período contenido en el período conservado. Para otra fecha de corte, vuelve a descargarlas. El máximo del transporte es 600 lecturas por ejecución; para una carga mayor, procesa menos tribunales por lote. No hay recuperación automática de una descarga incompleta desde esta ventana.
+**El ZIP para el Asistente no sustituye estas carpetas:** su tabla de eventos no conserva la columna Etapa de la observación, necesaria para excluir Informes.
+
+También admite una carpeta de reportes Excel independientes (sin `resumen.json`); en ese caso mantiene la selección de versiones por combinación del generador v2.4.
 
 ## Línea de comandos y pruebas
 
-Desde la carpeta de la herramienta, con las dependencias instaladas:
-
 ```text
-python scripts/meta4_bitacoras.py --folder "C:\Lote" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
+python scripts/meta4_bitacoras.py --folder "C:\Descargas\2026-10-16 10-00-00" --diaries "C:\Descargas\Bitacoras 2026-10-16" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
 ```
 
-La carpeta de salida debe ser nueva; se rechaza antes de procesar si ya existe. Los archivos se escriben en una carpeta temporal hermana y solo se publican si la verificación final pasa: un error no deja una planilla parcial. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error (antes se ignoraba en silencio). La fecha de corte no puede estar en el futuro. La interfaz usa la fecha de corte como fecha de emisión. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
+`--diaries` es opcional si las bitácoras están dentro de `--folder`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
 
 ```text
-python -m pip install pytest
+python -m pip install -r requirements-dev.txt
 python -m pytest tests -q
 ```
 
-Las pruebas usan exclusivamente identidades y datos ficticios. Se comprobó el procesamiento local y el transporte con respuestas simuladas. No se realizó una descarga con una sesión real de SITFA ni se ejecutaron los BAT en Windows en este entorno Linux.
+Las pruebas usan exclusivamente identidades y datos ficticios.
 
-## Cambios 1.1
+## Cambios 2.0
+
+- Eliminada la descarga directa: puente local, extensión de Chrome, transporte, lectura de bitácoras en vivo y captura PDF. La herramienta solo procesa lotes del Descargador. Dependencias retiradas: reportlab, Pillow, tzdata.
+- Registros y bitácoras pueden estar en carpetas separadas; se aceptan varios lotes de bitácoras y las lecturas conservadas de lotes retomados.
+- Nuevos controles: lote de registros con filtros (rechazo), lectura anterior a la fecha de corte, consultas sin bitácoras, lotes de bitácoras con filtros.
+- Una lectura fallida en un lote ya no anula la lectura verificada del mismo ingreso en otro lote; una bitácora alterada sigue bloqueando.
+- La fecha de corte propuesta es el día de lectura de las bitácoras.
+
+## Cambios 1.1 (resumen)
 
 Correcciones:
 
@@ -90,4 +90,3 @@ Rendimiento (lote ficticio de 612 registros, 68 consultas, 1.811 entradas de bit
 - Las páginas validadas por el descargador se leen directo a memoria, sin escribir y releer un XLSX temporal.
 - Registros.xlsx se escribe una sola vez con sus columnas de control; estilos de celda reutilizados.
 
-Sin cambios: transporte, extensión y validaciones del descargador 2.7.6 (SHA256 en ORIGEN_COMPONENTES.txt), pausas de 1 s entre consultas y lecturas en SITFA, límite de 600 lecturas, criterios de FECHA OBS. y alerta.

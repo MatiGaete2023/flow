@@ -1,4 +1,6 @@
-"""Meta 4 a partir de originales SITFA y bitácoras de un mes móvil."""
+"""Meta 4 a partir de los lotes del Descargador SITFA: registros y bitácoras de un mes móvil.
+
+No se conecta a SITFA ni a RUS: solo lee carpetas ya descargadas."""
 from __future__ import annotations
 import argparse
 import calendar
@@ -13,7 +15,7 @@ import re
 import secrets
 import shutil
 import sys
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 
 BASE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE / 'descargador'))
@@ -26,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '1.1'
+VERSION = '2.0'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -36,6 +38,12 @@ SALIDAS = ('Resultado META4', 'Salida META4')
 EN_CURSO = '.en-curso-'
 ALIAS_COLUMNAS = {'RUT RCEI': 'RUT', 'NOMBRE MENOR': 'NOMBRE'}
 IDENTIDAD = ('tribunal_codigo', 'causa_id', 'ingreso_id')
+NO_COMPLETADA = 'LECTURA NO COMPLETADA'
+NO_VERIFICABLE = 'BITÁCORA NO VERIFICABLE'
+IDENTIDAD_VISIBLE = 'REVISAR IDENTIDAD VISIBLE'
+LEIDA_ANTES = 'REVISAR: bitácora leída antes de la fecha de corte'
+BLOQUEANTES = (NO_VERIFICABLE, IDENTIDAD_VISIBLE)
+CONSULTA_CUBIERTA = ('ENUMERADA', 'SIN_REGISTROS')
 
 
 def periodo(corte):
@@ -98,27 +106,61 @@ def es_salida(path, origen):
     return any(part.startswith(SALIDAS) or EN_CURSO in part for part in path.relative_to(origen).parts)
 
 
+@dataclass
+class Lectura:
+    """Bitácoras leídas desde uno o más lotes del Descargador."""
+    registros: list = field(default_factory=list)
+    estados: list = field(default_factory=list)
+    cubiertas: set = field(default_factory=set)
+    declara_alcance: bool = False
+    avisos: list = field(default_factory=list)
+
+
+def dia_captura(value):
+    """Día local de la lectura. La extensión registra la hora en UTC."""
+    moment = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    return (moment.astimezone() if moment.tzinfo else moment).date()
+
+
+def archivos_bitacoras(root):
+    paths = [p for p in sorted(root.rglob('bitacoras.json')) if not es_salida(p, root)]
+    # Formato propio de Meta 4 1.0/1.1: se sigue aceptando para lotes ya generados.
+    return paths + [p for p in sorted(root.rglob('bitacoras_meta4.json')) if not es_salida(p, root)]
+
+
+def _consulta(item):
+    return str(item.get('tribunal', '')), str(item.get('tab', '')), str(item.get('modality', ''))
+
+
 def _leer_bitacoras(root, corte):
-    """Registros de bitácora del período y estado declarado por cada lote de lectura."""
-    result, estados = [], []
-    paths = [p for p in sorted(root.rglob('bitacoras_meta4.json')) if not es_salida(p, root)]
+    """Registros de bitácora del período, con el estado y el alcance de cada lote de lectura."""
+    lectura = Lectura()
+    paths = archivos_bitacoras(root)
     if not paths:
-        paths = [p for p in sorted(root.rglob('bitacoras.json')) if not es_salida(p, root)]
-    if not paths:
-        raise ValueError('Faltan bitácoras. Descarga con esta herramienta o selecciona una carpeta que contenga bitacoras.json y sus HTML.')
+        raise ValueError('Faltan bitácoras. Selecciona la carpeta de bitácoras del Descargador (bitacoras.json y sus HTML).')
     inicio = periodo(corte)[0]
     for path in paths:
+        if path.stat().st_size > 64 * 1024 * 1024:
+            raise ValueError('Un lote de bitácoras excede 64 MB; revisa la carpeta elegida.')
         data = json.loads(path.read_text(encoding='utf-8'))
         own = data.get('tipo') == 'META4_BITACORAS_MES'
         if own and (inicio < date.fromisoformat(data['desde']) or corte > date.fromisoformat(data['hasta'])):
             raise ValueError('Las bitácoras guardadas no cubren este período. Usa su fecha de corte o vuelve a descargarlas.')
         if not own and (data.get('tipo') != 'BITACORAS_LECTURA' or data.get('version') != 1):
             raise ValueError('Formato de bitácoras no reconocido.')
-        estados.append(str(data.get('estado') or 'SIN ESTADO'))
-        for original in data.get('registros', []):
+        lectura.estados.append(str(data.get('estado') or 'SIN ESTADO'))
+        if 'consultas' in data:
+            lectura.declara_alcance = True
+            lectura.cubiertas.update(_consulta(q) for q in data['consultas'] if q.get('estado') in CONSULTA_CUBIERTA)
+        seleccion = data.get('seleccion') or {}
+        if seleccion.get('dates') or seleccion.get('keep_filters'):
+            lectura.avisos.append(f'El lote de bitácoras {path.parent.name} usó filtros de fecha o del formulario; '
+                                  'puede no incluir todos los ingresos.')
+        # Un lote retomado conserva lecturas previas aún no reenumeradas: también valen.
+        for original in data.get('registros', []) + data.get('anteriores_no_reenumeradas', []):
             record = dict(original)
             record['entries'] = []
-            record['control'] = 'LECTURA NO COMPLETADA'
+            record['control'] = NO_COMPLETADA
             if record.get('estado') == 'LEIDA':
                 try:
                     if own:
@@ -130,16 +172,37 @@ def _leer_bitacoras(root, corte):
                         snapshot = read_snapshot(body, record['params'])
                     if tuple(str(snapshot[k]) for k in IDENTIDAD) != tuple(str(record[k]) for k in IDENTIDAD):
                         raise ValueError('La bitácora pertenece a otro ingreso.')
+                    leida = dia_captura(record['capturada'])
                     record['entries'] = entradas_periodo(snapshot['entries'], corte)
-                    record['control'] = 'REVISAR IDENTIDAD VISIBLE' if record.get('advertencias') else 'OK'
+                    if record.get('advertencias'):
+                        record['control'] = IDENTIDAD_VISIBLE
+                    elif leida < corte:
+                        # Lo escrito entre la lectura y el corte no está en la bitácora guardada.
+                        record['control'] = LEIDA_ANTES
+                    else:
+                        record['control'] = 'OK'
                 except (KeyError, ValueError, OSError, TypeError):
-                    record['control'] = 'BITÁCORA NO VERIFICABLE'
-            result.append(record)
-    return result, estados
+                    record['control'] = NO_VERIFICABLE
+            lectura.registros.append(record)
+    return lectura
 
 
 def cargar_bitacoras(root, corte):
-    return _leer_bitacoras(root, corte)[0]
+    return _leer_bitacoras(root, corte).registros
+
+
+def fecha_lectura(root):
+    """Último día con lecturas en los lotes de bitácoras; sirve para proponer la fecha de corte."""
+    days = []
+    for path in archivos_bitacoras(Path(root)):
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+            for record in data.get('registros', []) + data.get('anteriores_no_reenumeradas', []):
+                if record.get('estado') == 'LEIDA' and record.get('capturada'):
+                    days.append(dia_captura(record['capturada']))
+        except (OSError, ValueError, TypeError, AttributeError):
+            continue
+    return max(days) if days else None
 
 
 def normal(value):
@@ -184,11 +247,18 @@ def buscar(row, diaries):
     identities = {tuple(r.get(k) for k in IDENTIDAD) for r in candidates}
     if len(identities) != 1 or not all(next(iter(identities), ())):
         return None, 'IDENTIDAD AMBIGUA' if candidates else 'SIN BITÁCORA ASOCIADA'
-    failed = next((r['control'] for r in candidates if r.get('control') != 'OK'), None)
-    if failed:
-        return None, failed
-    # Una misma identidad puede aparecer en ambas pestañas. Se elige la captura más reciente.
-    newest = max(candidates, key=lambda r: str(r.get('capturada', '')))
+    # Un archivo alterado o una identidad visible distinta siempre detienen la asociación.
+    blocking = next((r['control'] for r in candidates if r.get('control') in BLOQUEANTES), None)
+    if blocking:
+        return None, blocking
+    # La misma identidad puede venir de ambas pestañas o de varios lotes (p. ej. por el límite
+    # de lecturas): una lectura fallida en un lote no anula la lectura verificada de otro.
+    read = [r for r in candidates if r.get('control') in ('OK', LEIDA_ANTES)]
+    if not read:
+        return None, candidates[0].get('control', NO_COMPLETADA)
+    newest = max(read, key=lambda r: str(r.get('capturada', '')))
+    if newest['control'] != 'OK':
+        return None, newest['control']
     return newest, 'OK'
 
 
@@ -374,25 +444,38 @@ def _agrupar_paginas(files):
 
 
 def fuentes(origen):
+    return _fuentes(origen)[:4]
+
+
+def _fuentes(origen):
     """Normaliza XLS BIFF, XML, HTML tabular y OOXML sin modificar originales.
 
     El manifiesto del descargador identifica TODAS las páginas de una consulta.
     No se selecciona solo un archivo por combinación cuando hay varias páginas.
+    Devuelve además las consultas de Meta 4 incluidas en el lote.
     """
     import motor as m
     summaries = [p for p in origen.rglob('resumen.json') if not es_salida(p, origen)]
     if len(summaries) > 1:
-        raise ValueError('Hay varios lotes descargados: selecciona la carpeta de un solo lote y sus bitácoras.')
+        raise ValueError('Hay varios lotes descargados: selecciona la carpeta de un solo lote de registros.')
     sources = []
     bindings = {}
+    consultas = []
     if summaries:
         path = summaries[0]
         summary = json.loads(path.read_text(encoding='utf-8'))
         if summary.get('estado') != 'VALIDADA':
             raise ValueError('La descarga de registros está incompleta. Completa el lote antes de generar Meta 4.')
+        # Meta 4 necesita listados completos: un filtro dejaría registros fuera sin aviso.
+        if summary.get('filtro_fecha') or summary.get('otros_filtros', 'todos los registros') != 'todos los registros':
+            raise ValueError('El lote de registros usó filtro de fechas o filtros del formulario. Descarga Espera y '
+                             'Cumplimiento sin filtros para generar Meta 4.')
         for query in summary['consultas']:
             if query['seleccion'].get('tab') not in ('Espera', 'Cumplimiento') or query['seleccion'].get('modality') not in ('1', '3'):
                 continue
+            if query['seleccion'].get('tab') == 'Cumplimiento' and query['seleccion'].get('report') not in (None, '', '0'):
+                raise ValueError('El lote filtró Cumplimiento por vencimiento. Descarga Cumplimiento sin ese filtro.')
+            consultas.append(query)
             manifest = dentro(path.parent, query['verificacion'])
             check = json.loads(manifest.read_text(encoding='utf-8'))
             if check.get('estado') not in ('VALIDADA', 'SIN_RESULTADOS', 'COMPLETA', 'COMPLETO'):
@@ -444,10 +527,23 @@ def fuentes(origen):
         selected, groups = _agrupar_paginas(files)
     else:
         selected, groups = meta.select_candidates(files, issues)
-    return files, issues, selected, groups
+    return files, issues, selected, groups, consultas
 
 
-def _escribir(destino, corte, emission, template, diaries, estados, files, issues, selected, groups, rows):
+def sin_bitacoras(consultas, lectura):
+    """Consultas con registros que ningún lote de bitácoras enumeró."""
+    if not lectura.declara_alcance:
+        return []
+    faltan = []
+    for query in consultas:
+        seleccion = query['seleccion']
+        if query.get('estado') == 'VALIDADA' and _consulta(seleccion) not in lectura.cubiertas:
+            faltan.append(' / '.join(str(seleccion.get(k) or '') for k in ('tribunal_nombre', 'tab', 'modalidad_nombre')))
+    return faltan
+
+
+def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows):
+    diaries, estados = lectura.registros, lectura.estados
     registros = destino / 'Registros.xlsx'
     meta.write_registros_workbook(registros, rows, files, selected, groups, issues, extra_headers=EXTRA,
                                   row_fill=lambda r: ROJO if r.values['ALERTA'] else None)
@@ -459,6 +555,7 @@ def _escribir(destino, corte, emission, template, diaries, estados, files, issue
     control = wb.create_sheet('Control bitácoras')
     control.append(['Período de bitácoras', inicio, fin])
     control.append(['Lectura de bitácoras', ', '.join(sorted(set(estados)))])
+    control.append(['Consultas sin bitácoras', len(faltan)])
     control.append(['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'])
     control.append(['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.'])
     for cell in control[1][1:]:
@@ -485,6 +582,8 @@ def _escribir(destino, corte, emission, template, diaries, estados, files, issue
         'revision_bitacora': sum(r.values[EXTRA[1]] != VERIFICADA for r in every),
         'controles_bitacora': dict(Counter(r.values[EXTRA[1]] for r in every)),
         'lectura_bitacoras': sorted(set(estados)),
+        'consultas_sin_bitacoras': faltan,
+        'avisos_bitacoras': lectura.avisos,
         'totales_meta4': summary,
         'excluidos_meta4': len(unmatched),
         'incidencias_fuentes': [i.message for i in issues],
@@ -493,26 +592,37 @@ def _escribir(destino, corte, emission, template, diaries, estados, files, issue
     return report
 
 
-def generar(origen, destino, corte, emission=None, template=None):
+def generar(origen, destino, corte, emission=None, template=None, bitacoras=None):
+    """`origen`: lote de registros del Descargador. `bitacoras`: carpeta de sus lotes de
+    bitácoras; si se omite, se buscan dentro de `origen`."""
     origen, destino = Path(origen).resolve(), Path(destino).resolve()
     if not origen.is_dir():
         raise ValueError('El origen debe ser una carpeta del descargador.')
+    raiz_bitacoras = Path(bitacoras).resolve() if bitacoras else origen
+    if not raiz_bitacoras.is_dir():
+        raise ValueError('La carpeta de bitácoras no existe.')
     if destino.exists():
         raise ValueError('La carpeta de salida ya existe; indica una carpeta nueva.')
     template = Path(template).expanduser().resolve() if template else None
     if template and not template.is_file():
         raise ValueError('No existe la plantilla indicada.')
-    diaries, estados = _leer_bitacoras(origen, corte)
-    files, issues, selected, groups = fuentes(origen)
+    lectura = _leer_bitacoras(raiz_bitacoras, corte)
+    files, issues, selected, groups, consultas = _fuentes(origen)
     if not any(f.candidates for f in files):
         raise ValueError('No se encontraron reportes de Espera/Cumplimiento reconocidos para FAE o Residencia.')
+    faltan = sin_bitacoras(consultas, lectura)
+    for label in faltan:
+        issues.append(meta.Issue('ADVERTENCIA', '', label, 'Ningún lote de bitácoras enumeró esta consulta; '
+                                 'sus registros quedan sin FECHA OBS.'))
+    for aviso in lectura.avisos:
+        issues.append(meta.Issue('ADVERTENCIA', '', '', aviso))
     rows = meta.consolidated_rows(selected)
-    enriquecer(rows, diaries, corte)
+    enriquecer(rows, lectura.registros, corte)
     # Se escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial.
     trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(4))
     trabajo.mkdir(parents=True)
     try:
-        report = _escribir(trabajo, corte, emission, template, diaries, estados,
+        report = _escribir(trabajo, corte, emission, template, lectura, faltan,
                            files, issues, selected, groups, rows)
         os.replace(trabajo, destino)
     except BaseException:
@@ -536,7 +646,8 @@ def _mes_arg(text):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--folder', required=True)
+    p.add_argument('--folder', required=True, help='Lote de registros del Descargador (resumen.json y Excel)')
+    p.add_argument('--diaries', help='Carpeta con los lotes de bitácoras; por defecto, dentro de --folder')
     p.add_argument('--output-dir', required=True)
     p.add_argument('--cutoff', type=_fecha_arg, help='Fecha de corte AAAA-MM-DD; por defecto, hoy')
     p.add_argument('--month', type=_mes_arg, help='Mes de emisión AAAA-MM; no cambia el período de bitácoras')
@@ -546,7 +657,7 @@ def main():
     if cutoff > date.today():
         p.exit(1, 'La fecha de corte no puede estar en el futuro.\n')
     try:
-        print(json.dumps(generar(args.folder, args.output_dir, cutoff, args.month, args.template), ensure_ascii=False, indent=2))
+        print(json.dumps(generar(args.folder, args.output_dir, cutoff, args.month, args.template, args.diaries), ensure_ascii=False, indent=2))
     except (ValueError, OSError) as exc:
         p.exit(1, str(exc) + '\n')
 

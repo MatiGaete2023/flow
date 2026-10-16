@@ -1,9 +1,14 @@
-META 4 CON BITACORAS 1.1 - Verificacion del 16 de octubre de 2026
+META 4 CON BITACORAS 2.0 - Verificacion del 16 de octubre de 2026
 
-81 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
-Ejecutadas con Python 3.13 y 3.12 (Linux). Compilacion comprobada con 3.11.
+86 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+Ejecutadas con Python 3.13 (Linux). Interfaz probada con Python 3.12 y Tk en
+pantalla virtual Linux.
 
-Comprobado con datos ficticios (1.0, se mantiene):
+Alcance 2.0: la herramienta no se conecta a SITFA ni a RUS. Se retiraron el
+puente local, la extension de Chrome, el transporte y la lectura en vivo, con
+sus pruebas. Solo procesa lotes del Descargador SITFA.
+
+Comprobado con datos ficticios:
 - Mes calendario movil, incluidos cambios de ano, meses cortos y bisiestos.
 - Fecha de observacion del centro; no se usa la respuesta del tribunal.
 - Exclusiones de Informes, fechas anteriores y fechas futuras.
@@ -11,29 +16,22 @@ Comprobado con datos ficticios (1.0, se mantiene):
 - Alerta de Espera en registros de Cumplimiento, en los tres libros.
 - Ausencias, fallas y ambiguedad de ingreso no reutilizan FECHA OBS. del Excel.
 - Asociacion por persona y programa; identificadores remotos cuando disponibles.
-- Todas las paginas de la consulta, con XLS HTML tabular y controles SHA256.
-- Respuesta de bitacora simulada: solo se guarda el mes y no se llama a Historia.
-- Exportacion de bitacoras con fecha y hora del centro.
-- Regresiones del generador v2.4.
-
-Nuevo en 1.1:
+- Todas las paginas de la consulta, con XLS HTML tabular y controles SHA256;
+  paginas de una consulta no se informan como duplicado.
+- Bitacoras del Descargador (bitacoras.json + HTML) verificadas por SHA256;
+  HTML modificado queda como BITACORA NO VERIFICABLE y bloquea la asociacion.
+- Registros y bitacoras en carpetas separadas; varios lotes de bitacoras;
+  lecturas conservadas de un lote retomado.
+- Lectura fallida en un lote no anula la lectura verificada en otro.
+- Lectura anterior a la fecha de corte requiere revision; fecha propuesta.
+- Lote de registros con filtro de fechas o de vencimiento: rechazado.
+- Consultas con registros sin bitacoras enumeradas: informadas.
 - Texto que empieza con "=" se conserva como texto en Registros y META 4.
-- Paginas de una consulta no se informan como duplicado en la matriz.
-- Carpeta de salida existente rechazada antes de procesar; verificacion
-  fallida no deja archivos parciales; plantilla inexistente es un error.
-- Bitacoras del descargador anterior (bitacoras.json + HTML) verificadas por
-  SHA256 y leidas; un HTML modificado queda como BITACORA NO VERIFICABLE.
-- Entradas guardadas sin respuesta del tribunal ni usuario autor.
+- Carpeta de salida existente rechazada; verificacion fallida no deja
+  archivos parciales; plantilla inexistente es error.
 - CLI rechaza fecha de corte futura y mes invalido.
-- Equivalencia 1.0 vs 1.1: lote ficticio de 612 registros, comparacion celda a
-  celda de los cinco libros. Valores identicos; solo difieren las mejoras
-  declaradas (estilo de columnas de control, fila "Lectura de bitacoras",
-  formato dd-mm-aaaa en la hoja Control bitacoras).
-- Tiempo de generacion local en ese lote: 20,7 s (1.0) -> 1,7 s (1.1).
+- Regresiones del generador v2.4.
+- Lote ficticio de 612 registros: generacion en 1,7 s (1.0: 20,7 s).
 
-Interfaz: apertura, filtrado de tribunales, validacion de fecha, generacion
-desde carpeta, aviso final y cierre probados con Tk en pantalla virtual Linux.
-
-Limites: no se ejecutaron los BAT en Windows ni una consulta con sesion real de
-SITFA. La validacion tecnica no acredita uso real. El servidor entrega la
-bitacora completa; el filtrado mensual se realiza en memoria antes de guardarla.
+Limites: no se ejecutaron los BAT en Windows ni se probo con lotes reales del
+Descargador. La validacion tecnica no acredita uso real.

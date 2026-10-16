@@ -1,19 +1,15 @@
 """Casos ficticios: fechas, identidades, páginas y alerta de etapa."""
-import base64
 from datetime import date
 import hashlib
 import json
 from pathlib import Path
 import sys
-from types import SimpleNamespace
-import threading
 
 import pytest
 from openpyxl import load_workbook
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import meta4_bitacoras as app
-from descarga_meta4 import DiarioMensual
 from test_generate_meta4 import make_excel
 
 CORTE = date(2026, 10, 16)
@@ -142,27 +138,6 @@ def test_changed_source_rejected(tmp_path):
     (tmp_path / 'resumen.json').write_text(json.dumps(dict(estado='VALIDADA', consultas=[dict(verificacion='v.json', seleccion=dict(tab='Espera', modality='3'))])))
     with pytest.raises(ValueError, match='cambió'):
         app.fuentes(tmp_path)
-
-
-def test_live_diary_saves_only_month_no_history(tmp_path):
-    raw = b'verified transport response'
-    params = {'ID_Ingreso': '201'}
-    calls = []
-    class Bridge:
-        def call(self, command, payload):
-            calls.append(command)
-            return dict(status=200, type='text/html', body=base64.b64encode(raw).decode(),
-                        params=params, digest=hashlib.sha256(raw).hexdigest(), startedAt='2026-10-16T10:00:00Z')
-    snap = diary()['snapshot']
-    snap['entries'] = [entrada('2026-09-01'), entrada('2026-10-10'), entrada('2026-10-17')]
-    session = SimpleNamespace(openings=0, folder=tmp_path, read=lambda *a: snap, anotar=lambda *a: None)
-    record = {'params': params}
-    runner = DiarioMensual(Bridge(), {}, lambda *a: None, threading.Event(), corte=CORTE)
-    runner._abrir_bitacora(session, record)
-    assert calls == ['diary_open']
-    assert len(record['snapshot']['entries']) == 1
-    assert not list(tmp_path.glob('*.html'))
-    assert record['estado'] == 'LEIDA'
 
 
 def test_remote_identity_narrows_matching_ingreso():
@@ -336,25 +311,6 @@ def test_legacy_html_changed_after_download_is_not_used(tmp_path):
     assert records[0]['control'] == 'BITÁCORA NO VERIFICABLE' and records[0]['entries'] == []
 
 
-def test_live_diary_keeps_only_needed_fields(tmp_path):
-    raw = b'verified transport response'
-    params = {'ID_Ingreso': '201'}
-
-    class Bridge:
-        def call(self, command, payload):
-            return dict(status=200, type='text/html', body=base64.b64encode(raw).decode(), params=params,
-                        digest=hashlib.sha256(raw).hexdigest(), startedAt='2026-10-16T10:00:00Z')
-    snap = diary()['snapshot']
-    snap['entries'] = [dict(entrada('2026-10-10'), entry_id='9', respuesta='Respuesta del tribunal', autor='Usuario')]
-    snap['row_metadata'] = [{'entry_id': '9'}]
-    session = SimpleNamespace(openings=0, folder=tmp_path, read=lambda *a: snap, anotar=lambda *a: None)
-    record = {'params': params}
-    DiarioMensual(Bridge(), {}, lambda *a: None, threading.Event(), corte=CORTE)._abrir_bitacora(session, record)
-    assert record['snapshot']['entries'] == [{'entry_id': '9', 'fecha': '2026-10-10', 'etapa': 'Espera',
-                                              'texto': 'Observación ficticia'}]
-    assert 'row_metadata' not in record['snapshot']
-
-
 def test_cli_rejects_future_cutoff_and_bad_month(tmp_path):
     import subprocess
     script = Path(app.__file__)
@@ -364,3 +320,96 @@ def test_cli_rejects_future_cutoff_and_bad_month(tmp_path):
     month = subprocess.run([sys.executable, str(script), '--folder', str(tmp_path), '--output-dir', str(tmp_path / 'r'),
                             '--month', '2026-13'], capture_output=True, text=True)
     assert month.returncode == 2 and 'AAAA-MM' in month.stderr
+
+
+# --------------------------------------------------------------------------
+# 2.0: solo lotes del Descargador
+# --------------------------------------------------------------------------
+
+def test_diaries_in_separate_folder(tmp_path):
+    source, diaries = tmp_path / 'registros', tmp_path / 'bitacoras'
+    source.mkdir()
+    diaries.mkdir()
+    make_excel(source / 'CUMP FAE LAJA.xlsx', 'Laja', 'Cumplimiento', [{'rit': 'X-1-2026', 'der': 'FAE FICTICIO'}])
+    legacy_lote(diaries, bitacora_html())
+    with pytest.raises(ValueError, match='Faltan bitácoras'):
+        app.generar(source, tmp_path / 'r1', CORTE)
+    report = app.generar(source, tmp_path / 'r2', CORTE, bitacoras=diaries)
+    assert report['alertas'] == 1
+
+
+def test_filtered_lot_is_rejected(tmp_path):
+    lote_html(tmp_path, [{}])
+    data = json.loads((tmp_path / 'resumen.json').read_text())
+    data['filtro_fecha'] = {'desde': '01/09/2026', 'hasta': '30/09/2026'}
+    (tmp_path / 'resumen.json').write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='sin filtros'):
+        app.fuentes(tmp_path)
+    data['filtro_fecha'] = None
+    data['consultas'][0]['seleccion']['report'] = '4'
+    (tmp_path / 'resumen.json').write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='vencimiento'):
+        app.fuentes(tmp_path)
+
+
+def test_read_before_cutoff_requires_review(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source, [dict(diary(), capturada='2026-10-10T12:00:00')])
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert report['controles_bitacora'] == {app.LEIDA_ANTES: 1}
+    assert app.fecha_lectura(source) == date(2026, 10, 10)
+
+
+def test_failed_read_in_one_lot_does_not_hide_verified_read_in_another(tmp_path):
+    failed = diary(entries=[entrada('2026-10-01', 'Cumplimiento')])
+    failed['estado'] = 'FALLIDA'
+    ok = diary(entries=[entrada('2026-10-10', 'Espera')])
+    for name, record in (('a', failed), ('b', ok)):
+        (tmp_path / name).mkdir()
+        save_diaries(tmp_path / name, [record])
+    records = app.cargar_bitacoras(tmp_path, CORTE)
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
+        'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
+        'NOMBRE': 'FICTICIO NNA'}, '', '', 1)
+    app.enriquecer({'Cumplimiento': [row]}, records, CORTE)
+    assert row.values['ALERTA'] == app.ALERTA
+
+
+def test_tampered_read_still_blocks_even_with_other_lot(tmp_path):
+    bad = dict(diary(), snapshot=dict(diary()['snapshot'], ingreso_id='999'))
+    for name, record in (('a', bad), ('b', diary())):
+        (tmp_path / name).mkdir()
+        save_diaries(tmp_path / name, [record])
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
+        'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
+        'NOMBRE': 'FICTICIO NNA'}, '', '', 1)
+    assert app.buscar(row, app.cargar_bitacoras(tmp_path, CORTE)) == (None, app.NO_VERIFICABLE)
+
+
+def test_resumed_lot_previous_reads_are_used(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    make_excel(source / 'CUMP FAE LAJA.xlsx', 'Laja', 'Cumplimiento', [{'rit': 'X-1-2026', 'der': 'FAE FICTICIO'}])
+    legacy_lote(source, bitacora_html())
+    path = next(source.rglob('bitacoras.json'))
+    data = json.loads(path.read_text())
+    data['anteriores_no_reenumeradas'], data['registros'] = data['registros'], []
+    path.write_text(json.dumps(data))
+    assert app.generar(source, tmp_path / 'resultado', CORTE)['alertas'] == 1
+
+
+def test_queries_without_diaries_are_reported(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{}])
+    data = json.loads((source / 'resumen.json').read_text())
+    data['consultas'][0].update(estado='VALIDADA')
+    data['consultas'][0]['seleccion'].update(tribunal='101', tribunal_nombre='Juzgado de Familia de Laja', modalidad_nombre='FAE')
+    (source / 'resumen.json').write_text(json.dumps(data))
+    (source / 'b').mkdir()
+    (source / 'b' / 'bitacoras_meta4.json').write_text(json.dumps(dict(
+        tipo='META4_BITACORAS_MES', desde='2026-09-16', hasta='2026-10-16', registros=[diary()],
+        consultas=[dict(tribunal='101', tab='Espera', modality='3', estado='ENUMERADA')])))
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert report['consultas_sin_bitacoras'] == ['Juzgado de Familia de Laja / Cumplimiento / FAE']

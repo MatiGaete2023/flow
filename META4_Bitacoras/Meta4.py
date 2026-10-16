@@ -1,11 +1,10 @@
-"""Ventana de descarga y generación de Meta 4."""
+"""Ventana de generación de Meta 4 desde las carpetas del Descargador SITFA.
+
+No se conecta a SITFA ni a RUS: solo lee lotes ya descargados."""
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
-from meta4_bitacoras import BASE, generar, meta
-from descarga_meta4 import descargar
-from puente import Bridge
-from motor import PocError
+from meta4_bitacoras import BASE, fecha_lectura, generar
 from datetime import date, datetime
 import os
 import queue
@@ -18,92 +17,74 @@ class App:
     def __init__(self, root):
         self.root = root
         root.title('Meta 4 · Registros y bitácoras')
-        root.geometry('850x690')
-        root.minsize(760, 620)
+        root.geometry('820x560')
+        root.minsize(720, 520)
         self.events = queue.Queue()
-        self.cancel = threading.Event()
         self.busy = False
-        self.catalog = None
-        self.court_ids = []
         self.output = None
-        self.read_count = 0
-        self.bridge = Bridge(self.emit)
+        self.source = tk.StringVar()
+        self.diaries = tk.StringVar()
         self.folder = tk.StringVar(value=str(BASE / 'Salidas'))
         self.cutoff = tk.StringVar(value=date.today().isoformat())
-        self.status = tk.StringVar(value='Conecta Chrome o procesa una carpeta ya descargada.')
+        self.status = tk.StringVar(value='Elige el lote de registros y las bitácoras descargadas con el Descargador SITFA.')
         frame = ttk.Frame(root, padding=24)
         frame.pack(fill='both', expand=True)
         ttk.Label(frame, text='Meta 4', font=('Segoe UI', 24, 'bold')).pack(anchor='w')
         ttk.Label(frame, text='Espera y Cumplimiento · FAE y Residencia · Bitácoras del último mes').pack(anchor='w', pady=(0, 16))
-        box = ttk.LabelFrame(frame, text='1. Conectar el descargador', padding=12)
+
+        box = ttk.LabelFrame(frame, text='1. Carpetas del Descargador', padding=12)
         box.pack(fill='x')
-        ttk.Label(box, text='Entra a SITFA → Seguimiento y conecta la extensión incluida usando este código:').pack(anchor='w')
-        code = ttk.Entry(box, font=('Consolas', 12))
-        code.insert(0, self.bridge.connection_code)
-        code.configure(state='readonly')
-        code.pack(fill='x', pady=8)
-        self.load = ttk.Button(box, text='Cargar tribunales de SITFA', command=lambda: self.work(self.load_catalog))
-        self.load.pack(anchor='w')
-        box = ttk.LabelFrame(frame, text='2. Elegir tribunales y fecha de corte', padding=12)
-        box.pack(fill='both', expand=True, pady=12)
-        self.courts = tk.Listbox(box, selectmode='extended', exportselection=False, height=8)
-        self.courts.pack(fill='both', expand=True)
+        self.folder_row(box, 'Registros (lote con resumen.json):', self.source, self.pick_source)
+        self.folder_row(box, 'Bitácoras (bitacoras.json y HTML):', self.diaries, self.pick_diaries)
+        ttk.Label(box, text='Si las bitácoras están dentro de la carpeta de registros, deja el segundo campo vacío.').pack(anchor='w')
+
+        box = ttk.LabelFrame(frame, text='2. Período y destino', padding=12)
+        box.pack(fill='x', pady=12)
         line = ttk.Frame(box)
         line.pack(fill='x')
-        ttk.Label(line, text='Ctrl + clic para seleccionar varios tribunales. Se incluyen Espera y Cumplimiento.').pack(side='left')
-        ttk.Button(line, text='Seleccionar todos', command=lambda: self.courts.select_set(0, 'end')).pack(side='right')
-        line = ttk.Frame(box)
-        line.pack(fill='x', pady=(10, 0))
         ttk.Label(line, text='Fecha de corte (AAAA-MM-DD):').pack(side='left')
         ttk.Entry(line, textvariable=self.cutoff, width=16).pack(side='left', padx=8)
-        box = ttk.LabelFrame(frame, text='3. Generar archivos', padding=12)
-        box.pack(fill='x')
-        line = ttk.Frame(box)
+        self.folder_row(box, 'Destino de resultados:', self.folder, self.destination)
+
+        line = ttk.Frame(frame)
         line.pack(fill='x')
-        ttk.Entry(line, textvariable=self.folder).pack(side='left', fill='x', expand=True)
-        ttk.Button(line, text='Destino…', command=self.destination).pack(side='left', padx=(8, 0))
-        self.download = ttk.Button(box, text='Descargar y generar Meta 4', command=self.start)
-        self.download.pack(side='left', pady=(10, 0))
-        self.offline = ttk.Button(box, text='Usar carpeta ya descargada…', command=self.offline_start)
-        self.offline.pack(side='left', padx=8, pady=(10, 0))
-        self.stop = ttk.Button(box, text='Detener', command=self.request_stop, state='disabled')
-        self.stop.pack(side='right', pady=(10, 0))
-        ttk.Label(frame, textvariable=self.status, wraplength=780).pack(fill='x', pady=12)
-        ttk.Button(frame, text='Abrir resultados', command=self.open_output).pack(anchor='e')
+        self.generate = ttk.Button(line, text='Generar Meta 4', command=self.start)
+        self.generate.pack(side='left')
+        ttk.Button(line, text='Abrir resultados', command=self.open_output).pack(side='right')
+        ttk.Label(frame, textvariable=self.status, wraplength=760).pack(fill='x', pady=12)
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.poll)
+
+    @staticmethod
+    def folder_row(parent, label, variable, command):
+        line = ttk.Frame(parent)
+        line.pack(fill='x', pady=(0, 8))
+        ttk.Label(line, text=label, width=34).pack(side='left')
+        ttk.Entry(line, textvariable=variable).pack(side='left', fill='x', expand=True)
+        ttk.Button(line, text='Elegir…', command=command).pack(side='left', padx=(8, 0))
 
     def emit(self, name, value):
         self.events.put((name, value))
 
-    def work(self, action):
-        if self.busy:
-            return
-        self.busy = True
-        self.cancel.clear()
-        self.read_count = 0
-        for button in (self.load, self.download, self.offline):
-            button.configure(state='disabled')
-        self.stop.configure(state='normal')
+    def pick_source(self):
+        path = filedialog.askdirectory(title='Lote de registros del Descargador', mustexist=True)
+        if path:
+            self.source.set(path)
+            if not self.diaries.get():
+                self.suggest_cutoff(path)
 
-        def run():
-            try:
-                action()
-            except (PocError, ValueError, OSError) as exc:
-                self.emit('error', str(exc))
-            except Exception as exc:
-                # Error no previsto: el tipo orienta el soporte sin exponer datos.
-                self.emit('error', f'Error inesperado ({type(exc).__name__}). Los archivos verificados se conservan.')
-            finally:
-                self.emit('idle', None)
-        threading.Thread(target=run, daemon=True).start()
+    def pick_diaries(self):
+        path = filedialog.askdirectory(title='Carpeta de bitácoras del Descargador', mustexist=True)
+        if path:
+            self.diaries.set(path)
+            self.suggest_cutoff(path)
 
-    def request_stop(self):
-        self.cancel.set()
-        self.status.set('Deteniendo al terminar la lectura en curso…')
-
-    def load_catalog(self):
-        self.emit('catalog', self.bridge.call('catalog', {'screen': 'seguimiento'}))
+    def suggest_cutoff(self, path):
+        # El corte no debe superar el día de lectura: lo posterior no está en las bitácoras.
+        day = fecha_lectura(path)
+        if day and day < date.today():
+            self.cutoff.set(day.isoformat())
+            self.status.set(f'Fecha de corte ajustada al día de lectura de las bitácoras: {day:%d-%m-%Y}.')
 
     def destination(self):
         path = filedialog.askdirectory(title='Carpeta de destino')
@@ -117,41 +98,35 @@ class App:
             raise ValueError('Escribe la fecha de corte como AAAA-MM-DD, por ejemplo 2026-10-16.') from None
         if cutoff > date.today():
             raise ValueError('La fecha de corte no puede estar en el futuro.')
-        return cutoff, Path(self.folder.get()).expanduser().resolve()
+        if not self.source.get().strip():
+            raise ValueError('Elige la carpeta del lote de registros.')
+        source = Path(self.source.get()).expanduser()
+        diaries = Path(self.diaries.get()).expanduser() if self.diaries.get().strip() else None
+        return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve()
 
     def start(self):
-        try:
-            cutoff, folder = self.parameters()
-            if not self.catalog:
-                raise ValueError('Conecta la extensión y carga los tribunales.')
-            ids = [self.court_ids[i] for i in self.courts.curselection()]
-            if not ids:
-                raise ValueError('Selecciona al menos un tribunal.')
-        except ValueError as exc:
-            messagebox.showerror('Revisar selección', str(exc))
+        if self.busy:
             return
-
-        def action():
-            output, report = descargar(self.bridge, self.catalog, ids, folder, cutoff, self.emit, self.cancel)
-            self.emit('complete', (str(output), report))
-        self.work(action)
-
-    def offline_start(self):
         try:
-            cutoff, folder = self.parameters()
+            cutoff, source, diaries, folder = self.parameters()
         except ValueError as exc:
-            messagebox.showerror('Revisar fecha', str(exc))
-            return
-        source = filedialog.askdirectory(title='Carpeta con Excel originales y bitácoras del descargador')
-        if not source:
+            messagebox.showerror('Revisar datos', str(exc))
             return
         output = folder / ('Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+        self.busy = True
+        self.generate.configure(state='disabled')
+        self.status.set('Generando Meta 4 y consolidados…')
 
-        def action():
-            self.emit('status', 'Generando Meta 4 y consolidados…')
-            report = generar(source, output, cutoff)
-            self.emit('complete', (str(output), report))
-        self.work(action)
+        def run():
+            try:
+                self.emit('complete', (str(output), generar(source, output, cutoff, bitacoras=diaries)))
+            except (ValueError, OSError) as exc:
+                self.emit('error', str(exc))
+            except Exception as exc:
+                self.emit('error', f'Error inesperado ({type(exc).__name__}). No se generaron archivos.')
+            finally:
+                self.emit('idle', None)
+        threading.Thread(target=run, daemon=True).start()
 
     def poll(self):
         while True:
@@ -161,37 +136,28 @@ class App:
                 break
             if name == 'idle':
                 self.busy = False
-                for button in (self.load, self.download, self.offline):
-                    button.configure(state='normal')
-                self.stop.configure(state='disabled')
-            elif name == 'catalog':
-                self.catalog = value
-                self.courts.delete(0, 'end')
-                self.court_ids = [k for k, label in value['tribunales'].items() if meta.tribunal_name(label)]
-                for k in self.court_ids:
-                    self.courts.insert('end', value['tribunales'][k])
-                self.status.set('Tribunales de Meta 4 cargados. Selecciona los que deseas incluir.' if self.court_ids else 'No hay tribunales reconocidos dentro del alcance de la planilla Meta 4.')
+                self.generate.configure(state='normal')
             elif name == 'error':
                 self.status.set('El proceso requiere revisión.')
                 messagebox.showerror('Meta 4', value)
             elif name == 'complete':
                 self.output, report = value
-                lectura = report.get('lectura') or ', '.join(report.get('lectura_bitacoras', []))
+                lectura = ', '.join(report['lectura_bitacoras'])
                 text = (f"Generados {report['registros']} registros. Alertas: {report['alertas']}. "
                         f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
-                self.status.set(text)
+                warnings = []
                 if lectura != 'COMPLETA':
-                    messagebox.showwarning('Archivos generados con lectura incompleta',
-                                           text + '\n\nLas filas sin lectura quedan en amarillo con FECHA OBS. vacía.\n\n' + self.output)
+                    warnings.append('La lectura de bitácoras no quedó COMPLETA.')
+                if report['consultas_sin_bitacoras']:
+                    warnings.append(f"{len(report['consultas_sin_bitacoras'])} consulta(s) sin bitácoras: "
+                                    + '; '.join(report['consultas_sin_bitacoras'][:5]))
+                warnings.extend(report['avisos_bitacoras'])
+                self.status.set(text)
+                if warnings:
+                    messagebox.showwarning('Archivos generados con avisos', text + '\n\n' + '\n'.join(warnings)
+                                           + '\n\nLas filas afectadas quedan en amarillo.\n\n' + self.output)
                 else:
                     messagebox.showinfo('Archivos generados', text + '\n\n' + self.output)
-            elif name == 'query':
-                self.status.set(f"Consulta {value['index']}/{value['total']}: {value['label']}")
-            elif name == 'diary_progress':
-                self.read_count += 1
-                self.status.set(f'Leyendo bitácoras del mes… {self.read_count} procesadas.')
-            elif name in ('status', 'warning', 'connected'):
-                self.status.set(str(value))
         self.root.after(100, self.poll)
 
     def open_output(self):
@@ -203,12 +169,9 @@ class App:
             messagebox.showinfo('Resultados', self.output)
 
     def close(self):
-        self.cancel.set()
         if self.busy:
-            self.status.set('Deteniendo el proceso; se conservarán las descargas comprobadas…')
-            self.root.after(500, self.close)
+            self.status.set('Espera a que termine la generación.')
             return
-        self.bridge.close()
         self.root.destroy()
 
 
