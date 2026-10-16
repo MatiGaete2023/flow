@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.1'
+VERSION = '2.2'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -501,20 +501,26 @@ def _fuentes(origen):
     sources = []
     bindings = {}
     consultas = []
+    filtros = []
     if summaries:
         path = summaries[0]
         summary = json.loads(path.read_text(encoding='utf-8'))
         if summary.get('estado') != 'VALIDADA':
             raise ValueError('La descarga de registros está incompleta. Completa el lote antes de generar Meta 4.')
-        # Meta 4 necesita listados completos: un filtro dejaría registros fuera sin aviso.
-        if summary.get('filtro_fecha') or summary.get('otros_filtros', 'todos los registros') != 'todos los registros':
-            raise ValueError('El lote de registros usó filtro de fechas o filtros del formulario. Descarga Espera y '
-                             'Cumplimiento sin filtros para generar Meta 4.')
+        # Un lote filtrado se acepta, pero puede dejar registros fuera de Meta 4: se informa siempre.
+        rango = summary.get('filtro_fecha')
+        if rango:
+            desde = rango.get('desde', '?') if isinstance(rango, dict) else '?'
+            hasta = rango.get('hasta', '?') if isinstance(rango, dict) else '?'
+            filtros.append(f'Filtro de fechas {desde} a {hasta}: el lote incluye solo los ingresos de ese rango.')
+        if summary.get('otros_filtros', 'todos los registros') != 'todos los registros':
+            filtros.append('Filtros del formulario de SITFA conservados: el lote puede no incluir todos los registros.')
         for query in summary['consultas']:
             if query['seleccion'].get('tab') not in ('Espera', 'Cumplimiento') or query['seleccion'].get('modality') not in ('1', '3'):
                 continue
             if query['seleccion'].get('tab') == 'Cumplimiento' and query['seleccion'].get('report') not in (None, '', '0'):
-                raise ValueError('El lote filtró Cumplimiento por vencimiento. Descarga Cumplimiento sin ese filtro.')
+                filtros.append(f"Filtro de vencimiento en {query.get('consulta') or 'Cumplimiento'}: "
+                               'incluye solo esas medidas.')
             consultas.append(query)
             manifest = dentro(path.parent, query['verificacion'])
             check = json.loads(manifest.read_text(encoding='utf-8'))
@@ -567,7 +573,7 @@ def _fuentes(origen):
         selected, groups = _agrupar_paginas(files)
     else:
         selected, groups = meta.select_candidates(files, issues)
-    return files, issues, selected, groups, consultas
+    return files, issues, selected, groups, consultas, filtros
 
 
 def sin_bitacoras(consultas, lectura):
@@ -630,7 +636,8 @@ def aplicar_filtro(tribunales, files, issues, selected, groups, faltan):
     return selected, groups, [item for item in faltan if item[1] in tribunales]
 
 
-def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales):
+def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales,
+              filtros=()):
     estados = lectura.estados
     diaries = lectura.registros
     if tribunales is not None:
@@ -648,6 +655,7 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     control.append(['Lectura de bitácoras', ', '.join(sorted(set(estados)))])
     control.append(['Consultas sin bitácoras', len(faltan)])
     control.append(['Tribunales incluidos', 'Todos' if tribunales is None else ', '.join(tribunales)])
+    control.append(['Filtros del lote de registros', ' | '.join(filtros) if filtros else 'Sin filtros'])
     control.append(['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'])
     control.append(['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.'])
     for cell in control[1][1:]:
@@ -680,6 +688,7 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
         'tribunales': 'TODOS' if tribunales is None else tribunales,
         'resumen_tribunales': resumen,
         'avisos_bitacoras': lectura.avisos,
+        'filtros_registros': list(filtros),
         'totales_meta4': summary,
         'excluidos_meta4': len(unmatched),
         'incidencias_fuentes': [i.message for i in issues],
@@ -705,7 +714,9 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     if template and not template.is_file():
         raise ValueError('No existe la plantilla indicada.')
     lectura = _leer_bitacoras(raiz_bitacoras, corte)
-    files, issues, selected, groups, consultas = _fuentes(origen)
+    files, issues, selected, groups, consultas, filtros = _fuentes(origen)
+    for filtro in filtros:
+        issues.append(meta.Issue('ADVERTENCIA', '', '', filtro))
     if not any(f.candidates for f in files):
         raise ValueError('No se encontraron reportes de Espera/Cumplimiento reconocidos para FAE o Residencia.')
     selected, groups, faltan = aplicar_filtro(tribunales, files, issues, selected, groups,
@@ -724,7 +735,7 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     trabajo.mkdir(parents=True)
     try:
         report = _escribir(trabajo, corte, emission, template, lectura, faltan,
-                           files, issues, selected, groups, rows, tribunales)
+                           files, issues, selected, groups, rows, tribunales, filtros)
         os.replace(trabajo, destino)
     except BaseException:
         shutil.rmtree(trabajo, ignore_errors=True)

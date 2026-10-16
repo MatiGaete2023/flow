@@ -1,6 +1,6 @@
 ORIGEN DE COMPONENTES
 
-Herramienta Meta 4 con bitácoras 2.1: Meta4.py y scripts/meta4_bitacoras.py.
+Herramienta Meta 4 con bitácoras 2.2: Meta4.py y scripts/meta4_bitacoras.py.
 Base de planilla: META4_Automatizado_v2_4.zip, suministrado por el usuario. Desde 1.1 scripts/generate_meta4.py
 recibe cambios de rendimiento y conserva como texto los valores que empiezan con "="; sus pruebas v2.4 se mantienen.
 Consolidado: reproduce las columnas y detección por RUT/nombre del Consolidador_Excel_Espera_Cumplimiento.zip suministrado.

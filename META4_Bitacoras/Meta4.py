@@ -171,6 +171,7 @@ class App:
                     warnings.append(f"{len(report['consultas_sin_bitacoras'])} consulta(s) sin bitácoras: "
                                     + '; '.join(report['consultas_sin_bitacoras'][:5]))
                 warnings.extend(report['avisos_bitacoras'])
+                warnings.extend('Lote con filtros: ' + f for f in report['filtros_registros'])
                 self.status.set(text)
                 if warnings:
                     messagebox.showwarning('Archivos generados con avisos', text + '\n\n' + '\n'.join(warnings)

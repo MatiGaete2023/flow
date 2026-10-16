@@ -338,18 +338,36 @@ def test_diaries_in_separate_folder(tmp_path):
     assert report['alertas'] == 1
 
 
-def test_filtered_lot_is_rejected(tmp_path):
-    lote_html(tmp_path, [{}])
-    data = json.loads((tmp_path / 'resumen.json').read_text())
-    data['filtro_fecha'] = {'desde': '01/09/2026', 'hasta': '30/09/2026'}
-    (tmp_path / 'resumen.json').write_text(json.dumps(data))
-    with pytest.raises(ValueError, match='sin filtros'):
-        app.fuentes(tmp_path)
-    data['filtro_fecha'] = None
+def test_filtered_lot_is_accepted_and_reported(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{}])
+    save_diaries(source, [diary()])
+    data = json.loads((source / 'resumen.json').read_text())
+    data.update(filtro_fecha={'desde': '01/09/2026', 'hasta': '30/09/2026'}, otros_filtros='formulario')
+    data['consultas'][0].update(consulta='Laja / Cumplimiento / FAE')
     data['consultas'][0]['seleccion']['report'] = '4'
-    (tmp_path / 'resumen.json').write_text(json.dumps(data))
-    with pytest.raises(ValueError, match='vencimiento'):
-        app.fuentes(tmp_path)
+    (source / 'resumen.json').write_text(json.dumps(data))
+    target = tmp_path / 'resultado'
+    report = app.generar(source, target, CORTE)
+    assert report['registros'] == 1 and len(report['filtros_registros']) == 3
+    assert report['filtros_registros'][0].startswith('Filtro de fechas 01/09/2026 a 30/09/2026')
+    assert 'Laja / Cumplimiento / FAE' in report['filtros_registros'][2]
+    control = load_workbook(target / 'META 4 - actualizado 2026-10.xlsx')['Control bitácoras']
+    assert control['A5'].value == 'Filtros del lote de registros' and 'Filtro de fechas' in control['B5'].value
+    issues = [r[3] for r in load_workbook(target / 'Registros.xlsx')['ERRORES_Y_ADVERTENCIAS'].iter_rows(min_row=4, values_only=True)]
+    assert any(str(m).startswith('Filtro de fechas') for m in issues)
+
+
+def test_unfiltered_lot_declares_no_filters(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{}])
+    save_diaries(source, [diary()])
+    target = tmp_path / 'resultado'
+    assert app.generar(source, target, CORTE)['filtros_registros'] == []
+    control = load_workbook(target / 'META 4 - actualizado 2026-10.xlsx')['Control bitácoras']
+    assert control['B5'].value == 'Sin filtros'
 
 
 def test_read_before_cutoff_requires_review(tmp_path):

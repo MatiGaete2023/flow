@@ -1,6 +1,6 @@
-META 4 CON BITACORAS 2.1 - Verificacion del 16 de octubre de 2026
+META 4 CON BITACORAS 2.2 - Verificacion del 16 de octubre de 2026
 
-90 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+91 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
 Ejecutadas con Python 3.13 (Linux). Interfaz probada con Python 3.12 y Tk en
 pantalla virtual Linux.
 
@@ -24,7 +24,8 @@ Comprobado con datos ficticios:
   lecturas conservadas de un lote retomado.
 - Lectura fallida en un lote no anula la lectura verificada en otro.
 - Lectura anterior a la fecha de corte requiere revision; fecha propuesta.
-- Lote de registros con filtro de fechas o de vencimiento: rechazado.
+- Lote de registros con filtro de fechas, del formulario o de vencimiento:
+  procesado, con cada filtro informado en aviso, Registros, Control y reporte.
 - Consultas con registros sin bitacoras enumeradas: informadas.
 - Texto que empieza con "=" se conserva como texto en Registros y META 4.
 - Carpeta de salida existente rechazada; verificacion fallida no deja

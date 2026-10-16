@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.1
+# Meta 4 · Registros y bitácoras — 2.2
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -7,7 +7,7 @@ Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó e
 1. Descomprime la carpeta completa. Requiere Python 3.10 o superior con tkinter (incluido por defecto en Python para Windows).
 2. Ejecuta **Instalar dependencias.bat** una vez.
 3. Con el **Descargador SITFA** descarga:
-   - Registros: Seguimiento → **Espera** y **Cumplimiento**, modalidades **FAE** y **Residencia**, **sin filtro de fechas ni filtros del formulario** y, en Cumplimiento, sin filtro de vencimiento.
+   - Registros: Seguimiento → **Espera** y **Cumplimiento**, modalidades **FAE** y **Residencia**. Para un Meta 4 completo conviene descargar sin filtro de fechas, sin filtros del formulario y sin filtro de vencimiento; si el lote tiene filtros, igual se procesa y se avisa.
    - Bitácoras: lectura de bitácoras del mismo alcance.
 4. Ejecuta **Iniciar Meta 4.bat**.
 5. Elige la carpeta del **lote de registros** (la que contiene `resumen.json`) y la carpeta de **bitácoras** (con `bitacoras.json` y sus HTML). Si las bitácoras están dentro de la carpeta de registros, deja vacío el segundo campo.
@@ -17,7 +17,7 @@ Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó e
 
 ## Qué lee y qué calcula
 
-- **Registros**: el lote validado del Descargador (`resumen.json`, verificaciones por consulta y todas sus páginas XLS con control SHA256). Solo usa Espera y Cumplimiento de FAE y Residencia. Rechaza un lote incompleto o descargado con filtros, porque dejaría registros fuera sin aviso.
+- **Registros**: el lote validado del Descargador (`resumen.json`, verificaciones por consulta y todas sus páginas XLS con control SHA256). Solo usa Espera y Cumplimiento de FAE y Residencia. Rechaza un lote incompleto. Un lote con filtro de fechas, filtros del formulario o filtro de vencimiento se procesa, pero cada filtro queda informado en el aviso final, en ERRORES_Y_ADVERTENCIAS de Registros.xlsx, en la hoja Control bitácoras y en el reporte (`filtros_registros`): META 4 contiene solo los registros que entregó ese filtro.
 - **Bitácoras**: uno o varios lotes `bitacoras.json` del Descargador, con sus HTML verificados por SHA256. Sirven varios lotes (por ejemplo, divididos por el límite de lecturas) y las lecturas conservadas de un lote retomado. También acepta `bitacoras_meta4.json` de Meta 4 1.0/1.1.
 - Usa solo las entradas del **mes calendario móvil** terminado en la fecha de corte, ambos extremos incluidos. Ejemplos: 16/09 a 16/10; 28/02 a 31/03. Los HTML originales no se modifican y no se copian a los resultados.
 - **FECHA OBS. es la fecha de la observación del centro** más reciente cuya columna Etapa sea Espera o Cumplimiento. La fecha de respuesta del tribunal no interviene. Tampoco intervienen las entradas de etapa Informes, aunque sean más recientes.
@@ -67,6 +67,10 @@ python -m pytest tests -q
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
 
+## Cambios 2.2
+
+- Los lotes de registros con filtros (fechas, formulario, vencimiento) ya no se rechazan: se procesan y cada filtro se informa.
+
 ## Cambios 2.1
 
 - Hoja **Resumen por tribunal** en Registros consolidados.xlsx y en el reporte JSON.
@@ -76,7 +80,7 @@ Las pruebas usan exclusivamente identidades y datos ficticios.
 
 - Eliminada la descarga directa: puente local, extensión de Chrome, transporte, lectura de bitácoras en vivo y captura PDF. La herramienta solo procesa lotes del Descargador. Dependencias retiradas: reportlab, Pillow, tzdata.
 - Registros y bitácoras pueden estar en carpetas separadas; se aceptan varios lotes de bitácoras y las lecturas conservadas de lotes retomados.
-- Nuevos controles: lote de registros con filtros (rechazo), lectura anterior a la fecha de corte, consultas sin bitácoras, lotes de bitácoras con filtros.
+- Nuevos controles: lote de registros con filtros (rechazo hasta 2.1; aviso desde 2.2), lectura anterior a la fecha de corte, consultas sin bitácoras, lotes de bitácoras con filtros.
 - Una lectura fallida en un lote ya no anula la lectura verificada del mismo ingreso en otro lote; una bitácora alterada sigue bloqueando.
 - La fecha de corte propuesta es el día de lectura de las bitácoras.
 
