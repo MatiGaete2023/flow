@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.0'
+VERSION = '2.1'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -315,9 +315,49 @@ def tabla(ws, headers, records, formatos=None):
     ws.auto_filter.ref = f'A1:{get_column_letter(len(headers))}{len(records) + 1}'
 
 
-def consolidado(path, rows):
+RESUMEN = ['TRIBUNAL', 'FAE ESPERA', 'FAE CUMPLIMIENTO', 'RESIDENCIA ESPERA', 'RESIDENCIA CUMPLIMIENTO',
+           'TOTAL REGISTROS', 'ALERTAS', 'REVISAR BITÁCORA', 'SIN FECHA OBS.', 'CONSULTAS SIN BITÁCORAS']
+SIN_TRIBUNAL = 'SIN TRIBUNAL RECONOCIDO'
+
+
+def tribunal_de(row):
+    return row.tribunal or meta.tribunal_name(row.values.get('TRIBUNAL')) or SIN_TRIBUNAL
+
+
+def resumen_tribunales(rows, faltan=(), tribunales=None):
+    """Conteos por tribunal: registros por lista, alertas, filas por revisar y consultas sin bitácoras.
+
+    `faltan` son pares (etiqueta, tribunal). Se listan los tribunales del filtro o los que tienen datos."""
+    counts = defaultdict(Counter)
+    for status, group in rows.items():
+        for r in group:
+            c = counts[tribunal_de(r)]
+            c[f'{(r.category or "").upper()} {status.upper()}'] += 1
+            c['TOTAL REGISTROS'] += 1
+            c['ALERTAS'] += bool(r.values['ALERTA'])
+            c['REVISAR BITÁCORA'] += r.values[EXTRA[1]] != VERIFICADA
+            c['SIN FECHA OBS.'] += r.values.get('FECHA OBS.') is None
+    for _, tribunal in faltan:
+        counts[tribunal or SIN_TRIBUNAL]['CONSULTAS SIN BITÁCORAS'] += 1
+    order = [t for t in meta.TRIBUNALS if (tribunales is None and t in counts) or (tribunales and t in tribunales)]
+    order += [t for t in counts if t not in meta.TRIBUNALS]
+    result = [dict({h: counts[t][h] for h in RESUMEN[1:]}, TRIBUNAL=t) for t in order]
+    total = Counter()
+    for item in result:
+        total.update({h: item[h] for h in RESUMEN[1:]})
+    result.append(dict({h: total[h] for h in RESUMEN[1:]}, TRIBUNAL='TOTAL'))
+    return result
+
+
+def consolidado(path, rows, resumen=None):
     wb = Workbook()
     wb.remove(wb.active)
+    if resumen is not None:
+        ws = wb.create_sheet('Resumen por tribunal')
+        tabla(ws, RESUMEN, resumen)
+        ws.column_dimensions['A'].width = 30
+        for cell in ws[ws.max_row]:
+            cell.font = Font(bold=True)
     for status in ('Espera', 'Cumplimiento'):
         tabla(wb.create_sheet(status), meta.SOURCE_HEADERS[status] + EXTRA, [r.values for r in rows[status]])
     groups = defaultdict(list)
@@ -342,7 +382,7 @@ def consolidado(path, rows):
     meta.save_workbook_atomic(wb, path)
 
 
-def marcar_planilla(wb, records, rows):
+def marcar_planilla(wb, records, rows, tribunales=None):
     # Mismo orden por modalidad y tribunal que read_registros/rebuild; no se coteja solo por RIT.
     flagged = defaultdict(list)
     for status, group in rows.items():
@@ -354,7 +394,7 @@ def marcar_planilla(wb, records, rows):
     for name in meta.SHEET_DEFS:
         ws = wb[name]
         pos = 1
-        for court in meta.TRIBUNALS:
+        for court in [t for t in meta.TRIBUNALS if tribunales is None or t in tribunales]:
             pos += 4
             source = flagged[(name, court)]
             written = records[name][court]
@@ -531,38 +571,92 @@ def _fuentes(origen):
 
 
 def sin_bitacoras(consultas, lectura):
-    """Consultas con registros que ningún lote de bitácoras enumeró."""
+    """Consultas con registros que ningún lote de bitácoras enumeró: pares (etiqueta, tribunal)."""
     if not lectura.declara_alcance:
         return []
     faltan = []
     for query in consultas:
         seleccion = query['seleccion']
         if query.get('estado') == 'VALIDADA' and _consulta(seleccion) not in lectura.cubiertas:
-            faltan.append(' / '.join(str(seleccion.get(k) or '') for k in ('tribunal_nombre', 'tab', 'modalidad_nombre')))
+            label = ' / '.join(str(seleccion.get(k) or '') for k in ('tribunal_nombre', 'tab', 'modalidad_nombre'))
+            faltan.append((label, meta.tribunal_name(seleccion.get('tribunal_nombre'))))
     return faltan
 
 
-def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows):
-    diaries, estados = lectura.registros, lectura.estados
+def tribunales_disponibles(origen):
+    """Tribunales de Meta 4 consultados en el lote de registros (vacío si no hay resumen.json)."""
+    origen = Path(origen)
+    found = set()
+    for path in origen.rglob('resumen.json'):
+        if es_salida(path, origen):
+            continue
+        try:
+            summary = json.loads(path.read_text(encoding='utf-8'))
+            for query in summary.get('consultas', []):
+                name = meta.tribunal_name((query.get('seleccion') or {}).get('tribunal_nombre'))
+                if name:
+                    found.add(name)
+        except (OSError, ValueError, AttributeError):
+            continue
+    return [t for t in meta.TRIBUNALS if t in found]
+
+
+def normalizar_tribunales(values):
+    """Nombres canónicos de Meta 4; None significa todos."""
+    if not values:
+        return None
+    result = []
+    for value in values:
+        name = meta.tribunal_name(value)
+        if not name:
+            raise ValueError(f'Tribunal no reconocido en el alcance de Meta 4: {value}.')
+        if name not in result:
+            result.append(name)
+    return [t for t in meta.TRIBUNALS if t in result]
+
+
+def aplicar_filtro(tribunales, files, issues, selected, groups, faltan):
+    """Deja solo las combinaciones de los tribunales elegidos; el resto queda NO INCLUIDO."""
+    if tribunales is None:
+        return selected, groups, faltan
+    for f in files:
+        for c in f.candidates:
+            if c.tribunal not in tribunales:
+                c.selected = False
+                c.selection_note = 'Fuera del filtro de tribunales'
+    issues[:] = [i for i in issues if not (i.level == 'FALTANTE' and i.combination.split(' | ')[0] not in tribunales)]
+    selected = {k: v for k, v in selected.items() if k[0] in tribunales}
+    groups = {k: v for k, v in groups.items() if k[0] in tribunales}
+    return selected, groups, [item for item in faltan if item[1] in tribunales]
+
+
+def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales):
+    estados = lectura.estados
+    diaries = lectura.registros
+    if tribunales is not None:
+        diaries = [d for d in diaries if meta.tribunal_name(d.get('tribunal_nombre')) in tribunales]
     registros = destino / 'Registros.xlsx'
     meta.write_registros_workbook(registros, rows, files, selected, groups, issues, extra_headers=EXTRA,
-                                  row_fill=lambda r: ROJO if r.values['ALERTA'] else None)
+                                  row_fill=lambda r: ROJO if r.values['ALERTA'] else None, scope=tribunales)
     records, counts, unmatched = meta.read_registros(registros)
     wb = meta.load_template(template)
-    summary = meta.rebuild(wb, records, emission or corte)
-    marcar_planilla(wb, records, rows)
+    summary = meta.rebuild(wb, records, emission or corte, tribunales)
+    marcar_planilla(wb, records, rows, tribunales)
     inicio, fin = periodo(corte)
     control = wb.create_sheet('Control bitácoras')
     control.append(['Período de bitácoras', inicio, fin])
     control.append(['Lectura de bitácoras', ', '.join(sorted(set(estados)))])
     control.append(['Consultas sin bitácoras', len(faltan)])
+    control.append(['Tribunales incluidos', 'Todos' if tribunales is None else ', '.join(tribunales)])
     control.append(['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'])
     control.append(['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.'])
     for cell in control[1][1:]:
         cell.number_format = 'dd-mm-yyyy'
-    out = destino / f'META 4 - actualizado {(emission or corte):%Y-%m}.xlsx'
+    parcial = '' if tribunales is None else ' - parcial'
+    out = destino / f'META 4 - actualizado {(emission or corte):%Y-%m}{parcial}.xlsx'
     meta.save_workbook_atomic(wb, out)
-    consolidado(destino / 'Registros consolidados.xlsx', rows)
+    resumen = resumen_tribunales(rows, faltan, tribunales)
+    consolidado(destino / 'Registros consolidados.xlsx', rows, resumen)
     exportar_bitacoras(destino / 'Bitacoras_del_mes.xlsx', diaries)
     totals, counted, problems = meta.verify_meta_output(out)
     problems = list(problems)
@@ -582,7 +676,9 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
         'revision_bitacora': sum(r.values[EXTRA[1]] != VERIFICADA for r in every),
         'controles_bitacora': dict(Counter(r.values[EXTRA[1]] for r in every)),
         'lectura_bitacoras': sorted(set(estados)),
-        'consultas_sin_bitacoras': faltan,
+        'consultas_sin_bitacoras': [label for label, _ in faltan],
+        'tribunales': 'TODOS' if tribunales is None else tribunales,
+        'resumen_tribunales': resumen,
         'avisos_bitacoras': lectura.avisos,
         'totales_meta4': summary,
         'excluidos_meta4': len(unmatched),
@@ -592,9 +688,11 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     return report
 
 
-def generar(origen, destino, corte, emission=None, template=None, bitacoras=None):
+def generar(origen, destino, corte, emission=None, template=None, bitacoras=None, tribunales=None):
     """`origen`: lote de registros del Descargador. `bitacoras`: carpeta de sus lotes de
-    bitácoras; si se omite, se buscan dentro de `origen`."""
+    bitácoras; si se omite, se buscan dentro de `origen`. `tribunales`: nombres a incluir
+    (por defecto, todos); con filtro, la planilla se marca como parcial."""
+    tribunales = normalizar_tribunales(tribunales)
     origen, destino = Path(origen).resolve(), Path(destino).resolve()
     if not origen.is_dir():
         raise ValueError('El origen debe ser una carpeta del descargador.')
@@ -610,8 +708,11 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     files, issues, selected, groups, consultas = _fuentes(origen)
     if not any(f.candidates for f in files):
         raise ValueError('No se encontraron reportes de Espera/Cumplimiento reconocidos para FAE o Residencia.')
-    faltan = sin_bitacoras(consultas, lectura)
-    for label in faltan:
+    selected, groups, faltan = aplicar_filtro(tribunales, files, issues, selected, groups,
+                                              sin_bitacoras(consultas, lectura))
+    if tribunales is not None and not selected:
+        raise ValueError('El lote no contiene registros de los tribunales elegidos.')
+    for label, _ in faltan:
         issues.append(meta.Issue('ADVERTENCIA', '', label, 'Ningún lote de bitácoras enumeró esta consulta; '
                                  'sus registros quedan sin FECHA OBS.'))
     for aviso in lectura.avisos:
@@ -623,7 +724,7 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     trabajo.mkdir(parents=True)
     try:
         report = _escribir(trabajo, corte, emission, template, lectura, faltan,
-                           files, issues, selected, groups, rows)
+                           files, issues, selected, groups, rows, tribunales)
         os.replace(trabajo, destino)
     except BaseException:
         shutil.rmtree(trabajo, ignore_errors=True)
@@ -652,12 +753,13 @@ def main():
     p.add_argument('--cutoff', type=_fecha_arg, help='Fecha de corte AAAA-MM-DD; por defecto, hoy')
     p.add_argument('--month', type=_mes_arg, help='Mes de emisión AAAA-MM; no cambia el período de bitácoras')
     p.add_argument('--template')
+    p.add_argument('--tribunal', action='append', help='Incluir solo este tribunal; repetir para varios')
     args = p.parse_args()
     cutoff = args.cutoff or date.today()
     if cutoff > date.today():
         p.exit(1, 'La fecha de corte no puede estar en el futuro.\n')
     try:
-        print(json.dumps(generar(args.folder, args.output_dir, cutoff, args.month, args.template, args.diaries), ensure_ascii=False, indent=2))
+        print(json.dumps(generar(args.folder, args.output_dir, cutoff, args.month, args.template, args.diaries, args.tribunal), ensure_ascii=False, indent=2))
     except (ValueError, OSError) as exc:
         p.exit(1, str(exc) + '\n')
 

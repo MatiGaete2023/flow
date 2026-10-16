@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.0
+# Meta 4 · Registros y bitácoras — 2.1
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -11,8 +11,9 @@ Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó e
    - Bitácoras: lectura de bitácoras del mismo alcance.
 4. Ejecuta **Iniciar Meta 4.bat**.
 5. Elige la carpeta del **lote de registros** (la que contiene `resumen.json`) y la carpeta de **bitácoras** (con `bitacoras.json` y sus HTML). Si las bitácoras están dentro de la carpeta de registros, deja vacío el segundo campo.
-6. Revisa la fecha de corte: al elegir las bitácoras se ajusta al día en que se leyeron si es anterior a hoy. Pulsa **Generar Meta 4**.
-7. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. El aviso final indica lectura incompleta, consultas sin bitácoras y lotes filtrados.
+6. Opcional: en **Tribunales** selecciona uno o varios (Ctrl + clic). Sin selección se incluyen todos. La lista muestra los tribunales consultados en el lote.
+7. Revisa la fecha de corte: al elegir las bitácoras se ajusta al día en que se leyeron si es anterior a hoy. Pulsa **Generar Meta 4**.
+8. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. El aviso final indica lectura incompleta, consultas sin bitácoras y lotes filtrados.
 
 ## Qué lee y qué calcula
 
@@ -37,9 +38,11 @@ Controles de bitácora (columna CONTROL BITÁCORA, filas amarillas):
 
 - **META 4 - actualizado AAAA-MM.xlsx**: las cuatro hojas tradicionales (FAE y Residencia, Espera y Cumplimiento), fechas actualizadas, filas rojas para la alerta y comentarios que explican el motivo. Amarillo indica revisión de bitácora. Incluye la hoja Control bitácoras con período, estado de lectura y consultas sin bitácoras.
 - **Registros.xlsx**: fuentes de Meta 4, FECHA OBS., etapa de última observación, control y alerta, inventario, matriz de cobertura y errores/advertencias.
-- **Registros consolidados.xlsx**: Espera, Cumplimiento, Duplicados y Alertas y revisión. Duplicados conserva la comparación por RUT y nombre del consolidador suministrado.
+- **Registros consolidados.xlsx**: **Resumen por tribunal**, Espera, Cumplimiento, Duplicados y Alertas y revisión. El resumen cuenta por tribunal los registros de cada lista (FAE/Residencia × Espera/Cumplimiento), alertas, filas por revisar, filas sin FECHA OBS. y consultas sin bitácoras, con una fila TOTAL. Las filas cuyo tribunal no se reconoce aparecen como SIN TRIBUNAL RECONOCIDO: quedan fuera de META 4. Duplicados conserva la comparación por RUT y nombre del consolidador suministrado.
 - **Bitacoras_del_mes.xlsx**: observaciones del período con fecha y hora del centro, etapa, texto e identificadores del ingreso; incluye control de lecturas.
-- **Reporte META4.json**: período, totales, alertas, registros que requieren revisión, conteo por control, estado de lectura, consultas sin bitácoras, avisos de filtros e incidencias de las fuentes.
+- **Reporte META4.json**: período, tribunales incluidos, resumen por tribunal, totales, alertas, registros que requieren revisión, conteo por control, estado de lectura, consultas sin bitácoras, avisos de filtros e incidencias de las fuentes.
+
+**Filtro de tribunales.** Con un filtro, META 4 contiene solo los bloques de esos tribunales y su nombre termina en `- parcial`; la hoja Control bitácoras y el reporte indican los tribunales incluidos; la matriz de cobertura marca el resto como NO INCLUIDO y calcula la cobertura solo sobre los elegidos; Bitacoras_del_mes.xlsx se limita a ellos. Un nombre no reconocido o un tribunal sin registros en el lote es un error.
 
 La carpeta de salida debe ser nueva; se rechaza antes de procesar si ya existe. Los archivos se escriben en una carpeta temporal hermana y solo se publican si la verificación final pasa: un error no deja una planilla parcial. No genera una planilla si un reporte de entrada no se puede leer.
 
@@ -55,7 +58,7 @@ También admite una carpeta de reportes Excel independientes (sin `resumen.json`
 python scripts/meta4_bitacoras.py --folder "C:\Descargas\2026-10-16 10-00-00" --diaries "C:\Descargas\Bitacoras 2026-10-16" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
 ```
 
-`--diaries` es opcional si las bitácoras están dentro de `--folder`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
+`--diaries` es opcional si las bitácoras están dentro de `--folder`. `--tribunal NOMBRE` (repetible) limita la generación a esos tribunales, por ejemplo `--tribunal Laja --tribunal Tomé`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
 
 ```text
 python -m pip install -r requirements-dev.txt
@@ -63,6 +66,11 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.1
+
+- Hoja **Resumen por tribunal** en Registros consolidados.xlsx y en el reporte JSON.
+- **Filtro de tribunales** en la ventana (lista del lote) y en la línea de comandos (`--tribunal`); la salida filtrada se marca como parcial.
 
 ## Cambios 2.0
 

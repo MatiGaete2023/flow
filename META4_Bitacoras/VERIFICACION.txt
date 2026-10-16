@@ -1,6 +1,6 @@
-META 4 CON BITACORAS 2.0 - Verificacion del 16 de octubre de 2026
+META 4 CON BITACORAS 2.1 - Verificacion del 16 de octubre de 2026
 
-86 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+90 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
 Ejecutadas con Python 3.13 (Linux). Interfaz probada con Python 3.12 y Tk en
 pantalla virtual Linux.
 
@@ -30,6 +30,13 @@ Comprobado con datos ficticios:
 - Carpeta de salida existente rechazada; verificacion fallida no deja
   archivos parciales; plantilla inexistente es error.
 - CLI rechaza fecha de corte futura y mes invalido.
+- Resumen por tribunal: conteos por lista, alertas, revision, sin FECHA OBS. y
+  fila TOTAL.
+- Filtro de tribunales: META 4 parcial solo con los bloques elegidos, matriz
+  NO INCLUIDO y cobertura sobre los elegidos, bitacoras del mes filtradas;
+  nombre no reconocido o tribunal sin registros es error. Sin filtro, las
+  salidas coinciden celda a celda con 2.0 salvo la hoja de resumen y la fila
+  "Tribunales incluidos".
 - Regresiones del generador v2.4.
 - Lote ficticio de 612 registros: generacion en 1,7 s (1.0: 20,7 s).
 

@@ -413,3 +413,67 @@ def test_queries_without_diaries_are_reported(tmp_path):
         consultas=[dict(tribunal='101', tab='Espera', modality='3', estado='ENUMERADA')])))
     report = app.generar(source, tmp_path / 'resultado', CORTE)
     assert report['consultas_sin_bitacoras'] == ['Juzgado de Familia de Laja / Cumplimiento / FAE']
+
+
+# --------------------------------------------------------------------------
+# 2.1: resumen por tribunal y filtro de tribunales
+# --------------------------------------------------------------------------
+
+def dos_tribunales(source):
+    make_excel(source / 'CUMP FAE LAJA.xlsx', 'Laja', 'Cumplimiento', [{'rit': 'X-1-2026', 'der': 'FAE FICTICIO'}])
+    make_excel(source / 'ESP RES TOME.xlsx', 'Tomé', 'Espera',
+               [{'rit': 'X-2-2026', 'der': 'RESIDENCIA FICTICIA'}, {'rit': 'X-3-2026', 'der': 'RESIDENCIA FICTICIA'}])
+    tome = dict(diary(rit='X-9-2026', ingreso='209'), tribunal_nombre='Juzgado de Familia de Tomé')
+    save_diaries(source, [diary(entries=[entrada('2026-10-09T10:00:00')]), tome])
+
+
+def test_summary_sheet_by_tribunal(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    dos_tribunales(source)
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    wb = load_workbook(tmp_path / 'resultado' / 'Registros consolidados.xlsx')
+    assert wb.sheetnames[0] == 'Resumen por tribunal'
+    rows = {r[0]: dict(zip(app.RESUMEN, r)) for r in wb['Resumen por tribunal'].iter_rows(min_row=2, values_only=True)}
+    assert list(rows) == ['LAJA', 'TOMÉ', 'TOTAL']
+    assert rows['LAJA']['FAE CUMPLIMIENTO'] == 1 and rows['LAJA']['ALERTAS'] == 1 and rows['LAJA']['SIN FECHA OBS.'] == 0
+    assert rows['TOMÉ']['RESIDENCIA ESPERA'] == 2 and rows['TOMÉ']['REVISAR BITÁCORA'] == 2
+    assert rows['TOTAL']['TOTAL REGISTROS'] == 3 and report['tribunales'] == 'TODOS'
+    assert report['resumen_tribunales'][-1]['TOTAL REGISTROS'] == 3
+
+
+def test_filter_generates_partial_meta4_for_selected_tribunals(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    dos_tribunales(source)
+    target = tmp_path / 'resultado'
+    report = app.generar(source, target, CORTE, tribunales=['Juzgado de Familia de Laja'])
+    assert report['tribunales'] == ['LAJA'] and report['registros'] == 1
+    wb = load_workbook(target / 'META 4 - actualizado 2026-10 - parcial.xlsx')
+    assert [c.value for c in wb['FAE Espera']['A'] if c.value in app.meta.TRIBUNALS] == ['LAJA']
+    assert wb['Control bitácoras']['B4'].value == 'LAJA'
+    matrix = load_workbook(target / 'Registros.xlsx')['MATRIZ_COBERTURA']
+    tome = next(r for r in range(5, matrix.max_row + 1) if matrix.cell(r, 1).value == 'TOMÉ')
+    assert matrix.cell(tome, 4).value == 'NO INCLUIDO'
+    assert 'Cobertura: 1/4' in matrix['A2'].value
+    lecturas = load_workbook(target / 'Bitacoras_del_mes.xlsx')['Control de lecturas']
+    assert [r[0] for r in lecturas.iter_rows(min_row=2, values_only=True)] == ['Juzgado de Familia de Laja']
+
+
+def test_filter_rejects_unknown_or_empty_tribunals(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    dos_tribunales(source)
+    with pytest.raises(ValueError, match='no reconocido'):
+        app.generar(source, tmp_path / 'r1', CORTE, tribunales=['Santiago'])
+    with pytest.raises(ValueError, match='tribunales elegidos'):
+        app.generar(source, tmp_path / 'r2', CORTE, tribunales=['Lebu'])
+    assert not (tmp_path / 'r2').exists()
+
+
+def test_available_tribunals_from_lot(tmp_path):
+    lote_html(tmp_path, [{}])
+    data = json.loads((tmp_path / 'resumen.json').read_text())
+    data['consultas'][0]['seleccion']['tribunal_nombre'] = 'Juzgado de Familia de Laja'
+    (tmp_path / 'resumen.json').write_text(json.dumps(data))
+    assert app.tribunales_disponibles(tmp_path) == ['LAJA']

@@ -1663,7 +1663,10 @@ def write_matrix_sheet(
     ws,
     selected: dict[tuple[str, str, str], Candidate],
     groups: dict[tuple[str, str, str], list[Candidate]],
+    scope: Iterable[str] | None = None,
 ) -> None:
+    """`scope` limita la cobertura esperada a esos tribunales; el resto se marca NO INCLUIDO."""
+    included = set(TRIBUNALS if scope is None else scope)
     ws.sheet_view.showGridLines = False
     ws.merge_cells("A1:E1")
     ws["A1"] = "MATRIZ DE COBERTURA DE ARCHIVOS"
@@ -1672,10 +1675,16 @@ def write_matrix_sheet(
     ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
     ws.row_dimensions[1].height = 30
 
-    found = len(selected)
-    duplicates = sum(1 for key in expected_keys() if len(groups.get(key, [])) > 1)
+    expected = [key for key in expected_keys() if key[0] in included]
+    found = sum(1 for key in expected if key in selected)
+    duplicates = sum(1 for key in expected if len(groups.get(key, [])) > 1)
     ws.merge_cells("A2:E2")
-    ws["A2"] = f"Cobertura: {found}/68 · Faltantes: {68 - found} · Combinaciones duplicadas: {duplicates}"
+    ws["A2"] = (
+        f"Cobertura: {found}/{len(expected)} · Faltantes: {len(expected) - found} · "
+        f"Combinaciones duplicadas: {duplicates}"
+    )
+    if scope is not None:
+        ws["A2"] = ws["A2"].value + f" · Tribunales incluidos: {len(included)}/{len(TRIBUNALS)}"
     ws["A2"].font = Font(name="Aptos", size=10, bold=True, color=DARK_TEXT)
     ws["A2"].fill = PatternFill("solid", fgColor=LIGHT_BLUE)
     ws["A2"].alignment = Alignment(vertical="center")
@@ -1694,7 +1703,8 @@ def write_matrix_sheet(
             (tribunal, "Residencia", "Cumplimiento"),
         ]
         for col_idx, key in enumerate(keys, 2):
-            ws.cell(row_idx, col_idx, matrix_cell_text(key, selected, groups))
+            text = matrix_cell_text(key, selected, groups) if tribunal in included else "NO INCLUIDO"
+            ws.cell(row_idx, col_idx, text)
         for col_idx in range(1, 6):
             cell = ws.cell(row_idx, col_idx)
             cell.font = Font(name="Aptos", size=9, bold=(col_idx == 1), color=DARK_TEXT)
@@ -1765,8 +1775,10 @@ def write_registros_workbook(
     issues: list[Issue],
     extra_headers: Iterable[str] = (),
     row_fill: Callable[[SourceRow], str | None] | None = None,
+    scope: Iterable[str] | None = None,
 ) -> None:
-    """`extra_headers` agrega columnas de control al final de ESPERA y CUMPLIMIENTO."""
+    """`extra_headers` agrega columnas de control al final de ESPERA y CUMPLIMIENTO.
+    `scope` limita la matriz de cobertura a esos tribunales."""
     extra = list(extra_headers)
     wb = Workbook()
     wb.remove(wb.active)
@@ -1777,7 +1789,7 @@ def write_registros_workbook(
     inventory = wb.create_sheet("INVENTARIO_ARCHIVOS")
     write_inventory_sheet(inventory, file_results)
     matrix = wb.create_sheet("MATRIZ_COBERTURA")
-    write_matrix_sheet(matrix, selected, groups)
+    write_matrix_sheet(matrix, selected, groups, scope)
     issue_sheet = wb.create_sheet("ERRORES_Y_ADVERTENCIAS")
     write_issues_sheet(issue_sheet, issues)
     wb.active = 0
@@ -2086,7 +2098,10 @@ def rebuild(
     wb: Workbook,
     records: dict[str, dict[str, list[list[Any]]]],
     emission_date: dt.date,
+    tribunals: Iterable[str] | None = None,
 ) -> dict[str, int]:
+    """`tribunals` limita los bloques escritos (por defecto, todos en el orden de TRIBUNALS)."""
+    blocks = TRIBUNALS if tribunals is None else [t for t in TRIBUNALS if t in set(tribunals)]
     emission_text = emission_date.strftime("%d-%m-%Y")
     summary: dict[str, int] = {}
     # Los estilos capturados viven hasta el final; sus id() son claves estables.
@@ -2114,7 +2129,7 @@ def rebuild(
         ws.page_setup.fitToHeight = 0
         row = 1
         total = 0
-        for tribunal in TRIBUNALS:
+        for tribunal in blocks:
             tribunal_records = records[sheet_name][tribunal]
             write_row(ws, row, [tribunal], templates["title"], memo=memo)
             set_height(ws, row, templates, "title")

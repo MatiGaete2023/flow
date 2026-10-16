@@ -4,7 +4,7 @@ No se conecta a SITFA ni a RUS: solo lee lotes ya descargados."""
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
-from meta4_bitacoras import BASE, fecha_lectura, generar
+from meta4_bitacoras import BASE, fecha_lectura, generar, meta, tribunales_disponibles
 from datetime import date, datetime
 import os
 import queue
@@ -17,8 +17,8 @@ class App:
     def __init__(self, root):
         self.root = root
         root.title('Meta 4 · Registros y bitácoras')
-        root.geometry('820x560')
-        root.minsize(720, 520)
+        root.geometry('820x720')
+        root.minsize(720, 640)
         self.events = queue.Queue()
         self.busy = False
         self.output = None
@@ -38,7 +38,17 @@ class App:
         self.folder_row(box, 'Bitácoras (bitacoras.json y HTML):', self.diaries, self.pick_diaries)
         ttk.Label(box, text='Si las bitácoras están dentro de la carpeta de registros, deja el segundo campo vacío.').pack(anchor='w')
 
-        box = ttk.LabelFrame(frame, text='2. Período y destino', padding=12)
+        box = ttk.LabelFrame(frame, text='2. Tribunales', padding=12)
+        box.pack(fill='both', expand=True, pady=(12, 0))
+        self.courts = tk.Listbox(box, selectmode='extended', exportselection=False, height=6)
+        self.courts.pack(fill='both', expand=True)
+        self.fill_courts(meta.TRIBUNALS)
+        line = ttk.Frame(box)
+        line.pack(fill='x', pady=(6, 0))
+        ttk.Label(line, text='Sin selección se incluyen todos. Con selección, la planilla se marca como parcial.').pack(side='left')
+        ttk.Button(line, text='Todos', command=lambda: self.courts.selection_clear(0, 'end')).pack(side='right')
+
+        box = ttk.LabelFrame(frame, text='3. Período y destino', padding=12)
         box.pack(fill='x', pady=12)
         line = ttk.Frame(box)
         line.pack(fill='x')
@@ -66,10 +76,17 @@ class App:
     def emit(self, name, value):
         self.events.put((name, value))
 
+    def fill_courts(self, names):
+        self.courts.delete(0, 'end')
+        for name in names:
+            self.courts.insert('end', name)
+
     def pick_source(self):
         path = filedialog.askdirectory(title='Lote de registros del Descargador', mustexist=True)
         if path:
             self.source.set(path)
+            # Solo los tribunales consultados en el lote; sin resumen.json, todos.
+            self.fill_courts(tribunales_disponibles(path) or meta.TRIBUNALS)
             if not self.diaries.get():
                 self.suggest_cutoff(path)
 
@@ -102,13 +119,14 @@ class App:
             raise ValueError('Elige la carpeta del lote de registros.')
         source = Path(self.source.get()).expanduser()
         diaries = Path(self.diaries.get()).expanduser() if self.diaries.get().strip() else None
-        return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve()
+        courts = [self.courts.get(i) for i in self.courts.curselection()] or None
+        return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve(), courts
 
     def start(self):
         if self.busy:
             return
         try:
-            cutoff, source, diaries, folder = self.parameters()
+            cutoff, source, diaries, folder, courts = self.parameters()
         except ValueError as exc:
             messagebox.showerror('Revisar datos', str(exc))
             return
@@ -119,7 +137,7 @@ class App:
 
         def run():
             try:
-                self.emit('complete', (str(output), generar(source, output, cutoff, bitacoras=diaries)))
+                self.emit('complete', (str(output), generar(source, output, cutoff, bitacoras=diaries, tribunales=courts)))
             except (ValueError, OSError) as exc:
                 self.emit('error', str(exc))
             except Exception as exc:
@@ -143,7 +161,8 @@ class App:
             elif name == 'complete':
                 self.output, report = value
                 lectura = ', '.join(report['lectura_bitacoras'])
-                text = (f"Generados {report['registros']} registros. Alertas: {report['alertas']}. "
+                alcance = 'todos los tribunales' if report['tribunales'] == 'TODOS' else 'PARCIAL: ' + ', '.join(report['tribunales'])
+                text = (f"Generados {report['registros']} registros ({alcance}). Alertas: {report['alertas']}. "
                         f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
                 warnings = []
                 if lectura != 'COMPLETA':
