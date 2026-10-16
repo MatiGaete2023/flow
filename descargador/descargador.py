@@ -1245,7 +1245,6 @@ class Application:
                         historia_en_paquete=self.prefs.data['historia_en_paquete'],
                         meses=self.prefs.data.get('meses_atras', 4),
                         informes=self.prefs.data.get('informes_por_vencer', False),
-                        esperar_pantalla=self.wait_for_screen,
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
@@ -1316,42 +1315,6 @@ class Application:
             finally:
                 self.emit('idle', None)
 
-    def wait_for_screen(self, screen):
-        """Desde el trabajador: pide al usuario cambiar la pantalla de SITFA y espera su respuesta."""
-        gate = {'event': threading.Event(), 'ok': False, 'screen': screen}
-        self.emit('need_screen', gate)
-        while not gate['event'].wait(0.25):
-            if self.cancel.is_set():
-                raise m.PocError('Proceso detenido.')
-        if not gate['ok']:
-            raise m.PocError('El usuario omitió el calendario de informes.')
-
-    def ask_screen(self, gate):
-        label = {'calendario_informes': 'el calendario de informes (Informes por vencer)'}.get(
-            gate['screen'], gate['screen']
-        )
-        if self.quitting or self.cancel.is_set():
-            gate['event'].set()
-            return
-        try:
-            self.root.deiconify()
-            self.root.lift()
-            self.root.bell()
-        except tk.TclError:
-            pass
-        try:
-            gate['ok'] = messagebox.askyesno(
-                'Cambia la pantalla de SITFA',
-                f'Para incluir los informes por vencer, en SITFA cambia a {label} y '
-                'luego pulsa «Sí». El Descargador actualizará sus opciones y seguirá solo.\n\n'
-                '«No» crea el paquete sin los informes por vencer.',
-                parent=self.root,
-            )
-        except tk.TclError:
-            gate['ok'] = False
-        finally:
-            gate['event'].set()
-
     def process_event(self, name, value):
         if name == 'pipeline_folder':
             self.last_folder = Path(value)
@@ -1365,9 +1328,6 @@ class Application:
                 self.last_sheets_folder = Path(value['folder'])
             elif value['fase'] == 'bitacoras':
                 self.last_diary_manifest = Path(value['folder']) / 'bitacoras.json'
-            return True
-        if name == 'need_screen':
-            self.ask_screen(value)
             return True
         if name == 'phase':
             self.phase_name.set(

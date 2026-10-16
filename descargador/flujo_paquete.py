@@ -23,7 +23,6 @@ def run(
     historia_en_paquete=True,
     meses=4,
     informes=False,
-    esperar_pantalla=None,
     today=None,
 ):
     if batch.screen != 'seguimiento':
@@ -75,7 +74,7 @@ def run(
             batch, backup
         )
         carpetas_informes, informes_completos = _informes(
-            bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, esperar_pantalla, today
+            bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today
         )
         phase('paquete')
         from descargador import package_current_lot
@@ -149,10 +148,10 @@ def meses_informes(today, dias=60):
     return meses
 
 
-def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, esperar_pantalla, today):
+def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today):
     """Calendario de informes por vencer de los próximos 60 días, solo con la hoja de Cumplimiento (es la que lo usa).
-    Pide al usuario cambiar SITFA al calendario; al terminar intenta volver a Seguimiento. Devuelve (carpetas, completo):
-    un mes que falla no descarta los ya descargados, pero el paquete queda parcial."""
+    La extensión cambia SITFA al calendario por sí sola (sin pedirlo al usuario) y al terminar vuelve a Seguimiento.
+    Devuelve (carpetas, completo): un mes que falla no descarta los ya descargados, pero el paquete queda parcial."""
     if not informes or 'Cumplimiento' not in getattr(batch, 'tabs', ()):
         return [], True
     from lotes import Batch
@@ -161,8 +160,6 @@ def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, i
     carpetas = []
     meses = meses_informes(today or m.now().date())
     try:
-        if esperar_pantalla:
-            esperar_pantalla('calendario_informes')
         catalog = bridge.call('catalog', {'screen': 'calendario_informes'})
         for month, year in meses:
             state['fase'] = f'informes-{year}-{month}'

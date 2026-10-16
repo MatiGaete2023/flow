@@ -309,12 +309,12 @@ class PuenteCatalogo:
         return {}
 
 
-def test_paquete_incluye_los_informes_por_vencer_tras_avisar_al_usuario(monkeypatch, tmp_path):
+def test_paquete_incluye_los_informes_por_vencer_y_cambia_de_pantalla_solo(monkeypatch, tmp_path):
     from datetime import date
 
     cancel = Event()
     pantallas = runners_con_calendario(monkeypatch, cancel)
-    avisos, eventos = [], []
+    eventos = []
     puente = PuenteCatalogo()
     result = flujo_paquete.run(
         puente,
@@ -324,11 +324,11 @@ def test_paquete_incluye_los_informes_por_vencer_tras_avisar_al_usuario(monkeypa
         Scope(),
         tmp_path,
         informes=True,
-        esperar_pantalla=avisos.append,
         today=date(2026, 10, 14),
     )
-    # El calendario cubre hoy + 60 días (14-oct → 13-dic: tres meses) y al terminar vuelve a Seguimiento.
-    assert avisos == ['calendario_informes'] and puente.llamadas == [
+    # La extensión abre el calendario sin pedirlo al usuario, cubre hoy + 60 días (14-oct → 13-dic: tres meses) y al
+    # terminar vuelve a Seguimiento.
+    assert puente.llamadas == [
         ('catalog', {'screen': 'calendario_informes'}),
         ('catalog', {'screen': 'seguimiento'}),
     ]
@@ -338,26 +338,25 @@ def test_paquete_incluye_los_informes_por_vencer_tras_avisar_al_usuario(monkeypa
     assert len([q for q in consultas if q['screen'] != 'bitacoras']) == 4
 
 
-def test_si_el_usuario_omite_los_informes_el_paquete_se_crea_parcial(monkeypatch, tmp_path):
+def test_si_no_se_puede_abrir_el_calendario_el_paquete_se_crea_parcial(monkeypatch, tmp_path):
     cancel = Event()
     pantallas = runners_con_calendario(monkeypatch, cancel)
     eventos = []
 
-    def omitir(pantalla):
-        raise PocError('El usuario omitió el calendario de informes.')
+    class SinCalendario(PuenteCatalogo):
+        def call(self, name, args=None, **kwargs):
+            super().call(name, args, **kwargs)
+            if args == {'screen': 'calendario_informes'}:
+                raise PocError('No se pudo abrir la pantalla.')
+            return {}
 
+    puente = SinCalendario()
     result = flujo_paquete.run(
-        PuenteCatalogo(),
-        {},
-        lambda *event: eventos.append(event),
-        cancel,
-        Scope(),
-        tmp_path,
-        informes=True,
-        esperar_pantalla=omitir,
+        puente, {}, lambda *event: eventos.append(event), cancel, Scope(), tmp_path, informes=True
     )
     assert pantallas == [] and result['partial'] and Path(result['path']).is_file()
     assert any(n == 'warning' and 'informes por vencer' in v for n, v in eventos)
+    assert puente.llamadas[-1] == ('catalog', {'screen': 'seguimiento'})
 
 
 def test_un_paquete_por_hoja_entrega_cada_hoja_por_separado(monkeypatch, tmp_path):
@@ -366,24 +365,17 @@ def test_un_paquete_por_hoja_entrega_cada_hoja_por_separado(monkeypatch, tmp_pat
     cancel = Event()
     pantallas = runners_con_calendario(monkeypatch, cancel)
 
-    avisos = []
+    puente = PuenteCatalogo()
     batch = Batch(('113',), ('3',), ('Espera', 'Cumplimiento'))
     monkeypatch.setattr(Batch, 'plan', lambda self, catalog: ['consulta ficticia'])
     resultados = flujo_paquete.run_por_hoja(
-        PuenteCatalogo(),
-        {},
-        lambda *event: None,
-        cancel,
-        batch,
-        tmp_path,
-        informes=True,
-        esperar_pantalla=avisos.append,
-        today=date(2026, 10, 14),
+        puente, {}, lambda *event: None, cancel, batch, tmp_path, informes=True, today=date(2026, 10, 14)
     )
     assert len(resultados) == 2 and all(Path(r['path']).is_file() for r in resultados)
     assert resultados[0]['path'] != resultados[1]['path']
     # El calendario se descarga una vez, con la hoja de Cumplimiento.
-    assert avisos == ['calendario_informes'] and pantallas == [('10', '2026'), ('11', '2026'), ('12', '2026')]
+    assert puente.llamadas.count(('catalog', {'screen': 'calendario_informes'})) == 1
+    assert pantallas == [('10', '2026'), ('11', '2026'), ('12', '2026')]
 
 
 def test_meses_del_calendario_cubren_sesenta_dias():
@@ -397,22 +389,13 @@ def test_meses_del_calendario_cubren_sesenta_dias():
 def test_sin_cumplimiento_no_se_pide_el_calendario(monkeypatch, tmp_path):
     cancel = Event()
     pantallas = runners_con_calendario(monkeypatch, cancel)
-    avisos = []
+    puente = PuenteCatalogo()
 
     class Espera(Scope):
         tabs = ('Espera',)
 
-    result = flujo_paquete.run(
-        PuenteCatalogo(),
-        {},
-        lambda *event: None,
-        cancel,
-        Espera(),
-        tmp_path,
-        informes=True,
-        esperar_pantalla=avisos.append,
-    )
-    assert avisos == [] and pantallas == [] and not result['partial']
+    result = flujo_paquete.run(puente, {}, lambda *event: None, cancel, Espera(), tmp_path, informes=True)
+    assert puente.llamadas == [] and pantallas == [] and not result['partial']
 
 
 def test_un_mes_que_falla_conserva_los_otros_y_el_paquete_queda_parcial_con_aviso(monkeypatch, tmp_path):

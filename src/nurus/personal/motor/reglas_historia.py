@@ -262,8 +262,8 @@ def _frase_busqueda(tramite, posicion):
 
 def busqueda_historia():
     """R11: la observación nombra primero la Orden de búsqueda y luego sus trámites relacionados (pide cuenta, deja sin
-    efecto, término). Solo cuenta lo de los últimos `ventana_busqueda` días: una orden anterior, o una búsqueda que la
-    bitácora ya observó, no genera texto. Marca nivel 1 si hay una orden vigente."""
+    efecto, término). Solo cuenta una búsqueda cuyo último trámite cae en los últimos `ventana_busqueda` días; una búsqueda
+    que la bitácora ya observó no genera texto. Marca nivel 1 si hay una orden vigente."""
     h = _h()
     if h is None:
         return []
@@ -285,7 +285,9 @@ def busqueda_historia():
     salida = []
     for orden in ordenes:
         cadena = cadenas[_id(orden)]
-        if orden.fecha < desde or _id(orden) in emitidos() or _busqueda_en_bitacora(cadena[-1]):
+        # La ventana se mide por el último trámite de la búsqueda (decisión del usuario, 16-oct): una orden antigua con
+        # un término reciente se dice completa; si todo es anterior, o la bitácora ya lo observó, no se dice nada.
+        if cadena[-1].fecha < desde or _id(orden) in emitidos() or _busqueda_en_bitacora(cadena[-1]):
             continue
         emitidos().update(_id(t) for t in cadena)
         texto = render('HISTORIA', 'R11_ORDEN', FECHA=fecha_es(orden.fecha), FOLIO=_folio(orden))

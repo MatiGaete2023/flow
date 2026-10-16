@@ -140,17 +140,44 @@ Argumentos: `(tribunal, RIT, idCausa)`. La función de SITFA hace **dos peticion
 Qué devuelve `read_historia(bytes)`:
 
 ```python
-{'encabezado': {'RIT': '…', 'RUC': '…', 'Caratulado': '…', 'F. Ingreso': '…', 'Proc.': '…', 'Forma Inicio': '…',
-                'Est. Adm.': '…', 'Etapa': '…', 'Estado Proc.': '…', 'Tribunal': '…'},
- 'reservada': True,
- 'filas': [{'fila': 1, 'folio': '9120', 'etapa': 'Cumplimiento', 'tramite': 'Resolución',
-            'descripcion': '…', 'referencia': 'Sin referencia.', 'fecha_texto': '13/10/2099',
-            'fecha_iso': '2099-10-13', 'anexo': False}, ...],
- 'vacio_explicito': False,                     # True solo si la tabla exacta existe y no tiene filas
- 'advertencias': [{'codigo': 'HISTORIA_FILA_INCOMPLETA', 'fila': 4, 'folio': '9001'},
-                  {'codigo': 'HISTORIA_FECHA_ILEGIBLE', 'fila': 2, 'folio': '…'},
-                  {'codigo': 'HISTORIA_ENCABEZADO_REPETIDO', 'fila': 1, 'folio': ''}],
- 'sha256': '…64 hex…', 'source': '', 'captured_at': ''}
+{
+    'encabezado': {
+        'RIT': '…',
+        'RUC': '…',
+        'Caratulado': '…',
+        'F. Ingreso': '…',
+        'Proc.': '…',
+        'Forma Inicio': '…',
+        'Est. Adm.': '…',
+        'Etapa': '…',
+        'Estado Proc.': '…',
+        'Tribunal': '…',
+    },
+    'reservada': True,
+    'filas': [
+        {
+            'fila': 1,
+            'folio': '9120',
+            'etapa': 'Cumplimiento',
+            'tramite': 'Resolución',
+            'descripcion': '…',
+            'referencia': 'Sin referencia.',
+            'fecha_texto': '13/10/2099',
+            'fecha_iso': '2099-10-13',
+            'anexo': False,
+        },
+        ...,
+    ],
+    'vacio_explicito': False,  # True solo si la tabla exacta existe y no tiene filas
+    'advertencias': [
+        {'codigo': 'HISTORIA_FILA_INCOMPLETA', 'fila': 4, 'folio': '9001'},
+        {'codigo': 'HISTORIA_FECHA_ILEGIBLE', 'fila': 2, 'folio': '…'},
+        {'codigo': 'HISTORIA_ENCABEZADO_REPETIDO', 'fila': 1, 'folio': ''},
+    ],
+    'sha256': '…64 hex…',
+    'source': '',
+    'captured_at': '',
+}
 # Errores: ValueError('HISTORIA_TABLA_NO_RECONOCIDA' | 'HISTORIA_ENCABEZADO_DISTINTO' | 'HISTORIA_SESION'
 #                     | 'HISTORIA_RESPUESTA_INCOMPLETA')   # este último: HTML sin </html> (respuesta cortada)
 ```

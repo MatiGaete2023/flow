@@ -204,7 +204,12 @@ def test_busqueda_nombra_primero_la_orden_y_luego_sus_tramites(tmp_path):
 
 
 def test_busqueda_anterior_a_dos_meses_o_ya_observada_no_genera_texto(tmp_path):
-    antigua = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-08-01', 10), ('Termino de búsqueda', '2026-10-01', 20)))
+    # La ventana se cuenta desde el último trámite: orden antigua con término reciente se dice, empezando por la orden.
+    reciente = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-07-01', 10), ('Termino de búsqueda', '2026-10-01', 20)))
+    assert reciente.observation.index('se decretó orden de búsqueda') < reciente.observation.index(
+        'término de la búsqueda'
+    )
+    antigua = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-07-01', 10), ('Termino de búsqueda', '2026-08-01', 20)))
     assert 'búsqueda' not in antigua.observation
     previa = bita(
         (

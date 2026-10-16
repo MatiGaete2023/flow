@@ -108,6 +108,13 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
   6. El paquete incluye el calendario de informes por vencer (60 días); Cumplimiento observa los informes que vencen dentro de ese plazo y alimenta el correo preventivo.
   7. El Descargador deja elegir el período a recolectar (1 a 4 meses) y entregar un paquete por hoja de RUS.
   8. Aprobados todos los textos pendientes (16-oct); búsqueda con «Posteriormente»/«Luego»; T5 con «Atendido que». Asistente `0.5.0.dev8`.
+  9. Tras la auditoría E3 propia (`docs/implementacion/revision/E3_WP65_69_20261016.md`): el Descargador cambia SITFA al
+     calendario de informes y de vuelta a Seguimiento sin aviso; la ventana de 2 meses de las órdenes de búsqueda se mide
+     por el último trámite; E-04 con E-05 se deja como está; el caso límite de nombres solo distintos entre paréntesis no se
+     corrige. Asistente `0.5.0.dev10`, reglas `historia-7`.
+  10. Limpieza de datos privados en el repositorio (WP-56): sin nombres reales en metadatos de plantillas, documentos ni
+     capturas del manual; fixtures de anonimización con nombres, RUT y RIT ficticios. El historial git conserva lo
+     anterior; purgarlo exige autorización escrita (WP-17).
 
 ## Fase B de auditoría final — 14 de octubre de 2026
 
