@@ -1,8 +1,9 @@
-META 4 CON BITACORAS 1.0 - Verificacion del 16 de octubre de 2026
+META 4 CON BITACORAS 1.1 - Verificacion del 16 de octubre de 2026
 
-71 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+81 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+Ejecutadas con Python 3.13 y 3.12 (Linux). Compilacion comprobada con 3.11.
 
-Comprobado con datos ficticios:
+Comprobado con datos ficticios (1.0, se mantiene):
 - Mes calendario movil, incluidos cambios de ano, meses cortos y bisiestos.
 - Fecha de observacion del centro; no se usa la respuesta del tribunal.
 - Exclusiones de Informes, fechas anteriores y fechas futuras.
@@ -15,8 +16,23 @@ Comprobado con datos ficticios:
 - Exportacion de bitacoras con fecha y hora del centro.
 - Regresiones del generador v2.4.
 
-Interfaz: apertura, filtrado de tribunales y cierre probados con Tk en pantalla
-virtual Linux. Importacion de todos los componentes y ayuda CLI comprobadas.
+Nuevo en 1.1:
+- Texto que empieza con "=" se conserva como texto en Registros y META 4.
+- Paginas de una consulta no se informan como duplicado en la matriz.
+- Carpeta de salida existente rechazada antes de procesar; verificacion
+  fallida no deja archivos parciales; plantilla inexistente es un error.
+- Bitacoras del descargador anterior (bitacoras.json + HTML) verificadas por
+  SHA256 y leidas; un HTML modificado queda como BITACORA NO VERIFICABLE.
+- Entradas guardadas sin respuesta del tribunal ni usuario autor.
+- CLI rechaza fecha de corte futura y mes invalido.
+- Equivalencia 1.0 vs 1.1: lote ficticio de 612 registros, comparacion celda a
+  celda de los cinco libros. Valores identicos; solo difieren las mejoras
+  declaradas (estilo de columnas de control, fila "Lectura de bitacoras",
+  formato dd-mm-aaaa en la hoja Control bitacoras).
+- Tiempo de generacion local en ese lote: 20,7 s (1.0) -> 1,7 s (1.1).
+
+Interfaz: apertura, filtrado de tribunales, validacion de fecha, generacion
+desde carpeta, aviso final y cierre probados con Tk en pantalla virtual Linux.
 
 Limites: no se ejecutaron los BAT en Windows ni una consulta con sesion real de
 SITFA. La validacion tecnica no acredita uso real. El servidor entrega la

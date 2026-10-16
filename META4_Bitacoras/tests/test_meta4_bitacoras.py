@@ -199,3 +199,168 @@ def test_month_export_contains_only_center_dates_in_window(tmp_path):
     ws = load_workbook(tmp_path / 'bitacoras.xlsx')['Observaciones del mes']
     assert ws.max_row == 2
     assert ws.cell(2, 8).value.strftime('%H:%M:%S') == '12:34:56'
+
+
+# --------------------------------------------------------------------------
+# Regresiones 1.1
+# --------------------------------------------------------------------------
+
+def lote_html(source, filas, tab='Cumplimiento'):
+    """Lote del descargador con una consulta y una página XLS HTML por elemento de `filas`."""
+    headers = ['RIT', 'TRIBUNAL', 'RUT', 'NOMBRE', 'DERIVACIÓN', 'TIPO', 'SEXO', 'FEC. RESOLUCIÓN', 'FEC. INGRESO EFECTIVO']
+    pages = []
+    for index, fila in enumerate(filas, 1):
+        values = {'RIT': f'X-{index}-2026', 'TRIBUNAL': 'Laja', 'RUT': '11111111-1', 'NOMBRE': 'FICTICIO NNA',
+                  'DERIVACIÓN': 'FAE FICTICIO', 'TIPO': 'MP', 'SEXO': 'F', 'FEC. RESOLUCIÓN': '01/09/2026',
+                  'FEC. INGRESO EFECTIVO': '02/09/2026', **fila}
+        data = ('<html><table><tr><td>Juzgado de Familia de Laja</td></tr><tr><td>Informe de Ingresos en Lista de ' + tab +
+                '</td></tr><tr><td>Fecha Emisión : 16/10/2026</td></tr><tr>' + ''.join(f'<td>{h}</td>' for h in headers) +
+                '</tr><tr>' + ''.join(f'<td>{values[h]}</td>' for h in headers) + '</tr></table></html>').encode()
+        filename = f'CUMP FAE LAJA {index}.xls'
+        (source / filename).write_bytes(data)
+        pages.append(dict(archivo=filename, sha256=hashlib.sha256(data).hexdigest()))
+    (source / 'verificacion.json').write_text(json.dumps(dict(estado='VALIDADA', paginas_esperadas=len(pages), paginas_verificadas=len(pages), archivos=pages)))
+    (source / 'resumen.json').write_text(json.dumps(dict(estado='VALIDADA', consultas=[dict(verificacion='verificacion.json', seleccion=dict(tab=tab, modality='3'))])))
+
+
+def test_text_starting_with_equals_is_kept_as_text(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{'TIPO': '=MP'}])
+    save_diaries(source, [diary(rit='X-1-2026')])
+    target = tmp_path / 'resultado'
+    app.generar(source, target, CORTE)
+    ws = load_workbook(target / 'Registros.xlsx')['CUMPLIMIENTO']
+    headers = [c.value for c in ws[1]]
+    cell = ws.cell(2, headers.index('TIPO') + 1)
+    assert cell.value == '=MP' and cell.data_type == 's'
+    ws = load_workbook(target / 'META 4 - actualizado 2026-10.xlsx')['FAE Cumplimiento']
+    row = next(c.row for r in ws for c in r if c.value == 'X-1-2026')
+    assert ws.cell(row, 3).value == '=MP' and ws.cell(row, 3).data_type == 's'
+
+
+def test_pages_of_one_query_are_not_duplicates(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{}, {}])
+    save_diaries(source, [diary(rit='X-1-2026'), diary(rit='X-2-2026', ingreso='202')])
+    target = tmp_path / 'resultado'
+    app.generar(source, target, CORTE)
+    ws = load_workbook(target / 'Registros.xlsx')['MATRIZ_COBERTURA']
+    text = next(ws.cell(r, 3).value for r in range(5, ws.max_row + 1) if ws.cell(r, 1).value == 'LAJA')
+    assert text == 'EXCEL · 2 registro(s)'
+    assert 'duplicadas: 0' in ws['A2'].value
+
+
+def test_existing_output_is_rejected_before_processing(tmp_path):
+    target = tmp_path / 'resultado'
+    target.mkdir()
+    with pytest.raises(ValueError, match='ya existe'):
+        app.generar(tmp_path, target, CORTE)
+
+
+def test_failed_verification_leaves_no_partial_output(tmp_path, monkeypatch):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source)
+    monkeypatch.setattr(app.meta, 'verify_meta_output', lambda path: ({}, {}, ['simulado']))
+    with pytest.raises(ValueError, match='simulado'):
+        app.generar(source, tmp_path / 'resultado', CORTE)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ['fuentes']
+
+
+def test_missing_template_is_an_error(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source)
+    with pytest.raises(ValueError, match='plantilla'):
+        app.generar(source, tmp_path / 'resultado', CORTE, template=tmp_path / 'no-existe.xlsx')
+
+
+def test_report_declares_reading_state_and_controls(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source)
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert report['lectura_bitacoras'] == ['SIN ESTADO']
+    assert report['controles_bitacora'] == {'VERIFICADA EN EL PERÍODO': 1}
+
+
+PARAMS = {'tipo_popUp': '11', 'CRR_IdCausa': '301', 'COD_Tribunal': '101', 'TIP_Consulta': '3',
+          'ID_Ingreso': '201', 'COD_Etapa': '5', 'FLG_MejorNinez': '0'}
+
+
+def bitacora_html(fecha='10/10/2026 10:00', etapa='Espera'):
+    headers = ['Tipo Observación', 'Etapa', 'Fecha Centro', 'Usuario Centro', 'Observación Centro',
+               'Fecha Tribunal', 'Usuario Tribunal', 'Observación Tribunal', 'Acción']
+    hidden = ''.join(f'<input type="hidden" name="{n}77" value="{v}">' for n, v in
+                     [('HOBS_Centro_', 'Texto ficticio'), ('HOBS_Tribunal_', '---'), ('HCOD_Estado_', '1'),
+                      ('HFUN_Tribunal_', ''), ('HFLG_Envio_', 'N')])
+    inputs = ''.join(f'<input name="{k}" value="{v}">' for k, v in [
+        ('COD_Tribunal', '101'), ('CRR_IdCausa', '301'), ('ID_Ingreso', '201'), ('COD_Etapa', '5'),
+        ('TIP_Consulta', '3'), ('tipo_popUp', '11'), ('RIT_Causa', 'X-1-2026'), ('GLS_Nombre', 'FICTICIO NNA'),
+        ('GLS_Centro', 'FAE FICTICIO')])
+    cells = ['Observación', etapa, fecha, 'Usuario', 'Texto ficticio', '---', '', '---']
+    return ('<html><body><form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do">' + inputs +
+            '<table id="TablaInforme"><tr>' + ''.join(f'<td>{h}</td>' for h in headers) + '</tr><tr>' +
+            ''.join(f'<td>{c}</td>' for c in cells) + '<td><img id="77" onclick="ver()">' + hidden +
+            '</td></tr></table></form></body></html>').encode('utf-8')
+
+
+def legacy_lote(source, body):
+    folder = source / 'Bitacoras 2026-10-16'
+    folder.mkdir()
+    (folder / 'b1.html').write_bytes(body)
+    record = {k: v for k, v in diary().items() if k != 'snapshot'}
+    record.update(archivo='b1.html', sha256=hashlib.sha256(body).hexdigest(), params=PARAMS)
+    (folder / 'bitacoras.json').write_text(json.dumps(dict(tipo='BITACORAS_LECTURA', version=1, estado='COMPLETA',
+                                                            registros=[record])), encoding='utf-8')
+    return folder / 'b1.html'
+
+
+def test_legacy_downloader_html_diaries_are_verified(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    make_excel(source / 'CUMP FAE LAJA.xlsx', 'Laja', 'Cumplimiento', [{'rit': 'X-1-2026', 'der': 'FAE FICTICIO'}])
+    legacy_lote(source, bitacora_html())
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert report['alertas'] == 1 and report['lectura_bitacoras'] == ['COMPLETA']
+
+
+def test_legacy_html_changed_after_download_is_not_used(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    page = legacy_lote(source, bitacora_html())
+    page.write_bytes(bitacora_html(etapa='Cumplimiento'))
+    records = app.cargar_bitacoras(source, CORTE)
+    assert records[0]['control'] == 'BITÁCORA NO VERIFICABLE' and records[0]['entries'] == []
+
+
+def test_live_diary_keeps_only_needed_fields(tmp_path):
+    raw = b'verified transport response'
+    params = {'ID_Ingreso': '201'}
+
+    class Bridge:
+        def call(self, command, payload):
+            return dict(status=200, type='text/html', body=base64.b64encode(raw).decode(), params=params,
+                        digest=hashlib.sha256(raw).hexdigest(), startedAt='2026-10-16T10:00:00Z')
+    snap = diary()['snapshot']
+    snap['entries'] = [dict(entrada('2026-10-10'), entry_id='9', respuesta='Respuesta del tribunal', autor='Usuario')]
+    snap['row_metadata'] = [{'entry_id': '9'}]
+    session = SimpleNamespace(openings=0, folder=tmp_path, read=lambda *a: snap, anotar=lambda *a: None)
+    record = {'params': params}
+    DiarioMensual(Bridge(), {}, lambda *a: None, threading.Event(), corte=CORTE)._abrir_bitacora(session, record)
+    assert record['snapshot']['entries'] == [{'entry_id': '9', 'fecha': '2026-10-10', 'etapa': 'Espera',
+                                              'texto': 'Observación ficticia'}]
+    assert 'row_metadata' not in record['snapshot']
+
+
+def test_cli_rejects_future_cutoff_and_bad_month(tmp_path):
+    import subprocess
+    script = Path(app.__file__)
+    future = subprocess.run([sys.executable, str(script), '--folder', str(tmp_path), '--output-dir', str(tmp_path / 'r'),
+                             '--cutoff', '2999-01-01'], capture_output=True, text=True)
+    assert future.returncode == 1 and 'futuro' in future.stderr
+    month = subprocess.run([sys.executable, str(script), '--folder', str(tmp_path), '--output-dir', str(tmp_path / 'r'),
+                            '--month', '2026-13'], capture_output=True, text=True)
+    assert month.returncode == 2 and 'AAAA-MM' in month.stderr

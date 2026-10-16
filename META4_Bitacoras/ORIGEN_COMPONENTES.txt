@@ -1,10 +1,11 @@
 ORIGEN DE COMPONENTES
 
-Herramienta Meta 4 con bitácoras 1.0: Meta4.py, scripts/meta4_bitacoras.py y scripts/descarga_meta4.py.
-Base de planilla: META4_Automatizado_v2_4.zip, suministrado por el usuario.
+Herramienta Meta 4 con bitácoras 1.1: Meta4.py, scripts/meta4_bitacoras.py y scripts/descarga_meta4.py.
+Base de planilla: META4_Automatizado_v2_4.zip, suministrado por el usuario. En 1.1 scripts/generate_meta4.py
+recibe cambios de rendimiento y conserva como texto los valores que empiezan con "="; sus pruebas v2.4 se mantienen.
 Consolidado: reproduce las columnas y detección por RUT/nombre del Consolidador_Excel_Espera_Cumplimiento.zip suministrado.
 Transporte, validadores y extensión: Descargador SITFA 2.7.6 del espacio de trabajo del usuario.
-Los módulos copiados y la extensión se conservaron sin cambios. No requiere la instalación del Asistente.
+Los módulos copiados y la extensión se conservaron sin cambios (hashes verificados en 1.1). No requiere la instalación del Asistente.
 
 SHA256 de los componentes del descargador incluidos:
 918b1284b4cc3d7731bd774ec90323a3d7aa67a91be2e0641d72c23065c67476  descargador/contrato_integral.py

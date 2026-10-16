@@ -17,8 +17,9 @@ import unicodedata
 from collections import Counter, defaultdict
 from copy import copy
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import pandas as pd
 from openpyxl import Workbook, load_workbook
@@ -82,6 +83,11 @@ TRIBUNAL_ALIASES = {
 }
 
 AMBIGUOUS_ALIASES = {"LA"}
+
+TRIBUNAL_REGEXES = [
+    (re.compile(rf"(?<![A-Z]){re.escape(pattern)}(?![A-Z])"), label)
+    for pattern, label in TRIBUNAL_PATTERNS
+]
 
 # Si el alias ambiguo viene precedido por uno de estos términos, es un artículo.
 ALIAS_CONNECTORS = {
@@ -305,12 +311,19 @@ class FileResult:
         return "NO"
 
 
-def norm(value: Any) -> str:
-    if value is None or pd.isna(value):
-        return ""
-    text = str(value).replace("\ufffd", "")
+@lru_cache(maxsize=1 << 16)
+def _norm_text(text: str) -> str:
+    text = text.replace("\ufffd", "")
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     return re.sub(r"[^A-Z0-9]+", " ", text.upper()).strip()
+
+
+def norm(value: Any) -> str:
+    if isinstance(value, str):
+        return _norm_text(value)
+    if value is None or pd.isna(value):
+        return ""
+    return _norm_text(str(value))
 
 
 def clean_text(value: Any) -> Any:
@@ -361,13 +374,21 @@ def segment_tribunals(value: Any) -> tuple[set[str], list[str]]:
     Prioridad: nombre completo > alias. Un alias solo se acepta si el contexto
     descarta que sea una palabra común (ver ALIAS_CONNECTORS/ALIAS_NEIGHBOURS).
     """
-    raw = re.sub(r"\bL\.\s?A\.?", "LA", str(value or ""), flags=re.IGNORECASE)
+    found, notes = _segment_tribunals_text(str(value or ""))
+    return set(found), list(notes)
+
+
+@lru_cache(maxsize=1 << 14)
+def _segment_tribunals_text(value: str) -> tuple[frozenset[str], tuple[str, ...]]:
+    # Función pura del texto: se memoiza porque la misma celda TRIBUNAL se
+    # clasifica una vez por fila y por bitácora.
+    raw = re.sub(r"\bL\.\s?A\.?", "LA", value, flags=re.IGNORECASE)
     text = norm(raw)
     if not text:
-        return set(), []
+        return frozenset(), ()
     found: set[str] = set()
-    for pattern, label in TRIBUNAL_PATTERNS:
-        if re.search(rf"(?<![A-Z]){re.escape(pattern)}(?![A-Z])", text):
+    for regex, label in TRIBUNAL_REGEXES:
+        if regex.search(text):
             found.add(label)
     # L-01: antes se retornaba aquí apenas un nombre completo coincidía, sin
     # revisar alias. Un segmento con un nombre completo Y un alias de OTRO
@@ -393,15 +414,15 @@ def segment_tribunals(value: Any) -> tuple[set[str], list[str]]:
             found.add(label)
         else:
             notes.append(
-                f"Se ignoró el alias '{token}' en '{str(value)}' porque el contexto no permite "
+                f"Se ignoró el alias '{token}' en '{value}' porque el contexto no permite "
                 f"distinguirlo de una palabra común; renombra el archivo para usarlo como {label}"
             )
-    return found, notes
+    return frozenset(found), tuple(notes)
 
 
 def tribunal_name(value: Any) -> str | None:
     """Clasificación para el contenido de una celda (un solo valor)."""
-    found, _ = segment_tribunals(value)
+    found, _ = _segment_tribunals_text(str(value or ""))
     if len(found) == 1:
         return next(iter(found))
     return None
@@ -850,31 +871,41 @@ def relative_string(path: Path, root: Path) -> str:
         return str(path)
 
 
+def read_sheet_frames(readable_path: Path) -> list[tuple[str, pd.DataFrame]]:
+    with pd.ExcelFile(readable_path) as xls:
+        return [
+            (sheet_name, pd.read_excel(xls, sheet_name=sheet_name, header=None, dtype=object))
+            for sheet_name in xls.sheet_names
+        ]
+
+
 def inspect_excel(
     path: Path,
     root: Path,
-    readable_path: Path,
+    readable_path: Path | None,
     issues: list[Issue],
+    frames: list[tuple[str, pd.DataFrame]] | None = None,
 ) -> FileResult:
+    """Clasifica un Excel. `frames` permite entregar hojas ya leídas en memoria."""
     relative = relative_string(path, root)
     result = FileResult(path=path, relative_path=relative, kind="EXCEL", result="PROCESADO")
     try:
-        with pd.ExcelFile(readable_path) as xls:
-            sheets: list[tuple[tuple[int, int], str, pd.DataFrame, int]] = []
-            for sheet_name in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet_name, header=None, dtype=object)
-                header_row = find_header_row(df)
-                if header_row is None:
-                    continue
-                headers = list(df.iloc[header_row])
-                rit_idx = header_index(headers, "RIT")
-                record_count = 0
-                if rit_idx is not None:
-                    data = df.iloc[header_row + 1 :]
-                    mask = data.iloc[:, rit_idx].notna() & data.iloc[:, rit_idx].astype(str).str.strip().ne("")
-                    record_count = int(mask.sum())
-                header_score = sum(1 for value in headers if norm(value))
-                sheets.append(((record_count, header_score), sheet_name, df, header_row))
+        if frames is None:
+            frames = read_sheet_frames(readable_path)
+        sheets: list[tuple[tuple[int, int], str, pd.DataFrame, int]] = []
+        for sheet_name, df in frames:
+            header_row = find_header_row(df)
+            if header_row is None:
+                continue
+            headers = list(df.iloc[header_row])
+            rit_idx = header_index(headers, "RIT")
+            record_count = 0
+            if rit_idx is not None:
+                data = df.iloc[header_row + 1 :]
+                mask = data.iloc[:, rit_idx].notna() & data.iloc[:, rit_idx].astype(str).str.strip().ne("")
+                record_count = int(mask.sum())
+            header_score = sum(1 for value in headers if norm(value))
+            sheets.append(((record_count, header_score), sheet_name, df, header_row))
     except Exception as exc:
         result.result = "ERROR"
         message = f"No se pudo abrir como Excel: {type(exc).__name__}: {exc}"
@@ -1362,6 +1393,36 @@ WHITE = "FFFFFF"
 DARK_TEXT = "1F2937"
 LIGHT_BORDER = "CBD5E1"
 
+NUMBER_HEADERS = {"T ESPERA", "DURACION", "EDAD", "DIAS DE CUMPLIMIENTO", "DIAS PARA EGRESAR"}
+
+
+def guard_text(cell) -> None:
+    """Un texto de origen que empieza con '=' se conserva como texto, no como fórmula.
+
+    Sin esto openpyxl lo guarda como fórmula sin valor calculado: pandas y la
+    verificación lo releen vacío y el dato se pierde."""
+    if cell.data_type == "f":
+        cell.data_type = "s"
+
+
+class StyleMemo:
+    """Reutiliza el estilo ya registrado en un libro.
+
+    Asignar fuente, relleno y borde a cada celda obliga a openpyxl a copiar y
+    volver a indexar esos objetos; la combinación ya registrada se copia como
+    índice. Válido solo dentro del mismo libro."""
+
+    def __init__(self) -> None:
+        self._arrays: dict[Any, Any] = {}
+
+    def apply(self, cell, key: Any, setter: Callable[[Any], None]) -> None:
+        array = self._arrays.get(key)
+        if array is None:
+            setter(cell)
+            self._arrays[key] = copy(cell._style)
+        else:
+            cell._style = copy(array)
+
 
 def unique_output_path(path: Path) -> Path:
     if not path.exists():
@@ -1403,7 +1464,15 @@ def apply_header_style(ws, row: int, start_col: int, end_col: int) -> None:
     ws.row_dimensions[row].height = 30
 
 
-def style_data_sheet(ws, headers: list[str], rows: list[SourceRow]) -> None:
+def style_data_sheet(
+    ws,
+    headers: list[str],
+    rows: list[SourceRow],
+    row_fill: Callable[[SourceRow], str | None] | None = None,
+    extra_wide: int = 0,
+) -> None:
+    """`row_fill` puede devolver un color que reemplaza el cebreado de la fila.
+    Las últimas `extra_wide` columnas (controles agregados) se muestran anchas."""
     ws.sheet_view.showGridLines = False
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{max(1, len(rows) + 1)}"
@@ -1411,20 +1480,42 @@ def style_data_sheet(ws, headers: list[str], rows: list[SourceRow]) -> None:
         ws.cell(1, col_idx, header)
     apply_header_style(ws, 1, 1, len(headers))
 
+    formats: list[tuple[str | None, bool]] = []
+    for header in headers:
+        normalized = norm(header)
+        if normalized in DATE_HEADERS:
+            formats.append(("DD-MM-YYYY", True))
+        elif normalized in NUMBER_HEADERS:
+            formats.append(("0", False))
+        elif normalized in {"RIT", "RUT"}:
+            formats.append(("@", False))
+        else:
+            formats.append((None, False))
+    font = Font(name="Aptos", size=9, color=DARK_TEXT)
+    alignment = Alignment(vertical="top", wrap_text=False)
+    memo = StyleMemo()
+
+    def styler(fill: str | None, number_format: str | None) -> Callable[[Any], None]:
+        def setter(cell) -> None:
+            cell.font = font
+            cell.alignment = alignment
+            if fill:
+                cell.fill = PatternFill("solid", fgColor=fill)
+            if number_format:
+                cell.number_format = number_format
+        return setter
+
     for row_idx, source_row in enumerate(rows, 2):
+        fill = row_fill(source_row) if row_fill else None
+        if fill is None and row_idx % 2 == 0:
+            fill = "F7FAFC"
         for col_idx, header in enumerate(headers, 1):
             cell = ws.cell(row_idx, col_idx, source_row.values.get(header))
-            cell.font = Font(name="Aptos", size=9, color=DARK_TEXT)
-            cell.alignment = Alignment(vertical="top", wrap_text=False)
-            if row_idx % 2 == 0:
-                cell.fill = PatternFill("solid", fgColor="F7FAFC")
-            normalized = norm(header)
-            if normalized in DATE_HEADERS and cell.value is not None:
-                cell.number_format = "DD-MM-YYYY"
-            elif normalized in {"T ESPERA", "DURACION", "EDAD", "DIAS DE CUMPLIMIENTO", "DIAS PARA EGRESAR"}:
-                cell.number_format = "0"
-            elif normalized in {"RIT", "RUT"}:
-                cell.number_format = "@"
+            guard_text(cell)
+            number_format, only_with_value = formats[col_idx - 1]
+            if only_with_value and cell.value is None:
+                number_format = None
+            memo.apply(cell, (fill, number_format), styler(fill, number_format))
 
     width_by_header = {
         "RIT": 15,
@@ -1445,9 +1536,12 @@ def style_data_sheet(ws, headers: list[str], rows: list[SourceRow]) -> None:
         "ARCHIVO ORIGEN": 38,
         "RUTA ORIGEN": 60,
     }
+    wide_columns = set(range(len(headers) - extra_wide + 1, len(headers) + 1)) if extra_wide else set()
     for col_idx, header in enumerate(headers, 1):
         normalized = norm(header)
-        if normalized in width_by_header:
+        if col_idx in wide_columns:
+            width = 42
+        elif normalized in width_by_header:
             width = width_by_header[normalized]
         elif normalized in DATE_HEADERS or normalized.startswith("FEC ") or normalized.startswith("FECHA "):
             width = 18
@@ -1520,7 +1614,7 @@ def write_inventory_sheet(ws, file_results: list[FileResult]) -> None:
             " | ".join(dict.fromkeys(result.observations)),
         ]
         for col_idx, value in enumerate(values, 1):
-            ws.cell(row_idx, col_idx, value)
+            guard_text(ws.cell(row_idx, col_idx, value))
         if result.emission_date:
             ws.cell(row_idx, 9).number_format = "DD-MM-YYYY"
         result_cell = ws.cell(row_idx, 10)
@@ -1648,7 +1742,7 @@ def write_issues_sheet(ws, issues: list[Issue]) -> None:
     for row_idx, issue in enumerate(display_issues, 4):
         values = [issue.level, issue.file, issue.combination, issue.message]
         for col_idx, value in enumerate(values, 1):
-            ws.cell(row_idx, col_idx, value)
+            guard_text(ws.cell(row_idx, col_idx, value))
         level_cell = ws.cell(row_idx, 1)
         if issue.level in {"ERROR", "FALTANTE"}:
             level_cell.fill = PatternFill("solid", fgColor=RED)
@@ -1669,13 +1763,17 @@ def write_registros_workbook(
     selected: dict[tuple[str, str, str], Candidate],
     groups: dict[tuple[str, str, str], list[Candidate]],
     issues: list[Issue],
+    extra_headers: Iterable[str] = (),
+    row_fill: Callable[[SourceRow], str | None] | None = None,
 ) -> None:
+    """`extra_headers` agrega columnas de control al final de ESPERA y CUMPLIMIENTO."""
+    extra = list(extra_headers)
     wb = Workbook()
     wb.remove(wb.active)
     espera = wb.create_sheet("ESPERA")
-    style_data_sheet(espera, ESPERA_HEADERS, rows["Espera"])
+    style_data_sheet(espera, ESPERA_HEADERS + extra, rows["Espera"], row_fill, len(extra))
     cumplimiento = wb.create_sheet("CUMPLIMIENTO")
-    style_data_sheet(cumplimiento, CUMPLIMIENTO_HEADERS, rows["Cumplimiento"])
+    style_data_sheet(cumplimiento, CUMPLIMIENTO_HEADERS + extra, rows["Cumplimiento"], row_fill, len(extra))
     inventory = wb.create_sheet("INVENTARIO_ARCHIVOS")
     write_inventory_sheet(inventory, file_results)
     matrix = wb.create_sheet("MATRIZ_COBERTURA")
@@ -1952,13 +2050,30 @@ def apply_style(cell, style: dict[str, Any]) -> None:
     cell.protection = copy(style["protection"])
 
 
-def write_row(ws, row_num: int, values: list[Any], styles: list[dict[str, Any]], date_cols: tuple[int, ...] = ()) -> None:
+def write_row(
+    ws,
+    row_num: int,
+    values: list[Any],
+    styles: list[dict[str, Any]],
+    date_cols: tuple[int, ...] = (),
+    memo: StyleMemo | None = None,
+) -> None:
     for col in range(1, 9):
         cell = ws.cell(row_num, col)
         cell.value = values[col - 1] if col <= len(values) else None
-        apply_style(cell, styles[col - 1])
-        if col in date_cols and cell.value is not None:
-            cell.number_format = "DD-MM-YYYY"
+        guard_text(cell)
+        style = styles[col - 1]
+        as_date = col in date_cols and cell.value is not None
+
+        def setter(target, style=style, as_date=as_date) -> None:
+            apply_style(target, style)
+            if as_date:
+                target.number_format = "DD-MM-YYYY"
+
+        if memo is None:
+            setter(cell)
+        else:
+            memo.apply(cell, (id(style), as_date), setter)
 
 
 def set_height(ws, row_num: int, templates: dict[str, Any], key: str) -> None:
@@ -1974,6 +2089,9 @@ def rebuild(
 ) -> dict[str, int]:
     emission_text = emission_date.strftime("%d-%m-%Y")
     summary: dict[str, int] = {}
+    # Los estilos capturados viven hasta el final; sus id() son claves estables.
+    memo = StyleMemo()
+    captured: list[dict[str, Any]] = []
     for sheet_name, spec in SHEET_DEFS.items():
         if sheet_name not in wb.sheetnames:
             ws = wb.create_sheet(sheet_name)
@@ -1985,6 +2103,7 @@ def rebuild(
         else:
             ws = wb[sheet_name]
             templates = capture_templates(ws)
+        captured.append(templates)
         if ws.max_row:
             ws.delete_rows(1, ws.max_row)
 
@@ -1997,32 +2116,32 @@ def rebuild(
         total = 0
         for tribunal in TRIBUNALS:
             tribunal_records = records[sheet_name][tribunal]
-            write_row(ws, row, [tribunal], templates["title"])
+            write_row(ws, row, [tribunal], templates["title"], memo=memo)
             set_height(ws, row, templates, "title")
             row += 1
-            write_row(ws, row, [spec["report"]], templates["report"])
+            write_row(ws, row, [spec["report"]], templates["report"], memo=memo)
             set_height(ws, row, templates, "report")
             row += 1
-            write_row(ws, row, [f"Fecha Emisión   : {emission_text}"], templates["date"])
+            write_row(ws, row, [f"Fecha Emisión   : {emission_text}"], templates["date"], memo=memo)
             set_height(ws, row, templates, "date")
             row += 2
             if tribunal_records:
-                write_row(ws, row, spec["headers"], templates["header"])
+                write_row(ws, row, spec["headers"], templates["header"], memo=memo)
                 set_height(ws, row, templates, "header")
                 row += 1
                 date_cols = (7, 8) if "Espera" in sheet_name else (6, 7, 8)
                 for rec in tribunal_records:
-                    write_row(ws, row, rec, templates["data"], date_cols=date_cols)
+                    write_row(ws, row, rec, templates["data"], date_cols=date_cols, memo=memo)
                     set_height(ws, row, templates, "data")
                     row += 1
                 total += len(tribunal_records)
             else:
-                write_row(ws, row, ["SIN REGISTROS"], templates["sin"])
+                write_row(ws, row, ["SIN REGISTROS"], templates["sin"], memo=memo)
                 set_height(ws, row, templates, "sin")
                 row += 1
             row += 1
         row += 1
-        write_row(ws, row, ["TOTAL:", total], templates["total"])
+        write_row(ws, row, ["TOTAL:", total], templates["total"], memo=memo)
         set_height(ws, row, templates, "total")
         summary[sheet_name] = total
     wb.active = 0

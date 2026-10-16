@@ -1,14 +1,17 @@
 """Descarga de Meta 4 reutilizando el transporte de solo lectura del Descargador."""
 from datetime import datetime
 import hashlib
-import json
 from pathlib import Path
-import sys
 
-from meta4_bitacoras import BASE, entradas_periodo, periodo, generar
+from meta4_bitacoras import entradas_periodo, periodo, generar
 from lotes import Batch, BatchRunner, ChromeTransport
 from lectura_bitacoras import DiaryRunner, LimiteLecturas, MAX_LECTURAS_POR_LOTE, write
 import motor as m
+
+# Minimización: solo lo que Meta 4 usa. No se guardan HTML, respuestas del
+# tribunal, autores ni entradas fuera del mes.
+CAMPOS_REGISTRO = ('tribunal_codigo', 'causa_id', 'ingreso_id', 'rit', 'persona', 'centro')
+CAMPOS_ENTRADA = ('entry_id', 'fecha', 'etapa', 'tipo', 'texto')
 
 
 class DiarioMensual(DiaryRunner):
@@ -18,7 +21,7 @@ class DiarioMensual(DiaryRunner):
 
     def _abrir_bitacora(self, session, record):
         if session.openings >= MAX_LECTURAS_POR_LOTE:
-            raise LimiteLecturas('Límite de 600 lecturas: selecciona menos tribunales por ejecución.')
+            raise LimiteLecturas(f'Límite de {MAX_LECTURAS_POR_LOTE} lecturas: selecciona menos tribunales por ejecución.')
         session.openings += 1
         result = self.bridge.call('diary_open', {'params': record['params'], 'timeout': 60000})
         body = ChromeTransport.body(result)
@@ -28,11 +31,10 @@ class DiarioMensual(DiaryRunner):
         datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00'))
         snapshot = session.read(body, record['params'])
         session.anotar(record, snapshot)
-        snapshot['entries'] = entradas_periodo(snapshot['entries'], self.corte)
-        # No se guarda HTML, textos de meses anteriores ni metadatos de esas entradas.
-        keep = ('tribunal_codigo', 'causa_id', 'ingreso_id', 'rit', 'persona', 'centro', 'entries')
+        entries = [{k: e[k] for k in CAMPOS_ENTRADA if k in e} for e in entradas_periodo(snapshot['entries'], self.corte)]
         record.update(estado='LEIDA', capturada=result['startedAt'],
-                      snapshot={k: snapshot[k] for k in keep}, entradas=len(snapshot['entries']))
+                      snapshot=dict({k: snapshot[k] for k in CAMPOS_REGISTRO}, entries=entries),
+                      entradas=len(entries))
 
     def _resultado(self, session):
         data = dict(session.state)
@@ -60,7 +62,9 @@ def descargar(bridge, catalog, tribunales, destination, corte, emit, cancel):
     result = DiarioMensual(bridge, catalog, emit, cancel, corte=corte).run(batch, root)
     if cancel.is_set():
         raise m.PocError('Proceso detenido; se conservan las bitácoras leídas.')
-    report = generar(root, root / 'Resultado META4', corte)
+    emit('status', 'Generando Meta 4 y consolidados…')
+    output = root / 'Resultado META4'
+    report = generar(root, output, corte)
     report['lectura'] = result['estado']
     emit('status', f"Terminado: {report['registros']} registros, {report['alertas']} alertas. Lectura {result['estado']}.")
-    return root / 'Resultado META4', report
+    return output, report

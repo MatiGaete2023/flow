@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
 from meta4_bitacoras import BASE, generar, meta
 from descarga_meta4 import descargar
 from puente import Bridge
+from motor import PocError
 from datetime import date, datetime
 import os
 import queue
@@ -25,6 +26,7 @@ class App:
         self.catalog = None
         self.court_ids = []
         self.output = None
+        self.read_count = 0
         self.bridge = Bridge(self.emit)
         self.folder = tk.StringVar(value=str(BASE / 'Salidas'))
         self.cutoff = tk.StringVar(value=date.today().isoformat())
@@ -46,7 +48,10 @@ class App:
         box.pack(fill='both', expand=True, pady=12)
         self.courts = tk.Listbox(box, selectmode='extended', exportselection=False, height=8)
         self.courts.pack(fill='both', expand=True)
-        ttk.Label(box, text='Ctrl + clic para seleccionar varios tribunales. Se incluyen Espera y Cumplimiento.').pack(anchor='w')
+        line = ttk.Frame(box)
+        line.pack(fill='x')
+        ttk.Label(line, text='Ctrl + clic para seleccionar varios tribunales. Se incluyen Espera y Cumplimiento.').pack(side='left')
+        ttk.Button(line, text='Seleccionar todos', command=lambda: self.courts.select_set(0, 'end')).pack(side='right')
         line = ttk.Frame(box)
         line.pack(fill='x', pady=(10, 0))
         ttk.Label(line, text='Fecha de corte (AAAA-MM-DD):').pack(side='left')
@@ -61,7 +66,7 @@ class App:
         self.download.pack(side='left', pady=(10, 0))
         self.offline = ttk.Button(box, text='Usar carpeta ya descargada…', command=self.offline_start)
         self.offline.pack(side='left', padx=8, pady=(10, 0))
-        self.stop = ttk.Button(box, text='Detener', command=self.cancel.set, state='disabled')
+        self.stop = ttk.Button(box, text='Detener', command=self.request_stop, state='disabled')
         self.stop.pack(side='right', pady=(10, 0))
         ttk.Label(frame, textvariable=self.status, wraplength=780).pack(fill='x', pady=12)
         ttk.Button(frame, text='Abrir resultados', command=self.open_output).pack(anchor='e')
@@ -76,17 +81,26 @@ class App:
             return
         self.busy = True
         self.cancel.clear()
+        self.read_count = 0
         for button in (self.load, self.download, self.offline):
             button.configure(state='disabled')
         self.stop.configure(state='normal')
+
         def run():
             try:
                 action()
-            except Exception as exc:
+            except (PocError, ValueError, OSError) as exc:
                 self.emit('error', str(exc))
+            except Exception as exc:
+                # Error no previsto: el tipo orienta el soporte sin exponer datos.
+                self.emit('error', f'Error inesperado ({type(exc).__name__}). Los archivos verificados se conservan.')
             finally:
                 self.emit('idle', None)
         threading.Thread(target=run, daemon=True).start()
+
+    def request_stop(self):
+        self.cancel.set()
+        self.status.set('Deteniendo al terminar la lectura en curso…')
 
     def load_catalog(self):
         self.emit('catalog', self.bridge.call('catalog', {'screen': 'seguimiento'}))
@@ -97,7 +111,10 @@ class App:
             self.folder.set(path)
 
     def parameters(self):
-        cutoff = date.fromisoformat(self.cutoff.get())
+        try:
+            cutoff = date.fromisoformat(self.cutoff.get().strip())
+        except ValueError:
+            raise ValueError('Escribe la fecha de corte como AAAA-MM-DD, por ejemplo 2026-10-16.') from None
         if cutoff > date.today():
             raise ValueError('La fecha de corte no puede estar en el futuro.')
         return cutoff, Path(self.folder.get()).expanduser().resolve()
@@ -113,6 +130,7 @@ class App:
         except ValueError as exc:
             messagebox.showerror('Revisar selección', str(exc))
             return
+
         def action():
             output, report = descargar(self.bridge, self.catalog, ids, folder, cutoff, self.emit, self.cancel)
             self.emit('complete', (str(output), report))
@@ -128,7 +146,9 @@ class App:
         if not source:
             return
         output = folder / ('Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+
         def action():
+            self.emit('status', 'Generando Meta 4 y consolidados…')
             report = generar(source, output, cutoff)
             self.emit('complete', (str(output), report))
         self.work(action)
@@ -156,22 +176,31 @@ class App:
                 messagebox.showerror('Meta 4', value)
             elif name == 'complete':
                 self.output, report = value
-                self.status.set(f"Generados {report['registros']} registros. Alertas: {report['alertas']}. Revisar bitácoras: {report['revision_bitacora']}.")
-                messagebox.showinfo('Archivos generados', self.status.get() + '\n\n' + self.output)
+                lectura = report.get('lectura') or ', '.join(report.get('lectura_bitacoras', []))
+                text = (f"Generados {report['registros']} registros. Alertas: {report['alertas']}. "
+                        f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
+                self.status.set(text)
+                if lectura != 'COMPLETA':
+                    messagebox.showwarning('Archivos generados con lectura incompleta',
+                                           text + '\n\nLas filas sin lectura quedan en amarillo con FECHA OBS. vacía.\n\n' + self.output)
+                else:
+                    messagebox.showinfo('Archivos generados', text + '\n\n' + self.output)
             elif name == 'query':
                 self.status.set(f"Consulta {value['index']}/{value['total']}: {value['label']}")
             elif name == 'diary_progress':
-                self.status.set('Leyendo bitácoras del mes…')
+                self.read_count += 1
+                self.status.set(f'Leyendo bitácoras del mes… {self.read_count} procesadas.')
             elif name in ('status', 'warning', 'connected'):
                 self.status.set(str(value))
         self.root.after(100, self.poll)
 
     def open_output(self):
-        if self.output:
-            if sys.platform == 'win32':
-                os.startfile(self.output)
-            else:
-                messagebox.showinfo('Resultados', self.output)
+        if not self.output:
+            messagebox.showinfo('Resultados', 'Todavía no hay resultados en esta sesión.')
+        elif sys.platform == 'win32':
+            os.startfile(self.output)
+        else:
+            messagebox.showinfo('Resultados', self.output)
 
     def close(self):
         self.cancel.set()
@@ -181,6 +210,7 @@ class App:
             return
         self.bridge.close()
         self.root.destroy()
+
 
 if __name__ == '__main__':
     root = tk.Tk()
