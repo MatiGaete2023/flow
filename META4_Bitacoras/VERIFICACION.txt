@@ -1,0 +1,23 @@
+META 4 CON BITACORAS 1.0 - Verificacion del 16 de octubre de 2026
+
+71 pruebas aprobadas; 1 omitida por condicion de plataforma del generador base.
+
+Comprobado con datos ficticios:
+- Mes calendario movil, incluidos cambios de ano, meses cortos y bisiestos.
+- Fecha de observacion del centro; no se usa la respuesta del tribunal.
+- Exclusiones de Informes, fechas anteriores y fechas futuras.
+- Empates de fecha/hora con etapas diferentes requieren revision.
+- Alerta de Espera en registros de Cumplimiento, en los tres libros.
+- Ausencias, fallas y ambiguedad de ingreso no reutilizan FECHA OBS. del Excel.
+- Asociacion por persona y programa; identificadores remotos cuando disponibles.
+- Todas las paginas de la consulta, con XLS HTML tabular y controles SHA256.
+- Respuesta de bitacora simulada: solo se guarda el mes y no se llama a Historia.
+- Exportacion de bitacoras con fecha y hora del centro.
+- Regresiones del generador v2.4.
+
+Interfaz: apertura, filtrado de tribunales y cierre probados con Tk en pantalla
+virtual Linux. Importacion de todos los componentes y ayuda CLI comprobadas.
+
+Limites: no se ejecutaron los BAT en Windows ni una consulta con sesion real de
+SITFA. La validacion tecnica no acredita uso real. El servidor entrega la
+bitacora completa; el filtrado mensual se realiza en memoria antes de guardarla.

@@ -1,0 +1,24 @@
+ORIGEN DE COMPONENTES
+
+Herramienta Meta 4 con bitácoras 1.0: Meta4.py, scripts/meta4_bitacoras.py y scripts/descarga_meta4.py.
+Base de planilla: META4_Automatizado_v2_4.zip, suministrado por el usuario.
+Consolidado: reproduce las columnas y detección por RUT/nombre del Consolidador_Excel_Espera_Cumplimiento.zip suministrado.
+Transporte, validadores y extensión: Descargador SITFA 2.7.6 del espacio de trabajo del usuario.
+Los módulos copiados y la extensión se conservaron sin cambios. No requiere la instalación del Asistente.
+
+SHA256 de los componentes del descargador incluidos:
+918b1284b4cc3d7731bd774ec90323a3d7aa67a91be2e0641d72c23065c67476  descargador/contrato_integral.py
+9b2ded4de050073c75de5d7d1da218a948d75f463ffa5a04f1448559b5bc84e8  descargador/csmp_shared.py
+578ed09b2fa9ba8b36ec54f6be986c90dbf9e90e3c7ecacbc723dca30178db76  descargador/evidencias.py
+b42acf2abf4a3fb580af06a317da5d778dce2f596f549a61533f89d7c04aab2c  descargador/extension/background.js
+633b8e0f6b6206d494902b536940b28aa2a3309a936829797204c60189ee2105  descargador/extension/conexion.css
+57858b780d23cfc7f9b8442a1ab317054d5fe20df54e55ce6fd2dd15c35cef1c  descargador/extension/conexion.html
+69bd20122a5e0384f13da16c9483c31947cf620974e46b4983c84f2f14d121a8  descargador/extension/conexion.js
+eafb20f6661d6257499fd05f8580fc7d19fa59efd28e9339f92bb6f13aeb0397  descargador/extension/manifest.json
+a1a7696a3b0c27d9c2cba048a181d0b15df20b7bdfdb2393953636371d9e7fc6  descargador/extension/pagina.js
+43ce3301a45698eb9e90f200ae0cf1feb9b0cc7da5e65b8a6fa2563a4b76f414  descargador/lectura_bitacoras.py
+a4816feb35e44f45067f074aa54b30dbd5909447e20cffb950d7504521c6be04  descargador/lotes.py
+9c12d8343a14ff37f4cfaae8ff7bee214ded696a9f290df1ee7f271fde90a5bd  descargador/motor.py
+5dba3d7c3134990b9e8562145e8759fd2a6c4c1ad5c9ab293668cfc6b19767ab  descargador/perfiles.py
+a39f9cbf79b3a3a4a6b838fe021a780073a7fc101e0ab9005970500bb89ea46f  descargador/puente.py
+fb97935e454b5b055452c3acab3768de50a0394595b5fee8b4f8503d4be1c8cc  descargador/vinculos.py
