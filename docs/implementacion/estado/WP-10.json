@@ -1,0 +1,22 @@
+{
+  "titulo": "Identidades sintéticas en pruebas",
+  "ola": 1,
+  "tipo": "M",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": "wp/WP-10-identidades",
+  "pr": 6,
+  "verificacion": "PASA",
+  "revision": "APROBADO",
+  "auditoria": "CONFORME",
+  "integrado_en": "c8ee8cdef9a5f9c8ae6333400c305766d0b4a5a2",
+  "notas": [
+    "Integración PR6: pruebas con identidades ficticias; 12 hallazgos restantes en variantes, reservados a WP-20.",
+    "Control posterior: 612/11 y 198/59, golden PASA; identidades12, todas en variantes."
+  ]
+}

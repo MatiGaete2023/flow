@@ -1,0 +1,22 @@
+{
+  "titulo": "Barra Siguiente paso",
+  "ola": 4,
+  "tipo": "C",
+  "depende_de": [
+    "WP-40"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T17:00:00-03:00",
+  "rama": "wp/WP-41-siguiente-paso",
+  "pr": 24,
+  "verificacion": "PASA (verificacion/WP-41.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-40 (PR #23). Módulo nuevo next_step.py; un único temporizador sin acumulación.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

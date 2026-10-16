@@ -1,0 +1,23 @@
+{
+  "titulo": "CI ordenada",
+  "ola": 3,
+  "tipo": "M",
+  "depende_de": [
+    "WP-22",
+    "WP-23"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T14:00:00-03:00",
+  "rama": "wp/WP-34-ci",
+  "pr": 21,
+  "verificacion": "PASA (verificacion/WP-34.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-24 (PR #20). Lint excluye src/nurus/personal/motor (4 F401 intactos por regla de motor).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

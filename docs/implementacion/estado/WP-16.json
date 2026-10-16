@@ -1,0 +1,24 @@
+{
+  "titulo": "Anonimizador de Excel",
+  "ola": 1,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T15:00:00-03:00",
+  "rama": "wp/WP-16-anonimizador",
+  "pr": 22,
+  "verificacion": "PASA (verificacion/WP-16.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Propuesta externa en /workspace/propuesta-WP16 en revisión. Ficha no nombra el servicio empaquetado src/nurus/personal/anonymize.py que necesita botón y CLI; se preparan patch y pruebas antes de pedir extensión concreta (regla13). No aplicado al repositorio.",
+    "Propuesta externa LEEME.md y patch configuracion.diff, revisión técnica APROBADA y30pruebas. Pregunta de alcance enviada al usuario: único móduloanonymize.py, sin aplicar hasta respuesta explícita.",
+    "Usuario: «Autorizo ... WP-16 en anonymize.py». Lógica única en src/nurus/personal/anonymize.py; tools/anonimizar_excel.py es envoltorio. Apilado sobre WP-34 (PR #21).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "datos": "ficticios",
+  "consultas_sitfa": 0,
+  "office_ejecutado": false,
+  "adaptador_productivo_implementado": false,
+  "casos": [
+    {
+      "modo": "ESPERA",
+      "formato_real": "HTML",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    },
+    {
+      "modo": "ESPERA",
+      "formato_real": "XML_2003",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    },
+    {
+      "modo": "ESPERA",
+      "formato_real": "OOXML",
+      "lectura_download": true,
+      "xls_directo_csmp": true,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    },
+    {
+      "modo": "CUMPLIMIENTO",
+      "formato_real": "HTML",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": true
+    },
+    {
+      "modo": "CUMPLIMIENTO",
+      "formato_real": "XML_2003",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": true
+    },
+    {
+      "modo": "CUMPLIMIENTO",
+      "formato_real": "OOXML",
+      "lectura_download": true,
+      "xls_directo_csmp": true,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": true
+    },
+    {
+      "modo": "INFORMES",
+      "formato_real": "HTML",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    },
+    {
+      "modo": "INFORMES",
+      "formato_real": "XML_2003",
+      "lectura_download": true,
+      "xls_directo_csmp": false,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    },
+    {
+      "modo": "INFORMES",
+      "formato_real": "OOXML",
+      "lectura_download": true,
+      "xls_directo_csmp": true,
+      "xlsx_convertido_csmp": true,
+      "filas": 1,
+      "original_intacto": true,
+      "cruce_faltante": false
+    }
+  ],
+  "identidad_minima_csmp": {
+    "rechazada": false,
+    "campos_funcionales_incompletos": true,
+    "advertencias": true,
+    "acciones": 0
+  },
+  "cruce_c10_con_identidad_completa_y_fecha_futura": true,
+  "cargar_externa_no_ejecuta_reglas": true,
+  "resultado": "OK"
+}

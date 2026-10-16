@@ -1,0 +1,87 @@
+{
+  "commit": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+  "base": "9d94a6e9862a33dc5c729aab6d2f53477e7dc6e8",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "932 aprobadas; mínimo 930; base 930; código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "283 aprobadas; mínimo 251; base 251; código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 932,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    },
+    "descargador": {
+      "aprobadas": 283,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+    "arbol_git": "a67d085b8c967dbdc37226294be5b486526e15e5",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+    "arbol_git": "a67d085b8c967dbdc37226294be5b486526e15e5",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
+  "medicion_reutilizada": false,
+  "veredicto": "PASA"
+}

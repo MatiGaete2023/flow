@@ -1,0 +1,581 @@
+{
+  "base": "c39f94d11b5997036ce0672440fb2c6de8d0ef0c",
+  "ramas_total": 45,
+  "no_ancestros": [
+    {
+      "rama": "origin/e3/wp-80-revision",
+      "sha": "283f77d1a421cc004b5455140b18a39016cc8a20",
+      "archivos": [
+        ".github/workflows/descargador-integral.yml",
+        ".github/workflows/tests.yml",
+        ".gitignore",
+        "descargador/archivo_local.py",
+        "descargador/descargador.py",
+        "descargador/export_csmp_capture.py",
+        "descargador/extension/conexion.js",
+        "descargador/flujo_csmp.py",
+        "descargador/lectura_bitacoras.py",
+        "descargador/motor.py",
+        "descargador/perfiles.py",
+        "descargador/pruebas/puente_origin_fixture.py",
+        "descargador/puente.py",
+        "descargador/resultados.py",
+        "descargador/test_export_csmp_capture.py",
+        "descargador/test_lectura_bitacoras.py",
+        "descargador/test_lotes.py",
+        "descargador/test_paquete_lote_actual.py",
+        "descargador/test_resultados.py",
+        "descargador/test_reutilizacion_local.py",
+        "descargador/ventana_flujo.py",
+        "descargador/ventana_resultados.py",
+        "docs/evidencia_desarrollo_20261008/flow-continuacion-descargador.xml",
+        "docs/evidencia_desarrollo_20261008/flow-gui-aislada.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-downloader-delivery.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-downloader-final-build.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-human-decisions.xml",
+        "docs/evidencia_p0/flow-baseline-compile.txt",
+        "docs/evidencia_referencias_20261009/generar_captura.py",
+        "docs/evidencia_regresiones_usuario_20261009/pytest_downloader.xml",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/auditoria/E3_CONSOLIDADO_WP-63_WP-80.md",
+        "docs/implementacion/auditoria/WP-80.md",
+        "docs/implementacion/estado/WP-80.json",
+        "docs/implementacion/wp/WP-80.md",
+        "src/nurus/capture/contract.py",
+        "src/nurus/capture/diaries.py",
+        "src/nurus/domain/models.py",
+        "src/nurus/personal/app.py",
+        "src/nurus/personal/app_base.py",
+        "src/nurus/personal/capture_input.py",
+        "src/nurus/personal/capture_reconciliation.py",
+        "src/nurus/personal/config.py",
+        "src/nurus/personal/download_link.py",
+        "src/nurus/personal/download_transfer.py",
+        "src/nurus/personal/operations.py",
+        "src/nurus/personal/reports.py",
+        "src/nurus/personal/resolutions.py",
+        "src/nurus/personal/work.py",
+        "src/nurus/rus/catalog.py",
+        "src/nurus/rus/columns.py",
+        "src/nurus/services/excel_cells.py",
+        "src/nurus/services/exports.py",
+        "src/nurus/services/file_output.py",
+        "tests/test_capture_contract.py",
+        "tests/test_capture_input.py",
+        "tests/test_config_migration_regressions_20260914.py",
+        "tests/test_file_output.py",
+        "tests/test_herramientas_plan.py",
+        "tests/test_preserved_workbook_export.py",
+        "tests/test_review_corrections.py",
+        "tools/check_real_ids.py",
+        "tools/verificar_wp.py"
+      ],
+      "commits_pendientes": 24
+    },
+    {
+      "rama": "origin/integracion/prueba-20261011",
+      "sha": "32795695d6f98dbb7e31566cf2fff4075bc6eff6",
+      "archivos": [
+        ".github/workflows/tests.yml",
+        "CONTINUAR.md",
+        "contracts/csmp_capture_v1/README.md",
+        "contracts/csmp_capture_v1/manifest.schema.json",
+        "descargador/descargador.py",
+        "descargador/export_csmp_capture.py",
+        "descargador/extraer_estructura_har.py",
+        "descargador/lectura_bitacoras.py",
+        "descargador/lotes.py",
+        "descargador/motor.py",
+        "descargador/preferencias.py",
+        "descargador/prueba_bitacoras_paquete.py",
+        "descargador/test_consolidado_paquete.py",
+        "descargador/test_extraer_estructura_har.py",
+        "descargador/test_lectura_bitacoras.py",
+        "descargador/test_paquete_lote_actual.py",
+        "descargador/test_retencion_lotes.py",
+        "descargador/test_ritmo_checkpoint.py",
+        "descargador/ventana_resultados.py",
+        "descargador/verificar_bitacoras_extension.py",
+        "docs/TRAZABILIDAD_EJECUCION_20261008.md",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/PLAN_IMPLEMENTACION.md",
+        "docs/implementacion/REPORTE_REVISION_20261010.md",
+        "docs/implementacion/auditoria/WP-14.md",
+        "docs/implementacion/auditoria/WP-15.md",
+        "docs/implementacion/verificacion/PLAN-revision-20261010.json",
+        "docs/implementacion/verificacion/WP-14.json",
+        "docs/implementacion/verificacion/WP-14.png",
+        "docs/implementacion/verificacion/WP-15.json",
+        "docs/implementacion/verificacion/WP-33.json",
+        "docs/implementacion/verificacion/WP-43.json",
+        "docs/implementacion/verificacion/WP-51.json",
+        "docs/implementacion/verificacion/WP-60.json",
+        "docs/implementacion/verificacion/WP-62.json",
+        "docs/implementacion/wp/WP-14.md",
+        "docs/implementacion/wp/WP-15.md",
+        "docs/implementacion/wp/WP-33.md",
+        "docs/implementacion/wp/WP-43.md",
+        "docs/implementacion/wp/WP-51.md",
+        "docs/implementacion/wp/WP-60.md",
+        "docs/implementacion/wp/WP-62.md",
+        "src/nurus/capture/contract.py",
+        "src/nurus/personal/work.py",
+        "tests/test_consolidado_paquete.py",
+        "tests/test_copia_desde_consolidado.py",
+        "tests/test_herramientas_plan.py",
+        "tests/test_mayoria_edad.py",
+        "tests/test_reglas_cumplimiento.py",
+        "tests/test_reglas_espera.py",
+        "tests/test_reglas_informes.py",
+        "tools/estado.py",
+        "tools/manual_descargador_capturas.py",
+        "tools/verificar_wp.py"
+      ],
+      "commits_pendientes": 11
+    },
+    {
+      "rama": "origin/revision/integracion-36-38-20261011",
+      "sha": "82b2d1e5a740453a0ea3ffdce86ab3281c1e0781",
+      "archivos": [
+        "CONTINUAR.md",
+        "docs/HISTORIAL.md",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/PLAN_IMPLEMENTACION.md",
+        "docs/implementacion/REPORTE_REVISION_20261011.md",
+        "docs/implementacion/REPORTE_WP81.md",
+        "docs/implementacion/REPORTE_WP82.md",
+        "docs/implementacion/REPORTE_WP83.md",
+        "docs/implementacion/estado/WP-81.json",
+        "docs/implementacion/estado/WP-82.json",
+        "docs/implementacion/estado/WP-83.json",
+        "docs/implementacion/estado/global.json",
+        "docs/implementacion/verificacion/WP-81-falla-enlaces.json",
+        "docs/implementacion/verificacion/WP-81.json",
+        "docs/implementacion/verificacion/WP-82.json",
+        "docs/implementacion/verificacion/WP-83.json",
+        "docs/implementacion/wp/WP-63.md",
+        "docs/implementacion/wp/WP-80.md",
+        "docs/implementacion/wp/WP-81.md",
+        "docs/implementacion/wp/WP-82.md",
+        "docs/implementacion/wp/WP-83.md",
+        "src/nurus/personal/current_tools.py",
+        "src/nurus/personal/interaction.py",
+        "src/nurus/personal/product_checks.py",
+        "src/nurus/personal/ux_support.py",
+        "tests/test_audit_tools.py",
+        "tests/test_herramientas_plan.py",
+        "tests/test_pending_draft_status.py",
+        "tests/test_secondary_window_lock.py",
+        "tests/test_verificar_wp.py",
+        "tools/check_real_ids.py",
+        "tools/verificar_wp.py"
+      ],
+      "commits_pendientes": 7
+    },
+    {
+      "rama": "origin/wp/02-acta-uso-real",
+      "sha": "6d228517d55d8471e1d644ce1590baf5bb74c5fe",
+      "archivos": [
+        "CONTINUAR.md",
+        "docs/aceptacion/ACTA_USO_REAL_20261011.json",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/estado/WP-02.json"
+      ],
+      "commits_pendientes": 3
+    },
+    {
+      "rama": "origin/wp/50-cronologia-solo-mostrar",
+      "sha": "62201aff1114cf6cd5e8585272c2fb500e56df3e",
+      "archivos": [
+        "contracts/csmp_context_v1/README.md",
+        "contracts/csmp_context_v1/catalog.json",
+        "docs/implementacion/wp/WP-50.md",
+        "src/nurus/capture/temporal.py",
+        "src/nurus/personal/app.py",
+        "src/nurus/personal/app_base.py",
+        "src/nurus/personal/capture_findings.py",
+        "src/nurus/personal/capture_input.py",
+        "src/nurus/personal/capture_selfcheck.py",
+        "src/nurus/personal/work_view.py",
+        "tests/test_capture_gui.py",
+        "tests/test_cronologia_solo_mostrar.py",
+        "tests/test_trabajo_vista.py"
+      ],
+      "commits_pendientes": 3
+    },
+    {
+      "rama": "origin/wp/80-auditoria",
+      "sha": "54bb56f25be96c096c42afbc39bf671062781ce4",
+      "archivos": [
+        ".github/workflows/descargador-integral.yml",
+        ".github/workflows/tests.yml",
+        ".gitignore",
+        "descargador/archivo_local.py",
+        "descargador/descargador.py",
+        "descargador/export_csmp_capture.py",
+        "descargador/extension/conexion.js",
+        "descargador/flujo_csmp.py",
+        "descargador/lectura_bitacoras.py",
+        "descargador/motor.py",
+        "descargador/perfiles.py",
+        "descargador/pruebas/puente_origin_fixture.py",
+        "descargador/puente.py",
+        "descargador/resultados.py",
+        "descargador/test_export_csmp_capture.py",
+        "descargador/test_lectura_bitacoras.py",
+        "descargador/test_lotes.py",
+        "descargador/test_paquete_lote_actual.py",
+        "descargador/test_resultados.py",
+        "descargador/test_reutilizacion_local.py",
+        "descargador/ventana_flujo.py",
+        "descargador/ventana_resultados.py",
+        "docs/evidencia_desarrollo_20261008/flow-continuacion-descargador.xml",
+        "docs/evidencia_desarrollo_20261008/flow-gui-aislada.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-downloader-delivery.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-downloader-final-build.xml",
+        "docs/evidencia_desarrollo_20261008/flow-mvp-human-decisions.xml",
+        "docs/evidencia_p0/flow-baseline-compile.txt",
+        "docs/evidencia_referencias_20261009/generar_captura.py",
+        "docs/evidencia_regresiones_usuario_20261009/pytest_downloader.xml",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/estado/WP-80.json",
+        "docs/implementacion/wp/WP-80.md",
+        "src/nurus/capture/contract.py",
+        "src/nurus/capture/diaries.py",
+        "src/nurus/domain/models.py",
+        "src/nurus/personal/app.py",
+        "src/nurus/personal/app_base.py",
+        "src/nurus/personal/capture_input.py",
+        "src/nurus/personal/capture_reconciliation.py",
+        "src/nurus/personal/config.py",
+        "src/nurus/personal/current_tools.py",
+        "src/nurus/personal/download_link.py",
+        "src/nurus/personal/download_transfer.py",
+        "src/nurus/personal/operations.py",
+        "src/nurus/personal/record_view.py",
+        "src/nurus/personal/reports.py",
+        "src/nurus/personal/resolutions.py",
+        "src/nurus/personal/work.py",
+        "src/nurus/rus/catalog.py",
+        "src/nurus/rus/columns.py",
+        "src/nurus/services/excel_cells.py",
+        "src/nurus/services/exports.py",
+        "src/nurus/services/file_output.py",
+        "tests/test_capture_contract.py",
+        "tests/test_capture_gui.py",
+        "tests/test_capture_input.py",
+        "tests/test_config_migration_regressions_20260914.py",
+        "tests/test_download_transfer.py",
+        "tests/test_file_output.py",
+        "tests/test_herramientas_plan.py",
+        "tests/test_preserved_workbook_export.py",
+        "tests/test_review_corrections.py",
+        "tests/test_trabajo_vista.py",
+        "tools/check_real_ids.py"
+      ],
+      "commits_pendientes": 26
+    },
+    {
+      "rama": "origin/wp/WP-11-ci-ensayo",
+      "sha": "4a144d559d4ffa80bfe2ad4dfa5d44974975b2d1",
+      "archivos": [],
+      "commits_pendientes": 2
+    },
+    {
+      "rama": "origin/wp/auditoria-refactor-20261011",
+      "sha": "3184a7186321854f020551b867d51e6135f46387",
+      "archivos": [
+        "CONTINUAR.md",
+        "docs/implementacion/ESTADO.json",
+        "docs/implementacion/REPORTE_REVISION_20261011.md",
+        "docs/implementacion/estado/WP-63.json",
+        "docs/implementacion/wp/WP-63.md",
+        "tests/test_audit_tools.py",
+        "tests/test_verificar_wp.py",
+        "tools/check_real_ids.py",
+        "tools/verificar_wp.py"
+      ],
+      "commits_pendientes": 1
+    }
+  ],
+  "ramas": [
+    {
+      "rama": "origin/ccr-4116db41-nm8g0r",
+      "sha": "0b3990d1beaeb22f0ee8ccc2c39b1e5d27c90706",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/e3/wp-80-revision",
+      "sha": "283f77d1a421cc004b5455140b18a39016cc8a20",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/feat/ejecucion-plan-20261008",
+      "sha": "c39f94d11b5997036ce0672440fb2c6de8d0ef0c",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/integracion/prueba-20261011",
+      "sha": "32795695d6f98dbb7e31566cf2fff4075bc6eff6",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/main",
+      "sha": "52c6359ade4b31cc2773734d6cbf1566d7dc169c",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/plan/revision-20261010",
+      "sha": "ce64463045f7525cac1386c4e6498a0efc07ff78",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/revision/integracion-36-38-20261011",
+      "sha": "82b2d1e5a740453a0ea3ffdce86ab3281c1e0781",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/02-acta-uso-real",
+      "sha": "6d228517d55d8471e1d644ce1590baf5bb74c5fe",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/50-cronologia-solo-mostrar",
+      "sha": "62201aff1114cf6cd5e8585272c2fb500e56df3e",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/80-auditoria",
+      "sha": "54bb56f25be96c096c42afbc39bf671062781ce4",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/81-revision-propia-20261011",
+      "sha": "1e12371e560af1386f7896306be27f71ed0f3994",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/82-pendientes-correo-20261011",
+      "sha": "421febba3e894b99a84594cff6afb6348bfe9b81",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/83-bloqueo-editores-20261011",
+      "sha": "9d6cbe7a34b57e21083855ce4e5a33c732f05a42",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/84-huellas-consulta-20261011",
+      "sha": "038d017b105dcbded86000295bd9fc8666972294",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-00-kit",
+      "sha": "0ed2363904bd6580426834f54deafe586f0e3594",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-01-gobernanza",
+      "sha": "41d53b01ce67b4417a077efb183045da6c560109",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-10-identidades",
+      "sha": "bddde13b26cfdf5179083a8fbe21b37c0bce5ea7",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-11-ci-ensayo",
+      "sha": "4a144d559d4ffa80bfe2ad4dfa5d44974975b2d1",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-11-identidades-ci",
+      "sha": "7ad07ea511535fa13fce390c8337f90c0be8967f",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-12-contactos-locales",
+      "sha": "b9263079d99cb507dadcd09eedf0652288232ad8",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-13-retencion-asistente",
+      "sha": "7b03bc88a1e101e10114091761c86e85c6958c48",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-14-retencion-descargador",
+      "sha": "af65fbd1547199ea903de8be7cd6cda3c64ab972",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-15-har",
+      "sha": "9a6d96f48489ed8e57f12c41f3a96c40d05155f5",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-16-anonimizador",
+      "sha": "db25252c9de70becaedd0d91f94c2105a1e32266",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-21-capa-legado",
+      "sha": "0c9cc7862e5d276624f7fbec1dc0dd4c3e1866d2",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-22-inspector-rus",
+      "sha": "70d09addf9758dd5a07f5e9eb76762433ca9c0e8",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-23-lanzamiento",
+      "sha": "2951899b7287bee2985d75953b566a1ff8277c04",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-24-documentacion",
+      "sha": "bd7c4bdfb43af362c45caf0c2a52b5e56393c6b5",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-30-cc-unico",
+      "sha": "1af645f34edc981cfa85f13305f6c368e35912ac",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-31-version",
+      "sha": "e40613bafa26f3d16e759f05cce4c5dcf8b18256",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-32-exportacion",
+      "sha": "d3c8c9cd1b1b6084703c5d16e69673d5b1ac25a4",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-33-ritmo-checkpoint",
+      "sha": "8e29fe8a42626582401b75a6ceb111edf815cc21",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-34-ci",
+      "sha": "800bfe3a26077a0d27b4ac6effc9423429b0c370",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-35-instaladores",
+      "sha": "bc3064f642da5a2774892d7a873542c66aebfcc1",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-40-trabajo-legible",
+      "sha": "20a2e227ec0735a496a9e9a52f1ad97b91be854c",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-41-siguiente-paso",
+      "sha": "1861f3605e43e2ac726448dbeb708853f5914d53",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-42-resoluciones-correos",
+      "sha": "1010dd77486bdb64e703e03d2a62d15cd0d4fa8a",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-43-paquete-lote",
+      "sha": "fd0eefde1dc3fb8278efa1103a3d2e8df36f4936",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-44-importar-ultimo",
+      "sha": "68d41dbbe74ca03f34369e69b1bc414c61897ba6",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-45-retirar-solicitud",
+      "sha": "6cba49b40b9ac30f263364744b556c21888d24f8",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-51-fidelidad-nativa",
+      "sha": "e9063dee87b87dd213ea9f2b251d061fed661a17",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-60-reglas-limites",
+      "sha": "30a7d64a437c7e53db19acbb61ad815817291c44",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-61-formato",
+      "sha": "3ded1e382c9d39cce582ed38220adee531467c43",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/WP-62-dividir-diaryrunner",
+      "sha": "7f7186e80858d3f260b3988faa42d293ad089a59",
+      "incluida_al_inicio": true,
+      "incluida_al_final": true
+    },
+    {
+      "rama": "origin/wp/auditoria-refactor-20261011",
+      "sha": "3184a7186321854f020551b867d51e6135f46387",
+      "incluida_al_inicio": false,
+      "incluida_al_final": true
+    }
+  ],
+  "rama_canonica": "feat/ejecucion-plan-20261008",
+  "consolidacion_fuentes": "8c4036dee65b8ff46948c776ab4a48ddd5ba610a",
+  "commit_verificado": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+  "resultado": "PASA",
+  "total_incorporadas": 45,
+  "alias_excluidos": [
+    "origin/HEAD (alias simbólico de main)"
+  ]
+}

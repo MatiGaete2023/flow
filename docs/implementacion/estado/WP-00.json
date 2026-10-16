@@ -1,0 +1,21 @@
+{
+  "titulo": "Kit, estado y línea base",
+  "ola": 0,
+  "tipo": "C",
+  "depende_de": [],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root (WP-00)",
+  "tomado": "2026-10-09T22:12:45.585627+00:00",
+  "rama": "wp/WP-00-kit",
+  "pr": 2,
+  "verificacion": "PASA: verificacion/WP-00.json; 605/11 y 198/59; subprocessos verificados",
+  "revision": "APROBADO: /root/revision_previa, sobre 14bdc90",
+  "auditoria": "CONFORME: auditoria/WP-00.md",
+  "integrado_en": "c4db3e11216b5ae6c44f59c3e5d474a47c5c70f8",
+  "notas": [
+    "Kit exacto recuperado en rama propia; rama auxiliar 5471ca6 preservada sin integrar.",
+    "Debilidad fail-open del verificador del kit mitigada al comprobar códigos reales de todos los subprocessos; mejora pendiente.",
+    "Verificación posterior al merge reproducida: 605/11, 198/59, golden PASA, sin fallos; baseline actualizado con las deudas iniciales 18/26."
+  ]
+}

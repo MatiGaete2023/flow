@@ -1,0 +1,33 @@
+{
+  "fecha": "2026-10-09",
+  "version": "2.7.4",
+  "datos": "EXCLUSIVAMENTE FICTICIOS",
+  "pdf": {
+    "paginas": 17,
+    "titulos_y_notas_completos": "OK",
+    "marcadores": "OK",
+    "revision_visual": "páginas 2, 3, 12 y 16; ajuste para evitar recortes y mejorar legibilidad"
+  },
+  "html": {
+    "secciones": 17,
+    "capturas_cargadas": 13,
+    "ampliacion": "OK",
+    "vista_movil": "OK",
+    "peticiones_externas": 0
+  },
+  "practica_zip": {
+    "integridad": "OK",
+    "archivos": 809,
+    "ingresos_excel": 800,
+    "registros_paquete": 4,
+    "bitacoras_correspondientes": 2,
+    "ajenas_excluidas": 798
+  },
+  "peticiones_institucionales": 0,
+  "cambios_funcionales": false,
+  "sha256": {
+    "Manual_ilustrado_Descargador_SITFA_2.7.4.html": "6de54c9c35c718fa8cb13112f07e82ec8cc084531e3a299066e6ac9d2f3cea83",
+    "Manual_ilustrado_Descargador_SITFA_2.7.4.pdf": "69b8a996ed5183ef994edde4193b1c8e94923e08b020c7dbea74ef98099b0535",
+    "Practica_ficticia_Descargador_2.7.4.zip": "9ce789cc50fc85833f01e216b4fa2f47f74033ee909272a91cf6cf9ccf40e4b3"
+  }
+}

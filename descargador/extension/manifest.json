@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SITFA · Descargador local integral",
+  "version": "2.8.0",
+  "version_name": "2.8.0 integral · bitácoras e historia",
+  "description": "Descarga Seguimiento, litigantes y calendarios desde tu Chrome, sin leer cookies ni contraseñas.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://familia.pjud.cl/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Conectar esta pestaña SITFA al descargador"
+  }
+}

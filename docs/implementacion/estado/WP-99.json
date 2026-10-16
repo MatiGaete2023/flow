@@ -1,0 +1,31 @@
+{
+  "titulo": "Correcciones de la prueba de usuario del 13 de octubre",
+  "ola": 7,
+  "tipo": "C",
+  "depende_de": [
+    {
+      "wp": "WP-50",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-93",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [
+    "m"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "13 de octubre de 2026",
+  "rama": "feat/ejecucion-plan-20261008",
+  "pr": null,
+  "verificacion": "PASA: verificacion/WP-99.json; asistente 932, descargador 283, golden y restricciones PASA, identidades 0.",
+  "revision": "No riesgoso según decisión j (lector de bitácoras, vista solo mostrar y tope de lecturas; sin motor, Outlook, contrato, retención ni extensión).",
+  "auditoria": null,
+  "integrado_en": "feat/ejecucion-plan-20261008",
+  "notas": [
+    "Pendiente: causa raíz de Espera (36/40 bitácoras leídas sin entradas); requiere estructura.json del usuario.",
+    "Registro: docs/aceptacion/REGISTRO_PRUEBAS_USUARIO_20261013.md."
+  ]
+}

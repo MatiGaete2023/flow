@@ -1,0 +1,224 @@
+{
+  "datos": "ficticios",
+  "perfil_usuario_accedido": false,
+  "api_extension_adaptada": false,
+  "peticiones_reales_sitfa": 0,
+  "regresion_anterior": {
+    "post": 200,
+    "get": 403
+  },
+  "conexion_antes_de_seguimiento": true,
+  "seguimiento_ausente_no_confunde_codigo": true,
+  "catalogo_y_bloqueo_api_reales_en_iframe": true,
+  "lote_tres_paginas_api_reales": true,
+  "codigo_incorrecto_rechazado": true,
+  "pestana_cerrada_distinguida": true,
+  "descargador_cerrado_distinguido": true,
+  "cabeceras_observadas": [
+    {
+      "metodo": "POST",
+      "ruta": "connect",
+      "origin_presente": true,
+      "identidad_presente": false
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": false
+    },
+    {
+      "metodo": "POST",
+      "ruta": "connect",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "POST",
+      "ruta": "complete",
+      "origin_presente": true,
+      "identidad_presente": true
+    },
+    {
+      "metodo": "GET",
+      "ruta": "next",
+      "origin_presente": false,
+      "identidad_presente": true
+    }
+  ],
+  "resultado": "OK"
+}

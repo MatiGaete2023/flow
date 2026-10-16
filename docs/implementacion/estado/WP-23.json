@@ -1,0 +1,22 @@
+{
+  "titulo": "Restos de lanzamiento del Descargador",
+  "ola": 2,
+  "tipo": "E/M",
+  "depende_de": [
+    "WP-22"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T11:00:00-03:00",
+  "rama": "wp/WP-23-lanzamiento",
+  "pr": 15,
+  "verificacion": "PASA (verificacion/WP-23.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-22 (PR #14). download_link/download_transfer sin cambios.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

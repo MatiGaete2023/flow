@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "rama_base": "feat/ejecucion-plan-20261008",
+  "commit_inicio": "2765b47",
+  "actualizado": "12 de octubre de 2026",
+  "orquestador": "Codex /root",
+  "decisiones": {
+    "D1": {
+      "pregunta": "Purga de historial: (a) reescribir flow/NuRus con push forzado, (b) repo nuevo, (c) no purgar",
+      "respuesta": "Reescribir historial; push forzado en flow autorizado por escrito el 11 de octubre de 2026 («Sí, autorizo push forzado»), con confirmación final antes de ejecutarlo",
+      "fecha": "11 de octubre de 2026",
+      "ejecucion": "Historial reescrito el 11-oct (35 ramas, force-with-lease, autorizado); 607 artefactos y 2 etiquetas remotas borradas; pendiente: refs/pull y cachés vía Soporte GitHub"
+    },
+    "D2": {
+      "pregunta": "Casos ya probados en uso real (lista D-T/A-T con PASÓ)",
+      "respuesta": "Ninguna todavía",
+      "fecha": "11 de octubre de 2026"
+    },
+    "D3": {
+      "pregunta": "¿Retirar inspector y diario de registro RUS?",
+      "respuesta": "Sí, retirarlos",
+      "fecha": "9 de octubre de 2026"
+    },
+    "D4": {
+      "pregunta": "Retención local: días de lotes y sesiones; máximo de sesiones anteriores",
+      "respuesta": "60 días y hasta 10 sesiones anteriores",
+      "fecha": "9 de octubre de 2026"
+    },
+    "D5": {
+      "pregunta": "¿Activar CT-01/CT-02 solo mostrar? ¿Horizonte (4 meses u otro)?",
+      "respuesta": "Sí, horizonte de 4 meses (Recomendado)",
+      "fecha": "10 de octubre de 2026"
+    },
+    "D6": {
+      "pregunta": "¿El ZIP puede incluir el XLSX consolidado (sin HTML ni PDF)?",
+      "respuesta": "Sí, solo el consolidado (Recomendado)",
+      "fecha": "10 de octubre de 2026"
+    },
+    "D7": {
+      "pregunta": "¿Fusionar a main al cierre?",
+      "respuesta": "Sí, tras el acta final (Recomendado)",
+      "fecha": "10 de octubre de 2026"
+    },
+    "D8": {
+      "pregunta": "¿Alguna consulta 2.7.5 falló por Envio() o filtros con 0? (sin datos)",
+      "respuesta": "No observé esos fallos",
+      "fecha": "9 de octubre de 2026"
+    },
+    "D9": {
+      "pregunta": "Solicitud de antecedentes: precargar o retirar",
+      "respuesta": "Retirar botón (Recomendado)",
+      "fecha": "10 de octubre de 2026"
+    }
+  },
+  "conflictos_abiertos": [
+    {
+      "id": "WP-30-cc_obligatorio",
+      "origen": "WP-30",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-30 pide quitar cc_obligatorio de correos_base.json, pero los golden serializan defaults() y el control 4 solo permite regenerarlos en WP-12. Se conserva sin lector.",
+      "respuesta": "Usuario, 11 de octubre de 2026: «Conservarlo». cc_obligatorio queda sin lector; el CC fijo sigue aplicándose por código.",
+      "estado": "RESUELTO"
+    },
+    {
+      "id": "WP-34-motor-f401",
+      "origen": "WP-34",
+      "fecha": "10 de octubre de 2026",
+      "descripcion": "[CONFLICTO_ABIERTO] La ficha WP-34 pide ruff F401/F841 sobre src completo, pero src/nurus/personal/motor/ tiene 4 F401 y es intocable salvo decisión expresa. La CI lo excluye con --extend-exclude.",
+      "respuesta": "Usuario, 11 de octubre de 2026: «Dejar como está». motor/ intacto; F401 excluido en CI; los 6 R-T de WP-60 siguen xfail estricto hasta una decisión por regla.",
+      "estado": "RESUELTO"
+    },
+    {
+      "id": "WP-60-R-T13",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "C-08 declara falta de ficha FAE aunque no exista su columna.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T19",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "El RIT visual discrepante se admite por IDs sin advertencia trazable.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T24",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta un hallazgo de cotejo del trámite de informe, CT-05.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T25",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta un hallazgo de firma con cobertura parcial, CT-08.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T26",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "Falta una señal de posible reiteración, CT-07.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    },
+    {
+      "id": "WP-60-R-T32",
+      "origen": "WP-60",
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "CT-01/CT-02 en modo solo mostrar (enabled=false en el motor) sin explicación específica de exclusión.",
+      "estado": "ABIERTO",
+      "responsable": "Usuario: decisión específica por regla",
+      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+    }
+  ],
+  "traspasos": [
+    {
+      "fecha": "9 de octubre de 2026",
+      "rama_anterior": "ccr-4116db41-nm8g0r",
+      "commit_anterior": "5471ca6",
+      "descripcion": "Trabajo previo no integrado: se recuperará por WP en ramas propias; sin presumir revisión, auditoría ni decisiones."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "Revisión de legado: corregir hook para blobs staged; anonimizador deja títulos/comentarios/enlaces; recuperación sin trabajo pierde configuración; instalador permite fallback sin hashes; barra no actualiza conteos y Correos acumula temporizadores; cobertura R-T32 y límites R-T02 incompletos. Ninguno se da por aprobado sin recuperación por WP."
+    },
+    {
+      "fecha": "9 de octubre de 2026",
+      "descripcion": "CI pausada deliberadamente hasta sanear contactos y fixtures. Se retiraron 14 artefactos generados por las primeras ejecuciones de esta sesión antes del saneamiento; las compilaciones históricas y la purga D1 no se tocaron. No se anuncia paquete nuevo ni CI Windows aprobada."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "WP-63: nueva auditoría y refactorización autorizadas por el usuario sobre 2cf8ca8 en clon limpio. Correcciones y reporte en rama propia; revisión cruzada E3 e integración pendientes. Los traspasos anteriores quedan como historial."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "descripcion": "WP-63 y WP-80 integrados; WP-81 continúa revisión propia desde 286c28f. Preserva decisiones/E3 previos; revisión propia no sustituye E3 del paquete nuevo."
+    }
+  ],
+  "decisiones_adicionales": {
+    "E3_excepcion": {
+      "respuesta": "Exceptuar E3, integra tú",
+      "fecha": "11 de octubre de 2026",
+      "alcance": "Integración en feat de #27, Codex #4/#8/#11 y #12–#32 por esta sesión, sin revisión de otra raíz; nunca a main."
+    },
+    "apostrofo_copia_portable": {
+      "respuesta": "Quitar apóstrofo",
+      "fecha": "11 de octubre de 2026"
+    },
+    "fuera_de_ficha": {
+      "respuesta": "Casilla consolidado en GUI; arreglar generadores docs; manual 2.7.4 sin botón retirado; retirar restos de WP-21",
+      "fecha": "11 de octubre de 2026"
+    },
+    "decisiones_20261011": {
+      "fecha": "11 de octubre de 2026",
+      "lista": [
+        "a) «Fusiona todas las ramas»: consolidación WP-85.",
+        "b) WP-63 se integra antes que WP-80.",
+        "c) WP-70 depende funcionalmente de WP-02, WP-17, WP-50 y WP-63.",
+        "d) WP-80 se integra por squash con mensaje formateado (regla 11).",
+        "e) WP-80 sin etiqueta pre-WP-80; rollback con git revert 5ac7385.",
+        "f) Excepciones E3 autorizadas para los PR #4/#8/#11/#12–#32, #27 y #36–#39.",
+        "g) La cronología WP-50 queda visible en feat mientras falta el acta de 10 ingresos; aceptación pendiente.",
+        "h) La plantilla del acta deja vacío el tipo de evidencia; lo elige el usuario.",
+        "i) WP-86 correctivo autorizado («Sí, todo»), con revisión E3 antes de integrar."
+      ]
+    },
+    "decisiones_20261012": {
+      "j_E3_solo_riesgosos": {
+        "texto": "E3 obligatoria solo si el diff toca: motor/, textos_base.json, Outlook/borradores, contrato de captura (contracts/, src/nurus/capture/contract.py), borrado o retención de datos, check_real_ids/anonimizador, extensión SITFA. El resto: verificar_wp.py PASA.",
+        "fuente": "Usuario, 12 de octubre de 2026: «Sí, para los cambios riesgosos»."
+      },
+      "k_eficiencia_ux": {
+        "texto": "Actualizar los planes y comenzar la implementación de eficiencia y UX; conservar los dos botones de preparación y la ubicación de productos secundarios.",
+        "fuente": "Usuario: «Actualiza los planes en el repositorio y comienza a implementar», junto con restricciones expresas del encargo de UX."
+      },
+      "l_completar_flujo": {
+        "texto": "Completar cambios anunciados que no estén integrados y continuar con UX.",
+        "fuente": "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+        "limites": "Conservar botones de preparación y ubicación de productos secundarios; motor, Outlook, contratos, retención y extensión intactos."
+      },
+      "m_limite_lecturas": {
+        "texto": "Subir MAX_LECTURAS_POR_LOTE de 300 a 600; pausa y checkpoints sin cambios.",
+        "fuente": "Usuario: «Sube el limite a 600» (13 de octubre de 2026)."
+      }
+    },
+    "decisiones_20261013_historia": {
+      "o_historia_causa": {
+        "texto": "Historia de la causa en el Descargador: solo la tabla de la pestaña Historia de la ventana «Información de la Causa» (folio, etapa, trámite, descripción, referencia, fecha y presencia de anexo), solo ventana de 4 meses, sin PDF, uso personal en Windows; el Asistente la analizará en otro paso. PDF y reglas CT-03..10 siguen fuera de alcance. Plan: docs/historia_causa/ (WP-52..WP-54).",
+        "fuente": "Usuario, 13 de octubre de 2026: «leer la historia de la causa», «no deseo descargar los pdf», «solo ver la descripción del trámite y el trámite, su fecha, folio», «solo en la ventana de 4 meses», «solo de uso personal en windows»."
+      },
+      "p_recomendaciones_historia": {
+        "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
+        "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
+      }
+    }
+  },
+  "orden_paquetes": [
+    "WP-00",
+    "WP-01",
+    "WP-02",
+    "WP-10",
+    "WP-11",
+    "WP-12",
+    "WP-13",
+    "WP-14",
+    "WP-15",
+    "WP-16",
+    "WP-17",
+    "WP-20",
+    "WP-21",
+    "WP-22",
+    "WP-23",
+    "WP-24",
+    "WP-30",
+    "WP-31",
+    "WP-32",
+    "WP-33",
+    "WP-34",
+    "WP-35",
+    "WP-40",
+    "WP-41",
+    "WP-42",
+    "WP-43",
+    "WP-44",
+    "WP-45",
+    "WP-50",
+    "WP-51",
+    "WP-60",
+    "WP-61",
+    "WP-62",
+    "WP-63",
+    "WP-80",
+    "WP-81",
+    "WP-82",
+    "WP-83",
+    "WP-84",
+    "WP-85",
+    "WP-86",
+    "WP-87",
+    "WP-88",
+    "WP-89",
+    "WP-90",
+    "WP-91",
+    "WP-92",
+    "WP-93",
+    "WP-94",
+    "WP-95",
+    "WP-96",
+    "WP-97",
+    "WP-98",
+    "WP-99",
+    "WP-52",
+    "WP-53",
+    "WP-54",
+    "WP-70"
+  ],
+  "commit_integracion": "fe4c225",
+  "excepciones_e3": [
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Autorizar excepción E3 para #36–38",
+      "pr": [
+        36,
+        37,
+        38
+      ],
+      "alcance": "Solo WP-81, WP-82 y WP-83. No se extiende a #39, main ni releases."
+    },
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Haz la excepcion y termina tu",
+      "pr": [
+        39
+      ],
+      "alcance": "Excepción E3 para WP-84/#39 solicitada en el mensaje anterior. Sin revisión de otra raíz. No autoriza main, release ni sustituye acta real."
+    }
+  ],
+  "rama_canonica": "feat/ejecucion-plan-20261008",
+  "consolidaciones": [
+    {
+      "fecha": "11 de octubre de 2026",
+      "respuesta": "Fusiona todas las ramas, que todo quede consolidado en una rama, luego haz tu reporte",
+      "ramas": 45,
+      "commit": "4dc54e9b52bbca441ca4d43cd577e5c1cbcda288",
+      "alcance": "Consolidación técnica en feat; referencias previas conservadas como respaldo. No marca aceptación real ni fusiona a main."
+    },
+    {
+      "fecha": "13 de octubre de 2026",
+      "respuesta": "consolida todo el trabajo en una sola rama, trabajaremnos y solucionaremos problemas desde aca",
+      "ramas": 60,
+      "commit": "f073e22",
+      "alcance": "wp/93-ef04 integrada; e3/wp-94 y e3/wp-92-93 unidas sin contenido (superadas). Las 56 ramas auxiliares, todas contenidas en feat, fueron retiradas del remoto por el usuario; quedan feat y main (intacta)."
+    }
+  ],
+  "bloqueos_externos": {
+    "actions_windows": {
+      "estado": "RESUELTO",
+      "motivo": "Facturación actualizada por usuario; jobs efectivamente iniciados.",
+      "evidencia": "Runs PR43 38257245371/38257245501/38257245645 con pasos ejecutados el 12 de octubre de 2026.",
+      "accion": "Entrega Windows completa e instalador PASA en run 38259239456; continuar eficiencia sin push Windows ni repetir construcciones por documentación. Actas reales pendientes."
+    }
+  }
+}

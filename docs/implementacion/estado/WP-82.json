@@ -1,0 +1,28 @@
+{
+  "titulo": "Pendientes de correo coherentes con Resultados",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/82-pendientes-correo-20261011",
+  "pr": 37,
+  "verificacion": "PASA después de integración en a59c4dff0997c611c5d03bc4f40da68046b62b7b: Asistente 824/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+  "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
+  "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
+  "integrado_en": "a59c4dff0997c611c5d03bc4f40da68046b62b7b",
+  "notas": [
+    "Continuación solicitada por el usuario. G-4 de WP-80; optimización limitada al caso sin recibos de G-5.",
+    "WP-81 #36 sigue sin E3 registrado; este paquete parte de feat 286c28f y es independiente. (histórico, superado: WP-81 integrado en c2a5d80 con excepción E3 expresa)",
+    "Catorce regresiones nuevas; cuatro indicadores y siete casos del ayudante fallaron antes de corregir; una optimización falló antes de aplicarse. Sin pruebas retiradas ni nuevos skips.",
+    "pending() es ayudante legado sin llamadas GUI; G-4 visible corregido en ux_support.product_indicators.",
+    "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+  ]
+}
