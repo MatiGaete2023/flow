@@ -5,7 +5,7 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 72; último en el orden: WP-99.
+- Paquetes integrados: 51 de 73; último en el orden: WP-99.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -21,6 +21,7 @@
 | WP-66 | EN_REVISION | Ronda de usuario 16-oct: nombre sin paréntesis, formato de resolución, búsqueda, RES, informes por vencer, período y rendimiento |
 | WP-67 | EN_REVISION | Limpieza de herramientas (tools/) |
 | WP-68 | EN_REVISION | Limpieza del Asistente y del Descargador |
+| WP-69 | EN_REVISION | Retiro de la auditoría de bitácoras anterior |
 | WP-71 | EN_REVISION | Reglas de historia R1: camino de datos (historia y bitácora hasta el motor) |
 | WP-72 | EN_REVISION | Reglas de historia R2: textos del scope HISTORIA |
 | WP-73 | EN_REVISION | Reglas de historia R3: cambios deliberados a reglas originales |

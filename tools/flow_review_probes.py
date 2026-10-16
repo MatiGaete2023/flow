@@ -220,7 +220,7 @@ def run(folder):
         else:
             findings['H07'] = {'write_succeeded': True, 'read_succeeded': True}
 
-    from test_bitacora_lote import manifest as diary_fixture
+    from bitacora_fixtures import manifest as diary_fixture
     from nurus.capture.diaries import import_lote
 
     diary_folder = folder / 'diary'

@@ -280,14 +280,15 @@ def generate(folder):
     semantic["reglas_rus"] = rus_rules_snapshot()
     # Reutiliza únicamente la fixture sintética del baseline; no captura HTML remoto.
     sys.path.insert(0, str(ROOT / "tests"))
-    from test_bitacora_lote import manifest
-    from nurus.personal.bitacora_lote import export_lote
+    from bitacora_fixtures import manifest
+    from nurus.capture.diaries import export_diaries
 
     diary_folder = folder / "Bitacora_ficticia"
     diary_folder.mkdir()
     diary_source = manifest(diary_folder)
+    # El Excel de bitácoras vigente es el del Descargador (capture.diaries); la auditoría anterior se retiró en WP-69.
     diary_excel = folder / "Bitacoras_RUS_baseline.xlsx"
-    export_lote(diary_source, diary_excel, date(2026, 6, 8), date(2026, 10, 8), today=date(2026, 10, 8))
+    export_diaries(diary_source, diary_excel)
     semantic["diary_workbook"] = workbook_snapshot(diary_excel, folder)
     generated.append(diary_excel)
     for path in generated:

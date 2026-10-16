@@ -2038,7 +2038,35 @@
       "integrado_en": null,
       "notas": [
         "Elimina código sin uso y sondas superadas; sin cambio de reglas ni de golden.",
-        "Pendiente de decisión: auditoría de bitácoras anterior (personal/bitacoras*).",
+        "No integrado ni aceptado.",
+        "La auditoría de bitácoras anterior se retiró en WP-69 por decisión del usuario."
+      ]
+    },
+    "WP-69": {
+      "titulo": "Retiro de la auditoría de bitácoras anterior",
+      "ola": 8,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-68",
+          "tipo": "archivo"
+        }
+      ],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+      "tomado": "16 de octubre de 2026",
+      "rama": "claude/lucid-sagan-hw9ul4",
+      "pr": null,
+      "verificacion": "Pendiente.",
+      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Decisión del usuario 16-oct: eliminar personal/bitacoras*, sin uso en la app.",
+        "Golden regenerado: Bitacoras_RUS_baseline es el Excel vigente del Descargador.",
         "No integrado ni aceptado."
       ]
     },

@@ -22,7 +22,7 @@
   "integrado_en": null,
   "notas": [
     "Elimina código sin uso y sondas superadas; sin cambio de reglas ni de golden.",
-    "Pendiente de decisión: auditoría de bitácoras anterior (personal/bitacoras*).",
-    "No integrado ni aceptado."
+    "No integrado ni aceptado.",
+    "La auditoría de bitácoras anterior se retiró en WP-69 por decisión del usuario."
   ]
 }

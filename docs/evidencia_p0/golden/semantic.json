@@ -5770,3256 +5770,224 @@
   },
   "diary_workbook": [
     {
-      "sheet": "Resumen",
-      "rows": 3,
-      "columns": 18,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cobertura",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Desde",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Hasta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entradas recientes",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Última fecha centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ambigüedad",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Con carga",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Administrativas",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Origen desconocido",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Detalle",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "JSON de textos extensos",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Clave de texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "PARCIAL",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-06-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "FALLIDA",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-06-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:R3",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 24.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 24.0,
-        "I": 19.0,
-        "J": 65.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 65.0,
-        "P": 65.0,
-        "Q": 65.0,
-        "R": 65.0
-      }
-    },
-    {
-      "sheet": "Bitácoras",
-      "rows": 2,
-      "columns": 21,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Autor",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tipo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "CC",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Etapa",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Origen",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto reiterado",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Posible reiteración",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fuente",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "JSON de textos extensos",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Clave de texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "44",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Al tribunal",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cumplimiento",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sin respuesta registrada",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": false,
-            "type": "b",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": false,
-            "type": "b",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "captura.html",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:U2",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 24.0,
-        "F": 19.0,
-        "G": 24.0,
-        "H": 24.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 65.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 19.0,
-        "P": 65.0,
-        "Q": 24.0,
-        "R": 24.0,
-        "S": 65.0,
-        "T": 65.0,
-        "U": 65.0
-      }
-    },
-    {
-      "sheet": "Incidencias",
-      "rows": 3,
-      "columns": 6,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Motivo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Detalle",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Lectura parcial",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Lectura fallida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sesión vencida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:F3",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 65.0
-      }
-    },
-    {
       "sheet": "Copia íntegra",
       "rows": 2,
-      "columns": 20,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Usuario centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tipo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "CC",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Etapa",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Usuario tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado RUS código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "HFLG_Envio RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha captura",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "44",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Al tribunal",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cumplimiento",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "USR",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sin respuesta registrada",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "6",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "1",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08T12:00:00Z",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:T2",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 35.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 19.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 65.0,
-        "N": 28.0,
-        "O": 28.0,
-        "P": 65.0,
-        "Q": 24.0,
-        "R": 24.0,
-        "S": 24.0,
-        "T": 19.0
-      }
-    },
-    {
-      "sheet": "Capturas",
-      "rows": 3,
       "columns": 13,
       "cells": [
         [
           {
-            "value": "Tribunal código",
+            "value": "tribunal_codigo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Causa RUS",
+            "value": "causa_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Ingreso RUS",
+            "value": "ingreso_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "RIT",
+            "value": "entry_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Persona",
+            "value": "fecha",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
+          },
+          {
+            "value": "autor",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "tipo",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "etapa",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fecha_respuesta",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "respuesta",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fuente",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fila_fuente",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "33",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "44",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "2026-08-12T10:13:00",
+            "type": "s",
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Etapa código",
+            "value": "Al tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Fecha captura",
+            "value": "Cumplimiento",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Aperturas idénticas",
+            "value": "Texto completo que la tabla oculta.",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Entradas tabla capturada",
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "captura.html",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 HTML",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Alcance",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Advertencias",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "3",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08T12:00:00Z",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sesión vencida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ]
       ],
-      "filter": "A1:M3",
+      "filter": "A1:M2",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 35.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 19.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 24.0
-      }
+      "widths": {}
+    },
+    {
+      "sheet": "Textos íntegros",
+      "rows": 1,
+      "columns": 6,
+      "cells": [
+        [
+          {
+            "value": "Clave",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Campo",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Parte",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Total",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "SHA256 texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ]
+      ],
+      "filter": "A1:F1",
+      "freeze": "A2",
+      "merged": [],
+      "widths": {}
     },
     {
       "sheet": "Fuentes",
@@ -9031,176 +5999,195 @@
             "value": "Archivo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "SHA-256",
+            "value": "SHA256",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Peticiones",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Aperturas",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Detalle",
+            "value": "Estado",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": "bitacoras.json",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "d17adf7289cb17e77cbf591d726669c3cd245f91c76a1cae154e0497813788a8",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 3,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "INCOMPLETA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:E2",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 24.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 65.0
-      }
+      "widths": {}
+    },
+    {
+      "sheet": "Ingresos",
+      "rows": 3,
+      "columns": 6,
+      "cells": [
+        [
+          {
+            "value": "Tribunal",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Causa",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Ingreso",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Alcance",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Entradas",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Advertencias",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "33",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "PARCIAL",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": 1,
+            "type": "n",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "34",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "FALLIDA",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": 0,
+            "type": "n",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          }
+        ]
+      ],
+      "filter": "A1:F3",
+      "freeze": "A2",
+      "merged": [],
+      "widths": {}
     },
     {
       "sheet": "Lecturas",
@@ -9212,1055 +6199,398 @@
             "value": "Tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Modalidad",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Pestaña",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Página",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Fila",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "RIT",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Persona",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Centro",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Causa RUS",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Ingreso RUS",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Estado lectura",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Detalle",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Archivo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "SHA-256",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Fecha captura",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Código extensión",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "22",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "33",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "LEIDA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "22",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "34",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FALLIDA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Sesión vencida",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "SIN_VINCULO",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Sin enlace comprobado",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:P4",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 17.0,
-        "G": 35.0,
-        "H": 24.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 65.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 19.0,
-        "P": 24.0
-      }
+      "widths": {}
     },
     {
       "sheet": "Consultas",
@@ -10272,584 +6602,226 @@
             "value": "Tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Modalidad",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Pestaña",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Estado",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Páginas recorridas",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Registros enumerados",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Detalle",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "ENUMERADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 3,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "1",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "4",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:G5",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 24.0,
-        "G": 65.0
-      }
+      "widths": {}
     },
     {
       "sheet": "Lote",
@@ -10861,281 +6833,118 @@
             "value": "Dato",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Valor",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": "Estado del recorrido",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "INCOMPLETA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Fecha",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Error del recorrido",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Descargador",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Extensión",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Selección",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{\"tribunals\": [\"11\"], \"modalities\": [\"1\", \"2\", \"3\", \"4\"], \"tabs\": [\"Cumplimiento\"]}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Historial",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Copia de la tabla capturada; no acredita historial remoto completo.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:B8",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 24.0,
-        "B": 24.0
-      }
+      "widths": {}
     }
   ]
 }
