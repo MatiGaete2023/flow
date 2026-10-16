@@ -113,8 +113,9 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
      por el último trámite; E-04 con E-05 se deja como está; el caso límite de nombres solo distintos entre paréntesis no se
      corrige. Asistente `0.5.0.dev10`, reglas `historia-7`.
   10. Limpieza de datos privados en el repositorio (WP-56): sin nombres reales en metadatos de plantillas, documentos ni
-     capturas del manual; fixtures de anonimización con nombres, RUT y RIT ficticios. El historial git conserva lo
-     anterior; purgarlo exige autorización escrita (WP-17).
+     capturas del manual; fixtures de anonimización con nombres, RUT y RIT ficticios.
+  11. Usuario (16-oct): «Autorizo purga de historial, elimina también ». Se retira la marca de las plantillas de
+     Laja y se reescribe el historial de todas las ramas (WP-17, segunda purga).
 
 ## Fase B de auditoría final — 14 de octubre de 2026
 
