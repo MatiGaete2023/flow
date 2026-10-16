@@ -11,9 +11,9 @@ reproducir · **I** = inferencia · **E** = especulación.
 
 - H: las 50 pruebas existentes pasan (49 aquí; 1 requiere Tkinter/customtkinter y no corre en Linux sin pantalla).
   Pasan porque no cubren ninguno de los casos de abajo.
-- H: el anonimizador del Asistente **filtra datos** en 4 casos reproducibles (F1–F4) y **falla** con 4 de los 6 tipos de
-  archivo que producen el Descargador/Asistente (F5–F6).
-- H: se construyó una herramienta nueva e independiente (`anonimizador/`, 89 pruebas + 1 omitida (requiere pantalla)) que corrige todo lo reproducido.
+- H: el anonimizador del Asistente **filtra o corrompe datos** en 6 casos reproducibles (F1–F6) y **falla** con la mayoría de los tipos de
+  archivo que producen el Descargador/Asistente (E4, O1).
+- H: se construyó una herramienta nueva e independiente (`anonimizador/`, 91 pruebas + 1 omitida (requiere pantalla)) que corrige todo lo reproducido.
   El código del Asistente **no se modificó**.
 
 ## Filtraciones (prioridad alta)
@@ -54,6 +54,12 @@ reproducir · **I** = inferencia · **E** = especulación.
 
 ## Omisiones
 
+- **E7 · Falso positivo aleatorio que bloquea copias válidas** (H). La huella HMAC (clave efímera) que `anonymize_package`
+  escribe en el consolidado a veces empieza con nueve dígitos y la revisión final la toma por teléfono: 5 de 150 ejecuciones
+  de `tests/test_anonimizar_local.py -k relaciones_y_consolidado` fallaron con «quedarían datos personales (teléfono)»
+  sin cambiar ninguna entrada. La suite del CI puede fallar sin causa; un usuario ve «no se creó una copia válida» y
+  reintentar «arregla» el problema.
+
 - **O1** (H). No procesa HTML, JSON, CSV, ICS, TXT ni Word; los ZIP deben ser `CSMP_CAPTURE_V1` (la entrega
   `INDICE.txt`+`MANIFIESTO.json` de ambos programas da «Sin manifiesto»); los ZIP con originales se rechazan completos.
 - **O2** (H). Cada archivo se anonimiza aislado: «Persona Ficticia 1» es otra persona en el Excel y en las bitácoras. No hay
@@ -90,19 +96,20 @@ reproducir · **I** = inferencia · **E** = especulación.
 
 Ver `anonimizador/README.md`. Cada F/E/O arriba tiene prueba en `anonimizador/tests/` (F1 `test_pares_etiqueta_valor_sin_encabezado`,
 F2 `test_apellido_tras_rol_se_oculta_completo`, F3 `test_rutas_con_usuario_y_enlaces`, F4 `test_captura_coherente_y_sin_datos`,
-F5 `test_numeros_largos_y_ids_se_vinculan_entre_hojas`, F6 `test_json_anidado_claves_rutas_e_ids`, E1 `test_fechas_en_texto…`,
+F5 `test_numeros_largos_y_ids_se_vinculan_entre_hojas`, F6 `test_json_anidado_claves_rutas_e_ids`, E7 `test_huellas_hexadecimales_no_disparan_falsos_positivos`, E1 `test_fechas_en_texto…`,
 E2 `test_pseudonimo_no_se_destruye…`, E3 `test_desplazar_fechas_en_celdas_y_textos`, E4 `test_html_con_extension_excel…` y
 `test_xml_spreadsheet_2003`, E5 benchmark, E6 `test_sin_enlaces_fisicos…`, O1 `test_archive.py`/`test_formats.py`, O2
 `test_sesion_compartida_entre_archivos`, O3 `test_nombre_de_una_persona_en_otro_archivo_se_detecta`).
 
 Defectos propios encontrados y corregidos mientras se construía: la misma cabecera de «pares» filtraba el nombre en la
 versión nueva (se corrigió con `looks_like_person`), `_publish` podía borrar un archivo preexistente ante colisión, los RIT
-ficticios de cinco dígitos se confundían con teléfonos en la revisión final y `column_kind('ruta')` devolvía RUT.
+ficticios de cinco dígitos y los ids/huellas hexadecimales se confundían con teléfonos en la revisión final (mismo origen que E7) y
+`column_kind('ruta')` devolvía RUT.
 
 ## Recomendación
 
 1. Usar `anonimizador/` para todo lo que salga del Descargador/Asistente.
 2. Decidir (usuario) si el botón «Configuración» del Asistente se mantiene con el motor viejo, se redirige o se retira;
-   mientras tanto no usar `nurus.personal.anonymize` con observaciones reales: F1–F4 aplican.
+   mientras tanto no usar `nurus.personal.anonymize` con observaciones reales: F1–F5 aplican.
 3. Revisión E3 independiente del nuevo motor antes de cualquier uso institucional (exigida por `PLAN_VIGENTE.md` al tocar el
    anonimizador). Esta revisión no la reemplaza ni acepta nada.
