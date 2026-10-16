@@ -60,7 +60,8 @@ def _pending_fields(document):
 
 
 def require_complete(document, allow_review_markers=False):
-    found = pending_fields(document)
+    # Puerta antes de entregar un documento: lee el archivo siempre, sin el caché de las vistas.
+    found = _pending_fields(document)
     if allow_review_markers:
         found = [f for f in found if not f.upper().startswith('[COMPLETAR')]
     if found:

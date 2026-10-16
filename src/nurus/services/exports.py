@@ -332,7 +332,8 @@ def _native_write_column(
             if keep_existing:
                 values = region.Value2
                 current = [values] if len(block) == 1 and not isinstance(values, tuple) else [row[0] for row in values]
-                empty = [item for item, value in zip(block, current, strict=True) if value in (None, "")]
+                # Igual que la copia portable: una celda con solo espacios cuenta como vacía.
+                empty = [item for item, value in zip(block, current, strict=True) if _is_blank_excel_value(value)]
                 _native_write_column(sheet, column, empty, chunk_size=chunk_size)
             else:
                 region.NumberFormat = "@"

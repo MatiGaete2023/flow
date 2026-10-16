@@ -31,6 +31,9 @@ HEADERS = (
 )
 
 
+RIT_RE = re.compile(r'[A-Z]+-\d+-\d{4}')
+
+
 def parse_day(value):
     if isinstance(value, datetime):
         return value.date()
@@ -52,17 +55,11 @@ def canonical(value):
     return m.normalized(value)
 
 
-def record_rows(grid):
-    """Valida encabezado, orden y cantidad antes de leer filas posicionales."""
-    _validate_excel_schema(grid)
-    return _record_rows_unchecked(grid)
-
-
 def _record_rows_unchecked(grid):
     """Lee filas posicionales de una tabla web o un reporte ya validado."""
     rows = []
     for row in grid:
-        if row and re.fullmatch(r'[A-Z]+-\d+-\d{4}', canonical(row[0])):
+        if row and RIT_RE.fullmatch(canonical(row[0])):
             if len(row) != 23:
                 import motor as m
 
@@ -89,9 +86,7 @@ def _validate_excel_schema(grid):
         import motor as m
 
         if not headers:
-            received = next(
-                (tuple(row) for row in grid if row and re.fullmatch(r'[A-Z]+-\d+-\d{4}', canonical(row[0]))), ()
-            )
+            received = next((tuple(row) for row in grid if row and RIT_RE.fullmatch(canonical(row[0]))), ())
             raise m.PocError(
                 'No se encontró el encabezado de carga esperado: '
                 + repr(HEADERS)
@@ -107,9 +102,7 @@ def _validate_excel_schema(grid):
         raise m.PocError(
             'Encabezado de carga inesperado; esperado: ' + repr(HEADERS) + '; recibido: ' + repr(tuple(row)) + '.'
         )
-    record_indices = [
-        index for index, row in enumerate(grid) if row and re.fullmatch(r'[A-Z]+-\d+-\d{4}', canonical(row[0]))
-    ]
+    record_indices = [index for index, row in enumerate(grid) if row and RIT_RE.fullmatch(canonical(row[0]))]
     if any(index < header_index for index in record_indices):
         import motor as m
 

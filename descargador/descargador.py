@@ -1037,7 +1037,15 @@ class Application:
             return
         self.enqueue(
             'package',
-            (self.last_sheets_folder, self.last_diary_manifest, Path(target), self.package_consolidated.get()),
+            (
+                self.last_sheets_folder,
+                self.last_diary_manifest,
+                Path(target),
+                self.package_consolidated.get(),
+                None,
+                (),
+                self.months(),
+            ),
         )
 
     def enqueue(self, command, arg=None):
@@ -1322,14 +1330,27 @@ class Application:
         label = {'calendario_informes': 'el calendario de informes (Informes por vencer)'}.get(
             gate['screen'], gate['screen']
         )
-        gate['ok'] = messagebox.askyesno(
-            'Cambia la pantalla de SITFA',
-            f'Para incluir los informes por vencer, en SITFA cambia a {label} y '
-            'luego pulsa «Sí». El Descargador actualizará sus opciones y seguirá solo.\n\n'
-            '«No» crea el paquete sin los informes por vencer.',
-            parent=self.root,
-        )
-        gate['event'].set()
+        if self.quitting or self.cancel.is_set():
+            gate['event'].set()
+            return
+        try:
+            self.root.deiconify()
+            self.root.lift()
+            self.root.bell()
+        except tk.TclError:
+            pass
+        try:
+            gate['ok'] = messagebox.askyesno(
+                'Cambia la pantalla de SITFA',
+                f'Para incluir los informes por vencer, en SITFA cambia a {label} y '
+                'luego pulsa «Sí». El Descargador actualizará sus opciones y seguirá solo.\n\n'
+                '«No» crea el paquete sin los informes por vencer.',
+                parent=self.root,
+            )
+        except tk.TclError:
+            gate['ok'] = False
+        finally:
+            gate['event'].set()
 
     def process_event(self, name, value):
         if name == 'pipeline_folder':
@@ -1611,7 +1632,7 @@ class Application:
 
 
 def package_current_lot(
-    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4
+    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4, avisos=()
 ):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
@@ -1630,6 +1651,7 @@ def package_current_lot(
         consolidated=consolidated,
         historia=historia,
         meses=meses,
+        avisos=avisos,
     )
     capture = read_capture(path)
     summary = next(

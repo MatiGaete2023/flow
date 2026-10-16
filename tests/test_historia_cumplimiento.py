@@ -1,6 +1,6 @@
 """WP-R6: reglas de historia en Cumplimiento (C1, C2, C4, C5, C8, C9, C10) y sus cambios a reglas originales."""
 
-from historia_fixtures import bita, cum, cumplimiento, hist
+from historia_fixtures import CUMPLIMIENTO, bita, correr, cum, cumplimiento, hist
 
 
 def test_ingreso_efectivo_verificado_por_la_historia_en_30_dias(tmp_path):
@@ -188,3 +188,28 @@ def test_la_columna_res_se_llena_con_el_tipo_de_proyecto_que_el_motor_identifica
     assert _automatic_resolution(escrito) is None
     sin = cum(tmp_path, cumplimiento(2, 'FAE UNO', dc=100, dpe=100))
     assert _automatic_resolution(sin) is None
+
+
+def test_prorroga_reciente_no_se_calla_por_un_numero_suelto_en_la_bitacora(tmp_path):
+    fila_ = cumplimiento(1, dc=200, dpe=-5, ingreso='2026-01-01', egreso='2026-10-09')
+    previa = bita(('2026-09-20', 'Persona X: Revisada prórroga de fecha 5 de marzo de 2026.'))
+    con = cum(tmp_path, fila_, hist(('Prorroga', '2026-09-15', 5)), previa)
+    assert 'PRORROGA_REVISAR' in [a[1] for a in con.avisos]
+
+
+def test_res_sugerido_no_cuenta_como_revision_al_reimportar_la_copia(tmp_path):
+    from nurus.personal.config import defaults
+    from nurus.personal.statistics import summarize
+    from nurus.personal.work import Work, _human_reviewed
+
+    trabajo = correr(
+        tmp_path,
+        'CUMPLIMIENTO',
+        CUMPLIMIENTO,
+        [cumplimiento(1, 'FAE UNO'), cumplimiento(2, 'FAE UNO')],
+        {0: hist(('Inf. Cump FAE/FAS', '2026-10-01', 30))},
+    )
+    copia = trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    externo = Work.external(copia, defaults(), 'CUMPLIMIENTO')
+    assert externo.rows[0].review.get('RES') == 'NOMENCL'
+    assert not any(_human_reviewed(r) for r in externo.rows) and summarize(externo)['datos_incompletos'] == 0

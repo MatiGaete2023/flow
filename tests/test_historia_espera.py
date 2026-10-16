@@ -171,13 +171,14 @@ def test_busqueda_nombra_primero_la_orden_y_luego_sus_tramites(tmp_path):
         'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 10), se decretó orden de búsqueda.'
     )
     cerrada = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Termino de búsqueda', '2026-09-20', 20)))
-    termino = 'Luego, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dispuso el término de la búsqueda.'
+    termino = 'Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dispuso el término de la búsqueda.'
     assert orden + ' ' + termino in cerrada.observation and cerrada.avisos == []
     sin_efecto = esp(
         tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 10), ('Deja sin efecto búsqueda', '2026-09-20', 20))
     )
     assert (
-        orden + ' Luego, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dejó sin efecto la búsqueda.'
+        orden
+        + ' Posteriormente, en resolución de fecha 20 de septiembre de 2026 (folio 20), se dejó sin efecto la búsqueda.'
         in (sin_efecto.observation)
     )
     completa = esp(
@@ -300,3 +301,33 @@ def test_curador_dado_de_baja_o_designado_solo_se_dice_si_rus_no_tiene_curador(t
     assert 'curador' not in r.observation.lower() and r.avisos == []
     # Sin columna de curador en la nómina no se evalúa.
     assert 'curador' not in esp(tmp_path, fila(1) + [3], hist(baja, designa)).observation.lower()
+
+
+def test_busqueda_conector_por_posicion_y_bitacora_sin_falsos_positivos(tmp_path):
+    dos = esp(
+        tmp_path,
+        fila(1) + [3],
+        hist(
+            (ORDEN, '2026-09-01', 10),
+            ('Pide cuenta búsqueda', '2026-09-10', 15),
+            ('Pide cuenta búsqueda', '2026-09-25', 25),
+        ),
+    )
+    assert dos.observation.count('Posteriormente,') == 1 and dos.observation.count('Luego,') == 1
+    # Un número suelto (el día de otra fecha) no prueba que la bitácora ya observó esta orden de búsqueda.
+    otra = bita(('2026-09-05', 'Persona X: orden de búsqueda de fecha 3 de marzo de 2026 (folio 40).'))
+    assert 'orden de búsqueda' in esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 3)), otra).observation
+    misma = bita(('2026-09-05', 'Persona X: consta orden de búsqueda (folio 3).'))
+    assert 'orden de búsqueda' not in esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 3)), misma).observation
+
+
+def test_e04_sin_folio_no_se_repite_con_la_resolucion_de_ingreso(tmp_path):
+    servicio = 'Ing.Serv. protección especializada y otras redes'
+    f = esp(
+        tmp_path,
+        fila(1) + [3],
+        hist((servicio, '2026-10-02', 30)),
+        extra=['2026-10-01'],
+        encabezados=['FEC. RESOLUCION'],
+    )
+    assert 'ordenado el 1 de octubre de 2026' in f.observation and 'Tribunal dispone ingreso' not in f.observation

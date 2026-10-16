@@ -365,3 +365,37 @@ def test_migracion_de_textos_rev6_ajusta_la_redaccion_aprobada_y_respeta_lo_edit
     assert datos['textos']['HISTORIA']['R11_TERMINO']['texto'] == 'Texto propio {FECHA} {FOLIO}.'
     assert datos['textos']['HISTORIA']['R11_SIN_EFECTO']['texto'] == base['R11_SIN_EFECTO']['texto']
     assert datos['textos']['HISTORIA']['T5_INSTITUCIONES']['texto'].startswith('Atendido que en sistema')
+
+
+def test_configuracion_de_revision_4_con_variables_antiguas_abre_y_repone_el_texto(tmp_path):
+    antiguo = (
+        'En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}, que pone '
+        'término a la búsqueda decretada mediante «Orden de búsqueda» de fecha {FECHA_ORDEN}, folio {FOLIO_ORDEN}.'
+    )
+
+    def rev4(d):
+        d['revision_textos'] = 4
+        d['textos']['HISTORIA']['R11_TERMINO']['texto'] = antiguo
+        d['textos']['HISTORIA']['R11_SIN_EFECTO']['texto'] = antiguo.replace('pone término a', 'deja sin efecto')
+
+    datos = _escribir(tmp_path / 'r4', rev4)
+    base = defaults()['textos']['HISTORIA']
+    assert datos['textos']['HISTORIA']['R11_TERMINO']['texto'] == base['R11_TERMINO']['texto']
+    assert datos['textos']['HISTORIA']['R11_SIN_EFECTO']['texto'] == base['R11_SIN_EFECTO']['texto']
+
+
+def test_un_error_tardio_al_abrir_queda_disponible_para_la_ventana():
+    import threading
+    from nurus.personal.app_base import launch_without_blocking
+
+    liberar = threading.Event()
+
+    def lento(_ruta):
+        liberar.wait(5)
+        raise OSError('sin programa asociado')
+
+    resultado = {}
+    assert launch_without_blocking('x.docx', startfile=lento, wait=0.05, result=resultado) is True
+    liberar.set()
+    resultado['thread'].join(5)
+    assert isinstance(resultado['error'], OSError)

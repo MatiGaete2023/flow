@@ -328,6 +328,31 @@ def complete_texts(cfg):
     return added
 
 
+def repair_texts(cfg):
+    """Repone el texto base en las claves cuyo texto guardado ya no tiene las variables de esa clave.
+
+    Pasa cuando una clave cambió de variables entre versiones (p. ej. R11_SIN_EFECTO de la revisión 4): ese texto no
+    puede usarse y, sin esto, validate() rechazaría la configuración completa y la app no abriría."""
+    repaired = []
+    for scope, entries in defaults()['textos'].items():
+        if scope.startswith('_'):
+            continue
+        stored = cfg.get('textos', {}).get(scope, {})
+        for key, entry in entries.items():
+            current = stored.get(key)
+            if not isinstance(current, dict):
+                continue
+            expected = {f for _, f, _, _ in Formatter().parse(entry['texto']) if f}
+            try:
+                valid = variables(str(current.get('texto', '')), expected) == expected
+            except ValueError:
+                valid = False
+            if not valid or not str(current.get('texto', '')).strip():
+                current['texto'] = entry['texto']
+                repaired.append(scope + '.' + key)
+    return repaired
+
+
 class Configuration:
     def __init__(self, directory=None, *, contacts_directory=None):
         self.directory = Path(directory) if directory else user_directory()
@@ -337,7 +362,7 @@ class Configuration:
             self.save(defaults(self.contacts_directory))
         try:
             self.data = json.loads(self.path.read_text(encoding='utf-8'))
-            added = complete_texts(self.data) + complete_umbrales(self.data)
+            added = complete_texts(self.data) + complete_umbrales(self.data) + repair_texts(self.data)
             validate(self.data)
         except Exception as exc:
             raise ValueError(

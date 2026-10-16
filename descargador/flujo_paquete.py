@@ -74,7 +74,7 @@ def run(
         diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra).run(
             batch, backup
         )
-        carpetas_informes = _informes(
+        carpetas_informes, informes_completos = _informes(
             bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, esperar_pantalla, today
         )
         phase('paquete')
@@ -93,6 +93,13 @@ def run(
                 ruta_historia = candidata
         target = root / 'Captura_CSMP.zip'
         opciones = {}
+        if not informes_completos:
+            opciones['avisos'] = [
+                (
+                    'CALENDARIO_INCOMPLETO',
+                    'Se pidió el calendario de informes por vencer y no quedó completo en el paquete.',
+                )
+            ]
         if carpetas_informes:
             opciones['extra_folders'] = carpetas_informes
         if meses != 4:
@@ -114,9 +121,8 @@ def run(
             historia_ok = False
             result = package_current_lot(sheets, manifest, target, consolidated, **opciones)
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])
-        if informes:
-            # Sin el calendario el paquete se crea igual, pero queda marcado como parcial.
-            partial = partial or not carpetas_informes
+        # Sin el calendario (o con un mes faltante) el paquete se crea igual, pero queda marcado como parcial.
+        partial = partial or not informes_completos
         if historia:
             partial = partial or not historia_ok
             result['historia'] = resumen or {'estado': 'INCOMPLETA'}
@@ -131,31 +137,49 @@ def run(
         raise
 
 
+def meses_informes(today, dias=60):
+    """Meses (mes, año) del calendario que cubren desde hoy hasta hoy + `dias`: a veces dos, a veces tres."""
+    from datetime import timedelta
+
+    fin = today + timedelta(days=dias)
+    meses, actual = [], today.replace(day=1)
+    while actual <= fin:
+        meses.append((str(actual.month), str(actual.year)))
+        actual = (actual.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return meses
+
+
 def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, esperar_pantalla, today):
-    """Calendario de informes por vencer (mes actual y siguiente, unos 60 días): pide al usuario cambiar SITFA a ese
-    calendario y actualizar las opciones; si no se logra, el paquete se crea igual y queda parcial."""
-    if not informes:
-        return []
-    from flujo_csmp import months
+    """Calendario de informes por vencer de los próximos 60 días, solo con la hoja de Cumplimiento (es la que lo usa).
+    Pide al usuario cambiar SITFA al calendario; al terminar intenta volver a Seguimiento. Devuelve (carpetas, completo):
+    un mes que falla no descarta los ya descargados, pero el paquete queda parcial."""
+    if not informes or 'Cumplimiento' not in getattr(batch, 'tabs', ()):
+        return [], True
     from lotes import Batch
 
     phase('informes')
+    carpetas = []
+    meses = meses_informes(today or m.now().date())
     try:
         if esperar_pantalla:
             esperar_pantalla('calendario_informes')
         catalog = bridge.call('catalog', {'screen': 'calendario_informes'})
-        carpetas = []
-        for month, year in months(today or m.now().date()):
+        for month, year in meses:
             state['fase'] = f'informes-{year}-{month}'
             plan = Batch(batch.tribunals, (), (), screen='calendario_informes', month=month, year=year)
             BatchRunner(bridge, catalog, relay, cancel, pause=pause).run(plan, backup)
             carpetas.append(backup.parent / state['carpetas'][state['fase']])
-        return carpetas
     except m.PocError as exc:
         if cancel.is_set():
             raise
-        emit('warning', 'No se incluyó el calendario de informes por vencer: ' + str(exc))
-        return []
+        emit('warning', 'No se incluyó completo el calendario de informes por vencer: ' + str(exc))
+    finally:
+        # La consulta siguiente parte en Seguimiento; si no se puede volver, el aviso de la próxima corrida lo dirá.
+        try:
+            bridge.call('catalog', {'screen': 'seguimiento'})
+        except Exception:
+            pass
+    return carpetas, len(carpetas) == len(meses)
 
 
 def run_por_hoja(bridge, catalog, emit, cancel, batch, destination, consolidated=True, **opciones):
@@ -164,14 +188,23 @@ def run_por_hoja(bridge, catalog, emit, cancel, batch, destination, consolidated
     pierde la hoja en curso. El calendario de informes por vencer se agrega a la hoja de Cumplimiento."""
     if len(batch.tabs) < 2:
         return [run(bridge, catalog, emit, cancel, batch, destination, consolidated, **opciones)]
-    resultados = []
+    resultados, fallas = [], []
     for numero, hoja in enumerate(batch.tabs, 1):
         if cancel.is_set():
             break
         emit('status', f'Hoja {numero} de {len(batch.tabs)}: {hoja}.')
         parcial = dict(opciones)
         parcial['informes'] = bool(opciones.get('informes')) and hoja == 'Cumplimiento'
-        resultados.append(
-            run(bridge, catalog, emit, cancel, replace(batch, tabs=(hoja,)), destination, consolidated, **parcial)
-        )
+        try:
+            resultados.append(
+                run(bridge, catalog, emit, cancel, replace(batch, tabs=(hoja,)), destination, consolidated, **parcial)
+            )
+        except m.PocError as exc:
+            if cancel.is_set():
+                raise
+            # Una hoja que falla no impide las siguientes; sus fuentes quedan en su carpeta de respaldo.
+            emit('warning', f'La hoja {hoja} no se pudo completar: {exc}')
+            fallas.append(exc)
+    if fallas and not resultados:
+        raise fallas[0]
     return resultados

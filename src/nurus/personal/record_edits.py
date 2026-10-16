@@ -294,7 +294,10 @@ def _recalculate(work, row):
     finally:
         current.reset(token)
     row.rules = list(dict.fromkeys(event for event in ctx['events'] if event not in work.config['desactivadas']))
-    row.actions = actions_for(row.rules)
+    from datetime import date as _date
+
+    corte = _date.fromisoformat(work.as_of) if getattr(work, 'as_of', '') else None
+    row.actions = actions_for(row.rules, as_date(getattr(work, 'cross_dates', {}).get(row.id)), corte)
     row.avisos = list(dict.fromkeys(ctx['marcas']))
     context = getattr(work, 'capture_context', {}).get(row.id)
     if context:

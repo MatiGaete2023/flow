@@ -19,6 +19,7 @@ from test_reutilizacion_local import bound_lot, diaries
 class Scope:
     screen = 'seguimiento'
     tribunals = ('113',)
+    tabs = ('Cumplimiento',)
 
     def plan(self, catalog):
         return ['consulta ficticia']
@@ -326,11 +327,15 @@ def test_paquete_incluye_los_informes_por_vencer_tras_avisar_al_usuario(monkeypa
         esperar_pantalla=avisos.append,
         today=date(2026, 10, 14),
     )
-    assert avisos == ['calendario_informes'] and puente.llamadas == [('catalog', {'screen': 'calendario_informes'})]
-    assert pantallas == [('10', '2026'), ('11', '2026')] and not result['partial']
+    # El calendario cubre hoy + 60 días (14-oct → 13-dic: tres meses) y al terminar vuelve a Seguimiento.
+    assert avisos == ['calendario_informes'] and puente.llamadas == [
+        ('catalog', {'screen': 'calendario_informes'}),
+        ('catalog', {'screen': 'seguimiento'}),
+    ]
+    assert pantallas == [('10', '2026'), ('11', '2026'), ('12', '2026')] and not result['partial']
     assert [v for n, v in eventos if n == 'phase'] == ['consultas', 'bitacoras', 'informes', 'paquete']
     consultas = read_capture(result['path']).rows('consultas')
-    assert len([q for q in consultas if q['screen'] != 'bitacoras']) == 3
+    assert len([q for q in consultas if q['screen'] != 'bitacoras']) == 4
 
 
 def test_si_el_usuario_omite_los_informes_el_paquete_se_crea_parcial(monkeypatch, tmp_path):
@@ -378,4 +383,55 @@ def test_un_paquete_por_hoja_entrega_cada_hoja_por_separado(monkeypatch, tmp_pat
     assert len(resultados) == 2 and all(Path(r['path']).is_file() for r in resultados)
     assert resultados[0]['path'] != resultados[1]['path']
     # El calendario se descarga una vez, con la hoja de Cumplimiento.
-    assert avisos == ['calendario_informes'] and pantallas == [('10', '2026'), ('11', '2026')]
+    assert avisos == ['calendario_informes'] and pantallas == [('10', '2026'), ('11', '2026'), ('12', '2026')]
+
+
+def test_meses_del_calendario_cubren_sesenta_dias():
+    from datetime import date
+
+    assert flujo_paquete.meses_informes(date(2026, 10, 1)) == [('10', '2026'), ('11', '2026')]
+    assert flujo_paquete.meses_informes(date(2026, 10, 16)) == [('10', '2026'), ('11', '2026'), ('12', '2026')]
+    assert flujo_paquete.meses_informes(date(2026, 12, 20)) == [('12', '2026'), ('1', '2027'), ('2', '2027')]
+
+
+def test_sin_cumplimiento_no_se_pide_el_calendario(monkeypatch, tmp_path):
+    cancel = Event()
+    pantallas = runners_con_calendario(monkeypatch, cancel)
+    avisos = []
+
+    class Espera(Scope):
+        tabs = ('Espera',)
+
+    result = flujo_paquete.run(
+        PuenteCatalogo(),
+        {},
+        lambda *event: None,
+        cancel,
+        Espera(),
+        tmp_path,
+        informes=True,
+        esperar_pantalla=avisos.append,
+    )
+    assert avisos == [] and pantallas == [] and not result['partial']
+
+
+def test_un_mes_que_falla_conserva_los_otros_y_el_paquete_queda_parcial_con_aviso(monkeypatch, tmp_path):
+    from datetime import date
+
+    cancel = Event()
+    pantallas = runners_con_calendario(monkeypatch, cancel)
+    original = flujo_paquete.BatchRunner
+
+    class FallaDiciembre(original):
+        def run(self, batch, destination):
+            if batch.screen == 'calendario_informes' and batch.month == '12':
+                raise PocError('SITFA no ofrece ese mes.')
+            return super().run(batch, destination)
+
+    monkeypatch.setattr(flujo_paquete, 'BatchRunner', FallaDiciembre)
+    result = flujo_paquete.run(
+        PuenteCatalogo(), {}, lambda *event: None, cancel, Scope(), tmp_path, informes=True, today=date(2026, 10, 16)
+    )
+    assert pantallas == [('10', '2026'), ('11', '2026')] and result['partial']
+    codigos = [i['code'] for i in read_capture(result['path']).rows('incidencias')]
+    assert 'CALENDARIO_INCOMPLETO' in codigos

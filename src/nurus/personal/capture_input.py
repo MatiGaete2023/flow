@@ -129,13 +129,11 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         return cached
     records = list(capture.rows('registros'))
     todos = list(records)
-    # Con Espera o Cumplimiento en la captura, el calendario de informes por vencer solo aporta fechas al cruce
-    # (C-10 y correo preventivo): sus filas no son registros propios, para no duplicar a la misma persona.
+    # Con registros de Seguimiento en la captura, el calendario de informes por vencer solo aporta fechas al cruce
+    # (C-10 y correo preventivo): sus filas no son registros propios, para no duplicar a la misma persona. Un paquete
+    # hecho solo del calendario sigue mostrándolo como filas.
     pantallas = {q['query_id']: q['screen'] for q in capture.rows('consultas')}
-    solo_cruce = any(
-        r['record_type'] in ('ESPERA', 'CUMPLIMIENTO') and pantallas.get(r['query_id']) != 'calendario_informes'
-        for r in records
-    )
+    solo_cruce = any(pantallas.get(r['query_id']) != 'calendario_informes' for r in records)
     if solo_cruce:
         records = [r for r in records if pantallas.get(r['query_id']) != 'calendario_informes']
 

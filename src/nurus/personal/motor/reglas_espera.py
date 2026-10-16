@@ -84,13 +84,14 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     H.ingreso_efectivo_en_espera(hoy, espera)
     H.marcas_sin_efecto()
     fres=fecha_valida(row.get(cols.get('resolucion'))) if cols.get('resolucion') else None
+    e04=False
     if fres:
         d=(hoy-_date(fres)).days
         if 0 <= d < parametro('resolucion_reciente'):
             folio=H.folio_resolucion(fres)
             if folio: frags.append(render('HISTORIA','E04_CON_FOLIO', PROGRAMA=titulo_programa(programa), FECHA_RESOLUCION=fecha_es(fres), FOLIO=folio))
             else: frags.append(render('ESPERA','E04_RESOLUCION_RECIENTE', PROGRAMA=titulo_programa(programa), FECHA_RESOLUCION=fecha_es(fres)))
-            principal=True
+            principal=e04=True
     if cols.get('espera') and (espera is None or espera < 0):
         incidencias.agregar(fila_excel, _rit(row, cols), 'E-05/E-06',
                             'tiempo de espera ausente o inválido (G-05)')
@@ -115,7 +116,8 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     if not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
     frags += H.lista_espera_larga(programa, espera)
-    frags += H.servicio(programa) + H.busqueda_historia()
+    # Con E-04 la resolución de ingreso ya se dijo: el trámite «Ing.Serv.» no la repite (un dato, una vez).
+    frags += ([] if e04 else H.servicio(programa)) + H.busqueda_historia()
     frags += H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _complementarias(row, cols)
     frags += H.aclaracion_causa()

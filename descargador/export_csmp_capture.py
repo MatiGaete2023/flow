@@ -107,6 +107,7 @@ def export_capture(
     _consolidated_data=None,
     historia=None,
     meses=4,
+    avisos=(),
 ):
     lots = list(lots)
     if not lots:
@@ -260,6 +261,9 @@ def export_capture(
                             'normalized_json': json.dumps(normalized, ensure_ascii=False),
                         }
                     )
+    for codigo, mensaje in avisos:
+        # Avisos del flujo (p. ej. calendario pedido y no completo): viajan en el paquete, no solo en el Descargador.
+        incident(data['consultas'][0]['query_id'] if data['consultas'] else '', codigo, mensaje)
     resueltos = set(asociar_calendarios(data))
     if resueltos:
         data['incidencias'] = [
@@ -321,7 +325,9 @@ def export_capture(
             for warning in snapshot.get('warnings', []):
                 incident(qid, 'BITACORA_ADVERTENCIA', warning)
             for en, entry in enumerate(snapshot['entries'], 1):
-                if entry['fecha'][:10] < primera_fecha:
+                # Con 4 meses (valor por defecto) el paquete conserva la bitácora completa, como antes: el motor
+                # busca ahí la primera observación de una materia para reiterarla. Solo un período menor recorta.
+                if meses < 4 and entry['fecha'][:10] < primera_fecha:
                     continue
                 common = {k: '' for k in COMMON}
                 common.update(

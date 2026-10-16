@@ -221,24 +221,43 @@ def marcas_sin_efecto():
         marcar(2, 'DEJA_SIN_EFECTO_MN', 'Deja sin efecto medida interconexión M.N. en la historia')
 
 
-def _busqueda_en_bitacora(ultimo_tramite):
-    """True si la bitácora ya menciona la búsqueda hasta su último trámite (su folio o su fecha)."""
-    folio = re.escape(ultimo_tramite.folio_txt) if ultimo_tramite.folio_txt else None
-    fecha = clave(fecha_es(ultimo_tramite.fecha))
+def _en_bitacora(tramite, materia):
+    """True si una observación de la bitácora posterior al trámite ya lo mencionó: habla de la materia y cita su folio
+    («folio N») o su fecha completa. Un número suelto (el día de otra fecha) no basta."""
+    fecha = clave(fecha_es(tramite.fecha))
+    folio = re.escape(tramite.folio_txt) if tramite.folio_txt else None
     for obs in bitacora():
+        if obs.fecha < tramite.fecha:
+            continue
         texto = clave(obs.texto)
-        if 'busqueda' in texto and ((folio and re.search(rf'(?<!\d){folio}(?!\d)', texto)) or fecha in texto):
+        if materia not in texto:
+            continue
+        if fecha in texto or (folio and re.search(rf'\bfolio (?:n[o°º]? )?{folio}(?!\d)', texto)):
             return True
     return False
 
 
-def _frase_busqueda(tramite, orden):
+def _busqueda_en_bitacora(ultimo_tramite):
+    """True si la bitácora ya menciona la búsqueda hasta su último trámite."""
+    return _en_bitacora(ultimo_tramite, 'busqueda')
+
+
+CONECTORES = ('Posteriormente, ', 'Luego, ')
+
+
+def _frase_busqueda(tramite, posicion):
+    """Trámite posterior a la orden; el primero abre con «Posteriormente» y los siguientes con «Luego» (decisión y8)."""
     llaves = {
         clave(V.PIDE_CUENTA_BUSQUEDA): 'R11_PIDE_CUENTA',
         clave(V.SIN_EFECTO_BUSQUEDA): 'R11_SIN_EFECTO',
         clave(V.TERMINO_BUSQUEDA): 'R11_TERMINO',
     }
-    return render('HISTORIA', llaves[tramite.clave], FECHA=fecha_es(tramite.fecha), FOLIO=_folio(tramite))
+    texto = render('HISTORIA', llaves[tramite.clave], FECHA=fecha_es(tramite.fecha), FOLIO=_folio(tramite))
+    actual = next((c for c in CONECTORES if str(texto).startswith(c)), None)
+    if not texto or actual is None:
+        return texto
+    deseado = CONECTORES[0 if posicion == 0 else 1]
+    return con_grupo(deseado + str(texto)[len(actual) :], 'C')
 
 
 def busqueda_historia():
@@ -273,7 +292,7 @@ def busqueda_historia():
         if not texto:
             continue
         salida.append(texto)
-        salida += [f for f in (_frase_busqueda(t, orden) for t in cadena[1:]) if f]
+        salida += [f for f in (_frase_busqueda(t, n) for n, t in enumerate(cadena[1:])) if f]
     # Cierre o consulta sin la orden en la historia: constancia neutra, solo si es reciente y no se observó antes.
     for t in huerfanos:
         if t.fecha >= desde and not _busqueda_en_bitacora(t):
@@ -322,14 +341,8 @@ def ingreso_informado(fecha_ingreso):
 
 
 def _prorroga_en_bitacora(prorroga):
-    """True si la bitácora ya menciona esa prórroga (su folio o su fecha): se revisó en una observación anterior."""
-    folio = re.escape(prorroga.folio_txt) if prorroga.folio_txt else None
-    fecha = clave(fecha_es(prorroga.fecha))
-    for obs in bitacora():
-        texto = clave(obs.texto)
-        if 'prorrog' in texto and ((folio and re.search(rf'(?<!\d){folio}(?!\d)', texto)) or fecha in texto):
-            return True
-    return False
+    """True si la bitácora ya menciona esa prórroga: se revisó en una observación anterior."""
+    return _en_bitacora(prorroga, 'prorrog')
 
 
 def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):

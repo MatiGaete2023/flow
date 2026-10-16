@@ -341,7 +341,7 @@ def mail_metric_value(work, row, key):
         texto = value(work, row, key).strip()
         if texto or key != 'vencimiento' or key in getattr(row, 'overrides', {}):
             return texto
-        cruce = getattr(work, 'cross_dates', {}).get(row.id)
+        cruce = _cross_date(work, row)
         return cruce.strftime('%d/%m/%Y') if cruce else ''
     from nurus.rus.columns import map_columns
 
@@ -350,12 +350,19 @@ def mail_metric_value(work, row, key):
     raw = row.values.get(column, '')
     if key == 'vencimiento' and raw in (None, ''):
         # Fila de Cumplimiento: el próximo informe viene del calendario de informes por vencer del paquete.
-        raw = getattr(work, 'cross_dates', {}).get(row.id)
+        raw = _cross_date(work, row)
     if raw is None:
         return ''
     if isinstance(raw, (date, datetime)):
         return raw.strftime('%d/%m/%Y')
     return str(raw).strip()
+
+
+def _cross_date(work, row):
+    """Fecha del cruce (próximo informe); una sesión reanudada la guarda como texto ISO."""
+    from nurus.rus.util import as_date
+
+    return as_date(getattr(work, 'cross_dates', {}).get(row.id))
 
 
 def due_value(work, row, kind):

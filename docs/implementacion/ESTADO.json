@@ -1893,6 +1893,34 @@
         "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
       ]
     },
+    "WP-55": {
+      "titulo": "Correcciones de la autoauditoría E3 (WP-65 a WP-69)",
+      "ola": 8,
+      "tipo": "M",
+      "depende_de": [
+        {
+          "wp": "WP-69",
+          "tipo": "archivo"
+        }
+      ],
+      "decisiones": [
+        "j"
+      ],
+      "estado": "EN_REVISION",
+      "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+      "tomado": "16 de octubre de 2026",
+      "rama": "claude/lucid-sagan-hw9ul4",
+      "pr": null,
+      "verificacion": "Pendiente.",
+      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "auditoria": null,
+      "integrado_en": null,
+      "notas": [
+        "Informe: docs/implementacion/revision/E3_WP65_69_20261016.md (tres revisores independientes en paralelo; no reemplaza la E3 de otra raíz).",
+        "Decisiones pendientes del usuario: R5b, R6, D5 (aviso del calendario).",
+        "No integrado ni aceptado."
+      ]
+    },
     "WP-64": {
       "titulo": "Fase B: correcciones de auditoría final",
       "ola": 8,

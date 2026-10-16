@@ -39,8 +39,14 @@ class Row:
     avisos: list = field(default_factory=list)
 
 
-def actions_for(events):
-    """Selección por identificador de rama, nunca por palabras de la observación."""
+VENTANA_POR_VENCER_DIAS = 60
+
+
+def actions_for(events, due=None, as_of=None):
+    """Selección por identificador de rama, nunca por palabras de la observación.
+
+    `due`/`as_of`: fecha del próximo informe (cruce) y corte; el correo preventivo de C-10 solo va si vence dentro de
+    60 días (con la hoja 2 de un Excel el cruce puede traer fechas lejanas)."""
     actions = []
     if any(e.endswith(('E05_SOLO_CORREO', 'E05_PROYECTO_Y_CORREO')) for e in events):
         actions.append('programa_espera')
@@ -54,8 +60,12 @@ def actions_for(events):
     if any(e.startswith(('CUMPLIMIENTO.C04_', 'CUMPLIMIENTO.C05_')) for e in events):
         actions.append('medidas')
     # Informe por vencer del calendario (cruce): el correo preventivo se alimenta de esa fecha.
-    if 'CUMPLIMIENTO.C10_HOJA2' in events:
-        actions.append('programa_por_vencer')
+    if 'CUMPLIMIENTO.C10_HOJA2' in events and 'programa_por_vencer' not in actions:
+        from nurus.rus.util import as_date
+
+        vence = as_date(due) if due is not None else None
+        if vence is None or as_of is None or (vence - as_of).days <= VENTANA_POR_VENCER_DIAS:
+            actions.append('programa_por_vencer')
     # Observaciones que remiten un proyecto para aplicar una nomenclatura (informe ingresado, causa finalizada).
     if any(e in ('HISTORIA.C10_ESCRITO', 'HISTORIA.P_FINALIZADA') for e in events):
         actions.append('NOMENCL')
@@ -192,11 +202,11 @@ def _map_consolidated(work, capture, book):
 
 def _automatic_resolution(row):
     """Tipo de proyecto que el motor identificó (PC_IE, PC_INFO o NOMENCL) para llenar la columna RES; None si no hay."""
-    from .resolutions import KINDS
+    from .resolutions import suggested_resolution
 
-    if row.excluded or row.decisions.get('resolution', 'auto') != 'auto':
+    if row.decisions.get('resolution', 'auto') != 'auto':
         return None
-    return next((kind for kind in row.actions if kind in KINDS), None)
+    return suggested_resolution(row)
 
 
 def _human_reviewed(row):
@@ -206,11 +216,11 @@ def _human_reviewed(row):
         return True
     if any(_explicit(review.get(key)) for key in ('FECHA_OBS', 'TT', 'CC')):
         return True
-    # El tipo que el motor sugirió en RES no es una edición humana; cambiarlo o escribir otro sí lo es.
-    from .resolutions import resolution_kind
+    # El tipo que el motor sugirió en RES no es una edición humana, tampoco al reimportar la copia (allí la
+    # decisión pasa a «review»); cambiarlo o escribir otro sí lo es.
+    from .resolutions import res_is_human
 
-    marcado = review.get('RES')
-    return _explicit(marcado) and (resolution_kind(marcado) or str(marcado).strip()) != _automatic_resolution(row)
+    return res_is_human(row)
 
 
 def _source_value(row, key, default=''):
@@ -468,7 +478,7 @@ class Work:
                     dict(record.values),
                     observation,
                     list(dict.fromkeys(events)),
-                    [] if excluded else actions_for(events),
+                    [] if excluded else actions_for(events, self.cross_dates[record.record_id], corte),
                     warnings,
                     excluded,
                 )

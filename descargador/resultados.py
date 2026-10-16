@@ -247,15 +247,12 @@ def tables(lot):
             raise m.PocError('El archivo cambió durante la lectura.')
         selection = query.get('seleccion') or manifest.get('seleccion') or {}
         if selection.get('screen') == 'carga':
-            from carga import HEADERS, records_in_grid, canonical
-            import re
+            from carga import HEADERS, RIT_RE, records_in_grid, canonical
 
             info = m.read_excel(content, records_in_grid)
             headers = HEADERS
             rows = [
-                (i, tuple(row))
-                for i, row in enumerate(info.grid, 1)
-                if row and re.fullmatch(r'[A-Z]+-\d+-\d{4}', canonical(row[0]))
+                (i, tuple(row)) for i, row in enumerate(info.grid, 1) if row and RIT_RE.fullmatch(canonical(row[0]))
             ]
         else:
             info = m.read_excel(content)
