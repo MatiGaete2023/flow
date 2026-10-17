@@ -45,6 +45,10 @@ def healthy():
         "omitidas": 1,
         "fallidas": 0,
         "subpruebas": 2,
+        "xfail": 0,
+        "xpass": 0,
+        "subpruebas_omitidas": 0,
+        "deseleccionadas": 0,
         "codigo": 0,
         "resumen": "10 passed, 1 skipped",
     }
@@ -470,3 +474,115 @@ def test_falla_de_suite_informa_nodeids_sin_mensajes(monkeypatch, healthy):
     assert "tests/test_x.py::test_ficticio[a-b]" in detail and "dato-privado-ficticio" not in detail
     report = verifier.suite_report(now["asistente"])
     assert report["fallidas_nodeids"] == now["asistente"]["fallidas_nodeids"]
+
+
+@pytest.mark.parametrize('suite', ['asistente', 'descargador'])
+@pytest.mark.parametrize('field', ['omitidas', 'xfail'])
+def test_new_skips_or_xfails_cannot_be_compensated_with_new_passes(healthy, suite, field):
+    now = copy.deepcopy(healthy)
+    now[suite]['aprobadas'] += 1
+    now[suite][field] += 1
+    prefix = 'tests' if suite == 'asistente' else 'descargador'
+    now['pruebas_recolectadas'][suite].append(f'{prefix}/test_new.py::test_added')
+    checks = verifier.compare(now, healthy, 0, 0)
+    assert next(c for c in checks if c['control'] == 'Inventario de pruebas')['resultado'] == 'PASA'
+    assert next(c for c in checks if c['control'] == f'Suite {suite}')['resultado'] == 'FALLA'
+
+
+@pytest.mark.parametrize('suite', ['asistente', 'descargador'])
+def test_subtest_loss_fails_even_when_parent_and_pass_count_are_preserved(healthy, suite):
+    now = copy.deepcopy(healthy)
+    now[suite]['subpruebas'] -= 1
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+def test_declaring_parent_removal_does_not_guess_which_subtests_were_removed(healthy):
+    node = healthy['pruebas_recolectadas']['asistente'][0]
+    now = copy.deepcopy(healthy)
+    now['asistente']['aprobadas'] -= 1
+    now['asistente']['subpruebas'] = 0
+    now['pruebas_recolectadas']['asistente'] = []
+    lists = ({'asistente': 1, 'descargador': 0}, [], {'asistente': {node}, 'descargador': set()})
+    checks = verifier.compare(now, healthy, 0, 0, lists)
+    assert next(c for c in checks if c['control'] == 'Inventario de pruebas')['resultado'] == 'PASA'
+    assert next(c for c in checks if c['control'] == 'Suite asistente')['resultado'] == 'FALLA'
+
+
+@pytest.mark.parametrize(
+    'summary,field',
+    [
+        ('1 xpassed', 'xpass'),
+        ('1 deselected', 'deseleccionadas'),
+        ('1 subtests skipped', 'subpruebas_omitidas'),
+    ],
+)
+def test_unexpected_pytest_outcomes_survive_parsing_and_publication_and_fail_gate(monkeypatch, healthy, summary, field):
+    output = f'10 passed, 1 skipped, 2 subtests passed, {summary} in 0.10s'
+    monkeypatch.setattr(verifier, 'run', lambda *a, **k: (0, output))
+    result = verifier.pytest_counts([])
+    assert result['medicion_valida'] is True
+    assert result['codigo'] == 0 and result['fallidas'] == 0
+    assert result[field] == 1
+    assert verifier.suite_report(result)[field] == 1
+    now = copy.deepcopy(healthy)
+    now['asistente'] = result
+    assert not verifier.suite_valid(result)
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+@pytest.mark.parametrize('field', ['xfail', 'xpass', 'deseleccionadas', 'subpruebas_omitidas'])
+@pytest.mark.parametrize('bad', [-1, True, '1', None])
+def test_optional_outcome_counts_are_validated_when_present(healthy, field, bad):
+    now = copy.deepcopy(healthy)
+    now['asistente'][field] = bad
+    assert not verifier.suite_valid(now['asistente'])
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+def test_old_measurements_with_absent_new_outcome_fields_remain_compatible(healthy):
+    historical = copy.deepcopy(healthy)
+    for suite in ('asistente', 'descargador'):
+        for field in ('xfail', 'xpass', 'deseleccionadas', 'subpruebas_omitidas'):
+            del historical[suite][field]
+        assert verifier.suite_valid(historical[suite])
+    assert passes(verifier.compare(healthy, historical, 0, 0))
+
+
+def test_improved_coverage_and_resolved_expected_failures_are_allowed(healthy):
+    base = copy.deepcopy(healthy)
+    base['asistente']['xfail'] = 6
+    now = copy.deepcopy(base)
+    now['asistente'].update(aprobadas=12, omitidas=0, xfail=5, subpruebas=3)
+    assert passes(verifier.compare(now, base, 0, 0))
+
+
+@pytest.mark.parametrize('existing_baseline', [False, True])
+def test_xpass_cannot_initialize_or_replace_baseline_or_enter_cache(
+    monkeypatch, baseline_file, healthy, isolated_cache, existing_baseline
+):
+    original = json.dumps(healthy).encode()
+    if existing_baseline:
+        baseline_file.write_bytes(original)
+    broken = copy.deepcopy(healthy)
+    broken['asistente']['xpass'] = 1
+    monkeypatch.setattr(verifier, 'collect', lambda: copy.deepcopy(broken))
+    assert not verifier.complete(broken)
+    assert verifier.main(['--linea-base']) == 1
+    if existing_baseline:
+        assert baseline_file.read_bytes() == original
+    else:
+        assert not baseline_file.exists()
+    assert not isolated_cache.exists() or not list(isolated_cache.glob('*.json'))
+
+
+def test_old_cached_xpass_is_rejected_and_measured_again(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding='utf-8')
+    broken = copy.deepcopy(healthy)
+    broken['asistente']['xpass'] = 1
+    key = verifier.environment_key('b' * 40)
+    isolated_cache.mkdir()
+    (isolated_cache / f'{key}.json').write_text(json.dumps({'clave': key, 'medicion': broken}), encoding='utf-8')
+    calls = []
+    monkeypatch.setattr(verifier, 'collect', lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main(['--reutilizar-medicion']) == 0
+    assert calls == [1]

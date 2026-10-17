@@ -1,0 +1,99 @@
+{
+  "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+  "base": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "975 aprobadas; mínimo 932; base 932; omitidas 11/11; xfail 6/6 (máximos); subpruebas 0/0 (mínimo); código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "283 aprobadas; mínimo 283; base 283; omitidas 0/0; xfail 0/0 (máximos); subpruebas 62/62 (mínimo); código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 975,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "xpass": 0,
+      "deseleccionadas": 0,
+      "subpruebas_omitidas": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    },
+    "descargador": {
+      "aprobadas": 283,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "xpass": 0,
+      "deseleccionadas": 0,
+      "subpruebas_omitidas": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+    "arbol_git": "923b3c3cfe8051e7bb433d8b1dbfd1ad8809e0c8",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+    "arbol_git": "923b3c3cfe8051e7bb433d8b1dbfd1ad8809e0c8",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
+  "medicion_reutilizada": false,
+  "veredicto": "PASA",
+  "origen_medicion": {
+    "commit_canonico": "0ff63a1611b8f2df04533061b4da25848b3e0879",
+    "arbol_canonico": "148952180ee25e17b19db9a5f562517c4c332c6c",
+    "blobs_contrastados": 864,
+    "alcance": "Medición local sobre copia íntegra contrastada por SHA Git. Los commits de procedencia son locales; CI del PR verifica el SHA publicado. El informe es la única ruta excluida por el verificador."
+  }
+}

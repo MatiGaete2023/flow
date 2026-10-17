@@ -116,7 +116,9 @@ def vinculo_externo(wb, ws):
     )
     vinculo = ExternalLink(externalBook=libro)
     vinculo.file_link = Relationship(
-        type='externalLinkPath', TargetMode='External', Target='file:///C:/Users/persona.canario/Causas/CanarioExterno.xlsx'
+        type='externalLinkPath',
+        TargetMode='External',
+        Target='file:///C:/Users/persona.canario/Causas/CanarioExterno.xlsx',
     )
     wb._external_links.append(vinculo)
     ws['M2'] = '=[1]Hoja1!A1'

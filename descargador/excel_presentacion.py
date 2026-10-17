@@ -1,7 +1,6 @@
 """Shared presentation for newly generated reports, never for preserved sources."""
 
 from datetime import date, datetime
-from math import ceil
 from openpyxl.styles import Border, Side, PatternFill, Font, Alignment
 from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
@@ -61,26 +60,3 @@ def format_cell(cell, header=False):
         cell.number_format = '@'
     elif isinstance(cell.value, (date, datetime)):
         cell.number_format = 'dd/mm/yyyy'
-
-
-def format_sheet(sheet, headers):
-    configure_sheet(sheet, headers)
-    for cells in sheet:
-        for cell in cells:
-            format_cell(cell, cell.row == 1)
-        if cells[0].row > 1:
-            lines = max(
-                (
-                    sum(
-                        max(1, ceil(len(part) / max(8, column_width(headers[c.column - 1]) - 3)))
-                        for part in str(c.value or '').split('\n')
-                    )
-                    for c in cells
-                ),
-                default=1,
-            )
-            # Leave very long text to Excel auto-fit instead of forcing a clipped cap.
-            if lines <= 12:
-                sheet.row_dimensions[cells[0].row].height = max(22, 15 * lines + 5)
-    sheet.auto_filter.ref = sheet.dimensions
-    sheet.print_options.horizontalCentered = True

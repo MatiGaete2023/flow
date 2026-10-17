@@ -14,8 +14,8 @@ Uso:
         un valor positivo da FALLA; usar --lista-eliminadas con nodeids medidos.
 
 Controles:
-  1. Suite del Asistente (pytest en tests/): 0 fallos; aprobadas >= base - eliminadas declaradas.
-  2. Suite del Descargador (pytest en descargador/): igual criterio.
+  1. Suite del Asistente (pytest en tests/): 0 fallos/XPASS/deselecciones; aprobadas >= base - bajas.
+  2. Suite del Descargador: igual; sin aumentar omisiones/xfail ni perder subpruebas frente a la base.
   3. Identidades reales (tools/check_real_ids.py): nunca más que la base; si la base es 0, debe ser 0.
   4. Paridad de 17 productos golden (tools/flow_baseline_golden.py): debe decir «PARIDAD PASÓ».
   5. Restricciones absolutas: sin .Send( en src/, CC fijo en policy.py, submit de registro deshabilitado,
@@ -122,13 +122,19 @@ def pytest_counts(args):
         "fallidas": sum(counts.get(key, 0) for key in ("failed", "error", "errors", "subtests failed")),
         "subpruebas": counts.get("subtests passed", 0),
         "xfail": counts.get("xfailed", 0),
+        "xpass": counts.get("xpassed", 0),
+        "deseleccionadas": counts.get("deselected", 0),
+        "subpruebas_omitidas": counts.get("subtests skipped", 0),
         "codigo": code,
         "medicion_valida": bool(valid),
     }
     result["fallidas_nodeids"] = failed_nodeids(out)
     result["resumen"] = (
         f"{result['aprobadas']} aprobadas, {result['omitidas']} omitidas, "
-        f"{result['fallidas']} fallidas, {result['subpruebas']} subpruebas; código {code}"
+        f"{result['fallidas']} fallidas, {result['subpruebas']} subpruebas, "
+        f"{result['xfail']} xfail, {result['xpass']} xpass, "
+        f"{result['deseleccionadas']} deseleccionadas, "
+        f"{result['subpruebas_omitidas']} subpruebas omitidas; código {code}"
     )
     return result
 
@@ -391,8 +397,14 @@ def compare(now, base, removed_a, removed_d, lists=None):
             minimum = b["aprobadas"] - removed
             add(
                 f"Suite {key}",
-                n["aprobadas"] >= minimum,
-                f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; código 0",
+                n["aprobadas"] >= minimum
+                and n["omitidas"] <= b["omitidas"]
+                and n.get("xfail", 0) <= b.get("xfail", 0)
+                and n["subpruebas"] >= b["subpruebas"],
+                f"{n['aprobadas']} aprobadas; mínimo {minimum}; base {b['aprobadas']}; "
+                f"omitidas {n['omitidas']}/{b['omitidas']}; "
+                f"xfail {n.get('xfail', 0)}/{b.get('xfail', 0)} (máximos); "
+                f"subpruebas {n['subpruebas']}/{b['subpruebas']} (mínimo); código 0",
             )
         else:
             failed = (
@@ -400,6 +412,11 @@ def compare(now, base, removed_a, removed_d, lists=None):
             )
             if isinstance(n, dict) and nonnegative(n.get("fallidas")) and n["fallidas"]:
                 detail = f"{n['fallidas']} prueba(s) fallida(s)" + (": " + ", ".join(failed) if failed else "")
+            elif isinstance(n, dict) and any(
+                nonnegative(n.get(field)) and n[field] > 0
+                for field in ("xpass", "deseleccionadas", "subpruebas_omitidas")
+            ):
+                detail = "Suite con XPASS, pruebas deseleccionadas o subpruebas omitidas; revisar antes de certificar"
             else:
                 detail = (
                     "Medición, línea base o declaración de bajas inválida; usar --lista-eliminadas con nodeids medidos"
@@ -461,6 +478,9 @@ def suite_valid(suite):
     return (
         isinstance(suite, dict)
         and all(nonnegative(suite.get(key)) for key in ("aprobadas", "omitidas", "fallidas", "subpruebas"))
+        # Historical baselines predate these fields; absent means zero, malformed never does.
+        and all(nonnegative(suite.get(key, 0)) for key in ("xfail", "xpass", "deseleccionadas", "subpruebas_omitidas"))
+        and all(suite.get(key, 0) == 0 for key in ("xpass", "deseleccionadas", "subpruebas_omitidas"))
         and type(suite.get("codigo")) is int
         and suite["codigo"] == 0
         and suite["fallidas"] == 0
@@ -624,7 +644,16 @@ def suite_report(value):
     value = value if isinstance(value, dict) else {}
     result = {
         key: value.get(key) if nonnegative(value.get(key)) else None
-        for key in ("aprobadas", "omitidas", "fallidas", "subpruebas", "xfail")
+        for key in (
+            "aprobadas",
+            "omitidas",
+            "fallidas",
+            "subpruebas",
+            "xfail",
+            "xpass",
+            "deseleccionadas",
+            "subpruebas_omitidas",
+        )
     }
     result["codigo"] = value.get("codigo") if type(value.get("codigo")) is int else None
     measured = value.get("medicion_valida", True)

@@ -5,13 +5,14 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 55; último en el orden: WP-99.
+- Paquetes integrados: 51 de 56; último en el orden: WP-99.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
+| WP-65 | EN_VERIFICACION | Auditoría de pruebas y código legado |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
 <!-- estado:fin -->
 

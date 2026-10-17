@@ -1,0 +1,20 @@
+{
+  "titulo": "Auditoría de pruebas y código legado",
+  "ola": 7,
+  "tipo": "M",
+  "depende_de": [{"wp": "WP-99", "tipo": "archivo"}],
+  "decisiones": [],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "Codex /root",
+  "tomado": "17 de octubre de 2026",
+  "rama": "wp/WP-65-auditoria-pruebas-20261017",
+  "pr": null,
+  "verificacion": null,
+  "revision": "Dos subagentes de la misma raíz; no equivalen a E3 independiente. Sin cambios en las áreas de riesgo de la decisión j.",
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Base canónica 0ff63a1611b8f2df04533061b4da25848b3e0879; cambios ajenos pendientes no integrados.",
+    "Una función sin uso retirada, cero pruebas retiradas, 31 casos nuevos de protección de cobertura."
+  ]
+}
