@@ -95,5 +95,31 @@
     "arbol_canonico": "148952180ee25e17b19db9a5f562517c4c332c6c",
     "blobs_contrastados": 864,
     "alcance": "Medición local sobre copia íntegra contrastada por SHA Git. Los commits de procedencia son locales; CI del PR verifica el SHA publicado. El informe es la única ruta excluida por el verificador."
+  },
+  "ci_remota": {
+    "commit_codigo": "147b8a069db1605c2316b3d7813a263381a0e8c7",
+    "estado": "BLOQUEADA_ANTES_DE_EJECUTAR_PASOS",
+    "causa": "No acreditada: el conector no permite leer las anotaciones de estos checks; no se atribuye a facturación ni al código sin evidencia.",
+    "runs": [
+      {
+        "id": 39074218719,
+        "nombre": "CI rápida Linux",
+        "conclusion": "failure",
+        "job": 117517924299
+      },
+      {
+        "id": 39074218727,
+        "nombre": "CSMP Assistant Windows",
+        "conclusion": "failure",
+        "job": 117517924062
+      },
+      {
+        "id": 39074218718,
+        "nombre": "Descargador integral y bitácoras",
+        "conclusion": "failure",
+        "job": 117517924098
+      }
+    ],
+    "observado": "Sin pasos ejecutados, sin logs y runner_id=0. Veredicto local PASA no equivale a CI remota aprobada."
   }
 }
