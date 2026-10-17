@@ -120,6 +120,28 @@
         "job": 117517924098
       }
     ],
-    "observado": "Sin pasos ejecutados, sin logs y runner_id=0. Veredicto local PASA no equivale a CI remota aprobada."
+    "observado": "Sin pasos ejecutados, sin logs y runner_id=0. Veredicto local PASA no equivale a CI remota aprobada.",
+    "commit_documental": "ac204e01237fb8cd95f56230ef450caadc8dbe87",
+    "runs_documental": [
+      {
+        "id": 39074332528,
+        "nombre": "CI rápida Linux",
+        "conclusion": "failure",
+        "job": 117518252009
+      },
+      {
+        "id": 39074332475,
+        "nombre": "CSMP Assistant Windows",
+        "conclusion": "failure",
+        "job": 117518251785
+      },
+      {
+        "id": 39074332482,
+        "nombre": "Descargador integral y bitácoras",
+        "conclusion": "failure",
+        "job": 117518252031
+      }
+    ],
+    "alcance_bloqueo": "Último run aprobado del repositorio: 38939108105 (2026-10-16T17:34:39Z). Desde 2026-10-16T17:45Z todos los runs fallan en segundos en cualquier rama y evento, incluido el push de la base 0ff63a1 (38945491608). El bloqueo es anterior a WP-65 y no lo causa su diff; la causa exacta sigue sin acreditar."
   }
 }
