@@ -52,20 +52,11 @@ def periodo(corte):
 
 
 def fecha(value):
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None)
-    if isinstance(value, date):
-        return datetime.combine(value, datetime.min.time())
-    value = str(value or '').strip()
+    # Toda entrada nace de bitacora_html._date(...).isoformat(): otro formato es un JSON alterado.
     try:
-        return datetime.fromisoformat(value.replace('Z', '+00:00')).replace(tzinfo=None)
+        return datetime.fromisoformat(str(value or '').strip().replace('Z', '+00:00')).replace(tzinfo=None)
     except ValueError:
-        for fmt in ('%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y', '%d-%m-%Y'):
-            try:
-                return datetime.strptime(value, fmt)
-            except ValueError:
-                pass
-    raise ValueError('Fecha de bitácora no reconocida.')
+        raise ValueError('Fecha de bitácora no reconocida.') from None
 
 
 def etapa(entry):

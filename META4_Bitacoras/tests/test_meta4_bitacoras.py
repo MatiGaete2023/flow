@@ -495,3 +495,131 @@ def test_available_tribunals_from_lot(tmp_path):
     data['consultas'][0]['seleccion']['tribunal_nombre'] = 'Juzgado de Familia de Laja'
     (tmp_path / 'resumen.json').write_text(json.dumps(data))
     assert app.tribunales_disponibles(tmp_path) == ['LAJA']
+
+
+# --------------------------------------------------------------------------
+# Auditoría 2.3: rutas vivas que no tenían prueba
+# --------------------------------------------------------------------------
+
+def vincular(source, ingreso):
+    """Agrega a la página el vínculo remoto que el Descargador registra para cada fila."""
+    path = source / 'verificacion.json'
+    data = json.loads(path.read_text())
+    data['archivos'][0]['vinculos_ingreso'] = [dict(rit='X-1-2026', rut='11111111-1', nombre='FICTICIO NNA',
+                                                    programa='FAE FICTICIO', tribunal_codigo='101',
+                                                    causa_id='301', ingreso_id=ingreso)]
+    path.write_text(json.dumps(data))
+
+
+def test_downloader_binding_resolves_ambiguous_ingreso_end_to_end(tmp_path):
+    records = [diary(ingreso='201', entries=[entrada('2026-10-10', 'Cumplimiento')]),
+               diary(ingreso='202', entries=[entrada('2026-10-10', 'Espera')])]
+    sin = tmp_path / 'sin'
+    sin.mkdir()
+    lote_html(sin, [{}])
+    save_diaries(sin, records)
+    assert app.generar(sin, tmp_path / 'r1', CORTE)['controles_bitacora'] == {'IDENTIDAD AMBIGUA': 1}
+    con = tmp_path / 'con'
+    con.mkdir()
+    lote_html(con, [{}])
+    vincular(con, '202')
+    save_diaries(con, records)
+    report = app.generar(con, tmp_path / 'r2', CORTE)
+    assert report['alertas'] == 1 and report['controles_bitacora'] == {app.VERIFICADA: 1}
+
+
+def test_empty_query_pdf_evidence_covers_combination(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    lote_html(source, [{}])
+    (source / 'ESP FAE Jdo Familia Laja.pdf').write_bytes(b'%PDF-ficticio')
+    (source / 'verificacion 2.json').write_text(json.dumps(dict(
+        estado='SIN_RESULTADOS', paginas_esperadas=0, paginas_verificadas=0, archivos=[],
+        evidencia=dict(archivo='ESP FAE Jdo Familia Laja.pdf', registros=0))))
+    data = json.loads((source / 'resumen.json').read_text())
+    data['consultas'].append(dict(verificacion='verificacion 2.json', estado='SIN_RESULTADOS',
+                                  seleccion=dict(tab='Espera', modality='3')))
+    (source / 'resumen.json').write_text(json.dumps(data))
+    save_diaries(source, [diary()])
+    target = tmp_path / 'resultado'
+    app.generar(source, target, CORTE)
+    ws = load_workbook(target / 'Registros.xlsx')['MATRIZ_COBERTURA']
+    laja = next(r for r in range(5, ws.max_row + 1) if ws.cell(r, 1).value == 'LAJA')
+    assert ws.cell(laja, 2).value == 'PDF · 0 registros' and ws.cell(laja, 3).value == 'EXCEL · 1 registro(s)'
+
+
+@pytest.mark.parametrize('cambio,mensaje', [
+    (lambda r, v: r.update(estado='INCOMPLETA'), 'incompleta'),
+    (lambda r, v: v.update(paginas_verificadas=0), 'Faltan páginas'),
+    (lambda r, v: v.update(estado='EN_CURSO'), 'no está validada'),
+])
+def test_downloader_lot_integrity_checks(tmp_path, cambio, mensaje):
+    lote_html(tmp_path, [{}])
+    resumen = json.loads((tmp_path / 'resumen.json').read_text())
+    check = json.loads((tmp_path / 'verificacion.json').read_text())
+    cambio(resumen, check)
+    (tmp_path / 'resumen.json').write_text(json.dumps(resumen))
+    (tmp_path / 'verificacion.json').write_text(json.dumps(check))
+    with pytest.raises(ValueError, match=mensaje):
+        app.fuentes(tmp_path)
+
+
+def test_two_record_lots_in_one_folder_are_rejected(tmp_path):
+    for name in ('a', 'b'):
+        (tmp_path / name).mkdir()
+        lote_html(tmp_path / name, [{}])
+    with pytest.raises(ValueError, match='varios lotes'):
+        app.fuentes(tmp_path)
+
+
+def test_visible_identity_warning_blocks_association(tmp_path):
+    save_diaries(tmp_path, [dict(diary(), advertencias=['Advertencia: nombre visible distinto'])])
+    assert app.cargar_bitacoras(tmp_path, CORTE)[0]['control'] == app.IDENTIDAD_VISIBLE
+
+
+def test_filtered_diary_lot_is_reported(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source)
+    path = source / 'bitacoras_meta4.json'
+    data = json.loads(path.read_text())
+    data['seleccion'] = {'dates': {'start': '01/10/2026', 'end': '16/10/2026'}, 'keep_filters': False}
+    path.write_text(json.dumps(data))
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert len(report['avisos_bitacoras']) == 1 and 'filtros' in report['avisos_bitacoras'][0]
+
+
+def test_match_by_name_without_rut_and_program_must_match():
+    base = {'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': None, 'NOMBRE': 'FICTICIO NNA', 'DERIVACIÓN': 'FAE FICTICIO'}
+    d = dict(diary(), control='OK', entries=[])
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base), '', '', 1)
+    assert app.buscar(row, [d])[1] == 'OK'
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, NOMBRE='OTRA PERSONA'), '', '', 1)
+    assert app.buscar(row, [d]) == (None, 'SIN BITÁCORA ASOCIADA')
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, DERIVACIÓN='OTRO PROGRAMA'), '', '', 1)
+    assert app.buscar(row, [d]) == (None, 'SIN BITÁCORA ASOCIADA')
+
+
+def test_alert_marking_refuses_misaligned_rows():
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {'RIT': 'X-1-2026', 'ALERTA': '', app.EXTRA[1]: app.VERIFICADA}, '', '', 1)
+    records = {name: {t: [] for t in app.meta.TRIBUNALS} for name in app.meta.SHEET_DEFS}
+    records['FAE Cumplimiento']['LAJA'] = [['X-9-2026']]
+    wb = app.meta.build_default_template()
+    with pytest.raises(ValueError, match='alinear'):
+        app.marcar_planilla(wb, records, {'Espera': [], 'Cumplimiento': [row]})
+
+
+def test_grid_frame_matches_previous_xlsx_roundtrip_semantics():
+    grid = [['', None, 'A1'], [], ['RIT', 'RUT (->RCEI)', 3.0, 2.5, date(2026, 1, 1), '=1+1'], ['', '']]
+    df = app.hoja_desde_grilla(grid)
+    assert df.shape == (3, 6)
+    assert df.iloc[0].tolist()[:3] == [None, None, 'A1'] and all(v is None for v in df.iloc[1])
+    header = df.iloc[2].tolist()
+    assert header[:2] == ['RIT', 'RUT'] and header[2] == 3 and isinstance(header[2], int) and header[3] == 2.5
+    assert header[4].hour == 0 and header[4].year == 2026 and header[5] == '=1+1'
+
+
+def test_diary_dates_are_iso_and_invalid_dates_are_rejected():
+    assert app.fecha('2026-10-10T12:34:56Z').hour == 12
+    with pytest.raises(ValueError, match='no reconocida'):
+        app.fecha('10/10/2026')
