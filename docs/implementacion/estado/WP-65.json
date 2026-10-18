@@ -9,7 +9,7 @@
   "tomado": "17 de octubre de 2026",
   "rama": "wp/WP-65-auditoria-pruebas-20261017",
   "pr": 47,
-  "verificacion": "PASA local en ac204e0: Asistente 975/11/6 xfail; Descargador 283/62 subpruebas; 9 controles y golden17. CI remota bloqueada antes de ejecutar pasos en todo el repositorio desde el 16 de octubre (también la base 0ff63a1); no acreditada.",
+  "verificacion": "PASA local en ac204e0: Asistente 975/11/6 xfail; Descargador 283/62 subpruebas; 9 controles y golden17. CI remota PASA tras reintento (18 de octubre): Linux run 39074332528; Windows Asistente 984/2/6 run 39074332475; Descargador 283/62 run 39074332482.",
   "revision": "Dos subagentes de la misma raíz; no equivalen a E3 independiente. Sin cambios en las áreas de riesgo de la decisión j.",
   "auditoria": null,
   "integrado_en": null,

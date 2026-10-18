@@ -98,7 +98,7 @@
   },
   "ci_remota": {
     "commit_codigo": "147b8a069db1605c2316b3d7813a263381a0e8c7",
-    "estado": "BLOQUEADA_ANTES_DE_EJECUTAR_PASOS",
+    "estado": "PASA_TRAS_REINTENTO",
     "causa": "No acreditada: el conector no permite leer las anotaciones de estos checks; no se atribuye a facturación ni al código sin evidencia.",
     "runs": [
       {
@@ -142,6 +142,36 @@
         "job": 117518252031
       }
     ],
-    "alcance_bloqueo": "Último run aprobado del repositorio: 38939108105 (2026-10-16T17:34:39Z). Desde 2026-10-16T17:45Z todos los runs fallan en segundos en cualquier rama y evento, incluido el push de la base 0ff63a1 (38945491608). El bloqueo es anterior a WP-65 y no lo causa su diff; la causa exacta sigue sin acreditar."
+    "alcance_bloqueo": "Último run aprobado del repositorio: 38939108105 (2026-10-16T17:34:39Z). Desde 2026-10-16T17:45Z todos los runs fallan en segundos en cualquier rama y evento, incluido el push de la base 0ff63a1 (38945491608). El bloqueo es anterior a WP-65 y no lo causa su diff; la causa exacta sigue sin acreditar.",
+    "reintento": {
+      "fecha": "2026-10-18",
+      "commit": "ac204e01237fb8cd95f56230ef450caadc8dbe87",
+      "runs": [
+        {
+          "id": 39074332528,
+          "intento": 2,
+          "nombre": "CI rápida Linux",
+          "conclusion": "success",
+          "job": 117538035804
+        },
+        {
+          "id": 39074332475,
+          "intento": 2,
+          "nombre": "CSMP Assistant Windows",
+          "conclusion": "success",
+          "job": 117538956823,
+          "resumen": "984 aprobadas, 2 omitidas, 6 xfail"
+        },
+        {
+          "id": 39074332482,
+          "intento": 2,
+          "nombre": "Descargador integral y bitácoras",
+          "conclusion": "success",
+          "job": 117538953859,
+          "resumen": "283 aprobadas, 62 subpruebas"
+        }
+      ],
+      "nota": "Impedimento resuelto por el usuario; Linux primero y Windows solo tras PASA, un reintento por corrida."
+    }
   }
 }
