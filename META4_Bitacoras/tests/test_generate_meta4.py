@@ -1,10 +1,11 @@
-"""Suite de regresión para generate_meta4.py v2.4.
+"""Regresiones de la clasificación y escritura (base v2.4), por el camino que usa el producto.
 
 Ejecutar desde la raíz del paquete:  python -m pytest tests -q
 Todos los datos son ficticios. No usar archivos reales del Poder Judicial.
 
-Cada bloque referencia el hallazgo de auditoría que protege (F-01, F-02, H-01,
-H-02, H-03, M-02, etc.) para que el motivo de cada prueba sea rastreable.
+Cada bloque referencia el hallazgo de auditoría que protege (F-01, F-02, H-02, H-03, M-01,
+M-05, A-01…) para que el motivo de cada prueba sea rastreable. Desde 2.3 no existe la línea
+de comandos propia de generate_meta4: las pruebas pasan por meta4_bitacoras.fuentes/generar.
 """
 
 from __future__ import annotations
@@ -12,7 +13,6 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -20,10 +20,14 @@ import pytest
 from openpyxl import Workbook, load_workbook
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-SCRIPT = BASE_DIR / "scripts" / "generate_meta4.py"
 sys.path.insert(0, str(BASE_DIR / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import generate_meta4 as g  # noqa: E402
+import meta4_bitacoras as app  # noqa: E402
+import biff_escritor  # noqa: E402
+
+CORTE = dt.date(2026, 10, 16)
 
 ESP_HDR = [
     "RIT", "TRIBUNAL", "RUT", "NOMBRE", "NACIONALIDAD / PAIS", "TIPO", "SEXO",
@@ -60,7 +64,7 @@ def make_excel(
         ws.cell(5, col, header)
     for offset, fila in enumerate(filas):
         base = {
-            "RIT": fila["rit"], "TRIBUNAL": tribunal, "RUT": "11111111-1",
+            "RIT": fila["rit"], "TRIBUNAL": fila.get("tribunal", tribunal), "RUT": fila.get("rut", "11111111-1"),
             "NOMBRE": "FICTICIO NNA", "TIPO": "MP", "SEXO": "F",
             "DERIVACIÓN": fila["der"], "FEC. RESOLUCIÓN": dt.date(2026, 6, 15),
         }
@@ -79,32 +83,22 @@ def make_excel(
 
 def make_blob(path: Path, when: dt.datetime | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(b"%PDF-ficticio" if path.suffix == ".pdf" else b"ficticio")
+    path.write_bytes(b"%PDF-ficticio")
     if when:
         os.utime(path, (when.timestamp(), when.timestamp()))
     return path
 
 
-def run(folder: Path, output: Path, *extra: str) -> dict:
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--folder", str(folder), "--output-dir", str(output),
-         "--month", "2026-08", *extra],
-        capture_output=True, text=True, check=True,
-    )
-    return json.loads(result.stdout)
+def generar(folder: Path, salida: Path) -> dict:
+    """Producto completo sobre una carpeta de reportes independientes, sin bitácoras leídas."""
+    (folder / "bitacoras_meta4.json").write_text(json.dumps(dict(
+        tipo="META4_BITACORAS_MES", desde="2026-09-16", hasta="2026-10-16", estado="COMPLETA", registros=[])))
+    return app.generar(folder, salida, CORTE)
 
 
-def sheet_rows(path: Path, sheet: str) -> list[tuple]:
-    wb = load_workbook(path, read_only=True, data_only=True)
-    try:
-        ws = wb[sheet]
-        rows = []
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            if row[0] is not None and str(row[0]).strip():
-                rows.append(row)
-        return rows
-    finally:
-        wb.close()
+def matrix_cell(path: Path, tribunal: str, column: int):
+    ws = load_workbook(path)["MATRIZ_COBERTURA"]
+    return next(ws.cell(r, column).value for r in range(5, ws.max_row + 1) if ws.cell(r, 1).value == tribunal)
 
 
 # --------------------------------------------------------------------------
@@ -159,54 +153,32 @@ def test_modalidad_plural_y_ambigua():
 
 
 # --------------------------------------------------------------------------
-# Feriados (F-08)
-# --------------------------------------------------------------------------
-
-def test_feriado_solsticio_respaldo():
-    assert dt.date(2026, 6, 21) in g.fallback_chile_holidays(2026)
-    assert dt.date(2026, 6, 20) not in g.fallback_chile_holidays(2026)
-
-
-def test_primer_dia_habil(tmp_path):
-    assert g.first_business_day(2026, 1, BASE_DIR) == dt.date(2026, 1, 2)
-    assert g.first_business_day(2026, 5, BASE_DIR) == dt.date(2026, 5, 4)
-    assert g.first_business_day(2026, 8, BASE_DIR) == dt.date(2026, 8, 3)
-
-
-# --------------------------------------------------------------------------
 # F-01: sin duplicación de filas, huérfanas fuera de alcance
 # --------------------------------------------------------------------------
 
 def test_f01_sin_duplicacion_de_filas(tmp_path):
-    folder = tmp_path / "in"
     make_excel(
-        folder / "FAE" / "lista espera coronel.xlsx", "CORONEL", "Espera",
+        tmp_path / "FAE" / "lista espera coronel.xlsx", "CORONEL", "Espera",
         [{"rit": f"A-{i}-2026", "der": "DAM DIAGNOSTICO"} for i in range(1, 5)],
     )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["verify_registros"]["rows"]["ESPERA"] == 0
-    assert data["out_of_scope_rows"] == 4
-    assert data["verification_problems"] == []
-    assert sheet_rows(salida / "Registros.xlsx", "ESPERA") == []
+    files, _, selected, _ = app.fuentes(tmp_path)
+    assert g.consolidated_rows(selected)["Espera"] == []
+    assert sum(len(f.orphan_rows) for f in files) == 4
 
 
 def test_f01_mixto_conserva_solo_alcance(tmp_path):
-    folder = tmp_path / "in"
     make_excel(
-        folder / "cumplimiento tome.xlsx", "TOMÉ", "Cumplimiento",
+        tmp_path / "cumplimiento tome.xlsx", "TOMÉ", "Cumplimiento",
         [
             {"rit": "C-1-2026", "der": "FAE PRO"},
             {"rit": "C-2-2026", "der": "RESIDENCIA RLP"},
             {"rit": "C-3-2026", "der": "OPD SEGUIMIENTO"},
         ],
     )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["verify_registros"]["rows"]["CUMPLIMIENTO"] == 2
-    assert data["out_of_scope_rows"] == 1
-    rits = {row[0] for row in sheet_rows(salida / "Registros.xlsx", "CUMPLIMIENTO")}
-    assert rits == {"C-1-2026", "C-2-2026"}
+    files, _, selected, _ = app.fuentes(tmp_path)
+    rows = g.consolidated_rows(selected)["Cumplimiento"]
+    assert {r.values["RIT"] for r in rows} == {"C-1-2026", "C-2-2026"}
+    assert sum(len(f.orphan_rows) for f in files) == 1
 
 
 # --------------------------------------------------------------------------
@@ -214,33 +186,26 @@ def test_f01_mixto_conserva_solo_alcance(tmp_path):
 # --------------------------------------------------------------------------
 
 def test_f02_excel_vence_a_pdf_mas_reciente(tmp_path):
-    folder = tmp_path / "in"
     make_excel(
-        folder / "espera fae lebu.xlsx", "LEBU", "Espera",
+        tmp_path / "espera fae lebu.xlsx", "LEBU", "Espera",
         [{"rit": f"B-{i}-2026", "der": "FAE PROGRAMA"} for i in range(1, 4)],
         emision="01/07/2026",
         when=dt.datetime(2026, 7, 1, 9, 0),  # explícitamente ANTES que el PDF
     )
-    make_blob(folder / "espera fae lebu sin registros.pdf", dt.datetime(2026, 7, 30, 12, 0))
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["meta_summary"]["FAE Espera"] == 3
-    assert data["verify_registros"]["rows"]["ESPERA"] == 3
-    assert data["coverage"]["found"] == 1
+    make_blob(tmp_path / "espera fae lebu sin registros.pdf", dt.datetime(2026, 7, 30, 12, 0))
+    _, _, selected, _ = app.fuentes(tmp_path)
+    chosen = selected[("LEBU", "FAE", "Espera")]
+    assert len(selected) == 1 and chosen.kind == "EXCEL" and len(chosen.rows) == 3
 
 
 def test_f02_error_si_seleccionado_pierde_registros(tmp_path):
-    folder = tmp_path / "in"
     make_excel(
-        folder / "viejo" / "espera fae arauco.xlsx", "ARAUCO", "Espera",
+        tmp_path / "viejo" / "espera fae arauco.xlsx", "ARAUCO", "Espera",
         [{"rit": f"V-{i}-2026", "der": "FAE X"} for i in range(1, 4)], emision="01/06/2026",
     )
-    make_excel(folder / "nuevo" / "espera fae arauco.xlsx", "ARAUCO", "Espera", [], emision="01/07/2026")
-    salida = tmp_path / "out"
-    run(folder, salida)
-    reporte = next(salida.glob("Reporte de procesamiento*.txt")).read_text(encoding="utf-8-sig")
-    assert "[ERROR]" in reporte
-    assert "no aporta registros" in reporte
+    make_excel(tmp_path / "nuevo" / "espera fae arauco.xlsx", "ARAUCO", "Espera", [], emision="01/07/2026")
+    _, issues, _, _ = app.fuentes(tmp_path)
+    assert any(i.level == "ERROR" and "no aporta registros" in i.message for i in issues)
 
 
 # --------------------------------------------------------------------------
@@ -254,295 +219,47 @@ def test_faltantes_no_detienen_generacion(tmp_path):
         [{"rit": "G-1-2026", "der": "RESIDENCIA RLP"}],
     )
     salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 1
-    assert data["coverage"]["missing"] == 67
-    assert (salida / "Registros.xlsx").exists()
-    assert list(salida.glob("META 4 - actualizado*.xlsx"))
-    assert list(salida.glob("Reporte de procesamiento*.txt"))
+    report = generar(folder, salida)
+    assert report["registros"] == 1
+    assert (salida / "META 4 - actualizado 2026-10.xlsx").is_file()
+    assert load_workbook(salida / "Registros.xlsx")["MATRIZ_COBERTURA"]["A2"].value.startswith(
+        "Cobertura: 1/68 · Faltantes: 67")
 
 
 def test_reejecucion_no_lee_sus_salidas(tmp_path):
     folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae yumbel.xlsx", "YUMBEL", "Espera",
-        [{"rit": "Y-1-2026", "der": "FAE UNO"}],
-    )
-    primera = run(folder, folder)
-    segunda = run(folder, folder)
-    assert primera["verify_registros"]["rows"]["ESPERA"] == 1
-    assert segunda["verify_registros"]["rows"]["ESPERA"] == 1
-    assert segunda["verification_problems"] == []
+    make_excel(folder / "espera fae yumbel.xlsx", "YUMBEL", "Espera", [{"rit": "Y-1-2026", "der": "FAE UNO"}])
+    primera = generar(folder, folder / "Resultado META4 1")
+    # Las salidas copiadas junto a las fuentes tampoco se leen como reportes.
+    for name in ("Registros.xlsx", "META 4 - actualizado 2026-10.xlsx", "Registros consolidados.xlsx",
+                 "Bitacoras_del_mes.xlsx"):
+        (folder / name).write_bytes((folder / "Resultado META4 1" / name).read_bytes())
+    segunda = generar(folder, folder / "Resultado META4 2")
+    assert primera["registros"] == segunda["registros"] == 1
 
 
 def test_pdf_incompleto_no_cubre_combinacion(tmp_path):
-    folder = tmp_path / "in"
-    make_blob(folder / "espera lebu.pdf")  # falta modalidad
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 0
+    make_blob(tmp_path / "espera lebu.pdf")  # falta modalidad
+    files, _, selected, _ = app.fuentes(tmp_path)
+    assert selected == {} and files[0].result == "NO CLASIFICADO"
 
 
-def test_excel_corrupto_no_detiene(tmp_path):
-    folder = tmp_path / "in"
-    folder.mkdir(parents=True)
-    (folder / "roto.xlsx").write_bytes(b"esto no es un excel")
-    make_excel(
-        folder / "espera fae tome.xlsx", "TOMÉ", "Espera",
-        [{"rit": "T-1-2026", "der": "FAE UNO"}],
-    )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-    reporte = next(salida.glob("Reporte de procesamiento*.txt")).read_text(encoding="utf-8-sig")
-    assert "roto.xlsx" in reporte
+def test_excel_ilegible_detiene_sin_planilla_parcial(tmp_path):
+    # El generador v2.4 continuaba; el producto se detiene para no emitir un META 4 incompleto.
+    (tmp_path / "roto.xlsx").write_bytes(b"esto no es un excel")
+    make_excel(tmp_path / "espera fae tome.xlsx", "TOMÉ", "Espera", [{"rit": "T-1-2026", "der": "FAE UNO"}])
+    with pytest.raises(ValueError, match="planilla parcial.*roto.xlsx"):
+        app.fuentes(tmp_path)
 
 
 def test_formato_t_espera_es_numero(tmp_path):
     folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae laja.xlsx", "LAJA", "Espera",
-        [{"rit": "L-1-2026", "der": "FAE UNO", "tesp": 13}],
-    )
-    salida = tmp_path / "out"
-    run(folder, salida)
-    meta = next(salida.glob("META 4 - actualizado*.xlsx"))
-    wb = load_workbook(meta)
-    try:
-        ws = wb["FAE Espera"]
-        celdas = [
-            cell for row in ws.iter_rows(min_col=6, max_col=6)
-            for cell in row if isinstance(cell.value, (int, float))
-        ]
-        assert celdas, "no se encontró la celda T ESPERA"
-        assert all("YY" not in (cell.number_format or "").upper() for cell in celdas)
-    finally:
-        wb.close()
-
-
-# --------------------------------------------------------------------------
-# CLI (F-11)
-# --------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "argumentos,fragmento_esperado",
-    [
-        (["--month", "agosto"], "AAAA-MM"),
-        (["--month", "2026-15"], "entre 01 y 12"),
-        (["--month", "2026"], "AAAA-MM"),
-        (["--emission-date", "32-13-2026"], "DD-MM-AAAA"),
-    ],
-)
-def test_cli_argumento_invalido_sale_con_codigo_2(tmp_path, argumentos, fragmento_esperado):
-    folder = tmp_path / "in"
-    folder.mkdir(parents=True)
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--folder", str(folder), *argumentos],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 2
-    assert fragmento_esperado in result.stderr
-    assert "Traceback" not in result.stderr
-
-
-def test_cli_carpeta_inexistente_sale_con_codigo_1_sin_traceback(tmp_path):
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--folder", str(tmp_path / "no-existe")],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 1
-    assert "Traceback" not in result.stderr
-    assert "No existe la carpeta" in result.stderr
-
-
-def test_cli_ruta_no_es_carpeta_sale_con_codigo_1_sin_traceback(tmp_path):
-    archivo = tmp_path / "no_es_carpeta.txt"
-    archivo.write_text("x")
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--folder", str(archivo)],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 1
-    assert "Traceback" not in result.stderr
-
-
-# --------------------------------------------------------------------------
-# Selector de carpeta (v2.2)
-# --------------------------------------------------------------------------
-
-def test_pick_folder_cancelado_sale_con_codigo_3(monkeypatch, tmp_path, capsys):
-    # No debe depender de un entorno gráfico real: se inyecta la cancelación
-    # directamente en el proceso de prueba. Antes esta prueba invocaba
-    # subprocess --pick-folder de verdad, lo que en Windows con tkinter
-    # presente abre una ventana real y deja la prueba colgada (hallazgo M-05).
-    monkeypatch.setattr(g, "select_source_folder", lambda: g.FolderSelection("CANCELADO"))
-    monkeypatch.setattr(sys, "argv", ["generate_meta4.py", "--pick-folder"])
-    monkeypatch.chdir(tmp_path)
-    with pytest.raises(SystemExit) as excinfo:
-        g.main()
-    assert excinfo.value.code == 3
-    assert "cancelado" in capsys.readouterr().out.lower()
-
-
-def test_pick_folder_no_disponible_sale_con_codigo_1(monkeypatch, tmp_path, capsys):
-    monkeypatch.setattr(g, "select_source_folder", lambda: g.FolderSelection("NO_DISPONIBLE"))
-    monkeypatch.setattr(sys, "argv", ["generate_meta4.py", "--pick-folder"])
-    monkeypatch.chdir(tmp_path)
-    with pytest.raises(SystemExit) as excinfo:
-        g.main()
-    assert excinfo.value.code == 1
-    assert "--folder" in capsys.readouterr().out
-
-
-def test_folder_explicito_ignora_el_dialogo(tmp_path):
-    folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae laja.xlsx", "LAJA", "Espera",
-        [{"rit": "P-1-2026", "der": "FAE UNO"}],
-    )
-    salida = tmp_path / "out"
-    data = run(folder, salida, "--pick-folder")
-    assert data["source_folder"] == str(folder.resolve())
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-
-
-def test_sin_argumentos_usa_carpeta_actual(tmp_path):
-    folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae tome.xlsx", "TOMÉ", "Espera",
-        [{"rit": "Q-1-2026", "der": "FAE UNO"}],
-    )
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--month", "2026-08"],
-        capture_output=True, text=True, cwd=str(folder), check=True,
-    )
-    data = json.loads(result.stdout)
-    assert data["source_folder"] == str(folder.resolve())
-
-
-def test_open_output_no_falla_fuera_de_windows(tmp_path):
-    folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae lebu.xlsx", "LEBU", "Espera",
-        [{"rit": "R-1-2026", "der": "FAE UNO"}],
-    )
-    salida = tmp_path / "out"
-    data = run(folder, salida, "--open-output")
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-
-
-def test_selector_no_disponible_sin_dialogos(monkeypatch):
-    monkeypatch.setattr(g, "_folder_dialog_tkinter", lambda: g.FolderSelection("NO_DISPONIBLE"))
-    monkeypatch.setattr(g, "_folder_dialog_powershell", lambda: g.FolderSelection("NO_DISPONIBLE"))
-    assert g.select_source_folder().status == "NO_DISPONIBLE"
-
-
-def test_selector_usa_tkinter_primero(monkeypatch):
-    monkeypatch.setattr(g, "_folder_dialog_tkinter", lambda: g.FolderSelection("SELECCIONADO", "/ruta/tk"))
-    monkeypatch.setattr(g, "_folder_dialog_powershell", lambda: g.FolderSelection("SELECCIONADO", "/ruta/ps"))
-    result = g.select_source_folder()
-    assert result.status == "SELECCIONADO"
-    assert result.path == "/ruta/tk"
-
-
-def test_selector_no_disponible_cae_a_powershell(monkeypatch):
-    monkeypatch.setattr(g, "_folder_dialog_tkinter", lambda: g.FolderSelection("NO_DISPONIBLE"))
-    monkeypatch.setattr(g, "_folder_dialog_powershell", lambda: g.FolderSelection("SELECCIONADO", "/ruta/ps"))
-    result = g.select_source_folder()
-    assert result.status == "SELECCIONADO"
-    assert result.path == "/ruta/ps"
-
-
-def test_selector_cancelado_no_prueba_powershell(monkeypatch):
-    # M-02: cancelar el primer diálogo no debe abrir un segundo. Antes, None
-    # significaba a la vez "no disponible" y "cancelado", y ambos casos
-    # activaban el respaldo de PowerShell.
-    llamadas = []
-    monkeypatch.setattr(g, "_folder_dialog_tkinter", lambda: g.FolderSelection("CANCELADO"))
-    monkeypatch.setattr(
-        g, "_folder_dialog_powershell", lambda: llamadas.append(1) or g.FolderSelection("SELECCIONADO", "/x")
-    )
-    result = g.select_source_folder()
-    assert result.status == "CANCELADO"
-    assert llamadas == []
-
-
-# --------------------------------------------------------------------------
-# H-01: el detector de duplicados no debe usar RIT+archivo como identidad
-# --------------------------------------------------------------------------
-
-def _build_registros_espera(path: Path, filas: list[list]) -> None:
-    """Construye un Registros.xlsx mínimo (solo hoja ESPERA) para probar
-    verify_registros_output de forma aislada, sin correr todo el pipeline."""
-    headers = ESP_HDR + ["FECHA OBS.", "ARCHIVO ORIGEN", "RUTA ORIGEN"]
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "ESPERA"
-    for col, header in enumerate(headers, 1):
-        ws.cell(1, col, header)
-    for row_idx, fila in enumerate(filas, 2):
-        for col, value in enumerate(fila, 1):
-            ws.cell(row_idx, col, value)
-    wb.create_sheet("CUMPLIMIENTO")
-    inv = wb.create_sheet("INVENTARIO_ARCHIVOS")
-    inv.append(["N"])
-    mat = wb.create_sheet("MATRIZ_COBERTURA")
-    for _ in range(4):
-        mat.append([""])
-    wb.create_sheet("ERRORES_Y_ADVERTENCIAS")
-    wb.save(path)
-
-
-def _fila_base(rit, rut, nombre, derivacion, archivo):
-    # RIT,TRIBUNAL,RUT,NOMBRE,NAC,TIPO,SEXO,DERIVACIÓN,CURADOR,T ESPERA,
-    # FEC.RESOLUCIÓN,REVISIÓN,DURACIÓN,80BIS,FEC.NAC,EDAD,F.IND,F.AMB,F.FAE,
-    # F.OÍDO,PROXS,FECHA OBS.,ARCHIVO ORIGEN,RUTA ORIGEN  (24 columnas)
-    return [
-        rit, "LAJA", rut, nombre, "CHILENA", "MP", "F", derivacion, "",
-        13, dt.date(2026, 6, 15), "", "", "", dt.date(2015, 1, 1), 11,
-        "", "", "", "", "", "", archivo, archivo,
-    ]
-
-
-def test_h01_hermanos_mismo_rit_no_es_falso_positivo(tmp_path):
-    # Dos NNA distintos bajo la misma causa (mismo RIT): NO debe reportarse.
-    path = tmp_path / "Registros.xlsx"
-    _build_registros_espera(path, [
-        _fila_base("F-100-2026", "11111111-1", "PERSONA FICTICIA UNO", "FAE UNO", "a.xlsx"),
-        _fila_base("F-100-2026", "22222222-2", "PERSONA FICTICIA DOS", "FAE UNO", "a.xlsx"),
-    ])
-    result = g.verify_registros_output(path)
-    assert result["problems"] == []
-    assert result["rows"]["ESPERA"] == 2
-
-
-def test_h01_fila_exacta_repetida_mismo_archivo_se_detecta(tmp_path):
-    path = tmp_path / "Registros.xlsx"
-    fila = _fila_base("F-200-2026", "33333333-3", "PERSONA FICTICIA TRES", "FAE UNO", "b.xlsx")
-    _build_registros_espera(path, [fila, list(fila)])
-    result = g.verify_registros_output(path)
-    assert any("mismo archivo" in problema for problema in result["problems"])
-
-
-def test_h01_fila_exacta_repetida_archivos_distintos_se_detecta(tmp_path):
-    path = tmp_path / "Registros.xlsx"
-    fila_a = _fila_base("F-300-2026", "44444444-4", "PERSONA FICTICIA CUATRO", "FAE UNO", "c.xlsx")
-    fila_b = _fila_base("F-300-2026", "44444444-4", "PERSONA FICTICIA CUATRO", "FAE UNO", "d.xlsx")
-    _build_registros_espera(path, [fila_a, fila_b])
-    result = g.verify_registros_output(path)
-    assert any("archivos distintos" in problema for problema in result["problems"])
-
-
-def test_h01_muestra_julio_sin_falsos_positivos_sinteticos(tmp_path):
-    # Reproduce la forma del hallazgo real: RIT repetido con fechas distintas
-    # (misma persona, dos medidas) tampoco debe reportarse.
-    path = tmp_path / "Registros.xlsx"
-    f1 = _fila_base("F-400-2026", "55555555-5", "PERSONA FICTICIA CINCO", "FAE UNO", "e.xlsx")
-    f2 = _fila_base("F-400-2026", "55555555-5", "PERSONA FICTICIA CINCO", "FAE UNO", "e.xlsx")
-    f2[10] = dt.date(2026, 7, 1)  # FEC. RESOLUCIÓN distinta -> huella distinta
-    _build_registros_espera(path, [f1, f2])
-    result = g.verify_registros_output(path)
-    assert result["problems"] == []
+    make_excel(folder / "espera fae laja.xlsx", "LAJA", "Espera", [{"rit": "L-1-2026", "der": "FAE UNO", "tesp": 13}])
+    generar(folder, tmp_path / "out")
+    ws = load_workbook(tmp_path / "out" / "META 4 - actualizado 2026-10.xlsx")["FAE Espera"]
+    celdas = [c for row in ws.iter_rows(min_col=6, max_col=6) for c in row if isinstance(c.value, (int, float))]
+    assert celdas, "no se encontró la celda T ESPERA"
+    assert all("YY" not in (c.number_format or "").upper() for c in celdas)
 
 
 # --------------------------------------------------------------------------
@@ -553,162 +270,124 @@ def test_h03_excel_multitribunal_coherencia_matriz_meta(tmp_path):
     folder = tmp_path / "in"
     make_excel(
         folder / "espera fae tome.xlsx", "TOMÉ", "Espera",
-        [{"rit": "X-1-2026", "der": "FAE UNO"}],
+        [{"rit": "X-1-2026", "der": "FAE UNO"},
+         {"rit": "X-2-2026", "der": "FAE UNO", "tribunal": "Juzgado de Familia de Lebu"}],
     )
-    wb = load_workbook(folder / "espera fae tome.xlsx")
-    ws = wb.active
-    ws.cell(7, 1, "X-2-2026")
-    ws.cell(7, 2, "Juzgado de Familia de Lebu")
-    ws.cell(7, 6, "MP")
-    ws.cell(7, 7, "F")
-    ws.cell(7, 8, "FAE UNO")
-    ws.cell(7, 10, 5)
-    ws.cell(7, 11, dt.date(2026, 6, 15))
-    wb.save(folder / "espera fae tome.xlsx")
-
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 2
-    assert data["meta_summary"]["FAE Espera"] == 2
-    assert data["verification_problems"] == []
-
-    wb2 = load_workbook(next(salida.glob("Registros.xlsx")))
-    matriz = wb2["MATRIZ_COBERTURA"]
-    celdas = {}
-    for row in matriz.iter_rows(min_row=5, max_row=21, values_only=True):
-        if row[0] in ("TOMÉ", "LEBU"):
-            celdas[row[0]] = row[1]
-    assert "FALTANTE" not in (celdas.get("TOMÉ", ""))
-    assert "FALTANTE" not in (celdas.get("LEBU", ""))
+    report = generar(folder, tmp_path / "out")
+    assert report["totales_meta4"]["FAE Espera"] == 2 and report["excluidos_meta4"] == 0
+    for tribunal in ("TOMÉ", "LEBU"):
+        assert matrix_cell(tmp_path / "out" / "Registros.xlsx", tribunal, 2) == "EXCEL · 1 registro(s)"
 
 
 def test_h03_archivo_uniforme_sin_cambio_de_comportamiento(tmp_path):
-    # Caso común: un solo tribunal en todo el archivo. Debe seguir dando un
-    # único candidato, igual que antes de la corrección.
-    folder = tmp_path / "in"
     make_excel(
-        folder / "espera fae laja.xlsx", "LAJA", "Espera",
+        tmp_path / "espera fae laja.xlsx", "LAJA", "Espera",
         [{"rit": f"U-{i}-2026", "der": "FAE UNO"} for i in range(1, 4)],
     )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 1
-    assert data["meta_summary"]["FAE Espera"] == 3
-    assert data["verification_problems"] == []
+    files, _, selected, _ = app.fuentes(tmp_path)
+    assert len(files[0].candidates) == 1 and len(selected[("LAJA", "FAE", "Espera")].rows) == 3
 
 
 # --------------------------------------------------------------------------
-# H-02 opción A: Excel con datos vence a un PDF/imagen más reciente, pero
-# la combinación queda visiblemente marcada para revisión humana.
+# A-01 (auditoría 2.3): filas de otro tribunal no desplazan al archivo propio
+# --------------------------------------------------------------------------
+
+def test_filas_de_otro_tribunal_se_suman_sin_desplazar_ni_duplicar(tmp_path):
+    make_excel(tmp_path / "espera fae talcahuano.xlsx", "Talcahuano", "Espera",
+               [{"rit": f"T-{i}-2026", "der": "FAE A"} for i in range(5)], emision="01/07/2026")
+    make_excel(tmp_path / "espera fae concepcion.xlsx", "Concepción", "Espera",
+               [{"rit": f"C-{i}-2026", "der": "FAE A"} for i in range(3)]
+               + [{"rit": "T-9-2026", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"},
+                  {"rit": "T-0-2026", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"}],
+               emision="02/07/2026")
+    _, issues, selected, groups = app.fuentes(tmp_path)
+    talcahuano = selected[("TALCAHUANO", "FAE", "Espera")]
+    assert g.matrix_cell_text(("TALCAHUANO", "FAE", "Espera"), selected, groups) == "EXCEL · 6 registro(s)"
+    assert talcahuano.file_result.relative_path == "espera fae talcahuano.xlsx"
+    assert sorted(r.values["RIT"] for r in talcahuano.rows) == [f"T-{i}-2026" for i in range(5)] + ["T-9-2026"]
+    assert len(selected[("CONCEPCIÓN", "FAE", "Espera")].rows) == 3
+    assert any("se incorporaron 1; 1 ya estaban" in i.message for i in issues)
+
+
+# --------------------------------------------------------------------------
+# A-02 / A-03 (auditoría 2.3): exclusión visible y caracteres de control
+# --------------------------------------------------------------------------
+
+def test_fila_con_tribunal_no_reconocido_queda_informada(tmp_path):
+    folder = tmp_path / "in"
+    make_excel(folder / "espera fae lebu.xlsx", "Lebu", "Espera",
+               [{"rit": "L-1-2026", "der": "FAE A", "tribunal": "1° JF"}])
+    report = generar(folder, tmp_path / "out")
+    assert report["excluidos_meta4"] == 1
+    ws = load_workbook(tmp_path / "out" / "Registros.xlsx")["ERRORES_Y_ADVERTENCIAS"]
+    mensajes = [r[3] for r in ws.iter_rows(min_row=4, values_only=True)]
+    assert any("Registro excluido de META 4" in str(m) and "1° JF" in str(m) for m in mensajes)
+
+
+def test_caracteres_de_control_no_abortan_la_generacion(tmp_path):
+    folder = tmp_path / "in"
+    folder.mkdir()
+    headers = ["RIT", "TRIBUNAL", "RUT", "NOMBRE", "DERIVACIÓN", "TIPO", "SEXO", "T ESPERA", "FEC. RESOLUCIÓN"]
+    rows = [["Juzgado de Familia de Laja"], ["Informe de Ingresos en Lista de Espera"],
+            ["Fecha Emisión : 01/07/2026"], [], headers,
+            ["X-1-2026", "Laja", "1-9", "NOMBRE\x02FICTICIO", "FAE A", "MP", "F", 3.0, "01/06/2026"]]
+    (folder / "espera fae laja.xls").write_bytes(biff_escritor.xls([("Hoja1", rows)]))
+    generar(folder, tmp_path / "out")
+    ws = load_workbook(tmp_path / "out" / "Registros.xlsx")["ESPERA"]
+    assert ws.cell(2, 4).value == "NOMBRE FICTICIO"
+    assert g.clean_text("A\x00B\x1fC") == "A B C"
+
+
+# --------------------------------------------------------------------------
+# H-02 opción A: Excel con datos vence a un PDF más reciente, marcado para revisión
 # --------------------------------------------------------------------------
 
 def test_h02a_excel_vence_y_queda_marcado_requiere_revision(tmp_path):
-    folder = tmp_path / "in"
     make_excel(
-        folder / "espera fae lebu.xlsx", "LEBU", "Espera",
+        tmp_path / "espera fae lebu.xlsx", "LEBU", "Espera",
         [{"rit": f"B-{i}-2026", "der": "FAE PROGRAMA"} for i in range(1, 4)],
         emision="01/07/2026",
         when=dt.datetime(2026, 7, 1, 9, 0),
     )
-    make_blob(folder / "espera fae lebu sin registros.pdf", dt.datetime(2026, 7, 30, 12, 0))
-    salida = tmp_path / "out"
-    run(folder, salida)
-
-    wb = load_workbook(next(salida.glob("Registros.xlsx")))
-    matriz = wb["MATRIZ_COBERTURA"]
-    celda_lebu = next(row[1] for row in matriz.iter_rows(min_row=5, max_row=21, values_only=True) if row[0] == "LEBU")
-    assert "REQUIERE REVISIÓN" in celda_lebu
-
-    reporte = next(salida.glob("Reporte de procesamiento*.txt")).read_text(encoding="utf-8-sig")
-    assert "[REQUIERE_REVISION]" in reporte
-    assert "espera fae lebu.xlsx" in reporte
-    assert "espera fae lebu sin registros.pdf" in reporte
+    make_blob(tmp_path / "espera fae lebu sin registros.pdf", dt.datetime(2026, 7, 30, 12, 0))
+    _, issues, selected, groups = app.fuentes(tmp_path)
+    revision = [i for i in issues if i.level == "REQUIERE_REVISION"]
+    assert len(revision) == 1
+    assert "espera fae lebu.xlsx" in revision[0].message and "espera fae lebu sin registros.pdf" in revision[0].message
+    assert "REQUIERE REVISIÓN" in g.matrix_cell_text(("LEBU", "FAE", "Espera"), selected, groups)
 
 
 # --------------------------------------------------------------------------
-# M-05: casos de formato y de ruta que faltaban en la suite
+# M-05 / M-01: formatos y rutas
 # --------------------------------------------------------------------------
 
 def test_xlsm_se_reconoce_y_procesa(tmp_path):
-    folder = tmp_path / "in"
-    make_excel(
-        folder / "espera fae laja.xlsm", "LAJA", "Espera",
-        [{"rit": "M-1-2026", "der": "FAE UNO"}],
-    )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-    assert data["coverage"]["found"] == 1
+    make_excel(tmp_path / "espera fae laja.xlsm", "LAJA", "Espera", [{"rit": "M-1-2026", "der": "FAE UNO"}])
+    _, _, selected, _ = app.fuentes(tmp_path)
+    assert len(selected) == 1 and len(selected[("LAJA", "FAE", "Espera")].rows) == 1
 
 
-def test_xls_legado_se_reconoce_y_procesa(tmp_path):
-    xlwt = pytest.importorskip("xlwt")
-    folder = tmp_path / "in"
-    folder.mkdir(parents=True)
-    wb = xlwt.Workbook()
-    ws = wb.add_sheet("Hoja1")
-    ws.write(0, 0, "Juzgado de Familia de Laja")
-    ws.write(1, 0, "Informe de Ingresos en Lista de Espera")
-    ws.write(2, 0, "Fecha Emisión   : 01/07/2026")
-    for col, header in enumerate(ESP_HDR, 0):
-        ws.write(4, col, header)
-    fila = {
-        "RIT": "W-1-2026", "TRIBUNAL": "LAJA", "RUT": "11111111-1",
-        "NOMBRE": "PERSONA FICTICIA", "TIPO": "MP", "SEXO": "F",
-        "DERIVACIÓN": "FAE UNO", "T ESPERA": 13,
-    }
-    for col, header in enumerate(ESP_HDR, 0):
-        ws.write(5, col, fila.get(header, ""))
-    wb.save(str(folder / "espera fae laja.xls"))
-
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 1
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-
-
-def test_imagen_cubre_combinacion_sin_leer_contenido(tmp_path):
-    folder = tmp_path / "in"
-    make_blob(folder / "cumplimiento residencia laja.png")
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 1
-    assert data["verify_registros"]["rows"]["CUMPLIMIENTO"] == 0
-    wb = load_workbook(next(salida.glob("Registros.xlsx")))
-    inv = wb["INVENTARIO_ARCHIVOS"]
-    fila = next(r for r in inv.iter_rows(min_row=2, values_only=True) if r[1].endswith(".png"))
-    assert fila[3] == "IMAGEN"
-    assert fila[9] == "SIN REGISTROS"
+def test_xls_binario_biff_se_reconoce_y_procesa(tmp_path):
+    rows = [["Juzgado de Familia de Laja"], ["Informe de Ingresos en Lista de Espera"],
+            ["Fecha Emisión   : 01/07/2026"], [], ESP_HDR,
+            ["W-1-2026", "LAJA", "11111111-1", "PERSONA FICTICIA", None, "MP", "F", "FAE UNO", None, 13,
+             ("date", 46188)]]
+    (tmp_path / "espera fae laja.xls").write_bytes(biff_escritor.xls([("Hoja1", rows)]))
+    _, _, selected, _ = app.fuentes(tmp_path)
+    row = selected[("LAJA", "FAE", "Espera")].rows[0]
+    assert row.values["T ESPERA"] == 13 and row.values["FEC. RESOLUCIÓN"] == dt.date(2026, 6, 15)
 
 
 def test_nombre_con_codificacion_dañada_usa_contenido_del_excel(tmp_path):
-    # Simula un nombre de archivo corrompido por una extracción de ZIP mal
-    # codificada (carácter de reemplazo Unicode). El tribunal debe salir del
-    # CONTENIDO del Excel, no del nombre dañado -- ya que el nombre no permite
-    # identificarlo de forma confiable.
-    folder = tmp_path / "in"
-    nombre_dañado = "espera fae \ufffdome.xlsx"
-    make_excel(
-        folder / nombre_dañado, "TOMÉ", "Espera",
-        [{"rit": "D-1-2026", "der": "FAE UNO"}],
-    )
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["verify_registros"]["rows"]["ESPERA"] == 1
-    assert data["coverage"]["found"] == 1
+    # Nombre de archivo corrompido (carácter de reemplazo Unicode): el tribunal sale del contenido.
+    make_excel(tmp_path / "espera fae �ome.xlsx", "TOMÉ", "Espera", [{"rit": "D-1-2026", "der": "FAE UNO"}])
+    _, _, selected, _ = app.fuentes(tmp_path)
+    assert set(selected) == {("TOMÉ", "FAE", "Espera")}
 
 
 def test_conflicto_carpeta_archivo_end_to_end(tmp_path):
-    # M-01 de punta a punta: PDF cuyo nombre dice Cumplimiento pero cuya
-    # carpeta dice Espera. El nombre del archivo (más específico) debe ganar.
-    folder = tmp_path / "in"
-    make_blob(folder / "ESPERA" / "cumplimiento residencia laja.pdf")
-    salida = tmp_path / "out"
-    data = run(folder, salida)
-    assert data["coverage"]["found"] == 1
-    wb = load_workbook(next(salida.glob("Registros.xlsx")))
-    matriz = wb["MATRIZ_COBERTURA"]
-    celda = next(
-        r[4] for r in matriz.iter_rows(min_row=5, max_row=21, values_only=True) if r[0] == "LAJA"
-    )
-    assert celda != "FALTANTE"  # columna Residencia Cumplimiento cubierta
+    # M-01: el nombre del archivo (más específico) gana a la carpeta.
+    make_blob(tmp_path / "ESPERA" / "cumplimiento residencia laja.pdf")
+    _, _, selected, _ = app.fuentes(tmp_path)
+    assert set(selected) == {("LAJA", "Residencia", "Cumplimiento")}
+    assert selected[("LAJA", "Residencia", "Cumplimiento")].kind == "PDF"

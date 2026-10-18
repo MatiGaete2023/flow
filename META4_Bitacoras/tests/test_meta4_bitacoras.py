@@ -143,7 +143,7 @@ def test_changed_source_rejected(tmp_path):
 def test_remote_identity_narrows_matching_ingreso():
     row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
         'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
-        'NOMBRE': 'FICTICIO NNA', '_REMOTE': ('101', '301', '202')}, '', '', 1)
+        'NOMBRE': 'FICTICIO NNA', '_REMOTE': ('101', '301', '202')}, '', 1)
     records = [dict(diary(ingreso=str(i)), control='OK', entries=[entrada('2026-10-10', s)])
                for i, s in [(201, 'Cumplimiento'), (202, 'Espera')]]
     app.enriquecer({'Cumplimiento': [row]}, records, CORTE)
@@ -153,7 +153,7 @@ def test_remote_identity_narrows_matching_ingreso():
 def test_same_rit_different_person_or_program_not_associated():
     row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
         'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '22222222-2', 'DERIVACIÓN': 'FAE FICTICIO',
-        'NOMBRE': 'OTRA PERSONA'}, '', '', 1)
+        'NOMBRE': 'OTRA PERSONA'}, '', 1)
     d = dict(diary(), control='OK', entries=[entrada('2026-10-10')])
     assert app.buscar(row, [d]) == (None, 'SIN BITÁCORA ASOCIADA')
 
@@ -161,7 +161,7 @@ def test_same_rit_different_person_or_program_not_associated():
 def test_last_cumplimiento_does_not_raise_alert():
     row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
         'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
-        'NOMBRE': 'FICTICIO NNA'}, '', '', 1)
+        'NOMBRE': 'FICTICIO NNA'}, '', 1)
     d = dict(diary(), control='OK', entries=[entrada('2026-10-10'), entrada('2026-10-11', 'Cumplimiento')])
     app.enriquecer({'Cumplimiento': [row]}, [d], CORTE)
     assert row.values['FECHA OBS.'] == date(2026, 10, 11)
@@ -389,7 +389,7 @@ def test_failed_read_in_one_lot_does_not_hide_verified_read_in_another(tmp_path)
     records = app.cargar_bitacoras(tmp_path, CORTE)
     row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
         'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
-        'NOMBRE': 'FICTICIO NNA'}, '', '', 1)
+        'NOMBRE': 'FICTICIO NNA'}, '', 1)
     app.enriquecer({'Cumplimiento': [row]}, records, CORTE)
     assert row.values['ALERTA'] == app.ALERTA
 
@@ -401,7 +401,7 @@ def test_tampered_read_still_blocks_even_with_other_lot(tmp_path):
         save_diaries(tmp_path / name, [record])
     row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {
         'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': '11111111-1', 'DERIVACIÓN': 'FAE FICTICIO',
-        'NOMBRE': 'FICTICIO NNA'}, '', '', 1)
+        'NOMBRE': 'FICTICIO NNA'}, '', 1)
     assert app.buscar(row, app.cargar_bitacoras(tmp_path, CORTE)) == (None, app.NO_VERIFICABLE)
 
 
@@ -592,16 +592,16 @@ def test_filtered_diary_lot_is_reported(tmp_path):
 def test_match_by_name_without_rut_and_program_must_match():
     base = {'TRIBUNAL': 'Laja', 'RIT': 'X-1-2026', 'RUT': None, 'NOMBRE': 'FICTICIO NNA', 'DERIVACIÓN': 'FAE FICTICIO'}
     d = dict(diary(), control='OK', entries=[])
-    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base), '', '', 1)
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base), '', 1)
     assert app.buscar(row, [d])[1] == 'OK'
-    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, NOMBRE='OTRA PERSONA'), '', '', 1)
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, NOMBRE='OTRA PERSONA'), '', 1)
     assert app.buscar(row, [d]) == (None, 'SIN BITÁCORA ASOCIADA')
-    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, DERIVACIÓN='OTRO PROGRAMA'), '', '', 1)
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', dict(base, DERIVACIÓN='OTRO PROGRAMA'), '', 1)
     assert app.buscar(row, [d]) == (None, 'SIN BITÁCORA ASOCIADA')
 
 
 def test_alert_marking_refuses_misaligned_rows():
-    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {'RIT': 'X-1-2026', 'ALERTA': '', app.EXTRA[1]: app.VERIFICADA}, '', '', 1)
+    row = app.meta.SourceRow('Cumplimiento', 'FAE', 'LAJA', {'RIT': 'X-1-2026', 'ALERTA': '', app.EXTRA[1]: app.VERIFICADA}, '', 1)
     records = {name: {t: [] for t in app.meta.TRIBUNALS} for name in app.meta.SHEET_DEFS}
     records['FAE Cumplimiento']['LAJA'] = [['X-9-2026']]
     wb = app.meta.build_default_template()
@@ -623,3 +623,12 @@ def test_diary_dates_are_iso_and_invalid_dates_are_rejected():
     assert app.fecha('2026-10-10T12:34:56Z').hour == 12
     with pytest.raises(ValueError, match='no reconocida'):
         app.fecha('10/10/2026')
+
+
+def test_legacy_record_with_null_params_is_not_verifiable(tmp_path):
+    legacy_lote(tmp_path, bitacora_html())
+    path = next(tmp_path.rglob('bitacoras.json'))
+    data = json.loads(path.read_text())
+    data['registros'][0]['params'] = None
+    path.write_text(json.dumps(data))
+    assert app.cargar_bitacoras(tmp_path, CORTE)[0]['control'] == app.NO_VERIFICABLE

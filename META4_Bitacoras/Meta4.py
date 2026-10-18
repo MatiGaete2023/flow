@@ -170,6 +170,9 @@ class App:
                 if report['consultas_sin_bitacoras']:
                     warnings.append(f"{len(report['consultas_sin_bitacoras'])} consulta(s) sin bitácoras: "
                                     + '; '.join(report['consultas_sin_bitacoras'][:5]))
+                if report['excluidos_meta4']:
+                    warnings.append(f"{report['excluidos_meta4']} registro(s) quedaron fuera de META 4 porque su "
+                                    'columna TRIBUNAL no identifica un tribunal (ver ERRORES_Y_ADVERTENCIAS).')
                 warnings.extend(report['avisos_bitacoras'])
                 warnings.extend('Lote con filtros: ' + f for f in report['filtros_registros'])
                 self.status.set(text)

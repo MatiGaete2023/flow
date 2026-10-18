@@ -1,34 +1,28 @@
-#!/usr/bin/env python3
-"""Genera Registros.xlsx, META 4 y un reporte de procesamiento desde una carpeta."""
+"""Clasificación de reportes y escritura de Registros.xlsx y META 4 (base: generador v2.4).
+
+Biblioteca de scripts/meta4_bitacoras.py; no tiene línea de comandos propia."""
 
 from __future__ import annotations
 
-import argparse
-import calendar
 import datetime as dt
-import json
 import os
 import re
-import shutil
-import subprocess
-import sys
 import tempfile
 import unicodedata
 from collections import Counter, defaultdict
 from copy import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
 import pandas as pd
 from openpyxl import Workbook, load_workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-
-APP_VERSION = "2.4"
 
 TRIBUNALS = [
     "ARAUCO",
@@ -231,7 +225,6 @@ SHEET_DEFS = {
 
 EXCEL_SUFFIXES = {".xls", ".xlsx", ".xlsm"}
 PDF_SUFFIXES = {".pdf"}
-IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".gif", ".webp"}
 
 DATE_HEADERS = {
     "FEC RESOLUCION",
@@ -260,7 +253,6 @@ class SourceRow:
     category: str | None
     tribunal: str | None
     values: dict[str, Any]
-    source_file: str
     source_path: str
     excel_row: int
 
@@ -330,7 +322,8 @@ def clean_text(value: Any) -> Any:
     if value is None or pd.isna(value):
         return None
     if isinstance(value, str):
-        return re.sub(r"\s+", " ", value).strip()
+        # Los caracteres de control no caben en un XLSX: openpyxl abortaría toda la escritura.
+        return re.sub(r"\s+", " ", ILLEGAL_CHARACTERS_RE.sub(" ", value)).strip()
     return value
 
 
@@ -574,246 +567,6 @@ def as_wait_days(value: Any) -> Any:
         return clean_text(value)
 
 
-def easter_sunday(year: int) -> dt.date:
-    """Algoritmo gregoriano de Meeus/Jones/Butcher."""
-    a = year % 19
-    b = year // 100
-    c = year % 100
-    d = b // 4
-    e = b % 4
-    f = (b + 8) // 25
-    g = (b - f + 1) // 3
-    h = (19 * a + b - d - g + 15) % 30
-    i = c // 4
-    k = c % 4
-    ell = (32 + 2 * e + 2 * i - h - k) % 7
-    m = (a + 11 * h + 22 * ell) // 451
-    month = (h + ell - 7 * m + 114) // 31
-    day = ((h + ell - 7 * m + 114) % 31) + 1
-    return dt.date(year, month, day)
-
-
-def mondayized(date_value: dt.date) -> dt.date:
-    weekday = date_value.weekday()
-    if weekday in (1, 2, 3):
-        return date_value - dt.timedelta(days=weekday)
-    if weekday == 4:
-        return date_value + dt.timedelta(days=3)
-    return date_value
-
-
-# Día Nacional de los Pueblos Indígenas (Ley 21.357): solsticio de invierno,
-# 20 o 21 de junio según el año. Solo se usa si la librería holidays no está
-# instalada. Para años fuera de la tabla se asume el 21 y debe confirmarse en
-# assets/feriados_adicionales.txt.
-SOLSTICE_DAY = {
-    2024: 20, 2025: 20, 2026: 21, 2027: 21, 2028: 20,
-    2029: 20, 2030: 21, 2031: 21, 2032: 20, 2033: 20,
-}
-
-
-def fallback_chile_holidays(year: int) -> set[dt.date]:
-    easter = easter_sunday(year)
-    dates = {
-        dt.date(year, 1, 1),
-        easter - dt.timedelta(days=2),
-        easter - dt.timedelta(days=1),
-        dt.date(year, 5, 1),
-        dt.date(year, 5, 21),
-        dt.date(year, 6, SOLSTICE_DAY.get(year, 21)),
-        mondayized(dt.date(year, 6, 29)),
-        dt.date(year, 7, 16),
-        dt.date(year, 8, 15),
-        dt.date(year, 9, 18),
-        dt.date(year, 9, 19),
-        mondayized(dt.date(year, 10, 12)),
-        dt.date(year, 10, 31),
-        dt.date(year, 11, 1),
-        dt.date(year, 12, 8),
-        dt.date(year, 12, 25),
-    }
-    if dt.date(year, 9, 18).weekday() == 1:
-        dates.add(dt.date(year, 9, 17))
-    if dt.date(year, 9, 19).weekday() == 3:
-        dates.add(dt.date(year, 9, 20))
-    return dates
-
-
-def additional_holidays(base_dir: Path, year: int) -> set[dt.date]:
-    path = base_dir / "assets" / "feriados_adicionales.txt"
-    result: set[dt.date] = set()
-    if not path.exists():
-        return result
-    try:
-        lines = path.read_text(encoding="utf-8-sig").splitlines()
-    except OSError:
-        return result
-    for line in lines:
-        value = line.split("#", 1)[0].strip()
-        if not value:
-            continue
-        try:
-            parsed = dt.datetime.strptime(value, "%Y-%m-%d").date()
-        except ValueError:
-            continue
-        if parsed.year == year:
-            result.add(parsed)
-    return result
-
-
-def chile_holidays(year: int, base_dir: Path) -> set[dt.date]:
-    try:
-        import holidays  # type: ignore
-
-        try:
-            generated = holidays.country_holidays("CL", subdiv="BI", years=year)
-        except (KeyError, NotImplementedError, ValueError):
-            generated = holidays.country_holidays("CL", years=year)
-        result = set(generated.keys())
-    except (ImportError, AttributeError):
-        result = fallback_chile_holidays(year)
-    return result | additional_holidays(base_dir, year)
-
-
-def first_business_day(year: int, month: int, base_dir: Path) -> dt.date:
-    day = dt.date(year, month, 1)
-    holidays_for_year = chile_holidays(year, base_dir)
-    while day.weekday() >= 5 or day in holidays_for_year:
-        day += dt.timedelta(days=1)
-    return day
-
-
-def parse_emission_date(args: argparse.Namespace, base_dir: Path) -> dt.date:
-    if args.emission_date:
-        try:
-            return dt.datetime.strptime(args.emission_date.strip(), "%d-%m-%Y").date()
-        except ValueError:
-            print(
-                f"--emission-date inválido: {args.emission_date!r}. Formato esperado DD-MM-AAAA, "
-                "por ejemplo 03-08-2026",
-                file=sys.stderr,
-            )
-            raise SystemExit(2)
-    if args.month:
-        match = re.fullmatch(r"\s*(\d{4})-(\d{1,2})\s*", args.month)
-        if not match:
-            print(
-                f"--month inválido: {args.month!r}. Formato esperado AAAA-MM, por ejemplo 2026-08",
-                file=sys.stderr,
-            )
-            raise SystemExit(2)
-        year, month = int(match.group(1)), int(match.group(2))
-        if not 1 <= month <= 12:
-            print(
-                f"--month inválido: el mes debe estar entre 01 y 12, se recibió {month:02d}",
-                file=sys.stderr,
-            )
-            raise SystemExit(2)
-    else:
-        today = dt.date.today()
-        year, month = today.year, today.month
-    return first_business_day(year, month, base_dir)
-
-
-@dataclass
-class FolderSelection:
-    """Resultado de un intento de mostrar el selector de carpeta.
-
-    NO_DISPONIBLE: el diálogo no pudo mostrarse en este equipo (falta tkinter,
-    no es Windows, PowerShell falló). Es el ÚNICO estado que debe activar un
-    respaldo.
-    CANCELADO: el diálogo se mostró y el usuario lo cerró sin elegir carpeta.
-    No debe abrir un segundo diálogo (defecto M-02: antes, cancelar tkinter
-    abría igual el respaldo de PowerShell).
-    SELECCIONADO: hay una carpeta elegida, en `path`.
-    """
-
-    status: str
-    path: str = ""
-
-
-def _folder_dialog_tkinter() -> FolderSelection:
-    """Selector nativo de Python. No depende de PowerShell ni de directivas de grupo."""
-    try:
-        import tkinter
-        from tkinter import filedialog
-    except ImportError:
-        return FolderSelection("NO_DISPONIBLE")
-    try:
-        root = tkinter.Tk()
-        root.withdraw()
-        try:
-            root.attributes("-topmost", True)
-        except tkinter.TclError:
-            pass
-        selection = filedialog.askdirectory(
-            title="Seleccione la carpeta que contiene los informes",
-            mustexist=True,
-        )
-        root.destroy()
-    except Exception:
-        return FolderSelection("NO_DISPONIBLE")
-    if selection:
-        return FolderSelection("SELECCIONADO", selection)
-    return FolderSelection("CANCELADO")
-
-
-def _folder_dialog_powershell() -> FolderSelection:
-    """Respaldo para equipos sin tkinter. Escribe la ruta en UTF-8 a un temporal
-    para no depender de la página de códigos de la consola (tildes y ñ)."""
-    if os.name != "nt":
-        return FolderSelection("NO_DISPONIBLE")
-    handle = tempfile.NamedTemporaryFile(prefix="meta4_folder_", suffix=".txt", delete=False)
-    handle.close()
-    temporary = Path(handle.name)
-    marker = temporary.with_suffix(".ok")
-    escaped = str(temporary).replace("'", "''")
-    escaped_marker = str(marker).replace("'", "''")
-    script = (
-        "Add-Type -AssemblyName System.Windows.Forms;"
-        "$dialog = New-Object System.Windows.Forms.FolderBrowserDialog;"
-        "$dialog.Description = 'Seleccione la carpeta que contiene los informes';"
-        "$dialog.ShowNewFolderButton = $false;"
-        "if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {"
-        f"[System.IO.File]::WriteAllText('{escaped}', $dialog.SelectedPath, "
-        "(New-Object System.Text.UTF8Encoding($false)));"
-        f"[System.IO.File]::WriteAllText('{escaped_marker}', 'OK') }}"
-    )
-    try:
-        completed = subprocess.run(
-            ["powershell", "-NoProfile", "-STA", "-Command", script],
-            capture_output=True,
-            timeout=600,
-            check=False,
-        )
-        if completed.returncode != 0:
-            return FolderSelection("NO_DISPONIBLE")
-        if not marker.exists():
-            # El diálogo se mostró y se cerró sin marcar OK: el usuario canceló.
-            return FolderSelection("CANCELADO")
-        selection = temporary.read_text(encoding="utf-8").strip()
-    except (OSError, subprocess.SubprocessError, UnicodeDecodeError):
-        return FolderSelection("NO_DISPONIBLE")
-    finally:
-        for candidate in (temporary, marker):
-            try:
-                candidate.unlink()
-            except OSError:
-                pass
-    if selection:
-        return FolderSelection("SELECCIONADO", selection)
-    return FolderSelection("CANCELADO")
-
-
-def select_source_folder() -> FolderSelection:
-    """Muestra el primer selector disponible. Solo NO_DISPONIBLE prueba el
-    siguiente; CANCELADO se respeta de inmediato y no abre un segundo diálogo."""
-    result = _folder_dialog_tkinter()
-    if result.status != "NO_DISPONIBLE":
-        return result
-    return _folder_dialog_powershell()
-
-
 def expected_keys() -> list[tuple[str, str, str]]:
     return [
         (tribunal, category, status)
@@ -1027,7 +780,6 @@ def inspect_excel(
                 category=category,
                 tribunal=row_tribunal,
                 values=values,
-                source_file=path.name,
                 source_path=relative,
                 excel_row=int(df_idx) + 1,
             )
@@ -1130,28 +882,10 @@ def inspect_excel(
     return result
 
 
-def find_directory_tribunal(path: Path, root: Path, mapping: dict[Path, str]) -> str | None:
-    current = path.parent.resolve()
-    root_resolved = root.resolve()
-    while True:
-        if current in mapping:
-            return mapping[current]
-        if current == root_resolved or current.parent == current:
-            return None
-        current = current.parent
-
-
-def inspect_zero_record_file(
-    path: Path,
-    root: Path,
-    kind: str,
-    directory_map: dict[Path, str],
-    issues: list[Issue],
-) -> FileResult:
+def inspect_zero_record_file(path: Path, root: Path, issues: list[Issue], kind: str = "PDF") -> FileResult:
+    """Evidencia sin registros (PDF de una consulta vacía): se clasifica solo por su ruta."""
     relative = relative_string(path, root)
     tribunal, path_notes = tribunal_from_path(relative)
-    if not tribunal:
-        tribunal = find_directory_tribunal(path, root, directory_map)
     status = status_from_path(relative)
     category = category_from_path(relative)
     result = FileResult(
@@ -1194,82 +928,8 @@ def inspect_zero_record_file(
     return result
 
 
-def inspect_ignored(path: Path, root: Path, reason: str) -> FileResult:
-    return FileResult(
-        path=path,
-        relative_path=relative_string(path, root),
-        kind="OTRO",
-        result="IGNORADO",
-        observations=[reason],
-    )
-
-
-def scan_folder(root: Path) -> tuple[list[FileResult], list[Issue]]:
-    issues: list[Issue] = []
-    file_results: list[FileResult] = []
-    discovered: list[Path] = []
-    for directory, subdirectories, filenames in os.walk(root, followlinks=False):
-        subdirectories[:] = [
-            name for name in subdirectories if not Path(directory, name).is_symlink()
-        ]
-        for filename in filenames:
-            path = Path(directory, filename)
-            if path.is_file() and not path.is_symlink():
-                discovered.append(path)
-    files = sorted(discovered, key=lambda path: norm(relative_string(path, root)))
-
-    excel_paths: list[Path] = []
-    other_paths: list[Path] = []
-    for path in files:
-        generated_reason = output_file_reason(path)
-        if generated_reason:
-            file_results.append(inspect_ignored(path, root, generated_reason))
-            continue
-        if path.suffix.lower() in EXCEL_SUFFIXES:
-            excel_paths.append(path)
-        else:
-            other_paths.append(path)
-
-    with tempfile.TemporaryDirectory(prefix="meta4_sources_") as temp_dir:
-        temp_root = Path(temp_dir)
-        for index, path in enumerate(excel_paths, 1):
-            readable_path = temp_root / f"{index:04d}{path.suffix.lower()}"
-            try:
-                shutil.copy2(path, readable_path)
-            except OSError as exc:
-                relative = relative_string(path, root)
-                message = f"No se pudo copiar para lectura: {exc}"
-                result = FileResult(path, relative, "EXCEL", "ERROR", observations=[message])
-                file_results.append(result)
-                issues.append(Issue("ERROR", relative, "", message))
-                continue
-            file_results.append(inspect_excel(path, root, readable_path, issues))
-
-    directory_votes: dict[Path, Counter[str]] = defaultdict(Counter)
-    for result in file_results:
-        if result.kind == "EXCEL" and result.tribunal:
-            directory_votes[result.path.parent.resolve()][result.tribunal] += 1
-    directory_map = {
-        directory: votes.most_common(1)[0][0]
-        for directory, votes in directory_votes.items()
-        if votes
-    }
-
-    for path in other_paths:
-        suffix = path.suffix.lower()
-        if suffix in PDF_SUFFIXES:
-            file_results.append(inspect_zero_record_file(path, root, "PDF", directory_map, issues))
-        elif suffix in IMAGE_SUFFIXES:
-            file_results.append(inspect_zero_record_file(path, root, "IMAGEN", directory_map, issues))
-        else:
-            file_results.append(inspect_ignored(path, root, "Tipo de archivo no utilizado"))
-
-    file_results.sort(key=lambda result: norm(result.relative_path))
-    return file_results, issues
-
-
-def candidate_sort_key(candidate: Candidate) -> tuple[int, int, float, int, str]:
-    """Un Excel siempre vence a un PDF o imagen: su contenido fue leído.
+def candidate_sort_key(candidate: Candidate) -> tuple[int, int, float, str]:
+    """Un Excel siempre vence a un PDF: su contenido fue leído.
 
     Entre archivos del mismo rango decide la fecha de emisión y luego la de
     modificación. Sin este primer criterio, un PDF más reciente eliminaba los
@@ -1281,14 +941,37 @@ def candidate_sort_key(candidate: Candidate) -> tuple[int, int, float, int, str]
     else:
         date_score = dt.datetime.fromtimestamp(candidate.modified_at).date().toordinal()
     evidence_score = 1 if candidate.kind == "EXCEL" else 0
-    kind_score = {"EXCEL": 3, "PDF": 2, "IMAGEN": 1}.get(candidate.kind, 0)
     return (
         evidence_score,
         date_score,
         candidate.modified_at,
-        kind_score,
         norm(candidate.file_result.relative_path),
     )
+
+
+def _row_identity(row: SourceRow) -> tuple[str, ...]:
+    return tuple(norm(row.values.get(header)) for header in ("RIT", "RUT", "NOMBRE", "DERIVACIÓN"))
+
+
+def _merge_strays(chosen: Candidate, strays: list[Candidate], key: tuple[str, str, str], issues: list[Issue]) -> Candidate:
+    seen = {_row_identity(row) for row in chosen.rows}
+    extra: list[SourceRow] = []
+    for stray in strays:
+        added = [row for row in stray.rows if _row_identity(row) not in seen]
+        seen.update(_row_identity(row) for row in added)
+        extra.extend(added)
+        stray.selected = True
+        stray.selection_note = f"Filas incorporadas a {combination_text(key)}"
+        issues.append(
+            Issue(
+                "ADVERTENCIA",
+                stray.file_result.relative_path,
+                combination_text(key),
+                f"El archivo de {stray.file_result.tribunal} contiene {len(stray.rows)} fila(s) de {key[0]}: "
+                f"se incorporaron {len(added)}; {len(stray.rows) - len(added)} ya estaban en el reporte propio",
+            )
+        )
+    return replace(chosen, rows=chosen.rows + extra)
 
 
 def select_candidates(
@@ -1306,10 +989,16 @@ def select_candidates(
         if not candidates:
             issues.append(Issue("FALTANTE", "", combination_text(key), "No se encontró un archivo para esta combinación"))
             continue
-        chosen = max(candidates, key=candidate_sort_key)
+        # Las filas de este tribunal halladas en el archivo de OTRO tribunal no son una versión
+        # del reporte: no compiten con el archivo propio, se suman a él sin repetir filas.
+        primaries = [c for c in candidates if c.tribunal == c.file_result.tribunal]
+        chosen = max(primaries or candidates, key=candidate_sort_key)
+        strays = [c for c in candidates if c is not chosen and c.tribunal != c.file_result.tribunal]
+        candidates = primaries or [chosen]
+        groups[key] = list(candidates)  # la matriz cuenta como duplicado solo otra versión del reporte
         chosen.selected = True
         chosen.selection_note = "Seleccionado"
-        selected[key] = chosen
+        selected[key] = _merge_strays(chosen, strays, key, issues) if strays else chosen
         if len(candidates) > 1:
             omitted = [candidate for candidate in candidates if candidate is not chosen]
             for candidate in omitted:
@@ -1382,7 +1071,6 @@ def consolidated_rows(
 
 
 NAVY = "17365D"
-BLUE = "2F75B5"
 LIGHT_BLUE = "D9EAF7"
 PALE_BLUE = "EAF3F8"
 GREEN = "E2F0D9"
@@ -1422,16 +1110,6 @@ class StyleMemo:
             self._arrays[key] = copy(cell._style)
         else:
             cell._style = copy(array)
-
-
-def unique_output_path(path: Path) -> Path:
-    if not path.exists():
-        return path
-    for index in range(1, 1000):
-        candidate = path.with_name(f"{path.stem} ({index}){path.suffix}")
-        if not candidate.exists():
-            return candidate
-    raise RuntimeError(f"No se pudo crear un nombre único cerca de {path}")
 
 
 def save_workbook_atomic(workbook: Workbook, path: Path) -> None:
@@ -1645,10 +1323,8 @@ def matrix_cell_text(
         out_of_scope = len(candidate.file_result.orphan_rows)
         if out_of_scope:
             text += f" (+{out_of_scope} fuera de alcance)"
-    elif candidate.kind == "PDF":
-        text = "PDF · 0 registros"
     else:
-        text = "IMAGEN · 0 registros"
+        text = "PDF · 0 registros"
     siblings = groups.get(key, [])
     if len(siblings) > 1:
         text += " · DUPLICADO"
@@ -1728,7 +1404,7 @@ def write_matrix_sheet(
     )
     ws.conditional_formatting.add(
         data_range,
-        FormulaRule(formula=["OR(ISNUMBER(SEARCH(\"PDF\",B5)),ISNUMBER(SEARCH(\"IMAGEN\",B5)))"], fill=PatternFill("solid", fgColor=PALE_BLUE)),
+        FormulaRule(formula=["ISNUMBER(SEARCH(\"PDF\",B5))"], fill=PatternFill("solid", fgColor=PALE_BLUE)),
     )
     ws.freeze_panes = "B5"
     ws.column_dimensions["A"].width = 24
@@ -1904,10 +1580,6 @@ def read_registros(
                     ]
                 records[sheet_name][tribunal].append(rec)
     return records, source_counts, unmatched
-
-
-def default_template_path(base_dir: Path) -> Path:
-    return base_dir / "assets" / "meta4-template.xlsx"
 
 
 def build_default_template() -> Workbook:
@@ -2206,433 +1878,3 @@ def verify_meta_output(path: Path) -> tuple[dict[str, Any], dict[str, int], list
         wb.close()
 
 
-def _fingerprint_value(value: Any) -> str:
-    """Forma canónica de un valor de celda para comparar filas por contenido."""
-    if value is None:
-        return ""
-    if isinstance(value, dt.datetime):
-        return value.date().isoformat()
-    if isinstance(value, dt.date):
-        return value.isoformat()
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    if isinstance(value, (int, float)):
-        return str(value)
-    return norm(value)
-
-
-def verify_registros_output(
-    path: Path,
-    expected_rows: dict[str, list[SourceRow]] | None = None,
-) -> dict[str, Any]:
-    """Recuenta el archivo escrito y lo contrasta con lo que había en memoria.
-
-    La comparación memoria-vs-archivo es la red de seguridad principal: como
-    ambos números provienen de construir el mismo `rows` en distintos momentos,
-    una discrepancia solo puede deberse a un error al escribir, no a que el RIT
-    se repita.
-
-    El detector de filas repetidas (H-01) usa una huella con TODAS las columnas
-    de negocio, no solo RIT: un RIT es la causa y puede legítimamente tener más
-    de una fila (hermanos, varias medidas). Usar RIT+archivo como clave produce
-    falsos positivos con datos reales. ARCHIVO ORIGEN y RUTA ORIGEN se excluyen
-    de la huella (son metadato técnico) y se comparan aparte para distinguir un
-    duplicado dentro de un mismo archivo de uno entre archivos distintos.
-    """
-    wb = load_workbook(path, read_only=True, data_only=True)
-    try:
-        result: dict[str, Any] = {"sheets": list(wb.sheetnames), "rows": {}, "problems": []}
-        for sheet_name, memory_key in (("ESPERA", "Espera"), ("CUMPLIMIENTO", "Cumplimiento")):
-            ws = wb[sheet_name]
-            headers = [cell for cell in next(ws.iter_rows(min_row=1, max_row=1, values_only=True), ())]
-            normalized = [norm(header) for header in headers]
-            rit_idx = normalized.index("RIT") if "RIT" in normalized else 0
-            archivo_idx = normalized.index("ARCHIVO ORIGEN") if "ARCHIVO ORIGEN" in normalized else None
-            ruta_idx = normalized.index("RUTA ORIGEN") if "RUTA ORIGEN" in normalized else None
-
-            count = 0
-            fingerprints: dict[tuple[str, ...], list[tuple[str, str]]] = defaultdict(list)
-            excluded_columns = {index for index in (archivo_idx, ruta_idx) if index is not None}
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                if rit_idx >= len(row):
-                    continue
-                rit = row[rit_idx]
-                if rit is None or not str(rit).strip():
-                    continue
-                count += 1
-                archivo = str(row[archivo_idx] or "").strip() if archivo_idx is not None and archivo_idx < len(row) else ""
-                # Huella de negocio: todas las columnas menos ARCHIVO ORIGEN y RUTA
-                # ORIGEN (metadatos técnicos). El archivo se compara aparte para
-                # distinguir "misma fila repetida en el mismo archivo" de "misma
-                # fila proveniente de archivos distintos".
-                business = tuple(
-                    _fingerprint_value(value) for index, value in enumerate(row) if index not in excluded_columns
-                )
-                fingerprints[business].append((str(rit).strip(), archivo))
-            result["rows"][sheet_name] = count
-
-            same_file, cross_file = [], []
-            for occurrences in fingerprints.values():
-                if len(occurrences) < 2:
-                    continue
-                rit_value = occurrences[0][0]
-                archivos = sorted({archivo for _, archivo in occurrences})
-                if len(archivos) == 1:
-                    same_file.append(f"RIT {rit_value} en {archivos[0]}")
-                else:
-                    cross_file.append(f"RIT {rit_value} en {', '.join(archivos)}")
-
-            if same_file:
-                result["problems"].append(
-                    f"{sheet_name}: {len(same_file)} fila(s) con todos los datos idénticos "
-                    f"repetidas dentro del mismo archivo de origen. Ejemplos: {'; '.join(same_file[:5])}"
-                )
-            if cross_file:
-                result["problems"].append(
-                    f"{sheet_name}: {len(cross_file)} fila(s) con todos los datos idénticos "
-                    f"provenientes de archivos distintos. Ejemplos: {'; '.join(cross_file[:5])}"
-                )
-            if expected_rows is not None and count != len(expected_rows.get(memory_key, [])):
-                result["problems"].append(
-                    f"{sheet_name}: se escribieron {count} filas pero se consolidaron "
-                    f"{len(expected_rows.get(memory_key, []))}"
-                )
-        result["inventory_rows"] = max(0, wb["INVENTARIO_ARCHIVOS"].max_row - 1)
-        result["matrix_rows"] = max(0, wb["MATRIZ_COBERTURA"].max_row - 4)
-        return result
-    finally:
-        wb.close()
-
-
-def write_text_report(
-    path: Path,
-    root: Path,
-    emission: dt.date,
-    file_results: list[FileResult],
-    selected: dict[tuple[str, str, str], Candidate],
-    groups: dict[tuple[str, str, str], list[Candidate]],
-    issues: list[Issue],
-    source_counts: dict[str, int],
-    meta_summary: dict[str, int],
-    registros_path: Path,
-    meta_path: Path,
-    started_at: dt.datetime,
-    finished_at: dt.datetime,
-) -> None:
-    divider = "=" * 96
-    lines: list[str] = [
-        divider,
-        "REPORTE DE PROCESAMIENTO META 4",
-        divider,
-        f"Versión                : {APP_VERSION}",
-        f"Carpeta examinada      : {root}",
-        f"Inicio                  : {started_at.strftime('%d-%m-%Y %H:%M:%S')}",
-        f"Término                 : {finished_at.strftime('%d-%m-%Y %H:%M:%S')}",
-        f"Fecha emisión META 4    : {emission.strftime('%d-%m-%Y')}",
-        "",
-        "RESUMEN",
-        "-" * 96,
-    ]
-    kind_counts = Counter(result.kind for result in file_results)
-    result_counts = Counter(result.result for result in file_results)
-    duplicate_count = sum(1 for key in expected_keys() if len(groups.get(key, [])) > 1)
-    lines.extend(
-        [
-            f"Archivos inventariados  : {len(file_results)}",
-            f"Excel                    : {kind_counts.get('EXCEL', 0)}",
-            f"PDF                      : {kind_counts.get('PDF', 0)}",
-            f"Imágenes                 : {kind_counts.get('IMAGEN', 0)}",
-            f"Otros/ignorados          : {kind_counts.get('OTRO', 0)}",
-            f"Combinaciones encontradas: {len(selected)}/68",
-            f"Combinaciones faltantes  : {68 - len(selected)}",
-            f"Combinaciones duplicadas : {duplicate_count}",
-            f"Registros Espera         : {source_counts.get('ESPERA', 0)}",
-            f"Registros Cumplimiento   : {source_counts.get('CUMPLIMIENTO', 0)}",
-            f"Total registros          : {sum(source_counts.values())}",
-            "",
-            "ARCHIVOS PROCESADOS",
-            "-" * 96,
-        ]
-    )
-    for result in file_results:
-        classification = " / ".join(
-            value
-            for value in (
-                result.tribunal or "SIN TRIBUNAL",
-                ", ".join(result.categories) or "SIN MODALIDAD",
-                result.status or "SIN ESTADO",
-            )
-        )
-        lines.append(
-            f"[{result.result}] [{result.selected_label()}] {result.kind} | "
-            f"{classification} | {result.record_count} registro(s) | {result.relative_path}"
-        )
-        if result.observations:
-            for observation in dict.fromkeys(result.observations):
-                lines.append(f"    - {observation}")
-
-    lines.extend(["", "MATRIZ DE COBERTURA", "-" * 96])
-    for tribunal in TRIBUNALS:
-        lines.append(tribunal)
-        for category, status in (
-            ("FAE", "Espera"),
-            ("FAE", "Cumplimiento"),
-            ("Residencia", "Espera"),
-            ("Residencia", "Cumplimiento"),
-        ):
-            key = (tribunal, category, status)
-            candidate = selected.get(key)
-            if candidate:
-                detail = (
-                    f"{candidate.kind}; {len(candidate.rows)} registro(s); "
-                    f"{candidate.file_result.relative_path}"
-                )
-                if len(groups.get(key, [])) > 1:
-                    detail += f"; {len(groups[key])} archivos encontrados"
-            else:
-                detail = "FALTANTE"
-            lines.append(f"    {category} {status}: {detail}")
-
-    lines.extend(["", "ERRORES Y ADVERTENCIAS", "-" * 96])
-    if issues:
-        for issue in issues:
-            location = issue.file or issue.combination or "GENERAL"
-            lines.append(f"[{issue.level}] {location}: {issue.message}")
-    else:
-        lines.append("No se detectaron errores ni advertencias.")
-
-    lines.extend(
-        [
-            "",
-            "TOTALES META 4",
-            "-" * 96,
-        ]
-    )
-    for sheet_name in SHEET_DEFS:
-        lines.append(f"{sheet_name}: {meta_summary.get(sheet_name, 0)}")
-    lines.extend(
-        [
-            "",
-            "PRODUCTOS GENERADOS",
-            "-" * 96,
-            f"Registros: {registros_path}",
-            f"META 4   : {meta_path}",
-            f"Reporte  : {path}",
-            "",
-            "CONTEO POR RESULTADO DE ARCHIVO",
-            "-" * 96,
-        ]
-    )
-    for name, count in sorted(result_counts.items()):
-        lines.append(f"{name}: {count}")
-    lines.extend(["", divider])
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8-sig")
-
-
-def create_template(path: Path) -> None:
-    workbook = build_default_template()
-    save_workbook_atomic(workbook, path)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Examina una carpeta y genera Registros.xlsx, META 4 y un reporte TXT"
-    )
-    parser.add_argument(
-        "--folder",
-        help="Carpeta que se examinará recursivamente. Por defecto, la carpeta actual.",
-    )
-    parser.add_argument(
-        "--pick-folder",
-        action="store_true",
-        help="Abre una ventana para elegir la carpeta cuando no se indica --folder",
-    )
-    parser.add_argument(
-        "--open-output",
-        action="store_true",
-        help="Abre la carpeta de salida al terminar (solo Windows)",
-    )
-    parser.add_argument(
-        "--output-dir",
-        help="Carpeta de salida. Por defecto, la misma carpeta examinada.",
-    )
-    parser.add_argument("--template", help="Plantilla META 4 opcional en formato .xlsx")
-    parser.add_argument("--month", help="Mes de emisión en formato AAAA-MM")
-    parser.add_argument("--emission-date", help="Fecha exacta de emisión en formato DD-MM-AAAA")
-    parser.add_argument(
-        "--overwrite",
-        action="store_true",
-        help="Reemplaza el META 4 del mismo mes en lugar de crear un nombre alternativo",
-    )
-    parser.add_argument(
-        "--create-template",
-        help="Crea una plantilla META 4 en la ruta indicada y termina",
-    )
-    args = parser.parse_args()
-
-    base_dir = Path(__file__).resolve().parents[1]
-    if args.create_template:
-        template_target = Path(args.create_template).expanduser().resolve()
-        create_template(template_target)
-        print(json.dumps({"template": str(template_target)}, ensure_ascii=False, indent=2))
-        return
-
-    started_at = dt.datetime.now()
-    if not args.folder and args.pick_folder:
-        selection = select_source_folder()
-        if selection.status == "NO_DISPONIBLE":
-            print("No se pudo mostrar un selector de carpetas en este equipo.")
-            print('Usa --folder "ruta" en su lugar.')
-            raise SystemExit(1)
-        if selection.status == "CANCELADO":
-            print("No se seleccionó ninguna carpeta. Proceso cancelado.")
-            raise SystemExit(3)
-        args.folder = selection.path
-    root = Path(args.folder or ".").expanduser().resolve()
-    if not root.exists():
-        print(f"No existe la carpeta: {root}", file=sys.stderr)
-        raise SystemExit(1)
-    if not root.is_dir():
-        print(f"La ruta no es una carpeta: {root}", file=sys.stderr)
-        raise SystemExit(1)
-    output_dir = Path(args.output_dir).expanduser().resolve() if args.output_dir else root
-    output_dir.mkdir(parents=True, exist_ok=True)
-    emission = parse_emission_date(args, base_dir)
-
-    file_results, issues = scan_folder(root)
-    selected, groups = select_candidates(file_results, issues)
-    rows = consolidated_rows(selected)
-    registros_path = output_dir / "Registros.xlsx"
-    write_registros_workbook(registros_path, rows, file_results, selected, groups, issues)
-
-    records, source_counts, unmatched = read_registros(registros_path)
-    if unmatched:
-        for item in unmatched:
-            message = (
-                f"Registro excluido de META 4: tribunal={item['tribunal']!r}, "
-                f"derivación={item['derivacion']!r}"
-            )
-            issues.append(
-                Issue(
-                    "ADVERTENCIA",
-                    f"{item['sheet']} fila {item['row']}",
-                    "",
-                    message,
-                )
-            )
-        write_registros_workbook(registros_path, rows, file_results, selected, groups, issues)
-
-    template = (
-        Path(args.template).expanduser().resolve()
-        if args.template
-        else default_template_path(base_dir)
-    )
-    workbook = load_template(template)
-    meta_summary = rebuild(workbook, records, emission)
-    meta_path = output_dir / f"META 4 - actualizado {emission.strftime('%Y-%m')}.xlsx"
-    if meta_path.exists() and not args.overwrite:
-        meta_path = unique_output_path(meta_path)
-    save_workbook_atomic(workbook, meta_path)
-    verified_meta, counted_meta, meta_problems = verify_meta_output(meta_path)
-    verified_registros = verify_registros_output(registros_path, rows)
-    verification_issues = list(meta_problems) + list(verified_registros["problems"])
-    if verified_meta != meta_summary:
-        verification_issues.append(
-            f"Los totales verificados {verified_meta} no coinciden con {meta_summary}"
-        )
-    if counted_meta != meta_summary:
-        verification_issues.append(
-            f"El recuento de filas por bloque {counted_meta} no coincide con {meta_summary}"
-        )
-    registros_total = len(rows["Espera"]) + len(rows["Cumplimiento"])
-    meta_total = sum(meta_summary.values())
-    expected_meta_total = registros_total - len(unmatched)
-    if meta_total != expected_meta_total:
-        verification_issues.append(
-            f"El META 4 contiene {meta_total} fila(s) pero deberían ser {expected_meta_total} "
-            f"({registros_total} en Registros menos {len(unmatched)} excluida(s) por tribunal o "
-            "derivación no reconocidos). Revisa coincidencia entre matriz de cobertura y META 4"
-        )
-    if verification_issues:
-        for message in verification_issues:
-            issues.append(Issue("ERROR", meta_path.name, "", f"Verificación: {message}"))
-        write_registros_workbook(registros_path, rows, file_results, selected, groups, issues)
-        verified_registros = verify_registros_output(registros_path, rows)
-
-    timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    report_path = unique_output_path(
-        output_dir / f"Reporte de procesamiento META 4 - {timestamp}.txt"
-    )
-    finished_at = dt.datetime.now()
-    write_text_report(
-        report_path,
-        root,
-        emission,
-        file_results,
-        selected,
-        groups,
-        issues,
-        source_counts,
-        meta_summary,
-        registros_path,
-        meta_path,
-        started_at,
-        finished_at,
-    )
-
-    print(
-        json.dumps(
-            {
-                "version": APP_VERSION,
-                "source_folder": str(root),
-                "emission": emission.strftime("%d-%m-%Y"),
-                "outputs": {
-                    "registros": str(registros_path),
-                    "meta4": str(meta_path),
-                    "report": str(report_path),
-                },
-                "files": {
-                    "inventoried": len(file_results),
-                    "excel": sum(result.kind == "EXCEL" for result in file_results),
-                    "pdf": sum(result.kind == "PDF" for result in file_results),
-                    "images": sum(result.kind == "IMAGEN" for result in file_results),
-                },
-                "coverage": {
-                    "found": len(selected),
-                    "expected": 68,
-                    "missing": 68 - len(selected),
-                    "duplicate_combinations": sum(
-                        1 for key in expected_keys() if len(groups.get(key, [])) > 1
-                    ),
-                },
-                "source_counts": source_counts,
-                "meta_summary": meta_summary,
-                "verify_meta_totals": verified_meta,
-                "verify_meta_counted_rows": counted_meta,
-                "verify_registros": verified_registros,
-                "verification_problems": verification_issues,
-                "out_of_scope_rows": sum(
-                    len(result.orphan_rows) for result in file_results
-                ),
-                "issues": len(issues),
-            },
-            ensure_ascii=False,
-            indent=2,
-        )
-    )
-
-    if args.open_output:
-        opener = getattr(os, "startfile", None)
-        if opener is not None:
-            try:
-                opener(str(output_dir))
-            except OSError:
-                pass
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except (FileNotFoundError, NotADirectoryError, PermissionError, OSError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        raise SystemExit(1)

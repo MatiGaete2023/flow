@@ -13,18 +13,7 @@ def normalize(value):
     return re.sub(r'\s+', ' ', re.sub(r'[-().]+', ' ', text.lower().strip()))
 
 
-def visible_identity_warnings(snapshot, rit, persona):
-    """Advertir diferencias de pantalla sin invalidar la identidad remota fuerte."""
-    warnings = []
-    if normalize(snapshot.get('rit')) != normalize(rit):
-        warnings.append('Advertencia: RIT visible de bitácora distinto al listado; revisar el ingreso.')
-    if normalize(snapshot.get('persona')) != normalize(persona):
-        warnings.append('Advertencia: nombre visible de bitácora distinto al listado; revisar el ingreso.')
-    return warnings
-
-
 ORIGIN = 'https://familia.pjud.cl'
-POPUP_PATH = '/SITFAWEB/IrPopUpInformesAccion.do'
 HEADERS = (
     'Tipo Observación',
     'Etapa',
@@ -98,7 +87,7 @@ def read_snapshot(text, params, *, source='', captured_at=''):
     """Vincula cada fila con sus campos ocultos por ID, nunca por posición."""
     raw = text.encode('utf-8') if isinstance(text, str) else text
     text = decode_snapshot(text)
-    if params.get('tipo_popUp') not in ('11', '12', '13'):
+    if not isinstance(params, dict) or params.get('tipo_popUp') not in ('11', '12', '13'):
         raise ValueError('La captura no corresponde a una bitácora RUS.')
     # RUS añade scripts después de </html> en esta ventana.
     if not re.search(r'</html\s*>', text, re.I):

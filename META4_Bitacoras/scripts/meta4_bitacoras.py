@@ -18,9 +18,9 @@ import sys
 from dataclasses import dataclass, field, replace
 
 BASE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(BASE / 'descargador'))
 sys.path.insert(0, str(BASE / 'src'))
 import generate_meta4 as meta
+import lector_excel
 from nurus.bitacora_html import read_snapshot
 import pandas as pd
 from openpyxl import Workbook
@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.2'
+VERSION = '2.3'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -485,7 +485,6 @@ def _fuentes(origen):
     No se selecciona solo un archivo por combinación cuando hay varias páginas.
     Devuelve además las consultas de Meta 4 incluidas en el lote.
     """
-    import motor as m
     summaries = [p for p in origen.rglob('resumen.json') if not es_salida(p, origen)]
     if len(summaries) > 1:
         raise ValueError('Hay varios lotes descargados: selecciona la carpeta de un solo lote de registros.')
@@ -536,11 +535,11 @@ def _fuentes(origen):
     files, issues = [], []
     for path, body in sources:
         if path.suffix.lower() in meta.PDF_SUFFIXES:
-            files.append(meta.inspect_zero_record_file(path, origen, 'PDF', {}, issues))
+            files.append(meta.inspect_zero_record_file(path, origen, issues))
             continue
         try:
-            grid = m.read_excel(body if body is not None else path.read_bytes()).grid
-        except m.PocError:
+            grid = lector_excel.read_excel(body if body is not None else path.read_bytes()).grid
+        except lector_excel.PocError:
             files.append(meta.inspect_excel(path, origen, path, issues))
             continue
         files.append(meta.inspect_excel(path, origen, None, issues, frames=[('Sheet', hoja_desde_grilla(grid))]))
@@ -720,6 +719,12 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     for aviso in lectura.avisos:
         issues.append(meta.Issue('ADVERTENCIA', '', '', aviso))
     rows = meta.consolidated_rows(selected)
+    for group in rows.values():
+        for r in group:
+            if meta.tribunal_name(r.values.get('TRIBUNAL')) is None:
+                issues.append(meta.Issue('ADVERTENCIA', f'{r.source_path} fila {r.excel_row}', '',
+                                         f"Registro excluido de META 4: la columna TRIBUNAL ({r.values.get('TRIBUNAL')!r}) "
+                                         'no identifica un tribunal. Queda en Registros.'))
     enriquecer(rows, lectura.registros, corte)
     # Se escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial.
     trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(4))

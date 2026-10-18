@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.2
+# Meta 4 · Registros y bitácoras — 2.3
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -66,6 +66,25 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.3 (auditoría de código y pruebas)
+
+Correcciones:
+
+- **Tildes en XLS HTML sin charset:** un archivo UTF-8 se leía como ISO-8859-1 ("CaÃ±ete"). Los tribunales con tilde no se reconocían y sus filas quedaban fuera de META 4 (en un lote ficticio, 144 de 612). Ahora se lee como UTF-8 o, si no lo es, como Windows-1252.
+- **Excel con dimensión desactualizada:** un .xlsx cuya dimensión declarada era menor que su contenido perdía filas sin aviso. Ahora se leen todas.
+- **Filas de otro tribunal dentro de un archivo:** desplazaban al reporte propio de ese tribunal y se perdían sus filas. Ahora se suman al reporte propio sin repetir filas y se informa.
+- **Fila con TRIBUNAL no reconocible:** quedaba en Registros pero fuera de META 4 sin aviso. Ahora se informa en ERRORES_Y_ADVERTENCIAS y en el aviso final.
+- **Caracteres de control en una celda** abortaban la generación; ahora se reemplazan por un espacio.
+- Una bitácora del formato anterior con parámetros nulos detenía todo; ahora queda como NO VERIFICABLE.
+
+Código retirado, con prueba de que el producto no lo usaba:
+
+- Línea de comandos propia de generate_meta4 (selector de carpeta, feriados, reporte TXT, verificación de duplicados del v2.4), con `assets/feriados_adicionales.txt` y la dependencia `holidays`.
+- `descargador/motor.py` (transporte a SITFA): se reemplaza por `scripts/lector_excel.py`, que contiene solo la lectura de Excel. La equivalencia se comprobó con 244 entradas: 238 resultados idénticos y 6 diferencias que son exactamente las dos correcciones anteriores.
+- Funciones sin uso del lector de bitácoras y ramas inalcanzables (formatos de fecha que nunca llegan, archivos de imagen).
+
+Pruebas: las que pasaban por la línea de comandos retirada se reescribieron contra el camino del producto; se agregaron pruebas del lector de Excel (incluido .xls binario, antes siempre omitido), de la ventana y de cada corrección.
 
 ## Cambios 2.2
 
