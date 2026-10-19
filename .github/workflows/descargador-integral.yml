@@ -51,6 +51,7 @@ jobs:
         run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
       - run: python -m pytest -q -p no:cacheprovider
       - run: node test_bitacoras_extension.cjs
+      - run: node test_calendario_extension.cjs
       # E4: pruebas unitarias en PR; Playwright solo en candidato explícito.
       - name: Extensión y servidor ficticios
         if: github.event_name == 'workflow_dispatch'

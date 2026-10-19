@@ -1,6 +1,6 @@
 """Contrato explícito de las piezas entregadas juntas; no consulta RUS."""
 
-PROTOCOLS = {'bitacoras_lectura': 1, 'descarga_conjunta': 1, 'pdf_seleccion': 1}
+PROTOCOLS = {'bitacoras_lectura': 1, 'descarga_conjunta': 1, 'pdf_seleccion': 1, 'calendario_lectura': 1}
 VERSION = '2.7.6'
 
 

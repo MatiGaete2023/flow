@@ -3,6 +3,7 @@
 import hashlib
 from datetime import datetime, timedelta
 import json
+import re
 from collections import Counter
 from copy import deepcopy
 from dataclasses import asdict
@@ -397,6 +398,36 @@ class _Lectura:
         record['reutilizada_de'] = {'carpeta': folder.name, 'capturada': previous['capturada']}
         return True
 
+    def reutilizar_calendario(self, record):
+        """Al retomar, reutiliza el calendario ya leído del mismo ingreso si su archivo conserva el hash."""
+        previous = (self.old.get(record['clave']) or {}).get('calendario_lectura') or {}
+        if previous.get('estado') != 'LEIDA' or previous.get('args') != record['calendario']:
+            return False
+        name = previous.get('archivo')
+        if not isinstance(name, str) or not re.fullmatch(r'calendario-[0-9a-f]{24}-[0-9a-f]{16}\.html', name):
+            return False
+        path = self.folder / name
+        if not path.is_file() or path.stat().st_size > 8 * 1024 * 1024:
+            return False
+        data = path.read_bytes()
+        if hashlib.sha256(data).hexdigest() != previous.get('sha256'):
+            return False
+        from nurus.calendario_html import read_calendar
+
+        try:
+            calendar = read_calendar(data, record['calendario'])
+        except ValueError:
+            return False
+        record['calendario_lectura'].update(
+            estado='LEIDA',
+            archivo=name,
+            sha256=previous['sha256'],
+            capturada=previous.get('capturada', ''),
+            proyecciones=calendar['proyecciones'],
+            reutilizada=True,
+        )
+        return True
+
     def _reutilizar_retomada(self, record):
         previous = self.old.get(record['clave'])
         if not previous or previous.get('params') != record.get('params'):
@@ -418,11 +449,17 @@ class _Lectura:
         return True
 
 
+# WD-1: el calendario de informes proyectados solo existe en las pestañas con ingreso efectivo.
+PESTANAS_CALENDARIO = ('Cumplimiento', 'Informes')
+
+
 class DiaryRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None):
+    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, calendars=False):
         self.bridge, self.catalog, self.emit, self.cancel = bridge, catalog, emit, cancel
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
+        # Casilla del usuario (19-oct-2026); cada calendario cuenta en MAX_LECTURAS_POR_LOTE.
+        self.calendars = bool(calendars)
 
     def run(self, batch, destination, resume=None):
         if batch.screen != 'seguimiento':
@@ -619,6 +656,7 @@ class DiaryRunner:
         ).hexdigest()
         session.state['registros'].append(record)
         query['registros'] += 1
+        calendar_opened = False
         if not all(identity):
             record.update(
                 estado='SIN_VINCULO',
@@ -636,10 +674,14 @@ class DiaryRunner:
                 'FLG_MejorNinez': item['antiguo'],
             }
             try:
-                if not session.reutilizar(record):
+                opened = not session.reutilizar(record)
+                if opened:
                     self._abrir_bitacora(session, record)
+                if self.calendars and selection.tab in PESTANAS_CALENDARIO and record.get('calendario'):
+                    calendar_opened = self._leer_calendario(session, record, pause=opened)
             except LimiteLecturas:
-                record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
+                if record['estado'] != 'LEIDA':
+                    record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
                 raise
             except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
                 record.update(
@@ -661,9 +703,8 @@ class DiaryRunner:
                 'estado': record['estado'],
             },
         )
-        if self.cancel.wait(
-            self.pause if record['estado'] != 'SIN_VINCULO' and not record.get('reutilizada') else 0.05
-        ):
+        paced = record['estado'] != 'SIN_VINCULO' and (not record.get('reutilizada') or calendar_opened)
+        if self.cancel.wait(self.pause if paced else 0.05):
             session.detener_si_cancelada()
 
     def _abrir_bitacora(self, session, record):
@@ -699,6 +740,59 @@ class DiaryRunner:
             entradas=len(snapshot['entries']),
         )
 
+    def _leer_calendario(self, session, record, pause):
+        """Calendario del ingreso tras su bitácora; una falla aquí no invalida la bitácora ya leída."""
+        args = record['calendario']
+        reading = {'estado': 'PENDIENTE', 'args': args}
+        record['calendario_lectura'] = reading
+        if session.reutilizar_calendario(record):
+            return False
+        if session.openings >= MAX_LECTURAS_POR_LOTE:
+            reading['error'] = 'Pendiente: se alcanzó el máximo de lecturas del lote.'
+            raise LimiteLecturas(
+                f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
+                'Divide el período o los tribunales y usa «Retomar» para continuar.'
+            )
+        if pause and self.cancel.wait(self.pause):
+            session.detener_si_cancelada()
+        session.openings += 1
+        try:
+            result = self.bridge.call('calendar_open', {'args': args, 'timeout': 60000})
+            data = ChromeTransport.body(result)
+            digest = hashlib.sha256(data).hexdigest()
+            if len(data) > 8 * 1024 * 1024 or digest != result.get('digest') or result.get('args') != args:
+                raise m.PocError('La respuesta del calendario no coincide con la solicitud.')
+            datetime.fromisoformat(result['startedAt'].replace('Z', '+00:00'))
+            from nurus.calendario_html import read_calendar
+
+            calendar = read_calendar(data, args)
+            name = 'calendario-' + record['clave'][:24] + '-' + digest[:16] + '.html'
+            path = session.folder / name
+            if path.exists():
+                if path.read_bytes() != data:
+                    raise m.PocError('El archivo local del calendario cambió.')
+            else:
+                m.save_exclusive(path, data)
+        except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
+            reading.update(
+                estado='FALLIDA',
+                error=str(exc)
+                if isinstance(exc, (m.PocError, ValueError))
+                else 'No se pudo comprobar o guardar este calendario.',
+            )
+            if getattr(exc, 'code', None):
+                reading['diagnostico'] = {'codigo_extension': exc.code}
+            self.emit('warning', 'Calendario de informes no leído: ' + reading['error'])
+            return True
+        reading.update(
+            estado='LEIDA',
+            archivo=name,
+            sha256=digest,
+            capturada=result['startedAt'],
+            proyecciones=calendar['proyecciones'],
+        )
+        return True
+
     def _cerrar(self, session):
         if session.state.get('estado') == 'EN_CURSO':
             # Error no previsto (p. ej. disco): el lote nunca queda «en curso» al cerrar.
@@ -726,6 +820,13 @@ class DiaryRunner:
             'leidas': sum(r['estado'] == 'LEIDA' for r in state['registros']),
             'fallidas': sum(r['estado'] != 'LEIDA' for r in state['registros']),
             'consultas_fallidas': sum(q['estado'] == 'FALLIDA' for q in state['consultas']),
+            'calendarios_leidos': sum(
+                (r.get('calendario_lectura') or {}).get('estado') == 'LEIDA' for r in state['registros']
+            ),
+            'calendarios_fallidos': sum(
+                (r.get('calendario_lectura') or {}).get('estado') in ('FALLIDA', 'PENDIENTE')
+                for r in state['registros']
+            ),
             'detalle': next(
                 (q.get('error', '') for q in state['consultas'] if q['estado'] == 'FALLIDA'), state.get('error', '')
             ),

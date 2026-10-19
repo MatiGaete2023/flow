@@ -506,6 +506,7 @@ El sistema **no calcula** con/sin carga por regla — eso quedó descartado expl
 | Lista controlada de siglas para formato de programa (G-03) | Evaluada y **rechazada** — el criterio de largo de palabra funciona bien en la práctica. |
 | Ficha Ambulatoria como validador/regla general (E1 original) | Superada por la corrección de fichas — confirmado definitivamente fuera de alcance. |
 | Orden de búsqueda (E2 original) | **Reabierta el 19-oct-2026** (decisión del usuario): el Descargador ya incluye «Búsqueda Lit» (menú 94) en el paquete. El Asistente muestra avisos OB-01..OB-05 solo mostrar (`nurus/personal/ordenes_busqueda.py`): activa sin resultado más de 60 días, persona mayor de edad, envío no realizado, NNA sin curador, audiencia próxima. Sin cruces con otras fuentes (el Excel no trae causa ni ingreso remotos). |
+| Calendario de informes por ingreso (WD-1) y CAL-03 (WA-6) | **Implementado el 19-oct-2026** (decisiones del usuario: casilla «Leer calendario de informes», desactivada por defecto; cada calendario cuenta en el máximo de 600 lecturas del lote). El Descargador lee el calendario (`tipo_popUp=8`) de cada ingreso de Cumplimiento e Informes tras su bitácora y lo exporta como filas `calendarios` `INFORME_PROYECTADO` (PENDIENTE/ENVIADO) con identidad VERIFICADA. El Asistente usa la próxima proyección PENDIENTE como fecha de cruce C-10 solo si Hoja2 no la aporta, y muestra CAL-03 (solo mostrar) cuando la pestaña Informes o Hoja2 difieren del calendario. No agrega observaciones. |
 
 ---
 

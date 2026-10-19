@@ -15,7 +15,7 @@ Ruff, identidades reales 0). Sin fusión a `feat` ni a `main`.
 | WA-4 | Hecho | N-01 mayoría, N-02 informe tras audiencia (30 días), N-03 varios ingresos, N-04 egresado con informe |
 | WD-2 | Pendiente de decisión | Usar la solicitud `CSMP_REQUEST` del Asistente para leer bitácoras solo de esos ingresos |
 | WD-3 | Propuesto aplazar | El diccionario de códigos perdió su principal uso al retirarse B-04 |
-| WD-1 / WA-6 | Bloqueado | Faltan los nombres de los parámetros de la dirección del calendario |
+| WD-1 / WA-6 | Hecho | Casilla «Leer calendario de informes» (cuenta en las 600 lecturas); proyecciones al paquete; C-10 usa el calendario si falta Hoja2; CAL-03 solo mostrar |
 | WA-8 | Después | Historia de causa (H-01, H-02 acotado) |
 
 Cambios que tocan zonas E3 (decisión j): motor (`reglas_*`, `utilidades`), `textos_base.json` y
@@ -52,3 +52,24 @@ intervencion, remision, id_ingreso, FLG_Antiguo)`. La función hace `window.open
 
 El navegador codifica la consulta en ISO-8859-1 (por ejemplo, «Ó» como `%D3`). Con esto WD-1 queda desbloqueado.
 El extractor `extraer_estructura_historia.py` se negó a escribir porque detectó valores; es la protección esperada.
+
+## WD-1 / WA-6 implementados (19-oct, noche)
+
+Decisiones del usuario: **1. casilla** (desactivada por defecto) y **2. sí, cuenta en el máximo de 600 lecturas**.
+
+- Extensión (`pagina.js`, capacidad `calendario_lectura: 1`): comando `calendar_open`, solo GET. Exige que la tabla de la
+  pestaña actual tenga exactamente una lupa `ShowInformesProgramados` con los mismos 12 argumentos y que el tribunal
+  coincida con `COD_Tribunal_sel`. Arma la dirección en el orden de la página y codifica en ISO-8859-1.
+- Descargador: `vinculos.extract` conserva los 12 argumentos (`calendario`). `DiaryRunner(calendars=True)` lee el
+  calendario después de la bitácora, en Cumplimiento e Informes. Guarda `calendario-<clave>-<hash>.html` y
+  `calendario_lectura` en `bitacoras.json`. Si el calendario falla, la bitácora sigue leída. Al alcanzar el límite queda
+  PENDIENTE; «Retomar» reutiliza los calendarios con hash íntegro.
+- Lector `nurus.calendario_html.read_calendar`: comprueba la identidad oculta, exige una tabla
+  «Fecha Proyección · Fecha Informe · Estado», solo PENDIENTE/ENVIADO, y ENVIADO solo con fecha de informe. Cualquier
+  desvío es error, nunca «sin proyecciones».
+- Paquete: por ingreso, una consulta `calendario_ingreso` con `remote_identity` y filas `calendarios`
+  `INFORME_PROYECTADO` (fecha = proyección, estado = PENDIENTE/ENVIADO, plazos en `normalized_json`).
+- Asistente (`calendario_ingreso.py`): las proyecciones no se agregan como registros. C-10 usa la próxima PENDIENTE
+  futura solo si Hoja2 no aporta fecha. CAL-03 avisa cuando el vencimiento de la pestaña Informes difiere de la primera
+  PENDIENTE, o cuando Hoja2 difiere de la próxima PENDIENTE.
+- Requiere revisión E3 (extensión y contrato de paquete) antes de integrar.

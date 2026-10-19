@@ -14,7 +14,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
   if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.6',
-    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1},escritura_rus:false};
+    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,calendario_lectura:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
   const fields={seguimiento:`COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
@@ -390,7 +390,65 @@ async function sitfaTask(command, payload) {
     return {pairs};
   }
   let url,init;
-  let diaryParams=null,startedAt=new Date().toISOString();
+  let diaryParams=null,calendarArgs=null,startedAt=new Date().toISOString();
+  // Argumentos literales de una llamada JS en onclick/href: números o textos entre comillas (con comas internas).
+  const literalCalls=(text,name)=>{
+    const out=[];const re=new RegExp("\\b"+name+"\\s*\\(","g");let m;
+    while((m=re.exec(text))) {
+      const args=[];let i=m.index+m[0].length,ok=false;
+      while(i<text.length) {
+        while(text[i]===" ")i++;
+        const q=text[i];let value="";
+        if(q==="'"||q==='"') {
+          i++;
+          while(i<text.length&&text[i]!==q){if(text[i]==="\\")i++;value+=text[i++];}
+          if(text[i]!==q)break;i++;
+        } else {
+          const d=/^\d{1,20}/.exec(text.slice(i));if(!d)break;value=d[0];i+=value.length;
+        }
+        args.push(value);
+        while(text[i]===" ")i++;
+        if(text[i]===","){i++;continue;}
+        if(text[i]===")"){ok=true;}
+        break;
+      }
+      if(ok)out.push(args);
+    }
+    return out;
+  };
+  // Igual que window.open en la página ISO-8859-1: «Ó» viaja como %D3; nunca otra codificación.
+  const latin1=value=>Array.from(value).map(c=>{
+    const code=c.charCodeAt(0);
+    if(/[A-Za-z0-9\-_.~\/:]/.test(c))return c;
+    if(code>255)throw new Error("estructura");
+    return "%"+code.toString(16).toUpperCase().padStart(2,"0");
+  }).join("");
+  if(command==="calendar_open") {
+    const run=window.__sitfaRun,args=payload.args;
+    if(screen!=="seguimiento" || !run?.diaryDocument || !Array.isArray(args) || args.length!==12 ||
+       args.some(v=>typeof v!=="string"||v.length>300))throw new Error("CALENDAR_CONTEXT");
+    diaryPhase='IDENTIDAD';
+    const selected=new Map(run.diaryPairs);
+    if(args[2]!==selected.get("COD_Tribunal_sel") || [0,1,2,3,10].some(i=>!/^\d{1,20}$/.test(args[i])))throw new Error("estructura");
+    const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
+    const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
+    if(!table)throw new Error("estructura");
+    let matches=0;
+    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"])
+      for(const call of literalCalls(el.getAttribute(attr)||"","ShowInformesProgramados"))
+        if(call.length===12&&call.every((v,i)=>v===args[i]))matches++;
+    if(matches!==1)throw new Error("CALENDAR_LINK");
+    const tip=selected.get("TIP_Consulta");
+    if(!/^[1-4]$/.test(tip||""))throw new Error("estructura");
+    // Mismo orden que ShowInformesProgramados de la página (TIP_Programa = TIP_Consulta del formulario).
+    const pairs=[["tipo_popUp","8"],["ID_Ingreso",args[10]],["TIP_Programa",tip],["CRR_IdCausa",args[0]],["CRR_IdParte",args[1]],
+      ["COD_Tribunal",args[2]],["COD_Centro",args[3]],["TIP_Consulta",tip],["GLS_Rit",args[4]],["FEC_IngEfectivo",args[5]],
+      ["GLS_Centro",args[6]],["GLS_Nombre",args[7]],["REM_Informe",args[9]],["PLZ_Intervencion",args[8]],["ID_Ingreso",args[10]],
+      ["FLG_MejorNinez",args[11]]];
+    calendarArgs=args;
+    url="https://familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?"+pairs.map(([k,v])=>k+"="+latin1(v)).join("&");
+    init={method:"GET"};
+  } else
   if(command==="diary_open") {
     const run=window.__sitfaRun,expected=payload.params;
     if(screen!=="seguimiento" || !run?.diaryDocument || !expected || typeof expected!=="object")throw new Error("DIARY_CONTEXT");
@@ -460,13 +518,19 @@ async function sitfaTask(command, payload) {
     window.__sitfaRun.diaryPairs=payload.pairs;
   }
   return {status:response.status,type:response.headers.get("content-type")||"",body:btoa(chunks.join("")),
-    ...(diaryParams?{params:diaryParams,startedAt,digest:await sha256(bytes)}:{})};
+    ...(diaryParams?{params:diaryParams,startedAt,digest:await sha256(bytes)}:{}),
+    ...(calendarArgs?{args:calendarArgs,startedAt,digest:await sha256(bytes)}:{})};
   } catch (error) {
     if(command==='diary_open') {
       const explicit=['DIARY_CONTEXT','DIARY_LINK'].includes(error?.message)?error.message:null;
       const code=explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'DIARY_TIMEOUT':'DIARY_NETWORK'):
         diaryPhase==='IDENTIDAD'?'DIARY_IDENTITY':'DIARY_RESPONSE');
       return {__sitfaError:code};
+    }
+    if(command==='calendar_open') {
+      const explicit=['CALENDAR_CONTEXT','CALENDAR_LINK'].includes(error?.message)?error.message:null;
+      return {__sitfaError:explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'CALENDAR_TIMEOUT':'CALENDAR_NETWORK'):
+        diaryPhase==='IDENTIDAD'?'CALENDAR_IDENTITY':'CALENDAR_RESPONSE')};
     }
     return {__sitfaError:command==="evidence_open"?"EVIDENCE_OPEN":"SITFA_TASK"};
   }
