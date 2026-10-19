@@ -1433,7 +1433,13 @@ class App(ctk.CTk):
             row=9, column=0, pady=12
         )
         self.disabled = {}
-        toggles = ['COMUN.CURADOR', 'COMUN.OIDO', 'COMUN.PROX_AUDIENCIA', 'COMUN.PROXIMA_MAYORIA', 'COMUN.REITERA_OBSERVACION']
+        toggles = [
+            'COMUN.CURADOR',
+            'COMUN.OIDO',
+            'COMUN.PROX_AUDIENCIA',
+            'COMUN.PROXIMA_MAYORIA',
+            'COMUN.REITERA_OBSERVACION',
+        ]
         for i, key in enumerate(toggles):
             v = tk.BooleanVar(value=key not in self.cfg.data['desactivadas'])
             self.disabled[key] = v
@@ -1442,9 +1448,7 @@ class App(ctk.CTk):
                 if key == 'COMUN.REITERA_OBSERVACION'
                 else 'Advertir ' + key.split('.')[1].replace('_', ' ').lower()
             )
-            ttk.Checkbutton(params, text=text, variable=v).grid(
-                row=10 + i, column=0, columnspan=4, sticky='w'
-            )
+            ttk.Checkbutton(params, text=text, variable=v).grid(row=10 + i, column=0, columnspan=4, sticky='w')
 
         mail = ttk.Frame(basic_nb, padding=8)
         basic_nb.add(mail, text='Plantillas correo')

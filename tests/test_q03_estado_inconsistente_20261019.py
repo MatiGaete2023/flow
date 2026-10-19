@@ -10,8 +10,14 @@ from nurus.personal.config import defaults
 
 
 def _record(record_type, ingreso='i1', status='VERIFICADA'):
-    return {'source_system': 'RUS', 'court_code': 'T1', 'cause_id': 'c1', 'ingreso_id': ingreso,
-            'record_type': record_type, 'identity_status': status}
+    return {
+        'source_system': 'RUS',
+        'court_code': 'T1',
+        'cause_id': 'c1',
+        'ingreso_id': ingreso,
+        'record_type': record_type,
+        'identity_status': status,
+    }
 
 
 def _run(provenance):

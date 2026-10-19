@@ -75,7 +75,9 @@ def bitacora_alerts(work, row):
     from datetime import date
     from .bitacora_avisos import avisos
 
-    return avisos(display_of(work, row), row.observation, row.rules, work.config['textos'], date.fromisoformat(work.as_of))
+    return avisos(
+        display_of(work, row), row.observation, row.rules, work.config['textos'], date.fromisoformat(work.as_of)
+    )
 
 
 def last_center_label(work, row):

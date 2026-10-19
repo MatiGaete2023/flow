@@ -49,26 +49,34 @@ def avisos(display, propuesta, reglas, textos, as_of):
     evento = repite_ultima(display, propuesta)
     if evento:
         result.append(
-            ('CT-07', f'La observación propuesta repite la última del centro ({_fecha(evento)}); '
-                      'revisar antes de registrarla.')
+            (
+                'CT-07',
+                f'La observación propuesta repite la última del centro ({_fecha(evento)}); '
+                'revisar antes de registrarla.',
+            )
         )
     if 'ESPERA.E05_SOLO_CORREO' in reglas:
         correo = _cuerpo(textos['ESPERA']['E05_SOLO_CORREO']['texto']).rstrip('. ')
         previos = [
-            e for e in display.get('center_period', ())
+            e
+            for e in display.get('center_period', ())
             if correo and correo in _cuerpo(e.get('text', '')) and (as_of - _dia(e)).days >= DIAS_CORREO_E05
         ]
         if previos:
             evento = max(previos, key=_dia)
             dias = (as_of - _dia(evento)).days
             result.append(
-                ('CT-11', f'El correo de E-05 ya se envió el {_fecha(evento)} (hace {dias} días) y sigue sin '
-                          'ingreso efectivo; evaluar proyecto de resolución.')
+                (
+                    'CT-11',
+                    f'El correo de E-05 ya se envió el {_fecha(evento)} (hace {dias} días) y sigue sin '
+                    'ingreso efectivo; evaluar proyecto de resolución.',
+                )
             )
     for evento in display.get('pending_court', ()):
         dias = (as_of - _dia(evento)).days
-        result.append(('CT-05', f'Observación al tribunal del {_fecha(evento)} sin respuesta registrada '
-                                f'(hace {dias} días).'))
+        result.append(
+            ('CT-05', f'Observación al tribunal del {_fecha(evento)} sin respuesta registrada (hace {dias} días).')
+        )
     return result
 
 
@@ -89,7 +97,9 @@ def aplicar_reiteracion(rows, contexts, config):
         head, sep, _ = row.observation.partition(': ')
         prefijo = head + sep if sep and len(head) <= 40 else ''
         texto = plantilla.format_map({'FECHA_OBSERVACION_ANTERIOR': fecha_es(_dia(evento))})
-        row.warnings.append(f'CT-07: la observación propuesta repetía la del {_fecha(evento)}; se consigna la '
-                            f'reiteración. Texto propuesto originalmente: {row.observation}')
+        row.warnings.append(
+            f'CT-07: la observación propuesta repetía la del {_fecha(evento)}; se consigna la '
+            f'reiteración. Texto propuesto originalmente: {row.observation}'
+        )
         row.observation = prefijo + texto
         row.rules = [*row.rules, regla]

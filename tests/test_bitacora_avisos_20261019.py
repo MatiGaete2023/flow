@@ -14,8 +14,16 @@ CORREO = TEXTOS['ESPERA']['E05_SOLO_CORREO']['texto']
 
 
 def _entrada(event_id, event_at, text='Texto ficticio.', event_type='Administrativa', response=''):
-    return {'event_id': event_id, 'event_at': event_at, 'origin': 'CENTRO', 'origin_verified': 'true',
-            'coverage': 'COMPLETA', 'text': text, 'event_type': event_type, 'response': response}
+    return {
+        'event_id': event_id,
+        'event_at': event_at,
+        'origin': 'CENTRO',
+        'origin_verified': 'true',
+        'coverage': 'COMPLETA',
+        'text': text,
+        'event_type': event_type,
+        'response': response,
+    }
 
 
 def test_ct07_avisa_cuando_la_propuesta_repite_la_ultima_observacion():
@@ -70,7 +78,11 @@ def test_avisos_aparecen_en_columna_y_panel_sin_cambiar_la_observacion(tmp_path)
     assert last_center_label(work, fila) == '01/09/2026 · 1 aviso'
     texto = novelties_text(work, fila)
     assert 'Avisos (solo mostrar' in texto and 'CT-05 · Observación al tribunal del 01/09/2026' in texto
-    assert (fila.observation, fila.rules, fila.actions) == (base['r0'].observation, base['r0'].rules, base['r0'].actions)
+    assert (fila.observation, fila.rules, fila.actions) == (
+        base['r0'].observation,
+        base['r0'].rules,
+        base['r0'].actions,
+    )
 
 
 def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
@@ -87,11 +99,14 @@ def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
     assert fila.observation == prefijo + 'Se reitera observación anterior del 10 de septiembre de 2026.'
     assert fila.rules[-1] == 'COMUN.REITERA_OBSERVACION'
     assert fila.actions == base['r0'].actions
-    assert any(w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and propuesta in w
-               for w in fila.warnings)
+    assert any(
+        w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and propuesta in w
+        for w in fila.warnings
+    )
     # La propuesta vigente es la reiteración: ya no corresponde el aviso CT-07.
-    assert 'CT-07' not in dict(avisos(work.capture_context['r0']['display'], fila.observation, fila.rules, TEXTOS,
-                                      CORTE))
+    assert 'CT-07' not in dict(
+        avisos(work.capture_context['r0']['display'], fila.observation, fila.rules, TEXTOS, CORTE)
+    )
 
 
 def test_ct07_reiteracion_desactivable(tmp_path):

@@ -27,15 +27,19 @@ def avisos_fila(values, cols, mode, as_of, fecha_hoja2=None):
         mayoria = _dia(fecha_mayoria(_valor(values, cols, 'nacimiento')))
         egreso = _dia(_valor(values, cols, 'egreso_proy'))
         if mayoria and egreso and as_of < mayoria < egreso:
-            out.append(f'N-01: la medida se proyecta hasta el {fecha_es(egreso)}, posterior a la mayoría de edad '
-                       f'({fecha_es(mayoria)}).')
+            out.append(
+                f'N-01: la medida se proyecta hasta el {fecha_es(egreso)}, posterior a la mayoría de edad '
+                f'({fecha_es(mayoria)}).'
+            )
     vencimiento = _dia(_valor(values, cols, 'vencimiento')) if mode == 'INFORMES' else _dia(fecha_hoja2)
     if vencimiento and cols.get('prox_aud'):
         audiencias = sorted({_dia(f) for f in fechas_varias(_valor(values, cols, 'prox_aud'))[0]})
         for audiencia in audiencias:
             if as_of <= audiencia < vencimiento <= audiencia + timedelta(days=VENTANA_INFORME_AUDIENCIA):
-                out.append(f'N-02: audiencia el {fecha_es(audiencia)} y el informe vence el {fecha_es(vencimiento)}; '
-                           'se sugiere solicitarlo antes de la audiencia.')
+                out.append(
+                    f'N-02: audiencia el {fecha_es(audiencia)} y el informe vence el {fecha_es(vencimiento)}; '
+                    'se sugiere solicitarlo antes de la audiencia.'
+                )
                 break
     return out
 
@@ -58,7 +62,8 @@ def marcar_paquete(rows, provenance, identity):
         key = identity(record)
         ingresos = por_causa[key[:3]]
         if len(ingresos) > 1 and record['record_type'] in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
-            row.warnings.append(f'N-03: la causa tiene {len(ingresos)} ingresos en este trabajo; '
-                                'considerar un solo correo o proyecto.')
+            row.warnings.append(
+                f'N-03: la causa tiene {len(ingresos)} ingresos en este trabajo; considerar un solo correo o proyecto.'
+            )
         if {'EGRESADOS', 'INFORMES'} <= tipos[key] and record['record_type'] in ('EGRESADOS', 'INFORMES'):
             row.warnings.append('N-04: medida egresada que sigue con informe pendiente en RUS; revisar.')

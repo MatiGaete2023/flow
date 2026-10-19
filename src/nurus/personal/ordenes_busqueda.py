@@ -47,8 +47,10 @@ def avisos_orden(values, as_of):
     out = []
     tramite = _dia(get('tramite')) if 'tramite' in cols else None
     if 'resultado' in cols and _vacio(get('resultado')) and tramite and (as_of - tramite).days > DIAS_SIN_RESULTADO:
-        out.append(f'OB-01: orden de búsqueda activa sin resultado desde el {fecha_es(tramite)} '
-                   f'({(as_of - tramite).days} días).')
+        out.append(
+            f'OB-01: orden de búsqueda activa sin resultado desde el {fecha_es(tramite)} '
+            f'({(as_of - tramite).days} días).'
+        )
     nacimiento = _dia(get('nacimiento')) if 'nacimiento' in cols else None
     if nacimiento:
         mayoria = _dia(fecha_mayoria(nacimiento))
@@ -57,8 +59,12 @@ def avisos_orden(values, as_of):
     if 'envio' in cols and _clave(get('envio')) != 'REALIZADA':
         estado = str(get('envio') or '').strip() or 'sin estado'
         out.append(f'OB-03: el envío de la orden no figura como realizado ({estado}).')
-    if 'tipo' in cols and 'curador' in cols and _clave(get('tipo')) in ('NINO', 'NINA', 'ADOLESCENTE') \
-            and _vacio(get('curador')):
+    if (
+        'tipo' in cols
+        and 'curador' in cols
+        and _clave(get('tipo')) in ('NINO', 'NINA', 'ADOLESCENTE')
+        and _vacio(get('curador'))
+    ):
         out.append('OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.')
     if 'audiencias' in cols:
         futuras = sorted({_dia(f) for f in fechas_varias(get('audiencias'))[0] if _dia(f) >= as_of})

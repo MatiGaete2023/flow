@@ -12,12 +12,29 @@ from nurus.personal.ordenes_busqueda import avisos_orden
 CORTE = date(2026, 10, 19)
 # Encabezados tal como los entrega el Excel BusquedaLit (23 columnas).
 BASE = {
-    'Tipo Causa': 'X', 'Rol Causa': '1', 'Era Causa': '2026', 'Tribunal': 'Juzgado ficticio', 'Rut': 'ID-FICTICIO',
-    'Nombre': 'Persona Ficticia', 'Tipo litigante': 'NIÑO', 'Sexo': 'F', 'Tipo O.B.': 'Carabineros',
-    'Nomenclatura': 'Orden ficticia', 'Resultado': '', 'Estado O.B.': 'Activa', 'Derivado a': 'Unidad ficticia',
-    'Fecha trámite': '01-07-2026', 'Duración Medida': '', 'Estado envío': 'Realizada', 'Fecha Envío': '02/07/2026',
-    'E-mail Envío': 'buzon@ejemplo.test', 'Fec. Nacimiento': '10/10/2015', 'Edad': '--', 'Nacionalidad': '1',
-    'Prox.Auds.': '-', 'Curador': 'Curador Ficticio',
+    'Tipo Causa': 'X',
+    'Rol Causa': '1',
+    'Era Causa': '2026',
+    'Tribunal': 'Juzgado ficticio',
+    'Rut': 'ID-FICTICIO',
+    'Nombre': 'Persona Ficticia',
+    'Tipo litigante': 'NIÑO',
+    'Sexo': 'F',
+    'Tipo O.B.': 'Carabineros',
+    'Nomenclatura': 'Orden ficticia',
+    'Resultado': '',
+    'Estado O.B.': 'Activa',
+    'Derivado a': 'Unidad ficticia',
+    'Fecha trámite': '01-07-2026',
+    'Duración Medida': '',
+    'Estado envío': 'Realizada',
+    'Fecha Envío': '02/07/2026',
+    'E-mail Envío': 'buzon@ejemplo.test',
+    'Fec. Nacimiento': '10/10/2015',
+    'Edad': '--',
+    'Nacionalidad': '1',
+    'Prox.Auds.': '-',
+    'Curador': 'Curador Ficticio',
 }
 
 
@@ -63,9 +80,18 @@ def test_importacion_de_paquete_marca_las_filas_de_busqueda_lit(tmp_path):
     tables['consultas'].append(query)
     metadata['queries'] = tables['consultas']
     record = tables['registros'][0]
-    otra = {**record, 'record_id': 'lit1', 'query_id': 'qlit', 'record_type': 'OTRO', 'identity_status': 'INCIERTA',
-            'ingreso_id': '', 'cause_id': '', 'normalized_json': json.dumps(BASE, ensure_ascii=False),
-            'raw_json': json.dumps(BASE, ensure_ascii=False), 'original_row': '9'}
+    otra = {
+        **record,
+        'record_id': 'lit1',
+        'query_id': 'qlit',
+        'record_type': 'OTRO',
+        'identity_status': 'INCIERTA',
+        'ingreso_id': '',
+        'cause_id': '',
+        'normalized_json': json.dumps(BASE, ensure_ascii=False),
+        'raw_json': json.dumps(BASE, ensure_ascii=False),
+        'original_row': '9',
+    }
     tables['registros'].append(otra)
     work = import_capture(write_capture(tmp_path / 'paquete.zip', metadata, tables), defaults(), as_of=CORTE)
     filas = {row.id: row for row in work.rows}
