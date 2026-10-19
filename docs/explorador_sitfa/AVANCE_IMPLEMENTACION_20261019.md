@@ -35,9 +35,20 @@ GLS_Nombre, GLS_Centro, FLG_MejorNinez`. `ShowExcel` abre `/sitfa/reportes/*.xls
 TIP_Consulta&GLS_Rit&FEC_IngEfectivo&GLS_Centro&GLS_Nombre&REM_Informe&PLZ_Intervencion&ID_Ingreso&FLG_MejorNinez`
 (`ID_Ingreso` aparece dos veces; `REM_Informe` y `PLZ_Intervencion` llevan texto «N Meses»).
 
-Correspondencia con los 12 argumentos de `ShowInformesProgramados` (`vinculos.py` valida 0, 2 y 10):
-- HECHO: 0 = `CRR_IdCausa`, 1 = `CRR_IdParte`, 2 = `COD_Tribunal`, 3 = `COD_Centro`, 10 = `ID_Ingreso`.
-- INFERENCIA: 4 = `GLS_Rit`, 5 = `FEC_IngEfectivo`, 6 = `GLS_Centro`, 7 = `GLS_Nombre`.
-- NO DETERMINADO: 8, 9 y 11 (¿plazo, remisión, `FLG_MejorNinez`?), y el origen de `TIP_Programa`.
+**Función resuelta (HECHO).** Una sonda local enmascaró los literales del HAR del usuario. El HAR no se versiona y no
+se imprimió ningún valor. La sonda obtuvo la definición en `InformesDAction.do`:
+`ShowInformesProgramados(idCausa, idParte, codTribunal, codCentro, rit, fecIngEfectivo, glsCentro, nomMenor,
+intervencion, remision, id_ingreso, FLG_Antiguo)`. La función hace `window.open` concatenando sin codificar:
 
-Para WD-1 falta la forma del `onclick` de la lupa «Inf.».
+| Parámetro | Origen |
+|---|---|
+| `ID_Ingreso` (dos veces) | arg 10 |
+| `TIP_Programa` y `TIP_Consulta` | `document.InformesPpalForm.TIP_Consulta.value` (modalidad del listado) |
+| `CRR_IdCausa`, `CRR_IdParte`, `COD_Tribunal`, `COD_Centro` | args 0–3 |
+| `GLS_Rit`, `FEC_IngEfectivo`, `GLS_Centro`, `GLS_Nombre` | args 4–7 |
+| `REM_Informe` | arg 9 (`remision`) |
+| `PLZ_Intervencion` | arg 8 (`intervencion`) |
+| `FLG_MejorNinez` | arg 11 (`FLG_Antiguo`) |
+
+El navegador codifica la consulta en ISO-8859-1 (por ejemplo, «Ó» como `%D3`). Con esto WD-1 queda desbloqueado.
+El extractor `extraer_estructura_historia.py` se negó a escribir porque detectó valores; es la protección esperada.
