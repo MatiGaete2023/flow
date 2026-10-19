@@ -73,11 +73,33 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
     <h1>Una nomenclatura, varias vistas: dónde se repiten las reglas</h1>
     <p class="lead">RUS no guarda los datos de cada pantalla por separado. Cada nomenclatura registrada en la causa genera datos que luego aparecen en varios lugares: columnas del listado, calendario de informes, historia, bitácora y Excel. Este análisis ordena las reglas actuales y las propuestas según ese principio, para no crear reglas duplicadas sobre un mismo hecho.</p>
     <nav class="toc" aria-label="Índice">
-      <a href="#principio">1. Principio</a><a href="#calendario">2. Calendario comprobado</a><a href="#mapa">3. Mapa de hechos</a>
-      <a href="#propuestas">4. Revisión de propuestas</a><a href="#choques">5. Choques con decisiones previas</a><a href="#sugerencias">6. Sugerencias</a><a href="#preguntas">7. Preguntas</a>
+      <a href="#manual">0. Lo que dice el manual</a><a href="#principio">1. Principio</a><a href="#calendario">2. Calendario comprobado</a><a href="#mapa">3. Mapa de hechos</a>
+      <a href="#propuestas">4. Revisión de propuestas</a><a href="#choques">5. Choques con decisiones previas</a><a href="#nuevos">5b. Hallazgos nuevos</a><a href="#sugerencias">6. Sugerencias</a><a href="#preguntas">7. Preguntas</a>
     </nav>
     <p class="legend"><span class="pill p-ok">HECHO</span> comprobado <span class="pill p-warn">INFERENCIA</span> deducción con supuesto explícito <span class="pill p-risk">DUDA</span> necesito tu respuesta</p>
   </header>
+
+  <section id="manual">
+    <h2>0. Lo que dice el manual SITFA que enviaste</h2>
+    <p class="lead">El archivo es una compilación de instructivos «Mejoras SITFA» de 2015 a 2026 (Jefa de proyecto: Paz Espinoza). Revisé las partes de RUS, nomenclaturas de protección, calendario, fichas, DCE y bitácora. <strong>No encontré</strong> el «Manual de Funciones CSMP 2025» ni un plan de trabajo dentro del archivo. <span class="pill p-risk">DUDA P6</span></p>
+    <div class="tbl"><table>
+      <thead><tr><th>Tema</th><th>Qué dice el manual</th><th>Efecto en el análisis</th></tr></thead>
+      <tbody>
+        <tr><td>Cadena de nomenclaturas de protección (2021-2022)</td><td>Se interconectan con Mejor Niñez: <strong>Derivación Dirección Reg.</strong> → <strong>Ingreso servicio protección especializada y otras redes</strong> (reemplaza Ingreso ambulatorio, Ingreso centro residencial e Ingreso FA/FAS) → <strong>Ingreso efectivo</strong> → <strong>Prórroga</strong> → <strong>Egreso servicio de protección especializada y otras redes</strong>. Además existen <strong>Pide cuenta derivación</strong> y <strong>Deja sin efecto derivación</strong>.</td><td><span class="pill p-ok">HECHO</span> Ya tengo los nombres oficiales de la cadena principal.</td></tr>
+        <tr><td>Plazos</td><td>La derivación fija complejidad, <strong>plazo de intervención</strong> y <strong>plazo de remisión de informe</strong> (por intervalos; hasta 215 meses). La nomenclatura de ingreso los recibe desde la derivación.</td><td>Confirma que el calendario nace en la derivación o el ingreso.</td></tr>
+        <tr><td>Prórroga</td><td>Pide plazo de prórroga y de remisión de informe. La columna egreso proyectado toma la <strong>última fecha calendarizada</strong> (fin o última prórroga) y le suma el nuevo plazo.</td><td><span class="pill p-ok">RESPONDE P4</span> RUS actualiza el egreso con la prórroga, así que H-04 y CAL-04 sobran.</td></tr>
+        <tr><td>Calendario de informes</td><td>Botón «Inf.» del módulo Informes RUS (Seguimiento Ambulatorio, Residencial y FAE/FAS). Los informes de cumplimiento se <strong>asocian</strong> a la calendarización y quedan con estado «enviado». La asociación se reconoce si coinciden la línea de acción y el litigante.</td><td>«ENVIADO» = informe de cumplimiento asociado a esa proyección. Si se elimina y se vuelve a agregar el litigante, el sistema no lo reconoce como la misma persona: es un riesgo de falso PENDIENTE.</td></tr>
+        <tr><td>80 BIS</td><td>Es una opción de «decreta medida (80 bis)» en la sección 6 del ingreso, y una marca en la derivación para avisar a Mejor Niñez que se usará el 80 bis.</td><td><span class="pill p-ok">RESPONDE P10</span> Es una marca registrada en el ingreso, no un plazo. No veo una regla obvia que la use.</td></tr>
+        <tr><td>DCE</td><td>Línea «Diagnóstico clínico especializado»: plazo de intervención y de remisión de informe preseleccionados en <strong>1 mes</strong>. El programa responde con el escrito «Resp. Solicitud DCE» (con PII) y el tribunal usa la nomenclatura «Resp. Diagnóstico clínico».</td><td>En DCE el calendario tendría una proyección a 1 mes del ingreso. El Manual CSMP habla de 40 días: posible margen sobre 30 días (<span class="pill p-risk">DUDA P11</span>).</td></tr>
+        <tr><td>Fichas</td><td>Ficha Individual, Ficha NNA FAE o FAS y Ficha Ambulatoria, como efectos en causas A-I-P-W-X. La fecha de nacimiento viene del Registro Civil.</td><td>Coincide con el catálogo: solo hay tres fichas.</td></tr>
+        <tr><td>Egreso</td><td>Motivos: Cumplimiento PII, Modificación de la derivación, Mayoría de edad, Fallecimiento, Informático, Administrativo.</td><td>Sirve para N-04 y E-02/C-01 si el Excel de Egresados trae el motivo.</td></tr>
+        <tr><td>Columnas RUS</td><td>«Días» por pestaña. En Informes cuenta hasta hoy, o hasta el egreso si ya egresó. Desde V09 (dic 2024) hay filtro de vencidos y de «45 días por vencer». Desde V11 (abr 2026): <strong>curador</strong> en «Seguimiento de búsqueda litigante» y <strong>todas las próximas audiencias separadas por coma</strong> en «Informe seguimiento».</td><td>C-05 usa los mismos 45 días que RUS. La coma rompe T-03 (§5b).</td></tr>
+        <tr><td>Consulta de litigante («binoculares»)</td><td>Pestañas de Arrestos, Órdenes de búsqueda y Mejor Niñez (historial de derivación, pide cuenta y deja sin efecto).</td><td>Otra vista de las órdenes de búsqueda; la fuente canónica sigue siendo el Excel BusquedaLit.</td></tr>
+        <tr><td>Informe Mejor Niñez</td><td>Adm. General → Informe RUS → Informe mejor niñez: seguimiento de derivaciones, pide cuenta y deja sin efecto enviados, con su estado de remisión.</td><td>Posible fuente nueva para Espera (<span class="pill p-risk">DUDA P15</span>).</td></tr>
+        <tr><td>Bitácoras</td><td>Desde V06 (2023) existe una «bitácora de causas» en tramitación, separada de la bitácora RUS, con marcas «requiere respuesta» y «validar respuesta».</td><td>FLOW lee la bitácora RUS. La de causas es otro canal; no se usa por ahora.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
 
   <section id="principio">
     <h2>1. Principio de trabajo</h2>
@@ -85,13 +107,13 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
       <p><strong>Una regla por hecho, nunca por pantalla.</strong> Cada hecho procesal (ingreso efectivo, informe remitido, prórroga, egreso…) debe tener <strong>una sola fuente canónica</strong> que dispare la observación. Las demás vistas del mismo hecho sirven solo para <strong>cotejo</strong>: generan incidencias cuando no coinciden, nunca una segunda observación.</p>
     </div>
     <div class="chain" aria-label="Ejemplo de cadena">
-      <span class="node src">Nomenclatura «ingreso informe de cumplimiento»</span><span class="arr">→</span>
+      <span class="node src">Informe de cumplimiento asociado a la calendarización</span><span class="arr">→</span>
       <span class="node">Historia: trámite</span><span class="arr">→</span>
       <span class="node">Calendario: Fecha Informe + ENVIADO</span><span class="arr">→</span>
       <span class="node">Pestaña Informes: deja de figurar o cambia de vencimiento</span><span class="arr">→</span>
       <span class="node">Calendario 91: sale de «por vencer»</span>
     </div>
-    <p class="small">El nombre exacto de cada nomenclatura no está en el repositorio. El «Manual de Funciones CSMP 2025» solo aparece citado por su hash y no hay manuales de SITFA. Por eso uso nombres descriptivos y te pido los oficiales en la pregunta P5. <span class="pill p-risk">DUDA</span></p>
+    <p class="small">Con el manual SITFA ya tengo los nombres oficiales de la cadena de protección (§0). Falta el nombre con que se registra la entrega del informe de cumplimiento (P5).</p>
   </section>
 
   <section id="calendario">
@@ -119,19 +141,21 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
     <div class="tbl"><table>
       <thead><tr><th>Hecho (nomenclatura)</th><th>Dónde aparece</th><th>Reglas actuales</th><th>Propuestas que tocan el mismo hecho</th><th>Fuente canónica sugerida</th></tr></thead>
       <tbody>
-        <tr><td>Resolución que ordena ingreso a programa</td><td>Historia · Espera «Fec. Resol.»</td><td>E-04, E-06</td><td>—</td><td>Excel Espera (ya)</td></tr>
-        <tr><td>Ingreso efectivo</td><td>Historia · Cumplimiento «Fec. Ing. Efectivo», «Días Cump.» · cabecera del calendario · paso de Espera a Cumplimiento</td><td>C-03, C-08 (FAE &gt;120 días)</td><td>Q-02, Q-03</td><td>Excel Cumplimiento (ya)</td></tr>
-        <tr><td>Plazo de intervención → egreso proyectado</td><td>«Egreso Proyectado», «Días para egresar» · última proyección del calendario</td><td>C-04, C-05</td><td>CAL-04, N-01</td><td>Excel (ya). CAL-04 sería redundante</td></tr>
+        <tr><td><strong>Ingreso servicio protección especializada y otras redes</strong> (antes Ingreso ambulatorio, centro residencial o FA/FAS)</td><td>Historia · Espera «Fec. Resol.»</td><td>E-04, E-06</td><td>—</td><td>Excel Espera (ya)</td></tr>
+        <tr><td><strong>Ingreso efectivo</strong></td><td>Historia · Cumplimiento «Fec. Ing. Efectivo», «Días Cump.» · cabecera del calendario · paso de Espera a Cumplimiento</td><td>C-03, C-08 (FAE &gt;120 días)</td><td>Q-02, Q-03</td><td>Excel Cumplimiento (ya)</td></tr>
+        <tr><td>Plazo de intervención (en la <strong>Derivación Dirección Reg.</strong> o el ingreso) → egreso proyectado</td><td>«Egreso Proyectado», «Días para egresar» · última proyección del calendario</td><td>C-04, C-05</td><td>CAL-04, N-01</td><td>Excel (ya). CAL-04 sería redundante</td></tr>
         <tr><td>Plazo de remisión → informes proyectados</td><td>Calendario por ingreso · pestaña Informes «Vencimiento» · calendario 91 · ¿Hoja2?</td><td>I-01, I-02, C-10 (Hoja2)</td><td>CAL-02, CAL-03, N-02</td><td><strong>Calendario por ingreso</strong> (identidad por ingreso, estado explícito) <span class="pill p-warn">INFERENCIA</span></td></tr>
         <tr><td>Ingreso de informe de cumplimiento o avance</td><td>Historia (trámite) · calendario «Fecha Informe» + ENVIADO · ¿bitácora del centro?</td><td>— (hoy I-01 no lo ve)</td><td>CAL-01, B-04, H-02</td><td><strong>Calendario por ingreso</strong>. B-04 y H-02 serían redundantes</td></tr>
-        <tr><td>Prórroga de la medida</td><td>Historia (resolución) · ¿nuevo egreso proyectado? · ¿nuevas proyecciones?</td><td>C-04, C-05 (indirectas)</td><td>H-04</td><td><span class="pill p-risk">DUDA P4</span> si RUS actualiza el egreso, H-04 sobra</td></tr>
+        <tr><td><strong>Prórroga</strong></td><td>Historia · egreso proyectado recalculado (manual) · nuevas proyecciones</td><td>C-04, C-05</td><td>H-04</td><td>Excel. <span class="pill p-ok">Manual</span> H-04 sobra</td></tr>
         <tr><td>Actualización de fichas (Individual, Ambulatoria, FAE)</td><td>Columnas «Ult. Act. F.Ind / F.Amb / F.FAE» · historia</td><td>C-07, C-08</td><td>— (F.Amb rechazada en el catálogo)</td><td>Excel (ya)</td></tr>
         <tr><td>Oído / audiencia</td><td>«Fec. Oído», «Prox. Auds.» · historia · Excel de búsquedas «Prox.Auds.»</td><td>T-02, T-03</td><td>N-02, OB-05, H-05</td><td>Excel (ya). H-05 redundante si «Prox. Auds.» ya viene</td></tr>
         <tr><td>Curador ad litem (registro como litigante)</td><td>Columna «Curador» · ventana Litigantes de la causa · Excel de búsquedas · historia (designación)</td><td>T-01</td><td>H-03, OB-04</td><td>Columna «Curador» (ya). H-03 aporta poco: T-01 ya sugiere asociarlo</td></tr>
         <tr><td>Orden de búsqueda (despacho, estado, resultado)</td><td>Excel BusquedaLit (tiene columna «Nomenclatura») · historia</td><td>— (fuera de alcance por decisión previa)</td><td>OB-01..OB-05</td><td>BusquedaLit <span class="pill p-risk">DUDA P9</span></td></tr>
-        <tr><td>Egreso de la medida</td><td>Historia · pestaña Egresados</td><td>—</td><td>N-04</td><td>Excel Egresados</td></tr>
+        <tr><td><strong>Egreso servicio de protección especializada y otras redes</strong> (con motivo)</td><td>Historia · pestaña Egresados</td><td>—</td><td>N-04</td><td>Excel Egresados</td></tr>
         <tr><td>Observaciones centro ↔ tribunal</td><td>Bitácora (canal propio; no es nomenclatura)</td><td>CT-01, CT-02 (solo mostrar)</td><td>B-01, B-02, B-03</td><td>Bitácora: sin redundancia</td></tr>
-        <tr><td>«80 BIS» (SI/NO)</td><td>Columna del listado de Cumplimiento</td><td>—</td><td>—</td><td><span class="pill p-risk">DUDA P10</span> significado</td></tr>
+        <tr><td>«Decreta medida 80 bis» (sección 6 del ingreso)</td><td>Columna «80 BIS» del listado</td><td>—</td><td>—</td><td>Excel; sin regla propuesta</td></tr>
+        <tr><td><strong>Pide cuenta derivación</strong> (interconexión con Mejor Niñez)</td><td>Historia · consulta de litigante (pestaña Mejor Niñez) · Informe mejor niñez</td><td>E-05 (el proyecto «pidiendo cuenta»)</td><td>B-02</td><td><span class="pill p-risk">DUDA P16</span></td></tr>
+        <tr><td>DCE: <strong>Resp. Solicitud DCE</strong> (escrito) y <strong>Resp. Diagnóstico clínico</strong></td><td>Historia · calendario (1 proyección a 1 mes)</td><td>I-01, I-02 en su rama DCE</td><td>—</td><td>Calendario <span class="pill p-risk">DUDA P11</span></td></tr>
       </tbody>
     </table></div>
   </section>
@@ -149,7 +173,7 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         <tr><td class="mono">CAL-01</td><td>Informe ENVIADO: no pedir cuenta</td><td><span class="pill p-ok">MANTENER, canónica</span></td><td>Es la única vista estructurada del «ingreso de informe».</td></tr>
         <tr><td class="mono">CAL-02</td><td>Proyección vencida y PENDIENTE</td><td><span class="pill p-risk">FUSIONAR con I-01</span></td><td>Mismo hecho que I-01. El calendario serviría como fuente o confirmación de I-01, no como regla nueva.</td></tr>
         <tr><td class="mono">CAL-03</td><td>Vencimiento distinto entre vistas</td><td><span class="pill p-warn">MANTENER como incidencia</span></td><td>Cotejo entre vistas del mismo hecho. Es justo el uso correcto de la redundancia.</td></tr>
-        <tr><td class="mono">CAL-04</td><td>Egreso distinto de ingreso + plazo</td><td><span class="pill p-risk">RETIRAR</span></td><td>RUS calcula ambos del mismo dato (comprobado). Solo tendría sentido si una prórroga no actualiza uno de los dos (P4).</td></tr>
+        <tr><td class="mono">CAL-04</td><td>Egreso distinto de ingreso + plazo</td><td><span class="pill p-risk">RETIRAR</span></td><td>RUS calcula ambos del mismo dato (comprobado), también con prórroga (manual).</td></tr>
         <tr><td class="mono">N-01</td><td>Medida más allá de la mayoría</td><td><span class="pill p-warn">MANTENER</span></td><td>Cruza dos hechos distintos (nacimiento y plazo).</td></tr>
         <tr><td class="mono">N-02</td><td>Informe vence después de audiencia</td><td><span class="pill p-warn">MANTENER</span></td><td>Cruza dos hechos distintos.</td></tr>
         <tr><td class="mono">N-03</td><td>Ingresos simultáneos de una causa</td><td><span class="pill p-warn">MANTENER</span></td><td>Agrupa la bandeja; no es regla de hecho.</td></tr>
@@ -157,12 +181,12 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         <tr><td class="mono">H-01</td><td>Trámites desde la última revisión</td><td><span class="pill p-warn">MANTENER (solo mostrar)</span></td><td>Vista panorámica, no regla.</td></tr>
         <tr><td class="mono">H-02</td><td>Escrito de programa no proveído</td><td><span class="pill p-warn">ACOTAR</span></td><td>Para informes es redundante con CAL-01. Solo aporta si se refiere a «escrito sin resolución que lo provea», que es otro hecho.</td></tr>
         <tr><td class="mono">H-03</td><td>Curador designado en historia</td><td><span class="pill p-risk">RETIRAR</span></td><td>T-01 ya cubre el hecho «no registrado».</td></tr>
-        <tr><td class="mono">H-04</td><td>Prórroga resuelta</td><td><span class="pill p-risk">DEPENDE DE P4</span></td><td>Si RUS actualiza el egreso con la prórroga, sobra.</td></tr>
+        <tr><td class="mono">H-04</td><td>Prórroga resuelta</td><td><span class="pill p-risk">RETIRAR</span></td><td>El manual confirma que la prórroga recalcula el egreso proyectado.</td></tr>
         <tr><td class="mono">H-05</td><td>Audiencia en historia</td><td><span class="pill p-risk">RETIRAR</span></td><td>«Prox. Auds.» ya viene en el Excel.</td></tr>
         <tr><td class="mono">OB-01..OB-05</td><td>Órdenes de búsqueda</td><td><span class="pill p-risk">DEPENDE DE P9</span></td><td>La decisión previa las dejó fuera de alcance porque no había planilla; ahora sí la hay.</td></tr>
       </tbody>
     </table></div>
-    <p class="small">Saldo: de 22 propuestas, 7 se retiran o fusionan, 3 quedan condicionadas a tus respuestas y 12 se mantienen.</p>
+    <p class="small">Saldo con el manual: de 22 propuestas, 8 se retiran o fusionan, 2 quedan condicionadas (órdenes de búsqueda) y 12 se mantienen. El manual agrega 2 hallazgos nuevos (§5b).</p>
   </section>
 
   <section id="choques">
@@ -177,6 +201,20 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         <tr><td>C-06 eliminada: no calcular hitos; Hoja2 «fuente única»</td><td>Calendario por ingreso</td><td>No es recálculo: es leer el cálculo de RUS. Propongo estudiarlo como mejor fuente para C-10 (P7)</td></tr>
         <tr><td>C-10 cruza Hoja2 por RIT, RUT, nombre, tribunal y derivación</td><td>—</td><td>El contrato nuevo prohíbe cruzar por RIT o nombre. El calendario por ingreso eliminaría ese cruce frágil</td></tr>
         <tr><td>[CONFLICTO_ABIERTO] DCE en Informes: el Manual pide cuenta a los 40 días</td><td>—</td><td>Si el calendario muestra el informe diagnóstico DCE con su plazo, podría resolverlo (P11)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="nuevos">
+    <h2>5b. Hallazgos nuevos a partir del manual</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Hallazgo</th><th>Nivel</th><th>Propuesta</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">BUG-01</td><td><strong>T-03 se pierde cuando hay dos o más audiencias.</strong> Desde abril de 2026, RUS muestra todas las próximas audiencias en una celda, separadas por coma. El lector de fechas del Asistente (<span class="mono">utilidades.get_date</span>) devuelve vacío para «dd/mm/aaaa, dd/mm/aaaa». La frase de audiencia se omite sin aviso y sin incidencia.</td><td><span class="pill p-ok">HECHO</span> lo probé con el código de <span class="mono">feat</span></td><td>Corrección técnica: tomar la audiencia futura más próxima. El texto aprobado y la regla no cambian, pero toca <span class="mono">motor/</span>, así que necesita tu autorización y paridad golden (P14).</td></tr>
+        <tr><td class="mono">PC-01</td><td><strong>Proyecto «pidiendo cuenta» en Espera frente a un «Pide cuenta derivación» ya emitido.</strong> El catálogo ya registraba (H04, P0) que el manual CSMP limita ciertos proyectos al primer pide cuenta. Si ya se emitió uno, un segundo proyecto podría sobrar.</td><td><span class="pill p-warn">INFERENCIA</span></td><td>«Solo mostrar»: avisar en E-05 cuando la historia o el Informe mejor niñez muestran un pide cuenta reciente. Requiere historia o una fuente nueva (P15, P16).</td></tr>
+        <tr><td class="mono">CAL-05</td><td><strong>Calendario PENDIENTE por litigante reingresado.</strong> El manual advierte que, si el litigante se eliminó y se volvió a agregar, la asociación del informe no se reconoce.</td><td><span class="pill p-ok">HECHO</span> (manual)</td><td>Al usar el calendario, un PENDIENTE no prueba que falte el informe. Mantener la revisión humana antes de pedir cuenta.</td></tr>
+        <tr><td class="mono">OK-01</td><td>El umbral de 45 días de C-05 coincide con el filtro «45 días por vencer» de RUS (V09).</td><td><span class="pill p-ok">HECHO</span></td><td>Sin cambios.</td></tr>
+        <tr><td class="mono">OK-02</td><td>Desde abril de 2026 el Excel de búsquedas trae la columna curador, así que OB-04 es viable.</td><td><span class="pill p-ok">HECHO</span></td><td>Depende de P9.</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -219,25 +257,24 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         <input type="text" id="p3">
       </fieldset>
       <fieldset>
-        <legend><span class="qid">P4</span> Cuando se registra una prórroga, ¿RUS actualiza el Egreso Proyectado y agrega proyecciones al calendario?</legend>
+        <legend><span class="qid">P4</span> Prórroga</legend>
+        <p class="hint">Respondida por el manual: la prórroga recalcula el egreso proyectado. Marca si tu experiencia lo contradice.</p>
         <div class="opts">
-          <label><input type="radio" name="p4" id="p4a" value="Sí, actualiza ambos"> Sí, actualiza ambos</label>
-          <label><input type="radio" name="p4" id="p4b" value="Solo el egreso proyectado"> Solo el egreso proyectado</label>
-          <label><input type="radio" name="p4" id="p4c" value="No actualiza nada automáticamente"> No actualiza nada automáticamente</label>
-          <label><input type="radio" name="p4" id="p4d" value="No sé"> No sé</label>
+          <label><input type="checkbox" id="p4x" value="En la práctica he visto que NO se actualiza"> En la práctica he visto que el egreso no se actualiza</label>
         </div>
       </fieldset>
       <fieldset>
-        <legend><span class="qid">P5</span> Nombres oficiales de las nomenclaturas</legend>
-        <label for="p5" class="hint">Escribe los que recuerdes: ingreso efectivo, ingreso de informe de cumplimiento o avance, prórroga, egreso, actualización de fichas, designación de curador, orden de búsqueda, oído… Uno por línea.</label>
-        <textarea id="p5" placeholder="Ej.: Ingreso informe cumplimiento X"></textarea>
+        <legend><span class="qid">P5</span> Nomenclaturas que el manual no nombra</legend>
+        <label for="p5" class="hint">¿Con qué nomenclatura o escrito se registra la entrega de un informe de cumplimiento o avance? ¿Y qué nomenclatura usan para el «proyecto pidiendo cuenta del ingreso efectivo» de E-05: «Pide cuenta derivación» u otra?</label>
+        <textarea id="p5" placeholder="Ej.: Informe cumplimiento… / Pide cuenta derivación"></textarea>
       </fieldset>
       <fieldset>
         <legend><span class="qid">P6</span> Manuales</legend>
+        <p class="hint">El archivo trae los instructivos de mejoras SITFA, pero no el Manual de Funciones CSMP 2025 ni el plan de trabajo que mencionaste.</p>
         <div class="opts">
-          <label><input type="checkbox" id="p6a" value="Adjunto el Manual de Funciones CSMP 2025 (texto o PDF)"> Adjuntaré el Manual de Funciones CSMP 2025</label>
-          <label><input type="checkbox" id="p6b" value="Tengo un manual de SITFA/RUS con nomenclaturas"> Tengo un manual de SITFA o RUS con las nomenclaturas</label>
-          <label><input type="checkbox" id="p6c" value="No tengo manuales disponibles"> No tengo manuales disponibles</label>
+          <label><input type="checkbox" id="p6a" value="Adjuntaré el Manual de Funciones CSMP 2025"> Adjuntaré el Manual de Funciones CSMP 2025</label>
+          <label><input type="checkbox" id="p6b" value="Adjuntaré el plan de trabajo"> Adjuntaré el plan de trabajo</label>
+          <label><input type="checkbox" id="p6c" value="No hay más documentos"> No hay más documentos</label>
         </div>
       </fieldset>
       <fieldset>
@@ -258,6 +295,7 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
           <label><input type="checkbox" name="p8" id="p8e" value="CAL-04" checked> CAL-04 egreso frente a plazo</label>
           <label><input type="checkbox" name="p8" id="p8f" value="H-03" checked> H-03 curador en historia</label>
           <label><input type="checkbox" name="p8" id="p8g" value="H-05" checked> H-05 audiencia en historia</label>
+          <label><input type="checkbox" name="p8" id="p8h" value="H-04" checked> H-04 prórroga en historia (el manual confirma que sobra)</label>
         </div>
       </fieldset>
       <fieldset>
@@ -270,8 +308,8 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         <input type="text" id="p9t">
       </fieldset>
       <fieldset>
-        <legend><span class="qid">P10</span> Columnas «80 BIS» y «F.Amb.»</legend>
-        <label for="p10" class="hint">¿Qué significa «80 BIS» y qué debería revisarse con esa columna?</label>
+        <legend><span class="qid">P10</span> «80 BIS» y Ficha Ambulatoria</legend>
+        <p class="hint">Según el manual, «80 BIS» es la marca «decreta medida 80 bis» del ingreso. ¿Debería revisarse algo con ella? Déjalo en blanco si no.</p>
         <input type="text" id="p10">
         <div class="opts">
           <label><input type="radio" name="p10b" id="p10a" value="F.Amb: mantener rechazo definitivo" checked> Ficha Ambulatoria: mantener el rechazo definitivo del catálogo</label>
@@ -279,17 +317,41 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
         </div>
       </fieldset>
       <fieldset>
-        <legend><span class="qid">P11</span> En un programa DCE, ¿el calendario muestra el informe diagnóstico con su plazo?</legend>
+        <legend><span class="qid">P11</span> DCE: ¿los 40 días del Manual CSMP se cuentan desde el ingreso efectivo, sobre un plazo RUS de 1 mes?</legend>
         <div class="opts">
-          <label><input type="radio" name="p11" id="p11a" value="Sí"> Sí</label>
-          <label><input type="radio" name="p11" id="p11b" value="No"> No</label>
-          <label><input type="radio" name="p11" id="p11c" value="No sé, lo reviso"> No sé, lo reviso</label>
+          <label><input type="radio" name="p11" id="p11a" value="Sí: 1 mes de plazo + margen hasta 40 días"> Sí: 1 mes de plazo más margen hasta los 40 días</label>
+          <label><input type="radio" name="p11" id="p11b" value="No, se cuentan de otra forma"> No, se cuentan de otra forma (explícalo en P13)</label>
+          <label><input type="radio" name="p11" id="p11c" value="No sé"> No sé</label>
         </div>
       </fieldset>
       <fieldset>
         <legend><span class="qid">P12</span> Dirección del calendario (para el Descargador)</legend>
         <label for="p12" class="hint">Copia la dirección completa de la ventana del calendario y <strong>reemplaza cada número por X</strong>. Solo necesito los nombres de los parámetros.</label>
         <input type="text" id="p12" placeholder="familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?tipo_popUp=8&ID_Ingreso=X&TIP_Programa=X&CRR_Id…">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P14</span> ¿Autorizas corregir la lectura de «Prox. Auds.» con varias fechas (BUG-01)?</legend>
+        <p class="hint">Mismo texto y misma regla T-03. Se toma la audiencia futura más próxima. Toca <span class="mono">motor/utilidades.py</span>, así que lleva pruebas y paridad golden.</p>
+        <div class="opts">
+          <label><input type="radio" name="p14" id="p14a" value="Sí, corregir" checked> Sí, corregir</label>
+          <label><input type="radio" name="p14" id="p14b" value="Mostrar todas las audiencias, no solo la próxima"> Corregir mostrando todas las audiencias futuras</label>
+          <label><input type="radio" name="p14" id="p14c" value="No"> No</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P15</span> ¿Usas el «Informe mejor niñez» (Adm. General → Informe RUS)?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p15" id="p15a" value="Sí, sirve para Espera"> Sí, me sirve para Espera</label>
+          <label><input type="radio" name="p15" id="p15b" value="Lo conozco pero no lo uso"> Lo conozco, pero no lo uso</label>
+          <label><input type="radio" name="p15" id="p15c" value="No lo conozco o no tengo acceso"> No lo conozco o no tengo acceso</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P16</span> ¿Avisamos en E-05 si ya hay un pide cuenta reciente (PC-01, solo mostrar)?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p16" id="p16a" value="Sí, evaluarlo"> Sí, evaluarlo</label>
+          <label><input type="radio" name="p16" id="p16b" value="No, el proyecto se envía igual"> No, el proyecto se envía igual</label>
+        </div>
       </fieldset>
       <fieldset>
         <legend><span class="qid">P13</span> Comentarios</legend>
@@ -306,13 +368,13 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
     </form>
   </section>
 
-  <p class="small">Fuentes: catálogo vigente <span class="mono">docs/REFERENCIA_CATALOGO_ASISTENTE.md</span>, motor <span class="mono">src/nurus/personal/motor/</span>, columnas <span class="mono">src/nurus/rus/columns.py</span> (rama <span class="mono">feat/ejecucion-plan-20261008</span>, <span class="mono">0ff63a1</span>), tus capturas del calendario y el Excel BusquedaLit (solo estructura).</p>
+  <p class="small">Fuentes: catálogo vigente <span class="mono">docs/REFERENCIA_CATALOGO_ASISTENTE.md</span>, motor <span class="mono">src/nurus/personal/motor/</span>, columnas <span class="mono">src/nurus/rus/columns.py</span> (rama <span class="mono">feat/ejecucion-plan-20261008</span>, <span class="mono">0ff63a1</span>), tus capturas del calendario, el Excel BusquedaLit (solo estructura) y el compilado «Mejoras SITFA» 2015-2026.</p>
 </div>
 
 <script>
 (()=>{
   const f=document.getElementById('f'),out=document.getElementById('out'),st=document.getElementById('status');
-  const KEY='nomenclaturas_v1';
+  const KEY='nomenclaturas_v2';
   const fields=[...f.querySelectorAll('input,textarea')].filter(e=>e.id&&e.id!=='out');
   const v=id=>document.getElementById(id);
   const pick=n=>{const e=f.querySelector('input[name='+n+']:checked');return e?e.value:'sin respuesta'};
@@ -326,15 +388,18 @@ button.sec{background:transparent;color:var(--accent);border:1px solid var(--acc
       'P1 Hoja2: '+pick('p1'),
       'P2 Vencimiento Informes = próxima proyección: '+pick('p2'),
       'P3 Estados: '+txt('p3'),
-      'P4 Prórroga actualiza: '+pick('p4'),
+      'P4 Prórroga: '+(v('p4x').checked?v('p4x').value:'conforme al manual'),
       'P5 Nomenclaturas:\n'+(v('p5').value.trim()||'sin respuesta'),
-      'P6 Manuales: '+(['p6a','p6b','p6c'].filter(i=>v(i).checked).map(i=>v(i).value).join('; ')||'sin respuesta'),
+      'P6 Documentos: '+(['p6a','p6b','p6c'].filter(i=>v(i).checked).map(i=>v(i).value).join('; ')||'sin respuesta'),
       'P7 Calendario como fuente C-10/I-01/I-02: '+pick('p7'),
       'P8 Retirar o fusionar: '+(checked('input[name=p8]').join('; ')||'ninguna'),
       'P9 Órdenes de búsqueda: '+pick('p9')+(v('p9t').value.trim()?' · uso actual: '+v('p9t').value.trim():''),
       'P10 80 BIS: '+txt('p10')+' · '+pick('p10b'),
       'P11 DCE en calendario: '+pick('p11'),
       'P12 URL calendario: '+txt('p12'),
+      'P14 Corregir Prox. Auds.: '+pick('p14'),
+      'P15 Informe mejor niñez: '+pick('p15'),
+      'P16 Aviso pide cuenta en E-05: '+pick('p16'),
       'P13 Comentarios: '+txt('p13')
     ].join('\n');
   }
