@@ -50,12 +50,12 @@
       "rule_id": "CT-05",
       "version": "preview-1",
       "enabled": false,
-      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "activation_state": "ACTIVA_SOLO_MOSTRAR",
       "required_source_and_evidence": "Observación centro anterior y respuesta comprobada",
-      "proposed_finding": "Posible respuesta vinculada a observación",
+      "proposed_finding": "Observación del centro «Al Tribunal» sin respuesta registrada pasados 30 días (B-03)",
       "action_limit": "Mostrar «respuesta registrada / pendiente de cotejar»; no «subsanada» sin evidencia",
-      "approval_reference": "",
-      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+      "approval_reference": "Decisión del usuario (19 de octubre de 2026, plan de ajustes, paquete 2 «bitácora inteligente»): solo mostrar, umbral 30 días.",
+      "rollback": "Quitar la regla de DISPLAY_RULES en nurus.capture.temporal y volver a PENDIENTE_ACEPTACION_FUNCIONAL; motor tradicional sin cambios."
     },
     {
       "rule_id": "CT-06",
@@ -72,12 +72,12 @@
       "rule_id": "CT-07",
       "version": "preview-1",
       "enabled": false,
-      "activation_state": "PENDIENTE_ACEPTACION_FUNCIONAL",
+      "activation_state": "ACTIVA_SOLO_MOSTRAR",
       "required_source_and_evidence": "Reiteración literal/semántica de observaciones con IDs conocidos",
-      "proposed_finding": "Posible repetición",
+      "proposed_finding": "La observación propuesta repite (≥0,92) la última observación del centro (B-01)",
       "action_limit": "Advertir y presentar fechas, autores y textos; no suprimir propuesta automáticamente",
-      "approval_reference": "",
-      "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+      "approval_reference": "Decisión del usuario (19 de octubre de 2026, plan de ajustes, paquete 2 «bitácora inteligente»): solo mostrar, umbral 30 días.",
+      "rollback": "Quitar la regla de DISPLAY_RULES en nurus.capture.temporal y volver a PENDIENTE_ACEPTACION_FUNCIONAL; motor tradicional sin cambios."
     },
     {
       "rule_id": "CT-08",
@@ -111,6 +111,17 @@
       "action_limit": "Categoría exhaustiva, con motivo y evidencias enumeradas",
       "approval_reference": "",
       "rollback": "Mantener enabled=false y motor tradicional sin cambios."
+    },
+    {
+      "rule_id": "CT-11",
+      "version": "preview-1",
+      "enabled": false,
+      "activation_state": "ACTIVA_SOLO_MOSTRAR",
+      "required_source_and_evidence": "Bitácora con entrada del centro que contiene el texto E05_SOLO_CORREO y la fila sigue en E-05 solo correo",
+      "proposed_finding": "Correo de E-05 enviado hace 30 días o más sin ingreso efectivo: evaluar proyecto de resolución (B-02)",
+      "action_limit": "Mostrar fecha y días transcurridos; no cambiar la observación ni agregar el proyecto automáticamente",
+      "approval_reference": "Decisión del usuario (19 de octubre de 2026, plan de ajustes, paquete 2 «bitácora inteligente»): solo mostrar, umbral 30 días.",
+      "rollback": "Quitar la regla de DISPLAY_RULES en nurus.capture.temporal y volver a PENDIENTE_ACEPTACION_FUNCIONAL; motor tradicional sin cambios."
     }
   ]
 }
