@@ -1,0 +1,351 @@
+<title>Nomenclaturas y reglas CSMP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: columna de lectura con mapa hecho→vistas al centro y cuestionario al final */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#1b2430; --muted:#5a6676; --line:#d9dee6;
+  --accent:#1f5f8b; --accent-soft:#e3eef6;
+  --ok:#2f7a4a; --ok-soft:#e2f2e7; --warn:#9a6a10; --warn-soft:#f8eed8; --risk:#a8352f; --risk-soft:#f8e3e1;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --surface:#1a2028; --ink:#e4e9ef; --muted:#9aa6b4; --line:#2e3742;
+  --accent:#6fb0dc; --accent-soft:#1c2e3c;
+  --ok:#7cc795; --ok-soft:#1b2f23; --warn:#e2b55a; --warn-soft:#33291a; --risk:#ec8a83; --risk-soft:#3a2120; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --surface:#1a2028; --ink:#e4e9ef; --muted:#9aa6b4; --line:#2e3742;
+  --accent:#6fb0dc; --accent-soft:#1c2e3c;
+  --ok:#7cc795; --ok-soft:#1b2f23; --warn:#e2b55a; --warn-soft:#33291a; --risk:#ec8a83; --risk-soft:#3a2120; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:1.75rem} h2{font-size:1.3rem;padding-bottom:6px;border-bottom:2px solid var(--line)} h3{font-size:1.05rem}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:500 .75rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:68ch}
+.mono{font-family:var(--f-mono);font-size:.86em}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px}
+nav.toc a{color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--surface);padding:5px 10px;border-radius:6px;font-size:.88rem}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box.key{border-left:4px solid var(--accent)}
+ul,ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.9rem}
+.chain .node{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.chain .node.src{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.chain .arr{color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:.88rem}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font:500 .72rem var(--f-mono);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-risk{background:var(--risk-soft);color:var(--risk)} .p-info{background:var(--accent-soft);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.85rem;color:var(--muted)}
+form{display:flex;flex-direction:column;gap:16px}
+fieldset{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-weight:700;padding:0 6px}
+.hint{color:var(--muted);font-size:.86rem}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.opts input{margin-top:4px}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{min-height:70px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:600 .95rem var(--f-body);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;background:var(--accent);color:var(--surface)}
+button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+#status{color:var(--ok);font-size:.9rem}
+#out{font-family:var(--f-mono);font-size:.82rem;min-height:180px}
+.small{font-size:.85rem;color:var(--muted)}
+.qid{font:600 .8rem var(--f-mono);color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="eyebrow">FLOW · Asistente CSMP · análisis de nomenclaturas · 19 oct 2026</span>
+    <h1>Una nomenclatura, varias vistas: dónde se repiten las reglas</h1>
+    <p class="lead">RUS no guarda los datos de cada pantalla por separado. Cada nomenclatura registrada en la causa genera datos que luego aparecen en varios lugares: columnas del listado, calendario de informes, historia, bitácora y Excel. Este análisis ordena las reglas actuales y las propuestas según ese principio, para no crear reglas duplicadas sobre un mismo hecho.</p>
+    <nav class="toc" aria-label="Índice">
+      <a href="#principio">1. Principio</a><a href="#calendario">2. Calendario comprobado</a><a href="#mapa">3. Mapa de hechos</a>
+      <a href="#propuestas">4. Revisión de propuestas</a><a href="#choques">5. Choques con decisiones previas</a><a href="#sugerencias">6. Sugerencias</a><a href="#preguntas">7. Preguntas</a>
+    </nav>
+    <p class="legend"><span class="pill p-ok">HECHO</span> comprobado <span class="pill p-warn">INFERENCIA</span> deducción con supuesto explícito <span class="pill p-risk">DUDA</span> necesito tu respuesta</p>
+  </header>
+
+  <section id="principio">
+    <h2>1. Principio de trabajo</h2>
+    <div class="box key">
+      <p><strong>Una regla por hecho, nunca por pantalla.</strong> Cada hecho procesal (ingreso efectivo, informe remitido, prórroga, egreso…) debe tener <strong>una sola fuente canónica</strong> que dispare la observación. Las demás vistas del mismo hecho sirven solo para <strong>cotejo</strong>: generan incidencias cuando no coinciden, nunca una segunda observación.</p>
+    </div>
+    <div class="chain" aria-label="Ejemplo de cadena">
+      <span class="node src">Nomenclatura «ingreso informe de cumplimiento»</span><span class="arr">→</span>
+      <span class="node">Historia: trámite</span><span class="arr">→</span>
+      <span class="node">Calendario: Fecha Informe + ENVIADO</span><span class="arr">→</span>
+      <span class="node">Pestaña Informes: deja de figurar o cambia de vencimiento</span><span class="arr">→</span>
+      <span class="node">Calendario 91: sale de «por vencer»</span>
+    </div>
+    <p class="small">El nombre exacto de cada nomenclatura no está en el repositorio. El «Manual de Funciones CSMP 2025» solo aparece citado por su hash y no hay manuales de SITFA. Por eso uso nombres descriptivos y te pido los oficiales en la pregunta P5. <span class="pill p-risk">DUDA</span></p>
+  </section>
+
+  <section id="calendario">
+    <h2>2. Lo que comprobé en el calendario de informes</h2>
+    <p class="lead">Recalculé con tus dos capturas, mirando solo fechas y plazos, sin datos personales.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Comprobación</th><th>Muestra 1 (6 meses)</th><th>Muestra 2 (12 meses)</th><th>Nivel</th></tr></thead>
+      <tbody>
+        <tr><td>Fecha Proyección = ingreso efectivo + k × plazo de remisión</td><td class="num">+3 m, +6 m ✓</td><td class="num">+3, +6, +9, +12 m ✓</td><td><span class="pill p-ok">HECHO</span></td></tr>
+        <tr><td>Última proyección = ingreso efectivo + plazo de intervención = Egreso Proyectado del listado</td><td class="num">✓ (coincide con la columna)</td><td class="num">✓ (último hito)</td><td><span class="pill p-ok">HECHO</span></td></tr>
+        <tr><td>«Días Cump.» = días desde el ingreso efectivo; «Días para egresar» = días hasta el egreso proyectado</td><td class="num">84 ✓ · 100 ✓</td><td>—</td><td><span class="pill p-ok">HECHO</span></td></tr>
+        <tr><td>Un informe remitido <strong>antes</strong> de la fecha proyectada queda ENVIADO para esa proyección</td><td>—</td><td class="num">8 y 4 días antes ✓</td><td><span class="pill p-ok">HECHO</span></td></tr>
+        <tr><td>Estados posibles</td><td colspan="2">Vistos: PENDIENTE y ENVIADO. Faltan los demás (¿atrasado?, ¿fuera de plazo?)</td><td><span class="pill p-risk">DUDA</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="box">
+      <p><strong>Consecuencia importante.</strong> El calendario es el mismo cálculo que el catálogo eliminó como C-06 (hitos 3/6/9/12 en Laja y Mulchén, 4/8/12 en Tomé). Ahora lo calcula RUS con el plazo real de cada ingreso. El Asistente nunca necesita volver a calcular hitos: puede leerlos.</p>
+      <p>Las columnas del listado (Días Cump., Días para egresar, Egreso Proyectado) <strong>son derivadas</strong> de ingreso efectivo + plazos. Cotejarlas entre sí no detecta nada nuevo.</p>
+    </div>
+  </section>
+
+  <section id="mapa">
+    <h2>3. Mapa: hecho procesal → dónde aparece → reglas</h2>
+    <p class="lead">La columna «Fuente canónica sugerida» indica dónde convendría anclar la regla. Las demás vistas quedan como cotejo.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Hecho (nomenclatura)</th><th>Dónde aparece</th><th>Reglas actuales</th><th>Propuestas que tocan el mismo hecho</th><th>Fuente canónica sugerida</th></tr></thead>
+      <tbody>
+        <tr><td>Resolución que ordena ingreso a programa</td><td>Historia · Espera «Fec. Resol.»</td><td>E-04, E-06</td><td>—</td><td>Excel Espera (ya)</td></tr>
+        <tr><td>Ingreso efectivo</td><td>Historia · Cumplimiento «Fec. Ing. Efectivo», «Días Cump.» · cabecera del calendario · paso de Espera a Cumplimiento</td><td>C-03, C-08 (FAE &gt;120 días)</td><td>Q-02, Q-03</td><td>Excel Cumplimiento (ya)</td></tr>
+        <tr><td>Plazo de intervención → egreso proyectado</td><td>«Egreso Proyectado», «Días para egresar» · última proyección del calendario</td><td>C-04, C-05</td><td>CAL-04, N-01</td><td>Excel (ya). CAL-04 sería redundante</td></tr>
+        <tr><td>Plazo de remisión → informes proyectados</td><td>Calendario por ingreso · pestaña Informes «Vencimiento» · calendario 91 · ¿Hoja2?</td><td>I-01, I-02, C-10 (Hoja2)</td><td>CAL-02, CAL-03, N-02</td><td><strong>Calendario por ingreso</strong> (identidad por ingreso, estado explícito) <span class="pill p-warn">INFERENCIA</span></td></tr>
+        <tr><td>Ingreso de informe de cumplimiento o avance</td><td>Historia (trámite) · calendario «Fecha Informe» + ENVIADO · ¿bitácora del centro?</td><td>— (hoy I-01 no lo ve)</td><td>CAL-01, B-04, H-02</td><td><strong>Calendario por ingreso</strong>. B-04 y H-02 serían redundantes</td></tr>
+        <tr><td>Prórroga de la medida</td><td>Historia (resolución) · ¿nuevo egreso proyectado? · ¿nuevas proyecciones?</td><td>C-04, C-05 (indirectas)</td><td>H-04</td><td><span class="pill p-risk">DUDA P4</span> si RUS actualiza el egreso, H-04 sobra</td></tr>
+        <tr><td>Actualización de fichas (Individual, Ambulatoria, FAE)</td><td>Columnas «Ult. Act. F.Ind / F.Amb / F.FAE» · historia</td><td>C-07, C-08</td><td>— (F.Amb rechazada en el catálogo)</td><td>Excel (ya)</td></tr>
+        <tr><td>Oído / audiencia</td><td>«Fec. Oído», «Prox. Auds.» · historia · Excel de búsquedas «Prox.Auds.»</td><td>T-02, T-03</td><td>N-02, OB-05, H-05</td><td>Excel (ya). H-05 redundante si «Prox. Auds.» ya viene</td></tr>
+        <tr><td>Curador ad litem (registro como litigante)</td><td>Columna «Curador» · ventana Litigantes de la causa · Excel de búsquedas · historia (designación)</td><td>T-01</td><td>H-03, OB-04</td><td>Columna «Curador» (ya). H-03 aporta poco: T-01 ya sugiere asociarlo</td></tr>
+        <tr><td>Orden de búsqueda (despacho, estado, resultado)</td><td>Excel BusquedaLit (tiene columna «Nomenclatura») · historia</td><td>— (fuera de alcance por decisión previa)</td><td>OB-01..OB-05</td><td>BusquedaLit <span class="pill p-risk">DUDA P9</span></td></tr>
+        <tr><td>Egreso de la medida</td><td>Historia · pestaña Egresados</td><td>—</td><td>N-04</td><td>Excel Egresados</td></tr>
+        <tr><td>Observaciones centro ↔ tribunal</td><td>Bitácora (canal propio; no es nomenclatura)</td><td>CT-01, CT-02 (solo mostrar)</td><td>B-01, B-02, B-03</td><td>Bitácora: sin redundancia</td></tr>
+        <tr><td>«80 BIS» (SI/NO)</td><td>Columna del listado de Cumplimiento</td><td>—</td><td>—</td><td><span class="pill p-risk">DUDA P10</span> significado</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="propuestas">
+    <h2>4. Revisión de mis propuestas con este principio</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Propuesta</th><th>Veredicto</th><th>Motivo</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Q-01</td><td>Fechas incoherentes</td><td><span class="pill p-risk">RETIRAR</span></td><td>El catálogo §11 ya lo rechazó: «supuesto inexistente».</td></tr>
+        <tr><td class="mono">Q-02</td><td>Días calculados que no cuadran</td><td><span class="pill p-risk">RETIRAR</span></td><td>Son derivados del mismo dato (comprobado en §2), y C-03 ya decidió confiar en la columna.</td></tr>
+        <tr><td class="mono">Q-03</td><td>Mismo ingreso en dos pestañas</td><td><span class="pill p-warn">MANTENER</span></td><td>Detecta un estado de RUS inconsistente, no un hecho repetido. Bajo costo.</td></tr>
+        <tr><td class="mono">B-01, B-02, B-03</td><td>Bitácora inteligente</td><td><span class="pill p-ok">MANTENER</span></td><td>Canal propio, sin otra vista del mismo hecho.</td></tr>
+        <tr><td class="mono">B-04</td><td>Informe del centro en bitácora</td><td><span class="pill p-risk">RETIRAR</span></td><td>Mismo hecho que CAL-01, con fuente peor (texto libre).</td></tr>
+        <tr><td class="mono">CAL-01</td><td>Informe ENVIADO: no pedir cuenta</td><td><span class="pill p-ok">MANTENER, canónica</span></td><td>Es la única vista estructurada del «ingreso de informe».</td></tr>
+        <tr><td class="mono">CAL-02</td><td>Proyección vencida y PENDIENTE</td><td><span class="pill p-risk">FUSIONAR con I-01</span></td><td>Mismo hecho que I-01. El calendario serviría como fuente o confirmación de I-01, no como regla nueva.</td></tr>
+        <tr><td class="mono">CAL-03</td><td>Vencimiento distinto entre vistas</td><td><span class="pill p-warn">MANTENER como incidencia</span></td><td>Cotejo entre vistas del mismo hecho. Es justo el uso correcto de la redundancia.</td></tr>
+        <tr><td class="mono">CAL-04</td><td>Egreso distinto de ingreso + plazo</td><td><span class="pill p-risk">RETIRAR</span></td><td>RUS calcula ambos del mismo dato (comprobado). Solo tendría sentido si una prórroga no actualiza uno de los dos (P4).</td></tr>
+        <tr><td class="mono">N-01</td><td>Medida más allá de la mayoría</td><td><span class="pill p-warn">MANTENER</span></td><td>Cruza dos hechos distintos (nacimiento y plazo).</td></tr>
+        <tr><td class="mono">N-02</td><td>Informe vence después de audiencia</td><td><span class="pill p-warn">MANTENER</span></td><td>Cruza dos hechos distintos.</td></tr>
+        <tr><td class="mono">N-03</td><td>Ingresos simultáneos de una causa</td><td><span class="pill p-warn">MANTENER</span></td><td>Agrupa la bandeja; no es regla de hecho.</td></tr>
+        <tr><td class="mono">N-04</td><td>Egresado con informe pendiente</td><td><span class="pill p-warn">MANTENER</span></td><td>Cruza egreso con informes; hay que ver si el calendario se cierra al egresar.</td></tr>
+        <tr><td class="mono">H-01</td><td>Trámites desde la última revisión</td><td><span class="pill p-warn">MANTENER (solo mostrar)</span></td><td>Vista panorámica, no regla.</td></tr>
+        <tr><td class="mono">H-02</td><td>Escrito de programa no proveído</td><td><span class="pill p-warn">ACOTAR</span></td><td>Para informes es redundante con CAL-01. Solo aporta si se refiere a «escrito sin resolución que lo provea», que es otro hecho.</td></tr>
+        <tr><td class="mono">H-03</td><td>Curador designado en historia</td><td><span class="pill p-risk">RETIRAR</span></td><td>T-01 ya cubre el hecho «no registrado».</td></tr>
+        <tr><td class="mono">H-04</td><td>Prórroga resuelta</td><td><span class="pill p-risk">DEPENDE DE P4</span></td><td>Si RUS actualiza el egreso con la prórroga, sobra.</td></tr>
+        <tr><td class="mono">H-05</td><td>Audiencia en historia</td><td><span class="pill p-risk">RETIRAR</span></td><td>«Prox. Auds.» ya viene en el Excel.</td></tr>
+        <tr><td class="mono">OB-01..OB-05</td><td>Órdenes de búsqueda</td><td><span class="pill p-risk">DEPENDE DE P9</span></td><td>La decisión previa las dejó fuera de alcance porque no había planilla; ahora sí la hay.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small">Saldo: de 22 propuestas, 7 se retiran o fusionan, 3 quedan condicionadas a tus respuestas y 12 se mantienen.</p>
+  </section>
+
+  <section id="choques">
+    <h2>5. Choques con decisiones previas del catálogo</h2>
+    <p class="lead">Fuente: <span class="mono">docs/REFERENCIA_CATALOGO_ASISTENTE.md</span> §5 y §11. Los registro para no reabrir sin querer algo ya resuelto.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Decisión previa</th><th>Lo que propuse</th><th>Qué hago</th></tr></thead>
+      <tbody>
+        <tr><td>Fechas futuras o egreso antes del ingreso: «supuesto inexistente»</td><td>Q-01</td><td>Retiro</td></tr>
+        <tr><td>Ficha Ambulatoria: «rechazada, definitiva», confirmada dos veces</td><td>Te pregunté por F.Amb</td><td>No propongo regla; solo confirma en P10 que sigue así</td></tr>
+        <tr><td>Orden de búsqueda: «fuera de alcance; las planillas no cubren OB»</td><td>OB-01..OB-05</td><td>Premisa superada (el Descargador ya baja BusquedaLit). Decide en P9</td></tr>
+        <tr><td>C-06 eliminada: no calcular hitos; Hoja2 «fuente única»</td><td>Calendario por ingreso</td><td>No es recálculo: es leer el cálculo de RUS. Propongo estudiarlo como mejor fuente para C-10 (P7)</td></tr>
+        <tr><td>C-10 cruza Hoja2 por RIT, RUT, nombre, tribunal y derivación</td><td>—</td><td>El contrato nuevo prohíbe cruzar por RIT o nombre. El calendario por ingreso eliminaría ese cruce frágil</td></tr>
+        <tr><td>[CONFLICTO_ABIERTO] DCE en Informes: el Manual pide cuenta a los 40 días</td><td>—</td><td>Si el calendario muestra el informe diagnóstico DCE con su plazo, podría resolverlo (P11)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="sugerencias">
+    <h2>6. Sugerencias</h2>
+    <ol>
+      <li><strong>Capa de hechos en el Asistente.</strong> Antes de las reglas, construir por ingreso una ficha de hechos: ingreso efectivo, plazos, proyecciones con estado, egreso, fichas, curador, audiencias. Cada hecho guarda su fuente canónica y sus vistas de cotejo. Las reglas leen hechos, no pantallas. Así es fácil ver cuándo dos reglas miran lo mismo.</li>
+      <li><strong>Calendario por ingreso como fuente de informes.</strong> El Descargador lo lee (misma ruta que la bitácora, <span class="mono">tipo_popUp=8</span>). El Asistente lo usa para I-01, I-02 y C-10. El texto aprobado no cambia; cambia de dónde sale la fecha y se evita pedir cuenta de un informe ya enviado (CAL-01).</li>
+      <li><strong>Redundancia como control, no como regla.</strong> Cuando dos vistas del mismo hecho difieren (pestaña Informes, calendario, Hoja2), generar una incidencia de cotejo (CAL-03) en vez de dos observaciones.</li>
+      <li><strong>Historia solo para lo que no tiene otra vista.</strong> Escritos sin proveer y resoluciones nuevas desde la última revisión (H-01). Todo lo que ya refleja una columna o el calendario no necesita regla de historia.</li>
+      <li><strong>Diccionario de nomenclaturas.</strong> Una tabla nomenclatura → hechos que produce → columnas y vistas donde aparece. Es la base para decidir las fuentes canónicas. Necesito tus nombres oficiales (P5) o el texto del Manual (P6).</li>
+    </ol>
+  </section>
+
+  <section id="preguntas">
+    <h2>7. Preguntas</h2>
+    <p class="lead">Responde lo que sepas; deja en blanco lo que no. Luego presiona <strong>Copiar respuestas</strong> y pégalo en el chat. Lo que escribas se guarda en este navegador mientras completas.</p>
+    <form id="f">
+      <fieldset>
+        <legend><span class="qid">P1</span> ¿De dónde sale la «Hoja2» que usa C-10?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p1" id="p1a" value="Excel del calendario «Informes por vencer» (menú 91)"> Excel del calendario «Informes por vencer» (menú 91)</label>
+          <label><input type="radio" name="p1" id="p1b" value="Excel de la pestaña Informes del seguimiento"> Excel de la pestaña Informes del seguimiento</label>
+          <label><input type="radio" name="p1" id="p1c" value="La armo yo a mano"> La armo a mano</label>
+          <label><input type="radio" name="p1" id="p1d" value="No sé"> No sé</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P2</span> El «Vencimiento» de la pestaña Informes, ¿es la próxima proyección PENDIENTE del calendario?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p2" id="p2a" value="Sí"> Sí</label>
+          <label><input type="radio" name="p2" id="p2b" value="No"> No</label>
+          <label><input type="radio" name="p2" id="p2c" value="No sé"> No sé</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P3</span> Estados del calendario</legend>
+        <label for="p3" class="hint">¿Qué estados has visto además de PENDIENTE y ENVIADO? ¿Cómo queda un informe que llega tarde?</label>
+        <input type="text" id="p3">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P4</span> Cuando se registra una prórroga, ¿RUS actualiza el Egreso Proyectado y agrega proyecciones al calendario?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p4" id="p4a" value="Sí, actualiza ambos"> Sí, actualiza ambos</label>
+          <label><input type="radio" name="p4" id="p4b" value="Solo el egreso proyectado"> Solo el egreso proyectado</label>
+          <label><input type="radio" name="p4" id="p4c" value="No actualiza nada automáticamente"> No actualiza nada automáticamente</label>
+          <label><input type="radio" name="p4" id="p4d" value="No sé"> No sé</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P5</span> Nombres oficiales de las nomenclaturas</legend>
+        <label for="p5" class="hint">Escribe los que recuerdes: ingreso efectivo, ingreso de informe de cumplimiento o avance, prórroga, egreso, actualización de fichas, designación de curador, orden de búsqueda, oído… Uno por línea.</label>
+        <textarea id="p5" placeholder="Ej.: Ingreso informe cumplimiento X"></textarea>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P6</span> Manuales</legend>
+        <div class="opts">
+          <label><input type="checkbox" id="p6a" value="Adjunto el Manual de Funciones CSMP 2025 (texto o PDF)"> Adjuntaré el Manual de Funciones CSMP 2025</label>
+          <label><input type="checkbox" id="p6b" value="Tengo un manual de SITFA/RUS con nomenclaturas"> Tengo un manual de SITFA o RUS con las nomenclaturas</label>
+          <label><input type="checkbox" id="p6c" value="No tengo manuales disponibles"> No tengo manuales disponibles</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P7</span> ¿Estudiamos usar el calendario por ingreso como fuente de C-10, I-01 e I-02 (mismos textos)?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p7" id="p7a" value="Sí, estudiarlo y reemplazar Hoja2"> Sí, y reemplazar Hoja2</label>
+          <label><input type="radio" name="p7" id="p7b" value="Sí, pero mantener Hoja2 y comparar ambas"> Sí, pero mantener Hoja2 y comparar ambas un tiempo</label>
+          <label><input type="radio" name="p7" id="p7c" value="No"> No</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P8</span> ¿Aceptas retirar o fusionar estas propuestas?</legend>
+        <div class="opts">
+          <label><input type="checkbox" name="p8" id="p8a" value="Q-01" checked> Q-01 fechas incoherentes</label>
+          <label><input type="checkbox" name="p8" id="p8b" value="Q-02" checked> Q-02 días que no cuadran</label>
+          <label><input type="checkbox" name="p8" id="p8c" value="B-04" checked> B-04 informe en bitácora</label>
+          <label><input type="checkbox" name="p8" id="p8d" value="CAL-02 (fusionar con I-01)" checked> CAL-02 (fusionar con I-01)</label>
+          <label><input type="checkbox" name="p8" id="p8e" value="CAL-04" checked> CAL-04 egreso frente a plazo</label>
+          <label><input type="checkbox" name="p8" id="p8f" value="H-03" checked> H-03 curador en historia</label>
+          <label><input type="checkbox" name="p8" id="p8g" value="H-05" checked> H-05 audiencia en historia</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P9</span> Órdenes de búsqueda: ¿reabrimos la decisión «fuera de alcance»?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p9" id="p9a" value="Reabrir: evaluar OB-01..OB-05 en solo mostrar"> Reabrir y evaluar OB-01 a OB-05 en «solo mostrar»</label>
+          <label><input type="radio" name="p9" id="p9b" value="Mantener fuera de alcance"> Mantener fuera de alcance</label>
+        </div>
+        <label for="p9t" class="hint">¿Qué haces hoy con las órdenes de búsqueda en tu trabajo? (opcional)</label>
+        <input type="text" id="p9t">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P10</span> Columnas «80 BIS» y «F.Amb.»</legend>
+        <label for="p10" class="hint">¿Qué significa «80 BIS» y qué debería revisarse con esa columna?</label>
+        <input type="text" id="p10">
+        <div class="opts">
+          <label><input type="radio" name="p10b" id="p10a" value="F.Amb: mantener rechazo definitivo" checked> Ficha Ambulatoria: mantener el rechazo definitivo del catálogo</label>
+          <label><input type="radio" name="p10b" id="p10c" value="F.Amb: reabrir"> Ficha Ambulatoria: reabrir</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P11</span> En un programa DCE, ¿el calendario muestra el informe diagnóstico con su plazo?</legend>
+        <div class="opts">
+          <label><input type="radio" name="p11" id="p11a" value="Sí"> Sí</label>
+          <label><input type="radio" name="p11" id="p11b" value="No"> No</label>
+          <label><input type="radio" name="p11" id="p11c" value="No sé, lo reviso"> No sé, lo reviso</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P12</span> Dirección del calendario (para el Descargador)</legend>
+        <label for="p12" class="hint">Copia la dirección completa de la ventana del calendario y <strong>reemplaza cada número por X</strong>. Solo necesito los nombres de los parámetros.</label>
+        <input type="text" id="p12" placeholder="familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?tipo_popUp=8&ID_Ingreso=X&TIP_Programa=X&CRR_Id…">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">P13</span> Comentarios</legend>
+        <label for="p13" class="hint">Otras nomenclaturas que se reflejen en varios lugares, correcciones o ideas</label>
+        <textarea id="p13"></textarea>
+      </fieldset>
+      <div class="actions">
+        <button type="submit" id="copiar">Copiar respuestas</button>
+        <button type="button" class="sec" id="limpiar">Borrar formulario</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
+      <label for="out" class="hint">Texto que se copia. Si el botón no funciona, selecciónalo y cópialo a mano.</label>
+      <textarea id="out" readonly></textarea>
+    </form>
+  </section>
+
+  <p class="small">Fuentes: catálogo vigente <span class="mono">docs/REFERENCIA_CATALOGO_ASISTENTE.md</span>, motor <span class="mono">src/nurus/personal/motor/</span>, columnas <span class="mono">src/nurus/rus/columns.py</span> (rama <span class="mono">feat/ejecucion-plan-20261008</span>, <span class="mono">0ff63a1</span>), tus capturas del calendario y el Excel BusquedaLit (solo estructura).</p>
+</div>
+
+<script>
+(()=>{
+  const f=document.getElementById('f'),out=document.getElementById('out'),st=document.getElementById('status');
+  const KEY='nomenclaturas_v1';
+  const fields=[...f.querySelectorAll('input,textarea')].filter(e=>e.id&&e.id!=='out');
+  const v=id=>document.getElementById(id);
+  const pick=n=>{const e=f.querySelector('input[name='+n+']:checked');return e?e.value:'sin respuesta'};
+  const checked=sel=>[...f.querySelectorAll(sel)].filter(e=>e.checked).map(e=>e.value);
+  const txt=id=>v(id).value.trim()||'sin respuesta';
+  function save(){try{const d={};fields.forEach(e=>{d[e.id]=(e.type==='checkbox'||e.type==='radio')?e.checked:e.value});localStorage.setItem(KEY,JSON.stringify(d))}catch(_){}}
+  function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return;fields.forEach(e=>{if(!(e.id in d))return;if(e.type==='checkbox'||e.type==='radio')e.checked=d[e.id];else e.value=d[e.id]})}catch(_){}}
+  function build(){
+    return [
+      'RESPUESTAS · NOMENCLATURAS Y REGLAS CSMP',
+      'P1 Hoja2: '+pick('p1'),
+      'P2 Vencimiento Informes = próxima proyección: '+pick('p2'),
+      'P3 Estados: '+txt('p3'),
+      'P4 Prórroga actualiza: '+pick('p4'),
+      'P5 Nomenclaturas:\n'+(v('p5').value.trim()||'sin respuesta'),
+      'P6 Manuales: '+(['p6a','p6b','p6c'].filter(i=>v(i).checked).map(i=>v(i).value).join('; ')||'sin respuesta'),
+      'P7 Calendario como fuente C-10/I-01/I-02: '+pick('p7'),
+      'P8 Retirar o fusionar: '+(checked('input[name=p8]').join('; ')||'ninguna'),
+      'P9 Órdenes de búsqueda: '+pick('p9')+(v('p9t').value.trim()?' · uso actual: '+v('p9t').value.trim():''),
+      'P10 80 BIS: '+txt('p10')+' · '+pick('p10b'),
+      'P11 DCE en calendario: '+pick('p11'),
+      'P12 URL calendario: '+txt('p12'),
+      'P13 Comentarios: '+txt('p13')
+    ].join('\n');
+  }
+  function refresh(){out.value=build();save()}
+  load();refresh();
+  f.addEventListener('input',refresh);f.addEventListener('change',refresh);
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();refresh();
+    try{await navigator.clipboard.writeText(out.value);st.textContent='Copiado. Pégalo en el chat.'}
+    catch(_){out.focus();out.select();st.textContent='No se pudo copiar automáticamente: el texto quedó seleccionado; usa Ctrl+C.'}
+  });
+  v('limpiar').addEventListener('click',()=>{try{localStorage.removeItem(KEY)}catch(_){};f.reset();refresh();st.textContent='Formulario reiniciado.'});
+})();
+</script>
