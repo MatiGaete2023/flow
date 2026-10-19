@@ -134,3 +134,49 @@ Requieren texto nuevo, es decir, decisión y acta. Propuesta: activarlas primero
 2. Umbrales nuevos: N días para B-02 y B-03, tolerancia de Q-02 y ventana de N-02.
 3. Redacción de N-01, N-02, N-04 y B-02, o mantenerlas en «solo mostrar» sin texto.
 4. ¿Integrar la rama de historia (DF-03)?
+
+## 5. Actualización del 19-oct con evidencia del usuario
+
+La evidencia fue una captura de pantalla y un Excel `BusquedaLit`. Solo se extrajo su estructura, sin valores; los
+originales no se versionan.
+
+### 5.1 Hipótesis resueltas (HECHO)
+
+| Tema | Resolución |
+|---|---|
+| Ventana R22-c6 | Es el **Calendario de informes proyectados**: `IrPopUpInformesAccion.do?tipo_popUp=8&ID_Ingreso=…&TIP_Programa=…&CRR_Id…`, abierto desde el ícono «Inf.» del listado |
+| Contenido del calendario | Cabecera: RIT, Nombre, Ingreso efectivo, Programa, Plazo remisión (meses), Plazo intervención (meses). Tabla: `Fecha Proyección · Fecha Informe · Estado` (observado: `PENDIENTE`) |
+| Órdenes de búsqueda | Son el menú 94, «Seguimiento Búsqueda Lit» (`BusquedaLit`) |
+| Litigantes | Botón dentro de «Información de la Causa» |
+| `BusquedaLit` | 23 columnas, encabezado en la fila 4 y datos desde la fila 5: `Tipo Causa, Rol Causa, Era Causa, Tribunal, Rut, Nombre, Tipo litigante, Sexo, Tipo O.B., Nomenclatura, Resultado, Estado O.B., Derivado a, Fecha trámite, Duración Medida, Estado envío, Fecha Envío, E-mail Envío, Fec. Nacimiento, Edad, Nacionalidad, Prox.Auds., Curador` |
+| Identidad de `BusquedaLit` | **Sin causa_id ni ingreso_id** ⇒ sin cruces con otras fuentes (contrato) |
+| Listado de Cumplimiento (pantalla) | Columnas «80 BIS» y «Ult. Act. F.Amb.»; el Asistente no las mapea (`src/nurus/rus/columns.py`) |
+
+### 5.2 Oportunidades nuevas
+
+| ID | Regla | Fuente | Riesgo |
+|---|---|---|---|
+| DF-05 | Lectura del calendario por ingreso (misma ruta que la bitácora, `tipo_popUp=8`) | Descargador | Medio (E3: extensión) |
+| CAL-01 | Informe proyectado con «Fecha Informe» registrada ⇒ no proponer «pidiendo cuenta» (reemplaza a B-04) | calendario + Informes | Bajo |
+| CAL-02 | Proyección vencida y PENDIENTE ⇒ confirma I-01 | calendario | Bajo |
+| CAL-03 | Vencimiento de la pestaña Informes u hoja 2 distinto del calendario ⇒ incidencia | calendario + Excel | Bajo |
+| CAL-04 | Egreso proyectado distinto de ingreso efectivo + plazo de intervención ⇒ incidencia | calendario + Excel | Medio |
+| OB-01 | Orden activa sin resultado después de N días desde «Fecha trámite» | BusquedaLit | Bajo |
+| OB-02 | Orden activa y persona de 18 años o más (por «Fec. Nacimiento») | BusquedaLit | Bajo |
+| OB-03 | «Estado envío» distinto de «Realizada» | BusquedaLit | Bajo |
+| OB-04 | Orden activa de un niño o adolescente sin curador | BusquedaLit | Medio |
+| OB-05 | Audiencia próxima con orden activa | BusquedaLit | Bajo |
+
+### 5.3 Decisiones del usuario (ronda 1)
+
+- Paquetes 2, 4 y 5, con umbrales B-02 = 30, B-03 = 30, Q-02 = 2 y N-02 = 30 días.
+- Observaciones nuevas en «solo mostrar».
+- Historia «más adelante»: **[CONFLICTO_ABIERTO]** con haber elegido el paquete 5. La interpretación propuesta es
+  diseñarlo ahora e implementarlo después.
+- Explorador: sin autorizaciones.
+
+Pendientes:
+
+- Nombres de los parámetros de la dirección del calendario.
+- Otros valores de «Estado» del calendario.
+- Significado funcional de «80 BIS» y «F.Amb.».
