@@ -55,6 +55,17 @@ def mark_inconsistent_states(rows, provenance):
             row.warnings.append(f'Q-03: el mismo ingreso figura en {names} en este lote; revisar su estado en RUS.')
 
 
+def mark_search_orders(rows, provenance, capture, as_of):
+    """OB-01..OB-05 solo mostrar para filas de «Búsqueda Lit» (pantalla litigantes, menú 94); sin cruces."""
+    from .ordenes_busqueda import avisos_orden
+
+    screens = {query['query_id']: query.get('screen', '') for query in capture.rows('consultas')}
+    for row in rows:
+        record = provenance[row.id]
+        if screens.get(record.get('query_id')) == 'litigantes':
+            row.warnings.extend(avisos_orden(json.loads(record['normalized_json']), as_of))
+
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -244,6 +255,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)
     mark_inconsistent_states(candidate.rows, provenance)
+    mark_search_orders(candidate.rows, provenance, capture, as_of)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash

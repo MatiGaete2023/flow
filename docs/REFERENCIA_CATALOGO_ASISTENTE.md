@@ -490,7 +490,7 @@ El sistema **no calcula** con/sin carga por regla — eso quedó descartado expl
 | Exclusión explícita de DCE en el corte de E-01 | Evaluada y **rechazada** — no es un riesgo real según el usuario. |
 | Lista controlada de siglas para formato de programa (G-03) | Evaluada y **rechazada** — el criterio de largo de palabra funciona bien en la práctica. |
 | Ficha Ambulatoria como validador/regla general (E1 original) | Superada por la corrección de fichas — confirmado definitivamente fuera de alcance. |
-| Orden de búsqueda (E2 original) | Sigue fuera de alcance — las planillas actuales (Espera/Cumplimiento/Informes) no cubren OB. |
+| Orden de búsqueda (E2 original) | **Reabierta el 19-oct-2026** (decisión del usuario): el Descargador ya incluye «Búsqueda Lit» (menú 94) en el paquete. El Asistente muestra avisos OB-01..OB-05 solo mostrar (`nurus/personal/ordenes_busqueda.py`): activa sin resultado más de 60 días, persona mayor de edad, envío no realizado, NNA sin curador, audiencia próxima. Sin cruces con otras fuentes (el Excel no trae causa ni ingreso remotos). |
 
 ---
 
