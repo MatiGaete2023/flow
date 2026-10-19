@@ -81,9 +81,10 @@ def test_expired_reports_generate_pc_info_but_upcoming_reports_do_not(tmp_path):
     assert 'proyecto de resolución pidiendo cuenta del informe de avance vencido' in general.rows[0].observation
 
     dce_path = source(tmp_path, 'INFORMES', program='DCE CENTRO')
-    dce = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 13))
+    # DCE: pedir cuenta pasados 10 días del vencimiento RUS (40 días desde el ingreso; decisión 19-oct-2026).
+    dce = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 23))
     assert dce.rows[0].actions == ['programa_vencido', 'PC_INFO']
-    assert 'informe diagnóstico vencido' in dce.rows[0].observation
+    assert 'informe diagnóstico vencido desde el 12 de septiembre de 2026' in dce.rows[0].observation
 
     upcoming = Work(defaults()).analyze(dce_path, 'INFORMES', as_of=date(2026, 9, 8))
     assert upcoming.rows[0].actions == ['programa_por_vencer']

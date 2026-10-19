@@ -335,7 +335,9 @@ Se elimina por completo el cálculo interno de hitos mensuales (3/6/9/12/15/18 p
 
 **Datos:** FECHA DE VENCIMIENTO y PROGRAMA.
 
-**Condición:** FECHA DE VENCIMIENTO anterior al día de ejecución.
+**Condición:** FECHA DE VENCIMIENTO anterior al día de ejecución. **DCE (decisión del usuario, 19-oct-2026):** más de
+10 días después del vencimiento RUS, es decir, pasados 40 días desde el ingreso (plazo RUS de 1 mes más el margen del
+Manual CSMP). Cierra el [CONFLICTO_ABIERTO] de los 40 días.
 
 **Texto — DCE:**
 
@@ -349,7 +351,9 @@ Se elimina por completo el cálculo interno de hitos mensuales (3/6/9/12/15/18 p
 
 **Datos:** FECHA DE VENCIMIENTO y PROGRAMA.
 
-**Condición:** Faltan entre 0 y 30 días para el vencimiento, ambos inclusive.
+**Condición:** Faltan entre 0 y 30 días para el vencimiento, ambos inclusive. **DCE:** también entre 1 y 10 días después
+del vencimiento RUS; en ese tramo la fecha del texto es la fecha límite con margen (vencimiento + 10 días) y no hay
+proyecto de resolución.
 
 **Texto — DCE:**
 
