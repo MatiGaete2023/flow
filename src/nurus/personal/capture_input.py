@@ -256,6 +256,9 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     candidate.rows.sort(key=lambda row: row.source_row)
     mark_inconsistent_states(candidate.rows, provenance)
     mark_search_orders(candidate.rows, provenance, capture, as_of)
+    from .contexto_excel import marcar_paquete
+
+    marcar_paquete(candidate.rows, provenance, identity)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash
