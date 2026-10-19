@@ -1433,10 +1433,16 @@ class App(ctk.CTk):
             row=9, column=0, pady=12
         )
         self.disabled = {}
-        for i, key in enumerate(['COMUN.CURADOR', 'COMUN.OIDO', 'COMUN.PROX_AUDIENCIA', 'COMUN.PROXIMA_MAYORIA']):
+        toggles = ['COMUN.CURADOR', 'COMUN.OIDO', 'COMUN.PROX_AUDIENCIA', 'COMUN.PROXIMA_MAYORIA', 'COMUN.REITERA_OBSERVACION']
+        for i, key in enumerate(toggles):
             v = tk.BooleanVar(value=key not in self.cfg.data['desactivadas'])
             self.disabled[key] = v
-            ttk.Checkbutton(params, text='Advertir ' + key.split('.')[1].replace('_', ' ').lower(), variable=v).grid(
+            text = (
+                'Reiterar observación repetida en bitácora'
+                if key == 'COMUN.REITERA_OBSERVACION'
+                else 'Advertir ' + key.split('.')[1].replace('_', ' ').lower()
+            )
+            ttk.Checkbutton(params, text=text, variable=v).grid(
                 row=10 + i, column=0, columnspan=4, sticky='w'
             )
 

@@ -28,20 +28,30 @@ def _cuerpo(texto):
     return rest if sep and len(head) <= 40 else t
 
 
+def repite_ultima(display, propuesta):
+    """Entrada «Centro» más reciente cuyo texto repite (≥0,92) la propuesta, o None."""
+    if not display or display.get('status') != 'ACREDITADA':
+        return None
+    cuerpo = _cuerpo(propuesta)
+    if not cuerpo:
+        return None
+    for evento in display['last_center']:
+        if SequenceMatcher(None, cuerpo, _cuerpo(evento.get('text', '')), autojunk=False).ratio() >= SIMILITUD:
+            return evento
+    return None
+
+
 def avisos(display, propuesta, reglas, textos, as_of):
     """Lista de (regla, texto). Solo con cronología acreditada del centro dentro del horizonte vigente."""
     if not display or display.get('status') != 'ACREDITADA':
         return []
     result = []
-    cuerpo = _cuerpo(propuesta)
-    if cuerpo:
-        for evento in display['last_center']:
-            if SequenceMatcher(None, cuerpo, _cuerpo(evento.get('text', '')), autojunk=False).ratio() >= SIMILITUD:
-                result.append(
-                    ('CT-07', f'La observación propuesta repite la última del centro ({_fecha(evento)}); '
-                              'revisar antes de registrarla.')
-                )
-                break
+    evento = repite_ultima(display, propuesta)
+    if evento:
+        result.append(
+            ('CT-07', f'La observación propuesta repite la última del centro ({_fecha(evento)}); '
+                      'revisar antes de registrarla.')
+        )
     if 'ESPERA.E05_SOLO_CORREO' in reglas:
         correo = _cuerpo(textos['ESPERA']['E05_SOLO_CORREO']['texto']).rstrip('. ')
         previos = [
@@ -60,3 +70,26 @@ def avisos(display, propuesta, reglas, textos, as_of):
         result.append(('CT-05', f'Observación al tribunal del {_fecha(evento)} sin respuesta registrada '
                                 f'(hace {dias} días).'))
     return result
+
+
+def aplicar_reiteracion(rows, contexts, config):
+    """CT-07 con texto (decisión del usuario 19-oct-2026): si la observación propuesta repite la última del centro,
+    se consigna «Se reitera observación anterior {fecha}» para toda la observación. Acciones sin cambios.
+    """
+    from .motor.utilidades import fecha_es
+
+    regla = 'COMUN.REITERA_OBSERVACION'
+    if regla in config['desactivadas']:
+        return
+    plantilla = config['textos']['COMUN']['REITERA_OBSERVACION']['texto']
+    for row in rows:
+        evento = repite_ultima(contexts.get(row.id, {}).get('display'), row.observation)
+        if not evento:
+            continue
+        head, sep, _ = row.observation.partition(': ')
+        prefijo = head + sep if sep and len(head) <= 40 else ''
+        texto = plantilla.format_map({'FECHA_OBSERVACION_ANTERIOR': fecha_es(_dia(evento))})
+        row.warnings.append(f'CT-07: la observación propuesta repetía la del {_fecha(evento)}; se consigna la '
+                            f'reiteración. Texto propuesto originalmente: {row.observation}')
+        row.observation = prefijo + texto
+        row.rules = [*row.rules, regla]

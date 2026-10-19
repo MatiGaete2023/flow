@@ -259,6 +259,9 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     from .contexto_excel import marcar_paquete
 
     marcar_paquete(candidate.rows, provenance, identity)
+    from .bitacora_avisos import aplicar_reiteracion
+
+    aplicar_reiteracion(candidate.rows, contexts, config)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash

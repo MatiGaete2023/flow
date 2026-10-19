@@ -56,6 +56,14 @@
     "condicion": "Dos o más audiencias futuras en «Prox. Auds.» (RUS V11); se desactiva junto con COMUN.PROX_AUDIENCIA"
   },
   {
+    "id": "COMUN.REITERA_OBSERVACION",
+    "vigente": true,
+    "fuente": "Decisión del usuario 2026-10-19 (CT-07, opción a)",
+    "texto_inicial": "Se reitera observación anterior {FECHA_OBSERVACION_ANTERIOR}.",
+    "acciones": [],
+    "condicion": "Solo con paquete de captura: la observación propuesta repite (≥0,92) la última observación del centro en la bitácora; reemplaza toda la observación y conserva las acciones"
+  },
+  {
     "id": "ESPERA.E04_RESOLUCION_RECIENTE",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",

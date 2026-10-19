@@ -203,6 +203,21 @@ próximas audiencias separadas por coma. Se muestran todas las futuras, en orden
 Una fecha ilegible dentro de la celda se registra como incidencia T-03 y no oculta las demás. Desactivar T-03 desactiva
 también la variante plural.
 
+## T-04 · Reiteración de observación (CT-07) — decisión del usuario, 19-oct-2026
+
+**Datos:** paquete de captura con bitácora del ingreso (identidad verificada, horizonte de cuatro meses).
+
+**Condición:** la observación propuesta repite (similitud ≥ 0,92, sin el prefijo de nombre) la última observación del
+centro registrada en la bitácora.
+
+**Aplicación:** reemplaza **toda** la observación por el texto de reiteración; conserva el prefijo y las acciones. El
+texto propuesto original queda en los avisos de la fila. Solo opera con paquete (un Excel suelto no trae bitácora). Se
+desactiva en Configuración («Reiterar observación repetida en bitácora»).
+
+**Texto aprobado:**
+
+> *Se reitera observación anterior {FECHA_OBSERVACION_ANTERIOR}.*
+
 ---
 
 # 5. Reglas de Cumplimiento

@@ -241,7 +241,7 @@ def validate(cfg):
             new_fields = variables(actual, old_fields)
             if new_fields != old_fields or not actual.strip():
                 raise ValueError('Variables de observación inválidas: ' + scope + '.' + key)
-    allowed = {'COMUN.CURADOR', 'COMUN.OIDO', 'COMUN.PROX_AUDIENCIA', 'COMUN.PROXIMA_MAYORIA'}
+    allowed = {'COMUN.CURADOR', 'COMUN.OIDO', 'COMUN.PROX_AUDIENCIA', 'COMUN.PROXIMA_MAYORIA', 'COMUN.REITERA_OBSERVACION'}
     if not set(cfg['desactivadas']) <= allowed:
         raise ValueError('Solo pueden desactivarse advertencias complementarias.')
     for tpl in cfg['correos']['plantillas'].values():

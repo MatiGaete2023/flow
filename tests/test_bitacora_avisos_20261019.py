@@ -71,3 +71,41 @@ def test_avisos_aparecen_en_columna_y_panel_sin_cambiar_la_observacion(tmp_path)
     texto = novelties_text(work, fila)
     assert 'Avisos (solo mostrar' in texto and 'CT-05 · Observación al tribunal del 01/09/2026' in texto
     assert (fila.observation, fila.rules, fila.actions) == (base['r0'].observation, base['r0'].rules, base['r0'].actions)
+
+
+def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
+    (tmp_path / 'b0').mkdir()
+    _, base = importar(tmp_path / 'b0')
+    propuesta = base['r0'].observation
+
+    def repetir(t):
+        t['bitacoras'][0]['text'] = propuesta
+
+    work, rows = importar(tmp_path, repetir)
+    fila = rows['r0']
+    prefijo = propuesta.partition(': ')[0] + ': '
+    assert fila.observation == prefijo + 'Se reitera observación anterior 10 de septiembre de 2026.'
+    assert fila.rules[-1] == 'COMUN.REITERA_OBSERVACION'
+    assert fila.actions == base['r0'].actions
+    assert any(w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and propuesta in w
+               for w in fila.warnings)
+    # La propuesta vigente es la reiteración: ya no corresponde el aviso CT-07.
+    assert 'CT-07' not in dict(avisos(work.capture_context['r0']['display'], fila.observation, fila.rules, TEXTOS,
+                                      CORTE))
+
+
+def test_ct07_reiteracion_desactivable(tmp_path):
+    from nurus.capture import write_capture
+    from nurus.personal.capture_input import import_capture
+    from test_capture_contract import fixture
+
+    (tmp_path / 'b0').mkdir()
+    _, base = importar(tmp_path / 'b0')
+    m, t = fixture()
+    t['bitacoras'][0]['text'] = base['r0'].observation
+    config = defaults()
+    config['desactivadas'] = ['COMUN.REITERA_OBSERVACION']
+    work = import_capture(write_capture(tmp_path / 'c.zip', m, t), config, as_of=CORTE)
+    fila = {r.id: r for r in work.rows}['r0']
+    assert fila.observation == base['r0'].observation
+    assert 'CT-07' in dict(avisos(work.capture_context['r0']['display'], fila.observation, fila.rules, TEXTOS, CORTE))

@@ -20,6 +20,9 @@
     },
     "PROX_AUDIENCIAS": {
       "texto": "Audiencias fijadas para {FECHAS_AUDIENCIA}."
+    },
+    "REITERA_OBSERVACION": {
+      "texto": "Se reitera observación anterior {FECHA_OBSERVACION_ANTERIOR}."
     }
   },
   "ESPERA": {
