@@ -216,7 +216,7 @@ desactiva en Configuración («Reiterar observación repetida en bitácora»).
 
 **Texto aprobado:**
 
-> *Se reitera observación anterior {FECHA_OBSERVACION_ANTERIOR}.*
+> *Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}.*
 
 ---
 

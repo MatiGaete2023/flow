@@ -84,7 +84,7 @@ def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
     work, rows = importar(tmp_path, repetir)
     fila = rows['r0']
     prefijo = propuesta.partition(': ')[0] + ': '
-    assert fila.observation == prefijo + 'Se reitera observación anterior 10 de septiembre de 2026.'
+    assert fila.observation == prefijo + 'Se reitera observación anterior del 10 de septiembre de 2026.'
     assert fila.rules[-1] == 'COMUN.REITERA_OBSERVACION'
     assert fila.actions == base['r0'].actions
     assert any(w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and propuesta in w

@@ -74,7 +74,7 @@ def avisos(display, propuesta, reglas, textos, as_of):
 
 def aplicar_reiteracion(rows, contexts, config):
     """CT-07 con texto (decisión del usuario 19-oct-2026): si la observación propuesta repite la última del centro,
-    se consigna «Se reitera observación anterior {fecha}» para toda la observación. Acciones sin cambios.
+    se consigna «Se reitera observación anterior del {fecha}» para toda la observación. Acciones sin cambios.
     """
     from .motor.utilidades import fecha_es
 

@@ -75,7 +75,7 @@
       "activation_state": "ACTIVA_SOLO_MOSTRAR",
       "required_source_and_evidence": "Reiteración literal/semántica de observaciones con IDs conocidos",
       "proposed_finding": "La observación propuesta repite (≥0,92) la última observación del centro (B-01)",
-      "action_limit": "Reemplazar toda la observación por «Se reitera observación anterior {fecha}» (COMUN.REITERA_OBSERVACION), conservando prefijo y acciones; el texto original queda en avisos",
+      "action_limit": "Reemplazar toda la observación por «Se reitera observación anterior del {fecha}» (COMUN.REITERA_OBSERVACION), conservando prefijo y acciones; el texto original queda en avisos",
       "approval_reference": "Decisión del usuario (19 de octubre de 2026, plan de ajustes, paquete 2 «bitácora inteligente»): solo mostrar, umbral 30 días. Texto de reiteración aprobado el mismo día (opción a, toda la observación).",
       "rollback": "Quitar la regla de DISPLAY_RULES en nurus.capture.temporal y volver a PENDIENTE_ACEPTACION_FUNCIONAL; motor tradicional sin cambios."
     },
