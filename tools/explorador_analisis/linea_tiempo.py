@@ -1,5 +1,5 @@
 """Línea de tiempo compacta con alias R01..Rnn (escribe alias.json en cwd). Uso: python -I linea_tiempo.py eventos.jsonl"""
-import json,sys,collections as C
+import json,sys
 ev=[json.loads(l) for l in open(sys.argv[1])]
 alias={};n=0
 for e in ev:

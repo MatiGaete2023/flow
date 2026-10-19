@@ -5264,6 +5264,11 @@
           "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — T-03"
+        },
+        "PROX_AUDIENCIAS": {
+          "texto": "Audiencias fijadas para {FECHAS_AUDIENCIA}.",
+          "confirmado": true,
+          "nota": "T-03 plural; aprobado por el usuario 2026-10-19 (RUS V11 muestra varias audiencias separadas por coma)"
         }
       },
       "ESPERA": {

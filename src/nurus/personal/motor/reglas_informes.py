@@ -21,7 +21,7 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     elif 0 <= dias <= parametro('informe'): key='I02_POR_VENCER_DCE' if es_dce(programa) else 'I02_POR_VENCER_GENERAL'
     else: return ''
     fr=[render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv))]
-    audiencia = _audiencia(row, cols)
+    audiencia = _audiencia(row, cols, incidencias, fila_excel)
     if audiencia:
         fr.append(audiencia)
     return componer(pfx, fr)

@@ -195,6 +195,14 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 > *Audiencia fijada para el {FECHA_AUDIENCIA}.*
 
+**Varias audiencias (decisión del usuario, 19-oct-2026):** desde RUS V11 (abril 2026) la columna trae todas las
+próximas audiencias separadas por coma. Se muestran todas las futuras, en orden, con el texto aprobado:
+
+> *Audiencias fijadas para el {FECHA_1} y el {FECHA_2}.* (con tres o más: «el A, el B y el C»)
+
+Una fecha ilegible dentro de la celda se registra como incidencia T-03 y no oculta las demás. Desactivar T-03 desactiva
+también la variante plural.
+
 ---
 
 # 5. Reglas de Cumplimiento

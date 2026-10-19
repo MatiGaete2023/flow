@@ -33,6 +33,28 @@ MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite a
 ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
 
 
+STATE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'EGRESADOS')
+STATE_LABELS = {'ESPERA': 'Espera', 'CUMPLIMIENTO': 'Cumplimiento', 'EGRESADOS': 'Egresados'}
+
+
+def mark_inconsistent_states(rows, provenance):
+    """Q-03: un mismo ingreso verificado en dos pestañas de estado del lote es un estado RUS inconsistente.
+
+    Informes no cuenta: un informe pendiente convive con su ingreso en Cumplimiento. Solo avisa; no corrige.
+    """
+    states = defaultdict(set)
+    for row in rows:
+        record = provenance[row.id]
+        if record['identity_status'] == 'VERIFICADA' and record['record_type'] in STATE_TYPES:
+            states[identity(record)].add(record['record_type'])
+    for row in rows:
+        record = provenance[row.id]
+        found = states.get(identity(record), set()) if record['identity_status'] == 'VERIFICADA' else set()
+        if record['record_type'] in STATE_TYPES and len(found) > 1:
+            names = ' y '.join(STATE_LABELS[t] for t in STATE_TYPES if t in found)
+            row.warnings.append(f'Q-03: el mismo ingreso figura en {names} en este lote; revisar su estado en RUS.')
+
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -221,6 +243,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             candidate.rows.append(row)
     attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)
+    mark_inconsistent_states(candidate.rows, provenance)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash

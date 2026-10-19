@@ -24,7 +24,7 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     if es_derivacion_sin_seg(programa): return componer(pfx,[render('COMUN','NO_SEGUIMIENTO', PROGRAMA=prog)])
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
-        return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))] + _complementarias(row, cols))
+        return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))] + _complementarias(row, cols, incidencias, fila_excel))
     frags=[]; principal=False
     dm=dias_para_mayoria(fn) if fn else None
     if dm is not None and 1 <= dm <= parametro('mayoria'):
@@ -53,7 +53,7 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
     # Orden aprobado: estado principal; hitos procesales; acciones/sugerencias.
     frags += _oido(row, cols)
-    aud=_audiencia(row, cols)
+    aud=_audiencia(row, cols, incidencias, fila_excel)
     if aud: frags.append(aud)
     frags += _curador(row, cols)
     pnrm=normalizar(programa)

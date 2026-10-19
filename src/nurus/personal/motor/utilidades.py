@@ -184,6 +184,39 @@ def prefijo_observacion(nombre, programa):
     return ""
 
 
+_SEPARADOR_FECHAS = re.compile(r'\s*[,;\n]\s*')
+
+
+def fechas_varias(val):
+    """Celda con una o varias fechas (RUS V11: «Prox. Auds.» separadas por coma).
+
+    Retorna (fechas legibles, cantidad de partes ilegibles). Una fecha única se lee igual que get_date.
+    """
+    unica = get_date(val)
+    if unica is not None:
+        return [unica], 0
+    if val is None or str(val).strip().lower() in _VALORES_VACIOS:
+        return [], 0
+    fechas, ilegibles = [], 0
+    for parte in _SEPARADOR_FECHAS.split(str(val).strip()):
+        if parte.lower() in _VALORES_VACIOS:
+            continue
+        fecha = get_date(parte)
+        if fecha is None:
+            ilegibles += 1
+        else:
+            fechas.append(fecha)
+    return fechas, ilegibles
+
+
+def lista_fechas_es(fechas):
+    """«el A y el B» o «el A, el B y el C», en el orden recibido."""
+    partes = ['el ' + fecha_es(f) for f in fechas]
+    if len(partes) <= 1:
+        return ''.join(partes)
+    return ', '.join(partes[:-1]) + ' y ' + partes[-1]
+
+
 def audiencia_suffix(row, cols):
     """Sufijo de audiencia. Filtra fechas pasadas."""
     col = cols.get("prox_aud")

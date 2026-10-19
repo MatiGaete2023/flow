@@ -17,6 +17,9 @@
     },
     "PROX_AUDIENCIA": {
       "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}."
+    },
+    "PROX_AUDIENCIAS": {
+      "texto": "Audiencias fijadas para {FECHAS_AUDIENCIA}."
     }
   },
   "ESPERA": {
