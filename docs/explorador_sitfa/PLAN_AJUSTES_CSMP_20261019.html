@@ -1,0 +1,261 @@
+<title>Plan de ajustes CSMP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: columna de lectura con mapa hecho→vistas al centro y cuestionario al final */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#1b2430; --muted:#5a6676; --line:#d9dee6;
+  --accent:#1f5f8b; --accent-soft:#e3eef6;
+  --ok:#2f7a4a; --ok-soft:#e2f2e7; --warn:#9a6a10; --warn-soft:#f8eed8; --risk:#a8352f; --risk-soft:#f8e3e1;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --surface:#1a2028; --ink:#e4e9ef; --muted:#9aa6b4; --line:#2e3742;
+  --accent:#6fb0dc; --accent-soft:#1c2e3c;
+  --ok:#7cc795; --ok-soft:#1b2f23; --warn:#e2b55a; --warn-soft:#33291a; --risk:#ec8a83; --risk-soft:#3a2120; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --surface:#1a2028; --ink:#e4e9ef; --muted:#9aa6b4; --line:#2e3742;
+  --accent:#6fb0dc; --accent-soft:#1c2e3c;
+  --ok:#7cc795; --ok-soft:#1b2f23; --warn:#e2b55a; --warn-soft:#33291a; --risk:#ec8a83; --risk-soft:#3a2120; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:1.75rem} h2{font-size:1.3rem;padding-bottom:6px;border-bottom:2px solid var(--line)} h3{font-size:1.05rem}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font:500 .75rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:68ch}
+.mono{font-family:var(--f-mono);font-size:.86em}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px}
+nav.toc a{color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--surface);padding:5px 10px;border-radius:6px;font-size:.88rem}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--accent)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box.key{border-left:4px solid var(--accent)}
+ul,ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.9rem}
+.chain .node{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.chain .node.src{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.chain .arr{color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:.88rem}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font:500 .72rem var(--f-mono);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-risk{background:var(--risk-soft);color:var(--risk)} .p-info{background:var(--accent-soft);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.85rem;color:var(--muted)}
+form{display:flex;flex-direction:column;gap:16px}
+fieldset{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-weight:700;padding:0 6px}
+.hint{color:var(--muted);font-size:.86rem}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.opts input{margin-top:4px}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{min-height:70px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:600 .95rem var(--f-body);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;background:var(--accent);color:var(--surface)}
+button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+#status{color:var(--ok);font-size:.9rem}
+#out{font-family:var(--f-mono);font-size:.82rem;min-height:180px}
+.small{font-size:.85rem;color:var(--muted)}
+.qid{font:600 .8rem var(--f-mono);color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="eyebrow">FLOW · Descargador SITFA y Asistente CSMP · informe final · 19 oct 2026</span>
+    <h1>Plan de ajustes a partir del Explorador SITFA y las nomenclaturas</h1>
+    <p class="lead">Cierra el análisis con tus respuestas a las 16 preguntas. Contiene el modelo final de hechos, qué cambia en cada herramienta, en qué orden y qué autorización requiere cada cambio. Todavía no se modificó ninguna herramienta.</p>
+    <nav class="toc" aria-label="Índice">
+      <a href="#decisiones">1. Decisiones registradas</a><a href="#correccion">2. Corrección importante</a><a href="#modelo">3. Modelo de hechos</a>
+      <a href="#asistente">4. Ajustes Asistente</a><a href="#descargador">5. Ajustes Descargador</a><a href="#orden">6. Orden</a><a href="#preguntas">7. Último paso</a>
+    </nav>
+    <p class="legend"><span class="pill p-ok">HECHO</span> comprobado <span class="pill p-warn">INFERENCIA</span> deducción con supuesto <span class="pill p-risk">REQUIERE</span> autorización o dato tuyo</p>
+  </header>
+
+  <section id="decisiones">
+    <h2>1. Decisiones registradas</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Tema</th><th>Tu decisión</th><th>Consecuencia</th></tr></thead>
+      <tbody>
+        <tr><td>Hoja2</td><td>Es el Excel del calendario «Informes por vencer» (menú 91)</td><td>C-10 cruza hoy ese calendario por RIT, RUT y nombre (sin identidad por ingreso)</td></tr>
+        <tr><td>Vencimiento de la pestaña Informes</td><td>Es la próxima proyección PENDIENTE</td><td>Pestaña Informes, calendario 91 y calendario por ingreso son <strong>vistas del mismo hecho</strong></td></tr>
+        <tr><td>Estados del calendario</td><td>Solo PENDIENTE y ENVIADO; los pendientes se ven en Informes → vencidos</td><td>Lo que sigue en la pestaña Informes ya excluye lo enviado (§2)</td></tr>
+        <tr><td>Nomenclaturas del informe</td><td>Escrito «Inf cumplimiento ambulatorio / FAE / residencial»; resolución con la nomenclatura «Ingreso informe cumplimiento X»</td><td>Se separan dos hechos: el informe <strong>llega</strong> (escrito) y el informe <strong>se provee</strong> (resolución)</td></tr>
+        <tr><td>Calendario como fuente</td><td>Sí, manteniendo Hoja2 y comparando ambas</td><td>CAL-03 como incidencia de cotejo</td></tr>
+        <tr><td>Propuestas retiradas</td><td>Q-01, Q-02, B-04, CAL-02 (a I-01), CAL-04, H-03, H-04, H-05</td><td>Fuera del plan</td></tr>
+        <tr><td>Órdenes de búsqueda</td><td>Reabrir OB-01 a OB-05 en «solo mostrar»</td><td>El Asistente debe leer BusquedaLit, que hoy no procesa</td></tr>
+        <tr><td>80 BIS y Ficha Ambulatoria</td><td>Sin regla; F.Amb sigue rechazada</td><td>Sin cambios</td></tr>
+        <tr><td>DCE</td><td>1 mes de plazo + margen hasta 40 días</td><td>Explica el conflicto abierto: hoy I-01 DCE pide cuenta desde el día 31 (§4, WA-7)</td></tr>
+        <tr><td>Audiencias múltiples</td><td>Mostrar todas, no solo la próxima</td><td>Corregir el lector y agregar una variante plural del texto T-03 (requiere acta)</td></tr>
+        <tr><td>Informe Mejor Niñez / pide cuenta</td><td>No se usa; el proyecto E-05 se envía igual</td><td>PC-01 descartada</td></tr>
+        <tr><td>Explorador</td><td>Sin autorizaciones</td><td>No se toca</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="correccion">
+    <h2>2. Corrección importante que surge de tus respuestas</h2>
+    <div class="box key">
+      <p><strong>CAL-01 («no pedir cuenta si el informe figura ENVIADO») también es redundante.</strong> Si la pestaña Informes solo muestra proyecciones PENDIENTES, un informe enviado ya no genera I-01. Sería otra vista del mismo hecho. <span class="pill p-warn">INFERENCIA</span> basada en P2 y P3.</p>
+      <p><strong>El vacío real es otro hecho:</strong> el programa ya presentó el escrito «Inf cumplimiento…», pero aún no se dicta la resolución con «Ingreso informe cumplimiento X». Mientras tanto la proyección sigue PENDIENTE y figura vencida en Informes. Entonces I-01 propone pedir cuenta de un informe que ya llegó y espera ser proveído.</p>
+      <p>Solo la <strong>historia de la causa</strong> distingue «llegó» de «se proveyó». Por eso H-02, acotado a «escrito de informe sin resolución que lo provea», pasa a ser la regla más valiosa del paquete de historia.</p>
+    </div>
+  </section>
+
+  <section id="modelo">
+    <h2>3. Modelo final de hechos (una fuente que dispara, el resto coteja)</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Hecho</th><th>Fuente que dispara</th><th>Vistas de cotejo</th><th>Reglas</th></tr></thead>
+      <tbody>
+        <tr><td>Ingreso ordenado (Ingreso serv. protección especializada)</td><td>Excel Espera</td><td>Historia</td><td>E-04, E-05, E-06</td></tr>
+        <tr><td>Ingreso efectivo</td><td>Excel Cumplimiento</td><td>Calendario (cabecera), historia</td><td>C-03, C-08, Q-03</td></tr>
+        <tr><td>Egreso proyectado (plazo + prórrogas)</td><td>Excel Cumplimiento</td><td>Última proyección del calendario</td><td>C-04, C-05, N-01</td></tr>
+        <tr><td>Informe proyectado pendiente</td><td>Pestaña Informes</td><td>Calendario 91 (Hoja2), calendario por ingreso</td><td>I-01, I-02, C-10, CAL-03</td></tr>
+        <tr><td>Informe <strong>llegó</strong> («Inf cumplimiento…»)</td><td>Historia</td><td>—</td><td>H-02 (paquete historia)</td></tr>
+        <tr><td>Informe <strong>proveído</strong> («Ingreso informe cumplimiento X»)</td><td>Calendario ENVIADO / sale de Informes</td><td>Historia</td><td>Ya cubierto por I-01</td></tr>
+        <tr><td>Audiencias</td><td>Columna «Prox. Auds.» (todas)</td><td>Historia, BusquedaLit</td><td>T-03, N-02, OB-05</td></tr>
+        <tr><td>Curador</td><td>Columna «Curador»</td><td>Litigantes, BusquedaLit</td><td>T-01, OB-04</td></tr>
+        <tr><td>Orden de búsqueda</td><td>Excel BusquedaLit</td><td>Consulta de litigante</td><td>OB-01..OB-05</td></tr>
+        <tr><td>Egreso</td><td>Excel Egresados</td><td>Historia</td><td>N-04</td></tr>
+        <tr><td>Observaciones centro ↔ tribunal</td><td>Bitácora RUS</td><td>—</td><td>CT-01, CT-02, B-01, B-02, B-03</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="asistente">
+    <h2>4. Ajustes al Asistente</h2>
+    <p class="lead">«Solo mostrar» significa que el aviso aparece en pantalla y no cambia el texto de la observación hasta el acta. El motor y los textos solo cambian donde se indica.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Qué hace</th><th>Toca</th><th>Requiere</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">WA-1</td><td><strong>Audiencias múltiples (BUG-01).</strong> Leer todas las fechas de «Prox. Auds.», conservar las futuras y registrar una incidencia si una fecha no se entiende. Texto plural propuesto: «Audiencias fijadas para el {FECHA_1} y el {FECHA_2}.» (con 3 o más: «el A, el B y el C»).</td><td><span class="mono">motor/utilidades.py</span>, <span class="mono">reglas_espera.py</span>, <span class="mono">textos_base.json</span></td><td><span class="pill p-risk">REQUIERE</span> tu aprobación del texto plural, paridad golden y revisión E3</td></tr>
+        <tr><td class="mono">WA-2</td><td><strong>Bitácora:</strong> B-01 (la propuesta repite la última observación del tribunal), B-02 (correo de E-05 enviado hace ≥30 días sin ingreso efectivo: sugerir proyecto), B-03 (observación del centro sin respuesta ≥30 días). Solo mostrar.</td><td>Capa de contexto (catálogo CT)</td><td>E3 (contrato de contexto)</td></tr>
+        <tr><td class="mono">WA-3</td><td><strong>Q-03:</strong> mismo ingreso en dos pestañas del mismo lote; genera una incidencia.</td><td>Importación y validación</td><td><code>verificar_wp.py</code> PASA</td></tr>
+        <tr><td class="mono">WA-4</td><td><strong>Excel:</strong> N-01 (medida más allá de la mayoría), N-02 (informe vence hasta 30 días después de la audiencia), N-03 (agrupar ingresos de una causa en la bandeja), N-04 (egresado con informe pendiente). Solo mostrar.</td><td>Capa de contexto y bandeja</td><td>E3 en N-03 si toca borradores</td></tr>
+        <tr><td class="mono">WA-5</td><td><strong>Órdenes de búsqueda:</strong> leer BusquedaLit (encabezado en la fila 4; 23 columnas; fechas en dos formatos; edad calculada desde el nacimiento) y avisar OB-01 (activa sin resultado más de N días), OB-02 (mayor de 18), OB-03 (envío no «Realizada»), OB-04 (sin curador), OB-05 (audiencia próxima). Solo mostrar, sin cruces con otras fuentes.</td><td>Importador nuevo y vista nueva</td><td><span class="pill p-risk">REQUIERE</span> el valor de N para OB-01</td></tr>
+        <tr><td class="mono">WA-6</td><td><strong>CAL-03:</strong> incidencia cuando la pestaña Informes, Hoja2 y el calendario por ingreso no coinciden.</td><td>Conciliación</td><td>Depende de WD-1</td></tr>
+        <tr><td class="mono">WA-7</td><td><strong>DCE a 40 días:</strong> hoy I-01 DCE propone proyecto desde el día 31 (vencimiento = ingreso + 1 mes). Según tu respuesta, el Manual CSMP pide cuenta pasados los 40 días. Opción: I-01 DCE desde vencimiento + 10 días e I-02 DCE en el intervalo.</td><td><span class="mono">motor/reglas_informes.py</span></td><td><span class="pill p-risk">REQUIERE</span> decisión expresa (cambia una regla del motor)</td></tr>
+        <tr><td class="mono">WA-8</td><td><strong>Historia (después):</strong> H-01 (trámites desde la última revisión) y H-02 (escrito «Inf cumplimiento…» sin «Ingreso informe cumplimiento X»: avisar antes de proponer pedir cuenta en I-01).</td><td>Rama de historia + contexto</td><td>Integrar la rama de historia (tu decisión: más adelante)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="descargador">
+    <h2>5. Ajustes al Descargador</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Qué hace</th><th>Requiere</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">WD-1</td><td><strong>Calendario por ingreso.</strong> Leer la ventana del calendario (<span class="mono">tipo_popUp=8</span>, misma ruta que la bitácora) para cada ingreso de Cumplimiento e Informes. Exporta plazo de remisión, plazo de intervención y cada proyección con fecha de informe y estado.</td><td><span class="pill p-risk">REQUIERE</span> los nombres de los parámetros de la dirección (pregunta 4) y revisión E3 (extensión)</td></tr>
+        <tr><td class="mono">WD-2</td><td><strong>Captura focalizada:</strong> bitácora, calendario o historia solo de los ingresos que pide el Asistente.</td><td>E3 (extensión)</td></tr>
+        <tr><td class="mono">WD-3</td><td><strong>Diccionario de códigos</strong> (tipos de informe, estados de búsqueda) dentro del paquete.</td><td>Contrato aditivo 1.x (E3)</td></tr>
+        <tr><td class="mono">WD-4</td><td><strong>BusquedaLit en el paquete CSMP</strong> como tabla opcional, para que el Asistente la importe junto con el resto.</td><td>Contrato aditivo 1.x (E3)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section id="orden">
+    <h2>6. Orden recomendado</h2>
+    <ol>
+      <li><strong>WA-3 + lector de WA-1</strong>: lo más chico. Corrige que hoy se pierdan las audiencias y agrega la incidencia, sin texto nuevo. El texto plural entra cuando lo apruebes.</li>
+      <li><strong>WA-2 Bitácora</strong>, con los datos que ya se descargan.</li>
+      <li><strong>WD-4 + WA-5 Órdenes de búsqueda.</strong></li>
+      <li><strong>WA-4 Excel</strong> y <strong>WD-2/WD-3</strong>.</li>
+      <li><strong>WD-1 + WA-6 Calendario</strong>, cuando tenga los parámetros de la dirección.</li>
+      <li><strong>WA-7 DCE</strong> según tu decisión; <strong>WA-8 Historia</strong> después.</li>
+    </ol>
+    <p class="small">Trabajaría en mi rama, reconstruida sobre <span class="mono">feat/ejecucion-plan-20261008</span>, con <code>python tools/verificar_wp.py</code> en cada paso. No fusiono a <span class="mono">feat</span> ni a <span class="mono">main</span>: eso lo haces tú.</p>
+  </section>
+
+  <section id="preguntas">
+    <h2>7. Último paso antes de implementar</h2>
+    <form id="f">
+      <fieldset>
+        <legend><span class="qid">1</span> ¿Parto implementando según el orden de la sección 6?</legend>
+        <div class="opts">
+          <label><input type="radio" name="q1" id="q1a" value="Sí, en el orden propuesto" checked> Sí, en el orden propuesto</label>
+          <label><input type="radio" name="q1" id="q1b" value="Sí, pero con otro orden (indicado en comentarios)"> Sí, con otro orden (indícalo en comentarios)</label>
+          <label><input type="radio" name="q1" id="q1c" value="No todavía"> No todavía</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">2</span> Texto plural de T-03</legend>
+        <div class="opts">
+          <label><input type="radio" name="q2" id="q2a" value="Apruebo: «Audiencias fijadas para el A y el B.»" checked> Apruebo: «Audiencias fijadas para el {A} y el {B}.»</label>
+          <label><input type="radio" name="q2" id="q2b" value="Otro texto (en comentarios)"> Otro texto (escríbelo en comentarios)</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">3</span> DCE (WA-7)</legend>
+        <div class="opts">
+          <label><input type="radio" name="q3" id="q3a" value="Cambiar I-01 DCE a vencimiento + 10 días"> Cambiar I-01 DCE: proyecto desde vencimiento + 10 días (40 días desde el ingreso)</label>
+          <label><input type="radio" name="q3" id="q3b" value="Solo mostrar aviso entre día 31 y 40" checked> Mantener la regla y solo mostrar un aviso entre los días 31 y 40</label>
+          <label><input type="radio" name="q3" id="q3c" value="No cambiar nada"> No cambiar nada</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">4</span> Dirección del calendario (para WD-1)</legend>
+        <label for="q4" class="hint">Abre un calendario, haz clic en la barra de direcciones, copia y pega aquí la dirección <strong>cambiando cada número por X</strong>.</label>
+        <input type="text" id="q4" placeholder="familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?tipo_popUp=8&ID_Ingreso=X&TIP_Programa=X&CRR_Id…">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">5</span> OB-01: ¿cuántos días sin resultado para avisar?</legend>
+        <input type="text" id="q5" value="60">
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">6</span> Confirmación</legend>
+        <div class="opts">
+          <label><input type="checkbox" id="q6" value="Confirmo: en Informes → vencidos solo aparecen proyecciones PENDIENTES" checked> Confirmo: en Informes → vencidos solo aparecen proyecciones PENDIENTES</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="qid">7</span> Comentarios</legend>
+        <label for="q7" class="hint">Opcional</label>
+        <textarea id="q7"></textarea>
+      </fieldset>
+      <div class="actions">
+        <button type="submit" id="copiar">Copiar respuestas</button>
+        <button type="button" class="sec" id="limpiar">Borrar formulario</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
+      <label for="out" class="hint">Texto que se copia. Si el botón no funciona, selecciónalo y cópialo a mano.</label>
+      <textarea id="out" readonly></textarea>
+    </form>
+  </section>
+  <p class="small">Fuentes: análisis previos en <span class="mono">docs/explorador_sitfa/</span>, catálogo <span class="mono">docs/REFERENCIA_CATALOGO_ASISTENTE.md</span>, motor en <span class="mono">feat@0ff63a1</span>, compilado «Mejoras SITFA» 2015-2026 y tus respuestas.</p>
+</div>
+
+<script>
+(()=>{
+  const f=document.getElementById('f'),out=document.getElementById('out'),st=document.getElementById('status');
+  const KEY='plan_ajustes_v1';
+  const fields=[...f.querySelectorAll('input,textarea')].filter(e=>e.id&&e.id!=='out');
+  const v=id=>document.getElementById(id);
+  const pick=n=>{const e=f.querySelector('input[name='+n+']:checked');return e?e.value:'sin respuesta'};
+  function save(){try{const d={};fields.forEach(e=>{d[e.id]=(e.type==='checkbox'||e.type==='radio')?e.checked:e.value});localStorage.setItem(KEY,JSON.stringify(d))}catch(_){}}
+  function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return;fields.forEach(e=>{if(!(e.id in d))return;if(e.type==='checkbox'||e.type==='radio')e.checked=d[e.id];else e.value=d[e.id]})}catch(_){}}
+  function build(){
+    return ['RESPUESTAS · PLAN DE AJUSTES CSMP',
+      '1 Implementar: '+pick('q1'),
+      '2 Texto T-03 plural: '+pick('q2'),
+      '3 DCE: '+pick('q3'),
+      '4 URL calendario: '+(v('q4').value.trim()||'sin respuesta'),
+      '5 OB-01 días: '+(v('q5').value.trim()||'sin respuesta'),
+      '6 Informes vencidos solo PENDIENTE: '+(v('q6').checked?'confirmado':'no confirmado'),
+      '7 Comentarios: '+(v('q7').value.trim()||'ninguno')].join('\n');
+  }
+  function refresh(){out.value=build();save()}
+  load();refresh();
+  f.addEventListener('input',refresh);f.addEventListener('change',refresh);
+  f.addEventListener('submit',async e=>{e.preventDefault();refresh();
+    try{await navigator.clipboard.writeText(out.value);st.textContent='Copiado. Pégalo en el chat.'}
+    catch(_){out.focus();out.select();st.textContent='No se pudo copiar automáticamente: el texto quedó seleccionado; usa Ctrl+C.'}});
+  v('limpiar').addEventListener('click',()=>{try{localStorage.removeItem(KEY)}catch(_){};f.reset();refresh();st.textContent='Formulario reiniciado.'});
+})();
+</script>
