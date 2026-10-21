@@ -128,6 +128,8 @@ TABLES = {
         'recoverable',
     ),
 }
+# Columnas aditivas al final: solo se escriben si alguna fila las trae; el lector acepta columnas extra al final.
+EXTENSIONS = {'historia_tramites': ('folio', 'stage', 'annex_visible', 'raw_json')}
 # Baseline: 200k filas, respuesta 80 MiB, HTML 8 MiB. Límites agregados conservadores.
 MAX_BYTES = 80 * 1024 * 1024
 MAX_FIELD = 8 * 1024 * 1024
@@ -263,15 +265,17 @@ def check_workbook(raw):
 
 
 def csv_bytes(table, rows):
+    rows = list(rows)
+    columns = TABLES[table] + tuple(c for c in EXTENSIONS.get(table, ()) if any(c in r for r in rows))
     stream = StringIO(newline='')
-    writer = csv.DictWriter(stream, fieldnames=TABLES[table], lineterminator='\n')
+    writer = csv.DictWriter(stream, fieldnames=columns, lineterminator='\n')
     writer.writeheader()
     for row in rows:
-        if set(row) - set(TABLES[table]):
+        if set(row) - set(columns):
             fail('Columnas no definidas en ' + table)
         if any(not isinstance(v, str) for v in row.values()):
             fail('Valores CSV deben ser texto; IDs nunca números.')
-        writer.writerow({k: row.get(k, '') for k in TABLES[table]})
+        writer.writerow({k: row.get(k, '') for k in columns})
     return stream.getvalue().encode('utf-8')
 
 
@@ -439,6 +443,8 @@ def _validate_rows(m, tables):
                     or row['origin_verified'] not in ('true', 'false')
                 ):
                     fail('Origen no válido.')
+                if row.get('annex_visible', 'false') not in ('true', 'false'):
+                    fail('Anexo visible inválido.')
                 if row.get('scope') == 'CAUSA' and row['ingreso_id']:
                     fail('Trámite de causa no atribuible a ingreso.')
                 if row.get('scope') and row['scope'] not in ('CAUSA', 'INGRESO'):

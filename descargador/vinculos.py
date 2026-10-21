@@ -13,10 +13,34 @@ def visible_cell_text(cell):
     return ' '.join(' '.join(parts).split())
 
 
+def javascript_tokens(text):
+    """Tokens léxicos conservadores. Plantillas y regex nunca aportan llamadas.
+
+    Ante una barra ambigua se descarta el posible literal completo: preferimos no
+    reconocer una acción a atribuir una identidad tomada de texto.
+    """
+    pattern = re.compile(
+        r"(?P<comment>//[^\n]*|/\*[\s\S]*?(?:\*/|$))"
+        r"|(?P<string>\"(?:\\[\s\S]|[^\"\\])*?(?:\"|$)|'(?:\\[\s\S]|[^'\\])*?(?:'|$)|`(?:\\[\s\S]|[^`\\])*?(?:`|$))"
+        r"|(?P<regex>/(?![/*])(?:\\[^\n]|\[(?:\\[^\n]|[^\]\\\n])*\]|[^/\\\n])+/[a-z]*)"
+        r"|(?P<identifier>[A-Za-z_$][\w$]*)"
+        r"|(?P<other>[\s\S])"
+    )
+    for match in pattern.finditer(str(text or '')):
+        yield match.lastgroup, match.group(), match.start(), match.end()
+
+
+def javascript_code(text):
+    return ''.join(
+        value if kind not in ('string', 'comment', 'regex') else ' ' * len(value)
+        for kind, value, _, _ in javascript_tokens(text)
+    )
+
+
 def calls(text, name):
     """Lectura de argumentos literales, respetando comas/paréntesis en textos."""
     result = []
-    for match in re.finditer(r'\b' + re.escape(name) + r'\s*\(', text):
+    for match in re.finditer(r'(?<![\w$.])' + re.escape(name) + r'\s*\(', javascript_code(text)):
         start = match.end()
         items = []
         token = ''
@@ -131,6 +155,68 @@ def extract(table, tribunal_code):
                 # Los 12 argumentos literales de la lupa «Inf.» permiten abrir el calendario de informes (WD-1).
                 entry.update(persona_id=cal[1], centro_id=cal[3], calendario=list(cal))
         result.append(entry)
+    return result
+
+
+def extract_historia(table, tribunal_code):
+    """Vínculo de historia por fila (alcance CAUSA): exactamente un ShowHistoria(tribunal, RIT, causa) concordante.
+
+    No exige ShowObservaciones. Si la fila trae además una observación de la misma causa y tribunal, se informa su
+    ingreso solo para la hoja de vínculos; los trámites nunca se atribuyen al ingreso. `identidad` es 'INCIERTA'
+    cuando el listado asocia un RIT a dos causas o una causa a dos RIT: esas causas no se leen.
+    """
+    import motor as m
+
+    headers = None
+    result = []
+    for tr in table.xpath('./tr | ./tbody/tr | ./thead/tr'):
+        cells = tr.xpath('./th | ./td')
+        values = [visible_cell_text(c) for c in cells]
+        normalized = [m.normalized(v) for v in values]
+        if 'RIT' in normalized and any(v in ('NOMBRE', 'NOMBRE MENOR') for v in normalized):
+            keys = {
+                'rit': ['RIT'],
+                'nombre': ['NOMBRE', 'NOMBRE MENOR'],
+                'rut': ['RUT', 'RUT (->RCEI)'],
+                'programa': ['DERIVACION', 'NOMBRE CENTRO', 'PROGRAMA'],
+            }
+            found = {k: [i for i, v in enumerate(normalized) if v in aliases] for k, aliases in keys.items()}
+            headers = {k: items[0] for k, items in found.items()} if all(len(i) == 1 for i in found.values()) else None
+            continue
+        if not headers or len(values) <= max(headers.values()):
+            continue
+        rit = m.normalized(values[headers['rit']])
+        if not re.fullmatch(r'[A-Z]{1,3}-\d{1,7}-\d{4}', rit):
+            continue
+        text = ' '.join(n.get(attr, '') for n in tr.xpath('.//*[@onclick or @href]') for attr in ('onclick', 'href'))
+        history = calls(text, 'ShowHistoria')
+        if len(history) != 1 or len(history[0]) != 3:
+            continue
+        court, linked_rit, cause = history[0]
+        if court != tribunal_code or m.normalized(linked_rit) != rit or not re.fullmatch(r'\d{1,20}', cause):
+            continue
+        entry = {k: values[i] for k, i in headers.items()}
+        entry.update(
+            tribunal_codigo=tribunal_code, causa_id=cause, ingreso_id='', identidad='VERIFICADA', rit_enlace=linked_rit
+        )
+        observation = calls(text, 'ShowObservaciones')
+        if (
+            len(observation) == 1
+            and len(observation[0]) == 6
+            and observation[0][0] == cause
+            and observation[0][1] == tribunal_code
+            and re.fullmatch(r'\d{1,20}', observation[0][2])
+        ):
+            entry['ingreso_id'] = observation[0][2]
+        result.append(entry)
+    # Un RIT con dos causas, o una causa con dos RIT, en el mismo listado: no se abre ninguna de ellas.
+    causas_por_rit, rits_por_causa = defaultdict(set), defaultdict(set)
+    for entry in result:
+        causas_por_rit[m.normalized(entry['rit'])].add(entry['causa_id'])
+        rits_por_causa[entry['causa_id']].add(m.normalized(entry['rit']))
+    for entry in result:
+        if len(causas_por_rit[m.normalized(entry['rit'])]) > 1 or len(rits_por_causa[entry['causa_id']]) > 1:
+            entry['identidad'] = 'INCIERTA'
     return result
 
 

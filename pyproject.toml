@@ -15,8 +15,6 @@ excel-legacy = ["xlrd>=2.0.1"]
 excel-native = ["pywin32>=306; platform_system == 'Windows'"]
 outlook = ["pywin32>=306; platform_system == 'Windows'"]
 
-performance = ["py-spy>=0.4,<1", "pyinstrument>=5,<6"]
-
 [project.scripts]
 nurus = "nurus.personal.app:main"
 csmp-assistant = "nurus.personal.app:main"

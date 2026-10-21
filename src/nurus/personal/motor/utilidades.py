@@ -10,10 +10,8 @@ Optimizaciones:
 import re
 import unicodedata
 import math
-import zipfile
 from datetime import datetime
 from .contexto import datetime as Clock
-from pathlib import Path
 import pandas as pd
 
 _PREPOSICIONES  = {"de", "del", "los", "las", "y", "en", "el", "la", "por", "con", "a"}
@@ -34,9 +32,6 @@ _ESPACIOS_RE     = re.compile(r'\s+')
 _GUIONES_RE      = re.compile(r'[-().]+')
 _NO_LETRAS_RE    = re.compile(r'[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]')
 _SEP_PROG_RE     = re.compile(r'[\s\-]+')
-_EXTENSIONES_EXCEL = {".xls", ".xlsx", ".xlsm"}
-_MAX_FILAS_EXCEL = 50_000
-_MAX_COLUMNAS_EXCEL = 100
 
 
 # ── fechas ────────────────────────────────────────────────────────────────────
@@ -73,78 +68,6 @@ def normalizar(txt):
     txt = txt.lower().strip()
     txt = _GUIONES_RE.sub(" ", txt)
     return _ESPACIOS_RE.sub(" ", txt).strip()
-
-
-def normalizar_match(txt):
-    """
-    Normalización para cruce entre hojas.
-    Limpia (), guard pd.isna() con try/except (protege contra listas/arrays).
-    """
-    try:
-        if pd.isna(txt):
-            return ""
-    except (TypeError, ValueError):
-        pass
-    # G-08: conservar EXACTAMENTE la normalización histórica del cruce Hoja2
-    # (sin quitar tildes ni guiones — cambiarla altera qué filas matchean).
-    s = _PAREN_RE.sub('', str(txt))
-    s = _PAREN_SUELTO_RE.sub('', s)
-    return _ESPACIOS_RE.sub(' ', s.strip().lower())
-
-
-def es_texto_formula(valor) -> bool:
-    """True si openpyxl interpretaría el valor como fórmula al escribirlo.
-
-    Solo el prefijo '=' se convierte en fórmula en un .xlsx generado por
-    openpyxl. No se altera el valor (el viejo prefijo apóstrofe corrompía
-    placeholders legítimos como '---'): el guardado fuerza data_type='s'.
-    """
-    return isinstance(valor, str) and valor.lstrip().startswith("=")
-
-
-def _validar_dimensiones_xlsx(path: Path, *, max_filas: int, max_columnas: int) -> None:
-    """Rechaza libros XLSX/XLSM con dimensiones incompatibles con el flujo RUS."""
-    from openpyxl import load_workbook
-
-    workbook = load_workbook(path, read_only=True, data_only=True)
-    try:
-        for hoja in workbook.worksheets:
-            filas = hoja.max_row or 0
-            columnas = hoja.max_column or 0
-            if filas > max_filas or columnas > max_columnas:
-                raise ValueError(
-                    f"El libro Excel supera el máximo permitido "
-                    f"({max_filas} filas / {max_columnas} columnas por hoja): "
-                    f"hoja {hoja.title!r} tiene {filas} filas y {columnas} columnas"
-                )
-    finally:
-        workbook.close()
-
-
-def validar_archivo_excel(ruta, *, max_bytes=100 * 1024 * 1024,
-                          max_descomprimido=200 * 1024 * 1024,
-                          max_filas=_MAX_FILAS_EXCEL,
-                          max_columnas=_MAX_COLUMNAS_EXCEL) -> Path:
-    """Valida tipo y límites básicos antes de abrir un Excel seleccionado."""
-    path = Path(ruta).expanduser()
-    if not path.is_file():
-        raise FileNotFoundError(f"Archivo Excel no encontrado: {path}")
-    if path.suffix.lower() not in _EXTENSIONES_EXCEL:
-        raise ValueError(f"Extensión Excel no permitida: {path.suffix or '(sin extensión)'}")
-    if path.stat().st_size > max_bytes:
-        raise ValueError("El archivo Excel supera el tamaño máximo permitido")
-
-    if path.suffix.lower() in {".xlsx", ".xlsm"}:
-        if not zipfile.is_zipfile(path):
-            raise ValueError("El archivo no es un libro XLSX/XLSM válido")
-        with zipfile.ZipFile(path) as archivo:
-            miembros = archivo.infolist()
-            if len(miembros) > 10_000:
-                raise ValueError("El libro Excel contiene demasiados componentes")
-            if sum(miembro.file_size for miembro in miembros) > max_descomprimido:
-                raise ValueError("El contenido descomprimido del Excel supera el límite")
-        _validar_dimensiones_xlsx(path, max_filas=max_filas, max_columnas=max_columnas)
-    return path
 
 
 def titulo_programa(txt):
@@ -217,30 +140,8 @@ def lista_fechas_es(fechas):
     return ', '.join(partes[:-1]) + ' y ' + partes[-1]
 
 
-def audiencia_suffix(row, cols):
-    """Sufijo de audiencia. Filtra fechas pasadas."""
-    col = cols.get("prox_aud")
-    if not col:
-        return ""
-    fec = get_date(row.get(col))
-    if not fec:
-        return ""
-    fec_date = fec.date() if hasattr(fec, "date") else fec
-    if fec_date < Clock.now().date():
-        return ""
-    return f". Se cita a audiencia para el día {fecha_es(fec)}."
-
-
 # ── detecciones ───────────────────────────────────────────────────────────────
 
-def detectar_tribunal(valor):
-    if not valor:
-        return None
-    t = normalizar(valor).upper()
-    if "MULCHEN" in t: return "MULCHEN"
-    if "LAJA"   in t: return "LAJA"
-    if "TOME"   in t: return "TOME"
-    return None
 
 
 def contiene_token(texto, *tokens) -> bool:

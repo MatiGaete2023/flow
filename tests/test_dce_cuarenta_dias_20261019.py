@@ -26,7 +26,7 @@ def test_dce_vencido_hasta_diez_dias_recibe_correo_con_fecha_limite(tmp_path, as
 def test_dce_vencido_mas_de_diez_dias_pide_cuenta(tmp_path):
     row = _fila(tmp_path, 'DCE CENTRO', date(2026, 9, 23))
     assert row.actions == ['programa_vencido', 'PC_INFO']
-    assert 'informe diagnóstico vencido desde el 12 de septiembre de 2026' in row.observation
+    assert 'Informe diagnóstico vencido desde el 12 de septiembre de 2026' in row.observation
 
 
 def test_programas_no_dce_mantienen_el_pide_cuenta_desde_el_primer_dia(tmp_path):

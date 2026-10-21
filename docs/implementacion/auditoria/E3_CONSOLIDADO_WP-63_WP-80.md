@@ -30,7 +30,7 @@ el supuesto explícito.
 | Commits / archivos | 20 / 56 (+4.068/−542) | 18 / 61 (+625/−307) |
 | Base | `2cf8ca8` (punta de `feat`, sin cambios) | `2cf8ca8` |
 | Estado / CI | borrador · CI verde (2/2) | borrador · CI verde (2/2) |
-| Ejecutor | Codex (commits firmados «el usuario titular») | Claude |
+| Ejecutor | Codex (commits firmados con la identidad del usuario) | Claude |
 
 - Las dos ramas modifican 17 archivos en común.
 - Una fusión de prueba de ambas da **8 conflictos de contenido**:

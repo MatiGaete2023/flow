@@ -454,8 +454,11 @@ PESTANAS_CALENDARIO = ('Cumplimiento', 'Informes')
 
 
 class DiaryRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, calendars=False):
+    def __init__(
+        self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, calendars=False, historia=None
+    ):
         self.bridge, self.catalog, self.emit, self.cancel = bridge, catalog, emit, cancel
+        self.historia = historia
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
         # Casilla del usuario (19-oct-2026); cada calendario cuenta en MAX_LECTURAS_POR_LOTE.
@@ -476,6 +479,8 @@ class DiaryRunner:
             session.persistir()
             self.bridge.call('lock')
             session.locked = True
+            if self.historia:
+                self._historia('abrir', session.folder)
             for index, selection in enumerate(plan, 1):
                 if not self.enumerar_listado(session, batch, selection, index, len(plan)):
                     break
@@ -492,8 +497,26 @@ class DiaryRunner:
         except m.PocError as exc:
             state.update(estado='CANCELADA' if self.cancel.is_set() else 'INCOMPLETA', error=str(exc))
         finally:
+            if self.historia:
+                self._historia('cerrar', state['estado'])
             self._cerrar(session)
         return self._resultado(session)
+
+    def _historia(self, operacion, *args):
+        """La historia es opcional: ni su almacenamiento ni el aviso afectan las bitácoras."""
+        try:
+            return getattr(self.historia, operacion)(*args)
+        except Exception:
+            estado = getattr(self.historia, 'estado', None)
+            if isinstance(estado, dict):
+                estado['estado'] = 'INCOMPLETA'
+                estado.setdefault('errores_listado', []).append({'error': 'HISTORIA_OPERACION_ERROR'})
+            self.historia.resultado = {'estado': 'INCOMPLETA', 'error': 'HISTORIA_OPERACION_ERROR'}
+            try:
+                self.emit('warning', 'La historia no pudo completarse; las bitácoras continúan.')
+            except Exception:
+                pass
+            return None
 
     def enumerar_listado(self, session, batch, selection, index, total_queries):
         """Una consulta: formulario, páginas del listado y lectura de cada fila. False = detener el lote."""
@@ -537,6 +560,8 @@ class DiaryRunner:
                 session.phase = 'LEER_FILAS'
                 for item in listing_rows(body, profile):
                     self.leer_bitacora(session, selection, query, number, item, seen)
+                if self.historia:
+                    self._historia('pagina', selection, query, number, body, profile)
                 query['paginas'] = number
                 session.persistir()
             query['estado'] = 'ENUMERADA'

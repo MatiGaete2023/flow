@@ -54,7 +54,7 @@ def popup(params, wrong=False):
     )
     # Los campos completos pertenecen a la tabla, tal como en RUS.
     return (
-        f'<html><form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do">'
+        '<html><form name="InformesPpalForm" action="/SITFAWEB/InformesDAction.do">'
         + ''.join(f'<input type="hidden" name="{k}" value="{html.escape(v, quote=True)}">' for k, v in fields.items())
         + f'<table id="TablaInforme"><tr>{headers}</tr><tr>{row}</tr>'
         + ''.join(f'<input type="hidden" name="{k}44" value="{html.escape(v, quote=True)}">' for k, v in hidden.items())
@@ -141,7 +141,7 @@ def test_same_rit_different_ingresos_and_failed_popup(tmp_path):
 
 
 def test_visible_identity_difference_is_warning_in_manifest_and_excel(tmp_path):
-    from nurus.personal.bitacora_lote import import_lote
+    from nurus.capture.diaries import import_lote
 
     class DisplayVariant(Bridge):
         def call(self, command, payload=None, timeout=75):
@@ -328,9 +328,8 @@ def test_all_followup_observation_popup_kinds_are_preserved_and_excel_created(tm
         ('utf-8', '', b'\xef\xbb\xbf'),
     ],
 )
-def test_legacy_diary_download_resume_and_both_importers_keep_original_bytes(tmp_path, encoding, meta, bom):
+def test_legacy_diary_download_resume_and_importer_keep_original_bytes(tmp_path, encoding, meta, bom):
     from nurus.capture.diaries import import_lote as import_shared
-    from nurus.personal.bitacora_lote import import_lote as import_personal
 
     complete = 'Observación íntegra: Ángela pidió revisión — línea siguiente.\nSegunda línea'
 
@@ -353,13 +352,11 @@ def test_legacy_diary_download_resume_and_both_importers_keep_original_bytes(tmp
             'Texto completo\nSegunda línea', complete
         ).encode(encoding)
         assert hashlib.sha256(raw).hexdigest() == record['sha256']
-    for importer in (import_shared, import_personal):
-        queries = importer(result['manifest'])['queries']
-        assert len(queries) == 2
-        for query, record in zip(queries, records):
-            entry = query['entries'][0]
-            assert (entry['texto'] if isinstance(entry, dict) else entry.texto) == complete
-            assert query['html_sha256'] == record['sha256']
+    queries = import_shared(result['manifest'])['queries']
+    assert len(queries) == 2
+    for query, record in zip(queries, records):
+        assert query['entries'][0]['texto'] == complete
+        assert query['html_sha256'] == record['sha256']
     bridge = EncodedBridge()
     resumed = run(tmp_path, bridge, resume=result['folder'])
     assert resumed['leidas'] == 2 and not bridge.openings

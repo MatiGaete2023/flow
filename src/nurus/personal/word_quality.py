@@ -12,7 +12,28 @@ def unresolved_text(text):
     return sorted(set(MARKERS.findall(str(text))))
 
 
+_CACHE = {}
+_CACHE_MAX = 512
+
+
 def pending_fields(document):
+    """Campos pendientes del Word. Un archivo sin cambios (misma ruta, tamaño y fecha) no se vuelve a leer: las vistas
+    de productos lo consultan en cada refresco y leerlo es lo que las dejaba pegadas con muchos proyectos."""
+    if isinstance(document, (str, Path)):
+        try:
+            info = Path(document).stat()
+            key = (str(Path(document).resolve()), info.st_mtime_ns, info.st_size)
+        except OSError:
+            return _pending_fields(document)
+        if key not in _CACHE:
+            if len(_CACHE) >= _CACHE_MAX:
+                _CACHE.clear()
+            _CACHE[key] = _pending_fields(document)
+        return list(_CACHE[key])
+    return _pending_fields(document)
+
+
+def _pending_fields(document):
     found = []
     # Validate every Word XML part, including headers, footers and text boxes.
     if isinstance(document, (str, Path)):
@@ -39,7 +60,8 @@ def pending_fields(document):
 
 
 def require_complete(document, allow_review_markers=False):
-    found = pending_fields(document)
+    # Puerta antes de entregar un documento: lee el archivo siempre, sin el caché de las vistas.
+    found = _pending_fields(document)
     if allow_review_markers:
         found = [f for f in found if not f.upper().startswith('[COMPLETAR')]
     if found:

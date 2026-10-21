@@ -35,6 +35,7 @@ En Linux sin pantalla usa xvfb-run si está disponible.
 
 import argparse
 import ast
+import contextlib
 import copy
 import json
 import hashlib
@@ -542,10 +543,8 @@ def provenance(output=None):
             output = report_path(output)
         except ValueError:
             return None
-        try:
+        with contextlib.suppress(ValueError):
             excluded = output.relative_to(ROOT.resolve()).as_posix()
-        except ValueError:
-            pass
 
     def git(*args):
         result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, timeout=30)
@@ -629,10 +628,9 @@ def load_cached(key):
 def store_cached(key, measurement):
     if not complete(measurement):
         return
-    try:
+    # La caché es una optimización: fallar al escribirla no cambia el veredicto.
+    with contextlib.suppress(OSError):
         write_json(CACHE_DIR / f"{key}.json", {"clave": key, "medicion": measurement})
-    except OSError:
-        pass  # La caché es una optimización: fallar al escribirla no cambia el veredicto.
 
 
 def public_provenance(value):

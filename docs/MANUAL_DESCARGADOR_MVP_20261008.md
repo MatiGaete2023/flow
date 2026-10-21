@@ -25,6 +25,17 @@ la tabla vacía se comprueba en la respuesta y no acredita un historial completo
 
 La consulta de firmas continúa retirada: no hay campo activo de días ni hoja vacía «Resoluciones firmadas». Las recuperaciones antiguas conservan sus metadatos, sin consultar firmas. El lanzador no reduce todavía los dos runtimes empaquetados; el instalador ahora incluye ambas apps y la extensión.
 
+## Historia de la causa (2.8.0, en prueba)
+
+Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «Consultar y crear paquete» (apagada por defecto; se recuerda).
+
+- **Qué lee:** de cada causa del lote, la tabla de la pestaña *Historia* (Folio, Etapa, Trámite, Desc. Trámite, Referencia, Fecha Tram, anexo sí/no) y el encabezado de la causa. Una lectura por causa, hasta 600 por lote, con pausa.
+- **Qué no hace:** no abre PDF ni anexos, no lee Notificación, Diligencias ni Escritos, no consulta por RIT ni nombre; solo usa el enlace de historia del listado vigente.
+- **Ventana:** los últimos 4 meses hasta la fecha de lectura; el Excel declara Desde y Hasta. No acredita ausencia de trámites fuera de ese rango.
+- **Productos:** `Historia_SITFA.xlsx` en la carpeta del paquete; con **Incluir historia en el paquete**, la tabla `historia_tramites` del ZIP (de la causa, no de un ingreso). El HTML íntegro queda en `respaldo/…/historia/`, nunca en el ZIP.
+- **Errores:** sesión vencida, tabla distinta o falla de red dejan la causa como FALLIDA con su motivo y el paquete como parcial; el paquete se crea igual. Nunca se informa «sin trámites» por un error.
+- **Actualizar:** carga la carpeta `extension` de esta misma entrega en `chrome://extensions`, recárgala (2.8.0) y abre una conexión nueva.
+
 ## Lotes antiguos (retención de 60 días)
 
 En **Resultados e historial**, **Archivar o borrar lotes antiguos** ofrece los lotes y paquetes («Paquete CSMP …») sin
@@ -90,3 +101,10 @@ Si un hash cambia, falta un original o la identidad no coincide, conservar
 el lote y registrar el error. No corregir a mano los IDs para hacer pasar el ZIP.
 Para soporte comunicar SHA, etapa, mensaje y estado de consulta; no adjuntar
 NNA, cookies, tokens, HAR, HTML ni PDFs institucionales al repositorio.
+
+Historia: cada «Consultar y crear paquete» inicia una lectura nueva de sus causas, aunque esté marcada
+«Reutilizar bitácoras leídas hoy». Para reintentar un lote interrumpido, usar «Reintentar lecturas fallidas…»
+y seleccionar ese lote: solo se conservan historias verificadas que siguen presentes en su listado.
+Los conflictos entre páginas o con el tribunal visible quedan advertidos; una falla de historia no impide
+las bitácoras. Textos largos del Excel continúan en columnas «(parte N)», sin recortes; fechas posteriores
+al día de lectura llevan una advertencia.

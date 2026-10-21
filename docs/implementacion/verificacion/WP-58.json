@@ -1,0 +1,177 @@
+{
+  "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+  "base": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "975 aprobadas; mínimo 932; base 932; omitidas 11/11; xfail 6/6 (máximos); subpruebas 0/0 (mínimo); código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "283 aprobadas; mínimo 283; base 283; omitidas 0/0; xfail 0/0 (máximos); subpruebas 62/62 (mínimo); código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 975,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 6,
+      "xpass": 0,
+      "deseleccionadas": 0,
+      "subpruebas_omitidas": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    },
+    "descargador": {
+      "aprobadas": 283,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "xpass": 0,
+      "deseleccionadas": 0,
+      "subpruebas_omitidas": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+    "arbol_git": "923b3c3cfe8051e7bb433d8b1dbfd1ad8809e0c8",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "94979fc36d042a70f90e9120b158df8aa128fc78",
+    "arbol_git": "923b3c3cfe8051e7bb433d8b1dbfd1ad8809e0c8",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
+  "medicion_reutilizada": false,
+  "veredicto": "PASA",
+  "origen_medicion": {
+    "commit_canonico": "0ff63a1611b8f2df04533061b4da25848b3e0879",
+    "arbol_canonico": "148952180ee25e17b19db9a5f562517c4c332c6c",
+    "blobs_contrastados": 864,
+    "alcance": "Medición local sobre copia íntegra contrastada por SHA Git. Los commits de procedencia son locales; CI del PR verifica el SHA publicado. El informe es la única ruta excluida por el verificador."
+  },
+  "ci_remota": {
+    "commit_codigo": "147b8a069db1605c2316b3d7813a263381a0e8c7",
+    "estado": "PASA_TRAS_REINTENTO",
+    "causa": "No acreditada: el conector no permite leer las anotaciones de estos checks; no se atribuye a facturación ni al código sin evidencia.",
+    "runs": [
+      {
+        "id": 39074218719,
+        "nombre": "CI rápida Linux",
+        "conclusion": "failure",
+        "job": 117517924299
+      },
+      {
+        "id": 39074218727,
+        "nombre": "CSMP Assistant Windows",
+        "conclusion": "failure",
+        "job": 117517924062
+      },
+      {
+        "id": 39074218718,
+        "nombre": "Descargador integral y bitácoras",
+        "conclusion": "failure",
+        "job": 117517924098
+      }
+    ],
+    "observado": "Sin pasos ejecutados, sin logs y runner_id=0. Veredicto local PASA no equivale a CI remota aprobada.",
+    "commit_documental": "ac204e01237fb8cd95f56230ef450caadc8dbe87",
+    "runs_documental": [
+      {
+        "id": 39074332528,
+        "nombre": "CI rápida Linux",
+        "conclusion": "failure",
+        "job": 117518252009
+      },
+      {
+        "id": 39074332475,
+        "nombre": "CSMP Assistant Windows",
+        "conclusion": "failure",
+        "job": 117518251785
+      },
+      {
+        "id": 39074332482,
+        "nombre": "Descargador integral y bitácoras",
+        "conclusion": "failure",
+        "job": 117518252031
+      }
+    ],
+    "alcance_bloqueo": "Último run aprobado del repositorio: 38939108105 (2026-10-16T17:34:39Z). Desde 2026-10-16T17:45Z todos los runs fallan en segundos en cualquier rama y evento, incluido el push de la base 0ff63a1 (38945491608). El bloqueo es anterior a WP-58 y no lo causa su diff; la causa exacta sigue sin acreditar.",
+    "reintento": {
+      "fecha": "2026-10-18",
+      "commit": "ac204e01237fb8cd95f56230ef450caadc8dbe87",
+      "runs": [
+        {
+          "id": 39074332528,
+          "intento": 2,
+          "nombre": "CI rápida Linux",
+          "conclusion": "success",
+          "job": 117538035804
+        },
+        {
+          "id": 39074332475,
+          "intento": 2,
+          "nombre": "CSMP Assistant Windows",
+          "conclusion": "success",
+          "job": 117538956823,
+          "resumen": "984 aprobadas, 2 omitidas, 6 xfail"
+        },
+        {
+          "id": 39074332482,
+          "intento": 2,
+          "nombre": "Descargador integral y bitácoras",
+          "conclusion": "success",
+          "job": 117538953859,
+          "resumen": "283 aprobadas, 62 subpruebas"
+        }
+      ],
+      "nota": "Impedimento resuelto por el usuario; Linux primero y Windows solo tras PASA, un reintento por corrida."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "titulo": "Reglas de historia R5: Espera",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-74"
+  ],
+  "decisiones": [
+    "j",
+    "o"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+  "tomado": "2026-10-14",
+  "rama": "claude/hopeful-hamilton-k2tcqp",
+  "pr": null,
+  "verificacion": "Pruebas focales (100); suite completa = base; golden PARIDAD PASÓ (A3).",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R5.",
+    "Commits: fd1adff"
+  ]
+}

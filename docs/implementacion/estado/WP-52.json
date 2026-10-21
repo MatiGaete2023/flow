@@ -1,0 +1,23 @@
+{
+  "titulo": "Historia de causa H0: caracterizar la ventana y registrar la decisión",
+  "ola": 5,
+  "tipo": "D",
+  "depende_de": [],
+  "decisiones": [
+    "o",
+    "p"
+  ],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "claude-sesion-01Ltq2nH",
+  "tomado": "13 de octubre de 2026",
+  "rama": "feat/historia-causa-sitfa",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "H0 cerrado: contracts/csmp_capture_v1/HISTORIA_VENTANA.md; extractor descargador/extraer_estructura_historia.py; fixtures ficticios fieles.",
+    "Decisiones o y p registradas el 13 de octubre de 2026."
+  ]
+}

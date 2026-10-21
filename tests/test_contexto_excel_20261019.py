@@ -44,7 +44,8 @@ def test_n02_aparece_en_avisos_sin_cambiar_la_observacion(tmp_path):
     book.save(path)
     row = Work(defaults()).analyze(path, 'INFORMES', as_of=CORTE).rows[0]
     assert any(w.startswith('N-02:') for w in row.warnings)
-    assert row.rules == ['INFORMES.I02_POR_VENCER_GENERAL', 'COMUN.PROX_AUDIENCIA']
+    # Decisión x (lucid-sagan, prioritaria en la integración): Informes no hace constar audiencias.
+    assert row.rules == ['INFORMES.I02_POR_VENCER_GENERAL']
 
 
 def _record(record_type, ingreso, status='VERIFICADA'):

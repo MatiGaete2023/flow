@@ -1,20 +1,32 @@
 {
-  "titulo": "Auditoría de pruebas y código legado",
-  "ola": 7,
-  "tipo": "M",
-  "depende_de": [{"wp": "WP-99", "tipo": "archivo"}],
-  "decisiones": [],
-  "estado": "EN_VERIFICACION",
-  "ejecutor": "Codex /root",
-  "tomado": "17 de octubre de 2026",
-  "rama": "wp/WP-65-auditoria-pruebas-20261017",
-  "pr": 47,
-  "verificacion": "PASA local en ac204e0: Asistente 975/11/6 xfail; Descargador 283/62 subpruebas; 9 controles y golden17. CI remota PASA tras reintento (18 de octubre): Linux run 39074332528; Windows Asistente 984/2/6 run 39074332475; Descargador 283/62 run 39074332482.",
-  "revision": "Dos subagentes de la misma raíz; no equivalen a E3 independiente. Sin cambios en las áreas de riesgo de la decisión j.",
+  "titulo": "Reglas de historia, segunda ronda (decisión x)",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    {
+      "wp": "WP-64",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j",
+    "u",
+    "x"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+  "tomado": "15 de octubre de 2026",
+  "rama": "claude/lucid-sagan-hw9ul4",
+  "pr": null,
+  "verificacion": "PASA sobre bd6147a: Asistente 1.124 aprobadas, Descargador 343; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-65.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb.",
+  "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
   "auditoria": null,
   "integrado_en": null,
   "notas": [
-    "Base canónica 0ff63a1611b8f2df04533061b4da25848b3e0879; cambios ajenos pendientes no integrados.",
-    "Una función sin uso retirada, cero pruebas retiradas, 31 casos nuevos de protección de cobertura."
+    "Base: WP-64 (0cbd856), que también espera E3. Todos los textos quedan confirmado:true (C10_ESCRITO aprobado el 15-oct-2026).",
+    "No integrado ni aceptado.",
+    "Sondeo aleatorio de 595 filas (3 etapas, historia y bitácora al azar): sin excepciones ni frases repetidas.",
+    "Ronda final: respuestas 3C/5C, constancias genéricas, Ingreso efectivo solo en Cumplimiento, D.R. ignorada, umbrales configurables, RULESET historia-4 y TEXT_REVISION 5.",
+    "Asistente 0.5.0.dev6."
   ]
 }

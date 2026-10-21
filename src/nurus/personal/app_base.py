@@ -52,6 +52,39 @@ def _attention_value(work, row, key):
     return value(work, row, key)
 
 
+def launch_without_blocking(path, startfile=None, wait=0.5, result=None):
+    """Abre el archivo con el programa de Windows sin dejar pegada la ventana mientras Excel o Word arrancan.
+
+    Devuelve True si la apertura sigue en curso pasado `wait`; un error inmediato se informa como ValueError. Un error
+    tardío queda en `result['error']` (el hilo nunca toca Tk) y `result['thread']` permite seguirlo."""
+    startfile = startfile or os.startfile
+    result = {} if result is None else result
+
+    def launch():
+        com = None
+        try:
+            import pythoncom as com  # ShellExecute pide COM inicializado para algunos manejadores (Office).
+
+            com.CoInitialize()
+        except ImportError:
+            com = None
+        try:
+            startfile(str(path))
+        except Exception as exc:  # noqa: BLE001 - cualquier falla se informa en la ventana, no se pierde en el hilo
+            result['error'] = exc
+        finally:
+            if com is not None:
+                com.CoUninitialize()
+
+    thread = threading.Thread(target=launch, daemon=True)
+    result['thread'] = thread
+    thread.start()
+    thread.join(wait)
+    if 'error' in result:
+        raise ValueError('No se pudo abrir ' + str(path) + ': ' + str(result['error']))
+    return thread.is_alive()
+
+
 class App(ctk.CTk):
     def __init__(self, configuration=None):
         self.cfg = configuration or Configuration()
@@ -144,8 +177,6 @@ class App(ctk.CTk):
         self.status.trace_add('write', self._show_result_notice)
         self._show_result_notice()
         self.operation_timings = []
-        self._theme_mode = ctk.get_appearance_mode()
-        self.after(700, self._watch_theme)
         self.protocol('WM_DELETE_WINDOW', self._close)
         self._bind_shortcuts()
         self.after(100, self._poll)
@@ -240,12 +271,11 @@ class App(ctk.CTk):
             self.status.set('Detención solicitada. Se completará la escritura actual antes de detener el resto.')
             self.cancel_button.configure(state='disabled')
 
-    def _watch_theme(self):
-        mode = ctk.get_appearance_mode()
-        if mode != self._theme_mode:
-            self._theme_mode = mode
-            ttk.install_theme(self)
-        self.after(700, self._watch_theme)
+    def _set_appearance_mode(self, mode_string):
+        # CTk notifica también cambios asíncronos del tema Sistema. Los estilos
+        # nativos deben cambiar en el mismo callback, antes del siguiente dibujo.
+        super()._set_appearance_mode(mode_string)
+        ttk.install_theme(self)
 
     def _poll(self):
         try:
@@ -376,9 +406,22 @@ class App(ctk.CTk):
         if not Path(path).exists():
             raise ValueError('No se encuentra el archivo o carpeta: ' + str(path))
         if os.name == 'nt':
-            os.startfile(str(path))
+            result = {}
+            if launch_without_blocking(path, result=result):
+                self.status.set('Abriendo el archivo… Windows lo mostrará cuando esté listo.')
+                self.after(500, lambda: self._watch_open(path, result))
         else:
             messagebox.showinfo('Archivo disponible', str(path))
+
+    def _watch_open(self, path, result):
+        """Sigue una apertura lenta desde el hilo de Tk: informa su error si llega tarde."""
+        if result['thread'].is_alive():
+            self.after(500, lambda: self._watch_open(path, result))
+        elif 'error' in result:
+            self.status.set('No se pudo abrir el archivo.')
+            messagebox.showerror('No se pudo abrir', str(path) + '\n' + str(result['error']))
+        elif self.status.get().startswith('Abriendo el archivo'):
+            self.status.set('Archivo abierto.')
 
     def _update_context(self):
         # Forzado: ediciones de revisión no cambian la firma barata pero sí dejan productos desactualizados.
@@ -559,7 +602,7 @@ class App(ctk.CTk):
                 'end',
                 iid=item.row_id,
                 values=(
-                    item.estado,
+                    f'{item.marca} · {item.estado}' if item.marca else item.estado,
                     item.proxima_accion,
                     _attention_value(self.work, row, 'rit'),
                     _attention_value(self.work, row, 'nombre'),

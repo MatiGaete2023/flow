@@ -33,7 +33,7 @@ ENCABEZADOS = [
     'PROFESIONAL',
     '',
 ]
-NOMBRE = 'José Ñuñez Pérez'
+NOMBRE = 'Jovito Ñandúzar Pétrel'
 
 
 def rut(number, formato='{n}-{dv}'):
@@ -42,7 +42,7 @@ def rut(number, formato='{n}-{dv}'):
     return formato.format(n=number, p=puntos, dv=check_digit(number))
 
 
-RUT_NNA = rut(15_284_731)
+RUT_NNA = rut(95_284_731)
 
 
 def plegar(texto):
@@ -55,7 +55,7 @@ def base(ws, filas_titulo=0, obs='', curador='NO POSEE', profesional='', libre='
         ws.append(['Informe ficticio'])
     ws.append(ENCABEZADOS)
     ws.append(
-        ['P-1534-2025', 'LAJA', NOMBRE, RUT_NNA, datetime(2010, 1, 1), 'PRM UNO', 45, curador, obs, profesional, libre]
+        ['P-9534-2099', 'LAJA', NOMBRE, RUT_NNA, datetime(2010, 1, 1), 'PRM UNO', 45, curador, obs, profesional, libre]
     )
 
 
@@ -67,27 +67,27 @@ def contenido(ruta):
 def objetos(wb, ws):
     base(ws)
     grafico = BarChart()
-    grafico.title = 'Espera de Ñuñez'
+    grafico.title = 'Espera de Ñandúzar'
     grafico.add_data(Reference(ws, min_col=7, min_row=1, max_row=2))
     ws.add_chart(grafico, 'M2')
     ws.auto_filter.ref = 'A1:K2'
-    ws.auto_filter.add_filter_column(2, ['Ñuñez'])
-    ws.defined_names['Nunez_hoja'] = DefinedName('Nunez_hoja', attr_text='ESPERA!$C$2')
+    ws.auto_filter.add_filter_column(2, ['Ñandúzar'])
+    ws.defined_names['Nanduzar_hoja'] = DefinedName('Nanduzar_hoja', attr_text='ESPERA!$C$2')
     ws.conditional_formatting.add(
         'I2:I9',
         Rule(
             type='containsText',
             operator='containsText',
-            text='Ñuñez',
-            formula=['NOT(ISERROR(SEARCH("Ñuñez",I2)))'],
+            text='Ñandúzar',
+            formula=['NOT(ISERROR(SEARCH("Ñandúzar",I2)))'],
             dxf=DifferentialStyle(),
         ),
     )
-    ws.oddHeader.center.text = 'Ñuñez'
+    ws.oddHeader.center.text = 'Ñandúzar'
     otra = wb.create_sheet('Tabla')
     otra.append(['RIT', 'NNA'])
     otra.append(['P-1-2026', 'x'])
-    otra.add_table(Table(displayName='Tabla_Nunez', ref='A1:B2'))
+    otra.add_table(Table(displayName='Tabla_Nanduzar', ref='A1:B2'))
 
 
 def vinculo_externo(wb, ws):
@@ -128,13 +128,13 @@ def hoja_secundaria(wb, ws):
     base(ws)
     otra = wb.create_sheet('Listado')
     otra.append(['N° CAUSA', 'NNA', 'RUN'])
-    otra.append(['C-1', 'Ñuñez Pérez José', int(rut(15_284_731, '{n}{dv}'))])
+    otra.append(['C-1', 'Ñandúzar Pétrel Jovito', int(rut(95_284_731, '{n}{dv}'))])
 
 
 def hojas_con_nombre(wb, ws):
     base(ws)
-    wb.create_sheet('Ñuñez')
-    wb.create_sheet('Pérez')
+    wb.create_sheet('Ñandúzar')
+    wb.create_sheet('Pétrel')
 
 
 def hoja_extra(encabezados, *filas):
@@ -149,29 +149,29 @@ def hoja_extra(encabezados, *filas):
 
 
 CASOS = {
-    'encabezado_en_fila_20': (lambda wb, ws: base(ws, filas_titulo=19), [NOMBRE, 'Ñuñez']),
+    'encabezado_en_fila_20': (lambda wb, ws: base(ws, filas_titulo=19), [NOMBRE, 'Ñandúzar']),
     'texto_libre_variantes': (
         lambda wb, ws: base(
             ws,
             obs=(
-                'JOSE NUNEZ fono +56 9 8765 4321, vive en Av. Los Aromos 1234 Coronel; RUT '
-                + rut(15_284_731, '{p} {dv}')
+                'JOVITO NANDUZAR fono +56 9 8765 4321, vive en Av. Los Aromos Ficticios 9999 Ciudad Canario; RUT '
+                + rut(95_284_731, '{p} {dv}')
                 + ' / '
-                + rut(15_284_731, '{n}{dv}')
+                + rut(95_284_731, '{n}{dv}')
                 + ' / '
-                + rut(15_284_731, '{n} - {dv}')
-                + '; causa 1534-2025 y P 1534 2025'
+                + rut(95_284_731, '{n} - {dv}')
+                + '; causa 9534-2099 y P 9534 2099'
             ),
         ),
         [
-            'JOSE NUNEZ',
+            'JOVITO NANDUZAR',
             '8765 4321',
             'Los Aromos',
-            rut(15_284_731, '{p} {dv}'),
-            rut(15_284_731, '{n}{dv}'),
-            rut(15_284_731, '{n} - {dv}'),
-            '1534-2025',
-            'P 1534 2025',
+            rut(95_284_731, '{p} {dv}'),
+            rut(95_284_731, '{n}{dv}'),
+            rut(95_284_731, '{n} - {dv}'),
+            '9534-2099',
+            'P 9534 2099',
         ],
     ),
     'curador_sin_rut': (
@@ -179,73 +179,78 @@ CASOS = {
         ['Marcela Quiroga Lillo', 'Quiroga', '2223344'],
     ),
     'curador_rut_seis_digitos': (
-        lambda wb, ws: base(ws, curador='Ramiro Tapia Ulloa ' + rut(912_345)),
-        ['Ramiro Tapia Ulloa', rut(912_345), 'Tapia'],
+        lambda wb, ws: base(ws, curador='Ramírez Tapiolo Ulloquera ' + rut(99_912_345)),
+        ['Ramírez Tapiolo Ulloquera', rut(99_912_345), 'Tapiolo'],
     ),
     'columna_profesional_y_sin_encabezado': (
-        lambda wb, ws: base(ws, profesional='Dupla: Ignacia Bustos Mella', libre='hablar con Ñuñez'),
-        ['Ignacia Bustos Mella', 'Bustos', 'Ñuñez'],
+        lambda wb, ws: base(ws, profesional='Dupla: Ignasia Bustorre Mellado', libre='hablar con Ñandúzar'),
+        ['Ignasia Bustorre Mellado', 'Bustorre', 'Ñandúzar'],
     ),
-    'objetos_del_libro': (objetos, [NOMBRE, 'Ñuñez', 'Nunez']),
+    'objetos_del_libro': (objetos, [NOMBRE, 'Ñandúzar', 'Nanduzar']),
     'formula_con_telefono': (
         lambda wb, ws: (
             base(ws),
-            ws.__setitem__('M5', '=HYPERLINK("mailto:jose.nunez@example.invalid","José Ñuñez Pérez 987654321")'),
+            ws.__setitem__(
+                'M5', '=HYPERLINK("mailto:jovito.nanduzar@example.invalid","Jovito Ñandúzar Pétrel 987654321")'
+            ),
         ),
-        [NOMBRE, '987654321', 'jose.nunez'],
+        [NOMBRE, '987654321', 'jovito.nanduzar'],
     ),
-    'texto_nfd': (lambda wb, ws: base(ws, obs=unicodedata.normalize('NFD', 'Visita a José Ñuñez Pérez')), [NOMBRE]),
+    'texto_nfd': (
+        lambda wb, ws: base(ws, obs=unicodedata.normalize('NFD', 'Visita a Jovito Ñandúzar Pétrel')),
+        [NOMBRE],
+    ),
     'vinculo_externo': (vinculo_externo, ['Persona Canario Externa', 'persona.canario', 'CanarioExterno']),
-    'run_numerico_en_hoja_secundaria': (hoja_secundaria, ['Ñuñez Pérez José', rut(15_284_731, '{n}{dv}')]),
-    'hojas_con_nombre': (hojas_con_nombre, ['Ñuñez', 'Pérez']),
+    'run_numerico_en_hoja_secundaria': (hoja_secundaria, ['Ñandúzar Pétrel Jovito', rut(95_284_731, '{n}{dv}')]),
+    'hojas_con_nombre': (hojas_con_nombre, ['Ñandúzar', 'Pétrel']),
     # Revisión del 11 de octubre de 2026: formatos y lugares que antes pasaban sin cambio.
     'rut_sin_dv_guion_largo_y_espacios': (
         lambda wb, ws: base(
             ws,
             obs=(
-                'RUT 15.284.731; '
-                + rut(16_345_678, '{p}\u2013{dv}')
+                'RUT 95.284.731; '
+                + rut(96_345_678, '{p}\u2013{dv}')
                 + '; '
-                + rut(17_456_789, '{n}').replace('17456789', '17 456 789')
+                + rut(97_456_789, '{n}').replace('97456789', '97 456 789')
                 + '-'
-                + check_digit(17_456_789)
+                + check_digit(97_456_789)
             ),
         ),
-        ['15.284.731', rut(16_345_678, '{p}\u2013{dv}'), '17 456 789'],
+        ['95.284.731', rut(96_345_678, '{p}\u2013{dv}'), '97 456 789'],
     ),
     'telefono_en_grupos_de_tres': (lambda wb, ws: base(ws, obs='llamar al 912 345 678'), ['912 345 678']),
     'numeros_en_celdas_numericas': (
         hoja_extra(
             ['RIT', 'NOMBRE', 'TEL.', 'R.U.N.', 'CONTACTO'],
-            ['P-2-2026', 'Persona Dos', 912345678, 15_284_731, 987654321],
+            ['P-2-2026', 'Persona Dos', 912345678, 95_284_731, 987654321],
         ),
-        ['912345678', '15284731', '987654321'],
+        ['912345678', '95284731', '987654321'],
     ),
     'curador_ad_litem': (
-        hoja_extra(['RIT', 'NOMBRE', 'CUR. AD LITEM'], ['P-3-2026', 'Persona Tres', 'Rosa Quintanilla Soto']),
-        ['Quintanilla'],
+        hoja_extra(['RIT', 'NOMBRE', 'CUR. AD LITEM'], ['P-3-2026', 'Persona Tres', 'Rosabel Quintanillo Sotoral']),
+        ['Quintanillo'],
     ),
     'encabezado_sin_nombre_ni_rut': (
-        hoja_extra(['N° RIT', 'NNA', 'CURADOR'], ['P-4-2026', 'Rosa Quintanilla', 'Ignacio Valdebenito']),
-        ['Quintanilla', 'Valdebenito'],
+        hoja_extra(['N° RIT', 'NNA', 'CURADOR'], ['P-4-2026', 'Rosabel Quintanillo', 'Ignatio Valdebeniteo']),
+        ['Quintanillo', 'Valdebeniteo'],
     ),
     'encabezado_run_nna': (
-        hoja_extra(['CAUSA', 'RUN NNA', 'NNA'], ['C-5-2026', rut(15_284_731), 'Rosa Quintanilla']),
-        ['Quintanilla', rut(15_284_731)],
+        hoja_extra(['CAUSA', 'RUN NNA', 'NNA'], ['C-5-2026', rut(95_284_731), 'Rosabel Quintanillo']),
+        ['Quintanillo', rut(95_284_731)],
     ),
     'telefono_en_columna_protegida': (
         hoja_extra(['RIT', 'NOMBRE', 'DERIVACION'], ['P-6-2026', 'Persona Seis', 'Derivó fono 9 1234 5678']),
         ['1234 5678'],
     ),
     'curador_institucional_con_abogado': (
-        lambda wb, ws: base(ws, curador='Institución: Corp X (abog. Ignacio Valdebenito)'),
-        ['Valdebenito'],
+        lambda wb, ws: base(ws, curador='Institución: Corp X (abog. Ignatio Valdebeniteo)'),
+        ['Valdebeniteo'],
     ),
     'rit_con_barra': (lambda wb, ws: base(ws, obs='causa C-2345/2023'), ['2345/2023']),
     **{
         f'columna_identidad_{numero}': (
-            hoja_extra(['RIT', encabezado], ['P-700-2026', 'Teresa Malibran Arrieta']),
-            ['Malibran', 'Arrieta'],
+            hoja_extra(['RIT', encabezado], ['P-9700-2099', 'Tesalia Malibrandt Arrizoqui']),
+            ['Malibrandt', 'Arrizoqui'],
         )
         for numero, encabezado in enumerate(
             ['APELLIDO PATERNO', 'APELLIDOS', 'DEMANDANTE', 'DEMANDADO', 'SOLICITANTE', 'INTERVINIENTE'], 1
@@ -291,8 +296,8 @@ def test_columna_protegida_conserva_el_texto_pero_no_el_rut(tmp_path):
     libro = Workbook()
     hoja = libro.active
     hoja.append(['RIT', 'NOMBRE', 'NOMBRE CENTRO'])
-    hoja.append(['P-1-2026', 'Persona Uno', 'PRM ' + rut(15_284_731)])
+    hoja.append(['P-1-2026', 'Persona Uno', 'PRM ' + rut(95_284_731)])
     libro.save(tmp_path / 'o.xlsx')
     anonymize(tmp_path / 'o.xlsx', tmp_path / 'c.xlsx')
     valor = load_workbook(tmp_path / 'c.xlsx').active['C2'].value
-    assert valor.startswith('PRM ') and rut(15_284_731) not in valor
+    assert valor.startswith('PRM ') and rut(95_284_731) not in valor

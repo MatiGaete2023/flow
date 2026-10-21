@@ -76,7 +76,7 @@
       "descripcion": "C-08 declara falta de ficha FAE aunque no exista su columna.",
       "estado": "ABIERTO",
       "responsable": "Usuario: decisión específica por regla",
-      "tratamiento": "Conservar xfail estricto y motor/textos intactos, según decisión del 11 de octubre. Prueba local no acredita aceptación."
+      "tratamiento": "Corrección preparada en WP-64 por autorización de Fase B: sin columna FAE no se afirma ausencia y se advierte NO_EVALUABLE. La prueba deja de ser xfail y PASA. Pendiente E3 e integración; no declara aceptación."
     },
     {
       "id": "WP-60-R-T19",
@@ -194,6 +194,21 @@
         "texto": "Subir MAX_LECTURAS_POR_LOTE de 300 a 600; pausa y checkpoints sin cambios.",
         "fuente": "Usuario: «Sube el limite a 600» (13 de octubre de 2026)."
       }
+    },
+    "decisiones_20261013_historia": {
+      "o_historia_causa": {
+        "texto": "Historia de la causa en el Descargador: solo la tabla de la pestaña Historia de la ventana «Información de la Causa» (folio, etapa, trámite, descripción, referencia, fecha y presencia de anexo), solo ventana de 4 meses, sin PDF, uso personal en Windows; el Asistente la analizará en otro paso. PDF y reglas CT-03..10 siguen fuera de alcance. Plan: docs/historia_causa/ (WP-52..WP-54).",
+        "fuente": "Usuario, 13 de octubre de 2026: «leer la historia de la causa», «no deseo descargar los pdf», «solo ver la descripción del trámite y el trámite, su fecha, folio», «solo en la ventana de 4 meses», «solo de uso personal en windows»."
+      },
+      "p_recomendaciones_historia": {
+        "texto": "Aceptadas las recomendaciones P1–P8 de docs/historia_causa/00_DECISIONES.md: encabezado de causa en hoja Causas; opción desmarcada por defecto; tope 600 historias por lote, separado; sin reutilización entre sesiones; sin visor (Excel); HTML íntegro en respaldo/historia/ con retención D4; P7 no aplica (escenario B); trabajo directo en feat/historia-causa-sitfa con un solo PR final.",
+        "fuente": "Usuario, 13 de octubre de 2026: «Sí a todo lo que me dices»."
+      }
+    },
+    "fase_b_auditoria_20261014": {
+      "autorizacion": "Usuario: «Pasa a la fase B».",
+      "informes_tempranos": "Conservar acciones y advertir la posible entrega (recomendado)",
+      "alcance": "WP-64; sin aceptación, integración en feat, main ni release; revisión E3 pendiente."
     }
   },
   "orden_paquetes": [
@@ -251,7 +266,10 @@
     "WP-97",
     "WP-98",
     "WP-99",
-    "WP-65",
+    "WP-52",
+    "WP-53",
+    "WP-54",
+    "WP-58",
     "WP-70"
   ],
   "commit_integracion": "fe4c225",

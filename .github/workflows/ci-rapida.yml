@@ -1,7 +1,7 @@
 name: CI rápida Linux
 on:
   push:
-    branches: ['feat/**', main]
+    branches: ['feat/ejecucion-plan-20261008', main]
   pull_request:
     branches: ['feat/**', main]
   workflow_dispatch:
@@ -68,3 +68,4 @@ jobs:
           xvfb-run -a python -m pytest -q descargador
           node descargador/test_bitacoras_extension.cjs
           node descargador/test_calendario_extension.cjs
+          node descargador/test_historia_extension.cjs

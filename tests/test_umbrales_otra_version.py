@@ -7,7 +7,7 @@ from nurus.personal.config import PARAMETER_LABELS, Configuration
 from test_integral_ui import run_gui
 from test_personal_usability_20260921 import Var
 
-AJENO = 'prorroga_reciente'
+AJENO = 'umbral_de_otra_version'
 
 
 def perfil_con_umbral_ajeno(directory):
@@ -25,8 +25,8 @@ def test_umbral_desconocido_no_impide_abrir_y_no_se_muestra(tmp_path):
         """
 from nurus.personal.config import PARAMETER_LABELS
 assert set(app.param_vars)==set(PARAMETER_LABELS)
-assert app.cfg.data['umbrales']['prorroga_reciente']==90
-app.config_search.set('prorroga');app.update()
+assert app.cfg.data['umbrales']['umbral_de_otra_version']==90
+app.config_search.set('otra');app.update()
 """,
     )
 

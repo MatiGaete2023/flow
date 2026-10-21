@@ -1,0 +1,12 @@
+# WP-64 y WP-65: sustituciones de nodeids, no eliminación de escenarios.
+ # Línea base bbf8cdd; cambios de umbrales q y decisión u ya documentados.
+tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-AFT PRUEBA-29-expected2] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-AFT PRUEBA-29-expected3]
+tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-AFT PRUEBA-30-expected3] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-AFT PRUEBA-30-expected4]
+tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-DCE PRUEBA-29-expected0] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-DCE PRUEBA-29-expected1]
+tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-DCE PRUEBA-30-expected1] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[LAJA-DCE PRUEBA-30-expected2]
+tests/test_personal_flow.py::test_assistant_waiting_profile[MULCHEN-AFT PRUEBA-30-expected4] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[MULCHEN-AFT PRUEBA-30-expected5]
+tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-30-expected5] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-30-expected6]
+tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-59-expected6] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-59-expected7]
+tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-60-expected7] # Reemplazo: tests/test_personal_flow.py::test_assistant_waiting_profile[TOME-AFT PRUEBA-60-expected8]
+tests/test_reglas_espera.py::test_rt04_dce_solo_correo_desde_30_y_sin_word # Reemplazo: tests/test_reglas_espera.py::test_rt04_dce_solo_correo_desde_el_primer_dia_y_sin_word
+tests/test_capture_build_identity.py::test_frozen_build_rejects_wrong_origin[desarrollo-0.5.0.dev5] # Reemplazo: tests/test_capture_build_identity.py::test_frozen_build_rejects_wrong_origin[desarrollo]

@@ -127,6 +127,10 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 **Rama Tomé (no DCE), 60 días o más:** agrega proyecto de resolución — mismo texto que la rama Laja/Mulchén.
 
+> **Nota 14-oct-2026 (`TEXT_REVISION=4`, plan de historia):** los umbrales vigentes son `espera_dce=0` (DCE: correo desde el primer día) y `espera_tome=60` (Tomé: correo y proyecto juntos a los 60 días; desaparece el tramo de solo correo entre 30 y 59). La narrativa siguiente conserva los valores anteriores (30) solo como historia. E-05 agrega además «Al {CORTE}, RUS registra {N} días de espera.»
+>
+> **Nota 15-oct-2026 (`TEXT_REVISION=5`, decisión x):** las observaciones se ordenan por grupo en las tres etapas: constancias, acciones del Centro (correos y proyectos de resolución) y gestión del Tribunal (`motor/textos.py`, `ESTRUCTURA`). Los textos de Informes I-01 se dividen en constancia («Informe … vencido desde el X») y acción. Detalle: `PLAN_VIGENTE.md` (x) y `docs/implementacion/revision/ANTES_DESPUES_DECISION_X_20261015.md`.
+
 **Notas de la corrección:**
 - El documento base estandarizaba 30 días para los tres tribunales sin distinguir DCE ni el tramo superior de Tomé. Confirmado con el usuario: Laja y Mulchén cambian de 30 días → proyecto+correo (sin tramos); Tomé mantiene un esquema de dos tramos (30d correo, 60d agrega proyecto); DCE nunca lleva proyecto, umbral único de 30 días sin distinción de tribunal.
 - Cierre unificado a "ingreso efectivo" en los tres tribunales (antes Tomé decía solo "ingreso" — era una discrepancia de redacción no deliberada).
@@ -193,12 +197,12 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 **Texto aprobado:**
 
-> *Audiencia fijada para el {FECHA_AUDIENCIA}.*
+> *Audiencia decretada para el {FECHA_AUDIENCIA}.*
 
 **Varias audiencias (decisión del usuario, 19-oct-2026):** desde RUS V11 (abril 2026) la columna trae todas las
 próximas audiencias separadas por coma. Se muestran todas las futuras, en orden, con el texto aprobado:
 
-> *Audiencias fijadas para el {FECHA_1} y el {FECHA_2}.* (con tres o más: «el A, el B y el C»)
+> *Audiencias decretadas para el {FECHA_1} y el {FECHA_2}.* (con tres o más: «el A, el B y el C»)
 
 Una fecha ilegible dentro de la celda se registra como incidencia T-03 y no oculta las demás. Desactivar T-03 desactiva
 también la variante plural.

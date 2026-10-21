@@ -1,13 +1,13 @@
-from .contexto import parametro
+from .contexto import marcar, parametro
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import (fecha_es, limpiar_nombre, normalizar, es_derivacion_sin_seg,
     get_int, calcular_edad_exacta, dias_para_mayoria, fecha_mayoria,
     titulo_programa, contiene_token)
 from .textos import render
-from .reglas_espera import _complementarias, _oido, _curador, _audiencia
+from . import reglas_historia as H
+from .reglas_espera import _oido, _oido_historia, _curador, _audiencia, _rus_sin_curador
 
 _RES=('rta','rtt','res','rfa','rva')
 def _d(v): return v.date() if hasattr(v,'date') else v
@@ -21,52 +21,84 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
     hoy=Clock.now().date()
     programa=str(row.get(cols.get('programa'), '')).strip(); nombre=str(row.get(cols.get('nombre'), '')).strip()
     pfx=prefijo(nombre, programa); pn=_pn(nombre); prog=titulo_programa(programa)
-    if es_derivacion_sin_seg(programa): return componer(pfx,[render('COMUN','NO_SEGUIMIENTO', PROGRAMA=prog)])
+    fegr=fecha_valida(row.get(cols.get('egreso_proy'))) if cols.get('egreso_proy') else None
+    dpe=get_int(row.get(cols.get('dias_egresar'))) if cols.get('dias_egresar') else None
+    dc=get_int(row.get(cols.get('dias_cumpl'))) if cols.get('dias_cumpl') else None
+    vencida=bool(fegr and ((dpe is not None and dpe < 0) or (dc is not None and dc < 0)))
+    if es_derivacion_sin_seg(programa):
+        frags=[render('COMUN','NO_SEGUIMIENTO', PROGRAMA=prog)]
+        if vencida: frags.append(render('HISTORIA','MEDIDA_SIN_VIGENCIA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
+        return componer(pfx, frags)
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
-        return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))] + _complementarias(row, cols, incidencias, fila_excel))
-    frags=[]; principal=False
+        marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad')
+        return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))])
+    finalizada=H.causa_finalizada(_rit(row, cols))
+    if finalizada: return componer(pfx, finalizada)
+    H.marcar_duplicidad()
+    H.marcas_sin_efecto()
+    frags=[]; principal=False; c03=False
+    c05=bool(fegr and dpe is not None and 0 <= dpe <= parametro('medida') and not vencida)
     dm=dias_para_mayoria(fn) if fn else None
-    if dm is not None and 1 <= dm <= parametro('mayoria'):
+    proxima=dm is not None and 1 <= dm <= parametro('mayoria')
+    if proxima:
         frags.append(render('COMUN','PROXIMA_MAYORIA', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
-    dc=get_int(row.get(cols.get('dias_cumpl'))) if cols.get('dias_cumpl') else None
+    frags += H.egreso_posterior_mayoria(fn, fegr, proxima)
     if cols.get('dias_cumpl') and dc is None:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-03',
                             'días de cumplimiento ausentes o inválidos (G-05)')
     fing=fecha_valida(row.get(cols.get('ingreso'))) if cols.get('ingreso') else None
     if dc is not None and 0 <= dc <= parametro('ingreso_reciente'):
-        if fing: frags.append(render('CUMPLIMIENTO','C03_INGRESO_RECIENTE', PROGRAMA=prog, FECHA_INGRESO=fecha_es(fing))); principal=True
+        if fing:
+            frags.append(render('CUMPLIMIENTO','C03_INGRESO_RECIENTE', PROGRAMA=prog, FECHA_INGRESO=fecha_es(fing)))
+            principal=True; c03=True
+            # El egreso se dice una sola vez (decisión x): si la medida está vencida o por vencer, lo dice esa frase.
+            if fegr and not (vencida or c05): frags.append(render('HISTORIA','EGRESO_PROYECTADO', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
         else: incidencias.agregar(fila_excel, _rit(row, cols), 'C-03', 'sin fecha de ingreso — regla omitida (G-05)')
-    dpe=get_int(row.get(cols.get('dias_egresar'))) if cols.get('dias_egresar') else None
     if cols.get('dias_egresar') and dpe is None:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04/C-05',
                             'días para egresar ausentes o inválidos (G-05)')
-    fegr=fecha_valida(row.get(cols.get('egreso_proy'))) if cols.get('egreso_proy') else None
-    vencida=bool(fegr and ((dpe is not None and dpe < 0) or (dc is not None and dc < 0)))
-    if vencida: frags.append(render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
+    vok=H.vencida_valida(vencida)
+    reiterada=False
+    if vencida:
+        previa=H.reitera('VENCIDA') if vok else ''
+        reiterada=bool(previa)
+        frags.append(previa or render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
     elif ((dpe is not None and dpe < 0) or (dc is not None and dc < 0)) and not fegr:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04', 'sin egreso proyectado (G-05)')
-    c05=bool(fegr and dpe is not None and 0 <= dpe <= parametro('medida') and not vencida)
     if c05:
         frags.append(render('CUMPLIMIENTO','C05_VENCE_HOY' if dpe == 0 else 'C05_POR_VENCER', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
-    if fecha_hoja2 and not vencida and not c05:
-        frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
-    # Orden aprobado: estado principal; hitos procesales; acciones/sugerencias.
-    frags += _oido(row, cols)
+    # La fecha de egreso se dice una sola vez (decisión x): la dice la frase de la medida o la de ingreso reciente.
+    egreso_dicho=bool((vencida and not reiterada) or c05 or (c03 and fegr))
+    if fecha_hoja2 and ((not vencida and not c05) or c03):
+        if not (egreso_dicho and fegr and _d(fecha_hoja2) == _d(fegr)):
+            frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
+    # Las frases se ordenan por grupo al componer: constancias, acciones del Centro, gestión del Tribunal.
+    if not c03: frags += H.ingreso_informado(fing)
+    frags += H.prorroga(hoy, fegr, bool(vencida and vok), c05, egreso_dicho)
+    frags += H.solicitud_dce(programa, vok) + H.escrito_sin_ingreso(programa)
+    frags += H.busqueda_historia() + H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
+    frags += _oido(row, cols) or _oido_historia(row, cols)
     aud=_audiencia(row, cols, incidencias, fila_excel)
     if aud: frags.append(aud)
     frags += _curador(row, cols)
     pnrm=normalizar(programa)
     fi=fecha_valida(row.get(cols.get('ficha_ind'))) if cols.get('ficha_ind') else None
     if pnrm.startswith(_RES) and cols.get('ficha_ind'):
-        if not fi: frags.append(render('CUMPLIMIENTO','C07_SIN_FICHA'))
+        if not fi: frags.append(H.reitera('SIN_FICHA') or render('CUMPLIMIENTO','C07_SIN_FICHA'))
         else:
             dd=(hoy-_d(fi)).days
             if dd > parametro('ficha_antigua'): frags.append(render('CUMPLIMIENTO','C07_FICHA_ANTIGUA', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
             elif 0 <= dd <= parametro('ficha_reciente'): frags.append(render('CUMPLIMIENTO','C07_FICHA_RECIENTE', FECHA_FICHA_INDIVIDUAL=fecha_es(fi)))
     ffae=fecha_valida(row.get(cols.get('ficha_fae'))) if cols.get('ficha_fae') else None
-    if contiene_token(programa,'fae','fas') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae:
-        frags.append(render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
+    if contiene_token(programa,'fae','fas'):
+        if not cols.get('ficha_fae'):
+            incidencias.agregar(fila_excel, _rit(row, cols), 'C-08', 'ficha FAE no evaluable: sin columna disponible (G-05)')
+        if cols.get('ficha_fae') and fing and (hoy-_d(fing)).days > parametro('ficha_fae') and not ffae:
+            frags.append(H.reitera('SIN_FAE') or render('CUMPLIMIENTO','C08_FICHA_FAE', PNOMBRE=pn))
     if not principal and not frags:
         return componer(pfx, [render('CUMPLIMIENTO','C09_SIN_OBSERVACIONES')])
+    if not principal and H.solo_historia():
+        frags.insert(0, render('HISTORIA','MEDIDA_REVISADA'))
+    frags += H.aclaracion_causa()
     return componer(pfx, frags)

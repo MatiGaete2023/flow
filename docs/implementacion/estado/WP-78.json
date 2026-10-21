@@ -1,0 +1,25 @@
+{
+  "titulo": "Reglas de historia R8: bandeja de atención y vista",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-77"
+  ],
+  "decisiones": [
+    "j",
+    "o"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+  "tomado": "2026-10-14",
+  "rama": "claude/hopeful-hamilton-k2tcqp",
+  "pr": null,
+  "verificacion": "test_bandeja_atencion + test_review_corrections + test_ef02_rendimiento: 31 pasan.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R8.",
+    "Commits: ab71972"
+  ]
+}

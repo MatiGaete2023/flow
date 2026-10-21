@@ -17,10 +17,10 @@ RETENCION_DIAS = 60
 SESIONES_ANTERIORES = 10
 VARIABLES = {'TRIBUNAL', 'ALCANCE_MODALIDADES', 'PERIODO', 'FECHA', 'PROGRAMA', 'TABLA_REGISTROS'}
 UMBRALES = dict(
-    espera_dce=30,
+    espera_dce=0,
     espera_laja=30,
     espera_mulchen=30,
-    espera_tome=30,
+    espera_tome=60,
     proyecto_tome=60,
     mayoria=60,
     oido=45,
@@ -31,6 +31,10 @@ UMBRALES = dict(
     ficha_antigua=180,
     ficha_reciente=30,
     ficha_fae=120,
+    prorroga_reciente=90,
+    ventana_ingreso=30,
+    lista_espera_larga=100,
+    ventana_busqueda=60,
 )
 PARAMETER_LABELS = {
     'espera_dce': 'Espera DCE: consultar ingreso desde',
@@ -47,8 +51,14 @@ PARAMETER_LABELS = {
     'ficha_antigua': 'Ficha individual antigua: más de',
     'ficha_reciente': 'Ficha individual reciente: hasta',
     'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
+    'prorroga_reciente': 'Prórroga reciente (marcar para revisión): hasta',
+    'ventana_ingreso': 'Ingreso efectivo en la historia: hasta',
+    'lista_espera_larga': 'Lista de espera residencial larga: más de',
+    'ventana_busqueda': 'Órdenes de búsqueda: solo la historia de los últimos',
 }
-TEXT_REVISION = 3
+TEXT_REVISION = 7
+LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
+LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
 LEGACY_TEXTS_REV2 = {
     "COMUN.MAYORIA_EDAD": "Se hace presente que {PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}, se sugiere egresar la medida.",
@@ -72,6 +82,33 @@ LEGACY_TEXTS_REV2 = {
     "INFORMES.I01_VENCIDO_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe de avance que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.",
     "INFORMES.I02_POR_VENCER_DCE": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el informe diagnóstico ordenado en autos debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
     "INFORMES.I02_POR_VENCER_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+}
+LEGACY_TEXTS_REV4 = {
+    "HISTORIA.BASE_TRAMITE": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}.",
+    "HISTORIA.VARIOS": "En la historia de la causa constan {N} trámites descritos como «{DESC}»; el último, de fecha {FECHA}, folio {FOLIO}.",
+    "INFORMES.I01_VENCIDO_DCE": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "INFORMES.I01_VENCIDO_GENERAL": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "HISTORIA.REITERA": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
+    "HISTORIA.P_FINALIZADA": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C10_ESCRITO": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+}
+LEGACY_TEXTS_REV5 = {
+    "HISTORIA.BASE_TRAMITE": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta el trámite «{DESC}».",
+    "HISTORIA.VARIOS": "Se hace presente que constan {N} trámites «{DESC}»; el último, a folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.C10_ESCRITO": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C2_PRORROGA_HASTA": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
+    "HISTORIA.SERVICIO_INGRESO": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.CURADOR_SIN_EFECTO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se dejó sin efecto la designación de curador ad litem.",
+    "HISTORIA.CURADOR_DESIGNADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se designó curador ad litem.",
+    "HISTORIA.SOLICITUD_DCE": "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa a folio {FOLIO}, de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
+    "HISTORIA.CONTINUIDAD_ATENCION": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta respuesta sobre la continuidad de atención.",
+    "HISTORIA.INFORME_INGRESADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se ingresa el informe de cumplimiento.",
+    "HISTORIA.E04_CON_FOLIO": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}, folio {FOLIO}. (Observación administrativa; no requiere gestión del Tribunal).",
+}
+LEGACY_TEXTS_REV6 = {
+    "HISTORIA.R11_SIN_EFECTO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
+    "HISTORIA.R11_TERMINO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+    "HISTORIA.T5_INSTITUCIONES": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
 }
 LEGACY_CORREO_BODIES = {
     'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
@@ -268,6 +305,17 @@ def validate(cfg):
     emails(cfg['correos'].get('cc_adicional', ''))
 
 
+def complete_umbrales(cfg):
+    """Agrega con su valor base los umbrales que una configuración anterior no tiene; nunca cambia los existentes."""
+    added = []
+    umbrales = cfg.setdefault('umbrales', {})
+    for key, value in UMBRALES.items():
+        if key not in umbrales:
+            umbrales[key] = value
+            added.append('umbrales.' + key)
+    return added
+
+
 def complete_texts(cfg):
     """Agrega con su texto base las claves que una configuración anterior no tiene; nunca cambia las existentes.
 
@@ -286,6 +334,31 @@ def complete_texts(cfg):
     return added
 
 
+def repair_texts(cfg):
+    """Repone el texto base en las claves cuyo texto guardado ya no tiene las variables de esa clave.
+
+    Pasa cuando una clave cambió de variables entre versiones (p. ej. R11_SIN_EFECTO de la revisión 4): ese texto no
+    puede usarse y, sin esto, validate() rechazaría la configuración completa y la app no abriría."""
+    repaired = []
+    for scope, entries in defaults()['textos'].items():
+        if scope.startswith('_'):
+            continue
+        stored = cfg.get('textos', {}).get(scope, {})
+        for key, entry in entries.items():
+            current = stored.get(key)
+            if not isinstance(current, dict):
+                continue
+            expected = {f for _, f, _, _ in Formatter().parse(entry['texto']) if f}
+            try:
+                valid = variables(str(current.get('texto', '')), expected) == expected
+            except ValueError:
+                valid = False
+            if not valid or not str(current.get('texto', '')).strip():
+                current['texto'] = entry['texto']
+                repaired.append(scope + '.' + key)
+    return repaired
+
+
 class Configuration:
     def __init__(self, directory=None, *, contacts_directory=None):
         self.directory = Path(directory) if directory else user_directory()
@@ -295,7 +368,7 @@ class Configuration:
             self.save(defaults(self.contacts_directory))
         try:
             self.data = json.loads(self.path.read_text(encoding='utf-8'))
-            added = complete_texts(self.data)
+            added = complete_texts(self.data) + complete_umbrales(self.data) + repair_texts(self.data)
             validate(self.data)
         except Exception as exc:
             raise ValueError(
@@ -337,12 +410,33 @@ class Configuration:
             updated['revision_textos'] = 2
             self.save(updated)
 
+        if self.data.get('revision_textos', 1) < 4:
+            updated = deepcopy(self.data)
+            for key, previous in LEGACY_UMBRALES_REV3.items():
+                if updated['umbrales'].get(key) == previous:
+                    updated['umbrales'][key] = UMBRALES[key]
+            if updated['umbrales']['espera_tome'] > updated['umbrales']['proyecto_tome']:
+                updated['umbrales']['espera_tome'] = updated['umbrales']['proyecto_tome']
+            audiencia = updated['textos']['COMUN']['PROX_AUDIENCIA']
+            if audiencia['texto'] == LEGACY_PROX_AUDIENCIA_REV3:
+                audiencia['texto'] = defaults()['textos']['COMUN']['PROX_AUDIENCIA']['texto']
+            self.save(updated)
+
         if self.data.get('revision_textos', 1) < TEXT_REVISION:
             updated = deepcopy(self.data)
             base = defaults()['textos']
-            for full_key, previous in LEGACY_TEXTS_REV2.items():
+            # Solo se reemplaza un texto que sigue igual al anterior: lo que el usuario editó se respeta.
+            for full_key, previous in (
+                *LEGACY_TEXTS_REV2.items(),
+                *LEGACY_TEXTS_REV4.items(),
+                *LEGACY_TEXTS_REV5.items(),
+                *LEGACY_TEXTS_REV6.items(),
+            ):
                 scope, key = full_key.split('.', 1)
-                if updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous:
+                if (
+                    key in base.get(scope, {})
+                    and updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous
+                ):
                     updated['textos'][scope][key]['texto'] = base[scope][key]['texto']
             updated['revision_textos'] = TEXT_REVISION
             self.save(updated)

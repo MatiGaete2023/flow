@@ -437,6 +437,48 @@ class Application:
             command=self.save_preferences,
         )
         self.calendar_choice.pack(side='left', padx=12)
+        # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
+        self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
+        self.history_choice = ttk.Checkbutton(
+            primary,
+            text='Leer también la historia de la causa (prueba)',
+            variable=self.read_history,
+            command=self.toggle_history,
+        )
+        self.history_choice.pack(side='left', padx=12)
+        self.history_in_package = tk.BooleanVar(value=self.prefs.data['historia_en_paquete'])
+        self.history_package_choice = ttk.Checkbutton(
+            primary,
+            text='Incluir historia en el paquete',
+            variable=self.history_in_package,
+            command=self.save_preferences,
+        )
+        if self.read_history.get():
+            self.history_package_choice.pack(side='left', padx=12)
+        # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
+        self.months_back = tk.StringVar(value=str(self.prefs.data['meses_atras']))
+        ttk.Label(primary, text='Período a recolectar (meses)').pack(side='left', padx=(12, 2))
+        self.months_combo = ttk.Combobox(
+            primary, textvariable=self.months_back, values=('1', '2', '3', '4'), width=3, state='readonly'
+        )
+        self.months_combo.pack(side='left')
+        self.months_combo.bind('<<ComboboxSelected>>', lambda _event: self.save_preferences())
+        self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
+        self.reports_choice = ttk.Checkbutton(
+            primary,
+            text='Incluir informes por vencer (60 días)',
+            variable=self.reports_due,
+            command=self.save_preferences,
+        )
+        self.reports_choice.pack(side='left', padx=12)
+        self.package_per_sheet = tk.BooleanVar(value=self.prefs.data['paquete_por_hoja'])
+        ttk.Checkbutton(
+            primary,
+            text='Un paquete por hoja de RUS (muchos registros)',
+            variable=self.package_per_sheet,
+            command=self.save_preferences,
+        ).pack(side='left', padx=12)
+        self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
@@ -550,6 +592,23 @@ class Application:
     def emit(self, name, value):
         self.events.put((name, value))
 
+    def toggle_history(self):
+        if self.read_history.get():
+            self.history_package_choice.pack(side='left', padx=12)
+            self.status.set(
+                'Se abrirá una historia por causa (no por registro), hasta 600 por lote. La consulta tardará más.'
+            )
+        else:
+            self.history_package_choice.pack_forget()
+        self.save_preferences()
+
+    def months(self):
+        try:
+            value = int(self.months_back.get())
+        except ValueError:
+            return 4
+        return value if 1 <= value <= 4 else 4
+
     def save_preferences(self):
         self.prefs.data.update(
             destino=self.dest.get(),
@@ -558,6 +617,11 @@ class Application:
             paquete_consolidado=self.package_consolidated.get(),
             reutilizar_bitacoras=self.reuse_diaries.get(),
             leer_calendarios=self.read_calendars.get(),
+            leer_historia=self.read_history.get(),
+            historia_en_paquete=self.history_in_package.get(),
+            informes_por_vencer=self.reports_due.get(),
+            paquete_por_hoja=self.package_per_sheet.get(),
+            meses_atras=self.months(),
         )
         try:
             self.prefs.save()
@@ -959,6 +1023,7 @@ class Application:
         self.last_folder = self.last_package = None
         self.last_sheets_folder = self.last_diary_manifest = None
         self.result_notice.set('')
+        self.history_counts = {'leidas': 0, 'fallidas': 0}
         self.tree.delete(*self.tree.get_children())
         self.save_preferences()
         self.enqueue('pipeline', (batch, destination, self.package_consolidated.get()))
@@ -982,7 +1047,15 @@ class Application:
             return
         self.enqueue(
             'package',
-            (self.last_sheets_folder, self.last_diary_manifest, Path(target), self.package_consolidated.get()),
+            (
+                self.last_sheets_folder,
+                self.last_diary_manifest,
+                Path(target),
+                self.package_consolidated.get(),
+                None,
+                (),
+                self.months(),
+            ),
         )
 
     def enqueue(self, command, arg=None):
@@ -1157,6 +1230,10 @@ class Application:
                     self.emit('status', 'SITFA abierto en tu Chrome. Entra a Seguimiento y conecta su extensión.')
                 elif command == 'catalog':
                     self.emit('catalog', self.bridge.call('catalog', {'screen': arg}))
+                    try:
+                        self.emit('extension_caps', self.bridge.call('capabilities'))
+                    except m.PocError:
+                        pass
                 elif command == 'download':
                     BatchRunner(
                         self.bridge, self.catalog, self.emit, self.cancel, pause=self.prefs.data['pausa_consultas']
@@ -1164,9 +1241,9 @@ class Application:
                 elif command == 'package':
                     self.emit('package_done', package_current_lot(*arg))
                 elif command == 'pipeline':
-                    from flujo_paquete import run
+                    from flujo_paquete import run, run_por_hoja
 
-                    run(
+                    (run_por_hoja if self.prefs.data.get('paquete_por_hoja') else run)(
                         self.bridge,
                         self.catalog,
                         self.emit,
@@ -1174,13 +1251,31 @@ class Application:
                         *arg,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse=self.prefs.data['reutilizar_bitacoras'],
-                        calendars=self.prefs.data['leer_calendarios'],
+                        calendars=self.prefs.data.get('leer_calendarios', False),
+                        historia=self.prefs.data['leer_historia'],
+                        historia_en_paquete=self.prefs.data['historia_en_paquete'],
+                        meses=self.prefs.data.get('meses_atras', 4),
+                        informes=self.prefs.data.get('informes_por_vencer', False),
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
 
                     batch, destination, resume = arg
                     reuse_base = destination if self.prefs.data['reutilizar_bitacoras'] and not resume else None
+                    historia = None
+                    if resume and self.prefs.data['leer_historia']:
+                        anterior = Path(resume) / 'historia' / 'historias.json'
+                        if anterior.is_file():
+                            from lectura_historia import LectorHistoria
+
+                            historia = LectorHistoria(
+                                self.bridge,
+                                self.emit,
+                                self.cancel,
+                                pause=self.prefs.data['pausa_consultas'],
+                                anterior=anterior,
+                                meses=self.prefs.data.get('meses_atras', 4),
+                            )
                     DiaryRunner(
                         self.bridge,
                         self.catalog,
@@ -1188,7 +1283,8 @@ class Application:
                         self.cancel,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse_base=reuse_base,
-                        calendars=self.prefs.data['leer_calendarios'],
+                        calendars=self.prefs.data.get('leer_calendarios', False),
+                        **({'historia': historia} if historia else {}),
                     ).run(batch, destination, resume)
                 elif command == 'joint':
                     from flujo_csmp import JointRunner
@@ -1242,12 +1338,17 @@ class Application:
             remember(self.prefs, value['folder'])
             if value['fase'] == 'consultas':
                 self.last_sheets_folder = Path(value['folder'])
-            else:
+            elif value['fase'] == 'bitacoras':
                 self.last_diary_manifest = Path(value['folder']) / 'bitacoras.json'
             return True
         if name == 'phase':
             self.phase_name.set(
-                {'consultas': '1 Consultar SITFA', 'bitacoras': '2 Leer bitácoras', 'paquete': '3 Crear paquete'}[value]
+                {
+                    'consultas': '1 Consultar SITFA',
+                    'bitacoras': '2 Leer bitácoras',
+                    'informes': '3 Informes por vencer',
+                    'paquete': '4 Crear paquete',
+                }.get(value, value)
             )
             self._phase_started = time.monotonic()
             self._phase_paused = 0.0
@@ -1308,6 +1409,29 @@ class Application:
 
                 write(Path(self.bitacoras_reply), {**value, 'id': self.bitacoras_id})
             self.refresh()
+            return True
+        if name == 'extension_caps':
+            soportada = isinstance(value, dict) and 'historia_lectura' in (value.get('protocolos') or {})
+            estado = 'normal' if soportada else 'disabled'
+            self.history_choice.configure(state=estado)
+            self.history_package_choice.configure(state=estado)
+            if not soportada:
+                from contrato_integral import VERSION
+
+                self.status.set(f'Actualiza la extensión a {VERSION} para leer la historia.')
+            return True
+        if name == 'history_progress':
+            key = 'leidas' if value['estado'] in ('LEIDA', 'VACIA_COMPROBADA') else 'fallidas'
+            self.history_counts[key] += 1
+            self.status.set(
+                f"Historia: {self.history_counts['leidas']} leídas · {self.history_counts['fallidas']} fallidas"
+            )
+            return True
+        if name == 'history_done':
+            self.status.set(
+                f"Historia {value['estado']}: {value['leidas']} leídas · {value['fallidas']} fallidas · "
+                f"{value['tramites_en_ventana']} trámites en el período recolectado"
+            )
             return True
         if name == 'diary_progress':
             self.tree.insert(
@@ -1479,7 +1603,9 @@ class Application:
         self.root.after(100, self.poll)
 
 
-def package_current_lot(sheets_folder, diary_manifest, target, consolidated=False):
+def package_current_lot(
+    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4, avisos=()
+):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
     from export_csmp_capture import export_capture_with_note
@@ -1488,9 +1614,16 @@ def package_current_lot(sheets_folder, diary_manifest, target, consolidated=Fals
     target = Path(target)
     if target.exists():
         raise m.PocError('El destino ya existe; elige un nombre nuevo.')
-    lots = load_sources([sheets_folder])
+    lots = load_sources([sheets_folder, *extra_folders])
     path, note = export_capture_with_note(
-        lots, target, diaries=[Path(diary_manifest)], match_diaries=True, consolidated=consolidated
+        lots,
+        target,
+        diaries=[Path(diary_manifest)],
+        match_diaries=True,
+        consolidated=consolidated,
+        historia=historia,
+        meses=meses,
+        avisos=avisos,
     )
     capture = read_capture(path)
     summary = next(

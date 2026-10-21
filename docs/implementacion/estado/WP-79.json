@@ -1,0 +1,25 @@
+{
+  "titulo": "Reglas de historia R9: integración y cierre",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    "WP-78"
+  ],
+  "decisiones": [
+    "j",
+    "o"
+  ],
+  "estado": "EN_REVISION",
+  "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
+  "tomado": "2026-10-14",
+  "rama": "claude/hopeful-hamilton-k2tcqp",
+  "pr": null,
+  "verificacion": "verificar_wp: identidades 0, golden, restricciones, ruff, módulos y enlaces PASAN; las suites reportan FALLA solo por falta de tkinter en el entorno (8 módulos sin recolectar en el Asistente, 4 en el Descargador).",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R9.",
+    "Commits: (este commit)"
+  ]
+}

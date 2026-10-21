@@ -155,8 +155,8 @@ D5 cuatro meses, D6 consolidado en ZIP, D8 sin fallos observados. E3 se aplica p
 
 ## Paquetes de trabajo
 
-**WP-65 · Auditoría de pruebas y código legado** — M · solicitud del usuario del 17 de octubre de 2026.
-Alcance, evidencia de obsolescencia, correcciones y límites en [su ficha](wp/WP-65.md).
+**WP-58 · Auditoría de pruebas y código legado** — M · solicitud del usuario del 17 de octubre de 2026.
+Alcance, evidencia de obsolescencia, correcciones y límites en [su ficha](wp/WP-58.md).
 
 **WP-81 · Revisión propia posterior a WP-63/WP-80** — M · depende funcionalmente de ambos.
 Alcance, archivos y criterios en [su ficha](wp/WP-81.md); PR borrador y E3 antes de integrar.

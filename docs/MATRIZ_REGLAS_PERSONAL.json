@@ -43,7 +43,7 @@
     "id": "COMUN.PROX_AUDIENCIA",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+    "texto_inicial": "Audiencia decretada para el {FECHA_AUDIENCIA}.",
     "acciones": [],
     "condicion": "Ver REFERENCIA_CATALOGO_ASISTENTE.md y motor/reglas_espera.py"
   },
@@ -51,7 +51,7 @@
     "id": "COMUN.PROX_AUDIENCIAS",
     "vigente": true,
     "fuente": "Decisión del usuario 2026-10-19 (plan de ajustes, WA-1)",
-    "texto_inicial": "Audiencias fijadas para {FECHAS_AUDIENCIA}.",
+    "texto_inicial": "Audiencias decretadas para {FECHAS_AUDIENCIA}.",
     "acciones": [],
     "condicion": "Dos o más audiencias futuras en «Prox. Auds.» (RUS V11); se desactiva junto con COMUN.PROX_AUDIENCIA"
   },
@@ -198,7 +198,7 @@
     "id": "INFORMES.I01_VENCIDO_DCE",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "texto_inicial": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
     "acciones": [
       "programa_vencido",
       "PC_INFO"
@@ -209,7 +209,7 @@
     "id": "INFORMES.I01_VENCIDO_GENERAL",
     "vigente": true,
     "fuente": "Asistente v9.1 · decisiones 2026-09-22",
-    "texto_inicial": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "texto_inicial": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
     "acciones": [
       "programa_vencido",
       "PC_INFO"

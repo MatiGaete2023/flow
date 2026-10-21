@@ -54,13 +54,13 @@ def _fila(tmp_path, audiencias, config=None):
 
 def test_una_audiencia_conserva_el_texto_singular(tmp_path):
     row = _fila(tmp_path, date(2026, 12, 28))
-    assert 'Audiencia fijada para el 28 de diciembre de 2026.' in row.observation
+    assert 'Audiencia decretada para el 28 de diciembre de 2026.' in row.observation
     assert 'COMUN.PROX_AUDIENCIAS' not in row.rules
 
 
 def test_varias_audiencias_futuras_usan_el_texto_plural_aprobado(tmp_path):
     row = _fila(tmp_path, '05/01/2027, 28/12/2026')
-    assert 'Audiencias fijadas para el 28 de diciembre de 2026 y el 5 de enero de 2027.' in row.observation
+    assert 'Audiencias decretadas para el 28 de diciembre de 2026 y el 5 de enero de 2027.' in row.observation
     assert 'COMUN.PROX_AUDIENCIAS' in row.rules
     assert not row.warnings
 
@@ -68,20 +68,20 @@ def test_varias_audiencias_futuras_usan_el_texto_plural_aprobado(tmp_path):
 def test_tres_audiencias_se_enumeran_en_orden(tmp_path):
     row = _fila(tmp_path, '28/12/2026; 05/01/2027; 10/02/2027')
     assert (
-        'Audiencias fijadas para el 28 de diciembre de 2026, el 5 de enero de 2027 y el 10 de febrero de 2027.'
+        'Audiencias decretadas para el 28 de diciembre de 2026, el 5 de enero de 2027 y el 10 de febrero de 2027.'
     ) in row.observation
 
 
 def test_audiencias_pasadas_se_descartan(tmp_path):
     row = _fila(tmp_path, '01/10/2026, 28/12/2026')
-    assert 'Audiencia fijada para el 28 de diciembre de 2026.' in row.observation
-    assert 'Audiencias fijadas' not in row.observation
+    assert 'Audiencia decretada para el 28 de diciembre de 2026.' in row.observation
+    assert 'Audiencias decretadas' not in row.observation
     assert 'Audiencia' not in _fila(tmp_path, '01/10/2026, 02/10/2026').observation
 
 
 def test_fecha_ilegible_queda_como_incidencia_y_no_oculta_las_legibles(tmp_path):
     row = _fila(tmp_path, '28/12/2026, por fijar')
-    assert 'Audiencia fijada para el 28 de diciembre de 2026.' in row.observation
+    assert 'Audiencia decretada para el 28 de diciembre de 2026.' in row.observation
     assert 'próxima audiencia con fecha ilegible (G-05)' in row.warnings
 
 

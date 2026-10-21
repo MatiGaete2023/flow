@@ -166,11 +166,9 @@ def reconcile(candidate, previous, *, resolutions=None):
         if row.id not in matches:
             continue
         prior = old_rows[matches[row.id]]
-        for field in EDIT_FIELDS:
-            setattr(row, field, deepcopy(getattr(prior, field)))
-        if same_bytes:
-            for field in ('sync_base', 'sync_local', 'sync_state'):
-                setattr(row, field, deepcopy(getattr(prior, field)))
+        copied = EDIT_FIELDS + (('sync_base', 'sync_local', 'sync_state') if same_bytes else ())
+        for name in copied:
+            setattr(row, name, deepcopy(getattr(prior, name)))
         if row.overrides:
             from .record_edits import recalculate
 

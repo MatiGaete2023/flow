@@ -13,7 +13,7 @@ from nurus.personal.product_state import stamp, stale
 from nurus.personal.outputs import Draft
 from nurus.personal.work import Work
 from test_capture_contract import fixture
-from test_bitacora_lote import manifest
+from bitacora_fixtures import manifest
 
 
 def test_dates_ties_origin_and_ingreso_are_not_inferred(tmp_path):

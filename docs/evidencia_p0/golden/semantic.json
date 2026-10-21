@@ -20,9 +20,10 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_PROYECTO_Y_CORREO"
+            "ESPERA.E05_PROYECTO_Y_CORREO",
+            "HISTORIA.E05_DIAS"
           ],
           "actions": [
             "programa_espera",
@@ -46,9 +47,10 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_SOLO_CORREO"
+            "ESPERA.E05_SOLO_CORREO",
+            "HISTORIA.E05_DIAS"
           ],
           "actions": [
             "programa_espera"
@@ -71,9 +73,10 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_PROYECTO_Y_CORREO"
+            "ESPERA.E05_PROYECTO_Y_CORREO",
+            "HISTORIA.E05_DIAS"
           ],
           "actions": [
             "programa_espera",
@@ -333,19 +336,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -369,8 +372,8 @@
                 "style": null
               },
               {
-                "value": null,
-                "type": "n",
+                "value": "PC_IE",
+                "type": "s",
                 "format": "General",
                 "style": null
               },
@@ -381,7 +384,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -497,19 +500,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_SOLO_CORREO\"]",
+                "value": "[\"ESPERA.E05_SOLO_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -545,7 +548,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -661,19 +664,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -697,8 +700,8 @@
                 "style": null
               },
               {
-                "value": null,
-                "type": "n",
+                "value": "PC_IE",
+                "type": "s",
                 "format": "General",
                 "style": null
               },
@@ -709,7 +712,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1222,13 +1225,13 @@
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1266,13 +1269,13 @@
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_SOLO_CORREO\"]",
+                "value": "[\"ESPERA.E05_SOLO_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1310,13 +1313,13 @@
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -5209,14 +5212,14 @@
   },
   "config": {
     "version": 1,
-    "revision_textos": 3,
+    "revision_textos": 7,
     "revision_correos": 3,
     "perfil": "Asistente v9.1; prioridad confirmada por usuario",
     "umbrales": {
-      "espera_dce": 30,
+      "espera_dce": 0,
       "espera_laja": 30,
       "espera_mulchen": 30,
-      "espera_tome": 30,
+      "espera_tome": 60,
       "proyecto_tome": 60,
       "mayoria": 60,
       "oido": 45,
@@ -5226,12 +5229,16 @@
       "informe": 30,
       "ficha_antigua": 180,
       "ficha_reciente": 30,
-      "ficha_fae": 120
+      "ficha_fae": 120,
+      "prorroga_reciente": 90,
+      "ventana_ingreso": 30,
+      "lista_espera_larga": 100,
+      "ventana_busqueda": 60
     },
     "desactivadas": [],
     "textos": {
       "_meta": {
-        "version": "v9.1.0",
+        "version": "v9.4.0",
         "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
       },
       "COMUN": {
@@ -5261,12 +5268,12 @@
           "nota": "Catálogo v2 2026-07-14 — T-02"
         },
         "PROX_AUDIENCIA": {
-          "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
+          "texto": "Audiencia decretada para el {FECHA_AUDIENCIA}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — T-03"
         },
         "PROX_AUDIENCIAS": {
-          "texto": "Audiencias fijadas para {FECHAS_AUDIENCIA}.",
+          "texto": "Audiencias decretadas para {FECHAS_AUDIENCIA}.",
           "confirmado": true,
           "nota": "T-03 plural; aprobado por el usuario 2026-10-19 (RUS V11 muestra varias audiencias separadas por coma)"
         },
@@ -5357,14 +5364,14 @@
       },
       "INFORMES": {
         "I01_VENCIDO_DCE": {
-          "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+          "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
           "confirmado": true,
-          "nota": "Catálogo v2 2026-07-14 — I-01"
+          "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; aprobado por el usuario"
         },
         "I01_VENCIDO_GENERAL": {
-          "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+          "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío.",
           "confirmado": true,
-          "nota": "Catálogo v2 2026-07-14 — I-01"
+          "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; aprobado por el usuario"
         },
         "I02_POR_VENCER_DCE": {
           "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
@@ -5375,6 +5382,178 @@
           "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — I-02"
+        }
+      },
+      "HISTORIA": {
+        "BASE_TRAMITE": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta el trámite «{DESC}».",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: constancia neutra aprobada por el usuario (opción A)"
+        },
+        "VARIOS": {
+          "texto": "Se hace presente que constan {N} trámites «{DESC}»; el último, en resolución de fecha {FECHA} (folio {FOLIO}).",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: constancia neutra aprobada por el usuario (opción A)"
+        },
+        "MEDIDA_REVISADA": {
+          "texto": "Medida revisada.",
+          "confirmado": true,
+          "nota": "Espera, regla 3 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "E04_CON_FOLIO": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado en resolución de fecha {FECHA_RESOLUCION} (folio {FOLIO}). (Observación administrativa; no requiere gestión del Tribunal).",
+          "confirmado": true,
+          "nota": "Espera, regla 1 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "R3_MULTI": {
+          "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado.",
+          "confirmado": true,
+          "nota": "Espera, regla 3 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "REITERA": {
+          "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}.",
+          "confirmado": true,
+          "nota": "REITERA — redacción abreviada aprobada por el usuario el 15-oct-2026"
+        },
+        "MATERIA_CURADOR": {
+          "texto": "la ausencia de curador ad litem en RUS",
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "MATERIA_SIN_FICHA": {
+          "texto": "la ausencia de ficha individual en RUS",
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "MATERIA_SIN_FAE": {
+          "texto": "la ausencia de ficha FAE en RUS",
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "MATERIA_VENCIDA": {
+          "texto": "la medida vencida en RUS",
+          "confirmado": true,
+          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "E05_DIAS": {
+          "texto": "Al {CORTE}, RUS registra {N} días de espera.",
+          "confirmado": true,
+          "nota": "Espera, E-05 ampliada — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "E10_LISTA": {
+          "texto": "Registra {N} días en lista de espera.",
+          "confirmado": true,
+          "nota": "Espera, E10 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "MEDIDA_SIN_VIGENCIA": {
+          "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Cumplimiento, sin seguimiento — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "EGRESO_PROYECTADO": {
+          "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Cumplimiento, C-03 ampliado (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+        },
+        "P_FINALIZADA": {
+          "texto": "La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+          "confirmado": true,
+          "nota": "Causa P con Conciliación o Dictación de sentencia sin Egreso de servicio — regla dada por el usuario el 14-oct-2026; «de que» aprobado el 15-oct-2026"
+        },
+        "C10_ESCRITO": {
+          "texto": "Informe de avance recepcionado en resolución de fecha {FECHA_ESCRITO} (folio {FOLIO_ESCRITO}). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: dividido en constancia y acción del Centro; «de que»; aprobado por el usuario el 15-oct-2026"
+        },
+        "J2_ACUMULADOS": {
+          "texto": "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}.",
+          "confirmado": true,
+          "nota": "Informes, J2 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "I01_SIN_ENVIO_GENERAL": {
+          "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}.",
+          "confirmado": true,
+          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "I01_SIN_ENVIO_DCE": {
+          "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}.",
+          "confirmado": true,
+          "nota": "Informes, I-01 sin frase de envío — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "T5_INSTITUCIONES": {
+          "texto": "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+          "confirmado": true,
+          "nota": "Transversal T5 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+        },
+        "C2_PRORROGA_HASTA": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+        },
+        "INGRESO_INFORMADO": {
+          "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+        },
+        "SERVICIO_INGRESO": {
+          "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO}).",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+        },
+        "CURADOR_SIN_EFECTO": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la designación de curador ad litem.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción propuesta y aprobada por el usuario"
+        },
+        "CURADOR_DESIGNADO": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se designó curador ad litem.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción análoga a la anterior; aprobado por el usuario el 15-oct-2026"
+        },
+        "EGRESO_POSTERIOR_MAYORIA": {
+          "texto": "El egreso proyectado es posterior a la mayoría de edad.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción aprobada por el usuario (cuando ya se informó la mayoría de edad)"
+        },
+        "EGRESO_POSTERIOR_MAYORIA_FECHA": {
+          "texto": "El egreso proyectado es posterior a la mayoría de edad, que se alcanza el {FECHA_MAYORIA}.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: variante con la fecha cuando no se informó antes; aprobado por el usuario el 15-oct-2026"
+        },
+        "SOLICITUD_DCE": {
+          "texto": "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa en resolución de fecha {FECHA} (folio {FOLIO}), a la espera de lo que se resuelva en la audiencia respectiva.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario (SPE. Resp. Solicitud DCE (escrito)); solo Cumplimiento"
+        },
+        "CONTINUIDAD_ATENCION": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta respuesta sobre la continuidad de atención.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
+        },
+        "INFORME_INGRESADO": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se ingresa el informe de cumplimiento.",
+          "confirmado": true,
+          "nota": "Decisión x, 15-oct-2026: redacción aprobada por el usuario (Ingreso Informe de Cumplimiento X)"
+        },
+        "R11_ORDEN": {
+          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se decretó orden de búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
+        },
+        "R11_PIDE_CUENTA": {
+          "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
+        },
+        "R11_SIN_EFECTO": {
+          "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
+        },
+        "R11_TERMINO": {
+          "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+          "confirmado": true,
+          "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
         }
       }
     },
@@ -5500,3258 +5679,325 @@
   },
   "network_calls": 0,
   "outlook_executed": false,
+  "reglas_rus": {
+    "ESPERA": [
+      {
+        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Registra 120 días en lista de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+        "rules": [
+          "ESPERA.E05_PROYECTO_Y_CORREO",
+          "HISTORIA.E10_LISTA",
+          "HISTORIA.T5_INSTITUCIONES"
+        ],
+        "actions": [
+          "programa_espera",
+          "PC_IE"
+        ],
+        "avisos": [
+          [
+            1,
+            "T5_INSTITUCIONES",
+            "Curador con varias instituciones en RUS"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": [
+          [
+            1,
+            "R6_DUPLICIDAD",
+            "Más de un ingreso del mismo NNA al mismo programa"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": [
+          [
+            1,
+            "R6_DUPLICIDAD",
+            "Más de un ingreso del mismo NNA al mismo programa"
+          ]
+        ]
+      },
+      {
+        "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ficticio. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+        "rules": [
+          "ESPERA.E06_SIN_RESOLUCION",
+          "COMUN.CURADOR"
+        ],
+        "actions": [],
+        "avisos": []
+      }
+    ],
+    "INFORMES": [
+      {
+        "observation": "Persona AFT: Informe de avance vencido desde el 20 de agosto de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ficticio requiriendo su envío.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL",
+          "HISTORIA.J2_ACUMULADOS"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": []
+      },
+      {
+        "observation": "Persona AFT: Informe de avance vencido desde el 20 de septiembre de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ficticio requiriendo su envío.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL",
+          "HISTORIA.J2_ACUMULADOS"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": []
+      },
+      {
+        "observation": "Persona AFT: Informe de avance vencido desde el 20 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ficticio requiriendo su envío.",
+        "rules": [
+          "INFORMES.I01_VENCIDO_GENERAL"
+        ],
+        "actions": [
+          "programa_vencido",
+          "PC_INFO"
+        ],
+        "avisos": []
+      }
+    ]
+  },
   "diary_workbook": [
-    {
-      "sheet": "Resumen",
-      "rows": 3,
-      "columns": 18,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cobertura",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Desde",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Hasta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entradas recientes",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Última fecha centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ambigüedad",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Con carga",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Administrativas",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Origen desconocido",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Detalle",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "JSON de textos extensos",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Clave de texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "PARCIAL",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-06-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "FALLIDA",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-06-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:R3",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 24.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 24.0,
-        "I": 19.0,
-        "J": 65.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 65.0,
-        "P": 65.0,
-        "Q": 65.0,
-        "R": 65.0
-      }
-    },
-    {
-      "sheet": "Bitácoras",
-      "rows": 2,
-      "columns": 21,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Autor",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tipo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "CC",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Etapa",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Origen",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto reiterado",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Posible reiteración",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fuente",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "JSON de textos extensos",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Clave de texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 texto",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "44",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Al tribunal",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cumplimiento",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sin respuesta registrada",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": false,
-            "type": "b",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": false,
-            "type": "b",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "captura.html",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:U2",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 24.0,
-        "F": 19.0,
-        "G": 24.0,
-        "H": 24.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 65.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 19.0,
-        "P": 65.0,
-        "Q": 24.0,
-        "R": 24.0,
-        "S": 65.0,
-        "T": 65.0,
-        "U": 65.0
-      }
-    },
-    {
-      "sheet": "Incidencias",
-      "rows": 3,
-      "columns": 6,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Motivo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Detalle",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Lectura parcial",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Lectura fallida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sesión vencida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:F3",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 65.0
-      }
-    },
     {
       "sheet": "Copia íntegra",
       "rows": 2,
-      "columns": 20,
-      "cells": [
-        [
-          {
-            "value": "Tribunal código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Causa RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Ingreso RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "RIT",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Entrada RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Usuario centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tipo",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "CC",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Etapa",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto centro",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Usuario tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto tribunal",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado respuesta",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Estado RUS código",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "HFLG_Envio RUS",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Fecha captura",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "44",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-08-12T10:13:00",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Al tribunal",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Cumplimiento",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Texto completo que la tabla oculta.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "USR",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sin respuesta registrada",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "6",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "1",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08T12:00:00Z",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ]
-      ],
-      "filter": "A1:T2",
-      "freeze": "A2",
-      "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 35.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 19.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 65.0,
-        "N": 28.0,
-        "O": 28.0,
-        "P": 65.0,
-        "Q": 24.0,
-        "R": 24.0,
-        "S": 24.0,
-        "T": 19.0
-      }
-    },
-    {
-      "sheet": "Capturas",
-      "rows": 3,
       "columns": 13,
       "cells": [
         [
           {
-            "value": "Tribunal código",
+            "value": "tribunal_codigo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Causa RUS",
+            "value": "causa_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Ingreso RUS",
+            "value": "ingreso_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "RIT",
+            "value": "entry_id",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Persona",
+            "value": "fecha",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
+          },
+          {
+            "value": "autor",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "tipo",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "etapa",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fecha_respuesta",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "respuesta",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fuente",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "fila_fuente",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "33",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "44",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "2026-08-12T10:13:00",
+            "type": "s",
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Etapa código",
+            "value": "Al tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Fecha captura",
+            "value": "Cumplimiento",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Aperturas idénticas",
+            "value": "Texto completo que la tabla oculta.",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Entradas tabla capturada",
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "captura.html",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "SHA-256 HTML",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Alcance",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Advertencias",
-            "type": "s",
-            "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "33",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "3",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "2026-10-08T12:00:00Z",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 1,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          }
-        ],
-        [
-          {
-            "value": "11",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "22",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "34",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "P-12-2026",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Persona de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Centro de prueba",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": 0,
-            "type": "n",
-            "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": "Sesión vencida",
-            "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "value": null,
-            "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ]
       ],
-      "filter": "A1:M3",
+      "filter": "A1:M2",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 17.0,
-        "E": 35.0,
-        "F": 24.0,
-        "G": 24.0,
-        "H": 19.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 24.0,
-        "M": 24.0
-      }
+      "widths": {}
+    },
+    {
+      "sheet": "Textos íntegros",
+      "rows": 1,
+      "columns": 6,
+      "cells": [
+        [
+          {
+            "value": "Clave",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Campo",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Parte",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Total",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "SHA256 texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Texto",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ]
+      ],
+      "filter": "A1:F1",
+      "freeze": "A2",
+      "merged": [],
+      "widths": {}
     },
     {
       "sheet": "Fuentes",
@@ -8763,176 +6009,195 @@
             "value": "Archivo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "SHA-256",
+            "value": "SHA256",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Peticiones",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Aperturas",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
-            "value": "Detalle",
+            "value": "Estado",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": "bitacoras.json",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "d17adf7289cb17e77cbf591d726669c3cd245f91c76a1cae154e0497813788a8",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 3,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "INCOMPLETA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:E2",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 24.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 65.0
-      }
+      "widths": {}
+    },
+    {
+      "sheet": "Ingresos",
+      "rows": 3,
+      "columns": 6,
+      "cells": [
+        [
+          {
+            "value": "Tribunal",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Causa",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Ingreso",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Alcance",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Entradas",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "Advertencias",
+            "type": "s",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "33",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "PARCIAL",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": 1,
+            "type": "n",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          }
+        ],
+        [
+          {
+            "value": "11",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "22",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "34",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": "FALLIDA",
+            "type": "s",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": 0,
+            "type": "n",
+            "format": "General",
+            "style": null
+          },
+          {
+            "value": null,
+            "type": "inlineStr",
+            "format": "General",
+            "style": null
+          }
+        ]
+      ],
+      "filter": "A1:F3",
+      "freeze": "A2",
+      "merged": [],
+      "widths": {}
     },
     {
       "sheet": "Lecturas",
@@ -8944,1055 +6209,398 @@
             "value": "Tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Modalidad",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Pestaña",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Página",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Fila",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "RIT",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Persona",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Centro",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Causa RUS",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Ingreso RUS",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Estado lectura",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Detalle",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Archivo",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "SHA-256",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Fecha captura",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Código extensión",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "22",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "33",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "LEIDA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "22",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "34",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FALLIDA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Sesión vencida",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "FAE",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 2,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "P-12-2026",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Persona de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Centro de prueba",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "SIN_VINCULO",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Sin enlace comprobado",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "captura.html",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "252f9f85bf3cfb878e0dbf1fffcf27898333d4cd89e8ac306006777ab797edbc",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08T12:00:00Z",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:P4",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 17.0,
-        "G": 35.0,
-        "H": 24.0,
-        "I": 24.0,
-        "J": 24.0,
-        "K": 24.0,
-        "L": 65.0,
-        "M": 24.0,
-        "N": 24.0,
-        "O": 19.0,
-        "P": 24.0
-      }
+      "widths": {}
     },
     {
       "sheet": "Consultas",
@@ -10004,584 +6612,226 @@
             "value": "Tribunal",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Modalidad",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Pestaña",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Estado",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Páginas recorridas",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Registros enumerados",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Detalle",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "ENUMERADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 1,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 3,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "1",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "11",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "4",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Cumplimiento",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "NO_CONSULTADA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": 0,
             "type": "n",
             "format": "General",
-            "style": [
-              2,
-              0,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "La ejecución terminó antes de esta consulta.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:G5",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 28.0,
-        "B": 24.0,
-        "C": 24.0,
-        "D": 24.0,
-        "E": 24.0,
-        "F": 24.0,
-        "G": 65.0
-      }
+      "widths": {}
     },
     {
       "sheet": "Lote",
@@ -10593,281 +6843,118 @@
             "value": "Dato",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           },
           {
             "value": "Valor",
             "type": "s",
             "format": "General",
-            "style": [
-              1,
-              2,
-              1,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "style": null
           }
         ],
         [
           {
             "value": "Estado del recorrido",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "INCOMPLETA",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Fecha",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "2026-10-08",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Error del recorrido",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": null,
             "type": "inlineStr",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Descargador",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Extensión",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Selección",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "{\"tribunals\": [\"11\"], \"modalities\": [\"1\", \"2\", \"3\", \"4\"], \"tabs\": [\"Cumplimiento\"]}",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ],
         [
           {
             "value": "Historial",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           },
           {
             "value": "Copia de la tabla capturada; no acredita historial remoto completo.",
             "type": "s",
-            "format": "@",
-            "style": [
-              2,
-              0,
-              1,
-              49,
-              0,
-              1,
-              0,
-              0,
-              0
-            ]
+            "format": "General",
+            "style": null
           }
         ]
       ],
       "filter": "A1:B8",
       "freeze": "A2",
       "merged": [],
-      "widths": {
-        "A": 24.0,
-        "B": 24.0
-      }
+      "widths": {}
     }
   ]
 }

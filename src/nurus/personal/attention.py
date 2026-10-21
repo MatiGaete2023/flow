@@ -22,6 +22,17 @@ class CaseStatus:
     capturado: str = ''
     vence: str = ''
     cambio: str = ''
+    nivel: int = 0
+    marca: str = ''
+
+
+MARCAS = {1: 'PRIORITARIO', 2: 'REQUIERE_ATENCION', 3: 'REVISAR'}
+
+
+def _aviso(row):
+    """Aviso de mayor prioridad (nivel menor) de la fila; None si no hay o la fila está excluida."""
+    avisos = [a for a in (getattr(row, 'avisos', None) or ()) if a and a[0] in MARCAS]
+    return None if getattr(row, 'excluded', False) or not avisos else min(avisos, key=lambda a: a[0])
 
 
 def _get(product, key, default=None):
@@ -140,7 +151,21 @@ def case_statuses(work, drafts, projects):
             state, action = 'BORRADOR_GUARDADO', 'Pendiente de actuación: envío o firma (decisión humana)'
         else:
             state, action = 'SIN_ACCION', 'Sin gestión propuesta'
-        result[row.id] = CaseStatus(row.id, state, reason, action, source, captured, due.get(row.id, ''), change)
+        top = _aviso(row)
+        if top and state == 'SIN_ACCION':
+            reason, action = reason or top[2], 'Revisa: ' + top[2]
+        result[row.id] = CaseStatus(
+            row.id,
+            state,
+            reason,
+            action,
+            source,
+            captured,
+            due.get(row.id, ''),
+            change,
+            top[0] if top else 0,
+            MARCAS[top[0]] if top else '',
+        )
     return result
 
 
@@ -162,6 +187,13 @@ def attention_items(work, drafts, projects):
             due = datetime.strptime(item.vence, '%d/%m/%Y') if item.vence else datetime.max
         except ValueError:
             due = datetime.max
-        return (ranks[item.estado], due, 0 if item.cambio else 1, item.row_id)
+        return (
+            0 if item.nivel == 1 else 1,
+            ranks.get(item.estado, len(ranks)),
+            item.nivel or len(MARCAS) + 1,
+            due,
+            0 if item.cambio else 1,
+            item.row_id,
+        )
 
-    return sorted((item for item in statuses.values() if item.estado in ranks), key=key)
+    return sorted((item for item in statuses.values() if item.estado in ranks or item.nivel), key=key)

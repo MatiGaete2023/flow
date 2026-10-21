@@ -1,7 +1,13 @@
 """Contrato explícito de las piezas entregadas juntas; no consulta RUS."""
 
-PROTOCOLS = {'bitacoras_lectura': 1, 'descarga_conjunta': 1, 'pdf_seleccion': 1, 'calendario_lectura': 1}
-VERSION = '2.7.6'
+PROTOCOLS = {
+    'bitacoras_lectura': 1,
+    'descarga_conjunta': 1,
+    'pdf_seleccion': 1,
+    'calendario_lectura': 1,
+    'historia_lectura': 1,
+}
+VERSION = '2.8.0'
 
 
 def capabilities():
@@ -35,7 +41,7 @@ def verify_extension(bridge):
         or result.get('escritura_rus') is not False
     ):
         raise m.PocError(
-            'La extensión no incluye conjuntamente lectura de bitácoras, descarga CSMP y PDF con selección restituida. Actualiza la extensión desde la carpeta de esta entrega y vuelve a conectar.'
+            'La extensión no incluye conjuntamente lectura de bitácoras e historia, descarga CSMP y PDF con selección restituida. Actualiza la extensión desde la carpeta de esta entrega y vuelve a conectar.'
         )
     if result.get('version') != VERSION:
         raise m.PocError(

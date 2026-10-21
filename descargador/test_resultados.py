@@ -285,3 +285,15 @@ class ResultTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class NombreSinParentesisTest(unittest.TestCase):
+    def test_la_columna_nombre_del_consolidado_no_lleva_parentesis(self):
+        import resultados
+
+        headers = ('RIT', 'NOMBRE', 'RUT')
+        rows = [(1, ('X-1-2026', 'Persona Ficticia (Reservado)', '1-9')), (2, ('X-2-2026', 'Otra (A) Persona', '2-7'))]
+        limpio = resultados.limpiar_nombres(headers, rows)
+        self.assertEqual([r[1][1] for r in limpio], ['Persona Ficticia', 'Otra Persona'])
+        self.assertEqual([r[1][0] for r in limpio], ['X-1-2026', 'X-2-2026'])
+        self.assertEqual(resultados.limpiar_nombres(('RIT',), [(1, ('X-1-2026',))]), [(1, ('X-1-2026',))])

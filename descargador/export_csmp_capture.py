@@ -1,6 +1,6 @@
 """Paquete local desde originales verificados, sin llamadas de Chrome ni CSMP."""
 
-from datetime import datetime, date
+from datetime import datetime
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -12,6 +12,7 @@ from nurus.capture.diaries import import_lotes, diary_paths
 from resultados import tables, table_mode, inside, headers_and_rows, parse_day
 import motor as m
 from nurus.capture.coverage import aggregate
+from nurus.capture.historias import cargar as cargar_historias, literal
 
 
 def calendar_date(normalized):
@@ -23,12 +24,52 @@ def calendar_date(normalized):
     return day.isoformat() if day else ''
 
 
-def literal(value):
-    if value is None:
-        return ''
-    if isinstance(value, (date, datetime)):
-        return value.isoformat()
-    return str(value)
+def asociar_calendarios(data):
+    """Calendarios de informes sin ids remotos: se asocian a un ingreso verificado solo si tribunal, RIT, nombre y
+    programa coinciden con exactamente un ingreso de las demás tablas de la captura (nunca por RIT solo ni con empate).
+    Devuelve los record_id resueltos."""
+    from collections import defaultdict
+    from nurus.rus.columns import map_columns
+
+    def clave(court, normalized, modo):
+        try:
+            columnas = map_columns(list(normalized), modo)
+        except Exception:
+            return None
+        partes = [m.normalized(normalized.get(columnas.get(k, ''), '')) for k in ('rit', 'nombre', 'programa')]
+        return (court, *partes) if all(partes) else None
+
+    ingresos = defaultdict(set)
+    for registro in data['registros']:
+        if registro['identity_status'] != 'VERIFICADA' or registro['record_type'] in ('INFORMES', 'OTRO', 'EGRESADOS'):
+            continue
+        k = clave(registro['court_code'], json.loads(registro['normalized_json']), registro['record_type'])
+        if k:
+            ingresos[k].add(tuple(registro[f] for f in ('cause_id', 'ingreso_id', 'person_id', 'program_id')))
+    por_fisica = {
+        (r['query_id'], r['source_sha256'], r['original_row']): r
+        for r in data['registros']
+        if r['record_type'] == 'INFORMES'
+    }
+    resueltos = []
+    for calendario in data.get('calendarios', []):
+        if calendario['association'] == 'VERIFICADA':
+            continue
+        k = clave(calendario['court_code'], json.loads(calendario['normalized_json']), 'INFORMES')
+        candidatos = ingresos.get(k, ())
+        if len(candidatos) != 1:
+            continue
+        ids = next(iter(candidatos))
+        registro = por_fisica.get((calendario['query_id'], calendario['source_sha256'], calendario['original_row']))
+        for destino in (calendario, registro):
+            if destino is None:
+                continue
+            destino.update(zip(('cause_id', 'ingreso_id', 'person_id', 'program_id'), ids))
+        calendario['association'] = 'VERIFICADA'
+        if registro is not None:
+            registro['identity_status'] = 'VERIFICADA'
+            resueltos.append(registro['record_id'])
+    return resueltos
 
 
 def consolidated_workbook(lots):
@@ -64,6 +105,9 @@ def export_capture(
     match_diaries=False,
     consolidated=False,
     _consolidated_data=None,
+    historia=None,
+    meses=4,
+    avisos=(),
 ):
     lots = list(lots)
     if not lots:
@@ -75,6 +119,8 @@ def export_capture(
     if diaries:
         fingerprint += json.dumps(sorted(sha256(p.read_bytes()).hexdigest() for p in diary_paths(diaries)))
         fingerprint += 'MATCH' if match_diaries else 'ALL'
+    if historia:
+        fingerprint += 'HISTORIA' + sha256(Path(historia).read_bytes()).hexdigest()
     cid = 'captura-' + sha256(fingerprint.encode()).hexdigest()[:24]
     data = {'consultas': [], 'registros': [], 'incidencias': []}
     originals = {}
@@ -215,6 +261,14 @@ def export_capture(
                             'normalized_json': json.dumps(normalized, ensure_ascii=False),
                         }
                     )
+    for codigo, mensaje in avisos:
+        # Avisos del flujo (p. ej. calendario pedido y no completo): viajan en el paquete, no solo en el Descargador.
+        incident(data['consultas'][0]['query_id'] if data['consultas'] else '', codigo, mensaje)
+    resueltos = set(asociar_calendarios(data))
+    if resueltos:
+        data['incidencias'] = [
+            i for i in data['incidencias'] if not (i['code'] == 'IDENTIDAD_INCIERTA' and i['record_id'] in resueltos)
+        ]
     if diaries:
         data['bitacoras'] = []
         identities = (
@@ -242,6 +296,15 @@ def export_capture(
                 screen='bitacoras',
                 error='Las bitácoras disponibles no tienen correspondencia remota verificada con los registros seleccionados.',
             )
+        from datetime import date as _date
+        from nurus.capture.temporal import earliest
+
+        # Período a recolectar (1 a 4 meses): las entradas anteriores a la ventana no pasan al paquete.
+        try:
+            corte = _date.fromisoformat(captured[:10])
+        except ValueError:
+            corte = _date.today()
+        primera_fecha = earliest(corte, meses).isoformat()
         for qi, snapshot in enumerate(batch['queries']):
             qid = f'diary-{qi}'
             selection = {
@@ -262,6 +325,10 @@ def export_capture(
             for warning in snapshot.get('warnings', []):
                 incident(qid, 'BITACORA_ADVERTENCIA', warning)
             for en, entry in enumerate(snapshot['entries'], 1):
+                # Con 4 meses (valor por defecto) el paquete conserva la bitácora completa, como antes: el motor
+                # busca ahí la primera observación de una materia para reiterarla. Solo un período menor recorta.
+                if meses < 4 and entry['fecha'][:10] < primera_fecha:
+                    continue
                 common = {k: '' for k in COMMON}
                 common.update(
                     capture_id=cid,
@@ -359,11 +426,15 @@ def export_capture(
                         'normalized_json': values,
                     }
                 )
+    if historia:
+        _historia(historia, data, query, incident, cid, captured)
     states = {k: 'NO_SOLICITADA' for k in TABLES}
     states.update(
         consultas=aggregate(q['coverage'] for q in data['consultas']),
         registros=aggregate(
-            q['coverage'] for q in data['consultas'] if q['screen'] not in ('bitacoras', 'calendario_ingreso')
+            q['coverage']
+            for q in data['consultas']
+            if q['screen'] not in ('bitacoras', 'calendario_ingreso', 'historia_tramites')
         ),
         incidencias='COMPLETA' if data['incidencias'] else 'VACIA_COMPROBADA',
     )
@@ -374,6 +445,12 @@ def export_capture(
             state = aggregate(relevant)
             states[name] = 'VACIA_COMPROBADA' if not data.get(name) and state == 'COMPLETA' else state
             data.setdefault(name, [])
+    if historia:
+        states['historia_tramites'] = aggregate(
+            q['coverage'] for q in data['consultas'] if q['screen'] == 'historia_tramites'
+        )
+        if not data.get('historia_tramites') and states['historia_tramites'] == 'COMPLETA':
+            states['historia_tramites'] = 'VACIA_COMPROBADA'
     from contrato_integral import capabilities
 
     build = capabilities()
@@ -387,3 +464,129 @@ def export_capture(
         'table_states': states,
     }
     return write_capture(destination, metadata, data, originals=originals, consolidated=consolidated_bytes)
+
+
+HISTORIA_COBERTURA = {
+    'LEIDA': 'COMPLETA',
+    'VACIA_COMPROBADA': 'VACIA_COMPROBADA',
+    'FALLIDA': 'FALLIDA',
+    'IDENTIDAD_INCIERTA': 'IDENTIDAD_INCIERTA',
+    'PENDIENTE': 'CANCELADA',
+    'CANCELADA': 'CANCELADA',
+}
+
+
+def _historia(manifest, data, query, incident, cid, captured):
+    """Una consulta por causa (alcance CAUSA, sin remote_identity) y una fila por trámite dentro de la ventana."""
+    estado, causas = cargar_historias(manifest)
+    lote = Path(manifest).resolve().parent.parent.name
+    data['historia_tramites'] = []
+    vinculos = {}
+    for v in estado['vinculos']:
+        vinculos.setdefault(v['clave'], v)
+    fallos = list(estado.get('errores_listado', []))
+    if estado.get('estado') != 'COMPLETA' and not fallos:
+        fallos = [{'error': 'HISTORIA_ENUMERACION_INCOMPLETA'}]
+    for n, fallo in enumerate(fallos, 1):
+        qid = f'hist-listado-{n}'
+        query(
+            qid,
+            {'tab': 'HISTORIA', 'capture_tables': ['historia_tramites']},
+            'FALLIDA',
+            captured,
+            screen='historia_tramites',
+            error='HISTORIA_ENUMERACION_FALLIDA',
+        )
+        incident(qid, 'HISTORIA_ENUMERACION_FALLIDA', 'No se pudo enumerar toda la historia solicitada.')
+    if not causas and not fallos:
+        query(
+            'hist-listado-vacio',
+            {'tab': 'HISTORIA', 'capture_tables': ['historia_tramites']},
+            'VACIA_COMPROBADA',
+            captured,
+            screen='historia_tramites',
+        )
+    for n, item in enumerate(causas, 1):
+        causa = item['causa']
+        qid = f'hist-{n}'
+        cobertura = HISTORIA_COBERTURA.get(causa['estado'], 'FALLIDA')
+        primera = vinculos.get(item['clave'], {})
+        selection = {
+            'tribunal': causa['tribunal'],
+            'tribunal_nombre': causa.get('tribunal_nombre', ''),
+            'modality': primera.get('modalidad', ''),
+            'tab': 'HISTORIA',
+            'capture_tables': ['historia_tramites'],
+            'historia_causa': {'source_system': 'RUS', 'court_code': causa['tribunal'], 'cause_id': causa['causa_id']},
+            'ventana': {
+                'criterio': estado.get('criterio_temporal', 'ventana_4_meses'),
+                'desde': causa.get('desde', ''),
+                'hasta': causa.get('hasta', ''),
+            },
+        }
+        cuando = causa.get('leida') or captured
+        lectura_ok = cobertura in ('COMPLETA', 'VACIA_COMPROBADA')
+        row = query(
+            qid,
+            selection,
+            cobertura,
+            cuando,
+            1,
+            1 if lectura_ok else 0,
+            screen='historia_tramites',
+            error=causa.get('error', '') if cobertura == 'FALLIDA' else '',
+        )
+        if cobertura == 'FALLIDA':
+            incident(qid, 'HISTORIA_FALLIDA', causa.get('error') or 'No se pudo leer la historia.')
+        elif cobertura == 'IDENTIDAD_INCIERTA':
+            incident(qid, 'HISTORIA_IDENTIDAD_INCIERTA', causa.get('error') or 'Identidad de la causa no verificable.')
+        elif cobertura == 'CANCELADA':
+            incident(qid, 'HISTORIA_NO_LEIDA', 'La historia no se leyó (lote cancelado o con tope).')
+        for codigo in causa.get('advertencias', []):
+            incident(qid, codigo, 'Advertencia del lector de historia.')
+        for fila in item['ventana']:
+            common = {k: '' for k in COMMON}
+            common.update(
+                capture_id=cid,
+                query_id=qid,
+                source_system='RUS',
+                court_code=row['court_code'],
+                court_name=row['court_name'],
+                rit_original=causa['rit'],
+                cause_id=causa['causa_id'],
+                modality_code=row['modality_code'],
+                tab=primera.get('pestana', ''),
+                captured_at=cuando,
+                original_file=f'respaldo/{lote}/historia/' + causa['archivo'],
+                original_row=str(fila['fila']),
+                source_sha256=causa['sha256'],
+                coverage='COMPLETA',
+            )
+            data['historia_tramites'].append(
+                {
+                    **common,
+                    'event_id': f'{qid}-{fila["fila"]}',
+                    'event_at': fila['fecha_iso'],
+                    'time_precision': 'DIA' if fila['fecha_iso'] else 'DESCONOCIDA',
+                    'time_zone': 'DESCONOCIDA',
+                    'scope': 'CAUSA',
+                    'event_type': 'tramite',
+                    'description': fila['descripcion'],
+                    'reference': fila['referencia'],
+                    'identity_status': 'CAUSA',
+                    'folio': fila['folio'],
+                    'stage': fila['etapa'],
+                    'annex_visible': 'true' if fila['anexo'] else 'false',
+                    'raw_json': json.dumps(
+                        {
+                            'Folio': fila['folio'],
+                            'Etapa': fila['etapa'],
+                            'Trámite': fila['tramite'],
+                            'Desc. Trámite': fila['descripcion'],
+                            'Referencia': fila['referencia'],
+                            'Fecha Tram': fila['fecha_texto'],
+                        },
+                        ensure_ascii=False,
+                    ),
+                }
+            )

@@ -11,7 +11,7 @@ from nurus.capture.diaries import import_lote
 from export_csmp_capture import export_capture
 from resultados import load_lot
 from test_resultados import fixture
-from test_bitacora_lote import manifest as diary_fixture
+from bitacora_fixtures import manifest as diary_fixture
 
 
 def test_partial_calendar_and_unattempted_calendar_never_complete(tmp_path):
