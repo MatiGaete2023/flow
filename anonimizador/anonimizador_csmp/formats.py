@@ -97,6 +97,9 @@ def _check_dimensions(rows, cells):
 
 def has_formulas(data):
     """¿Algún hoja del libro guarda fórmulas? Solo se conservan sus valores calculados."""
+    from . import safezip
+
+    safezip.validate(data)  # límites de tamaño y compresión antes de descomprimir hojas
     with zipfile.ZipFile(BytesIO(data)) as book:
         for name in book.namelist():
             if name.startswith("xl/worksheets/") and name.endswith(".xml"):

@@ -119,8 +119,10 @@ def _specials(specials, out, session):
         if manifest is not None:
             state = str(manifest.get("estado", state))
             result = {k: v for k, v in manifest.items() if k not in ("archivos",)}
+            # Todo valor conservado, también los anidados, pasa por el anonimizador JSON (revisión del PR #51).
             result = {
-                k: jsonfmt.value(k, v, session) if not isinstance(v, (dict, list)) else v for k, v in result.items()
+                k: jsonfmt.walk(v, session, k) if isinstance(v, (dict, list)) else jsonfmt.value(k, v, session)
+                for k, v in result.items()
             }
             files = []
             for item in items:

@@ -115,3 +115,37 @@ def test_docx_con_imagenes_se_rechaza(tmp_path):
     path = tmp_path / "foto.docx"
     path.write_bytes(data)
     assert not run([path], Options(), tmp_path / "o").ok
+
+
+def test_docx_otras_partes_con_autores_y_textos_se_depuran(tmp_path):
+    # Revisión Codex en el PR #51 (21-oct-2026): people.xml, glosario y propiedades personalizadas salían sin tratar.
+    people = (
+        '<w15:people xmlns:w15="w15"><w15:person w15:author="Ana Díaz Soto">'
+        '<w15:presenceInfo w15:providerId="None" w15:userId="Ana Díaz Soto"/></w15:person></w15:people>'
+    )
+    glosario = (
+        '<w:glossaryDocument xmlns:w="w"><w:docParts><w:docPart><w:docPartBody><w:p><w:r><w:t>Firma Ana Díaz Soto</w:t>'
+        "</w:r></w:p></w:docPartBody></w:docPart></w:docParts></w:glossaryDocument>"
+    )
+    custom = '<Properties xmlns:vt="vt"><property name="Responsable"><vt:lpwstr>Ana Díaz Soto</vt:lpwstr></property></Properties>'
+    data = make_docx(
+        {
+            "word/document.xml": "<w:document xmlns:w='w'><w:body><w:p><w:r><w:t>Hola</w:t></w:r></w:p></w:body></w:document>",
+            "word/people.xml": people,
+            "word/glossary/document.xml": glosario,
+            "docProps/custom.xml": custom,
+        }
+    )
+    out = one(tmp_path, "Carta.docx", data)
+    with zipfile.ZipFile(out) as archive:
+        for name in ("word/people.xml", "word/glossary/document.xml", "docProps/custom.xml"):
+            assert "Díaz" not in archive.read(name).decode(), name
+
+
+def test_ics_desplaza_fechas_basicas_rfc5545(tmp_path):
+    ics = (
+        "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:x1\r\nDTSTART:20261021T150000Z\r\n"
+        "DTEND;VALUE=DATE:20261022\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+    )
+    texto = one(tmp_path, "agenda.ics", ics, shift_days=10).read_text(encoding="utf-8")
+    assert "DTSTART:20261031T150000Z" in texto and "DTEND;VALUE=DATE:20261101" in texto

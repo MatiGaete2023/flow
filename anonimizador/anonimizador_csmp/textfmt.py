@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date, timedelta
 from html import escape, unescape
 
 from .formats import decode_text
@@ -82,6 +83,24 @@ def seed_ics(data, session):
             seed_line(value.replace("\\,", ",").replace("\\n", "\n"), session)
 
 
+ICS_BASIC = re.compile(r"(?<!\d)(\d{4})(\d{2})(\d{2})(?=T\d{6}Z?(?!\d)|(?!\d))")
+
+
+def shift_ics(value, days):
+    """Fechas RFC 5545 básicas (20261021, 20261021T150000Z) y las escritas con guiones o barras."""
+    if not days:
+        return value
+
+    def basic(match):
+        try:
+            moved = date(int(match.group(1)), int(match.group(2)), int(match.group(3))) + timedelta(days=days)
+        except (ValueError, OverflowError):
+            return match.group(0)
+        return f"{moved.year:04d}{moved.month:02d}{moved.day:02d}"
+
+    return ICS_BASIC.sub(basic, shift_dates(value, days))
+
+
 def anonymize_ics(data, session):
     out, texts, serial = [], [], 0
     for raw in unfold(decode_text(data)):
@@ -90,7 +109,7 @@ def anonymize_ics(data, session):
         if not sep:
             continue
         if prop in ICS_KEEP:
-            new_value = shift_dates(value, session.options.shift_days) if prop.startswith("DT") else value
+            new_value = shift_ics(value, session.options.shift_days) if prop.startswith("DT") else value
             new = f"{name}:{new_value}"
         elif prop == "UID":
             serial += 1
@@ -106,7 +125,10 @@ def anonymize_ics(data, session):
 
 
 W_T = re.compile(r"(?P<popen><w:p\b(?:[^>/]|/(?!>))*>)|(?P<pclose></w:p>)|(?P<t><w:t\b[^>]*?>)(?P<text>[^<]*)</w:t>")
-DOCX_PARTS = re.compile(r"^word/(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$")
+DOCX_PARTS = re.compile(r"^word/(?:glossary/)?(document|header\d*|footer\d*|footnotes|endnotes|comments)\.xml$")
+# Autores en comentarios, revisiones y people.xml (w:, w15: u otro prefijo).
+DOCX_AUTHORS = re.compile(r'(\b\w+:(?:author|initials|userId))="[^"]*"')
+CUSTOM_VALUES = re.compile(r"(<vt:(?:lpwstr|lpstr|bstr)\b[^>]*>)[^<]*(</vt:(?:lpwstr|lpstr|bstr)>)")
 
 
 def _docx_paragraphs(xml):
@@ -164,7 +186,7 @@ def anonymize_docx(data, session):
                 if "xml:space" not in tag:
                     tag = tag[:-1] + ' xml:space="preserve">'
                 xml = xml[:start] + tag + text + "</w:t>" + xml[end:]
-            xml = re.sub(r'(w:author|w:initials)="[^"]*"', r'\1="anonimizado"', xml)
+            xml = DOCX_AUTHORS.sub(r'\1="anonimizado"', xml)
             xml = re.sub(r"<w:instrText\b[^>]*>[^<]*</w:instrText>", "", xml)
             raw = xml.encode("utf-8")
         elif low == "docprops/core.xml":
@@ -177,6 +199,11 @@ def anonymize_docx(data, session):
             for tag in ("Company", "Manager", "HyperlinkBase"):
                 xml = re.sub(rf"(<{tag}\b[^>]*>)[^<]*(</{tag}>)", r"\1\2", xml)
             raw = xml.encode("utf-8")
+        elif low.startswith("word/") and low.endswith(".xml"):
+            xml = DOCX_AUTHORS.sub(r'\1="anonimizado"', raw.decode("utf-8", "replace"))
+            raw = xml.encode("utf-8")
+        elif low == "docprops/custom.xml":
+            raw = CUSTOM_VALUES.sub(r"\1anonimizado\2", raw.decode("utf-8", "replace")).encode("utf-8")
         elif low.endswith(".rels"):
             xml = raw.decode("utf-8", "replace")
             xml = re.sub(r'Target="[^"]*"(\s+TargetMode="External")', r'Target="about:blank"\1', xml)

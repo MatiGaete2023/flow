@@ -121,3 +121,35 @@ def test_xlsx_bomba_de_descompresion_se_rechaza(tmp_path):
     result = run([bomb], Options(), tmp_path / "o")
     assert not result.ok and not result.outputs
     _ = Workbook
+
+
+def test_manifiesto_con_datos_anidados_se_anonimiza(tmp_path):
+    # Revisión Codex en el PR #51 (21-oct-2026): los valores anidados del manifiesto se copiaban sin tratar.
+    manifiesto = {
+        "estado": "VERIFICADO",
+        "persona": {"nombre": "Ana Díaz Soto", "rut": valid_rut()},
+        "lista": ["Ana Díaz Soto"],
+        "archivos": [{"archivo": "datos.csv", "bytes": 10}],
+    }
+    path = build(
+        tmp_path / "lote.zip",
+        {"datos.csv": "Nombre,Obs\nPersona Uno,ok\n", "MANIFIESTO.json": json.dumps(manifiesto, ensure_ascii=False)},
+    )
+    files = read_zip(run([path], Options(), tmp_path / "o").outputs[0])
+    texto = files["MANIFIESTO.json"].decode("utf-8")
+    assert "Díaz" not in texto and valid_rut() not in texto
+
+
+def test_formulas_se_buscan_solo_despues_de_validar_el_libro(monkeypatch):
+    from anonimizador_csmp import formats
+
+    llamadas = []
+
+    def rechaza(data):
+        llamadas.append(len(data))
+        raise safezip.UnsafeArchive("bomba")
+
+    monkeypatch.setattr(safezip, "validate", rechaza)
+    with pytest.raises(safezip.UnsafeArchive):
+        formats.has_formulas(b"PK\x05\x06" + b"\x00" * 18)
+    assert llamadas
