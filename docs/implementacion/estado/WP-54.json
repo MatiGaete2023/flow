@@ -9,19 +9,20 @@
     "o",
     "p"
   ],
-  "estado": "EN_VERIFICACION",
+  "estado": "INTEGRADO",
   "ejecutor": "Codex /root (correcciones E3 sobre 9310d60)",
   "tomado": "2026-10-13",
   "rama": "feat/historia-causa-sitfa",
-  "pr": 45,
+  "pr": 50,
   "verificacion": "PASA Linux sobre 2af78a5: verificar_wp, 960 Asistente + 338 Descargador + 62 subpruebas; 11 omitidas y 6 xfail conocidos; CI local focal y ambas pruebas cjs PASA. Evidencia: docs/implementacion/verificacion/WP-53.json",
-  "revision": null,
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
   "auditoria": null,
-  "integrado_en": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
   "notas": [
     "Guía vigente: docs/historia_causa/GUIA_IMPLEMENTACION.md; traspaso en docs/historia_causa/AVANCE.md.",
     "Aplicadas las diez correcciones E3 con regresiones sintéticas, sin cambios en motor, textos tradicionales ni Outlook.",
     "Medición final sobre commit limpio 2af78a5: PASA, cero fallos. Fallos iniciales de entorno corregidos con LOCALAPPDATA escribible y Xvfb.",
-    "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno."
+    "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
   ]
 }

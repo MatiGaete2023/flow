@@ -43,3 +43,18 @@ def test_guardar_umbrales_conserva_los_de_otra_version(tmp_path):
     BaseApp._save_params(app)
     umbrales = Configuration(cfg.directory).data['umbrales']
     assert umbrales[AJENO] == 90 and umbrales['oido'] == 40
+
+
+def test_ningun_umbral_queda_bajo_el_boton_de_guardar(tmp_path):
+    # Revisión E3 (21-oct-2026): con 18 umbrales la última fila compartía la celda del botón «Guardar umbrales».
+    run_gui(
+        tmp_path,
+        """
+params = app._config_parameter_widgets[0][1].master
+celdas = {}
+for widget in params.grid_slaves():
+    info = widget.grid_info()
+    celdas.setdefault((int(info['row']), int(info['column'])), []).append(widget)
+assert all(len(widgets) == 1 for widgets in celdas.values()), sorted(c for c, w in celdas.items() if len(w) > 1)
+""",
+    )

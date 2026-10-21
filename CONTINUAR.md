@@ -5,36 +5,14 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 77; último en el orden: WP-99.
+- Paquetes integrados: 73 de 77; último en el orden: WP-79.
 
 | WP | Estado | Título |
 | --- | --- | --- |
 | WP-02 | BLOQUEADO_USUARIO | Acta de uso real |
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
-| WP-52 | EN_VERIFICACION | Historia de causa H0: caracterizar la ventana y registrar la decisión |
-| WP-53 | EN_REVISION | Historia de causa: núcleo (extensión, lector en una pasada, Excel, paquete, retención) |
-| WP-54 | EN_VERIFICACION | Historia de causa: interfaz, flujo, entrega Windows y acta |
-| WP-58 | EN_VERIFICACION | Auditoría de pruebas y código legado |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
-| WP-55 | EN_REVISION | Correcciones de la autoauditoría E3 (WP-65 a WP-69) |
-| WP-56 | EN_REVISION | Decisiones del usuario sobre la E3 propia y limpieza de datos privados |
-| WP-57 | EN_REVISION | Captura PDF de consulta vacía sin espera indefinida |
-| WP-64 | EN_REVISION | Fase B: correcciones de auditoría final |
-| WP-65 | EN_REVISION | Reglas de historia, segunda ronda (decisión x) |
-| WP-66 | EN_REVISION | Ronda de usuario 16-oct: nombre sin paréntesis, formato de resolución, búsqueda, RES, informes por vencer, período y rendimiento |
-| WP-67 | EN_REVISION | Limpieza de herramientas (tools/) |
-| WP-68 | EN_REVISION | Limpieza del Asistente y del Descargador |
-| WP-69 | EN_REVISION | Retiro de la auditoría de bitácoras anterior |
-| WP-71 | EN_REVISION | Reglas de historia R1: camino de datos (historia y bitácora hasta el motor) |
-| WP-72 | EN_REVISION | Reglas de historia R2: textos del scope HISTORIA |
-| WP-73 | EN_REVISION | Reglas de historia R3: cambios deliberados a reglas originales |
-| WP-74 | EN_REVISION | Reglas de historia R4: capa de análisis |
-| WP-75 | EN_REVISION | Reglas de historia R5: Espera |
-| WP-76 | EN_REVISION | Reglas de historia R6: Cumplimiento |
-| WP-77 | EN_REVISION | Reglas de historia R7: Informes |
-| WP-78 | EN_REVISION | Reglas de historia R8: bandeja de atención y vista |
-| WP-79 | EN_REVISION | Reglas de historia R9: integración y cierre |
 <!-- estado:fin -->
 
 **Una sola rama de trabajo: `feat/ejecucion-plan-20261008`.** Todo el código y la documentación están aquí; `main`

@@ -128,3 +128,20 @@ Usuario: «Actualiza los planes en el repositorio y comienza a implementar».
 - Identidad y tiempo: fuentes conservadas, uso sustantivo de historia solo con vínculo VERIFICADA y hasta el corte.
 
 Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sigue en `1a2dd0f`.
+
+## Decisiones del 21 de octubre de 2026
+
+- z) Una sola versión vigente: `claude/lucid-sagan-hw9ul4` (dev10, Descargador 2.8.0) y `claude/exciting-gates-5xq24d`
+  (WA-1 a WA-7, CT-05/07/11, WD-1) se integran combinando ambas y priorizando lucid-sagan donde se contradicen.
+  Fuente: «Combina ambas en A1–A4, prioriza lucid-sagan». A1: «Audiencia decretada» / «Audiencias decretadas». A2:
+  mayoría de edad sola, con marca. A3: historia + audiencias múltiples en Espera y Cumplimiento; Informes sin audiencia
+  y con margen DCE de 10 días. A4: «Informe diagnóstico vencido desde el …». Las casillas del Descargador «Leer
+  calendario de informes» e «Incluir informes por vencer (60 días)» son distintas y se conservan («dejalos como
+  estaban»). La auditoría de pruebas WP-65 de la línea feat pasa a WP-58.
+- aa) Ramas con nombre claro: `ultima-version/asistente-descargador` y `ultima-version/anonimizador`. Fuente: «Cambia el
+  nombre de las ramas con las últimas versiones de cada cosa».
+- ab) E3 pendiente hecha por la sesión `01UiipQ3fZdQ8wDJSoFcza3h` y dada por cumplida; integrar a las ramas pertinentes.
+  Fuente: «Los elementos que todavía no han pasado la revisión E3, revísalos tú; si pasan, da por cumplida la revisión e
+  intégralos». Informe y salvedad de independencia (la resolución de la fusión es de la misma sesión):
+  `docs/implementacion/revision/E3_INTEGRACION_20261021.md`. No autoriza aceptación institucional, fusión a `main` ni
+  release.

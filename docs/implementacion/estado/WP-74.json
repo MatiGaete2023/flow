@@ -9,17 +9,18 @@
     "j",
     "o"
   ],
-  "estado": "EN_REVISION",
+  "estado": "INTEGRADO",
   "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
   "tomado": "2026-10-14",
   "rama": "claude/hopeful-hamilton-k2tcqp",
-  "pr": null,
+  "pr": 50,
   "verificacion": "test_analisis_historia + test_historia_datos: 17 pasan; ruff limpio.",
-  "revision": null,
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
   "auditoria": null,
-  "integrado_en": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
   "notas": [
     "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R4.",
-    "Commits: 2f86824"
+    "Commits: 2f86824",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
   ]
 }

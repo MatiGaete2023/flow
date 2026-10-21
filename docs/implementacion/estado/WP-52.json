@@ -7,17 +7,18 @@
     "o",
     "p"
   ],
-  "estado": "EN_VERIFICACION",
+  "estado": "INTEGRADO",
   "ejecutor": "claude-sesion-01Ltq2nH",
   "tomado": "13 de octubre de 2026",
   "rama": "feat/historia-causa-sitfa",
-  "pr": null,
-  "verificacion": null,
-  "revision": null,
+  "pr": 50,
+  "verificacion": "PASA en la rama integrada ultima-version/asistente-descargador: Asistente 1240/11/5 xfail; Descargador 352/62; golden17, inventario con 48 bajas declaradas y controles PASA; CI del PR #50 PASA.",
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
   "auditoria": null,
-  "integrado_en": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
   "notas": [
     "H0 cerrado: contracts/csmp_capture_v1/HISTORIA_VENTANA.md; extractor descargador/extraer_estructura_historia.py; fixtures ficticios fieles.",
-    "Decisiones o y p registradas el 13 de octubre de 2026."
+    "Decisiones o y p registradas el 13 de octubre de 2026.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
   ]
 }

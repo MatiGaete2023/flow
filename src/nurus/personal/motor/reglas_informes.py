@@ -32,8 +32,9 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     else: return ''
     finalizada = H.causa_finalizada(row.get(cols.get('rit'), '') if cols.get('rit') else '')
     if finalizada: return componer(pfx, finalizada)
-    # WA-7: el DCE dentro del margen aún se informa por vencer; la historia se contrasta solo si se dice vencido.
-    vencido = key.startswith('I01')
+    # El vencimiento para contrastar la historia es el de RUS (decisión u); el margen DCE de WA-7 solo cambia la
+    # frase y su plazo. Un informe ingresado tras el vencimiento desmiente también al DCE dentro del margen.
+    vencido = dias < 0
     i1 = H.informe_historia(fv, vencido)
     i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None)
     if vencido and not (i1 or i3) and H.informe_previo(programa, fv):

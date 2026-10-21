@@ -1636,18 +1636,19 @@
         "o",
         "p"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sesion-01Ltq2nH",
       "tomado": "13 de octubre de 2026",
       "rama": "feat/historia-causa-sitfa",
-      "pr": null,
-      "verificacion": null,
-      "revision": null,
+      "pr": 50,
+      "verificacion": "PASA en la rama integrada ultima-version/asistente-descargador: Asistente 1240/11/5 xfail; Descargador 352/62; golden17, inventario con 48 bajas declaradas y controles PASA; CI del PR #50 PASA.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "H0 cerrado: contracts/csmp_capture_v1/HISTORIA_VENTANA.md; extractor descargador/extraer_estructura_historia.py; fixtures ficticios fieles.",
-        "Decisiones o y p registradas el 13 de octubre de 2026."
+        "Decisiones o y p registradas el 13 de octubre de 2026.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-53": {
@@ -1661,21 +1662,22 @@
         "o",
         "p"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root (correcciones E3 sobre 9310d60)",
       "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
-      "pr": 45,
+      "pr": 50,
       "verificacion": "PASA Linux sobre 2af78a5: verificar_wp, 960 Asistente + 338 Descargador + 62 subpruebas; 11 omitidas y 6 xfail conocidos; CI local focal y ambas pruebas cjs PASA. Evidencia: docs/implementacion/verificacion/WP-53.json",
-      "revision": "APROBADO",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Guía vigente: docs/historia_causa/GUIA_IMPLEMENTACION.md; traspaso en docs/historia_causa/AVANCE.md.",
         "Aplicadas las diez correcciones E3 con regresiones sintéticas, sin cambios en motor, textos tradicionales ni Outlook.",
         "Medición final sobre commit limpio 2af78a5: PASA, cero fallos. Fallos iniciales de entorno corregidos con LOCALAPPDATA escribible y Xvfb.",
         "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno.",
-        "E3 APROBADA (13-oct, sobre ea3005e). Riesgos mayores 1-2 y workflow Windows (menor 9) pendientes; ver AVANCE.md."
+        "E3 APROBADA (13-oct, sobre ea3005e). Riesgos mayores 1-2 y workflow Windows (menor 9) pendientes; ver AVANCE.md.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-54": {
@@ -1689,20 +1691,21 @@
         "o",
         "p"
       ],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root (correcciones E3 sobre 9310d60)",
       "tomado": "2026-10-13",
       "rama": "feat/historia-causa-sitfa",
-      "pr": 45,
+      "pr": 50,
       "verificacion": "PASA Linux sobre 2af78a5: verificar_wp, 960 Asistente + 338 Descargador + 62 subpruebas; 11 omitidas y 6 xfail conocidos; CI local focal y ambas pruebas cjs PASA. Evidencia: docs/implementacion/verificacion/WP-53.json",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Guía vigente: docs/historia_causa/GUIA_IMPLEMENTACION.md; traspaso en docs/historia_causa/AVANCE.md.",
         "Aplicadas las diez correcciones E3 con regresiones sintéticas, sin cambios en motor, textos tradicionales ni Outlook.",
         "Medición final sobre commit limpio 2af78a5: PASA, cero fallos. Fallos iniciales de entorno corregidos con LOCALAPPDATA escribible y Xvfb.",
-        "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno."
+        "Pendiente nueva E3 independiente; aceptación real y acta solo del usuario. API de GitHub Forbidden: no se puede consultar ni lanzar Windows desde este entorno.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-58": {
@@ -1716,18 +1719,19 @@
         }
       ],
       "decisiones": [],
-      "estado": "EN_VERIFICACION",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root",
       "tomado": "17 de octubre de 2026",
       "rama": "wp/WP-58-auditoria-pruebas-20261017",
-      "pr": 47,
+      "pr": 50,
       "verificacion": "PASA local en ac204e0: Asistente 975/11/6 xfail; Descargador 283/62 subpruebas; 9 controles y golden17. CI remota PASA tras reintento (18 de octubre): Linux run 39074332528; Windows Asistente 984/2/6 run 39074332475; Descargador 283/62 run 39074332482.",
-      "revision": "Dos subagentes de la misma raíz; no equivalen a E3 independiente. Sin cambios en las áreas de riesgo de la decisión j.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Base canónica 0ff63a1611b8f2df04533061b4da25848b3e0879; cambios ajenos pendientes no integrados.",
-        "Una función sin uso retirada, cero pruebas retiradas, 31 casos nuevos de protección de cobertura."
+        "Una función sin uso retirada, cero pruebas retiradas, 31 casos nuevos de protección de cobertura.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-70": {
@@ -1933,19 +1937,20 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre fac9f0d: Asistente 1.138, Descargador 348; 48 bajas/sustituciones declaradas (verificacion/WP-55-reemplazos.txt); golden sin cambios; identidades, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-55.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Informe: docs/implementacion/revision/E3_WP65_69_20261016.md (tres revisores independientes en paralelo; no reemplaza la E3 de otra raíz).",
         "Decisiones del usuario (16-oct) aplicadas en WP-56: R6 por último trámite, D5 sin aviso, R5b y D11 no se corrigen.",
-        "No integrado ni aceptado."
+        "No integrado ni aceptado.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-56": {
@@ -1962,19 +1967,20 @@
         "j",
         "y"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre 88c15e5: Asistente 1.138, Descargador 348; 48 bajas/sustituciones declaradas (verificacion/WP-55-reemplazos.txt); golden sin cambios; identidades, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-56.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Decisiones: PLAN_VIGENTE.md y), puntos 9 y 10.",
         "El historial git conserva los datos retirados; purgarlo es WP-17 y exige autorización escrita.",
-        "No integrado ni aceptado."
+        "No integrado ni aceptado.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-57": {
@@ -1990,18 +1996,19 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre fecfe92: Asistente 1.138, Descargador 348; golden sin cambios; identidades, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-57.json.",
-      "revision": "PENDIENTE E3: toca la extensión SITFA (decisión j).",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Prueba del usuario 16-oct: E_PIPELINE «Chrome no respondió a tiempo» en la consulta 8/34, primera sin registros.",
-        "La prueba Playwright con extensión real no corre en este contenedor (Chromium sin Extensions.triggerAction); queda para la CI Windows con workflow_dispatch."
+        "La prueba Playwright con extensión real no corre en este contenedor (Chromium sin Extensions.triggerAction); queda para la CI Windows con workflow_dispatch.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-64": {
@@ -2020,20 +2027,21 @@
         "v",
         "w"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Codex /root — Fase B autorizada por usuario",
       "tomado": "14 de octubre de 2026",
       "rama": "wp/WP-64-auditoria-fase-b",
-      "pr": 46,
+      "pr": 50,
       "verificacion": "PASA sobre b69d1ed: Asistente 1090/11 omitidas/5 xfail; Descargador 343/62 subpruebas; controles completos y nueve sustituciones declaradas PASA. verificacion/WP-64.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente, según PLAN_IMPLEMENTACION.md y decisión j.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Usuario: «Pasa a la fase B». Alcance y evidencia en wp/WP-64.md.",
         "Base de código candidata: 4f572ed; rama de integración permanece en 1a2dd0f. E3 externa necesaria antes de integrar.",
         "Decisión de informes tempranos aplicada: conservar acciones y advertir posible entrega, sin umbral inventado.",
-        "CI del commit b69d1ed: Linux, Descargador Windows y Asistente Windows Python 3.12 aprobados. No integrado ni aceptado."
+        "CI del commit b69d1ed: Linux, Descargador Windows y Asistente Windows Python 3.12 aprobados. No integrado ni aceptado.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-65": {
@@ -2051,21 +2059,22 @@
         "u",
         "x"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "15 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre bd6147a: Asistente 1.124 aprobadas, Descargador 343; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-65.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Base: WP-64 (0cbd856), que también espera E3. Todos los textos quedan confirmado:true (C10_ESCRITO aprobado el 15-oct-2026).",
         "No integrado ni aceptado.",
         "Sondeo aleatorio de 595 filas (3 etapas, historia y bitácora al azar): sin excepciones ni frases repetidas.",
         "Ronda final: respuestas 3C/5C, constancias genéricas, Ingreso efectivo solo en Cumplimiento, D.R. ignorada, umbrales configurables, RULESET historia-4 y TEXT_REVISION 5.",
-        "Asistente 0.5.0.dev6."
+        "Asistente 0.5.0.dev6.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-66": {
@@ -2083,19 +2092,20 @@
         "x",
         "y"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre 7f9ec0d: Asistente 1.148 aprobadas, Descargador 350; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-66.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb; la fase de informes solo con simulacros.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Base: WP-65 (rama claude/lucid-sagan-hw9ul4). No integrado ni aceptado.",
         "Asistente 0.5.0.dev7; Descargador sin cambio de versión de contrato (extensión intacta).",
-        "Los 13 textos pendientes fueron aprobados por el usuario el 16-oct-2026; Asistente 0.5.0.dev8."
+        "Los 13 textos pendientes fueron aprobados por el usuario el 16-oct-2026; Asistente 0.5.0.dev8.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-67": {
@@ -2111,18 +2121,19 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre 5912b5f: Asistente 1.148, Descargador 350; inventario, identidades, golden, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-67.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Elimina tres scripts sin uso y el extra performance; sin cambio de comportamiento en el resto.",
-        "No integrado ni aceptado."
+        "No integrado ni aceptado.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-68": {
@@ -2138,19 +2149,20 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre 0078d20: Asistente 1.142, Descargador 345; 21 bajas declaradas (verificacion/WP-68-reemplazos.txt); identidades, golden sin cambios, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-68.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Elimina código sin uso y sondas superadas; sin cambio de reglas ni de golden.",
         "No integrado ni aceptado.",
-        "La auditoría de bitácoras anterior se retiró en WP-69 por decisión del usuario."
+        "La auditoría de bitácoras anterior se retiró en WP-69 por decisión del usuario.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-69": {
@@ -2166,19 +2178,20 @@
       "decisiones": [
         "j"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
       "tomado": "16 de octubre de 2026",
       "rama": "claude/lucid-sagan-hw9ul4",
-      "pr": null,
+      "pr": 50,
       "verificacion": "PASA sobre 722aae8: Asistente 1.120, Descargador 345; 43 bajas declaradas (verificacion/WP-69-reemplazos.txt); golden regenerado a propósito (Bitacoras_RUS_baseline); identidades, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-69.json.",
-      "revision": "PENDIENTE E3: otra raíz de agente (decisión j). Esta sesión escribió el cambio y no puede aprobarlo.",
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Decisión del usuario 16-oct: eliminar personal/bitacoras*, sin uso en la app.",
         "Golden regenerado: Bitacoras_RUS_baseline es el Excel vigente del Descargador.",
-        "No integrado ni aceptado."
+        "No integrado ni aceptado.",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-71": {
@@ -2192,18 +2205,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_historia_datos + test_capture_input + test_reglas_espera: 29 pasan; golden PARIDAD PASÓ; ruff limpio.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R1.",
-        "Commits: e6d35a0"
+        "Commits: e6d35a0",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-72": {
@@ -2217,18 +2231,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_historia_textos + migración + wording: 12 pasan. Desviación: el golden difiere solo en `config/textos/HISTORIA` y `_meta/version` (el plan esperaba paridad); se regenera en R3.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R2.",
-        "Commits: 2ad22c1"
+        "Commits: 2ad22c1",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-73": {
@@ -2242,18 +2257,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_cambios_originales (24) + reglas + mayoría + config; suite completa = base (42 fallos GUI/tkinter idénticos); golden regenerado con PARIDAD PASÓ.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R3.",
-        "Commits: 6025bb6, fae7032"
+        "Commits: 6025bb6, fae7032",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-74": {
@@ -2267,18 +2283,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_analisis_historia + test_historia_datos: 17 pasan; ruff limpio.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R4.",
-        "Commits: 2f86824"
+        "Commits: 2f86824",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-75": {
@@ -2292,18 +2309,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "Pruebas focales (100); suite completa = base; golden PARIDAD PASÓ (A3).",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R5.",
-        "Commits: fd1adff"
+        "Commits: fd1adff",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-76": {
@@ -2317,18 +2335,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_historia_cumplimiento + reglas + cambios + mayoría: 45 pasan, 1 xfail previo.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R6.",
-        "Commits: 3f291ad"
+        "Commits: 3f291ad",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-77": {
@@ -2342,18 +2361,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_historia_informes + test_reglas_informes: 21 pasan, 5 xfail previos.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R7.",
-        "Commits: a574a45"
+        "Commits: a574a45",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-78": {
@@ -2367,18 +2387,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "test_bandeja_atencion + test_review_corrections + test_ef02_rendimiento: 31 pasan.",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R8.",
-        "Commits: ab71972"
+        "Commits: ab71972",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     },
     "WP-79": {
@@ -2392,18 +2413,19 @@
         "j",
         "o"
       ],
-      "estado": "EN_REVISION",
+      "estado": "INTEGRADO",
       "ejecutor": "claude-sonnet-5-5 (sesión 017uPaxcgXhUC1UXn6NTTVNa)",
       "tomado": "2026-10-14",
       "rama": "claude/hopeful-hamilton-k2tcqp",
-      "pr": null,
+      "pr": 50,
       "verificacion": "verificar_wp: identidades 0, golden, restricciones, ruff, módulos y enlaces PASAN; las suites reportan FALLA solo por falta de tkinter en el entorno (8 módulos sin recolectar en el Asistente, 4 en el Descargador).",
-      "revision": null,
+      "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
-      "integrado_en": null,
+      "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
       "notas": [
         "Plan técnico «Flow — Plan de implementación técnica», paquete WP-R9.",
-        "Commits: (este commit)"
+        "Commits: (este commit)",
+        "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
       ]
     }
   },

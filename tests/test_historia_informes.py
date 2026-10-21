@@ -77,3 +77,24 @@ def test_j2_informes_vencidos_acumulados(tmp_path):
     assert 'informes vencidos' not in textos[2]
     # Decisión u (14-oct): J2 usa solo datos de RUS; con Excel (sin paquete) da lo mismo.
     assert [r.observation for r in correr(tmp_path, 'INFORMES', INFORMES, filas, paquete=False).rows] == textos
+
+
+def test_dce_en_el_margen_con_informe_ingresado_despues_del_vencimiento(tmp_path):
+    # Revisión E3 (21-oct-2026): el margen DCE de WA-7 no impide contrastar la historia con el vencimiento de RUS.
+    f = inf(
+        tmp_path, fila(1, 'DCE UNO') + ['2026-10-09'], hist(('Ingreso informe de cumplimiento X', '2026-10-11', 58))
+    )
+    assert f.observation.split(': ', 1)[1] == (
+        'Informe diagnóstico vencido desde el 9 de octubre de 2026. '
+        'Se hace presente que en resolución de fecha 11 de octubre de 2026 (folio 58), se ingresa el informe de cumplimiento.'
+    )
+    assert f.actions == [] and [a[:2] for a in f.avisos] == [(2, 'I01_CONTRADICHA')]
+
+
+def test_dce_en_el_margen_con_informe_anterior_al_vencimiento_conserva_el_aviso(tmp_path):
+    f = inf(
+        tmp_path, fila(1, 'DCE UNO') + ['2026-10-09'], hist(('Ingreso informe de cumplimiento X', '2026-07-01', 30))
+    )
+    assert f.rules == ['INFORMES.I02_POR_VENCER_DCE'] and f.actions == ['programa_por_vencer']
+    assert 'a más tardar el 19 de octubre de 2026' in f.observation and 'folio 30' not in f.observation
+    assert [a[:2] for a in f.avisos] == [(2, 'ENTREGA_ANTERIOR')]

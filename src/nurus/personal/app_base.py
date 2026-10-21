@@ -1474,8 +1474,10 @@ class App(ctk.CTk):
             entry = ttk.Entry(params, textvariable=var, width=8)
             entry.grid(row=i // 2 + 1, column=(i % 2) * 2 + 1)
             self._config_parameter_widgets.append((key, label, entry))
+        # Debajo del último umbral: con 18 umbrales la fila 9 ya es de parámetros.
+        button_row = (len(known) + 1) // 2 + 1
         ttk.Button(params, text='Guardar umbrales', command=lambda: self._guard(self._save_params)).grid(
-            row=9, column=0, pady=12
+            row=button_row, column=0, pady=12
         )
         self.disabled = {}
         toggles = [
@@ -1493,7 +1495,7 @@ class App(ctk.CTk):
                 if key == 'COMUN.REITERA_OBSERVACION'
                 else 'Advertir ' + key.split('.')[1].replace('_', ' ').lower()
             )
-            ttk.Checkbutton(params, text=text, variable=v).grid(row=10 + i, column=0, columnspan=4, sticky='w')
+            ttk.Checkbutton(params, text=text, variable=v).grid(row=button_row + 1 + i, column=0, columnspan=4, sticky='w')
 
         mail = ttk.Frame(basic_nb, padding=8)
         basic_nb.add(mail, text='Plantillas correo')
