@@ -410,13 +410,12 @@ class Application:
         results.columnconfigure(0, weight=1)
         primary = ttk.Frame(results)
         primary.grid(row=0, column=0, sticky='ew')
-        # En una sola fila las opciones no caben a 1000 px y «Avanzado» quedaba fuera de la ventana: tres filas.
+        # En una sola fila las opciones no caben a 1000 px y «Avanzado» quedaba fuera de la ventana: botones arriba y
+        # opciones en dos columnas debajo.
         top = ttk.Frame(primary)
         top.pack(fill='x')
-        reading = ttk.Frame(primary)
-        reading.pack(fill='x', pady=(4, 0))
-        period = ttk.Frame(primary)
-        period.pack(fill='x', pady=(2, 0))
+        options = ttk.Frame(primary)
+        options.pack(fill='x', pady=(4, 0))
         self.pipeline_button = ttk.Button(
             top, text='Consultar y crear paquete', style='Primary.TButton', command=self.start_pipeline
         )
@@ -438,53 +437,56 @@ class Application:
         # WD-1: lectura opcional del calendario de informes proyectados; cuenta en el máximo de lecturas del lote.
         self.read_calendars = tk.BooleanVar(value=self.prefs.data['leer_calendarios'])
         self.calendar_choice = ttk.Checkbutton(
-            reading,
+            options,
             text='Leer calendario de informes',
             variable=self.read_calendars,
             command=self.save_preferences,
         )
-        self.calendar_choice.pack(side='left', padx=12)
+        self.calendar_choice.grid(row=0, column=0, sticky='w', padx=(0, 16), pady=1)
         # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
         self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
         self.history_choice = ttk.Checkbutton(
-            reading,
+            options,
             text='Leer también la historia de la causa (prueba)',
             variable=self.read_history,
             command=self.toggle_history,
         )
-        self.history_choice.pack(side='left', padx=12)
+        self.history_choice.grid(row=0, column=1, sticky='w', pady=1)
         self.history_in_package = tk.BooleanVar(value=self.prefs.data['historia_en_paquete'])
         self.history_package_choice = ttk.Checkbutton(
-            reading,
+            options,
             text='Incluir historia en el paquete',
             variable=self.history_in_package,
             command=self.save_preferences,
         )
-        if self.read_history.get():
-            self.history_package_choice.pack(side='left', padx=12)
+        self.history_package_choice.grid(row=1, column=1, sticky='w', pady=1)
+        if not self.read_history.get():
+            self.history_package_choice.grid_remove()
+        self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
+        self.reports_choice = ttk.Checkbutton(
+            options,
+            text='Incluir informes por vencer (60 días)',
+            variable=self.reports_due,
+            command=self.save_preferences,
+        )
+        self.reports_choice.grid(row=1, column=0, sticky='w', padx=(0, 16), pady=1)
         # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
+        period = ttk.Frame(options)
+        period.grid(row=2, column=0, sticky='w', padx=(0, 16), pady=1)
         self.months_back = tk.StringVar(value=str(self.prefs.data['meses_atras']))
-        ttk.Label(period, text='Período a recolectar (meses)').pack(side='left', padx=(12, 2))
+        ttk.Label(period, text='Período a recolectar (meses)').pack(side='left', padx=(0, 4))
         self.months_combo = ttk.Combobox(
             period, textvariable=self.months_back, values=('1', '2', '3', '4'), width=3, state='readonly'
         )
         self.months_combo.pack(side='left')
         self.months_combo.bind('<<ComboboxSelected>>', lambda _event: self.save_preferences())
-        self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
-        self.reports_choice = ttk.Checkbutton(
-            period,
-            text='Incluir informes por vencer (60 días)',
-            variable=self.reports_due,
-            command=self.save_preferences,
-        )
-        self.reports_choice.pack(side='left', padx=12)
         self.package_per_sheet = tk.BooleanVar(value=self.prefs.data['paquete_por_hoja'])
         ttk.Checkbutton(
-            period,
+            options,
             text='Un paquete por hoja de RUS (muchos registros)',
             variable=self.package_per_sheet,
             command=self.save_preferences,
-        ).pack(side='left', padx=12)
+        ).grid(row=2, column=1, sticky='w', pady=1)
         self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
@@ -601,12 +603,12 @@ class Application:
 
     def toggle_history(self):
         if self.read_history.get():
-            self.history_package_choice.pack(side='left', padx=12)
+            self.history_package_choice.grid()
             self.status.set(
                 'Se abrirá una historia por causa (no por registro), hasta 600 por lote. La consulta tardará más.'
             )
         else:
-            self.history_package_choice.pack_forget()
+            self.history_package_choice.grid_remove()
         self.save_preferences()
 
     def months(self):
