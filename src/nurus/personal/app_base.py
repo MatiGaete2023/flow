@@ -1421,7 +1421,9 @@ class App(ctk.CTk):
         self.config_search.trace_add('write', self._filter_config_parameters)
         self.param_vars = {}
         self._config_parameter_widgets = []
-        for i, (key, number) in enumerate(self.cfg.data['umbrales'].items()):
+        # Otra versión del Asistente puede guardar umbrales que esta no usa: no se muestran ni se pierden.
+        known = [(key, number) for key, number in self.cfg.data['umbrales'].items() if key in PARAMETER_LABELS]
+        for i, (key, number) in enumerate(known):
             var = tk.StringVar(value=str(number))
             self.param_vars[key] = var
             label = ttk.Label(params, text=PARAMETER_LABELS[key] + ' (días)')
@@ -1649,7 +1651,7 @@ class App(ctk.CTk):
         from copy import deepcopy
 
         cfg = deepcopy(self.cfg.data)
-        cfg['umbrales'] = {k: int(v.get()) for k, v in self.param_vars.items()}
+        cfg['umbrales'] = {**cfg['umbrales'], **{k: int(v.get()) for k, v in self.param_vars.items()}}
         hidden = [key for key in cfg['desactivadas'] if key not in self.disabled]
         cfg['desactivadas'] = hidden + [key for key, var in self.disabled.items() if not var.get()]
         self.cfg.save(cfg)
