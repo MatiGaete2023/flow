@@ -128,7 +128,8 @@ def extract(table, tribunal_code):
                 and cal[10] == obs[2]
                 and all(re.fullmatch(r'\d{1,20}', cal[i]) for i in (1, 3))
             ):
-                entry.update(persona_id=cal[1], centro_id=cal[3])
+                # Los 12 argumentos literales de la lupa «Inf.» permiten abrir el calendario de informes (WD-1).
+                entry.update(persona_id=cal[1], centro_id=cal[3], calendario=list(cal))
         result.append(entry)
     return result
 

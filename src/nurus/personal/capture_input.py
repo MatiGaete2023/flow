@@ -33,6 +33,39 @@ MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite a
 ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
 
 
+STATE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'EGRESADOS')
+STATE_LABELS = {'ESPERA': 'Espera', 'CUMPLIMIENTO': 'Cumplimiento', 'EGRESADOS': 'Egresados'}
+
+
+def mark_inconsistent_states(rows, provenance):
+    """Q-03: un mismo ingreso verificado en dos pestañas de estado del lote es un estado RUS inconsistente.
+
+    Informes no cuenta: un informe pendiente convive con su ingreso en Cumplimiento. Solo avisa; no corrige.
+    """
+    states = defaultdict(set)
+    for row in rows:
+        record = provenance[row.id]
+        if record['identity_status'] == 'VERIFICADA' and record['record_type'] in STATE_TYPES:
+            states[identity(record)].add(record['record_type'])
+    for row in rows:
+        record = provenance[row.id]
+        found = states.get(identity(record), set()) if record['identity_status'] == 'VERIFICADA' else set()
+        if record['record_type'] in STATE_TYPES and len(found) > 1:
+            names = ' y '.join(STATE_LABELS[t] for t in STATE_TYPES if t in found)
+            row.warnings.append(f'Q-03: el mismo ingreso figura en {names} en este lote; revisar su estado en RUS.')
+
+
+def mark_search_orders(rows, provenance, capture, as_of):
+    """OB-01..OB-05 solo mostrar para filas de «Búsqueda Lit» (pantalla litigantes, menú 94); sin cruces."""
+    from .ordenes_busqueda import avisos_orden
+
+    screens = {query['query_id']: query.get('screen', '') for query in capture.rows('consultas')}
+    for row in rows:
+        record = provenance[row.id]
+        if screens.get(record.get('query_id')) == 'litigantes':
+            row.warnings.extend(avisos_orden(json.loads(record['normalized_json']), as_of))
+
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -84,7 +117,8 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
 
     represented = {physical(row) for row in records}
     for calendar in capture.rows('calendarios'):
-        if physical(calendar) in represented:
+        # WD-1: las proyecciones por ingreso complementan su registro; no son registros propios.
+        if physical(calendar) in represented or calendar['event_type'] == 'INFORME_PROYECTADO':
             continue
         record = {k: calendar[k] for k in SOURCE_FIELDS}
         is_report = calendar['event_type'].strip().upper() in ('INFORME', 'INFORMES')
@@ -115,6 +149,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         if row['association'] == 'VERIFICADA' and row['event_type'].strip().upper() in ('INFORME', 'INFORMES'):
             calendars[identity(row)].append(row)
     cross = {}
+    from .calendario_ingreso import avisos_cotejo, proxima_pendiente, proyecciones
+
+    projected = proyecciones(capture, identity)
+    cotejo = {}
     event_index = defaultdict(list)
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
@@ -155,6 +193,18 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
                 dates.append(due)
         if len(set(dates)) == 1:
             cross[record['record_id']] = dates[0]
+        items = projected.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
+        if items and mode in ('CUMPLIMIENTO', 'INFORMES'):
+            due = None
+            if mode == 'INFORMES':
+                column = map_columns(raw, 'INFORMES').get('vencimiento')
+                due = as_date(raw.get(column, '')) if column else None
+            cotejo[record['record_id']] = avisos_cotejo(
+                items, as_of, vencimiento_informes=due, fecha_hoja2=cross.get(record['record_id'])
+            )
+            # Calendario como fuente (decisión 19-oct-2026): suple a Hoja2 solo cuando esta no aporta fecha.
+            if record['record_id'] not in cross and proxima_pendiente(items, as_of):
+                cross[record['record_id']] = proxima_pendiente(items, as_of)
     headers = list(dict.fromkeys(key for row in canonical for key in row))
     if not headers:
         headers = ['RIT', 'TRIBUNAL', 'NOMBRE', 'DERIVACION']
@@ -221,6 +271,16 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             candidate.rows.append(row)
     attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)
+    mark_inconsistent_states(candidate.rows, provenance)
+    for row in candidate.rows:
+        row.warnings.extend(cotejo.get(row.id, ()))
+    mark_search_orders(candidate.rows, provenance, capture, as_of)
+    from .contexto_excel import marcar_paquete
+
+    marcar_paquete(candidate.rows, provenance, identity)
+    from .bitacora_avisos import aplicar_reiteracion
+
+    aplicar_reiteracion(candidate.rows, contexts, config)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash

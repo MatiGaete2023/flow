@@ -428,6 +428,15 @@ class Application:
             command=self.save_preferences,
         )
         self.reuse_choice.pack(side='left', padx=12)
+        # WD-1: lectura opcional del calendario de informes proyectados; cuenta en el máximo de lecturas del lote.
+        self.read_calendars = tk.BooleanVar(value=self.prefs.data['leer_calendarios'])
+        self.calendar_choice = ttk.Checkbutton(
+            primary,
+            text='Leer calendario de informes',
+            variable=self.read_calendars,
+            command=self.save_preferences,
+        )
+        self.calendar_choice.pack(side='left', padx=12)
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
         actions.columnconfigure(0, weight=1)
@@ -548,6 +557,7 @@ class Application:
             aviso_sonoro=self.sound.get(),
             paquete_consolidado=self.package_consolidated.get(),
             reutilizar_bitacoras=self.reuse_diaries.get(),
+            leer_calendarios=self.read_calendars.get(),
         )
         try:
             self.prefs.save()
@@ -1164,6 +1174,7 @@ class Application:
                         *arg,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse=self.prefs.data['reutilizar_bitacoras'],
+                        calendars=self.prefs.data['leer_calendarios'],
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
@@ -1177,6 +1188,7 @@ class Application:
                         self.cancel,
                         pause=self.prefs.data['pausa_consultas'],
                         reuse_base=reuse_base,
+                        calendars=self.prefs.data['leer_calendarios'],
                     ).run(batch, destination, resume)
                 elif command == 'joint':
                     from flujo_csmp import JointRunner

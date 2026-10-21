@@ -143,7 +143,7 @@ def test_reimportar_sesion_previa_sin_vista_la_recalcula(tmp_path):
 def test_catalogo_coincide_con_reglas_solo_mostrar():
     catalogo = json.loads((ROOT / 'contracts/csmp_context_v1/catalog.json').read_text(encoding='utf-8'))
     activas = tuple(r['rule_id'] for r in catalogo['rules'] if r['activation_state'] == 'ACTIVA_SOLO_MOSTRAR')
-    assert activas == DISPLAY_RULES == ('CT-01', 'CT-02')
+    assert activas == DISPLAY_RULES == ('CT-01', 'CT-02', 'CT-05', 'CT-07', 'CT-11')
     assert not any(r['enabled'] for r in catalogo['rules'])
 
 

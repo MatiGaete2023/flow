@@ -7,7 +7,9 @@ from lotes import BatchRunner
 from lectura_bitacoras import DiaryRunner, write
 
 
-def run(bridge, catalog, emit, cancel, batch, destination, consolidated=True, *, pause=1.0, reuse=True):
+def run(
+    bridge, catalog, emit, cancel, batch, destination, consolidated=True, *, pause=1.0, reuse=True, calendars=False
+):
     if batch.screen != 'seguimiento':
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
@@ -47,7 +49,9 @@ def run(bridge, catalog, emit, cancel, batch, destination, consolidated=True, *,
             raise m.PocError('La consulta no identificó sus originales; no se creó el paquete.')
         phase('bitacoras')
         reuse_base = Path(destination) if reuse else None
-        diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base).run(batch, backup)
+        diaries = DiaryRunner(
+            bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, calendars=calendars
+        ).run(batch, backup)
         phase('paquete')
         from descargador import package_current_lot
 

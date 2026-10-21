@@ -1,11 +1,11 @@
 from .contexto import parametro
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from .contexto import datetime as Clock
+from .contexto import datetime as Clock, current
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import (fecha_es, limpiar_nombre, es_dce, es_derivacion_sin_seg,
     tiene_curador_real, get_int, calcular_edad_exacta, dias_para_mayoria, fecha_mayoria,
-    titulo_programa)
+    titulo_programa, fechas_varias, lista_fechas_es)
 from .textos import render
 
 
@@ -14,11 +14,19 @@ def _pnombre(nombre):
     n=limpiar_nombre(nombre); return n.split()[0] if n else ''
 def _date(v): return v.date() if hasattr(v,'date') else v
 
-def _audiencia(row, cols):
-    """Retorna únicamente T-03 cuando existe una audiencia vigente."""
-    fa=fecha_valida(row.get(cols.get('prox_aud'))) if cols.get('prox_aud') else None
-    if fa and _date(fa) >= Clock.now().date():
-        return render('COMUN','PROX_AUDIENCIA', FECHA_AUDIENCIA=fecha_es(fa))
+def _audiencia(row, cols, incidencias=None, fila_excel=None):
+    """T-03 con todas las audiencias vigentes; una fecha ilegible queda como incidencia, nunca en silencio."""
+    if not cols.get('prox_aud'):
+        return ''
+    fechas, ilegibles = fechas_varias(row.get(cols.get('prox_aud')))
+    if ilegibles and incidencias is not None:
+        incidencias.agregar(fila_excel, _rit(row, cols), 'T-03', 'próxima audiencia con fecha ilegible (G-05)')
+    hoy = Clock.now().date()
+    futuras = sorted({_date(f) for f in fechas if _date(f) >= hoy})
+    if len(futuras) == 1:
+        return render('COMUN','PROX_AUDIENCIA', FECHA_AUDIENCIA=fecha_es(futuras[0]))
+    if futuras and 'COMUN.PROX_AUDIENCIA' not in current.get()['config']['desactivadas']:
+        return render('COMUN','PROX_AUDIENCIAS', FECHAS_AUDIENCIA=lista_fechas_es(futuras))
     return ''
 
 def _oido(row, cols):
@@ -42,9 +50,9 @@ def _curador_oido(row, cols):
     return _oido(row, cols) + _curador(row, cols)
 
 
-def _complementarias(row, cols):
+def _complementarias(row, cols, incidencias=None, fila_excel=None):
     out = _oido(row, cols)
-    audiencia = _audiencia(row, cols)
+    audiencia = _audiencia(row, cols, incidencias, fila_excel)
     if audiencia:
         out.append(audiencia)
     out += _curador(row, cols)
@@ -62,7 +70,7 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
         frags.append(render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn))))
-        frags += _complementarias(row, cols)
+        frags += _complementarias(row, cols, incidencias, fila_excel)
         return componer(pfx, frags)
     dm=dias_para_mayoria(fn) if fn else None
     if dm is not None and 1 <= dm <= parametro('mayoria'):
@@ -92,5 +100,5 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     # (incluye T ESPERA ausente/ inválido y tribunal no reconocido — D11).
     if not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
-    frags += _complementarias(row, cols)
+    frags += _complementarias(row, cols, incidencias, fila_excel)
     return componer(pfx, frags)

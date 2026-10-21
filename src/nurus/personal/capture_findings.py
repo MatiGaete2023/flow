@@ -70,6 +70,16 @@ def display_of(work, row):
     return getattr(work, 'capture_context', {}).get(row.id, {}).get('display')
 
 
+def bitacora_alerts(work, row):
+    """Avisos CT-05/CT-07/CT-11 (solo mostrar) del ingreso; vacío sin paquete o sin cronología acreditada."""
+    from datetime import date
+    from .bitacora_avisos import avisos
+
+    return avisos(
+        display_of(work, row), row.observation, row.rules, work.config['textos'], date.fromisoformat(work.as_of)
+    )
+
+
 def last_center_label(work, row):
     """Columna «Última obs. centro»: solo muestra lo capturado; vacío si no hay paquete."""
     display = display_of(work, row)
@@ -92,7 +102,9 @@ def last_center_label(work, row):
         return 'Sin entradas capturadas'
     label = _when(display['last_center'][0])[:10]
     pending = len(display['later']) + len(display['uncertain'])
-    return label + (f' · {pending} posterior' + ('es' if pending > 1 else '') if pending else '')
+    label += f' · {pending} posterior' + ('es' if pending > 1 else '') if pending else ''
+    alerts = len(bitacora_alerts(work, row))
+    return label + (f' · {alerts} aviso' + ('s' if alerts > 1 else '') if alerts else '')
 
 
 def novelties_text(work, row):
@@ -122,6 +134,10 @@ def novelties_text(work, row):
         if display['uncertain']:
             lines.append('Mismo día, orden incierto (sin hora comparable):')
             lines += _entries(display['uncertain'])
+    alerts = bitacora_alerts(work, row)
+    if alerts:
+        lines.append('Avisos (solo mostrar; no cambian la observación propuesta):')
+        lines += [f'- {rule} · {text}' for rule, text in alerts]
     if display['outside_horizon']:
         lines.append(f"{display['outside_horizon']} entrada(s) anteriores al período no se consideran.")
     if display.get('after_cutoff'):

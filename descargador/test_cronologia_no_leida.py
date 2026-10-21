@@ -20,7 +20,9 @@ def _labels(tmp_path, manifest):
 
 def test_ingreso_sin_lectura_dice_bitacora_no_leida(tmp_path):
     work, rows = _labels(tmp_path, diaries(tmp_path / 'Bitacoras 2026-10-13', 1))
-    assert last_center_label(work, rows['100']) == '12/08/2026'
+    # La entrada ficticia «Al Tribunal» sin respuesta tiene más de 30 días: aviso CT-05 (19-oct-2026).
+    assert last_center_label(work, rows['100']) == '12/08/2026 · 1 aviso'
+    assert 'CT-05 · Observación al tribunal del 12/08/2026' in novelties_text(work, rows['100'])
     assert last_center_label(work, rows['101']) == 'Bitácora no leída'
     assert 'no se leyó' in novelties_text(work, rows['101'])
 
@@ -33,4 +35,4 @@ def test_lectura_fallida_dice_bitacora_no_leida(tmp_path):
     work, rows = _labels(tmp_path, manifest)
     assert read_capture(work.path).rows('consultas')
     assert last_center_label(work, rows['101']) == 'Bitácora no leída'
-    assert last_center_label(work, rows['100']) == '12/08/2026'
+    assert last_center_label(work, rows['100']) == '12/08/2026 · 1 aviso'

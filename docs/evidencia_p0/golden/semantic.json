@@ -5264,6 +5264,16 @@
           "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — T-03"
+        },
+        "PROX_AUDIENCIAS": {
+          "texto": "Audiencias fijadas para {FECHAS_AUDIENCIA}.",
+          "confirmado": true,
+          "nota": "T-03 plural; aprobado por el usuario 2026-10-19 (RUS V11 muestra varias audiencias separadas por coma)"
+        },
+        "REITERA_OBSERVACION": {
+          "texto": "Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}.",
+          "confirmado": true,
+          "nota": "CT-07; aprobado por el usuario 2026-10-19: si la observación propuesta repite la última del centro en la bitácora, se consigna esta frase para toda la observación"
         }
       },
       "ESPERA": {

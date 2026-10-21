@@ -403,6 +403,10 @@ class Work:
                     )
                 observation = fn(values, court, cols, **args) if court else ''
                 warnings.extend(i['MOTIVO'] for i in inc._items)
+                if observation and 'COMUN.NO_SEGUIMIENTO' not in ctx['events']:
+                    from .contexto_excel import avisos_fila
+
+                    warnings.extend(avisos_fila(values, cols, self.mode, ctx['date'], args.get('fecha_hoja2')))
             except (ValueError, TypeError, KeyError) as exc:
                 observation = ''
                 warnings.append('No se pudo evaluar esta fila: ' + str(exc))

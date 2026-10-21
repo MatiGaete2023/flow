@@ -297,15 +297,79 @@ def export_capture(
                         'identity_status': 'VERIFICADA',
                     }
                 )
+        for ci, calendar in enumerate(batch.get('calendars', [])):
+            qid = f'calendar-{ci}'
+            scope = {
+                'source_system': 'RUS',
+                'court_code': calendar['tribunal_codigo'],
+                'cause_id': calendar['causa_id'],
+                'ingreso_id': calendar['ingreso_id'],
+            }
+            selection = {
+                'tribunal': calendar['tribunal_codigo'],
+                'tab': 'CALENDARIO',
+                'capture_tables': ['calendarios'],
+                'remote_identity': scope,
+            }
+            when = calendar.get('captured_at') or captured
+            query(
+                qid,
+                selection,
+                calendar['coverage'],
+                when,
+                1,
+                0 if calendar['coverage'] == 'FALLIDA' else 1,
+                screen='calendario_ingreso',
+                error=calendar['error'],
+            )
+            if calendar['coverage'] == 'FALLIDA':
+                incident(qid, 'CALENDARIO_FALLIDO', calendar['error'])
+                continue
+            plazos = {
+                'plazo_remision_meses': calendar.get('plazo_remision_meses'),
+                'plazo_intervencion_meses': calendar.get('plazo_intervencion_meses'),
+            }
+            data.setdefault('calendarios', [])
+            for projection in calendar['proyecciones']:
+                common = {k: '' for k in COMMON}
+                common.update(
+                    capture_id=cid,
+                    query_id=qid,
+                    source_system='RUS',
+                    court_code=calendar['tribunal_codigo'],
+                    cause_id=calendar['causa_id'],
+                    ingreso_id=calendar['ingreso_id'],
+                    captured_at=when,
+                    original_file=calendar['archivo'],
+                    original_sheet='Calendario',
+                    original_row=str(projection['fila']),
+                    source_sha256=calendar['html_sha256'],
+                    coverage='COMPLETA',
+                )
+                values = json.dumps({**projection, **plazos}, ensure_ascii=False)
+                data['calendarios'].append(
+                    {
+                        **common,
+                        'calendar_id': f"{qid}-{projection['fila']}",
+                        'event_at': projection['fecha_proyeccion'],
+                        'event_type': 'INFORME_PROYECTADO',
+                        'status': projection['estado'],
+                        'association': 'VERIFICADA',
+                        'raw_json': values,
+                        'normalized_json': values,
+                    }
+                )
     states = {k: 'NO_SOLICITADA' for k in TABLES}
     states.update(
         consultas=aggregate(q['coverage'] for q in data['consultas']),
-        registros=aggregate(q['coverage'] for q in data['consultas'] if q['screen'] != 'bitacoras'),
+        registros=aggregate(
+            q['coverage'] for q in data['consultas'] if q['screen'] not in ('bitacoras', 'calendario_ingreso')
+        ),
         incidencias='COMPLETA' if data['incidencias'] else 'VACIA_COMPROBADA',
     )
     for name in ('calendarios', 'bitacoras'):
-        screen = 'calendario_informes' if name == 'calendarios' else 'bitacoras'
-        relevant = [q['coverage'] for q in data['consultas'] if q['screen'] == screen]
+        screens = ('calendario_informes', 'calendario_ingreso') if name == 'calendarios' else ('bitacoras',)
+        relevant = [q['coverage'] for q in data['consultas'] if q['screen'] in screens]
         if name in data or relevant:
             state = aggregate(relevant)
             states[name] = 'VACIA_COMPROBADA' if not data.get(name) and state == 'COMPLETA' else state
