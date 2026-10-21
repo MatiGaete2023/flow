@@ -1641,7 +1641,7 @@
       "tomado": "13 de octubre de 2026",
       "rama": "feat/historia-causa-sitfa",
       "pr": 50,
-      "verificacion": "PASA en la rama integrada ultima-version/asistente-descargador: Asistente 1240/11/5 xfail; Descargador 352/62; golden17, inventario con 48 bajas declaradas y controles PASA; CI del PR #50 PASA.",
+      "verificacion": "PASA en la rama integrada ultima-version/asistente-descargador: Asistente 1240/11/5 xfail; Descargador 354/62; golden17, inventario con 48 bajas declaradas y controles PASA; CI del PR #50 PASA.",
       "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
       "auditoria": null,
       "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",

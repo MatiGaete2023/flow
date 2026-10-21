@@ -381,3 +381,21 @@ def test_e3_error_inesperado_en_el_lote_igual_genera_excel_y_diagnostico(tmp_pat
     assert (lote / 'Historia_SITFA.xlsx').is_file() and (lote / 'historia' / 'diagnostico_historia.json').is_file()
     assert json.loads((lote / 'historia' / 'historias.json').read_text(encoding='utf-8'))['estado'] == 'INCOMPLETA'
     assert json.loads((lote / 'bitacoras.json').read_text(encoding='utf-8'))['estado'] != 'EN_CURSO'
+
+
+def test_reintento_con_otro_periodo_vuelve_a_leer_la_historia(tmp_path):
+    # Revisión Codex en el PR #50 (21-oct-2026): una causa leída con 4 meses se reutilizaba al reintentar con 1 mes y
+    # el paquete declaraba la cobertura anterior.
+    primero = lector(tmp_path / 'uno')
+    primero.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    primero.cerrar()
+    bridge = FakeBridge()
+    parser()
+    segundo = LectorHistoria(
+        bridge, lambda *a: None, threading.Event(), pause=0, anterior=primero.carpeta / 'historias.json', meses=1
+    )
+    segundo.abrir(tmp_path / 'dos')
+    segundo.pagina(SELECCION, QUERY, 1, LISTADO, PERFIL)
+    assert len(bridge.calls) == 1
+    (causa,) = estado(segundo)['causas'].values()
+    assert not causa.get('reutilizada') and estado(segundo)['meses'] == 1

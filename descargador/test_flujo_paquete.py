@@ -25,7 +25,7 @@ class Scope:
         return ['consulta ficticia']
 
 
-def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False):
+def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False, calendar_failed=False):
     used = []
 
     class Queries:
@@ -53,6 +53,7 @@ def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False):
                 'estado': 'INCOMPLETA' if partial else 'COMPLETA',
                 'fallidas': int(partial),
                 'consultas_fallidas': 0,
+                'calendarios_fallidos': int(calendar_failed),
             }
 
     monkeypatch.setattr(flujo_paquete, 'BatchRunner', Queries)
@@ -94,6 +95,16 @@ def test_lectura_parcial_se_declara_en_resultado(monkeypatch, tmp_path):
     result = flujo_paquete.run(None, {}, lambda *event: None, cancel, Scope(), tmp_path, False)
     assert result['partial']
     assert read_capture(result['path']).consolidated is None
+    assert json.loads(next(tmp_path.rglob('proceso.json')).read_text())['estado'] == 'PARCIAL'
+
+
+def test_calendario_por_ingreso_fallido_marca_el_paquete_parcial(monkeypatch, tmp_path):
+    # Revisión Codex en el PR #50 (21-oct-2026): con las bitácoras completas y un calendario WD-1 fallido, el
+    # paquete se declaraba completo.
+    cancel = Event()
+    runners(monkeypatch, cancel, calendar_failed=True)
+    result = flujo_paquete.run(None, {}, lambda *event: None, cancel, Scope(), tmp_path, False, calendars=True)
+    assert result['partial']
     assert json.loads(next(tmp_path.rglob('proceso.json')).read_text())['estado'] == 'PARCIAL'
 
 

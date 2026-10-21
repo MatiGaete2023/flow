@@ -92,6 +92,21 @@ filtraba nada. Corrección: `scrub_unknown` oculta la palabra de nombre que sigu
 a un apellido conocido, salvo términos institucionales. Pruebas: tres nuevas en `anonimizador/tests/test_textengine.py`.
 Sonda sintética posterior: sin fugas en ninguno de los dos modos; «PRM Quillón» es un programa y se conserva a propósito.
 
+## Hallazgos de la revisión automática de Codex (PR #50 y #51), verificados y corregidos
+
+Cada uno se reprodujo con datos sintéticos antes de corregirlo, y cada corrección lleva una prueba que fallaba.
+
+- **Descargador, interfaz (P1).** Las opciones del paquete estaban en una sola fila de 2132 px. A 1000 px quedaban
+  fuera de la ventana «Avanzado / recuperación», el período, los informes por vencer y el paquete por hoja. Ahora van en
+  tres filas (776, 534 y 822 px), con las mismas casillas en el mismo orden.
+- **Descargador, paquete (P2).** Un calendario por ingreso (WD-1) fallido no marcaba el paquete como parcial.
+- **Descargador, historia (P2).** Un reintento con otro período reutilizaba la historia leída con el período anterior y
+  declaraba una cobertura que no tenía. Ahora se vuelve a leer.
+- **Anonimizador (P1, también en modo estricto).** Se copiaban sin tratar los valores anidados de `MANIFIESTO.json`, y
+  en Word `people.xml`, el glosario y `docProps/custom.xml`.
+- **Anonimizador (P2).** `--desplazar-fechas` no movía las fechas RFC 5545 básicas de los `.ics`, y `has_formulas`
+  descomprimía las hojas antes de validar los límites del ZIP.
+
 ## Observaciones (N2, no exigen cambio)
 
 - O-1: los riesgos 1 y 2 de la segunda E3 de WP-53 (valores cifrados reflejados y tribunal visible distinto del menú)
@@ -102,9 +117,9 @@ Sonda sintética posterior: sin fugas en ninguno de los dos modos; «PRM Quilló
 
 ## Controles
 
-- Asistente: 1240 aprobadas, 11 omitidas, 5 xfail. Descargador: 352 aprobadas, 62 subpruebas. Node 3/3. Ruff y formato.
+- Asistente: 1240 aprobadas, 11 omitidas, 5 xfail. Descargador: 354 aprobadas, 62 subpruebas. Node 3/3. Ruff y formato.
 - Paridad golden de 17 productos: PASA, sin cambiar referencias en esta ronda.
-- Anonimizador: 93 aprobadas, 2 omitidas (requieren pantalla).
+- Anonimizador: 97 aprobadas, 2 omitidas (requieren pantalla).
 - `verificar_wp.py --lista-eliminadas docs/implementacion/verificacion/integracion-20261021-eliminadas.txt`: PASA.
 
 ## No verificado

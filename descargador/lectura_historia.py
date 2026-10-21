@@ -114,7 +114,8 @@ class LectorHistoria:
         try:
             ruta = Path(self.anterior)
             datos = json.loads(ruta.read_text(encoding='utf-8'))
-            if datos.get('tipo') != 'HISTORIA_LECTURA':
+            # Con otro período (1 a 4 meses) la ventana y los conteos de la lectura anterior no valen: se relee.
+            if datos.get('tipo') != 'HISTORIA_LECTURA' or datos.get('meses', 4) != self.meses:
                 return
             for clave, causa in datos['causas'].items():
                 origen = ruta.parent / str(causa.get('archivo', ''))

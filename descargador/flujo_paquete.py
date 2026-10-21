@@ -124,6 +124,8 @@ def run(
             historia_ok = False
             result = package_current_lot(sheets, manifest, target, consolidated, **opciones)
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])
+        # Un calendario por ingreso (WD-1) fallido o pendiente también deja el paquete parcial.
+        partial = partial or bool(diaries.get('calendarios_fallidos'))
         # Sin el calendario (o con un mes faltante) el paquete se crea igual, pero queda marcado como parcial.
         partial = partial or not informes_completos
         if historia:

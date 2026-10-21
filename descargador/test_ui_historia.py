@@ -22,6 +22,10 @@ def test_casillas_de_historia(tmp_path):
             assert 'prueba' in app.history_choice.cget('text')
             app.history_choice.invoke()
             assert app.read_history.get() and app.history_package_choice.winfo_manager()
+            # Revisión Codex en el PR #50: todas las opciones caben a 1000 px (antes «Avanzado» quedaba fuera).
+            filas = app.pipeline_button.master.master.pack_slaves()
+            root.update_idletasks()
+            assert len(filas) == 3 and max(fila.winfo_reqwidth() for fila in filas) <= 1000 - 24
             assert 'hasta 600' in app.status.get()
             assert app.prefs.data['leer_historia'] is True
             app.process_event('history_progress',{'causa':'C-1-2099','estado':'LEIDA'})
