@@ -550,9 +550,12 @@ class Replacer:
         alterar programas o tribunales cuyo texto coincide con un apellido."""
         stash = Stash()
         text = self.identifiers(value, free=free, phones=phones, stash=stash)
+        first = len(stash.items)
         text = self._names(text, stash, full_only)
         if scrub:
-            text = scrub_unknown(text)
+            names = range(first, len(stash.items))
+            surnames = [i for i in names if stash.items[i].startswith("Apellido")]
+            text = scrub_unknown(text, names, surnames)
         return stash.restore(text)
 
 
@@ -569,11 +572,34 @@ def _institutional(text):
     return bool(words) and all(w in INSTITUTIONAL for w in words)
 
 
-def scrub_unknown(text):
-    """Oculta secuencias que parecen nombres de persona aunque no estén catalogadas."""
+def scrub_unknown(text, names=(), surnames=()):
+    """Oculta secuencias que parecen nombres de persona aunque no estén catalogadas.
+
+    `names` y `surnames` son los índices de marcadores de nombres conocidos ya reemplazados: una palabra de nombre
+    pegada a ellos (el segundo apellido después, o el nombre de pila antes de un apellido) también se oculta."""
     text = AFTER_ROLE.sub(lambda m: m.group(1) + (m.group(2) if _institutional(m.group(2)) else IDENTITY_OMITTED), text)
     for pattern in (UNKNOWN_FULL_NAME, UNKNOWN_UPPER_NAME):
         text = pattern.sub(lambda m: m.group(0) if _institutional(m.group(0)) else IDENTITY_OMITTED, text)
+    return _next_to_known(text, names, surnames)
+
+
+def _marks(indexes):
+    return r"(?:" + "|".join(f"\ue000{i}\ue001" for i in indexes) + r")"
+
+
+def _next_to_known(text, names, surnames):
+    word = r"(?:" + CAP + "|" + UP + r")"
+    gap = r"\s+" + PART + "?"
+
+    def keep(value):
+        return _institutional(value) or fold(value) in STOPWORDS
+
+    if names:
+        after = re.compile(r"(" + _marks(names) + gap + r")(" + word + r")(?!\w)")
+        text = after.sub(lambda m: m.group(0) if keep(m.group(2)) else m.group(1) + IDENTITY_OMITTED, text)
+    if surnames:
+        before = re.compile(r"(?<!\w)(" + word + r")(" + gap + _marks(surnames) + r")")
+        text = before.sub(lambda m: m.group(0) if keep(m.group(1)) else IDENTITY_OMITTED + m.group(2), text)
     return text
 
 

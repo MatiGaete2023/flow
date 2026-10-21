@@ -134,3 +134,24 @@ def test_huellas_hexadecimales_no_disparan_falsos_positivos(session):
     ]
     found, _ = session.leaks(texts)
     assert not found
+
+
+def test_apellido_suelto_junto_a_nombre_conocido_se_oculta(session):
+    # Revisión E3 (21-oct-2026): con el nombre conocido ya reemplazado, el apellido siguiente quedaba visible.
+    session.replacer.add_person("Josefa Muñoz")
+    session.replacer.add_person("Marta Rojas Pérez")
+    texto = session.free("Josefa Muñoz Tapia asiste; visto por abog. Juan Pérez Cotapos.")
+    assert "Tapia" not in texto and "Cotapos" not in texto and "Juan" not in texto
+    assert "Persona Ficticia" in texto
+
+
+def test_nombre_suelto_antes_de_apellido_conocido_se_oculta(session):
+    session.replacer.add_person("Benjamín Araya")
+    texto = session.free("Se entrevista a Tomás Araya en el colegio.")
+    assert "Tomás" not in texto and "Araya" not in texto
+
+
+def test_palabra_institucional_junto_a_nombre_conocido_se_conserva(session):
+    session.replacer.add_person("Josefa Muñoz")
+    texto = session.free("Josefa Muñoz Tribunal de Familia")
+    assert "Tribunal" in texto and "Muñoz" not in texto
