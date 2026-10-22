@@ -48,3 +48,22 @@ def test_guardar_borrador_persiste_el_contacto_en_configuracion_y_directorio(tmp
     assert {e['Nombre'] for e in stored if not e['Nombre'].startswith('Tribunal: ')} == {PROGRAMA}
     assert 'Contacto guardado' in contacts_notice(learned)
     assert BaseApp._remember_program_contacts(app, [borrador('norte@programa.example')]) == {}
+
+
+def test_lote_solo_informa_los_borradores_creados_en_esta_ejecucion(monkeypatch):
+    # Revisión Codex (PR #52): un recibo antiguo no debe hacer aprender la dirección editada de un borrador no guardado.
+    from nurus.personal import outputs
+
+    antiguo, nuevo = borrador('editado@programa.example'), borrador('nuevo@programa.example', program='PRM Otro')
+    work = SimpleNamespace(receipts={'clave-antigua': {'state': 'created'}})
+    monkeypatch.setattr(
+        outputs, '_draft_fingerprint', lambda d, digests: 'clave-antigua' if d is antiguo else 'clave-nueva'
+    )
+    monkeypatch.setattr(outputs, 'create_draft', lambda work, draft, **kw: None)
+    result = {'created': 0, 'skipped': 0, 'errors': [], 'processed': 0}
+
+    class Cancelado(Exception):
+        pass
+
+    outputs._create_batch(work, [antiguo, nuevo], result, lambda: None, lambda *a: None, Cancelado)
+    assert result['created_drafts'] == [nuevo] and result['skipped'] == 1

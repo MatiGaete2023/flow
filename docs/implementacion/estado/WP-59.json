@@ -14,7 +14,7 @@
   "tomado": "22 de octubre de 2026",
   "rama": "ultima-version/asistente-descargador",
   "pr": null,
-  "verificacion": "Local: Asistente 1243/11/5 xfail; Descargador 354/62 subpruebas; Node 3/3; verificar_pdf_extension.py con Chromium 141 real y SITFA ficticio que hace AJAX tras cargar: la extensión anterior falla con EVIDENCE_CAPTURE (error del usuario) y la nueva genera los 5 PDF y rechaza el contexto alterado.",
+  "verificacion": "Local: Asistente 1244/11/5 xfail; Descargador 354/62 subpruebas; Node 3/3; verificar_pdf_extension.py con Chromium 141 real y SITFA ficticio que hace AJAX tras cargar: la extensión anterior falla con EVIDENCE_CAPTURE (error del usuario) y la nueva genera los 5 PDF y rechaza el contexto alterado.",
   "revision": "E3 de la misma sesión (no independiente), autorizada por el usuario el 22 de octubre de 2026: docs/implementacion/wp/WP-59.md.",
   "auditoria": null,
   "integrado_en": null,

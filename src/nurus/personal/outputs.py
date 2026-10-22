@@ -680,6 +680,7 @@ def _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled
                 continue
             create_draft(work, draft, confirmed=True, _digests=digests)
             result['created'] += 1
+            result.setdefault('created_drafts', []).append(draft)
         except Exception as exc:
             result['errors'].append(draft.subject + ': ' + str(exc))
 

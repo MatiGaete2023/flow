@@ -263,11 +263,10 @@ class App(_BaseApp):
 
         def done(result):
             self._save_session()
-            created = [d for d in drafts if work.receipts.get(d.key, {}).get('state') == 'created']
             self.status.set(
                 f"{result['created']} borradores guardados; {result['skipped']} ya procesados; {len(result['errors'])} incidencias."
                 + (" Detenido entre productos." if result.get('cancelled') else "")
-                + contacts_notice(self._remember_program_contacts(created))
+                + contacts_notice(self._remember_program_contacts(result.get('created_drafts', [])))
             )
             if result['errors']:
                 messagebox.showwarning('Lote guardado con incidencias', '\n'.join(result['errors']))
