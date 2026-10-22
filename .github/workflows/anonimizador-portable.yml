@@ -1,0 +1,72 @@
+name: Anonimizador CSMP independiente
+on:
+  workflow_dispatch:
+  push:
+    branches: ['wp/anonimizador-**']
+    paths: ['anonimizador/**', 'portable/**', '.github/workflows/anonimizador-portable.yml']
+  pull_request:
+    paths: ['anonimizador/**', 'portable/**', '.github/workflows/anonimizador-portable.yml']
+permissions:
+  contents: read
+jobs:
+  pruebas:
+    # La herramienta no importa el Asistente ni el Descargador: se prueba sin instalarlos.
+    name: Pruebas (${{ matrix.os }}, Python ${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: '3.12'}
+          - {os: windows-latest, python: '3.13'}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - name: Dependencias mínimas
+        run: python -m pip install "openpyxl>=3.1,<4" "xlrd>=2.0.1" xlwt pytest ruff
+      - name: Estilo
+        run: python -m ruff check --select E9,F63,F7,F82,F401,F841 anonimizador portable
+      - name: Pruebas sintéticas
+        run: python -m pytest -q anonimizador/tests --junitxml=pruebas-anonimizador.xml
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pruebas-${{ matrix.os }}
+          path: pruebas-anonimizador.xml
+          retention-days: 30
+  portable:
+    needs: pruebas
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - name: Entorno de compilación aislado
+        shell: pwsh
+        run: |
+          python -m venv .venv-portable
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv-portable/Scripts/python.exe -m pip install -r portable/requirements-build.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compilar y probar el EXE
+        shell: pwsh
+        run: ./portable/build.ps1 -Python (Resolve-Path .venv-portable/Scripts/python.exe).Path
+      - name: Preparar entrega y huellas
+        shell: pwsh
+        run: |
+          .venv-portable/Scripts/python.exe portable/package.py entrega
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AnonimizadorCSMP-Windows-x64
+          path: |
+            entrega/*.zip
+            entrega/*.txt
+          if-no-files-found: error
+          retention-days: 30

@@ -23,4 +23,5 @@ Actualizado el 12 de octubre de 2026 (WP-94). Lo histórico está en [historico/
 | [Resumen del proyecto](../RESUMEN_PROYECTO_NURUS_CSMP_20261009.md) | Fundamentos, fases, correcciones y pendientes al 9 de octubre |
 | [Manual ilustrado del Descargador](manual_descargador_2_7_4/README.md) | Uso paso a paso, PDF y práctica ficticia |
 | [Corrección del ZIP 2.7.5](CORRECCION_REFERENCIAS_ZIP_20261009.md) | Referencias de bitácoras no disponibles |
+| [Revisión del anonimizador](REVISION_ANONIMIZADOR_20261016.md) · [Anonimizador independiente](../anonimizador/README.md) | Defectos del anonimizador del Asistente y herramienta nueva que no depende de él (16-oct) |
 | [README del Descargador](../descargador/README.md) · [historial de cambios](../descargador/CHANGELOG.md) | Instalación y uso del Descargador |

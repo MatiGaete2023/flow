@@ -1,5 +1,7 @@
 # Anonimizador local Excel / Captura CSMP
 
+> **Superado por [`anonimizador/`](../anonimizador/README.md)** (herramienta independiente, todos los formatos). Los defectos de este motor están en la [revisión del 16-oct](REVISION_ANONIMIZADOR_20261016.md); evita usarlo con observaciones reales.
+
 ## Ejecutar (Windows 10, sin administrador)
 
 En el repositorio `flow`, rama `feat/ejecucion-plan-20261008`:
