@@ -26,7 +26,7 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | P10 | BLOQUEADA_POR_EVIDENCIA | CT-03..10 NO IMPLEMENTADAS; todas CT desactivadas. Aprobación por regla y G9. |
 | P11 | IMPLEMENTADA_PENDIENTE_ACEPTACION | INT reales y ampliadas NO EJECUTADAS; MVP local comprobado. |
 | P12 | BLOQUEADA_POR_EVIDENCIA | P9/P10 y acta institucional; ampliación excluida del MVP. |
-| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI 0795cda (Descargador 2.7.5) aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
+| P13 | IMPLEMENTADA_PENDIENTE_ACEPTACION | CI e3a6369 aprobada en Python 3.12/3.13/3.14; el build actual verifica eliminación real de carpeta y conservación de datos externos. H01–H09/M01–M03 corregidos con evidencia sintética. Acta pendiente entregada; Windows 10 institucional/Office y promoción pendientes. |
 
 ## Todas las tareas y entregables
 
@@ -136,38 +136,38 @@ Pruebas, productos y hashes: [evidencia](evidencia_desarrollo_20261008/README.md
 | D-T18 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Solo lectura en rutas revisadas y fixtures; nunca subir material real. |
 | D-T19 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline preservado; cualquier adaptación exige nueva regresión. |
 | D-T20 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | CI e3a6369 SUCCESS: 615 aprobadas/1 omitida por versión Windows, productos v1 desde EXE autónomo/instalado y paquete SHA coherente; el instalador actual acredita eliminación real y datos externos intactos. Dependencias bloqueadas por Python/plataforma y verificadas. Actas separan evidencia ficticia/institucional. Windows 10 institucional/Office pendientes. |
-| R-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_espera.py::test_rt01_derivacion_sin_seguimiento_solo_si_coincide_al_inicio` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_mayoria_edad.py::test_rt02_limites_1_60_61_dias_y_formatos_sitfa` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_mayoria_edad.py::test_rt03_mayoria_cumplida_sugiere_sin_ejecutar_egreso` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T04 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_espera.py::test_rt04_dce_solo_correo_desde_30_y_sin_word` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T05 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_espera.py::test_rt05_laja_mulchen_tramo_exacto` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T06 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_espera.py::test_rt06_tome_cortes_29_30_59_60` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T07 | EN_CURSO | PASÓ · `tests/test_reglas_espera.py::test_rt07_espera_invalida_genera_incidencia_y_fallback` | NO EJECUTADO | Baseline preservado; Fallback E-06 conservado; NO_EVALUABLE contextual falta. |
-| R-T08 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_espera.py::test_rt08_resolucion_reciente_solo_antes_de_30_dias` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T09 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt09_ingreso_reciente_solo_en_intervalo_y_con_fecha` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T10 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt10_dias_para_egresar_cortes` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T11 | EN_CURSO | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt11_dias_negativos_con_egreso_futuro_no_afirma_vencimiento` | NO EJECUTADO | Baseline preservado; Work advierte contradicción; clasificación agregada todavía falta. |
-| R-T12 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt12_ficha_residencial_cortes` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T13 | EN_CURSO | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_cumplimiento.py::test_rt13_fae_sin_ficha_con_columna`; `tests/test_reglas_cumplimiento.py::test_rt13_fae_sin_columna_no_afirma_ausencia` | NO EJECUTADO | Baseline preservado; Conflicto C08: falta ficha puede confundirse con falta de columna; no corregir regla unilateralmente. |
-| R-T14 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt14_hoja2_duplicada_no_cruza_otro_programa` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_cumplimiento.py::test_rt15_c04_c05_suprimen_c10` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_informes.py::test_rt16_informe_vence_ayer_hoy_30_31`; `tests/test_reglas_informes.py::test_rt16_dce_distingue_informe_diagnostico`; `tests/test_reglas_informes.py::test_rt16_sin_fecha_no_emite_frase_e_informa_incidencia` | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
-| R-T17 | EN_CURSO | PASÓ · `tests/test_reglas_informes.py::test_rt17_dos_ingresos_misma_causa_sin_contaminacion` | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| R-T18 | EN_CURSO | PASÓ · `tests/test_reglas_informes.py::test_rt18_bitacora_totalmente_fallida_es_no_evaluable` | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| R-T19 | EN_CURSO | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_informes.py::test_rt19_ids_iguales_admiten_rit_visual_distinto`; `tests/test_reglas_informes.py::test_rt19_discrepancia_visual_deja_advertencia_trazable` | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| R-T20 | EN_CURSO | PASÓ · `tests/test_reglas_informes.py::test_rt20_nombre_igual_ids_ingreso_distintos_no_se_cruzan` | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| R-T21 | EN_CURSO | PASÓ · `tests/test_reglas_informes.py::test_rt21_observaciones_del_centro_empatadas_se_conservan` | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
-| R-T22 | BLOQUEADA_POR_EVIDENCIA | PASÓ · `tests/test_reglas_informes.py::test_rt22_observacion_fuera_de_ventana_no_inventa_ultima` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
-| R-T23 | BLOQUEADA_POR_EVIDENCIA | PASÓ · `tests/test_reglas_informes.py::test_rt23_mismo_dia_sin_hora_es_incierto_y_focalizado` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
-| R-T24 | BLOQUEADA_POR_EVIDENCIA | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_informes.py::test_rt24_informe_vencido_y_tramite_exigen_cotejo` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
-| R-T25 | BLOQUEADA_POR_EVIDENCIA | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_informes.py::test_rt25_firma_parcial_no_acredita_ausencia_de_actividad` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
-| R-T26 | BLOQUEADA_POR_EVIDENCIA | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_informes.py::test_rt26_reiteracion_senalada_sin_suprimir_propuesta` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
-| R-T27 | EN_CURSO | PASÓ · `tests/test_reglas_informes.py::test_rt27_regla_valida_con_dato_faltante_de_otra` | NO EJECUTADO | Baseline preservado; Incidencias tradicionales existen; falta modelo de hallazgo contextual por regla. |
-| R-T28 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_informes.py::test_rt28_tribunal_no_soportado_sin_textos_inventados` | NO EJECUTADO | Baseline preservado; Tribunales sin regla configurada advierten; no extrapolar catálogo jurídico. |
-| R-T29 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_informes.py::test_rt29_recalculo_no_sobrescribe_texto_humano`; `tests/test_reglas_informes.py::test_rt29_reimportacion_conserva_texto_y_decisiones_humanas` | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
-| R-T30 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_informes.py::test_rt30_nominas_exactas_por_programa` | NO EJECUTADO | Baseline preservado; Nóminas baseline; pendientes pruebas de enlace remoto del nuevo contrato. |
-| R-T31 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ · `tests/test_reglas_informes.py::test_rt31_borrador_guardado_nunca_se_registra_como_envio` | NO EJECUTADO | Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente. |
-| R-T32 | BLOQUEADA_POR_EVIDENCIA | XFAIL estricto [CONFLICTO_ABIERTO] · `tests/test_reglas_informes.py::test_rt32_regla_desactivada_se_omite_y_se_conserva_la_configuracion`; `tests/test_reglas_informes.py::test_rt32_reglas_contextuales_desactivadas_explican_exclusion` | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T01 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T03 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T04 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T05 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T06 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T07 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Fallback E-06 conservado; NO_EVALUABLE contextual falta. |
+| R-T08 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T09 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T10 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T11 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Work advierte contradicción; clasificación agregada todavía falta. |
+| R-T12 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T13 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Conflicto C08: falta ficha puede confundirse con falta de columna; no corregir regla unilateralmente. |
+| R-T14 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T15 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T16 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Baseline sin cambio; contextual pendiente. |
+| R-T17 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
+| R-T18 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
+| R-T19 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
+| R-T20 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
+| R-T21 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Preview ficticio acotado a cuatro meses y mismo ingreso; interpretación real NO_EVALUABLE. |
+| R-T22 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T23 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T24 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T25 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T26 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
+| R-T27 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Incidencias tradicionales existen; falta modelo de hallazgo contextual por regla. |
+| R-T28 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Tribunales sin regla configurada advierten; no extrapolar catálogo jurídico. |
+| R-T29 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Reanálisis/reimportación conserva decisiones; conciliación explícita de fuentes cambiadas/ambiguas y remapeo de IDs/productos; fuente/regla/corte invalida productos preparados. |
+| R-T30 | IMPLEMENTADA_PENDIENTE_ACEPTACION | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Nóminas baseline; pendientes pruebas de enlace remoto del nuevo contrato. |
+| R-T31 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | Contactos desconocidos vacíos, borrador sin Send y advertencia de registro no acreditado. Outlook real pendiente. |
+| R-T32 | BLOQUEADA_POR_EVIDENCIA | NO EJECUTADO | NO EJECUTADO | Ampliación excluida: extractor historia/PDF y reglas CT correspondientes no implementados/aceptados. |
 | INT-01 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Excel autónomo legado probado; alcance real pendiente. |
 | INT-02 | IMPLEMENTADA_PENDIENTE_ACEPTACION | PASÓ | NO EJECUTADO | ZIP completo/parcial desde varias descargas y bitácoras anteriores comprobadas; resume coincidencias/exclusiones y conserva antigüedad/cobertura. Fuente institucional no certificada por fixtures. |
 | INT-03 | EN_CURSO | NO EJECUTADO | NO EJECUTADO | Baseline preservado; Calendarios legados locales; falta normalización v1. |

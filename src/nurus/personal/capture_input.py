@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date
+from datetime import date, timedelta
 from hashlib import sha256
 from io import BytesIO
 import json
@@ -20,6 +20,7 @@ from nurus.capture.temporal import (
 from nurus.rus.columns import COMMON, MODE_COLUMNS, map_columns
 from nurus.rus.models import ReadBatch, SourceRecord, SourceReference, Mode
 from nurus.rus.util import as_date
+from .motor.historia import construir, dia_iso, observaciones
 from .work import Work
 from nurus.services.excel_cells import append_literal_row
 
@@ -27,10 +28,94 @@ CANONICAL = {key: names[0] for key, names in COMMON.items()}
 for columns in MODE_COLUMNS.values():
     CANONICAL.update({key: names[0] for key, names in columns.items()})
 MAX_ANALYSIS_RECORDS = 20000  # Techo operativo ensayado; no altera el límite agregado del contrato.
+VENTANA_INFORMES_DIAS = 60  # Calendario de informes por vencer: mes actual y siguiente
 
 
 # Tipos de registro que evalúa el motor tradicional; EGRESADOS/OTRO quedan sin evaluar.
 ENGINE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'INFORMES')
+
+
+STATE_TYPES = ('ESPERA', 'CUMPLIMIENTO', 'EGRESADOS')
+STATE_LABELS = {'ESPERA': 'Espera', 'CUMPLIMIENTO': 'Cumplimiento', 'EGRESADOS': 'Egresados'}
+
+
+def mark_inconsistent_states(rows, provenance):
+    """Q-03: un mismo ingreso verificado en dos pestañas de estado del lote es un estado RUS inconsistente.
+
+    Informes no cuenta: un informe pendiente convive con su ingreso en Cumplimiento. Solo avisa; no corrige.
+    """
+    states = defaultdict(set)
+    for row in rows:
+        record = provenance[row.id]
+        if record['identity_status'] == 'VERIFICADA' and record['record_type'] in STATE_TYPES:
+            states[identity(record)].add(record['record_type'])
+    for row in rows:
+        record = provenance[row.id]
+        found = states.get(identity(record), set()) if record['identity_status'] == 'VERIFICADA' else set()
+        if record['record_type'] in STATE_TYPES and len(found) > 1:
+            names = ' y '.join(STATE_LABELS[t] for t in STATE_TYPES if t in found)
+            row.warnings.append(f'Q-03: el mismo ingreso figura en {names} en este lote; revisar su estado en RUS.')
+
+
+def mark_search_orders(rows, provenance, capture, as_of):
+    """OB-01..OB-05 solo mostrar para filas de «Búsqueda Lit» (pantalla litigantes, menú 94); sin cruces."""
+    from .ordenes_busqueda import avisos_orden
+
+    screens = {query['query_id']: query.get('screen', '') for query in capture.rows('consultas')}
+    for row in rows:
+        record = provenance[row.id]
+        if screens.get(record.get('query_id')) == 'litigantes':
+            row.warnings.extend(avisos_orden(json.loads(record['normalized_json']), as_of))
+
+
+def _historias_por_causa(capture):
+    """{(source_system, court_code, cause_id): Historia}; vacío si la fuente no se solicitó."""
+    rango = {'COMPLETA': 3, 'PARCIAL': 2, 'VACIA_COMPROBADA': 1}
+    filas = defaultdict(list)
+    for fila in capture.rows('historia_tramites'):
+        filas[fila['query_id']].append(fila)
+    resultado, mejor = {}, {}
+    for consulta in capture.manifest['queries']:
+        if consulta['screen'] != 'historia_tramites':
+            continue
+        filtros = json.loads(consulta['filters_json'])
+        causa = filtros.get('historia_causa')
+        if not causa:
+            continue
+        clave = (causa['source_system'], causa['court_code'], causa['cause_id'])
+        puntaje = rango.get(consulta['coverage'], 0)
+        if clave in mejor and mejor[clave] >= puntaje:
+            continue
+        ventana = filtros.get('ventana') or {}
+        desde, hasta = (dia_iso(ventana.get(k)) for k in ('desde', 'hasta'))
+        resultado[clave] = construir(filas.get(consulta['query_id'], ()), consulta['coverage'], desde, hasta)
+        mejor[clave] = puntaje
+    return resultado
+
+
+def captured_rule_context(work, source):
+    """Fuentes de la sesión para recalcular una fila, sin reabrir el ZIP ni elevar identidad."""
+    if not source or source['identity_status'] != 'VERIFICADA':
+        return None, ()
+    tables = getattr(work, 'capture_rule_sources', None)
+    if tables is None:
+        raise ValueError(
+            'La sesión anterior no conserva fuentes del motor. Reimporta el paquete antes de editar datos.'
+        )
+    cached = getattr(work, '_save_rule_source_index', None)
+    if cached is None or cached[0] != work.capture_digest:
+        from nurus.capture.contract import Capture
+
+        capture = Capture(work.capture_manifest, tables, work.capture_digest)
+        diaries = defaultdict(list)
+        for event in capture.rows('bitacoras'):
+            if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
+                diaries[identity(event)].append(event)
+        cached = (work.capture_digest, _historias_por_causa(capture), {k: observaciones(v) for k, v in diaries.items()})
+        work._save_rule_source_index = cached  # índice derivado; Work.save excluye los campos _save_*.
+    return cached[1].get((source['source_system'], source['court_code'], source['cause_id'])), cached[2].get(
+        identity(source), ()
+    )
 
 
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
@@ -76,15 +161,25 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         )
         return cached
     records = list(capture.rows('registros'))
+    todos = list(records)
+    # Con registros de Seguimiento en la captura, el calendario de informes por vencer solo aporta fechas al cruce
+    # (C-10 y correo preventivo): sus filas no son registros propios, para no duplicar a la misma persona. Un paquete
+    # hecho solo del calendario sigue mostrándolo como filas.
+    pantallas = {q['query_id']: q['screen'] for q in capture.rows('consultas')}
+    solo_cruce = any(pantallas.get(r['query_id']) != 'calendario_informes' for r in records)
+    if solo_cruce:
+        records = [r for r in records if pantallas.get(r['query_id']) != 'calendario_informes']
 
     # Un productor independiente puede aportar calendarios sin duplicarlos en
     # registros. Solo se omite una copia de la misma fila física, nunca por RIT.
     def physical(row):
         return tuple(row[k] for k in ('query_id', 'source_sha256', 'original_file', 'original_sheet', 'original_row'))
 
-    represented = {physical(row) for row in records}
+    represented = {physical(row) for row in todos}
+    record_ids = {row['record_id'] for row in todos}
     for calendar in capture.rows('calendarios'):
-        if physical(calendar) in represented:
+        # WD-1: las proyecciones por ingreso complementan su registro; no son registros propios.
+        if physical(calendar) in represented or solo_cruce or calendar['event_type'] == 'INFORME_PROYECTADO':
             continue
         record = {k: calendar[k] for k in SOURCE_FIELDS}
         is_report = calendar['event_type'].strip().upper() in ('INFORME', 'INFORMES')
@@ -97,9 +192,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             source_table='calendarios',
             calendar_id=calendar['calendar_id'],
         )
-        if any(row['record_id'] == record['record_id'] for row in records):
+        if record['record_id'] in record_ids:
             raise ValueError('Identificador de calendario colisiona con registro; trabajo anterior intacto.')
         records.append(record)
+        record_ids.add(record['record_id'])
     if len(records) > MAX_ANALYSIS_RECORDS:
         raise ValueError(
             'La captura excede el límite operativo de 20.000 registros; '
@@ -115,11 +211,21 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         if row['association'] == 'VERIFICADA' and row['event_type'].strip().upper() in ('INFORME', 'INFORMES'):
             calendars[identity(row)].append(row)
     cross = {}
+    from .calendario_ingreso import avisos_cotejo, proxima_pendiente, proyecciones
+
+    projected = proyecciones(capture, identity)
+    cotejo = {}
     event_index = defaultdict(list)
+    bitacora_index = defaultdict(list)
+    historias = _historias_por_causa(capture)
+    historia_by_record = {}
+    bitacora_by_record = {}
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
             if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
                 event_index[identity(event)].append(event)
+                if table == 'bitacoras':
+                    bitacora_index[identity(event)].append(event)
     for number, record in enumerate(records, 2):
         if number % 100 == 0:
             checkpoint()
@@ -145,16 +251,33 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         provenance[record['record_id']] = record
         row_modes[record['record_id']] = mode
         contexts[record['record_id']] = chronology(capture, record, as_of, event_index=event_index)
+        if record['identity_status'] == 'VERIFICADA':
+            historia_by_record[record['record_id']] = historias.get(
+                (record['source_system'], record['court_code'], record['cause_id'])
+            )
+            bitacora_by_record[record['record_id']] = observaciones(bitacora_index.get(identity(record), ()))
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
         for cal in matching:
             source = json.loads(cal['normalized_json'])
             cm = map_columns(source, 'INFORMES')
             due = as_date(source.get(cm.get('vencimiento', ''), ''))
-            if due and due > as_of:
+            if due and as_of < due <= as_of + timedelta(days=VENTANA_INFORMES_DIAS):
                 dates.append(due)
         if len(set(dates)) == 1:
             cross[record['record_id']] = dates[0]
+        items = projected.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
+        if items and mode in ('CUMPLIMIENTO', 'INFORMES'):
+            due = None
+            if mode == 'INFORMES':
+                column = map_columns(raw, 'INFORMES').get('vencimiento')
+                due = as_date(raw.get(column, '')) if column else None
+            cotejo[record['record_id']] = avisos_cotejo(
+                items, as_of, vencimiento_informes=due, fecha_hoja2=cross.get(record['record_id'])
+            )
+            # Calendario como fuente (decisión 19-oct-2026): suple a Hoja2 solo cuando esta no aporta fecha.
+            if record['record_id'] not in cross and proxima_pendiente(items, as_of):
+                cross[record['record_id']] = proxima_pendiente(items, as_of)
     headers = list(dict.fromkeys(key for row in canonical for key in row))
     if not headers:
         headers = ['RIT', 'TRIBUNAL', 'NOMBRE', 'DERIVACION']
@@ -205,7 +328,15 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             column_mapping=mapping,
             source_bytes=content,
         )
-        analyzed = Work(config).analyze(path, mode, as_of=as_of, batch=batch, cross_by_record=cross)
+        analyzed = Work(config).analyze(
+            path,
+            mode,
+            as_of=as_of,
+            batch=batch,
+            cross_by_record=cross,
+            historia_by_record=historia_by_record,
+            bitacora_by_record=bitacora_by_record,
+        )
         # Un grupo solo de EGRESADOS/OTRO no pasa por el motor: sus avisos de columnas serían falsos.
         if any(record['record_type'] in ENGINE_TYPES for record, _, _, _ in items):
             candidate.warnings.extend(analyzed.warnings)
@@ -221,10 +352,21 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             candidate.rows.append(row)
     attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)
+    mark_inconsistent_states(candidate.rows, provenance)
+    for row in candidate.rows:
+        row.warnings.extend(cotejo.get(row.id, ()))
+    mark_search_orders(candidate.rows, provenance, capture, as_of)
+    from .contexto_excel import marcar_paquete
+
+    marcar_paquete(candidate.rows, provenance, identity)
+    from .bitacora_avisos import aplicar_reiteracion
+
+    aplicar_reiteracion(candidate.rows, contexts, config)
     candidate.capture_digest = capture.digest
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash
     candidate.capture_manifest = capture.manifest
+    candidate.capture_rule_sources = {table: capture.rows(table) for table in ('historia_tramites', 'bitacoras')}
     candidate.capture_sources = provenance
     candidate.capture_context = contexts
     candidate.capture_modes = row_modes

@@ -1,0 +1,59 @@
+{
+  "operacion": "import_capture con registros y calendarios independientes",
+  "repeticiones": 3,
+  "datos": "ficticios",
+  "antes": [
+    {
+      "base_records": 500,
+      "independent_calendars": 500,
+      "analysis_rows": 1000,
+      "median_s": 0.9530938929999593,
+      "samples_s": [
+        1.8209977019999997,
+        0.9530938929999593,
+        0.8657740979999744
+      ],
+      "semantic_sha256": "4fd05b3fbe42421e87bf90901dd4710248baf89cea0794189baceb4bd3e8c92d"
+    },
+    {
+      "base_records": 1500,
+      "independent_calendars": 1500,
+      "analysis_rows": 3000,
+      "median_s": 3.1371132259999968,
+      "samples_s": [
+        2.4201526939999667,
+        3.6109422500001074,
+        3.1371132259999968
+      ],
+      "semantic_sha256": "8249748d76e765471716c076b3de5947e1296108cc989f20278546a03f288e01"
+    }
+  ],
+  "despues": [
+    {
+      "base_records": 500,
+      "independent_calendars": 500,
+      "analysis_rows": 1000,
+      "median_s": 0.7840527459999294,
+      "samples_s": [
+        0.8107450509999126,
+        0.6826998880000019,
+        0.7840527459999294
+      ],
+      "semantic_sha256": "4fd05b3fbe42421e87bf90901dd4710248baf89cea0794189baceb4bd3e8c92d"
+    },
+    {
+      "base_records": 1500,
+      "independent_calendars": 1500,
+      "analysis_rows": 3000,
+      "median_s": 2.2578102260000605,
+      "samples_s": [
+        2.8563246080000226,
+        2.2578102260000605,
+        1.826369576999923
+      ],
+      "semantic_sha256": "8249748d76e765471716c076b3de5947e1296108cc989f20278546a03f288e01"
+    }
+  ],
+  "integridad": "Los SHA semánticos de filas, reglas, acciones y observaciones coinciden.",
+  "limite": "Medición local; no acredita rendimiento institucional ni costos de CI."
+}

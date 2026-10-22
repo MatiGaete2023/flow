@@ -29,8 +29,6 @@ def lock_file():
 
 
 def main():
-    if sys.version_info < (3, 10):
-        raise RuntimeError('Se requiere Python 3.10 o posterior.')
     if sys.version_info[:2] != (3, 12):
         print('Aviso: la versión probada es Python 3.12; se usa', sys.version.split()[0])
     try:

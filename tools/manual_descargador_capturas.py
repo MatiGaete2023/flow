@@ -260,7 +260,7 @@ async def browser(browser_path=None):
                     await manager.goto('chrome://extensions/')
                     # Chrome usa shadow DOM; Playwright atraviesa las raíces abiertas.
                     toggle = manager.locator('#devMode')
-                    if not await toggle.get_attribute('aria-pressed') == 'true':
+                    if await toggle.get_attribute('aria-pressed') != 'true':
                         await toggle.click()
                     await expect(manager.locator('#loadUnpacked')).to_be_visible()
                     await expect(manager.locator('extensions-item')).to_have_count(1)

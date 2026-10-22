@@ -8,6 +8,12 @@
     "tests/test_rus_capture.py": "WP-22 (D3)",
     "tests/test_operational_products.py": "WP-21",
     "tests/test_rus_reader_and_rules.py": "WP-21 (renombrada a tests/test_rus_reader.py)",
-    "descargador/solicitud_antecedentes.py": "WP-45 (D9)"
+    "descargador/solicitud_antecedentes.py": "WP-45 (D9)",
+    "src/nurus/personal/bitacoras.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)",
+    "src/nurus/personal/bitacora_har.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)",
+    "src/nurus/personal/bitacora_lote.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)",
+    "tests/test_bitacoras.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)",
+    "tests/test_bitacora_har.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)",
+    "tests/test_bitacora_lote.py": "WP-69 (auditoría de bitácoras anterior, sin uso en la app)"
   }
 }

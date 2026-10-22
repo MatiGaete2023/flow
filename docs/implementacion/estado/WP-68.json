@@ -1,0 +1,29 @@
+{
+  "titulo": "Limpieza del Asistente y del Descargador",
+  "ola": 8,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-67",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+  "tomado": "16 de octubre de 2026",
+  "rama": "claude/lucid-sagan-hw9ul4",
+  "pr": 50,
+  "verificacion": "PASA sobre 0078d20: Asistente 1.142, Descargador 345; 21 bajas declaradas (verificacion/WP-68-reemplazos.txt); identidades, golden sin cambios, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-68.json.",
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
+  "auditoria": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
+  "notas": [
+    "Elimina código sin uso y sondas superadas; sin cambio de reglas ni de golden.",
+    "No integrado ni aceptado.",
+    "La auditoría de bitácoras anterior se retiró en WP-69 por decisión del usuario.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
+  ]
+}

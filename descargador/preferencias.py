@@ -51,6 +51,12 @@ class Preferences:
             'csmp': '',
             'paquete_consolidado': True,
             'reutilizar_bitacoras': True,
+            'leer_calendarios': False,
+            'leer_historia': False,
+            'historia_en_paquete': True,
+            'informes_por_vencer': True,
+            'meses_atras': 4,
+            'paquete_por_hoja': False,
             'tema': 'Sistema',
             'historial_lotes': [],
             'historial_bitacoras': [],
@@ -63,6 +69,11 @@ class Preferences:
                     for key in self.data:
                         if key in value and isinstance(value[key], type(self.data[key])):
                             self.data[key] = value[key]
+                    meses = value.get('meses_atras')
+                    if isinstance(meses, int) and not isinstance(meses, bool) and 1 <= meses <= 4:
+                        self.data['meses_atras'] = meses
+                    else:
+                        self.data['meses_atras'] = 4
                     if isinstance(value.get('tribunales'), list):
                         self.data['tribunales'] = value['tribunales']
                     if isinstance(value.get('pausa_consultas'), (int, float)) and not isinstance(
@@ -133,7 +144,30 @@ def pending_plan(folder):
 
 
 RETENCION_DIAS = 60
-PRESERVABLES = frozenset({'Bitacoras_RUS.xlsx', 'diagnostico_bitacoras.json'})
+PRESERVABLES = frozenset({'Bitacoras_RUS.xlsx', 'diagnostico_bitacoras.json', 'diagnostico_historia.json'})
+
+
+def _es_preservable(child):
+    nombre = child.name
+    return nombre in PRESERVABLES or (nombre.startswith('Historia_SITFA') and nombre.endswith('.xlsx'))
+
+
+def _subir_historia(path):
+    """Antes de «conservar»: lleva el Excel y el diagnóstico de historia a la raíz del lote o paquete."""
+    import shutil
+
+    respaldo = path / 'respaldo'
+    carpetas = [path]
+    if respaldo.is_dir() and not respaldo.is_symlink():
+        carpetas += [c for c in respaldo.iterdir() if c.is_dir() and not c.is_symlink()]
+    for carpeta in carpetas:
+        candidatos = list(carpeta.glob('Historia_SITFA*.xlsx')) + [carpeta / 'historia' / 'diagnostico_historia.json']
+        for origen in candidatos:
+            if not origen.is_file() or origen.is_symlink():
+                continue
+            destino = path / origen.name
+            if origen != destino and not destino.exists():
+                shutil.move(str(origen), str(destino))
 
 
 def onedrive_warning(path):
@@ -147,6 +181,29 @@ def onedrive_warning(path):
 PACKAGE_PREFIX = 'Paquete CSMP '
 
 
+CONTROLES = ('resumen.json', 'bitacoras.json', 'flujo.json', 'historias.json', 'historia/historias.json')
+
+
+def _es_enlace(path):
+    return path.is_symlink() or (hasattr(path, 'is_junction') and path.is_junction())
+
+
+def _sin_enlaces(path, root):
+    path, root = Path(path), Path(root)
+    try:
+        partes = path.relative_to(root).parts
+    except ValueError:
+        return False
+    actual = root
+    if _es_enlace(actual) or any(_es_enlace(p) for p in actual.absolute().parents):
+        return False
+    for parte in partes:
+        actual = actual / parte
+        if _es_enlace(actual):
+            return False
+    return True
+
+
 def _package_controls(folder):
     """Paquete de «Consultar y crear paquete» (revisión externa H3): controles bajo respaldo/ y el ZIP.
 
@@ -156,16 +213,16 @@ def _package_controls(folder):
     process = backup / 'proceso.json'
     if (
         not folder.name.startswith(PACKAGE_PREFIX)  # E3 WP-94 C4: una carpeta ajena no se toma por paquete
-        or backup.is_symlink()
+        or not _sin_enlaces(backup, folder)
         or not backup.is_dir()
         or process.is_symlink()
         or not process.is_file()
     ):
         return []
     controls = [process]
-    for name in ('resumen.json', 'bitacoras.json', 'flujo.json'):
+    for name in CONTROLES:
         for path in backup.glob('*/' + name):
-            if not path.is_symlink() and not path.parent.is_symlink() and path.is_file():
+            if _sin_enlaces(path, folder) and path.is_file():
                 controls.append(path)
     controls += [path for path in folder.glob('*.zip') if path.is_file() and not path.is_symlink()]
     return controls
@@ -176,7 +233,7 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
     import time
 
     root = Path(root)
-    if not root.is_dir() or root.is_symlink():
+    if not root.is_dir() or not _sin_enlaces(root, root):
         return []
     excluded = {Path(path).resolve() for path in protected if path}
     limit = time.time() - max_days * 86400
@@ -186,12 +243,11 @@ def old_batches(root, *, max_days=RETENCION_DIAS, protected=()):
             folder.is_symlink()
             or not folder.is_dir()
             or any(path.is_relative_to(folder.resolve()) for path in excluded)
+            or any(_es_enlace(p) for p in folder.rglob('*'))
         ):
             continue
         controls = [
-            folder / name
-            for name in ('resumen.json', 'bitacoras.json', 'flujo.json')
-            if (folder / name).is_file() and not (folder / name).is_symlink()
+            folder / name for name in CONTROLES if (folder / name).is_file() and _sin_enlaces(folder / name, folder)
         ] + _package_controls(folder)
         if not controls:
             continue
@@ -215,6 +271,8 @@ def manage_old_batches(
 
     if not confirmed:
         return []
+    if not _sin_enlaces(Path(root), Path(root)) or any(not _sin_enlaces(Path(path), Path(root)) for path in selected):
+        raise PocError('La selección contiene enlaces; actualiza la lista.')
     root = Path(root).resolve()
     available = {
         item['folder'].resolve(): item['folder'] for item in old_batches(root, max_days=max_days, protected=protected)
@@ -226,19 +284,24 @@ def manage_old_batches(
         )
     target = Path(archive).resolve() if archive else None
     if target:
+        if not _sin_enlaces(Path(archive), Path(archive)):
+            raise PocError('La carpeta de archivo contiene enlaces; elige otra carpeta.')
         if target == root or any(target == path or target.is_relative_to(path) for path in selected):
             raise PocError('La carpeta de archivo debe estar fuera de los lotes seleccionados.')
         if any((target / path.name).exists() for path in selected):
             raise PocError('La carpeta de archivo ya contiene un lote con el mismo nombre.')
     changed = []
     for path in selected:
+        if path not in {item['folder'].resolve() for item in old_batches(root, max_days=max_days, protected=protected)}:
+            raise PocError('La selección cambió; actualiza la lista antes de borrar.')
         if target:
             target.mkdir(parents=True, exist_ok=True)
             shutil.move(str(path), str(target / path.name))
         elif preserve:
             package = bool(_package_controls(path))
+            _subir_historia(path)
             for child in path.iterdir():
-                if child.name in PRESERVABLES and child.is_file() and not child.is_symlink():
+                if _es_preservable(child) and child.is_file() and not child.is_symlink():
                     continue
                 if package and child.suffix.lower() == '.zip' and child.is_file() and not child.is_symlink():
                     continue  # E3 WP-94 C2: en un paquete, las bitácoras viven en el ZIP; «conservar» lo conserva

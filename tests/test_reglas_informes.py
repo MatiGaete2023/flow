@@ -38,8 +38,15 @@ def test_rt16_informe_vence_ayer_hoy_30_31(tmp_path):
 
 
 def test_rt16_dce_distingue_informe_diagnostico(tmp_path):
-    fila = analizar(tmp_path, 'INFORMES', BASE, [persona(1, programa='DCE UNO') + ['2026-10-08']]).rows[0]
-    assert fila.rules == ['INFORMES.I01_VENCIDO_DCE']
+    # WA-7 (19-oct-2026): DCE se pide en cuenta pasados 10 días del vencimiento RUS; antes, correo I-02 DCE.
+    filas = analizar(
+        tmp_path,
+        'INFORMES',
+        BASE,
+        # Personas distintas: dos informes de una misma persona se acumulan (J2, historia) y no aíslan el margen.
+        [persona(i, programa='DCE UNO') + [f] for i, f in ((1, '2026-09-28'), (2, '2026-10-08'))],
+    ).rows
+    assert [f.rules for f in filas] == [['INFORMES.I01_VENCIDO_DCE'], ['INFORMES.I02_POR_VENCER_DCE']]
 
 
 def test_rt16_sin_fecha_no_emite_frase_e_informa_incidencia(tmp_path):
@@ -125,7 +132,7 @@ def test_rt32_regla_desactivada_se_omite_y_se_conserva_la_configuracion(tmp_path
     umbrales = dict(configuracion['umbrales'])
     trabajo = analizar(tmp_path, 'ESPERA', ESPERA, [persona(1) + [45, '']], configuracion=configuracion)
     assert 'COMUN.CURADOR' not in trabajo.rows[0].rules
-    assert trabajo.rows[0].rules == ['ESPERA.E05_PROYECTO_Y_CORREO']
+    assert trabajo.rows[0].rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS']
     assert configuracion['umbrales'] == umbrales and configuracion['desactivadas'] == ['COMUN.CURADOR']
     activo = analizar(tmp_path, 'ESPERA', ESPERA, [persona(1) + [45, '']])
     assert 'COMUN.CURADOR' in activo.rows[0].rules

@@ -36,10 +36,17 @@ class Row:
     decisions: dict = field(default_factory=dict)
     overrides: dict = field(default_factory=dict)
     word_overrides: dict = field(default_factory=dict)
+    avisos: list = field(default_factory=list)
 
 
-def actions_for(events):
-    """Selección por identificador de rama, nunca por palabras de la observación."""
+VENTANA_POR_VENCER_DIAS = 60
+
+
+def actions_for(events, due=None, as_of=None):
+    """Selección por identificador de rama, nunca por palabras de la observación.
+
+    `due`/`as_of`: fecha del próximo informe (cruce) y corte; el correo preventivo de C-10 solo va si vence dentro de
+    60 días (con la hoja 2 de un Excel el cruce puede traer fechas lejanas)."""
     actions = []
     if any(e.endswith(('E05_SOLO_CORREO', 'E05_PROYECTO_Y_CORREO')) for e in events):
         actions.append('programa_espera')
@@ -52,6 +59,16 @@ def actions_for(events):
         actions.append('programa_por_vencer')
     if any(e.startswith(('CUMPLIMIENTO.C04_', 'CUMPLIMIENTO.C05_')) for e in events):
         actions.append('medidas')
+    # Informe por vencer del calendario (cruce): el correo preventivo se alimenta de esa fecha.
+    if 'CUMPLIMIENTO.C10_HOJA2' in events and 'programa_por_vencer' not in actions:
+        from nurus.rus.util import as_date
+
+        vence = as_date(due) if due is not None else None
+        if vence is None or as_of is None or (vence - as_of).days <= VENTANA_POR_VENCER_DIAS:
+            actions.append('programa_por_vencer')
+    # Observaciones que remiten un proyecto para aplicar una nomenclatura (informe ingresado, causa finalizada).
+    if any(e in ('HISTORIA.C10_ESCRITO', 'HISTORIA.P_FINALIZADA') for e in events):
+        actions.append('NOMENCL')
     return actions
 
 
@@ -183,12 +200,27 @@ def _map_consolidated(work, capture, book):
     return capture.consolidated, sheets.pop(), positions
 
 
+def _automatic_resolution(row):
+    """Tipo de proyecto que el motor identificó (PC_IE, PC_INFO o NOMENCL) para llenar la columna RES; None si no hay."""
+    from .resolutions import suggested_resolution
+
+    if row.decisions.get('resolution', 'auto') != 'auto':
+        return None
+    return suggested_resolution(row)
+
+
 def _human_reviewed(row):
     """Distingue una edición humana real de columnas técnicas reimportadas vacías."""
     review = row.review or {}
     if 'OBSERVACION' in review and str(review.get('OBSERVACION', '')) != str(row.observation or ''):
         return True
-    return any(_explicit(review.get(key)) for key in ('FECHA_OBS', 'TT', 'CC', 'RES'))
+    if any(_explicit(review.get(key)) for key in ('FECHA_OBS', 'TT', 'CC')):
+        return True
+    # El tipo que el motor sugirió en RES no es una edición humana, tampoco al reimportar la copia (allí la
+    # decisión pasa a «review»); cambiarlo o escribir otro sí lo es.
+    from .resolutions import res_is_human
+
+    return res_is_human(row)
 
 
 def _source_value(row, key, default=''):
@@ -305,7 +337,19 @@ class Work:
         self.source_scope = 'SOLO_PLANILLA'
         self.capture_changes = None
 
-    def analyze(self, path, mode, *, sheet=None, cross_sheet=None, as_of=None, batch=None, cross_by_record=None):
+    def analyze(
+        self,
+        path,
+        mode,
+        *,
+        sheet=None,
+        cross_sheet=None,
+        as_of=None,
+        batch=None,
+        cross_by_record=None,
+        historia_by_record=None,
+        bitacora_by_record=None,
+    ):
         from .operations import progress, checkpoint
 
         checkpoint()
@@ -358,6 +402,7 @@ class Work:
             'CUMPLIMIENTO': generar_observacion_cumplimiento,
             'INFORMES': generar_observacion_informes,
         }[self.mode]
+        duplicity, accumulated = self._prepass(batch, cols)
         for number, record in enumerate(batch.records):
             if number % 100 == 0:
                 checkpoint()
@@ -377,7 +422,19 @@ class Work:
                 column = cols.get(name)
                 if column and isinstance(values.get(column), (int, float)):
                     values[column] = as_date(values[column], batch.excel_epoch)
-            ctx = {'config': self.config, 'events': [], 'date': date.fromisoformat(self.as_of), 'invalid': []}
+            historia = (historia_by_record or {}).get(record.record_id)
+            corte = date.fromisoformat(self.as_of)
+            ctx = {
+                'config': self.config,
+                'events': [],
+                'date': corte,
+                'invalid': [],
+                'historia': historia.al_corte(corte) if historia is not None else None,
+                'bitacora': tuple(o for o in (bitacora_by_record or {}).get(record.record_id, ()) if o.fecha <= corte),
+                'marcas': [],
+                'duplicidad': duplicity.get(record.record_id),
+                'acumulado': accumulated.get(record.record_id),
+            }
             token = current.set(ctx)
             inc = Incidencias()
             warnings = []
@@ -403,6 +460,10 @@ class Work:
                     )
                 observation = fn(values, court, cols, **args) if court else ''
                 warnings.extend(i['MOTIVO'] for i in inc._items)
+                if observation and 'COMUN.NO_SEGUIMIENTO' not in ctx['events']:
+                    from .contexto_excel import avisos_fila
+
+                    warnings.extend(avisos_fila(values, cols, self.mode, ctx['date'], args.get('fecha_hoja2')))
             except (ValueError, TypeError, KeyError) as exc:
                 observation = ''
                 warnings.append('No se pudo evaluar esta fila: ' + str(exc))
@@ -421,20 +482,49 @@ class Work:
                     dict(record.values),
                     observation,
                     list(dict.fromkeys(events)),
-                    [] if excluded else actions_for(events),
+                    [] if excluded else actions_for(events, self.cross_dates[record.record_id], corte),
                     warnings,
                     excluded,
                 )
             )
             self.rows[-1].decisions = {'structured': True, 'mail': {}, 'resolution': 'auto'}
+            self.rows[-1].avisos = list(dict.fromkeys(ctx['marcas']))
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
 
-    def document_exception(self, reason):
-        """Compatibilidad con sesiones antiguas; ya no es requisito para exportar."""
-        if not reason.strip():
-            raise ValueError('Indica el motivo de la excepción de cruce.')
-        self.exception = reason.strip()
+    def _prepass(self, batch, cols, *, mode=None):
+        """Duplicidad de ingreso (Espera/Cumplimiento) e informes vencidos acumulados (Informes), por causa.
+        Solo usa datos de RUS: corre igual con Excel o con paquete, haya o no historia (decisión u, 14-oct)."""
+        mode = mode or self.mode
+        if mode not in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES'):
+            return {}, {}
+        from .motor.analisis_historia import causas_con_varios, duplicidades
+
+        def cell(record, field):
+            return str(record.values.get(cols.get(field, ''), '') or '').strip()
+
+        rows = [
+            (r.record_id, cell(r, 'tribunal'), cell(r, 'rit'), cell(r, 'rut'), cell(r, 'programa'))
+            for r in batch.records
+        ]
+        if mode != 'INFORMES':
+            return duplicidades(rows), {}
+        today = date.fromisoformat(self.as_of)
+        groups = {}
+        for r in batch.records:
+            due = as_date(r.values.get(cols.get('vencimiento', '')), batch.excel_epoch)
+            if not due or due >= today:
+                continue
+            ident = tuple(historical_match(cell(r, f)) for f in ('tribunal', 'rit', 'rut', 'programa'))
+            if ident[1]:
+                groups.setdefault(ident, []).append((r.record_id, due))
+        accumulated = {}
+        for items in groups.values():
+            if len(items) > 1:
+                oldest = min(due for _, due in items)
+                accumulated.update({rid: (len(items), oldest) for rid, _ in items})
+        # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
+        return causas_con_varios(rows), accumulated
 
     def export(self, destination, *, backend='native', reduced_fidelity=False):
         """Exporta la propuesta o las ediciones humanas vigentes de Trabajo.
@@ -494,7 +584,7 @@ class Work:
                     'review_date': _review_value(row, 'FECHA_OBS'),
                     'tt_value': _review_value(row, 'TT'),
                     'workload_value': _review_value(row, 'CC'),
-                    'resolution_value': _review_value(row, 'RES'),
+                    'resolution_value': _review_value(row, 'RES', _automatic_resolution(row)),
                 }
             )
         result = _export_preserved_payload(

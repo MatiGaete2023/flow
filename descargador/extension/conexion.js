@@ -8,6 +8,13 @@ const messages={
   DIARY_NETWORK:"La consulta de bitácora falló al contactar con RUS o recibió una redirección. Comprueba la sesión y reintenta el lote.",
   DIARY_TIMEOUT:"RUS no respondió a tiempo al abrir la bitácora. Reintenta las lecturas fallidas.",
   DIARY_RESPONSE:"RUS no entregó una respuesta válida de bitácora. Revisa la sesión y reintenta las lecturas fallidas.",
+  HISTORY_CONTEXT:"No se conserva el listado actual para abrir la historia. Vuelve a consultar sin navegar en SITFA.",
+  HISTORY_LINK:"El enlace de historia no está en el listado actual. No se abrió una causa por suposición.",
+  HISTORY_IDENTITY:"La causa pedida no coincide con el tribunal del listado actual.",
+  HISTORY_NETWORK:"Falló el contacto con SITFA al abrir la historia. Comprueba la sesión.",
+  HISTORY_TIMEOUT:"SITFA no respondió a tiempo al abrir la historia.",
+  HISTORY_RESPONSE:"SITFA no entregó una historia válida. Revisa la sesión.",
+  HISTORY_REFLECTED:"La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.",
   CONNECTION_CODE:"El descargador rechazó el código. Copia el código actual de la ventana que está abierta; cambia al reiniciar o desconectar.",
   EXTENSION_ORIGIN:"El descargador rechazó el origen de la extensión. Actualiza el descargador y recarga la extensión en chrome://extensions.",
   EXTENSION_CHANGED:"Este descargador está vinculado a otra copia de la extensión. Pulsa Desconectar en el descargador y usa el nuevo código.",
@@ -59,7 +66,8 @@ async function execute(command,payload={}) {
       const tab=await chrome.tabs.get(tabId);windowId=tab.windowId;
       if(new URL(tab.url).origin!=="https://familia.pjud.cl" || tab.discarded)throw new Error("pestaña");
       const win=await chrome.windows.get(windowId);
-      if(win.state==="minimized")await chrome.windows.update(windowId,{state:"normal"});
+      // Chrome no pinta una ventana tapada por otra (p. ej., el descargador): se trae al frente para la captura.
+      await chrome.windows.update(windowId,{...(win.state==="minimized"?{state:"normal"}:{}),focused:true});
       await chrome.tabs.update(tabId,{active:true});
       chrome.tabs.onActivated.addListener(activated);
       await inject("evidence_show",payload);

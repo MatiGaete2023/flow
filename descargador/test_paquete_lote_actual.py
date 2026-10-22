@@ -69,7 +69,7 @@ def test_boton_se_habilita_tras_lote_y_bitacoras_y_no_abre_resultados(tmp_path):
             import descargador
             descargador.filedialog.asksaveasfilename=lambda **kw:str(salida)
             app.create_package()
-            assert pedidos==[('package',(lote,bitacoras/'bitacoras.json',salida,True))]
+            assert pedidos==[('package',(lote,bitacoras/'bitacoras.json',salida,True,None,(),4))]
             resultado=descargador.package_current_lot(*pedidos[0][1])
             app.process_event('package_done',resultado)
             assert 'Paquete creado: '+salida.name in app.status.get()

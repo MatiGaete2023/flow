@@ -736,7 +736,12 @@ class ResultsWindow(tk.Toplevel):
 
             lots = load_sources(folders, partial)
             path, note = export_capture_with_note(
-                lots, target, diaries=diaries or None, match_diaries=True, consolidated=wanted
+                lots,
+                target,
+                diaries=diaries or None,
+                match_diaries=True,
+                consolidated=wanted,
+                meses=self.app.prefs.data.get('meses_atras', 4),
             )
             capture = read_capture(path)
             summary = next(

@@ -51,24 +51,9 @@ Las pruebas normales no necesitan acceder a SITFA:
 .venv\Scripts\python.exe -m unittest discover -p "test_*.py"
 ```
 
-Para reproducir la integración ficticia con Chrome, instala la dependencia opcional de pruebas y ejecuta:
-
-```powershell
-.venv\Scripts\python.exe -m pip install playwright==1.63.0
-.venv\Scripts\python.exe -m playwright install chromium
-.venv\Scripts\python.exe verificar_chrome_ficticio.py
-```
-
-El programa de uso diario no requiere Playwright. La prueba guarda únicamente Excel ficticios e indicadores en `pruebas_locales`. Las cifras entregadas se encuentran en **comprobaciones.json**. El ZIP de distribución contiene fuentes, extensión, instrucciones y pruebas; excluye HAR, Excel reales, entornos Python y credenciales.
-
-Para comprobar las API reales de la extensión en un perfil ficticio separado:
-
-```powershell
-.venv\Scripts\python.exe -m playwright install chromium
-.venv\Scripts\python.exe verificar_extension_real.py
-```
-
-Esta prueba usa Chrome for Testing, sin cambiar tu Chrome. Crea y elimina su perfil y Excel ficticios dentro de pruebas_locales; conserva únicamente un informe sin datos privados. El archivo pruebas/puente_origin_fixture.py reproduce el comportamiento anterior únicamente para esta prueba; la herramienta utiliza puente.py.
+La integración ficticia con Chrome se comprueba con `verificar_bitacoras_extension.py` y `verificar_pdf_extension.py` (este último recorre
+también las cinco pantallas de `verificar_flujos_extension.py`); ambos corren en la CI «Descargador integral». Las sondas anteriores
+`verificar_chrome_ficticio.py` y `verificar_extension_real.py` (versión 2.1) se retiraron en WP-68. El programa de uso diario no requiere Playwright.
 
 
 ## Versión 2.1.0: pantallas y tribunales

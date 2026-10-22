@@ -5,6 +5,10 @@ from typing import TypedDict
 from nurus.capture.temporal import identity
 
 
+# Alcances del catálogo de textos: sus hallazgos se reconstruyen desde Row.rules en cada actualización.
+RULE_SCOPES = ('COMUN.', 'ESPERA.', 'CUMPLIMIENTO.', 'INFORMES.', 'HISTORIA.')
+
+
 class Finding(TypedDict):
     rule_id: str
     rule_version: str
@@ -30,7 +34,11 @@ def traditional_findings(work, row) -> list[Finding]:
             record_identity=list(identity(source)),
             detected_at=work.as_of,
             fact=row.observation,
-            condition='Regla tradicional conservada; no acredita actuaciones remotas.',
+            condition=(
+                'Constancia de historia de la causa; no acredita actuaciones remotas.'
+                if rule.startswith('HISTORIA.')
+                else 'Regla tradicional conservada; no acredita actuaciones remotas.'
+            ),
             coverage=source['coverage'],
             status='APLICA',
             reason='Evaluación del motor tradicional.',
@@ -48,9 +56,7 @@ def updated_contexts(work, rows):
         if row.id not in contexts:
             continue
         context = deepcopy(contexts[row.id])
-        contextual = [
-            f for f in context['findings'] if not f['rule_id'].startswith(('ESPERA.', 'CUMPLIMIENTO.', 'INFORMES.'))
-        ]
+        contextual = [f for f in context['findings'] if not f['rule_id'].startswith(RULE_SCOPES)]
         context['findings'] = contextual + traditional_findings(work, row)
         contexts[row.id] = context
     return contexts
@@ -68,6 +74,16 @@ def _when(event):
 
 def display_of(work, row):
     return getattr(work, 'capture_context', {}).get(row.id, {}).get('display')
+
+
+def bitacora_alerts(work, row):
+    """Avisos CT-05/CT-07/CT-11 (solo mostrar) del ingreso; vacío sin paquete o sin cronología acreditada."""
+    from datetime import date
+    from .bitacora_avisos import avisos
+
+    return avisos(
+        display_of(work, row), row.observation, row.rules, work.config['textos'], date.fromisoformat(work.as_of)
+    )
 
 
 def last_center_label(work, row):
@@ -92,7 +108,9 @@ def last_center_label(work, row):
         return 'Sin entradas capturadas'
     label = _when(display['last_center'][0])[:10]
     pending = len(display['later']) + len(display['uncertain'])
-    return label + (f' · {pending} posterior' + ('es' if pending > 1 else '') if pending else '')
+    label += f' · {pending} posterior' + ('es' if pending > 1 else '') if pending else ''
+    alerts = len(bitacora_alerts(work, row))
+    return label + (f' · {alerts} aviso' + ('s' if alerts > 1 else '') if alerts else '')
 
 
 def novelties_text(work, row):
@@ -122,6 +140,10 @@ def novelties_text(work, row):
         if display['uncertain']:
             lines.append('Mismo día, orden incierto (sin hora comparable):')
             lines += _entries(display['uncertain'])
+    alerts = bitacora_alerts(work, row)
+    if alerts:
+        lines.append('Avisos (solo mostrar; no cambian la observación propuesta):')
+        lines += [f'- {rule} · {text}' for rule, text in alerts]
     if display['outside_horizon']:
         lines.append(f"{display['outside_horizon']} entrada(s) anteriores al período no se consideran.")
     if display.get('after_cutoff'):
