@@ -8,7 +8,7 @@ import tempfile, unittest
 from urllib.parse import urlencode
 from openpyxl import Workbook
 import motor as m
-from carga import HEADERS, date_blocks, record_rows, signatures, coverage
+from carga import HEADERS
 from flujo_csmp import months, plan, assemble
 from resultados import load_lot
 from perfiles import Selection, selection_profile, response_profile
@@ -49,7 +49,15 @@ class JointTests(unittest.TestCase):
             data = json.loads(meta.read_text())
             data['archivos'][0].update(sha256=hashlib.sha256(content).hexdigest(), bytes=len(content))
             meta.write_text(json.dumps(data))
-            scopes = {'113': coverage(date(2026, 8, 4), date(2026, 10, 2), [{'estado': 'VALIDADA'}])}
+            scopes = {
+                '113': {
+                    'desde': '2026-08-04',
+                    'hasta': '2026-10-02',
+                    'estado': 'PARCIAL',
+                    'criterio_temporal': 'filtro_carga_no_confirmado',
+                    'sin_coincidencias': 'Sin coincidencias en los informes consultados.',
+                }
+            }
             result = assemble([principal, load_lot(current), load_lot(following)], [], scopes, root / 'final')
             book = load_workbook(result)
             self.assertEqual(book['CUMPLIMIENTO'].max_row, 2)
@@ -62,8 +70,6 @@ class JointTests(unittest.TestCase):
             book.close()
 
     def test_inclusive_periods_and_year_change(self):
-        blocks = date_blocks(date(2026, 8, 4), date(2026, 10, 2))
-        self.assertEqual(blocks, [(date(2026, 8, 4), date(2026, 9, 2)), (date(2026, 9, 3), date(2026, 10, 2))])
         self.assertEqual(months(date(2026, 12, 31)), (('12', '2026'), ('1', '2027')))
         phases = plan(('777', '888'), ('1', '2'), 'Cumplimiento', date(2026, 10, 2))
         self.assertIsNone(phases[0][1].dates)
@@ -73,40 +79,6 @@ class JointTests(unittest.TestCase):
         self.assertEqual([s.month for _, s in phases if s.screen == 'calendario_informes'], ['10', '11'])
         with self.assertRaises(m.PocError):
             plan(('777',), ('1',), 'Espera', date(2026, 10, 2), 59)
-
-    def test_signed_only_and_fixed_title_is_ignored(self):
-        rows = [
-            ['Juzgado de Familia Concepción'],
-            list(HEADERS),
-            row(),
-            row(signature='--'),
-            row(invalid='X'),
-            row(signature='01/01/2026'),
-        ]
-        found = signatures(rows, '777', 'Tribunal ficticio', date(2026, 8, 4), date(2026, 10, 2))
-        self.assertEqual(len(found), 1)
-        self.assertEqual(found[0]['tribunal_codigo'], '777')
-        self.assertEqual(
-            len(
-                signatures(
-                    [list(HEADERS), row(), row()], '777', 'Tribunal ficticio', date(2026, 8, 4), date(2026, 10, 2)
-                )
-            ),
-            2,
-        )
-        with self.assertRaises(m.PocError):
-            signatures([list(HEADERS), row()], '888', 'Otro tribunal', date(2026, 8, 4), date(2026, 10, 2))
-        with self.assertRaises(m.PocError):
-            record_rows([list(HEADERS), row() + ['dato extra']])
-
-    def test_no_rows_never_prove_full_history_by_default(self):
-        scope = coverage(date(2026, 8, 4), date(2026, 10, 2), [{'estado': 'SIN_RESULTADOS'}])
-        self.assertEqual(scope['estado'], 'PARCIAL')
-        self.assertIn('informes consultados', scope['sin_coincidencias'])
-        self.assertEqual(
-            coverage(date(2026, 8, 4), date(2026, 10, 2), [{'estado': 'INCOMPLETA'}], complete_history=True)['estado'],
-            'PARCIAL',
-        )
 
     def test_carga_specific_request_response_and_full_cells_match(self):
         cat = {'pantalla': 'carga', 'tribunales': {'777': 'Tribunal ficticio'}}

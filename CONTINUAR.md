@@ -5,7 +5,7 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 51 de 55; último en el orden: WP-99.
+- Paquetes integrados: 73 de 77; último en el orden: WP-79.
 
 | WP | Estado | Título |
 | --- | --- | --- |

@@ -1,6 +1,6 @@
 # Catálogo contextual — activación pendiente
 
-[Catálogo](catalog.json) conserva CT-01..CT-10 del documento 03, con fuentes,
+[Catálogo](catalog.json) conserva CT-01..CT-10 del documento 03 y CT-11 (19-oct-2026), con fuentes,
 condiciones propuestas y límites. Ninguna genera hallazgos (`enabled: false`); falta
 aceptación funcional individual y evidencia G1/G9 donde corresponda.
 
@@ -10,6 +10,14 @@ cuatro meses (columna «Última obs. centro» y panel «Novedades posteriores» 
 No cambian observaciones, reglas, umbrales, `TT`, `CC` ni `RES`. Sin origen acreditado
 se muestra `ORIGEN_DESCONOCIDO`. `nurus.capture.temporal.DISPLAY_RULES` debe coincidir
 con este catálogo; vaciarlo es el rollback.
+
+CT-05, CT-07 y CT-11 pasan a `ACTIVA_SOLO_MOSTRAR` por decisión del usuario del 19 de octubre
+de 2026 (plan de ajustes, paquete 2), como avisos en la columna «Última obs. centro» y en el panel
+«Novedades posteriores» (`nurus.personal.bitacora_avisos`). Las entradas «Centro» son las
+observaciones propias del CSMP. CT-07 (B-01): la observación propuesta repite (≥0,92) la última del
+centro. CT-11 (B-02, nueva): el correo de E-05 «solo correo» ya consta en la bitácora hace 30 días o
+más; evaluar proyecto. CT-05 (B-03): observación «Al Tribunal» sin respuesta registrada pasados 30
+días. Solo dentro del horizonte de cuatro meses; no cambian observaciones ni acciones.
 
 `nurus.capture.temporal` implementa cronología de preview para CT-01/02/06,
 exclusivamente con fixtures explícitas no sensibles. Producción informa contexto

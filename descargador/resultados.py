@@ -6,6 +6,7 @@ from datetime import date, datetime
 from datetime import timezone
 import csv
 import hashlib
+import re
 import json
 import os
 from pathlib import Path
@@ -221,6 +222,23 @@ def table_mode(selection):
     return ''
 
 
+def sin_parentesis(texto):
+    """Quita lo escrito entre paréntesis (y paréntesis sueltos) de un nombre; no toca otros caracteres."""
+    if not isinstance(texto, str):
+        return texto
+    limpio = re.sub(r'\([^()]*\)', ' ', texto)
+    limpio = re.sub(r'[()]', ' ', limpio)
+    return re.sub(r'\s+', ' ', limpio).strip()
+
+
+def limpiar_nombres(headers, rows):
+    """La columna NOMBRE del consolidado no lleva paréntesis: contaminarían correos y proyectos de resolución."""
+    columna = mapping(headers).get('nombre')
+    if columna is None:
+        return rows
+    return [(n, tuple(sin_parentesis(v) if i == columna else v for i, v in enumerate(row))) for n, row in rows]
+
+
 def tables(lot):
     count = 0
     for query, manifest, item, path in lot.sources():
@@ -229,15 +247,12 @@ def tables(lot):
             raise m.PocError('El archivo cambió durante la lectura.')
         selection = query.get('seleccion') or manifest.get('seleccion') or {}
         if selection.get('screen') == 'carga':
-            from carga import HEADERS, records_in_grid, canonical
-            import re
+            from carga import HEADERS, RIT_RE, records_in_grid, canonical
 
             info = m.read_excel(content, records_in_grid)
             headers = HEADERS
             rows = [
-                (i, tuple(row))
-                for i, row in enumerate(info.grid, 1)
-                if row and re.fullmatch(r'[A-Z]+-\d+-\d{4}', canonical(row[0]))
+                (i, tuple(row)) for i, row in enumerate(info.grid, 1) if row and RIT_RE.fullmatch(canonical(row[0]))
             ]
         else:
             info = m.read_excel(content)
@@ -284,6 +299,7 @@ def tables(lot):
             from vinculos import match_rows
 
             headers, rows = match_rows(headers, rows, item.get('vinculos_ingreso', []), selection.get('tribunal', ''))
+        rows = limpiar_nombres(headers, rows)
         yield query, selection, item, headers, rows
 
 

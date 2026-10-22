@@ -278,6 +278,13 @@ def _portable_preserved(content: bytes, target: Path, snapshot: dict) -> None:
                 _write_text(existing, observation)
             elif stage == "proposal":
                 _write_text(existing, existing.value)
+            if (
+                record.get("resolution_value")
+                and "RES" not in _reviewed_fields(record)
+                and _is_blank_excel_value(sheet.cell(row, columns["RES"]).value)
+            ):
+                # El tipo de proyecto que el motor identificó se sugiere en RES; el usuario puede cambiarlo o vaciarlo.
+                _write_text(sheet.cell(row, columns["RES"]), record["resolution_value"])
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
                     _write_text(sheet.cell(row, columns[title]), value)
@@ -325,7 +332,8 @@ def _native_write_column(
             if keep_existing:
                 values = region.Value2
                 current = [values] if len(block) == 1 and not isinstance(values, tuple) else [row[0] for row in values]
-                empty = [item for item, value in zip(block, current, strict=True) if value in (None, "")]
+                # Igual que la copia portable: una celda con solo espacios cuenta como vacía.
+                empty = [item for item, value in zip(block, current, strict=True) if _is_blank_excel_value(value)]
                 _native_write_column(sheet, column, empty, chunk_size=chunk_size)
             else:
                 region.NumberFormat = "@"
@@ -475,6 +483,7 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
         records = _review_records(snapshot)
         last_row = sheet.UsedRange.Row + sheet.UsedRange.Rows.Count - 1
         writes: dict[str, list[tuple[int, object]]] = {title: [] for title in columns}
+        suggested_res: list[tuple[int, object]] = []
         for record in records:
             row = int(record["source_row"])
             if row <= header_row or row > last_row:
@@ -491,11 +500,18 @@ def _native_preserved(content: bytes, target: Path, snapshot: dict) -> None:
             if stage == "reviewed":
                 for title, value in _reviewed_fields(record).items():
                     writes[title].append((row, _safe_cell(value)))
+            if record.get("resolution_value") and "RES" not in _reviewed_fields(record):
+                suggested_res.append((row, _safe_cell(record["resolution_value"])))
 
         for title, updates in writes.items():
             _native_write_column(
-                sheet, columns[title], updates, keep_existing=stage == "proposal" and title == "OBSERVACION"
+                sheet,
+                columns[title],
+                updates,
+                keep_existing=stage == "proposal" and title == "OBSERVACION",
             )
+        # Tipo de proyecto que el motor identificó: se sugiere en RES solo donde la celda está vacía.
+        _native_write_column(sheet, columns["RES"], suggested_res, keep_existing=True)
         sheet.Columns(columns["NURUS_REGLAS"]).Hidden = True
         if 'NURUS_DECISIONES' in columns:
             sheet.Columns(columns['NURUS_DECISIONES']).Hidden = True

@@ -24,7 +24,6 @@ def visible_identity_warnings(snapshot, rit, persona):
 
 
 ORIGIN = 'https://familia.pjud.cl'
-POPUP_PATH = '/SITFAWEB/IrPopUpInformesAccion.do'
 HEADERS = (
     'Tipo Observación',
     'Etapa',

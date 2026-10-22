@@ -2,12 +2,16 @@
 
 from datetime import date, datetime
 import json
+import unicodedata
 from calendar import monthrange
 
-RULESET_VERSION = 'baseline-20261008+context-preview-2'
+RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-7'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
-DISPLAY_RULES = ('CT-01', 'CT-02')
-DISPLAY_VERSION = 'solo-mostrar-3'
+# CT-05, CT-07 y CT-11: avisos de bitácora solo mostrar (decisión del usuario 19-oct-2026, paquete 2).
+DISPLAY_RULES = ('CT-01', 'CT-02', 'CT-05', 'CT-07', 'CT-11')
+DISPLAY_VERSION = 'solo-mostrar-4'
+# CT-05: observación del centro «Al Tribunal» sin respuesta registrada pasado este plazo.
+DIAS_SIN_RESPUESTA = 30
 CONTEXT_RULES = {
     'CT-01': ('bitacoras', 'Última observación atribuible al centro'),
     'CT-02': ('bitacoras', 'Entradas posteriores y empates inciertos'),
@@ -19,6 +23,7 @@ CONTEXT_RULES = {
     'CT-08': ('historia_tramites', 'Firma requiere cobertura e identidad'),
     'CT-09': ('calendarios', 'Calendario no acredita recepción'),
     'CT-10': ('incidencias', 'Contradicciones requieren examen humano'),
+    'CT-11': ('bitacoras', 'Correo de E-05 ya enviado sin ingreso efectivo; evaluar proyecto'),
 }
 
 
@@ -33,9 +38,11 @@ def moment(row):
     return datetime.fromisoformat(value.replace('Z', '+00:00')) if 'T' in value else date.fromisoformat(value)
 
 
-def earliest(as_of):
-    """Ventana de cuatro meses naturales; no busca antecedentes más antiguos."""
-    month = as_of.year * 12 + as_of.month - 1 - 4
+def earliest(as_of, meses=4):
+    """Ventana de hasta cuatro meses naturales (1 a 4, a elección del usuario); no busca antecedentes más antiguos."""
+    if not isinstance(meses, int) or isinstance(meses, bool) or not 1 <= meses <= 4:
+        raise ValueError('El período a recolectar va de 1 a 4 meses.')
+    month = as_of.year * 12 + as_of.month - 1 - meses
     year, zero_month = divmod(month, 12)
     return date(year, zero_month + 1, min(as_of.day, monthrange(year, zero_month + 1)[1]))
 
@@ -94,6 +101,11 @@ def order(related):
     return last, later, uncertain
 
 
+def _normal(value):
+    text = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode()
+    return ' '.join(text.lower().split())
+
+
 def display_chronology(events, as_of, *, requested=True, read=True):
     """CT-01/CT-02 en modo «solo mostrar» (D5): no genera hallazgos ni cambia observaciones.
 
@@ -110,6 +122,14 @@ def display_chronology(events, as_of, *, requested=True, read=True):
         key=lambda e: (e['event_at'], e.get('event_id', '')),
     )
     last, later, uncertain = order(recent)
+    center = center_entries(recent)
+    pending = [
+        e
+        for e in center
+        if _normal(e.get('event_type')) == 'al tribunal'
+        and not (e.get('response') or '').strip()
+        and (as_of - date.fromisoformat(e['event_at'][:10])).days >= DIAS_SIN_RESPUESTA
+    ]
     if last:
         status = 'ACREDITADA'
     elif recent:
@@ -129,6 +149,8 @@ def display_chronology(events, as_of, *, requested=True, read=True):
         'later': later,
         'uncertain': uncertain,
         'unattributed': [] if last else recent,
+        'center_period': center,
+        'pending_court': pending,
         'outside_horizon': sum(1 for e in dated if e['event_at'][:10] < start),
         'after_cutoff': sum(1 for e in dated if e['event_at'][:10] > end),
         'undated': len(events) - len(dated),

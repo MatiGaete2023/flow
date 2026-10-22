@@ -31,7 +31,6 @@ COLORS = {
     'pending_background': ('#e8f0f5', '#2b3541'),
     'pending_text': ('#203248', '#edf2f7'),
 }
-SPACING = (4, 8, 12, 16, 24)
 BODY_FONT = ('Segoe UI', 11)
 TITLE_FONT = ('Segoe UI', 18, 'bold')
 SECTION_FONT = ('Segoe UI', 12, 'bold')

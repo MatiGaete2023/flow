@@ -16,7 +16,7 @@ import argparse, json, re, subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION_NAME = '{version} integral · bitácoras y evidencia'
+VERSION_NAME = '{version} integral · bitácoras e historia'
 PAGE_VERSION = re.compile(r"(return \{tipo:'CSMP_RUS_CAPACIDADES',version:')[^']*(')")
 
 

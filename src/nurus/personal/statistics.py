@@ -15,6 +15,8 @@ def summarize(work):
         sin_carga=0,
         datos_incompletos=0,
     )
+    from .resolutions import res_is_human
+
     for row in work.rows:
         if row.excluded:
             continue
@@ -28,7 +30,7 @@ def summarize(work):
             counts['constancias'] += 1
             counts['con_carga'] += charge
             counts['sin_carga'] += 1 - charge
-        elif any(review.get(k) not in ('', None) for k in ('FECHA_OBS', 'TT', 'CC', 'RES')):
+        elif any(review.get(k) not in ('', None) for k in ('FECHA_OBS', 'TT', 'CC')) or res_is_human(row):
             counts['datos_incompletos'] += 1
     counts['word_generados'] = len({r.get('path') for r in work.receipts.values() if r.get('kind') == 'word'})
     counts['proyectos_generados'] = sum(r.get('kind') == 'word' for r in work.receipts.values())

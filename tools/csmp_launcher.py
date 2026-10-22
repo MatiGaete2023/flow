@@ -44,9 +44,9 @@ def choose_mode():
     assistant.pack(fill='x', pady=(8, 16))
     ttk.Label(body, text='Descargador: consultar SITFA y crear un paquete.').pack(anchor='w')
     ttk.Button(body, text='Abrir Descargador', command=lambda: choose('descargador')).pack(fill='x', pady=8)
-    root.bind('<Alt-a>', lambda event: choose('asistente'))
-    root.bind('<Alt-d>', lambda event: choose('descargador'))
-    root.bind('<Escape>', lambda event: root.destroy())
+    root.bind('<Alt-a>', lambda _event: choose('asistente'))
+    root.bind('<Alt-d>', lambda _event: choose('descargador'))
+    root.bind('<Escape>', lambda _event: root.destroy())
     assistant.focus_set()
     root.mainloop()
     return result[0] if result else None
@@ -63,7 +63,7 @@ def run(argv=None):
         return main(args)
     mode = choose_mode()
     if mode is None:
-        return
+        return None
     if mode == 'asistente':
         from nurus.personal.app import main
 

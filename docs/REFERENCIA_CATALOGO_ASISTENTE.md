@@ -127,6 +127,10 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 **Rama Tomé (no DCE), 60 días o más:** agrega proyecto de resolución — mismo texto que la rama Laja/Mulchén.
 
+> **Nota 14-oct-2026 (`TEXT_REVISION=4`, plan de historia):** los umbrales vigentes son `espera_dce=0` (DCE: correo desde el primer día) y `espera_tome=60` (Tomé: correo y proyecto juntos a los 60 días; desaparece el tramo de solo correo entre 30 y 59). La narrativa siguiente conserva los valores anteriores (30) solo como historia. E-05 agrega además «Al {CORTE}, RUS registra {N} días de espera.»
+>
+> **Nota 15-oct-2026 (`TEXT_REVISION=5`, decisión x):** las observaciones se ordenan por grupo en las tres etapas: constancias, acciones del Centro (correos y proyectos de resolución) y gestión del Tribunal (`motor/textos.py`, `ESTRUCTURA`). Los textos de Informes I-01 se dividen en constancia («Informe … vencido desde el X») y acción. Detalle: `PLAN_VIGENTE.md` (x) y `docs/implementacion/revision/ANTES_DESPUES_DECISION_X_20261015.md`.
+
 **Notas de la corrección:**
 - El documento base estandarizaba 30 días para los tres tribunales sin distinguir DCE ni el tramo superior de Tomé. Confirmado con el usuario: Laja y Mulchén cambian de 30 días → proyecto+correo (sin tramos); Tomé mantiene un esquema de dos tramos (30d correo, 60d agrega proyecto); DCE nunca lleva proyecto, umbral único de 30 días sin distinción de tribunal.
 - Cierre unificado a "ingreso efectivo" en los tres tribunales (antes Tomé decía solo "ingreso" — era una discrepancia de redacción no deliberada).
@@ -193,7 +197,30 @@ Especificación funcional para generar observaciones administrativas a partir de
 
 **Texto aprobado:**
 
-> *Audiencia fijada para el {FECHA_AUDIENCIA}.*
+> *Audiencia decretada para el {FECHA_AUDIENCIA}.*
+
+**Varias audiencias (decisión del usuario, 19-oct-2026):** desde RUS V11 (abril 2026) la columna trae todas las
+próximas audiencias separadas por coma. Se muestran todas las futuras, en orden, con el texto aprobado:
+
+> *Audiencias decretadas para el {FECHA_1} y el {FECHA_2}.* (con tres o más: «el A, el B y el C»)
+
+Una fecha ilegible dentro de la celda se registra como incidencia T-03 y no oculta las demás. Desactivar T-03 desactiva
+también la variante plural.
+
+## T-04 · Reiteración de observación (CT-07) — decisión del usuario, 19-oct-2026
+
+**Datos:** paquete de captura con bitácora del ingreso (identidad verificada, horizonte de cuatro meses).
+
+**Condición:** la observación propuesta repite (similitud ≥ 0,92, sin el prefijo de nombre) la última observación del
+centro registrada en la bitácora.
+
+**Aplicación:** reemplaza **toda** la observación por el texto de reiteración; conserva el prefijo y las acciones. El
+texto propuesto original queda en los avisos de la fila. Solo opera con paquete (un Excel suelto no trae bitácora). Se
+desactiva en Configuración («Reiterar observación repetida en bitácora»).
+
+**Texto aprobado:**
+
+> *Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}.*
 
 ---
 
@@ -327,7 +354,9 @@ Se elimina por completo el cálculo interno de hitos mensuales (3/6/9/12/15/18 p
 
 **Datos:** FECHA DE VENCIMIENTO y PROGRAMA.
 
-**Condición:** FECHA DE VENCIMIENTO anterior al día de ejecución.
+**Condición:** FECHA DE VENCIMIENTO anterior al día de ejecución. **DCE (decisión del usuario, 19-oct-2026):** más de
+10 días después del vencimiento RUS, es decir, pasados 40 días desde el ingreso (plazo RUS de 1 mes más el margen del
+Manual CSMP). Cierra el [CONFLICTO_ABIERTO] de los 40 días.
 
 **Texto — DCE:**
 
@@ -341,7 +370,9 @@ Se elimina por completo el cálculo interno de hitos mensuales (3/6/9/12/15/18 p
 
 **Datos:** FECHA DE VENCIMIENTO y PROGRAMA.
 
-**Condición:** Faltan entre 0 y 30 días para el vencimiento, ambos inclusive.
+**Condición:** Faltan entre 0 y 30 días para el vencimiento, ambos inclusive. **DCE:** también entre 1 y 10 días después
+del vencimiento RUS; en ese tramo la fecha del texto es la fecha límite con margen (vencimiento + 10 días) y no hay
+proyecto de resolución.
 
 **Texto — DCE:**
 
@@ -478,7 +509,8 @@ El sistema **no calcula** con/sin carga por regla — eso quedó descartado expl
 | Exclusión explícita de DCE en el corte de E-01 | Evaluada y **rechazada** — no es un riesgo real según el usuario. |
 | Lista controlada de siglas para formato de programa (G-03) | Evaluada y **rechazada** — el criterio de largo de palabra funciona bien en la práctica. |
 | Ficha Ambulatoria como validador/regla general (E1 original) | Superada por la corrección de fichas — confirmado definitivamente fuera de alcance. |
-| Orden de búsqueda (E2 original) | Sigue fuera de alcance — las planillas actuales (Espera/Cumplimiento/Informes) no cubren OB. |
+| Orden de búsqueda (E2 original) | **Reabierta el 19-oct-2026** (decisión del usuario): el Descargador ya incluye «Búsqueda Lit» (menú 94) en el paquete. El Asistente muestra avisos OB-01..OB-05 solo mostrar (`nurus/personal/ordenes_busqueda.py`): activa sin resultado más de 60 días, persona mayor de edad, envío no realizado, NNA sin curador, audiencia próxima. Sin cruces con otras fuentes (el Excel no trae causa ni ingreso remotos). |
+| Calendario de informes por ingreso (WD-1) y CAL-03 (WA-6) | **Implementado el 19-oct-2026** (decisiones del usuario: casilla «Leer calendario de informes», desactivada por defecto; cada calendario cuenta en el máximo de 600 lecturas del lote). El Descargador lee el calendario (`tipo_popUp=8`) de cada ingreso de Cumplimiento e Informes tras su bitácora y lo exporta como filas `calendarios` `INFORME_PROYECTADO` (PENDIENTE/ENVIADO) con identidad VERIFICADA. El Asistente usa la próxima proyección PENDIENTE como fecha de cruce C-10 solo si Hoja2 no la aporta, y muestra CAL-03 (solo mostrar) cuando la pestaña Informes o Hoja2 difieren del calendario. No agrega observaciones. |
 
 ---
 

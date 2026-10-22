@@ -1,6 +1,27 @@
 /* Esta funcion se ejecuta en el formulario. No usa document.cookie ni almacenes. */
 async function sitfaTask(command, payload) {
   let diaryPhase='CONTEXTO';
+  let encryptedValues=[];
+  // Léxico conservador: nunca reconocer una llamada dentro de texto, plantilla, comentario o regex.
+  const realCode = text => text.replace(
+    /\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|`(?:\\[\s\S]|[^`\\])*(?:`|$)|\/(?![/*])(?:\\[^\n]|\[(?:\\[^\n]|[^\]\\\n])*\]|[^/\\\n])+\/[a-z]*/g,
+    value => ' '.repeat(value.length));
+  const boundedBytes = async (response, limit) => {
+    const reader=response.body?.getReader();
+    if(!reader)throw new Error("HISTORY_RESPONSE");
+    const received=[];let length=0;
+    try {
+      while(true) {
+        const {done,value}=await reader.read();if(done)break;
+        length+=value.byteLength;
+        if(length>limit){await reader.cancel();throw new Error("HISTORY_RESPONSE");}
+        received.push(value);
+      }
+    } finally {reader.releaseLock();}
+    const bytes=new Uint8Array(length);let offset=0;
+    for(const value of received){bytes.set(value,offset);offset+=value.length;}
+    return bytes;
+  };
   try {
   if (location.origin !== "https://familia.pjud.cl") return null;
   const form = document.querySelector('form[name="InformesPpalForm"],form[name="MaoPpalForm"]');
@@ -13,8 +34,8 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.7.6',
-    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1},escritura_rus:false};
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.8.0',
+    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,calendario_lectura:1,historia_lectura:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
   const fields={seguimiento:`COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
@@ -213,7 +234,11 @@ async function sitfaTask(command, payload) {
     const rect=context?.getBoundingClientRect();
     if(!context?.isConnected || style.display==="none" || style.visibility!=="visible" || Number(style.opacity)!==1 ||
        rect.top<0 || rect.bottom>run.evidenceFrame.clientHeight || rect.width<300 || rect.height<20)throw new Error("pantalla");
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    // Sin cuadros pintados (pestaña oculta o ventana tapada) se informa en vez de esperar sin límite.
+    await new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error("pantalla")),5000);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{clearTimeout(timer);resolve();}));
+    });
     document.getElementById("sitfaDescargaLocal").style.visibility="hidden";
     return {ok:true};
   }
@@ -390,7 +415,65 @@ async function sitfaTask(command, payload) {
     return {pairs};
   }
   let url,init;
-  let diaryParams=null,startedAt=new Date().toISOString();
+  let diaryParams=null,calendarArgs=null,startedAt=new Date().toISOString();
+  // Argumentos literales de una llamada JS en onclick/href: números o textos entre comillas (con comas internas).
+  const literalCalls=(text,name)=>{
+    const out=[];const re=new RegExp("\\b"+name+"\\s*\\(","g");let m;
+    while((m=re.exec(text))) {
+      const args=[];let i=m.index+m[0].length,ok=false;
+      while(i<text.length) {
+        while(text[i]===" ")i++;
+        const q=text[i];let value="";
+        if(q==="'"||q==='"') {
+          i++;
+          while(i<text.length&&text[i]!==q){if(text[i]==="\\")i++;value+=text[i++];}
+          if(text[i]!==q)break;i++;
+        } else {
+          const d=/^\d{1,20}/.exec(text.slice(i));if(!d)break;value=d[0];i+=value.length;
+        }
+        args.push(value);
+        while(text[i]===" ")i++;
+        if(text[i]===","){i++;continue;}
+        if(text[i]===")"){ok=true;}
+        break;
+      }
+      if(ok)out.push(args);
+    }
+    return out;
+  };
+  // Igual que window.open en la página ISO-8859-1: «Ó» viaja como %D3; nunca otra codificación.
+  const latin1=value=>Array.from(value).map(c=>{
+    const code=c.charCodeAt(0);
+    if(/[A-Za-z0-9\-_.~\/:]/.test(c))return c;
+    if(code>255)throw new Error("estructura");
+    return "%"+code.toString(16).toUpperCase().padStart(2,"0");
+  }).join("");
+  if(command==="calendar_open") {
+    const run=window.__sitfaRun,args=payload.args;
+    if(screen!=="seguimiento" || !run?.diaryDocument || !Array.isArray(args) || args.length!==12 ||
+       args.some(v=>typeof v!=="string"||v.length>300))throw new Error("CALENDAR_CONTEXT");
+    diaryPhase='IDENTIDAD';
+    const selected=new Map(run.diaryPairs);
+    if(args[2]!==selected.get("COD_Tribunal_sel") || [0,1,2,3,10].some(i=>!/^\d{1,20}$/.test(args[i])))throw new Error("estructura");
+    const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
+    const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
+    if(!table)throw new Error("estructura");
+    let matches=0;
+    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"])
+      for(const call of literalCalls(el.getAttribute(attr)||"","ShowInformesProgramados"))
+        if(call.length===12&&call.every((v,i)=>v===args[i]))matches++;
+    if(matches!==1)throw new Error("CALENDAR_LINK");
+    const tip=selected.get("TIP_Consulta");
+    if(!/^[1-4]$/.test(tip||""))throw new Error("estructura");
+    // Mismo orden que ShowInformesProgramados de la página (TIP_Programa = TIP_Consulta del formulario).
+    const pairs=[["tipo_popUp","8"],["ID_Ingreso",args[10]],["TIP_Programa",tip],["CRR_IdCausa",args[0]],["CRR_IdParte",args[1]],
+      ["COD_Tribunal",args[2]],["COD_Centro",args[3]],["TIP_Consulta",tip],["GLS_Rit",args[4]],["FEC_IngEfectivo",args[5]],
+      ["GLS_Centro",args[6]],["GLS_Nombre",args[7]],["REM_Informe",args[9]],["PLZ_Intervencion",args[8]],["ID_Ingreso",args[10]],
+      ["FLG_MejorNinez",args[11]]];
+    calendarArgs=args;
+    url="https://familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?"+pairs.map(([k,v])=>k+"="+latin1(v)).join("&");
+    init={method:"GET"};
+  } else
   if(command==="diary_open") {
     const run=window.__sitfaRun,expected=payload.params;
     if(screen!=="seguimiento" || !run?.diaryDocument || !expected || typeof expected!=="object")throw new Error("DIARY_CONTEXT");
@@ -417,6 +500,51 @@ async function sitfaTask(command, payload) {
     diaryParams=expected;
     url="https://familia.pjud.cl/SITFAWEB/IrPopUpInformesAccion.do?"+new URLSearchParams(names.map(k=>[k,expected[k]]));
     init={method:"GET"};
+  } else if(command==="history_open") {
+    const run=window.__sitfaRun,p=payload.params;
+    if(screen!=="seguimiento"||!run?.diaryDocument||!p||typeof p!=="object")throw new Error("HISTORY_CONTEXT");
+    diaryPhase='IDENTIDAD';
+    if(Object.keys(p).length!==3||!["tribunal","rit","causa"].every(k=>typeof p[k]==="string")||
+       !/^\d{1,4}$/.test(p.tribunal)||!/^[A-Za-z]{1,3}-\d{1,7}-\d{4}$/.test(p.rit)||!/^\d{1,20}$/.test(p.causa))
+      throw new Error("HISTORY_IDENTITY");
+    const selected=new Map(run.diaryPairs);
+    if(p.tribunal!==selected.get("COD_Tribunal_sel"))throw new Error("HISTORY_IDENTITY");
+    const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
+    const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
+    if(!table)throw new Error("HISTORY_CONTEXT");
+    let found=0;
+    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"]) {
+      const text=(el.getAttribute(attr)||"").replace(/^javascript:/i,'');
+      for(const match of realCode(text).matchAll(/(?<![\w$.])ShowHistoria\s*\(/g)) {
+        const tail=text.slice(match.index+match[0].length);
+        const end=tail.indexOf(')');if(end<0)continue;
+        const a=tail.slice(0,end).split(",").map(s=>{const x=/^(?:(\d{1,20})|'([^'\\]*)'|"([^"\\]*)")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
+        if(a.length===3&&a[0]===p.tribunal&&a[1]===p.rit&&a[2]===p.causa)found++;
+      }
+    }
+    if(!found)throw new Error("HISTORY_LINK");
+    const [tip,rol,era]=p.rit.split("-");
+    const base="https://familia.pjud.cl/SITFAWEB/";
+    diaryPhase='RED';
+    const enc=await fetch(base+"Encrypt_AjaxAccion.do?opcion=1&TIP_Causa="+tip+"&ROL_Causa="+rol+"&ERA_Causa="+era+
+      "&crr_idcausaUrl="+p.causa+"&cod_tribunalUrl="+p.tribunal,
+      {method:"POST",credentials:"include",cache:"no-store",redirect:"error",
+       headers:{"X-Requested-With":"XMLHttpRequest"},signal:AbortSignal.timeout(60000)});
+    diaryPhase='RESPUESTA';
+    const encText=new TextDecoder("utf-8",{fatal:true}).decode(await boundedBytes(enc,4096));
+    if(enc.status!==200||encText.length>4096)throw new Error("HISTORY_RESPONSE");
+    let data;try{data=JSON.parse(encText);}catch(_){throw new Error("HISTORY_RESPONSE");}
+    const keys=["crr_causa","tip_causa","rol_causa","era_causa","cod_tribunal"];
+    if(!data||typeof data!=="object"||Array.isArray(data)||Object.keys(data).length!==keys.length||
+       keys.some(k=>typeof data[k]!=="string"||!/^[A-Za-z0-9%+/=._-]{1,512}$/.test(data[k])))throw new Error("HISTORY_RESPONSE");
+    encryptedValues=keys.map(k=>data[k]);
+    url=base+"ConsultaDetalleAtPublicoAccion.do?TipoPopup=3&a1="+data.crr_causa+"&b2="+data.tip_causa+"&c3="+data.rol_causa+
+      "&d4="+data.era_causa+"&e5="+data.cod_tribunal+"&B4=1&FLG_Encripta=1";
+    const u=new URL(url);
+    if(u.origin!=="https://familia.pjud.cl"||u.pathname!=="/SITFAWEB/ConsultaDetalleAtPublicoAccion.do"||u.hash||
+       [...u.searchParams.keys()].join()!=="TipoPopup,a1,b2,c3,d4,e5,B4,FLG_Encripta")throw new Error("HISTORY_RESPONSE");
+    init={method:"GET"};
+    diaryParams=p;
   } else
   if (command === "search") {
     const pairs=payload.pairs;
@@ -434,20 +562,25 @@ async function sitfaTask(command, payload) {
   const response=await fetch(url,{...init,credentials:"include",cache:"no-store",redirect:"error",
     signal:AbortSignal.timeout(Math.min(payload.timeout||60000,60000))});
   diaryPhase='RESPUESTA';
-  const reader=response.body?.getReader();
-  if(!reader)throw new Error("estructura");
-  const received=[];let length=0;
-  try {
-    while(true) {
-      const {done,value}=await reader.read();if(done)break;
-      length+=value.byteLength;
-      if(length>80*1024*1024){await reader.cancel();throw new Error("estructura");}
-      received.push(value);
+  const maxBytes=command==="history_open"?8*1024*1024:80*1024*1024;
+  if(command==="history_open"&&!/^text\/html(?:\s*;|$)/i.test(response.headers.get("content-type")||""))
+    throw new Error("HISTORY_RESPONSE");
+  const bytes=await boundedBytes(response,maxBytes);
+  if(response.status!==200||!bytes.length)throw new Error("sesion");
+  if(command==="history_open") {
+    let html;
+    try{html=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}
+    catch(_){html=new TextDecoder("windows-1252").decode(bytes);}
+    // No devolver valores cifrados reflejados, ni sus variantes URL/HTML, a Python.
+    const decoded=html.replace(/&#(?:x([0-9a-f]+)|(\d+));?/gi,(_,hex,dec)=>String.fromCodePoint(parseInt(hex||dec,hex?16:10)))
+      .replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&apos;/gi,"'");
+    const views=[html,decoded];
+    for(const value of [...views]){try{views.push(decodeURIComponent(value));}catch(_){}}
+    for(const token of encryptedValues) {
+      const variants=[token];try{variants.push(decodeURIComponent(token));}catch(_){}
+      if(views.some(view=>variants.some(value=>view.includes(value))))throw new Error("HISTORY_REFLECTED");
     }
-  } finally {reader.releaseLock();}
-  const bytes=new Uint8Array(length);let offset=0;
-  for(const value of received){bytes.set(value,offset);offset+=value.length;}
-  if (response.status!==200 || !bytes.length || bytes.length>80*1024*1024) throw new Error("sesion");
+  }
   const chunks=[];
   for (let i=0;i<bytes.length;i+=32768) chunks.push(String.fromCharCode(...bytes.subarray(i,i+32768)));
   if(command==="search" && screen==="seguimiento") {
@@ -460,13 +593,24 @@ async function sitfaTask(command, payload) {
     window.__sitfaRun.diaryPairs=payload.pairs;
   }
   return {status:response.status,type:response.headers.get("content-type")||"",body:btoa(chunks.join("")),
-    ...(diaryParams?{params:diaryParams,startedAt,digest:await sha256(bytes)}:{})};
+    ...(diaryParams?{params:diaryParams,startedAt,digest:await sha256(bytes)}:{}),
+    ...(calendarArgs?{args:calendarArgs,startedAt,digest:await sha256(bytes)}:{})};
   } catch (error) {
     if(command==='diary_open') {
       const explicit=['DIARY_CONTEXT','DIARY_LINK'].includes(error?.message)?error.message:null;
       const code=explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'DIARY_TIMEOUT':'DIARY_NETWORK'):
         diaryPhase==='IDENTIDAD'?'DIARY_IDENTITY':'DIARY_RESPONSE');
       return {__sitfaError:code};
+    }
+    if(command==='calendar_open') {
+      const explicit=['CALENDAR_CONTEXT','CALENDAR_LINK'].includes(error?.message)?error.message:null;
+      return {__sitfaError:explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'CALENDAR_TIMEOUT':'CALENDAR_NETWORK'):
+        diaryPhase==='IDENTIDAD'?'CALENDAR_IDENTITY':'CALENDAR_RESPONSE')};
+    }
+    if(command==='history_open') {
+      const explicit=['HISTORY_CONTEXT','HISTORY_LINK','HISTORY_IDENTITY','HISTORY_RESPONSE','HISTORY_REFLECTED'].includes(error?.message)?error.message:null;
+      return {__sitfaError: explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'HISTORY_TIMEOUT':'HISTORY_NETWORK'):
+        diaryPhase==='IDENTIDAD'?'HISTORY_IDENTITY':'HISTORY_RESPONSE')};
     }
     return {__sitfaError:command==="evidence_open"?"EVIDENCE_OPEN":"SITFA_TASK"};
   }

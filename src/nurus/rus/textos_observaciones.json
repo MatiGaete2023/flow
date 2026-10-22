@@ -16,7 +16,13 @@
       "texto": "Oído el {FECHA_OIDO}."
     },
     "PROX_AUDIENCIA": {
-      "texto": "Audiencia fijada para el {FECHA_AUDIENCIA}."
+      "texto": "Audiencia decretada para el {FECHA_AUDIENCIA}."
+    },
+    "PROX_AUDIENCIAS": {
+      "texto": "Audiencias decretadas para {FECHAS_AUDIENCIA}."
+    },
+    "REITERA_OBSERVACION": {
+      "texto": "Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}."
     }
   },
   "ESPERA": {
@@ -70,16 +76,120 @@
   },
   "INFORMES": {
     "I01_VENCIDO_DCE": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío."
+      "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío."
     },
     "I01_VENCIDO_GENERAL": {
-      "texto": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío."
+      "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa {PROGRAMA} requiriendo su envío."
     },
     "I02_POR_VENCER_DCE": {
       "texto": "Se remite correo al programa {PROGRAMA} informando que el informe diagnóstico debe ser remitido a más tardar el {FECHA_VENCIMIENTO}."
     },
     "I02_POR_VENCER_GENERAL": {
       "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}."
+    }
+  },
+  "HISTORIA": {
+    "BASE_TRAMITE": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta el trámite «{DESC}»."
+    },
+    "VARIOS": {
+      "texto": "Se hace presente que constan {N} trámites «{DESC}»; el último, en resolución de fecha {FECHA} (folio {FOLIO})."
+    },
+    "MEDIDA_REVISADA": {
+      "texto": "Medida revisada."
+    },
+    "E04_CON_FOLIO": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado en resolución de fecha {FECHA_RESOLUCION} (folio {FOLIO}). (Observación administrativa; no requiere gestión del Tribunal)."
+    },
+    "R3_MULTI": {
+      "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado."
+    },
+    "REITERA": {
+      "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}."
+    },
+    "MATERIA_CURADOR": {
+      "texto": "la ausencia de curador ad litem en RUS"
+    },
+    "MATERIA_SIN_FICHA": {
+      "texto": "la ausencia de ficha individual en RUS"
+    },
+    "MATERIA_SIN_FAE": {
+      "texto": "la ausencia de ficha FAE en RUS"
+    },
+    "MATERIA_VENCIDA": {
+      "texto": "la medida vencida en RUS"
+    },
+    "E05_DIAS": {
+      "texto": "Al {CORTE}, RUS registra {N} días de espera."
+    },
+    "E10_LISTA": {
+      "texto": "Registra {N} días en lista de espera."
+    },
+    "MEDIDA_SIN_VIGENCIA": {
+      "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}."
+    },
+    "EGRESO_PROYECTADO": {
+      "texto": "RUS registra como fecha de egreso proyectado el {FECHA_EGRESO_PROYECTADO}."
+    },
+    "P_FINALIZADA": {
+      "texto": "La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa."
+    },
+    "C10_ESCRITO": {
+      "texto": "Informe de avance recepcionado en resolución de fecha {FECHA_ESCRITO} (folio {FOLIO_ESCRITO}). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."
+    },
+    "J2_ACUMULADOS": {
+      "texto": "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}."
+    },
+    "I01_SIN_ENVIO_GENERAL": {
+      "texto": "Informe de avance vencido desde el {FECHA_VENCIMIENTO}."
+    },
+    "I01_SIN_ENVIO_DCE": {
+      "texto": "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}."
+    },
+    "T5_INSTITUCIONES": {
+      "texto": "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."
+    },
+    "C2_PRORROGA_HASTA": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}."
+    },
+    "INGRESO_INFORMADO": {
+      "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}."
+    },
+    "SERVICIO_INGRESO": {
+      "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO})."
+    },
+    "CURADOR_SIN_EFECTO": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la designación de curador ad litem."
+    },
+    "CURADOR_DESIGNADO": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se designó curador ad litem."
+    },
+    "EGRESO_POSTERIOR_MAYORIA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad."
+    },
+    "EGRESO_POSTERIOR_MAYORIA_FECHA": {
+      "texto": "El egreso proyectado es posterior a la mayoría de edad, que se alcanza el {FECHA_MAYORIA}."
+    },
+    "SOLICITUD_DCE": {
+      "texto": "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa en resolución de fecha {FECHA} (folio {FOLIO}), a la espera de lo que se resuelva en la audiencia respectiva."
+    },
+    "CONTINUIDAD_ATENCION": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta respuesta sobre la continuidad de atención."
+    },
+    "INFORME_INGRESADO": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se ingresa el informe de cumplimiento."
+    },
+    "R11_ORDEN": {
+      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se decretó orden de búsqueda."
+    },
+    "R11_PIDE_CUENTA": {
+      "texto": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda."
+    },
+    "R11_SIN_EFECTO": {
+      "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda."
+    },
+    "R11_TERMINO": {
+      "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda."
     }
   }
 }

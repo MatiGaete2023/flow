@@ -77,10 +77,13 @@ def import_lote(manifest):
         raise ValueError('Falta el control de lecturas del lote.')
     queries = {}
     ledger = []
+    calendars = {}
     for record in records:
         if not isinstance(record, dict) or not isinstance(record.get('params', {}), dict):
             raise ValueError('El control de lecturas tiene un registro mal formado.')
         identity = tuple(record.get(k, '') for k in ('tribunal_codigo', 'causa_id', 'ingreso_id'))
+        if all(identity) and isinstance(record.get('calendario_lectura'), dict):
+            calendars[identity] = _calendar(manifest, record, identity)
         state = record.get('estado', 'FALLIDA')
         error = record.get('error', '')
         query = None
@@ -251,6 +254,7 @@ def import_lote(manifest):
         )
     return {
         'queries': list(queries.values()),
+        'calendars': list(calendars.values()),
         'sources': [
             {
                 'file': manifest.name,
@@ -262,6 +266,47 @@ def import_lote(manifest):
         ],
         'extra_sheets': extra,
     }
+
+
+def _calendar(manifest, record, identity):
+    """WD-1: calendario por ingreso releído desde su HTML con hash; una copia alterada queda FALLIDA."""
+    from nurus.calendario_html import read_calendar
+
+    reading = record['calendario_lectura']
+    result = {
+        'tribunal_codigo': identity[0],
+        'causa_id': identity[1],
+        'ingreso_id': identity[2],
+        'coverage': 'FALLIDA',
+        'error': reading.get('error', '') or 'No se completó la lectura del calendario.',
+        'proyecciones': [],
+        'archivo': reading.get('archivo', ''),
+        'captured_at': reading.get('capturada', ''),
+        'html_sha256': '',
+    }
+    if reading.get('estado') != 'LEIDA':
+        return result
+    try:
+        name = reading['archivo']
+        path = (manifest.parent / name).resolve()
+        if path.parent != manifest.parent or path.suffix != '.html' or path.stat().st_size > 8 * 1024 * 1024:
+            raise ValueError('Archivo de calendario fuera de alcance.')
+        body = path.read_bytes()
+        if sha256(body).hexdigest() != reading['sha256']:
+            raise ValueError('La copia HTML del calendario cambió después de su verificación.')
+        calendar = read_calendar(body, reading['args'], source=name, captured_at=reading['capturada'])
+    except (ValueError, KeyError, OSError, TypeError, IndexError) as exc:
+        result['error'] = str(exc) if isinstance(exc, ValueError) else 'No se pudo abrir una copia verificable.'
+        return result
+    result.update(
+        coverage='COMPLETA' if calendar['proyecciones'] else 'VACIA_COMPROBADA',
+        error='',
+        proyecciones=calendar['proyecciones'],
+        plazo_remision_meses=calendar['plazo_remision_meses'],
+        plazo_intervencion_meses=calendar['plazo_intervencion_meses'],
+        html_sha256=calendar['html_sha256'],
+    )
+    return result
 
 
 def diary_paths(paths):
@@ -276,6 +321,7 @@ def import_lotes(paths, *, identities=None):
     if not paths:
         raise ValueError('Añade un control bitacoras.json con sus HTML originales.')
     queries = {}
+    calendars = {}
     sources = []
     extra = {}
     excluded = 0
@@ -283,6 +329,21 @@ def import_lotes(paths, *, identities=None):
     for path in paths:
         capture = import_lote(path)
         sources.extend(capture['sources'])
+        for calendar in capture['calendars']:
+            key = tuple(calendar[k] for k in ('tribunal_codigo', 'causa_id', 'ingreso_id'))
+            if identities is not None and key not in identities:
+                continue
+            old = calendars.get(key)
+            # Se conserva la lectura comprobada más reciente; una fallida no reemplaza a una leída.
+            if (
+                old is None
+                or (calendar['coverage'] != 'FALLIDA') > (old['coverage'] != 'FALLIDA')
+                or (
+                    (calendar['coverage'] != 'FALLIDA') == (old['coverage'] != 'FALLIDA')
+                    and calendar['captured_at'] >= old['captured_at']
+                )
+            ):
+                calendars[key] = {**calendar, 'manifest_path': str(path)}
         for title, headers, rows in capture['extra_sheets']:
             if title not in extra:
                 extra[title] = (headers, [])
@@ -301,6 +362,7 @@ def import_lotes(paths, *, identities=None):
             queries[key] = _merge_snapshot(old, query)
     return {
         'queries': list(queries.values()),
+        'calendars': list(calendars.values()),
         'sources': sources,
         'extra_sheets': [(title, headers, rows) for title, (headers, rows) in extra.items()],
         'reuse': {'manifests': len(paths), 'matched': len(queries), 'excluded': excluded, 'duplicates': duplicates},

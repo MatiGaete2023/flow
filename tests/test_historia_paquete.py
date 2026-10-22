@@ -1,0 +1,64 @@
+"""Paquete ZIP ficticio con historia de la causa, de punta a punta por import_capture."""
+
+from datetime import date
+
+import pytest
+from historia_fixtures import captura_con_historia
+
+from nurus.capture import write_capture
+from nurus.personal.capture_input import import_capture
+from nurus.personal.config import defaults
+
+CORTE = date(2026, 10, 8)
+INGRESO = ('Ingreso efectivo', '2026-10-02', 41)
+
+
+def _importar(tmp_path, tramites, cobertura='COMPLETA', nombre='h'):
+    metadata, tablas = captura_con_historia(tramites, cobertura)
+    return import_capture(write_capture(tmp_path / f'{nombre}.zip', metadata, tablas), defaults(), as_of=CORTE)
+
+
+def test_la_historia_de_la_causa_llega_a_los_ingresos_de_esa_causa(tmp_path):
+    trabajo = _importar(tmp_path, [INGRESO])
+    r0, r1, r2, r3 = trabajo.rows
+    for fila in (r0, r1):  # causa-ficticia-0: «Ingreso efectivo» con RUS en Espera, reglas normales y marca
+        assert [a[:2] for a in fila.avisos] == [(2, 'R3_INGRESO_EFECTIVO')]
+        assert fila.actions == ['programa_espera', 'PC_IE'] and 'ESPERA.E05_PROYECTO_Y_CORREO' in fila.rules
+    for fila in (r2, r3):  # causa-ficticia-1: sin historia, regla original
+        assert 'ESPERA.E05_PROYECTO_Y_CORREO' in fila.rules and fila.avisos == []
+
+
+@pytest.mark.parametrize('cobertura', ['VACIA_COMPROBADA', 'FALLIDA', 'CANCELADA', 'NO_CONSULTADA'])
+def test_sin_trámites_capturados_rigen_las_reglas_originales(tmp_path, cobertura):
+    con = _importar(tmp_path, [], cobertura, 'con')
+    base = _importar(tmp_path, [], 'VACIA_COMPROBADA', 'base')
+    assert [(r.observation, r.rules, r.avisos) for r in con.rows] == [
+        (r.observation, r.rules, r.avisos) for r in base.rows
+    ]
+
+
+def test_cobertura_parcial_cuenta_como_presencia(tmp_path):
+    trabajo = _importar(tmp_path, [INGRESO], 'PARCIAL')
+    assert [a[:2] for a in trabajo.rows[0].avisos] == [(2, 'R3_INGRESO_EFECTIVO')]
+
+
+def test_importar_de_nuevo_con_otra_regla_no_reutiliza_un_trabajo_antiguo(tmp_path):
+    trabajo = _importar(tmp_path, [INGRESO])
+    assert trabajo.ruleset_version.endswith('+historia-7')
+
+
+def test_el_consolidado_exportado_trae_res_con_el_tipo_de_proyecto_sugerido(tmp_path):
+    from openpyxl import load_workbook
+
+    trabajo = _importar(tmp_path, [INGRESO])
+    tipos = [r.actions for r in trabajo.rows]
+    trabajo.export(tmp_path / 'Obs.xlsx', backend='portable', reduced_fidelity=True)
+    libro = load_workbook(trabajo.output)
+    try:
+        hoja = libro['Trabajo']
+        columnas = {c.value: c.column for c in hoja[1]}
+        valores = [hoja.cell(n, columnas['RES']).value for n in range(2, 2 + len(trabajo.rows))]
+    finally:
+        libro.close()
+    esperado = [next((k for k in a if k in ('PC_IE', 'PC_INFO', 'NOMENCL')), None) for a in tipos]
+    assert valores == esperado and 'PC_IE' in valores

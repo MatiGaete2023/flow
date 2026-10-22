@@ -194,6 +194,7 @@ class Bridge:
             'evidence_capture',
             'evidence_close',
             'diary_open',
+            'history_open',
         ):
             raise PocError('Accion no permitida.')
         if self.closed or not self.connected:
@@ -217,6 +218,13 @@ class Bridge:
                     'DIARY_NETWORK': 'Falló el contacto con RUS al abrir la bitácora o hubo una redirección. Comprueba la sesión y reintenta.',
                     'DIARY_TIMEOUT': 'RUS no respondió a tiempo al abrir la bitácora. Reintenta las lecturas fallidas.',
                     'DIARY_RESPONSE': 'RUS no entregó una respuesta válida de bitácora. Revisa la sesión y reintenta.',
+                    'HISTORY_CONTEXT': 'No se conserva el listado actual para abrir la historia. Vuelve a consultar sin navegar en SITFA.',
+                    'HISTORY_LINK': 'El enlace de historia no está en el listado actual. No se abrió una causa por suposición.',
+                    'HISTORY_IDENTITY': 'La causa pedida no coincide con el tribunal del listado actual.',
+                    'HISTORY_NETWORK': 'Falló el contacto con SITFA al abrir la historia. Comprueba la sesión.',
+                    'HISTORY_TIMEOUT': 'SITFA no respondió a tiempo al abrir la historia.',
+                    'HISTORY_RESPONSE': 'SITFA no entregó una historia válida. Revisa la sesión.',
+                    'HISTORY_REFLECTED': 'La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.',
                     'FOLLOWUP_REQUIRED': 'El enlace con Chrome funciona, pero no se encuentra Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y vuelve a Cargar opciones.',
                     'SITE_ACCESS': 'Chrome no permite acceder a la pestaña SITFA. Revisa que siga abierta y que la extensión tenga acceso a familia.pjud.cl; abre de nuevo la conexión desde esa pestaña.',
                     'MULTIPLE_FORMS': 'Hay más de un formulario de Seguimiento en esa pestaña. Abre la conexión desde una pestaña con un solo formulario.',

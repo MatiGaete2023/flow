@@ -95,6 +95,28 @@ assert app.work_primary_button.cget('text')=='Procesar Excel'
     )
 
 
+def test_cambio_asincrono_de_apariencia_actualiza_ttk_sin_esperar_sondeo(tmp_path):
+    run_gui(
+        tmp_path,
+        """
+from tkinter import ttk
+from customtkinter.windows.widgets.appearance_mode.appearance_mode_tracker import AppearanceModeTracker
+from nurus.personal import ui
+from nurus.ui_theme import tokens
+app.theme_choice.set('Claro');app.apply_appearance();app.update()
+app.theme_choice.set('Sistema');app.apply_appearance()
+# El detector de sistema notifica el cambio; no hay sleeps ni se invoca el sondeo de la app.
+AppearanceModeTracker.appearance_mode = 1
+AppearanceModeTracker.update_callbacks()
+palette=tokens('Oscuro')
+assert ui.ctk.get_appearance_mode()=='Dark'
+assert ttk.Style(app).lookup('Primary.TButton','background')==palette['primary']
+assert ttk.Style(app).lookup('Treeview','background',('selected',))==palette['primary']
+assert app.cfg.data['vista']['tema']=='Sistema'
+""",
+    )
+
+
 def test_descargador_comparte_tokens_sin_cambiar_preferencias_o_controles(tmp_path):
     root = Path(__file__).resolve().parents[1]
     script = """

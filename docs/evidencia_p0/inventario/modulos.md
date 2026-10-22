@@ -41,10 +41,10 @@ imports calculados ni invocaciones por subprocess. Las acciones son propuestas p
 | [nurus.personal.app_base](../../../src/nurus/personal/app_base.py) | ADAPTAR entrada local después de G3/G5 | P5/P6 | 35 | 1 |
 | [nurus.personal.appearance_view](../../../src/nurus/personal/appearance_view.py) | CONSERVAR | P0 | 2 | 1 |
 | [nurus.personal.attachment_store](../../../src/nurus/personal/attachment_store.py) | CONSERVAR | P0 | 0 | 1 |
-| [nurus.personal.bitacora_har](../../../src/nurus/personal/bitacora_har.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
+| nurus.personal.bitacora_har (`src/nurus/personal/bitacora_har.py`, retirado en WP-69) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
 | nurus.personal.bitacora_link (`src/nurus/personal/bitacora_link.py`, retirado en WP-23) | DESACOPLAR TRAS G3/G5; conservar recuperación | P6 | 4 | 2 |
-| [nurus.personal.bitacora_lote](../../../src/nurus/personal/bitacora_lote.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
-| [nurus.personal.bitacoras](../../../src/nurus/personal/bitacoras.py) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 3 | 5 |
+| nurus.personal.bitacora_lote (`src/nurus/personal/bitacora_lote.py`, retirado en WP-69) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 2 | 2 |
+| nurus.personal.bitacoras (`src/nurus/personal/bitacoras.py`, retirado en WP-69) | SEPARAR exportación/análisis sin cambiar reglas | P3 | 3 | 5 |
 | [nurus.personal.commands](../../../src/nurus/personal/commands.py) | CONSERVAR | P0 | 3 | 1 |
 | [nurus.personal.config](../../../src/nurus/personal/config.py) | CONSERVAR | P0 | 3 | 11 |
 | [nurus.personal.courts](../../../src/nurus/personal/courts.py) | CONSERVAR | P0 | 2 | 3 |

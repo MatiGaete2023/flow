@@ -1,0 +1,31 @@
+{
+  "titulo": "Ronda de usuario 16-oct: nombre sin paréntesis, formato de resolución, búsqueda, RES, informes por vencer, período y rendimiento",
+  "ola": 8,
+  "tipo": "C/M",
+  "depende_de": [
+    {
+      "wp": "WP-65",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j",
+    "x",
+    "y"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+  "tomado": "16 de octubre de 2026",
+  "rama": "claude/lucid-sagan-hw9ul4",
+  "pr": 50,
+  "verificacion": "PASA sobre 7f9ec0d: Asistente 1.148 aprobadas, Descargador 350; inventario, 10 sustituciones declaradas (docs/implementacion/verificacion/WP-65-reemplazos.txt), identidades, golden (regenerado a propósito), restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-66.json. Sin tkinter real ni Windows: Python 3.12 + Xvfb; la fase de informes solo con simulacros.",
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
+  "auditoria": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
+  "notas": [
+    "Base: WP-65 (rama claude/lucid-sagan-hw9ul4). No integrado ni aceptado.",
+    "Asistente 0.5.0.dev7; Descargador sin cambio de versión de contrato (extensión intacta).",
+    "Los 13 textos pendientes fueron aprobados por el usuario el 16-oct-2026; Asistente 0.5.0.dev8.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
+  ]
+}

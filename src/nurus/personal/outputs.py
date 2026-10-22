@@ -177,7 +177,12 @@ def value(work, row, key):
         return ''
     if isinstance(raw, (datetime, date)):
         return raw.strftime('%d/%m/%Y')
-    return str(raw)
+    return sin_parentesis(str(raw)) if key == 'nombre' else str(raw)
+
+
+def sin_parentesis(texto):
+    """Un nombre no lleva paréntesis ni lo escrito en ellos: contaminan correos y proyectos de resolución."""
+    return ' '.join(re.sub(r'[()]', ' ', re.sub(r'\([^()]*\)', ' ', texto)).split())
 
 
 def resolve_contact(cfg, name):
@@ -333,17 +338,31 @@ def mail_metric_value(work, row, key):
     columna ambigua produce un error en lugar de elegir una fecha arbitraria.
     """
     if key in getattr(row, 'overrides', {}) or key in work.mapping:
-        return value(work, row, key).strip()
+        texto = value(work, row, key).strip()
+        if texto or key != 'vencimiento' or key in getattr(row, 'overrides', {}):
+            return texto
+        cruce = _cross_date(work, row)
+        return cruce.strftime('%d/%m/%Y') if cruce else ''
     from nurus.rus.columns import map_columns
 
     mode = {'espera': 'ESPERA', 'vencimiento': 'INFORMES', 'egreso_proy': 'CUMPLIMIENTO'}[key]
     column = map_columns(row.values.keys(), mode).get(key)
     raw = row.values.get(column, '')
+    if key == 'vencimiento' and raw in (None, ''):
+        # Fila de Cumplimiento: el próximo informe viene del calendario de informes por vencer del paquete.
+        raw = _cross_date(work, row)
     if raw is None:
         return ''
     if isinstance(raw, (date, datetime)):
         return raw.strftime('%d/%m/%Y')
     return str(raw).strip()
+
+
+def _cross_date(work, row):
+    """Fecha del cruce (próximo informe); una sesión reanudada la guarda como texto ISO."""
+    from nurus.rus.util import as_date
+
+    return as_date(getattr(work, 'cross_dates', {}).get(row.id))
 
 
 def due_value(work, row, kind):

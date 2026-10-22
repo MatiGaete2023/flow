@@ -1,7 +1,8 @@
 # Entrega MVP NURUS / CSMP — 8 de octubre de 2026
 
-CSMP 0.5.0.dev5 y Descargador/extensión 2.7.6; contrato CSMP_CAPTURE/REQUEST
-1.0.0 (CSMP_CAPTURE 1.1.0 con XLSX consolidado). Cambios de 2.7.6 en el
+Candidato de Fase B (14 de octubre de 2026): CSMP 0.5.0.dev5 y Descargador/extensión 2.8.0; contrato CSMP_CAPTURE/REQUEST
+1.0.0 (CSMP_CAPTURE 1.1.0 con XLSX consolidado). Revisión y aceptación pendientes en WP-64.
+No reutilizar evidencia de los builds históricos citados abajo para certificar este candidato. Cambios en el
 [historial del Descargador](../descargador/CHANGELOG.md); lo que sigue sobre 2.7.5 es antecedente. Integración en pruebas, sin promoción a versión institucional vigente.
 Los dos programas funcionan autónomamente y pueden distribuirse juntos.
 
@@ -18,7 +19,7 @@ También se corrigen los vínculos de Espera e Informes, se recuperan lotes
 anteriores y se reúnen descargas separadas con bitácoras reutilizables en un ZIP.
 El Excel de bitácoras se genera automáticamente y editar nóminas es opcional.
 Al actualizar desde ZIP, ejecutar de nuevo `Instalar_CSMP.bat` y cargar/recargar
-la carpeta `descargador/extension` de la misma entrega (hoy 2.7.6) en Chrome; iniciar una conexión nueva.
+la carpeta `descargador/extension` de la misma entrega (candidato 2.8.0) en Chrome; iniciar una conexión nueva.
 El detalle está en `REGRESIONES_PRUEBAS_USUARIO_20261009.md`.
 
 ```mermaid
@@ -73,7 +74,11 @@ Outlook 365 o políticas Chrome de la institución.
 - En el repositorio, TRAZABILIDAD_EJECUCION_20261008.md y evidencia_desarrollo_20261008
   relacionan las tareas, 115 requisitos, comandos, hashes y resultados.
 
-Historia/PDF por trámite y reglas CT de producción no forman parte de esta entrega.
+El candidato incorpora historia de causa (solo tabla de cuatro meses, sin PDF/OCR) y las reglas HISTORIA
+con las decisiones q–w del plan vigente. CT-03..10 siguen desactivadas; no son lo mismo que HISTORIA.
+Las correcciones de identidad/corte, ficha FAE y advertencia de posible entrega requieren E3 de otra raíz
+antes de integrar. El instalador y el acta deben corresponder al SHA probado.
+PDF de trámites permanece fuera de alcance.
 Sin identidad remota no se relacionan eventos por nombre/RIT. No se registra RUS
 ni se envían correos automáticamente. La aprobación de release/merge y sustitución
 de la versión institucional corresponde al usuario tras revisar la entrega.

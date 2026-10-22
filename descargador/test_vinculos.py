@@ -1,6 +1,6 @@
 import unittest
 from lxml import html, etree
-from vinculos import calls, extract, match_rows, visible_cell_text
+from vinculos import calls, extract, extract_historia, match_rows, visible_cell_text
 
 
 def listing(court='777', duplicate=False):
@@ -68,3 +68,64 @@ class BindingTests(unittest.TestCase):
         _, output = match_rows(headers, rows[:1], extract(listing(duplicate=True), '777'), '777')
         self.assertEqual(output[0][1][-1], 'Identidad ambigua')
         self.assertEqual(output[0][1][ingreso], '')
+
+
+def test_extract_historia_por_causa_con_forma_real_y_sin_observaciones():
+    # Forma observada en H0: números sin comillas, RIT entre comillas.
+    page = html.fromstring(
+        '<table><tr><td>Sel</td><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivación</td><td>Obs.</td></tr>'
+        '<tr><td></td><td><a href="#" onclick="ShowHistoria(777,\'X-1-2026\',100)">X-1-2026</a></td>'
+        '<td>11111111-1</td><td>Persona ficticia</td><td>PRM</td>'
+        '<td><a onclick="ShowObservaciones(100,777,\'200\',12,3,\'0\')">Obs</a></td></tr>'
+        '<tr><td></td><td><a onclick="ShowHistoria(777,\'X-2-2026\',101)">X-2-2026</a></td>'
+        '<td>11111111-1</td><td>Otra persona</td><td>PRM</td><td></td></tr></table>'
+    )
+    found = extract_historia(page, '777')
+    assert [(f['rit'], f['causa_id'], f['ingreso_id']) for f in found] == [
+        ('X-1-2026', '100', '200'),
+        ('X-2-2026', '101', ''),
+    ]
+
+
+def test_extract_historia_descarta_enlaces_ambiguos_o_discordantes():
+    assert len(extract_historia(listing(), '777')) == 1
+    assert extract_historia(listing(court='888'), '777') == []
+    doble = listing()
+    celda = doble.xpath('.//a[contains(@onclick,"ShowHistoria")]')[0]
+    celda.addnext(html.fromstring('<a onclick="ShowHistoria(\'777\',\'X-1-2026\',\'100\')">otra</a>'))
+    assert extract_historia(doble, '777') == []
+    otro_rit = html.fromstring(
+        etree.tostring(listing(), encoding='unicode').replace("'X-1-2026','100')", "'X-9-2026','100')")
+    )
+    assert extract_historia(otro_rit, '777') == []
+
+
+def test_extract_historia_ingreso_de_otro_tribunal_o_no_numerico_se_ignora_y_rit_con_dos_causas_es_incierto():
+    def fila(rit, causa, obs=''):
+        return (
+            f'<tr><td><a onclick="ShowHistoria(777,\'{rit}\',{causa})">{rit}</a></td><td>11111111-1</td>'
+            f'<td>Persona ficticia</td><td>PRM</td><td>{obs}</td></tr>'
+        )
+
+    cabecera = '<table><tr><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivación</td><td>Obs.</td></tr>'
+    page = html.fromstring(
+        cabecera
+        + fila('X-1-2026', 100, '<a onclick="ShowObservaciones(100,888,\'200\',12,3,\'0\')">o</a>')
+        + fila('X-2-2026', 101, '<a onclick="ShowObservaciones(101,777,\'abc def\',12,3,\'0\')">o</a>')
+        + fila('X-3-2026', 102)
+        + fila('X-3-2026', 103)
+        + '</table>'
+    )
+    found = {(f['rit'], f['causa_id']): f for f in extract_historia(page, '777')}
+    assert found[('X-1-2026', '100')]['ingreso_id'] == '' and found[('X-2-2026', '101')]['ingreso_id'] == ''
+    assert found[('X-3-2026', '102')]['identidad'] == found[('X-3-2026', '103')]['identidad'] == 'INCIERTA'
+    assert found[('X-1-2026', '100')]['identidad'] == 'VERIFICADA'
+
+
+def test_historia_no_se_extrae_de_literales_comentarios_regex():
+    from vinculos import calls
+
+    accion = "ShowHistoria(49,'X-1-2099',100)"
+    for falso in (f'"{accion}"', f'`{accion}`', f'/* {accion} */', f'// {accion}', f'if(x) /{accion}/.test(x)'):
+        assert calls(falso, 'ShowHistoria') == []
+    assert calls(f'/* texto */ {accion}', 'ShowHistoria') == [['49', 'X-1-2099', '100']]

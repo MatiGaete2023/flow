@@ -35,15 +35,15 @@ def rut(number, dotted=False):
 
 
 PERSONAS = [
-    'Valentina Ignacia Soto Reyes',
-    'Tomás Andrés Soto Reyes',
-    'Martina Fuentes Lagos',
-    'Benjamín Alarcón Pizarro',
+    'Valquiria Ignasia Sotoral Reyzábal',
+    'Tobías Andreo Sotoral Reyzábal',
+    'Martiniana Fontanar Lagunero',
+    'Benjamino Alarconte Pizarral',
 ]
-CURADORA = 'Carolina Muñoz Herrera'
-RUTS = [rut(15_284_731), rut(15_284_732, dotted=True), rut(21_406_377), rut(19_873_215)]
-RUT_CURADORA = rut(13_552_918)
-RIT_HERMANOS, RIT_OTRO, RIT_TERCERO = 'P-1534-2025', 'P-77-2026', 'X-902-2024'
+CURADORA = 'Carolinda Muñozal Herrerón'
+RUTS = [rut(95_284_731), rut(95_284_732, dotted=True), rut(91_406_377), rut(99_873_215)]
+RUT_CURADORA = rut(93_552_918)
+RIT_HERMANOS, RIT_OTRO, RIT_TERCERO = 'P-9534-2099', 'P-9077-2099', 'X-9902-2099'
 
 
 def sonda(tmp_path):
@@ -73,7 +73,7 @@ def sonda(tmp_path):
             'PRM UNO',
             45,
             'NO POSEE',
-            f'Curadora {CURADORA.split()[0]} {CURADORA.split()[1]} informa; madre: Soto',
+            f'Curadora {CURADORA.split()[0]} {CURADORA.split()[1]} informa; madre: Sotoral',
         ],
         [
             RIT_OTRO,

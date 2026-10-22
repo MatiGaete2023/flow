@@ -1,7 +1,5 @@
 """R-T09 a R-T15: reglas tradicionales de Cumplimiento con fecha de corte fija."""
 
-import pytest
-
 from test_mayoria_edad import analizar, persona
 
 BASE = [
@@ -33,7 +31,7 @@ def test_rt09_ingreso_reciente_solo_en_intervalo_y_con_fecha(tmp_path):
             (10, 100, '', LEJANO),
         ],
     ).rows
-    assert [f.rules for f in filas[:3]] == [['CUMPLIMIENTO.C03_INGRESO_RECIENTE']] * 2 + [
+    assert [f.rules for f in filas[:3]] == [['CUMPLIMIENTO.C03_INGRESO_RECIENTE', 'HISTORIA.EGRESO_PROYECTADO']] * 2 + [
         ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES']
     ]
     assert filas[3].rules == ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES']
@@ -106,12 +104,6 @@ def test_rt13_fae_sin_ficha_con_columna(tmp_path):
     assert 'CUMPLIMIENTO.C08_FICHA_FAE' not in filas[1].rules
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason='[CONFLICTO_ABIERTO] 03 §6 C-08: sin columna de ficha FAE el código afirma '
-    '«no registra ficha»; el documento pide NO_EVALUABLE. No se cambia la regla sin decisión del usuario.',
-)
 def test_rt13_fae_sin_columna_no_afirma_ausencia(tmp_path):
     fila = _cumplimiento(tmp_path, [(200, 100, '2026-01-01', LEJANO)], programa='FAE UNO').rows[0]
     assert 'CUMPLIMIENTO.C08_FICHA_FAE' not in fila.rules

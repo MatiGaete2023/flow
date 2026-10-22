@@ -208,3 +208,90 @@ def test_egresados_group_adds_no_false_column_warning(tmp_path):
     assert not any('Columnas funcionales ausentes' in w for w in work.warnings)
     egresado = next(row for row in work.rows if row.id == record['record_id'])
     assert 'Tipo de fuente fuera del motor tradicional; no evaluado.' in egresado.warnings
+
+
+def _calendario(source, numero, vence):
+    from nurus.capture.contract import COMMON
+
+    calendar = {k: source[k] for k in COMMON}
+    raw = {
+        'RIT': source['rit_original'],
+        'NOMBRE': 'Persona Ficticia',
+        'NOMBRE CENTRO': 'PRM FICTICIO',
+        'FECHA VENCIMIENTO': vence,
+    }
+    calendar.update(
+        original_file='calendario.xls',
+        original_row=str(numero),
+        calendar_id=f'cal{numero}',
+        event_at=vence,
+        event_type='INFORME',
+        status='PENDIENTE',
+        association='VERIFICADA',
+        raw_json=json.dumps(raw),
+        normalized_json=json.dumps(raw),
+    )
+    return calendar
+
+
+def test_cumplimiento_con_calendario_observa_el_informe_por_vencer_y_alimenta_el_correo(tmp_path):
+    from nurus.personal.outputs import mail_metric_value
+
+    m, t = fixture()
+    t['registros'] = t['registros'][:2]
+    for record in t['registros']:
+        raw = json.loads(record['normalized_json'])
+        raw.update({'DIAS DE CUMPLIMIENTO': '200', 'DIAS PARA EGRESAR': '150', 'FEC.EGRESO PROYECTADO': '2027-03-01'})
+        record.update(record_type='CUMPLIMIENTO', raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    # r0: informe a 43 días (dentro de la ventana); r1: a 83 días (fuera).
+    t['calendarios'] = [
+        _calendario(t['registros'][0], 50, '2026-11-20'),
+        _calendario(t['registros'][1], 51, '2026-12-30'),
+    ]
+    m['table_states']['calendarios'] = 'COMPLETA'
+    work = import_capture(write_capture(tmp_path / 'cal.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    primera, segunda = work.rows[0], work.rows[1]
+    assert 'vence el 20 de noviembre de 2026' in primera.observation
+    assert 'programa_por_vencer' in primera.actions and 'programa_por_vencer' not in segunda.actions
+    assert (
+        'informe de avance' not in segunda.observation.lower() or 'vence el 30 de diciembre' not in segunda.observation
+    )
+    assert mail_metric_value(work, primera, 'vencimiento') == '20/11/2026'
+
+
+def test_calendario_con_pestana_informes_no_duplica_filas(tmp_path):
+    m, t = fixture()
+    t['registros'] = t['registros'][:2]
+    for record in t['registros']:
+        raw = json.loads(record['normalized_json'])
+        raw['FECHA VENCIMIENTO'] = '2026-10-20'
+        record.update(record_type='INFORMES', raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    calendario = {**t['consultas'][0], 'query_id': 'qcal', 'screen': 'calendario_informes', 'tab': ''}
+    t['consultas'].append(calendario)
+    m['queries'] = t['consultas']
+    for n, base in enumerate(list(t['registros'])):
+        copia = dict(
+            base,
+            record_id=f'cal-{n}',
+            query_id='qcal',
+            original_row=str(90 + n),
+            identity_status='INCIERTA',
+            modality_code=calendario['modality_code'],
+            tab='',
+        )
+        t['registros'].append(copia)
+    work = import_capture(write_capture(tmp_path / 'inf.zip', m, t), defaults(), as_of=date(2026, 10, 8))
+    assert len(work.rows) == 2
+
+
+def test_fecha_cruzada_guardada_como_texto_se_lee_como_fecha():
+    from types import SimpleNamespace
+    from nurus.personal.outputs import mail_metric_value
+
+    work = SimpleNamespace(mapping={'vencimiento': 'FECHA VENCIMIENTO'}, cross_dates={'r0': '2026-11-20'})
+    row = SimpleNamespace(id='r0', values={'FECHA VENCIMIENTO': ''}, overrides={})
+    assert mail_metric_value(work, row, 'vencimiento') == '20/11/2026'
+    sin_columna = SimpleNamespace(mapping={}, cross_dates={'r0': '2026-11-20'})
+    assert (
+        mail_metric_value(sin_columna, SimpleNamespace(id='r0', values={}, overrides={}), 'vencimiento') == '20/11/2026'
+    )

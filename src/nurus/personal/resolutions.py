@@ -73,6 +73,21 @@ def _case_key(work, row):
     return normalize(court), normalize(value(work, row, 'rit'))
 
 
+def suggested_resolution(row):
+    """Tipo de proyecto que el motor identificó para la fila (el primero de sus acciones); None si no hay o está excluida."""
+    if getattr(row, 'excluded', False):
+        return None
+    return next((kind for kind in getattr(row, 'actions', []) if kind in KINDS), None)
+
+
+def res_is_human(row):
+    """True si RES tiene un valor que no es el que el motor sugirió."""
+    value = (getattr(row, 'review', None) or {}).get('RES')
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return False
+    return (resolution_kind(value) or str(value).strip()) != suggested_resolution(row)
+
+
 def resolution_marked(value):
     """Compatibilidad: reconoce tipos nuevos y marcas usadas en planillas antiguas."""
     if resolution_kind(value):

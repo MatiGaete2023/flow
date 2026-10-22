@@ -2,6 +2,32 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**Sin cambio de versión, 16 de octubre de 2026** (prueba). Sobre 2.8.0:
+- Extensión: la captura PDF de una consulta sin registros trae Chrome al frente y, si Chrome no pinta la pestaña en 5 s,
+  informa «Mantén SITFA visible» en vez de quedar esperando hasta «Chrome no respondió a tiempo». Hay que recargar la
+  extensión en chrome://extensions.
+- «Período a recolectar» de 1 a 4 meses para bitácoras e historia de la causa.
+- «Incluir informes por vencer (60 días)»: nueva fase que cambia SITFA sola al calendario de informes, descarga los meses que cubren 60 días, vuelve a Seguimiento y los agrega al paquete.
+- «Un paquete por hoja de RUS»: cada hoja (Espera, Cumplimiento, Informes) se consulta y entrega por separado.
+- La columna NOMBRE del consolidado ya no lleva paréntesis.
+
+**2.8.0, 13 de octubre de 2026** (Descargador y extensión; **prueba**, pendiente de acta del usuario). Cambios desde 2.7.6:
+- **Historia de la causa**: casilla «Leer también la historia de la causa (últimos 4 meses)» (apagada por defecto).
+  Se lee la tabla de la pestaña Historia una vez por causa, en la misma pasada del listado que las bitácoras.
+  Solo trámites de los últimos 4 meses; sin PDF ni anexos.
+- Productos: `Historia_SITFA.xlsx` (Trámites, Causas, Vínculos, Control) y, si se marca «Incluir historia en el paquete»,
+  la tabla `historia_tramites` en `Captura_CSMP.zip` (alcance CAUSA, columnas aditivas `folio`, `stage`,
+  `annex_visible`, `raw_json`; el Asistente no cambia).
+- Un error, sesión vencida o tabla distinta queda como FALLIDA con su motivo; nunca como «sin trámites».
+- Extensión 2.8.0: comando `history_open` (dos peticiones al mismo origen, sin permisos nuevos, sin exponer valores cifrados).
+  Hay que recargar la extensión y el Descargador juntos.
+- Retención de 60 días incluye `historias.json` y rechaza enlaces simbólicos intermedios; revalida antes del borrado.
+- Correcciones E3: extracción anónima con listas cerradas y análisis léxico; cifrado reflejado rechazado en la extensión;
+  esquema JSON exacto y streaming de 8 MiB; índices de identidad globales y cotejo del tribunal visible.
+- Historia aislada ante fallos de disco; consulta nueva sin reutilización entre lotes; reintento explícito del lote elegido.
+  Enumeración fallida degrada la cobertura del ZIP; diagnósticos con códigos constantes; textos largos íntegros
+  en columnas de continuación y advertencia para fechas posteriores. La prueba de extensión corre en CI y local.
+
 **2.7.6, 11 de octubre de 2026** (Descargador y extensión; Asistente 0.5.0.dev5). Cambios visibles desde 2.7.5:
 - **Crear paquete de este lote…** en la ventana principal, con la casilla **Incluir XLSX consolidado**; en
   Resultados, **Paquete con XLSX consolidado**. El paquete lleva solo el XLSX consolidado (CSMP_CAPTURE 1.1.0),
@@ -63,7 +89,7 @@ La exportación de calendario distingue vencimiento de informe y egreso proyecta
 **5 de octubre de 2026.** Esta rama incorpora la descarga conjunta para CSMP: principal completa, informes por vencer del mes actual y siguiente, y carga de al menos 60 días en bloques de hasta 30. Incluye recuperación por consulta, procedencia, vínculos de ingreso y cobertura explícita. La actividad se presenta como parcial hasta confirmar el criterio temporal del sistema. Consulta la [guía de pruebas integrales](docs/GUIA_PRUEBAS_INTEGRALES.md) y el [estado de los 32 elementos](docs/ESTADO_PLAN_INTEGRAL_20261005.md).
 
 **Rama experimental:** las mejoras funcionales y la integración con NuRus están
-implementadas aquí. Consulta [GUIA_EXPERIMENTAL.md](GUIA_EXPERIMENTAL.md) para
+implementadas aquí. Consulta [GUIA_EXPERIMENTAL.md](../docs/historico/descargador_20261001/GUIA_EXPERIMENTAL.md) para
 comparar con `main`, usar consolidación, favoritos, historial, CSV/ICS/ZIP y
 exportación para CSMP. La versión original se conserva en `main`; el texto de
 funcionamiento básico siguiente sigue describiendo su flujo de descarga.
@@ -204,14 +230,14 @@ Se incorporan los calendarios mensuales de informes y medidas por vencer y Consu
 El detalle y las limitaciones de las comprobaciones están en **VERIFICACION.md**.
 
 La revisión de código, las correcciones y las propuestas de mejoras están en
-[INFORME_REVISION.md](INFORME_REVISION.md).
+[INFORME_REVISION.md](../docs/historico/descargador_20261001/INFORME_REVISION.md).
 
 Las propuestas de funcionalidades, consolidación e integraciones para facilitar
-el trabajo del usuario están en [MEJORAS_USUARIO.md](MEJORAS_USUARIO.md).
+el trabajo del usuario están en [MEJORAS_USUARIO.md](../docs/historico/descargador_20261001/MEJORAS_USUARIO.md).
 Las propuestas se evaluaron en esos documentos; su estado de implementación en
-esta rama está en [GUIA_EXPERIMENTAL.md](GUIA_EXPERIMENTAL.md).
+esta rama está en [GUIA_EXPERIMENTAL.md](../docs/historico/descargador_20261001/GUIA_EXPERIMENTAL.md).
 
-La [comparación con NuRus / CSMP Assistant](COMPARACION_NURUS.md) detalla cómo
+La [comparación con NuRus / CSMP Assistant](../docs/historico/descargador_20261001/COMPARACION_NURUS.md) detalla cómo
 entregar libros compatibles, aprovechar su análisis, correos y resoluciones,
 y qué límites comprobar. Incluye una sonda offline con datos ficticios.
 

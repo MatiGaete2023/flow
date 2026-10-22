@@ -46,8 +46,6 @@ def source(tmp_path, mode='ESPERA', program='AFT EJEMPLO', days=30):
 
 def exported(tmp_path, mode='ESPERA'):
     work = Work(defaults()).analyze(source(tmp_path, mode), mode, as_of=date(2026, 9, 13))
-    if work.needs_cross:
-        work.document_exception('Revisión parcial: descarga sin cruce.')
     work.export(tmp_path / 'salida.xlsx', backend='portable', reduced_fidelity=True)
     return work
 
@@ -215,13 +213,14 @@ def test_empty_to_is_saved_with_mandatory_cc_and_repeats_blocked(tmp_path, monke
 @pytest.mark.parametrize(
     'court,program,days,expected',
     [
-        ('LAJA', 'DCE PRUEBA', 29, []),
+        ('LAJA', 'DCE PRUEBA', 0, ['programa_espera']),
+        ('LAJA', 'DCE PRUEBA', 29, ['programa_espera']),
         ('LAJA', 'DCE PRUEBA', 30, ['programa_espera']),
         ('LAJA', 'AFT PRUEBA', 29, []),
         ('LAJA', 'AFT PRUEBA', 30, ['programa_espera', 'PC_IE']),
         ('MULCHEN', 'AFT PRUEBA', 30, ['programa_espera', 'PC_IE']),
-        ('TOME', 'AFT PRUEBA', 30, ['programa_espera']),
-        ('TOME', 'AFT PRUEBA', 59, ['programa_espera']),
+        ('TOME', 'AFT PRUEBA', 30, []),
+        ('TOME', 'AFT PRUEBA', 59, []),
         ('TOME', 'AFT PRUEBA', 60, ['programa_espera', 'PC_IE']),
     ],
 )
