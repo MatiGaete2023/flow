@@ -157,6 +157,9 @@ async def main():
                                 f'<table id="{TABS[s.tab][3]}"></table>',
                                 f'<h3>Listado [Cantidad : 0]</h3><table id="{TABS[s.tab][3]}"><tr><td>RIT</td><td>Nombre</td></tr></table>',
                             )
+                        if native:
+                            # Como SITFA real: AJAX propio tras cargar que altera el DOM de la vista.
+                            body += '<script>setTimeout(()=>document.body.append(Object.assign(document.createElement("span"),{id:"ajaxSitfa",textContent:"actualizado"})),400)</script>'
                         await r.fulfill(body=body, content_type='text/html; charset=utf-8')
                         return
                     if u.path.startswith('/sitfa/reportes/'):
@@ -252,8 +255,11 @@ async def main():
                 pixels = []
 
                 async def inspect(payload):
-                    frame = next(f for f in target.frames if f.url == m.ENDPOINT)
+                    # La evidencia es una copia fija sin scripts: se lee desde el marco SITFA que la contiene.
+                    frame = next(f for f in target.frames if f.name == 'sitfaEvidenciaFija').parent_frame
+                    assert not any(f.url == m.ENDPOINT for f in target.frames), 'La vista viva debe cerrarse'
                     values = await frame.evaluate('''() => {
+                        const document=window.document.querySelector('iframe[name="sitfaEvidenciaFija"]').contentDocument;
                         const form=document.InformesPpalForm,result={};
                         for(const name of ['COD_Tribunal_sel','TIP_Consulta','COD_Lengueta','FEC_Inicio','FEC_Fin']) {
                             const e=form.elements.namedItem(name);result[name]=e.value;
@@ -284,7 +290,8 @@ async def main():
                     )
                     if mode['tamper']:
                         await frame.evaluate(
-                            "document.getElementById('sitfaContextoConsulta').textContent='Consulta distinta'"
+                            "document.querySelector('iframe[name=\"sitfaEvidenciaFija\"]').contentDocument"
+                            ".getElementById('sitfaContextoConsulta').textContent='Consulta distinta'"
                         )
 
                 class CheckedBridge:

@@ -151,7 +151,7 @@ async function sitfaTask(command, payload) {
     if(run?.evidence) {
       run.evidence.remove();
       for(const item of run.evidenceScroll||[])try{item.window.scrollTo(item.x,item.y);}catch(_){}
-      delete run.evidence;delete run.evidenceFrame;delete run.evidenceDigest;delete run.evidenceDocument;delete run.evidenceScroll;delete run.evidenceContext;
+      delete run.evidence;delete run.evidenceFrame;delete run.evidenceDigest;delete run.evidenceShownDigest;delete run.evidenceDocument;delete run.evidenceScroll;delete run.evidenceContext;
     }
     const cover=document.getElementById("sitfaDescargaLocal");if(cover)cover.style.visibility="visible";
   };
@@ -205,9 +205,27 @@ async function sitfaTask(command, payload) {
       frame.contentWindow.scrollTo(0,0);
       const data=evidenceBytes(doc),digest=await sha256(data);
       if(data.length>80*1024*1024)throw new Error("estructura");
+      // SITFA sigue ejecutando AJAX tras cargar y altera su DOM. La captura muestra una copia sin scripts
+      // de exactamente lo verificado (sandbox sin allow-scripts ni allow-forms); la vista viva se cierra.
+      const still=document.createElement("iframe");still.name="sitfaEvidenciaFija";
+      still.setAttribute("sandbox","allow-same-origin");still.style.cssText=frame.style.cssText;
+      const doctype=doc.doctype?new XMLSerializer().serializeToString(doc.doctype):"";
+      await new Promise((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(new Error("tiempo")),10000);
+        still.addEventListener("load",()=>{clearTimeout(timer);resolve();},{once:true});
+        still.srcdoc=doctype+new TextDecoder().decode(data);
+        panel.insertBefore(still,frame);
+      });
+      frame.remove();
+      const shown=still.contentDocument;
+      for(const e of shown.querySelectorAll('noscript,meta[http-equiv="refresh" i]'))e.remove();
+      const shownContext=shown.getElementById("sitfaContextoConsulta");
+      if(!shownContext)throw new Error("estructura");
+      window.__sitfaRun.evidenceFrame=still;
       window.__sitfaRun.evidenceDigest=digest;
-      window.__sitfaRun.evidenceDocument=doc;
-      window.__sitfaRun.evidenceContext=context;
+      window.__sitfaRun.evidenceShownDigest=await sha256(evidenceBytes(shown));
+      window.__sitfaRun.evidenceDocument=shown;
+      window.__sitfaRun.evidenceContext=shownContext;
       const chunks=[];for(let i=0;i<data.length;i+=32768)chunks.push(String.fromCharCode(...data.subarray(i,i+32768)));
       return {status:200,type:"text/html; charset=utf-8",body:btoa(chunks.join("")),digest};
     } catch(error) {evidenceClose();throw error;}
@@ -216,9 +234,9 @@ async function sitfaTask(command, payload) {
     const run=window.__sitfaRun;
     if(!run?.evidenceFrame || payload.digest!==run.evidenceDigest || !/^[a-f0-9]{64}$/.test(payload.digest))throw new Error("estructura");
     const doc=run.evidenceFrame.contentDocument;
-    if(run.evidenceFrame.contentWindow.location.href!==endpoint || doc.querySelector('input[type="password"]'))throw new Error("sesion");
-    // Se conserva el DOM validado: la captura no acepta una navegación posterior.
-    if(run.evidenceDocument!==doc || await sha256(evidenceBytes(doc))!==payload.digest)throw new Error("cambio");
+    if(run.evidenceFrame.contentWindow.location.href!=="about:srcdoc" || doc.querySelector('input[type="password"]'))throw new Error("sesion");
+    // La copia fija no ejecuta scripts: cualquier cambio entre la verificación y la captura la invalida.
+    if(run.evidenceDocument!==doc || await sha256(evidenceBytes(doc))!==run.evidenceShownDigest)throw new Error("cambio");
     if(!run.evidenceScroll) {
       run.evidenceScroll=[];
       let w=window;
