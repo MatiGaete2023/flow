@@ -19,7 +19,7 @@ from .mail_controls import (
     empty_preparation_message,
     require_mail_action,
 )
-from .outputs import prepare_drafts, prepare_required_drafts, create_drafts, drafts_for_scope, value
+from .outputs import contacts_notice, prepare_drafts, prepare_required_drafts, create_drafts, drafts_for_scope, value
 from .resolutions import (
     automatic_project_selections,
     unique_case_selections,
@@ -266,6 +266,7 @@ class App(_BaseApp):
             self.status.set(
                 f"{result['created']} borradores guardados; {result['skipped']} ya procesados; {len(result['errors'])} incidencias."
                 + (" Detenido entre productos." if result.get('cancelled') else "")
+                + contacts_notice(self._remember_program_contacts(result.get('created_drafts', [])))
             )
             if result['errors']:
                 messagebox.showwarning('Lote guardado con incidencias', '\n'.join(result['errors']))

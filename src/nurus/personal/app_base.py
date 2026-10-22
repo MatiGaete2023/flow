@@ -28,7 +28,7 @@ from .ux_support import (
     RES_HELP,
 )
 from .work import Work
-from .outputs import create_draft, import_contacts
+from .outputs import contacts_notice, create_draft, import_contacts
 from .mail_controls import NO_WORK, require_mail_action
 from .mail_view import update_mail_actions
 from .resolutions import KINDS, kind_code, kind_label, prepare_projects, generate_projects, automatic_project_selections
@@ -1219,7 +1219,10 @@ class App(ctk.CTk):
             lambda: create_draft(work, draft, confirmed=True),
             lambda r: (
                 self._save_session(),
-                self.status.set('Borrador guardado en Outlook. No se envió ningún correo.'),
+                self.status.set(
+                    'Borrador guardado en Outlook. No se envió ningún correo.'
+                    + contacts_notice(self._remember_program_contacts([draft]))
+                ),
             ),
         )
 
@@ -1900,6 +1903,35 @@ class App(ctk.CTk):
         self._list_contacts()
         self._editing_contact_name = None
         self.status.set('Contacto eliminado. Puedes deshacer esta acción.')
+
+    def _remember_program_contacts(self, drafts):
+        """Guarda la dirección escrita a mano de un programa sin contacto, una vez creado su borrador."""
+        from copy import deepcopy
+        from .config import parse_contacts, save_contacts, EXAMPLE_CONTACTS
+        from .outputs import learned_contacts
+
+        learned = learned_contacts(self.cfg.data, drafts)
+        if not learned:
+            return {}
+        cfg = deepcopy(self.cfg.data)
+        if getattr(self.cfg, 'contacts_missing', False):
+            # Los contactos ficticios de ejemplo no pasan al directorio real.
+            examples = parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8'))
+            cfg['contactos'] = {
+                name: address for name, address in cfg['contactos'].items() if examples.get(name) != address
+            }
+        cfg['contactos'] = {**cfg['contactos'], **learned}
+        self.cfg.save(cfg)
+        courts = {
+            'Tribunal: ' + key: '; '.join(court['para'])
+            for key, court in cfg['correos']['tribunales'].items()
+            if court.get('para')
+        }
+        save_contacts({**cfg['contactos'], **courts}, self.cfg.contacts_directory)
+        self.cfg.contacts_missing = False
+        if hasattr(self, 'contact_list'):
+            self._list_contacts()
+        return learned
 
     def _import_contacts(self):
         path = filedialog.askopenfilename(

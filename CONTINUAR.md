@@ -5,7 +5,7 @@
 
 - Rama canónica: `feat/ejecucion-plan-20261008`.
 - Línea base: `bbf8cdda95bb`; asistente 932 aprobadas, 11 omitidas, 6 xfail; descargador 283 aprobadas, 62 subpruebas.
-- Paquetes integrados: 73 de 77; último en el orden: WP-79.
+- Paquetes integrados: 73 de 78; último en el orden: WP-79.
 
 | WP | Estado | Título |
 | --- | --- | --- |
@@ -13,6 +13,7 @@
 | WP-17 | EN_VERIFICACION | Purga de historial |
 | WP-50 | BLOQUEADO_USUARIO | Cronología de bitácoras solo mostrar |
 | WP-70 | BLOQUEADO_USUARIO | Cierre de la implementación |
+| WP-59 | EN_REVISION | PDF de consulta vacía con SITFA que altera su página, y contactos de programas aprendidos |
 <!-- estado:fin -->
 
 **Una sola rama de trabajo: `feat/ejecucion-plan-20261008`.** Todo el código y la documentación están aquí; `main`

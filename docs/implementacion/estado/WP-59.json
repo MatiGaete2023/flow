@@ -1,0 +1,25 @@
+{
+  "titulo": "PDF de consulta vacía con SITFA que altera su página, y contactos de programas aprendidos",
+  "ola": 7,
+  "tipo": "S",
+  "depende_de": [
+    {
+      "wp": "WP-57",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [],
+  "estado": "EN_REVISION",
+  "ejecutor": "Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h",
+  "tomado": "22 de octubre de 2026",
+  "rama": "ultima-version/asistente-descargador",
+  "pr": null,
+  "verificacion": "Local: Asistente 1244/11/5 xfail; Descargador 354/62 subpruebas; Node 3/3; verificar_pdf_extension.py con Chromium 141 real y SITFA ficticio que hace AJAX tras cargar: la extensión anterior falla con EVIDENCE_CAPTURE (error del usuario) y la nueva genera los 5 PDF y rechaza el contexto alterado.",
+  "revision": "E3 de la misma sesión (no independiente), autorizada por el usuario el 22 de octubre de 2026: docs/implementacion/wp/WP-59.md.",
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "Síntoma del usuario en dos equipos con la rama feat: E_PIPELINE «No se pudo capturar la consulta vacía» en la consulta 1/4.",
+    "Falta la prueba con SITFA real del usuario; aceptación y actas son del usuario."
+  ]
+}

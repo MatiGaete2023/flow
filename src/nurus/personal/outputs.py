@@ -193,6 +193,34 @@ def resolve_contact(cfg, name):
     return next(iter(found)) if len(found) == 1 else ''
 
 
+def learned_contacts(cfg, drafts):
+    """Direcciones escritas a mano en correos a programas sin contacto, para no repetirlas en el próximo lote.
+
+    Nunca reemplaza un contacto existente; si el mismo programa recibió direcciones distintas, no se guarda ninguna.
+    """
+    aliases = {normalize(k): normalize(v) for k, v in cfg['aliases'].items()}
+    known = {normalize(k) for k in cfg['contactos']}
+    found = {}
+    for draft in drafts:
+        if not draft.program or (draft.recipient_type or 'programas') != 'programas':
+            continue
+        key = normalize(draft.program)
+        if key in known or aliases.get(key, key) in known:
+            continue
+        address = '; '.join(emails(draft.to))
+        if address:
+            found.setdefault(key, (draft.program, set()))[1].add(address)
+    return {name: next(iter(addresses)) for name, addresses in found.values() if len(addresses) == 1}
+
+
+def contacts_notice(learned):
+    if not learned:
+        return ''
+    return (
+        ' Contacto guardado para el próximo lote: ' + '; '.join(f'{k} → {v}' for k, v in sorted(learned.items())) + '.'
+    )
+
+
 def import_contacts(cfg, path):
     import pandas as pd
 
@@ -652,6 +680,7 @@ def _create_batch(work, drafts, result, checkpoint, progress, OperationCancelled
                 continue
             create_draft(work, draft, confirmed=True, _digests=digests)
             result['created'] += 1
+            result.setdefault('created_drafts', []).append(draft)
         except Exception as exc:
             result['errors'].append(draft.subject + ': ' + str(exc))
 
