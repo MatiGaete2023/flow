@@ -31,6 +31,8 @@ const messages={
 };
 function status(message){byId("status").textContent=message;}
 function failure(code){return Object.assign(new Error(code),{code});}
+// Motivos técnicos de la evidencia PDF: vocabulario fijo, sin datos de causas.
+const evidenceReasons=["estructura","sesion","cambio","pantalla","tiempo","pagina","acceso","permiso","pestaña","ventana","captura"];
 function safeCode(error,fallback){return Object.hasOwn(messages,error?.code)?error.code:fallback;}
 async function bridge(path,body) {
   let response;
@@ -54,17 +56,19 @@ async function inject(command,payload={}) {
   const candidates=results.filter(r=>r.result!==null&&r.result!==undefined);
   if (!candidates.length) throw failure(command==="catalog"?"FOLLOWUP_REQUIRED":"SITFA_TASK");
   if (candidates.length!==1) throw failure("MULTIPLE_FORMS");
-  if(candidates[0].result?.__sitfaError) throw failure(Object.hasOwn(messages,candidates[0].result.__sitfaError)?candidates[0].result.__sitfaError:"SITFA_TASK");
+  if(candidates[0].result?.__sitfaError) throw Object.assign(failure(Object.hasOwn(messages,candidates[0].result.__sitfaError)?candidates[0].result.__sitfaError:"SITFA_TASK"),
+    evidenceReasons.includes(candidates[0].result.motivo)?{motivo:candidates[0].result.motivo}:{});
   frameId=candidates[0].frameId;return candidates[0].result;
 }
 async function execute(command,payload={}) {
   if(command==="evidence_capture") {
-    let changed=false;
+    let changed=false,stage="pestaña";
     const activated=info=>{if(info.windowId===windowId&&info.tabId!==tabId)changed=true;};
     let windowId;
     try {
       const tab=await chrome.tabs.get(tabId);windowId=tab.windowId;
       if(new URL(tab.url).origin!=="https://familia.pjud.cl" || tab.discarded)throw new Error("pestaña");
+      stage="ventana";
       const win=await chrome.windows.get(windowId);
       // Chrome no pinta una ventana tapada por otra (p. ej., el descargador): se trae al frente para la captura.
       await chrome.windows.update(windowId,{...(win.state==="minimized"?{state:"normal"}:{}),focused:true});
@@ -75,11 +79,19 @@ async function execute(command,payload={}) {
       await new Promise(resolve=>setTimeout(resolve,600));
       const active=await chrome.tabs.query({windowId,active:true});
       if(changed || active.length!==1 || active[0].id!==tabId)throw new Error("pestaña");
-      const png=await chrome.tabs.captureVisibleTab(windowId,{format:"png"});
+      stage="captura";
+      let png;
+      try {png=await chrome.tabs.captureVisibleTab(windowId,{format:"png"});}
+      catch (error) {throw new Error(/activeTab|all_urls|permission/i.test(String(error?.message))?"permiso":"captura");}
+      stage="pestaña";
       await inject("evidence_show",payload);
       if(changed || !(await chrome.tabs.get(tabId)).active || !png.startsWith("data:image/png;base64,"))throw new Error("pestaña");
       return {png:png.slice("data:image/png;base64,".length),digest:payload.digest};
-    } catch (_) {throw failure("EVIDENCE_CAPTURE");}
+    } catch (error) {
+      const motivo=evidenceReasons.includes(error?.motivo)?error.motivo:evidenceReasons.includes(error?.message)?error.message:
+        error?.code==="SITE_ACCESS"?"acceso":error?.code?"pagina":stage;
+      throw Object.assign(failure("EVIDENCE_CAPTURE"),{motivo});
+    }
     finally {chrome.tabs.onActivated.removeListener(activated);try {await inject("evidence_close");}catch(_) {}}
   }
   if(command!=="catalog" || !payload.screen) return inject(command,payload);
@@ -129,7 +141,9 @@ byId("connect").addEventListener("click",async()=>{
       try {result={id:task.id,ok:true,result:await execute(task.command,task.payload)};}
       catch (error) {
         const code=safeCode(error,"SITFA_TASK");
-        result={id:task.id,ok:false,error:code};status(messages[code]);
+        const motivo=evidenceReasons.includes(error?.motivo)?error.motivo:undefined;
+        result={id:task.id,ok:false,error:code,...(motivo?{motivo}:{})};
+        status(messages[code]+(motivo?" Motivo técnico: "+motivo+".":""));
       }
       // Python ya dejó de esperar esta tarea (plazo vencido): la respuesta tardía se descarta sin cortar la conexión.
       try {await bridge("/complete",result);} catch (error) {if (error?.code!=="TASK_EXPIRED") throw error;}

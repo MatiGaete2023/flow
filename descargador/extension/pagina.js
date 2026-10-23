@@ -34,8 +34,8 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.8.0',
-    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,calendario_lectura:1,historia_lectura:1},escritura_rus:false};
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.8.1',
+    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
   const fields={seguimiento:`COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
@@ -630,6 +630,10 @@ async function sitfaTask(command, payload) {
       return {__sitfaError: explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'HISTORY_TIMEOUT':'HISTORY_NETWORK'):
         diaryPhase==='IDENTIDAD'?'HISTORY_IDENTITY':'HISTORY_RESPONSE')};
     }
-    return {__sitfaError:command==="evidence_open"?"EVIDENCE_OPEN":"SITFA_TASK"};
+    if(command==="evidence_open"||command==="evidence_show") {
+      const motivo=["estructura","sesion","cambio","pantalla","tiempo"].includes(error?.message)?error.message:"pagina";
+      return {__sitfaError:command==="evidence_open"?"EVIDENCE_OPEN":"EVIDENCE_CAPTURE",motivo};
+    }
+    return {__sitfaError:"SITFA_TASK"};
   }
 }
