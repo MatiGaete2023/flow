@@ -1,0 +1,24 @@
+{
+  "titulo": "Acta de uso real",
+  "ola": 0,
+  "tipo": "C",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [
+    "D2"
+  ],
+  "estado": "BLOQUEADO_USUARIO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": "wp/02-acta-uso-real",
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "D2: «Ninguna todavía» (11 de octubre de 2026).",
+    "Plantilla docs/aceptacion/ACTA_USO_REAL_20261012.json generada con flow_acceptance.py init (40 casos D-T/A-T, NO_EJECUTADO, tipo de evidencia vacío, commit 5a8f68e). Reemplaza la de 14f679d. Solo el usuario completa resultados."
+  ]
+}

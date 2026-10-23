@@ -1,0 +1,25 @@
+{
+  "revision": "2026-09-14-matrices-v1",
+  "templates": {
+    "LAJA/NOMENCL.docx": {
+      "sha256": "3114bbd5dd433698f76279dbe4c49cf76361ec0fc99936a6102978946f6eed07",
+      "file": "matrix_patches/laja_nomencl.b64"
+    },
+    "LAJA/PC_IE.docx": {
+      "sha256": "5d902b463b995dc78e59e532446c59548f20f4a98fb74f3eb632154df8d96e59",
+      "file": "matrix_patches/laja_pc_ie.b64"
+    },
+    "MULCHEN/NOMENCL.docx": {
+      "sha256": "b50571734226954628ca2084bbec84e288aede4226e53eed561a77170f2ccd89",
+      "file": "matrix_patches/mulchen_nomencl.b64"
+    },
+    "MULCHEN/PC_IE.docx": {
+      "sha256": "86322612ff02ec560237f3436951b218670c2b9866ec8cc2ede0daa67e36166b",
+      "file": "matrix_patches/mulchen_pc_ie.b64"
+    },
+    "MULCHEN/PC_INFO.docx": {
+      "sha256": "37cb380cbf81a4963109c002fcc9cd60ed53da12452749a456fc73372a4ae306",
+      "file": "matrix_patches/mulchen_pc_info.b64"
+    }
+  }
+}

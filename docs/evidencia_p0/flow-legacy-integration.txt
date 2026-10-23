@@ -1,0 +1,1 @@
+{"resultado": "OK", "datos": "ficticios", "filas_espera": 2, "filas_cumplimiento": 2, "exportacion_revisable": true, "procedencia_recuperada": true, "cruce_c10": true, "office_ejecutado": false, "red": false}

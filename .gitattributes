@@ -1,0 +1,10 @@
+# Pytest guarda fragmentos originales de traceback con espacios al final.
+# Se conserva esa evidencia sin reformatearla.
+docs/evidencia_p0/flow-baseline-*.txt -whitespace
+docs/evidencia_p0/flow-baseline-*.xml -whitespace
+# Adjuntos íntegros: conservar saltos Markdown y espacios del documento fuente.
+docs/plan_20261008/*.md -whitespace -text
+docs/evidencia_p0/flow-revision-02-*.txt -whitespace
+docs/evidencia_p0/flow-revision-02-*.xml -whitespace
+docs/evidencia_desarrollo_20261008/flow-*.txt -whitespace
+docs/evidencia_desarrollo_20261008/flow-*.xml -whitespace

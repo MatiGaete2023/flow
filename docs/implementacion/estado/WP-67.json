@@ -1,0 +1,28 @@
+{
+  "titulo": "Limpieza de herramientas (tools/)",
+  "ola": 8,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-66",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+  "tomado": "16 de octubre de 2026",
+  "rama": "claude/lucid-sagan-hw9ul4",
+  "pr": 50,
+  "verificacion": "PASA sobre 5912b5f: Asistente 1.148, Descargador 350; inventario, identidades, golden, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-67.json.",
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
+  "auditoria": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
+  "notas": [
+    "Elimina tres scripts sin uso y el extra performance; sin cambio de comportamiento en el resto.",
+    "No integrado ni aceptado.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
+  ]
+}

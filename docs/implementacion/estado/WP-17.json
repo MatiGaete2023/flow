@@ -1,0 +1,32 @@
+{
+  "titulo": "Purga de historial",
+  "ola": 1,
+  "tipo": "M",
+  "depende_de": [
+    "WP-10",
+    "WP-12",
+    "WP-20"
+  ],
+  "decisiones": [
+    "D1"
+  ],
+  "estado": "EN_VERIFICACION",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": null,
+  "rama": "feat/ejecucion-plan-20261008",
+  "pr": null,
+  "verificacion": "Ramas purgadas y 607 artefactos anteriores eliminados; dos etiquetas antiguas borradas y ls-remote sin etiquetas. Pendiente Soporte GitHub para refs de PR/cachés.",
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "D1 respondida (reescribir historial; push forzado autorizado con confirmación final). Dependencias integradas.",
+    "Push forzado de 35 ramas el 11 de octubre de 2026 (autorización escrita). Pendiente: borrar 2 etiquetas, refs/pull vía soporte de GitHub y artefactos de Actions.",
+    "11 de octubre de 2026: 607 artefactos de Actions previos a la purga borrados por la API (autorización escrita). Las 2 etiquetas no se pueden borrar desde el proxy (403): las borra el usuario. Falta además refs/pull vía Soporte de GitHub.",
+    "Continuación del 11 de octubre: DELETE de ambas etiquetas por API exitoso; ls-remote --tags vacío. Se mantiene EN_VERIFICACION por refs de PR/cachés externas.",
+    "Clon nuevo de ramas: check_real_ids --historia = 0. Los 96 artefactos actuales tienen 19 commits alcanzables en ramas saneadas. No se descargaron refs de PR.",
+    "Comprobación posterior a #36/#37, con checker actualizado: clon nuevo de ramas, --historia = 0. Las referencias antiguas de PR/cachés siguen pendientes de Soporte GitHub.",
+    "16 de octubre de 2026: segunda purga autorizada por escrito («Autorizo purga de historial, elimina también [la marca de redacción]»; sesión 01VB84tpYXBaUxLxFtBYLGQx). Detalle en wp/WP-17.md.",
+    "16 de octubre de 2026: push --force-with-lease de 12 ramas (main sin cambios: no contenía los datos). Clon nuevo: check_real_ids --historia = 0, sin nombre del titular, marca, rutas ni correo personal en autores. verificar_wp PASA sobre 4ef7030 (verificacion/WP-17-segunda-purga.json). Siguen pendientes refs/pull, cachés y artefactos de Actions anteriores."
+  ]
+}

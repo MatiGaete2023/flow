@@ -1,0 +1,92 @@
+{
+  "commit": "fecfe9284a3a87f92c1877488e5fc8647d72ddc1",
+  "base": "bbf8cdda95bb40307e515a960f2aed71dcd65758",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "1138 aprobadas; mínimo 894; base 932; código 0"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "348 aprobadas; mínimo 273; base 283; código 0"
+    },
+    {
+      "control": "Inventario de pruebas",
+      "resultado": "PASA",
+      "detalle": "Sin bajas no declaradas"
+    },
+    {
+      "control": "Pruebas eliminadas listadas",
+      "resultado": "PASA",
+      "detalle": "48 nodos ausentes como se declaró"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos; límite 0"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "Paridad válida"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "Sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82/F401/F841",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0; base 0"
+    }
+  ],
+  "suites": {
+    "asistente": {
+      "aprobadas": 1138,
+      "omitidas": 11,
+      "fallidas": 0,
+      "subpruebas": 0,
+      "xfail": 5,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    },
+    "descargador": {
+      "aprobadas": 348,
+      "omitidas": 0,
+      "fallidas": 0,
+      "subpruebas": 62,
+      "xfail": 0,
+      "codigo": 0,
+      "medicion_valida": true,
+      "fallidas_nodeids": []
+    }
+  },
+  "procedencia_inicio": {
+    "commit": "fecfe9284a3a87f92c1877488e5fc8647d72ddc1",
+    "arbol_git": "ff73056a20437d98a19fc07b7fd7537a0b259abb",
+    "cambios_locales": false
+  },
+  "procedencia_fin": {
+    "commit": "fecfe9284a3a87f92c1877488e5fc8647d72ddc1",
+    "arbol_git": "ff73056a20437d98a19fc07b7fd7537a0b259abb",
+    "cambios_locales": false
+  },
+  "procedencia_verificada": true,
+  "elegible_integracion": true,
+  "medicion_reutilizada": false,
+  "veredicto": "PASA"
+}

@@ -1,0 +1,4 @@
+# Productos generados: conservar bytes y tratar PDF, imágenes y ZIP como binarios.
+*.pdf binary
+*.png binary
+*.zip binary

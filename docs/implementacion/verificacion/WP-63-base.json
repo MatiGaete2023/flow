@@ -1,0 +1,48 @@
+{
+  "commit": "2cf8ca8",
+  "base": "79610fd",
+  "controles": [
+    {
+      "control": "Suite asistente",
+      "resultado": "PASA",
+      "detalle": "592 passed, 11 skipped, 6 xfailed in 87.35s (0:01:27) (mínimo 592 aprobadas; base 592)"
+    },
+    {
+      "control": "Suite descargador",
+      "resultado": "PASA",
+      "detalle": "231 passed, 62 subtests passed in 27.94s (mínimo 231 aprobadas; base 231)"
+    },
+    {
+      "control": "Identidades reales",
+      "resultado": "PASA",
+      "detalle": "0 hallazgos (límite 0)"
+    },
+    {
+      "control": "Paridad golden",
+      "resultado": "PASA",
+      "detalle": "PASA"
+    },
+    {
+      "control": "Restricciones absolutas",
+      "resultado": "PASA",
+      "detalle": "sin infracciones"
+    },
+    {
+      "control": "Ruff E9/F63/F7/F82",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Módulos no alcanzables",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    },
+    {
+      "control": "Enlaces rotos",
+      "resultado": "PASA",
+      "detalle": "0 (base 0)"
+    }
+  ],
+  "veredicto": "PASA",
+  "nota": "Medición previa a cambios de WP-63; base 79610fd es referencia histórica previa a la purga. No se modifica el informe original de los controles."
+}

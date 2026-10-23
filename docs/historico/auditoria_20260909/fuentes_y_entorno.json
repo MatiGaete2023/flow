@@ -1,0 +1,117 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux",
+    "pandas": "2.2.3",
+    "openpyxl": "3.1.5",
+    "pytest": "9.1.1"
+  },
+  "tests": {
+    "published_branch": {
+      "passed": 81,
+      "failed": 0
+    },
+    "local_candidate": {
+      "passed": 54,
+      "skipped": 4,
+      "failed": 0
+    },
+    "institutional_excel_outlook": "not_executed"
+  },
+  "sources": [
+    {
+      "file": "02-Asistente-2-.zip",
+      "sha256": "db84753a5bcdd961e4a24f930ede55545f38128742399653252f626fe8965063",
+      "bytes": 467922
+    },
+    {
+      "file": "01-Creador-de-Correos.py",
+      "sha256": "d9c30652f7157b050c88136d2cee1e90e33135f0aa32b84baf69c40faa5f71ce",
+      "bytes": 57222
+    },
+    {
+      "file": "03-Contador-de-Correos.PY",
+      "sha256": "026e207d0916e6b0fb47eb166e9b3abf26924234fac32f509b2a17da71b0dee1",
+      "bytes": 3193
+    },
+    {
+      "file": "CSMP_2025_Fusionado(2).md",
+      "sha256": "f1e7c3ff33f3e62b7dd867b42339061c799f165cf966f9520dd110cb66a2e59b",
+      "bytes": 77978
+    },
+    {
+      "file": "NuRus-implementacion-plan-2026-09-08.zip",
+      "sha256": "450522917608775bafae657964a038c7e359837ad21b2ae79e05f5d11c14c064",
+      "bytes": 107344
+    },
+    {
+      "file": "Catalogo_Reglas_CSMP_v2_20260714.md",
+      "sha256": "5e7c3d8604fc221b972a8f78cad73c6c33859615b60811e8b8b84b696766e167",
+      "bytes": 31076
+    },
+    {
+      "file": "01-Informe-funcional-del-motor-de-observaciones-y-su-integraci-n-con-el-trabajo-humano.md",
+      "sha256": "4d443bb60c4122b96885840fe8019513a8539e4b57e7220c70888febc9f412dd",
+      "bytes": 34194,
+      "scope": "Secciones 1-2, 8-9, 13-18, 21-23, 28-32, 34; localización de estructura restante; cifras no recalculadas"
+    }
+  ],
+  "footer_formulas": [
+    {
+      "file": "AGOSTO.xlsx",
+      "sheet": "ESPERA",
+      "row": 98,
+      "nonempty_cells": {
+        "X98": "=SUM(X2:X97)",
+        "Y98": "=SUM(Y2:Y97)"
+      }
+    },
+    {
+      "file": "AGOSTO.xlsx",
+      "sheet": "CUMPLIMIENTO",
+      "row": 763,
+      "nonempty_cells": {
+        "X763": "=SUM(X2:X762)",
+        "Y763": "=SUM(Y2:Y762)"
+      }
+    },
+    {
+      "file": "RUS_CUMPLIMIENTO_20260904_114132_856292.xlsx",
+      "sheet": "CUMPLIMIENTO",
+      "row": 265,
+      "nonempty_cells": {
+        "X265": "=SUM(X2:X264)",
+        "Y265": "=SUM(Y2:Y264)"
+      }
+    }
+  ],
+  "candidate_only_files": [
+    {
+      "path": "src/nurus/adapters/sent_mail.py",
+      "sha256": "e708cc56b679c8abf9ddb659c260c8c5d81455fd255085e37f41fbca737416a9"
+    },
+    {
+      "path": "src/nurus/product_ui.py",
+      "sha256": "1277a754918da1831cde6458590b21a3e0cd9643550966e5fff936fdbf9034fc"
+    },
+    {
+      "path": "src/nurus/services/communications.py",
+      "sha256": "5fe7ea2833532fb4c3614a9e942799e1ac8973ba523aab3515d244cb0f32ca5a"
+    },
+    {
+      "path": "src/nurus/services/delivery.py",
+      "sha256": "61cf99da7a2e5c833c967d3f35fb03a92ab3b7dcd4cd0bfef562d49b1e0c3f27"
+    },
+    {
+      "path": "src/nurus/services/resolutions.py",
+      "sha256": "f80508937b358081ec3c680b90b2794de9aa0d38e5491faef35bd3487757d054"
+    },
+    {
+      "path": "src/nurus/services/workbook_export.py",
+      "sha256": "5f03fd824b7d8df9fadcad3ffff997f3374e39f95f8937f1818fe6adb6246291"
+    }
+  ],
+  "catalog_texts": {
+    "identical": 25
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "fecha": "2026-10-01",
+  "version": "2.2.0",
+  "pruebas_locales": {
+    "resultado": "OK",
+    "cantidad": 69
+  },
+  "har": {
+    "har": 9,
+    "post_buscar_medida": 56,
+    "consultas_distintas_sin_paginacion": 8,
+    "respuestas_reconocidas": 51,
+    "sin_cuerpo": 5,
+    "requieren_revision": 0,
+    "peticiones_sitfa": 0
+  },
+  "chrome_ficticio": {
+    "resultado": "OK",
+    "chrome_real": true,
+    "datos": "ficticios",
+    "lotes": 4,
+    "consultas": 6,
+    "paginas": 18,
+    "fechas_activadas": true,
+    "filtros_limpiados_y_conservados": true,
+    "informes_opciones_dinamicas": true,
+    "conexion_js_ejecutada": true,
+    "api_extension_adaptada": true,
+    "peticiones_sitfa": 0
+  },
+  "extension_real": {
+    "datos": "ficticios",
+    "perfil_usuario_accedido": false,
+    "api_extension_adaptada": false,
+    "peticiones_reales_sitfa": 0,
+    "regresion_anterior": {
+      "post": 200,
+      "get": 403
+    },
+    "conexion_antes_de_seguimiento": true,
+    "seguimiento_ausente_no_confunde_codigo": true,
+    "catalogo_y_bloqueo_api_reales_en_iframe": true,
+    "lote_tres_paginas_api_reales": true,
+    "codigo_incorrecto_rechazado": true,
+    "pestana_cerrada_distinguida": true,
+    "descargador_cerrado_distinguido": true,
+    "cabeceras_observadas": [
+      {
+        "metodo": "POST",
+        "ruta": "connect",
+        "origin_presente": true,
+        "identidad_presente": false
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": false
+      },
+      {
+        "metodo": "POST",
+        "ruta": "connect",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "POST",
+        "ruta": "complete",
+        "origin_presente": true,
+        "identidad_presente": true
+      },
+      {
+        "metodo": "GET",
+        "ruta": "next",
+        "origin_presente": false,
+        "identidad_presente": true
+      }
+    ],
+    "resultado": "OK"
+  },
+  "flujos_extension_real": {
+    "datos": "ficticios",
+    "api_extension_adaptada": false,
+    "perfil_usuario_accedido": false,
+    "peticiones_reales_sitfa": 0,
+    "resultado": "OK",
+    "pantallas": 4,
+    "lotes": 5,
+    "consultas": 9,
+    "paginas": 19,
+    "navegacion_entre_pantallas": true,
+    "tribunales_no_marcados_excluidos": true,
+    "fechas_litigantes": true,
+    "filtros_litigantes_conservados_y_restaurados": true,
+    "calendarios_mes_anio": true,
+    "radio_y_checkbox_restaurados": true,
+    "descargas_secuenciales": true
+  },
+  "flujos_capturados": {
+    "resultado": "FORMATOS_Y_RESPUESTAS_RECONOCIDOS",
+    "har_leidos": 4,
+    "respuestas_reconocidas": {
+      "litigantes": 7,
+      "calendario_informes": 2,
+      "calendario_medidas": 1
+    },
+    "respuestas_sin_cuerpo": 0,
+    "xls_existentes": [
+      {
+        "pantalla": "litigantes",
+        "formato": "XLS-BIFF",
+        "registros": 4,
+        "formato_reconocido": true,
+        "coincide_con_har": null,
+        "comparacion": "SIN_HAR_DEL_TRIBUNAL_DEL_NOMBRE"
+      },
+      {
+        "pantalla": "calendario_informes",
+        "formato": "XLS-BIFF",
+        "registros": 782,
+        "formato_reconocido": true,
+        "coincide_con_har": false,
+        "comparacion": "REGISTROS_DISTINTOS"
+      }
+    ],
+    "consultas_reales_nuevas": 0,
+    "datos_privados_guardados": false
+  },
+  "conexion_2_0_1_perfil_habitual": "CONFIRMADA_POR_USUARIO",
+  "flujos_2_1_0_perfil_habitual": "NO_DESCARGADOS_EN_VIVO",
+  "nuevas_consultas_reales": 0,
+  "pdf_extension_real": {
+    "datos": "ficticios",
+    "api_extension_adaptada": false,
+    "permisos_manifest_ampliados": false,
+    "activeTab_gesto_accion_real": true,
+    "peticiones_reales_sitfa": 0,
+    "perfil_usuario_accedido": false,
+    "resultado": "OK",
+    "pdfs": 5,
+    "pantallas": 4,
+    "excel_posterior_verificado": true,
+    "continuidad_pdf_excel_mismo_lote": true,
+    "consulta_cambiada_sin_pdf": true,
+    "restauracion_y_cierre": true,
+    "nombres_pdf": [
+      "ESP Residencia Jdo Familia Tome.pdf",
+      "Litigantes Activa Jdo Familia Tome.pdf",
+      "Informes Jdo Familia Tome.pdf",
+      "Medidas por vencer Jdo Familia Tome.pdf"
+    ],
+    "captura_chrome_real": true,
+    "revision_visual_pdf": "OK: cuatro pantallas renderizadas e inspeccionadas"
+  }
+}

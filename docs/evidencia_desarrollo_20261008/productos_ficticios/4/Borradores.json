@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "espera",
+    "subject": "Revisión pestaña \"Espera\" del módulo RUS — Jgdo. L. y G. de Laja",
+    "to": "ficticio@example.test",
+    "cc": "copia@example.test",
+    "body": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a Residencial, Ambulatorio, FAE y DCE y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+    "record_ids": [
+      "r0",
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "attachments_pending": false,
+    "requires_human_review": true
+  },
+  {
+    "kind": "programa_espera",
+    "subject": "Lista de espera — PRM FICTICIO — Jgdo. L. y G. de Laja",
+    "to": "ficticio@example.test",
+    "cc": "copia@example.test",
+    "body": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de PRM FICTICIO, correspondientes a Jgdo. L. y G. de Laja. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,",
+    "record_ids": [
+      "r0",
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "attachments_pending": true,
+    "requires_human_review": true
+  }
+]

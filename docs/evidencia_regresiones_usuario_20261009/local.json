@@ -1,0 +1,51 @@
+{
+  "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+  "checked_at": "2026-10-09T14:09:05.216636+00:00",
+  "data": "synthetic_only",
+  "institutional_requests": 0,
+  "real_outlook": false,
+  "python": "3.12.14",
+  "platform": "Linux/Xvfb",
+  "suites": {
+    "assistant": {
+      "tests": "616",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "11",
+      "time": "70.403",
+      "stdout_sha256": "544e9b412bbf5217414c602e3553e46197b6cc855f67a2068b6d193aeac14726"
+    },
+    "downloader": {
+      "tests": "251",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "43.189",
+      "stdout_sha256": "e8c0566c2477b43c68946565d0fe0cffbe283d4ec500eb1173c6c43e7b2eca81"
+    }
+  },
+  "golden_products": 17,
+  "har_structure": {
+    "argument_count": 6,
+    "new_espera_records_without_links": 16,
+    "new_informes_records_without_links": 12,
+    "diary_popup_responses_in_supplied_har": 0,
+    "raw_har_committed": false,
+    "supplied_har_observed_followup_popup_kinds": [
+      11,
+      13
+    ],
+    "prior_cumplimiento_popup_kind": 12,
+    "supplied_har_orders_popup_kind": 10
+  },
+  "complete_suites_executed_commit": "d6ec1b4018705e437e968af8d4727ab9cc4bb03e",
+  "windows_test_adjustments": {
+    "files": [
+      "descargador/test_experiencia.py",
+      "descargador/test_reutilizacion_local.py"
+    ],
+    "local_focused_passed": 9,
+    "application_code_changed": false
+  },
+  "real_judicial_files_committed": false
+}

@@ -1,0 +1,41 @@
+{
+  "datos": "ficticios",
+  "api_extension_adaptada": false,
+  "permisos_manifest_ampliados": false,
+  "activeTab_gesto_accion_real": true,
+  "peticiones_reales_sitfa": 0,
+  "perfil_usuario_accedido": false,
+  "resultado": "OK",
+  "pdfs": 5,
+  "pantallas": 4,
+  "excel_posterior_verificado": true,
+  "continuidad_pdf_excel_mismo_lote": true,
+  "consulta_cambiada_sin_pdf": true,
+  "restauracion_y_cierre": true,
+  "nombres_pdf": [
+    "ESP Residencia Jdo Familia Tome.pdf",
+    "Litigantes Activa Jdo Familia Tome.pdf",
+    "Informes Jdo Familia Tome.pdf",
+    "Medidas por vencer Jdo Familia Tome.pdf"
+  ],
+  "captura_chrome_real": true,
+  "pdf_sin_encabezado_ni_margen": true,
+  "cabeceras_td_vacias": true,
+  "pdfs_regresion_selectores_vacios": 2,
+  "controles_y_rotulos_restituidos": [
+    {
+      "tribunal": "113",
+      "modalidad": "2",
+      "pestana": "tdCumplimiento",
+      "filtro_fechas": true
+    },
+    {
+      "tribunal": "113",
+      "modalidad": "2",
+      "pestana": "tdCumplimiento",
+      "filtro_fechas": false
+    }
+  ],
+  "contexto_visible_en_pixeles": true,
+  "contexto_alterado_sin_pdf": true
+}
