@@ -1,8 +1,15 @@
 """Contrato explícito de las piezas entregadas juntas; no consulta RUS."""
 
 from pathlib import Path
+import sys
 
-EXTENSION_DIR = Path(__file__).resolve().parent / 'extension'
+
+def extension_dir():
+    """Carpeta que Chrome debe cargar: junto al código o, en el EXE, en la raíz de la entrega (build_integral.ps1)."""
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).resolve().parent.parent / 'extension'
+    return Path(__file__).resolve().parent / 'extension'
+
 
 PROTOCOLS = {
     'bitacoras_lectura': 1,
@@ -52,7 +59,7 @@ def verify_extension(bridge):
             + '; esta herramienta requiere '
             + VERSION
             + '). En chrome://extensions quita «SITFA · Descargador local integral» y pulsa Cargar descomprimida con la carpeta '
-            + str(EXTENSION_DIR)
+            + str(extension_dir())
             + '. Luego abre una nueva conexión desde SITFA.'
         )
     return {'version': result.get('version', 'sin versión'), 'protocolos': dict(PROTOCOLS)}

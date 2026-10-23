@@ -835,7 +835,9 @@ class Application:
             TribunalPicker(self.root, self.catalog['tribunales'], self.selected_tribunals or (), self.select_tribunals)
 
     def setup(self):
-        directory = Path(__file__).resolve().parent / 'extension'
+        from contrato_integral import extension_dir
+
+        directory = extension_dir()
         self.root.clipboard_clear()
         self.root.clipboard_append(str(directory))
         self.root.update()

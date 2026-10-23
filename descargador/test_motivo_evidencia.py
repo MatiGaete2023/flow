@@ -6,7 +6,10 @@ import time
 import pytest
 
 import motor as m
-from contrato_integral import EXTENSION_DIR, PROTOCOLS, VERSION, verify_extension
+from pathlib import Path
+import sys
+
+from contrato_integral import PROTOCOLS, VERSION, extension_dir, verify_extension
 from puente import Bridge
 
 
@@ -59,5 +62,12 @@ def test_extension_de_otra_carpeta_se_identifica_con_la_ruta_a_cargar():
     with pytest.raises(m.PocError) as error:
         verify_extension(Capacidades('2.8.0', anterior))
     texto = str(error.value)
-    assert 'copia anterior' in texto and '2.8.0' in texto and VERSION in texto and str(EXTENSION_DIR) in texto
+    assert 'copia anterior' in texto and '2.8.0' in texto and VERSION in texto and str(extension_dir()) in texto
     assert verify_extension(Capacidades(VERSION, dict(PROTOCOLS)))['version'] == VERSION
+
+
+def test_en_el_exe_la_extension_esta_en_la_raiz_de_la_entrega(monkeypatch, tmp_path):
+    # Revisión Codex (PR #53): build_integral.ps1 copia extension/ junto a SITFA_Descargador/, no dentro.
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(sys, 'executable', str(tmp_path / 'SITFA_Descargador' / 'SITFA_Descargador.exe'))
+    assert extension_dir() == Path(tmp_path).resolve() / 'extension'
