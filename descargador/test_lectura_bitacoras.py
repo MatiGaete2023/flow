@@ -220,7 +220,7 @@ def test_version_incompatible_fails_before_query(tmp_path, version):
     data = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))
     assert result['estado'] == 'INCOMPLETA' and not bridge.openings
     assert not data['consultas'] and not data['registros']
-    assert 'versión distinta' in result['detalle']
+    assert 'copia anterior' in result['detalle'] and version in result['detalle']
 
 
 def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):

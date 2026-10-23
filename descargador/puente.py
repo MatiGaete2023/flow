@@ -11,6 +11,23 @@ import time
 
 from motor import PocError
 
+# Mismo vocabulario fijo que extension/conexion.js; nunca datos de causas.
+EVIDENCE_REASONS = frozenset(
+    (
+        'estructura',
+        'sesion',
+        'cambio',
+        'pantalla',
+        'tiempo',
+        'pagina',
+        'acceso',
+        'permiso',
+        'pestaña',
+        'ventana',
+        'captura',
+    )
+)
+
 
 class Bridge:
     def __init__(self, emit=lambda *args: None, port=0):
@@ -232,12 +249,16 @@ class Bridge:
                     'EVIDENCE_CAPTURE': 'No se pudo capturar la consulta vacía. Mantén SITFA visible, pulsa el icono de la extensión desde SITFA y vuelve a conectar. Los archivos guardados se conservan.',
                     'EVIDENCE_OPEN': 'No se pudo cargar la vista SITFA para generar el PDF de la consulta vacía. Revisa la sesión y actualiza la extensión y el descargador juntos. Los archivos guardados se conservan.',
                 }
-                error = PocError(
-                    messages.get(
-                        result.get('error'),
-                        'La extension no pudo completar la consulta. Revise su pestaña de conexión y la sesión SITFA.',
-                    )
+                text = messages.get(
+                    result.get('error'),
+                    'La extension no pudo completar la consulta. Revise su pestaña de conexión y la sesión SITFA.',
                 )
+                if (
+                    result.get('error') in ('EVIDENCE_CAPTURE', 'EVIDENCE_OPEN')
+                    and result.get('motivo') in EVIDENCE_REASONS
+                ):
+                    text += ' Motivo técnico: ' + result['motivo'] + '.'
+                error = PocError(text)
                 error.code = result.get('error') if result.get('error') in messages else 'SITFA_TASK'
                 raise error
             return result.get('result')

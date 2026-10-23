@@ -332,8 +332,8 @@ async def main():
                 try:
                     await asyncio.to_thread(checked_runner.run, Batch(('113',), ('2',), ('Cumplimiento',)), output)
                     raise AssertionError('No aceptar contexto alterado entre validación y captura')
-                except m.PocError:
-                    pass
+                except m.PocError as error:
+                    assert str(error).endswith('Motivo técnico: cambio.'), error
                 folder = Path(next(v for n, v in reversed(events) if n == 'folder'))
                 assert not list(folder.glob('*.pdf'))
                 assert len(pixels) == 2 and len(inspections) == 3
