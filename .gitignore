@@ -12,3 +12,25 @@ build/
 pytest-cache-files-*/
 src/nurus/personal/_build_meta.py
 .verificacion/
+
+# Datos: nunca versionar copias de SITFA, RUS, Outlook ni credenciales. Lo ya versionado sigue versionado;
+# un archivo nuevo de estos tipos exige una excepción abajo o `git add -f` tras comprobar que es ficticio
+# (tools/check_real_ids.py y tools/check_contactos.py).
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.pdf
+*.zip
+*.doc
+*.docx
+*.har
+*.msg
+*.eml
+.env*
+*.pem
+*.key
+# Excepciones: plantillas y fixtures ficticios que el código o las pruebas necesitan.
+!src/nurus/personal/plantillas_word/*/*.docx
+!contracts/*/fixtures/*.zip
+!docs/evidencia_p0/golden/**

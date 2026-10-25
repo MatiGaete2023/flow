@@ -53,6 +53,9 @@ jobs:
       - name: Control de identidades antes de instalar o generar artefactos
         run: python tools/check_real_ids.py
 
+      - name: Control de correos y RIT antes de instalar o generar artefactos
+        run: python tools/check_contactos.py
+
       - name: Versiones desde sus fuentes únicas
         run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
 

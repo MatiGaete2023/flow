@@ -9,6 +9,7 @@ cd "$(dirname "$0")/.."
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 run() { echo "== $*"; "$@"; }
 run python tools/check_real_ids.py
+run python tools/check_contactos.py
 run python tools/estado.py validar
 run python tools/check_links.py
 run python -m ruff check --select E9,F63,F7,F82,F401,F841 src descargador tools --extend-exclude src/nurus/personal/motor
