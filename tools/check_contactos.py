@@ -3,8 +3,8 @@
 Complementa tools/check_real_ids.py (RUT) con dos identidades que ese control no ve:
 
 - Correos: se aceptan los dominios reservados para ejemplos (RFC 2606: .example, .test, .invalid, .localhost y
-  example.com/.net/.org), los dominios con una etiqueta «example» o «ejemplo» y las direcciones institucionales
-  de tools/contactos_permitidos.txt.
+  example.com/.net/.org), los dominios con una etiqueta «example» o «ejemplo» y el CC institucional, leído de
+  su única fuente (src/nurus/services/policy.py, WP-30) sin importarla: este control corre antes de instalar.
 - RIT (letra-rol-año): se acepta el año 2099, convención para causas ficticias.
 
 Los correos y RIT presentes el 25 de octubre de 2026 constan como huellas SHA-256 en el mismo archivo para no
@@ -20,6 +20,7 @@ Código de salida 1 si hay hallazgos y 2 si la revisión no se completa. Nunca i
 """
 
 import argparse
+import ast
 import hashlib
 import re
 import subprocess
@@ -30,6 +31,7 @@ import check_real_ids as ids  # mismo directorio: lectura de texto, Office y ZIP
 
 ROOT = ids.ROOT
 ALLOWLIST = ROOT / "tools" / "contactos_permitidos.txt"
+POLICY = ROOT / "src" / "nurus" / "services" / "policy.py"
 _LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
 EMAIL = re.compile(rf"([A-Za-z0-9._%+-]+)@((?:{_LABEL}\.)+[A-Za-z]{{2,24}})(?![A-Za-z0-9])")
 RIT = re.compile(r"(?<![\w-])([A-Z])\s*-\s*(\d{1,6})\s*-\s*((?:19|20)\d{2})(?![\w])")
@@ -55,6 +57,15 @@ def load_allowlist(*, stage: bool = False) -> set[str]:
             return set()
         content = ALLOWLIST.read_text(encoding="utf-8")
     return {line.strip().lower() for line in content.splitlines() if line.strip() and not line.startswith("#")}
+
+
+def institutional() -> str:
+    """MANDATORY_CC de policy.py como literal; sin él, el control no se completa."""
+    for node in ast.parse(POLICY.read_text(encoding="utf-8")).body:
+        if isinstance(node, ast.Assign) and [getattr(t, "id", None) for t in node.targets] == ["MANDATORY_CC"]:
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                return node.value.value.lower()
+    raise ValueError("policy.py no define MANDATORY_CC como texto; revisión incompleta")
 
 
 def reserved(domain: str) -> bool:
@@ -117,7 +128,7 @@ def _main(argv: list[str]) -> int:
         paths = [candidate for path in paths for candidate in (path.rglob("*") if path.is_dir() else [path])]
     else:
         paths = ids.tracked_files()
-    findings = scan(paths, load_allowlist(stage=args.stage), stage=args.stage)
+    findings = scan(paths, load_allowlist(stage=args.stage) | {institutional()}, stage=args.stage)
     for label, line, kind, masked in findings:
         print(f"{label}:{line}: {kind} sin constancia de ficticio ({masked})")
     if findings:

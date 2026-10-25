@@ -1,7 +1,6 @@
 # Control de tools/check_contactos.py. Una entrada por línea; las que empiezan con # se ignoran.
-#
-# Direcciones institucionales que el código usa a propósito (en claro).
-ucc_concepcion@pjud.cl
+# El CC institucional no va aquí: se lee de src/nurus/services/policy.py (fuente única, WP-30). Una dirección
+# institucional distinta puede agregarse en claro, una por línea.
 #
 # Huellas SHA-256 de los correos y RIT presentes el 25 de octubre de 2026. No certifican que sean ficticios;
 # evitan bloquear el repositorio actual. No agregar huellas nuevas: los datos de prueba nuevos usan un

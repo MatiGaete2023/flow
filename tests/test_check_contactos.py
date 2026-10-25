@@ -43,17 +43,26 @@ def test_dominios_reservados_e_institucional_pasan(tmp_path, monkeypatch):
             INSTITUCIONAL.upper(),
         ]
     )
-    assert revisar(tmp_path, monkeypatch, texto, [INSTITUCIONAL]) == 0
+    assert revisar(tmp_path, monkeypatch, texto) == 0
 
 
-def test_institucional_sin_lista_falla(tmp_path, monkeypatch):
-    assert revisar(tmp_path, monkeypatch, INSTITUCIONAL) == 1
+def test_institucional_sale_de_policy_y_otra_direccion_institucional_requiere_lista(tmp_path, monkeypatch):
+    assert contactos.institutional() == INSTITUCIONAL
+    otra = 'otra_oficina' + AT + 'pjud.cl'
+    assert revisar(tmp_path, monkeypatch, otra) == 1
+    assert revisar(tmp_path, monkeypatch, otra, [otra]) == 0
+
+
+def test_policy_sin_literal_no_certifica(tmp_path, monkeypatch, capsys):
+    (tmp_path / 'policy.py').write_text('MANDATORY_CC = leer()\n', encoding='utf-8')
+    monkeypatch.setattr(contactos, 'POLICY', tmp_path / 'policy.py')
+    assert revisar(tmp_path, monkeypatch, 'sin datos') == 2
 
 
 def test_identificadores_pegados_no_crean_una_direccion_nueva(tmp_path, monkeypatch):
     # ID de prueba parametrizada: «dirección-DIRECCIÓN» sin espacio entre ambas.
     texto = 'test_cc[' + INSTITUCIONAL + '-' + INSTITUCIONAL.upper() + ']'
-    assert revisar(tmp_path, monkeypatch, texto, [INSTITUCIONAL]) == 0
+    assert revisar(tmp_path, monkeypatch, texto) == 0
 
 
 def test_rit_falla_enmascarado_y_el_anio_2099_pasa(tmp_path, monkeypatch, capsys):
