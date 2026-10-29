@@ -912,3 +912,17 @@ def test_cli_regenerate(tmp_path, monkeypatch, capsys):
                                       '--output-dir', str(tmp_path / 'r2')])
     app.main()
     assert json.loads(capsys.readouterr().out)['registros'] == 5
+
+
+def test_too_long_destination_is_rejected_before_processing(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    largo = tmp_path / ('x' * (app.RUTA_MAXIMA - app.RESERVA_RUTA - len(str(tmp_path))))
+    with pytest.raises(ValueError, match='demasiado larga para Windows'):
+        app.generar(lotes, largo, CORTE, bitacoras=diaries)
+    with pytest.raises(ValueError, match='demasiado larga para Windows'):
+        app.regenerar(lotes[0] / 'resumen.json', largo)
+    assert not list(tmp_path.glob('x*'))
+    justo = tmp_path / ('y' * (app.RUTA_MAXIMA - app.RESERVA_RUTA - len(str(tmp_path)) - 1))
+    report = app.generar(lotes, justo, CORTE, bitacoras=diaries)
+    assert report['registros'] == 5
+    assert max(len(str(p)) for p in justo.iterdir()) <= app.RUTA_MAXIMA - len(app.EN_CURSO) - 4

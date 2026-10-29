@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.5
+# Meta 4 · Registros y bitácoras — 2.5.1
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -88,6 +88,12 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.5.1
+
+- **Rutas largas en Windows.** Una carpeta de destino profunda (por ejemplo, dentro de otra carpeta de resultados) superaba el límite de 260 caracteres de Windows y fallaba con `[WinError 3]`. Ahora la ruta se comprueba antes de procesar y el mensaje indica el largo máximo del destino (199 caracteres). Los nombres de carpeta son más cortos (sin microsegundos) y los temporales también.
+- Si la ruta final de los archivos supera 218 caracteres, el aviso final advierte que Excel podría no abrirlos.
+- Recomendación: deja la herramienta y los resultados en una carpeta corta, por ejemplo `D:\Meta4`.
 
 ## Cambios 2.5
 

@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.5'
+VERSION = '2.5.1'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -36,6 +36,10 @@ ROJO = 'FFC7CE'
 AMARILLO = 'FFF2CC'
 SALIDAS = ('Resultado META4', 'Salida META4')
 EN_CURSO = '.en-curso-'
+# Windows no crea rutas de más de 259 caracteres. Se reserva la carpeta temporal y el nombre
+# de archivo más largo ('META 4 - actualizado AAAA-MM - parcial.xlsx').
+RUTA_MAXIMA = 259
+RESERVA_RUTA = len(EN_CURSO) + 4 + 1 + 45
 ALIAS_COLUMNAS = {'RUT RCEI': 'RUT', 'NOMBRE MENOR': 'NOMBRE'}
 IDENTIDAD = ('tribunal_codigo', 'causa_id', 'ingreso_id')
 NO_COMPLETADA = 'LECTURA NO COMPLETADA'
@@ -811,11 +815,23 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     return report
 
 
-def _en_carpeta_nueva(destino, trabajo_fn):
-    """Escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial."""
+def validar_destino(destino):
+    """Rechaza antes de procesar una carpeta de salida cuya ruta Windows no podría crear."""
+    destino = Path(destino)
+    largo = len(str(destino)) + RESERVA_RUTA
+    if largo > RUTA_MAXIMA:
+        raise ValueError(
+            f'La ruta de la carpeta de resultados es demasiado larga para Windows ({len(str(destino))} caracteres; '
+            f'máximo {RUTA_MAXIMA - RESERVA_RUTA}). Elige una carpeta de destino más corta, por ejemplo D:\\Meta4, '
+            f'y no dentro de otra carpeta de resultados.\n\nDestino elegido: {destino.parent}')
     if destino.exists():
         raise ValueError('La carpeta de salida ya existe; indica una carpeta nueva.')
-    trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(4))
+
+
+def _en_carpeta_nueva(destino, trabajo_fn):
+    """Escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial."""
+    validar_destino(destino)
+    trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(2))
     trabajo.mkdir(parents=True)
     try:
         report = trabajo_fn(trabajo)
@@ -878,6 +894,7 @@ def regenerar(registros, destino, corte=None, emission=None, template=None):
     destino = Path(destino).expanduser().resolve()
     if not registros.is_file():
         raise ValueError('Elige el archivo Registros.xlsx revisado.')
+    validar_destino(destino)
     template = Path(template).expanduser().resolve() if template else None
     if template and not template.is_file():
         raise ValueError('No existe la plantilla indicada.')
@@ -956,8 +973,7 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     raiz_bitacoras = raices(bitacoras) if bitacoras else origen
     if not all(p.is_dir() for p in raiz_bitacoras):
         raise ValueError('La carpeta de bitácoras no existe.')
-    if destino.exists():
-        raise ValueError('La carpeta de salida ya existe; indica una carpeta nueva.')
+    validar_destino(destino)
     template = Path(template).expanduser().resolve() if template else None
     if template and not template.is_file():
         raise ValueError('No existe la plantilla indicada.')

@@ -123,3 +123,11 @@ def test_regenerates_from_reviewed_registros(ventana, tmp_path, monkeypatch):
     assert 'Regenerado desde Registros revisado. Generados 5 registros' in app.status.get(), shown[-1]
     assert Path(app.output).name.endswith(' regenerado')
     assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()
+
+
+def test_output_folder_name_is_short_and_unique(tmp_path):
+    first = Meta4.nueva_salida(tmp_path, ' regenerado')
+    assert len(first.name) == len('Resultado META4 2026-10-29 15-09-27 regenerado')
+    first.mkdir()
+    assert Meta4.nueva_salida(tmp_path, ' regenerado').name in (first.name + ' (2)',
+                                                                 Meta4.nueva_salida(tmp_path, ' regenerado').name)

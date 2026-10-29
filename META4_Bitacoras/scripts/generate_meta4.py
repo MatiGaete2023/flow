@@ -1117,7 +1117,7 @@ def save_workbook_atomic(workbook: Workbook, path: Path) -> None:
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(
-            prefix=f"{path.stem}_",
+            prefix="~",  # nombre temporal corto: la ruta completa no debe superar el límite de Windows
             suffix=path.suffix,
             dir=path.parent,
             delete=False,

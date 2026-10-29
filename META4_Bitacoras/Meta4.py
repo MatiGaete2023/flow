@@ -13,6 +13,18 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
 
+EXCEL_RUTA_MAXIMA = 218
+
+
+def nueva_salida(folder, sufijo=''):
+    """Carpeta de resultados con nombre corto: la ruta completa debe caber en el límite de Windows."""
+    base = 'Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S') + sufijo
+    output, n = folder / base, 2
+    while output.exists():
+        output, n = folder / f'{base} ({n})', n + 1
+    return output
+
+
 class App:
     def __init__(self, root):
         self.root = root
@@ -156,7 +168,7 @@ class App:
         except ValueError as exc:
             messagebox.showerror('Revisar datos', str(exc))
             return
-        output = folder / ('Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+        output = nueva_salida(folder)
         self.run(output, lambda: generar(source, output, cutoff, bitacoras=diaries, tribunales=courts),
                  'Generando Meta 4 y consolidados…')
 
@@ -167,8 +179,7 @@ class App:
         path = filedialog.askopenfilename(title='Registros.xlsx revisado', filetypes=[('Excel', '*.xlsx')])
         if not path:
             return
-        output = Path(self.folder.get()).expanduser().resolve() / (
-            'Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f') + ' regenerado')
+        output = nueva_salida(Path(self.folder.get()).expanduser().resolve(), ' regenerado')
         self.run(output, lambda: regenerar(path, output), 'Regenerando Meta 4 desde Registros revisado…')
 
     def run(self, output, task, message):
@@ -220,6 +231,10 @@ class App:
                                     'columna TRIBUNAL no identifica un tribunal (ver ERRORES_Y_ADVERTENCIAS).')
                 warnings.extend(report['avisos_bitacoras'])
                 warnings.extend('Lote con filtros: ' + f for f in report['filtros_registros'])
+                longest = max((len(str(p)) for p in Path(self.output).iterdir()), default=0)
+                if longest > EXCEL_RUTA_MAXIMA:
+                    warnings.append(f'La ruta de los archivos tiene {longest} caracteres: Excel podría no abrirlos '
+                                    f'(máximo {EXCEL_RUTA_MAXIMA}). Usa una carpeta de destino más corta.')
                 self.status.set(text)
                 if warnings:
                     messagebox.showwarning('Archivos generados con avisos', text + '\n\n' + '\n'.join(warnings)

@@ -1,3 +1,11 @@
+META 4 CON BITACORAS 2.5.1 - Verificacion del 29 de octubre de 2026
+
+130 pruebas aprobadas con Python 3.12 y Tk (124 y 1 omitida con Python 3.13
+sin tkinter). Nuevo: destino con ruta demasiado larga rechazado antes de
+procesar (generar y regenerar), sin dejar carpetas; destino en el limite
+genera correctamente; nombre de carpeta de resultados corto y unico.
+No verificado en Windows real en esta sesion.
+
 META 4 CON BITACORAS 2.5 - Verificacion del 29 de octubre de 2026
 
 128 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (123 y 1
