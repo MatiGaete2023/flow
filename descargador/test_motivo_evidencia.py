@@ -71,3 +71,32 @@ def test_en_el_exe_la_extension_esta_en_la_raiz_de_la_entrega(monkeypatch, tmp_p
     monkeypatch.setattr(sys, 'frozen', True, raising=False)
     monkeypatch.setattr(sys, 'executable', str(tmp_path / 'SITFA_Descargador' / 'SITFA_Descargador.exe'))
     assert extension_dir() == Path(tmp_path).resolve() / 'extension'
+
+
+def test_paquete_rechazado_por_el_contrato_muestra_el_motivo(monkeypatch):
+    # Prueba del usuario 29-oct-2026: el error del contrato quedaba oculto tras «No se pudo completar la operación».
+    import queue
+    import contrato_integral
+    from descargador import Application
+    from nurus.capture.contract import CaptureError
+
+    def rechazo(bridge):
+        raise CaptureError('ID vacío o duplicado en incidencias')
+
+    monkeypatch.setattr(contrato_integral, 'verify_extension', rechazo)
+    app = Application.__new__(Application)
+    events = []
+    app.commands = queue.Queue()
+    app.emit = lambda name, value: events.append((name, value))
+
+    class Puente:
+        connected = False
+
+        def close(self):
+            pass
+
+    app.bridge = Puente()
+    app.commands.put(('pipeline', None))
+    app.commands.put(('exit', None))
+    Application.worker(app)
+    assert ('error', 'E_PIPELINE: El paquete no pasó la validación: ID vacío o duplicado en incidencias') in events

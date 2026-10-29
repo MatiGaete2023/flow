@@ -191,3 +191,20 @@ def test_zip_uses_its_shared_reader_before_a_different_installed_release():
     )
     assert result.returncode == 0, result.stderr
     assert Path(result.stdout.strip()) == root.parent / 'src' / 'nurus' / 'bitacora_html.py'
+
+
+def test_incidencias_con_id_unico_tras_resolver_identidades_por_calendario(tmp_path, monkeypatch):
+    # Prueba del usuario 29-oct-2026: «ID vacío o duplicado en incidencias». Las incidencias se numeraban por largo
+    # de la lista; al quitar las IDENTIDAD_INCIERTA resueltas, la siguiente repetía un id existente.
+    import export_csmp_capture
+
+    def resolver_primera(data):
+        return [i['record_id'] for i in data['incidencias'] if i['code'] == 'IDENTIDAD_INCIERTA'][:1]
+
+    monkeypatch.setattr(export_csmp_capture, 'asociar_calendarios', resolver_primera)
+    manifest = diaries(tmp_path / 'anteriores', 2)
+    # Lote sin ids remotos: dos registros INCIERTA (i1, i2); se resuelve el primero.
+    lots = [load_lot(fixture(tmp_path / 'lot'))]
+    capture = read_capture(export_capture(lots, tmp_path / 'asistente.zip', diaries=[manifest], match_diaries=True))
+    ids = [i['incident_id'] for i in capture.rows('incidencias')]
+    assert len(ids) == len(set(ids)) and 'BITACORAS_REUTILIZADAS' in {i['code'] for i in capture.rows('incidencias')}
