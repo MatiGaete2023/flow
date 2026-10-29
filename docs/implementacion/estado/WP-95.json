@@ -1,0 +1,25 @@
+{
+  "titulo": "Fase A: comparación de capturas y revisión por excepción",
+  "ola": 7,
+  "tipo": "C",
+  "depende_de": [
+    {
+      "wp": "WP-94",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "13 de octubre de 2026",
+  "rama": "feat/ejecucion-plan-20261008",
+  "pr": null,
+  "verificacion": "PASA: asistente 918/11, descargador 251/0, golden PASA; identidad real 0; ruff y restricciones PASAN.",
+  "revision": "No riesgoso (decisión j): sin E3.",
+  "auditoria": null,
+  "integrado_en": "feat/ejecucion-plan-20261008",
+  "notas": [
+    "Plan: docs/implementacion/PLAN_FASE_A_20261013.md; ficha con contratos, cambios por archivo y pruebas.",
+    "Planificado el 13 de octubre de 2026 a pedido del usuario, para ejecución por otra IA."
+  ]
+}

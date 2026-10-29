@@ -1,0 +1,22 @@
+{
+  "titulo": "Pruebas de aceptación R-T",
+  "ola": 6,
+  "tipo": "C",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex (ejecutor de WP-60)",
+  "tomado": null,
+  "rama": "wp/WP-60-reglas-limites",
+  "pr": 11,
+  "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "094c77b",
+  "notas": [
+    "Calidad en paralelo:32filasR-T con casos fijos; seis conflictos xfail estrictos propuestos por executor; revisión y verificación independientes pendientes, motor sin cambios.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

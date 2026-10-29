@@ -1,0 +1,298 @@
+name: CSMP Assistant Windows
+
+on:
+  # E4 revisada: código en PR; entrega completa solo bajo demanda.
+  pull_request:
+    branches: ['feat/**']
+    paths:
+      - 'src/**'
+      - 'descargador/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'contracts/**'
+      - 'installer/**'
+      - '*.spec'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Una corrida nueva del mismo evento y rama cancela la anterior. El evento va en el grupo
+# para que un push y un PR no se cancelen entre sí (cada uno corre su propio alcance).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        # Presupuesto de minutos Windows: cada PR corre 3.12; la matriz completa corre al
+        # validar candidato a pedido (workflow_dispatch).
+        python: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.12","3.13","3.14"]') }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Python ${{ matrix.python }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Control de identidades antes de instalar o generar artefactos
+        run: python tools/check_real_ids.py
+
+      - name: Versiones desde sus fuentes únicas
+        run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
+
+      - name: Estado compartido coherente (E1)
+        run: python tools/estado.py validar; if ($LASTEXITCODE -ne 0) { throw 'ESTADO.json no coincide con sus fuentes' }
+
+      - name: Install
+        run: |
+          python -m pip install --require-hashes -r requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación bloqueada' }
+          python -m pip install --no-deps --no-build-isolation .
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación del proyecto' }
+
+      - name: Build wheel
+        run: python -m pip wheel --no-deps --no-build-isolation --wheel-dir dist .
+
+      - name: Verify installed package outside source path
+        run: >-
+          python -I -c "from pathlib import Path;
+          import nurus; from importlib.metadata import version;
+          from nurus.rus.catalog import load_catalog;
+          from nurus.personal.config import defaults;
+          from nurus.personal.template_package import _matrix_patches; import nurus.personal as personal;
+          assert nurus.__version__ == version('nurus'); assert load_catalog();
+          assert len(_matrix_patches()) == 5;
+          template_root = Path(personal.__file__).parent / 'plantillas_word';
+          expected = {'LAJA/NOMENCL.docx','LAJA/PC_IE.docx','LAJA/PC_INFO.docx','MULCHEN/NOMENCL.docx','MULCHEN/PC_IE.docx','MULCHEN/PC_INFO.docx'};
+          actual = {p.relative_to(template_root).as_posix() for p in template_root.rglob('*.docx')}; assert actual == expected;
+          assert defaults()['correos']['plantillas'] and defaults()['textos'];
+          print(nurus.__version__, 'installed resources OK; 5 patches, 6 templates and mail/text defaults verified')"
+
+      - name: Dependency check
+        run: python -m pip check
+
+      - name: Legacy Excel dependency
+        run: python -c "import xlrd; print(xlrd.__version__)"
+
+      - name: Native Excel/Outlook dependency on Windows
+        run: python -c "import win32com.client; print('pywin32 OK')"
+
+      - name: Locked dependency inventory
+        run: python tools/flow_dependency_inventory.py --lock requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock --output artifacts/dependencies-${{ matrix.python }}.json
+
+      - name: Static analysis
+        run: python -m ruff check --select E9,F63,F7,F82,F401,F841 src descargador tools --extend-exclude src/nurus/personal/motor
+
+      - name: Format
+        # WP-61: el formato lo fija ruff (pyproject.toml); motor/ queda excluido salvo decisión expresa.
+        run: python -m ruff format --check src descargador tools tests
+
+      - name: Compile
+        run: python -m compileall -q src tests tools
+
+      - name: Personal GUI smoke
+        timeout-minutes: 2
+        if: matrix.python == '3.12'
+        run: python tools/smoke_personal_gui.py
+
+      - name: Tests
+        timeout-minutes: 12
+        run: python -m pytest -q -o faulthandler_timeout=90
+
+      - name: Fictitious end-to-end products and interface
+        if: matrix.python == '3.12'
+        run: python tools/showcase_products.py
+
+      - name: CSMP capture v1 independent fictitious products
+        if: matrix.python == '3.12'
+        run: python tools/flow_capture_pipeline.py artifacts/captura-v1 --rows 4 --complete
+
+      - name: Deferred institutional acceptance template
+        if: matrix.python == '3.12'
+        run: |
+          $captureSourceCommit = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo identificar el SHA del código descargado' }
+          python tools/flow_acceptance.py init artifacts/ACTA_USO_REAL_NO_EJECUTADA.json --commit $captureSourceCommit --assistant-version $env:ASSISTANT_VERSION --downloader-version $env:DOWNLOADER_VERSION --extension-version $env:DOWNLOADER_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar el acta diferida' }
+
+      - name: Windows interface captures
+        if: always() && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Windows-interface
+          retention-days: 14
+          path: artifacts/*.png
+          if-no-files-found: ignore
+
+      # E4: distribuciones, ejecutables e instaladores solo en candidato explícito.
+      - name: Build Windows distribution
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        shell: pwsh
+        run: |
+          @'
+          import os
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          excluded = {".git", ".pytest_cache", "__pycache__", ".venv", "venv", "node_modules", "artifacts", "dist", "build", "cache", "data"}
+          names = subprocess.check_output(["git", "ls-files", "-z"])
+          destination = Path("dist/CSMP_Assistant_personal_" + os.environ["ASSISTANT_VERSION"] + ".zip")
+          with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for raw in names.split(b"\0"):
+                  if not raw:
+                      continue
+                  name = os.fsdecode(raw)
+                  path = Path(name)
+                  if path.is_absolute() or ".." in path.parts:
+                      raise RuntimeError("La fuente contiene una ruta fuera del checkout")
+                  if any(part in excluded for part in path.parts):
+                      continue
+                  if path.is_symlink():
+                      raise RuntimeError("La fuente no puede incluir enlaces simbólicos")
+                  if path.is_file():
+                      if not path.resolve().is_relative_to(Path.cwd().resolve()):
+                          raise RuntimeError("La fuente apunta fuera del checkout")
+                      archive.write(path, "CSMP_Assistant/" + path.as_posix())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la selección segura de archivos fuente' }
+
+      - name: Source distribution
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 14
+          path: dist/CSMP_Assistant_personal_${{ env.ASSISTANT_VERSION }}.zip
+
+      - name: Verificar lector y empaquetado integral SITFA
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        timeout-minutes: 15
+        shell: pwsh
+        # pip check ya corrió en este job; pruebas del Descargador y de la extensión: workflow descargador-integral.
+        run: |
+          ./tools/build_integral.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Falló paquete CSMP-Descargador' }
+
+      - name: Windows executable
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        shell: pwsh
+        run: |
+          $proof = Get-Content dist/integral/VERIFICACION_CSMP.json -Raw | ConvertFrom-Json
+          if (-not $proof.ok -or -not $proof.frozen -or -not $proof.capture_v1_verified -or -not $proof.capture_pipeline_verified) { throw 'El paquete CSMP no confirmó su arranque, contrato y productos ficticios' }
+          $downloader = Get-Content dist/integral/VERIFICACION_DESCARGADOR.json -Raw | ConvertFrom-Json
+          if (-not $downloader.ok -or -not $downloader.bitacora_button_verified -or -not $downloader.shared_bitacora_parser_verified -or -not $downloader.capture_v1_verified) { throw 'Paquete Descargador incompleto' }
+          Copy-Item dist/integral/VERIFICACION_CSMP.json artifacts/package-check.json
+
+      - name: Descargador executable artifact
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows
+          retention-days: 14
+          path: dist/integral/SITFA_Descargador/
+          if-no-files-found: error
+
+      - name: Artefacto integral CSMP y Descargador
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Descargador-Integral-${{ env.ASSISTANT_VERSION }}-SITFA-${{ env.DOWNLOADER_VERSION }}
+          retention-days: 30
+          path: dist/integral/
+          if-no-files-found: error
+
+      - name: Executable artifact
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Integral-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 14
+          path: dist/integral/CSMP_Integral/
+          if-no-files-found: error
+
+      - name: Wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nurus-wheel-${{ matrix.os }}-py${{ matrix.python }}
+          retention-days: 14
+          path: |
+            dist/*.whl
+            artifacts/dependencies-${{ matrix.python }}.json
+            requirements/windows-py${{ matrix.python == '3.12' && '312' || matrix.python == '3.13' && '313' || '314' }}.lock
+
+      - name: Measure native table redraws
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        run: python tools/benchmark_interface.py --rows 1000 10000 --repeats 10
+
+      - name: Build and verify Windows installer
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          . ./tools/windows_process_check.ps1
+          $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $compiler) {
+            choco install innosetup --yes --no-progress --execution-timeout=180
+            if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Inno Setup' }
+            $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $compiler) { throw 'No se encuentra Inno Setup' }
+          Write-Host 'INICIO: compilar instalador'
+          & $compiler "/DAppVersion=$env:ASSISTANT_VERSION" installer/CSMP.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la construcción del instalador' }
+          Write-Host 'APROBADO: compilar instalador'
+          $installer = Get-ChildItem dist/Instalar_CSMP_*_Windows.exe | Select-Object -First 1
+          $destination = Join-Path $env:RUNNER_TEMP 'CSMP instalado'
+          . ./tools/verify_installer.ps1
+          $expectedCommit = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo obtener SHA de la prueba' }
+          Invoke-InstallerVerification -Installer $installer.FullName -ExpectedSourceCommit $expectedCommit -Destination $destination -EvidenceDirectory 'artifacts'
+
+      - name: Installer diagnostics
+        if: always() && github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Installer-diagnostics
+          retention-days: 14
+          path: |
+            artifacts/installer-*.log
+            artifacts/installed-package-check*.json
+            artifacts/delivery-verification.json
+            artifacts/dependencies*.json
+            artifacts/package-check*.json
+          if-no-files-found: ignore
+
+      - name: Installer and measurements
+        if: github.event_name == 'workflow_dispatch' && matrix.python == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSMP-Instalador-Windows-${{ env.ASSISTANT_VERSION }}
+          retention-days: 30
+          path: |
+            dist/Instalar_CSMP_*_Windows.exe
+            artifacts/performance.json
+            artifacts/installed-package-check.json
+            artifacts/delivery-verification.json
+            artifacts/dependencies*.json
+            requirements/windows-py312.lock
+            artifacts/package-check.json
+            artifacts/ACTA_USO_REAL_NO_EJECUTADA.json
+            artifacts/productos-ficticios/
+            artifacts/captura-v1/

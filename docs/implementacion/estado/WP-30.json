@@ -1,0 +1,22 @@
+{
+  "titulo": "CC fijo con una sola fuente",
+  "ola": 3,
+  "tipo": "M",
+  "depende_de": [
+    "WP-21"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T11:20:00-03:00",
+  "rama": "wp/WP-30-cc-unico",
+  "pr": 16,
+  "verificacion": "PASA (verificacion/WP-30.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-23 (PR #15). cc_obligatorio queda en correos_base.json sin lector: quitarlo rompe la paridad golden (conflicto abierto).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

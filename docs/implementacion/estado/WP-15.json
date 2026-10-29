@@ -1,0 +1,24 @@
+{
+  "titulo": "Extractor HAR anónimo",
+  "ola": 1,
+  "tipo": "C",
+  "depende_de": [
+    "WP-00"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex (ejecutor de WP-15)",
+  "tomado": null,
+  "rama": "wp/WP-15-har",
+  "pr": 8,
+  "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+  "revision": "APROBADO",
+  "auditoria": "CONFORME",
+  "integrado_en": "a3c037d",
+  "notas": [
+    "Recuperación nueva d40a655: tres pruebas HAR sintéticas, apertura exclusiva sin sobrescritura incluso concurrente. Verificación local PASA; controles independientes en curso.",
+    "Corrección ba18ff1: listas permitidas de estructura y marcadores para desconocidos; reviewer APROBADO. Descargador local204/62; verificación y Windows pendientes.",
+    "CI positiva sobre árbol saneado6c9cefe: runs38008362069 Assistant y38008362082 Descargador en progreso; Linux y alineación repetidas por incorporarbase625.",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

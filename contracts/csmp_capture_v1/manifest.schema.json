@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:csmp:capture:1",
+  "title": "CSMP_CAPTURE_V1",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "capture_id",
+    "captured_at",
+    "downloader",
+    "mapping_version",
+    "contains_sensitive_data",
+    "originals_authorized",
+    "queries",
+    "files",
+    "table_states"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "CSMP_CAPTURE"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$"
+    },
+    "capture_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "captured_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})?$"
+    },
+    "mapping_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_features": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "downloader": {
+      "type": "object",
+      "required": [
+        "version",
+        "commit"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "contains_sensitive_data": {
+      "type": "boolean"
+    },
+    "originals_authorized": {
+      "type": "boolean"
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "query_id",
+          "source_system",
+          "screen",
+          "tab",
+          "court_code",
+          "court_name",
+          "modality_code",
+          "coverage",
+          "captured_at",
+          "filters_json",
+          "expected_pages",
+          "saved_pages",
+          "period_from",
+          "period_to",
+          "time_zone",
+          "history_complete",
+          "institutional_verified",
+          "error"
+        ],
+        "properties": {
+          "query_id": {
+            "type": "string"
+          },
+          "source_system": {
+            "type": "string"
+          },
+          "screen": {
+            "type": "string"
+          },
+          "tab": {
+            "type": "string"
+          },
+          "court_code": {
+            "type": "string"
+          },
+          "court_name": {
+            "type": "string"
+          },
+          "modality_code": {
+            "type": "string"
+          },
+          "coverage": {
+            "enum": [
+              "NO_SOLICITADA",
+              "NO_CONSULTADA",
+              "COMPLETA",
+              "VACIA_COMPROBADA",
+              "PARCIAL",
+              "FALLIDA",
+              "CANCELADA",
+              "IDENTIDAD_INCIERTA",
+              "NO_DISPONIBLE"
+            ]
+          },
+          "captured_at": {
+            "type": "string"
+          },
+          "filters_json": {
+            "type": "string"
+          },
+          "expected_pages": {
+            "type": "string"
+          },
+          "saved_pages": {
+            "type": "string"
+          },
+          "period_from": {
+            "type": "string"
+          },
+          "period_to": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "history_complete": {
+            "type": "string"
+          },
+          "institutional_verified": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "maxItems": 2047,
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "bytes",
+          "type"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(data|originales|evidencias|consolidado)/[^\\\\]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 83886080
+          },
+          "type": {
+            "enum": [
+              "normalized_table",
+              "original",
+              "consolidated_workbook"
+            ]
+          },
+          "table": {
+            "enum": [
+              "consultas",
+              "registros",
+              "bitacoras",
+              "calendarios",
+              "historia_tramites",
+              "documentos",
+              "incidencias"
+            ]
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "normalized_table"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "table",
+                "rows"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "consolidated_workbook"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "path": {
+                  "const": "consolidado/consolidado.xlsx"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "table_states": {
+      "type": "object",
+      "required": [
+        "consultas",
+        "registros",
+        "bitacoras",
+        "calendarios",
+        "historia_tramites",
+        "documentos",
+        "incidencias"
+      ],
+      "properties": {
+        "consultas": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "registros": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "bitacoras": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "calendarios": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "historia_tramites": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "documentos": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        },
+        "incidencias": {
+          "enum": [
+            "NO_SOLICITADA",
+            "NO_CONSULTADA",
+            "COMPLETA",
+            "VACIA_COMPROBADA",
+            "PARCIAL",
+            "FALLIDA",
+            "CANCELADA",
+            "IDENTIDAD_INCIERTA",
+            "NO_DISPONIBLE"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

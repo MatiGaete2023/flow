@@ -1,0 +1,21 @@
+{
+  "titulo": "Dividir DiaryRunner.run",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    "WP-33"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": null,
+  "rama": "wp/WP-62-dividir-diaryrunner",
+  "pr": 29,
+  "verificacion": "PASA (verificar_wp.py tras integrar, 11 de octubre de 2026)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "7921e95",
+  "notas": [
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

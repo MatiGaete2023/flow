@@ -1,0 +1,28 @@
+{
+  "titulo": "Captura PDF de consulta vacía sin espera indefinida",
+  "ola": 8,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-56",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "j"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "Claude (sesión 01VB84tpYXBaUxLxFtBYLGQx)",
+  "tomado": "16 de octubre de 2026",
+  "rama": "claude/lucid-sagan-hw9ul4",
+  "pr": 50,
+  "verificacion": "PASA sobre fecfe92: Asistente 1.138, Descargador 348; golden sin cambios; identidades, restricciones, Ruff, alcanzabilidad y enlaces PASAN. docs/implementacion/verificacion/WP-57.json.",
+  "revision": "E3 APRUEBA CON CAMBIOS (aplicados): Claude, sesión 01UiipQ3fZdQ8wDJSoFcza3h, 21 de octubre de 2026, independiente del ejecutor; docs/implementacion/revision/E3_INTEGRACION_20261021.md. Revisión dada por cumplida por el usuario.",
+  "auditoria": null,
+  "integrado_en": "PR #50 → feat/ejecucion-plan-20261008 (21 de octubre de 2026)",
+  "notas": [
+    "Prueba del usuario 16-oct: E_PIPELINE «Chrome no respondió a tiempo» en la consulta 8/34, primera sin registros.",
+    "La prueba Playwright con extensión real no corre en este contenedor (Chromium sin Extensions.triggerAction); queda para la CI Windows con workflow_dispatch.",
+    "Integrado tras la E3 del 21-oct-2026 (E3-1 a E3-3 corregidos); aceptación real y actas siguen siendo del usuario."
+  ]
+}

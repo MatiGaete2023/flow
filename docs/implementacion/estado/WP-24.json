@@ -1,0 +1,22 @@
+{
+  "titulo": "Documentación vigente",
+  "ola": 2,
+  "tipo": "E/M",
+  "depende_de": [
+    "WP-20"
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T12:30:00-03:00",
+  "rama": "wp/WP-24-documentacion",
+  "pr": 20,
+  "verificacion": "PASA (verificacion/WP-24.json): enlaces rotos 0",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "Apilado sobre WP-35 (PR #19).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

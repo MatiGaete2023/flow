@@ -1,0 +1,27 @@
+{
+  "titulo": "EF-01: continuación generada y reutilización segura de mediciones",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-89",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/90-ef01",
+  "pr": null,
+  "verificacion": "PASA: verificacion/WP-90.json sobre 883af7d limpio; asistente 887/11/6, descargador 246/62, inventario sin bajas, golden intacto. Reutilización comprobada: misma medición en 0,2 s frente a ~2,5 min; árbol con cambios = vuelve a medir.",
+  "revision": "Revisión propia; E3 independiente no aplica (decisión j: herramientas de verificación, sin zona riesgosa).",
+  "auditoria": null,
+  "integrado_en": "883af7d",
+  "notas": [
+    "Traspaso TRASPASO_PROGRAMADOR_20261012.md, punto 5.1: resto de EF-01.",
+    "estado.py continuacion genera el bloque de CONTINUAR.md desde estado/*.json y linea_base.json; validar falla si está desactualizado.",
+    "verificar_wp.py --reutilizar-medicion: caché local .verificacion/ con clave de árbol limpio + intérprete + plataforma + paquetes + PYTHONPATH + pantalla + herramienta; nunca en CI; solo mediciones completas; controles siempre recalculados.",
+    "Integrado por fast-forward en feat (sin PR, como WP-86) para no disparar Windows por cambios de herramientas; CI rápida corre en el push."
+  ]
+}

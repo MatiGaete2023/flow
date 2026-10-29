@@ -1,0 +1,153 @@
+{
+  "checked_at": "2026-10-09T03:42:01Z",
+  "source_commit": "6d3555a14fe4b6966f5091dc6a7db51a1e54e521",
+  "assistant": {
+    "run_id": 37878632095,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095",
+    "artifacts": [
+      {
+        "id": 11594165533,
+        "name": "RUS-Registro-Actual-Windows",
+        "size_bytes": 11157625,
+        "digest": "sha256:e22bb63eb0286ea30ba36bfcffbbb003eb37da1022b0d4631bdd9b289b407569",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11594165533"
+      },
+      {
+        "id": 11594002109,
+        "name": "CSMP-Instalador-Windows-dev4",
+        "size_bytes": 46502626,
+        "digest": "sha256:9f384fc8ebb1d3d50056d181456207bac0aa3609361977c03b4960e8c9ca16d3",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11594002109"
+      },
+      {
+        "id": 11593867395,
+        "name": "nurus-wheel-windows-latest-py3.12",
+        "size_bytes": 457251,
+        "digest": "sha256:c96a4a351261ce4a6124faf049cf1be8172d05743d44104d151b691f33a50827",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593867395"
+      },
+      {
+        "id": 11593867357,
+        "name": "CSMP-Descargador-Integral-dev4-SITFA-272",
+        "size_bytes": 108094317,
+        "digest": "sha256:939ac0f0a32667d8f56b9b38fed0159e22283c2cf73ecb35f549b8fe4883394f",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593867357"
+      },
+      {
+        "id": 11593746541,
+        "name": "nurus-wheel-windows-latest-py3.13",
+        "size_bytes": 457261,
+        "digest": "sha256:5de45bd0a2e50d01c258b61e3d1111a80038abe7cf146a03613811c86df9765d",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593746541"
+      },
+      {
+        "id": 11593672733,
+        "name": "CSMP-Integral-Windows-dev4",
+        "size_bytes": 67479646,
+        "digest": "sha256:29c09ee690478c467a303144d1355e075676d8247f1af5653caa8ea0841df6a6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593672733"
+      },
+      {
+        "id": 11593508535,
+        "name": "CSMP-Installer-diagnostics",
+        "size_bytes": 177947,
+        "digest": "sha256:fc44f84959ade33f191fd2a9d6810f3371c85c2b5b39374fe3184a7d64fe5a05",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593508535"
+      },
+      {
+        "id": 11593158295,
+        "name": "CSMP-Windows-dev4",
+        "size_bytes": 3076818,
+        "digest": "sha256:878df2fffbce055be65fccea7d2e9fc97daa65cdd3dd63bc4dac117131093d05",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593158295"
+      },
+      {
+        "id": 11593048604,
+        "name": "CSMP-Windows-interface",
+        "size_bytes": 246714,
+        "digest": "sha256:ada3b4615e9e52d570785a55ecd81b0861cbc4e5b3b69a180fa3f2cf3ae9d88e",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11593048604"
+      },
+      {
+        "id": 11592978362,
+        "name": "nurus-wheel-windows-latest-py3.14",
+        "size_bytes": 457763,
+        "digest": "sha256:7365506701ff3363311594e40ffbb814862a5f501c13622aef908cb098eab717",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632095/artifacts/11592978362"
+      }
+    ],
+    "python": [
+      "3.12",
+      "3.13",
+      "3.14"
+    ],
+    "python_312_tests": {
+      "passed": 584,
+      "skipped": 1
+    }
+  },
+  "downloader": {
+    "run_id": 37878632105,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632105",
+    "artifacts": [
+      {
+        "id": 11594120109,
+        "name": "Descargador-SITFA-2.7.2-Windows",
+        "size_bytes": 29186148,
+        "digest": "sha256:39c1d710952e8af435d5fc406a8a908b9ccb1acb62dbaf2711ed0b5e0bedbdd4",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37878632105/artifacts/11594120109"
+      }
+    ],
+    "tests": {
+      "passed": 169,
+      "subtests_passed": 57
+    }
+  },
+  "capture_pipeline_verified_in_frozen_exe_and_installer": true,
+  "joint_source_commit_consistency_verified": true,
+  "installer_data_preserved": true,
+  "artifact_digest_source": "GitHub Actions API; no recomputado localmente",
+  "local_artifact_download": "NO_REALIZADA; intentos previos HTTP 403",
+  "institutional_acceptance": "NO_EJECUTADO",
+  "institutional_access_deferred_by_user": true,
+  "history_pdf_capture": "NO_IMPLEMENTADA",
+  "context_rules_production_enabled": false,
+  "delivered_installer_verification": {
+    "run_id": 37880150341,
+    "job_id": 113657744511,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37880150341",
+    "verification_source_commit": "396a643d7cd5e540ee6b34ffeb9c00708d1c90f6",
+    "binary_source_commit": "6d3555a14fe4b6966f5091dc6a7db51a1e54e521",
+    "reused_installer_run_id": 37878632095,
+    "installation_verified": true,
+    "installed_pipeline_verified": true,
+    "reinstallation_verified": true,
+    "installed_directory_removed": true,
+    "external_synthetic_data_preserved": true,
+    "artifact": {
+      "id": 11593803911,
+      "name": "CSMP-Delivered-Installer-Verification-6d3555a",
+      "size_bytes": 159934,
+      "digest": "sha256:c156770091d2b4b2626cc1ccd0bda199db63386b51982d62458137ded16a0f97",
+      "expires_at": "2027-01-07T03:37:47Z",
+      "url": "https://github.com/MatiGaete2023/flow/actions/runs/37880150341/artifacts/11593803911"
+    },
+    "digest_source": "GitHub Actions API; no recomputado localmente",
+    "evidence_source": "Aserciones ejecutadas en Windows y logs del job; JSON detallado incluido en el artefacto",
+    "institutional_acceptance": "NO_EJECUTADO",
+    "executed_log_lines": [
+      "2026-10-09T03:38:03.9684960Z INICIO: instalación del artefacto publicado (plazo 180 s)",
+      "2026-10-09T03:38:11.9241065Z APROBADO: instalación del artefacto publicado",
+      "2026-10-09T03:38:11.9287396Z INICIO: productos desde artefacto instalado (plazo 180 s)",
+      "2026-10-09T03:38:16.4633902Z APROBADO: productos desde artefacto instalado",
+      "2026-10-09T03:38:16.5339332Z INICIO: reinstalación del artefacto publicado (plazo 180 s)",
+      "2026-10-09T03:38:23.8493850Z APROBADO: reinstalación del artefacto publicado",
+      "2026-10-09T03:38:23.8507163Z INICIO: lanzador de desinstalación (plazo 180 s)",
+      "2026-10-09T03:38:25.3095980Z APROBADO: lanzador de desinstalación",
+      "2026-10-09T03:38:25.9702952Z APROBADO: carpeta de aplicación eliminada y datos externos conservados"
+    ]
+  }
+}

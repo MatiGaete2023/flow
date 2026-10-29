@@ -1,0 +1,190 @@
+{
+  "titulo": "Cierre de la implementación",
+  "ola": 7,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-00",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-01",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-02",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-10",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-11",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-12",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-13",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-14",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-15",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-16",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-17",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-20",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-21",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-22",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-23",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-24",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-30",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-31",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-32",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-33",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-34",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-35",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-40",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-41",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-42",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-43",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-44",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-45",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-50",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-51",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-60",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-62",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-61",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-63",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-80",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-81",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-82",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-83",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-84",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-85",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-86",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [
+    "D7"
+  ],
+  "estado": "BLOQUEADO_USUARIO",
+  "ejecutor": null,
+  "tomado": null,
+  "rama": null,
+  "pr": null,
+  "verificacion": null,
+  "revision": null,
+  "auditoria": null,
+  "integrado_en": null,
+  "notas": [
+    "D7: fusionar a main solo tras el acta final firmada por el usuario.",
+    "11 de octubre de 2026: métricas medidas en docs/implementacion/CIERRE.md; falta CI, acta final y D2. (histórico, superado: CI verde en 14f679d y luego en 32dd14c, runs 38182127247 y 38182124001)",
+    "11 de octubre de 2026: CI verde en 14f679d y paquete conjunto compilado (run 38136720831); falta el acta final y D2.",
+    "WP-63: el cierre requiere WP-02, WP-17, WP-50 y WP-63 integrados como dependencias funcionales; CI verde no sustituye el acta.",
+    "11 de octubre de 2026 (decisión c del usuario): dependencias funcionales WP-02, WP-17, WP-50 y WP-63; WP-61 y WP-80..86 solo de archivo. Pendientes: acta final, D2, acta de 10 ingresos (WP-50), Soporte GitHub (WP-17) y PR #1 a main según D7."
+  ]
+}

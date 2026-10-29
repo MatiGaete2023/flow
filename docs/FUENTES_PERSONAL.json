@@ -1,0 +1,22 @@
+[
+  {
+    "fuente": "Asistente (1).zip",
+    "sha256": "485fb260bd24adaf70fe33fa12486216ce5ddebf4732f285985664e2a8746ad1"
+  },
+  {
+    "fuente": "Creador de Correos.py",
+    "sha256": "d9c30652f7157b050c88136d2cee1e90e33135f0aa32b84baf69c40faa5f71ce"
+  },
+  {
+    "fuente": "Contador de Correos.PY",
+    "sha256": "026e207d0916e6b0fb47eb166e9b3abf26924234fac32f509b2a17da71b0dee1"
+  },
+  {
+    "fuente": "config_correos_csmp.json",
+    "sha256": "e4683aa37e79354a256083b3ec0dd9f65c16a9a8f952692c031d4a0f5c1be120"
+  },
+  {
+    "fuente": "CSMP_2025_Fusionado(2).md",
+    "sha256": "f1e7c3ff33f3e62b7dd867b42339061c799f165cf966f9520dd110cb66a2e59b"
+  }
+]

@@ -1,0 +1,149 @@
+{
+  "titulo": "Formato automático",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-00",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-01",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-02",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-10",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-11",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-12",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-13",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-14",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-15",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-16",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-17",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-20",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-21",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-22",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-23",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-24",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-30",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-31",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-32",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-33",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-34",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-35",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-40",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-41",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-42",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-43",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-44",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-45",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-50",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-51",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-60",
+      "tipo": "archivo"
+    },
+    {
+      "wp": "WP-62",
+      "tipo": "archivo"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": null,
+  "rama": "wp/WP-61-formato",
+  "pr": null,
+  "verificacion": "PASA (592/11/6, 231/62; AST idéntico)",
+  "revision": "Comparación de AST por archivo (formato puro); excepción a E3 autorizada por el usuario",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3",
+  "integrado_en": "bfc73aa",
+  "notas": [
+    "E6: excluye src/nurus/personal/motor/ salvo decisión expresa.",
+    "Integrado en feat el 11 de octubre de 2026 en avance rápido."
+  ]
+}

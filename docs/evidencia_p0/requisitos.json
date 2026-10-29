@@ -1,0 +1,1338 @@
+[
+  {
+    "id": "D-T01",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/lotes.py",
+      "descargador/motor.py"
+    ],
+    "tests": [
+      "descargador/test_lotes.py",
+      "descargador/test_periodos_xls.py"
+    ],
+    "limit": "Fixtures paginación pasan; aceptación institucional por variante pendiente."
+  },
+  {
+    "id": "D-T02",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Catálogo validado en fixtures; falta contraste real de combinaciones."
+  },
+  {
+    "id": "D-T03",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/evidencias.py",
+      "descargador/perfiles.py"
+    ],
+    "tests": [
+      "descargador/test_evidencias.py"
+    ],
+    "limit": "Vacío y evidencia probados localmente; navegador/institución pendiente."
+  },
+  {
+    "id": "D-T04",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/motor.py",
+      "descargador/preferencias.py"
+    ],
+    "tests": [
+      "descargador/test_filtros_respuesta.py"
+    ],
+    "limit": "No repetir aceptación de filtros privados sin sesión autorizada."
+  },
+  {
+    "id": "D-T05",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/filtros_respuesta.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_resultados_ics_semantics.py"
+    ],
+    "limit": "Fechas y períodos fixtures; contraste por año real pendiente."
+  },
+  {
+    "id": "D-T06",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/carga.py",
+      "descargador/perfiles.py"
+    ],
+    "tests": [
+      "descargador/test_carga.py",
+      "descargador/test_fase3.py"
+    ],
+    "limit": "Cobertura temporal de firma no acreditada; probar cada pantalla."
+  },
+  {
+    "id": "D-T07",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/lotes.py",
+      "descargador/pausa.py"
+    ],
+    "tests": [
+      "descargador/test_lotes.py",
+      "descargador/test_recuperacion_flujo.py"
+    ],
+    "limit": "Recuperación técnica local; no certifica selección institucional."
+  },
+  {
+    "id": "D-T08",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/motor.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_poc.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Validación de fixtures; mantener rechazo ante contrato inesperado."
+  },
+  {
+    "id": "D-T09",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "descargador/test_vinculos.py",
+      "tests/test_bitacora_har.py"
+    ],
+    "limit": "Tests de identidad pasan; cotejo RUS y fallas conocidas siguen pendientes."
+  },
+  {
+    "id": "D-T10",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/lectura_bitacoras.py"
+    ],
+    "tests": [
+      "descargador/test_lectura_bitacoras.py"
+    ],
+    "limit": "G1 requiere sesión legítima y muestra por modalidad/pestaña."
+  },
+  {
+    "id": "D-T11",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/personal/bitacoras.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Excel existe en Asistente; falta exportación autónoma P3."
+  },
+  {
+    "id": "D-T12",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py"
+    ],
+    "tests": [],
+    "limit": "Sin extractor general; primero muestras y contrato P9."
+  },
+  {
+    "id": "D-T13",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/evidencias.py"
+    ],
+    "tests": [],
+    "limit": "PDF de evidencia no equivale a documentos por trámite; falta P9."
+  },
+  {
+    "id": "D-T14",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/resultados.py"
+    ],
+    "tests": [
+      "descargador/test_resultados.py",
+      "descargador/test_experiencia.py"
+    ],
+    "limit": "Exportaciones locales con original intacto; Office real pendiente."
+  },
+  {
+    "id": "D-T15",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Contrato CSMP_CAPTURE_V1 aún no existe; P2/P4/P5."
+  },
+  {
+    "id": "D-T16",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/resultados.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "descargador/test_resultados.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Estados legados parciales; falta contrato común y consumidor v1."
+  },
+  {
+    "id": "D-T17",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/excel_presentacion.py",
+      "descargador/resultados.py"
+    ],
+    "tests": [
+      "descargador/test_diseno_productos.py"
+    ],
+    "limit": "No hay Excel 2010 en este Linux; CI Windows no prueba Office 2010."
+  },
+  {
+    "id": "D-T18",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/extension/pagina.js",
+      "descargador/puente.py"
+    ],
+    "tests": [
+      "descargador/test_bitacoras_extension.cjs",
+      "descargador/test_lectura_bitacoras.py"
+    ],
+    "limit": "Solo lectura en rutas revisadas y fixtures; nunca subir material real."
+  },
+  {
+    "id": "D-T19",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/lotes.py",
+      "src/nurus/personal/download_transfer.py"
+    ],
+    "tests": [
+      "descargador/test_recuperacion_flujo.py",
+      "tests/test_download_transfer.py"
+    ],
+    "limit": "Baseline preservado; cualquier adaptación exige nueva regresión."
+  },
+  {
+    "id": "D-T20",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/SITFA_Descargador.spec",
+      "tools/build_integral.ps1"
+    ],
+    "tests": [
+      "tests/test_current_release_contract.py"
+    ],
+    "limit": "CI origen exitoso; nueva distribución y aceptación Windows no ejecutadas."
+  },
+  {
+    "id": "R-T01",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T02",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T03",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T04",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T05",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T06",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T07",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Fallback E-06 conservado; NO_EVALUABLE contextual falta."
+  },
+  {
+    "id": "R-T08",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_espera.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T09",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T10",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T11",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Work advierte contradicción; clasificación agregada todavía falta."
+  },
+  {
+    "id": "R-T12",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T13",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Conflicto C08: falta ficha puede confundirse con falta de columna; no corregir regla unilateralmente."
+  },
+  {
+    "id": "R-T14",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T15",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_cumplimiento.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T16",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/motor/reglas_informes.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Baseline sin cambio; contextual pendiente."
+  },
+  {
+    "id": "R-T17",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad/error local existe; última observación del centro y clasificación contextual no implementadas ni aceptadas."
+  },
+  {
+    "id": "R-T18",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad/error local existe; última observación del centro y clasificación contextual no implementadas ni aceptadas."
+  },
+  {
+    "id": "R-T19",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad/error local existe; última observación del centro y clasificación contextual no implementadas ni aceptadas."
+  },
+  {
+    "id": "R-T20",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad/error local existe; última observación del centro y clasificación contextual no implementadas ni aceptadas."
+  },
+  {
+    "id": "R-T21",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T22",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T23",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T24",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T25",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T26",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Análisis temporal contextual P7/P10 no acreditado; mantener nuevas reglas desactivadas."
+  },
+  {
+    "id": "R-T27",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_rus_reader_and_rules.py"
+    ],
+    "limit": "Incidencias tradicionales existen; falta modelo de hallazgo contextual por regla."
+  },
+  {
+    "id": "R-T28",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py"
+    ],
+    "limit": "Tribunales sin regla configurada advierten; no extrapolar catálogo jurídico."
+  },
+  {
+    "id": "R-T29",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/record_edits.py"
+    ],
+    "tests": [
+      "tests/test_current_work_features.py",
+      "tests/test_personal_flow.py"
+    ],
+    "limit": "Ediciones conservadas en Excel/sesión legado; reimportación v1 aún falta."
+  },
+  {
+    "id": "R-T30",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/outputs.py"
+    ],
+    "tests": [
+      "tests/test_mail_attachment_regressions_20260930.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Nóminas baseline; pendientes pruebas de enlace remoto del nuevo contrato."
+  },
+  {
+    "id": "R-T31",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/outputs.py",
+      "src/nurus/adapters/outlook.py"
+    ],
+    "tests": [
+      "tests/test_outlook_safety.py",
+      "tests/test_outlook_signature_regression_20260914.py"
+    ],
+    "limit": "Guardado solo borrador probado con dobles; textos se remite requieren decisión funcional."
+  },
+  {
+    "id": "R-T32",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Aprobación y toggles de reglas CT no existen; no activarlas en este encargo P0."
+  },
+  {
+    "id": "INT-01",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Excel autónomo legado probado; alcance real pendiente."
+  },
+  {
+    "id": "INT-02",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No existe paquete normalizado."
+  },
+  {
+    "id": "INT-03",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/filtros_respuesta.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_resultados_ics_semantics.py"
+    ],
+    "limit": "Calendarios legados locales; falta normalización v1."
+  },
+  {
+    "id": "INT-04",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/motor.py",
+      "descargador/preferencias.py"
+    ],
+    "tests": [
+      "descargador/test_filtros_respuesta.py"
+    ],
+    "limit": "Filtros y cobertura fixtures; institución pendiente."
+  },
+  {
+    "id": "INT-05",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/carga.py",
+      "descargador/perfiles.py"
+    ],
+    "tests": [
+      "descargador/test_carga.py",
+      "descargador/test_fase3.py"
+    ],
+    "limit": "Pantallas legadas; aceptación por variante pendiente."
+  },
+  {
+    "id": "INT-06",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "descargador/lotes.py",
+      "descargador/pausa.py"
+    ],
+    "tests": [
+      "descargador/test_lotes.py",
+      "descargador/test_recuperacion_flujo.py"
+    ],
+    "limit": "Recuperación legado funciona en fixtures."
+  },
+  {
+    "id": "INT-07",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/evidencias.py",
+      "descargador/perfiles.py"
+    ],
+    "tests": [
+      "descargador/test_evidencias.py"
+    ],
+    "limit": "Vacío con evidencia legado; contraste real pendiente."
+  },
+  {
+    "id": "INT-08",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "descargador/test_vinculos.py",
+      "tests/test_bitacora_har.py"
+    ],
+    "limit": "Identidad fixtures; cotejo real pendiente."
+  },
+  {
+    "id": "INT-09",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py",
+      "src/nurus/bitacora_html.py"
+    ],
+    "tests": [
+      "descargador/test_vinculos.py",
+      "tests/test_bitacora_har.py"
+    ],
+    "limit": "Ingreso incompatible rechazado en fixtures; v1 pendiente."
+  },
+  {
+    "id": "INT-10",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/personal/bitacoras.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Copia íntegra y partición probadas en Asistente; autonomía P3 falta."
+  },
+  {
+    "id": "INT-11",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py"
+    ],
+    "tests": [],
+    "limit": "Historia/PDF sin contrato remoto aceptado."
+  },
+  {
+    "id": "INT-12",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/resultados.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "descargador/test_resultados.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Faltantes legado explícitos; reglas dependientes de ZIP no implementadas."
+  },
+  {
+    "id": "INT-13",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Nueva regla contextual no implementada."
+  },
+  {
+    "id": "INT-14",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Secuencia por observación centro no implementada."
+  },
+  {
+    "id": "INT-15",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/resultados.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "descargador/test_resultados.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Múltiples incidencias legado; nuevo modelo de hallazgos pendiente."
+  },
+  {
+    "id": "INT-16",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/record_edits.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_current_work_features.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Editor masivo legado probado; nueva bandeja no integrada."
+  },
+  {
+    "id": "INT-17",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/outputs.py"
+    ],
+    "tests": [
+      "tests/test_mail_attachment_regressions_20260930.py"
+    ],
+    "limit": "Nóminas locales pasan; no dependen del nuevo ZIP todavía."
+  },
+  {
+    "id": "INT-18",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/resolutions.py",
+      "src/nurus/personal/outputs.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_outlook_safety.py"
+    ],
+    "limit": "Word baseline y dobles Outlook; nueva entrega institucional pendiente."
+  },
+  {
+    "id": "INT-19",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/outputs.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_outlook_safety.py"
+    ],
+    "limit": "Fallas Outlook/contactos aisladas por tests."
+  },
+  {
+    "id": "INT-20",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No hay validador ZIP v1."
+  },
+  {
+    "id": "INT-21",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py"
+    ],
+    "limit": "Excel legado y observaciones preservadas por golden."
+  },
+  {
+    "id": "INT-22",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No hay reimportación de capture_id v1."
+  },
+  {
+    "id": "INT-23",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/product_state.py"
+    ],
+    "tests": [
+      "tests/test_current_work_features.py",
+      "tests/test_operational_products.py"
+    ],
+    "limit": "Obsolescencia y regeneración baseline probadas."
+  },
+  {
+    "id": "INT-24",
+    "state": "PARCIAL",
+    "code": [],
+    "tests": [],
+    "limit": "Importación ZIP sin Descargador falta; Excel local ya funciona."
+  },
+  {
+    "id": "INT-25",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/personal/bitacoras.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Excel habitual autónomo; Excel bitácora depende de Asistente."
+  },
+  {
+    "id": "INT-26",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/extension/pagina.js",
+      "descargador/puente.py",
+      "src/nurus/personal/registration.py"
+    ],
+    "tests": [
+      "descargador/test_bitacoras_extension.cjs",
+      "descargador/test_lectura_bitacoras.py"
+    ],
+    "limit": "Extensión solo lectura y Outlook sin Send; queda una API genérica de registro heredada, sin adaptador institucional. Aislarla del nuevo flujo conforme a A-T15."
+  },
+  {
+    "id": "INT-27",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/app.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_integral_ui.py",
+      "tests/test_personal_flow.py"
+    ],
+    "limit": "11 commits delante de main; copia exacta, UI Xvfb y golden sin cambios funcionales."
+  },
+  {
+    "id": "F00",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Autorización y sesión son responsabilidad humana; prueba real pendiente."
+  },
+  {
+    "id": "F01",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/perfiles.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_flujos.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Plan congelado/catálogo legado; variantes reales pendientes."
+  },
+  {
+    "id": "F02",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/carga.py",
+      "descargador/perfiles.py"
+    ],
+    "tests": [
+      "descargador/test_carga.py",
+      "descargador/test_fase3.py"
+    ],
+    "limit": "Lectura por pantalla conserva cobertura; no prueba todas las variantes reales."
+  },
+  {
+    "id": "F03",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/lectura_bitacoras.py"
+    ],
+    "tests": [
+      "descargador/test_lectura_bitacoras.py"
+    ],
+    "limit": "Cotejo de bitácoras y cobertura requiere G1."
+  },
+  {
+    "id": "F04",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "descargador/vinculos.py"
+    ],
+    "tests": [],
+    "limit": "Extractor opcional no implementado; muestras requeridas."
+  },
+  {
+    "id": "F05",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/motor.py",
+      "descargador/lotes.py"
+    ],
+    "tests": [
+      "descargador/test_poc.py",
+      "descargador/test_lotes.py"
+    ],
+    "limit": "Validadores locales legados; no implementan contrato normalizado."
+  },
+  {
+    "id": "F06",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/bitacora_lote.py",
+      "src/nurus/personal/bitacoras.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Excel habitual independiente; bitácora todavía en Asistente."
+  },
+  {
+    "id": "F07",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Paquete v1 pendiente de G0/G2."
+  },
+  {
+    "id": "F08",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Importación ZIP local pendiente."
+  },
+  {
+    "id": "F09",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Cruce legado C10 e identidad bitácoras; falta modelo combinado por ingreso."
+  },
+  {
+    "id": "F10",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No implementado análisis temporal por centro/ingreso."
+  },
+  {
+    "id": "F11",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/motor/reglas_espera.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_observation_wording_20260922.py"
+    ],
+    "limit": "Reglas tradicionales existen; clasificación contextual no implementada."
+  },
+  {
+    "id": "F12",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/record_edits.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_current_work_features.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Editor legado preserva decisiones; bandeja de hallazgos nueva pendiente."
+  },
+  {
+    "id": "F13",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/outputs.py",
+      "src/nurus/personal/resolutions.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_operational_products.py"
+    ],
+    "limit": "Productos baseline funcionan; integración con contrato v1 pendiente."
+  },
+  {
+    "id": "F14",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/extension/pagina.js",
+      "descargador/puente.py"
+    ],
+    "tests": [
+      "descargador/test_bitacoras_extension.cjs",
+      "descargador/test_lectura_bitacoras.py"
+    ],
+    "limit": "Actuación oficial humana; no automatizar registro ni envío."
+  },
+  {
+    "id": "F15",
+    "state": "PARCIAL",
+    "code": [
+      "descargador/resultados.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "descargador/test_resultados.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Recuperación y avisos legados; archivo de solicitud declarativo pendiente."
+  },
+  {
+    "id": "A-T01",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "P2/P4/P5: no hay contrato ni importador v1; verificar cuatro modalidades y sus fuentes al implementarlos."
+  },
+  {
+    "id": "A-T02",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "El flujo Excel/bitácora legado registra faltantes, pero no hay paquete ni clasificación SOLO_PLANILLA/NO_EVALUABLE integrada."
+  },
+  {
+    "id": "A-T03",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Falta validador ZIP v1 y sustitución atómica de sesión; pruebas de hash legado no acreditan este caso."
+  },
+  {
+    "id": "A-T04",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/bitacora_html.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_bitacora_har.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Identidad remota de bitácoras probada con fixtures; falta relacionador compuesto v1 por ingreso."
+  },
+  {
+    "id": "A-T05",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "No hay reimportación capture_id/hash ni preservación de decisiones sobre un paquete v1."
+  },
+  {
+    "id": "A-T06",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/rus/reader.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_preserved_workbook_export.py"
+    ],
+    "limit": "Excel legado y golden de los tres modos preservados; sin nuevas reglas contextuales ni certificación Office."
+  },
+  {
+    "id": "A-T07",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/table_update.py",
+      "src/nurus/personal/selection.py",
+      "src/nurus/personal/work_view.py"
+    ],
+    "tests": [
+      "tests/test_integral_ui.py"
+    ],
+    "limit": "UI integral probó 1100 filas/selección; faltan múltiples hallazgos y mediciones 100/500/2000 de la cadena nueva."
+  },
+  {
+    "id": "A-T08",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/session.py",
+      "src/nurus/personal/sync.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_review_20260929.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Ediciones y productos de sesión legado probados; aplicar el mismo contrato al nuevo importador."
+  },
+  {
+    "id": "A-T09",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/product_state.py",
+      "src/nurus/personal/product_checks.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_operational_products.py"
+    ],
+    "limit": "Guardas de cambios de decisión/fuente legado existentes; versión de reglas del nuevo paquete aún no integrada."
+  },
+  {
+    "id": "A-T10",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/outputs.py",
+      "src/nurus/personal/roster.py"
+    ],
+    "tests": [
+      "tests/test_personal_batch_revision.py",
+      "tests/test_mail_attachment_regressions_20260930.py"
+    ],
+    "limit": "Nóminas de trabajo legado probadas; falta integración de calendarios v1 y selección independiente de observación nueva."
+  },
+  {
+    "id": "A-T11",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/resolutions.py",
+      "src/nurus/personal/resolution_view.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Plantillas, edición y agrupación Word baseline; no acredita revisión institucional ni generación desde paquete v1."
+  },
+  {
+    "id": "A-T12",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "src/nurus/adapters/outlook.py",
+      "src/nurus/personal/current_tools.py"
+    ],
+    "tests": [
+      "tests/test_outlook_safety.py",
+      "tests/test_review_20260929.py"
+    ],
+    "limit": "Dobles de Outlook verifican Save sin Send y adjuntos; falta Outlook 365 institucional, contactos autorizados y recepción humana."
+  },
+  {
+    "id": "A-T13",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/outputs.py",
+      "src/nurus/adapters/outlook.py"
+    ],
+    "tests": [
+      "tests/test_personal_flow.py",
+      "tests/test_personal_usability_20260921.py"
+    ],
+    "limit": "Análisis y exportación portable funcionan en Linux sin Office; backend nativo sigue siendo opcional según función."
+  },
+  {
+    "id": "A-T14",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/sync.py",
+      "src/nurus/personal/bitacora_lote.py"
+    ],
+    "tests": [
+      "tests/test_audit_integrity_20260928.py",
+      "tests/test_bitacora_lote.py"
+    ],
+    "limit": "Rechazo de identidad ajena legado probado; Excel puede carecer de ID remoto y no autoriza asociación contextual v1."
+  },
+  {
+    "id": "A-T15",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/registration.py",
+      "src/nurus/personal/registration_excel.py",
+      "src/nurus/personal/app.py"
+    ],
+    "tests": [
+      "tests/test_rus_capture.py",
+      "tests/test_registration.py",
+      "tests/test_registration_excel.py"
+    ],
+    "limit": "No se encontró adaptador institucional ni botón de escritura operativo; submit(adapter) existe y llama adapter.save. Aislar esa API en P6; fixtures no habilitan registro real."
+  },
+  {
+    "id": "A-T16",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/work.py",
+      "src/nurus/personal/session.py"
+    ],
+    "tests": [
+      "tests/test_current_release_contract.py",
+      "tests/test_current_work_features.py"
+    ],
+    "limit": "review_store/rus_activity ya no existen en el árbol activo; activity_reviewed se conserva por save/load y no tiene productores actuales. Aislar marcas heredadas sin perder sesión en P6."
+  },
+  {
+    "id": "A-T17",
+    "state": "IMPLEMENTADO",
+    "code": [
+      "src/nurus/personal/config.py",
+      "src/nurus/personal/personalization.py",
+      "src/nurus/personal/template_package.py"
+    ],
+    "tests": [
+      "tests/test_config_migration_regressions_20260914.py",
+      "tests/test_personal_batch_revision.py"
+    ],
+    "limit": "Migraciones idempotentes con backups probadas; configuración personal real del usuario no recibida ni migrada."
+  },
+  {
+    "id": "A-T18",
+    "state": "BLOQUEADO POR PRUEBA REAL",
+    "code": [
+      "CSMP_Experimental.spec",
+      "installer/CSMP.iss",
+      "src/nurus/personal/package_check.py"
+    ],
+    "tests": [
+      "tests/test_windows_installer_contract.py",
+      "tests/test_current_release_contract.py"
+    ],
+    "limit": "CI origen verifica Windows; nueva entrega/Windows 10 sin admin y Office institucional requieren pruebas propias. No asumirlas por usar Linux."
+  },
+  {
+    "id": "A-T19",
+    "state": "NO IMPLEMENTADO",
+    "code": [],
+    "tests": [],
+    "limit": "Excel legado funciona localmente; la entrada ZIP autónoma todavía no existe. Cerrar G5/G6 sin instalar extensión/Descargador."
+  },
+  {
+    "id": "A-T20",
+    "state": "PARCIAL",
+    "code": [
+      "src/nurus/personal/app.py",
+      "src/nurus/personal/work.py"
+    ],
+    "tests": [
+      "tests/test_integral_ui.py",
+      "tests/test_personal_flow.py"
+    ],
+    "limit": "Snapshot exacto 251d5c4 preserva 11 commits sobre main; golden/UI pasan, pero no hay aceptación funcional de todas las diferencias históricas."
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "texto": "#203248",
+    "fondo": "#FFFFFF",
+    "ratio": 13.03,
+    "AA": true
+  },
+  {
+    "texto": "#536B7C",
+    "fondo": "#FFFFFF",
+    "ratio": 5.58,
+    "AA": true
+  },
+  {
+    "texto": "#EDF2F7",
+    "fondo": "#20262E",
+    "ratio": 13.53,
+    "AA": true
+  },
+  {
+    "texto": "#A5B3C2",
+    "fondo": "#20262E",
+    "ratio": 7.13,
+    "AA": true
+  },
+  {
+    "texto": "#FFFFFF",
+    "fondo": "#176D8C",
+    "ratio": 5.83,
+    "AA": true
+  },
+  {
+    "texto": "#FFFFFF",
+    "fondo": "#277595",
+    "ratio": 5.17,
+    "AA": true
+  },
+  {
+    "texto": "#FFFFFF",
+    "fondo": "#B42318",
+    "ratio": 6.57,
+    "AA": true
+  },
+  {
+    "texto": "#166534",
+    "fondo": "#DCFCE7",
+    "ratio": 6.49,
+    "AA": true
+  },
+  {
+    "texto": "#BBF7D0",
+    "fondo": "#143827",
+    "ratio": 10.67,
+    "AA": true
+  },
+  {
+    "texto": "#765113",
+    "fondo": "#FFF1D4",
+    "ratio": 6.35,
+    "AA": true
+  },
+  {
+    "texto": "#FFE2CD",
+    "fondo": "#653B29",
+    "ratio": 7.69,
+    "AA": true
+  },
+  {
+    "texto": "#991B1B",
+    "fondo": "#FEE2E2",
+    "ratio": 6.8,
+    "AA": true
+  },
+  {
+    "texto": "#FECACA",
+    "fondo": "#4C2020",
+    "ratio": 9.46,
+    "AA": true
+  },
+  {
+    "texto": "#203248",
+    "fondo": "#E8F0F5",
+    "ratio": 11.3,
+    "AA": true
+  },
+  {
+    "texto": "#EDF2F7",
+    "fondo": "#2B3541",
+    "ratio": 11.04,
+    "AA": true
+  }
+]

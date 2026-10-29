@@ -1,0 +1,21 @@
+{
+  "superseded": true,
+  "runs": [
+    {
+      "source_commit": "cb06ffff72ff58655ade2d458965271c8d282bb4",
+      "assistant_run_id": 37931874562,
+      "assistant_conclusion": "failure",
+      "downloader_run_id": 37931874552,
+      "downloader_conclusion": "success",
+      "reason": "La comprobación del paquete esperaba el texto antiguo de la fixture; se actualizó para la nueva bitácora acentuada Windows-1252."
+    },
+    {
+      "source_commit": "d6ec1b4018705e437e968af8d4727ab9cc4bb03e",
+      "downloader_run_id": 37941896587,
+      "downloader_conclusion": "failure",
+      "reason": "Dos aserciones de pruebas Windows: ruta corta frente a ruta canónica, y read_text sin UTF-8 en HTML ficticio. Corregidas en e3a6369 sin cambiar código funcional."
+    }
+  ],
+  "stable_previous_source_commit": "99ed217c2fbb66d723b45f6e824622b07ae2f138",
+  "real_judicial_files_committed": false
+}

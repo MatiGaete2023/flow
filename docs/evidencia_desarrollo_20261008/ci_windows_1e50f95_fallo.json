@@ -1,0 +1,23 @@
+{
+  "source_commit": "1e50f95893ae6c5a2c27386a83455db0ae5f6fc1",
+  "assistant_run": 37857365015,
+  "assistant_conclusion": "failure",
+  "python_versions": [
+    "3.12",
+    "3.13",
+    "3.14"
+  ],
+  "python_312_results": {
+    "passed": 580,
+    "failed": 1,
+    "skipped": 1
+  },
+  "failed_case": "test_cli_creates_pending_acta_and_never_echoes_invalid_sensitive_input",
+  "cause": "stderr CP1252 en Windows; lector subprocess esperaba UTF-8",
+  "correction_commit": "9cd9f508e6b5185b407563eccd0bdc79e71c94e7",
+  "correction": "CLI reconfigura stdout y stderr a UTF-8; test fuerza PYTHONIOENCODING=cp1252",
+  "tests_omitted_to_hide_failure": false,
+  "downloader_run": 37857364791,
+  "downloader_conclusion": "success",
+  "institutional_tests": "NO_EJECUTADO"
+}

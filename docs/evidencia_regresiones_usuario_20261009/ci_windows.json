@@ -1,0 +1,687 @@
+{
+  "checked_at": "2026-10-09T14:32:19.483352+00:00",
+  "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+  "versions": {
+    "assistant": "0.5.0.dev4",
+    "downloader": "2.7.4",
+    "extension": "2.7.4"
+  },
+  "assistant": {
+    "run_id": 37942421534,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534",
+    "artifacts": [
+      {
+        "id": 11623016385,
+        "name": "nurus-wheel-windows-latest-py3.14",
+        "size_bytes": 502664,
+        "digest": "sha256:cd398dab9e06bcc7f490d9899f237b8c98a33b99515ba7a5bff99898136b06f7",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11623016385"
+      },
+      {
+        "id": 11622661493,
+        "name": "nurus-wheel-windows-latest-py3.13",
+        "size_bytes": 502099,
+        "digest": "sha256:3b44eb1fffd0501aa5f2e0c3f8946716dc689159b54a0c1056e070fe1d7e2d98",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622661493"
+      },
+      {
+        "id": 11622653641,
+        "name": "CSMP-Descargador-Integral-dev4-SITFA-274",
+        "size_bytes": 108186474,
+        "digest": "sha256:e6ed51709e27e273248299c794c753fe0f926620af1e9a9ab2c1605f86efe510",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622653641"
+      },
+      {
+        "id": 11622297539,
+        "name": "CSMP-Windows-interface",
+        "size_bytes": 250800,
+        "digest": "sha256:4bcc8af52a4db235fcd05bab9d85f78dd4c63c3bb8fa3345719bb05ba78cba77",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622297539"
+      },
+      {
+        "id": 11622223523,
+        "name": "CSMP-Instalador-Windows-dev4",
+        "size_bytes": 46489698,
+        "digest": "sha256:b541f76f232531af417aa439b159afbfeb40df2f059f3cfae023df7c7a55228a",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622223523"
+      },
+      {
+        "id": 11622163526,
+        "name": "CSMP-Installer-diagnostics",
+        "size_bytes": 157174,
+        "digest": "sha256:214b49e9f3f54461d564bd6bf2703fe742fa0dc8ba7b1ca8b3ce1647a682382d",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622163526"
+      },
+      {
+        "id": 11622083428,
+        "name": "nurus-wheel-windows-latest-py3.12",
+        "size_bytes": 502101,
+        "digest": "sha256:12f05fddb834f958646bc8f7dc4d265783a53f69848e85aa057e6ee7eff630bd",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622083428"
+      },
+      {
+        "id": 11622022878,
+        "name": "RUS-Registro-Actual-Windows",
+        "size_bytes": 11159515,
+        "digest": "sha256:52fca53100d589bd07e5eb56bfa5747c0ce291495c13327c18bb29cf2f80db59",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622022878"
+      },
+      {
+        "id": 11622013413,
+        "name": "CSMP-Integral-Windows-dev4",
+        "size_bytes": 67403709,
+        "digest": "sha256:8659bd2e91eb5891a7c1b5b418490c6259f6be29fbc81dde2b7c8cb736261462",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11622013413"
+      },
+      {
+        "id": 11621982707,
+        "name": "CSMP-Windows-dev4",
+        "size_bytes": 3328201,
+        "digest": "sha256:3ff2739db83ad79f1028db1efd379e469950bb0b37265dc2511cc174f7b844bc",
+        "expires_at": "2027-01-07T14:12:11Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421534/artifacts/11621982707"
+      }
+    ],
+    "jobs": [
+      {
+        "id": 113860221630,
+        "name": "test (windows-latest, 3.13)",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python 3.13",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build wheel",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify installed package outside source path",
+            "conclusion": "success"
+          },
+          {
+            "name": "Dependency check",
+            "conclusion": "success"
+          },
+          {
+            "name": "Legacy Excel dependency",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Excel/Outlook dependency on Windows",
+            "conclusion": "success"
+          },
+          {
+            "name": "Locked dependency inventory",
+            "conclusion": "success"
+          },
+          {
+            "name": "Static analysis of contract boundaries",
+            "conclusion": "success"
+          },
+          {
+            "name": "Compile",
+            "conclusion": "success"
+          },
+          {
+            "name": "Personal GUI smoke",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Fictitious end-to-end products and interface",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "CSMP capture v1 independent fictitious products",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Deferred institutional acceptance template",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "RUS capture in Chromium with a fictitious form",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Windows interface captures",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build Windows distribution",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Source distribution",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Windows executable",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "RUS inspector and Chrome capture extension",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verificar lector y empaquetado integral SITFA",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Artefacto integral CSMP y Descargador",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Executable artifact",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Wheel artifact",
+            "conclusion": "success"
+          },
+          {
+            "name": "Measure native table redraws",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build and verify Windows installer",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Installer diagnostics",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Installer and measurements",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Python 3.13",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 113860221862,
+        "name": "test (windows-latest, 3.12)",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python 3.12",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build wheel",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify installed package outside source path",
+            "conclusion": "success"
+          },
+          {
+            "name": "Dependency check",
+            "conclusion": "success"
+          },
+          {
+            "name": "Legacy Excel dependency",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Excel/Outlook dependency on Windows",
+            "conclusion": "success"
+          },
+          {
+            "name": "Locked dependency inventory",
+            "conclusion": "success"
+          },
+          {
+            "name": "Static analysis of contract boundaries",
+            "conclusion": "success"
+          },
+          {
+            "name": "Compile",
+            "conclusion": "success"
+          },
+          {
+            "name": "Personal GUI smoke",
+            "conclusion": "success"
+          },
+          {
+            "name": "Tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Fictitious end-to-end products and interface",
+            "conclusion": "success"
+          },
+          {
+            "name": "CSMP capture v1 independent fictitious products",
+            "conclusion": "success"
+          },
+          {
+            "name": "Deferred institutional acceptance template",
+            "conclusion": "success"
+          },
+          {
+            "name": "RUS capture in Chromium with a fictitious form",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows interface captures",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build Windows distribution",
+            "conclusion": "success"
+          },
+          {
+            "name": "Source distribution",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows executable",
+            "conclusion": "success"
+          },
+          {
+            "name": "RUS inspector and Chrome capture extension",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verificar lector y empaquetado integral SITFA",
+            "conclusion": "success"
+          },
+          {
+            "name": "Artefacto integral CSMP y Descargador",
+            "conclusion": "success"
+          },
+          {
+            "name": "Executable artifact",
+            "conclusion": "success"
+          },
+          {
+            "name": "Wheel artifact",
+            "conclusion": "success"
+          },
+          {
+            "name": "Measure native table redraws",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and verify Windows installer",
+            "conclusion": "success"
+          },
+          {
+            "name": "Installer diagnostics",
+            "conclusion": "success"
+          },
+          {
+            "name": "Installer and measurements",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Python 3.12",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 113860222220,
+        "name": "test (windows-latest, 3.14)",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python 3.14",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build wheel",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify installed package outside source path",
+            "conclusion": "success"
+          },
+          {
+            "name": "Dependency check",
+            "conclusion": "success"
+          },
+          {
+            "name": "Legacy Excel dependency",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Excel/Outlook dependency on Windows",
+            "conclusion": "success"
+          },
+          {
+            "name": "Locked dependency inventory",
+            "conclusion": "success"
+          },
+          {
+            "name": "Static analysis of contract boundaries",
+            "conclusion": "success"
+          },
+          {
+            "name": "Compile",
+            "conclusion": "success"
+          },
+          {
+            "name": "Personal GUI smoke",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Fictitious end-to-end products and interface",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "CSMP capture v1 independent fictitious products",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Deferred institutional acceptance template",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "RUS capture in Chromium with a fictitious form",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Windows interface captures",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build Windows distribution",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Source distribution",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Windows executable",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "RUS inspector and Chrome capture extension",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verificar lector y empaquetado integral SITFA",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Artefacto integral CSMP y Descargador",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Executable artifact",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Wheel artifact",
+            "conclusion": "success"
+          },
+          {
+            "name": "Measure native table redraws",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build and verify Windows installer",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Installer diagnostics",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Installer and measurements",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Python 3.14",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "python": [
+      "3.12",
+      "3.13",
+      "3.14"
+    ],
+    "tests_by_python": {
+      "3.12": {
+        "passed": 615,
+        "skipped": 1,
+        "seconds": 535.14
+      },
+      "3.13": {
+        "passed": 615,
+        "skipped": 1,
+        "seconds": 214.21
+      },
+      "3.14": {
+        "passed": 615,
+        "skipped": 1,
+        "seconds": 223.96
+      }
+    }
+  },
+  "downloader": {
+    "run_id": 37942421581,
+    "conclusion": "success",
+    "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421581",
+    "artifacts": [
+      {
+        "id": 11623120729,
+        "name": "Descargador-SITFA-2.7.4-Windows",
+        "size_bytes": 40639422,
+        "digest": "sha256:8c99a83e3448030aa2e0cd38df617fbbd4d29e7423a740c7f742b85ceb552d26",
+        "expires_at": "2027-01-07T14:12:12Z",
+        "source_commit": "e3a63691ba75657cef82834406dadb849ba50ee6",
+        "url": "https://github.com/MatiGaete2023/flow/actions/runs/37942421581/artifacts/11623120729"
+      }
+    ],
+    "jobs": [
+      {
+        "id": 113859943429,
+        "name": "descargador",
+        "conclusion": "success",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python -m pip install --require-hashes -r ../requirements/windows-py312.lock",
+            "conclusion": "success"
+          },
+          {
+            "name": "Inventario de dependencias bloqueadas",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python -m pytest -q -p no:cacheprovider",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run node test_bitacoras_extension.cjs",
+            "conclusion": "success"
+          },
+          {
+            "name": "Extensión y servidor ficticios",
+            "conclusion": "success"
+          },
+          {
+            "name": "Ejecutable y contrato compartido",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "tests": {
+      "passed": 192,
+      "subtests_passed": 59,
+      "seconds": 46.71
+    }
+  },
+  "executed_log_excerpts": {
+    "assistant_312": [
+      "615 passed, 1 skipped in 535.14s (0:08:55)",
+      "APROBADO: EXE autónomo CSMP",
+      "192 passed, 59 subtests passed in 64.37s (0:01:04)",
+      "APROBADO: verificación SITFA_Descargador/SITFA_Descargador.exe --verificar-paquete",
+      "APROBADO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-paquete",
+      "APROBADO: verificación CSMP_Integral/CSMP_Integral.exe --verificar-integracion",
+      "Paquete integral verificado: D:\\a\\flow\\flow\\dist\\integral",
+      "APROBADO: compilar instalador",
+      "APROBADO: instalación del build actual",
+      "APROBADO: productos desde EXE instalado",
+      "APROBADO: reinstalación del build actual",
+      "APROBADO: lanzador de desinstalación",
+      "APROBADO: eliminación real de la carpeta instalada",
+      "APROBADO: instalación, SHA, productos, eliminación y datos externos"
+    ],
+    "assistant_313": [
+      "615 passed, 1 skipped in 214.21s (0:03:34)\r"
+    ],
+    "assistant_314": [
+      "615 passed, 1 skipped in 223.96s (0:03:43)\r"
+    ],
+    "downloader": [
+      "192 passed, 59 subtests passed in 46.71s\r",
+      "{\"resultado\": \"OK\", \"datos\": \"ficticios\", \"modalidades\": 4, \"tribunales\": 2, \"pestanas\": 3, \"opciones_informes\": 3, \"paginas_por_consulta\": 2, \"bitacoras\": 80, \"tipos_popup\": [\"11\", \"12\", \"13\"], \"codificaciones\": [\"utf-8\", \"windows-1252\"], \"peticiones_reales_rus\": 0, \"escrituras_rus\": 0}\r",
+      "{\"datos\": \"ficticios\", \"api_extension_adaptada\": false, \"permisos_manifest_ampliados\": false, \"activeTab_gesto_accion_real\": true, \"peticiones_reales_sitfa\": 0, \"perfil_usuario_accedido\": false, \"resultado\": \"OK\", \"pdfs\": 5, \"pantallas\": 4, \"excel_posterior_verificado\": true, \"continuidad_pdf_excel_mismo_lote\": true, \"consulta_cambiada_sin_pdf\": true, \"restauracion_y_cierre\": true, \"nombres_pdf\": [\"ESP Residencia Jdo Familia Tome.pdf\", \"Litigantes Activa Jdo Familia Tome.pdf\", \"Informes Jdo Familia Tome.pdf\", \"Medidas por vencer Jdo Familia Tome.pdf\"], \"captura_chrome_real\": true, \"pdf_sin_encabezado_ni_margen\": true, \"cabeceras_td_vacias\": true, \"pdfs_regresion_selectores_vacios\": 2, \"controles_y_rotulos_restituidos\": [{\"tribunal\": \"113\", \"modalidad\": \"2\", \"pestana\": \"tdCumplimiento\", \"filtro_fechas\": true}, {\"tribunal\": \"113\", \"modalidad\": \"2\", \"pestana\": \"tdCumplimiento\", \"filtro_fechas\": false}], \"contexto_visible_en_pixeles\": true, \"contexto_alterado_sin_pdf\": true}\r",
+      "26142 INFO: Build complete! The results are available in: D:\\a\\flow\\flow\\descargador\\dist\r"
+    ]
+  },
+  "verification": {
+    "standalone_exe": true,
+    "joint_package_same_source_sha": true,
+    "installed_exe_products": true,
+    "installation_reinstallation": true,
+    "installed_folder_removed": true,
+    "external_sentinel_preserved": true,
+    "real_institutional_acceptance": false,
+    "real_judicial_files_committed": false
+  },
+  "limits": [
+    "Fixtures sintéticas; no acredita Office ni SITFA reales.",
+    "Digests ZIP informados por GitHub; no recalculados localmente.",
+    "Las suites Linux completas se ejecutaron en d6ec1b4; e3a6369 modifica dos aserciones Windows y se comprobó con nueve pruebas focalizadas. Código funcional idéntico.",
+    "Los checkpoints documentales posteriores no cambian los binarios del SHA indicado."
+  ]
+}

@@ -1,0 +1,471 @@
+"""Configuración de dominio por usuario; nunca altera la instalación."""
+
+from copy import deepcopy
+from pathlib import Path
+import json
+import os
+import re
+import shutil
+import tempfile
+from string import Formatter
+from .template_validation import variables
+
+BASE = Path(__file__).parent
+from nurus.services.policy import MANDATORY_CC as CC  # noqa: F401 (reexportación pública)
+
+RETENCION_DIAS = 60
+SESIONES_ANTERIORES = 10
+VARIABLES = {'TRIBUNAL', 'ALCANCE_MODALIDADES', 'PERIODO', 'FECHA', 'PROGRAMA', 'TABLA_REGISTROS'}
+UMBRALES = dict(
+    espera_dce=0,
+    espera_laja=30,
+    espera_mulchen=30,
+    espera_tome=60,
+    proyecto_tome=60,
+    mayoria=60,
+    oido=45,
+    resolucion_reciente=30,
+    ingreso_reciente=30,
+    medida=45,
+    informe=30,
+    ficha_antigua=180,
+    ficha_reciente=30,
+    ficha_fae=120,
+    prorroga_reciente=90,
+    ventana_ingreso=30,
+    lista_espera_larga=100,
+    ventana_busqueda=60,
+)
+PARAMETER_LABELS = {
+    'espera_dce': 'Espera DCE: consultar ingreso desde',
+    'espera_laja': 'Espera Laja: proyecto y correo desde',
+    'espera_mulchen': 'Espera Mulchén: proyecto y correo desde',
+    'espera_tome': 'Espera Tomé: correo desde',
+    'proyecto_tome': 'Espera Tomé: proyecto desde',
+    'mayoria': 'Avisar mayoría de edad dentro de',
+    'oido': 'Oído: considerar reciente hasta',
+    'resolucion_reciente': 'Resolución reciente: menos de',
+    'ingreso_reciente': 'Ingreso reciente: hasta',
+    'medida': 'Avisar medida por vencer dentro de',
+    'informe': 'Avisar informe por vencer dentro de',
+    'ficha_antigua': 'Ficha individual antigua: más de',
+    'ficha_reciente': 'Ficha individual reciente: hasta',
+    'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
+    'prorroga_reciente': 'Prórroga reciente (marcar para revisión): hasta',
+    'ventana_ingreso': 'Ingreso efectivo en la historia: hasta',
+    'lista_espera_larga': 'Lista de espera residencial larga: más de',
+    'ventana_busqueda': 'Órdenes de búsqueda: solo la historia de los últimos',
+}
+TEXT_REVISION = 7
+LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
+LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
+CORREO_REVISION = 3
+LEGACY_TEXTS_REV2 = {
+    "COMUN.MAYORIA_EDAD": "Se hace presente que {PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}, se sugiere egresar la medida.",
+    "COMUN.PROXIMA_MAYORIA": "Se hace presente que {PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}.",
+    "COMUN.CURADOR": "No registra curador asociado en RUS, se sugiere asociar curador ad litem informáticamente.",
+    "COMUN.OIDO": "Oído con fecha {FECHA_OIDO}.",
+    "COMUN.PROX_AUDIENCIA": "Se cita a audiencia para el día {FECHA_AUDIENCIA}.",
+    "ESPERA.E04_RESOLUCION_RECIENTE": "Medida revisada, a la espera de ingreso efectivo. Se hace presente que el Tribunal ordenó el ingreso efectivo al programa {PROGRAMA} con fecha {FECHA_RESOLUCION}. (Observación administrativa, no requiere acción/respuesta del Tribunal).",
+    "ESPERA.E05_SOLO_CORREO": "Medida revisada, a la espera de ingreso efectivo. Se remite correo electrónico al programa consultando respecto de la fecha estimada de ingreso efectivo.",
+    "ESPERA.E05_PROYECTO_Y_CORREO": "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta al programa respecto del ingreso efectivo. Igualmente, se remite correo electrónico al programa consultando respecto de la fecha estimada de ingreso efectivo.",
+    "CUMPLIMIENTO.C03_INGRESO_RECIENTE": "Medida revisada. Se hace presente que el ingreso efectivo al programa {PROGRAMA} se registra con fecha {FECHA_INGRESO}.",
+    "CUMPLIMIENTO.C04_VENCIDA": "La medida se visualiza vencida en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
+    "CUMPLIMIENTO.C05_VENCE_HOY": "Se hace presente que la medida se visualiza con vencimiento para el día de hoy, {FECHA_EGRESO_PROYECTADO}.",
+    "CUMPLIMIENTO.C05_POR_VENCER": "Se hace presente que la medida se visualiza próxima a vencer en RUS el {FECHA_EGRESO_PROYECTADO}.",
+    "CUMPLIMIENTO.C07_SIN_FICHA": "No registra ficha individual en RUS, se sugiere confeccionar.",
+    "CUMPLIMIENTO.C07_FICHA_ANTIGUA": "Atendido que la ficha individual registra como última actualización el {FECHA_FICHA_INDIVIDUAL}, superando los 180 días, se sugiere actualizar.",
+    "CUMPLIMIENTO.C07_FICHA_RECIENTE": "Se hace presente que la ficha individual fue actualizada con fecha {FECHA_FICHA_INDIVIDUAL}.",
+    "CUMPLIMIENTO.C08_FICHA_FAE": "Se hace presente que {PNOMBRE} no tiene ficha FAE, se sugiere confeccionar.",
+    "CUMPLIMIENTO.C10_HOJA2": "Medida revisada, se hace presente que el programa {PROGRAMA} deberá remitir informe de avance a más tardar el {FECHA_VENCIMIENTO}.",
+    "INFORMES.I01_VENCIDO_DCE": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe diagnóstico que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.",
+    "INFORMES.I01_VENCIDO_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de requerir el informe de avance que se encuentra vencido en RUS desde el {FECHA_VENCIMIENTO}.",
+    "INFORMES.I02_POR_VENCER_DCE": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el informe diagnóstico ordenado en autos debe ser remitido a más tardar el {FECHA_VENCIMIENTO}.",
+    "INFORMES.I02_POR_VENCER_GENERAL": "Se remite correo electrónico al programa {PROGRAMA} a fin de señalar que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
+}
+LEGACY_TEXTS_REV4 = {
+    "HISTORIA.BASE_TRAMITE": "En la historia de la causa consta un trámite descrito como «{DESC}», de fecha {FECHA}, folio {FOLIO}.",
+    "HISTORIA.VARIOS": "En la historia de la causa constan {N} trámites descritos como «{DESC}»; el último, de fecha {FECHA}, folio {FOLIO}.",
+    "INFORMES.I01_VENCIDO_DCE": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "INFORMES.I01_VENCIDO_GENERAL": "Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe de avance vencido desde el {FECHA_VENCIMIENTO}. De igual manera, se remite correo al programa {PROGRAMA} requiriendo su envío.",
+    "HISTORIA.REITERA": "Se reitera observación de fecha {FECHA_ANTERIOR}, respecto de {MATERIA}.",
+    "HISTORIA.P_FINALIZADA": "La causa se encuentra finalizada, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C10_ESCRITO": "Atendido que informe de avance se encuentra recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}, se deja constancia que se remite proyecto de resolución que aplica nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+}
+LEGACY_TEXTS_REV5 = {
+    "HISTORIA.BASE_TRAMITE": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta el trámite «{DESC}».",
+    "HISTORIA.VARIOS": "Se hace presente que constan {N} trámites «{DESC}»; el último, a folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.C10_ESCRITO": "Informe de avance recepcionado a folio {FOLIO_ESCRITO}, de fecha {FECHA_ESCRITO}. Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+    "HISTORIA.C2_PRORROGA_HASTA": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
+    "HISTORIA.SERVICIO_INGRESO": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de folio {FOLIO}, de fecha {FECHA}.",
+    "HISTORIA.CURADOR_SIN_EFECTO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se dejó sin efecto la designación de curador ad litem.",
+    "HISTORIA.CURADOR_DESIGNADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se designó curador ad litem.",
+    "HISTORIA.SOLICITUD_DCE": "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa a folio {FOLIO}, de fecha {FECHA}, a la espera de lo que se resuelva en la audiencia respectiva.",
+    "HISTORIA.CONTINUIDAD_ATENCION": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, consta respuesta sobre la continuidad de atención.",
+    "HISTORIA.INFORME_INGRESADO": "Se hace presente que a folio {FOLIO}, de fecha {FECHA}, se ingresa el informe de cumplimiento.",
+    "HISTORIA.E04_CON_FOLIO": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}, folio {FOLIO}. (Observación administrativa; no requiere gestión del Tribunal).",
+}
+LEGACY_TEXTS_REV6 = {
+    "HISTORIA.R11_SIN_EFECTO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
+    "HISTORIA.R11_TERMINO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+    "HISTORIA.T5_INSTITUCIONES": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+}
+LEGACY_CORREO_BODIES = {
+    'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
+    'cumplimiento': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Cumplimiento del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
+    'informes': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Informes del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
+    'medidas': 'Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nómina de medidas sin vigencia y por vencer al día {FECHA}, correspondiente a {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,',
+    'programa_por_vencer': 'Buen día:\n\nJunto con saludar, se envía planilla de causas cuyos informes se encuentran próximos a vencer, correspondientes a {PROGRAMA} y {TRIBUNAL}. Se solicita tener presentes las fechas indicadas y acusar recibo de la información.\n\nAtentamente,',
+}
+
+
+def user_directory():
+    return Path(os.environ.get('LOCALAPPDATA') or Path.home()) / 'CSMP_Personal'
+
+
+def atomic_json(path, data):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(dir=path.parent, suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as stream:
+            json.dump(data, stream, ensure_ascii=False, indent=2, default=str)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+    finally:
+        Path(name).unlink(missing_ok=True)
+
+
+def emails(value):
+    result = []
+    for part in re.split(r'[;,\n]+', str(value or '')):
+        part = part.strip()
+        if part and part.lower() not in {s.lower() for s in result}:
+            if not re.fullmatch(r"[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+", part):
+                raise ValueError('Dirección inválida: ' + part)
+            result.append(part)
+    return result
+
+
+EXAMPLE_CONTACTS = BASE / 'contactos_ejemplo.json'
+CONTACTS_FILE = 'contactos.json'
+
+
+def contacts_file(directory=None):
+    """Directorio local del usuario (fuera del repositorio y del paquete)."""
+    return Path(directory or user_directory()) / CONTACTS_FILE
+
+
+def parse_contacts(raw):
+    """Acepta una lista JSON de {Nombre, Mail} o el formato histórico de objetos separados por comas."""
+    raw = raw.strip()
+    records = json.loads(raw if raw.startswith('[') else '[' + raw.rstrip(',') + ']')
+    contacts = {}
+    ambiguous = set()
+    for record in records:
+        name = str(record.get('Nombre', '')).strip()
+        address = str(record.get('Mail', '')).strip()
+        if not name:
+            continue
+        try:
+            emails(address)
+        except ValueError:
+            continue
+        if name in contacts and contacts[name] != address:
+            ambiguous.add(name)
+        else:
+            contacts[name] = address
+    for name in ambiguous:
+        contacts.pop(name, None)
+    return contacts
+
+
+def base_contacts(directory=None):
+    """Contactos locales del usuario o, si aún no existen, el ejemplo ficticio (segundo valor False)."""
+    path = contacts_file(directory)
+    if path.is_file():
+        return parse_contacts(path.read_text(encoding='utf-8')), True
+    return parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8')), False
+
+
+def save_contacts(contacts, directory=None):
+    """Guarda el directorio local de contactos; nunca dentro del paquete."""
+    atomic_json(
+        contacts_file(directory), [{'Nombre': name, 'Mail': address} for name, address in sorted(contacts.items())]
+    )
+
+
+def defaults(directory=None):
+    """Base ficticia; sólo la app carga contactos del usuario con una ruta explícita."""
+    text = json.loads((BASE / 'textos_base.json').read_text(encoding='utf-8'))
+    mail = json.loads((BASE / 'correos_base.json').read_text(encoding='utf-8'))
+    mail['tribunales']['LAJA']['nombre'] = 'Jgdo. L. y G. de Laja'
+    mail['tribunales']['MULCHEN']['nombre'] = 'Jgdo. L. y G. de Mulchén'
+    mail['tribunales']['TOME']['nombre'] = 'Juzgado de Familia de Tomé'
+    for kind, title in [
+        ('programa_espera', 'Lista de espera'),
+        ('programa_vencido', 'Informes pendientes'),
+        ('programa_por_vencer', 'Informes por vencer'),
+    ]:
+        body = {
+            'programa_espera': 'Junto con saludar, se acompaña nómina de registros en lista de espera de {PROGRAMA}, correspondientes a {TRIBUNAL}. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.',
+            'programa_vencido': 'Junto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a {PROGRAMA} y {TRIBUNAL}. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.',
+            'programa_por_vencer': 'Junto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.',
+        }[kind]
+        closing = 'Atte. a Ud.,' if kind == 'programa_por_vencer' else 'Atentamente,'
+        mail['plantillas'][kind] = {
+            'nombre': title + ' · programa',
+            'asunto': title + ' — {PROGRAMA} — {TRIBUNAL}',
+            'cuerpo': 'Buen día:\n\n' + body + '\n\n' + closing,
+            'adjunto': 'obligatorio',
+            'usa_modalidades': False,
+            'fuente': 'Manual CSMP: Espera, Informes e instrucciones generales, páginas 7, 13 y 14.',
+        }
+    contacts = (
+        base_contacts(directory)[0]
+        if directory is not None
+        else parse_contacts(EXAMPLE_CONTACTS.read_text(encoding='utf-8'))
+    )
+    # Destinatarios de tribunales: entradas «Tribunal: LAJA» del archivo local de contactos.
+    for name in [n for n in contacts if n.startswith('Tribunal: ')]:
+        key = name.split(': ', 1)[1].strip().upper()
+        address = contacts.pop(name)
+        if key in mail['tribunales']:
+            mail['tribunales'][key]['para'] = emails(address)
+    aliases = {
+        a['alias']: a['nombre_catastro'] for a in json.loads((BASE / 'aliases_base.json').read_text(encoding='utf-8'))
+    }
+    return {
+        'version': 1,
+        'revision_textos': TEXT_REVISION,
+        'revision_correos': CORREO_REVISION,
+        'perfil': 'Asistente v9.1; prioridad confirmada por usuario',
+        'umbrales': deepcopy(UMBRALES),
+        'desactivadas': [],
+        'textos': text,
+        'correos': mail,
+        'contactos': contacts,
+        'aliases': aliases,
+        'cuenta_outlook': '',
+        'firma': '',
+        'vista': {'tema': 'Sistema'},
+        'correo_html': True,
+        'metricas_locales': False,
+    }
+
+
+def validate(cfg):
+    if cfg.get('vista', {}).get('tema', 'Sistema') not in ('Claro', 'Oscuro', 'Sistema'):
+        raise ValueError('Tema de interfaz inválido.')
+    if type(cfg.get('correo_html', True)) is not bool:
+        raise ValueError('Formato de correo inválido.')
+    if cfg.get('version') != 1:
+        raise ValueError('Versión de configuración no admitida.')
+    for key in UMBRALES:
+        v = cfg['umbrales'].get(key)
+        if type(v) is not int or not 0 <= v <= 730:
+            raise ValueError('Umbral inválido: ' + key)
+    if cfg['umbrales']['proyecto_tome'] < cfg['umbrales']['espera_tome']:
+        raise ValueError('El umbral de proyecto Tomé no puede anteceder al correo.')
+    base = defaults()['textos']
+    for scope, entries in base.items():
+        if scope.startswith('_'):
+            continue
+        for key, value in entries.items():
+            actual = cfg['textos'][scope][key]['texto']
+            old_fields = {f for _, f, _, _ in Formatter().parse(value['texto']) if f}
+            new_fields = variables(actual, old_fields)
+            if new_fields != old_fields or not actual.strip():
+                raise ValueError('Variables de observación inválidas: ' + scope + '.' + key)
+    allowed = {
+        'COMUN.CURADOR',
+        'COMUN.OIDO',
+        'COMUN.PROX_AUDIENCIA',
+        'COMUN.PROXIMA_MAYORIA',
+        'COMUN.REITERA_OBSERVACION',
+    }
+    if not set(cfg['desactivadas']) <= allowed:
+        raise ValueError('Solo pueden desactivarse advertencias complementarias.')
+    for tpl in cfg['correos']['plantillas'].values():
+        from .mail_category import CATEGORIES
+
+        if tpl.get('categoria', '') not in ('', *CATEGORIES):
+            raise ValueError('Categoría de correo inválida.')
+        for key in ('asunto', 'cuerpo'):
+            fields = variables(tpl[key], VARIABLES)
+            if not fields <= VARIABLES:
+                raise ValueError('Variable de correo desconocida: ' + str(fields - VARIABLES))
+        if tpl['adjunto'] not in ('obligatorio', 'opcional'):
+            raise ValueError('Requisito de adjunto inválido.')
+    for contact in cfg['contactos'].values():
+        emails(contact)
+    for court in cfg['correos']['tribunales'].values():
+        emails(';'.join(court['para']))
+    emails(cfg['correos'].get('cc_adicional', ''))
+
+
+def complete_umbrales(cfg):
+    """Agrega con su valor base los umbrales que una configuración anterior no tiene; nunca cambia los existentes."""
+    added = []
+    umbrales = cfg.setdefault('umbrales', {})
+    for key, value in UMBRALES.items():
+        if key not in umbrales:
+            umbrales[key] = value
+            added.append('umbrales.' + key)
+    return added
+
+
+def complete_texts(cfg):
+    """Agrega con su texto base las claves que una configuración anterior no tiene; nunca cambia las existentes.
+
+    Sin esto, una clave nueva en textos_base.json haría fallar validate() antes de cualquier migración.
+    """
+    added = []
+    textos = cfg.setdefault('textos', {})
+    for scope, entries in defaults()['textos'].items():
+        if scope.startswith('_'):
+            continue
+        current = textos.setdefault(scope, {})
+        for key, entry in entries.items():
+            if key not in current:
+                current[key] = deepcopy(entry)
+                added.append(scope + '.' + key)
+    return added
+
+
+def repair_texts(cfg):
+    """Repone el texto base en las claves cuyo texto guardado ya no tiene las variables de esa clave.
+
+    Pasa cuando una clave cambió de variables entre versiones (p. ej. R11_SIN_EFECTO de la revisión 4): ese texto no
+    puede usarse y, sin esto, validate() rechazaría la configuración completa y la app no abriría."""
+    repaired = []
+    for scope, entries in defaults()['textos'].items():
+        if scope.startswith('_'):
+            continue
+        stored = cfg.get('textos', {}).get(scope, {})
+        for key, entry in entries.items():
+            current = stored.get(key)
+            if not isinstance(current, dict):
+                continue
+            expected = {f for _, f, _, _ in Formatter().parse(entry['texto']) if f}
+            try:
+                valid = variables(str(current.get('texto', '')), expected) == expected
+            except ValueError:
+                valid = False
+            if not valid or not str(current.get('texto', '')).strip():
+                current['texto'] = entry['texto']
+                repaired.append(scope + '.' + key)
+    return repaired
+
+
+class Configuration:
+    def __init__(self, directory=None, *, contacts_directory=None):
+        self.directory = Path(directory) if directory else user_directory()
+        self.path = self.directory / 'configuracion.json'
+        self.contacts_directory = Path(contacts_directory) if contacts_directory is not None else self.directory
+        if not self.path.exists():
+            self.save(defaults(self.contacts_directory))
+        try:
+            self.data = json.loads(self.path.read_text(encoding='utf-8'))
+            added = complete_texts(self.data) + complete_umbrales(self.data) + repair_texts(self.data)
+            validate(self.data)
+        except Exception as exc:
+            raise ValueError(
+                f'Configuración no utilizable: {self.path}. Conserva el archivo y recupera su copia .bak. Detalle: {exc}'
+            ) from exc
+        if added:
+            self.save(self.data)
+        # Sin contactos locales y con el ejemplo ficticio cargado: la app pide importar el directorio real.
+        example = defaults()
+        stored_contacts = self.data.get('contactos', {})
+        stored_courts = self.data.get('correos', {}).get('tribunales', {})
+        imported = bool(stored_contacts) and stored_contacts != example['contactos']
+        imported = imported or any(
+            court.get('para') and court.get('para') != example['correos']['tribunales'].get(name, {}).get('para')
+            for name, court in stored_courts.items()
+        )
+        self.contacts_missing = not contacts_file(self.contacts_directory).is_file() and not imported
+
+        if self.data.get('revision_textos', 1) < 2:
+            updated = deepcopy(self.data)
+            base = defaults()['textos']
+            for scope, entries in base.items():
+                if scope.startswith('_'):
+                    continue
+                for key, entry in entries.items():
+                    # Un texto rev1 puede venir del texto rev2 (LEGACY_TEXTS_REV2, que rev3 migra en el paso
+                    # siguiente) o del texto base vigente: se aceptan ambos orígenes.
+                    for original in dict.fromkeys((LEGACY_TEXTS_REV2.get(scope + '.' + key), entry['texto'])):
+                        if original is None:
+                            continue
+                        previous = (
+                            original.replace('Se remite correo electrónico', 'Se sugiere remitir correo electrónico')
+                            .replace('se remite correo electrónico', 'se sugiere remitir correo electrónico')
+                            .replace('Se remite proyecto de resolución', 'Se sugiere preparar proyecto de resolución')
+                        )
+                        if updated['textos'][scope][key]['texto'] == previous:
+                            updated['textos'][scope][key]['texto'] = original
+                            break
+            updated['revision_textos'] = 2
+            self.save(updated)
+
+        if self.data.get('revision_textos', 1) < 4:
+            updated = deepcopy(self.data)
+            for key, previous in LEGACY_UMBRALES_REV3.items():
+                if updated['umbrales'].get(key) == previous:
+                    updated['umbrales'][key] = UMBRALES[key]
+            if updated['umbrales']['espera_tome'] > updated['umbrales']['proyecto_tome']:
+                updated['umbrales']['espera_tome'] = updated['umbrales']['proyecto_tome']
+            audiencia = updated['textos']['COMUN']['PROX_AUDIENCIA']
+            if audiencia['texto'] == LEGACY_PROX_AUDIENCIA_REV3:
+                audiencia['texto'] = defaults()['textos']['COMUN']['PROX_AUDIENCIA']['texto']
+            self.save(updated)
+
+        if self.data.get('revision_textos', 1) < TEXT_REVISION:
+            updated = deepcopy(self.data)
+            base = defaults()['textos']
+            # Solo se reemplaza un texto que sigue igual al anterior: lo que el usuario editó se respeta.
+            for full_key, previous in (
+                *LEGACY_TEXTS_REV2.items(),
+                *LEGACY_TEXTS_REV4.items(),
+                *LEGACY_TEXTS_REV5.items(),
+                *LEGACY_TEXTS_REV6.items(),
+            ):
+                scope, key = full_key.split('.', 1)
+                if (
+                    key in base.get(scope, {})
+                    and updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous
+                ):
+                    updated['textos'][scope][key]['texto'] = base[scope][key]['texto']
+            updated['revision_textos'] = TEXT_REVISION
+            self.save(updated)
+
+        if self.data.get('revision_correos', 0) < CORREO_REVISION:
+            updated = deepcopy(self.data)
+            canonical = defaults()['correos']['plantillas']
+            templates = updated['correos']['plantillas']
+            # Completa únicamente plantillas ausentes. Las existentes se respetan,
+            # salvo cuerpos predeterminados antiguos conocidos que sí deben migrar.
+            for key, canonical_template in canonical.items():
+                if key not in templates:
+                    templates[key] = deepcopy(canonical_template)
+                    continue
+                previous_body = LEGACY_CORREO_BODIES.get(key)
+                if previous_body and templates[key].get('cuerpo') == previous_body:
+                    templates[key]['cuerpo'] = canonical_template['cuerpo']
+            updated['revision_correos'] = CORREO_REVISION
+            self.save(updated)
+
+        # Actualiza matrices empaquetadas una sola vez por revisión. Si existían
+        # versiones distintas, conserva respaldo antes de instalar la nueva.
+        from .template_package import install_bundled_templates
+
+        install_bundled_templates(BASE / 'plantillas_word', self.directory / 'plantillas_word')
+
+    def save(self, data):
+        validate(data)
+        if self.path.exists():
+            shutil.copyfile(self.path, self.path.with_suffix('.bak'))
+        atomic_json(self.path, data)
+        self.data = deepcopy(data)

@@ -1,0 +1,22 @@
+{
+  "titulo": "Correcciones de auditoría del merge histórico",
+  "ola": 7,
+  "tipo": "C",
+  "depende_de": [],
+  "decisiones": [
+    "j"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "13 de octubre de 2026",
+  "rama": "wp/98-correcciones-auditoria",
+  "pr": null,
+  "verificacion": "PASA: verificacion/WP-98.json sobre el merge con feat; asistente 930, descargador 251, golden 17 sin cambios, identidades 0, ruff 0, enlaces 0.",
+  "revision": "E3 APROBADO (sesión Claude 012yjVgL, otra raíz): auditoria/WP-98.md.",
+  "auditoria": "auditoria/WP-98.md",
+  "integrado_en": "feat/ejecucion-plan-20261008",
+  "notas": [
+    "Informe recibido sobre 0b3990d contrastado con base actual 99cb79f.",
+    "Alcance y trazabilidad: docs/implementacion/wp/WP-98.md."
+  ]
+}

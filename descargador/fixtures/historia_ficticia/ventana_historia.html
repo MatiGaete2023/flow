@@ -1,0 +1,83 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="IBM WebSphere Studio">
+<title>Consulta Detalle Causa</title>
+<script language="JavaScript">
+function InformeHistoria (crr_idtramite, flg_doc_reservado, gls_etapa,gls_tiptramite,gls_despliegue,fecha_tramite)
+ {
+ this.crr_idtramite = crr_idtramite;
+ this.flg_doc_reservado = flg_doc_reservado;
+ this.gls_etapa = gls_etapa;
+ this.gls_tiptramite = gls_tiptramite;
+ this.gls_despliegue = gls_despliegue;
+ this.fecha_tramite = fecha_tramite;
+ }
+var historia = new Array();
+</script>
+</head>
+<body class="scrollColor">
+<form name="AtPublicoPpalForm" method="post" action="/SITFAWEB/AtPublicoDAction.do">
+<div class="container-fluid" id="app"><div class="row"><div class="col-xs-12"><div class="panel panel-default">
+<div class="panel-heading"><strong>Informaci&oacute;n de la Causa</strong> <strong>[Causa Reservada]</strong></div>
+<div class="panel-body">
+<div class="row">
+<div class="col-xs-4"><label class="form-check-label">RIT:</label> C-99999-2099</div>
+<div class="col-xs-4"><label class="form-check-label">Caratulado:</label> NOMBRECANARIO APELLIDOCANARIO</div>
+<div class="col-xs-4"><label class="form-check-label">F. Ingreso:</label> 01/01/2099</div>
+</div>
+<div class="row">
+<div class="col-xs-4"><label class="form-check-label">RUC:</label> 99- 9-9999999-9</div>
+<div class="col-xs-4"><label class="form-check-label">Proc.:</label> Cumplimiento</div>
+<div class="col-xs-4"><label class="form-check-label">Forma Inicio:</label> Requerimiento</div>
+</div>
+<div class="row">
+<div class="col-xs-4"><label class="form-check-label">Est. Adm.:</label> Sin archivar</div>
+<div class="col-xs-4"><label class="form-check-label">Etapa:</label> Cumplimiento</div>
+<div class="col-xs-4"><label class="form-check-label">Estado Proc.:</label> Concluido</div>
+</div>
+<div class="row">
+<div class="col-xs-8"><label class="form-check-label">Tribunal:</label> Juzgado Canario de Prueba</div>
+<div class="col-xs-4"><label class="form-check-label">Texto Requerimiento :</label><img src="pdf.gif" onclick="ShowPDFO('REQCANARIO')"></div>
+</div>
+</div></div></div></div>
+<ul class="nav nav-tabs">
+<li><a href="#" onclick="ShowPopUpCabecera(1,100)">Litigantes</a></li>
+<li><a href="#" onclick="ShowPopUpCabecera(2,100)">Materias</a></li>
+<li><a href="#" onclick="ShowPopUpCabecera(3,100)">Plazos</a></li>
+<li><a href="#" onclick="ShowPopUpCabecera(4,100)">Remisi&oacute;n</a></li>
+</ul>
+<ul class="nav nav-pills">
+<li><a href="#" onclick="Lengueta('Historia')">Historia</a></li>
+<li><a href="#" onclick="Lengueta('Notificaciones')">Notificaci&oacute;n</a></li>
+<li><a href="#" onclick="Lengueta('Diligencias')">Diligencias</a></li>
+<li><a href="#" onclick="Lengueta('Escritos')">Escritos</a></li>
+</ul>
+<div class="row"><div class="col-xs-12"><div class="table-responsive">
+<table class="table table-sm table-bordered table-hover">
+<thead><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Tr&aacute;mite</th><th>Desc. Tr&aacute;mite</th><th>Referencia</th><th>Fecha Tram</th></tr></thead>
+<tbody>
+<script>historia[0] = new InformeHistoria(1001,'N','Cumplimiento','Resolucion','Tengase presente canario','13/10/2099');</script>
+<tr><td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%">9120</td>
+<td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%"><img alt="Ver documento" border="0" height="16" onclick="ShowPDF('TOKENDOCCANARIO1','pdf')" src="pdf.gif" style="cursor:pointer" width="16"></td>
+<td align="center" class="textoBarra" width="5%"><img src="sel.gif" onclick="ShowPopUpLengueta(1,1001,49,100,3,0)"></td>
+<td align="center" class="textoBarra" width="5%"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>
+<td class="textoBarra">Cumplimiento</td><td class="textoBarra">Resoluci&oacute;n</td><td class="textoBarra">Tengase presente canario</td>
+<td class="textoBarra">Pone en conocimiento CANARIOREF</td><td class="textoBarra">13/10/2099</td></tr>
+<script>historia[1] = new InformeHistoria(1000,'N','Cumplimiento','Escrito','Acompana documentos','09/10/2099');</script>
+<tr><td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%">9119</td>
+<td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%"><img alt="Reservado" border="0" height="16" onclick="Reservado('TOKENDOCCANARIO2')" src="pdf.gif" style="cursor:pointer" width="16"></td>
+<td align="center" class="textoBarra" width="5%"><img src="sel.gif"></td>
+<td align="center" class="textoBarra" width="5%"><!--  *******  ARCHIVOS ANEXOS  *******   --><img src="anexo.gif" onclick="ShowAnexos(1000,49)"></td>
+<td class="textoBarra">Cumplimiento</td><td class="textoBarra">Escrito</td><td class="textoBarra">Acompa&ntilde;a documentos</td>
+<td class="textoBarra">Sin referencia.</td><td class="textoBarra">09/10/2099</td></tr>
+<script>historia[2] = new InformeHistoria(999,'N','Cumplimiento','Actuacion','Opinion consejero tecnico canario','02/10/2099');</script>
+<tr><td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%">9117</td>
+<td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%"><img alt="Ver documento" border="0" height="16" onclick="ShowPDF('TOKENDOCCANARIO3','pdf')" src="pdf.gif" style="cursor:pointer" width="16"></td>
+<td align="center" class="textoBarra" width="5%"><img src="sel.gif" onclick="ShowPopUpLengueta(1,999,49,100,3,0)"></td>
+<td align="center" class="textoBarra" width="5%"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>
+<td class="textoBarra">Cumplimiento</td><td class="textoBarra">Actuaci&oacute;n</td>
+<td class="textoBarra">Opini&oacute;n consejero t&eacute;cnico canario con un texto bastante m&aacute;s largo que los dem&aacute;s para probar tramos</td>
+<td class="textoBarra">Not+aper NOMBRECANARIO/Tp</td><td class="textoBarra">02/10/2099</td></tr>
+<tr><td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%">9001</td>
+<td align="center" bordercolor="#FFFFFF" class="textoBarra" width="5%"><img alt="Ver documento" src="pdf.gif" onclick="ShowPDF('TOKENDOCCANARIO4','pdf')"></td>
+<td align="center" class="textoBarra" width="5%"><img src="sel.gif"></td>
+<td align="center" class="textoBarra" width="5%"><!--  *******  ARCHIVOS ANEXOS  *******   --></td></tr></tbody></table></div></div></div></form></body></html>

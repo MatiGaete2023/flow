@@ -1,0 +1,32 @@
+{
+  "titulo": "Revisión propia posterior a WP-63 y WP-80",
+  "ola": 6,
+  "tipo": "M",
+  "depende_de": [
+    {
+      "wp": "WP-63",
+      "tipo": "funcional"
+    },
+    {
+      "wp": "WP-80",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "11 de octubre de 2026",
+  "rama": "wp/81-revision-propia-20261011",
+  "pr": 36,
+  "verificacion": "PASA después de integración en c2a5d807578c69a506fe8f338f3fe69186367195: Asistente 810/11/6 xfail; Descargador 240/62; nueve controles y procedencia limpia/estable. Línea base regenerada.",
+  "revision": "Revisión propia del Ejecutor; excepción E3 autorizada expresamente por el usuario el 11 de octubre de 2026 para #36–38.",
+  "auditoria": "Sin auditoría de otra raíz: excepción E3 expresa del usuario para #36–38; restricciones absolutas y golden17 PASA.",
+  "integrado_en": "c2a5d807578c69a506fe8f338f3fe69186367195",
+  "notas": [
+    "Pedido expreso del usuario: revisión propia sin perjuicio de E3. No acredita revisión cruzada ni aceptación de uso real.",
+    "Cuatro fallos corregidos, incluido O1 de WP-63; 14 nuevas regresiones, ninguna prueba retirada.",
+    "Base 286c28f posterior a integración WP-63/WP-80; no modificar su estado, E3 ni decisiones.",
+    "Evidencia posterior al SHA medido: cambios solo en documentación/estado, no código, pruebas ni configuración. E3 independiente pendiente. (histórico, superado: integrado en c2a5d80 con excepción E3 expresa)",
+    "Usuario: «Autorizar excepción E3 para #36–38». No se extiende a #39 ni a main/release."
+  ]
+}

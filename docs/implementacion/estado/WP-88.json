@@ -1,0 +1,29 @@
+{
+  "titulo": "Flujo integrado y siguientes acciones de UX",
+  "ola": 6,
+  "tipo": "M/C",
+  "depende_de": [
+    {
+      "wp": "WP-87",
+      "tipo": "funcional"
+    }
+  ],
+  "decisiones": [],
+  "estado": "INTEGRADO",
+  "ejecutor": "Codex /root",
+  "tomado": "12 de octubre de 2026",
+  "rama": "wp/88-flujo-integrado",
+  "pr": 42,
+  "verificacion": "PASA: docs/implementacion/verificacion/WP-88.json; candidato 14aa8af609a06e09287f401648e1af56b7c9e700 limpio, inventario sin bajas y golden intacto.",
+  "revision": "Revisión propia del diff: conforme. E3 independiente no exigida por decisión j; no acredita otra raíz.",
+  "auditoria": null,
+  "integrado_en": "9c8049035a5bc850e0d6ca2811f9476f9a2f2c54",
+  "notas": [
+    "Usuario: «Efectua los cambuos del otro agente que no esten y continua».",
+    "Los seis comportamientos anunciados no están en e91e360; se implementan sin cambiar reglas, Outlook, contratos ni extensión.",
+    "38 focales del flujo/compatibilidad PASA; 18 focales de arranque y 9 de UX final PASA. Verificación completa del candidato pendiente.",
+    "Verificación final PASA; cifras y procedencia en línea base/informe. Corrección del arranque autónomo, recuperaciones legadas, preferencia compartida y ruta de paquete probadas localmente. Windows/instalador y uso real pendientes.",
+    "PR #42 fusionado en feat; código idéntico al candidato 14aa8af medido PASA. Integración técnica; CI Windows sigue bloqueada por facturación y no acredita aceptación funcional."
+  ],
+  "validacion_windows": "PASA: run 38259239456 (c896b0f, código WP-88 más correctivo UI WP-89), Python 3.12–3.14, ambos EXE y ciclo de instalación. Navegador/Descargador run 38257631987 PASA. Solo sintéticos; Office/SITFA y acta real pendientes."
+}

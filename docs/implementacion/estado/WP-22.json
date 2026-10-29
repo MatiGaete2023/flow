@@ -1,0 +1,24 @@
+{
+  "titulo": "Inspector y diario de registro RUS",
+  "ola": 2,
+  "tipo": "E/M",
+  "depende_de": [
+    "WP-21"
+  ],
+  "decisiones": [
+    "D3"
+  ],
+  "estado": "INTEGRADO",
+  "ejecutor": "claude-sesion-012yjVgL",
+  "tomado": "2026-10-10T10:30:00-03:00",
+  "rama": "wp/WP-22-inspector-rus",
+  "pr": 14,
+  "verificacion": "PASA (verificacion/WP-22.json)",
+  "revision": "Subagentes de la sesión Ejecutora (apoyo); excepción a E3 autorizada por el usuario el 11 de octubre de 2026",
+  "auditoria": "Sin auditoría de otra raíz: excepción a E3 autorizada por el usuario",
+  "integrado_en": "463699f",
+  "notas": [
+    "D3 = Sí, retirarlos. registration.py eliminado (no reducido). Apilado sobre WP-21 (PR #13).",
+    "Integrado en feat el 11 de octubre de 2026 por la sesión Ejecutora (excepción a E3)."
+  ]
+}

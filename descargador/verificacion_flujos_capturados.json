@@ -1,0 +1,30 @@
+{
+  "resultado": "FORMATOS_Y_RESPUESTAS_RECONOCIDOS",
+  "har_leidos": 4,
+  "respuestas_reconocidas": {
+    "litigantes": 7,
+    "calendario_informes": 2,
+    "calendario_medidas": 1
+  },
+  "respuestas_sin_cuerpo": 0,
+  "xls_existentes": [
+    {
+      "pantalla": "litigantes",
+      "formato": "XLS-BIFF",
+      "registros": 4,
+      "formato_reconocido": true,
+      "coincide_con_har": null,
+      "comparacion": "SIN_HAR_DEL_TRIBUNAL_DEL_NOMBRE"
+    },
+    {
+      "pantalla": "calendario_informes",
+      "formato": "XLS-BIFF",
+      "registros": 782,
+      "formato_reconocido": true,
+      "coincide_con_har": false,
+      "comparacion": "REGISTROS_DISTINTOS"
+    }
+  ],
+  "consultas_reales_nuevas": 0,
+  "datos_privados_guardados": false
+}

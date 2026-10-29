@@ -1,0 +1,66 @@
+name: Descargador integral y bitácoras
+on:
+  pull_request:
+    branches: ['feat/**']
+    paths:
+      - 'src/**'
+      - 'descargador/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'contracts/**'
+      - 'installer/**'
+      - '*.spec'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+# Una corrida nueva del mismo evento y rama cancela la anterior. El evento va en el grupo
+# para que un push y un PR no se cancelen entre sí (cada uno corre su propio alcance).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  descargador:
+    timeout-minutes: 20
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: descargador
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/windows-py312.lock
+      - name: Control de identidades antes de instalar o generar artefactos
+        working-directory: .
+        run: python tools/check_real_ids.py
+      - name: Versiones desde sus fuentes únicas
+        working-directory: .
+        run: python tools/write_build_meta.py --github-env $env:GITHUB_ENV
+      - run: python -m pip install --require-hashes -r ../requirements/windows-py312.lock
+      - name: Inventario de dependencias bloqueadas
+        run: python ../tools/flow_dependency_inventory.py --lock ../requirements/windows-py312.lock --output artifacts/dependencies.json
+      - run: python -m pytest -q -p no:cacheprovider
+      - run: node test_bitacoras_extension.cjs
+      - run: node test_calendario_extension.cjs
+      - run: node test_historia_extension.cjs
+      # E4: pruebas unitarias en PR; Playwright solo en candidato explícito.
+      - name: Extensión y servidor ficticios
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python -m playwright install chromium
+          if ($LASTEXITCODE -ne 0) { throw 'Falló Chromium de pruebas' }
+          python verificar_bitacoras_extension.py
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la lectura ficticia desde la extensión' }
+          python verificar_pdf_extension.py
+          if ($LASTEXITCODE -ne 0) { throw 'Falló la evidencia PDF con extensión real' }
+      # El integral del workflow tests.yml construye y verifica ambos EXE una sola vez.

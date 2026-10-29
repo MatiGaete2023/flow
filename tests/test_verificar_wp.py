@@ -1,0 +1,588 @@
+"""Regresiones de la puerta de verificación, con procesos y datos ficticios."""
+
+import copy
+import importlib.util
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+SPEC = importlib.util.spec_from_file_location(
+    "verificar_wp_under_test", Path(__file__).resolve().parents[1] / "tools" / "verificar_wp.py"
+)
+verifier = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(verifier)
+REAL_PROVENANCE = verifier.provenance
+
+
+@pytest.fixture(autouse=True)
+def clean_provenance(monkeypatch):
+    monkeypatch.setattr(
+        verifier,
+        "provenance",
+        lambda output=None: {
+            "commit": "a" * 40,
+            "arbol_git": "b" * 40,
+            "cambios_locales": False,
+            "huella_trabajo": "c" * 64,
+        },
+    )
+
+
+@pytest.fixture(autouse=True)
+def isolated_cache(monkeypatch, tmp_path):
+    # Ninguna prueba escribe la caché real del repositorio ni hereda la de CI.
+    monkeypatch.setattr(verifier, "CACHE_DIR", tmp_path / "cache")
+    monkeypatch.delenv("CI", raising=False)
+    return tmp_path / "cache"
+
+
+@pytest.fixture
+def healthy():
+    suite = {
+        "aprobadas": 10,
+        "omitidas": 1,
+        "fallidas": 0,
+        "subpruebas": 2,
+        "xfail": 0,
+        "xpass": 0,
+        "subpruebas_omitidas": 0,
+        "deseleccionadas": 0,
+        "codigo": 0,
+        "resumen": "10 passed, 1 skipped",
+    }
+    return {
+        "commit": "abcdef0",
+        "pruebas_recolectadas": {"asistente": ["tests/test_fictitious.py::test_known"], "descargador": []},
+        "asistente": suite.copy(),
+        "descargador": suite.copy(),
+        "identidades_reales": 12,
+        "paridad_golden": "PASA",
+        "restricciones": [],
+        "ruff_src": 0,
+        "modulos_no_alcanzables": 12,
+        "enlaces_rotos": 26,
+    }
+
+
+def passes(checks):
+    assert len(checks) == 9
+    return all(check["resultado"] == "PASA" for check in checks)
+
+
+@pytest.mark.parametrize("code", [1, 2, 3, 4, 5, 124, 127])
+def test_pytest_error_with_passed_tests_cannot_pass(monkeypatch, healthy, code):
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (code, "10 passed, 1 skipped in 0.10s"))
+    now = copy.deepcopy(healthy)
+    now["asistente"] = verifier.pytest_counts([])
+    assert now["asistente"]["aprobadas"] == 10
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+@pytest.mark.parametrize(
+    "output,passed,failed,subtests,valid",
+    [
+        ("10 passed, 2 xfailed, 3 subtests passed in 0.10s", 10, 0, 3, True),
+        ("2 passed, 1 failed, 2 errors, 1 subtests failed in 1.20s", 2, 4, 0, True),
+        ("3 subtests passed in 0.10s", 0, 0, 3, False),
+        ("10 passed", 0, 0, 0, False),
+        ("private-marker", 0, 0, 0, False),
+        ("10 passed, unknown summary in 0.10s", 10, 0, 0, False),
+    ],
+)
+def test_pytest_summary_is_complete_and_distinguishes_xfail(monkeypatch, output, passed, failed, subtests, valid):
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (0, output))
+    result = verifier.pytest_counts([])
+    assert (result["aprobadas"], result["fallidas"], result["subpruebas"], result["medicion_valida"]) == (
+        passed,
+        failed,
+        subtests,
+        valid,
+    )
+    assert "private-marker" not in result["resumen"]
+    published = verifier.suite_report(result | {"stdout": "private-marker", "traceback": "private-marker"})
+    assert "private-marker" not in json.dumps(published)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "asistente",
+        "descargador",
+        "pruebas_recolectadas",
+        "identidades_reales",
+        "paridad_golden",
+        "restricciones",
+        "ruff_src",
+        "modulos_no_alcanzables",
+        "enlaces_rotos",
+    ],
+)
+@pytest.mark.parametrize("bad", [None, "malformed", {}, True])
+def test_missing_or_malformed_control_never_disappears(healthy, key, bad):
+    now = copy.deepcopy(healthy)
+    now[key] = bad
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+    assert not passes(verifier.compare(healthy, now, 0, 0))
+    del now[key]
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+@pytest.mark.parametrize("removed", [-1, 1, 11, True])
+def test_invalid_declared_test_removals_fail(healthy, removed):
+    assert not passes(verifier.compare(healthy, healthy, removed, 0))
+
+
+@pytest.fixture
+def scanner_root(tmp_path, monkeypatch):
+    (tmp_path / "tools").mkdir()
+    for filename in ("check_real_ids.py", "check_links.py", "modulos_no_alcanzables.py"):
+        (tmp_path / "tools" / filename).touch()
+    monkeypatch.setattr(verifier, "ROOT", tmp_path)
+    return tmp_path
+
+
+@pytest.mark.parametrize("method", ["count_real_ids", "ruff_count", "unreachable_count", "broken_links"])
+@pytest.mark.parametrize("code,output", [(1, "Traceback private-marker"), (2, ""), (124, ""), (0, "malformed")])
+def test_scanner_crash_or_malformed_output_not_zero(monkeypatch, scanner_root, method, code, output):
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (code, output))
+    assert getattr(verifier, method)() is None
+
+
+@pytest.mark.parametrize(
+    "method,code,output,expected",
+    [
+        ("count_real_ids", 0, "Sin RUT reales detectados.\n", 0),
+        (
+            "count_real_ids",
+            1,
+            "fixture:1: RUT con dígito verificador válido (ficticio)\n1 posibles identidades reales. Reemplázalas por datos sintéticos de prueba.\n",
+            1,
+        ),
+        ("broken_links", 1, "fixture:1: missing\n1 enlaces rotos.\n", 1),
+        ("ruff_count", 1, '[{"code":"F821"}]', 1),
+        ("unreachable_count", 0, '{"no_alcanzables": ["ficticio"]}', 1),
+    ],
+)
+def test_valid_findings_are_measurements_not_process_errors(monkeypatch, scanner_root, method, code, output, expected):
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (code, output))
+    assert getattr(verifier, method)() == expected
+
+
+def test_timeout_is_safe_failure(monkeypatch):
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired("private-marker", 1, output="private-marker")
+
+    monkeypatch.setattr(verifier.subprocess, "run", timeout)
+    assert verifier.run(["ficticio"], timeout=1) == (124, "")
+
+
+def test_syntax_error_in_restrictions_fails_without_source(monkeypatch, tmp_path, capsys):
+    personal = tmp_path / "src" / "nurus" / "personal"
+    personal.mkdir(parents=True)
+    (personal / "registration.py").write_text("def submit(private_marker invalid syntax", encoding="utf-8")
+    monkeypatch.setattr(verifier, "ROOT", tmp_path)
+    problems = verifier.restrictions()
+    assert "No se pudo analizar registration.py" in problems
+    assert "private_marker" not in json.dumps(problems)
+    assert "private_marker" not in capsys.readouterr().out
+
+
+@pytest.fixture
+def baseline_file(monkeypatch, tmp_path):
+    target = tmp_path / "linea_base.json"
+    monkeypatch.setattr(verifier, "BASE_FILE", target)
+    return target
+
+
+@pytest.mark.parametrize("bad", ["process", "increased_debt", "fewer_tests", "missing"])
+def test_failed_update_preserves_baseline_bytes(monkeypatch, baseline_file, healthy, bad, capsys):
+    original = json.dumps(healthy).encode()
+    baseline_file.write_bytes(original)
+    now = copy.deepcopy(healthy)
+    if bad == "process":
+        now["asistente"]["codigo"] = 2
+        now["asistente"]["resumen"] = "private-marker"
+    elif bad == "increased_debt":
+        now["identidades_reales"] += 1
+    elif bad == "fewer_tests":
+        now["descargador"]["aprobadas"] -= 1
+    else:
+        now["ruff_src"] = None
+    monkeypatch.setattr(verifier, "collect", lambda: now)
+    assert verifier.main(["--linea-base"]) == 1
+    assert baseline_file.read_bytes() == original
+    assert "private-marker" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("contents", [b"not JSON", b"{}", b"null"])
+def test_existing_corrupt_baseline_not_replaced(monkeypatch, baseline_file, healthy, contents):
+    baseline_file.write_bytes(contents)
+    monkeypatch.setattr(verifier, "collect", lambda: healthy)
+    assert verifier.main(["--linea-base"]) == 1
+    assert baseline_file.read_bytes() == contents
+
+
+def test_initial_baseline_needs_all_healthy_controls(monkeypatch, baseline_file, healthy):
+    healthy["ruff_src"] = None
+    monkeypatch.setattr(verifier, "collect", lambda: healthy)
+    assert verifier.main(["--linea-base"]) == 1
+    assert not baseline_file.exists()
+
+
+def test_valid_historical_debt_can_initialize_and_update(monkeypatch, baseline_file, healthy):
+    monkeypatch.setattr(verifier, "collect", lambda: healthy)
+    assert verifier.main(["--linea-base"]) == 0
+    healthy["asistente"]["aprobadas"] += 1
+    assert verifier.main(["--linea-base"]) == 0
+    assert json.loads(baseline_file.read_text(encoding="utf-8"))["asistente"]["aprobadas"] == 11
+
+
+def test_output_cannot_overwrite_baseline(monkeypatch, baseline_file, healthy):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    monkeypatch.setattr(verifier, "collect", lambda: pytest.fail("must reject before running"))
+    with pytest.raises(SystemExit) as exc:
+        verifier.main(["--salida", str(baseline_file)])
+    assert exc.value.code == 2
+
+
+@pytest.mark.parametrize('relative', ['src/config.json', 'src/code.py', '.git/state.json', 'report.json'])
+def test_report_output_cannot_replace_or_exclude_project_files(monkeypatch, tmp_path, relative):
+    monkeypatch.setattr(verifier, 'ROOT', tmp_path)
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('original ficticio', encoding='utf-8')
+    monkeypatch.setattr(verifier, 'collect', lambda: pytest.fail('must reject before collecting'))
+    with pytest.raises(SystemExit) as exc:
+        verifier.main(['--salida', str(target)])
+    assert exc.value.code == 2
+    assert target.read_text(encoding='utf-8') == 'original ficticio'
+
+
+def test_dirty_source_cannot_be_hidden_as_report(monkeypatch, tmp_path):
+    source = tmp_path / 'src' / 'config.json'
+    source.parent.mkdir()
+    source.write_text('{}', encoding='utf-8')
+    for command in (
+        ['git', 'init', '-q'],
+        ['git', 'add', '.'],
+        ['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'],
+    ):
+        subprocess.run(command, cwd=tmp_path, check=True, capture_output=True)
+    source.write_text('{"changed": true}', encoding='utf-8')
+    monkeypatch.setattr(verifier, 'ROOT', tmp_path)
+    assert REAL_PROVENANCE(source) is None
+    report = tmp_path / 'docs' / 'implementacion' / 'verificacion' / 'fixture.json'
+    assert REAL_PROVENANCE(report)['cambios_locales'] is True
+
+
+def test_failed_json_write_closes_temporary_before_cleanup(monkeypatch, tmp_path):
+    target = tmp_path / 'report.json'
+    target.write_bytes(b'previous report')
+    original_create = verifier.tempfile.NamedTemporaryFile
+    original_unlink = Path.unlink
+    handles = []
+
+    def create(*args, **kwargs):
+        handle = original_create(*args, **kwargs)
+        handles.append(handle)
+        return handle
+
+    def unlink(path, *args, **kwargs):
+        if handles and path == Path(handles[0].name):
+            assert handles[0].closed, 'Windows cannot remove an open temporary file'
+        return original_unlink(path, *args, **kwargs)
+
+    def fail_write(*args, **kwargs):
+        raise OSError('fictitious write failure')
+
+    monkeypatch.setattr(verifier.tempfile, 'NamedTemporaryFile', create)
+    monkeypatch.setattr(Path, 'unlink', unlink)
+    monkeypatch.setattr(verifier.json, 'dump', fail_write)
+    with pytest.raises(OSError, match='fictitious write failure'):
+        verifier.write_json(target, {})
+    assert target.read_bytes() == b'previous report'
+    assert not Path(handles[0].name).exists()
+
+
+def test_negative_cli_removal_rejected_before_running(monkeypatch):
+    monkeypatch.setattr(verifier, "collect", lambda: pytest.fail("must reject before running"))
+    with pytest.raises(SystemExit) as exc:
+        verifier.main(["--pruebas-eliminadas-asistente", "-1"])
+    assert exc.value.code == 2
+
+
+@pytest.mark.parametrize("change", ["commit", "huella_trabajo", "cambios_locales", "unavailable"])
+def test_changed_or_dirty_worktree_not_integrable(monkeypatch, baseline_file, healthy, change, tmp_path):
+    before = {"commit": "a" * 40, "arbol_git": "b" * 40, "cambios_locales": False, "huella_trabajo": "c" * 64}
+    after = before.copy()
+    if change == "unavailable":
+        after = None
+    elif change == "cambios_locales":
+        before[change] = after[change] = True
+    else:
+        after[change] = "d" * len(after[change])
+    identities = iter([before, after])
+    monkeypatch.setattr(verifier, "provenance", lambda output=None: next(identities))
+    monkeypatch.setattr(verifier, "collect", lambda: healthy)
+    report_file = tmp_path / "report.json"
+    assert verifier.main(["--linea-base", "--salida", str(report_file)]) == 1
+    assert not baseline_file.exists()
+    report = json.loads(report_file.read_text(encoding="utf-8"))
+    assert report["elegible_integracion"] is False
+    assert report["veredicto"] == "FALLA"
+    assert len(report["controles"]) == 9
+    assert "huella_trabajo" not in json.dumps(report)
+
+
+@pytest.mark.parametrize('declared,expected', [('test_known[synthetic]', 0), ('test_known[invented]', 1)])
+def test_cli_removed_list_uses_exact_baseline_inventory(
+    monkeypatch, baseline_file, healthy, tmp_path, declared, expected
+):
+    node = 'tests/test_synthetic.py::test_known[synthetic]'
+    healthy['pruebas_recolectadas'] = {'asistente': [node], 'descargador': []}
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    now = copy.deepcopy(healthy)
+    now['asistente']['aprobadas'] -= 1
+    now['pruebas_recolectadas']['asistente'] = []
+    monkeypatch.setattr(verifier, 'collect', lambda: now)
+    monkeypatch.setattr(verifier, 'collected_nodeids', lambda *_: set())
+    manifest = tmp_path / 'removed.txt'
+    manifest.write_text('tests/test_synthetic.py::' + declared, encoding="utf-8")
+    assert verifier.main(['--lista-eliminadas', str(manifest)]) == expected
+
+
+def test_clean_source_with_failed_control_is_not_integrable(monkeypatch, baseline_file, healthy, tmp_path):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    now = copy.deepcopy(healthy)
+    now['asistente']['fallidas'] = 1
+    monkeypatch.setattr(verifier, 'collect', lambda: now)
+    report_file = tmp_path / 'report.json'
+    assert verifier.main(['--salida', str(report_file)]) == 1
+    report = json.loads(report_file.read_text(encoding="utf-8"))
+    assert report['procedencia_verificada'] is True
+    assert report['elegible_integracion'] is False
+    assert report['veredicto'] == 'FALLA'
+    assert report['suites']['asistente']['fallidas'] == 1
+    assert report['suites']['asistente']['codigo'] == 0
+    assert 'resumen' not in report['suites']['asistente']
+    assert 'controles' not in report['suites']['asistente']
+
+
+@pytest.mark.parametrize(
+    'scenario,expected',
+    [
+        ('unchanged', 'PASA'),
+        ('undeclared', 'FALLA'),
+        ('new_tests_mask_deletions', 'FALLA'),
+        ('partially_declared', 'FALLA'),
+        ('fully_declared', 'PASA'),
+    ],
+)
+def test_inventory_prevents_new_tests_from_hiding_unreported_deletions(healthy, scenario, expected):
+    base = copy.deepcopy(healthy)
+    nodes = [f'tests/test_synthetic.py::test_case_{index}' for index in range(10)]
+    base['pruebas_recolectadas']['asistente'] = nodes
+    now = copy.deepcopy(base)
+    lists = None
+    if scenario != 'unchanged':
+        now['pruebas_recolectadas']['asistente'] = nodes[:6]
+        now['asistente']['aprobadas'] = 6
+        if scenario != 'undeclared':
+            now['pruebas_recolectadas']['asistente'] += [f'tests/test_new.py::test_added_{i}' for i in range(5)]
+            now['asistente']['aprobadas'] = 11
+        if scenario in {'partially_declared', 'fully_declared'}:
+            declared = set(nodes[6:9] if scenario == 'partially_declared' else nodes[6:])
+            lists = ({'asistente': len(declared), 'descargador': 0}, [], {'asistente': declared, 'descargador': set()})
+    checks = verifier.compare(now, base, 0, 0, lists)
+    inventory = next(check for check in checks if check['control'] == 'Inventario de pruebas')
+    assert inventory['resultado'] == expected
+    if scenario == 'new_tests_mask_deletions':
+        assert next(check for check in checks if check['control'] == 'Suite asistente')['resultado'] == 'PASA'
+
+
+def test_reused_measurement_skips_collect_only_on_same_clean_tree(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main([]) == 0 and len(calls) == 1
+    assert len(list(isolated_cache.glob("*.json"))) == 1
+    report = isolated_cache.parent / "informe.json"
+    monkeypatch.setattr(verifier, "report_path", lambda output: Path(output))
+    assert verifier.main(["--reutilizar-medicion", "--salida", str(report)]) == 0
+    assert len(calls) == 1
+    assert json.loads(report.read_text(encoding="utf-8"))["medicion_reutilizada"] is True
+
+
+@pytest.mark.parametrize("change", ["dirty", "ci", "pythonpath", "tree", "flag"])
+def test_reuse_requires_identical_clean_context(monkeypatch, baseline_file, healthy, change):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main([]) == 0
+    state = {"commit": "a" * 40, "arbol_git": "b" * 40, "cambios_locales": False, "huella_trabajo": "c" * 64}
+    if change == "dirty":
+        state["cambios_locales"] = True
+    elif change == "tree":
+        state["arbol_git"] = "d" * 40
+    elif change == "ci":
+        monkeypatch.setenv("CI", "true")
+    elif change == "pythonpath":
+        monkeypatch.setenv("PYTHONPATH", "/otra/copia/src")
+    monkeypatch.setattr(verifier, "provenance", lambda output=None: dict(state))
+    verifier.main([] if change == "flag" else ["--reutilizar-medicion"])
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize("contents", [b"not JSON", b"{}", b'{"clave": "x", "medicion": {}}'])
+def test_corrupt_or_incomplete_cache_is_measured_again(monkeypatch, baseline_file, healthy, isolated_cache, contents):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    key = verifier.environment_key("b" * 40)
+    isolated_cache.mkdir()
+    (isolated_cache / f"{key}.json").write_bytes(contents)
+    calls = []
+    monkeypatch.setattr(verifier, "collect", lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main(["--reutilizar-medicion"]) == 0
+    assert calls == [1]
+
+
+def test_incomplete_measurement_is_never_cached(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding="utf-8")
+    broken = copy.deepcopy(healthy)
+    broken["ruff_src"] = None
+    monkeypatch.setattr(verifier, "collect", lambda: copy.deepcopy(broken))
+    assert verifier.main([]) == 1
+    assert not isolated_cache.exists() or not list(isolated_cache.glob("*.json"))
+
+
+def test_falla_de_suite_informa_nodeids_sin_mensajes(monkeypatch, healthy):
+    # Revisión externa H8: el control dice qué prueba falló, sin copiar el mensaje (puede traer datos).
+    output = (
+        "FAILED tests/test_x.py::test_ficticio[a-b] - AssertionError: dato-privado-ficticio\n"
+        "ERROR tests/test_y.py::Clase::test_z\n"
+        "1 failed, 9 passed, 1 error in 0.10s"
+    )
+    monkeypatch.setattr(verifier, "run", lambda *a, **k: (1, output))
+    now = copy.deepcopy(healthy)
+    now["asistente"] = verifier.pytest_counts([])
+    assert now["asistente"]["fallidas_nodeids"] == [
+        "tests/test_x.py::test_ficticio[a-b]",
+        "tests/test_y.py::Clase::test_z",
+    ]
+    detail = next(c["detalle"] for c in verifier.compare(now, healthy, 0, 0) if c["control"] == "Suite asistente")
+    assert "tests/test_x.py::test_ficticio[a-b]" in detail and "dato-privado-ficticio" not in detail
+    report = verifier.suite_report(now["asistente"])
+    assert report["fallidas_nodeids"] == now["asistente"]["fallidas_nodeids"]
+
+
+@pytest.mark.parametrize('suite', ['asistente', 'descargador'])
+@pytest.mark.parametrize('field', ['omitidas', 'xfail'])
+def test_new_skips_or_xfails_cannot_be_compensated_with_new_passes(healthy, suite, field):
+    now = copy.deepcopy(healthy)
+    now[suite]['aprobadas'] += 1
+    now[suite][field] += 1
+    prefix = 'tests' if suite == 'asistente' else 'descargador'
+    now['pruebas_recolectadas'][suite].append(f'{prefix}/test_new.py::test_added')
+    checks = verifier.compare(now, healthy, 0, 0)
+    assert next(c for c in checks if c['control'] == 'Inventario de pruebas')['resultado'] == 'PASA'
+    assert next(c for c in checks if c['control'] == f'Suite {suite}')['resultado'] == 'FALLA'
+
+
+@pytest.mark.parametrize('suite', ['asistente', 'descargador'])
+def test_subtest_loss_fails_even_when_parent_and_pass_count_are_preserved(healthy, suite):
+    now = copy.deepcopy(healthy)
+    now[suite]['subpruebas'] -= 1
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+def test_declaring_parent_removal_does_not_guess_which_subtests_were_removed(healthy):
+    node = healthy['pruebas_recolectadas']['asistente'][0]
+    now = copy.deepcopy(healthy)
+    now['asistente']['aprobadas'] -= 1
+    now['asistente']['subpruebas'] = 0
+    now['pruebas_recolectadas']['asistente'] = []
+    lists = ({'asistente': 1, 'descargador': 0}, [], {'asistente': {node}, 'descargador': set()})
+    checks = verifier.compare(now, healthy, 0, 0, lists)
+    assert next(c for c in checks if c['control'] == 'Inventario de pruebas')['resultado'] == 'PASA'
+    assert next(c for c in checks if c['control'] == 'Suite asistente')['resultado'] == 'FALLA'
+
+
+@pytest.mark.parametrize(
+    'summary,field',
+    [
+        ('1 xpassed', 'xpass'),
+        ('1 deselected', 'deseleccionadas'),
+        ('1 subtests skipped', 'subpruebas_omitidas'),
+    ],
+)
+def test_unexpected_pytest_outcomes_survive_parsing_and_publication_and_fail_gate(monkeypatch, healthy, summary, field):
+    output = f'10 passed, 1 skipped, 2 subtests passed, {summary} in 0.10s'
+    monkeypatch.setattr(verifier, 'run', lambda *a, **k: (0, output))
+    result = verifier.pytest_counts([])
+    assert result['medicion_valida'] is True
+    assert result['codigo'] == 0 and result['fallidas'] == 0
+    assert result[field] == 1
+    assert verifier.suite_report(result)[field] == 1
+    now = copy.deepcopy(healthy)
+    now['asistente'] = result
+    assert not verifier.suite_valid(result)
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+@pytest.mark.parametrize('field', ['xfail', 'xpass', 'deseleccionadas', 'subpruebas_omitidas'])
+@pytest.mark.parametrize('bad', [-1, True, '1', None])
+def test_optional_outcome_counts_are_validated_when_present(healthy, field, bad):
+    now = copy.deepcopy(healthy)
+    now['asistente'][field] = bad
+    assert not verifier.suite_valid(now['asistente'])
+    assert not passes(verifier.compare(now, healthy, 0, 0))
+
+
+def test_old_measurements_with_absent_new_outcome_fields_remain_compatible(healthy):
+    historical = copy.deepcopy(healthy)
+    for suite in ('asistente', 'descargador'):
+        for field in ('xfail', 'xpass', 'deseleccionadas', 'subpruebas_omitidas'):
+            del historical[suite][field]
+        assert verifier.suite_valid(historical[suite])
+    assert passes(verifier.compare(healthy, historical, 0, 0))
+
+
+def test_improved_coverage_and_resolved_expected_failures_are_allowed(healthy):
+    base = copy.deepcopy(healthy)
+    base['asistente']['xfail'] = 6
+    now = copy.deepcopy(base)
+    now['asistente'].update(aprobadas=12, omitidas=0, xfail=5, subpruebas=3)
+    assert passes(verifier.compare(now, base, 0, 0))
+
+
+@pytest.mark.parametrize('existing_baseline', [False, True])
+def test_xpass_cannot_initialize_or_replace_baseline_or_enter_cache(
+    monkeypatch, baseline_file, healthy, isolated_cache, existing_baseline
+):
+    original = json.dumps(healthy).encode()
+    if existing_baseline:
+        baseline_file.write_bytes(original)
+    broken = copy.deepcopy(healthy)
+    broken['asistente']['xpass'] = 1
+    monkeypatch.setattr(verifier, 'collect', lambda: copy.deepcopy(broken))
+    assert not verifier.complete(broken)
+    assert verifier.main(['--linea-base']) == 1
+    if existing_baseline:
+        assert baseline_file.read_bytes() == original
+    else:
+        assert not baseline_file.exists()
+    assert not isolated_cache.exists() or not list(isolated_cache.glob('*.json'))
+
+
+def test_old_cached_xpass_is_rejected_and_measured_again(monkeypatch, baseline_file, healthy, isolated_cache):
+    baseline_file.write_text(json.dumps(healthy), encoding='utf-8')
+    broken = copy.deepcopy(healthy)
+    broken['asistente']['xpass'] = 1
+    key = verifier.environment_key('b' * 40)
+    isolated_cache.mkdir()
+    (isolated_cache / f'{key}.json').write_text(json.dumps({'clave': key, 'medicion': broken}), encoding='utf-8')
+    calls = []
+    monkeypatch.setattr(verifier, 'collect', lambda: calls.append(1) or copy.deepcopy(healthy))
+    assert verifier.main(['--reutilizar-medicion']) == 0
+    assert calls == [1]

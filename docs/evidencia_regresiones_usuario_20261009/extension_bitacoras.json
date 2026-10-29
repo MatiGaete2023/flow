@@ -1,0 +1,21 @@
+{
+  "resultado": "OK",
+  "datos": "ficticios",
+  "modalidades": 4,
+  "tribunales": 2,
+  "pestanas": 3,
+  "opciones_informes": 3,
+  "paginas_por_consulta": 2,
+  "bitacoras": 80,
+  "tipos_popup": [
+    "11",
+    "12",
+    "13"
+  ],
+  "codificaciones": [
+    "utf-8",
+    "windows-1252"
+  ],
+  "peticiones_reales_rus": 0,
+  "escrituras_rus": 0
+}
