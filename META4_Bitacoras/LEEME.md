@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.3
+# Meta 4 · Registros y bitácoras — 2.4
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -10,14 +10,15 @@ Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó e
    - Registros: Seguimiento → **Espera** y **Cumplimiento**, modalidades **FAE** y **Residencia**. Para un Meta 4 completo conviene descargar sin filtro de fechas, sin filtros del formulario y sin filtro de vencimiento; si el lote tiene filtros, igual se procesa y se avisa.
    - Bitácoras: lectura de bitácoras del mismo alcance.
 4. Ejecuta **Iniciar Meta 4.bat**.
-5. Elige la carpeta del **lote de registros** (la que contiene `resumen.json`) y la carpeta de **bitácoras** (con `bitacoras.json` y sus HTML). Si las bitácoras están dentro de la carpeta de registros, deja vacío el segundo campo.
-6. Opcional: en **Tribunales** selecciona uno o varios (Ctrl + clic). Sin selección se incluyen todos. La lista muestra los tribunales consultados en el lote.
+5. En **Lotes de registros** pulsa **Agregar…** una vez por cada lote (la carpeta que contiene `resumen.json`). Puedes agregar, por ejemplo, FAE Espera, FAE Cumplimiento, Residencia Espera y Residencia Cumplimiento por separado, o un lote por modalidad con Espera y Cumplimiento: todos se combinan en **un solo Meta 4**. También sirve agregar una carpeta que contenga varios lotes. **Quitar** saca los seleccionados; **Vaciar**, todos.
+   Luego elige la carpeta de **bitácoras** (con `bitacoras.json` y sus HTML). Si las bitácoras están dentro de las carpetas de registros, deja ese campo vacío.
+6. Opcional: en **Tribunales** selecciona uno o varios (Ctrl + clic). Sin selección se incluyen todos. La lista muestra los tribunales consultados en los lotes agregados.
 7. Revisa la fecha de corte: al elegir las bitácoras se ajusta al día en que se leyeron si es anterior a hoy. Pulsa **Generar Meta 4**.
 8. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. El aviso final indica lectura incompleta, consultas sin bitácoras y lotes filtrados.
 
 ## Qué lee y qué calcula
 
-- **Registros**: el lote validado del Descargador (`resumen.json`, verificaciones por consulta y todas sus páginas XLS con control SHA256). Solo usa Espera y Cumplimiento de FAE y Residencia. Rechaza un lote incompleto. Un lote con filtro de fechas, filtros del formulario o filtro de vencimiento se procesa, pero cada filtro queda informado en el aviso final, en ERRORES_Y_ADVERTENCIAS de Registros.xlsx, en la hoja Control bitácoras y en el reporte (`filtros_registros`): META 4 contiene solo los registros que entregó ese filtro.
+- **Registros**: uno o varios lotes validados del Descargador (`resumen.json`, verificaciones por consulta y todas sus páginas XLS con control SHA256). Solo usa Espera y Cumplimiento de FAE y Residencia. Rechaza un lote incompleto e indica cuál. Si la misma consulta (tribunal × lista × modalidad) aparece en dos lotes, se rechaza nombrando ambos: hay que quitar uno, para no duplicar registros. Un lote con filtro de fechas, filtros del formulario o filtro de vencimiento se procesa, pero cada filtro queda informado en el aviso final, en ERRORES_Y_ADVERTENCIAS de Registros.xlsx, en la hoja Control bitácoras y en el reporte (`filtros_registros`): META 4 contiene solo los registros que entregó ese filtro.
 - **Bitácoras**: uno o varios lotes `bitacoras.json` del Descargador, con sus HTML verificados por SHA256. Sirven varios lotes (por ejemplo, divididos por el límite de lecturas) y las lecturas conservadas de un lote retomado. También acepta `bitacoras_meta4.json` de Meta 4 1.0/1.1.
 - Usa solo las entradas del **mes calendario móvil** terminado en la fecha de corte, ambos extremos incluidos. Ejemplos: 16/09 a 16/10; 28/02 a 31/03. Los HTML originales no se modifican y no se copian a los resultados.
 - **FECHA OBS. es la fecha de la observación del centro** más reciente cuya columna Etapa sea Espera o Cumplimiento. La fecha de respuesta del tribunal no interviene. Tampoco intervienen las entradas de etapa Informes, aunque sean más recientes.
@@ -50,15 +51,15 @@ Para asociar una fila exige tribunal, RIT, persona (RUT o nombre si falta RUT) y
 
 **El ZIP para el Asistente no sustituye estas carpetas:** su tabla de eventos no conserva la columna Etapa de la observación, necesaria para excluir Informes.
 
-También admite una carpeta de reportes Excel independientes (sin `resumen.json`); en ese caso mantiene la selección de versiones por combinación del generador v2.4.
+También admite una carpeta de reportes Excel independientes (sin `resumen.json`); en ese caso mantiene la selección de versiones por combinación del generador v2.4. Ese modo acepta una sola carpeta y no se mezcla con lotes del Descargador.
 
 ## Línea de comandos y pruebas
 
 ```text
-python scripts/meta4_bitacoras.py --folder "C:\Descargas\2026-10-16 10-00-00" --diaries "C:\Descargas\Bitacoras 2026-10-16" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
+python scripts/meta4_bitacoras.py --folder "C:\Descargas\FAE Espera" --folder "C:\Descargas\FAE Cumplimiento" --folder "C:\Descargas\RES Espera" --folder "C:\Descargas\RES Cumplimiento" --diaries "C:\Descargas\Bitacoras 2026-10-16" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
 ```
 
-`--diaries` es opcional si las bitácoras están dentro de `--folder`. `--tribunal NOMBRE` (repetible) limita la generación a esos tribunales, por ejemplo `--tribunal Laja --tribunal Tomé`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
+`--folder` es repetible: cada lote se agrega al mismo Meta 4 (también sirve una carpeta que contenga varios lotes). `--diaries` es opcional y repetible si las bitácoras están dentro de `--folder`. `--tribunal NOMBRE` (repetible) limita la generación a esos tribunales, por ejemplo `--tribunal Laja --tribunal Tomé`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
 
 ```text
 python -m pip install -r requirements-dev.txt
@@ -66,6 +67,15 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.4
+
+- **Varios lotes de registros en un solo Meta 4.** La ventana tiene una lista de lotes (Agregar…, Quitar, Vaciar) y la línea de comandos acepta `--folder` repetido. Una carpeta con varios lotes dentro también se combina; antes se rechazaba.
+- Cada lote se valida por separado (estado, páginas, SHA256) y el error indica qué lote falla. Los avisos de filtros terminan con `[lote]`.
+- La misma consulta en dos lotes, o la misma combinación tribunal × modalidad × lista en dos lotes, se rechaza antes de escribir, nombrando ambos lotes.
+- Un lote elegido dos veces, o una carpeta que contiene a otro lote ya elegido, se lee una sola vez.
+- La hoja Control bitácoras agrega la fila **Lotes de registros** (cantidad y nombres) y el reporte JSON el campo `lotes_registros`.
+- Las bitácoras se buscan en todas las carpetas de registros si no se indica una carpeta propia.
 
 ## Cambios 2.3 (auditoría de código y pruebas)
 

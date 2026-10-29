@@ -14,7 +14,7 @@ if sys.platform != 'win32' and not os.environ.get('DISPLAY'):
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import Meta4  # noqa: E402
-from test_meta4_bitacoras import diary, lote_html, save_diaries  # noqa: E402
+from test_meta4_bitacoras import cuatro_lotes, diary, lote_html, save_diaries  # noqa: E402
 
 
 @pytest.fixture
@@ -53,8 +53,8 @@ def lote(tmp_path):
 def test_requires_source_and_valid_date(ventana):
     app, shown = ventana
     app.start()
-    assert shown[-1][1][1] == 'Elige la carpeta del lote de registros.'
-    app.source.set('x')
+    assert shown[-1][1][1] == 'Agrega al menos un lote de registros.'
+    app.sources = ['x']
     app.cutoff.set('2026-13-01')
     app.start()
     assert 'AAAA-MM-DD' in shown[-1][1][1]
@@ -80,10 +80,32 @@ def test_generation_error_is_shown_without_output(ventana, tmp_path):
     app, shown = ventana
     empty = tmp_path / 'vacio'
     empty.mkdir()
-    app.source.set(str(empty))
+    app.set_sources([empty])
     app.cutoff.set('2026-10-16')
     app.folder.set(str(tmp_path / 'salidas'))
     app.start()
     esperar(app)
     assert shown[-1][0] == 'showerror' and 'Faltan bitácoras' in shown[-1][1][1]
     assert app.output is None
+
+
+def test_adds_several_lots_and_generates_one_meta4(ventana, tmp_path, monkeypatch):
+    app, shown = ventana
+    lotes, diaries = cuatro_lotes(tmp_path / 'descargas')
+    for path in lotes + [lotes[0]]:
+        monkeypatch.setattr(Meta4.filedialog, 'askdirectory', lambda _p=path, **k: str(_p))
+        app.pick_source()
+    assert app.lots.size() == 4 and '4 lote(s)' in app.lots_info.get()
+    app.lots.selection_set(3)
+    app.remove_sources()
+    assert app.lots.size() == 3
+    app.set_sources(lotes)
+    app.diaries.set(str(diaries))
+    app.cutoff.set('2026-10-16')
+    app.folder.set(str(tmp_path / 'salidas'))
+    app.start()
+    esperar(app)
+    # Las bitácoras ficticias no declaran lectura COMPLETA: el aviso es el esperado.
+    assert shown[-1][0] == 'showwarning' and 'no quedó COMPLETA' in shown[-1][1][1], shown[-1]
+    assert 'Generados 5 registros de 4 lote(s)' in app.status.get()
+    assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()

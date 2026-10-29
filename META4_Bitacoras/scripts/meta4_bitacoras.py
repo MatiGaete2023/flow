@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.3'
+VERSION = '2.4'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -97,6 +97,42 @@ def es_salida(path, origen):
     return any(part.startswith(SALIDAS) or EN_CURSO in part for part in path.relative_to(origen).parts)
 
 
+def raices(carpetas):
+    """Una carpeta o varias, resueltas y sin repetir, en el orden elegido."""
+    items = [carpetas] if isinstance(carpetas, (str, os.PathLike)) else list(carpetas or ())
+    result = []
+    for item in items:
+        path = Path(item).expanduser().resolve()
+        if path not in result:
+            result.append(path)
+    return result
+
+
+def buscar_archivos(roots, name):
+    """Archivos `name` bajo cada carpeta, sin resultados de Meta 4 ni repeticiones por carpetas anidadas."""
+    found = []
+    for root in roots:
+        for path in sorted(root.rglob(name)):
+            if not es_salida(path, root) and path.resolve() not in found:
+                found.append(path.resolve())
+    return found
+
+
+def base_comun(roots):
+    """Carpeta desde la que se muestran las rutas de las fuentes: con varios lotes, su carpeta común."""
+    if len(roots) == 1:
+        return roots[0]
+    try:
+        return Path(os.path.commonpath(roots))
+    except ValueError:  # Unidades distintas en Windows.
+        return Path(roots[0].anchor)
+
+
+def etiqueta_lote(path, base):
+    folder = path.parent
+    return str(folder.relative_to(base)) if folder != base and folder.is_relative_to(base) else folder.name
+
+
 @dataclass
 class Lectura:
     """Bitácoras leídas desde uno o más lotes del Descargador."""
@@ -114,9 +150,9 @@ def dia_captura(value):
 
 
 def archivos_bitacoras(root):
-    paths = [p for p in sorted(root.rglob('bitacoras.json')) if not es_salida(p, root)]
+    roots = raices(root)
     # Formato propio de Meta 4 1.0/1.1: se sigue aceptando para lotes ya generados.
-    return paths + [p for p in sorted(root.rglob('bitacoras_meta4.json')) if not es_salida(p, root)]
+    return buscar_archivos(roots, 'bitacoras.json') + buscar_archivos(roots, 'bitacoras_meta4.json')
 
 
 def _consulta(item):
@@ -185,7 +221,7 @@ def cargar_bitacoras(root, corte):
 def fecha_lectura(root):
     """Último día con lecturas en los lotes de bitácoras; sirve para proponer la fecha de corte."""
     days = []
-    for path in archivos_bitacoras(Path(root)):
+    for path in archivos_bitacoras(root):
         try:
             data = json.loads(path.read_text(encoding='utf-8'))
             for record in data.get('registros', []) + data.get('anteriores_no_reenumeradas', []):
@@ -478,71 +514,100 @@ def fuentes(origen):
     return _fuentes(origen)[:4]
 
 
+def _lote(path, label, sources, bindings, consultas, filtros, vistas):
+    """Valida un lote del Descargador y agrega sus páginas verificadas."""
+    summary = json.loads(path.read_text(encoding='utf-8'))
+    if summary.get('estado') != 'VALIDADA':
+        raise ValueError(f'La descarga de registros está incompleta ({label}). Completa el lote antes de generar Meta 4.')
+    # Un lote filtrado se acepta, pero puede dejar registros fuera de Meta 4: se informa siempre.
+    rango = summary.get('filtro_fecha')
+    if rango:
+        desde = rango.get('desde', '?') if isinstance(rango, dict) else '?'
+        hasta = rango.get('hasta', '?') if isinstance(rango, dict) else '?'
+        filtros.append(f'Filtro de fechas {desde} a {hasta}: el lote incluye solo los ingresos de ese rango. [{label}]')
+    if summary.get('otros_filtros', 'todos los registros') != 'todos los registros':
+        filtros.append(f'Filtros del formulario de SITFA conservados: el lote puede no incluir todos los registros. [{label}]')
+    for query in summary['consultas']:
+        seleccion = query['seleccion']
+        if seleccion.get('tab') not in ('Espera', 'Cumplimiento') or seleccion.get('modality') not in ('1', '3'):
+            continue
+        if seleccion.get('tab') == 'Cumplimiento' and seleccion.get('report') not in (None, '', '0'):
+            filtros.append(f"Filtro de vencimiento en {query.get('consulta') or 'Cumplimiento'}: "
+                           f'incluye solo esas medidas. [{label}]')
+        # La misma consulta en dos lotes duplicaría sus registros: se exige elegir uno.
+        vista = (str(seleccion.get('tribunal') or meta.tribunal_name(seleccion.get('tribunal_nombre')) or ''),
+                 seleccion['tab'], seleccion['modality'])
+        if vista[0] and vista in vistas and vistas[vista] != label:
+            raise ValueError(f"La consulta {query.get('consulta') or ' / '.join(vista)} está en dos lotes "
+                             f'({vistas[vista]} y {label}). Quita uno de los dos para no duplicar registros.')
+        vistas[vista] = label
+        consultas.append(query)
+        manifest = dentro(path.parent, query['verificacion'])
+        check = json.loads(manifest.read_text(encoding='utf-8'))
+        if check.get('estado') not in ('VALIDADA', 'SIN_RESULTADOS', 'COMPLETA', 'COMPLETO'):
+            raise ValueError(f'Una consulta del descargador no está validada ({label}).')
+        if check.get('paginas_verificadas') != check.get('paginas_esperadas'):
+            raise ValueError(f'Faltan páginas del descargador ({label}).')
+        if not check['archivos'] and check.get('evidencia'):
+            sources.append((dentro(path.parent, check['evidencia']['archivo']), None, label))
+        for page in check['archivos']:
+            source = dentro(path.parent, page['archivo'])
+            body = source.read_bytes()
+            if hashlib.sha256(body).hexdigest() != page['sha256']:
+                raise ValueError(f'Un Excel del descargador cambió después de su verificación ({label}).')
+            sources.append((source, body, label))
+            bindings[source] = page.get('vinculos_ingreso', [])
+
+
 def _fuentes(origen):
     """Normaliza XLS BIFF, XML, HTML tabular y OOXML sin modificar originales.
 
-    El manifiesto del descargador identifica TODAS las páginas de una consulta.
-    No se selecciona solo un archivo por combinación cuando hay varias páginas.
-    Devuelve además las consultas de Meta 4 incluidas en el lote.
+    `origen` es una carpeta o una lista de carpetas. Cada `resumen.json` encontrado es un
+    lote del Descargador (por ejemplo, FAE Espera, FAE Cumplimiento, Residencia Espera y
+    Residencia Cumplimiento por separado) y todos se combinan en un solo Meta 4.
+    El manifiesto de cada lote identifica TODAS las páginas de una consulta.
+    Devuelve además las consultas de Meta 4 incluidas, los filtros y los lotes leídos.
     """
-    summaries = [p for p in origen.rglob('resumen.json') if not es_salida(p, origen)]
-    if len(summaries) > 1:
-        raise ValueError('Hay varios lotes descargados: selecciona la carpeta de un solo lote de registros.')
+    roots = raices(origen)
+    base = base_comun(roots)
+    summaries = buscar_archivos(roots, 'resumen.json')
     sources = []
     bindings = {}
     consultas = []
     filtros = []
+    lotes = []
     if summaries:
-        path = summaries[0]
-        summary = json.loads(path.read_text(encoding='utf-8'))
-        if summary.get('estado') != 'VALIDADA':
-            raise ValueError('La descarga de registros está incompleta. Completa el lote antes de generar Meta 4.')
-        # Un lote filtrado se acepta, pero puede dejar registros fuera de Meta 4: se informa siempre.
-        rango = summary.get('filtro_fecha')
-        if rango:
-            desde = rango.get('desde', '?') if isinstance(rango, dict) else '?'
-            hasta = rango.get('hasta', '?') if isinstance(rango, dict) else '?'
-            filtros.append(f'Filtro de fechas {desde} a {hasta}: el lote incluye solo los ingresos de ese rango.')
-        if summary.get('otros_filtros', 'todos los registros') != 'todos los registros':
-            filtros.append('Filtros del formulario de SITFA conservados: el lote puede no incluir todos los registros.')
-        for query in summary['consultas']:
-            if query['seleccion'].get('tab') not in ('Espera', 'Cumplimiento') or query['seleccion'].get('modality') not in ('1', '3'):
-                continue
-            if query['seleccion'].get('tab') == 'Cumplimiento' and query['seleccion'].get('report') not in (None, '', '0'):
-                filtros.append(f"Filtro de vencimiento en {query.get('consulta') or 'Cumplimiento'}: "
-                               'incluye solo esas medidas.')
-            consultas.append(query)
-            manifest = dentro(path.parent, query['verificacion'])
-            check = json.loads(manifest.read_text(encoding='utf-8'))
-            if check.get('estado') not in ('VALIDADA', 'SIN_RESULTADOS', 'COMPLETA', 'COMPLETO'):
-                raise ValueError('Una consulta del descargador no está validada.')
-            if check.get('paginas_verificadas') != check.get('paginas_esperadas'):
-                raise ValueError('Faltan páginas del descargador.')
-            if not check['archivos'] and check.get('evidencia'):
-                sources.append((dentro(path.parent, check['evidencia']['archivo']), None))
-            for page in check['archivos']:
-                source = dentro(path.parent, page['archivo'])
-                body = source.read_bytes()
-                if hashlib.sha256(body).hexdigest() != page['sha256']:
-                    raise ValueError('Un Excel del descargador cambió después de su verificación.')
-                sources.append((source, body))
-                bindings[source] = page.get('vinculos_ingreso', [])
+        sin_lote = [r for r in roots if not any(s.is_relative_to(r) for s in summaries)]
+        if sin_lote:
+            raise ValueError('Esta carpeta no contiene un lote del Descargador (resumen.json): ' + ', '.join(map(str, sin_lote)))
+        vistas = {}
+        for path in summaries:
+            label = etiqueta_lote(path, base)
+            lotes.append(label)
+            _lote(path, label, sources, bindings, consultas, filtros, vistas)
+    elif len(roots) > 1:
+        raise ValueError('Varias carpetas solo se combinan si son lotes del Descargador (con resumen.json). '
+                         'Para reportes Excel sueltos elige una sola carpeta.')
     else:
-        sources = [(p, None) for p in sorted(origen.rglob('*'))
+        origen = roots[0]
+        sources = [(p, None, '') for p in sorted(origen.rglob('*'))
                    if p.suffix.lower() in meta.EXCEL_SUFFIXES | meta.PDF_SUFFIXES and p.is_file()
                    and not p.is_symlink() and not meta.output_file_reason(p)
                    and not p.name.startswith(('Bitacoras_', 'Registros consolidados')) and not es_salida(p, origen)]
+    origen = base
+    lote_de = {}
     files, issues = [], []
-    for path, body in sources:
+    for path, body, label in sources:
         if path.suffix.lower() in meta.PDF_SUFFIXES:
             files.append(meta.inspect_zero_record_file(path, origen, issues))
-            continue
-        try:
-            grid = lector_excel.read_excel(body if body is not None else path.read_bytes()).grid
-        except lector_excel.PocError:
-            files.append(meta.inspect_excel(path, origen, path, issues))
-            continue
-        files.append(meta.inspect_excel(path, origen, None, issues, frames=[('Sheet', hoja_desde_grilla(grid))]))
+        else:
+            try:
+                grid = lector_excel.read_excel(body if body is not None else path.read_bytes()).grid
+            except lector_excel.PocError:
+                files.append(meta.inspect_excel(path, origen, path, issues))
+            else:
+                files.append(meta.inspect_excel(path, origen, None, issues, frames=[('Sheet', hoja_desde_grilla(grid))]))
+        lote_de[id(files[-1])] = label
     broken = [f for f in files if f.result == 'ERROR']
     if broken:
         raise ValueError('No se generó una planilla parcial: hay reportes que no se pudieron leer. Revisa: ' + ', '.join(f.relative_path for f in broken))
@@ -560,10 +625,18 @@ def _fuentes(origen):
                 if len(remotes) == 1 and all(next(iter(remotes))):
                     v['_REMOTE'] = next(iter(remotes))
     if summaries:
+        origenes = defaultdict(set)
+        for f in files:
+            for c in f.candidates:
+                origenes[c.key].add(lote_de[id(f)])
+        for key, labels in origenes.items():
+            if len(labels) > 1:
+                raise ValueError(f'{meta.combination_text(key)} aparece en varios lotes ({", ".join(sorted(labels))}). '
+                                 'Quita uno de los lotes para no duplicar registros.')
         selected, groups = _agrupar_paginas(files)
     else:
         selected, groups = meta.select_candidates(files, issues)
-    return files, issues, selected, groups, consultas, filtros
+    return files, issues, selected, groups, consultas, filtros, lotes
 
 
 def sin_bitacoras(consultas, lectura):
@@ -580,12 +653,9 @@ def sin_bitacoras(consultas, lectura):
 
 
 def tribunales_disponibles(origen):
-    """Tribunales de Meta 4 consultados en el lote de registros (vacío si no hay resumen.json)."""
-    origen = Path(origen)
+    """Tribunales de Meta 4 consultados en los lotes de registros (vacío si no hay resumen.json)."""
     found = set()
-    for path in origen.rglob('resumen.json'):
-        if es_salida(path, origen):
-            continue
+    for path in buscar_archivos(raices(origen), 'resumen.json'):
         try:
             summary = json.loads(path.read_text(encoding='utf-8'))
             for query in summary.get('consultas', []):
@@ -627,7 +697,7 @@ def aplicar_filtro(tribunales, files, issues, selected, groups, faltan):
 
 
 def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales,
-              filtros=()):
+              filtros=(), lotes=()):
     estados = lectura.estados
     diaries = lectura.registros
     if tribunales is not None:
@@ -646,6 +716,7 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     control.append(['Consultas sin bitácoras', len(faltan)])
     control.append(['Tribunales incluidos', 'Todos' if tribunales is None else ', '.join(tribunales)])
     control.append(['Filtros del lote de registros', ' | '.join(filtros) if filtros else 'Sin filtros'])
+    control.append(['Lotes de registros', len(lotes), ' | '.join(lotes)])
     control.append(['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'])
     control.append(['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.'])
     for cell in control[1][1:]:
@@ -678,6 +749,7 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
         'tribunales': 'TODOS' if tribunales is None else tribunales,
         'resumen_tribunales': resumen,
         'avisos_bitacoras': lectura.avisos,
+        'lotes_registros': list(lotes),
         'filtros_registros': list(filtros),
         'totales_meta4': summary,
         'excluidos_meta4': len(unmatched),
@@ -688,15 +760,18 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
 
 
 def generar(origen, destino, corte, emission=None, template=None, bitacoras=None, tribunales=None):
-    """`origen`: lote de registros del Descargador. `bitacoras`: carpeta de sus lotes de
-    bitácoras; si se omite, se buscan dentro de `origen`. `tribunales`: nombres a incluir
-    (por defecto, todos); con filtro, la planilla se marca como parcial."""
+    """`origen`: una o varias carpetas con lotes de registros del Descargador; todos los lotes
+    se combinan en un solo Meta 4. `bitacoras`: una o varias carpetas de lotes de bitácoras;
+    si se omite, se buscan dentro de `origen`. `tribunales`: nombres a incluir (por defecto,
+    todos); con filtro, la planilla se marca como parcial."""
     tribunales = normalizar_tribunales(tribunales)
-    origen, destino = Path(origen).resolve(), Path(destino).resolve()
-    if not origen.is_dir():
+    origen, destino = raices(origen), Path(destino).resolve()
+    if not origen:
+        raise ValueError('Elige al menos una carpeta de registros del Descargador.')
+    if not all(p.is_dir() for p in origen):
         raise ValueError('El origen debe ser una carpeta del descargador.')
-    raiz_bitacoras = Path(bitacoras).resolve() if bitacoras else origen
-    if not raiz_bitacoras.is_dir():
+    raiz_bitacoras = raices(bitacoras) if bitacoras else origen
+    if not all(p.is_dir() for p in raiz_bitacoras):
         raise ValueError('La carpeta de bitácoras no existe.')
     if destino.exists():
         raise ValueError('La carpeta de salida ya existe; indica una carpeta nueva.')
@@ -704,7 +779,7 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     if template and not template.is_file():
         raise ValueError('No existe la plantilla indicada.')
     lectura = _leer_bitacoras(raiz_bitacoras, corte)
-    files, issues, selected, groups, consultas, filtros = _fuentes(origen)
+    files, issues, selected, groups, consultas, filtros, lotes = _fuentes(origen)
     for filtro in filtros:
         issues.append(meta.Issue('ADVERTENCIA', '', '', filtro))
     if not any(f.candidates for f in files):
@@ -731,7 +806,7 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
     trabajo.mkdir(parents=True)
     try:
         report = _escribir(trabajo, corte, emission, template, lectura, faltan,
-                           files, issues, selected, groups, rows, tribunales, filtros)
+                           files, issues, selected, groups, rows, tribunales, filtros, lotes)
         os.replace(trabajo, destino)
     except BaseException:
         shutil.rmtree(trabajo, ignore_errors=True)
@@ -754,8 +829,10 @@ def _mes_arg(text):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--folder', required=True, help='Lote de registros del Descargador (resumen.json y Excel)')
-    p.add_argument('--diaries', help='Carpeta con los lotes de bitácoras; por defecto, dentro de --folder')
+    p.add_argument('--folder', required=True, action='append',
+                   help='Lote de registros del Descargador (resumen.json y Excel); repetir para combinar varios lotes')
+    p.add_argument('--diaries', action='append',
+                   help='Carpeta con lotes de bitácoras; repetible; por defecto, dentro de --folder')
     p.add_argument('--output-dir', required=True)
     p.add_argument('--cutoff', type=_fecha_arg, help='Fecha de corte AAAA-MM-DD; por defecto, hoy')
     p.add_argument('--month', type=_mes_arg, help='Mes de emisión AAAA-MM; no cambia el período de bitácoras')

@@ -4,7 +4,7 @@ No se conecta a SITFA ni a RUS: solo lee lotes ya descargados."""
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
-from meta4_bitacoras import BASE, fecha_lectura, generar, meta, tribunales_disponibles
+from meta4_bitacoras import BASE, buscar_archivos, fecha_lectura, generar, meta, raices, tribunales_disponibles
 from datetime import date, datetime
 import os
 import queue
@@ -17,16 +17,16 @@ class App:
     def __init__(self, root):
         self.root = root
         root.title('Meta 4 · Registros y bitácoras')
-        root.geometry('820x720')
-        root.minsize(720, 640)
+        root.geometry('820x820')
+        root.minsize(720, 720)
         self.events = queue.Queue()
         self.busy = False
         self.output = None
-        self.source = tk.StringVar()
+        self.sources = []
         self.diaries = tk.StringVar()
         self.folder = tk.StringVar(value=str(BASE / 'Salidas'))
         self.cutoff = tk.StringVar(value=date.today().isoformat())
-        self.status = tk.StringVar(value='Elige el lote de registros y las bitácoras descargadas con el Descargador SITFA.')
+        self.status = tk.StringVar(value='Agrega los lotes de registros y las bitácoras descargadas con el Descargador SITFA.')
         frame = ttk.Frame(root, padding=24)
         frame.pack(fill='both', expand=True)
         ttk.Label(frame, text='Meta 4', font=('Segoe UI', 24, 'bold')).pack(anchor='w')
@@ -34,9 +34,21 @@ class App:
 
         box = ttk.LabelFrame(frame, text='1. Carpetas del Descargador', padding=12)
         box.pack(fill='x')
-        self.folder_row(box, 'Registros (lote con resumen.json):', self.source, self.pick_source)
+        ttk.Label(box, text='Lotes de registros (cada uno con resumen.json). Se combinan en un solo Meta 4:').pack(anchor='w')
+        line = ttk.Frame(box)
+        line.pack(fill='x', pady=(4, 0))
+        self.lots = tk.Listbox(line, height=5, selectmode='extended', exportselection=False)
+        self.lots.pack(side='left', fill='x', expand=True)
+        buttons = ttk.Frame(line)
+        buttons.pack(side='left', padx=(8, 0), anchor='n')
+        ttk.Button(buttons, text='Agregar…', command=self.pick_source).pack(fill='x')
+        ttk.Button(buttons, text='Quitar', command=self.remove_sources).pack(fill='x', pady=4)
+        ttk.Button(buttons, text='Vaciar', command=lambda: self.set_sources([])).pack(fill='x')
+        self.lots_info = tk.StringVar(value='Ej.: FAE Espera, FAE Cumplimiento, Residencia Espera, Residencia Cumplimiento. '
+                                            'También sirve una carpeta que contenga varios lotes.')
+        ttk.Label(box, textvariable=self.lots_info, wraplength=740).pack(anchor='w', pady=(4, 8))
         self.folder_row(box, 'Bitácoras (bitacoras.json y HTML):', self.diaries, self.pick_diaries)
-        ttk.Label(box, text='Si las bitácoras están dentro de la carpeta de registros, deja el segundo campo vacío.').pack(anchor='w')
+        ttk.Label(box, text='Si las bitácoras están dentro de las carpetas de registros, deja este campo vacío.').pack(anchor='w')
 
         box = ttk.LabelFrame(frame, text='2. Tribunales', padding=12)
         box.pack(fill='both', expand=True, pady=(12, 0))
@@ -81,14 +93,26 @@ class App:
         for name in names:
             self.courts.insert('end', name)
 
+    def set_sources(self, paths):
+        self.sources = [str(p) for p in raices(paths)]
+        self.lots.delete(0, 'end')
+        for path in self.sources:
+            self.lots.insert('end', path)
+        # Solo los tribunales consultados en los lotes; sin resumen.json, todos.
+        self.fill_courts(tribunales_disponibles(self.sources) or meta.TRIBUNALS)
+        found = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
+        self.lots_info.set(f'{len(self.sources)} carpeta(s) · {found} lote(s) del Descargador encontrados.')
+
     def pick_source(self):
-        path = filedialog.askdirectory(title='Lote de registros del Descargador', mustexist=True)
+        path = filedialog.askdirectory(title='Lote de registros del Descargador (o carpeta con varios lotes)', mustexist=True)
         if path:
-            self.source.set(path)
-            # Solo los tribunales consultados en el lote; sin resumen.json, todos.
-            self.fill_courts(tribunales_disponibles(path) or meta.TRIBUNALS)
+            self.set_sources(self.sources + [path])
             if not self.diaries.get():
-                self.suggest_cutoff(path)
+                self.suggest_cutoff(self.sources)
+
+    def remove_sources(self):
+        chosen = set(self.lots.curselection())
+        self.set_sources([p for i, p in enumerate(self.sources) if i not in chosen])
 
     def pick_diaries(self):
         path = filedialog.askdirectory(title='Carpeta de bitácoras del Descargador', mustexist=True)
@@ -115,9 +139,9 @@ class App:
             raise ValueError('Escribe la fecha de corte como AAAA-MM-DD, por ejemplo 2026-10-16.') from None
         if cutoff > date.today():
             raise ValueError('La fecha de corte no puede estar en el futuro.')
-        if not self.source.get().strip():
-            raise ValueError('Elige la carpeta del lote de registros.')
-        source = Path(self.source.get()).expanduser()
+        if not self.sources:
+            raise ValueError('Agrega al menos un lote de registros.')
+        source = [Path(p) for p in self.sources]
         diaries = Path(self.diaries.get()).expanduser() if self.diaries.get().strip() else None
         courts = [self.courts.get(i) for i in self.courts.curselection()] or None
         return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve(), courts
@@ -162,7 +186,9 @@ class App:
                 self.output, report = value
                 lectura = ', '.join(report['lectura_bitacoras'])
                 alcance = 'todos los tribunales' if report['tribunales'] == 'TODOS' else 'PARCIAL: ' + ', '.join(report['tribunales'])
-                text = (f"Generados {report['registros']} registros ({alcance}). Alertas: {report['alertas']}. "
+                lotes = len(report['lotes_registros'])
+                text = (f"Generados {report['registros']} registros" + (f' de {lotes} lote(s)' if lotes else '') +
+                        f" ({alcance}). Alertas: {report['alertas']}. "
                         f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
                 warnings = []
                 if lectura != 'COMPLETA':

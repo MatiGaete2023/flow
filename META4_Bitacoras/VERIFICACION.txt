@@ -1,3 +1,21 @@
+META 4 CON BITACORAS 2.4 - Verificacion del 29 de octubre de 2026
+
+116 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (112 y 1
+omitida con Python 3.13 sin tkinter). Compilacion comprobada con 3.11.
+
+Nuevo en 2.4, comprobado con datos ficticios:
+- Cuatro lotes separados (FAE Espera, FAE Cumplimiento, Residencia Espera,
+  Residencia Cumplimiento) generan un solo Meta 4 con sus 4 hojas completas.
+- Un lote con Espera y Cumplimiento de una modalidad se combina con otro lote.
+- Carpeta que contiene varios lotes: se combinan.
+- Lote repetido o anidado: se lee una vez.
+- Misma consulta en dos lotes: rechazo antes de escribir, nombrando ambos.
+- Carpeta sin resumen.json mezclada con lotes, o varias carpetas de Excel
+  sueltos: rechazo.
+- Lote incompleto y filtros: el mensaje nombra el lote.
+- Linea de comandos con --folder repetido.
+- Ventana: agregar, quitar y generar desde varios lotes.
+
 META 4 CON BITACORAS 2.3 - Verificacion del 18 de octubre de 2026
 
 105 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (102 y 1

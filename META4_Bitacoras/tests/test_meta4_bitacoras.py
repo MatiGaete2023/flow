@@ -2,6 +2,7 @@
 from datetime import date
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 
@@ -564,11 +565,11 @@ def test_downloader_lot_integrity_checks(tmp_path, cambio, mensaje):
         app.fuentes(tmp_path)
 
 
-def test_two_record_lots_in_one_folder_are_rejected(tmp_path):
+def test_same_query_in_two_lots_is_rejected(tmp_path):
     for name in ('a', 'b'):
         (tmp_path / name).mkdir()
         lote_html(tmp_path / name, [{}])
-    with pytest.raises(ValueError, match='varios lotes'):
+    with pytest.raises(ValueError, match=r'LAJA \| FAE \| Cumplimiento aparece en varios lotes \(a, b\)'):
         app.fuentes(tmp_path)
 
 
@@ -632,3 +633,152 @@ def test_legacy_record_with_null_params_is_not_verifiable(tmp_path):
     data['registros'][0]['params'] = None
     path.write_text(json.dumps(data))
     assert app.cargar_bitacoras(tmp_path, CORTE)[0]['control'] == app.NO_VERIFICABLE
+
+
+# --------------------------------------------------------------------------
+# 2.4: varios lotes de registros en un solo Meta 4
+# --------------------------------------------------------------------------
+
+MODALIDADES = {'FAE': ('3', 'FAE FICTICIO'), 'Residencia': ('1', 'RESIDENCIA FICTICIA')}
+
+
+def lote_lista(source, tab, modalidad, rits, tribunal='101'):
+    """Lote del Descargador con una sola consulta (tribunal × lista × modalidad)."""
+    source.mkdir(parents=True)
+    code, programa = MODALIDADES[modalidad]
+    headers = ['RIT', 'TRIBUNAL', 'RUT', 'NOMBRE', 'DERIVACIÓN', 'TIPO', 'SEXO', 'FEC. RESOLUCIÓN', 'FEC. INGRESO EFECTIVO']
+    filas = ''.join('<tr>' + ''.join(f'<td>{v}</td>' for v in (rit, 'Laja', '11111111-1', 'FICTICIO NNA', programa,
+                                                                 'MP', 'F', '01/09/2026', '02/09/2026')) + '</tr>' for rit in rits)
+    data = ('<html><table><tr><td>Juzgado de Familia de Laja</td></tr><tr><td>Informe de Ingresos en Lista de ' + tab +
+            '</td></tr><tr><td>Fecha Emisión : 16/10/2026</td></tr><tr>' + ''.join(f'<td>{h}</td>' for h in headers) +
+            '</tr>' + filas + '</table></html>').encode()
+    (source / 'pagina 1.xls').write_bytes(data)
+    (source / 'verificacion.json').write_text(json.dumps(dict(estado='VALIDADA', paginas_esperadas=1, paginas_verificadas=1,
+        archivos=[dict(archivo='pagina 1.xls', sha256=hashlib.sha256(data).hexdigest())])))
+    seleccion = dict(tab=tab, modality=code, tribunal=tribunal, tribunal_nombre='Juzgado de Familia de Laja',
+                     modalidad_nombre=modalidad)
+    (source / 'resumen.json').write_text(json.dumps(dict(estado='VALIDADA', consultas=[dict(
+        verificacion='verificacion.json', estado='VALIDADA', consulta=f'Laja / {tab} / {modalidad}', seleccion=seleccion)])))
+    return source
+
+
+def diario(rit, ingreso, programa):
+    return dict(diary(rit=rit, ingreso=ingreso), programa=programa)
+
+
+def cuatro_lotes(root):
+    lotes = [lote_lista(root / 'FAE Espera', 'Espera', 'FAE', ['E-1-2026']),
+             lote_lista(root / 'FAE Cumplimiento', 'Cumplimiento', 'FAE', ['C-1-2026', 'C-2-2026']),
+             lote_lista(root / 'RES Espera', 'Espera', 'Residencia', ['E-2-2026']),
+             lote_lista(root / 'RES Cumplimiento', 'Cumplimiento', 'Residencia', ['C-3-2026'])]
+    diaries = root / 'bitacoras'
+    diaries.mkdir()
+    save_diaries(diaries, [diario('E-1-2026', '1', 'FAE FICTICIO'), diario('C-1-2026', '2', 'FAE FICTICIO'),
+                           diario('C-2-2026', '3', 'FAE FICTICIO'), diario('E-2-2026', '4', 'RESIDENCIA FICTICIA'),
+                           diario('C-3-2026', '5', 'RESIDENCIA FICTICIA')])
+    return lotes, diaries
+
+
+def filas_meta4(path):
+    wb = load_workbook(path)
+    return {name: sorted(c.value for r in wb[name] for c in r if re.fullmatch(r'[EC]-\d-2026', str(c.value or '')))
+            for name in ('FAE Espera', 'FAE Cumplimiento', 'Residencia Espera', 'Residencia Cumplimiento')}
+
+
+ESPERADO = {'FAE Espera': ['E-1-2026'], 'FAE Cumplimiento': ['C-1-2026', 'C-2-2026'],
+            'Residencia Espera': ['E-2-2026'], 'Residencia Cumplimiento': ['C-3-2026']}
+
+
+def test_four_separate_lots_make_one_meta4(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    target = tmp_path / 'resultado'
+    report = app.generar(lotes, target, CORTE, bitacoras=diaries)
+    assert report['registros'] == 5 and report['totales_meta4'] == {k: len(v) for k, v in ESPERADO.items()}
+    assert report['lotes_registros'] == ['FAE Espera', 'FAE Cumplimiento', 'RES Espera', 'RES Cumplimiento']
+    assert report['controles_bitacora'] == {app.VERIFICADA: 5}
+    assert filas_meta4(target / 'META 4 - actualizado 2026-10.xlsx') == ESPERADO
+    control = load_workbook(target / 'META 4 - actualizado 2026-10.xlsx')['Control bitácoras']
+    assert control['A6'].value == 'Lotes de registros' and control['B6'].value == 4
+    resumen = report['resumen_tribunales'][0]
+    assert resumen['TRIBUNAL'] == 'LAJA' and resumen['FAE CUMPLIMIENTO'] == 2 and resumen['RESIDENCIA ESPERA'] == 1
+
+
+def test_parent_folder_with_several_lots_is_combined(tmp_path):
+    cuatro_lotes(tmp_path / 'descargas')
+    report = app.generar(tmp_path / 'descargas', tmp_path / 'resultado', CORTE)
+    assert report['registros'] == 5 and len(report['lotes_registros']) == 4
+    assert app.tribunales_disponibles(tmp_path / 'descargas') == ['LAJA']
+
+
+def test_lot_chosen_twice_or_nested_is_read_once(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    report = app.generar(lotes + [lotes[0], tmp_path], tmp_path / 'resultado', CORTE, bitacoras=[diaries, diaries])
+    assert report['registros'] == 5 and len(report['lotes_registros']) == 4
+
+
+def test_lot_with_espera_and_cumplimiento_combines_with_other_modality(tmp_path):
+    fae = lote_lista(tmp_path / 'FAE', 'Espera', 'FAE', ['E-1-2026'])
+    otra = lote_lista(tmp_path / 'tmp', 'Cumplimiento', 'FAE', ['C-1-2026'])
+    data = json.loads((fae / 'resumen.json').read_text())
+    (otra / 'pagina 1.xls').rename(fae / 'pagina 2.xls')
+    check = json.loads((otra / 'verificacion.json').read_text())
+    check['archivos'][0]['archivo'] = 'pagina 2.xls'
+    (fae / 'verificacion 2.json').write_text(json.dumps(check))
+    data['consultas'].append(dict(json.loads((otra / 'resumen.json').read_text())['consultas'][0], verificacion='verificacion 2.json'))
+    (fae / 'resumen.json').write_text(json.dumps(data))
+    for name in ('resumen.json', 'verificacion.json'):
+        (otra / name).unlink()
+    otra.rmdir()
+    lote_lista(tmp_path / 'RES', 'Cumplimiento', 'Residencia', ['C-3-2026'])
+    save_diaries(tmp_path, [diario('E-1-2026', '1', 'FAE FICTICIO'), diario('C-1-2026', '2', 'FAE FICTICIO'),
+                            diario('C-3-2026', '5', 'RESIDENCIA FICTICIA')])
+    report = app.generar([tmp_path / 'FAE', tmp_path / 'RES'], tmp_path / 'resultado', CORTE, bitacoras=tmp_path)
+    assert report['totales_meta4'] == {'FAE Espera': 1, 'FAE Cumplimiento': 1, 'Residencia Espera': 0, 'Residencia Cumplimiento': 1}
+
+
+def test_same_query_downloaded_in_two_lots_is_rejected_before_output(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    lote_lista(tmp_path / 'FAE Espera otra vez', 'Espera', 'FAE', ['E-1-2026'])
+    target = tmp_path / 'resultado'
+    with pytest.raises(ValueError, match=r'Laja / Espera / FAE está en dos lotes \(FAE Espera y FAE Espera otra vez\)'):
+        app.generar(tmp_path, target, CORTE, bitacoras=diaries)
+    assert not target.exists() and not list(tmp_path.glob('resultado*'))
+
+
+def test_folder_without_lot_cannot_be_mixed_with_lots(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    with pytest.raises(ValueError, match='no contiene un lote del Descargador'):
+        app.fuentes(lotes + [diaries])
+    sueltos = [tmp_path / 'x', tmp_path / 'y']
+    for folder in sueltos:
+        folder.mkdir()
+    with pytest.raises(ValueError, match='Excel sueltos elige una sola carpeta'):
+        app.fuentes(sueltos)
+
+
+def test_incomplete_lot_names_the_lot(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    data = json.loads((lotes[2] / 'resumen.json').read_text())
+    (lotes[2] / 'resumen.json').write_text(json.dumps(dict(data, estado='INCOMPLETA')))
+    with pytest.raises(ValueError, match=r'incompleta \(RES Espera\)'):
+        app.fuentes(lotes)
+
+
+def test_filters_name_their_lot(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    data = json.loads((lotes[1] / 'resumen.json').read_text())
+    (lotes[1] / 'resumen.json').write_text(json.dumps(dict(data, otros_filtros='formulario')))
+    report = app.generar(lotes, tmp_path / 'resultado', CORTE, bitacoras=diaries)
+    assert report['filtros_registros'] == ['Filtros del formulario de SITFA conservados: el lote puede no incluir '
+                                           'todos los registros. [FAE Cumplimiento]']
+
+
+def test_cli_accepts_repeated_folder(tmp_path, monkeypatch, capsys):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    argv = ['meta4']
+    for lote in lotes:
+        argv += ['--folder', str(lote)]
+    argv += ['--diaries', str(diaries), '--output-dir', str(tmp_path / 'resultado'), '--cutoff', '2026-10-16']
+    monkeypatch.setattr(sys, 'argv', argv)
+    app.main()
+    assert json.loads(capsys.readouterr().out)['registros'] == 5
