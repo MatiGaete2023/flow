@@ -75,3 +75,14 @@ def test_cal03_un_aviso_por_vista_discordante():
         'CAL-03: Hoja2 (calendario 91) indica el 1 de diciembre de 2026 y el calendario del ingreso no tiene un '
         'próximo informe pendiente; revisar en RUS.'
     ]
+
+
+def test_fecha_con_hora_se_lee_y_la_ilegible_informa_columna_y_forma():
+    # Prueba del usuario 29-oct-2026: todas las ventanas reales fallaban con «fecha ilegible» sin decir por qué.
+    result = read_calendar(page([('01/06/2026 00:00', '28/05/2026 13:16:05', 'ENVIADO')]), ARGS)
+    assert result['proyecciones'][0]['fecha_proyeccion'] == '2026-06-01'
+    assert result['proyecciones'][0]['fecha_informe'] == '2026-05-28'
+    with pytest.raises(ValueError, match='«Fecha Informe» \\(forma «AA AAAAAAAAA»\\)'):
+        read_calendar(page([('01/06/2026', 'No informado', 'PENDIENTE')]), ARGS)
+    with pytest.raises(ValueError, match='«Fecha Proyección» \\(forma «9999-99-99»\\)'):
+        read_calendar(page([('2026-06-01', '', 'PENDIENTE')]), ARGS)

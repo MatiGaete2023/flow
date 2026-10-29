@@ -28,14 +28,26 @@ def _input(form, name):
     return found[0].get('value', '')
 
 
-def _fecha(texto, *, opcional=False):
+# Fecha con hora opcional, como en las bitácoras («23/10/2026 13:16»).
+FECHA = re.compile(r'(\d{2}/\d{2}/\d{4})(?: \d{1,2}:\d{2}(?::\d{2})?)?')
+
+
+def _forma(texto):
+    """Forma de un valor no reconocido sin su contenido: dígitos como 9 y letras como A."""
+    return re.sub(r'[^\W\d_]', 'A', re.sub(r'\d', '9', texto))[:24]
+
+
+def _fecha(texto, columna, *, opcional=False):
     texto = texto.strip()
     if opcional and texto in ('', '-', '--', '---'):
         return ''
+    encontrada = FECHA.fullmatch(texto)
     try:
-        return datetime.strptime(texto, '%d/%m/%Y').date().isoformat()
-    except ValueError:
-        raise ValueError('El calendario contiene una fecha ilegible.') from None
+        return datetime.strptime(encontrada.group(1), '%d/%m/%Y').date().isoformat()
+    except (AttributeError, ValueError):
+        raise ValueError(
+            f'El calendario contiene una fecha ilegible en «{columna}» (forma «{_forma(texto)}»).'
+        ) from None
 
 
 def _texto(nodo):
@@ -93,11 +105,16 @@ def read_calendar(data, args, *, source='', captured_at=''):
         estado = celdas[2].strip().upper()
         if estado not in ESTADOS:
             raise ValueError('Estado de calendario no reconocido.')
-        informe = _fecha(celdas[1], opcional=True)
+        informe = _fecha(celdas[1], 'Fecha Informe', opcional=True)
         if (estado == 'ENVIADO') != bool(informe):
             raise ValueError('Estado y fecha de informe del calendario no concuerdan.')
         proyecciones.append(
-            {'fila': numero, 'fecha_proyeccion': _fecha(celdas[0]), 'fecha_informe': informe, 'estado': estado}
+            {
+                'fila': numero,
+                'fecha_proyeccion': _fecha(celdas[0], 'Fecha Proyección'),
+                'fecha_informe': informe,
+                'estado': estado,
+            }
         )
     return {
         **identidad,
