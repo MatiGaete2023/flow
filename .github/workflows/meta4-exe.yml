@@ -1,0 +1,49 @@
+name: Meta 4 Windows
+# Construye Meta4.exe bajo demanda y en cada push de ultima-version/meta4 (pedido del usuario, 29-oct-2026).
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ultima-version/meta4']
+permissions:
+  contents: read
+jobs:
+  exe:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: META4_Bitacoras
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Dependencias
+        run: |
+          python -m pip install -r requirements-dev.txt pyinstaller==6.22.3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Pruebas
+        run: |
+          python -m pytest -q -p no:cacheprovider
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Construir Meta4.exe
+        run: |
+          python -m PyInstaller --noconfirm --clean --windowed --name Meta4 --paths scripts --paths src --hidden-import nurus.bitacora_html Meta4.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Comprobar el paquete
+        run: |
+          if (-not (Test-Path dist/Meta4/Meta4.exe)) { throw 'Falta Meta4.exe' }
+          # Un módulo propio que PyInstaller no encontró dejaría un EXE que falla al abrir.
+          $warn = Get-Content build/Meta4/warn-Meta4.txt -Raw
+          foreach ($mod in 'meta4_bitacoras', 'generate_meta4', 'lector_excel', 'nurus') {
+            if ($warn -match "missing module named '?$mod") { throw "PyInstaller no encontró $mod" }
+          }
+          Copy-Item LEEME.md, ORIGEN_COMPONENTES.txt, VERIFICACION.txt dist/Meta4/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Meta4-Windows-x64
+          path: META4_Bitacoras/dist/Meta4
+          if-no-files-found: error
+          retention-days: 30
