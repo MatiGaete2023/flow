@@ -92,7 +92,11 @@ def evidence_text(work, row=None):
             k + ': ' + v for k, v in getattr(work, 'capture_coverage', {}).get(row.id, {}).items()
         ]
     if incidents:
-        lines += ['', 'Incidencias:'] + [i['code'] + ' · ' + i['severity'] + ' · ' + i['message'] for i in incidents]
+        from collections import Counter
+
+        # Prueba del usuario 29-oct-2026: cientos de avisos idénticos ocultaban los distintos; se agrupan con su total.
+        counts = Counter((i['code'], i['severity'], i['message']) for i in incidents)
+        lines += ['', 'Incidencias:'] + [' · '.join(key) + (f' (×{n})' if n > 1 else '') for key, n in counts.items()]
     if row:
         source = work.capture_sources[row.id]
         context = work.capture_context[row.id]

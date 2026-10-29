@@ -22,6 +22,7 @@
     "Síntoma del usuario en dos equipos con la rama feat: E_PIPELINE «No se pudo capturar la consulta vacía» en la consulta 1/4.",
     "Falta la prueba con SITFA real del usuario; aceptación y actas son del usuario.",
     "23-oct-2026: el error persistió en el equipo del usuario; versión 2.8.1 detecta copias anteriores de la extensión y el error indica su motivo técnico.",
-    "29-oct-2026: paquete rechazado por id de incidencia duplicado y calendario por ingreso bloqueado por el puente; ambos corregidos con pruebas."
+    "29-oct-2026: paquete rechazado por id de incidencia duplicado y calendario por ingreso bloqueado por el puente; ambos corregidos con pruebas.",
+    "29-oct-2026 (tarde): calendario real falla por formato de fecha; se acepta fecha con hora y el error informa columna y forma. Incidencias idénticas agrupadas en la evidencia."
   ]
 }
