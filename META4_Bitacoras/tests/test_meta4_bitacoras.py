@@ -573,9 +573,47 @@ def test_same_query_in_two_lots_is_rejected(tmp_path):
         app.fuentes(tmp_path)
 
 
-def test_visible_identity_warning_blocks_association(tmp_path):
-    save_diaries(tmp_path, [dict(diary(), advertencias=['Advertencia: nombre visible distinto'])])
-    assert app.cargar_bitacoras(tmp_path, CORTE)[0]['control'] == app.IDENTIDAD_VISIBLE
+def visible(rit='X-1-2026', persona='FICTICIO NNA', advertencia=None):
+    record = diary()
+    record['snapshot'].update(rit=rit, persona=persona)
+    if advertencia:
+        record['advertencias'] = [f'Advertencia: {advertencia} visible de bitácora distinto al listado; revisar el ingreso.']
+    return record
+
+
+@pytest.mark.parametrize('record,control', [
+    (visible(advertencia='RIT'), app.IDENTIDAD_VISIBLE),
+    (visible(rit='X-9-2026'), app.IDENTIDAD_VISIBLE),
+    (visible(persona='NNA FICTICIO', advertencia='nombre'), 'OK'),
+    (visible(persona='FICTICIÓ  NNA', advertencia='nombre'), 'OK'),
+    (visible(persona='FICTICIO NNA SEGUNDO', advertencia='nombre'), 'OK'),
+    (visible(persona='OTRA PERSONA', advertencia='nombre'), app.NOMBRE_VISIBLE),
+])
+def test_visible_identity_rit_blocks_name_only_requires_review(tmp_path, record, control):
+    save_diaries(tmp_path, [record])
+    assert app.cargar_bitacoras(tmp_path, CORTE)[0]['control'] == control
+
+
+def test_name_visible_difference_keeps_date_and_marks_yellow(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source, [visible(persona='OTRA PERSONA', advertencia='nombre')])
+    target = tmp_path / 'resultado'
+    report = app.generar(source, target, CORTE)
+    ws = load_workbook(target / 'Registros.xlsx')['CUMPLIMIENTO']
+    headers = [c.value for c in ws[1]]
+    row = {h: ws.cell(2, i + 1).value for i, h in enumerate(headers)}
+    assert row['FECHA OBS.'].date() == date(2026, 10, 10)
+    assert row['CONTROL BITÁCORA'] == f'{app.VERIFICADA} · {app.NOMBRE_VISIBLE}'
+    assert report['revision_bitacora'] == 1
+
+
+def test_visible_rit_difference_still_leaves_date_blank(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    prepare(source, [visible(advertencia='RIT')])
+    report = app.generar(source, tmp_path / 'resultado', CORTE)
+    assert report['controles_bitacora'] == {app.IDENTIDAD_VISIBLE: 1}
 
 
 def test_filtered_diary_lot_is_reported(tmp_path):
@@ -780,5 +818,97 @@ def test_cli_accepts_repeated_folder(tmp_path, monkeypatch, capsys):
         argv += ['--folder', str(lote)]
     argv += ['--diaries', str(diaries), '--output-dir', str(tmp_path / 'resultado'), '--cutoff', '2026-10-16']
     monkeypatch.setattr(sys, 'argv', argv)
+    app.main()
+    assert json.loads(capsys.readouterr().out)['registros'] == 5
+
+
+# --------------------------------------------------------------------------
+# 2.5: regenerar desde Registros.xlsx revisado
+# --------------------------------------------------------------------------
+
+def editar_registros(path, cambios, borrar=()):
+    """`cambios`: {(hoja, RIT): {columna: valor}}. `borrar`: [(hoja, RIT)]."""
+    wb = load_workbook(path)
+    for sheet in ('ESPERA', 'CUMPLIMIENTO'):
+        ws = wb[sheet]
+        headers = [c.value for c in ws[1]]
+        for row in range(ws.max_row, 1, -1):
+            rit = ws.cell(row, headers.index('RIT') + 1).value
+            if (sheet, rit) in borrar:
+                ws.delete_rows(row)
+                continue
+            for column, value in cambios.get((sheet, rit), {}).items():
+                ws.cell(row, headers.index(column) + 1, value)
+    wb.save(path)
+
+
+def fecha_meta4(path, sheet, rit):
+    ws = load_workbook(path)[sheet]
+    row = next(c.row for r in ws for c in r if c.value == rit)
+    return ws.cell(row, 8).value, ws.cell(row, 1).fill.fgColor.rgb
+
+
+def test_regenerate_uses_user_corrections(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    first = tmp_path / 'Resultado META4 1'
+    app.generar(lotes, first, CORTE, bitacoras=diaries)
+    editar_registros(first / 'Registros.xlsx', {
+        ('ESPERA', 'E-1-2026'): {'FECHA OBS.': '05-10-2026', 'CONTROL BITÁCORA': 'REVISADO manualmente'},
+        ('CUMPLIMIENTO', 'C-1-2026'): {'ETAPA ÚLTIMA OBS.': 'Cumplimiento', 'CONTROL BITÁCORA': 'pendiente'},
+    }, borrar=[('CUMPLIMIENTO', 'C-3-2026')])
+    original = (first / 'META 4 - actualizado 2026-10.xlsx').read_bytes()
+    second = tmp_path / 'Resultado META4 2 regenerado'
+    report = app.regenerar(first / 'Registros.xlsx', second)
+    assert report['registros'] == 4 and report['alertas'] == 1 and report['revision_bitacora'] == 1
+    assert report['totales_meta4'] == {'FAE Espera': 1, 'FAE Cumplimiento': 2, 'Residencia Espera': 1,
+                                       'Residencia Cumplimiento': 0}
+    assert report['lotes_registros'] == ['FAE Espera', 'FAE Cumplimiento', 'RES Espera', 'RES Cumplimiento']
+    assert report['regenerado_desde'] == str((first / 'Registros.xlsx').resolve())
+    out = second / 'META 4 - actualizado 2026-10.xlsx'
+    day, _ = fecha_meta4(out, 'FAE Espera', 'E-1-2026')
+    assert day.date() == date(2026, 10, 5)
+    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-1-2026')[1].endswith(app.AMARILLO)
+    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-2-2026')[1].endswith(app.ROJO)
+    assert not fecha_meta4(out, 'FAE Espera', 'E-1-2026')[1].endswith((app.ROJO, app.AMARILLO))
+    control = {r[0]: r[1:] for r in load_workbook(out)['Control bitácoras'].iter_rows(values_only=True)}
+    assert 'Regenerado desde Registros.xlsx revisado' in control
+    ws = load_workbook(second / 'Registros.xlsx')['CUMPLIMIENTO']
+    headers = [c.value for c in ws[1]]
+    assert [ws.cell(r, headers.index('ALERTA') + 1).value for r in (2, 3)] == [None, app.ALERTA]
+    assert load_workbook(second / 'Registros.xlsx').sheetnames[2:] == ['INVENTARIO_ARCHIVOS', 'MATRIZ_COBERTURA',
+                                                                        'ERRORES_Y_ADVERTENCIAS']
+    assert (second / 'Bitacoras_del_mes.xlsx').is_file() and (second / 'Registros consolidados.xlsx').is_file()
+    assert (first / 'META 4 - actualizado 2026-10.xlsx').read_bytes() == original
+
+
+def test_regenerate_rejects_bad_date_without_output(tmp_path):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    first = tmp_path / 'r1'
+    app.generar(lotes, first, CORTE, bitacoras=diaries)
+    editar_registros(first / 'Registros.xlsx', {('ESPERA', 'E-1-2026'): {'FECHA OBS.': 'ayer'}})
+    with pytest.raises(ValueError, match='FECHA OBS. no reconocida en la hoja ESPERA, fila 2'):
+        app.regenerar(first / 'Registros.xlsx', tmp_path / 'r2')
+    assert not list(tmp_path.glob('r2*'))
+
+
+def test_regenerate_without_report_needs_cutoff_and_keeps_partial_filter(tmp_path):
+    source = tmp_path / 'fuentes'
+    source.mkdir()
+    dos_tribunales(source)
+    first = tmp_path / 'r1'
+    app.generar(source, first, CORTE, tribunales=['Laja'])
+    report = app.regenerar(first / 'Registros.xlsx', tmp_path / 'r2')
+    assert report['tribunales'] == ['LAJA'] and (tmp_path / 'r2' / 'META 4 - actualizado 2026-10 - parcial.xlsx').is_file()
+    (first / 'Reporte META4.json').unlink()
+    with pytest.raises(ValueError, match='indica la fecha de corte'):
+        app.regenerar(first / 'Registros.xlsx', tmp_path / 'r3')
+    assert app.regenerar(first / 'Registros.xlsx', tmp_path / 'r3', corte=CORTE)['registros'] == 1
+
+
+def test_cli_regenerate(tmp_path, monkeypatch, capsys):
+    lotes, diaries = cuatro_lotes(tmp_path)
+    app.generar(lotes, tmp_path / 'r1', CORTE, bitacoras=diaries)
+    monkeypatch.setattr(sys, 'argv', ['meta4', '--regenerar', str(tmp_path / 'r1' / 'Registros.xlsx'),
+                                      '--output-dir', str(tmp_path / 'r2')])
     app.main()
     assert json.loads(capsys.readouterr().out)['registros'] == 5

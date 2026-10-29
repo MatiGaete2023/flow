@@ -4,7 +4,7 @@ No se conecta a SITFA ni a RUS: solo lee lotes ya descargados."""
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
-from meta4_bitacoras import BASE, buscar_archivos, fecha_lectura, generar, meta, raices, tribunales_disponibles
+from meta4_bitacoras import BASE, buscar_archivos, fecha_lectura, generar, meta, raices, regenerar, tribunales_disponibles
 from datetime import date, datetime
 import os
 import queue
@@ -72,6 +72,8 @@ class App:
         line.pack(fill='x')
         self.generate = ttk.Button(line, text='Generar Meta 4', command=self.start)
         self.generate.pack(side='left')
+        self.regenerate = ttk.Button(line, text='Regenerar desde Registros revisado…', command=self.start_regenerate)
+        self.regenerate.pack(side='left', padx=(8, 0))
         ttk.Button(line, text='Abrir resultados', command=self.open_output).pack(side='right')
         ttk.Label(frame, textvariable=self.status, wraplength=760).pack(fill='x', pady=12)
         root.protocol('WM_DELETE_WINDOW', self.close)
@@ -155,13 +157,29 @@ class App:
             messagebox.showerror('Revisar datos', str(exc))
             return
         output = folder / ('Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+        self.run(output, lambda: generar(source, output, cutoff, bitacoras=diaries, tribunales=courts),
+                 'Generando Meta 4 y consolidados…')
+
+    def start_regenerate(self):
+        """META 4 y consolidados nuevos desde un Registros.xlsx corregido a mano."""
+        if self.busy:
+            return
+        path = filedialog.askopenfilename(title='Registros.xlsx revisado', filetypes=[('Excel', '*.xlsx')])
+        if not path:
+            return
+        output = Path(self.folder.get()).expanduser().resolve() / (
+            'Resultado META4 ' + datetime.now().strftime('%Y-%m-%d %H-%M-%S-%f') + ' regenerado')
+        self.run(output, lambda: regenerar(path, output), 'Regenerando Meta 4 desde Registros revisado…')
+
+    def run(self, output, task, message):
         self.busy = True
         self.generate.configure(state='disabled')
-        self.status.set('Generando Meta 4 y consolidados…')
+        self.regenerate.configure(state='disabled')
+        self.status.set(message)
 
         def run():
             try:
-                self.emit('complete', (str(output), generar(source, output, cutoff, bitacoras=diaries, tribunales=courts)))
+                self.emit('complete', (str(output), task()))
             except (ValueError, OSError) as exc:
                 self.emit('error', str(exc))
             except Exception as exc:
@@ -179,6 +197,7 @@ class App:
             if name == 'idle':
                 self.busy = False
                 self.generate.configure(state='normal')
+                self.regenerate.configure(state='normal')
             elif name == 'error':
                 self.status.set('El proceso requiere revisión.')
                 messagebox.showerror('Meta 4', value)
@@ -187,7 +206,7 @@ class App:
                 lectura = ', '.join(report['lectura_bitacoras'])
                 alcance = 'todos los tribunales' if report['tribunales'] == 'TODOS' else 'PARCIAL: ' + ', '.join(report['tribunales'])
                 lotes = len(report['lotes_registros'])
-                text = (f"Generados {report['registros']} registros" + (f' de {lotes} lote(s)' if lotes else '') +
+                text = ('Regenerado desde Registros revisado. ' if report.get('regenerado_desde') else '') + (f"Generados {report['registros']} registros" + (f' de {lotes} lote(s)' if lotes else '') +
                         f" ({alcance}). Alertas: {report['alertas']}. "
                         f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
                 warnings = []

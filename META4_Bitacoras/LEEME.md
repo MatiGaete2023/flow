@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.4
+# Meta 4 · Registros y bitácoras — 2.5
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -15,6 +15,7 @@ Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó e
 6. Opcional: en **Tribunales** selecciona uno o varios (Ctrl + clic). Sin selección se incluyen todos. La lista muestra los tribunales consultados en los lotes agregados.
 7. Revisa la fecha de corte: al elegir las bitácoras se ajusta al día en que se leyeron si es anterior a hoy. Pulsa **Generar Meta 4**.
 8. Pulsa **Abrir resultados**. Cada ejecución crea una carpeta nueva. El aviso final indica lectura incompleta, consultas sin bitácoras y lotes filtrados.
+9. Si corriges **Registros.xlsx** (ver «Regenerar después de revisar»), guárdalo y pulsa **Regenerar desde Registros revisado…**.
 
 ## Qué lee y qué calcula
 
@@ -32,8 +33,22 @@ Controles de bitácora (columna CONTROL BITÁCORA, filas amarillas):
 - `REVISAR: bitácora leída antes de la fecha de corte`: lo escrito entre la lectura y el corte no está en la bitácora guardada. Usa como corte el día de lectura o vuelve a leer.
 - `LECTURA NO COMPLETADA`: el Descargador no logró leerla (fallida, pendiente o sin enlace). Si otro lote tiene una lectura verificada del mismo ingreso, se usa esa.
 - `BITÁCORA NO VERIFICABLE`: el HTML cambió después de la descarga, falta o pertenece a otro ingreso. Bloquea la asociación aunque exista otra lectura.
-- `REVISAR IDENTIDAD VISIBLE`, `IDENTIDAD AMBIGUA`, `SIN BITÁCORA ASOCIADA`: diferencias o ausencia de identidad entre la fila y la bitácora.
+- `VERIFICADA EN EL PERÍODO`: bitácora asociada y leída sin problemas, con al menos una observación del centro de etapa Espera o Cumplimiento en el período. FECHA OBS. es la más reciente.
+- `SIN OBSERVACIÓN DE ESPERA/CUMPLIMIENTO EN EL MES`: bitácora asociada y leída, pero sin observación del centro de etapa Espera o Cumplimiento en el período (no hay, son anteriores o son de Informes). FECHA OBS. vacía.
+- `REVISAR IDENTIDAD VISIBLE`: el **RIT** que muestra la bitácora es distinto al del listado. Bloquea: FECHA OBS. vacía.
+- `REVISAR NOMBRE VISIBLE (fecha tomada de la bitácora)`: el nombre que muestra la bitácora es distinto al del listado, aunque coinciden tribunal, causa, ingreso, RIT, RUT y programa. **La fecha se usa** y la fila queda amarilla. No se marca si solo cambia el orden de las palabras, las tildes o falta un nombre o apellido.
+- `IDENTIDAD AMBIGUA`, `SIN BITÁCORA ASOCIADA`: varios ingresos compatibles o ninguna bitácora para la fila.
 - Si los lotes de bitácoras declaran sus consultas, el reporte lista las consultas con registros que **ningún lote de bitácoras enumeró**.
+
+## Regenerar después de revisar
+
+Registros.xlsx es la hoja de trabajo. En las hojas ESPERA y CUMPLIMIENTO puedes:
+
+- Escribir o corregir **FECHA OBS.** (DD-MM-AAAA) y **ETAPA ÚLTIMA OBS.** (Espera o Cumplimiento).
+- Escribir **REVISADO** (o un texto que empiece así) en **CONTROL BITÁCORA** para quitar el amarillo.
+- Borrar filas que no corresponden.
+
+Guarda el archivo y pulsa **Regenerar desde Registros revisado…** (o `--regenerar Registros.xlsx`). Se crea una carpeta nueva `… regenerado` con META 4, Registros.xlsx, Registros consolidados.xlsx, Reporte META4.json y una copia de Bitacoras_del_mes.xlsx. La ALERTA roja se recalcula con la etapa. Período, tribunales, lotes y avisos se toman del Reporte META4.json de la misma carpeta; si falta, hay que indicar la fecha de corte (`--cutoff`). La carpeta original no se modifica. Una FECHA OBS. ilegible detiene el proceso indicando hoja y fila.
 
 ## Resultados
 
@@ -59,6 +74,12 @@ También admite una carpeta de reportes Excel independientes (sin `resumen.json`
 python scripts/meta4_bitacoras.py --folder "C:\Descargas\FAE Espera" --folder "C:\Descargas\FAE Cumplimiento" --folder "C:\Descargas\RES Espera" --folder "C:\Descargas\RES Cumplimiento" --diaries "C:\Descargas\Bitacoras 2026-10-16" --output-dir "C:\Resultados\Meta4-nuevo" --cutoff 2026-10-16
 ```
 
+Regenerar desde un Registros.xlsx revisado:
+
+```text
+python scripts/meta4_bitacoras.py --regenerar "C:\Resultados\Meta4-nuevo\Registros.xlsx" --output-dir "C:\Resultados\Meta4-revisado"
+```
+
 `--folder` es repetible: cada lote se agrega al mismo Meta 4 (también sirve una carpeta que contenga varios lotes). `--diaries` es opcional y repetible si las bitácoras están dentro de `--folder`. `--tribunal NOMBRE` (repetible) limita la generación a esos tribunales, por ejemplo `--tribunal Laja --tribunal Tomé`. `--month AAAA-MM` cambia el mes de emisión de la planilla; `--cutoff` controla por separado el período de bitácoras y no puede estar en el futuro. `--template archivo.xlsx` permite una plantilla propia; si no existe, es un error. La fecha de corte filtra las observaciones; no reconstruye el estado histórico de los registros de SITFA, que son los vigentes al descargar.
 
 ```text
@@ -67,6 +88,13 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.5
+
+- **Nombre visible distinto ya no borra la fecha.** Antes cualquier aviso de identidad del Descargador dejaba FECHA OBS. vacía, aunque la bitácora tuviera observaciones. Ahora solo un RIT visible distinto bloquea; un nombre distinto usa la fecha y deja la fila amarilla con `REVISAR NOMBRE VISIBLE`. Orden de palabras, tildes o un nombre de menos no generan aviso.
+- **Regenerar desde Registros.xlsx revisado** (botón y `--regenerar`).
+- `REVISADO` en CONTROL BITÁCORA quita el amarillo al regenerar.
+- El reporte guarda `mes_emision`.
 
 ## Cambios 2.4
 

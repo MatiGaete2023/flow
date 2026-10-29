@@ -1,3 +1,19 @@
+META 4 CON BITACORAS 2.5 - Verificacion del 29 de octubre de 2026
+
+128 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (123 y 1
+omitida con Python 3.13 sin tkinter). Compilacion comprobada con 3.11.
+
+Nuevo en 2.5, comprobado con datos ficticios:
+- RIT visible distinto: bloquea (FECHA OBS. vacia).
+- Nombre visible distinto: fecha usada, fila amarilla con REVISAR NOMBRE VISIBLE.
+- Mismo nombre con otro orden, tildes, espacios o un nombre de mas: sin aviso.
+- Regenerar desde Registros.xlsx editado: fecha manual, REVISADO, etapa
+  cambiada (alerta recalculada), fila borrada; META 4 y consolidados nuevos,
+  hojas de inventario/matriz/errores conservadas, original sin cambios.
+- Fecha ilegible: rechazo con hoja y fila, sin carpeta de salida.
+- Filtro de tribunales conservado; sin Reporte META4.json exige fecha de corte.
+- Linea de comandos --regenerar y boton de la ventana.
+
 META 4 CON BITACORAS 2.4 - Verificacion del 29 de octubre de 2026
 
 116 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (112 y 1

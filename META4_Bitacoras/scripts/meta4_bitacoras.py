@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.4'
+VERSION = '2.5'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'
@@ -41,6 +41,7 @@ IDENTIDAD = ('tribunal_codigo', 'causa_id', 'ingreso_id')
 NO_COMPLETADA = 'LECTURA NO COMPLETADA'
 NO_VERIFICABLE = 'BITÁCORA NO VERIFICABLE'
 IDENTIDAD_VISIBLE = 'REVISAR IDENTIDAD VISIBLE'
+NOMBRE_VISIBLE = 'REVISAR NOMBRE VISIBLE (fecha tomada de la bitácora)'
 LEIDA_ANTES = 'REVISAR: bitácora leída antes de la fecha de corte'
 BLOQUEANTES = (NO_VERIFICABLE, IDENTIDAD_VISIBLE)
 CONSULTA_CUBIERTA = ('ENUMERADA', 'SIN_REGISTROS')
@@ -143,6 +144,28 @@ class Lectura:
     avisos: list = field(default_factory=list)
 
 
+def _tokens(value):
+    return set(meta.norm(value).replace(',', ' ').split())
+
+
+def nombres_compatibles(a, b):
+    """Mismo nombre con otro orden, tildes o un nombre/apellido de menos (al menos dos palabras en común)."""
+    x, y = _tokens(a), _tokens(b)
+    return bool(x) and bool(y) and (x == y or ((x <= y or y <= x) and len(x & y) >= 2))
+
+
+def control_identidad(record, snapshot):
+    """Compara lo visible en la bitácora con la fila del listado. La identidad remota
+    (tribunal, causa, ingreso) ya coincide: un RIT visible distinto bloquea; un nombre
+    escrito distinto solo pide revisión y la fecha se usa igual."""
+    avisos = ' '.join(map(str, record.get('advertencias') or ()))
+    if 'RIT visible' in avisos or meta.norm(snapshot.get('rit')) != meta.norm(record.get('rit')):
+        return IDENTIDAD_VISIBLE
+    if nombres_compatibles(snapshot.get('persona'), record.get('nombre')):
+        return None
+    return NOMBRE_VISIBLE
+
+
 def dia_captura(value):
     """Día local de la lectura. La extensión registra la hora en UTC."""
     moment = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
@@ -201,8 +224,9 @@ def _leer_bitacoras(root, corte):
                         raise ValueError('La bitácora pertenece a otro ingreso.')
                     leida = dia_captura(record['capturada'])
                     record['entries'] = entradas_periodo(snapshot['entries'], corte)
-                    if record.get('advertencias'):
-                        record['control'] = IDENTIDAD_VISIBLE
+                    identidad = control_identidad(record, snapshot)
+                    if identidad:
+                        record['control'] = identidad
                     elif leida < corte:
                         # Lo escrito entre la lectura y el corte no está en la bitácora guardada.
                         record['control'] = LEIDA_ANTES
@@ -280,13 +304,13 @@ def buscar(row, diaries):
         return None, blocking
     # La misma identidad puede venir de ambas pestañas o de varios lotes (p. ej. por el límite
     # de lecturas): una lectura fallida en un lote no anula la lectura verificada de otro.
-    read = [r for r in candidates if r.get('control') in ('OK', LEIDA_ANTES)]
+    read = [r for r in candidates if r.get('control') in ('OK', LEIDA_ANTES, NOMBRE_VISIBLE)]
     if not read:
         return None, candidates[0].get('control', NO_COMPLETADA)
     newest = max(read, key=lambda r: str(r.get('capturada', '')))
-    if newest['control'] != 'OK':
+    if newest['control'] == LEIDA_ANTES:
         return None, newest['control']
-    return newest, 'OK'
+    return newest, newest['control']
 
 
 def enriquecer(rows, diaries, corte):
@@ -296,15 +320,22 @@ def enriquecer(rows, diaries, corte):
             diary, control = buscar(row, index)
             day, stage = None, ''
             if diary:
-                day, stage, control = ultima(diary['entries'], corte)
+                day, stage, resultado = ultima(diary['entries'], corte)
+                # El aviso de nombre visible se conserva junto al resultado: la fila queda en amarillo.
+                control = resultado if control == 'OK' else f'{resultado} · {control}'
             row.values['FECHA OBS.'] = day
             row.values[EXTRA[0]] = stage
             row.values[EXTRA[1]] = control
             row.values['ALERTA'] = ALERTA if row.status == 'Cumplimiento' and stage == 'Espera' else ''
 
 
+def revisada(control):
+    """Control sin pendiente: verificada en el período o marcada REVISADO por el usuario."""
+    return control == VERIFICADA or normal(control).startswith('REVISADO')
+
+
 def requiere_revision(values):
-    return bool(values['ALERTA']) or values[EXTRA[1]] != VERIFICADA
+    return bool(values['ALERTA']) or not revisada(values[EXTRA[1]])
 
 
 def tabla(ws, headers, records, formatos=None):
@@ -362,7 +393,7 @@ def resumen_tribunales(rows, faltan=(), tribunales=None):
             c[f'{(r.category or "").upper()} {status.upper()}'] += 1
             c['TOTAL REGISTROS'] += 1
             c['ALERTAS'] += bool(r.values['ALERTA'])
-            c['REVISAR BITÁCORA'] += r.values[EXTRA[1]] != VERIFICADA
+            c['REVISAR BITÁCORA'] += not revisada(r.values[EXTRA[1]])
             c['SIN FECHA OBS.'] += r.values.get('FECHA OBS.') is None
     for _, tribunal in faltan:
         counts[tribunal or SIN_TRIBUNAL]['CONSULTAS SIN BITÁCORAS'] += 1
@@ -696,6 +727,56 @@ def aplicar_filtro(tribunales, files, issues, selected, groups, faltan):
     return selected, groups, [item for item in faltan if item[1] in tribunales]
 
 
+def lineas_control(inicio, fin, estados, faltan, tribunales, filtros, lotes, extra=()):
+    lines = [['Período de bitácoras', inicio, fin],
+             ['Lectura de bitácoras', ', '.join(sorted(set(estados)))],
+             ['Consultas sin bitácoras', len(faltan)],
+             ['Tribunales incluidos', 'Todos' if tribunales is None else ', '.join(tribunales)],
+             ['Filtros del lote de registros', ' | '.join(filtros) if filtros else 'Sin filtros'],
+             ['Lotes de registros', len(lotes), ' | '.join(lotes)]]
+    lines += [list(e) for e in extra]
+    lines += [['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'],
+              ['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.']]
+    return lines
+
+
+def _publicar(destino, registros, rows, corte, emission, template, tribunales, faltan, control_lines):
+    """META 4, Registros consolidados y verificación final a partir de un Registros.xlsx ya escrito."""
+    records, counts, unmatched = meta.read_registros(registros)
+    wb = meta.load_template(template)
+    summary = meta.rebuild(wb, records, emission or corte, tribunales)
+    marcar_planilla(wb, records, rows, tribunales)
+    control = wb.create_sheet('Control bitácoras')
+    for line in control_lines:
+        control.append(line)
+    for cell in control[1][1:]:
+        cell.number_format = 'dd-mm-yyyy'
+    parcial = '' if tribunales is None else ' - parcial'
+    out = destino / f'META 4 - actualizado {(emission or corte):%Y-%m}{parcial}.xlsx'
+    meta.save_workbook_atomic(wb, out)
+    resumen = resumen_tribunales(rows, faltan, tribunales)
+    consolidado(destino / 'Registros consolidados.xlsx', rows, resumen)
+    totals, counted, problems = meta.verify_meta_output(out)
+    problems = list(problems)
+    if totals != summary or counted != summary:
+        problems.append('Los totales escritos no coinciden con los registros generados.')
+    if sum(summary.values()) != sum(len(v) for v in rows.values()) - len(unmatched):
+        problems.append('Faltan registros en la planilla final.')
+    if problems:
+        raise ValueError('La planilla requiere revisión: ' + '; '.join(problems))
+    return summary, unmatched, resumen
+
+
+def _conteos(rows):
+    every = [r for group in rows.values() for r in group]
+    return {
+        'registros': len(every),
+        'alertas': sum(bool(r.values['ALERTA']) for r in every),
+        'revision_bitacora': sum(not revisada(r.values[EXTRA[1]]) for r in every),
+        'controles_bitacora': dict(Counter(r.values[EXTRA[1]] for r in every)),
+    }
+
+
 def _escribir(destino, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales,
               filtros=(), lotes=()):
     estados = lectura.estados
@@ -705,45 +786,16 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     registros = destino / 'Registros.xlsx'
     meta.write_registros_workbook(registros, rows, files, selected, groups, issues, extra_headers=EXTRA,
                                   row_fill=lambda r: ROJO if r.values['ALERTA'] else None, scope=tribunales)
-    records, counts, unmatched = meta.read_registros(registros)
-    wb = meta.load_template(template)
-    summary = meta.rebuild(wb, records, emission or corte, tribunales)
-    marcar_planilla(wb, records, rows, tribunales)
     inicio, fin = periodo(corte)
-    control = wb.create_sheet('Control bitácoras')
-    control.append(['Período de bitácoras', inicio, fin])
-    control.append(['Lectura de bitácoras', ', '.join(sorted(set(estados)))])
-    control.append(['Consultas sin bitácoras', len(faltan)])
-    control.append(['Tribunales incluidos', 'Todos' if tribunales is None else ', '.join(tribunales)])
-    control.append(['Filtros del lote de registros', ' | '.join(filtros) if filtros else 'Sin filtros'])
-    control.append(['Lotes de registros', len(lotes), ' | '.join(lotes)])
-    control.append(['Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.'])
-    control.append(['Sin observación en el mes: FECHA OBS. vacía. Informes no participa.'])
-    for cell in control[1][1:]:
-        cell.number_format = 'dd-mm-yyyy'
-    parcial = '' if tribunales is None else ' - parcial'
-    out = destino / f'META 4 - actualizado {(emission or corte):%Y-%m}{parcial}.xlsx'
-    meta.save_workbook_atomic(wb, out)
-    resumen = resumen_tribunales(rows, faltan, tribunales)
-    consolidado(destino / 'Registros consolidados.xlsx', rows, resumen)
+    summary, unmatched, resumen = _publicar(destino, registros, rows, corte, emission, template, tribunales, faltan,
+                                            lineas_control(inicio, fin, estados, faltan, tribunales, filtros, lotes))
     exportar_bitacoras(destino / 'Bitacoras_del_mes.xlsx', diaries)
-    totals, counted, problems = meta.verify_meta_output(out)
-    problems = list(problems)
-    if totals != summary or counted != summary:
-        problems.append('Los totales escritos no coinciden con los registros generados.')
-    if sum(summary.values()) != sum(len(v) for v in rows.values()) - len(unmatched):
-        problems.append('Faltan registros en la planilla final.')
-    if problems:
-        raise ValueError('La planilla requiere revisión: ' + '; '.join(problems))
-    every = [r for group in rows.values() for r in group]
     report = {
         'version': VERSION,
         'desde': str(inicio),
         'hasta': str(fin),
-        'registros': len(every),
-        'alertas': sum(bool(r.values['ALERTA']) for r in every),
-        'revision_bitacora': sum(r.values[EXTRA[1]] != VERIFICADA for r in every),
-        'controles_bitacora': dict(Counter(r.values[EXTRA[1]] for r in every)),
+        'mes_emision': f'{(emission or corte):%Y-%m}',
+        **_conteos(rows),
         'lectura_bitacoras': sorted(set(estados)),
         'consultas_sin_bitacoras': [label for label, _ in faltan],
         'tribunales': 'TODOS' if tribunales is None else tribunales,
@@ -757,6 +809,137 @@ def _escribir(destino, corte, emission, template, lectura, faltan, files, issues
     }
     (destino / 'Reporte META4.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     return report
+
+
+def _en_carpeta_nueva(destino, trabajo_fn):
+    """Escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial."""
+    if destino.exists():
+        raise ValueError('La carpeta de salida ya existe; indica una carpeta nueva.')
+    trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(4))
+    trabajo.mkdir(parents=True)
+    try:
+        report = trabajo_fn(trabajo)
+        os.replace(trabajo, destino)
+    except BaseException:
+        shutil.rmtree(trabajo, ignore_errors=True)
+        raise
+    return report
+
+
+HOJAS_REGISTROS = {'ESPERA': 'Espera', 'CUMPLIMIENTO': 'Cumplimiento'}
+
+
+def leer_registros_editados(path):
+    """Filas de ESPERA y CUMPLIMIENTO de un Registros.xlsx revisado por el usuario.
+
+    Se conservan los valores escritos (FECHA OBS., ETAPA ÚLTIMA OBS., CONTROL BITÁCORA);
+    la ALERTA se recalcula con la etapa, porque depende de ella."""
+    from openpyxl import load_workbook
+    wb = load_workbook(path, data_only=True)
+    rows = {'Espera': [], 'Cumplimiento': []}
+    for sheet, status in HOJAS_REGISTROS.items():
+        name = next((n for n in wb.sheetnames if normal(n) == sheet), None)
+        if name is None:
+            raise ValueError(f'Registros.xlsx no tiene la hoja {sheet}.')
+        expected = meta.SOURCE_HEADERS[status] + EXTRA
+        canonical = {normal(h): h for h in expected}
+        grid = list(wb[name].iter_rows(values_only=True))
+        if not grid:
+            raise ValueError(f'La hoja {sheet} de Registros.xlsx está vacía.')
+        headers = [canonical.get(normal(h)) for h in grid[0]]
+        missing = [h for h in expected if h not in headers]
+        if missing:
+            raise ValueError(f'En la hoja {sheet} de Registros.xlsx faltan columnas: ' + ', '.join(missing))
+        for index, values in enumerate(grid[1:], 2):
+            record = {h: v for h, v in zip(headers, values) if h}
+            if not str(record.get('RIT') or '').strip():
+                continue
+            for h, v in record.items():
+                if normal(h) in meta.DATE_HEADERS:
+                    record[h] = meta.as_date(v)
+            if record['FECHA OBS.'] is not None and not isinstance(record['FECHA OBS.'], date):
+                raise ValueError(f'FECHA OBS. no reconocida en la hoja {sheet}, fila {index}: '
+                                 f"{record['FECHA OBS.']!r}. Usa el formato DD-MM-AAAA.")
+            record[EXTRA[1]] = str(record.get(EXTRA[1]) or '').strip()
+            record[EXTRA[0]] = str(record.get(EXTRA[0]) or '').strip()
+            stage = etapa({'etapa': record[EXTRA[0]]})
+            record['ALERTA'] = ALERTA if status == 'Cumplimiento' and stage == 'Espera' else ''
+            rows[status].append(meta.SourceRow(status, meta.classify_derivation(record.get('DERIVACIÓN')),
+                                               meta.tribunal_name(record.get('TRIBUNAL')), record, name, index))
+    return wb, rows
+
+
+def regenerar(registros, destino, corte=None, emission=None, template=None):
+    """Vuelve a generar META 4 y sus consolidados desde un Registros.xlsx revisado.
+
+    Toma el período, los tribunales, los lotes y los avisos del `Reporte META4.json` de la
+    misma carpeta; copia Bitacoras_del_mes.xlsx. Nunca modifica la carpeta original."""
+    registros = Path(registros).expanduser().resolve()
+    destino = Path(destino).expanduser().resolve()
+    if not registros.is_file():
+        raise ValueError('Elige el archivo Registros.xlsx revisado.')
+    template = Path(template).expanduser().resolve() if template else None
+    if template and not template.is_file():
+        raise ValueError('No existe la plantilla indicada.')
+    previo_path = registros.parent / 'Reporte META4.json'
+    previo = json.loads(previo_path.read_text(encoding='utf-8')) if previo_path.is_file() else {}
+    if corte is None:
+        if 'hasta' not in previo:
+            raise ValueError('No está el Reporte META4.json junto a Registros.xlsx: indica la fecha de corte.')
+        corte = date.fromisoformat(previo['hasta'])
+    if emission is None and previo.get('mes_emision'):
+        emission = date.fromisoformat(previo['mes_emision'] + '-01')
+    tribunales = None if previo.get('tribunales', 'TODOS') == 'TODOS' else normalizar_tribunales(previo['tribunales'])
+    faltan = [(label, meta.tribunal_name(label.split(' / ')[0])) for label in previo.get('consultas_sin_bitacoras', [])]
+    wb, rows = leer_registros_editados(registros)
+    for status, group in rows.items():
+        if tribunales is not None:
+            fuera = [r for r in group if r.tribunal not in tribunales]
+            if fuera:
+                raise ValueError(f'Registros.xlsx tiene filas de tribunales fuera del filtro original ({fuera[0].values.get("TRIBUNAL")}).')
+    inicio, fin = periodo(corte)
+    editado = datetime.fromtimestamp(registros.stat().st_mtime)
+
+    def trabajo(carpeta):
+        # Registros.xlsx: las hojas revisadas se reescriben con su ALERTA recalculada; el resto se conserva.
+        for sheet, status in HOJAS_REGISTROS.items():
+            name = next(n for n in wb.sheetnames if normal(n) == sheet)
+            position = wb.sheetnames.index(name)
+            wb.remove(wb[name])
+            ws = wb.create_sheet(sheet, position)
+            meta.style_data_sheet(ws, meta.SOURCE_HEADERS[status] + EXTRA, rows[status],
+                                  lambda r: ROJO if r.values['ALERTA'] else None, len(EXTRA))
+        wb.active = 0
+        nuevo = carpeta / 'Registros.xlsx'
+        meta.save_workbook_atomic(wb, nuevo)
+        extra = [('Regenerado desde Registros.xlsx revisado', editado.strftime('%d-%m-%Y %H:%M'), str(registros))]
+        summary, unmatched, resumen = _publicar(
+            carpeta, nuevo, rows, corte, emission, template, tribunales, faltan,
+            lineas_control(inicio, fin, previo.get('lectura_bitacoras', ['SIN DATO']), faltan, tribunales,
+                           previo.get('filtros_registros', []), previo.get('lotes_registros', []), extra))
+        bitacoras = registros.parent / 'Bitacoras_del_mes.xlsx'
+        if bitacoras.is_file():
+            shutil.copy2(bitacoras, carpeta / 'Bitacoras_del_mes.xlsx')
+        report = dict(previo, **{
+            'version': VERSION,
+            'desde': str(inicio),
+            'hasta': str(fin),
+            'mes_emision': f'{(emission or corte):%Y-%m}',
+            **_conteos(rows),
+            'tribunales': 'TODOS' if tribunales is None else tribunales,
+            'resumen_tribunales': resumen,
+            'totales_meta4': summary,
+            'excluidos_meta4': len(unmatched),
+            'regenerado_desde': str(registros),
+            'regenerado_el': datetime.now().isoformat(timespec='seconds'),
+        })
+        report.setdefault('lectura_bitacoras', ['SIN DATO'])
+        for key in ('consultas_sin_bitacoras', 'avisos_bitacoras', 'lotes_registros', 'filtros_registros'):
+            report.setdefault(key, [])
+        (carpeta / 'Reporte META4.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+        return report
+
+    return _en_carpeta_nueva(destino, trabajo)
 
 
 def generar(origen, destino, corte, emission=None, template=None, bitacoras=None, tribunales=None):
@@ -801,17 +984,9 @@ def generar(origen, destino, corte, emission=None, template=None, bitacoras=None
                                          f"Registro excluido de META 4: la columna TRIBUNAL ({r.values.get('TRIBUNAL')!r}) "
                                          'no identifica un tribunal. Queda en Registros.'))
     enriquecer(rows, lectura.registros, corte)
-    # Se escribe en una carpeta temporal hermana: si algo falla, no queda una planilla parcial.
-    trabajo = destino.with_name(destino.name + EN_CURSO + secrets.token_hex(4))
-    trabajo.mkdir(parents=True)
-    try:
-        report = _escribir(trabajo, corte, emission, template, lectura, faltan,
-                           files, issues, selected, groups, rows, tribunales, filtros, lotes)
-        os.replace(trabajo, destino)
-    except BaseException:
-        shutil.rmtree(trabajo, ignore_errors=True)
-        raise
-    return report
+    return _en_carpeta_nueva(destino, lambda trabajo: _escribir(
+        trabajo, corte, emission, template, lectura, faltan, files, issues, selected, groups, rows, tribunales,
+        filtros, lotes))
 
 
 def _fecha_arg(text):
@@ -829,7 +1004,7 @@ def _mes_arg(text):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--folder', required=True, action='append',
+    p.add_argument('--folder', action='append',
                    help='Lote de registros del Descargador (resumen.json y Excel); repetir para combinar varios lotes')
     p.add_argument('--diaries', action='append',
                    help='Carpeta con lotes de bitácoras; repetible; por defecto, dentro de --folder')
@@ -838,12 +1013,20 @@ def main():
     p.add_argument('--month', type=_mes_arg, help='Mes de emisión AAAA-MM; no cambia el período de bitácoras')
     p.add_argument('--template')
     p.add_argument('--tribunal', action='append', help='Incluir solo este tribunal; repetir para varios')
+    p.add_argument('--regenerar', metavar='REGISTROS_XLSX',
+                   help='Regenera META 4 y consolidados desde un Registros.xlsx revisado (no usa --folder)')
     args = p.parse_args()
-    cutoff = args.cutoff or date.today()
-    if cutoff > date.today():
+    if args.cutoff and args.cutoff > date.today():
         p.exit(1, 'La fecha de corte no puede estar en el futuro.\n')
+    if not args.regenerar and not args.folder:
+        p.exit(1, 'Indica --folder (uno o varios lotes) o --regenerar Registros.xlsx.\n')
     try:
-        print(json.dumps(generar(args.folder, args.output_dir, cutoff, args.month, args.template, args.diaries, args.tribunal), ensure_ascii=False, indent=2))
+        if args.regenerar:
+            report = regenerar(args.regenerar, args.output_dir, args.cutoff, args.month, args.template)
+        else:
+            report = generar(args.folder, args.output_dir, args.cutoff or date.today(), args.month, args.template,
+                             args.diaries, args.tribunal)
+        print(json.dumps(report, ensure_ascii=False, indent=2, default=str))
     except (ValueError, OSError) as exc:
         p.exit(1, str(exc) + '\n')
 

@@ -109,3 +109,17 @@ def test_adds_several_lots_and_generates_one_meta4(ventana, tmp_path, monkeypatc
     assert shown[-1][0] == 'showwarning' and 'no quedó COMPLETA' in shown[-1][1][1], shown[-1]
     assert 'Generados 5 registros de 4 lote(s)' in app.status.get()
     assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()
+
+
+def test_regenerates_from_reviewed_registros(ventana, tmp_path, monkeypatch):
+    app, shown = ventana
+    lotes, diaries = cuatro_lotes(tmp_path / 'descargas')
+    first = tmp_path / 'salidas' / 'Resultado META4 1'
+    Meta4.generar(lotes, first, date(2026, 10, 16), bitacoras=diaries)
+    monkeypatch.setattr(Meta4.filedialog, 'askopenfilename', lambda **k: str(first / 'Registros.xlsx'))
+    app.folder.set(str(tmp_path / 'salidas'))
+    app.start_regenerate()
+    esperar(app)
+    assert 'Regenerado desde Registros revisado. Generados 5 registros' in app.status.get(), shown[-1]
+    assert Path(app.output).name.endswith(' regenerado')
+    assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()
