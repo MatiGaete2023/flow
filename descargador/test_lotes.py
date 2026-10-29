@@ -452,7 +452,8 @@ class InterfaceTests(unittest.TestCase):
             app.process_event('catalog', CATALOG)
             self.assertEqual(len(app.batch().plan(CATALOG)), 16)
             app.select_tribunals(('49',))
-            app.modality.set('Residencia')
+            app.select_modalities(('1',))
+            self.assertEqual(app.modality.get(), 'Residencia')
             app.tab.set('Cumplimiento')
             app.refresh()
             self.assertEqual(len(app.batch().plan(CATALOG)), 1)
@@ -468,6 +469,41 @@ class InterfaceTests(unittest.TestCase):
             self.assertLess(app.tree.winfo_rooty() + app.tree.winfo_height(), root.winfo_rooty() + root.winfo_height())
             app.process_event('warning', 'Revisa el formulario de SITFA.')
             self.assertEqual(app.status.get(), 'Revisa el formulario de SITFA.')
+        finally:
+            dispose_interface(app, root)
+
+    @isolated_gui
+    def test_varias_modalidades_como_los_tribunales(self):
+        # Petición del usuario 29-oct-2026: elegir una o varias modalidades igual que los tribunales.
+        import tkinter as tk
+        from descargador import Application, TribunalPicker
+
+        root = tk.Tk()
+        app = Application(root, start_worker=False)
+        try:
+            app.process_event('connected', 'Chrome ficticio')
+            app.process_event('catalog', CATALOG)
+            app.select_tribunals(('49',))
+            app.tab.set('Cumplimiento')
+            self.assertEqual(app.modality.get(), 'Todas las modalidades')
+            todas = app.batch().modalities
+            self.assertGreater(len(todas), 2)
+            picker = TribunalPicker(
+                root, app.available_modalities(), todas, app.select_modalities, counted='modalidades seleccionadas'
+            )
+            picker.set_all(False)
+            picker.choices[todas[0]].set(True)
+            picker.choices[todas[1]].set(True)
+            self.assertIn('2 modalidades seleccionadas', picker.selection_count.get())
+            picker.apply()
+            self.assertEqual(app.batch().modalities, todas[:2])
+            self.assertEqual(len(app.batch().plan(CATALOG)), 2)
+            self.assertTrue(app.modality.get().startswith('2 modalidades marcadas'))
+            app.select_modalities(())
+            with self.assertRaises(m.PocError):
+                app.batch()
+            app.select_modalities(todas)
+            self.assertEqual((app.modality.get(), app.selected_modalities), ('Todas las modalidades', None))
         finally:
             dispose_interface(app, root)
 
