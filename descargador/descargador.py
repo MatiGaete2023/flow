@@ -1328,13 +1328,17 @@ class Application:
                     self.emit('disconnected', self.bridge.connection_code)
             except m.PocError as exc:
                 self.emit('error', 'E_' + command.upper() + ': ' + str(exc))
-            except Exception:
-                self.emit(
-                    'error',
-                    'E_'
-                    + command.upper()
-                    + ': No se pudo completar la operación. Revisa la conexión, SITFA y la carpeta. Se conservan los archivos ya verificados.',
-                )
+            except Exception as exc:
+                if type(exc).__module__ == 'nurus.capture.contract' and type(exc).__name__ == 'CaptureError':
+                    # Mensajes fijos del contrato de captura, sin datos de causas: dicen qué rechazó el paquete.
+                    self.emit('error', 'E_' + command.upper() + ': El paquete no pasó la validación: ' + str(exc))
+                else:
+                    self.emit(
+                        'error',
+                        'E_'
+                        + command.upper()
+                        + ': No se pudo completar la operación. Revisa la conexión, SITFA y la carpeta. Se conservan los archivos ya verificados.',
+                    )
             finally:
                 self.emit('idle', None)
 

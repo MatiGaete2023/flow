@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from hashlib import sha256
+import itertools
 import json
 from pathlib import Path
 from csmp_shared import parser
@@ -125,6 +126,8 @@ def export_capture(
     data = {'consultas': [], 'registros': [], 'incidencias': []}
     originals = {}
     query_index = {}
+    # Contador propio: si se descartan incidencias resueltas, el largo de la lista repetiría un id (prueba 29-oct).
+    incident_ids = itertools.count(1)
 
     def incident(qid, code, message, rid=''):
         data['incidencias'].append(
@@ -132,7 +135,7 @@ def export_capture(
                 capture_id=cid,
                 query_id=qid,
                 record_id=rid,
-                incident_id='i' + str(len(data['incidencias']) + 1),
+                incident_id='i' + str(next(incident_ids)),
                 phase='EXPORTAR',
                 code=code,
                 severity='ADVERTENCIA',

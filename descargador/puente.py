@@ -211,6 +211,7 @@ class Bridge:
             'evidence_capture',
             'evidence_close',
             'diary_open',
+            'calendar_open',
             'history_open',
         ):
             raise PocError('Accion no permitida.')
@@ -235,6 +236,12 @@ class Bridge:
                     'DIARY_NETWORK': 'Falló el contacto con RUS al abrir la bitácora o hubo una redirección. Comprueba la sesión y reintenta.',
                     'DIARY_TIMEOUT': 'RUS no respondió a tiempo al abrir la bitácora. Reintenta las lecturas fallidas.',
                     'DIARY_RESPONSE': 'RUS no entregó una respuesta válida de bitácora. Revisa la sesión y reintenta.',
+                    'CALENDAR_CONTEXT': 'No se conserva el listado actual para abrir el calendario de informes. Vuelve a consultar sin navegar en SITFA.',
+                    'CALENDAR_LINK': 'El enlace del calendario de informes no está en el listado actual. No se abrió un ingreso por suposición.',
+                    'CALENDAR_IDENTITY': 'El calendario de informes no coincide con el tribunal e ingreso del listado actual.',
+                    'CALENDAR_NETWORK': 'Falló el contacto con SITFA al abrir el calendario de informes. Comprueba la sesión.',
+                    'CALENDAR_TIMEOUT': 'SITFA no respondió a tiempo al abrir el calendario de informes.',
+                    'CALENDAR_RESPONSE': 'SITFA no entregó un calendario de informes válido. Revisa la sesión.',
                     'HISTORY_CONTEXT': 'No se conserva el listado actual para abrir la historia. Vuelve a consultar sin navegar en SITFA.',
                     'HISTORY_LINK': 'El enlace de historia no está en el listado actual. No se abrió una causa por suposición.',
                     'HISTORY_IDENTITY': 'La causa pedida no coincide con el tribunal del listado actual.',
