@@ -31,12 +31,23 @@ TAB_OPTIONS = {
 
 
 class TribunalPicker(tk.Toplevel):
-    """Las casillas se guardan solo al pulsar Aplicar; cerrar conserva la selección."""
+    """Las casillas se guardan solo al pulsar Aplicar; cerrar conserva la selección. Sirve también para modalidades."""
 
-    def __init__(self, root, catalog, selected, apply):
+    def __init__(
+        self,
+        root,
+        catalog,
+        selected,
+        apply,
+        *,
+        title='Elegir tribunales',
+        prompt='Marca los tribunales que quieres incluir.',
+        counted='tribunales seleccionados',
+    ):
         super().__init__(root)
-        self.title('Elegir tribunales')
-        self.geometry('560x520')
+        self.title(title)
+        self.counted = counted
+        self.geometry('560x520' if len(catalog) > 8 else '480x360')
         self.minsize(430, 300)
         self.transient(root)
         self.grab_set()
@@ -45,7 +56,7 @@ class TribunalPicker(tk.Toplevel):
         self.labels = catalog
         self.search = tk.StringVar()
         self.selection_count = tk.StringVar()
-        ttk.Label(self, text='Marca los tribunales que quieres incluir.', padding=12).pack(anchor='w')
+        ttk.Label(self, text=prompt, padding=12).pack(anchor='w')
         ttk.Entry(self, textvariable=self.search).pack(fill='x', padx=12)
         ttk.Label(self, textvariable=self.selection_count).pack(anchor='w', padx=12)
         controls = ttk.Frame(self, padding=(12, 0))
@@ -93,7 +104,7 @@ class TribunalPicker(tk.Toplevel):
             if query in m.normalized(self.labels[key]):
                 widget.pack(anchor='w', fill='x', pady=3)
         self.selection_count.set(
-            f'{sum(v.get() for v in self.choices.values())} tribunales seleccionados (se conservan los ocultos)'
+            f'{sum(v.get() for v in self.choices.values())} {self.counted} (se conservan los ocultos)'
         )
 
     def apply(self):
@@ -206,6 +217,7 @@ class Application:
         self.bitacoras_id = None
         self.tribunal = tk.StringVar(value=ALL_TRIBUNALS)
         self.modality = tk.StringVar(value=ALL_MODALITIES)
+        self.selected_modalities = None
         self.selected_tribunals = (
             None if self.prefs.data['tribunales'] is None else tuple(self.prefs.data['tribunales'])
         )
@@ -336,8 +348,13 @@ class Application:
         ttk.Label(tribunal_row, textvariable=self.tribunal, wraplength=350).grid(row=0, column=0, sticky='w')
         self.trib_button = ttk.Button(tribunal_row, text='Elegir tribunales…', command=self.choose_tribunals)
         self.trib_button.grid(row=0, column=1, padx=(8, 0))
-        self.mod_combo = ttk.Combobox(query, textvariable=self.modality, width=28)
-        self.mod_combo.grid(row=1, column=1, sticky='ew', pady=(3, 8))
+        modality_row = ttk.Frame(query)
+        modality_row.grid(row=1, column=1, sticky='ew', pady=(3, 8))
+        modality_row.columnconfigure(0, weight=1)
+        ttk.Label(modality_row, textvariable=self.modality, wraplength=300).grid(row=0, column=0, sticky='w')
+        # Como los tribunales: una o varias modalidades por lote (petición del usuario, 29-oct-2026).
+        self.mod_combo = ttk.Button(modality_row, text='Elegir modalidades…', command=self.choose_modalities)
+        self.mod_combo.grid(row=0, column=1, padx=(8, 0))
         ttk.Label(query, text='Registros').grid(row=2, column=0, sticky='w')
         ttk.Label(query, text='Filtro de cumplimiento / tipo de informe').grid(row=2, column=1, sticky='w')
         self.tab_combo = ttk.Combobox(query, textvariable=self.tab, values=tuple(TAB_OPTIONS))
@@ -554,7 +571,6 @@ class Application:
         ttk.Label(results, textvariable=self.result_notice, wraplength=860).grid(row=9, column=0, sticky='ew')
         ttk.Label(body, textvariable=self.status, wraplength=910).grid(row=6, column=0, sticky='ew', pady=(12, 0))
         for combo in (
-            self.mod_combo,
             self.tab_combo,
             self.report_combo,
             self.state_combo,
@@ -710,9 +726,7 @@ class Application:
 
     def apply_batch(self, batch):
         self.select_tribunals(batch.tribunals)
-        self.modality.set(
-            MODALITIES.get(batch.modalities[0], ALL_MODALITIES) if len(batch.modalities) == 1 else ALL_MODALITIES
-        )
+        self.select_modalities(batch.modalities)
         self.tab.set(next((k for k, v in TAB_OPTIONS.items() if v == batch.tabs), 'Espera y Cumplimiento'))
         self.order_state.set(self.catalog.get('estados', {}).get(batch.state, ''))
         self.month.set(self.catalog.get('meses', {}).get(batch.month, ''))
@@ -830,6 +844,40 @@ class Application:
         )
         self.refresh()
 
+    def available_modalities(self):
+        return {k: MODALITIES[k] for k in (self.catalog or {}).get('modalidades', {}) if k in MODALITIES}
+
+    def select_modalities(self, ids):
+        available = self.available_modalities()
+        if set(ids) - set(available):
+            raise m.PocError('La selección contiene modalidades no disponibles.')
+        chosen = tuple(k for k in available if k in ids)
+        # Todas marcadas equivale a «Todas las modalidades»: el lote sigue las que ofrezca SITFA.
+        self.selected_modalities = None if set(chosen) == set(available) else chosen
+        if self.selected_modalities is None:
+            text = ALL_MODALITIES
+        elif not chosen:
+            text = 'Ninguna modalidad marcada'
+        elif len(chosen) == 1:
+            text = available[chosen[0]]
+        else:
+            text = f'{len(chosen)} modalidades marcadas: ' + ', '.join(available[k] for k in chosen)
+        self.modality.set(text)
+        self.refresh()
+
+    def choose_modalities(self):
+        if self.catalog and not self.busy:
+            available = self.available_modalities()
+            TribunalPicker(
+                self.root,
+                available,
+                tuple(available) if self.selected_modalities is None else self.selected_modalities,
+                self.select_modalities,
+                title='Elegir modalidades',
+                prompt='Marca las modalidades que quieres incluir.',
+                counted='modalidades seleccionadas',
+            )
+
     def choose_tribunals(self):
         if self.catalog and not self.busy:
             TribunalPicker(self.root, self.catalog['tribunales'], self.selected_tribunals or (), self.select_tribunals)
@@ -877,13 +925,14 @@ class Application:
                 month=code('meses', self.month),
                 year=code('anios', self.year),
             )
+        available = self.available_modalities()
         modalities = (
-            tuple(k for k in self.catalog['modalidades'] if k in MODALITIES)
-            if self.modality.get() == ALL_MODALITIES
-            else tuple(
-                k for k, v in MODALITIES.items() if v == self.modality.get() and k in self.catalog['modalidades']
-            )
+            tuple(available)
+            if self.selected_modalities is None
+            else tuple(k for k in available if k in self.selected_modalities)
         )
+        if not modalities:
+            raise m.PocError('Marca al menos una modalidad.')
         report_options = self.catalog['informes'] if self.tab.get() == 'Informes' else self.catalog.get('medidas', {})
         reports = [k for k, v in report_options.items() if v == self.report.get()]
         return Batch(
@@ -942,8 +991,8 @@ class Application:
         package_ready = bool(self.last_package and self.last_package.is_file() and not self.busy)
         self.copy_path_button.configure(state='normal' if package_ready else 'disabled')
         self.package_folder_button.configure(state='normal' if package_ready and not self.quitting else 'disabled')
-        for combo in (self.mod_combo, self.tab_combo):
-            combo.configure(state='readonly' if ready and followup else 'disabled')
+        self.mod_combo.configure(state='normal' if ready and followup else 'disabled')
+        self.tab_combo.configure(state='readonly' if ready and followup else 'disabled')
         self.state_combo.configure(state='readonly' if ready and screen == 'litigantes' else 'disabled')
         for combo in (self.month_combo, self.year_combo):
             combo.configure(state='readonly' if ready and calendar_screen else 'disabled')
@@ -1522,14 +1571,13 @@ class Application:
                             ),
                         )
                     )
-            self.mod_combo.configure(
-                values=[ALL_MODALITIES, *[MODALITIES[k] for k in value['modalidades'] if k in MODALITIES]]
-            )
             self.report_combo.configure(values=list(value['informes'].values()))
             if value['informes']:
                 self.report.set(next(iter(value['informes'].values())))
-            if self.modality.get() not in self.mod_combo['values']:
-                self.modality.set(ALL_MODALITIES)
+            available = self.available_modalities()
+            if self.selected_modalities is not None and not set(self.selected_modalities) <= set(available):
+                self.selected_modalities = None
+            self.select_modalities(tuple(available) if self.selected_modalities is None else self.selected_modalities)
             self.status.set('Opciones cargadas. Elige el alcance del lote y, si corresponde, las fechas.')
         elif name == 'folder':
             self.last_folder = Path(value)
