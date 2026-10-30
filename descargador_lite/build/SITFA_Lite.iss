@@ -35,16 +35,19 @@ Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Gr
 Source: "..\dist\SITFA_Lite\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\extension\*"; DestDir: "{app}\extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\manuales\*.html"; DestDir: "{app}\manuales"; Flags: ignoreversion
+Source: "..\docs\SITFA_Lite_*.pdf"; DestDir: "{app}\manuales"; Flags: ignoreversion
+Source: "..\docs\SITFA_Lite_Video_Instalar_Extension.mp4"; DestDir: "{app}\manuales"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\SITFA Lite\SITFA Lite"; Filename: "{app}\SITFA_Lite.exe"
-Name: "{autoprograms}\SITFA Lite\Manual de instalación"; Filename: "{app}\manuales\MANUAL_INSTALACION.html"
-Name: "{autoprograms}\SITFA Lite\Manual de uso"; Filename: "{app}\manuales\MANUAL_USO.html"
+Name: "{autoprograms}\SITFA Lite\Manual de instalación (PDF)"; Filename: "{app}\manuales\SITFA_Lite_Manual_Instalacion.pdf"
+Name: "{autoprograms}\SITFA Lite\Manual de uso (PDF)"; Filename: "{app}\manuales\SITFA_Lite_Manual_Uso.pdf"
+Name: "{autoprograms}\SITFA Lite\Video · instalar la extensión"; Filename: "{app}\manuales\SITFA_Lite_Video_Instalar_Extension.mp4"
 Name: "{autoprograms}\SITFA Lite\Carpeta de la extensión de Chrome"; Filename: "{app}\extension"
 Name: "{autodesktop}\SITFA Lite"; Filename: "{app}\SITFA_Lite.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\manuales\MANUAL_INSTALACION.html"; Description: "Ver cómo instalar la extensión de Chrome (paso obligatorio, una vez)"; Flags: postinstall shellexec skipifsilent
+Filename: "{app}\manuales\SITFA_Lite_Video_Instalar_Extension.mp4"; Description: "Ver el video para instalar la extensión de Chrome (paso obligatorio, una vez)"; Flags: postinstall shellexec skipifsilent
 Filename: "{app}\SITFA_Lite.exe"; Description: "Abrir SITFA Lite"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

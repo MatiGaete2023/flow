@@ -389,7 +389,7 @@ class Application:
             entry = ttk.Entry(self.date_box, textvariable=var, width=12)
             entry.grid(row=0, column=2 + col * 3)
             entry.bind('<KeyRelease>', lambda e: self.refresh())
-            button = ttk.Button(self.date_box, text='📅', width=3, command=lambda var=var: self.pick(var))
+            button = ttk.Button(self.date_box, text='Elegir…', width=7, command=lambda var=var: self.pick(var))
             button.grid(row=0, column=3 + col * 3, padx=(2, 12))
             self.date_widgets += [entry, button]
         quick = ttk.Frame(self.date_box)

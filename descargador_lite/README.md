@@ -10,6 +10,8 @@ Sin paquetes consolidados, bitácoras, historia de la causa ni calendario de inf
 
 ## Documentos
 
+- Manuales ilustrados en PDF: [instalación](docs/SITFA_Lite_Manual_Instalacion.pdf) · [uso](docs/SITFA_Lite_Manual_Uso.pdf)
+- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (65 s, sin audio, con subtítulos)
 - [Manual de instalación](docs/MANUAL_INSTALACION.md)
 - [Manual de uso](docs/MANUAL_USO.md)
 - [Evaluación del integral y decisiones de diseño](docs/EVALUACION.md)
@@ -51,3 +53,7 @@ powershell -ExecutionPolicy Bypass -File build\build.ps1
 Resultado: `dist\Instalar_SITFA_Lite_1.0.0.exe` y `dist\Instalar_SITFA_Lite_1.0.0.sha256`.
 
 La versión vive en `app/version.py` y debe coincidir con `extension/manifest.json` (el build lo comprueba).
+
+## Regenerar manuales ilustrados y video
+
+Capturas con datos ficticios (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js`, `capturas_programa.py`; luego `anotar.py`, `manuales_pdf.py` + `pdf.js` y `video.py`.
