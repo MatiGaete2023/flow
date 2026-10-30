@@ -1,0 +1,72 @@
+name: SITFA Lite · instalador Windows
+on:
+  push:
+    paths:
+      - 'descargador_lite/**'
+      - '.github/workflows/sitfa-lite.yml'
+  pull_request:
+    paths:
+      - 'descargador_lite/**'
+      - '.github/workflows/sitfa-lite.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  instalador:
+    timeout-minutes: 25
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: descargador_lite
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Extensión (sintaxis)
+        run: |
+          node --check extension/pagina.js
+          node --check extension/conexion.js
+          node --check extension/background.js
+          if ($LASTEXITCODE -ne 0) { throw 'Error de sintaxis en la extensión' }
+      - name: Inno Setup
+        run: |
+          $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $iscc) {
+            choco install innosetup --yes --no-progress --execution-timeout=300
+            if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Inno Setup' }
+          }
+      - name: Pruebas, manuales, PyInstaller e instalador
+        run: |
+          python -m venv .venv-build
+          ./build/build.ps1
+      - name: Prueba de instalación silenciosa
+        run: |
+          $installer = Get-ChildItem dist/Instalar_SITFA_Lite_*.exe | Select-Object -First 1
+          $target = Join-Path $env:RUNNER_TEMP 'SITFA_Lite_instalado'
+          $p = Start-Process $installer.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=$target","/LOG=$env:RUNNER_TEMP\install.log" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "El instalador terminó con código $($p.ExitCode)" }
+          foreach ($f in 'SITFA_Lite.exe','extension\manifest.json','extension\pagina.js','manuales\MANUAL_INSTALACION.html','manuales\MANUAL_USO.html') {
+            if (-not (Test-Path (Join-Path $target $f))) { throw "Falta $f en la instalación" }
+          }
+          $u = Get-ChildItem $target -Filter 'unins*.exe' | Select-Object -First 1
+          $p = Start-Process $u.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "El desinstalador terminó con código $($p.ExitCode)" }
+          Write-Host 'Instalación y desinstalación silenciosas correctas'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SITFA_Lite_instalador
+          retention-days: 30
+          path: |
+            descargador_lite/dist/Instalar_SITFA_Lite_*.exe
+            descargador_lite/dist/Instalar_SITFA_Lite_*.sha256
+            descargador_lite/docs/MANUAL_INSTALACION.md
+            descargador_lite/docs/MANUAL_USO.md
