@@ -11,8 +11,8 @@ Sin paquetes consolidados, bitácoras, historia de la causa ni calendario de inf
 ## Documentos
 
 - Manuales ilustrados en PDF: [instalación](docs/SITFA_Lite_Manual_Instalacion.pdf) · [uso](docs/SITFA_Lite_Manual_Uso.pdf)
-- [Video: instalación y uso completo](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (2 min 44 s, sin audio, con subtítulos)
-- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (65 s)
+- [Video: instalación y uso completo](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (3 min 38 s, narrado, con subtítulos)
+- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (85 s, narrado)
 - [Manual de instalación](docs/MANUAL_INSTALACION.md)
 - [Manual de uso](docs/MANUAL_USO.md)
 - [Evaluación del integral y decisiones de diseño](docs/EVALUACION.md)
@@ -57,4 +57,4 @@ La versión vive en `app/version.py` y debe coincidir con `extension/manifest.js
 
 ## Regenerar manuales ilustrados y video
 
-Capturas con datos ficticios (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js`, `capturas_programa.py`; luego `anotar.py`, `manuales_pdf.py` + `pdf.js`, `video.py` (extensión) y `video.py --completo` (instalación y uso).
+Capturas con datos ficticios (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js`, `capturas_programa.py`; luego `anotar.py`, `manuales_pdf.py` + `pdf.js`, `video.py` (extensión) y `video.py --completo` (instalación y uso). Versión narrada: `narrado.py` (voz local Kokoro, `es-419`; modelo en github.com/thewh1teagle/kokoro-onnx/releases).
