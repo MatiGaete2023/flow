@@ -54,7 +54,7 @@ jobs:
           $target = Join-Path $env:RUNNER_TEMP 'SITFA_Lite_instalado'
           $p = Start-Process $installer.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=$target","/LOG=$env:RUNNER_TEMP\install.log" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "El instalador terminó con código $($p.ExitCode)" }
-          foreach ($f in 'SITFA_Lite.exe','extension\manifest.json','extension\pagina.js','extension\icons\icono128.png','manuales\MANUAL_INSTALACION.html','manuales\SITFA_Lite_Manual_Instalacion.pdf','manuales\SITFA_Lite_Manual_Uso.pdf','manuales\SITFA_Lite_Video_Instalar_Extension.mp4') {
+          foreach ($f in 'SITFA_Lite.exe','extension\manifest.json','extension\pagina.js','extension\icons\icono128.png','manuales\MANUAL_INSTALACION.html','manuales\SITFA_Lite_Manual_Instalacion.pdf','manuales\SITFA_Lite_Manual_Uso.pdf','manuales\SITFA_Lite_Video_Instalar_Extension.mp4','manuales\SITFA_Lite_Video_Instalacion_y_Uso.mp4') {
             if (-not (Test-Path (Join-Path $target $f))) { throw "Falta $f en la instalación" }
           }
           $u = Get-ChildItem $target -Filter 'unins*.exe' | Select-Object -First 1
@@ -70,4 +70,4 @@ jobs:
             descargador_lite/dist/Instalar_SITFA_Lite_*.sha256
             descargador_lite/docs/SITFA_Lite_Manual_Instalacion.pdf
             descargador_lite/docs/SITFA_Lite_Manual_Uso.pdf
-            descargador_lite/docs/SITFA_Lite_Video_Instalar_Extension.mp4
+            descargador_lite/docs/SITFA_Lite_Video_*.mp4

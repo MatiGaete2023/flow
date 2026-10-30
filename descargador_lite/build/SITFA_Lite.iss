@@ -36,13 +36,14 @@ Source: "..\dist\SITFA_Lite\*"; DestDir: "{app}"; Flags: ignoreversion recursesu
 Source: "..\extension\*"; DestDir: "{app}\extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\manuales\*.html"; DestDir: "{app}\manuales"; Flags: ignoreversion
 Source: "..\docs\SITFA_Lite_*.pdf"; DestDir: "{app}\manuales"; Flags: ignoreversion
-Source: "..\docs\SITFA_Lite_Video_Instalar_Extension.mp4"; DestDir: "{app}\manuales"; Flags: ignoreversion
+Source: "..\docs\SITFA_Lite_Video_*.mp4"; DestDir: "{app}\manuales"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\SITFA Lite\SITFA Lite"; Filename: "{app}\SITFA_Lite.exe"
 Name: "{autoprograms}\SITFA Lite\Manual de instalación (PDF)"; Filename: "{app}\manuales\SITFA_Lite_Manual_Instalacion.pdf"
 Name: "{autoprograms}\SITFA Lite\Manual de uso (PDF)"; Filename: "{app}\manuales\SITFA_Lite_Manual_Uso.pdf"
 Name: "{autoprograms}\SITFA Lite\Video · instalar la extensión"; Filename: "{app}\manuales\SITFA_Lite_Video_Instalar_Extension.mp4"
+Name: "{autoprograms}\SITFA Lite\Video · instalación y uso completo"; Filename: "{app}\manuales\SITFA_Lite_Video_Instalacion_y_Uso.mp4"
 Name: "{autoprograms}\SITFA Lite\Carpeta de la extensión de Chrome"; Filename: "{app}\extension"
 Name: "{autodesktop}\SITFA Lite"; Filename: "{app}\SITFA_Lite.exe"; Tasks: desktopicon
 
