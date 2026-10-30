@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "SITFA Lite · Descargas RUS",
+  "version": "1.0.0",
+  "version_name": "1.0.0 Lite · solo descargas RUS",
+  "description": "Descarga los XLS de Seguimiento, Búsqueda de litigantes, Informes y Medidas por vencer desde tu Chrome, sin leer cookies ni contraseñas.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://familia.pjud.cl/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Conectar esta pestaña SITFA a SITFA Lite",
+    "default_icon": {
+      "16": "icons/icono16.png",
+      "32": "icons/icono32.png",
+      "48": "icons/icono48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icono16.png",
+    "32": "icons/icono32.png",
+    "48": "icons/icono48.png",
+    "128": "icons/icono128.png"
+  }
+}

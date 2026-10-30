@@ -1,0 +1,6 @@
+dist/
+build/_work/
+.venv-build/
+tests/_tmp/
+__pycache__/
+*.pyc
