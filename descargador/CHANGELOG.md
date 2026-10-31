@@ -2,6 +2,16 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**2.8.2, 31 de octubre de 2026** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.1:
+- **Pantallazo PDF completo**: Chrome solo captura lo visible y el PDF cortaba el final de la página (en los calendarios,
+  la última semana: días 29, 30 y 31). La copia fija se reduce hasta caber entera antes de capturar.
+- **Carga acepta 31 días**: un mes de 31 días («Este mes» en octubre) se rechazaba por un tope de 30 días.
+- **Lote que parecía trabado**: con la sesión SITFA vencida o Chrome sin responder, cada bitácora esperaba su plazo
+  (hasta 75 s) y un paquete grande quedaba horas sin avanzar. Tras 5 bitácoras fallidas seguidas el lote se detiene.
+- **Herramientas › Retomar paquete…**: continúa una carpeta «Paquete CSMP …» cortada o parcial. Reutiliza las consultas
+  validadas y las bitácoras ya leídas (hash comprobado), lee solo las pendientes y rehace `Captura_CSMP.zip`; el ZIP
+  parcial anterior queda en `respaldo`. Sirve también tras el máximo de 600 lecturas por lote.
+
 **Sin cambio de versión, 16 de octubre de 2026** (prueba). Sobre 2.8.0:
 - Extensión: la captura PDF de una consulta sin registros trae Chrome al frente y, si Chrome no pinta la pestaña en 5 s,
   informa «Mantén SITFA visible» en vez de quedar esperando hasta «Chrome no respondió a tiempo». Hay que recargar la

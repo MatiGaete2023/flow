@@ -111,4 +111,4 @@ class JointTests(unittest.TestCase):
             with self.assertRaises(m.PocError):
                 m.query_pairs(urlencode({**dict(pairs), **replacement}), profile)
         with self.assertRaises(m.PocError):
-            selection_profile(replace(selection, start='02/09/2026'), cat)
+            selection_profile(replace(selection, start='01/09/2026'), cat)

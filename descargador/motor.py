@@ -382,8 +382,9 @@ def query_pairs(raw, profile=ORIGINAL):
         from carga import parse_day
 
         a, b = parse_day(profile.start), parse_day(profile.end)
-        if a is None or b is None or not 0 <= (b - a).days < 30:
-            raise PocError('Carga admite hasta 30 días inclusivos por consulta.')
+        # Hasta 31 días inclusivos: un mes completo de 31 días (p. ej., «Este mes» en octubre) es una consulta.
+        if a is None or b is None or not 0 <= (b - a).days <= 30:
+            raise PocError('Carga admite hasta 31 días inclusivos por consulta.')
     return pairs
 
 

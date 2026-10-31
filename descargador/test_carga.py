@@ -42,3 +42,13 @@ def test_load_report_accepts_normalized_header_and_fixed_concepcion_title():
     ]
     rows = records_in_grid(grid)
     assert [row[0] for row in rows] == ["X-1-2026", "Y-2-2026"]
+
+
+def test_carga_acepta_mes_completo_de_31_dias_y_rechaza_32():
+    from perfiles import Selection, selection_profile
+
+    catalog = {'pantalla': 'carga', 'tribunales': {'777': 'Tribunal ficticio 777'}}
+    profile = selection_profile(Selection('777', '', '', screen='carga', start='01/10/2026', end='31/10/2026'), catalog)
+    assert profile.end == '31/10/2026'
+    with pytest.raises(PocError, match='31 días'):
+        selection_profile(Selection('777', '', '', screen='carga', start='30/09/2026', end='31/10/2026'), catalog)
