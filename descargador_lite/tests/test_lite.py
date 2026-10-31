@@ -170,7 +170,7 @@ def test_extension_lite_sin_comandos_excluidos():
         assert banned not in js
     manifest = json.loads((ROOT / 'extension' / 'manifest.json').read_text(encoding='utf-8'))
     assert manifest['permissions'] == ['activeTab', 'scripting']
-    assert manifest['version'] == '1.0.0'
+    assert manifest['version'] == '1.0.1'
 
 
 def test_selector_dinamico_de_vencimiento_sitfa():

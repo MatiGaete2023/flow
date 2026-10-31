@@ -3,7 +3,7 @@
 from pathlib import Path
 import sys
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 EXTENSION_TYPE = 'SITFA_LITE_CAPACIDADES'
 PROTOCOLS = {'descarga_xls': 1, 'pdf_sin_registros': 1}
 

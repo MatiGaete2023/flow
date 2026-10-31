@@ -91,7 +91,7 @@ class FakeBridge:
         self.calls.append(command)
         payload = payload or {}
         if command == 'capabilities':
-            return {'tipo': 'SITFA_LITE_CAPACIDADES', 'version': '1.0.0',
+            return {'tipo': 'SITFA_LITE_CAPACIDADES', 'version': '1.0.1',
                     'protocolos': {'descarga_xls': 1, 'pdf_sin_registros': 1}, 'escritura_rus': False}
         if command in ('lock', 'unlock', 'evidence_close'):
             return {'ok': True, 'restored': True}
