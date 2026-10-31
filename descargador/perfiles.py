@@ -52,8 +52,8 @@ def selection_profile(selection, catalog, template="pendiente"):
         from carga import parse_day
 
         a, b = parse_day(selection.start), parse_day(selection.end)
-        if a is None or b is None or not 0 <= (b - a).days < 30:
-            raise m.PocError('Selecciona hasta 30 días inclusivos para carga.')
+        if a is None or b is None or not 0 <= (b - a).days <= 30:
+            raise m.PocError('Selecciona hasta 31 días inclusivos para carga.')
         return m.QueryProfile(
             f'T{selection.tribunal}-Carga-{a.isoformat()}-{b.isoformat()}',
             f'{tribunal} / Carga / {selection.start}–{selection.end}',

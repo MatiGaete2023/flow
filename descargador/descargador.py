@@ -261,6 +261,7 @@ class Application:
             ('Configurar ejecutable CSMP…', self.configure_csmp),
         ]:
             tools.add_command(label=label, command=command)
+        tools.add_command(label='Retomar paquete…', command=self.resume_pipeline)
         tools.add_command(label='Retomar descarga conjunta…', command=self.resume_joint)
         tools.add_command(label='Pausa entre consultas…', command=self.configure_pause)
         self.sound = tk.BooleanVar(value=self.prefs.data['aviso_sonoro'])
@@ -967,13 +968,15 @@ class Application:
             (
                 self.cancel_button,
                 self.busy
-                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary', 'pipeline')
+                and getattr(self, 'operation', None)
+                in ('download', 'joint', 'resume_joint', 'diary', 'pipeline', 'resume_pipeline')
                 and not self.quitting,
             ),
             (
                 self.pause_button,
                 self.busy
-                and getattr(self, 'operation', None) in ('download', 'joint', 'resume_joint', 'diary', 'pipeline')
+                and getattr(self, 'operation', None)
+                in ('download', 'joint', 'resume_joint', 'diary', 'pipeline', 'resume_pipeline')
                 and not self.quitting,
             ),
             (self.folder_button, self.last_folder is not None and not self.quitting),
@@ -1088,6 +1091,32 @@ class Application:
         self.save_preferences()
         self.enqueue('pipeline', (batch, destination, self.package_consolidated.get()))
 
+    def resume_pipeline(self):
+        """Continúa un paquete cortado: no repite consultas validadas ni bitácoras ya leídas."""
+        if self.busy or self.quitting:
+            return
+        if not (self.connected and self.catalog):
+            self.status.set('Conecta Chrome y carga las opciones de Seguimiento antes de retomar un paquete.')
+            return
+        folder = filedialog.askdirectory(parent=self.root, title='Carpeta «Paquete CSMP …» a retomar')
+        if not folder:
+            return
+        if not (Path(folder) / 'respaldo' / 'proceso.json').is_file():
+            messagebox.showerror(
+                'Retomar paquete',
+                'Elige una carpeta «Paquete CSMP …» (contiene respaldo/proceso.json).',
+                parent=self.root,
+            )
+            return
+        self.cancel.clear()
+        self.last_folder = self.last_package = None
+        self.last_sheets_folder = self.last_diary_manifest = None
+        self.result_notice.set('')
+        self.history_counts = {'leidas': 0, 'fallidas': 0}
+        self.tree.delete(*self.tree.get_children())
+        self.status.set('Retomando el paquete: se reutiliza lo ya validado y se leen solo las bitácoras pendientes.')
+        self.enqueue('resume_pipeline', (Path(folder), self.package_consolidated.get()))
+
     def create_package(self):
         """Paquete del Asistente con el lote de hojas y las bitácoras recién leídas, sin abrir Resultados."""
         if self.busy or not (self.last_sheets_folder and self.last_diary_manifest):
@@ -1125,7 +1154,7 @@ class Application:
             arg = SCREENS[self.screen.get()]
         self.busy = True
         self.operation = command
-        if command in ('download', 'joint', 'resume_joint', 'diary', 'package', 'pipeline'):
+        if command in ('download', 'joint', 'resume_joint', 'diary', 'package', 'pipeline', 'resume_pipeline'):
             self._phase_started = time.monotonic()
             self._phase_paused = 0.0
             self._pause_started = None
@@ -1137,6 +1166,7 @@ class Application:
                     'diary': 'Leer bitácoras',
                     'package': 'Crear paquete',
                     'pipeline': 'Preparar paquete',
+                    'resume_pipeline': 'Retomar paquete',
                 }[command]
             )
             self.progress_detail.set('Operación iniciada · tiempo restante: estimando…')
@@ -1281,7 +1311,7 @@ class Application:
         while True:
             command, arg = self.commands.get()
             try:
-                if command in ('download', 'joint', 'resume_joint', 'pipeline'):
+                if command in ('download', 'joint', 'resume_joint', 'pipeline', 'resume_pipeline'):
                     from contrato_integral import verify_extension
 
                     verify_extension(self.bridge)
@@ -1300,10 +1330,14 @@ class Application:
                     ).run(*arg)
                 elif command == 'package':
                     self.emit('package_done', package_current_lot(*arg))
-                elif command == 'pipeline':
-                    from flujo_paquete import run, run_por_hoja
+                elif command in ('pipeline', 'resume_pipeline'):
+                    from flujo_paquete import retomar, run, run_por_hoja
 
-                    (run_por_hoja if self.prefs.data.get('paquete_por_hoja') else run)(
+                    if command == 'resume_pipeline':
+                        funcion = retomar
+                    else:
+                        funcion = run_por_hoja if self.prefs.data.get('paquete_por_hoja') else run
+                    funcion(
                         self.bridge,
                         self.catalog,
                         self.emit,
@@ -1376,7 +1410,17 @@ class Application:
                     self.bridge = self.bridge_factory(self.emit)
                     self.emit('disconnected', self.bridge.connection_code)
             except m.PocError as exc:
-                self.emit('error', 'E_' + command.upper() + ': ' + str(exc))
+                retomable = command in ('pipeline', 'resume_pipeline') and 'Retomar paquete' not in str(exc)
+                self.emit(
+                    'error',
+                    'E_'
+                    + command.upper()
+                    + ': '
+                    + str(exc)
+                    + (
+                        ' Para continuar sin repetir lo ya hecho: Herramientas › Retomar paquete….' if retomable else ''
+                    ),
+                )
             except Exception as exc:
                 if type(exc).__module__ == 'nurus.capture.contract' and type(exc).__name__ == 'CaptureError':
                     # Mensajes fijos del contrato de captura, sin datos de causas: dicen qué rechazó el paquete.

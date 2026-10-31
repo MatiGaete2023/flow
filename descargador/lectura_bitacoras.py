@@ -282,8 +282,17 @@ def lecturas_reutilizables(carpetas, ahora, horas=REUTILIZAR_HORAS):
     return {key: (folder, record) for key, (folder, record, _captured) in result.items()}
 
 
-class LimiteLecturas(m.PocError):
-    """Detiene todo el lote (no solo la consulta) al alcanzar MAX_LECTURAS_POR_LOTE."""
+class LoteDetenido(m.PocError):
+    """Detiene todo el lote (no solo la consulta); lo leído queda en el manifiesto para retomarlo."""
+
+
+class LimiteLecturas(LoteDetenido):
+    """Detiene todo el lote al alcanzar MAX_LECTURAS_POR_LOTE."""
+
+
+# Con la sesión SITFA vencida o Chrome sin responder, cada bitácora esperaba su plazo (hasta 75 s) y un lote grande
+# parecía trabado durante horas. Tras estas fallas seguidas el lote se detiene y se puede retomar.
+MAX_FALLAS_SEGUIDAS = 5
 
 
 class _Lectura:
@@ -331,6 +340,7 @@ class _Lectura:
         self.cross = lecturas_reutilizables(carpetas_previas(reuse_base, self.folder), m.now()) if reuse_base else {}
         self.pending = 0
         self.openings = 0
+        self.fallas_seguidas = 0
         self.phase = ''
         self.locked = False
 
@@ -567,7 +577,7 @@ class DiaryRunner:
             query['estado'] = 'ENUMERADA'
             session.persistir()
         except (m.PocError, ValueError, KeyError, OSError) as exc:
-            if isinstance(exc, LimiteLecturas):
+            if isinstance(exc, LoteDetenido):
                 query['estado'] = 'INCOMPLETA'
                 self.emit('warning', str(exc))
                 raise
@@ -717,6 +727,10 @@ class DiaryRunner:
                 )
                 if getattr(exc, 'code', None):
                     record['diagnostico'] = {'codigo_extension': exc.code}
+        if record['estado'] == 'FALLIDA':
+            session.fallas_seguidas += 1
+        elif record['estado'] == 'LEIDA':
+            session.fallas_seguidas = 0
         session.persistir(lazy=True)
         self.emit(
             'diary_progress',
@@ -728,6 +742,11 @@ class DiaryRunner:
                 'estado': record['estado'],
             },
         )
+        if session.fallas_seguidas >= MAX_FALLAS_SEGUIDAS:
+            raise LoteDetenido(
+                f'{MAX_FALLAS_SEGUIDAS} bitácoras seguidas fallaron ({record["error"]}). Se detuvo el lote para no '
+                'esperar en cada causa. Revisa la sesión SITFA y usa «Retomar paquete…»: no se vuelve a leer lo ya leído.'
+            )
         paced = record['estado'] != 'SIN_VINCULO' and (not record.get('reutilizada') or calendar_opened)
         if self.cancel.wait(self.pause if paced else 0.05):
             session.detener_si_cancelada()
@@ -737,7 +756,7 @@ class DiaryRunner:
         if session.openings >= MAX_LECTURAS_POR_LOTE:
             raise LimiteLecturas(
                 f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                'Divide el período o los tribunales y usa «Retomar» para continuar.'
+                'Usa «Herramientas › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
             )
         session.openings += 1
         result = self.bridge.call('diary_open', {'params': record['params'], 'timeout': 60000})
@@ -776,7 +795,7 @@ class DiaryRunner:
             reading['error'] = 'Pendiente: se alcanzó el máximo de lecturas del lote.'
             raise LimiteLecturas(
                 f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                'Divide el período o los tribunales y usa «Retomar» para continuar.'
+                'Usa «Herramientas › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
             )
         if pause and self.cancel.wait(self.pause):
             session.detener_si_cancelada()

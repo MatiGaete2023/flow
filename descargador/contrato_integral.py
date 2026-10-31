@@ -19,7 +19,7 @@ PROTOCOLS = {
     'calendario_lectura': 1,
     'historia_lectura': 1,
 }
-VERSION = '2.8.1'
+VERSION = '2.8.2'
 
 
 def capabilities():

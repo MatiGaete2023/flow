@@ -1,11 +1,14 @@
 """Orquesta runners existentes; conserva fuentes y entrega un ZIP sin pasos manuales."""
 
-from dataclasses import replace
+from dataclasses import asdict, is_dataclass, replace
+import json
 from pathlib import Path
 
 import motor as m
 from lotes import BatchRunner
-from lectura_bitacoras import DiaryRunner, write
+from lectura_bitacoras import MANIFEST, DiaryRunner, saved_batch, write
+
+PROCESO = 'proceso.json'
 
 
 def run(
@@ -25,17 +28,31 @@ def run(
     meses=4,
     informes=False,
     today=None,
+    resume=None,
 ):
+    """Consulta, bitácoras, informes y ZIP. Con `resume` (carpeta «Paquete CSMP …») continúa un paquete anterior:
+    reutiliza las consultas validadas y las bitácoras ya leídas, y vuelve a crear el ZIP."""
+    if resume:
+        root = Path(resume).resolve()
+        backup = root / 'respaldo'
+        control = backup / PROCESO
+        state = _proceso(control)
+        batch = _alcance(root, state)
+        state.update(estado='EN_CURSO', reintentos=state.get('reintentos', 0) + 1)
+    else:
+        root = Path(destination) / ('Paquete CSMP ' + m.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
+        backup = root / 'respaldo'
+        control = backup / PROCESO
+        state = {'estado': 'EN_CURSO', 'fase': 'consultas', 'carpetas': {}}
+        if is_dataclass(batch):
+            state['seleccion'] = asdict(batch)
     if batch.screen != 'seguimiento':
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
-    root = Path(destination) / ('Paquete CSMP ' + m.now().strftime('%Y-%m-%d %H-%M-%S-%f'))
-    backup = root / 'respaldo'
-    backup.mkdir(parents=True)
-    control = backup / 'proceso.json'
-    state = {'estado': 'EN_CURSO', 'fase': 'consultas', 'carpetas': {}}
+    backup.mkdir(parents=True, exist_ok=bool(resume))
     write(control, state)
     emit('pipeline_folder', str(root))
+    anterior = {fase: root / carpeta for fase, carpeta in state['carpetas'].items()} if resume else {}
 
     def checkpoint():
         if cancel.is_set():
@@ -60,23 +77,37 @@ def run(
 
     try:
         phase('consultas')
-        BatchRunner(bridge, catalog, relay, cancel, pause=pause).run(batch, backup)
+        if _consultas_validadas(anterior.get('consultas')):
+            emit('status', 'Consultas ya validadas en el intento anterior: se reutilizan.')
+        else:
+            state['carpetas'].pop('consultas', None)
+            BatchRunner(bridge, catalog, relay, cancel, pause=pause).run(batch, backup)
         if 'consultas' not in state['carpetas']:
             raise m.PocError('La consulta no identificó sus originales; no se creó el paquete.')
         phase('bitacoras')
-        reuse_base = Path(destination) if reuse else None
+        previas = anterior.get('bitacoras')
+        previas = previas if previas and (previas / MANIFEST).is_file() else None
+        reuse_base = Path(destination) if reuse and not resume else None
         lector = None
         if historia:
             from lectura_historia import LectorHistoria
 
-            lector = LectorHistoria(bridge, relay, cancel, pause=pause, meses=meses)
+            historia_previa = previas / 'historia' / 'historias.json' if previas else None
+            lector = LectorHistoria(
+                bridge,
+                relay,
+                cancel,
+                pause=pause,
+                meses=meses,
+                **({'anterior': historia_previa} if historia_previa and historia_previa.is_file() else {}),
+            )
         extra = {'historia': lector} if lector else {}
         # Cada lectura opcional se pide solo si está activa, como la historia.
         if calendars:
             extra['calendars'] = True
-        diaries = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra).run(
-            batch, backup
-        )
+        runner = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra)
+        # Al retomar, el mismo lote de bitácoras continúa: lo ya leído (hash comprobado) no se vuelve a abrir.
+        diaries = runner.run(batch, backup, previas) if previas else runner.run(batch, backup)
         carpetas_informes, informes_completos = _informes(
             bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today
         )
@@ -95,6 +126,9 @@ def run(
             if candidata.is_file() and candidata.resolve().is_relative_to(backup.resolve()):
                 ruta_historia = candidata
         target = root / 'Captura_CSMP.zip'
+        if target.exists():
+            # El ZIP parcial del intento anterior se guarda en respaldo; el nuevo ocupa su lugar.
+            target.replace(backup / ('Captura_CSMP anterior ' + m.now().strftime('%Y-%m-%d %H-%M-%S-%f') + '.zip'))
         opciones = {}
         if not informes_completos:
             opciones['avisos'] = [
@@ -140,6 +174,46 @@ def run(
         state['estado'] = 'INCOMPLETO'
         write(control, state)
         raise
+
+
+def _proceso(control):
+    try:
+        state = json.loads(control.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        raise m.PocError('Elige una carpeta «Paquete CSMP …» creada por «Consultar y crear paquete».') from None
+    if not isinstance(state, dict) or not isinstance(state.get('carpetas'), dict):
+        raise m.PocError('El control del paquete (respaldo/proceso.json) no es válido.')
+    if state.get('estado') == 'COMPLETO':
+        raise m.PocError('Ese paquete ya está completo; no hay nada que retomar.')
+    for carpeta in state['carpetas'].values():
+        if not isinstance(carpeta, str) or not (control.parent.parent / carpeta).resolve().is_relative_to(
+            control.parent.resolve()
+        ):
+            raise m.PocError('El control del paquete apunta fuera de su respaldo.')
+    return state
+
+
+def _alcance(root, state):
+    """Alcance guardado del paquete; los paquetes anteriores a 2.8.2 solo lo tienen en su lote de bitácoras."""
+    if isinstance(state.get('seleccion'), dict):
+        return saved_batch({'seleccion': state['seleccion']})
+    carpeta = state['carpetas'].get('bitacoras')
+    if carpeta and (root / carpeta / MANIFEST).is_file():
+        from lectura_bitacoras import load
+
+        return saved_batch(load(root / carpeta / MANIFEST))
+    raise m.PocError('Este paquete no guardó su alcance (se cortó en las consultas). Crea un paquete nuevo.')
+
+
+def _consultas_validadas(carpeta):
+    try:
+        return json.loads((carpeta / 'resumen.json').read_text(encoding='utf-8')).get('estado') == 'VALIDADA'
+    except (TypeError, OSError, ValueError, AttributeError):
+        return False
+
+
+def retomar(bridge, catalog, emit, cancel, carpeta, consolidated=True, **opciones):
+    return run(bridge, catalog, emit, cancel, None, None, consolidated, resume=carpeta, **opciones)
 
 
 def meses_informes(today, dias=60):

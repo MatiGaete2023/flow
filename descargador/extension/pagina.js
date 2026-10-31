@@ -34,7 +34,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelInformesPorVencer1,[name="ExcelInformesPorVencer1"]')?"calendario_informes":
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
-  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.8.1',
+  if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.8.2',
     protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
@@ -230,6 +230,18 @@ async function sitfaTask(command, payload) {
       return {status:200,type:"text/html; charset=utf-8",body:btoa(chunks.join("")),digest};
     } catch(error) {evidenceClose();throw error;}
   }
+  // Chrome solo captura lo visible: la copia fija se reduce hasta caber entera en la ventana. Sin esto el PDF
+  // cortaba el final de la página (en los calendarios, la última semana: días 29, 30 y 31).
+  const fitEvidence = run => {
+    const frame=run.evidenceFrame,panel=run.evidence,doc=frame.contentDocument;
+    panel.style.overflow="hidden";
+    Object.assign(frame.style,{transform:"",transformOrigin:"0 0",flex:"1",width:"100%",height:""});
+    const viewW=panel.clientWidth,viewH=panel.clientHeight;
+    const fullW=Math.max(viewW,doc.documentElement.scrollWidth,doc.body?.scrollWidth||0);
+    const fullH=Math.max(viewH,doc.documentElement.scrollHeight,doc.body?.scrollHeight||0);
+    const scale=Math.max(0.25,Math.min(1,viewW/fullW,viewH/fullH));
+    if(scale<1)Object.assign(frame.style,{flex:"none",width:viewW/scale+"px",height:viewH/scale+"px",transform:`scale(${scale})`});
+  };
   if(command==="evidence_show") {
     const run=window.__sitfaRun;
     if(!run?.evidenceFrame || payload.digest!==run.evidenceDigest || !/^[a-f0-9]{64}$/.test(payload.digest))throw new Error("estructura");
@@ -246,6 +258,7 @@ async function sitfaTask(command, payload) {
         element.scrollIntoView({block:"start",inline:"start",behavior:"instant"});w=parent;
       }
     }
+    fitEvidence(run);
     if(run.evidenceFrame.clientWidth<400 || run.evidenceFrame.clientHeight<200)throw new Error("pantalla");
     run.evidenceFrame.contentWindow.scrollTo(0,0);
     const context=run.evidenceContext,style=context&&run.evidenceFrame.contentWindow.getComputedStyle(context);
@@ -361,7 +374,7 @@ async function sitfaTask(command, payload) {
         if(date.getUTCFullYear()!==y||date.getUTCMonth()!==m-1||date.getUTCDate()!==d)throw new Error("filtro");return date;
       };
       const difference=(day(s.end)-day(s.start))/86400000;
-      if(difference<0||difference>=30)throw new Error("filtro");
+      if(difference<0||difference>30)throw new Error("filtro");
       field("FEC_Desde").value=s.start;field("FEC_Hasta").value=s.end;
       const button=form.querySelector('input[type="submit"][name="irAccion"][value="Aud.Carga Func.-"]');
       if(!button)throw new Error("estructura");
