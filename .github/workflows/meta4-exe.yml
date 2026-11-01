@@ -3,7 +3,7 @@ name: Meta 4 Windows
 on:
   workflow_dispatch:
   push:
-    branches: ['ultima-version/meta4']
+    branches: ['Meta4']
 permissions:
   contents: read
 jobs:
