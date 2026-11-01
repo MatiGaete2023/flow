@@ -1,7 +1,7 @@
 name: Descargador integral y bitácoras
 on:
   pull_request:
-    branches: ['feat/**']
+    branches: ['Integral']
     paths:
       - 'src/**'
       - 'descargador/**'

@@ -2,7 +2,7 @@ name: Anonimizador CSMP independiente
 on:
   workflow_dispatch:
   push:
-    branches: ['wp/anonimizador-**']
+    branches: ['anonimizador', 'wp/anonimizador-**']
     paths: ['anonimizador/**', 'portable/**', '.github/workflows/anonimizador-portable.yml']
   pull_request:
     paths: ['anonimizador/**', 'portable/**', '.github/workflows/anonimizador-portable.yml']

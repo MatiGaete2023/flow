@@ -3,7 +3,7 @@ name: CSMP Assistant Windows
 on:
   # E4 revisada: código en PR; entrega completa solo bajo demanda.
   pull_request:
-    branches: ['feat/**']
+    branches: ['Integral']
     paths:
       - 'src/**'
       - 'descargador/**'

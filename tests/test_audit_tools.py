@@ -421,7 +421,7 @@ def test_ci_budget_has_no_automatic_windows_build_or_duplicate_exe():
         source = (root / '.github/workflows' / name).read_text()
         events = source.split('permissions:')[0].split('concurrency:')[0]
         assert '  push:' not in events
-        assert "branches: ['feat/**']" in events and '    paths:' in events
+        assert "branches: ['Integral']" in events and '    paths:' in events
         assert 'timeout-minutes:' in source
         assert 'python -m PyInstaller' not in source
     assistant = (root / '.github/workflows/tests.yml').read_text()

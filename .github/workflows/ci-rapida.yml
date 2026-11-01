@@ -1,9 +1,9 @@
 name: CI rápida Linux
 on:
   push:
-    branches: ['feat/ejecucion-plan-20261008', main]
+    branches: ['Integral', main]
   pull_request:
-    branches: ['feat/**', main]
+    branches: ['Integral', main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   verificar:
-    # El PR permanente de feat a main ya tiene el control del push del mismo SHA.
-    if: github.event_name != 'pull_request' || github.base_ref != 'main' || !startsWith(github.head_ref, 'feat/')
+    # El PR permanente de Integral a main ya tiene el control del push del mismo SHA.
+    if: github.event_name != 'pull_request' || github.base_ref != 'main' || github.head_ref != 'Integral'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
