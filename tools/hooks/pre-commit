@@ -2,4 +2,5 @@
 # Revisa el contenido del índice, incluidas rutas con espacios; omite eliminados.
 # Activar con: git config core.hooksPath tools/hooks
 PY=$(command -v python3 || command -v python || command -v py)
-exec "$PY" tools/check_real_ids.py --stage
+"$PY" tools/check_real_ids.py --stage || exit $?
+exec "$PY" tools/check_contactos.py --stage

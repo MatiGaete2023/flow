@@ -32,6 +32,7 @@ jobs:
       - name: Privacidad, estado y enlaces antes de instalar
         run: |
           python tools/check_real_ids.py
+          python tools/check_contactos.py
           python tools/estado.py validar
           python tools/check_links.py
       - name: Determinar alcance sin omitir cambios desconocidos
