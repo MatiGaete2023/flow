@@ -170,7 +170,7 @@ def test_extension_lite_sin_comandos_excluidos():
         assert banned not in js
     manifest = json.loads((ROOT / 'extension' / 'manifest.json').read_text(encoding='utf-8'))
     assert manifest['permissions'] == ['activeTab', 'scripting']
-    assert manifest['version'] == '1.0.1'
+    assert manifest['version'] == '1.0.2'
 
 
 def test_selector_dinamico_de_vencimiento_sitfa():
@@ -180,3 +180,16 @@ def test_selector_dinamico_de_vencimiento_sitfa():
     assert selected_report(m.root_html('<script>' + script + '</script>'), 'tdCumplimiento') == '0'
     with pytest.raises(m.PocError):
         selected_report(m.root_html('<script>' + script.replace("'0'", "'2'") + '</script>'), 'tdCumplimiento')
+
+
+def test_nombre_se_acorta_en_carpeta_profunda_y_error_de_escritura_explica_la_causa(tmp_path):
+    from lotes import name_limit
+    from motor import PocError, save_exclusive, write_error
+
+    profunda = tmp_path / ('x' * 180)
+    assert len(str(profunda)) + 1 + name_limit(profunda) + len(' (99) - p99 de 99.xls') <= 259 or name_limit(profunda) == 60
+    assert name_limit(tmp_path) <= 150
+    assert 'demasiado larga' in write_error(OSError(206, 'x'), tmp_path / 'a.xls')
+    assert 'no permitió escribir' in write_error(PermissionError(13, 'x'), tmp_path / 'a.xls')
+    with pytest.raises(PocError, match='Falló la escritura local del archivo: .*Carpeta'):
+        save_exclusive(tmp_path / 'no-existe' / 'a.xls', b'x')

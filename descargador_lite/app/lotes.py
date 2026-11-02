@@ -89,15 +89,20 @@ def query_parts(selection, catalog, dates):
     return [safe_name(p) for p in parts if safe_name(p)]
 
 
-def file_base(selection, catalog, dates=None):
+def name_limit(folder):
+    """Largo máximo del nombre para que carpeta + nombre + sufijo de página quepan en los 260 caracteres de Windows."""
+    return max(60, min(MAX_NAME, 259 - len(str(Path(folder).absolute())) - 1 - len(' (99) - p99 de 99.xls')))
+
+
+def file_base(selection, catalog, dates=None, limit=MAX_NAME):
     """Ej.: «Seguimiento - Cumplimiento - Ambulatorio - Vencidos - Jdo Familia Mulchen - 01-10-2026 al 31-10-2026»."""
     parts = query_parts(selection, catalog, dates)
     tribunal = tribunal_name(catalog['tribunales'][selection.tribunal])
     head = ' - '.join(parts[: 4 if selection.screen == 'seguimiento' else 2])
     tail = parts[4 if selection.screen == 'seguimiento' else 2 :]
-    room = MAX_NAME - len(head) - sum(len(x) + 3 for x in tail) - 3
+    room = limit - len(head) - sum(len(x) + 3 for x in tail) - 3
     tribunal = tribunal[: max(12, room)].rstrip(' .')
-    return ' - '.join([head, tribunal, *tail])
+    return ' - '.join([head, tribunal, *tail])[:limit].rstrip(' .-')
 
 
 @dataclass(frozen=True)
@@ -238,7 +243,8 @@ class BatchRunner:
         folder.mkdir(parents=True, exist_ok=False)
         self.emit('folder', str(folder))
         self.emit('plan', len(plan))
-        bases = Counter(file_base(s, self.catalog, batch.dates) for s in plan)
+        limit = name_limit(folder)
+        bases = Counter(file_base(s, self.catalog, batch.dates, limit) for s in plan)
         used = Counter()
         completed = []
         state = 'EN_CURSO'
@@ -287,7 +293,7 @@ class BatchRunner:
                 if index > 1 and self.pause and self.cancel.wait(self.pause):
                     self.cancelled()
                 desired = selection_profile(selection, self.catalog)
-                base = file_base(selection, self.catalog, batch.dates)
+                base = file_base(selection, self.catalog, batch.dates, limit)
                 self.emit('query', {'index': index, 'total': len(plan), 'label': base})
                 dates = None if selection.screen.startswith('calendario_') else batch.dates
                 prepared = self.bridge.call(

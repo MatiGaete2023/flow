@@ -646,10 +646,28 @@ def save_exclusive(path, data):
             os.fsync(f.fileno())
     except FileExistsError:
         raise PocError("Ya existe el archivo de destino; usar una ejecucion nueva.") from None
-    except OSError:
+    except OSError as exc:
         if created and path.exists():
             path.unlink(missing_ok=True)
-        raise PocError("Fallo la escritura local del archivo.") from None
+        raise PocError(write_error(exc, path)) from None
+
+
+def write_error(exc, path):
+    """Motivo concreto de una escritura fallida; sin él no se sabe si es la ruta, un permiso o el disco."""
+    full = str(Path(path).absolute())
+    code = getattr(exc, "winerror", None) or exc.errno
+    if code in (3, 206) or len(full) >= 260:
+        why = f"la ruta es demasiado larga para Windows ({len(full)} caracteres). Elige una carpeta de destino más corta"
+    elif isinstance(exc, PermissionError) or code in (5, 13, 32, 33):
+        why = (
+            "Windows no permitió escribir en esa carpeta (permiso, archivo abierto o protección «Acceso controlado a "
+            "carpetas» del antivirus). Permite SITFA Lite en esa protección o elige otra carpeta, por ejemplo C:\\SITFA"
+        )
+    elif code in (28, 112):
+        why = "no queda espacio en el disco"
+    else:
+        why = f"error del sistema {type(exc).__name__} {code}"
+    return f"Falló la escritura local del archivo: {why}. Carpeta: {Path(full).parent}"
 
 
 def write_manifest(folder, records, total, state, profile=ORIGINAL, manifest_name="verificacion.json"):
