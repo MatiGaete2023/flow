@@ -18,7 +18,11 @@ from anonimizador_csmp import gui  # noqa: E402
 @pytest.fixture(scope="session")
 def raiz():
     # Una sola Tk por sesión: en Windows, crear muchas Tk() seguidas falla a veces al cargar tk.tcl.
-    root = tk.Tk()
+    try:
+        root = tk.Tk()
+    except tk.TclError:
+        # Algunos Python de los runners de Windows no traen Tcl/Tk utilizable (init.tcl ausente).
+        pytest.skip("Tk no disponible en este Python")
     root.withdraw()
     yield root
     root.destroy()
