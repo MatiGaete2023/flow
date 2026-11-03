@@ -5,6 +5,8 @@ Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado 
 **2.9.0, 3 de noviembre de 2026 · rama Rediseno** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.3:
 - Lista lateral de consultas (Seguimiento para el paquete; Medidas, Resoluciones firmadas, Informes y Litigantes
   para descargar sueltas); elegir una carga sus opciones sola.
+- «Instalar extensión…» avisa si falta la carpeta extension y muestra la ruta exacta a elegir; Chrome rechaza
+  Descargas o la carpeta del programa (contienen _internal). El Descargador suelto trae su carpeta extension.
 - Barra superior con estado de Chrome y menú «Más» (instalar extensión, código, desconectar, carpeta, apariencia).
 - Las opciones se cargan solas al conectar; la conexión solo se muestra mientras no hay conexión.
 - Opciones del paquete como fichas; sin títulos ni frases de ayuda; sin botones de período rápido (el calendario los

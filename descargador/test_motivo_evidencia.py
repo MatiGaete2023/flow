@@ -100,3 +100,43 @@ def test_paquete_rechazado_por_el_contrato_muestra_el_motivo(monkeypatch):
     app.commands.put(('exit', None))
     Application.worker(app)
     assert ('error', 'E_PIPELINE: El paquete no pasó la validación: ID vacío o duplicado en incidencias') in events
+
+
+def test_en_el_exe_acepta_la_extension_junto_al_ejecutable(monkeypatch, tmp_path):
+    # Entregas sueltas del Descargador: extension/ puede quedar dentro de SITFA_Descargador/.
+    junto = tmp_path / 'SITFA_Descargador' / 'extension'
+    junto.mkdir(parents=True)
+    (junto / 'manifest.json').write_text('{}', encoding='utf-8')
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(sys, 'executable', str(tmp_path / 'SITFA_Descargador' / 'SITFA_Descargador.exe'))
+    assert extension_dir() == junto.resolve()
+    raiz = tmp_path / 'extension'
+    raiz.mkdir()
+    (raiz / 'manifest.json').write_text('{}', encoding='utf-8')
+    assert extension_dir() == raiz.resolve()
+
+
+def test_instalar_extension_avisa_si_falta_la_carpeta(monkeypatch, tmp_path):
+    import os
+
+    import pytest
+
+    tk = pytest.importorskip('tkinter')
+    if sys.platform != 'win32' and not os.environ.get('DISPLAY'):
+        pytest.skip('Sin pantalla para Tk.')
+    import contrato_integral
+    import descargador
+    from test_lotes import dispose_interface
+
+    monkeypatch.setattr(contrato_integral, 'extension_dir', lambda: tmp_path / 'no-existe')
+    errores, chrome = [], []
+    monkeypatch.setattr(descargador.messagebox, 'showerror', lambda *a, **k: errores.append(a))
+    monkeypatch.setattr(descargador, 'open_chrome', lambda url: chrome.append(url))
+    root = tk.Tk()
+    root.withdraw()
+    app = descargador.Application(root, start_worker=False)
+    try:
+        app.setup()
+        assert errores and 'extension' in errores[0][0] and not chrome
+    finally:
+        dispose_interface(app, root)

@@ -955,13 +955,28 @@ class Application:
         from contrato_integral import extension_dir
 
         directory = extension_dir()
+        if not (directory / 'manifest.json').is_file():
+            # Sin la carpeta, Chrome recibiría otra (p. ej. Descargas, con _internal) y la rechazaría.
+            messagebox.showerror(
+                'Falta la carpeta extension',
+                'No se encontró la carpeta extension de esta entrega en:\n\n'
+                + str(directory)
+                + '\n\nDescomprime el paquete completo en una carpeta propia (no sueltos en Descargas) y abre el '
+                'Descargador desde ahí.',
+                parent=self.root,
+            )
+            return
         self.root.clipboard_clear()
         self.root.clipboard_append(str(directory))
         self.root.update()
         open_chrome('chrome://extensions/')
         messagebox.showinfo(
             'Instalación única en tu Chrome',
-            'Activa Modo de desarrollador y pulsa Cargar descomprimida.\n\nSelecciona la carpeta extension de esta herramienta. Su ruta está copiada al portapapeles.\n\nDespués entra a Seguimiento y pulsa el icono de SITFA · Descargador local.',
+            'Activa Modo de desarrollador y pulsa Cargar descomprimida.\n\nElige exactamente esta carpeta (su ruta '
+            'está copiada al portapapeles; pégala en la barra de dirección):\n\n'
+            + str(directory)
+            + '\n\nNo elijas Descargas ni la carpeta del programa: Chrome rechaza las que contienen _internal.\n\n'
+            'Después entra a Seguimiento y pulsa el icono de SITFA · Descargador local.',
             parent=self.root,
         )
 

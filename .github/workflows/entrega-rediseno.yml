@@ -4,6 +4,7 @@ name: Entrega Rediseño · CSMP y Descargador Windows
 # corre al agregar o cambiar este archivo en esa rama, o a pedido; no en cada push de código.
 # Entrega 2: lista lateral del Descargador, Asistente sin paso a paso inferior.
 # Entrega 3: correcciones de la revisión E3 (H-1 a H-6).
+# Entrega 4: la extensión viaja también en el Descargador suelto; aviso si falta la carpeta extension.
 on:
   push:
     branches: ['Rediseno']
@@ -200,7 +201,10 @@ jobs:
         with:
           name: Descargador-SITFA-${{ env.DOWNLOADER_VERSION }}-Windows
           retention-days: 14
-          path: dist/integral/SITFA_Descargador/
+          # El Descargador suelto lleva su extensión: la raíz del ZIP queda con SITFA_Descargador/ y extension/.
+          path: |
+            dist/integral/SITFA_Descargador/
+            dist/integral/extension/
           if-no-files-found: error
 
       - name: Artefacto integral CSMP y Descargador

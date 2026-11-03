@@ -5,9 +5,16 @@ import sys
 
 
 def extension_dir():
-    """Carpeta que Chrome debe cargar: junto al código o, en el EXE, en la raíz de la entrega (build_integral.ps1)."""
+    """Carpeta que Chrome debe cargar: junto al código o, en el EXE, en la raíz de la entrega (build_integral.ps1).
+
+    En el EXE se acepta también una carpeta extension junto al ejecutable; si ninguna existe se devuelve la de la raíz
+    de la entrega, para que el aviso diga dónde debería estar."""
     if getattr(sys, 'frozen', False):
-        return Path(sys.executable).resolve().parent.parent / 'extension'
+        exe = Path(sys.executable).resolve().parent
+        for candidata in (exe.parent / 'extension', exe / 'extension'):
+            if (candidata / 'manifest.json').is_file():
+                return candidata
+        return exe.parent / 'extension'
     return Path(__file__).resolve().parent / 'extension'
 
 
