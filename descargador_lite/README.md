@@ -51,7 +51,7 @@ Manual en Windows (Python 3.12 x64 + Inno Setup 6):
 powershell -ExecutionPolicy Bypass -File build\build.ps1
 ```
 
-Resultado: `dist\Instalar_SITFA_Lite_1.0.2.exe` y `dist\Instalar_SITFA_Lite_1.0.2.sha256`.
+Resultado: `dist\Instalar_SITFA_Lite_1.0.3.exe` y `dist\Instalar_SITFA_Lite_1.0.3.sha256`.
 
 La versión vive en `app/version.py` y debe coincidir con `extension/manifest.json` (el build lo comprueba).
 

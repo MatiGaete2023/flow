@@ -170,7 +170,7 @@ def test_extension_lite_sin_comandos_excluidos():
         assert banned not in js
     manifest = json.loads((ROOT / 'extension' / 'manifest.json').read_text(encoding='utf-8'))
     assert manifest['permissions'] == ['activeTab', 'scripting']
-    assert manifest['version'] == '1.0.2'
+    assert manifest['version'] == '1.0.3'
 
 
 def test_selector_dinamico_de_vencimiento_sitfa():
@@ -193,3 +193,19 @@ def test_nombre_se_acorta_en_carpeta_profunda_y_error_de_escritura_explica_la_ca
     assert 'no permitió escribir' in write_error(PermissionError(13, 'x'), tmp_path / 'a.xls')
     with pytest.raises(PocError, match='Falló la escritura local del archivo: .*Carpeta'):
         save_exclusive(tmp_path / 'no-existe' / 'a.xls', b'x')
+
+
+def test_sin_registros_sin_pdf_si_se_desmarca(folder):
+    bridge = FakeBridge('seguimiento', pages={('902', 'Espera', '1', None): 0})
+    batch = Batch('seguimiento', ('901', '902'), modalities=('1',), tabs=('Espera',))
+    events = []
+    result = BatchRunner(
+        bridge, CATALOGS['seguimiento'], lambda *e: events.append(e), PauseGate(), evidencia=False
+    ).run(batch, folder)
+    lot = next(folder.iterdir())
+    assert [r['estado'] for r in result] == ['VALIDADA', 'SIN_RESULTADOS'] and result[1]['evidencia_omitida']
+    assert names(lot, '.pdf') == [] and 'evidence_open' not in bridge.calls
+    manifest = json.loads((lot / 'verificacion 002.json').read_text(encoding='utf-8'))
+    assert manifest['evidencia_omitida'] is True and 'evidencia' not in manifest
+    assert ('empty', {'consulta': result[1]['consulta']}) in events
+    assert events[-1][1]['empty'] == 1 and events[-1][1]['pdfs'] == 0

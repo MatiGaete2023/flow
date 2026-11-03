@@ -36,13 +36,15 @@ def data_directory():
 class Preferences:
     def __init__(self, path=None):
         self.path = Path(path) if path else data_directory() / 'preferencias.json'
-        self.data = {'destino': str(Path.home() / 'Documents' / 'SITFA Lite'), 'pausa': 1.0}
+        self.data = {'destino': str(Path.home() / 'Documents' / 'SITFA Lite'), 'pausa': 1.0, 'pdf_sin_registros': True}
         try:
             stored = json.loads(self.path.read_text(encoding='utf-8'))
             if isinstance(stored.get('destino'), str):
                 self.data['destino'] = stored['destino']
             if isinstance(stored.get('pausa'), (int, float)) and 0 <= stored['pausa'] <= 30:
                 self.data['pausa'] = float(stored['pausa'])
+            if isinstance(stored.get('pdf_sin_registros'), bool):
+                self.data['pdf_sin_registros'] = stored['pdf_sin_registros']
         except (OSError, ValueError, AttributeError):
             pass
 
@@ -405,6 +407,10 @@ class Application:
             command=self.refresh,
         )
         self.filter_check.grid(row=2, column=0, columnspan=8, sticky='w', pady=(6, 0))
+        self.empty_pdf = tk.BooleanVar(value=self.prefs.data['pdf_sin_registros'])
+        ttk.Checkbutton(
+            self.date_box, text='PDF de consultas sin registros', variable=self.empty_pdf, command=self.toggle_empty_pdf
+        ).grid(row=3, column=0, columnspan=8, sticky='w', pady=(6, 0))
         ttk.Label(self.options_box, textvariable=self.preview, font=('Segoe UI', 10, 'bold')).grid(
             row=10, column=0, columnspan=2, sticky='w', pady=(10, 0)
         )
@@ -533,6 +539,11 @@ class Application:
         year = next((k for k, v in self.catalog.get('anios', {}).items() if v == self.year.get()), None)
         return Batch(screen, tribunals, months=self.months.selected(), year=year)
 
+    def toggle_empty_pdf(self):
+        self.prefs.data['pdf_sin_registros'] = self.empty_pdf.get()
+        self.prefs.save()
+        self.refresh()
+
     def refresh(self):
         idle = not self.busy and not self.quitting
         ready = idle and self.connected and self.catalog is not None
@@ -566,7 +577,8 @@ class Application:
                 plan = self.batch().plan(self.catalog)
                 plan_ok = True
                 self.preview.set(
-                    f'{len(plan)} consulta(s) · cada una con todas sus páginas · pantallazo PDF si no hay registros'
+                    f'{len(plan)} consulta(s) · cada una con todas sus páginas'
+                    + (' · pantallazo PDF si no hay registros' if self.empty_pdf.get() else '')
                 )
             except m.PocError as exc:
                 self.preview.set(str(exc))
@@ -687,7 +699,14 @@ class Application:
                     self.emit('catalog', self.bridge.call('catalog', {'screen': arg}))
                 elif command == 'download':
                     verify_extension(self.bridge)
-                    BatchRunner(self.bridge, self.catalog, self.emit, self.cancel, pause=self.prefs.data['pausa']).run(
+                    BatchRunner(
+                        self.bridge,
+                        self.catalog,
+                        self.emit,
+                        self.cancel,
+                        pause=self.prefs.data['pausa'],
+                        evidencia=self.prefs.data['pdf_sin_registros'],
+                    ).run(
                         *arg
                     )
                 elif command in ('disconnect', 'exit'):
@@ -739,6 +758,9 @@ class Application:
         elif name == 'progress':
             self.tree.insert('', 'end', values=(value['registros'], value['archivo']))
             self.tree.yview_moveto(1)
+        elif name == 'empty':
+            self.tree.insert('', 'end', values=(0, value['consulta'] + ' · sin registros, sin PDF'))
+            self.tree.yview_moveto(1)
         elif name == 'evidence':
             self.tree.insert('', 'end', values=(0, value['archivo']))
             self.tree.yview_moveto(1)
@@ -749,6 +771,7 @@ class Application:
         elif name == 'done':
             self.phase.set(
                 f'Listo: {value["queries"]} consultas · {value["files"]} XLS · {value["pdfs"]} pantallazos PDF · '
+                f'{value.get("empty", 0)} sin registros · '
                 f'{value["records"]} registros'
             )
             self.status.set('Lote terminado. Doble clic en un archivo para abrirlo.')

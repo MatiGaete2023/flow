@@ -222,8 +222,9 @@ def evidence_context(selection, catalog, dates):
 
 
 class BatchRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=0.0):
+    def __init__(self, bridge, catalog, emit, cancel, pause=0.0, evidencia=True):
         self.bridge = bridge
+        self.evidencia = bool(evidencia)
         self.catalog = catalog
         self.emit = emit
         self.cancel = cancel
@@ -336,11 +337,16 @@ class BatchRunner:
                 evidence = None
                 if first is None:
                     self.cancelled()
-                    evidence = self.capture_empty(
-                        selection, profile, pairs, dates, folder, unique(base, ' - SIN REGISTROS.pdf')
-                    )
+                    # El pantallazo es opcional: sin él, la consulta vacía igual queda comprobada por SITFA.
+                    if self.evidencia:
+                        evidence = self.capture_empty(
+                            selection, profile, pairs, dates, folder, unique(base, ' - SIN REGISTROS.pdf')
+                        )
                     m.write_manifest(folder, [], 0, 'SIN_RESULTADOS', profile, manifest)
-                    self.emit('evidence', evidence)
+                    if evidence:
+                        self.emit('evidence', evidence)
+                    else:
+                        self.emit('empty', {'consulta': base})
                     result = []
                 else:
                     self.emit('total', first.total)
@@ -371,7 +377,7 @@ class BatchRunner:
                         'estado': 'VALIDADA' if result else 'SIN_RESULTADOS',
                         'paginas': len(result),
                         'registros': sum(x['registros'] for x in result),
-                        'archivos': [x['archivo'] for x in result] or [evidence['archivo']],
+                        'archivos': [x['archivo'] for x in result] or ([evidence['archivo']] if evidence else []),
                         'verificacion': manifest,
                         'seleccion': planned[index - 1],
                     }
@@ -381,6 +387,9 @@ class BatchRunner:
                 info['filtro_fecha'] = None if dates is None else asdict(dates)
                 if evidence:
                     info['evidencia'] = evidence
+                elif not result:
+                    info['evidencia_omitida'] = True
+                    completed[-1]['evidencia_omitida'] = True
                 temp = folder / (manifest + '.tmp')
                 temp.write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding='utf-8')
                 temp.replace(folder / manifest)
@@ -395,6 +404,7 @@ class BatchRunner:
                     'queries': len(completed),
                     'files': len(list(folder.glob('*.xls'))),
                     'pdfs': len(list(folder.glob('*.pdf'))),
+                    'empty': sum(x['estado'] == 'SIN_RESULTADOS' for x in completed),
                     'records': sum(x['registros'] for x in completed),
                 },
             )
