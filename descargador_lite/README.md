@@ -1,8 +1,8 @@
 # SITFA Lite · Descargas RUS
 
 **1.1.0 (rama Rediseno):** consultas en la lista lateral, filtros como fichas, opciones que se cargan solas al
-conectar, período «Sin filtro / Por fecha» con calendario y avance por consulta. Manuales ilustrados actualizados a 1.1;
-los dos videos narrados todavía muestran la ventana 1.0.
+conectar, período «Sin filtro / Por fecha» con calendario y avance por consulta. Manuales ilustrados y videos narrados
+actualizados a 1.1.
 
 Versión liviana del descargador SITFA: solo descarga los XLS que produce RUS y guarda un pantallazo PDF cuando una consulta no tiene registros.
 
@@ -15,8 +15,8 @@ Sin paquetes consolidados, bitácoras, historia de la causa ni calendario de inf
 ## Documentos
 
 - Manuales ilustrados en PDF: [instalación](docs/SITFA_Lite_Manual_Instalacion.pdf) · [uso](docs/SITFA_Lite_Manual_Uso.pdf)
-- [Video: instalación y uso completo (ventana 1.0)](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (3 min 38 s, narrado, con subtítulos)
-- [Video: instalar la extensión (ventana 1.0)](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (85 s, narrado)
+- [Video: instalación y uso completo](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (3 min 39 s, narrado, con subtítulos)
+- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (87 s, narrado)
 - [Manual de instalación](docs/MANUAL_INSTALACION.md)
 - [Manual de uso](docs/MANUAL_USO.md)
 - [Evaluación del integral y decisiones de diseño](docs/EVALUACION.md)

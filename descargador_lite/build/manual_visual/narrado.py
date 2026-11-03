@@ -82,8 +82,8 @@ def guiones(src, img):
 
     ruta_ext = r'C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension'
     extension = [
-        ('Pulsa el botón Instalar extensión. El programa copia la ubicación de la carpeta y abre la página de extensiones de Chrome.',
-         sc('a0_inicio.png', a('a0_inicio.png', 'instalar'), 'Pulsa «Instalar extensión…»: copia la ruta y abre chrome://extensions.', 1, 7)),
+        ('Abre el menú Más y elige Instalar extensión. El programa copia la ubicación de la carpeta y abre la página de extensiones de Chrome.',
+         sc('a0_inicio.png', a('a0_inicio.png', 'mas'), 'Menú «Más» → «Instalar extensión…»: copia la ruta y abre chrome://extensions.', 1, 7)),
         ('Arriba a la derecha, activa el Modo Desarrollador.',
          sc('r01_extensiones.png', b('dev'), 'Activa «Modo Desarrollador» (arriba a la derecha).', 2, 7)),
         ('Aparecen nuevos botones. Pulsa Cargar descomprimida.',
@@ -91,27 +91,27 @@ def guiones(src, img):
         ('Se abre una ventana para elegir carpeta. Pega la ruta con control ve en la barra de dirección, y pulsa Seleccionar carpeta.',
          cd('Paso 4 · Elige la carpeta extension', ['En la ventana de carpetas pega la ruta con Ctrl+V',
                                                     'en la barra de dirección y pulsa «Seleccionar carpeta»:'], ruta_ext)),
-        ('Listo. Aparece la tarjeta de Sitfa Lite, versión uno punto cero, activada. No muevas esa carpeta, porque Chrome la usa desde ahí.',
-         sc('r03_extension_cargada.png', b('card'), 'Aparece la tarjeta «SITFA Lite · Descargas RUS 1.0.0», activada.', 5, 7, zoom=1.5)),
+        ('Listo. Aparece la tarjeta de Sitfa Lite, activada. No muevas esa carpeta, porque Chrome la usa desde ahí.',
+         sc('r03_extension_cargada.png', b('card'), 'Aparece la tarjeta «SITFA Lite · Descargas RUS», activada.', 5, 7, zoom=1.5)),
         ('Para tenerla siempre a mano, abre el menú de extensiones, el ícono de rompecabezas, y pulsa el alfiler junto a Sitfa Lite.',
          sc('r04_menu_extensiones.png', (1086, 212, 24, 24), 'Rompecabezas → alfiler junto a SITFA Lite.', 6, 7)),
         ('Ahora el ícono azul queda fijo en la barra.',
          sc('r05_fijada.png', (1116, 49, 28, 28), 'El ícono azul queda fijo en la barra.', 7, 7)),
     ]
     conectar = [
-        ('Pulsa Abrir Sitfa en Chrome, e inicia sesión como siempre.',
-         sc('a0_inicio.png', a('a0_inicio.png', 'abrir'), 'Pulsa «Abrir SITFA en Chrome» e inicia sesión.', 1, 4)),
-        ('Luego, en Sitfa Lite, pulsa Copiar código.',
-         sc('a0_inicio.png', a('a0_inicio.png', 'copiar'), 'Pulsa «Copiar código».', 2, 4)),
+        ('Pulsa Abrir Sitfa, e inicia sesión como siempre.',
+         sc('a0_inicio.png', a('a0_inicio.png', 'abrir'), 'Pulsa «Abrir SITFA» e inicia sesión.', 1, 4)),
+        ('Luego, en Sitfa Lite, pulsa Copiar, junto al código.',
+         sc('a0_inicio.png', a('a0_inicio.png', 'copiar'), 'Pulsa «Copiar».', 2, 4)),
         ('Vuelve a la pestaña de Sitfa y pulsa el ícono azul. Se abre la pestaña de conexión: pega el código y pulsa Conectar. Deja esa pestaña abierta.',
          sc('r07_codigo_pegado.png', b('connect'), 'Pulsa el ícono, pega el código y pulsa «Conectar».', 3, 4)),
-        ('El programa muestra Conectado, en verde. Ya puedes descargar.',
-         sc('a1_conectado.png', a('a1_conectado.png', 'estado'), 'SITFA Lite muestra «● Conectado».', 4, 4)),
+        ('Arriba a la derecha, el programa muestra Chrome conectado, y trae solo las opciones de tu sesión. Ya puedes descargar.',
+         sc('a1_conectado.png', a('a1_conectado.png', 'estado'), 'SITFA Lite muestra «Chrome conectado».', 4, 4)),
     ]
     corto = (
         [('Hola. En un par de minutos vas a instalar la extensión de Chrome de Sitfa Lite. Se hace una sola vez y no necesitas permisos de administrador.',
           cd('Cómo instalar la extensión de Chrome', ['Una sola vez · 2 minutos · sin administrador',
-                                                      'Antes: instala SITFA Lite con Instalar_SITFA_Lite_1.0.0.exe']))]
+                                                      'Antes: instala SITFA Lite con Instalar_SITFA_Lite_1.1.0.exe']))]
         + extension
         + conectar
         + [('Eso es todo. Mientras descargas, deja abiertas la pestaña de Sitfa y la de conexión. Para seguir, revisa el manual de uso en el menú Inicio.',
@@ -119,36 +119,36 @@ def guiones(src, img):
                                        'Manual de uso: menú Inicio → SITFA Lite → Manual de uso.']))]
     )
     uso = [
-        ('Para descargar, primero marca una de las cuatro consultas.',
-         sc('a1_conectado.png', a('a1_conectado.png', 'radios'), 'Marca una de las 4 consultas.', 1, 8, zoom=1.4)),
-        ('Pulsa Cargar opciones. Sitfa abre esa pantalla en tu Chrome, y el programa trae los tribunales y filtros de tu sesión.',
-         sc('a1_conectado.png', a('a1_conectado.png', 'cargar'), 'Pulsa «Cargar opciones».', 2, 8)),
-        ('En Informe de seguimiento, marca los tribunales con un clic. El buscador filtra la lista, y los botones Todos y Ninguno marcan lo que ves.',
-         sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'tribunales'), 'Marca tribunales; «Buscar» filtra la lista.', 3, 8, zoom=1.3)),
-        ('Elige las pestañas: Espera, Cumplimiento, Informes o Egresados. Y debajo, las modalidades: Residencia, Ambulatorio, FAE o DCE.',
-         sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'pestanas'), 'Pestañas y modalidades.', 4, 8)),
-        ('Si incluyes la pestaña Informes, elige el tipo de informe. Y si incluyes Cumplimiento, elige el filtro de medidas: todas, por vencer o vencidas.',
-         sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'informes'), 'Tipo de informe y filtro de medidas.', 5, 8)),
-        ('El filtro de fecha es opcional. Escribe desde y hasta, o usa los atajos: este mes, mes anterior o últimos treinta días.',
-         sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'fechas'), 'Filtro de fecha opcional.', 6, 8, zoom=1.5)),
-        ('Pulsa Descargar. Mientras trabaja, no uses la pestaña de Sitfa: verás el aviso Descargando el lote.',
-         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'descargar'), 'Pulsa «Descargar».', 7, 8)),
-        ('Cada archivo aparece en la lista con sus registros. Con doble clic lo abres, y con Abrir carpeta del lote ves todo lo descargado.',
-         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'lista'), 'Doble clic abre el archivo.', 8, 8, zoom=1.4)),
-        ('En Búsqueda de litigantes, marca tribunales y uno o varios estados. Las fechas también son opcionales.',
+        ('Para descargar, elige una de las cuatro consultas en la lista de la izquierda. Sitfa abre esa pantalla en tu Chrome, y el programa trae solo sus tribunales y filtros.',
+         sc('a1_conectado.png', a('a1_conectado.png', 'consultas'), 'Elige la consulta en la lista de la izquierda.', 1, 8, zoom=1.4)),
+        ('Marca los tribunales con un clic en cada ficha. Un clic en el nombre de la fila marca o desmarca todos.',
+         sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'tribunales'), 'Tribunales: clic en cada ficha.', 2, 8, zoom=1.3)),
+        ('Elige las pestañas: Espera, Cumplimiento, Informes o Egresados. Y la modalidad: Residencia, Ambulatorio, FAE o DCE.',
+         sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'pestanas'), 'Pestañas y modalidad.', 3, 8)),
+        ('Si marcas la pestaña Informes, aparece el tipo de informe. Y si marcas Cumplimiento, aparece el filtro de medidas.',
+         sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'informes'), 'Tipo de informe y filtro de medidas.', 4, 8)),
+        ('El período es opcional: sin filtro, o por fecha, con desde y hasta, y el botón calendario.',
+         sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'periodo'), 'Período: sin filtro o por fecha.', 5, 8, zoom=1.4)),
+        ('En Incluir decides si se guarda un pantallazo en pe de efe cuando una consulta no tiene registros. Si lo desmarcas, la consulta solo queda anotada como sin registros.',
+         sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'incluir'), 'PDF si no hay registros: opcional.', 6, 8, zoom=1.4)),
+        ('Pulsa Descargar. Cada consulta aparece en la lista con su estado y sus registros. Mientras trabaja, no uses la pestaña de Sitfa.',
+         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'lista'), 'Cada consulta con su estado.', 7, 8, zoom=1.2)),
+        ('Al terminar, abajo ves el resumen del lote, con Abrir carpeta y Nuevo lote. Con doble clic en una consulta abres su archivo.',
+         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'resumen'), 'Abrir carpeta o Nuevo lote.', 8, 8)),
+        ('En Búsqueda de litigantes, marca tribunales y uno o varios estados. El período también es opcional.',
          sc('a5_busqueda_lit.png', a('a5_busqueda_lit.png', 'estados'), 'Búsqueda litigantes: tribunales y estado.', 0, 0, zoom=1.5)),
         ('Y en Informes por vencer o Medidas por vencer, marca tribunales, uno o varios meses, y el año.',
          sc('a6_medidas_por_vencer.png', a('a6_medidas_por_vencer.png', 'meses'), 'Informes / Medidas por vencer: mes(es) y año.', 0, 0, zoom=1.5)),
-        ('Los archivos se guardan en una carpeta con fecha y hora, y su nombre dice exactamente qué consulta es: pestaña, modalidad, filtro, tribunal, fechas y página. Si una consulta no tiene registros, se guarda un pantallazo en pe de efe que dice sin registros.',
+        ('Los archivos se guardan en una carpeta con fecha y hora, y su nombre dice exactamente qué consulta es: pestaña, modalidad, filtro, tribunal, fechas y página.',
          cd('Nombres de los archivos', [
              'Subcarpeta por lote con fecha y hora, en Documentos\\SITFA Lite.',
              'Seguimiento - Cumplimiento - Ambulatorio - Vencidos - Jdo Familia X - 01-10-2026 al 30-10-2026 - p2 de 3.xls',
              'Medidas por vencer - Octubre 2026 - Jdo Familia X.xls',
-             'Sin registros → … - SIN REGISTROS.pdf (pantallazo de SITFA)'])),
+             'Sin registros, con PDF marcado → … - SIN REGISTROS.pdf'])),
         ('Unos consejos: deja Chrome visible mientras descarga. Si aparece sesión expirada o sin conexión, vuelve a entrar a Sitfa, pulsa el ícono y pega el código actual. Los manuales están en el menú Inicio. ¡Listo, a descargar!',
          cd('Consejos', [
              '• Deja Chrome visible (no minimizado): el pantallazo PDF lo necesita.',
-             '• Cancelar detiene al terminar la página en curso; lo guardado se conserva.',
+             '• Detener termina la página en curso; lo guardado se conserva.',
              '• «Sesión expirada» o «Sin conexión»: entra a SITFA, pulsa el ícono y pega el código actual.',
              '• Manuales PDF: menú Inicio → SITFA Lite.'])),
     ]
@@ -158,10 +158,10 @@ def guiones(src, img):
               'Descarga los XLS que produce RUS, con todas sus páginas:',
               '• Seguimiento · Informe seguimiento   • Seguimiento · Búsqueda litigantes',
               '• Informes por vencer   • Medidas por vencer',
-              'Pantallazo PDF cuando una consulta no tiene registros.'])),
+              'Pantallazo PDF opcional cuando una consulta no tiene registros.'])),
          ('Primero, instala el programa. Haz doble clic en el instalador. Si Windows muestra una advertencia, pulsa Más información, y luego Ejecutar de todas formas. Deja la carpeta propuesta y pulsa Instalar. No pide permisos de administrador.',
           cd('Parte 1 · Instalar el programa', [
-              '1. Doble clic en Instalar_SITFA_Lite_1.0.0.exe.',
+              '1. Doble clic en Instalar_SITFA_Lite_1.1.0.exe.',
               '2. «Windows protegió su PC»: Más información → Ejecutar de todas formas.',
               '3. Siguiente → deja la carpeta propuesta → Instalar (no pide administrador).',
               '4. Al terminar deja marcada «Abrir SITFA Lite».'],
@@ -173,7 +173,7 @@ def guiones(src, img):
         + [('Tercero: conecta Chrome con el programa. Esto se hace cada vez que abres Sitfa Lite.',
             cd('Parte 3 · Conectar', ['Cada vez que abras SITFA Lite.']))]
         + conectar
-        + [('Y cuarto: descargar.', cd('Parte 4 · Descargar', ['Elegir consulta → Cargar opciones → marcar filtros → Descargar.']))]
+        + [('Y cuarto: descargar.', cd('Parte 4 · Descargar', ['Elegir consulta → marcar filtros → Descargar.']))]
         + uso
     )
     return corto, completo

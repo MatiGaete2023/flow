@@ -110,7 +110,7 @@ def card(title, lines, seconds=4.0, mono=None):
     frame = Image.new('RGB', (W, H), (243, 246, 250))
     d = ImageDraw.Draw(frame)
     d.rectangle([0, 0, 14, H], fill=BLUE)
-    d.text((80, 150), 'SITFA LITE 1.0.0 · SOLO DESCARGAS RUS', font=font(BOLD, 20), fill=BLUE)
+    d.text((80, 150), 'SITFA LITE 1.1.0 · SOLO DESCARGAS RUS', font=font(BOLD, 20), fill=BLUE)
     y = 200
     for line in wrap(d, title, font(BOLD, 46), W - 160):
         d.text((80, y), line, font=font(BOLD, 46), fill=DARK)
@@ -136,7 +136,7 @@ def main(src, img, out):
     total = 9
     parts = [
         card('Cómo instalar la extensión de Chrome', ['Una sola vez · 2 minutos · sin administrador',
-                                                      'Antes: instala SITFA Lite con Instalar_SITFA_Lite_1.0.0.exe']),
+                                                      'Antes: instala SITFA Lite con Instalar_SITFA_Lite_1.1.0.exe']),
         scene(img / 'a0_inicio.png', a('a0_inicio.png', 'instalar'),
               'Abre SITFA Lite y pulsa «Instalar extensión…». Copia la ruta de la carpeta y abre chrome://extensions.', 1, total),
         scene(img / 'r01_extensiones.png', b('dev'), 'En chrome://extensions activa «Modo Desarrollador» (arriba a la derecha).', 2, total),
@@ -191,7 +191,7 @@ def complete(src, img, out):
             'Pantallazo PDF cuando una consulta no tiene registros.'], 6.0),
         # Parte 1: instalar el programa (ventanas estándar de Windows; sin capturas)
         card('Parte 1 · Instalar el programa', [
-            '1. Doble clic en Instalar_SITFA_Lite_1.0.0.exe.',
+            '1. Doble clic en Instalar_SITFA_Lite_1.1.0.exe.',
             '2. Si aparece «Windows protegió su PC»: Más información → Ejecutar de todas formas.',
             '3. Siguiente → deja la carpeta propuesta → Instalar (no pide administrador).',
             '4. Al terminar deja marcadas «Ver el video…» y «Abrir SITFA Lite».'], 9.0,
