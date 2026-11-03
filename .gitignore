@@ -34,3 +34,5 @@ src/nurus/personal/_build_meta.py
 !src/nurus/personal/plantillas_word/*/*.docx
 !contracts/*/fixtures/*.zip
 !docs/evidencia_p0/golden/**
+# Manuales de uso generados por tools/manuales con capturas ficticias (sin datos de SITFA, RUS ni personas).
+!docs/manuales/*.pdf
