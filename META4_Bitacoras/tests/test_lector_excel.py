@@ -17,7 +17,7 @@ import biff_escritor  # noqa: E402
 
 def tabla_html(nombre, meta=''):
     return (f'<html><head>{meta}</head><body><table><tr><td>RIT</td><td>NOMBRE</td><td>DERIVACIÓN</td></tr>'
-            f'<tr><td>C-1-2024</td><td>{nombre}</td><td>FAE</td></tr></table></body></html>')
+            f'<tr><td>C-1-2099</td><td>{nombre}</td><td>FAE</td></tr></table></body></html>')
 
 
 @pytest.mark.parametrize('data', [
@@ -31,7 +31,7 @@ def tabla_html(nombre, meta=''):
 def test_html_tabular_conserva_tildes(data):
     info = lx.read_excel(data)
     assert info.format == 'HTML-tabular-con-extension-xls'
-    assert info.grid == [['RIT', 'NOMBRE', 'DERIVACIÓN'], ['C-1-2024', 'MUÑOZ – PÉREZ', 'FAE']]
+    assert info.grid == [['RIT', 'NOMBRE', 'DERIVACIÓN'], ['C-1-2099', 'MUÑOZ – PÉREZ', 'FAE']]
 
 
 def xlsx(rows, dimension=None):
@@ -53,7 +53,7 @@ def xlsx(rows, dimension=None):
 
 
 def test_ooxml_con_dimension_desactualizada_lee_todas_las_filas():
-    rows = [['RIT', 'NOMBRE', 'DERIVACIÓN']] + [[f'C-{i}-2024', f'PERSONA {i}', 'FAE'] for i in range(1, 7)]
+    rows = [['RIT', 'NOMBRE', 'DERIVACIÓN']] + [[f'C-{i}-2099', f'PERSONA {i}', 'FAE'] for i in range(1, 7)]
     for dimension in (None, 'A1:C3', 'A1'):
         info = lx.read_excel(xlsx(rows, dimension))
         assert sum(info.records.values()) == 6, dimension
@@ -61,17 +61,17 @@ def test_ooxml_con_dimension_desactualizada_lee_todas_las_filas():
 
 
 def test_ooxml_filas_irregulares_se_completan_con_vacios():
-    info = lx.read_excel(xlsx([['Título'], [], ['RIT', 'NOMBRE', 'X', 'Y'], ['C-1-2024', 'ANA']]))
+    info = lx.read_excel(xlsx([['Título'], [], ['RIT', 'NOMBRE', 'X', 'Y'], ['C-1-2099', 'ANA']]))
     assert info.grid == [('Título', None, None, None), (None, None, None, None),
-                         ('RIT', 'NOMBRE', 'X', 'Y'), ('C-1-2024', 'ANA', None, None)]
+                         ('RIT', 'NOMBRE', 'X', 'Y'), ('C-1-2099', 'ANA', None, None)]
 
 
 def test_biff_lee_texto_numero_y_fecha():
     data = biff_escritor.xls([('Hoja1', [['RIT', 'NOMBRE', 'T ESPERA', 'FECHA'],
-                                         ['C-1-2024', 'ANA', 13, ('date', 46188)]])])
+                                         ['C-1-2099', 'ANA', 13, ('date', 46188)]])])
     info = lx.read_excel(data)
     assert info.format == 'XLS-BIFF'
-    assert info.grid[1] == ['C-1-2024', 'ANA', 13.0, dt.datetime(2026, 6, 15)]
+    assert info.grid[1] == ['C-1-2099', 'ANA', 13.0, dt.datetime(2026, 6, 15)]
 
 
 def test_xml_spreadsheet_2003_con_indices_y_fecha():
@@ -79,12 +79,12 @@ def test_xml_spreadsheet_2003_con_indices_y_fecha():
             'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="H"><Table>'
             '<Row><Cell><Data ss:Type="String">RIT</Data></Cell><Cell><Data ss:Type="String">NOMBRE</Data></Cell>'
             '<Cell ss:Index="4"><Data ss:Type="String">FECHA</Data></Cell></Row>'
-            '<Row ss:Index="3"><Cell><Data ss:Type="String">C-1-2024</Data></Cell><Cell><Data ss:Type="String">ANA'
+            '<Row ss:Index="3"><Cell><Data ss:Type="String">C-1-2099</Data></Cell><Cell><Data ss:Type="String">ANA'
             '</Data></Cell><Cell ss:Index="4"><Data ss:Type="DateTime">2026-06-15T00:00:00.000</Data></Cell></Row>'
             '</Table></Worksheet></Workbook>').encode()
     info = lx.read_excel(data)
     assert info.format == 'XML-Spreadsheet-2003'
-    assert info.grid == [['RIT', 'NOMBRE', '', 'FECHA'], [], ['C-1-2024', 'ANA', '', dt.date(2026, 6, 15)]]
+    assert info.grid == [['RIT', 'NOMBRE', '', 'FECHA'], [], ['C-1-2099', 'ANA', '', dt.date(2026, 6, 15)]]
 
 
 @pytest.mark.parametrize('data,mensaje', [
@@ -102,4 +102,4 @@ def test_rechaza_lo_que_no_es_un_listado_unico(data, mensaje):
 
 def test_ooxml_demasiado_ancho_se_rechaza():
     with pytest.raises(lx.PocError, match='límites'):
-        lx.read_excel(xlsx([['RIT', 'NOMBRE'] + ['x'] * 205, ['C-1-2024', 'ANA']], 'A1:B2'))
+        lx.read_excel(xlsx([['RIT', 'NOMBRE'] + ['x'] * 205, ['C-1-2099', 'ANA']], 'A1:B2'))

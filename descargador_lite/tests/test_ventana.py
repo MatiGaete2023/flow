@@ -33,9 +33,18 @@ class Puente(FakeBridge):
         pass
 
 
-@pytest.fixture
-def app(tmp_path):
+@pytest.fixture(scope='session')
+def raiz():
+    # Una sola Tk por sesión: en Windows, crear muchas Tk() seguidas falla a veces al cargar tk.tcl.
     root = tk.Tk()
+    root.withdraw()
+    yield root
+    root.destroy()
+
+
+@pytest.fixture
+def app(tmp_path, raiz):
+    root = tk.Toplevel(raiz)
     window = sitfa_lite.Application(root, bridge_factory=Puente, preferences_path=tmp_path / 'p.json')
     window.dest.set(str(tmp_path / 'descargas'))
     yield window

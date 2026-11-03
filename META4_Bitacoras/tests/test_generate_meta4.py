@@ -170,14 +170,14 @@ def test_f01_mixto_conserva_solo_alcance(tmp_path):
     make_excel(
         tmp_path / "cumplimiento tome.xlsx", "TOMÉ", "Cumplimiento",
         [
-            {"rit": "C-1-2026", "der": "FAE PRO"},
-            {"rit": "C-2-2026", "der": "RESIDENCIA RLP"},
-            {"rit": "C-3-2026", "der": "OPD SEGUIMIENTO"},
+            {"rit": "C-1-2099", "der": "FAE PRO"},
+            {"rit": "C-2-2099", "der": "RESIDENCIA RLP"},
+            {"rit": "C-3-2099", "der": "OPD SEGUIMIENTO"},
         ],
     )
     files, _, selected, _ = app.fuentes(tmp_path)
     rows = g.consolidated_rows(selected)["Cumplimiento"]
-    assert {r.values["RIT"] for r in rows} == {"C-1-2026", "C-2-2026"}
+    assert {r.values["RIT"] for r in rows} == {"C-1-2099", "C-2-2099"}
     assert sum(len(f.orphan_rows) for f in files) == 1
 
 
@@ -216,7 +216,7 @@ def test_faltantes_no_detienen_generacion(tmp_path):
     folder = tmp_path / "in"
     make_excel(
         folder / "cumplimiento residencia laja.xlsx", "LAJA", "Cumplimiento",
-        [{"rit": "G-1-2026", "der": "RESIDENCIA RLP"}],
+        [{"rit": "G-1-2099", "der": "RESIDENCIA RLP"}],
     )
     salida = tmp_path / "out"
     report = generar(folder, salida)
@@ -228,7 +228,7 @@ def test_faltantes_no_detienen_generacion(tmp_path):
 
 def test_reejecucion_no_lee_sus_salidas(tmp_path):
     folder = tmp_path / "in"
-    make_excel(folder / "espera fae yumbel.xlsx", "YUMBEL", "Espera", [{"rit": "Y-1-2026", "der": "FAE UNO"}])
+    make_excel(folder / "espera fae yumbel.xlsx", "YUMBEL", "Espera", [{"rit": "Y-1-2099", "der": "FAE UNO"}])
     primera = generar(folder, folder / "Resultado META4 1")
     # Las salidas copiadas junto a las fuentes tampoco se leen como reportes.
     for name in ("Registros.xlsx", "META 4 - actualizado 2026-10.xlsx", "Registros consolidados.xlsx",
@@ -247,14 +247,14 @@ def test_pdf_incompleto_no_cubre_combinacion(tmp_path):
 def test_excel_ilegible_detiene_sin_planilla_parcial(tmp_path):
     # El generador v2.4 continuaba; el producto se detiene para no emitir un META 4 incompleto.
     (tmp_path / "roto.xlsx").write_bytes(b"esto no es un excel")
-    make_excel(tmp_path / "espera fae tome.xlsx", "TOMÉ", "Espera", [{"rit": "T-1-2026", "der": "FAE UNO"}])
+    make_excel(tmp_path / "espera fae tome.xlsx", "TOMÉ", "Espera", [{"rit": "T-1-2099", "der": "FAE UNO"}])
     with pytest.raises(ValueError, match="planilla parcial.*roto.xlsx"):
         app.fuentes(tmp_path)
 
 
 def test_formato_t_espera_es_numero(tmp_path):
     folder = tmp_path / "in"
-    make_excel(folder / "espera fae laja.xlsx", "LAJA", "Espera", [{"rit": "L-1-2026", "der": "FAE UNO", "tesp": 13}])
+    make_excel(folder / "espera fae laja.xlsx", "LAJA", "Espera", [{"rit": "L-1-2099", "der": "FAE UNO", "tesp": 13}])
     generar(folder, tmp_path / "out")
     ws = load_workbook(tmp_path / "out" / "META 4 - actualizado 2026-10.xlsx")["FAE Espera"]
     celdas = [c for row in ws.iter_rows(min_col=6, max_col=6) for c in row if isinstance(c.value, (int, float))]
@@ -294,17 +294,17 @@ def test_h03_archivo_uniforme_sin_cambio_de_comportamiento(tmp_path):
 
 def test_filas_de_otro_tribunal_se_suman_sin_desplazar_ni_duplicar(tmp_path):
     make_excel(tmp_path / "espera fae talcahuano.xlsx", "Talcahuano", "Espera",
-               [{"rit": f"T-{i}-2026", "der": "FAE A"} for i in range(5)], emision="01/07/2026")
+               [{"rit": f"T-{i}-2099", "der": "FAE A"} for i in range(5)], emision="01/07/2026")
     make_excel(tmp_path / "espera fae concepcion.xlsx", "Concepción", "Espera",
-               [{"rit": f"C-{i}-2026", "der": "FAE A"} for i in range(3)]
-               + [{"rit": "T-9-2026", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"},
-                  {"rit": "T-0-2026", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"}],
+               [{"rit": f"C-{i}-2099", "der": "FAE A"} for i in range(3)]
+               + [{"rit": "T-9-2099", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"},
+                  {"rit": "T-0-2099", "der": "FAE A", "tribunal": "Juzgado de Familia de Talcahuano"}],
                emision="02/07/2026")
     _, issues, selected, groups = app.fuentes(tmp_path)
     talcahuano = selected[("TALCAHUANO", "FAE", "Espera")]
     assert g.matrix_cell_text(("TALCAHUANO", "FAE", "Espera"), selected, groups) == "EXCEL · 6 registro(s)"
     assert talcahuano.file_result.relative_path == "espera fae talcahuano.xlsx"
-    assert sorted(r.values["RIT"] for r in talcahuano.rows) == [f"T-{i}-2026" for i in range(5)] + ["T-9-2026"]
+    assert sorted(r.values["RIT"] for r in talcahuano.rows) == [f"T-{i}-2099" for i in range(5)] + ["T-9-2099"]
     assert len(selected[("CONCEPCIÓN", "FAE", "Espera")].rows) == 3
     assert any("se incorporaron 1; 1 ya estaban" in i.message for i in issues)
 
@@ -316,7 +316,7 @@ def test_filas_de_otro_tribunal_se_suman_sin_desplazar_ni_duplicar(tmp_path):
 def test_fila_con_tribunal_no_reconocido_queda_informada(tmp_path):
     folder = tmp_path / "in"
     make_excel(folder / "espera fae lebu.xlsx", "Lebu", "Espera",
-               [{"rit": "L-1-2026", "der": "FAE A", "tribunal": "1° JF"}])
+               [{"rit": "L-1-2099", "der": "FAE A", "tribunal": "1° JF"}])
     report = generar(folder, tmp_path / "out")
     assert report["excluidos_meta4"] == 1
     ws = load_workbook(tmp_path / "out" / "Registros.xlsx")["ERRORES_Y_ADVERTENCIAS"]
@@ -362,7 +362,7 @@ def test_h02a_excel_vence_y_queda_marcado_requiere_revision(tmp_path):
 # --------------------------------------------------------------------------
 
 def test_xlsm_se_reconoce_y_procesa(tmp_path):
-    make_excel(tmp_path / "espera fae laja.xlsm", "LAJA", "Espera", [{"rit": "M-1-2026", "der": "FAE UNO"}])
+    make_excel(tmp_path / "espera fae laja.xlsm", "LAJA", "Espera", [{"rit": "M-1-2099", "der": "FAE UNO"}])
     _, _, selected, _ = app.fuentes(tmp_path)
     assert len(selected) == 1 and len(selected[("LAJA", "FAE", "Espera")].rows) == 1
 
@@ -370,7 +370,7 @@ def test_xlsm_se_reconoce_y_procesa(tmp_path):
 def test_xls_binario_biff_se_reconoce_y_procesa(tmp_path):
     rows = [["Juzgado de Familia de Laja"], ["Informe de Ingresos en Lista de Espera"],
             ["Fecha Emisión   : 01/07/2026"], [], ESP_HDR,
-            ["W-1-2026", "LAJA", "11111111-1", "PERSONA FICTICIA", None, "MP", "F", "FAE UNO", None, 13,
+            ["W-1-2099", "LAJA", "11111111-1", "PERSONA FICTICIA", None, "MP", "F", "FAE UNO", None, 13,
              ("date", 46188)]]
     (tmp_path / "espera fae laja.xls").write_bytes(biff_escritor.xls([("Hoja1", rows)]))
     _, _, selected, _ = app.fuentes(tmp_path)
@@ -380,7 +380,7 @@ def test_xls_binario_biff_se_reconoce_y_procesa(tmp_path):
 
 def test_nombre_con_codificacion_dañada_usa_contenido_del_excel(tmp_path):
     # Nombre de archivo corrompido (carácter de reemplazo Unicode): el tribunal sale del contenido.
-    make_excel(tmp_path / "espera fae �ome.xlsx", "TOMÉ", "Espera", [{"rit": "D-1-2026", "der": "FAE UNO"}])
+    make_excel(tmp_path / "espera fae �ome.xlsx", "TOMÉ", "Espera", [{"rit": "D-1-2099", "der": "FAE UNO"}])
     _, _, selected, _ = app.fuentes(tmp_path)
     assert set(selected) == {("TOMÉ", "FAE", "Espera")}
 

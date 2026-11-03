@@ -15,10 +15,18 @@ if sys.platform != "win32" and not os.environ.get("DISPLAY"):
 from anonimizador_csmp import gui  # noqa: E402
 
 
-@pytest.fixture
-def app():
+@pytest.fixture(scope="session")
+def raiz():
+    # Una sola Tk por sesión: en Windows, crear muchas Tk() seguidas falla a veces al cargar tk.tcl.
     root = tk.Tk()
     root.withdraw()
+    yield root
+    root.destroy()
+
+
+@pytest.fixture
+def app(raiz):
+    root = tk.Toplevel(raiz)
     window = gui.App(root)
     yield window
     root.destroy()

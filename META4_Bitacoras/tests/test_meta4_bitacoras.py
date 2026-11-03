@@ -705,26 +705,26 @@ def diario(rit, ingreso, programa):
 
 
 def cuatro_lotes(root):
-    lotes = [lote_lista(root / 'FAE Espera', 'Espera', 'FAE', ['E-1-2026']),
-             lote_lista(root / 'FAE Cumplimiento', 'Cumplimiento', 'FAE', ['C-1-2026', 'C-2-2026']),
-             lote_lista(root / 'RES Espera', 'Espera', 'Residencia', ['E-2-2026']),
-             lote_lista(root / 'RES Cumplimiento', 'Cumplimiento', 'Residencia', ['C-3-2026'])]
+    lotes = [lote_lista(root / 'FAE Espera', 'Espera', 'FAE', ['E-1-2099']),
+             lote_lista(root / 'FAE Cumplimiento', 'Cumplimiento', 'FAE', ['C-1-2099', 'C-2-2099']),
+             lote_lista(root / 'RES Espera', 'Espera', 'Residencia', ['E-2-2099']),
+             lote_lista(root / 'RES Cumplimiento', 'Cumplimiento', 'Residencia', ['C-3-2099'])]
     diaries = root / 'bitacoras'
     diaries.mkdir()
-    save_diaries(diaries, [diario('E-1-2026', '1', 'FAE FICTICIO'), diario('C-1-2026', '2', 'FAE FICTICIO'),
-                           diario('C-2-2026', '3', 'FAE FICTICIO'), diario('E-2-2026', '4', 'RESIDENCIA FICTICIA'),
-                           diario('C-3-2026', '5', 'RESIDENCIA FICTICIA')])
+    save_diaries(diaries, [diario('E-1-2099', '1', 'FAE FICTICIO'), diario('C-1-2099', '2', 'FAE FICTICIO'),
+                           diario('C-2-2099', '3', 'FAE FICTICIO'), diario('E-2-2099', '4', 'RESIDENCIA FICTICIA'),
+                           diario('C-3-2099', '5', 'RESIDENCIA FICTICIA')])
     return lotes, diaries
 
 
 def filas_meta4(path):
     wb = load_workbook(path)
-    return {name: sorted(c.value for r in wb[name] for c in r if re.fullmatch(r'[EC]-\d-2026', str(c.value or '')))
+    return {name: sorted(c.value for r in wb[name] for c in r if re.fullmatch(r'[EC]-\d-2099', str(c.value or '')))
             for name in ('FAE Espera', 'FAE Cumplimiento', 'Residencia Espera', 'Residencia Cumplimiento')}
 
 
-ESPERADO = {'FAE Espera': ['E-1-2026'], 'FAE Cumplimiento': ['C-1-2026', 'C-2-2026'],
-            'Residencia Espera': ['E-2-2026'], 'Residencia Cumplimiento': ['C-3-2026']}
+ESPERADO = {'FAE Espera': ['E-1-2099'], 'FAE Cumplimiento': ['C-1-2099', 'C-2-2099'],
+            'Residencia Espera': ['E-2-2099'], 'Residencia Cumplimiento': ['C-3-2099']}
 
 
 def test_four_separate_lots_make_one_meta4(tmp_path):
@@ -755,8 +755,8 @@ def test_lot_chosen_twice_or_nested_is_read_once(tmp_path):
 
 
 def test_lot_with_espera_and_cumplimiento_combines_with_other_modality(tmp_path):
-    fae = lote_lista(tmp_path / 'FAE', 'Espera', 'FAE', ['E-1-2026'])
-    otra = lote_lista(tmp_path / 'tmp', 'Cumplimiento', 'FAE', ['C-1-2026'])
+    fae = lote_lista(tmp_path / 'FAE', 'Espera', 'FAE', ['E-1-2099'])
+    otra = lote_lista(tmp_path / 'tmp', 'Cumplimiento', 'FAE', ['C-1-2099'])
     data = json.loads((fae / 'resumen.json').read_text())
     (otra / 'pagina 1.xls').rename(fae / 'pagina 2.xls')
     check = json.loads((otra / 'verificacion.json').read_text())
@@ -767,16 +767,16 @@ def test_lot_with_espera_and_cumplimiento_combines_with_other_modality(tmp_path)
     for name in ('resumen.json', 'verificacion.json'):
         (otra / name).unlink()
     otra.rmdir()
-    lote_lista(tmp_path / 'RES', 'Cumplimiento', 'Residencia', ['C-3-2026'])
-    save_diaries(tmp_path, [diario('E-1-2026', '1', 'FAE FICTICIO'), diario('C-1-2026', '2', 'FAE FICTICIO'),
-                            diario('C-3-2026', '5', 'RESIDENCIA FICTICIA')])
+    lote_lista(tmp_path / 'RES', 'Cumplimiento', 'Residencia', ['C-3-2099'])
+    save_diaries(tmp_path, [diario('E-1-2099', '1', 'FAE FICTICIO'), diario('C-1-2099', '2', 'FAE FICTICIO'),
+                            diario('C-3-2099', '5', 'RESIDENCIA FICTICIA')])
     report = app.generar([tmp_path / 'FAE', tmp_path / 'RES'], tmp_path / 'resultado', CORTE, bitacoras=tmp_path)
     assert report['totales_meta4'] == {'FAE Espera': 1, 'FAE Cumplimiento': 1, 'Residencia Espera': 0, 'Residencia Cumplimiento': 1}
 
 
 def test_same_query_downloaded_in_two_lots_is_rejected_before_output(tmp_path):
     lotes, diaries = cuatro_lotes(tmp_path)
-    lote_lista(tmp_path / 'FAE Espera otra vez', 'Espera', 'FAE', ['E-1-2026'])
+    lote_lista(tmp_path / 'FAE Espera otra vez', 'Espera', 'FAE', ['E-1-2099'])
     target = tmp_path / 'resultado'
     with pytest.raises(ValueError, match=r'Laja / Espera / FAE está en dos lotes \(FAE Espera y FAE Espera otra vez\)'):
         app.generar(tmp_path, target, CORTE, bitacoras=diaries)
@@ -853,9 +853,9 @@ def test_regenerate_uses_user_corrections(tmp_path):
     first = tmp_path / 'Resultado META4 1'
     app.generar(lotes, first, CORTE, bitacoras=diaries)
     editar_registros(first / 'Registros.xlsx', {
-        ('ESPERA', 'E-1-2026'): {'FECHA OBS.': '05-10-2026', 'CONTROL BITÁCORA': 'REVISADO manualmente'},
-        ('CUMPLIMIENTO', 'C-1-2026'): {'ETAPA ÚLTIMA OBS.': 'Cumplimiento', 'CONTROL BITÁCORA': 'pendiente'},
-    }, borrar=[('CUMPLIMIENTO', 'C-3-2026')])
+        ('ESPERA', 'E-1-2099'): {'FECHA OBS.': '05-10-2026', 'CONTROL BITÁCORA': 'REVISADO manualmente'},
+        ('CUMPLIMIENTO', 'C-1-2099'): {'ETAPA ÚLTIMA OBS.': 'Cumplimiento', 'CONTROL BITÁCORA': 'pendiente'},
+    }, borrar=[('CUMPLIMIENTO', 'C-3-2099')])
     original = (first / 'META 4 - actualizado 2026-10.xlsx').read_bytes()
     second = tmp_path / 'Resultado META4 2 regenerado'
     report = app.regenerar(first / 'Registros.xlsx', second)
@@ -865,11 +865,11 @@ def test_regenerate_uses_user_corrections(tmp_path):
     assert report['lotes_registros'] == ['FAE Espera', 'FAE Cumplimiento', 'RES Espera', 'RES Cumplimiento']
     assert report['regenerado_desde'] == str((first / 'Registros.xlsx').resolve())
     out = second / 'META 4 - actualizado 2026-10.xlsx'
-    day, _ = fecha_meta4(out, 'FAE Espera', 'E-1-2026')
+    day, _ = fecha_meta4(out, 'FAE Espera', 'E-1-2099')
     assert day.date() == date(2026, 10, 5)
-    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-1-2026')[1].endswith(app.AMARILLO)
-    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-2-2026')[1].endswith(app.ROJO)
-    assert not fecha_meta4(out, 'FAE Espera', 'E-1-2026')[1].endswith((app.ROJO, app.AMARILLO))
+    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-1-2099')[1].endswith(app.AMARILLO)
+    assert fecha_meta4(out, 'FAE Cumplimiento', 'C-2-2099')[1].endswith(app.ROJO)
+    assert not fecha_meta4(out, 'FAE Espera', 'E-1-2099')[1].endswith((app.ROJO, app.AMARILLO))
     control = {r[0]: r[1:] for r in load_workbook(out)['Control bitácoras'].iter_rows(values_only=True)}
     assert 'Regenerado desde Registros.xlsx revisado' in control
     ws = load_workbook(second / 'Registros.xlsx')['CUMPLIMIENTO']
@@ -885,7 +885,7 @@ def test_regenerate_rejects_bad_date_without_output(tmp_path):
     lotes, diaries = cuatro_lotes(tmp_path)
     first = tmp_path / 'r1'
     app.generar(lotes, first, CORTE, bitacoras=diaries)
-    editar_registros(first / 'Registros.xlsx', {('ESPERA', 'E-1-2026'): {'FECHA OBS.': 'ayer'}})
+    editar_registros(first / 'Registros.xlsx', {('ESPERA', 'E-1-2099'): {'FECHA OBS.': 'ayer'}})
     with pytest.raises(ValueError, match='FECHA OBS. no reconocida en la hoja ESPERA, fila 2'):
         app.regenerar(first / 'Registros.xlsx', tmp_path / 'r2')
     assert not list(tmp_path.glob('r2*'))

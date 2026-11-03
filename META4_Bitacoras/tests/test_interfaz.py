@@ -17,12 +17,21 @@ import Meta4  # noqa: E402
 from test_meta4_bitacoras import cuatro_lotes, diary, lote_html, save_diaries  # noqa: E402
 
 
+@pytest.fixture(scope='session')
+def raiz():
+    # Una sola Tk por sesión: en Windows, crear muchas Tk() seguidas falla a veces al cargar tk.tcl.
+    root = tk.Tk()
+    root.withdraw()
+    yield root
+    root.destroy()
+
+
 @pytest.fixture
-def ventana(monkeypatch):
+def ventana(monkeypatch, raiz):
     shown = []
     for name in ('showinfo', 'showwarning', 'showerror'):
         monkeypatch.setattr(Meta4.messagebox, name, lambda *a, _n=name, **k: shown.append((_n, a)))
-    root = tk.Tk()
+    root = tk.Toplevel(raiz)
     app = Meta4.App(root)
     yield app, shown
     if not app.busy:
