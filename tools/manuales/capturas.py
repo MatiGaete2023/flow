@@ -1,9 +1,12 @@
-"""Capturas de las ventanas reales con datos ficticios para los manuales (Linux + Xvfb + ImageMagick).
+"""Capturas de las ventanas reales con datos ficticios para los manuales.
 
-    xvfb-run -a -s "-screen 0 1400x1000x24" python tools/manuales/capturas.py <producto> <salida>
+    python tools/manuales/capturas.py <producto> <salida>            # Windows (como las ve el usuario)
+    xvfb-run -a python tools/manuales/capturas.py <producto> <salida>  # Linux, solo para revisar el flujo
 
-producto: asistente | descargador | meta4 | anonimizador. Escribe <salida>/raw/*.png y <salida>/cajas.json
-(recuadros numerados que anota tools/manuales/generar.py). Ningún dato es real.
+producto: asistente | descargador | meta4 | anonimizador | lite. Escribe <salida>/raw/*.png y <salida>/cajas.json
+(recuadros relativos a la ventana, que anota tools/manuales/generar.py); en «lite» también app_boxes.json para
+descargador_lite/build/manual_visual. Las capturas para publicar se toman en Windows (workflow manuales-windows.yml):
+en Linux, Tk dibuja con otra tipografía y otros controles. Ningún dato es real.
 """
 
 import json
@@ -22,7 +25,11 @@ class Camara:
         self.antes = antes
         (self.salida / 'raw').mkdir(parents=True, exist_ok=True)
         self.cajas = {}
-        root.geometry(f'{ancho}x{alto}+0+0')
+        root.geometry(f'{ancho}x{alto}+40+40')
+        try:
+            root.attributes('-topmost', True)  # nada tapa la ventana durante la captura
+        except Exception:
+            pass
 
     def esperar(self, condicion=lambda: True, segundos=30):
         limite = time.time() + segundos
@@ -40,16 +47,25 @@ class Camara:
             self.esperar()
         time.sleep(0.6)
         self.root.update()
-        subprocess.run(
-            ['import', '-window', 'root', '-crop', f'{self.ancho}x{self.alto}+0+0', str(self.salida / 'raw' / nombre)],
-            check=True,
-        )
-        self.cajas[nombre] = [
-            [w.winfo_rootx(), w.winfo_rooty(), w.winfo_width(), w.winfo_height()] for w in widgets.values()
-        ]
+        x, y = self.root.winfo_rootx(), self.root.winfo_rooty()
+        w, h = self.root.winfo_width(), self.root.winfo_height()
+        destino = self.salida / 'raw' / nombre
+        if sys.platform == 'win32':
+            from PIL import ImageGrab
+
+            ImageGrab.grab(bbox=(x, y, x + w, y + h), all_screens=True).save(destino)
+        else:
+            subprocess.run(['import', '-window', 'root', '-crop', f'{w}x{h}+{x}+{y}', str(destino)], check=True)
+        # Recuadros relativos al área de la ventana capturada.
+        self.cajas[nombre] = {
+            clave: [v.winfo_rootx() - x, v.winfo_rooty() - y, v.winfo_width(), v.winfo_height()]
+            for clave, v in widgets.items()
+        }
 
     def cerrar(self):
-        (self.salida / 'cajas.json').write_text(json.dumps(self.cajas, indent=1), encoding='utf-8')
+        listas = {nombre: list(cajas.values()) for nombre, cajas in self.cajas.items()}
+        (self.salida / 'cajas.json').write_text(json.dumps(listas, indent=1), encoding='utf-8')
+        (self.salida / 'app_boxes.json').write_text(json.dumps(self.cajas, indent=1), encoding='utf-8')
 
 
 def asistente(salida):
@@ -205,7 +221,69 @@ def anonimizador(salida):
     root.destroy()
 
 
-if __name__ == '__main__':
-    {'asistente': asistente, 'descargador': descargador, 'meta4': meta4, 'anonimizador': anonimizador}[sys.argv[1]](
-        sys.argv[2]
+def lite(salida):
+    """Mismas capturas que descargador_lite/build/manual_visual (a0 a a6), con SITFA ficticio."""
+    app_dir = ROOT / 'descargador_lite'
+    sys.path[:0] = [str(app_dir / 'app'), str(app_dir / 'tests')]
+    import tkinter as tk
+
+    import sitfa_lite
+    from test_ventana import Puente
+
+    base = Path(tempfile.mkdtemp())
+    root = tk.Tk()
+    app = sitfa_lite.Application(root, bridge_factory=Puente, preferences_path=base / 'prefs.json')
+    app.dest.set(str(base))
+    cam = Camara(root, salida, 1000, 680)
+
+    def fila(nombre):
+        return app.form.rows[nombre][1]
+
+    cam.foto('a0_inicio.png', abrir=app.open_button, copiar=app.copy_button, mas=app.window.top.menu_button)
+    app.bridge.connected = True
+    cam.esperar(lambda: app.catalog is not None and not app.busy)
+    cam.foto('a1_conectado.png', estado=app.window.top.pill, consultas=app.side, descargar=app.download_button)
+    app.tribunals.set(['901'])
+    app.tabs.set(['Espera', 'Cumplimiento', 'Informes'])
+    app.modalities.set(['2'])
+    app.refresh()
+    cam.foto(
+        'a2_opciones_seguimiento.png',
+        tribunales=fila('Tribunales'),
+        pestanas=fila('Pestañas'),
+        modalidades=fila('Modalidad'),
     )
+    app.informes.set(['1', '2'])
+    app.medidas.set(['0', '5'])
+    app.quick_dates('Mes anterior')
+    cam.foto(
+        'a3_informes_medidas_fechas.png',
+        informes=fila('informes'),
+        medidas=fila('medidas'),
+        periodo=fila('Período'),
+        incluir=fila('Incluir'),
+    )
+    app.primary()
+    cam.esperar(lambda: app.showing_results and not app.busy, 60)
+    cam.foto('a4_descarga_terminada.png', lista=app.results, resumen=app.window.footer)
+    app.primary()
+    app.side.select('litigantes', notify=True)
+    cam.esperar(lambda: app.catalog is not None and app.catalog['pantalla'] == 'litigantes' and not app.busy)
+    app.tribunals.set(['901', '902'])
+    app.states.set(list(app.states.buttons))
+    app.refresh()
+    cam.foto('a5_busqueda_lit.png', tribunales=fila('Tribunales'), estados=fila('Estado'))
+    app.side.select('calendario_medidas', notify=True)
+    cam.esperar(lambda: app.catalog is not None and app.catalog['pantalla'] == 'calendario_medidas' and not app.busy)
+    app.tribunals.set(['901'])
+    app.months.set(['11'])
+    app.refresh()
+    cam.foto('a6_medidas_por_vencer.png', meses=fila('Mes'), anio=fila('Año'))
+    cam.cerrar()
+    root.destroy()
+
+
+if __name__ == '__main__':
+    {'asistente': asistente, 'descargador': descargador, 'meta4': meta4, 'anonimizador': anonimizador, 'lite': lite}[
+        sys.argv[1]
+    ](sys.argv[2])

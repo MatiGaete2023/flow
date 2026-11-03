@@ -1,0 +1,64 @@
+name: Capturas Windows para manuales y videos
+
+# Las capturas de los manuales se toman en Windows, como las ve el usuario (en Linux Tk dibuja otra tipografía y
+# otros controles). Solo datos ficticios. Corre al cambiar este archivo o el capturador en la rama Rediseno, o a pedido,
+# y deja las imágenes en docs/manuales/capturas_windows/ con un commit en la misma rama.
+on:
+  push:
+    branches: ['Rediseno']
+    paths: ['.github/workflows/manuales-windows.yml', 'tools/manuales/capturas.py']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  capturas:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/windows-py312.lock
+      - name: Pantalla 1920x1080
+        continue-on-error: true
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+      - name: Dependencias
+        shell: pwsh
+        run: |
+          python -m pip install --require-hashes -r requirements/windows-py312.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps --no-build-isolation .
+          python -m pip install -r descargador_lite/requirements.txt -r META4_Bitacoras/requirements.txt -r anonimizador/requirements.txt xlwt pytest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Capturas de las cinco herramientas
+        shell: pwsh
+        run: |
+          foreach ($p in 'asistente', 'descargador', 'lite', 'meta4', 'anonimizador') {
+            python tools/manuales/capturas.py $p "docs/manuales/capturas_windows/$p"
+            if ($LASTEXITCODE -ne 0) { throw "Falló la captura de $p" }
+          }
+          Get-ChildItem -Recurse docs/manuales/capturas_windows | Select-Object FullName, Length
+      - name: Guardar en la rama
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/manuales/capturas_windows
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { Write-Output 'Sin cambios en las capturas'; exit 0 }
+          git commit -m 'Capturas Windows para manuales y videos (datos ficticios)'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capturas-windows
+          path: docs/manuales/capturas_windows/
+          retention-days: 14
