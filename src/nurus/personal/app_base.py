@@ -131,9 +131,6 @@ class App(ctk.CTk):
             frame = ttk.Frame(self.tabs, padding=10)
             self.tabs.add(frame, text=name)
             self.pages[name] = frame
-        ctk.CTkLabel(sidebar, text='Uso personal\nSolo borradores', text_color=ttk.MUTED, justify='left').pack(
-            side='bottom', padx=16, pady=18
-        )
         self._work_page()
         self._mail_page()
         self._word_page()

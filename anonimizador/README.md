@@ -91,3 +91,8 @@ algún módulo importa `nurus` o el Descargador. La compatibilidad con el lector
 
 `portable/build.ps1` compila `AnonimizadorCSMP.exe` con PyInstaller en un entorno aislado y ejecuta la autoprueba
 sintética del propio `.exe` (`AnonimizadorCSMP.exe --self-test informe.json`). Ver `portable/LEEME.md`.
+
+## 1.1.0 (rama Rediseno)
+
+Ventana rediseñada: modo Estricto/Conservador arriba, lista de entradas con su resultado, opciones en «Más».
+El motor de anonimización no cambia.

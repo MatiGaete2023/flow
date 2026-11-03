@@ -9,11 +9,14 @@ import json
 import os
 from pathlib import Path
 import queue
+import re
 import subprocess
 import sys
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+
+import flowkit as ui
 
 import motor as m
 from lotes import ALL_MEASURES, Batch, BatchRunner, Dates, MODALITIES, TAB_ORDER
@@ -25,7 +28,7 @@ from version import VERSION, extension_dir, verify_extension
 MONTH_NAMES = (
     'Enero Febrero Marzo Abril Mayo Junio Julio Agosto Septiembre Octubre Noviembre Diciembre'
 ).split()
-BG = '#f3f6fa'
+PERIODS = ('Sin filtro', 'Por fecha')
 
 
 def data_directory():
@@ -132,132 +135,17 @@ def date_preset(label, today=None):
     return start.strftime('%d/%m/%Y'), end.strftime('%d/%m/%Y')
 
 
-class CheckGroup(ttk.LabelFrame):
-    """Casillas con Todas/Ninguna; columns > 1 reparte las opciones en una grilla."""
-
-    def __init__(self, parent, text, columns=1, on_change=None):
-        super().__init__(parent, text=text, padding=8)
-        self.columns = columns
-        self.on_change = on_change
-        self.vars = {}
-        self.buttons = []
-        bar = ttk.Frame(self)
-        bar.pack(fill='x')
-        for label, value in (('Todas', True), ('Ninguna', False)):
-            b = ttk.Button(bar, text=label, width=9, command=lambda value=value: self.set_all(value))
-            b.pack(side='left', padx=(0, 6))
-            self.buttons.append(b)
-        self.body = ttk.Frame(self)
-        self.body.pack(fill='both', expand=True, pady=(6, 0))
-        self.checks = []
-
-    def set_options(self, options, selected=()):
-        for w in self.body.winfo_children():
-            w.destroy()
-        self.vars = {}
-        self.checks = []
-        for i, (code, label) in enumerate(options.items()):
-            var = tk.BooleanVar(value=code in selected)
-            check = ttk.Checkbutton(self.body, text=label, variable=var, command=self.changed)
-            check.grid(row=i // self.columns, column=i % self.columns, sticky='w', padx=(0, 14), pady=1)
-            self.vars[code] = var
-            self.checks.append(check)
-
-    def set_all(self, value):
-        for var in self.vars.values():
-            var.set(value)
-        self.changed()
-
-    def changed(self):
-        if self.on_change:
-            self.on_change()
-
-    def selected(self):
-        return tuple(code for code, var in self.vars.items() if var.get())
-
-    def set_enabled(self, enabled):
-        state = 'normal' if enabled else 'disabled'
-        for w in (*self.buttons, *self.checks):
-            w.configure(state=state)
+def short_label(label):
+    """Nombre de la consulta sin la pantalla ni las fechas (ya visibles en la lista y el resumen)."""
+    parts = [x for x in label.split(' - ') if not re.fullmatch(r'\d{2}-\d{2}-\d{4} al \d{2}-\d{2}-\d{4}', x)]
+    return ' · '.join(parts[1:] if len(parts) > 1 else parts)
 
 
-class TribunalList(ttk.LabelFrame):
-    """Lista con filtro y selección múltiple; muestra cuántos tribunales están marcados."""
-
-    def __init__(self, parent, on_change=None):
-        super().__init__(parent, text='Tribunales', padding=8)
-        self.on_change = on_change
-        self.options = {}
-        self.chosen = set()
-        self.filter = tk.StringVar()
-        self.count = tk.StringVar(value='0 marcados')
-        bar = ttk.Frame(self)
-        bar.pack(fill='x')
-        ttk.Label(bar, text='Buscar:').pack(side='left')
-        self.entry = ttk.Entry(bar, textvariable=self.filter, width=22)
-        self.entry.pack(side='left', padx=6)
-        self.filter.trace_add('write', lambda *a: self.render())
-        self.all_button = ttk.Button(bar, text='Todos', width=8, command=lambda: self.set_visible(True))
-        self.all_button.pack(side='left', padx=(0, 6))
-        self.none_button = ttk.Button(bar, text='Ninguno', width=8, command=lambda: self.set_visible(False))
-        self.none_button.pack(side='left')
-        ttk.Label(bar, textvariable=self.count).pack(side='right')
-        frame = ttk.Frame(self)
-        frame.pack(fill='both', expand=True, pady=(6, 0))
-        self.listbox = tk.Listbox(frame, selectmode='multiple', height=8, exportselection=False, activestyle='none')
-        self.listbox.pack(side='left', fill='both', expand=True)
-        bar2 = ttk.Scrollbar(frame, orient='vertical', command=self.listbox.yview)
-        bar2.pack(side='right', fill='y')
-        self.listbox.configure(yscrollcommand=bar2.set)
-        self.listbox.bind('<<ListboxSelect>>', self.clicked)
-        self.visible = []
-
-    def set_options(self, options, selected=()):
-        self.options = dict(options)
-        self.chosen = set(selected) & set(self.options)
-        self.filter.set('')
-        self.render()
-
-    def render(self):
-        text = m.normalized(self.filter.get())
-        self.visible = [k for k, v in self.options.items() if text in m.normalized(v)]
-        # Tk ignora insert/delete en un Listbox deshabilitado.
-        state = self.listbox.cget('state')
-        self.listbox.configure(state='normal')
-        self.listbox.delete(0, 'end')
-        for i, code in enumerate(self.visible):
-            self.listbox.insert('end', self.options[code])
-            if code in self.chosen:
-                self.listbox.selection_set(i)
-        self.listbox.configure(state=state)
-        self.update_count()
-
-    def clicked(self, _event=None):
-        current = set(self.listbox.curselection())
-        for i, code in enumerate(self.visible):
-            if i in current:
-                self.chosen.add(code)
-            else:
-                self.chosen.discard(code)
-        self.update_count()
-
-    def set_visible(self, value):
-        for code in self.visible:
-            (self.chosen.add if value else self.chosen.discard)(code)
-        self.render()
-
-    def update_count(self):
-        self.count.set(f'{len(self.chosen)} de {len(self.options)} marcados')
-        if self.on_change:
-            self.on_change()
-
-    def selected(self):
-        return tuple(k for k in self.options if k in self.chosen)
-
-    def set_enabled(self, enabled):
-        state = 'normal' if enabled else 'disabled'
-        for w in (self.entry, self.all_button, self.none_button, self.listbox):
-            w.configure(state=state)
+SIDE = [
+    ('Seguimiento', [('seguimiento', 'Informe seguimiento'), ('litigantes', 'Búsqueda litigantes')]),
+    ('Informes', [('calendario_informes', 'Informes por vencer'), ('calendario_medidas', 'Medidas por vencer')]),
+]
+LABELS = {code: label for label, code in SCREENS.items()}
 
 
 class Application:
@@ -273,318 +161,246 @@ class Application:
         self.connected = False
         self.busy = False
         self.quitting = False
+        self.running = False
+        self.showing_results = False
         self.last_folder = None
         self.planned = 0
+        self.query_index = 0
+        self.query_files = {}
         self.screen = tk.StringVar(value=next(iter(SCREENS)))
-        self.use_dates = tk.BooleanVar(value=False)
         today = m.now().strftime('%d/%m/%Y')
         self.from_date = tk.StringVar(value=today)
         self.to_date = tk.StringVar(value=today)
         self.keep_filters = tk.BooleanVar(value=False)
+        self.empty_pdf = tk.BooleanVar(value=self.prefs.data['pdf_sin_registros'])
         self.year = tk.StringVar()
         self.dest = tk.StringVar(value=self.prefs.data['destino'])
         self.code = tk.StringVar(value=self.bridge.connection_code)
-        self.link = tk.StringVar(value='● Sin conexión')
-        self.status = tk.StringVar(value='1) Abre SITFA en Chrome  2) Pulsa el icono de la extensión  3) Pega el código.')
-        self.preview = tk.StringVar(value='Pulsa «Cargar opciones» para traer tribunales y filtros de tu sesión.')
-        self.phase = tk.StringVar(value='Listo')
+        self.status = tk.StringVar()
+        self.summary = ''
 
-        root.title(f'SITFA Lite {VERSION} · Descargas RUS')
-        root.geometry(f'1000x{min(980, max(680, root.winfo_screenheight() - 80))}')
-        root.minsize(860, 600)
-        root.configure(background=BG)
+        self.window = ui.Window(root, 'SITFA Lite', 'Descargar', self.primary, size='1000x680', minsize=(820, 560))
+        root.title(f'SITFA Lite {VERSION}')
         root.protocol('WM_DELETE_WINDOW', self.close_app)
-        style = ttk.Style(root)
-        style.theme_use('clam')
-        for name in ('TFrame', 'TLabelframe', 'TCheckbutton', 'TRadiobutton'):
-            style.configure(name, background=BG)
-        style.configure('TLabelframe.Label', background=BG, foreground='#20324d', font=('Segoe UI', 10, 'bold'))
-        style.configure('TLabel', background=BG, foreground='#20324d', font=('Segoe UI', 10))
-        style.configure('Title.TLabel', font=('Segoe UI', 18, 'bold'))
-        style.configure('Big.TButton', font=('Segoe UI', 11, 'bold'), padding=(16, 9))
-        style.configure('TButton', padding=(8, 5))
+        top = self.window.top
+        top.add('Abrir SITFA en Chrome', lambda: self.enqueue('open'))
+        top.add('Instalar extensión…', self.setup)
+        top.add('Copiar código de conexión', self.copy_code)
+        top.add('Desconectar', lambda: self.enqueue('disconnect'))
+        top.add('Carpeta de descarga…', self.browse, separator=True)
+        top.add('Abrir carpeta del último lote', self.open_folder)
+        top.add_check('Conservar los otros filtros preparados en SITFA', self.keep_filters, self.refresh)
+        top.add(f'Versión {VERSION}', lambda: None, separator=True)
+        self.folder_button = self.window.footer.add('Abrir carpeta', self.open_folder)
+        self.folder_button.pack_forget()
+        self.download_button = self.window.footer.primary
+        self.status.trace_add('write', self._status_changed)
 
-        bottom = ttk.Frame(root, padding=(16, 6, 16, 10))
-        bottom.pack(side='bottom', fill='x')
-        outer = ttk.Frame(root)
-        outer.pack(fill='both', expand=True)
-        canvas = tk.Canvas(outer, background=BG, highlightthickness=0)
-        canvas.pack(side='left', fill='both', expand=True)
-        scroll = ttk.Scrollbar(outer, orient='vertical', command=canvas.yview)
-        scroll.pack(side='right', fill='y')
-        canvas.configure(yscrollcommand=scroll.set)
-        body = ttk.Frame(canvas, padding=16)
-        window = canvas.create_window(0, 0, anchor='nw', window=body)
-        canvas.bind('<Configure>', lambda e: canvas.itemconfigure(window, width=e.width))
-        body.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
-        root.bind(
-            '<MouseWheel>',
-            lambda e: canvas.yview_scroll(-int(e.delta / 120), 'units')
-            if e.widget.winfo_class() not in ('Listbox', 'Treeview')
-            else None,
+        self.side, pane = ui.with_sidebar(self.window, SIDE, self.change_screen)
+        self.pane = pane
+        # Sin conexión: una sola acción.
+        self.connect_view = ttk.Frame(pane)
+        ttk.Label(self.connect_view, text='Conecta tu Chrome', font=ui.FONT_BOLD).pack(anchor='w')
+        self.open_button = ttk.Button(
+            self.connect_view, text='Abrir SITFA', style='Primary.TButton', command=lambda: self.enqueue('open')
         )
-        body.columnconfigure(0, weight=1)
-
-        ttk.Label(body, text='SITFA Lite · Descargas RUS', style='Title.TLabel').grid(
-            row=0, column=0, sticky='w', pady=(0, 6)
-        )
-
-        # 1. Conexión
-        box = ttk.LabelFrame(body, text='1. Conexión con tu Chrome', padding=8)
-        box.grid(row=2, column=0, sticky='ew', pady=(0, 8))
-        box.columnconfigure(1, weight=1)
-        row = ttk.Frame(box)
-        row.grid(row=0, column=0, columnspan=4, sticky='w')
-        self.open_button = ttk.Button(row, text='Abrir SITFA en Chrome', command=lambda: self.enqueue('open'))
-        self.open_button.pack(side='left', padx=(0, 8))
-        self.setup_button = ttk.Button(row, text='Instalar extensión…', command=self.setup)
-        self.setup_button.pack(side='left', padx=(0, 8))
-        self.disconnect_button = ttk.Button(row, text='Desconectar', command=lambda: self.enqueue('disconnect'))
-        self.disconnect_button.pack(side='left', padx=(0, 16))
-        self.link_label = ttk.Label(row, textvariable=self.link, foreground='#b45309')
-        self.link_label.pack(side='left')
-        ttk.Label(box, text='Código:').grid(row=1, column=0, sticky='w', pady=(6, 0))
-        ttk.Entry(box, textvariable=self.code, state='readonly').grid(row=1, column=1, sticky='ew', padx=8, pady=(6, 0))
-        self.copy_button = ttk.Button(box, text='Copiar código', command=self.copy_code)
-        self.copy_button.grid(row=1, column=2, pady=(6, 0))
-
-        # 2. Consulta
-        box = ttk.LabelFrame(body, text='2. Qué descargar', padding=8)
-        box.grid(row=3, column=0, sticky='ew', pady=(0, 8))
-        radios = ttk.Frame(box)
-        radios.pack(side='left', fill='x')
-        self.screen_radios = []
-        for i, label in enumerate(SCREENS):
-            r = ttk.Radiobutton(radios, text=label, value=label, variable=self.screen, command=self.change_screen)
-            r.grid(row=i // 2, column=i % 2, sticky='w', padx=(0, 30), pady=2)
-            self.screen_radios.append(r)
-        self.load_button = ttk.Button(box, text='Cargar opciones', command=self.load_catalog)
-        self.load_button.pack(side='right', padx=(10, 0))
-
-        # 3. Opciones
-        self.options_box = ttk.LabelFrame(body, text='3. Opciones y filtros', padding=8)
-        self.options_box.grid(row=4, column=0, sticky='ew')
-        self.options_box.columnconfigure(0, weight=3)
-        self.options_box.columnconfigure(1, weight=2)
-        self.tribunals = TribunalList(self.options_box, on_change=self.refresh)
-        self.tribunals.grid(row=0, column=0, rowspan=4, sticky='nsew', padx=(0, 10))
-        self.tabs = CheckGroup(self.options_box, 'Pestañas', columns=2, on_change=self.refresh)
-        self.modalities = CheckGroup(self.options_box, 'Modalidades', columns=2, on_change=self.refresh)
-        self.informes = CheckGroup(self.options_box, 'Informe (pestaña Informes)', on_change=self.refresh)
-        self.medidas = CheckGroup(self.options_box, 'Medidas (pestaña Cumplimiento)', on_change=self.refresh)
-        self.states = CheckGroup(self.options_box, 'Estado', on_change=self.refresh)
-        self.months = CheckGroup(self.options_box, 'Mes', columns=3, on_change=self.refresh)
-        self.year_box = ttk.Frame(self.options_box)
-        ttk.Label(self.year_box, text='Año:').pack(side='left')
-        self.year_combo = ttk.Combobox(self.year_box, textvariable=self.year, width=8, state='readonly')
-        self.year_combo.pack(side='left', padx=6)
+        self.open_button.pack(anchor='w', pady=(12, 12))
+        line = ttk.Frame(self.connect_view)
+        line.pack(anchor='w')
+        ttk.Entry(line, textvariable=self.code, state='readonly', width=44).pack(side='left')
+        self.copy_button = ttk.Button(line, text='Copiar', command=self.copy_code)
+        self.copy_button.pack(side='left', padx=(6, 0))
+        # Conectado: filtros de la consulta elegida.
+        self.form = ui.Form(pane, key_width=12)
+        f = self.form
+        self.tribunals = f.row('Tribunales', lambda p: ui.Chips(p, command=self.refresh))
+        self.tabs = f.row('Pestañas', lambda p: ui.Chips(p, command=self.refresh))
+        self.informes = f.row('  Informes', lambda p: ui.Chips(p, command=self.refresh, style='Chip.Toolbutton'),
+                              name='informes')
+        self.medidas = f.row('  Medidas', lambda p: ui.Chips(p, command=self.refresh), name='medidas')
+        self.modalities = f.row('Modalidad', lambda p: ui.Chips(p, command=self.refresh))
+        self.states = f.row('Estado', lambda p: ui.Chips(p, command=self.refresh))
+        self.months = f.row('Mes', lambda p: ui.Chips(p, command=self.refresh))
+        self.year_combo = f.row('Año', lambda p: ttk.Combobox(p, textvariable=self.year, width=8, state='readonly'))
         self.year_combo.bind('<<ComboboxSelected>>', lambda e: self.refresh())
-
-        self.date_box = ttk.Frame(self.options_box)
-        self.date_check = ttk.Checkbutton(
-            self.date_box, text='Filtrar por fecha', variable=self.use_dates, command=self.refresh
-        )
-        self.date_check.grid(row=0, column=0, sticky='w', padx=(0, 12))
-        self.date_widgets = []
-        for col, (label, var) in enumerate((('Desde', self.from_date), ('Hasta', self.to_date))):
-            ttk.Label(self.date_box, text=label).grid(row=0, column=1 + col * 3, padx=(0, 4))
-            entry = ttk.Entry(self.date_box, textvariable=var, width=12)
-            entry.grid(row=0, column=2 + col * 3)
-            entry.bind('<KeyRelease>', lambda e: self.refresh())
-            button = ttk.Button(self.date_box, text='Elegir…', width=7, command=lambda var=var: self.pick(var))
-            button.grid(row=0, column=3 + col * 3, padx=(2, 12))
-            self.date_widgets += [entry, button]
-        quick = ttk.Frame(self.date_box)
-        quick.grid(row=1, column=0, columnspan=8, sticky='w', pady=(6, 0))
-        for label in ('Este mes', 'Mes anterior', 'Últimos 30 días'):
-            b = ttk.Button(quick, text=label, command=lambda label=label: self.quick_dates(label))
-            b.pack(side='left', padx=(0, 6))
-            self.date_widgets.append(b)
-        self.filter_check = ttk.Checkbutton(
-            self.date_box,
-            text='Conservar los otros filtros preparados en SITFA (centro, RUT, causa, litigante…)',
-            variable=self.keep_filters,
-            command=self.refresh,
-        )
-        self.filter_check.grid(row=2, column=0, columnspan=8, sticky='w', pady=(6, 0))
-        self.empty_pdf = tk.BooleanVar(value=self.prefs.data['pdf_sin_registros'])
-        ttk.Checkbutton(
-            self.date_box, text='PDF de consultas sin registros', variable=self.empty_pdf, command=self.toggle_empty_pdf
-        ).grid(row=3, column=0, columnspan=8, sticky='w', pady=(6, 0))
-        ttk.Label(self.options_box, textvariable=self.preview, font=('Segoe UI', 10, 'bold')).grid(
-            row=10, column=0, columnspan=2, sticky='w', pady=(10, 0)
-        )
-
-        # 4. Descarga
-        box = ttk.LabelFrame(bottom, text='4. Descargar (subcarpeta con fecha y hora por lote)', padding=8)
-        box.pack(fill='x')
-        box.columnconfigure(0, weight=1)
-        ttk.Entry(box, textvariable=self.dest, state='readonly').grid(row=1, column=0, sticky='ew', pady=(0, 6))
-        self.browse_button = ttk.Button(box, text='Cambiar carpeta…', command=self.browse)
-        self.browse_button.grid(row=1, column=1, padx=8, pady=(0, 6))
-        actions = ttk.Frame(box)
-        actions.grid(row=2, column=0, columnspan=3, sticky='w')
-        self.download_button = ttk.Button(actions, text='⬇  Descargar', style='Big.TButton', command=self.start)
-        self.download_button.pack(side='left')
-        self.cancel_button = ttk.Button(actions, text='Cancelar', command=self.request_cancel)
-        self.cancel_button.pack(side='left', padx=8)
-        self.folder_button = ttk.Button(actions, text='Abrir carpeta del lote', command=self.open_folder)
-        self.folder_button.pack(side='left')
-        ttk.Label(actions, textvariable=self.phase, font=('Segoe UI', 10, 'bold')).pack(side='left', padx=(16, 0))
-        self.progress = ttk.Progressbar(box)
-        self.progress.grid(row=4, column=0, columnspan=3, sticky='ew', pady=6)
-        table = ttk.Frame(box)
-        table.grid(row=5, column=0, columnspan=3, sticky='ew')
-        table.columnconfigure(0, weight=1)
-        self.tree = ttk.Treeview(table, columns=('rows', 'file'), show='headings', height=4)
-        self.tree.heading('rows', text='Registros')
-        self.tree.heading('file', text='Archivo guardado')
-        self.tree.column('rows', width=90, stretch=False, anchor='center')
-        self.tree.column('file', width=760)
-        self.tree.grid(row=0, column=0, sticky='ew')
-        bar = ttk.Scrollbar(table, orient='vertical', command=self.tree.yview)
-        bar.grid(row=0, column=1, sticky='ns')
-        self.tree.configure(yscrollcommand=bar.set)
-        self.tree.bind('<Double-1>', self.open_selected)
-        ttk.Label(bottom, textvariable=self.status, wraplength=900, foreground='#195fa8').pack(fill='x', pady=(6, 0))
-        self.change_screen(initial=True)
+        self.period = f.row('Período', lambda p: ui.Chips(p, [(x, x) for x in PERIODS], multi=False,
+                                                         command=self.change_period))
+        self.range = f.row('', self._range_row, name='rango')
+        self.include = f.row('Incluir', lambda p: ui.Chips(p, [('pdf', 'PDF si no hay registros')],
+                                                         command=self.toggle_empty_pdf))
+        self.include.set(['pdf'] if self.empty_pdf.get() else [])
+        self.results = ui.ProgressList(pane, on_open=self.open_result, height=14)
+        self.screen_radios = list(self.side.buttons.values())
+        self.change_screen(self.side.get(), initial=True)
         if start_worker:
             threading.Thread(target=self.worker, daemon=True).start()
             root.after(100, self.poll)
+
+    def _range_row(self, parent):
+        frame = ttk.Frame(parent)
+        self.date_widgets = []
+        for label, var in (('Desde', self.from_date), ('Hasta', self.to_date)):
+            ttk.Label(frame, text=label, style='Muted.TLabel').pack(side='left', padx=(0, 4))
+            entry = ttk.Entry(frame, textvariable=var, width=11)
+            entry.pack(side='left')
+            entry.bind('<KeyRelease>', lambda e: self.refresh())
+            button = ttk.Button(frame, text='Calendario', command=lambda var=var: self.pick(var))
+            button.pack(side='left', padx=(2, 14))
+            self.date_widgets += [entry, button]
+        return frame
+
+    def _status_changed(self, *_):
+        text = self.status.get()
+        self.window.banner.show(text) if text else self.window.banner.hide()
 
     # --- selección -------------------------------------------------------------------------------
     @property
     def screen_code(self):
         return SCREENS[self.screen.get()]
 
-    def change_screen(self, initial=False):
+    @property
+    def use_dates(self):
+        return self.period.get() != ('Sin filtro',)
+
+    def change_screen(self, code=None, initial=False):
+        if code:
+            self.screen.set(LABELS[code])
         self.catalog = None
-        for w in (self.tabs, self.modalities, self.informes, self.medidas, self.states, self.months):
-            w.set_options({})
-            w.grid_remove()
-        self.tribunals.set_options({})
-        self.year_box.grid_remove()
-        self.date_box.grid_remove()
+        for chips in (self.tribunals, self.tabs, self.informes, self.medidas, self.modalities, self.states, self.months):
+            chips.set_options([])
         screen = self.screen_code
-        if screen == 'seguimiento':
-            self.tabs.grid(row=0, column=1, sticky='ew', pady=(0, 6))
-            self.modalities.grid(row=1, column=1, sticky='ew', pady=(0, 6))
-            self.informes.grid(row=2, column=1, sticky='ew', pady=(0, 6))
-            self.medidas.grid(row=3, column=1, sticky='ew', pady=(0, 6))
-            self.date_box.grid(row=4, column=0, columnspan=2, sticky='w', pady=(8, 0))
-        elif screen == 'litigantes':
-            self.states.grid(row=0, column=1, sticky='ew', pady=(0, 6))
-            self.date_box.grid(row=4, column=0, columnspan=2, sticky='w', pady=(8, 0))
-        else:
-            self.months.grid(row=0, column=1, sticky='ew', pady=(0, 6))
-            self.year_box.grid(row=1, column=1, sticky='w', pady=(0, 6))
-        if not initial:
-            self.status.set('Pulsa «Cargar opciones»: SITFA abrirá la pantalla elegida en tu Chrome.')
+        shown = {
+            'seguimiento': {'Tribunales', 'Pestañas', 'Modalidad', 'Período', 'Incluir'},
+            'litigantes': {'Tribunales', 'Estado', 'Período', 'Incluir'},
+        }.get(screen, {'Tribunales', 'Mes', 'Año', 'Incluir'})
+        for name in self.form.rows:
+            self.form.show(name, name in shown)
+        if not initial and self.connected and not self.busy:
+            self.load_catalog()
+        self.refresh()
+
+    def change_period(self):
         self.refresh()
 
     def apply_catalog(self, catalog):
         if not isinstance(catalog, dict) or catalog.get('pantalla') != self.screen_code:
-            raise m.PocError('SITFA devolvió otra pantalla. Vuelve a pulsar Cargar opciones.')
+            raise m.PocError('SITFA devolvió otra pantalla. Elige de nuevo la consulta.')
         self.catalog = catalog
         chosen = catalog.get('seleccion') or {}
         tribunal = chosen.get('tribunal')
-        self.tribunals.set_options(catalog['tribunales'], (tribunal,) if tribunal in catalog['tribunales'] else ())
+        self.tribunals.set_options(list(catalog['tribunales'].items()),
+                                   (tribunal,) if tribunal in catalog['tribunales'] else ())
         screen = self.screen_code
         if screen == 'seguimiento':
-            tabs = {t: t for t in TAB_ORDER if t in catalog.get('pestanas', [])}
-            self.tabs.set_options(tabs, tuple(t for t in ('Espera', 'Cumplimiento') if t in tabs))
-            modalities = {k: MODALITIES[k] for k in catalog.get('modalidades', {}) if k in MODALITIES}
-            self.modalities.set_options(modalities, tuple(modalities))
-            self.informes.set_options(catalog.get('informes', {}), tuple(catalog.get('informes', {}))[:1])
-            measures = {ALL_MEASURES: 'Todas las medidas', **catalog.get('medidas', {})}
-            self.medidas.set_options(measures, (ALL_MEASURES,))
+            tabs = [t for t in TAB_ORDER if t in catalog.get('pestanas', [])]
+            self.tabs.set_options([(t, t) for t in tabs], [t for t in ('Espera', 'Cumplimiento') if t in tabs])
+            modalities = [(k, MODALITIES[k]) for k in catalog.get('modalidades', {}) if k in MODALITIES]
+            self.modalities.set_options(modalities, [k for k, _ in modalities])
+            informes = list(catalog.get('informes', {}).items())
+            self.informes.set_options(informes, [k for k, _ in informes[:1]])
+            self.medidas.set_options([(ALL_MEASURES, 'Todas las medidas'), *catalog.get('medidas', {}).items()],
+                                     [ALL_MEASURES])
             if chosen.get('desde') and chosen.get('hasta'):
                 self.from_date.set(chosen['desde'])
                 self.to_date.set(chosen['hasta'])
         elif screen == 'litigantes':
             states = catalog.get('estados', {})
-            self.states.set_options(states, (chosen.get('estado'),) if chosen.get('estado') in states else ())
+            self.states.set_options(list(states.items()), [chosen.get('estado')] if chosen.get('estado') in states else [])
         else:
             months = catalog.get('meses', {})
-            self.months.set_options(months, (chosen.get('mes'),) if chosen.get('mes') in months else ())
+            self.months.set_options(list(months.items()), [chosen.get('mes')] if chosen.get('mes') in months else [])
             years = catalog.get('anios', {})
             self.year_combo.configure(values=list(years.values()))
             self.year.set(years.get(chosen.get('anio'), next(iter(years.values()), '')))
-        self.status.set('Opciones cargadas. Marca tribunales y filtros, y pulsa Descargar.')
+        self.status.set('')
         self.refresh()
 
     def batch(self):
         if not self.catalog:
-            raise m.PocError('Pulsa Cargar opciones primero.')
+            raise m.PocError('Cargando las opciones de SITFA…')
         screen = self.screen_code
         dates = None
-        if screen in ('seguimiento', 'litigantes') and self.use_dates.get():
+        if screen in ('seguimiento', 'litigantes') and self.use_dates:
             dates = Dates(self.from_date.get().strip(), self.to_date.get().strip())
         keep = self.keep_filters.get() and screen in ('seguimiento', 'litigantes')
-        tribunals = self.tribunals.selected()
+        tribunals = self.tribunals.get()
         if screen == 'seguimiento':
-            tabs = self.tabs.selected()
+            tabs = self.tabs.get()
             return Batch(
                 screen,
                 tribunals,
-                modalities=self.modalities.selected(),
+                modalities=self.modalities.get(),
                 tabs=tabs,
-                informes=self.informes.selected() if 'Informes' in tabs else (),
-                medidas=self.medidas.selected() if 'Cumplimiento' in tabs else (),
+                informes=self.informes.get() if 'Informes' in tabs else (),
+                medidas=self.medidas.get() if 'Cumplimiento' in tabs else (),
                 dates=dates,
                 keep_filters=keep,
             )
         if screen == 'litigantes':
-            return Batch(screen, tribunals, states=self.states.selected(), dates=dates, keep_filters=keep)
+            return Batch(screen, tribunals, states=self.states.get(), dates=dates, keep_filters=keep)
         year = next((k for k, v in self.catalog.get('anios', {}).items() if v == self.year.get()), None)
-        return Batch(screen, tribunals, months=self.months.selected(), year=year)
+        return Batch(screen, tribunals, months=self.months.get(), year=year)
 
     def toggle_empty_pdf(self):
+        self.empty_pdf.set('pdf' in self.include.get())
         self.prefs.data['pdf_sin_registros'] = self.empty_pdf.get()
         self.prefs.save()
         self.refresh()
 
+    def describe(self, plan):
+        parts = [f'{len(plan)} consulta{"s" if len(plan) != 1 else ""}']
+        tribunals = len(self.tribunals.get())
+        parts.append(f'{tribunals} tribunal{"es" if tribunals != 1 else ""}')
+        if self.screen_code in ('seguimiento', 'litigantes'):
+            parts.append('sin filtro de fecha' if not self.use_dates else f'{self.from_date.get()} – {self.to_date.get()}')
+        return ' · '.join(parts)
+
+    def show(self, view):
+        for widget in (self.connect_view, self.form, self.results):
+            widget.pack_forget()
+        {'connect': self.connect_view, 'form': self.form, 'results': self.results}[view].pack(
+            fill='both' if view == 'results' else 'x', expand=view == 'results', anchor='nw'
+        )
+
     def refresh(self):
         idle = not self.busy and not self.quitting
         ready = idle and self.connected and self.catalog is not None
-        for widget, enabled in [
-            (self.open_button, idle),
-            (self.setup_button, idle),
-            (self.copy_button, idle),
-            (self.disconnect_button, idle and self.connected),
-            (self.load_button, idle and self.connected),
-            (self.browse_button, idle),
-            (self.cancel_button, self.busy and not self.quitting),
-            (self.folder_button, self.last_folder is not None),
-            (self.date_check, ready),
-            (self.filter_check, ready),
-        ]:
-            widget.configure(state='normal' if enabled else 'disabled')
-        for radio in self.screen_radios:
-            radio.configure(state='normal' if idle else 'disabled')
-        self.tribunals.set_enabled(ready)
-        for group in (self.tabs, self.modalities, self.states, self.months):
-            group.set_enabled(ready)
-        tabs = self.tabs.selected()
-        self.informes.set_enabled(ready and 'Informes' in tabs)
-        self.medidas.set_enabled(ready and 'Cumplimiento' in tabs)
-        self.year_combo.configure(state='readonly' if ready else 'disabled')
-        for widget in self.date_widgets:
-            widget.configure(state='normal' if ready and self.use_dates.get() else 'disabled')
-        plan_ok = False
-        if self.catalog:
-            try:
-                plan = self.batch().plan(self.catalog)
-                plan_ok = True
-                self.preview.set(
-                    f'{len(plan)} consulta(s) · cada una con todas sus páginas'
-                    + (' · pantallazo PDF si no hay registros' if self.empty_pdf.get() else '')
-                )
-            except m.PocError as exc:
-                self.preview.set(str(exc))
+        if self.running or self.showing_results:
+            self.show('results')
+        elif self.connected:
+            self.show('form')
         else:
-            self.preview.set('Pulsa «Cargar opciones» para traer tribunales y filtros de tu sesión.')
-        self.download_button.configure(state='normal' if ready and plan_ok else 'disabled')
+            self.show('connect')
+        self.window.top.set_state('Chrome conectado' if self.connected else 'Sin conexión',
+                                  'ok' if self.connected else 'muted')
+        self.side.enable(idle)
+        if self.screen_code == 'seguimiento':
+            tabs = self.tabs.get()
+            self.form.show('informes', 'Informes' in tabs)
+            self.form.show('medidas', 'Cumplimiento' in tabs)
+        if self.screen_code in ('seguimiento', 'litigantes'):
+            self.form.show('rango', self.period.get() == ('Por fecha',))
+        for chips in (self.tribunals, self.tabs, self.informes, self.medidas, self.modalities, self.states,
+                      self.months, self.period, self.include):
+            chips.enable(ready)
+        self.year_combo.configure(state='readonly' if ready else 'disabled')
+        footer = self.window.footer
+        if self.running:
+            footer.set(self.summary, enabled=not self.quitting, primary_text='Detener')
+            return
+        if self.showing_results:
+            self.folder_button.pack(side='right', padx=(0, 8))
+            footer.set(self.summary, enabled=idle, primary_text='Nuevo lote')
+            return
+        self.folder_button.pack_forget()
+        if not self.connected:
+            footer.set('', enabled=False, primary_text='Descargar')
+            return
+        try:
+            plan = self.batch().plan(self.catalog)
+            footer.set(self.describe(plan), enabled=ready, primary_text='Descargar')
+        except m.PocError as exc:
+            footer.set(str(exc), enabled=False, primary_text='Descargar')
 
     # --- acciones ----------------------------------------------------------------------------------
     def emit(self, name, value):
@@ -605,11 +421,12 @@ class Application:
         self.root.after(300, self.refresh)
 
     def quick_dates(self, label):
+        """Atajo programático (sin botón): fija Desde/Hasta y activa el filtro por fecha."""
         start, end = date_preset(label)
         self.from_date.set(start)
         self.to_date.set(end)
-        self.use_dates.set(True)
-        self.refresh()
+        self.period.set(['Por fecha'])
+        self.change_period()
 
     def setup(self):
         directory = extension_dir()
@@ -643,39 +460,51 @@ class Application:
             self.prefs.data['destino'] = chosen
             self.prefs.save()
 
+    def primary(self):
+        if self.running:
+            self.request_cancel()
+        elif self.showing_results:
+            self.showing_results = False
+            self.status.set('')
+            self.refresh()
+        else:
+            self.start()
+
     def start(self):
         try:
             batch = self.batch()
-            batch.plan(self.catalog)
+            plan = batch.plan(self.catalog)
             destination = Path(self.dest.get())
             destination.mkdir(parents=True, exist_ok=True)
         except m.PocError as exc:
-            messagebox.showwarning('Revisa la selección', str(exc), parent=self.root)
+            self.window.banner.show(str(exc), bad=True)
             return
         except OSError:
-            messagebox.showwarning('Carpeta', 'No se pudo crear la carpeta de descarga.', parent=self.root)
+            self.window.banner.show('No se pudo crear la carpeta de descarga. Elige otra en Más › Carpeta de descarga.',
+                                    bad=True)
             return
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        self.results.clear()
+        self.results.bar.configure(maximum=max(1, len(plan)))
+        self.query_files = {}
         self.cancel.clear()
-        self.progress.configure(value=0, maximum=1)
-        self.phase.set('Iniciando…')
+        self.running = True
+        self.summary = f'Consultando 0 de {len(plan)}'
+        self.status.set('')
         self.enqueue('download', (batch, destination))
 
     def request_cancel(self):
         self.cancel.set()
-        self.phase.set('Cancelando al terminar la página en curso…')
+        self.summary = 'Deteniendo al terminar la página en curso…'
+        self.refresh()
 
     def open_folder(self):
         if self.last_folder:
             open_path(self.last_folder)
 
-    def open_selected(self, _event=None):
-        item = self.tree.focus()
-        if item and self.last_folder:
-            path = self.last_folder / self.tree.item(item, 'values')[1]
-            if path.is_file():
-                open_path(path)
+    def open_result(self, key):
+        files = self.query_files.get(int(key), [])
+        if files and self.last_folder and (self.last_folder / files[0]).is_file():
+            open_path(self.last_folder / files[0])
 
     def close_app(self):
         if self.busy and not messagebox.askyesno(
@@ -706,9 +535,7 @@ class Application:
                         self.cancel,
                         pause=self.prefs.data['pausa'],
                         evidencia=self.prefs.data['pdf_sin_registros'],
-                    ).run(
-                        *arg
-                    )
+                    ).run(*arg)
                 elif command in ('disconnect', 'exit'):
                     if self.bridge.connected:
                         try:
@@ -731,13 +558,14 @@ class Application:
     def process_event(self, name, value):
         if name == 'connected':
             self.connected = True
-            self.status.set(value)
+            self.status.set('')
+            if not self.busy:
+                self.load_catalog()
         elif name == 'disconnected':
             self.connected = False
             self.catalog = None
             self.code.set(value)
             self.change_screen(initial=True)
-            self.status.set('Desconectado. Para volver a conectar usa el código nuevo.')
         elif name == 'status':
             self.status.set(value)
         elif name == 'catalog':
@@ -745,47 +573,58 @@ class Application:
                 self.apply_catalog(value)
             except (m.PocError, KeyError, TypeError) as exc:
                 self.catalog = None
-                self.status.set(str(exc) if isinstance(exc, m.PocError) else 'SITFA entregó opciones incompletas.')
+                self.window.banner.show(
+                    str(exc) if isinstance(exc, m.PocError) else 'SITFA entregó opciones incompletas.', bad=True
+                )
         elif name == 'folder':
             self.last_folder = Path(value)
         elif name == 'plan':
             self.planned = value
-            self.progress.configure(maximum=max(1, value), value=0)
         elif name == 'query':
-            self.phase.set(f'Consulta {value["index"]} de {value["total"]}: {value["label"]}')
+            self.query_index = value['index']
+            self.summary = f'Consultando {value["index"]} de {value["total"]}'
+            self.results.set(value['index'], 'run', name=short_label(value['label']))
         elif name == 'total':
-            self.status.set(f'{value} página(s) en esta consulta.')
+            self.results.set(self.query_index, 'run', f'{value} página{"s" if value != 1 else ""}')
         elif name == 'progress':
-            self.tree.insert('', 'end', values=(value['registros'], value['archivo']))
-            self.tree.yview_moveto(1)
-        elif name == 'empty':
-            self.tree.insert('', 'end', values=(0, value['consulta'] + ' · sin registros, sin PDF'))
-            self.tree.yview_moveto(1)
+            self.query_files.setdefault(self.query_index, []).append(value['archivo'])
+            self.results.set(self.query_index, 'run', f'página {value.get("pagina", "")} · {value["registros"]}')
         elif name == 'evidence':
-            self.tree.insert('', 'end', values=(0, value['archivo']))
-            self.tree.yview_moveto(1)
+            self.query_files.setdefault(self.query_index, []).append(value['archivo'])
         elif name == 'query_done':
-            self.progress.step(1)
+            empty = value['estado'] == 'SIN_RESULTADOS'
+            detail = ('sin registros' + (' · sin PDF' if value.get('evidencia_omitida') else ' · PDF')
+                      if empty else f'{value["registros"]} registros')
+            self.results.set(self.query_index, 'skip' if empty else 'ok', detail)
         elif name == 'warning':
             self.status.set(value)
         elif name == 'done':
-            self.phase.set(
-                f'Listo: {value["queries"]} consultas · {value["files"]} XLS · {value["pdfs"]} pantallazos PDF · '
-                f'{value.get("empty", 0)} sin registros · '
-                f'{value["records"]} registros'
+            self.status.set('')
+            self.running = False
+            self.showing_results = True
+            self.summary = (
+                f'{value["queries"]} consultas · {value["records"]} registros · {value["files"]} XLS · '
+                f'{value["pdfs"]} PDF · {value.get("empty", 0)} sin registros'
             )
-            self.status.set('Lote terminado. Doble clic en un archivo para abrirlo.')
             self.root.bell()
         elif name == 'error':
-            self.phase.set('Detenido')
-            self.status.set(value)
+            if self.running:
+                self.running = False
+                self.showing_results = True
+                self.summary = 'Detenido'
+                if self.query_index:
+                    self.results.set(self.query_index, 'bad', 'detenida')
             if not self.quitting:
-                messagebox.showerror('SITFA Lite', value, parent=self.root)
+                self.window.banner.show(value, bad=True)
         elif name == 'idle':
             self.busy = False
+            if value == 'download' and self.running:
+                self.running = False
+                self.showing_results = True
         elif name == 'exit':
             self.root.destroy()
             return False
+        self.refresh()
         return True
 
     def poll(self):
@@ -799,12 +638,13 @@ class Application:
         linked = self.bridge.connected
         if linked != self.connected and not self.busy:
             self.connected = linked
-            if not linked and self.catalog is not None:
+            if linked:
+                self.load_catalog()
+            elif self.catalog is not None:
                 self.change_screen(initial=True)
-                self.status.set('Se perdió la conexión con Chrome. Abre de nuevo la conexión desde el icono SITFA Lite.')
-        self.link.set('● Conectado' if self.connected else '● Sin conexión')
-        self.link_label.configure(foreground='#15803d' if self.connected else '#b45309')
-        self.refresh()
+                self.window.banner.show('Se perdió la conexión con Chrome. Ábrela de nuevo desde el icono SITFA Lite.',
+                                        bad=True)
+            self.refresh()
         self.root.after(400, self.poll)
 
 

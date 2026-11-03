@@ -1,5 +1,5 @@
 ; Instalador autoinstalable de SITFA Lite. Compilar después de PyInstaller y de generar los manuales HTML:
-;   ISCC.exe "/DAppVersion=1.0.3" build\SITFA_Lite.iss
+;   ISCC.exe "/DAppVersion=1.1.0" build\SITFA_Lite.iss
 #ifndef AppVersion
   #error AppVersion es obligatoria: pasarla con /DAppVersion (app/version.py)
 #endif

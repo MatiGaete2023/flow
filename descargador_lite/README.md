@@ -1,5 +1,9 @@
 # SITFA Lite · Descargas RUS
 
+**1.1.0 (rama Rediseno):** consultas en la lista lateral, filtros como fichas, opciones que se cargan solas al
+conectar, período «Sin filtro / Por fecha» con calendario y avance por consulta. Los manuales ilustrados y videos de
+`docs/` muestran todavía la ventana 1.0.
+
 Versión liviana del descargador SITFA: solo descarga los XLS que produce RUS y guarda un pantallazo PDF cuando una consulta no tiene registros.
 
 - Seguimiento · Informe seguimiento: tribunales, pestañas (Espera, Cumplimiento, Informes, Egresados), modalidades, tipo de informe, filtro de medidas, fechas.
@@ -51,7 +55,7 @@ Manual en Windows (Python 3.12 x64 + Inno Setup 6):
 powershell -ExecutionPolicy Bypass -File build\build.ps1
 ```
 
-Resultado: `dist\Instalar_SITFA_Lite_1.0.3.exe` y `dist\Instalar_SITFA_Lite_1.0.3.sha256`.
+Resultado: `dist\Instalar_SITFA_Lite_1.1.0.exe` y `dist\Instalar_SITFA_Lite_1.1.0.sha256`.
 
 La versión vive en `app/version.py` y debe coincidir con `extension/manifest.json` (el build lo comprueba).
 

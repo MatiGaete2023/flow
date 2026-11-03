@@ -53,11 +53,12 @@ def lote(tmp_path):
 def test_requires_source_and_valid_date(ventana):
     app, shown = ventana
     app.start()
-    assert shown[-1][1][1] == 'Agrega al menos un lote de registros.'
+    assert app.window.banner.text.get() == 'Agrega al menos un lote de registros.'
     app.sources = ['x']
     app.cutoff.set('2026-13-01')
     app.start()
-    assert 'AAAA-MM-DD' in shown[-1][1][1]
+    assert 'AAAA-MM-DD' in app.window.banner.text.get()
+    assert not shown
 
 
 def test_generates_and_lists_lot_tribunals(ventana, tmp_path, monkeypatch):
@@ -65,15 +66,18 @@ def test_generates_and_lists_lot_tribunals(ventana, tmp_path, monkeypatch):
     source = lote(tmp_path)
     monkeypatch.setattr(Meta4.filedialog, 'askdirectory', lambda **k: str(source))
     app.pick_source()
-    assert app.courts.get(0, 'end') == ('LAJA',)
+    assert tuple(app.courts.buttons) == ('LAJA',) and app.courts.get() == ('LAJA',)
+    assert app.lots.item('0', 'values')[1] == '1 lote · bitácoras ✓'
     app.cutoff.set(date(2026, 10, 16).isoformat())
     app.folder.set(str(tmp_path / 'salidas'))
-    app.courts.selection_set(0)
     app.start()
     esperar(app)
-    assert shown[-1][0] == 'showinfo', shown[-1]
-    assert 'PARCIAL: LAJA' in app.status.get()
-    assert (Path(app.output) / 'META 4 - actualizado 2026-10 - parcial.xlsx').is_file()
+    assert not app.warnings, app.warnings
+    assert 'todos los tribunales' in app.status.get()
+    assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()
+    app.courts.toggle_all()
+    app.start()
+    assert 'al menos un tribunal' in app.window.banner.text.get()
 
 
 def test_generation_error_is_shown_without_output(ventana, tmp_path):
@@ -85,8 +89,8 @@ def test_generation_error_is_shown_without_output(ventana, tmp_path):
     app.folder.set(str(tmp_path / 'salidas'))
     app.start()
     esperar(app)
-    assert shown[-1][0] == 'showerror' and 'Faltan bitácoras' in shown[-1][1][1]
-    assert app.output is None
+    assert 'Faltan bitácoras' in app.window.banner.text.get()
+    assert app.output is None and not shown
 
 
 def test_adds_several_lots_and_generates_one_meta4(ventana, tmp_path, monkeypatch):
@@ -95,10 +99,10 @@ def test_adds_several_lots_and_generates_one_meta4(ventana, tmp_path, monkeypatc
     for path in lotes + [lotes[0]]:
         monkeypatch.setattr(Meta4.filedialog, 'askdirectory', lambda _p=path, **k: str(_p))
         app.pick_source()
-    assert app.lots.size() == 4 and '4 lote(s)' in app.lots_info.get()
-    app.lots.selection_set(3)
+    assert len(app.lots.get_children()) == 4 and '4 lote(s)' in app.lots_info
+    app.lots.selection_set('3')
     app.remove_sources()
-    assert app.lots.size() == 3
+    assert len(app.lots.get_children()) == 3
     app.set_sources(lotes)
     app.diaries.set(str(diaries))
     app.cutoff.set('2026-10-16')
@@ -106,7 +110,8 @@ def test_adds_several_lots_and_generates_one_meta4(ventana, tmp_path, monkeypatc
     app.start()
     esperar(app)
     # Las bitácoras ficticias no declaran lectura COMPLETA: el aviso es el esperado.
-    assert shown[-1][0] == 'showwarning' and 'no quedó COMPLETA' in shown[-1][1][1], shown[-1]
+    assert 'La lectura de bitácoras no quedó COMPLETA.' in app.warnings
+    assert app.notices.tree.get_children() and not shown
     assert 'Generados 5 registros de 4 lote(s)' in app.status.get()
     assert (Path(app.output) / 'META 4 - actualizado 2026-10.xlsx').is_file()
 

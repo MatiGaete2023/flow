@@ -1,4 +1,4 @@
-# Meta 4 · Registros y bitácoras — 2.5.1
+# Meta 4 · Registros y bitácoras — 2.6.0
 
 Genera la planilla Meta 4 y sus consolidados **a partir de lo que ya descargó el Descargador SITFA**. Esta herramienta no se conecta a SITFA ni a RUS, no usa extensión de Chrome ni abre puertos: solo lee carpetas locales.
 
@@ -88,6 +88,11 @@ python -m pytest tests -q
 ```
 
 Las pruebas usan exclusivamente identidades y datos ficticios.
+
+## Cambios 2.6.0
+
+- Ventana rediseñada: lotes con detección de bitácoras por lote, tribunales como fichas (todas marcadas = todos),
+  corte y un solo botón; avisos en la ventana en vez de cuadros emergentes. Generar y regenerar no cambian.
 
 ## Cambios 2.5.1
 

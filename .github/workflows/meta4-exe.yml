@@ -3,7 +3,7 @@ name: Meta 4 Windows
 on:
   workflow_dispatch:
   push:
-    branches: ['Meta4']
+    branches: ['Meta4', 'Rediseno']
 permissions:
   contents: read
 jobs:
@@ -37,7 +37,7 @@ jobs:
           if (-not (Test-Path dist/Meta4/Meta4.exe)) { throw 'Falta Meta4.exe' }
           # Un módulo propio que PyInstaller no encontró dejaría un EXE que falla al abrir.
           $warn = Get-Content build/Meta4/warn-Meta4.txt -Raw
-          foreach ($mod in 'meta4_bitacoras', 'generate_meta4', 'lector_excel', 'nurus') {
+          foreach ($mod in 'meta4_bitacoras', 'generate_meta4', 'lector_excel', 'nurus', 'flowkit') {
             if ($warn -match "missing module named '?$mod") { throw "PyInstaller no encontró $mod" }
           }
           Copy-Item LEEME.md, ORIGEN_COMPONENTES.txt, VERIFICACION.txt dist/Meta4/

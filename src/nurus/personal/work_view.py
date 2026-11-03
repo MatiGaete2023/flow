@@ -130,7 +130,7 @@ def build(app):
     ).pack(side='left', padx=(0, 5))
     view_button(
         bar,
-        text='Actualizar Excel · F5',
+        text='Actualizar Excel',
         width=145,
         fg_color='transparent',
         border_width=1,
@@ -286,12 +286,10 @@ def build(app):
     view_button(
         footer, text='Ampliar / reducir editor', width=160, fg_color='transparent', border_width=1, command=maximize
     ).pack(side='left')
-    view_button(footer, text='Guardar local · Ctrl+S', width=150, command=lambda: app._guard(app._save_session)).pack(
-        side='right'
-    )
+    view_button(footer, text='Guardar', width=150, command=lambda: app._guard(app._save_session)).pack(side='right')
     view_button(
         footer,
-        text='Aplicar · Ctrl+Enter',
+        text='Aplicar',
         width=135,
         fg_color='transparent',
         border_width=1,

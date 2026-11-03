@@ -65,7 +65,7 @@ def build(app):
     def group(title, line=1):
         frame = ui.Frame(lines[line])
         frame.pack(side='left', fill='y', padx=(0, 14))
-        ui.Label(frame, text=title, text_color=ui.MUTED).pack(anchor='w')
+        # El título del grupo es solo una clave interna: el orden de los botones ya dice el paso.
         row = ui.Frame(frame)
         row.pack(anchor='w')
         app.resolution_groups[title] = row
@@ -197,7 +197,6 @@ def build(app):
     view_button(text, text='Vista PDF del Word generado', command=lambda: app._guard(lambda: preview(app))).pack(
         anchor='w', pady=4
     )
-    ui.Label(text, text='Texto editable · revisa el formato final en Word', text_color=ui.MUTED).pack(anchor='w')
     app.project_editor = ui.Textbox(text, wrap='word', height=18, font=('Segoe UI', 11), undo=True)
     app.project_editor.pack(fill='both', expand=True)
     app.project_review_status = tk.StringVar()

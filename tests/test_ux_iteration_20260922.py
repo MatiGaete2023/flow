@@ -107,7 +107,7 @@ def test_ui_source_keeps_secondary_actions_and_exposes_requested_hierarchy():
     app = plano('src/nurus/personal/app_base.py')
     mail = plano('src/nurus/personal/mail_view.py')
     work = plano('src/nurus/personal/work_view.py')
-    assert 'ActualizarExcel·F5' in work
+    assert "text='ActualizarExcel'" in work  # El atajo F5 vive en la paleta Ctrl+K, no en el botón.
     resolutions = plano('src/nurus/personal/resolution_view.py')
     assert 'GenerarWord' in resolutions and 'Preparar/actualizarproyectos' in resolutions
     assert 'Guardarborradores' in mail and 'Guardareste' in mail and 'Preparartodos' in mail

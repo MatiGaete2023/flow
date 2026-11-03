@@ -39,3 +39,4 @@ def apply(root, choice):
 
     root.configure(background=background)
     visit(root)
+    return palette

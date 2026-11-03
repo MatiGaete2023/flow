@@ -28,7 +28,7 @@ from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-VERSION = '2.5.1'
+VERSION = '2.6.0'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
 EXTRA = ['ETAPA ÚLTIMA OBS.', 'CONTROL BITÁCORA', 'ALERTA']
 VERIFICADA = 'VERIFICADA EN EL PERÍODO'

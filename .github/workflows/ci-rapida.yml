@@ -1,7 +1,7 @@
 name: CI rápida Linux
 on:
   push:
-    branches: ['Integral', main]
+    branches: ['Integral', 'Rediseno', main]
   pull_request:
     branches: ['Integral', main]
   workflow_dispatch:

@@ -1,17 +1,18 @@
-"""Ventana de generación de Meta 4 desde las carpetas del Descargador SITFA.
-
-No se conecta a SITFA ni a RUS: solo lee lotes ya descargados."""
+"""Ventana de Meta 4: lotes del Descargador → planilla Meta 4. No se conecta a SITFA ni a RUS."""
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'scripts'))
-from meta4_bitacoras import BASE, buscar_archivos, fecha_lectura, generar, meta, raices, regenerar, tribunales_disponibles
-from datetime import date, datetime
-import os
-import queue
-import threading
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from meta4_bitacoras import (  # noqa: E402
+    BASE, archivos_bitacoras, buscar_archivos, fecha_lectura, generar, meta, raices, regenerar, tribunales_disponibles,
+)
+from datetime import date, datetime  # noqa: E402
+import os  # noqa: E402
+import queue  # noqa: E402
+import threading  # noqa: E402
+import tkinter as tk  # noqa: E402
+from tkinter import ttk, filedialog, messagebox  # noqa: E402,F401
 
+import flowkit as ui  # noqa: E402
 
 EXCEL_RUTA_MAXIMA = 218
 
@@ -28,9 +29,6 @@ def nueva_salida(folder, sufijo=''):
 class App:
     def __init__(self, root):
         self.root = root
-        root.title('Meta 4 · Registros y bitácoras')
-        root.geometry('820x820')
-        root.minsize(720, 720)
         self.events = queue.Queue()
         self.busy = False
         self.output = None
@@ -38,100 +36,99 @@ class App:
         self.diaries = tk.StringVar()
         self.folder = tk.StringVar(value=str(BASE / 'Salidas'))
         self.cutoff = tk.StringVar(value=date.today().isoformat())
-        self.status = tk.StringVar(value='Agrega los lotes de registros y las bitácoras descargadas con el Descargador SITFA.')
-        frame = ttk.Frame(root, padding=24)
-        frame.pack(fill='both', expand=True)
-        ttk.Label(frame, text='Meta 4', font=('Segoe UI', 24, 'bold')).pack(anchor='w')
-        ttk.Label(frame, text='Espera y Cumplimiento · FAE y Residencia · Bitácoras del último mes').pack(anchor='w', pady=(0, 16))
-
-        box = ttk.LabelFrame(frame, text='1. Carpetas del Descargador', padding=12)
-        box.pack(fill='x')
-        ttk.Label(box, text='Lotes de registros (cada uno con resumen.json). Se combinan en un solo Meta 4:').pack(anchor='w')
-        line = ttk.Frame(box)
-        line.pack(fill='x', pady=(4, 0))
-        self.lots = tk.Listbox(line, height=5, selectmode='extended', exportselection=False)
-        self.lots.pack(side='left', fill='x', expand=True)
-        buttons = ttk.Frame(line)
-        buttons.pack(side='left', padx=(8, 0), anchor='n')
-        ttk.Button(buttons, text='Agregar…', command=self.pick_source).pack(fill='x')
-        ttk.Button(buttons, text='Quitar', command=self.remove_sources).pack(fill='x', pady=4)
-        ttk.Button(buttons, text='Vaciar', command=lambda: self.set_sources([])).pack(fill='x')
-        self.lots_info = tk.StringVar(value='Ej.: FAE Espera, FAE Cumplimiento, Residencia Espera, Residencia Cumplimiento. '
-                                            'También sirve una carpeta que contenga varios lotes.')
-        ttk.Label(box, textvariable=self.lots_info, wraplength=740).pack(anchor='w', pady=(4, 8))
-        self.folder_row(box, 'Bitácoras (bitacoras.json y HTML):', self.diaries, self.pick_diaries)
-        ttk.Label(box, text='Si las bitácoras están dentro de las carpetas de registros, deja este campo vacío.').pack(anchor='w')
-
-        box = ttk.LabelFrame(frame, text='2. Tribunales', padding=12)
-        box.pack(fill='both', expand=True, pady=(12, 0))
-        self.courts = tk.Listbox(box, selectmode='extended', exportselection=False, height=6)
-        self.courts.pack(fill='both', expand=True)
+        self.status = tk.StringVar()
+        self.window = ui.Window(root, 'Meta 4', 'Generar Meta 4', self.start, size='820x600', minsize=(680, 480))
+        top = self.window.top
+        top.add('Agregar lote…', self.pick_source)
+        top.add('Quitar lote elegido', self.remove_sources)
+        top.add('Vaciar', lambda: self.set_sources([]))
+        top.add('Bitácoras en otra carpeta…', self.pick_diaries, separator=True)
+        top.add('Destino de resultados…', self.destination)
+        top.add('Regenerar desde Registros revisado…', self.start_regenerate, separator=True)
+        top.add('Abrir resultados', self.open_output)
+        self.add_button = self.window.footer.add('Agregar lote…', self.pick_source)
+        self.generate = self.window.footer.primary
+        form = ui.Form(self.window.body, key_width=11, padding=(16, 14))
+        form.pack(fill='both', expand=True)
+        self.lots = form.row('Lotes', self._lots_view)
+        self.courts = form.row('Tribunales', lambda p: ui.Chips(p, command=self.refresh))
+        self.cutoff_entry = form.row('Corte', lambda p: ttk.Entry(p, textvariable=self.cutoff, width=12))
+        self.notices = form.row('Avisos', lambda p: ui.ProgressList(p, height=5), name='avisos')
+        self.notices.bar.pack_forget()
+        form.show('avisos', False)
+        self.form = form
         self.fill_courts(meta.TRIBUNALS)
-        line = ttk.Frame(box)
-        line.pack(fill='x', pady=(6, 0))
-        ttk.Label(line, text='Sin selección se incluyen todos. Con selección, la planilla se marca como parcial.').pack(side='left')
-        ttk.Button(line, text='Todos', command=lambda: self.courts.selection_clear(0, 'end')).pack(side='right')
-
-        box = ttk.LabelFrame(frame, text='3. Período y destino', padding=12)
-        box.pack(fill='x', pady=12)
-        line = ttk.Frame(box)
-        line.pack(fill='x')
-        ttk.Label(line, text='Fecha de corte (AAAA-MM-DD):').pack(side='left')
-        ttk.Entry(line, textvariable=self.cutoff, width=16).pack(side='left', padx=8)
-        self.folder_row(box, 'Destino de resultados:', self.folder, self.destination)
-
-        line = ttk.Frame(frame)
-        line.pack(fill='x')
-        self.generate = ttk.Button(line, text='Generar Meta 4', command=self.start)
-        self.generate.pack(side='left')
-        self.regenerate = ttk.Button(line, text='Regenerar desde Registros revisado…', command=self.start_regenerate)
-        self.regenerate.pack(side='left', padx=(8, 0))
-        ttk.Button(line, text='Abrir resultados', command=self.open_output).pack(side='right')
-        ttk.Label(frame, textvariable=self.status, wraplength=760).pack(fill='x', pady=12)
+        self.cutoff.trace_add('write', lambda *_: self.refresh())
+        self.status.trace_add('write', self._status_changed)
+        self.refresh()
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.poll)
 
-    @staticmethod
-    def folder_row(parent, label, variable, command):
-        line = ttk.Frame(parent)
-        line.pack(fill='x', pady=(0, 8))
-        ttk.Label(line, text=label, width=34).pack(side='left')
-        ttk.Entry(line, textvariable=variable).pack(side='left', fill='x', expand=True)
-        ttk.Button(line, text='Elegir…', command=command).pack(side='left', padx=(8, 0))
+    def _lots_view(self, parent):
+        tree = ttk.Treeview(parent, columns=('lote', 'detalle'), show='', height=5, selectmode='extended')
+        tree.column('lote', width=380)
+        tree.column('detalle', width=200, anchor='e')
+        tree.tag_configure('falta', foreground=ui.PALETTE['warn'])
+        tree.tag_configure('vacio', foreground=ui.PALETTE['muted'])
+        return tree
+
+    def _status_changed(self, *_):
+        text = self.status.get()
+        self.window.banner.show(text) if text else self.window.banner.hide()
 
     def emit(self, name, value):
         self.events.put((name, value))
 
     def fill_courts(self, names):
-        self.courts.delete(0, 'end')
-        for name in names:
-            self.courts.insert('end', name)
+        names = list(names)
+        self.courts.set_options([(n, n.title()) for n in names], selected=names)
+
+    def selected_courts(self):
+        chosen = list(self.courts.get())
+        return None if len(chosen) == len(self.courts.buttons) else chosen
+
+    def refresh(self):
+        lots = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
+        courts = self.courts.get()
+        partial = '' if len(courts) == len(self.courts.buttons) else ' (parcial)'
+        summary = f'{lots} lote{"s" if lots != 1 else ""} · {len(courts)} tribunal{"es" if len(courts) != 1 else ""}{partial} · corte {self.cutoff.get()}'
+        self.window.footer.set(summary if self.sources else '', enabled=bool(self.sources and courts) and not self.busy)
 
     def set_sources(self, paths):
         self.sources = [str(p) for p in raices(paths)]
-        self.lots.delete(0, 'end')
-        for path in self.sources:
-            self.lots.insert('end', path)
+        self.lots.delete(*self.lots.get_children())
+        external = bool(self.diaries.get().strip())
+        for index, path in enumerate(self.sources):
+            found = len(buscar_archivos(raices([path]), 'resumen.json'))
+            diaries = external or bool(archivos_bitacoras(path))
+            detail = f'{found} lote{"s" if found != 1 else ""} · ' + ('bitácoras ✓' if diaries else 'faltan bitácoras')
+            tag = 'vacio' if not found else ('' if diaries else 'falta')
+            self.lots.insert('', 'end', iid=str(index), values=(Path(path).name, detail), tags=(tag,))
         # Solo los tribunales consultados en los lotes; sin resumen.json, todos.
         self.fill_courts(tribunales_disponibles(self.sources) or meta.TRIBUNALS)
-        found = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
-        self.lots_info.set(f'{len(self.sources)} carpeta(s) · {found} lote(s) del Descargador encontrados.')
+        self.refresh()
+
+    @property
+    def lots_info(self):
+        lots = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
+        return f'{len(self.sources)} carpeta(s) · {lots} lote(s)'
 
     def pick_source(self):
-        path = filedialog.askdirectory(title='Lote de registros del Descargador (o carpeta con varios lotes)', mustexist=True)
+        path = filedialog.askdirectory(title='Lote del Descargador (o carpeta con varios lotes)', mustexist=True)
         if path:
             self.set_sources(self.sources + [path])
             if not self.diaries.get():
                 self.suggest_cutoff(self.sources)
 
     def remove_sources(self):
-        chosen = set(self.lots.curselection())
+        chosen = {int(i) for i in self.lots.selection()}
         self.set_sources([p for i, p in enumerate(self.sources) if i not in chosen])
 
     def pick_diaries(self):
         path = filedialog.askdirectory(title='Carpeta de bitácoras del Descargador', mustexist=True)
         if path:
             self.diaries.set(path)
+            self.set_sources(self.sources)
             self.suggest_cutoff(path)
 
     def suggest_cutoff(self, path):
@@ -139,10 +136,10 @@ class App:
         day = fecha_lectura(path)
         if day and day < date.today():
             self.cutoff.set(day.isoformat())
-            self.status.set(f'Fecha de corte ajustada al día de lectura de las bitácoras: {day:%d-%m-%Y}.')
+            self.status.set(f'Corte ajustado al día de lectura de las bitácoras: {day:%d-%m-%Y}.')
 
     def destination(self):
-        path = filedialog.askdirectory(title='Carpeta de destino')
+        path = filedialog.askdirectory(title='Destino de resultados')
         if path:
             self.folder.set(path)
 
@@ -155,10 +152,14 @@ class App:
             raise ValueError('La fecha de corte no puede estar en el futuro.')
         if not self.sources:
             raise ValueError('Agrega al menos un lote de registros.')
+        if not self.courts.get():
+            raise ValueError('Marca al menos un tribunal.')
         source = [Path(p) for p in self.sources]
         diaries = Path(self.diaries.get()).expanduser() if self.diaries.get().strip() else None
-        courts = [self.courts.get(i) for i in self.courts.curselection()] or None
-        return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve(), courts
+        return cutoff, source, diaries, Path(self.folder.get()).expanduser().resolve(), self.selected_courts()
+
+    def fail(self, text):
+        self.window.banner.show(text, bad=True)
 
     def start(self):
         if self.busy:
@@ -166,7 +167,7 @@ class App:
         try:
             cutoff, source, diaries, folder, courts = self.parameters()
         except ValueError as exc:
-            messagebox.showerror('Revisar datos', str(exc))
+            self.fail(str(exc))
             return
         output = nueva_salida(folder)
         self.run(output, lambda: generar(source, output, cutoff, bitacoras=diaries, tribunales=courts),
@@ -184,8 +185,9 @@ class App:
 
     def run(self, output, task, message):
         self.busy = True
-        self.generate.configure(state='disabled')
-        self.regenerate.configure(state='disabled')
+        self.generate.state(['disabled'])
+        self.add_button.state(['disabled'])
+        self.form.show('avisos', False)
         self.status.set(message)
 
         def run():
@@ -207,49 +209,54 @@ class App:
                 break
             if name == 'idle':
                 self.busy = False
-                self.generate.configure(state='normal')
-                self.regenerate.configure(state='normal')
+                self.add_button.state(['!disabled'])
+                self.refresh()
             elif name == 'error':
-                self.status.set('El proceso requiere revisión.')
-                messagebox.showerror('Meta 4', value)
+                self.status.set('')
+                self.fail(value)
             elif name == 'complete':
-                self.output, report = value
-                lectura = ', '.join(report['lectura_bitacoras'])
-                alcance = 'todos los tribunales' if report['tribunales'] == 'TODOS' else 'PARCIAL: ' + ', '.join(report['tribunales'])
-                lotes = len(report['lotes_registros'])
-                text = ('Regenerado desde Registros revisado. ' if report.get('regenerado_desde') else '') + (f"Generados {report['registros']} registros" + (f' de {lotes} lote(s)' if lotes else '') +
-                        f" ({alcance}). Alertas: {report['alertas']}. "
-                        f"Revisar bitácoras: {report['revision_bitacora']}. Lectura de bitácoras: {lectura}.")
-                warnings = []
-                if lectura != 'COMPLETA':
-                    warnings.append('La lectura de bitácoras no quedó COMPLETA.')
-                if report['consultas_sin_bitacoras']:
-                    warnings.append(f"{len(report['consultas_sin_bitacoras'])} consulta(s) sin bitácoras: "
-                                    + '; '.join(report['consultas_sin_bitacoras'][:5]))
-                if report['excluidos_meta4']:
-                    warnings.append(f"{report['excluidos_meta4']} registro(s) quedaron fuera de META 4 porque su "
-                                    'columna TRIBUNAL no identifica un tribunal (ver ERRORES_Y_ADVERTENCIAS).')
-                warnings.extend(report['avisos_bitacoras'])
-                warnings.extend('Lote con filtros: ' + f for f in report['filtros_registros'])
-                longest = max((len(str(p)) for p in Path(self.output).iterdir()), default=0)
-                if longest > EXCEL_RUTA_MAXIMA:
-                    warnings.append(f'La ruta de los archivos tiene {longest} caracteres: Excel podría no abrirlos '
-                                    f'(máximo {EXCEL_RUTA_MAXIMA}). Usa una carpeta de destino más corta.')
-                self.status.set(text)
-                if warnings:
-                    messagebox.showwarning('Archivos generados con avisos', text + '\n\n' + '\n'.join(warnings)
-                                           + '\n\nLas filas afectadas quedan en amarillo.\n\n' + self.output)
-                else:
-                    messagebox.showinfo('Archivos generados', text + '\n\n' + self.output)
+                self.complete(*value)
         self.root.after(100, self.poll)
+
+    def complete(self, output, report):
+        self.output = output
+        lectura = ', '.join(report['lectura_bitacoras'])
+        alcance = 'todos los tribunales' if report['tribunales'] == 'TODOS' else 'PARCIAL: ' + ', '.join(report['tribunales'])
+        lotes = len(report['lotes_registros'])
+        text = ('Regenerado desde Registros revisado. ' if report.get('regenerado_desde') else '') + (
+            f"Generados {report['registros']} registros" + (f' de {lotes} lote(s)' if lotes else '')
+            + f" ({alcance}). Alertas: {report['alertas']}. Revisar bitácoras: {report['revision_bitacora']}.")
+        warnings = []
+        if lectura != 'COMPLETA':
+            warnings.append('La lectura de bitácoras no quedó COMPLETA.')
+        if report['consultas_sin_bitacoras']:
+            warnings.append(f"{len(report['consultas_sin_bitacoras'])} consulta(s) sin bitácoras: "
+                            + '; '.join(report['consultas_sin_bitacoras'][:5]))
+        if report['excluidos_meta4']:
+            warnings.append(f"{report['excluidos_meta4']} registro(s) fuera de META 4: su columna TRIBUNAL no "
+                            'identifica un tribunal (ver ERRORES_Y_ADVERTENCIAS).')
+        warnings.extend(report['avisos_bitacoras'])
+        warnings.extend('Lote con filtros: ' + f for f in report['filtros_registros'])
+        longest = max((len(str(p)) for p in Path(output).iterdir()), default=0)
+        if longest > EXCEL_RUTA_MAXIMA:
+            warnings.append(f'La ruta de los archivos tiene {longest} caracteres: Excel podría no abrirlos '
+                            f'(máximo {EXCEL_RUTA_MAXIMA}). Usa un destino más corto.')
+        self.warnings = warnings
+        self.notices.clear()
+        for number, warning in enumerate(warnings, 1):
+            self.notices.set(number, 'warn', name=warning)
+        self.form.show('avisos', bool(warnings))
+        self.status.set(text)
+        self.window.banner.show(text + (' Las filas afectadas quedan en amarillo.' if warnings else ''),
+                                action=self.open_output, action_text='Abrir resultados')
 
     def open_output(self):
         if not self.output:
-            messagebox.showinfo('Resultados', 'Todavía no hay resultados en esta sesión.')
+            self.status.set('Todavía no hay resultados en esta sesión.')
         elif sys.platform == 'win32':
             os.startfile(self.output)
         else:
-            messagebox.showinfo('Resultados', self.output)
+            self.status.set(self.output)
 
     def close(self):
         if self.busy:

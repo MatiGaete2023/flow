@@ -1,71 +1,63 @@
-"""Humo de la ventana con un Tkinter simulado (la prueba con pantalla real está en test_engine)."""
+"""Ventana real con datos ficticios. Se omite sin pantalla (en Linux: xvfb-run)."""
 
-import importlib
+import os
 import sys
 import time
-from types import ModuleType
-from unittest.mock import MagicMock
 
 import pytest
 
 from conftest import make_xlsx
 
+tk = pytest.importorskip("tkinter")
+if sys.platform != "win32" and not os.environ.get("DISPLAY"):
+    pytest.skip("Sin pantalla para Tk.", allow_module_level=True)
 
-class Var:
-    def __init__(self, value=None, **_):
-        self.value = value
-
-    def get(self):
-        return self.value
-
-    def set(self, value):
-        self.value = value
+from anonimizador_csmp import gui  # noqa: E402
 
 
 @pytest.fixture
-def gui(monkeypatch):
-    tk, ttk, dialog = ModuleType("tkinter"), ModuleType("tkinter.ttk"), ModuleType("tkinter.filedialog")
-    tk.StringVar = tk.BooleanVar = Var
-    tk.Tk, tk.Listbox, tk.Text = MagicMock(), MagicMock(), MagicMock()
-    for name in ("Frame", "Label", "Button", "Radiobutton", "Checkbutton", "Entry", "LabelFrame", "Progressbar"):
-        setattr(ttk, name, MagicMock())
-    dialog.askopenfilenames = dialog.askdirectory = MagicMock(return_value=())
-    tk.ttk, tk.filedialog = ttk, dialog
-    monkeypatch.setitem(sys.modules, "tkinter", tk)
-    monkeypatch.setitem(sys.modules, "tkinter.ttk", ttk)
-    monkeypatch.setitem(sys.modules, "tkinter.filedialog", dialog)
-    sys.modules.pop("anonimizador_csmp.gui", None)
-    module = importlib.import_module("anonimizador_csmp.gui")
-    yield module
-    sys.modules.pop("anonimizador_csmp.gui", None)
+def app():
+    root = tk.Tk()
+    root.withdraw()
+    window = gui.App(root)
+    yield window
+    root.destroy()
 
 
-def test_sin_entradas_avisa(gui):
-    app = gui.App(MagicMock())
+def esperar(app):
+    deadline = time.monotonic() + 30
+    while app.busy and time.monotonic() < deadline:
+        app.root.update()
+        time.sleep(0.05)
+
+
+def test_sin_entradas_avisa(app):
     app.start()
     assert "al menos un archivo" in app.status.get()
+    assert app.window.banner.visible
+    assert app.go.instate(["disabled"])
 
 
-def test_proceso_completo_en_hilo(gui, tmp_path):
-    app = gui.App(MagicMock())
+def test_proceso_completo_en_hilo(app, tmp_path):
     app.inputs = [make_xlsx(tmp_path / "a.xlsx", [["RIT", "NOMBRE"], ["P-1-2026", "Ana Díaz"]])]
     app.out_dir.set(str(tmp_path / "salida"))
+    assert "1 entrada · copia en la carpeta elegida" == app.window.footer.summary.get()
+    assert app.go.instate(["!disabled"])
     app.start()
-    deadline = time.monotonic() + 20
-    while time.monotonic() < deadline:
-        if not app.events.empty():
-            break
-        time.sleep(0.05)
-    app.root.after = MagicMock()
-    while not app.events.empty():
-        app.poll()
+    esperar(app)
     assert "1 copia(s) creada(s)" in app.status.get()
     assert list((tmp_path / "salida").glob("*.xlsx"))
+    assert app.list.done == 1 and "INFORME DE ANONIMIZACIÓN" in app.report
 
 
-def test_dias_invalidos(gui):
-    app = gui.App(MagicMock())
+def test_dias_invalidos(app):
     app.inputs = ["x"]
     app.shift.set("abc")
     app.start()
     assert "número entero" in app.status.get()
+
+
+def test_modo_desde_la_barra(app):
+    app.modes.set(["conservador"])
+    app.modes._changed()
+    assert app.mode.get() == "conservador"

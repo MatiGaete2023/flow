@@ -200,13 +200,13 @@ class Application:
         self.last_diary_manifest = None
         self.prefs = Preferences(preferences_path, memory=not start_worker and preferences_path is None)
         self.recovery = None
-        self.context = tk.StringVar(value='Sin lote activo')
+        self.context = tk.StringVar(value='')
         self.query_index = 0
         self.query_total = 0
         self.result_windows = []
         self.last_package = None
-        self.phase_name = tk.StringVar(value='Listo para preparar una consulta')
-        self.progress_detail = tk.StringVar(value='Sin operación en curso')
+        self.phase_name = tk.StringVar(value='')
+        self.progress_detail = tk.StringVar(value='')
         self.result_notice = tk.StringVar()
         self._phase_started = None
         self._pause_started = None
@@ -242,17 +242,20 @@ class Application:
         self.code = tk.StringVar(value=self.bridge.connection_code)
         self.status = tk.StringVar(value='Abre tu Chrome, entra a Seguimiento y conecta la extensión local.')
         self.preview = tk.StringVar(value='Carga las opciones de tu sesión para preparar el lote.')
-        self.count = tk.StringVar(value='Sin descargas en este lote')
+        self.count = tk.StringVar(value='')
         root.title(f'Descargador SITFA · {VERSION} integral · CSMP y bitácoras')
-        menu = tk.Menu(root)
-        root.configure(menu=menu)
+        from flowkit import TopBar
+
+        self.topbar = TopBar(root, 'Descargador SITFA')
+        self.topbar.pack(side='top', fill='x')
+        tools = self.topbar.menu
         self.theme = tk.StringVar(value=self.prefs.data.get('tema', 'Sistema'))
-        appearance = tk.Menu(menu, tearoff=False)
-        menu.add_cascade(label='Apariencia', menu=appearance)
-        for choice in ('Claro', 'Oscuro', 'Sistema'):
-            appearance.add_radiobutton(label=choice, variable=self.theme, value=choice, command=self.apply_theme)
-        tools = tk.Menu(menu, tearoff=False)
-        menu.add_cascade(label='Más opciones', menu=tools)
+        tools.add_command(label='Instalar extensión…', command=self.setup)
+        tools.add_command(label='Copiar código de conexión', command=self.copy_code)
+        tools.add_command(label='Recargar opciones de SITFA', command=lambda: self.enqueue('catalog'))
+        tools.add_command(label='Desconectar', command=lambda: self.enqueue('disconnect'))
+        tools.add_command(label='Carpeta de descarga…', command=self.browse)
+        tools.add_separator()
         for label, command in [
             ('Guardar consulta favorita…', self.save_favorite),
             ('Elegir favorita…', self.choose_favorite),
@@ -266,6 +269,11 @@ class Application:
         tools.add_command(label='Pausa entre consultas…', command=self.configure_pause)
         self.sound = tk.BooleanVar(value=self.prefs.data['aviso_sonoro'])
         tools.add_checkbutton(label='Aviso sonoro al terminar', variable=self.sound, command=self.save_preferences)
+        tools.add_separator()
+        appearance = tk.Menu(tools, tearoff=False)
+        tools.add_cascade(label='Apariencia', menu=appearance)
+        for choice in ('Claro', 'Oscuro', 'Sistema'):
+            appearance.add_radiobutton(label=choice, variable=self.theme, value=choice, command=self.apply_theme)
         root.geometry(f'1000x{min(900, max(600, root.winfo_screenheight() - 120))}')
         root.minsize(880, 600)
         root.protocol('WM_DELETE_WINDOW', self.close_app)
@@ -300,12 +308,9 @@ class Application:
             ),
         )
         body.columnconfigure(0, weight=1)
-        ttk.Label(body, text='Descargas de SITFA', style='Title.TLabel').grid(row=0, column=0, sticky='w')
-        ttk.Label(body, text='Tribunales a elección · una o todas las modalidades · todas las páginas').grid(
-            row=1, column=0, sticky='w', pady=(3, 15)
-        )
-        connect = ttk.LabelFrame(body, text='1. Tu Chrome habitual', padding=12)
+        connect = ttk.LabelFrame(body, text='Conecta tu Chrome', padding=12)
         connect.grid(row=2, column=0, sticky='ew', pady=(0, 12))
+        self.connect_box = connect
         connect.columnconfigure(0, weight=1)
         row = ttk.Frame(connect)
         row.grid(row=0, column=0, sticky='w')
@@ -313,31 +318,25 @@ class Application:
         self.open_button.pack(side='left', padx=(0, 8))
         self.setup_button = ttk.Button(row, text='Instalar extensión…', command=self.setup)
         self.setup_button.pack(side='left', padx=(0, 8))
+        # Cargar y desconectar viven en el menú «Más»; las opciones se cargan solas al conectar.
         self.load_button = ttk.Button(row, text='Cargar opciones', command=lambda: self.enqueue('catalog'))
-        self.load_button.pack(side='left', padx=(0, 8))
         self.disconnect_button = ttk.Button(row, text='Desconectar', command=lambda: self.enqueue('disconnect'))
-        self.disconnect_button.pack(side='left')
         code_row = ttk.Frame(connect)
         code_row.grid(row=1, column=0, sticky='ew', pady=(9, 3))
         code_row.columnconfigure(1, weight=1)
-        ttk.Label(code_row, text='Código de conexión:').grid(row=0, column=0, padx=(0, 8))
+        ttk.Label(code_row, text='Código').grid(row=0, column=0, padx=(0, 8))
         self.code_entry = ttk.Entry(code_row, textvariable=self.code, state='readonly')
         self.code_entry.grid(row=0, column=1, sticky='ew', padx=(0, 8))
-        self.copy_button = ttk.Button(code_row, text='Copiar código', command=self.copy_code)
+        self.copy_button = ttk.Button(code_row, text='Copiar', command=self.copy_code)
         self.copy_button.grid(row=0, column=2)
-        ttk.Label(
-            connect,
-            text='En Seguimiento, pulsa el icono de la extensión y pega este código. Mantén abierta su pestaña.',
-            wraplength=910,
-        ).grid(row=2, column=0, sticky='w', pady=(5, 0))
-        flow = ttk.Frame(connect)
-        flow.grid(row=3, column=0, sticky='ew', pady=(10, 0))
+        flow = ttk.Frame(body)
+        flow.grid(row=1, column=0, sticky='ew', pady=(0, 12))
         flow.columnconfigure(1, weight=1)
         ttk.Label(flow, text='Consulta:').grid(row=0, column=0, padx=(0, 8))
         self.screen_combo = ttk.Combobox(flow, textvariable=self.screen, values=tuple(SCREENS), state='disabled')
         self.screen_combo.grid(row=0, column=1, sticky='ew')
         self.screen_combo.bind('<<ComboboxSelected>>', lambda e: self.change_screen())
-        query = ttk.LabelFrame(body, text='2. Elige qué descargar', padding=12)
+        query = ttk.LabelFrame(body, text='Qué descargar', padding=12)
         query.grid(row=3, column=0, sticky='ew', pady=(0, 12))
         query.columnconfigure(0, weight=3)
         query.columnconfigure(1, weight=2)
@@ -364,18 +363,24 @@ class Application:
         self.report_combo.grid(row=3, column=1, sticky='ew', pady=(3, 8))
         extras = ttk.Frame(query)
         extras.grid(row=4, column=0, columnspan=2, sticky='ew', pady=(0, 8))
+        self.extras_box = extras
         self.state_combo = ttk.Combobox(extras, textvariable=self.order_state, width=20)
         self.month_combo = ttk.Combobox(extras, textvariable=self.month, width=16)
         self.year_combo = ttk.Combobox(extras, textvariable=self.year, width=8)
-        for label, combo in [
-            ('Estado de órdenes', self.state_combo),
-            ('Mes', self.month_combo),
-            ('Año', self.year_combo),
+        self.extra_fields = {}
+        for key, label, combo in [
+            ('litigantes', 'Estado de órdenes', self.state_combo),
+            ('calendario', 'Mes', self.month_combo),
+            ('calendario', 'Año', self.year_combo),
         ]:
-            ttk.Label(extras, text=label).pack(side='left', padx=(0, 6))
-            combo.pack(side='left', padx=(0, 16))
+            field = ttk.Frame(extras)
+            ttk.Label(field, text=label).pack(side='left', padx=(0, 6))
+            combo.pack(in_=field, side='left', padx=(0, 16))
+            field.pack(side='left')
+            self.extra_fields.setdefault(key, []).append(field)
         dates = ttk.Frame(query)
         dates.grid(row=5, column=0, columnspan=2, sticky='ew')
+        self.dates_box = dates
         self.date_check = ttk.Checkbutton(
             dates, text='Filtrar por fecha', variable=self.use_dates, command=self.refresh
         )
@@ -390,31 +395,19 @@ class Application:
             self.date_widgets.extend((entry, button))
         self.filter_check = ttk.Checkbutton(
             query,
-            text='Conservar los otros filtros preparados en SITFA (por ejemplo, litigante o centro)',
+            text='Conservar los otros filtros de SITFA',
             variable=self.keep_filters,
             command=self.refresh,
         )
         self.filter_check.grid(row=6, column=0, columnspan=2, sticky='w', pady=(9, 4))
-        quick = ttk.Frame(query)
-        quick.grid(row=9, column=0, columnspan=2, sticky='w', pady=6)
-        for label in ('Este mes', 'Mes anterior', 'Últimos 30 días'):
-            ttk.Button(quick, text=label, command=lambda label=label: self.quick_dates(label)).pack(
-                side='left', padx=(0, 6)
-            )
-        ttk.Label(
-            query,
-            text='Para una persona concreta, prepara sus filtros en SITFA y marca Conservar los otros filtros. Los calendarios usan mes y año.',
-            wraplength=910,
-        ).grid(row=7, column=0, columnspan=2, sticky='w')
+        # Sin botones de período rápido: el calendario de Desde/Hasta los cubre (pedido del usuario, 3-nov-2026).
         ttk.Label(query, textvariable=self.preview, style='Section.TLabel').grid(
             row=8, column=0, columnspan=2, sticky='w', pady=(9, 0)
         )
         destination = ttk.Frame(body)
         destination.grid(row=4, column=0, sticky='ew', pady=(0, 12))
         destination.columnconfigure(0, weight=1)
-        ttk.Label(destination, text='Carpeta de descarga · se creará una subcarpeta con fecha y hora').grid(
-            row=0, column=0, sticky='w'
-        )
+        ttk.Label(destination, text='Carpeta de descarga').grid(row=0, column=0, sticky='w')
         ttk.Entry(destination, textvariable=self.dest, state='readonly').grid(
             row=1, column=0, sticky='ew', padx=(0, 8), pady=(4, 0)
         )
@@ -440,14 +433,19 @@ class Application:
         self.pipeline_button.pack(side='left')
         self.package_consolidated = tk.BooleanVar(value=self.prefs.data['paquete_consolidado'])
         self.package_choice = ttk.Checkbutton(
-            top, text='Incluir XLSX consolidado', variable=self.package_consolidated, command=self.save_preferences
+            top,
+            text='XLSX consolidado',
+            variable=self.package_consolidated,
+            command=self.save_preferences,
+            style='Chip.Toolbutton',
         )
         self.package_choice.pack(side='left', padx=12)
         # EF-04: menos aperturas en SITFA; solo lecturas del mismo día y de menos de 12 h, con hash comprobado.
         self.reuse_diaries = tk.BooleanVar(value=self.prefs.data['reutilizar_bitacoras'])
         self.reuse_choice = ttk.Checkbutton(
             top,
-            text='Reutilizar bitácoras leídas hoy',
+            text='Reutilizar bitácoras de hoy',
+            style='Chip.Toolbutton',
             variable=self.reuse_diaries,
             command=self.save_preferences,
         )
@@ -456,43 +454,47 @@ class Application:
         self.read_calendars = tk.BooleanVar(value=self.prefs.data['leer_calendarios'])
         self.calendar_choice = ttk.Checkbutton(
             options,
-            text='Leer calendario de informes',
+            text='Calendario de informes',
+            style='Chip.Toolbutton',
             variable=self.read_calendars,
             command=self.save_preferences,
         )
-        self.calendar_choice.grid(row=0, column=0, sticky='w', padx=(0, 16), pady=1)
+        self.calendar_choice.grid(row=0, column=0, sticky='w', padx=(0, 6), pady=(0, 6))
         # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
         self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
         self.history_choice = ttk.Checkbutton(
             options,
-            text='Leer también la historia de la causa (prueba)',
+            text='Historia de la causa (prueba)',
+            style='Chip.Toolbutton',
             variable=self.read_history,
             command=self.toggle_history,
         )
-        self.history_choice.grid(row=0, column=1, sticky='w', pady=1)
+        self.history_choice.grid(row=0, column=1, sticky='w', padx=(0, 6), pady=(0, 6))
         self.history_in_package = tk.BooleanVar(value=self.prefs.data['historia_en_paquete'])
         self.history_package_choice = ttk.Checkbutton(
             options,
-            text='Incluir historia en el paquete',
+            text='Historia en el paquete',
+            style='Chip.Toolbutton',
             variable=self.history_in_package,
             command=self.save_preferences,
         )
-        self.history_package_choice.grid(row=1, column=1, sticky='w', pady=1)
+        self.history_package_choice.grid(row=0, column=2, sticky='w', padx=(0, 6), pady=(0, 6))
         if not self.read_history.get():
             self.history_package_choice.grid_remove()
         self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
         self.reports_choice = ttk.Checkbutton(
             options,
-            text='Incluir informes por vencer (60 días)',
+            text='Informes por vencer (60 días)',
+            style='Chip.Toolbutton',
             variable=self.reports_due,
             command=self.save_preferences,
         )
-        self.reports_choice.grid(row=1, column=0, sticky='w', padx=(0, 16), pady=1)
+        self.reports_choice.grid(row=0, column=3, sticky='w', padx=(0, 6), pady=(0, 6))
         # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
         period = ttk.Frame(options)
-        period.grid(row=2, column=0, sticky='w', padx=(0, 16), pady=1)
+        period.grid(row=1, column=2, columnspan=2, sticky='w', padx=(0, 6), pady=(0, 6))
         self.months_back = tk.StringVar(value=str(self.prefs.data['meses_atras']))
-        ttk.Label(period, text='Período a recolectar (meses)').pack(side='left', padx=(0, 4))
+        ttk.Label(period, text='Meses de bitácora').pack(side='left', padx=(0, 4))
         self.months_combo = ttk.Combobox(
             period, textvariable=self.months_back, values=('1', '2', '3', '4'), width=3, state='readonly'
         )
@@ -501,18 +503,20 @@ class Application:
         self.package_per_sheet = tk.BooleanVar(value=self.prefs.data['paquete_por_hoja'])
         ttk.Checkbutton(
             options,
-            text='Un paquete por hoja de RUS (muchos registros)',
+            text='Un paquete por hoja',
+            style='Chip.Toolbutton',
             variable=self.package_per_sheet,
             command=self.save_preferences,
-        ).grid(row=2, column=1, sticky='w', pady=1)
+        ).grid(row=1, column=0, sticky='w', padx=(0, 6), pady=(0, 6))
         # Pantallazo de constancia en consultas sin registros; sin él la consulta vacía igual queda registrada.
         self.empty_pdf = tk.BooleanVar(value=self.prefs.data['pdf_sin_registros'])
         ttk.Checkbutton(
             options,
-            text='PDF de consultas sin registros',
+            text='PDF si no hay registros',
+            style='Chip.Toolbutton',
             variable=self.empty_pdf,
             command=self.save_preferences,
-        ).grid(row=3, column=0, sticky='w', padx=(0, 16), pady=1)
+        ).grid(row=1, column=1, sticky='w', padx=(0, 6), pady=(0, 6))
         self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
@@ -528,9 +532,6 @@ class Application:
         ttk.Button(actions, text='Resultados…', command=self.show_results).grid(row=0, column=3, padx=8)
         self.joint_button = ttk.Button(actions, text='Descarga conjunta CSMP', command=self.start_joint)
         self.joint_button.grid(row=1, column=0, sticky='w', pady=5)
-        ttk.Label(actions, text='Principal completa + informes del mes actual y siguiente').grid(
-            row=1, column=1, columnspan=3, sticky='w', padx=8
-        )
         self.diary_button = ttk.Button(actions, text='Leer bitácoras del lote', command=self.start_diary)
         self.diary_button.grid(row=2, column=0, sticky='w', pady=5)
         self.diary_retry_button = ttk.Button(actions, text='Reintentar lecturas fallidas…', command=self.resume_diary)
@@ -589,6 +590,7 @@ class Application:
             combo.bind('<<ComboboxSelected>>', lambda e: self.refresh())
         self.refresh()
         self.apply_theme(save=False)
+        self.auto_catalog = start_worker
         if start_worker:
             threading.Thread(target=self.worker, daemon=True).start()
             root.after(100, self.poll)
@@ -600,10 +602,28 @@ class Application:
         if choice not in ('Claro', 'Oscuro', 'Sistema'):
             choice = 'Sistema'
             self.theme.set(choice)
-        apply(self.root, choice)
+        palette = apply(self.root, choice)
+        if palette:
+            self._kit_styles(palette)
         if save:
             self.prefs.data['tema'] = choice
             self.prefs.save()
+
+    def _kit_styles(self, p):
+        """Barra superior y fichas del kit común con la paleta clara u oscura vigente."""
+        style = ttk.Style(self.root)
+        bar, text, muted = p.get('heading', p['background']), p['text'], p.get('muted', p['text'])
+        style.configure('Bar.TFrame', background=bar)
+        style.configure('Name.TLabel', background=bar, foreground=text, font=('Segoe UI', 10, 'bold'))
+        style.configure('BarMuted.TLabel', background=bar, foreground=muted)
+        style.configure('Menu.TMenubutton', background=bar, foreground=text, padding=(8, 2), relief='flat')
+        style.configure('Chip.Toolbutton', background=p['field'], foreground=text, padding=(10, 3), relief='flat')
+        style.map(
+            'Chip.Toolbutton',
+            background=[('disabled', p['background']), ('selected', p['primary']), ('active', bar)],
+            foreground=[('disabled', muted), ('selected', p['on_primary'])],
+        )
+        self.topbar.dot.configure(background=bar)
 
     def toggle_pause(self):
         if self.cancel.paused:
@@ -957,6 +977,19 @@ class Application:
         )
 
     def refresh(self):
+        if hasattr(self, 'topbar'):
+            self.topbar.set_state(
+                'Chrome conectado' if self.connected else 'Sin conexión', 'ok' if self.connected else 'muted'
+            )
+            self.connect_box.grid_remove() if self.connected else self.connect_box.grid()
+            # Solo los controles que aplican a la pantalla elegida.
+            code = SCREENS.get(self.screen.get(), 'seguimiento')
+            kind = 'calendario' if code.startswith('calendario_') else code
+            self.extras_box.grid() if kind in self.extra_fields else self.extras_box.grid_remove()
+            for key, fields in self.extra_fields.items():
+                for field in fields:
+                    field.pack(side='left') if key == kind else field.pack_forget()
+            self.dates_box.grid_remove() if code.startswith('calendario_') else self.dates_box.grid()
         idle = not self.busy and not self.quitting
         ready = idle and self.connected and self.catalog is not None
         screen = SCREENS[self.screen.get()]
@@ -1588,6 +1621,9 @@ class Application:
             self.connected = True
             self.catalog = None
             self.status.set(value)
+            # Sin botón «Cargar opciones»: al conectar se traen las opciones de la pantalla elegida.
+            if getattr(self, 'auto_catalog', False) and not self.busy:
+                self.root.after(0, lambda: self.enqueue('catalog'))
         elif name == 'disconnected':
             self.connected = False
             self.catalog = None

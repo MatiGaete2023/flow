@@ -2,6 +2,12 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**2.9.0, 3 de noviembre de 2026 · rama Rediseno** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.3:
+- Barra superior con estado de Chrome y menú «Más» (instalar extensión, código, desconectar, carpeta, apariencia).
+- Las opciones se cargan solas al conectar; la conexión solo se muestra mientras no hay conexión.
+- Opciones del paquete como fichas; sin títulos ni frases de ayuda; sin botones de período rápido (el calendario los
+  cubre); estado, mes y año solo en las pantallas donde aplican.
+
 **2.8.3, 3 de noviembre de 2026** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.2:
 - **PDF de consultas sin registros** es opcional (casilla en las opciones; marcada por defecto). Desmarcada, la consulta
   vacía se comprueba igual con la respuesta de SITFA y queda como `SIN_RESULTADOS` con `evidencia_omitida`, sin abrir

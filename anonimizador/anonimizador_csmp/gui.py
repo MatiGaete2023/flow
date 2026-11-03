@@ -1,4 +1,4 @@
-"""Ventana Tkinter: elegir archivos o carpetas, modo y destino. Todo el proceso es local."""
+"""Ventana: agregar archivos o carpetas y anonimizar. Todo el proceso es local; el original no se modifica."""
 
 from __future__ import annotations
 
@@ -6,9 +6,10 @@ import queue
 import threading
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, ttk
+from tkinter import filedialog, simpledialog, ttk
 
 from . import __version__
+from . import flowkit as ui
 from .engine import SUPPORTED, report_text, run
 from .textengine import Options
 
@@ -19,99 +20,89 @@ FILETYPES = [
     ),
     ("Todos los archivos", "*.*"),
 ]
+MODES = [("estricto", "Estricto"), ("conservador", "Conservador")]
+ABOUT = (
+    "Anonimizador CSMP {version}\n\n"
+    "Acepta: {supported}.\n\n"
+    "Estricto omite los textos libres completos. Conservador mantiene observaciones sustituyendo identidades "
+    "detectables.\n\nEl original no se modifica y nada sale del equipo. Revisa la copia antes de compartirla: "
+    "ninguna modalidad garantiza anonimización absoluta."
+)
 
 
 class App:
     def __init__(self, root):
         self.root = root
-        root.title(f"Anonimizador CSMP {__version__}")
-        root.geometry("720x640")
-        root.minsize(640, 560)
         self.inputs = []
         self.events = queue.Queue()
+        self.busy = False
+        self.report = ""
         self.mode = tk.StringVar(value="estricto")
         self.shift = tk.StringVar(value="0")
         self.seed = tk.StringVar()
         self.birth = tk.BooleanVar(value=False)
         self.strict_zip = tk.BooleanVar(value=False)
         self.out_dir = tk.StringVar()
-        self.status = tk.StringVar(value="Agrega archivos o una carpeta para comenzar.")
-        frame = ttk.Frame(root, padding=16)
-        frame.pack(fill="both", expand=True)
-        ttk.Label(frame, text="Anonimizar copias locales", font=("Segoe UI", 14, "bold")).pack(anchor="w")
-        ttk.Label(
-            frame,
-            text="Acepta lo que entregan el Descargador y el Asistente: " + SUPPORTED + ".\n"
-            "El original no se modifica y nada sale del equipo.",
-            wraplength=660,
-        ).pack(anchor="w", pady=(2, 8))
-        buttons = ttk.Frame(frame)
-        buttons.pack(anchor="w")
-        self.add_files = ttk.Button(buttons, text="Agregar archivos…", command=self.pick_files)
-        self.add_files.pack(side="left")
-        self.add_folder = ttk.Button(buttons, text="Agregar carpeta…", command=self.pick_folder)
-        self.add_folder.pack(side="left", padx=6)
-        self.clear = ttk.Button(buttons, text="Quitar todo", command=self.clear_inputs)
-        self.clear.pack(side="left")
-        self.listing = tk.Listbox(frame, height=6, activestyle="none")
-        self.listing.pack(fill="x", pady=(8, 8))
-        mode = ttk.LabelFrame(frame, text="Modo", padding=8)
-        mode.pack(fill="x")
-        ttk.Radiobutton(
-            mode, text="Estricto (recomendado): omite los textos libres completos", value="estricto", variable=self.mode
-        ).pack(anchor="w")
-        ttk.Radiobutton(
-            mode,
-            text="Conservador: mantiene observaciones sustituyendo identidades detectables",
-            value="conservador",
-            variable=self.mode,
-        ).pack(anchor="w")
-        more = ttk.LabelFrame(frame, text="Opciones", padding=8)
-        more.pack(fill="x", pady=(8, 0))
-        ttk.Label(more, text="Desplazar fechas (días):").grid(row=0, column=0, sticky="w")
-        ttk.Entry(more, textvariable=self.shift, width=8).grid(row=0, column=1, sticky="w", padx=6)
-        ttk.Label(more, text="Frase de semilla (opcional):").grid(row=0, column=2, sticky="w", padx=(12, 0))
-        ttk.Entry(more, textvariable=self.seed, width=22, show="•").grid(row=0, column=3, sticky="w", padx=6)
-        ttk.Checkbutton(more, text="Fechas de nacimiento al 1 de enero", variable=self.birth).grid(
-            row=1, column=0, columnspan=2, sticky="w", pady=(6, 0)
-        )
-        ttk.Checkbutton(more, text="Un ZIP con archivos no admitidos falla completo", variable=self.strict_zip).grid(
-            row=1, column=2, columnspan=2, sticky="w", pady=(6, 0)
-        )
-        dest = ttk.Frame(frame)
-        dest.pack(fill="x", pady=(8, 0))
-        ttk.Label(dest, text="Carpeta de destino:").pack(side="left")
-        ttk.Entry(dest, textvariable=self.out_dir).pack(side="left", fill="x", expand=True, padx=6)
-        ttk.Button(dest, text="Elegir…", command=self.pick_out).pack(side="left")
-        ttk.Label(frame, text="Vacío = junto al original.", foreground="#555").pack(anchor="w")
-        self.go = ttk.Button(frame, text="Anonimizar", command=self.start)
-        self.go.pack(anchor="w", pady=(10, 0))
-        self.progress = ttk.Progressbar(frame, maximum=100)
-        self.progress.pack(fill="x", pady=(8, 0))
-        ttk.Label(frame, textvariable=self.status, wraplength=660).pack(anchor="w", pady=(6, 0))
-        self.log = tk.Text(frame, height=8, state="disabled", wrap="word")
-        self.log.pack(fill="both", expand=True, pady=(6, 0))
-        ttk.Label(
-            frame,
-            text="Revisa manualmente la copia antes de compartirla: ninguna modalidad garantiza anonimización absoluta.",
-            foreground="#6b4d09",
-            wraplength=660,
-        ).pack(anchor="w", pady=(6, 0))
+        self.status = tk.StringVar()
+        self.window = ui.Window(root, "Anonimizador CSMP", "Anonimizar", self.start, size="760x520", minsize=(600, 420))
+        top = self.window.top
+        self.modes = ui.Chips(top.extra, MODES, multi=False, command=lambda: self.mode.set(self.modes.get()[0]))
+        self.modes.set([self.mode.get()])
+        self.modes.pack(side="left", pady=(6, 0))
+        top.add("Agregar archivos…", self.pick_files)
+        top.add("Agregar carpeta…", self.pick_folder)
+        top.add("Quitar todo", self.clear_inputs)
+        top.add("Carpeta de destino…", self.pick_out, separator=True)
+        top.add("Desplazar fechas…", self.ask_shift)
+        top.add("Frase de semilla…", self.ask_seed)
+        top.add_check("Fechas de nacimiento al 1 de enero", self.birth)
+        top.add_check("Un ZIP con archivos no admitidos falla completo", self.strict_zip)
+        top.add("Ver último informe", self.show_report, separator=True)
+        top.add("Acerca de", self.about)
+        footer = self.window.footer
+        self.add_folder = footer.add("Agregar carpeta…", self.pick_folder)
+        self.add_files = footer.add("Agregar archivos…", self.pick_files)
+        self.go = footer.primary
+        body = ttk.Frame(self.window.body, padding=(16, 14))
+        body.pack(fill="both", expand=True)
+        self.empty = ttk.Label(body, text="Agrega archivos o carpetas del Descargador o del Asistente.", style="Muted.TLabel")
+        self.list = ui.ProgressList(body, height=12)
+        self.status.trace_add("write", self._status_changed)
+        self.out_dir.trace_add("write", lambda *_: self.refresh())
+        self.refresh()
+
+    def _status_changed(self, *_):
+        text = self.status.get()
+        self.window.banner.show(text, bad=not text.startswith(tuple("123456789"))) if text else self.window.banner.hide()
 
     def refresh(self):
-        self.listing.delete(0, "end")
-        for number, path in enumerate(self.inputs, 1):
+        if self.inputs:
+            self.empty.pack_forget()
+            self.list.pack(fill="both", expand=True)
             # Solo número y tipo: el nombre y la ruta pueden identificar a personas.
-            kind = "carpeta" if path.is_dir() else (path.suffix.lower() or "archivo")
-            self.listing.insert("end", f"Entrada {number}: {kind}")
+            self.list.plan(
+                [
+                    (n, f"Entrada {n} · " + ("carpeta" if Path(p).is_dir() else (Path(p).suffix.lower() or "archivo")))
+                    for n, p in enumerate(self.inputs, 1)
+                ]
+            )
+        else:
+            self.list.pack_forget()
+            self.empty.pack(anchor="w")
+        where = "en la carpeta elegida" if (self.out_dir.get() or "").strip() else "junto al original"
+        count = len(self.inputs)
+        self.window.footer.set(
+            f"{count} entrada{'s' if count != 1 else ''} · copia {where}" if count else "",
+            enabled=bool(count) and not self.busy,
+        )
 
     def pick_files(self):
-        names = filedialog.askopenfilenames(parent=self.root, title="Selecciona archivos locales", filetypes=FILETYPES)
+        names = filedialog.askopenfilenames(parent=self.root, title="Agregar archivos", filetypes=FILETYPES)
         self.inputs += [Path(n) for n in names if Path(n) not in self.inputs]
         self.refresh()
 
     def pick_folder(self):
-        name = filedialog.askdirectory(parent=self.root, title="Selecciona una carpeta local")
+        name = filedialog.askdirectory(parent=self.root, title="Agregar carpeta")
         if name and Path(name) not in self.inputs:
             self.inputs.append(Path(name))
         self.refresh()
@@ -121,20 +112,45 @@ class App:
         if name:
             self.out_dir.set(name)
 
+    def ask_shift(self):
+        value = simpledialog.askinteger("Desplazar fechas", "Días (0 = sin desplazar):", parent=self.root,
+                                        initialvalue=int(self.shift.get() or 0))
+        if value is not None:
+            self.shift.set(str(value))
+
+    def ask_seed(self):
+        value = simpledialog.askstring("Frase de semilla", "Misma frase = mismos seudónimos entre ejecuciones:",
+                                       parent=self.root, show="•")
+        if value is not None:
+            self.seed.set(value)
+
+    def about(self):
+        self.show_text("Acerca de", ABOUT.format(version=__version__, supported=SUPPORTED))
+
+    def show_report(self):
+        self.show_text("Informe de anonimización", self.report or "Todavía no hay informe en esta sesión.")
+
+    def show_text(self, title, text):
+        window = tk.Toplevel(self.root)
+        window.title(title)
+        box = tk.Text(window, wrap="word", width=72, height=20, borderwidth=0, padx=12, pady=12)
+        box.insert("1.0", text)
+        box.configure(state="disabled")
+        box.pack(fill="both", expand=True)
+
     def clear_inputs(self):
         self.inputs = []
+        self.window.banner.hide()
         self.refresh()
 
     def lock(self, locked):
-        state = ["disabled"] if locked else ["!disabled"]
-        for widget in (self.go, self.add_files, self.add_folder, self.clear):
-            widget.state(state)
+        self.busy = locked
+        for widget in (self.add_files, self.add_folder):
+            widget.state(["disabled"] if locked else ["!disabled"])
+        self.refresh() if not locked else self.go.state(["disabled"])
 
     def write(self, text):
-        self.log.configure(state="normal")
-        self.log.delete("1.0", "end")
-        self.log.insert("1.0", text)
-        self.log.configure(state="disabled")
+        self.report = text
 
     def start(self):
         if not self.inputs:
@@ -152,9 +168,9 @@ class App:
             skip_unsupported=not self.strict_zip.get(),
             generalize_birth=self.birth.get(),
         )
-        out_dir = Path(self.out_dir.get()) if self.out_dir.get().strip() else None
+        out_dir = Path(self.out_dir.get()) if (self.out_dir.get() or "").strip() else None
         self.lock(True)
-        self.status.set("Procesando localmente; ningún dato se envía fuera del equipo.")
+        self.window.banner.hide()
         self.write("")
 
         def work():
@@ -163,7 +179,7 @@ class App:
                     list(self.inputs),
                     options,
                     out_dir,
-                    lambda label, step, total: self.events.put(("progress", (step, total))),
+                    lambda label, step, total: self.events.put(("progress", (label, step, total))),
                 )
                 self.events.put(("done", (result, options)))
             except Exception:
@@ -177,30 +193,46 @@ class App:
             while True:
                 event, value = self.events.get_nowait()
                 if event == "progress":
-                    step, total = value
-                    self.progress["value"] = 100 * step / max(1, total)
+                    label, step, total = value
+                    self.list.bar.configure(maximum=max(1, total), value=step)
                     continue
                 self.lock(False)
                 if event == "error":
                     self.status.set("No se pudo completar el proceso. Los originales siguen intactos.")
-                else:
-                    result, options = value
-                    self.progress["value"] = 100
-                    made = len(result.outputs)
-                    failed = sum(not item.ok for item in result.items)
-                    self.status.set(
-                        f"{made} copia(s) creada(s)"
-                        + (f"; {failed} no se pudo/pudieron crear" if failed else "")
-                        + ". Revisión humana obligatoria antes de compartir."
-                    )
-                    self.write(
-                        report_text(result, options)
-                        + "\nUbicación: "
-                        + (str(result.outputs[0].parent) if made else "-")
-                    )
+                    return
+                result, options = value
+                self.list.clear()
+                for number, item in enumerate(result.items, 1):
+                    self.list.set(number, "ok" if item.ok else "bad",
+                                  f"{item.changed} cambios" if item.ok else item.detail,
+                                  name=f"{item.label} · {item.kind or 'sin formato'}")
+                made = len(result.outputs)
+                failed = sum(not item.ok for item in result.items)
+                self.status.set(
+                    f"{made} copia(s) creada(s)"
+                    + (f"; {failed} no se pudo/pudieron crear" if failed else "")
+                    + ". Revisión humana obligatoria antes de compartir."
+                )
+                self.write(report_text(result, options) + "\nUbicación: " + (str(result.outputs[0].parent) if made else "-"))
+                folder = result.outputs[0].parent if made else None
+                self.window.banner.show(
+                    self.status.get(), bad=not made,
+                    action=(lambda: _open(folder)) if folder else None, action_text="Abrir carpeta",
+                )
                 return
         except queue.Empty:
             self.root.after(100, self.poll)
+
+
+def _open(path):
+    import os
+    import subprocess
+    import sys
+
+    if sys.platform == "win32":
+        os.startfile(path)  # noqa: S606 - carpeta local recién creada por la herramienta
+    else:
+        subprocess.Popen(["xdg-open", str(path)])
 
 
 def main():
