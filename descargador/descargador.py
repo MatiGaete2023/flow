@@ -505,6 +505,14 @@ class Application:
             variable=self.package_per_sheet,
             command=self.save_preferences,
         ).grid(row=2, column=1, sticky='w', pady=1)
+        # Pantallazo de constancia en consultas sin registros; sin él la consulta vacía igual queda registrada.
+        self.empty_pdf = tk.BooleanVar(value=self.prefs.data['pdf_sin_registros'])
+        ttk.Checkbutton(
+            options,
+            text='PDF de consultas sin registros',
+            variable=self.empty_pdf,
+            command=self.save_preferences,
+        ).grid(row=3, column=0, sticky='w', padx=(0, 16), pady=1)
         self.history_counts = {'leidas': 0, 'fallidas': 0}
         actions = ttk.LabelFrame(results, text='Lote y recuperación', padding=8)
         actions.grid(row=0, column=0, sticky='ew')
@@ -647,6 +655,7 @@ class Application:
             historia_en_paquete=self.history_in_package.get(),
             informes_por_vencer=self.reports_due.get(),
             paquete_por_hoja=self.package_per_sheet.get(),
+            pdf_sin_registros=self.empty_pdf.get(),
             meses_atras=self.months(),
         )
         try:
@@ -655,7 +664,9 @@ class Application:
             self.status.set('E_CONFIG: no se pudo guardar la configuración local.')
 
     def _paced_batch_runner(self, *args, **kwargs):
-        return BatchRunner(*args, pause=self.prefs.data['pausa_consultas'], **kwargs)
+        return BatchRunner(
+            *args, pause=self.prefs.data['pausa_consultas'], evidencia=self.prefs.data['pdf_sin_registros'], **kwargs
+        )
 
     def configure_pause(self):
         from preferencias import PAUSA_MAXIMA_S, PAUSA_MINIMA_S, clamp_pause
@@ -1325,9 +1336,7 @@ class Application:
                     except m.PocError:
                         pass
                 elif command == 'download':
-                    BatchRunner(
-                        self.bridge, self.catalog, self.emit, self.cancel, pause=self.prefs.data['pausa_consultas']
-                    ).run(*arg)
+                    self._paced_batch_runner(self.bridge, self.catalog, self.emit, self.cancel).run(*arg)
                 elif command == 'package':
                     self.emit('package_done', package_current_lot(*arg))
                 elif command in ('pipeline', 'resume_pipeline'):
@@ -1350,6 +1359,7 @@ class Application:
                         historia_en_paquete=self.prefs.data['historia_en_paquete'],
                         meses=self.prefs.data.get('meses_atras', 4),
                         informes=self.prefs.data.get('informes_por_vencer', False),
+                        pdf_vacias=self.prefs.data['pdf_sin_registros'],
                     )
                 elif command == 'diary':
                     from lectura_bitacoras import DiaryRunner
@@ -1647,6 +1657,9 @@ class Application:
             self.status.set(
                 f'Consulta {self.query_index}/{self.query_total} · Página {value["pagina"]}/{value["total"]} verificada · {value["registros"]} registros'
             )
+        elif name == 'empty':
+            self.tree.insert('', 'end', values=('Sin PDF', 0, value['consulta']))
+            self.tree.yview_moveto(1)
         elif name == 'evidence':
             self.tree.insert('', 'end', values=('PDF', 0, value['archivo']))
             self.tree.yview_moveto(1)
@@ -1654,7 +1667,7 @@ class Application:
         elif name == 'done':
             self.last_sheets_folder = self.last_folder
             self.status.set(
-                f'Lote completo: {value["queries"]} consultas, {value["files"]} Excel, {value.get("pdfs", 0)} PDF y {value["records"]} registros.'
+                f'Lote completo: {value["queries"]} consultas, {value["files"]} Excel, {value.get("pdfs", 0)} PDF, {value.get("empty", 0)} sin registros y {value["records"]} registros.'
             )
             self.count.set('Completado. Puedes abrir Resultados o iniciar otro lote.')
             self.context.set(self.last_folder.name if self.last_folder else 'Lote completo')

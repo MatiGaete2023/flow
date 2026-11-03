@@ -29,6 +29,7 @@ def run(
     informes=False,
     today=None,
     resume=None,
+    pdf_vacias=True,
 ):
     """Consulta, bitácoras, informes y ZIP. Con `resume` (carpeta «Paquete CSMP …») continúa un paquete anterior:
     reutiliza las consultas validadas y las bitácoras ya leídas, y vuelve a crear el ZIP."""
@@ -81,7 +82,7 @@ def run(
             emit('status', 'Consultas ya validadas en el intento anterior: se reutilizan.')
         else:
             state['carpetas'].pop('consultas', None)
-            BatchRunner(bridge, catalog, relay, cancel, pause=pause).run(batch, backup)
+            BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=pdf_vacias).run(batch, backup)
         if 'consultas' not in state['carpetas']:
             raise m.PocError('La consulta no identificó sus originales; no se creó el paquete.')
         phase('bitacoras')
@@ -109,7 +110,7 @@ def run(
         # Al retomar, el mismo lote de bitácoras continúa: lo ya leído (hash comprobado) no se vuelve a abrir.
         diaries = runner.run(batch, backup, previas) if previas else runner.run(batch, backup)
         carpetas_informes, informes_completos = _informes(
-            bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today
+            bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias
         )
         phase('paquete')
         from descargador import package_current_lot
@@ -228,7 +229,7 @@ def meses_informes(today, dias=60):
     return meses
 
 
-def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today):
+def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias=True):
     """Calendario de informes por vencer de los próximos 60 días, solo con la hoja de Cumplimiento (es la que lo usa).
     La extensión cambia SITFA al calendario por sí sola (sin pedirlo al usuario) y al terminar vuelve a Seguimiento.
     Devuelve (carpetas, completo): un mes que falla no descarta los ya descargados, pero el paquete queda parcial."""
@@ -244,7 +245,7 @@ def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, i
         for month, year in meses:
             state['fase'] = f'informes-{year}-{month}'
             plan = Batch(batch.tribunals, (), (), screen='calendario_informes', month=month, year=year)
-            BatchRunner(bridge, catalog, relay, cancel, pause=pause).run(plan, backup)
+            BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=pdf_vacias).run(plan, backup)
             carpetas.append(backup.parent / state['carpetas'][state['fase']])
     except m.PocError as exc:
         if cancel.is_set():

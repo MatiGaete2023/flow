@@ -19,7 +19,7 @@ BATCH = Batch(('49',), ('2',), ('Cumplimiento',))
 
 def fakes(monkeypatch, llamadas, *, parcial):
     class Consultas:
-        def __init__(self, bridge, catalog, emit, gate, pause):
+        def __init__(self, bridge, catalog, emit, gate, pause, evidencia=True):
             self.emit = emit
 
         def run(self, batch, destination):

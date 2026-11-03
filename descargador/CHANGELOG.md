@@ -2,6 +2,12 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**2.8.3, 3 de noviembre de 2026** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.2:
+- **PDF de consultas sin registros** es opcional (casilla en las opciones; marcada por defecto). Desmarcada, la consulta
+  vacía se comprueba igual con la respuesta de SITFA y queda como `SIN_RESULTADOS` con `evidencia_omitida`, sin abrir
+  la captura. El paquete la declara `VACIA_COMPROBADA` con la incidencia informativa `VACIA_SIN_PDF`, que el Asistente
+  muestra; el libro de resultados dice «Sin PDF».
+
 **2.8.2, 31 de octubre de 2026** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.1:
 - **Pantallazo PDF completo**: Chrome solo captura lo visible y el PDF cortaba el final de la página (en los calendarios,
   la última semana: días 29, 30 y 31). La copia fija se reduce hasta caber entera antes de capturar.

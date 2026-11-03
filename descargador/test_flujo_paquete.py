@@ -29,7 +29,7 @@ def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False, c
     used = []
 
     class Queries:
-        def __init__(self, bridge, catalog, emit, gate, pause):
+        def __init__(self, bridge, catalog, emit, gate, pause, evidencia=True):
             self.emit = emit
             used.append(('consultas', pause, gate is cancel))
 
@@ -173,7 +173,7 @@ def runners_historia(monkeypatch, cancel):
             return {'manifest': str(manifest), 'estado': 'COMPLETA', 'fallidas': 0, 'consultas_fallidas': 0}
 
     class Queries:
-        def __init__(self, bridge, catalog, emit, gate, pause):
+        def __init__(self, bridge, catalog, emit, gate, pause, evidencia=True):
             self.emit = emit
 
         def run(self, batch, destination):
@@ -286,7 +286,7 @@ def runners_con_calendario(monkeypatch, cancel):
     pantallas = []
 
     class Queries:
-        def __init__(self, bridge, catalog, emit, gate, pause):
+        def __init__(self, bridge, catalog, emit, gate, pause, evidencia=True):
             self.emit = emit
 
         def run(self, batch, destination):

@@ -416,7 +416,16 @@ def export_book(lots, destination=None, csmp=False):
         for query, manifest in lot.queries:
             if manifest.get('estado') == 'SIN_RESULTADOS':
                 append_text(
-                    summary, ['SIN_RESULTADOS', lot.folder.name, query['consulta'], 'PDF', 0, 'Sin registros', '']
+                    summary,
+                    [
+                        'SIN_RESULTADOS',
+                        lot.folder.name,
+                        query['consulta'],
+                        'PDF' if manifest.get('evidencia') else 'Sin PDF',
+                        0,
+                        'Sin registros',
+                        '',
+                    ],
                 )
             elif manifest.get('estado') == 'INCOMPLETA' and not manifest.get('archivos'):
                 append_text(

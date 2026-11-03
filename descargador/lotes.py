@@ -152,8 +152,9 @@ class ChromeTransport:
 
 
 class BatchRunner:
-    def __init__(self, bridge, catalog, emit, cancel, pause=0.0):
+    def __init__(self, bridge, catalog, emit, cancel, pause=0.0, evidencia=True):
         self.bridge = bridge
+        self.evidencia = bool(evidencia)
         self.catalog = catalog
         self.emit = emit
         self.cancel = cancel
@@ -264,99 +265,116 @@ class BatchRunner:
                 if first is None:
                     if self.cancel.is_set():
                         raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
-                    self.emit('status', 'Preparando captura de la consulta sin registros…')
-                    try:
-                        context = [
-                            [
-                                'Tribunal',
-                                self.catalog['tribunales'][selection.tribunal] + ' (código ' + selection.tribunal + ')',
-                            ]
-                        ]
-                        if selection.screen == 'seguimiento':
-                            context.extend(
+                    # El pantallazo es opcional: sin él, la consulta vacía igual queda comprobada por la respuesta de SITFA.
+                    if self.evidencia:
+                        self.emit('status', 'Preparando captura de la consulta sin registros…')
+                        try:
+                            context = [
                                 [
-                                    ['Modalidad', self.catalog['modalidades'][selection.modality]],
-                                    ['Pestaña', selection.tab],
+                                    'Tribunal',
+                                    self.catalog['tribunales'][selection.tribunal]
+                                    + ' (código '
+                                    + selection.tribunal
+                                    + ')',
+                                ]
+                            ]
+                            if selection.screen == 'seguimiento':
+                                context.extend(
+                                    [
+                                        ['Modalidad', self.catalog['modalidades'][selection.modality]],
+                                        ['Pestaña', selection.tab],
+                                    ]
+                                )
+                            context.append(['Consulta', profile.label])
+                            context.append(
+                                [
+                                    'Fechas',
+                                    batch.dates.start + ' – ' + batch.dates.end
+                                    if batch.dates
+                                    else 'Sin filtro de fechas',
                                 ]
                             )
-                        context.append(['Consulta', profile.label])
-                        context.append(
-                            [
-                                'Fechas',
-                                batch.dates.start + ' – ' + batch.dates.end if batch.dates else 'Sin filtro de fechas',
-                            ]
-                        )
-                        native = self.bridge.call(
-                            'evidence_open', {'pairs': pairs, 'label': profile.label, 'context': context}
-                        )
-                        native_html = ChromeTransport.body(native)
-                        digest = hashlib.sha256(native_html).hexdigest()
-                        if native.get('digest') != digest:
-                            raise m.PocError('La pantalla de evidencia no coincide con la respuesta recibida.')
-                        _, native_first = response_profile(native_html.decode('utf-8'), pairs, selection, self.catalog)
-                        if native_first is not None:
-                            raise m.PocError(
-                                'La consulta cambió y ahora tiene registros. Inicie un lote nuevo; no se guardó un PDF vacío.'
+                            native = self.bridge.call(
+                                'evidence_open', {'pairs': pairs, 'label': profile.label, 'context': context}
                             )
-                        native_root = m.root_html(native_html.decode('utf-8'))
-                        banners = native_root.xpath('//*[@id="sitfaContextoConsulta"]')
-                        context_text = 'Consulta solicitada · ' + ' · '.join(
-                            label + ': ' + value for label, value in context
-                        )
-                        if (
-                            len(banners) != 1
-                            or banners[0].get('data-context')
-                            != json.dumps(context, ensure_ascii=False, separators=(',', ':'))
-                            or banners[0].text_content() != context_text
-                        ):
-                            raise m.PocError(
-                                'La pantalla no identifica el contexto de la consulta solicitada. Recarga la extensión de esta entrega.'
+                            native_html = ChromeTransport.body(native)
+                            digest = hashlib.sha256(native_html).hexdigest()
+                            if native.get('digest') != digest:
+                                raise m.PocError('La pantalla de evidencia no coincide con la respuesta recibida.')
+                            _, native_first = response_profile(
+                                native_html.decode('utf-8'), pairs, selection, self.catalog
                             )
-                        native_fields = m.fields_from_form(
-                            native_root.xpath('//form[@name=$name]', name=profile.form_name)[0]
-                        )
-                        if any(native_fields.get(k) != v for k, v in profile.target.items()):
-                            raise m.PocError('Los controles de la pantalla a capturar no corresponden a la selección.')
-                        date_fields = (
-                            ('FEC_Desde', 'FEC_Hasta') if selection.screen == 'carga' else ('FEC_Inicio', 'FEC_Fin')
-                        )
-                        if batch.dates and any(
-                            unquote_plus(native_fields.get(k, '')) != v
-                            for k, v in zip(date_fields, (batch.dates.start, batch.dates.end))
-                        ):
-                            raise m.PocError('Las fechas de la pantalla a capturar no corresponden al lote.')
-                        if self.cancel.is_set():
-                            raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
-                        capture = self.bridge.call('evidence_capture', {'digest': digest})
-                        pdf, checksum = screenshot_pdf(capture, digest, profile.label)
-                        base = file_base(selection, self.catalog)
-                        ordinals[base] += 1
-                        suffix = f' {ordinals[base]}' if bases[base] > 1 else ''
-                        name = base + suffix + '.pdf'
-                        path = folder / name
-                        m.save_exclusive(path, pdf)
-                        if hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-                            path.unlink(missing_ok=True)
-                            raise m.PocError('No se pudo verificar la escritura del PDF.')
-                        evidence = {
-                            'archivo': name,
-                            'registros': 0,
-                            'sha256': checksum,
-                            'tipo': 'PDF_CAPTURA_SITFA',
-                            'contexto_consulta': context,
-                        }
-                    finally:
-                        try:
-                            self.bridge.call('evidence_close', timeout=8)
-                        except Exception:
-                            pass
+                            if native_first is not None:
+                                raise m.PocError(
+                                    'La consulta cambió y ahora tiene registros. Inicie un lote nuevo; no se guardó un PDF vacío.'
+                                )
+                            native_root = m.root_html(native_html.decode('utf-8'))
+                            banners = native_root.xpath('//*[@id="sitfaContextoConsulta"]')
+                            context_text = 'Consulta solicitada · ' + ' · '.join(
+                                label + ': ' + value for label, value in context
+                            )
+                            if (
+                                len(banners) != 1
+                                or banners[0].get('data-context')
+                                != json.dumps(context, ensure_ascii=False, separators=(',', ':'))
+                                or banners[0].text_content() != context_text
+                            ):
+                                raise m.PocError(
+                                    'La pantalla no identifica el contexto de la consulta solicitada. Recarga la extensión de esta entrega.'
+                                )
+                            native_fields = m.fields_from_form(
+                                native_root.xpath('//form[@name=$name]', name=profile.form_name)[0]
+                            )
+                            if any(native_fields.get(k) != v for k, v in profile.target.items()):
+                                raise m.PocError(
+                                    'Los controles de la pantalla a capturar no corresponden a la selección.'
+                                )
+                            date_fields = (
+                                ('FEC_Desde', 'FEC_Hasta') if selection.screen == 'carga' else ('FEC_Inicio', 'FEC_Fin')
+                            )
+                            if batch.dates and any(
+                                unquote_plus(native_fields.get(k, '')) != v
+                                for k, v in zip(date_fields, (batch.dates.start, batch.dates.end))
+                            ):
+                                raise m.PocError('Las fechas de la pantalla a capturar no corresponden al lote.')
+                            if self.cancel.is_set():
+                                raise m.PocError('Lote cancelado. Se conservan los archivos verificados.')
+                            capture = self.bridge.call('evidence_capture', {'digest': digest})
+                            pdf, checksum = screenshot_pdf(capture, digest, profile.label)
+                            base = file_base(selection, self.catalog)
+                            ordinals[base] += 1
+                            suffix = f' {ordinals[base]}' if bases[base] > 1 else ''
+                            name = base + suffix + '.pdf'
+                            path = folder / name
+                            m.save_exclusive(path, pdf)
+                            if hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
+                                path.unlink(missing_ok=True)
+                                raise m.PocError('No se pudo verificar la escritura del PDF.')
+                            evidence = {
+                                'archivo': name,
+                                'registros': 0,
+                                'sha256': checksum,
+                                'tipo': 'PDF_CAPTURA_SITFA',
+                                'contexto_consulta': context,
+                            }
+                        finally:
+                            try:
+                                self.bridge.call('evidence_close', timeout=8)
+                            except Exception:
+                                pass
                     m.write_manifest(folder, [], 0, 'SIN_RESULTADOS', profile, manifest)
                     info = json.loads((folder / manifest).read_text(encoding='utf-8'))
-                    info['evidencia'] = evidence
+                    if evidence:
+                        info['evidencia'] = evidence
+                    else:
+                        info['evidencia_omitida'] = True
                     temp = folder / (manifest + '.tmp')
                     temp.write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding='utf-8')
                     temp.replace(folder / manifest)
-                    self.emit('evidence', evidence)
+                    if evidence:
+                        self.emit('evidence', evidence)
+                    else:
+                        self.emit('empty', {'consulta': profile.label})
                     result = []
                     pages = 0
                 else:
@@ -401,6 +419,8 @@ class BatchRunner:
                 temp.replace(folder / manifest)
                 if evidence:
                     completed[-1]['evidencia'] = evidence
+                elif not pages:
+                    completed[-1]['evidencia_omitida'] = True
                 summary()
                 self.emit('query_done', completed[-1])
             state = 'VALIDADA'
@@ -412,6 +432,7 @@ class BatchRunner:
                     'queries': len(completed),
                     'files': len(list(folder.glob('*.xls'))),
                     'pdfs': len(list(folder.glob('*.pdf'))),
+                    'empty': sum(x['estado'] == 'SIN_RESULTADOS' for x in completed),
                     'records': sum(x['registros'] for x in completed),
                 },
             )

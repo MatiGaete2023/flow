@@ -57,6 +57,7 @@ class Preferences:
             'informes_por_vencer': True,
             'meses_atras': 4,
             'paquete_por_hoja': False,
+            'pdf_sin_registros': True,
             'tema': 'Sistema',
             'historial_lotes': [],
             'historial_bitacoras': [],

@@ -129,7 +129,7 @@ def export_capture(
     # Contador propio: si se descartan incidencias resueltas, el largo de la lista repetiría un id (prueba 29-oct).
     incident_ids = itertools.count(1)
 
-    def incident(qid, code, message, rid=''):
+    def incident(qid, code, message, rid='', severity='ADVERTENCIA'):
         data['incidencias'].append(
             dict(
                 capture_id=cid,
@@ -138,7 +138,7 @@ def export_capture(
                 incident_id='i' + str(next(incident_ids)),
                 phase='EXPORTAR',
                 code=code,
-                severity='ADVERTENCIA',
+                severity=severity,
                 message=message,
                 recoverable='true',
             )
@@ -186,6 +186,11 @@ def export_capture(
             query_index[(li, item['verificacion'])] = row
             if state == 'PARCIAL':
                 incident(qid, 'CAPTURA_PARCIAL', 'La consulta no tiene cobertura completa.')
+            if state == 'VACIA_COMPROBADA' and manifest.get('evidencia_omitida'):
+                # Elección del usuario: la respuesta de SITFA comprobó cero registros; no se guardó pantallazo PDF.
+                incident(
+                    qid, 'VACIA_SIN_PDF', 'Consulta sin registros; no se pidió pantallazo PDF.', severity='INFORMACION'
+                )
         attempted = [item.get('seleccion', {}) for item, _ in lot.queries]
         for pi, selection in enumerate(lot.summary.get('plan', [])):
             if selection not in attempted:
