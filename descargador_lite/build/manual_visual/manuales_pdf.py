@@ -29,7 +29,7 @@ code{font-family:'DejaVu Sans Mono',Consolas,monospace;font-size:9.5pt;backgroun
 def page(title, subtitle, body):
     return (
         f'<!doctype html><html lang="es"><meta charset="utf-8"><title>{escape(title)}</title><style>{CSS}</style>'
-        f'<div class="cover"><p class="eyebrow">SITFA LITE {VERSION} · SOLO DESCARGAS RUS</p><h1>{escape(title)}</h1>'
+        f'<div class="cover"><p class="eyebrow">SITFA LITE {VERSION} · DESCARGAS RUS</p><h1>{escape(title)}</h1>'
         f'<p>{subtitle}</p></div>{body}</html>'
     )
 
@@ -64,7 +64,7 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <p>Aparece al activar el modo desarrollador. En la ventana de carpetas pega la ruta (<b>Ctrl+V</b> en la barra de dirección) y pulsa <b>Seleccionar carpeta</b>:</p>
 <div class="path">C:\\Users\\&lt;tu usuario&gt;\\AppData\\Local\\Programs\\SITFA_Lite\\extension</div>""", 'r02_modo_desarrollador.png')
     body += step(5, 'Comprueba la tarjeta «SITFA Lite · Descargas RUS»', """
-<p>Debe decir <b>1.1.0 Lite · solo descargas RUS</b> y estar activada (interruptor azul).</p>
+<p>Debe decir <b>1.1.0 Lite · descargas RUS</b> y estar activada (interruptor azul).</p>
 <div class="warn">No muevas ni borres la carpeta <code>extension</code>: Chrome la usa desde ahí.</div>""", 'r03_extension_cargada.png')
     body += step(6, 'Fija el ícono en la barra', '<p>Pulsa el rompecabezas (1) y luego el alfiler (2) junto a SITFA Lite.</p>',
                  'r04_menu_extensiones.png')
@@ -87,17 +87,17 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <table><tr><th>Síntoma</th><th>Solución</th></tr>
 <tr><td>No aparece «Cargar extensión sin empaquetar»</td><td>Activa Modo de desarrollador. Si tu equipo lo bloquea por política institucional, pide a soporte habilitarlo para esta extensión.</td></tr>
 <tr><td>«Chrome usa otra versión de la extensión»</td><td>Quita la tarjeta antigua y carga la carpeta <code>extension</code> de esta instalación.</td></tr>
-<tr><td>«El descargador rechazó el código»</td><td>Copia el código actual de la ventana abierta.</td></tr>
+<tr><td>«SITFA Lite rechazó el código»</td><td>Copia el código actual de la ventana abierta.</td></tr>
 <tr><td>«No se encontró Chrome instalado»</td><td>Abre SITFA manualmente en Chrome; el resto funciona igual.</td></tr>
 <tr><td>El antivirus bloquea el instalador</td><td>Verifica el SHA-256 publicado junto al instalador y pide la excepción a soporte.</td></tr></table>"""
     return page('Manual de instalación', 'Programa SITFA Lite + extensión de Chrome · 5 minutos, una sola vez · sin administrador', body)
 
 
 def uso():
-    body = '<div class="page"></div><h2>Qué hace y qué no</h2>'
+    body = '<div class="page"></div><h2>Qué hace</h2>'
     body += """
 <p><b>Hace:</b> descarga los XLS que produce RUS/SITFA —todas las páginas— de 4 consultas, los nombra según la consulta y, si lo dejas marcado, guarda un pantallazo PDF cuando no hay registros.</p>
-<p><b>No hace:</b> paquetes consolidados, bitácoras, historia de la causa, calendario de informes por ingreso, ni escritura en RUS.</p>
+<p>No escribe en RUS.</p>
 <table><tr><th>Consulta</th><th>Opciones</th><th>Una descarga por cada…</th></tr>
 <tr><td>Seguimiento · Informe seguimiento</td><td>Tribunales · Pestañas · Modalidades · Informe (pestaña Informes) · Medidas (pestaña Cumplimiento) · Fechas</td><td>tribunal × pestaña × modalidad × informe/medida</td></tr>
 <tr><td>Seguimiento · Búsqueda litigantes</td><td>Tribunales · Estado · Fechas</td><td>tribunal × estado</td></tr>

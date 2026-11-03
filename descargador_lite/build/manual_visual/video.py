@@ -117,7 +117,7 @@ def card(title, lines, seconds=4.0, mono=None):
     frame = Image.new('RGB', (W, H), (243, 246, 250))
     d = ImageDraw.Draw(frame)
     d.rectangle([0, 0, 14, H], fill=BLUE)
-    d.text((80, 150), 'SITFA LITE 1.1.0 · SOLO DESCARGAS RUS', font=font(BOLD, 20), fill=BLUE)
+    d.text((80, 150), 'SITFA LITE 1.1.0 · DESCARGAS RUS', font=font(BOLD, 20), fill=BLUE)
     y = 200
     for line in wrap(d, title, font(BOLD, 46), W - 160):
         d.text((80, y), line, font=font(BOLD, 46), fill=DARK)

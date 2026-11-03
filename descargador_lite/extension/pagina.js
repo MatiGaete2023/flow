@@ -1,5 +1,5 @@
-/* SITFA Lite: se ejecuta en el formulario. Solo consultas y XLS de RUS; sin bitácoras, historias ni calendarios
-   por ingreso. No usa document.cookie ni almacenes. */
+/* SITFA Lite: se ejecuta en el formulario. Consultas y XLS de RUS.
+   No usa document.cookie ni almacenes. */
 async function sitfaTask(command, payload) {
   const boundedBytes = async (response, limit) => {
     const reader=response.body?.getReader();

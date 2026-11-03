@@ -1,7 +1,4 @@
-"""SITFA Lite: descargas XLS de RUS (Seguimiento, Busqueda Lit, Informes y Medidas por vencer).
-
-Sin paquetes consolidados, bitacoras, historias de la causa ni calendarios por ingreso.
-"""
+"""SITFA Lite: descargas XLS de RUS (Seguimiento, Busqueda Lit, Informes y Medidas por vencer)."""
 
 import calendar
 from datetime import date, timedelta

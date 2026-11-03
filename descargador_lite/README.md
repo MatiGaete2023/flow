@@ -4,13 +4,13 @@
 conectar, período «Sin filtro / Por fecha» con calendario y avance por consulta. Manuales ilustrados y videos narrados
 actualizados a 1.1.
 
-Versión liviana del descargador SITFA: solo descarga los XLS que produce RUS y guarda un pantallazo PDF cuando una consulta no tiene registros.
+SITFA Lite descarga desde tu Chrome los XLS que produce RUS y guarda un pantallazo PDF cuando una consulta no tiene registros.
 
 - Seguimiento · Informe seguimiento: tribunales, pestañas (Espera, Cumplimiento, Informes, Egresados), modalidades, tipo de informe, filtro de medidas, fechas.
 - Seguimiento · Búsqueda litigantes: tribunales, estado, fechas.
 - Informes · Informes por vencer / Medidas por vencer: tribunales, mes(es), año.
 
-Sin paquetes consolidados, bitácoras, historia de la causa ni calendario de informes por ingreso. No escribe en RUS.
+No escribe en RUS.
 
 ## Documentos
 
@@ -19,7 +19,6 @@ Sin paquetes consolidados, bitácoras, historia de la causa ni calendario de inf
 - [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (87 s, narrado)
 - [Manual de instalación](docs/MANUAL_INSTALACION.md)
 - [Manual de uso](docs/MANUAL_USO.md)
-- [Evaluación del integral y decisiones de diseño](docs/EVALUACION.md)
 
 ## Estructura
 

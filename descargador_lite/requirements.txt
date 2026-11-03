@@ -1,4 +1,4 @@
-# Ejecución (mismas versiones que el descargador integral 2.8.1)
+# Ejecución
 lxml==6.1.3
 xlrd==2.0.2
 openpyxl==3.1.5

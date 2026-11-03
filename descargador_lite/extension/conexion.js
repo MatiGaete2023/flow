@@ -2,19 +2,19 @@ const byId=id=>document.getElementById(id);
 let running=false,connecting=false,endpoint=null,key=null,frameId=null,busy=false;
 const tabId=Number(new URLSearchParams(location.search).get("tab"));
 const messages={
-  CONNECTION_CODE:"El descargador rechazó el código. Copia el código actual de la ventana que está abierta; cambia al reiniciar o desconectar.",
-  EXTENSION_ORIGIN:"El descargador rechazó el origen de la extensión. Actualiza el descargador y recarga la extensión en chrome://extensions.",
-  EXTENSION_CHANGED:"Este descargador está vinculado a otra copia de la extensión. Pulsa Desconectar en el descargador y usa el nuevo código.",
-  LOCAL_UNREACHABLE:"No se pudo contactar con el descargador de este equipo. Comprueba que siga abierto y pega su código actual.",
-  LOCAL_TIMEOUT:"El descargador local no respondió a tiempo. Comprueba que siga abierto y vuelve a conectar.",
-  LOCAL_PROTOCOL:"El descargador y la extensión no completaron el enlace. Actualiza ambos y vuelve a conectar.",
+  CONNECTION_CODE:"SITFA Lite rechazó el código. Copia el código actual de la ventana que está abierta; cambia al reiniciar o desconectar.",
+  EXTENSION_ORIGIN:"SITFA Lite rechazó el origen de la extensión. Actualiza SITFA Lite y recarga la extensión en chrome://extensions.",
+  EXTENSION_CHANGED:"SITFA Lite está vinculado a otra copia de la extensión. Pulsa Desconectar en SITFA Lite y usa el nuevo código.",
+  LOCAL_UNREACHABLE:"No se pudo contactar con SITFA Lite en este equipo. Comprueba que siga abierto y pega su código actual.",
+  LOCAL_TIMEOUT:"SITFA Lite no respondió a tiempo. Comprueba que siga abierto y vuelve a conectar.",
+  LOCAL_PROTOCOL:"SITFA Lite y la extensión no completaron el enlace. Actualiza ambos y vuelve a conectar.",
   SITE_ACCESS:"El enlace local funciona, pero Chrome no permite acceder a la pestaña SITFA. Comprueba que siga abierta y que la extensión tenga acceso a familia.pjud.cl. Abre de nuevo la conexión desde esa pestaña.",
   FOLLOWUP_REQUIRED:"El enlace local funciona, pero no se encuentra una pantalla de consulta. Entra a Seguimiento o Informes en la pestaña original de SITFA y vuelve a pulsar Cargar opciones.",
   MULTIPLE_FORMS:"Se encontró más de un formulario de Seguimiento. Abre la conexión desde una pestaña con un solo formulario.",
   SITFA_TASK:"SITFA no respondió como se esperaba. Revisa la sesión y la pantalla de consulta elegida.",
   SCREEN_OPEN:"No se pudo abrir la pantalla elegida en SITFA. Revisa la sesión, entra a una pantalla de consulta y vuelve a Cargar opciones.",
   EVIDENCE_CAPTURE:"No se pudo capturar la consulta vacía. Mantén SITFA abierto en una ventana visible, pulsa de nuevo el icono de la extensión desde SITFA y vuelve a conectar. El lote conserva los archivos guardados.",
-  EVIDENCE_OPEN:"No se pudo cargar la vista SITFA para el PDF de la consulta vacía. Revisa que la sesión siga abierta y actualiza la extensión y el descargador juntos. Los archivos anteriores se conservan.",
+  EVIDENCE_OPEN:"No se pudo cargar la vista SITFA para el PDF de la consulta vacía. Revisa que la sesión siga abierta y actualiza la extensión y SITFA Lite juntos. Los archivos anteriores se conservan.",
 };
 function status(message){byId("status").textContent=message;}
 function failure(code){return Object.assign(new Error(code),{code});}
@@ -59,7 +59,7 @@ async function execute(command,payload={}) {
       if(new URL(tab.url).origin!=="https://familia.pjud.cl" || tab.discarded)throw new Error("pestaña");
       stage="ventana";
       const win=await chrome.windows.get(windowId);
-      // Chrome no pinta una ventana tapada por otra (p. ej., el descargador): se trae al frente para la captura.
+      // Chrome no pinta una ventana tapada por otra (p. ej., SITFA Lite): se trae al frente para la captura.
       await chrome.windows.update(windowId,{...(win.state==="minimized"?{state:"normal"}:{}),focused:true});
       await chrome.tabs.update(tabId,{active:true});
       chrome.tabs.onActivated.addListener(activated);
@@ -111,7 +111,7 @@ byId("connect").addEventListener("click",async()=>{
   if (running || busy || connecting) return;
   if (!Number.isInteger(tabId) || tabId<=0) {status("Abre esta conexión pulsando el icono de la extensión desde la pestaña SITFA.");return;}
   const match=/^(\d{1,5})-([0-9a-f]{32})$/.exec(byId("code").value.trim());
-  if (!match || Number(match[1])<1 || Number(match[1])>65535) {status("Copia el código completo desde el descargador.");return;}
+  if (!match || Number(match[1])<1 || Number(match[1])>65535) {status("Copia el código completo desde SITFA Lite.");return;}
   endpoint="http://127.0.0.1:"+match[1];key=match[2];frameId=null;
   connecting=true;byId("connect").disabled=true;byId("code").disabled=true;
   status("Comprobando el enlace con SITFA Lite…");
@@ -145,5 +145,5 @@ byId("connect").addEventListener("click",async()=>{
 byId("disconnect").addEventListener("click",()=>{
   if (busy || connecting) return;
   // Cambia la bandera; /next finaliza su espera acotada antes de limpiar el contexto.
-  running=false;status("Desconectado. Para volver a conectar, copia el código actual del descargador.");
+  running=false;status("Desconectado. Para volver a conectar, copia el código actual de SITFA Lite.");
 });

@@ -66,5 +66,5 @@ Listo. Continúa con el **Manual de uso**.
 | «No se encontró Chrome instalado» | Instala Google Chrome o abre SITFA manualmente; el resto funciona igual. |
 | No aparece «Cargar extensión sin empaquetar» (en Chrome antiguos: «Cargar descomprimida») | Activa **Modo de desarrollador** en `chrome://extensions`. Si tu equipo lo bloquea por política institucional, pide a soporte que lo habilite para esta extensión. |
 | «Chrome usa otra versión de la extensión» | Quita la tarjeta antigua en `chrome://extensions` y carga la carpeta `extension` de esta instalación. |
-| «El descargador rechazó el código» | El código cambia cada vez que abres SITFA Lite o pulsas Desconectar. Copia el actual. |
+| «SITFA Lite rechazó el código» | El código cambia cada vez que abres SITFA Lite o pulsas Desconectar. Copia el actual. |
 | El antivirus bloquea el instalador | Es un programa empaquetado con PyInstaller sin firma comercial. Verifica el SHA-256 publicado junto al instalador y pide la excepción a soporte. |

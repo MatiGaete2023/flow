@@ -1,8 +1,7 @@
 """Motor local (Lite): valida respuestas y Excel recibidos desde la extension de Chrome.
 
-Solo descargas XLS que produce RUS/SITFA: Seguimiento, Busqueda de litigantes,
-Informes por vencer y Medidas por vencer. No lee bitacoras, historias ni calendarios
-por ingreso. No accede a cookies, contrasenas o perfiles de navegador.
+Descarga los XLS que produce RUS/SITFA: Seguimiento, Busqueda de litigantes,
+Informes por vencer y Medidas por vencer. No accede a cookies, contrasenas o perfiles de navegador.
 """
 
 from __future__ import annotations

@@ -232,7 +232,7 @@ class Bridge:
                     'MULTIPLE_FORMS': 'Hay más de un formulario de Seguimiento en esa pestaña. Abre la conexión desde una pestaña con un solo formulario.',
                     'SCREEN_OPEN': 'No se pudo abrir la pantalla elegida. Revisa la sesión SITFA y vuelve a Cargar opciones.',
                     'EVIDENCE_CAPTURE': 'No se pudo capturar la consulta vacía. Mantén SITFA visible, pulsa el icono de la extensión desde SITFA y vuelve a conectar. Los archivos guardados se conservan.',
-                    'EVIDENCE_OPEN': 'No se pudo cargar la vista SITFA para generar el PDF de la consulta vacía. Revisa la sesión y actualiza la extensión y el descargador juntos. Los archivos guardados se conservan.',
+                    'EVIDENCE_OPEN': 'No se pudo cargar la vista SITFA para generar el PDF de la consulta vacía. Revisa la sesión y actualiza la extensión y SITFA Lite juntos. Los archivos guardados se conservan.',
                 }
                 text = messages.get(
                     result.get('error'),

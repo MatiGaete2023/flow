@@ -34,8 +34,7 @@ def main(out):
         '  - Seguimiento (Búsqueda litigantes): tribunal, estado y fechas.\n'
         '  - Informes por vencer y Medidas por vencer: tribunal, mes y año.\n'
         'Si una consulta no tiene registros guarda un pantallazo PDF de SITFA.\n\n'
-        'No crea paquetes consolidados, no lee bitácoras, historias de la causa ni calendarios por ingreso,\n'
-        'y no escribe en RUS. No lee contraseñas ni cookies.\n\n'
+        'No escribe en RUS. No lee contraseñas ni cookies.\n\n'
         'Se instala solo para tu usuario (no requiere administrador).\n'
         'Después de instalar debes cargar UNA VEZ la extensión de Chrome: el manual de instalación se abre al final.\n',
         encoding='utf-8-sig',  # Inno Setup lee como UTF-8 solo con BOM

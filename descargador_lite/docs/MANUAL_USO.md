@@ -3,7 +3,7 @@
 SITFA Lite descarga los XLS que produce RUS/SITFA, con todas sus páginas, y los nombra según la consulta. Si una consulta no tiene registros y dejas marcado «PDF si no hay registros», guarda un pantallazo PDF de SITFA como constancia; si lo desmarcas, la consulta queda anotada como «sin registros».
 
 **Hace:** Seguimiento (Informe seguimiento), Seguimiento (Búsqueda litigantes), Informes por vencer y Medidas por vencer.
-**No hace:** paquetes consolidados, lectura de bitácoras, historia de la causa, calendario de informes por ingreso, ni escritura en RUS.
+No escribe en RUS.
 
 ## Uso rápido (4 pasos)
 
