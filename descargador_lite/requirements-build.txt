@@ -1,0 +1,5 @@
+# Solo para construir el instalador en Windows
+-r requirements.txt
+pyinstaller==6.22.3
+Markdown==3.9
+pytest==8.4.2
