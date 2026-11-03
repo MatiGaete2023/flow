@@ -1,0 +1,95 @@
+META 4 CON BITACORAS 2.5.1 - Verificacion del 29 de octubre de 2026
+
+130 pruebas aprobadas con Python 3.12 y Tk (124 y 1 omitida con Python 3.13
+sin tkinter). Nuevo: destino con ruta demasiado larga rechazado antes de
+procesar (generar y regenerar), sin dejar carpetas; destino en el limite
+genera correctamente; nombre de carpeta de resultados corto y unico.
+No verificado en Windows real en esta sesion.
+
+META 4 CON BITACORAS 2.5 - Verificacion del 29 de octubre de 2026
+
+128 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (123 y 1
+omitida con Python 3.13 sin tkinter). Compilacion comprobada con 3.11.
+
+Nuevo en 2.5, comprobado con datos ficticios:
+- RIT visible distinto: bloquea (FECHA OBS. vacia).
+- Nombre visible distinto: fecha usada, fila amarilla con REVISAR NOMBRE VISIBLE.
+- Mismo nombre con otro orden, tildes, espacios o un nombre de mas: sin aviso.
+- Regenerar desde Registros.xlsx editado: fecha manual, REVISADO, etapa
+  cambiada (alerta recalculada), fila borrada; META 4 y consolidados nuevos,
+  hojas de inventario/matriz/errores conservadas, original sin cambios.
+- Fecha ilegible: rechazo con hoja y fila, sin carpeta de salida.
+- Filtro de tribunales conservado; sin Reporte META4.json exige fecha de corte.
+- Linea de comandos --regenerar y boton de la ventana.
+
+META 4 CON BITACORAS 2.4 - Verificacion del 29 de octubre de 2026
+
+116 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (112 y 1
+omitida con Python 3.13 sin tkinter). Compilacion comprobada con 3.11.
+
+Nuevo en 2.4, comprobado con datos ficticios:
+- Cuatro lotes separados (FAE Espera, FAE Cumplimiento, Residencia Espera,
+  Residencia Cumplimiento) generan un solo Meta 4 con sus 4 hojas completas.
+- Un lote con Espera y Cumplimiento de una modalidad se combina con otro lote.
+- Carpeta que contiene varios lotes: se combinan.
+- Lote repetido o anidado: se lee una vez.
+- Misma consulta en dos lotes: rechazo antes de escribir, nombrando ambos.
+- Carpeta sin resumen.json mezclada con lotes, o varias carpetas de Excel
+  sueltos: rechazo.
+- Lote incompleto y filtros: el mensaje nombra el lote.
+- Linea de comandos con --folder repetido.
+- Ventana: agregar, quitar y generar desde varios lotes.
+
+META 4 CON BITACORAS 2.3 - Verificacion del 18 de octubre de 2026
+
+105 pruebas aprobadas con Python 3.12 y Tk en pantalla virtual Linux (102 y 1
+omitida con Python 3.13 sin tkinter). Compilacion comprobada con 3.11.
+Cobertura de lineas: 90 % (generate_meta4 89 %, lector_excel 88 %,
+meta4_bitacoras 94 %, bitacora_html 77 %).
+
+Alcance 2.0: la herramienta no se conecta a SITFA ni a RUS. Se retiraron el
+puente local, la extension de Chrome, el transporte y la lectura en vivo, con
+sus pruebas. Solo procesa lotes del Descargador SITFA.
+
+Comprobado con datos ficticios:
+- Mes calendario movil, incluidos cambios de ano, meses cortos y bisiestos.
+- Fecha de observacion del centro; no se usa la respuesta del tribunal.
+- Exclusiones de Informes, fechas anteriores y fechas futuras.
+- Empates de fecha/hora con etapas diferentes requieren revision.
+- Alerta de Espera en registros de Cumplimiento, en los tres libros.
+- Ausencias, fallas y ambiguedad de ingreso no reutilizan FECHA OBS. del Excel.
+- Asociacion por persona y programa; identificadores remotos cuando disponibles.
+- Todas las paginas de la consulta, con XLS HTML tabular y controles SHA256;
+  paginas de una consulta no se informan como duplicado.
+- Bitacoras del Descargador (bitacoras.json + HTML) verificadas por SHA256;
+  HTML modificado queda como BITACORA NO VERIFICABLE y bloquea la asociacion.
+- Registros y bitacoras en carpetas separadas; varios lotes de bitacoras;
+  lecturas conservadas de un lote retomado.
+- Lectura fallida en un lote no anula la lectura verificada en otro.
+- Lectura anterior a la fecha de corte requiere revision; fecha propuesta.
+- Lote de registros con filtro de fechas, del formulario o de vencimiento:
+  procesado, con cada filtro informado en aviso, Registros, Control y reporte.
+- Consultas con registros sin bitacoras enumeradas: informadas.
+- Texto que empieza con "=" se conserva como texto en Registros y META 4.
+- Carpeta de salida existente rechazada; verificacion fallida no deja
+  archivos parciales; plantilla inexistente es error.
+- CLI rechaza fecha de corte futura y mes invalido.
+- Resumen por tribunal: conteos por lista, alertas, revision, sin FECHA OBS. y
+  fila TOTAL.
+- Filtro de tribunales: META 4 parcial solo con los bloques elegidos, matriz
+  NO INCLUIDO y cobertura sobre los elegidos, bitacoras del mes filtradas;
+  nombre no reconocido o tribunal sin registros es error. Sin filtro, las
+  salidas coinciden celda a celda con 2.0 salvo la hoja de resumen y la fila
+  "Tribunales incluidos".
+- Regresiones del generador v2.4, ahora por el camino del producto.
+- Auditoria 2.3: lector de Excel (BIFF con fecha, OOXML con dimension
+  desactualizada, XML 2003, HTML UTF-8/Windows-1252 con y sin charset,
+  rechazos); filas de otro tribunal; fila con tribunal no reconocido;
+  caracteres de control; vinculo remoto del Descargador de punta a punta; PDF
+  de consulta vacia; integridad del lote; ventana Tk.
+- Equivalencia del lector extraido frente a motor.py: 244 entradas, 238
+  identicas; las 6 diferencias son las dos correcciones declaradas.
+- Lote ficticio de 612 registros: generacion en 1,7 s (1.0: 20,7 s).
+
+Limites: no se ejecutaron los BAT en Windows ni se probo con lotes reales del
+Descargador. La validacion tecnica no acredita uso real.

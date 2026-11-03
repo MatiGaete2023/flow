@@ -1,0 +1,20 @@
+ORIGEN DE COMPONENTES
+
+Herramienta Meta 4 con bitácoras 2.3: Meta4.py y scripts/meta4_bitacoras.py.
+Base de planilla: META4_Automatizado_v2_4.zip, suministrado por el usuario. scripts/generate_meta4.py conserva su
+clasificación y escritura; desde 2.3 no incluye su línea de comandos propia (no la usaba el producto).
+Consolidado: reproduce las columnas y detección por RUT/nombre del Consolidador_Excel_Espera_Cumplimiento.zip suministrado.
+
+Lectura de entradas, derivada del Descargador SITFA 2.7.6:
+- scripts/lector_excel.py: read_excel y sus funciones auxiliares, extraídas de descargador/motor.py
+  (SHA256 del original 9c12d8343a14ff37f4cfaae8ff7bee214ded696a9f290df1ee7f271fde90a5bd). Cambios: decodificación del HTML sin charset y
+  lectura de OOXML con dimensión desactualizada. El resto de motor.py (transporte a SITFA) no se incluye.
+- src/nurus/bitacora_html.py: lector de la ventana de bitácora guardada como HTML. Desde 2.3 sin
+  visible_identity_warnings ni POPUP_PATH (sin uso) y con validación de parámetros.
+
+La herramienta no se conecta a SITFA ni a RUS: no incluye puente local, extensión de Chrome,
+transporte por lotes, lectura de bitácoras en vivo ni captura PDF.
+
+SHA256 de los componentes incluidos:
+ea9d7adca16644615084da7333bcc6df94adbad5281bb54f600958a24fbbd4d6  scripts/lector_excel.py
+902f455226da41969e0c998eb4b59f20384b36c8ad57be62656741e21f338c03  src/nurus/bitacora_html.py
