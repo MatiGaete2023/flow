@@ -1,0 +1,67 @@
+{
+ "01_inicio.png": {
+  "importar": [
+   453,
+   12,
+   130,
+   32
+  ]
+ },
+ "02_trabajo.png": {
+  "tabla": [
+   167,
+   120,
+   1086,
+   170
+  ],
+  "siguiente": [
+   10,
+   726,
+   165,
+   32
+  ],
+  "excel": [
+   1136,
+   12,
+   132,
+   32
+  ]
+ },
+ "03_correos.png": {
+  "preparar": [
+   175,
+   58,
+   110,
+   32
+  ],
+  "guardar": [
+   1020,
+   662,
+   145,
+   32
+  ]
+ },
+ "04_resoluciones.png": {
+  "preparar": [
+   629,
+   14,
+   205,
+   32
+  ],
+  "generar": [
+   429,
+   50,
+   135,
+   32
+  ]
+ },
+ "05_resultados.png": {
+  "descargar": [
+   -48,
+   -71,
+   1,
+   1
+  ]
+ },
+ "06_configuracion.png": {}
+}

@@ -1,0 +1,130 @@
+{
+ "a0_inicio.png": {
+  "abrir": [
+   198,
+   88,
+   107,
+   31
+  ],
+  "copiar": [
+   524,
+   131,
+   107,
+   31
+  ],
+  "mas": [
+   872,
+   6,
+   116,
+   27
+  ]
+ },
+ "a1_conectado.png": {
+  "estado": [
+   747,
+   9,
+   115,
+   21
+  ],
+  "consultas": [
+   0,
+   41,
+   180,
+   590
+  ],
+  "descargar": [
+   881,
+   641,
+   107,
+   31
+  ]
+ },
+ "a2_opciones_seguimiento.png": {
+  "tribunales": [
+   286,
+   55,
+   698,
+   35
+  ],
+  "pestanas": [
+   286,
+   90,
+   698,
+   35
+  ],
+  "modalidades": [
+   286,
+   195,
+   698,
+   35
+  ]
+ },
+ "a3_informes_medidas_fechas.png": {
+  "informes": [
+   286,
+   125,
+   698,
+   35
+  ],
+  "medidas": [
+   286,
+   160,
+   698,
+   35
+  ],
+  "periodo": [
+   286,
+   230,
+   698,
+   35
+  ],
+  "incluir": [
+   286,
+   296,
+   698,
+   35
+  ]
+ },
+ "a4_descarga_terminada.png": {
+  "lista": [
+   198,
+   55,
+   786,
+   562
+  ],
+  "resumen": [
+   0,
+   633,
+   1000,
+   47
+  ]
+ },
+ "a5_busqueda_lit.png": {
+  "tribunales": [
+   286,
+   55,
+   698,
+   35
+  ],
+  "estados": [
+   286,
+   90,
+   698,
+   35
+  ]
+ },
+ "a6_medidas_por_vencer.png": {
+  "meses": [
+   286,
+   90,
+   698,
+   70
+  ],
+  "anio": [
+   286,
+   161,
+   81,
+   27
+  ]
+ }
+}
