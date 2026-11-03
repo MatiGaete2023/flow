@@ -2,7 +2,7 @@
 
     python tools/manuales/videos.py <capturas> <docs/manuales> <modelo_kokoro> <salida>
 
-<capturas>/<producto>/cajas.json da los recuadros; las imágenes anotadas salen de <docs/manuales>/img/<producto>/.
+<capturas>/<producto>/cajas.json da los recuadros y raw/ las capturas sin marcas (el video dibuja un recuadro por paso).
 El modelo (kokoro-v1.0.onnx, voices-v1.0.bin) se descarga de github.com/thewh1teagle/kokoro-onnx/releases.
 Reutiliza las escenas animadas de descargador_lite/build/manual_visual (video.py y narrado.py).
 """
@@ -53,7 +53,7 @@ def guion(producto, capturas, manuales):
 
     def sc(imagen, n, texto, paso, total, zoom=1.5):
         caja = tuple(cajas[imagen][n - 1]) if n else None
-        ruta = manuales / 'img' / producto / imagen
+        ruta = capturas / producto / 'raw' / imagen
         return lambda s: video.scene(ruta, caja, texto, paso, total, seconds=max(s, 4.2), zoom=zoom)
 
     def cd(titulo, lineas):

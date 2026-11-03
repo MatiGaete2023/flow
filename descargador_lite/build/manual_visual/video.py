@@ -75,7 +75,11 @@ def fit(img):
 
 
 def scene(src, target, text, step, total, seconds=6.0, zoom=1.7):
-    """Puntero hacia el objetivo, clic y acercamiento suave. target = (x, y, w, h) en la captura."""
+    """Puntero hacia el objetivo, clic, recuadro y acercamiento suave. target = (x, y, w, h) en la captura.
+
+    Usar capturas sin marcas (raw): el único recuadro es el del paso. El acercamiento se limita para que el
+    recuadro completo quede a la vista y nunca supera 1,4.
+    """
     img = Image.open(src).convert('RGB')
     base, s, (ox, oy) = fit(img)
     canvas = Image.new('RGB', (W, H - BAR), (243, 246, 250))
@@ -84,6 +88,9 @@ def scene(src, target, text, step, total, seconds=6.0, zoom=1.7):
     if target:
         tx, ty, tw, th = target
         cx, cy = ox + (tx + tw / 2) * s, oy + (ty + th / 2) * s
+        x0, y0, x1, y1 = ox + tx * s - 6, oy + ty * s - 6, ox + (tx + tw) * s + 6, oy + (ty + th) * s + 6
+        ImageDraw.Draw(canvas).rounded_rectangle([x0, y0, x1, y1], radius=8, outline=RED, width=4)
+        zoom = max(1.0, min(zoom, 1.4, W * 0.85 / (x1 - x0), (H - BAR) * 0.85 / (y1 - y0)))
     else:
         cx, cy = W / 2, (H - BAR) / 2
     start = (W * 0.55, (H - BAR) * 0.75)
@@ -139,8 +146,8 @@ def main(src, img, out):
                                                       'Antes: instala SITFA Lite con Instalar_SITFA_Lite_1.1.0.exe']),
         scene(img / 'a0_inicio.png', a('a0_inicio.png', 'instalar'),
               'Abre SITFA Lite y pulsa «Instalar extensión…». Copia la ruta de la carpeta y abre chrome://extensions.', 1, total),
-        scene(img / 'r01_extensiones.png', b('dev'), 'En chrome://extensions activa «Modo Desarrollador» (arriba a la derecha).', 2, total),
-        scene(img / 'r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar descomprimida».', 3, total),
+        scene(img / 'r01_extensiones.png', b('dev'), 'En chrome://extensions activa «Modo de desarrollador» (arriba a la derecha).', 2, total),
+        scene(img / 'r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar extensión sin empaquetar».', 3, total),
         card('Paso 4 · Elige la carpeta extension', ['En la ventana de carpetas pega la ruta con Ctrl+V',
                                                      'en la barra de dirección y pulsa «Seleccionar carpeta»:'], 6.0,
              mono=r'C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension'),
@@ -200,8 +207,8 @@ def complete(src, img, out):
                                                          'el programa no ve tu contraseña ni tus cookies.'], 4.0),
         scene(img / 'a0_inicio.png', a('a0_inicio.png', 'instalar'),
               'En SITFA Lite pulsa «Instalar extensión…»: copia la ruta de la carpeta y abre chrome://extensions.', 1, 7),
-        scene(img / 'r01_extensiones.png', b('dev'), 'Activa «Modo Desarrollador» (arriba a la derecha).', 2, 7),
-        scene(img / 'r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar descomprimida».', 3, 7),
+        scene(img / 'r01_extensiones.png', b('dev'), 'Activa «Modo de desarrollador» (arriba a la derecha).', 2, 7),
+        scene(img / 'r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar extensión sin empaquetar».', 3, 7),
         card('Paso 4 · Elige la carpeta extension', ['En la ventana de carpetas pega la ruta con Ctrl+V',
                                                      'en la barra de dirección y pulsa «Seleccionar carpeta»:'], 6.0,
              mono=r'C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension'),

@@ -972,7 +972,7 @@ class Application:
         open_chrome('chrome://extensions/')
         messagebox.showinfo(
             'Instalación única en tu Chrome',
-            'Activa Modo de desarrollador y pulsa Cargar descomprimida.\n\nElige exactamente esta carpeta (su ruta '
+            'Activa Modo de desarrollador y pulsa Cargar extensión sin empaquetar.\n\nElige exactamente esta carpeta (su ruta '
             'está copiada al portapapeles; pégala en la barra de dirección):\n\n'
             + str(directory)
             + '\n\nNo elijas Descargas ni la carpeta del programa: Chrome rechaza las que contienen _internal.\n\n'

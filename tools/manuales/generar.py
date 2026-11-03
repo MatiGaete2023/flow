@@ -162,7 +162,7 @@ def descargador(img):
     c += """<p>El Descargador SITFA consulta SITFA desde tu propio Chrome, descarga los XLS de RUS con todas sus páginas, lee
 las bitácoras y crea el paquete <code>Captura_CSMP.zip</code> para el Asistente. No escribe en RUS.</p>
 <div class="note">Instalación de la extensión (una vez): menú <b>Más › Instalar extensión…</b>, activa el modo desarrollador
-en <code>chrome://extensions</code>, pulsa «Cargar descomprimida» y elige la carpeta <code>extension</code>. El programa y la
+en <code>chrome://extensions</code>, pulsa «Cargar extensión sin empaquetar» y elige la carpeta <code>extension</code>. El programa y la
 extensión deben tener la misma versión (2.9.0).</div>"""
     c += seccion('1. Conectar Chrome')
     c += paso(

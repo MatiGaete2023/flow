@@ -7,7 +7,7 @@ La versión vigente está en `contrato_integral.py`; la extensión de `extension
 ## Instalar y abrir
 
 1. Ejecuta `Iniciar.cmd` (usa el EXE de `dist/` si existe; si no, crea `.venv` con Python 3.12 y el lock con hashes).
-2. En Chrome: `chrome://extensions` → modo desarrollador → «Cargar descomprimida» → carpeta `extension/`.
+2. En Chrome: `chrome://extensions` → modo desarrollador → «Cargar extensión sin empaquetar» → carpeta `extension/`.
 3. Entra a SITFA → Seguimiento y conecta la extensión con el código que muestra el Descargador.
 
 ## Uso

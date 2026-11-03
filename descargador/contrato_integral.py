@@ -65,7 +65,7 @@ def verify_extension(bridge):
             + str(result.get('version', 'sin versión'))
             + '; esta herramienta requiere '
             + VERSION
-            + '). En chrome://extensions quita «SITFA · Descargador local integral» y pulsa Cargar descomprimida con la carpeta '
+            + '). En chrome://extensions quita «SITFA · Descargador local integral» y pulsa Cargar extensión sin empaquetar con la carpeta '
             + str(extension_dir())
             + '. Luego abre una nueva conexión desde SITFA.'
         )

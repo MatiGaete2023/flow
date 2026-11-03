@@ -1,6 +1,7 @@
 """Videos narrados (voz neuronal Kokoro, local) a partir de las mismas capturas de video.py.
 
-Uso: narrado.py <capturas> <docs/img> <modelo_kokoro> <salida_dir> [voz]
+Uso: narrado.py <capturas> <capturas>/raw <modelo_kokoro> <salida_dir> [voz]
+(imágenes sin marcas: el video dibuja un recuadro por paso)
 El modelo (kokoro-v1.0.onnx, voices-v1.0.bin) se descarga de github.com/thewh1teagle/kokoro-onnx/releases.
 """
 
@@ -84,10 +85,10 @@ def guiones(src, img):
     extension = [
         ('Abre el menú Más y elige Instalar extensión. El programa copia la ubicación de la carpeta y abre la página de extensiones de Chrome.',
          sc('a0_inicio.png', a('a0_inicio.png', 'mas'), 'Menú «Más» → «Instalar extensión…»: copia la ruta y abre chrome://extensions.', 1, 7)),
-        ('Arriba a la derecha, activa el Modo Desarrollador.',
-         sc('r01_extensiones.png', b('dev'), 'Activa «Modo Desarrollador» (arriba a la derecha).', 2, 7)),
-        ('Aparecen nuevos botones. Pulsa Cargar descomprimida.',
-         sc('r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar descomprimida».', 3, 7)),
+        ('Arriba a la derecha, activa el Modo de desarrollador.',
+         sc('r01_extensiones.png', b('dev'), 'Activa «Modo de desarrollador» (arriba a la derecha).', 2, 7)),
+        ('Aparecen nuevos botones. Pulsa Cargar extensión sin empaquetar.',
+         sc('r02_modo_desarrollador.png', b('load'), 'Pulsa «Cargar extensión sin empaquetar».', 3, 7)),
         ('Se abre una ventana para elegir carpeta. Pega la ruta con control ve en la barra de dirección, y pulsa Seleccionar carpeta.',
          cd('Paso 4 · Elige la carpeta extension', ['En la ventana de carpetas pega la ruta con Ctrl+V',
                                                     'en la barra de dirección y pulsa «Seleccionar carpeta»:'], ruta_ext)),

@@ -444,7 +444,7 @@ class Application:
         messagebox.showinfo(
             'Instalar la extensión (una sola vez)',
             '1. En chrome://extensions activa «Modo de desarrollador» (arriba a la derecha).\n'
-            '2. Pulsa «Cargar descomprimida».\n'
+            '2. Pulsa «Cargar extensión sin empaquetar».\n'
             '3. Pega la ruta copiada al portapapeles y elige la carpeta:\n\n'
             f'{directory}\n\n'
             '4. Fija el icono «SITFA Lite» en la barra de Chrome.',

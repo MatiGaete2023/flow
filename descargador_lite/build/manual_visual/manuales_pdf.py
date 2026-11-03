@@ -58,9 +58,9 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
     body += step(2, 'En SITFA Lite abre «Más» → «Instalar extensión…»', f"""
 <p>Copia al portapapeles la ruta de la carpeta <code>extension</code> y abre <code>chrome://extensions</code>. Menú «Más»: recuadro {RED} 3.</p>""",
                  'a0_inicio.png', half=True)
-    body += step(3, 'Activa «Modo Desarrollador»', '<p>Interruptor arriba a la derecha de <code>chrome://extensions</code>.</p>',
+    body += step(3, 'Activa «Modo de desarrollador»', '<p>Interruptor arriba a la derecha de <code>chrome://extensions</code>.</p>',
                  'r01_extensiones.png')
-    body += step(4, 'Pulsa «Cargar descomprimida»', """
+    body += step(4, 'Pulsa «Cargar extensión sin empaquetar»', """
 <p>Aparece al activar el modo desarrollador. En la ventana de carpetas pega la ruta (<b>Ctrl+V</b> en la barra de dirección) y pulsa <b>Seleccionar carpeta</b>:</p>
 <div class="path">C:\\Users\\&lt;tu usuario&gt;\\AppData\\Local\\Programs\\SITFA_Lite\\extension</div>""", 'r02_modo_desarrollador.png')
     body += step(5, 'Comprueba la tarjeta «SITFA Lite · Descargas RUS»', """
@@ -85,7 +85,7 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <p><b>Actualizar:</b> ejecuta el nuevo instalador y en <code>chrome://extensions</code> pulsa ↻ en la tarjeta SITFA Lite. El programa avisa si la extensión es de otra versión.</p>
 <p><b>Desinstalar:</b> Configuración → Aplicaciones → SITFA Lite → Desinstalar; en <code>chrome://extensions</code> pulsa <b>Quitar</b>. Tus descargas no se borran.</p>
 <table><tr><th>Síntoma</th><th>Solución</th></tr>
-<tr><td>No aparece «Cargar descomprimida»</td><td>Activa Modo Desarrollador. Si tu equipo lo bloquea por política institucional, pide a soporte habilitarlo para esta extensión.</td></tr>
+<tr><td>No aparece «Cargar extensión sin empaquetar»</td><td>Activa Modo de desarrollador. Si tu equipo lo bloquea por política institucional, pide a soporte habilitarlo para esta extensión.</td></tr>
 <tr><td>«Chrome usa otra versión de la extensión»</td><td>Quita la tarjeta antigua y carga la carpeta <code>extension</code> de esta instalación.</td></tr>
 <tr><td>«El descargador rechazó el código»</td><td>Copia el código actual de la ventana abierta.</td></tr>
 <tr><td>«No se encontró Chrome instalado»</td><td>Abre SITFA manualmente en Chrome; el resto funciona igual.</td></tr>

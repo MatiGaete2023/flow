@@ -30,7 +30,7 @@ La extensión es la que consulta SITFA con tu sesión. Se instala en modo desarr
    - copia al portapapeles la ruta de la carpeta `extension`,
    - abre `chrome://extensions` en tu Chrome.
 2. En `chrome://extensions`, activa **Modo de desarrollador** (interruptor arriba a la derecha).
-3. Pulsa **Cargar descomprimida**.
+3. Pulsa **Cargar extensión sin empaquetar**.
 4. En la ventana de carpetas, pega la ruta (Ctrl+V en la barra de dirección) y elige la carpeta `extension`. La ruta es:
    `C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension`
 5. Debe aparecer la tarjeta **SITFA Lite · Descargas RUS 1.1.0**.
@@ -64,7 +64,7 @@ Listo. Continúa con el **Manual de uso**.
 | Síntoma | Solución |
 | --- | --- |
 | «No se encontró Chrome instalado» | Instala Google Chrome o abre SITFA manualmente; el resto funciona igual. |
-| No aparece «Cargar descomprimida» | Activa **Modo de desarrollador** en `chrome://extensions`. Si tu equipo lo bloquea por política institucional, pide a soporte que lo habilite para esta extensión. |
+| No aparece «Cargar extensión sin empaquetar» (en Chrome antiguos: «Cargar descomprimida») | Activa **Modo de desarrollador** en `chrome://extensions`. Si tu equipo lo bloquea por política institucional, pide a soporte que lo habilite para esta extensión. |
 | «Chrome usa otra versión de la extensión» | Quita la tarjeta antigua en `chrome://extensions` y carga la carpeta `extension` de esta instalación. |
 | «El descargador rechazó el código» | El código cambia cada vez que abres SITFA Lite o pulsas Desconectar. Copia el actual. |
 | El antivirus bloquea el instalador | Es un programa empaquetado con PyInstaller sin firma comercial. Verifica el SHA-256 publicado junto al instalador y pide la excepción a soporte. |
