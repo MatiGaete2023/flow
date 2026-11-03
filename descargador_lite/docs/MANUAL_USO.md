@@ -1,16 +1,16 @@
 # SITFA Lite · Manual de uso
 
-SITFA Lite descarga los XLS que produce RUS/SITFA, con todas sus páginas, y los nombra según la consulta. Si una consulta no tiene registros, guarda un pantallazo PDF de SITFA como respaldo.
+SITFA Lite descarga los XLS que produce RUS/SITFA, con todas sus páginas, y los nombra según la consulta. Si una consulta no tiene registros y dejas marcado «PDF si no hay registros», guarda un pantallazo PDF de SITFA como constancia; si lo desmarcas, la consulta queda anotada como «sin registros».
 
 **Hace:** Seguimiento (Informe seguimiento), Seguimiento (Búsqueda litigantes), Informes por vencer y Medidas por vencer.
 **No hace:** paquetes consolidados, lectura de bitácoras, historia de la causa, calendario de informes por ingreso, ni escritura en RUS.
 
 ## Uso rápido (4 pasos)
 
-1. **Conectar:** abre SITFA Lite → **Abrir SITFA en Chrome** → inicia sesión → pulsa el icono **SITFA Lite** en Chrome → pega el código (**Copiar código**) → **Conectar**. Debe verse **● Conectado**.
-2. **Qué descargar:** marca una de las 4 consultas y pulsa **Cargar opciones**. SITFA abre esa pantalla en tu Chrome y SITFA Lite trae sus tribunales y filtros.
-3. **Opciones:** marca tribunales y filtros (ver tabla). Abajo se indica cuántas consultas se harán.
-4. **Descargar:** pulsa **⬇ Descargar**. Al terminar, **Abrir carpeta del lote** o doble clic en un archivo de la lista.
+1. **Conectar:** abre SITFA Lite → **Abrir SITFA** → inicia sesión → pulsa el icono **SITFA Lite** en Chrome → pega el código (**Copiar**) → **Conectar**. Arriba a la derecha debe decir **Chrome conectado**.
+2. **Qué descargar:** elige una de las 4 consultas en la lista de la izquierda. SITFA abre esa pantalla en tu Chrome y SITFA Lite trae sus tribunales y filtros solo.
+3. **Opciones:** marca las fichas de tribunales y filtros (ver tabla); clic en el nombre de una fila marca o desmarca todas. Abajo se indica cuántas consultas se harán.
+4. **Descargar:** pulsa **Descargar**. Cada consulta muestra su estado; al terminar, **Abrir carpeta** o doble clic en una consulta. **Nuevo lote** vuelve a los filtros.
 
 Mientras descarga, la pestaña de SITFA queda cubierta con el aviso «Descargando el lote»; no la uses ni la cierres. Deja abierta también la pestaña de conexión.
 
@@ -25,9 +25,10 @@ Mientras descarga, la pestaña de SITFA queda cubierta con el aviso «Descargand
 
 Notas:
 
-- Los nombres exactos de informes, medidas, estados, meses y años son los que entrega tu SITFA al pulsar **Cargar opciones**.
-- **Filtrar por fecha:** activa la casilla y escribe Desde/Hasta (DD/MM/AAAA), usa 📅 o los atajos *Este mes*, *Mes anterior*, *Últimos 30 días*.
-- **Conservar los otros filtros preparados en SITFA:** para buscar a una persona, centro, RUT o causa concreta, prepara esos filtros primero en la pantalla de SITFA y marca esta casilla. Si no la marcas, SITFA Lite limpia esos filtros y trae todos los registros.
+- Los nombres exactos de informes, medidas, estados, meses y años son los que entrega tu SITFA al elegir la consulta.
+- **Período:** *Sin filtro* o *Por fecha*, con Desde/Hasta (DD/MM/AAAA) y el botón **Calendario**.
+- **Incluir · PDF si no hay registros:** marcado (por defecto), guarda el pantallazo de constancia; desmarcado, no lo guarda. Se recuerda entre sesiones.
+- **Conservar los otros filtros preparados en SITFA** (menú **Más**): para buscar a una persona, centro, RUT o causa concreta, prepara esos filtros primero en la pantalla de SITFA y márcalo. Si no, SITFA Lite limpia esos filtros y trae todos los registros.
 - Las consultas de Informes/Medidas por vencer usan mes y año; no admiten rango de fechas.
 
 ## Nombres de los archivos
@@ -58,10 +59,10 @@ Cada página se verifica antes de pedir la siguiente: la respuesta de SITFA debe
 
 ## Cancelar, errores y sesión
 
-- **Cancelar** detiene el lote al terminar la página en curso. Los archivos ya guardados quedan; repite la consulta en un lote nuevo.
+- **Detener** (el botón principal mientras descarga) detiene el lote al terminar la página en curso. Los archivos ya guardados quedan; repite la consulta en un lote nuevo.
 - «Sesión expirada»: vuelve a iniciar sesión en SITFA, abre de nuevo la conexión desde el icono de la extensión y repite.
 - «No se pudo capturar la consulta vacía»: deja la ventana de Chrome visible (no minimizada) durante el lote; el pantallazo necesita que Chrome pinte la pestaña.
-- Si se pierde la conexión (● Sin conexión): pulsa el icono SITFA Lite en la pestaña de SITFA y pega el código de nuevo.
+- Si se pierde la conexión (**Sin conexión**): pulsa el icono SITFA Lite en la pestaña de SITFA y pega el código de nuevo.
 
 ## Privacidad
 

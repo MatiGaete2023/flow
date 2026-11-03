@@ -160,13 +160,20 @@ class Chips(ttk.Frame):
         self._layout(width if width > 50 else 10_000)
 
     def _layout(self, width):
-        row = col = used = 0
+        # Cada fila es un marco propio: las fichas fluyen sin alinearse en columnas compartidas.
+        for frame in getattr(self, '_rows', []):
+            frame.destroy()
+        self._rows = []
+        used = width + 1
         for button in self.buttons.values():
             need = button.winfo_reqwidth() + 6
-            if used and used + need > width:
-                row, col, used = row + 1, 0, 0
-            button.grid(row=row, column=col, padx=(0, 6), pady=(0, 6), sticky='w')
-            col += 1
+            if used + need > width and (used <= width or not self._rows):
+                frame = ttk.Frame(self)
+                frame.pack(side='top', anchor='w', pady=(0, 6))
+                self._rows.append(frame)
+                used = 0
+            button.pack(in_=self._rows[-1], side='left', padx=(0, 6))
+            button.lift(self._rows[-1])
             used += need
 
     def _reflow(self, event):

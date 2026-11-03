@@ -2,6 +2,7 @@ name: Entrega Rediseño · CSMP y Descargador Windows
 
 # Entrega única de la rama Rediseno (pedido expreso del usuario, 3-nov-2026). No cambia la regla E4 de tests.yml:
 # corre al agregar o cambiar este archivo en esa rama, o a pedido; no en cada push de código.
+# Entrega 2: lista lateral del Descargador, Asistente sin paso a paso inferior.
 on:
   push:
     branches: ['Rediseno']

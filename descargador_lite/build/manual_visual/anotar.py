@@ -30,22 +30,16 @@ def mark(image, boxes, pad=6):
 
 
 def main(src, out):
+    """Anota las capturas del programa (app_boxes.json, en orden) y, si están, las de Chrome (boxes.json)."""
     src, out = Path(src), Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    web = json.loads((src / 'boxes.json').read_text())
     app = json.loads((src / 'app_boxes.json').read_text())
+    for name, boxes in app.items():
+        mark(Image.open(src / 'raw' / name), list(boxes.values())).save(out / name, optimize=True)
+    if not (src / 'boxes.json').is_file():
+        return  # Las capturas de Chrome no cambiaron: se conservan las anotadas en docs/img.
+    web = json.loads((src / 'boxes.json').read_text())
     b = lambda k: [web[k]['x'], web[k]['y'], web[k]['width'], web[k]['height']]  # noqa: E731
-    def a(shot, *keys):
-        # Los controles dentro del área desplazable se recortan a lo visible.
-        cx, cy, cw, ch = app[shot]['_canvas']
-        result = []
-        for k in keys:
-            x, y, w, h = app[shot][k]
-            if k not in ('descargar', 'lista', 'copiar', 'abrir', 'instalar', 'estado', 'radios', 'cargar'):
-                top, bottom = max(y, cy + 4), min(y + h, cy + ch - 8)
-                y, h = top, max(0, bottom - top)
-            result.append([x, y, w, h])
-        return result
     plan = {
         'r01_extensiones.png': [b('dev')],
         'r02_modo_desarrollador.png': [b('load')],
@@ -54,13 +48,6 @@ def main(src, out):
         'r05_fijada.png': [[1116, 49, 28, 28]],
         'r06_conexion.png': [],
         'r07_codigo_pegado.png': [b('code'), b('connect')],
-        'a0_inicio.png': a('a0_inicio.png', 'abrir', 'instalar', 'copiar'),
-        'a1_conectado.png': a('a1_conectado.png', 'estado', 'radios', 'cargar'),
-        'a2_opciones_seguimiento.png': a('a2_opciones_seguimiento.png', 'tribunales', 'pestanas', 'modalidades'),
-        'a3_informes_medidas_fechas.png': a('a3_informes_medidas_fechas.png', 'informes', 'medidas', 'fechas'),
-        'a4_descarga_terminada.png': a('a4_descarga_terminada.png', 'descargar', 'lista'),
-        'a5_busqueda_lit.png': a('a5_busqueda_lit.png', 'tribunales', 'estados'),
-        'a6_medidas_por_vencer.png': a('a6_medidas_por_vencer.png', 'meses', 'anio'),
     }
     for name, boxes in plan.items():
         mark(Image.open(src / 'raw' / name), boxes).save(out / name, optimize=True)

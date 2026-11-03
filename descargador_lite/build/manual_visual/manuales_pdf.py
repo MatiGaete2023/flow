@@ -4,7 +4,7 @@ import sys
 from html import escape
 from pathlib import Path
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 CSS = """
 @page{size:A4;margin:16mm 14mm}
 body{font:11pt/1.5 'DejaVu Sans','Segoe UI',Arial,sans-serif;color:#20324d;margin:0}
@@ -45,7 +45,7 @@ RED = '<span class="red">●</span>'
 def instalacion():
     body = '<div class="page"></div><h2>A. Instalar el programa</h2>'
     body += step(1, 'Ejecutar el instalador', """
-<ol><li>Doble clic en <b>Instalar_SITFA_Lite_1.0.0.exe</b>.</li>
+<ol><li>Doble clic en <b>Instalar_SITFA_Lite_1.1.0.exe</b>.</li>
 <li>Si aparece «Windows protegió su PC» (SmartScreen): <b>Más información</b> → <b>Ejecutar de todas formas</b>. Aparece porque el instalador no tiene firma digital comercial.</li>
 <li>Lee el aviso inicial → <b>Siguiente</b> → deja la carpeta propuesta → marca «Crear un acceso directo en el escritorio» → <b>Instalar</b>.</li>
 <li>Al terminar deja marcadas las casillas: se abre el manual de instalación y SITFA Lite.</li></ol>
@@ -55,8 +55,8 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <div class="warn">Las ventanas del instalador son las estándar de Windows (Inno Setup); no se incluyen capturas porque este manual se generó fuera de Windows.</div>
 """)
     body += '<div class="page"></div><h2>B. Cargar la extensión en Chrome (una sola vez)</h2>'
-    body += step(2, 'En SITFA Lite pulsa «Instalar extensión…»', f"""
-<p>Copia al portapapeles la ruta de la carpeta <code>extension</code> y abre <code>chrome://extensions</code>. Recuadro {RED} 2.</p>""",
+    body += step(2, 'En SITFA Lite abre «Más» → «Instalar extensión…»', f"""
+<p>Copia al portapapeles la ruta de la carpeta <code>extension</code> y abre <code>chrome://extensions</code>. Menú «Más»: recuadro {RED} 3.</p>""",
                  'a0_inicio.png', half=True)
     body += step(3, 'Activa «Modo Desarrollador»', '<p>Interruptor arriba a la derecha de <code>chrome://extensions</code>.</p>',
                  'r01_extensiones.png')
@@ -64,7 +64,7 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <p>Aparece al activar el modo desarrollador. En la ventana de carpetas pega la ruta (<b>Ctrl+V</b> en la barra de dirección) y pulsa <b>Seleccionar carpeta</b>:</p>
 <div class="path">C:\\Users\\&lt;tu usuario&gt;\\AppData\\Local\\Programs\\SITFA_Lite\\extension</div>""", 'r02_modo_desarrollador.png')
     body += step(5, 'Comprueba la tarjeta «SITFA Lite · Descargas RUS»', """
-<p>Debe decir <b>1.0.0 Lite · solo descargas RUS</b> y estar activada (interruptor azul).</p>
+<p>Debe decir <b>1.1.0 Lite · solo descargas RUS</b> y estar activada (interruptor azul).</p>
 <div class="warn">No muevas ni borres la carpeta <code>extension</code>: Chrome la usa desde ahí.</div>""", 'r03_extension_cargada.png')
     body += step(6, 'Fija el ícono en la barra', '<p>Pulsa el rompecabezas (1) y luego el alfiler (2) junto a SITFA Lite.</p>',
                  'r04_menu_extensiones.png')
@@ -72,13 +72,13 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
                  'r05_fijada.png')
     body += '<div class="page"></div><h2>C. Conectar Chrome con SITFA Lite</h2>'
     body += step(8, 'Abre SITFA y copia el código', """
-<ol><li><b>Abrir SITFA en Chrome</b> (1) e inicia sesión como siempre.</li>
-<li><b>Copiar código</b> (3). El código cambia cada vez que abres el programa o pulsas Desconectar.</li></ol>""",
+<ol><li><b>Abrir SITFA</b> (1) e inicia sesión como siempre.</li>
+<li><b>Copiar</b> (2) el código. Cambia cada vez que abres el programa o desconectas (menú «Más»).</li></ol>""",
                  'a0_inicio.png', half=True)
     body += step(9, 'Pulsa el ícono SITFA Lite estando en la pestaña de SITFA', """
 <p>Se abre la pestaña «Conectar con SITFA Lite». Pega el código (1) y pulsa <b>Conectar</b> (2). Deja esa pestaña abierta.</p>""",
                  'r07_codigo_pegado.png')
-    body += step(10, 'Listo: «● Conectado»', '<p>El programa muestra el estado en verde (1). Sigue con el <b>Manual de uso</b>.</p>',
+    body += step(10, 'Listo: «Chrome conectado»', '<p>Arriba a la derecha dice <b>Chrome conectado</b> (1) y las opciones de SITFA se cargan solas. Sigue con el <b>Manual de uso</b>.</p>',
                  'a1_conectado.png', half=True)
     body += '<div class="page"></div><h2>D. Actualizar, desinstalar y problemas frecuentes</h2>'
     body += """
@@ -96,31 +96,32 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 def uso():
     body = '<div class="page"></div><h2>Qué hace y qué no</h2>'
     body += """
-<p><b>Hace:</b> descarga los XLS que produce RUS/SITFA —todas las páginas— de 4 consultas, los nombra según la consulta y guarda un pantallazo PDF cuando no hay registros.</p>
+<p><b>Hace:</b> descarga los XLS que produce RUS/SITFA —todas las páginas— de 4 consultas, los nombra según la consulta y, si lo dejas marcado, guarda un pantallazo PDF cuando no hay registros.</p>
 <p><b>No hace:</b> paquetes consolidados, bitácoras, historia de la causa, calendario de informes por ingreso, ni escritura en RUS.</p>
 <table><tr><th>Consulta</th><th>Opciones</th><th>Una descarga por cada…</th></tr>
 <tr><td>Seguimiento · Informe seguimiento</td><td>Tribunales · Pestañas · Modalidades · Informe (pestaña Informes) · Medidas (pestaña Cumplimiento) · Fechas</td><td>tribunal × pestaña × modalidad × informe/medida</td></tr>
 <tr><td>Seguimiento · Búsqueda litigantes</td><td>Tribunales · Estado · Fechas</td><td>tribunal × estado</td></tr>
 <tr><td>Informes · Informes por vencer</td><td>Tribunales · Mes(es) · Año</td><td>tribunal × mes</td></tr>
 <tr><td>Informes · Medidas por vencer</td><td>Tribunales · Mes(es) · Año</td><td>tribunal × mes</td></tr></table>
-<div class="note">Antes de empezar: SITFA Lite debe mostrar <b>● Conectado</b> (ver Manual de instalación, sección C).</div>"""
+<div class="note">Antes de empezar: SITFA Lite debe mostrar <b>Chrome conectado</b> (ver Manual de instalación, sección C).</div>"""
     body += '<div class="page"></div><h2>1. Elegir la consulta</h2>'
-    body += step(1, 'Marca la consulta y pulsa «Cargar opciones»', """
-<p>SITFA abre esa pantalla en tu Chrome y el programa trae sus tribunales y filtros (2 y 3). El estado de conexión es (1).</p>""",
+    body += step(1, 'Elige la consulta en la lista de la izquierda', """
+<p>(2) SITFA abre esa pantalla en tu Chrome y el programa trae sus tribunales y filtros solo; no hay que pulsar nada más. (1) es el estado de conexión y (3) el botón Descargar.</p>""",
                  'a1_conectado.png')
     body += '<div class="page"></div><h2>2. Seguimiento · Informe seguimiento</h2>'
     body += step(2, 'Tribunales, pestañas y modalidades', """
-<ol><li><b>Tribunales:</b> clic para marcar o desmarcar; <b>Buscar</b> filtra la lista; <b>Todos/Ninguno</b> actúa sobre lo visible.</li>
+<ol><li><b>Tribunales:</b> clic en una ficha para marcarla o desmarcarla. Clic en el nombre de la fila marca o desmarca todas.</li>
 <li><b>Pestañas:</b> Espera, Cumplimiento, Informes, Egresados.</li>
-<li><b>Modalidades:</b> Residencia, Ambulatorio, FAE, DCE.</li></ol>""", 'a2_opciones_seguimiento.png')
+<li><b>Modalidad:</b> Residencia, Ambulatorio, FAE, DCE.</li></ol>""", 'a2_opciones_seguimiento.png')
     body += step(3, 'Informe, medidas y fechas', """
-<ol><li><b>Informe</b> (solo pestaña Informes): Por vencer, Vencidos, Recibidos.</li>
-<li><b>Medidas</b> (solo pestaña Cumplimiento): Todas las medidas, Por vencer, Vencidos.</li>
-<li><b>Filtrar por fecha</b> (opcional): Desde/Hasta DD/MM/AAAA, botón <b>Elegir…</b> o atajos. «Conservar los otros filtros preparados en SITFA»: prepara antes en SITFA el centro, RUT, causa o litigante y marca la casilla.</li></ol>
-<p>Abajo se indica cuántas consultas se harán.</p>""", 'a3_informes_medidas_fechas.png')
+<ol><li><b>Informes</b> (aparece al marcar la pestaña Informes): Por vencer, Vencidos, Recibidos.</li>
+<li><b>Medidas</b> (aparece al marcar Cumplimiento): Todas las medidas, Por vencer, Vencidos.</li>
+<li><b>Período:</b> Sin filtro, o Por fecha con Desde/Hasta (DD/MM/AAAA) y botón <b>Calendario</b>.</li>
+<li><b>Incluir · PDF si no hay registros:</b> marcado, guarda el pantallazo de constancia; desmarcado, la consulta vacía solo queda anotada como «sin registros».</li></ol>
+<p>Abajo se indica cuántas consultas se harán. «Conservar los otros filtros preparados en SITFA» está en el menú «Más».</p>""", 'a3_informes_medidas_fechas.png')
     body += '<div class="page"></div><h2>3. Descargar</h2>'
     body += step(4, 'Pulsa «Descargar»', """
-<p>(1) inicia el lote; (2) muestra cada archivo guardado y sus registros. Mientras descarga, la pestaña de SITFA queda cubierta con «Descargando el lote»: no la uses ni la cierres. <b>Cancelar</b> detiene al terminar la página en curso. Doble clic en un archivo lo abre; <b>Abrir carpeta del lote</b> abre la subcarpeta.</p>""",
+<p>(1) muestra cada consulta con su estado: ✓ con registros, – sin registros (con o sin PDF), ✕ detenida. (2) resume el lote; ahí están <b>Abrir carpeta</b> y <b>Nuevo lote</b>. Mientras descarga, el botón dice <b>Detener</b> (termina la página en curso) y la pestaña de SITFA queda cubierta con «Descargando el lote»: no la uses ni la cierres. Doble clic en una consulta abre su archivo.</p>""",
                  'a4_descarga_terminada.png')
     body += '<div class="page"></div><h2>4. Búsqueda litigantes</h2>'
     body += step(5, 'Tribunales y estado', '<p>Marca tribunales (1) y uno o varios estados (2). Fechas opcionales, igual que en Seguimiento.</p>',
@@ -146,7 +147,7 @@ def uso():
 <table><tr><th>Mensaje</th><th>Qué hacer</th></tr>
 <tr><td>Sesión expirada</td><td>Inicia sesión de nuevo en SITFA, reconecta desde el ícono y repite el lote.</td></tr>
 <tr><td>No se pudo capturar la consulta vacía</td><td>Deja Chrome visible durante el lote.</td></tr>
-<tr><td>● Sin conexión</td><td>Pulsa el ícono SITFA Lite en la pestaña de SITFA y pega el código actual.</td></tr>
+<tr><td>Sin conexión</td><td>Pulsa el ícono SITFA Lite en la pestaña de SITFA y pega el código actual.</td></tr>
 <tr><td>Lote cancelado / detenido</td><td>Los archivos guardados quedan; repite en un lote nuevo.</td></tr></table>
 <p><b>Privacidad:</b> la extensión usa tu sesión de Chrome; el programa no ve contraseñas ni cookies. Comunicación solo local (127.0.0.1) con código de conexión. Los archivos quedan solo en tu equipo.</p>"""
     return page('Manual de uso', 'Seguimiento · Búsqueda litigantes · Informes por vencer · Medidas por vencer', body)

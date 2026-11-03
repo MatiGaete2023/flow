@@ -10,7 +10,7 @@ Tiempo estimado: 5 minutos, una sola vez. No requiere permisos de administrador.
 
 ## Paso 1 · Ejecutar el instalador
 
-1. Haz doble clic en `Instalar_SITFA_Lite_1.0.0.exe`.
+1. Haz doble clic en `Instalar_SITFA_Lite_1.1.0.exe`.
 2. Si Windows muestra «Windows protegió su PC» (SmartScreen): pulsa **Más información** → **Ejecutar de todas formas**. Aparece porque el instalador no tiene firma digital comercial.
 3. Lee el aviso inicial y pulsa **Siguiente**.
 4. Deja la carpeta propuesta (`C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite`) y marca, si quieres, el acceso directo en el escritorio.
@@ -26,24 +26,24 @@ El instalador crea en el menú Inicio la carpeta **SITFA Lite** con:
 
 La extensión es la que consulta SITFA con tu sesión. Se instala en modo desarrollador porque es de uso local y no está publicada en Chrome Web Store.
 
-1. Abre SITFA Lite y pulsa **Instalar extensión…**. Esto:
+1. Abre SITFA Lite y en el menú **Más** elige **Instalar extensión…**. Esto:
    - copia al portapapeles la ruta de la carpeta `extension`,
    - abre `chrome://extensions` en tu Chrome.
 2. En `chrome://extensions`, activa **Modo de desarrollador** (interruptor arriba a la derecha).
 3. Pulsa **Cargar descomprimida**.
 4. En la ventana de carpetas, pega la ruta (Ctrl+V en la barra de dirección) y elige la carpeta `extension`. La ruta es:
    `C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension`
-5. Debe aparecer la tarjeta **SITFA Lite · Descargas RUS 1.0.0**.
+5. Debe aparecer la tarjeta **SITFA Lite · Descargas RUS 1.1.0**.
 6. Pulsa el icono de rompecabezas de Chrome y fija (📌) **SITFA Lite** para tenerlo siempre visible.
 
 > No muevas ni borres la carpeta `extension`: Chrome la usa desde ahí. Si reinstalas en otra carpeta, quita la extensión anterior y vuelve a cargarla.
 
 ## Paso 3 · Comprobar la conexión
 
-1. En SITFA Lite pulsa **Abrir SITFA en Chrome** e inicia sesión como siempre.
+1. En SITFA Lite pulsa **Abrir SITFA** e inicia sesión como siempre.
 2. Con la pestaña de SITFA activa, pulsa el icono **SITFA Lite** de Chrome. Se abre la pestaña «Conectar con SITFA Lite».
-3. En SITFA Lite pulsa **Copiar código** y pégalo en esa pestaña; pulsa **Conectar**.
-4. SITFA Lite muestra **● Conectado** en verde.
+3. En SITFA Lite pulsa **Copiar** y pega el código en esa pestaña; pulsa **Conectar**.
+4. SITFA Lite muestra **Chrome conectado** arriba a la derecha y carga las opciones solo.
 
 Listo. Continúa con el **Manual de uso**.
 

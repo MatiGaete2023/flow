@@ -116,8 +116,8 @@ class NextStepBar(ui.Frame):
             ('correos', '3 Correos'),
             ('resoluciones', '4 Resoluciones'),
         ):
+            # Estado por paso sin mostrar: la barra lateral ya nombra cada página; queda la siguiente acción.
             label = ui.Label(flow, text=name + '\nPendiente', width=90, font=('Segoe UI', 12))
-            label.pack(side='left', padx=2)
             self.flow_labels[key] = label
         self.action_button = ui.Button(
             flow, text='Siguiente acción', width=165, role='secondary', command=self.next_action

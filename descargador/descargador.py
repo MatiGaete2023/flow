@@ -183,6 +183,14 @@ def pick_date(root, variable):
     render()
 
 
+SIDE_NAMES = {
+    'calendario_medidas': 'Medidas por vencer',
+    'calendario_informes': 'Informes por vencer',
+    'carga': 'Resoluciones firmadas',
+    'litigantes': 'Litigantes y órdenes',
+}
+
+
 class Application:
     def __init__(self, root, start_worker=True, bridge_factory=Bridge, preferences_path=None):
         self.root = root
@@ -287,6 +295,21 @@ class Application:
         style.configure('Treeview', rowheight=26, font=('Segoe UI', 10))
         container = ttk.Frame(root)
         container.pack(fill='both', expand=True)
+        from flowkit import SideList
+
+        # Lista lateral de consultas (como SITFA Lite): el paquete arriba; las descargas sueltas debajo.
+        self.side = SideList(
+            container,
+            [
+                ('Paquete', [('Seguimiento', 'Seguimiento')]),
+                ('Solo descargar', [(k, SIDE_NAMES.get(v, k)) for k, v in SCREENS.items() if v != 'seguimiento']),
+            ],
+            command=self._side_selected,
+            width=210,
+        )
+        self.side.pack(side='left', fill='y')
+        self.side.pack_propagate(False)
+        ttk.Separator(container, orient='vertical').pack(side='left', fill='y')
         self.canvas = tk.Canvas(container, bg='#f3f6fa', highlightthickness=0)
         self.canvas.pack(side='left', fill='both', expand=True)
         scroll = ttk.Scrollbar(container, orient='vertical', command=self.canvas.yview)
@@ -329,12 +352,8 @@ class Application:
         self.code_entry.grid(row=0, column=1, sticky='ew', padx=(0, 8))
         self.copy_button = ttk.Button(code_row, text='Copiar', command=self.copy_code)
         self.copy_button.grid(row=0, column=2)
-        flow = ttk.Frame(body)
-        flow.grid(row=1, column=0, sticky='ew', pady=(0, 12))
-        flow.columnconfigure(1, weight=1)
-        ttk.Label(flow, text='Consulta:').grid(row=0, column=0, padx=(0, 8))
-        self.screen_combo = ttk.Combobox(flow, textvariable=self.screen, values=tuple(SCREENS), state='disabled')
-        self.screen_combo.grid(row=0, column=1, sticky='ew')
+        # La lista lateral reemplaza al selector; el combobox se conserva sin mostrar para el resto del código.
+        self.screen_combo = ttk.Combobox(body, textvariable=self.screen, values=tuple(SCREENS), state='disabled')
         self.screen_combo.bind('<<ComboboxSelected>>', lambda e: self.change_screen())
         query = ttk.LabelFrame(body, text='Qué descargar', padding=12)
         query.grid(row=3, column=0, sticky='ew', pady=(0, 12))
@@ -624,6 +643,13 @@ class Application:
             foreground=[('disabled', muted), ('selected', p['on_primary'])],
         )
         self.topbar.dot.configure(background=bar)
+        style.configure('Side.Toolbutton', background=p['background'], foreground=text, anchor='w', padding=(10, 5))
+        style.map(
+            'Side.Toolbutton',
+            background=[('selected', bar), ('active', bar)],
+            font=[('selected', ('Segoe UI', 10, 'bold'))],
+        )
+        style.configure('Group.TLabel', background=p['background'], foreground=muted, font=('Segoe UI', 9))
 
     def toggle_pause(self):
         if self.cancel.paused:
@@ -860,10 +886,19 @@ class Application:
         )
         self.refresh()
 
+    def _side_selected(self, label):
+        if label != self.screen.get():
+            self.screen.set(label)
+            self.change_screen()
+
     def change_screen(self):
         self.catalog = None
         self.refresh()
-        self.status.set('Pulsa Cargar opciones para abrir y preparar la consulta elegida en SITFA.')
+        if getattr(self, 'auto_catalog', False) and self.connected and not self.busy:
+            self.status.set('Abriendo la consulta elegida en SITFA…')
+            self.enqueue('catalog')
+        else:
+            self.status.set('Pulsa Cargar opciones para abrir y preparar la consulta elegida en SITFA.')
 
     def select_tribunals(self, ids):
         if not self.catalog or set(ids) - set(self.catalog['tribunales']):
@@ -996,6 +1031,10 @@ class Application:
         followup = screen == 'seguimiento'
         calendar_screen = screen.startswith('calendario_')
         self.screen_combo.configure(state='readonly' if idle and self.connected else 'disabled')
+        if hasattr(self, 'side'):
+            if self.side.get() != self.screen.get():
+                self.side.select(self.screen.get())
+            self.side.enable(idle and self.connected and not self.recovery)
         for button, enabled in [
             (self.open_button, idle),
             (self.setup_button, idle),

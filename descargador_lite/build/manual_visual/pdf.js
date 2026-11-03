@@ -10,7 +10,7 @@ const [src, out] = process.argv.slice(2);
     await page.waitForLoadState('networkidle');
     await page.pdf({path: path.resolve(out, name + '.pdf'), format: 'A4', printBackground: true,
       displayHeaderFooter: true, headerTemplate: '<span></span>',
-      footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#64748b">SITFA Lite 1.0.0 · página <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
+      footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#64748b">SITFA Lite 1.1.0 · página <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
       margin: {top: '14mm', bottom: '16mm', left: '0', right: '0'}});
   }
   await browser.close();
