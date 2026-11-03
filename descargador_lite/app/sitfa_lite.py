@@ -356,6 +356,10 @@ class Application:
         return ' · '.join(parts)
 
     def show(self, view):
+        # Solo cambia la vista si hace falta: volver a empaquetar en cada evento hace parpadear la ventana.
+        if getattr(self, '_view', None) == view:
+            return
+        self._view = view
         for widget in (self.connect_view, self.form, self.results):
             widget.pack_forget()
         {'connect': self.connect_view, 'form': self.form, 'results': self.results}[view].pack(
@@ -471,6 +475,10 @@ class Application:
             self.start()
 
     def start(self):
+        if self.busy:
+            # Una operación anterior (p. ej. cargar opciones) sigue en curso: no se marca un lote que no partió.
+            self.window.banner.show('Espera a que termine la operación en curso y vuelve a pulsar Descargar.')
+            return
         try:
             batch = self.batch()
             plan = batch.plan(self.catalog)

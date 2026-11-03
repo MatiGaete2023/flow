@@ -48,3 +48,20 @@ def test_componentes_basicos():
         root.update()
     finally:
         root.destroy()
+
+
+@pytest.mark.skipif(sys.platform != 'win32' and not os.environ.get('DISPLAY'), reason='Sin pantalla para Tk.')
+def test_ficha_unica_ignora_un_valor_que_ya_no_existe():
+    tk = pytest.importorskip('tkinter')
+    sys.path.insert(0, str(ROOT / 'ui'))
+    import flowkit as ui
+
+    root = tk.Tk()
+    try:
+        chips = ui.Chips(root, [('a', 'A'), ('b', 'B')], multi=False)
+        chips.set_options([('a', 'A'), ('b', 'B')], selected=['ya-no-existe', 'b'])
+        assert chips.get() == ('b',)
+        chips.set_options([('c', 'C')], selected=['b'])
+        assert chips.get() == ('c',)
+    finally:
+        root.destroy()

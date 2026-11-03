@@ -145,3 +145,14 @@ def test_output_folder_name_is_short_and_unique(tmp_path):
     first.mkdir()
     assert Meta4.nueva_salida(tmp_path, ' regenerado').name in (first.name + ' (2)',
                                                                  Meta4.nueva_salida(tmp_path, ' regenerado').name)
+
+
+def test_escribir_la_fecha_no_recorre_las_carpetas(ventana, tmp_path, monkeypatch):
+    app, _ = ventana
+    lotes, _ = cuatro_lotes(tmp_path / 'descargas')
+    app.set_sources(lotes)
+    llamadas = []
+    monkeypatch.setattr(Meta4, 'buscar_archivos', lambda *a: llamadas.append(a) or [])
+    for valor in ('2026-10-1', '2026-10-16'):
+        app.cutoff.set(valor)
+    assert not llamadas and '4 lotes' in app.window.footer.summary.get()

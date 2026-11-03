@@ -74,3 +74,28 @@ def test_asistente_muestra_la_consulta_vacia_sin_pdf(tmp_path):
         capture_incidents=capture.rows('incidencias'),
     )
     assert 'VACIA_SIN_PDF · INFORMACION · Consulta sin registros; no se pidió pantallazo PDF.' in evidence_text(work)
+
+
+def test_menu_mas_sin_separadores_dobles_y_con_abrir_sitfa():
+    import os
+    import sys
+
+    import pytest
+
+    tk = pytest.importorskip('tkinter')
+    if sys.platform != 'win32' and not os.environ.get('DISPLAY'):
+        pytest.skip('Sin pantalla para Tk.')
+    from descargador import Application
+    from test_lotes import dispose_interface
+
+    root = tk.Tk()
+    root.withdraw()
+    app = Application(root, start_worker=False)
+    try:
+        menu = app.topbar.menu
+        tipos = [menu.type(i) for i in range(menu.index('end') + 1)]
+        etiquetas = [menu.entrycget(i, 'label') for i, t in enumerate(tipos) if t != 'separator']
+        assert 'Abrir mi Chrome en SITFA' in etiquetas
+        assert all(not (a == b == 'separator') for a, b in zip(tipos, tipos[1:]))
+    finally:
+        dispose_interface(app, root)

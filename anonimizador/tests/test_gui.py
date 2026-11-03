@@ -73,3 +73,11 @@ def test_modo_desde_la_barra(app):
     app.modes.set(["conservador"])
     app.modes._changed()
     assert app.mode.get() == "conservador"
+
+
+def test_desplazar_fechas_con_valor_invalido_no_falla(app, monkeypatch):
+    app.shift.set("abc")
+    vistos = []
+    monkeypatch.setattr(gui.simpledialog, "askinteger", lambda *a, **k: vistos.append(k["initialvalue"]) or 7)
+    app.ask_shift()
+    assert vistos == [0] and app.shift.get() == "7"

@@ -258,6 +258,8 @@ class Application:
         self.topbar.pack(side='top', fill='x')
         tools = self.topbar.menu
         self.theme = tk.StringVar(value=self.prefs.data.get('tema', 'Sistema'))
+        # Abrir SITFA también desde el menú: el recuadro de conexión se oculta al conectar.
+        tools.add_command(label='Abrir mi Chrome en SITFA', command=lambda: self.enqueue('open'))
         tools.add_command(label='Instalar extensión…', command=self.setup)
         tools.add_command(label='Copiar código de conexión', command=self.copy_code)
         tools.add_command(label='Recargar opciones de SITFA', command=lambda: self.enqueue('catalog'))

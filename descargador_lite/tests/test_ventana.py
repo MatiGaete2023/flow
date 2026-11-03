@@ -100,3 +100,24 @@ def test_cambio_de_consulta_recarga_opciones(app):
     app.change_period()
     app.root.update()
     assert app.form.rows['rango'][1].winfo_ismapped()
+
+
+def test_descargar_con_otra_operacion_en_curso_no_marca_un_lote(app):
+    app.bridge.connected = True
+    esperar(app, lambda: app.catalog is not None)
+    app.tribunals.set(['901'])
+    app.busy = True
+    app.start()
+    assert not app.running and app.commands.empty() and app.window.banner.visible
+    app.busy = False
+
+
+def test_refresh_no_reempaqueta_la_vista(app):
+    app.bridge.connected = True
+    esperar(app, lambda: app.catalog is not None)
+    llamadas = []
+    original = app.form.pack
+    app.form.pack = lambda *a, **k: (llamadas.append(1), original(*a, **k))
+    for _ in range(5):
+        app.refresh()
+    assert not llamadas

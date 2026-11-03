@@ -155,7 +155,9 @@ class Chips(ttk.Frame):
                 )
             self.buttons[value] = button
         if not self.multi:
-            self.single.set(next(iter(keep), '') if keep & set(self.buttons) else next(iter(self.buttons), ''))
+            # La primera opción pedida que exista; si ninguna existe, la primera disponible.
+            pedidas = [v for v in (selected or [self.single.get()]) if v in self.buttons]
+            self.single.set(pedidas[0] if pedidas else next(iter(self.buttons), ''))
         width = self.winfo_width()
         self._layout(width if width > 50 else 10_000)
 

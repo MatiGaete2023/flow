@@ -33,6 +33,7 @@ class App:
         self.busy = False
         self.output = None
         self.sources = []
+        self.lot_count = 0
         self.diaries = tk.StringVar()
         self.folder = tk.StringVar(value=str(BASE / 'Salidas'))
         self.cutoff = tk.StringVar(value=date.today().isoformat())
@@ -88,7 +89,8 @@ class App:
         return None if len(chosen) == len(self.courts.buttons) else chosen
 
     def refresh(self):
-        lots = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
+        # Conteo guardado en set_sources: recorrer las carpetas en cada tecla de la fecha era lento con muchos lotes.
+        lots = self.lot_count
         courts = self.courts.get()
         partial = '' if len(courts) == len(self.courts.buttons) else ' (parcial)'
         summary = f'{lots} lote{"s" if lots != 1 else ""} · {len(courts)} tribunal{"es" if len(courts) != 1 else ""}{partial} · corte {self.cutoff.get()}'
@@ -96,6 +98,7 @@ class App:
 
     def set_sources(self, paths):
         self.sources = [str(p) for p in raices(paths)]
+        self.lot_count = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
         self.lots.delete(*self.lots.get_children())
         external = bool(self.diaries.get().strip())
         for index, path in enumerate(self.sources):
@@ -110,8 +113,7 @@ class App:
 
     @property
     def lots_info(self):
-        lots = len(buscar_archivos(raices(self.sources), 'resumen.json')) if self.sources else 0
-        return f'{len(self.sources)} carpeta(s) · {lots} lote(s)'
+        return f'{len(self.sources)} carpeta(s) · {self.lot_count} lote(s)'
 
     def pick_source(self):
         path = filedialog.askdirectory(title='Lote del Descargador (o carpeta con varios lotes)', mustexist=True)

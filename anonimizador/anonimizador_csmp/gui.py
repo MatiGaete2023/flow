@@ -113,8 +113,13 @@ class App:
             self.out_dir.set(name)
 
     def ask_shift(self):
-        value = simpledialog.askinteger("Desplazar fechas", "Días (0 = sin desplazar):", parent=self.root,
-                                        initialvalue=int(self.shift.get() or 0))
+        try:
+            actual = int((self.shift.get() or "0").strip())
+        except ValueError:
+            actual = 0  # un valor escrito a mano inválido no debe romper el diálogo
+        value = simpledialog.askinteger(
+            "Desplazar fechas", "Días (0 = sin desplazar):", parent=self.root, initialvalue=actual
+        )
         if value is not None:
             self.shift.set(str(value))
 
