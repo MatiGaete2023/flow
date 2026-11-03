@@ -1,6 +1,7 @@
 # Manuales de las herramientas Flow
 
-PDF ilustrados con capturas de las ventanas reales y datos ficticios (rama Rediseno, 3 de noviembre de 2026).
+PDF ilustrados y videos con capturas de las ventanas reales tomadas en Windows (workflow
+`manuales-windows.yml`, carpeta `capturas_windows/`) y datos ficticios (rama Rediseno, 3 de noviembre de 2026).
 
 | Herramienta | Versión | Manual | Video narrado |
 |---|---|---|---|
@@ -15,9 +16,9 @@ Las imágenes anotadas están en `img/<herramienta>/`.
 ## Regenerar
 
 ```bash
-for p in asistente descargador meta4 anonimizador; do xvfb-run -a -s "-screen 0 1400x1000x24" python tools/manuales/capturas.py $p capturas/$p; done
-python tools/manuales/generar.py capturas docs/manuales
-python tools/manuales/videos.py capturas docs/manuales <carpeta_modelo_kokoro> docs/manuales
+# 1. Capturas en Windows: workflow «Capturas Windows para manuales y videos» (las guarda en capturas_windows/)
+python tools/manuales/generar.py docs/manuales/capturas_windows docs/manuales
+python tools/manuales/videos.py docs/manuales/capturas_windows docs/manuales <carpeta_modelo_kokoro> docs/manuales
 ```
 
 Los videos usan la voz local Kokoro (`kokoro-onnx`, `soundfile`, `ffmpeg`); el modelo se descarga de
