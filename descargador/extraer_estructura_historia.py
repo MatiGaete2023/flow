@@ -30,7 +30,6 @@ MAX_HAR = 400 * 1024 * 1024  # un HAR «con contenido» de DevTools incluye imá
 MAX_TABLAS = 200
 MAX_COLUMNAS = 30
 MAX_ESQUELETO = 4000
-IDENT = re.compile(r'^[A-Za-z_$][\w$]{0,60}$')
 RUTA = re.compile(r'^/?(?:[A-Za-z0-9_\-]+/)*[A-Za-z0-9_\-]+\.(?:do|jsp)$')
 INTERES = re.compile(r'(?i)histor|detalle|popup|causa|show|abrir|ventana|tramite|consulta')
 LLAMADA = re.compile(r'([A-Za-z_$][\w$]*)\s*\(([^()]*)\)')

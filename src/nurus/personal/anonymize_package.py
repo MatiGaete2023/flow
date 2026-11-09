@@ -78,7 +78,6 @@ CONTROL_FIELDS = {
     'original_row',
     'download_state',
     'content_read',
-    'history_complete',
 }
 _JSON_LIMIT = 30
 _SENSITIVE_WORDS = re.compile(r'(?i)(rut|run|nombre|apellido|curador|litigante|domicilio|direccion|telefono|correo)')

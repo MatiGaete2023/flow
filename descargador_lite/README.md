@@ -24,10 +24,10 @@ No escribe en RUS.
 
 ```
 app/          programa (Tkinter) + motor de validación + puente local
-extension/    extensión Chrome MV3 (cargar descomprimida)
+extension/    extensión Chrome MV3 (cargar sin empaquetar)
 tests/        pruebas con SITFA ficticio (sin red ni datos reales)
 build/        PyInstaller (.spec), Inno Setup (.iss), build.ps1, manuales.py
-docs/         manuales y evaluación
+docs/         manuales, videos y evaluación de diseño
 ```
 
 ## Desarrollo
@@ -60,4 +60,4 @@ La versión vive en `app/version.py` y debe coincidir con `extension/manifest.js
 
 ## Regenerar manuales ilustrados y video
 
-Capturas con datos ficticios (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js`, `capturas_programa.py`; luego `anotar.py`, `manuales_pdf.py` + `pdf.js`, `video.py` (extensión) y `video.py --completo` (instalación y uso). Versión narrada: `narrado.py` (voz local Kokoro, `es-419`; modelo en github.com/thewh1teagle/kokoro-onnx/releases).
+Todo con datos ficticios. Capturas del programa: en Windows, con el workflow «Capturas Windows para manuales y videos» (`tools/manuales/capturas.py lite`, quedan en `docs/manuales/capturas_windows/lite/`). Capturas de Chrome (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js` (ventana completa) y `capturas_chrome_contenido.js` (página, en español). Luego `anotar.py`, `manuales_pdf.py` + `pdf.js` para los PDF, y `narrado.py` para los videos (voz local Kokoro, `es-419`; modelo en github.com/thewh1teagle/kokoro-onnx/releases).

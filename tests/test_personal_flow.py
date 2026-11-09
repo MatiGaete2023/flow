@@ -36,7 +36,7 @@ def source(tmp_path, mode='ESPERA', program='AFT EJEMPLO', days=30):
     s.append(headers)
     s.append(values)
     s.column_dimensions['A'].width = 27
-    s.auto_filter.ref = f'A3:F4'
+    s.auto_filter.ref = 'A3:F4'
     other = b.create_sheet('Original')
     other['B2'] = '=1+2'
     path = tmp_path / 'origen.xlsx'

@@ -255,7 +255,10 @@ def lite(salida):
     )
     app.informes.set(['1', '2'])
     app.medidas.set(['0', '5'])
-    app.quick_dates('Mes anterior')
+    app.from_date.set('01/10/2026')
+    app.to_date.set('31/10/2026')
+    app.period.set(['Por fecha'])
+    app.refresh()
     cam.foto(
         'a3_informes_medidas_fechas.png',
         informes=fila('informes'),

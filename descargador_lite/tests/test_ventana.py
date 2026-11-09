@@ -97,7 +97,7 @@ def test_cambio_de_consulta_recarga_opciones(app):
     esperar(app, lambda: app.catalog is not None and app.catalog['pantalla'] == 'litigantes')
     assert app.form.rows['Estado'][1].winfo_ismapped() and not app.form.rows['Pestañas'][1].winfo_ismapped()
     app.period.set(['Por fecha'])
-    app.change_period()
+    app.refresh()
     app.root.update()
     assert app.form.rows['rango'][1].winfo_ismapped()
 

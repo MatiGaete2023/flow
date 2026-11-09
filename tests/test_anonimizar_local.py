@@ -3,7 +3,6 @@
 from io import BytesIO
 import json
 from hashlib import sha256
-from pathlib import Path
 import zipfile
 
 import pytest

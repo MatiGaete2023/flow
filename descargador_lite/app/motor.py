@@ -28,9 +28,6 @@ from lxml import etree, html
 ORIGIN = "https://familia.pjud.cl"
 ENDPOINT = ORIGIN + "/SITFAWEB/InformesDAction.do"
 START = ORIGIN + "/SITFAWEB/jsp/Login/LoginB4.jsp"
-PAGE_FIELD = "NUM_PaginaCumplimiento"
-TOTAL_FIELD = "NUM_TotalCumplimiento"
-TARGET = {"COD_Lengueta": "tdCumplimiento", "COD_Tribunal_sel": "119", "TIP_Consulta": "2"}
 
 
 @dataclass(frozen=True)
@@ -86,21 +83,6 @@ ORIGINAL = QueryProfile(
     "119",
     "2",
     "amblistcump",
-)
-LAJA_FAE = QueryProfile(
-    "laja-cumplimiento-fae", "Laja / Cumplimiento / FAE-FAS", "Laja_Cumplimiento_FAE-FAS", "113", "3", "faefaslistcump"
-)
-LAJA_ESPERA = QueryProfile(
-    "laja-espera-ambulatorio",
-    "Laja / Espera / Ambulatorio",
-    "Laja_Espera_Ambulatorio",
-    "113",
-    "2",
-    "amblistesp",
-    "tdEspera",
-    "NUM_PaginaEspera",
-    "NUM_TotalEspera",
-    "tablaEspera",
 )
 ALLOWED_FIELDS = frozenset(
     """COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta

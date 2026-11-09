@@ -17,7 +17,7 @@ from lotes import Batch, BatchRunner, Dates, MODALITIES
 from puente import Bridge
 from perfiles import SCREENS
 from pausa import PauseGate
-from preferencias import Preferences, date_preset, pending_plan
+from preferencias import Preferences, pending_plan
 
 ALL_TRIBUNALS = 'Todos los tribunales disponibles'
 ALL_MODALITIES = 'Todas las modalidades'
@@ -742,26 +742,6 @@ class Application:
         if executable:
             self.prefs.data['csmp'] = executable
             self.save_preferences()
-
-    def quick_dates(self, label):
-        if self.busy:
-            return
-        first, last = date_preset(label, m.now().date())
-        if SCREENS[self.screen.get()].startswith('calendario_'):
-            if not self.catalog:
-                return
-            month = str(first.month)
-            year = str(first.year)
-            if month not in self.catalog.get('meses', {}) or year not in self.catalog.get('anios', {}):
-                self.status.set('Ese mes/año no está disponible en SITFA.')
-                return
-            self.month.set(self.catalog['meses'][month])
-            self.year.set(self.catalog['anios'][year])
-        else:
-            self.from_date.set(first.strftime('%d/%m/%Y'))
-            self.to_date.set(last.strftime('%d/%m/%Y'))
-            self.use_dates.set(True)
-        self.clear_pending()
 
     def save_favorite(self):
         if self.busy:

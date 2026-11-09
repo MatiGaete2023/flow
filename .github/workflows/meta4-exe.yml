@@ -1,9 +1,10 @@
 name: Meta 4 Windows
-# Construye Meta4.exe bajo demanda y en cada push de ultima-version/meta4 (pedido del usuario, 29-oct-2026).
+# Construye Meta4.exe bajo demanda y en cada push que toque META4_Bitacoras/ (ramas Meta4 y Rediseno).
 on:
   workflow_dispatch:
   push:
     branches: ['Meta4', 'Rediseno']
+    paths: ['META4_Bitacoras/**', '.github/workflows/meta4-exe.yml']
 permissions:
   contents: read
 jobs:

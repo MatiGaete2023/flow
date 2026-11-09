@@ -371,7 +371,6 @@ class Banner(ttk.Frame):
         self.label = ttk.Label(self, textvariable=self.text, style='Banner.TLabel', wraplength=640, anchor='w')
         self.label.pack(side='left', fill='x', expand=True)
         self.action = ttk.Button(self, text='')
-        self.parent_manager = None
 
     def show(self, text, bad=False, action=None, action_text=''):
         self.text.set(text)

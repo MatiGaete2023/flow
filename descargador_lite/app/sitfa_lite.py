@@ -1,7 +1,7 @@
 """SITFA Lite: descargas XLS de RUS (Seguimiento, Busqueda Lit, Informes y Medidas por vencer)."""
 
 import calendar
-from datetime import date, timedelta
+from datetime import date
 import json
 import os
 from pathlib import Path
@@ -120,18 +120,6 @@ def pick_date(root, variable):
     render()
 
 
-def date_preset(label, today=None):
-    today = today or m.now().date()
-    if label == 'Este mes':
-        start, end = today.replace(day=1), today
-    elif label == 'Mes anterior':
-        end = today.replace(day=1) - timedelta(days=1)
-        start = end.replace(day=1)
-    else:
-        start, end = today - timedelta(days=29), today
-    return start.strftime('%d/%m/%Y'), end.strftime('%d/%m/%Y')
-
-
 def short_label(label):
     """Nombre de la consulta sin la pantalla ni las fechas (ya visibles en la lista y el resumen)."""
     parts = [x for x in label.split(' - ') if not re.fullmatch(r'\d{2}-\d{2}-\d{4} al \d{2}-\d{2}-\d{4}', x)]
@@ -161,7 +149,6 @@ class Application:
         self.running = False
         self.showing_results = False
         self.last_folder = None
-        self.planned = 0
         self.query_index = 0
         self.query_files = {}
         self.screen = tk.StringVar(value=next(iter(SCREENS)))
@@ -188,13 +175,13 @@ class Application:
         top.add('Abrir carpeta del último lote', self.open_folder)
         top.add_check('Conservar los otros filtros preparados en SITFA', self.keep_filters, self.refresh)
         top.add(f'Versión {VERSION}', lambda: None, separator=True)
+        top.menu.entryconfigure('end', state='disabled')
         self.folder_button = self.window.footer.add('Abrir carpeta', self.open_folder)
         self.folder_button.pack_forget()
         self.download_button = self.window.footer.primary
         self.status.trace_add('write', self._status_changed)
 
         self.side, pane = ui.with_sidebar(self.window, SIDE, self.change_screen)
-        self.pane = pane
         # Sin conexión: una sola acción.
         self.connect_view = ttk.Frame(pane)
         ttk.Label(self.connect_view, text='Conecta tu Chrome', font=ui.FONT_BOLD).pack(anchor='w')
@@ -212,8 +199,7 @@ class Application:
         f = self.form
         self.tribunals = f.row('Tribunales', lambda p: ui.Chips(p, command=self.refresh))
         self.tabs = f.row('Pestañas', lambda p: ui.Chips(p, command=self.refresh))
-        self.informes = f.row('  Informes', lambda p: ui.Chips(p, command=self.refresh, style='Chip.Toolbutton'),
-                              name='informes')
+        self.informes = f.row('  Informes', lambda p: ui.Chips(p, command=self.refresh), name='informes')
         self.medidas = f.row('  Medidas', lambda p: ui.Chips(p, command=self.refresh), name='medidas')
         self.modalities = f.row('Modalidad', lambda p: ui.Chips(p, command=self.refresh))
         self.states = f.row('Estado', lambda p: ui.Chips(p, command=self.refresh))
@@ -221,13 +207,12 @@ class Application:
         self.year_combo = f.row('Año', lambda p: ttk.Combobox(p, textvariable=self.year, width=8, state='readonly'))
         self.year_combo.bind('<<ComboboxSelected>>', lambda e: self.refresh())
         self.period = f.row('Período', lambda p: ui.Chips(p, [(x, x) for x in PERIODS], multi=False,
-                                                         command=self.change_period))
-        self.range = f.row('', self._range_row, name='rango')
+                                                         command=self.refresh))
+        f.row('', self._range_row, name='rango')
         self.include = f.row('Incluir', lambda p: ui.Chips(p, [('pdf', 'PDF si no hay registros')],
                                                          command=self.toggle_empty_pdf))
         self.include.set(['pdf'] if self.empty_pdf.get() else [])
         self.results = ui.ProgressList(pane, on_open=self.open_result, height=14)
-        self.screen_radios = list(self.side.buttons.values())
         self.change_screen(self.side.get(), initial=True)
         if start_worker:
             threading.Thread(target=self.worker, daemon=True).start()
@@ -235,7 +220,6 @@ class Application:
 
     def _range_row(self, parent):
         frame = ttk.Frame(parent)
-        self.date_widgets = []
         for label, var in (('Desde', self.from_date), ('Hasta', self.to_date)):
             ttk.Label(frame, text=label, style='Muted.TLabel').pack(side='left', padx=(0, 4))
             entry = ttk.Entry(frame, textvariable=var, width=11)
@@ -243,7 +227,6 @@ class Application:
             entry.bind('<KeyRelease>', lambda e: self.refresh())
             button = ttk.Button(frame, text='Calendario', command=lambda var=var: self.pick(var))
             button.pack(side='left', padx=(2, 14))
-            self.date_widgets += [entry, button]
         return frame
 
     def _status_changed(self, *_):
@@ -274,9 +257,6 @@ class Application:
             self.form.show(name, name in shown)
         if not initial and self.connected and not self.busy:
             self.load_catalog()
-        self.refresh()
-
-    def change_period(self):
         self.refresh()
 
     def apply_catalog(self, catalog):
@@ -421,14 +401,6 @@ class Application:
         pick_date(self.root, var)
         self.root.after(300, self.refresh)
 
-    def quick_dates(self, label):
-        """Atajo programático (sin botón): fija Desde/Hasta y activa el filtro por fecha."""
-        start, end = date_preset(label)
-        self.from_date.set(start)
-        self.to_date.set(end)
-        self.period.set(['Por fecha'])
-        self.change_period()
-
     def setup(self):
         directory = extension_dir()
         self.root.clipboard_clear()
@@ -503,8 +475,12 @@ class Application:
         self.refresh()
 
     def open_folder(self):
-        if self.last_folder:
-            open_path(self.last_folder)
+        # Sin lote en esta sesión se abre la carpeta de descarga; si ya no existe, se avisa en vez de fallar en silencio.
+        folder = self.last_folder or Path(self.dest.get())
+        if folder.is_dir():
+            open_path(folder)
+        else:
+            self.window.banner.show('La carpeta todavía no existe: se crea con la primera descarga.')
 
     def open_result(self, key):
         files = self.query_files.get(int(key), [])
@@ -583,8 +559,6 @@ class Application:
                 )
         elif name == 'folder':
             self.last_folder = Path(value)
-        elif name == 'plan':
-            self.planned = value
         elif name == 'query':
             self.query_index = value['index']
             self.summary = f'Consultando {value["index"]} de {value["total"]}'
@@ -626,6 +600,7 @@ class Application:
             if value == 'download' and self.running:
                 self.running = False
                 self.showing_results = True
+                self.summary = 'Detenido'
         elif name == 'exit':
             self.root.destroy()
             return False

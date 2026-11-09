@@ -42,7 +42,7 @@ class App:
         top = self.window.top
         top.add('Agregar lote…', self.pick_source)
         top.add('Quitar lote elegido', self.remove_sources)
-        top.add('Vaciar', lambda: self.set_sources([]))
+        top.add('Vaciar', lambda: self.busy or self.set_sources([]))
         top.add('Bitácoras en otra carpeta…', self.pick_diaries, separator=True)
         top.add('Destino de resultados…', self.destination)
         top.add('Regenerar desde Registros revisado…', self.start_regenerate, separator=True)
@@ -116,6 +116,8 @@ class App:
         return f'{len(self.sources)} carpeta(s) · {self.lot_count} lote(s)'
 
     def pick_source(self):
+        if self.busy:  # el menú «Más» sigue activo mientras se genera
+            return
         path = filedialog.askdirectory(title='Lote del Descargador (o carpeta con varios lotes)', mustexist=True)
         if path:
             self.set_sources(self.sources + [path])
@@ -123,10 +125,14 @@ class App:
                 self.suggest_cutoff(self.sources)
 
     def remove_sources(self):
+        if self.busy:
+            return
         chosen = {int(i) for i in self.lots.selection()}
         self.set_sources([p for i, p in enumerate(self.sources) if i not in chosen])
 
     def pick_diaries(self):
+        if self.busy:
+            return
         path = filedialog.askdirectory(title='Carpeta de bitácoras del Descargador', mustexist=True)
         if path:
             self.diaries.set(path)
@@ -255,6 +261,8 @@ class App:
     def open_output(self):
         if not self.output:
             self.status.set('Todavía no hay resultados en esta sesión.')
+        elif not Path(self.output).is_dir():
+            self.status.set('La carpeta de resultados ya no existe.')
         elif sys.platform == 'win32':
             os.startfile(self.output)
         else:

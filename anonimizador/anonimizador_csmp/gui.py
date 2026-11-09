@@ -97,11 +97,15 @@ class App:
         )
 
     def pick_files(self):
+        if self.busy:  # el menú «Más» sigue activo mientras se procesa
+            return
         names = filedialog.askopenfilenames(parent=self.root, title="Agregar archivos", filetypes=FILETYPES)
         self.inputs += [Path(n) for n in names if Path(n) not in self.inputs]
         self.refresh()
 
     def pick_folder(self):
+        if self.busy:
+            return
         name = filedialog.askdirectory(parent=self.root, title="Agregar carpeta")
         if name and Path(name) not in self.inputs:
             self.inputs.append(Path(name))
@@ -144,6 +148,8 @@ class App:
         box.pack(fill="both", expand=True)
 
     def clear_inputs(self):
+        if self.busy:
+            return
         self.inputs = []
         self.window.banner.hide()
         self.refresh()
@@ -234,6 +240,8 @@ def _open(path):
     import subprocess
     import sys
 
+    if not Path(path).is_dir():
+        return
     if sys.platform == "win32":
         os.startfile(path)  # noqa: S606 - carpeta local recién creada por la herramienta
     else:
