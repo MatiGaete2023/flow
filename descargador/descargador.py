@@ -440,17 +440,17 @@ class Application:
         self.reuse_choice = chip('Reutilizar bitácoras de hoy', self.reuse_diaries, 1, 0)
         # WD-1: lectura opcional del calendario de informes proyectados; cuenta en el máximo de lecturas del lote.
         self.calendar_choice = chip('Calendario de informes', self.read_calendars, 2, 0)
-        self.reports_choice = chip('Informes por vencer (60 días)', self.reports_due, 3, 0)
-        chip('Un paquete por hoja', self.package_per_sheet, 0, 1)
-        chip('PDF si no hay registros', self.empty_pdf, 1, 1)
+        self.reports_choice = chip('Informes por vencer (60 días)', self.reports_due, 0, 1)
+        chip('Un paquete por hoja', self.package_per_sheet, 1, 1)
+        chip('PDF si no hay registros', self.empty_pdf, 2, 1)
         # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
-        self.history_choice = chip('Historia de la causa (prueba)', self.read_history, 2, 1, self.toggle_history)
-        self.history_package_choice = chip('Historia en el paquete', self.history_in_package, 3, 1)
+        self.history_choice = chip('Historia de la causa (prueba)', self.read_history, 0, 2, self.toggle_history)
+        self.history_package_choice = chip('Historia en el paquete', self.history_in_package, 1, 2)
         if not self.read_history.get():
             self.history_package_choice.grid_remove()
         # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
         period = ttk.Frame(options)
-        period.grid(row=2, column=0, columnspan=4, sticky='w', pady=(0, 6))
+        period.grid(row=3, column=0, columnspan=3, sticky='w', pady=(0, 6))
         self.months_back = tk.StringVar(value=str(self.prefs.data['meses_atras']))
         ttk.Label(period, text='Meses de bitácora', style='Muted.TLabel').pack(side='left', padx=(0, 4))
         self.months_combo = ttk.Combobox(
