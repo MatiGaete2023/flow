@@ -39,20 +39,44 @@ CATALOGS = {
         'medidas': {},
         'pestanas': [],
         'estados': {},
-        'meses': {str(i): n for i, n in enumerate(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
-                                                    'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'], 1)},
+        'meses': {
+            str(i): n
+            for i, n in enumerate(
+                [
+                    'Enero',
+                    'Febrero',
+                    'Marzo',
+                    'Abril',
+                    'Mayo',
+                    'Junio',
+                    'Julio',
+                    'Agosto',
+                    'Septiembre',
+                    'Octubre',
+                    'Noviembre',
+                    'Diciembre',
+                ],
+                1,
+            )
+        },
         'anios': {'2026': '2026', '2027': '2027'},
         'seleccion': {'mes': '10', 'anio': '2026'},
     },
 }
 CATALOGS['calendario_medidas'] = {**CATALOGS['calendario_informes'], 'pantalla': 'calendario_medidas'}
-TABS = {'Espera': ('tdEspera', 'NUM_PaginaEspera', 'NUM_TotalEspera', 'tablaEspera'),
-        'Cumplimiento': ('tdCumplimiento', 'NUM_PaginaCumplimiento', 'NUM_TotalCumplimiento', 'tablaCumplimiento'),
-        'Informes': ('tdInforme', 'NUM_PaginaInforme', 'NUM_TotalInforme', 'tablaInforme'),
-        'Egresados': ('tdEgreso', 'NUM_PaginaEgreso', 'NUM_TotalEgreso', 'tablaEgresados')}
+TABS = {
+    'Espera': ('tdEspera', 'NUM_PaginaEspera', 'NUM_TotalEspera', 'tablaEspera'),
+    'Cumplimiento': ('tdCumplimiento', 'NUM_PaginaCumplimiento', 'NUM_TotalCumplimiento', 'tablaCumplimiento'),
+    'Informes': ('tdInforme', 'NUM_PaginaInforme', 'NUM_TotalInforme', 'tablaInforme'),
+    'Egresados': ('tdEgreso', 'NUM_PaginaEgreso', 'NUM_TotalEgreso', 'tablaEgresados'),
+}
 TEMPLATES = {'litigantes': 'BusquedaLit', 'calendario_informes': 'InfoPorVencer', 'calendario_medidas': 'MedPorVencer'}
-ACTIONS = {'seguimiento': 'Buscar medida', 'litigantes': 'Consulta Informe',
-           'calendario_informes': 'Buscar Inf.', 'calendario_medidas': 'Buscar'}
+ACTIONS = {
+    'seguimiento': 'Buscar medida',
+    'litigantes': 'Consulta Informe',
+    'calendario_informes': 'Buscar Inf.',
+    'calendario_medidas': 'Buscar',
+}
 
 
 def b64(data):
@@ -91,8 +115,12 @@ class FakeBridge:
         self.calls.append(command)
         payload = payload or {}
         if command == 'capabilities':
-            return {'tipo': 'SITFA_LITE_CAPACIDADES', 'version': '1.1.0',
-                    'protocolos': {'descarga_xls': 1, 'pdf_sin_registros': 1}, 'escritura_rus': False}
+            return {
+                'tipo': 'SITFA_LITE_CAPACIDADES',
+                'version': '1.1.0',
+                'protocolos': {'descarga_xls': 1, 'pdf_sin_registros': 1},
+                'escritura_rus': False,
+            }
         if command in ('lock', 'unlock', 'evidence_close'):
             return {'ok': True, 'restored': True}
         if command == 'catalog':
@@ -109,7 +137,9 @@ class FakeBridge:
         if command == 'evidence_open':
             p = dict(payload['pairs'])
             # Como restoreEvidenceSelection: la copia para el PDF muestra la pestaña consultada.
-            html = self.page_html(p).replace('name="COD_Lengueta" value=""', f'name="COD_Lengueta" value="{p.get("COD_Lengueta", "")}"')
+            html = self.page_html(p).replace(
+                'name="COD_Lengueta" value=""', f'name="COD_Lengueta" value="{p.get("COD_Lengueta", "")}"'
+            )
             context = payload['context']
             banner = (
                 f'<div id="sitfaContextoConsulta" data-context="{escape(json.dumps(context, ensure_ascii=False, separators=(",", ":")))}">'
@@ -118,7 +148,12 @@ class FakeBridge:
             )
             body = html.replace('<body>', '<body>' + banner).encode('utf-8')
             self.evidence_digest = hashlib.sha256(body).hexdigest()
-            return {'status': 200, 'type': 'text/html; charset=utf-8', 'body': b64(body), 'digest': self.evidence_digest}
+            return {
+                'status': 200,
+                'type': 'text/html; charset=utf-8',
+                'body': b64(body),
+                'digest': self.evidence_digest,
+            }
         if command == 'evidence_capture':
             return {'png': b64(png()), 'digest': payload['digest']}
         raise AssertionError('comando no permitido en Lite: ' + command)
@@ -134,7 +169,12 @@ class FakeBridge:
                 pairs.append(('TIP_Informe', s['report'] or '0'))
             pairs += [(tab[1], ''), (tab[2], '')]
         elif screen == 'litigantes':
-            pairs += [('TIP_Consulta', '2'), ('COD_EstBusqueda', s['state']), ('NUM_PaginaInforme', ''), ('NUM_Total', '')]
+            pairs += [
+                ('TIP_Consulta', '2'),
+                ('COD_EstBusqueda', s['state']),
+                ('NUM_PaginaInforme', ''),
+                ('NUM_Total', ''),
+            ]
         else:
             pairs += [('TIP_Consulta', '1'), ('COD_Mes_sel', s['month']), ('COD_Anio_Sel', s['year'])]
         if not screen.startswith('calendario_'):
@@ -165,7 +205,8 @@ class FakeBridge:
         fields = ''.join(
             f'<select name="{k}"><option value="{escape(v)}" selected>{escape(v)}</option></select>'
             for k, v in p.items()
-            if k in ('COD_Tribunal_sel', 'TIP_Consulta', 'TIP_Informe', 'COD_EstBusqueda', 'COD_Mes_sel', 'COD_Anio_Sel')
+            if k
+            in ('COD_Tribunal_sel', 'TIP_Consulta', 'TIP_Informe', 'COD_EstBusqueda', 'COD_Mes_sel', 'COD_Anio_Sel')
         )
         fields += '<input name="FEC_Inicio" value="{}"><input name="FEC_Fin" value="{}">'.format(
             escape(p.get('FEC_Inicio', '')), escape(p.get('FEC_Fin', ''))
@@ -174,7 +215,9 @@ class FakeBridge:
         if self.screen == 'seguimiento':
             tab = next(v for v in TABS.values() if v[0] == p['COD_Lengueta'])
             fields += '<input name="COD_Lengueta" value="">'
-            fields += f'<input name="{tab[1]}" value="{page if total else 1}"><input name="{tab[2]}" value="{max(total, 1)}">'
+            fields += (
+                f'<input name="{tab[1]}" value="{page if total else 1}"><input name="{tab[2]}" value="{max(total, 1)}">'
+            )
             body = ''.join(f'<tr><td>{r}</td><td>{n}</td></tr>' for r, n in rows) or '<tr><td>Sin registros</td></tr>'
             tables = ''.join(
                 f'<table id="{v[3]}"><tr><td>RIT</td><td>Nombre</td></tr>{body if v == tab else ""}</table>'
@@ -192,7 +235,9 @@ class FakeBridge:
             scripts += ''.join(f'Ritxdias[dia] = "{r}"; Nombresxdias[dia] = "{n}";' for r, n in rows)
         return (
             '<html><body><form name="InformesPpalForm" method="post" action="/SITFAWEB/InformesDAction.do">'
-            + fields + tables + f'</form><script>{scripts}</script></body></html>'
+            + fields
+            + tables
+            + f'</form><script>{scripts}</script></body></html>'
         )
 
     def excel(self, p):

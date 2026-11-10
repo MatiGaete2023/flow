@@ -21,6 +21,14 @@ FILETYPES = [
     ("Todos los archivos", "*.*"),
 ]
 MODES = [("estricto", "Estricto"), ("conservador", "Conservador")]
+MODE_HELP = {
+    "estricto": "Estricto: omite los textos libres completos (observaciones, notas).",
+    "conservador": "Conservador: mantiene las observaciones y sustituye las identidades que detecta.",
+}
+DOCS = [
+    ("Manual de uso (PDF)", "Manual_Anonimizador_CSMP.pdf"),
+    ("Video: Anonimizador", "Flow_Video_Anonimizador_CSMP.mp4"),
+]
 ABOUT = (
     "Anonimizador CSMP {version}\n\n"
     "Acepta: {supported}.\n\n"
@@ -46,36 +54,81 @@ class App:
         self.status = tk.StringVar()
         self.window = ui.Window(root, "Anonimizador CSMP", "Anonimizar", self.start, size="760x520", minsize=(600, 420))
         top = self.window.top
-        self.modes = ui.Chips(top.extra, MODES, multi=False, command=lambda: self.mode.set(self.modes.get()[0]))
+        self.modes = ui.Chips(top.extra, MODES, multi=False, command=self._mode_changed)
         self.modes.set([self.mode.get()])
         self.modes.pack(side="left", pady=(6, 0))
-        top.add("Agregar archivos…", self.pick_files)
-        top.add("Agregar carpeta…", self.pick_folder)
-        top.add("Quitar todo", self.clear_inputs)
-        top.add("Carpeta de destino…", self.pick_out, separator=True)
-        top.add("Desplazar fechas…", self.ask_shift)
-        top.add("Frase de semilla…", self.ask_seed)
-        top.add_check("Fechas de nacimiento al 1 de enero", self.birth)
-        top.add_check("Un ZIP con archivos no admitidos falla completo", self.strict_zip)
+        top.add("Agregar archivos…", self.pick_files, busy_lock=True)
+        top.add("Agregar carpeta…", self.pick_folder, busy_lock=True)
+        top.add("Quitar entrada elegida", self.remove_selected, busy_lock=True)
+        top.add("Quitar todo", self.clear_inputs, busy_lock=True)
+        top.add("Carpeta de destino…", self.pick_out, separator=True, busy_lock=True)
+        top.add("Desplazar fechas…", self.ask_shift, busy_lock=True)
+        top.add("Frase de semilla…", self.ask_seed, busy_lock=True)
+        top.add_check("Fechas de nacimiento al 1 de enero", self.birth, self.refresh, busy_lock=True)
+        top.add_check("Un ZIP con archivos no admitidos falla completo", self.strict_zip, self.refresh, busy_lock=True)
         top.add("Ver último informe", self.show_report, separator=True)
         top.add("Acerca de", self.about)
+        self.window.add_docs(DOCS, anchor=__file__)
+        top.add_note(f"Versión {__version__}")
         footer = self.window.footer
         self.add_folder = footer.add("Agregar carpeta…", self.pick_folder)
         self.add_files = footer.add("Agregar archivos…", self.pick_files)
         self.go = footer.primary
         body = ttk.Frame(self.window.body, padding=(16, 14))
         body.pack(fill="both", expand=True)
-        self.empty = ttk.Label(body, text="Agrega archivos o carpetas del Descargador o del Asistente.", style="Muted.TLabel")
-        self.list = ui.ProgressList(body, height=12)
+        self.mode_help = ttk.Label(body, style="Muted.TLabel")
+        self.mode_help.pack(anchor="w", pady=(0, 10))
+        self.empty = ttk.Label(
+            body, text="Agrega archivos o carpetas del Descargador o del Asistente.", style="Empty.TLabel"
+        )
+        self.list = ui.ProgressList(
+            body, height=12, hint="Pasa el mouse sobre una entrada para ver su nombre · Supr quita la entrada elegida."
+        )
+        self.list.tree.bind("<Delete>", lambda _e: self.remove_selected())
+        # El nombre solo aparece al pasar el mouse: no queda en la lista, capturas ni registros.
+        self.row_names = {}
+        ui.Tooltip(self.list.tree, lambda e: self.row_names.get(self.list.tree.identify_row(e.y), ""))
+        self.status_kind = "info"
         self.status.trace_add("write", self._status_changed)
         self.out_dir.trace_add("write", lambda *_: self.refresh())
+        for variable in (self.shift, self.seed):
+            variable.trace_add("write", lambda *_: self.refresh())
         self.refresh()
 
     def _status_changed(self, *_):
         text = self.status.get()
-        self.window.banner.show(text, bad=not text.startswith(tuple("123456789"))) if text else self.window.banner.hide()
+        self.window.banner.show(text, kind=self.status_kind) if text else self.window.banner.hide()
+
+    def say(self, text, kind="info"):
+        self.status_kind = kind
+        self.status.set(text)
+
+    def _mode_changed(self):
+        self.mode.set(self.modes.get()[0])
+        self.refresh()
+
+    def options_summary(self):
+        """Opciones activas, para verlas en el pie sin abrir el menú."""
+        parts = []
+        try:
+            days = int((self.shift.get() or "0").strip())
+        except ValueError:
+            days = 0
+        if days:
+            parts.append(f"fechas {days:+d} días")
+        if self.seed.get():
+            parts.append("semilla definida")
+        if self.birth.get():
+            parts.append("nacimiento al 1 de enero")
+        if self.strict_zip.get():
+            parts.append("ZIP estricto")
+        return parts
 
     def refresh(self):
+        self.mode_help.configure(text=MODE_HELP.get(self.mode.get(), ""))
+        self.window.top.lock(self.busy)
+        if self.inputs and not self.busy:
+            self.row_names = {str(n): Path(p).name for n, p in enumerate(self.inputs, 1)}
         if self.inputs:
             self.empty.pack_forget()
             self.list.pack(fill="both", expand=True)
@@ -91,10 +144,8 @@ class App:
             self.empty.pack(anchor="w")
         where = "en la carpeta elegida" if (self.out_dir.get() or "").strip() else "junto al original"
         count = len(self.inputs)
-        self.window.footer.set(
-            f"{count} entrada{'s' if count != 1 else ''} · copia {where}" if count else "",
-            enabled=bool(count) and not self.busy,
-        )
+        summary = [f"{count} entrada{'s' if count != 1 else ''}", f"copia {where}", *self.options_summary()]
+        self.window.footer.set(" · ".join(summary) if count else "", enabled=bool(count) and not self.busy)
 
     def pick_files(self):
         if self.busy:  # el menú «Más» sigue activo mientras se procesa
@@ -128,8 +179,9 @@ class App:
             self.shift.set(str(value))
 
     def ask_seed(self):
-        value = simpledialog.askstring("Frase de semilla", "Misma frase = mismos seudónimos entre ejecuciones:",
-                                       parent=self.root, show="•")
+        value = simpledialog.askstring(
+            "Frase de semilla", "Misma frase = mismos seudónimos entre ejecuciones:", parent=self.root, show="•"
+        )
         if value is not None:
             self.seed.set(value)
 
@@ -147,6 +199,14 @@ class App:
         box.configure(state="disabled")
         box.pack(fill="both", expand=True)
 
+    def remove_selected(self):
+        if self.busy:
+            return
+        chosen = {int(i) for i in self.list.tree.selection() if i.isdigit()}
+        if chosen:
+            self.inputs = [p for n, p in enumerate(self.inputs, 1) if n not in chosen]
+            self.refresh()
+
     def clear_inputs(self):
         if self.busy:
             return
@@ -156,6 +216,7 @@ class App:
 
     def lock(self, locked):
         self.busy = locked
+        self.window.top.lock(locked)
         for widget in (self.add_files, self.add_folder):
             widget.state(["disabled"] if locked else ["!disabled"])
         self.refresh() if not locked else self.go.state(["disabled"])
@@ -165,12 +226,12 @@ class App:
 
     def start(self):
         if not self.inputs:
-            self.status.set("Debes agregar al menos un archivo o carpeta.")
+            self.say("Debes agregar al menos un archivo o carpeta.", "warn")
             return
         try:
             days = int(self.shift.get().strip() or 0)
         except ValueError:
-            self.status.set("Los días a desplazar deben ser un número entero.")
+            self.say("Los días a desplazar deben ser un número entero.", "bad")
             return
         options = Options(
             mode=self.mode.get(),
@@ -206,29 +267,41 @@ class App:
                 if event == "progress":
                     label, step, total = value
                     self.list.bar.configure(maximum=max(1, total), value=step)
+                    self.window.set_progress(f"{step} de {total}")
                     continue
+                self.window.set_progress()
                 self.lock(False)
                 if event == "error":
-                    self.status.set("No se pudo completar el proceso. Los originales siguen intactos.")
+                    self.say("No se pudo completar el proceso. Los originales siguen intactos.", "bad")
                     return
                 result, options = value
                 self.list.clear()
                 for number, item in enumerate(result.items, 1):
-                    self.list.set(number, "ok" if item.ok else "bad",
-                                  f"{item.changed} cambios" if item.ok else item.detail,
-                                  name=f"{item.label} · {item.kind or 'sin formato'}")
+                    self.list.set(
+                        number,
+                        "ok" if item.ok else "bad",
+                        f"{item.changed} cambios" if item.ok else item.detail,
+                        name=f"{item.label} · {item.kind or 'sin formato'}",
+                    )
                 made = len(result.outputs)
                 failed = sum(not item.ok for item in result.items)
+                if len(result.items) != len(self.inputs):
+                    self.row_names = {}
+                self.status_kind = "warn" if failed and made else ("bad" if not made else "ok")
                 self.status.set(
                     f"{made} copia(s) creada(s)"
                     + (f"; {failed} no se pudo/pudieron crear" if failed else "")
                     + ". Revisión humana obligatoria antes de compartir."
                 )
-                self.write(report_text(result, options) + "\nUbicación: " + (str(result.outputs[0].parent) if made else "-"))
+                self.write(
+                    report_text(result, options) + "\nUbicación: " + (str(result.outputs[0].parent) if made else "-")
+                )
                 folder = result.outputs[0].parent if made else None
                 self.window.banner.show(
-                    self.status.get(), bad=not made,
-                    action=(lambda: _open(folder)) if folder else None, action_text="Abrir carpeta",
+                    self.status.get(),
+                    kind=self.status_kind,
+                    action=(lambda: _open(folder)) if folder else None,
+                    action_text="Abrir carpeta",
                 )
                 return
         except queue.Empty:
@@ -236,16 +309,7 @@ class App:
 
 
 def _open(path):
-    import os
-    import subprocess
-    import sys
-
-    if not Path(path).is_dir():
-        return
-    if sys.platform == "win32":
-        os.startfile(path)  # noqa: S606 - carpeta local recién creada por la herramienta
-    else:
-        subprocess.Popen(["xdg-open", str(path)])
+    ui.open_path(path)
 
 
 def main():

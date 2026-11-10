@@ -83,8 +83,8 @@ def guiones(src, img):
 
     ruta_ext = r'C:\Users\<tu usuario>\AppData\Local\Programs\SITFA_Lite\extension'
     extension = [
-        ('Abre el menú Más y elige Instalar extensión. El programa copia la ubicación de la carpeta y abre la página de extensiones de Chrome.',
-         sc('a0_inicio.png', a('a0_inicio.png', 'mas'), 'Menú «Más» → «Instalar extensión…»: copia la ruta y abre chrome://extensions.', 1, 7)),
+        ('Pulsa Instalar extensión, abajo en la pantalla de conexión. El programa copia la ubicación de la carpeta y abre la página de extensiones de Chrome.',
+         sc('a0_inicio.png', a('a0_inicio.png', 'instalar'), '«Instalar extensión…»: copia la ruta y abre chrome://extensions.', 1, 7)),
         ('Arriba a la derecha, activa el Modo de desarrollador.',
          sc('r01_extensiones.png', b('dev'), 'Activa «Modo de desarrollador» (arriba a la derecha).', 2, 7)),
         ('Aparecen nuevos botones. Pulsa Cargar extensión sin empaquetar.',
@@ -95,16 +95,16 @@ def guiones(src, img):
         ('Listo. Aparece la tarjeta de Sitfa Lite, activada. No muevas esa carpeta, porque Chrome la usa desde ahí.',
          sc('r03_extension_cargada.png', b('card'), 'Aparece la tarjeta «SITFA Lite · Descargas RUS», activada.', 5, 7, zoom=1.5)),
         ('Para tenerla siempre a mano, abre el menú de extensiones, el ícono de rompecabezas, y pulsa el alfiler junto a Sitfa Lite.',
-         sc('r04_menu_extensiones.png', (1086, 212, 24, 24), 'Rompecabezas → alfiler junto a SITFA Lite.', 6, 7)),
+         sc('r04_menu_extensiones.png', tuple(web.get('r04', [None, (1086, 212, 24, 24)])[1]), 'Rompecabezas → alfiler junto a SITFA Lite.', 6, 7)),
         ('Ahora el ícono azul queda fijo en la barra.',
-         sc('r05_fijada.png', (1116, 49, 28, 28), 'El ícono azul queda fijo en la barra.', 7, 7)),
+         sc('r05_fijada.png', tuple(web.get('r05', [(1116, 49, 28, 28)])[0]), 'El ícono azul queda fijo en la barra.', 7, 7)),
     ]
     conectar = [
-        ('Pulsa Abrir Sitfa, e inicia sesión como siempre.',
+        ('La pantalla de conexión tiene tres pasos, y cada uno se marca al cumplirse. Primero, pulsa Abrir Sitfa, e inicia sesión como siempre.',
          sc('a0_inicio.png', a('a0_inicio.png', 'abrir'), 'Pulsa «Abrir SITFA» e inicia sesión.', 1, 4)),
-        ('Luego, en Sitfa Lite, pulsa Copiar, junto al código.',
+        ('Segundo, en Sitfa Lite, pulsa Copiar, junto al código.',
          sc('a0_inicio.png', a('a0_inicio.png', 'copiar'), 'Pulsa «Copiar».', 2, 4)),
-        ('Vuelve a la pestaña de Sitfa y pulsa el ícono azul. Se abre la pestaña de conexión: pega el código y pulsa Conectar. Deja esa pestaña abierta.',
+        ('Tercero, vuelve a la pestaña de Sitfa y pulsa el ícono azul. Se abre la pestaña de conexión: pega el código y pulsa Conectar. Deja esa pestaña abierta.',
          sc('r07_codigo_pegado.png', b('connect'), 'Pulsa el ícono, pega el código y pulsa «Conectar».', 3, 4)),
         ('Arriba a la derecha, el programa muestra Chrome conectado, y trae solo las opciones de tu sesión. Ya puedes descargar.',
          sc('a1_conectado.png', a('a1_conectado.png', 'estado'), 'SITFA Lite muestra «Chrome conectado».', 4, 4)),
@@ -122,19 +122,19 @@ def guiones(src, img):
     uso = [
         ('Para descargar, elige una de las cuatro consultas en la lista de la izquierda. Sitfa abre esa pantalla en tu Chrome, y el programa trae solo sus tribunales y filtros.',
          sc('a1_conectado.png', a('a1_conectado.png', 'consultas'), 'Elige la consulta en la lista de la izquierda.', 1, 8, zoom=1.4)),
-        ('Marca los tribunales con un clic en cada ficha. Un clic en el nombre de la fila marca o desmarca todos.',
+        ('Marca los tribunales con un clic en cada ficha. La ficha Todos marca o desmarca todos. La próxima vez, el programa propone lo mismo que marcaste.',
          sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'tribunales'), 'Tribunales: clic en cada ficha.', 2, 8, zoom=1.3)),
         ('Elige las pestañas: Espera, Cumplimiento, Informes o Egresados. Y la modalidad: Residencia, Ambulatorio, FAE o DCE.',
          sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'pestanas'), 'Pestañas y modalidad.', 3, 8)),
         ('Si marcas la pestaña Informes, aparece el tipo de informe. Y si marcas Cumplimiento, aparece el filtro de medidas.',
          sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'informes'), 'Tipo de informe y filtro de medidas.', 4, 8)),
-        ('El período es opcional: sin filtro, o por fecha, con desde y hasta, y el botón calendario.',
+        ('El período es opcional: sin filtro, o por fecha, con desde y hasta, y el botón calendario. Si una fecha está mal escrita, se marca en rojo ahí mismo.',
          sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'periodo'), 'Período: sin filtro o por fecha.', 5, 8, zoom=1.4)),
         ('En Incluir decides si se guarda un pantallazo en pe de efe cuando una consulta no tiene registros. Si lo desmarcas, la consulta solo queda anotada como sin registros.',
          sc('a3_informes_medidas_fechas.png', a('a3_informes_medidas_fechas.png', 'incluir'), 'PDF si no hay registros: opcional.', 6, 8, zoom=1.4)),
         ('Pulsa Descargar. Cada consulta aparece en la lista con su estado y sus registros. Mientras trabaja, no uses la pestaña de Sitfa.',
          sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'lista'), 'Cada consulta con su estado.', 7, 8, zoom=1.2)),
-        ('Al terminar, abajo ves el resumen del lote, con Abrir carpeta y Nuevo lote. Con doble clic en una consulta abres su archivo.',
+        ('Al terminar, abajo ves el resumen del lote, con Abrir carpeta y Nuevo lote. Con doble clic en una consulta abres su archivo. Si alguna quedó detenida, aparece Reintentar las que faltan.',
          sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'resumen'), 'Abrir carpeta o Nuevo lote.', 8, 8)),
         ('En Búsqueda de litigantes, marca tribunales y uno o varios estados. El período también es opcional.',
          sc('a5_busqueda_lit.png', a('a5_busqueda_lit.png', 'estados'), 'Búsqueda litigantes: tribunales y estado.', 0, 0, zoom=1.5)),
@@ -151,7 +151,19 @@ def guiones(src, img):
              '• Deja Chrome visible (no minimizado): el pantallazo PDF lo necesita.',
              '• Detener termina la página en curso; lo guardado se conserva.',
              '• «Sesión expirada» o «Sin conexión»: entra a SITFA, pulsa el ícono y pega el código actual.',
-             '• Manuales PDF: menú Inicio → SITFA Lite.'])),
+             '• Manuales y videos: menú «Más» del programa (F1 abre el manual).'])),
+    ]
+    tarea = [
+        ('En menos de un minuto: descargar el informe de seguimiento de un tribunal.',
+         cd('Descargar Seguimiento de un tribunal', ['Chrome conectado → Informe seguimiento → un tribunal → Descargar.'])),
+        ('Con Chrome conectado, elige Informe seguimiento en la lista de la izquierda.',
+         sc('a1_conectado.png', a('a1_conectado.png', 'consultas'), 'Informe seguimiento.', 1, 4, zoom=1.4)),
+        ('Marca el tribunal, las pestañas y la modalidad, cada uno con un clic.',
+         sc('a2_opciones_seguimiento.png', a('a2_opciones_seguimiento.png', 'tribunales'), 'Un tribunal, pestañas y modalidad.', 2, 4, zoom=1.3)),
+        ('Pulsa Descargar, o la tecla Enter. Cada consulta muestra su avance.',
+         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'lista'), 'Descargar (o Enter).', 3, 4, zoom=1.2)),
+        ('Listo. Abre la carpeta con el botón de abajo.',
+         sc('a4_descarga_terminada.png', a('a4_descarga_terminada.png', 'resumen'), 'Abrir carpeta.', 4, 4)),
     ]
     completo = (
         [('Hola. Este video muestra cómo instalar y usar Sitfa Lite, la herramienta que descarga las planillas Excel que produce Rus, con todas sus páginas: Informe de seguimiento, Búsqueda de litigantes, Informes por vencer y Medidas por vencer.',
@@ -177,15 +189,16 @@ def guiones(src, img):
         + [('Y cuarto: descargar.', cd('Parte 4 · Descargar', ['Elegir consulta → marcar filtros → Descargar.']))]
         + uso
     )
-    return corto, completo
+    return corto, completo, tarea
 
 
 def main(src, img, modelo, out, voice='ef_dora'):
     src, img, modelo, out = Path(src), Path(img), Path(modelo), Path(out)
     tts = Kokoro(str(modelo / 'kokoro-v1.0.onnx'), str(modelo / 'voices-v1.0.bin'))
-    corto, completo = guiones(src, img)
+    corto, completo, tarea = guiones(src, img)
     for name, parts in (('SITFA_Lite_Video_Instalar_Extension.mp4', corto),
-                        ('SITFA_Lite_Video_Instalacion_y_Uso.mp4', completo)):
+                        ('SITFA_Lite_Video_Instalacion_y_Uso.mp4', completo),
+                        ('SITFA_Lite_Video_Descargar_Seguimiento.mp4', tarea)):
         print(name, round(build(parts, voice, tts, out / name), 1), 's')
 
 

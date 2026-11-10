@@ -7,10 +7,10 @@ No escribe en RUS.
 
 ## Uso rápido (4 pasos)
 
-1. **Conectar:** abre SITFA Lite → **Abrir SITFA** → inicia sesión → pulsa el icono **SITFA Lite** en Chrome → pega el código (**Copiar**) → **Conectar**. Arriba a la derecha debe decir **Chrome conectado**.
+1. **Conectar** (tres pasos que se marcan con ✓): **Abrir SITFA** → inicia sesión → **Copiar** el código → en Chrome pulsa el icono **SITFA Lite**, pega el código y pulsa **Conectar**. Arriba a la derecha debe decir **Chrome conectado**.
 2. **Qué descargar:** elige una de las 4 consultas en la lista de la izquierda. SITFA abre esa pantalla en tu Chrome y SITFA Lite trae sus tribunales y filtros solo.
-3. **Opciones:** marca las fichas de tribunales y filtros (ver tabla); clic en el nombre de una fila marca o desmarca todas. Abajo se indica cuántas consultas se harán.
-4. **Descargar:** pulsa **Descargar**. Cada consulta muestra su estado; al terminar, **Abrir carpeta** o doble clic en una consulta. **Nuevo lote** vuelve a los filtros.
+3. **Opciones:** marca las fichas de tribunales y filtros (ver tabla); la ficha **Todos** marca o desmarca todas. Cada consulta propone lo que marcaste la última vez. Abajo se indica cuántas consultas se harán y la carpeta de descarga (clic para cambiarla).
+4. **Descargar:** pulsa **Descargar** (o Enter; Esc detiene). Cada consulta muestra su estado; al terminar, **Abrir carpeta** o doble clic en una consulta. Si alguna quedó detenida, **Reintentar las que faltan** descarga solo esas. **Nuevo lote** vuelve a los filtros.
 
 Mientras descarga, la pestaña de SITFA queda cubierta con el aviso «Descargando el lote»; no la uses ni la cierres. Deja abierta también la pestaña de conexión.
 
@@ -26,7 +26,8 @@ Mientras descarga, la pestaña de SITFA queda cubierta con el aviso «Descargand
 Notas:
 
 - Los nombres exactos de informes, medidas, estados, meses y años son los que entrega tu SITFA al elegir la consulta.
-- **Período:** *Sin filtro* o *Por fecha*, con Desde/Hasta (DD/MM/AAAA) y el botón **Calendario**.
+- **Período:** *Sin filtro* o *Por fecha*, con Desde/Hasta (DD/MM/AAAA) y el botón **Calendario**. Una fecha mal escrita se marca en rojo en el lugar.
+- **Ayuda:** el menú **Más** abre los manuales y videos; **F1** abre el manual de uso.
 - **Incluir · PDF si no hay registros:** marcado (por defecto), guarda el pantallazo de constancia; desmarcado, no lo guarda. Se recuerda entre sesiones.
 - **Conservar los otros filtros preparados en SITFA** (menú **Más**): para buscar a una persona, centro, RUT o causa concreta, prepara esos filtros primero en la pantalla de SITFA y márcalo. Si no, SITFA Lite limpia esos filtros y trae todos los registros.
 - Las consultas de Informes/Medidas por vencer usan mes y año; no admiten rango de fechas.

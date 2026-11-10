@@ -638,7 +638,9 @@ def write_error(exc, path):
     full = str(Path(path).absolute())
     code = getattr(exc, "winerror", None) or exc.errno
     if code in (3, 206) or len(full) >= 260:
-        why = f"la ruta es demasiado larga para Windows ({len(full)} caracteres). Elige una carpeta de destino más corta"
+        why = (
+            f"la ruta es demasiado larga para Windows ({len(full)} caracteres). Elige una carpeta de destino más corta"
+        )
     elif isinstance(exc, PermissionError) or code in (5, 13, 32, 33):
         why = (
             "Windows no permitió escribir en esa carpeta (permiso, archivo abierto o protección «Acceso controlado a "

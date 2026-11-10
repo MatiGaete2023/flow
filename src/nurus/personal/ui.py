@@ -219,6 +219,10 @@ class PageStack(ctk.CTkFrame):
     def tabs(self):
         return tuple(self._pages)
 
+    def set_text(self, page, text):
+        """Texto del botón lateral de una página (p. ej. «2 Correos · 3»)."""
+        self._buttons[str(page)].configure(text='  ' + text)
+
     def select(self, page=None):
         if page is None:
             return self._active

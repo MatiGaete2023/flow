@@ -55,8 +55,8 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
 <div class="warn">Las ventanas del instalador son las estándar de Windows (Inno Setup); no se incluyen capturas porque este manual se generó fuera de Windows.</div>
 """)
     body += '<div class="page"></div><h2>B. Cargar la extensión en Chrome (una sola vez)</h2>'
-    body += step(2, 'En SITFA Lite abre «Más» → «Instalar extensión…»', f"""
-<p>Copia al portapapeles la ruta de la carpeta <code>extension</code> y abre <code>chrome://extensions</code>. Menú «Más»: recuadro {RED} 3.</p>""",
+    body += step(2, 'En SITFA Lite pulsa «Instalar extensión…»', f"""
+<p>Está abajo en la pantalla de conexión (recuadro {RED} 4; también en el menú «Más»). Copia al portapapeles la ruta de la carpeta <code>extension</code> y abre <code>chrome://extensions</code>.</p>""",
                  'a0_inicio.png', half=True)
     body += step(3, 'Activa «Modo de desarrollador»', '<p>Interruptor arriba a la derecha de <code>chrome://extensions</code>.</p>',
                  'r01_extensiones.png')
@@ -72,6 +72,7 @@ El menú Inicio queda con la carpeta <b>SITFA Lite</b>: programa, manuales y «C
                  'r05_fijada.png')
     body += '<div class="page"></div><h2>C. Conectar Chrome con SITFA Lite</h2>'
     body += step(8, 'Abre SITFA y copia el código', """
+<p>La pantalla de conexión tiene tres pasos; cada uno muestra ✓ al cumplirse.</p>
 <ol><li><b>Abrir SITFA</b> (1) e inicia sesión como siempre.</li>
 <li><b>Copiar</b> (2) el código. Cambia cada vez que abres el programa o desconectas (menú «Más»).</li></ol>""",
                  'a0_inicio.png', half=True)
@@ -110,18 +111,18 @@ def uso():
                  'a1_conectado.png')
     body += '<div class="page"></div><h2>2. Seguimiento · Informe seguimiento</h2>'
     body += step(2, 'Tribunales, pestañas y modalidades', """
-<ol><li><b>Tribunales:</b> clic en una ficha para marcarla o desmarcarla. Clic en el nombre de la fila marca o desmarca todas.</li>
+<ol><li><b>Tribunales:</b> clic en una ficha para marcarla o desmarcarla. La ficha <b>Todos</b> marca o desmarca todas. La próxima vez, cada consulta propone lo que marcaste en la última descarga.</li>
 <li><b>Pestañas:</b> Espera, Cumplimiento, Informes, Egresados.</li>
 <li><b>Modalidad:</b> Residencia, Ambulatorio, FAE, DCE.</li></ol>""", 'a2_opciones_seguimiento.png')
     body += step(3, 'Informe, medidas y fechas', """
 <ol><li><b>Informes</b> (aparece al marcar la pestaña Informes): Por vencer, Vencidos, Recibidos.</li>
 <li><b>Medidas</b> (aparece al marcar Cumplimiento): Todas las medidas, Por vencer, Vencidos.</li>
-<li><b>Período:</b> Sin filtro, o Por fecha con Desde/Hasta (DD/MM/AAAA) y botón <b>Calendario</b>.</li>
+<li><b>Período:</b> Sin filtro, o Por fecha con Desde/Hasta (DD/MM/AAAA) y botón <b>Calendario</b>. Una fecha mal escrita o «Desde» posterior a «Hasta» se marca en rojo ahí mismo.</li>
 <li><b>Incluir · PDF si no hay registros:</b> marcado, guarda el pantallazo de constancia; desmarcado, la consulta vacía solo queda anotada como «sin registros».</li></ol>
-<p>Abajo se indica cuántas consultas se harán. «Conservar los otros filtros preparados en SITFA» está en el menú «Más».</p>""", 'a3_informes_medidas_fechas.png')
+<p>Abajo se indica cuántas consultas se harán y, a la izquierda, la carpeta de descarga (un clic la cambia). «Conservar los otros filtros preparados en SITFA» está en el menú «Más».</p>""", 'a3_informes_medidas_fechas.png')
     body += '<div class="page"></div><h2>3. Descargar</h2>'
     body += step(4, 'Pulsa «Descargar»', """
-<p>(1) muestra cada consulta con su estado: ✓ con registros, – sin registros (con o sin PDF), ✕ detenida. (2) resume el lote; ahí están <b>Abrir carpeta</b> y <b>Nuevo lote</b>. Mientras descarga, el botón dice <b>Detener</b> (termina la página en curso) y la pestaña de SITFA queda cubierta con «Descargando el lote»: no la uses ni la cierres. Doble clic en una consulta abre su archivo.</p>""",
+<p>(1) muestra cada consulta con su estado: ✓ con registros, – sin registros (con o sin PDF), ✕ detenida. (2) resume el lote; ahí están <b>Abrir carpeta</b> y <b>Nuevo lote</b>. Mientras descarga, el botón dice <b>Detener</b> (termina la página en curso) y la pestaña de SITFA queda cubierta con «Descargando el lote»: no la uses ni la cierres. Doble clic en una consulta abre su archivo. <b>Enter</b> pulsa Descargar y <b>Esc</b> detiene; el avance también se ve en la barra de tareas («3 de 8 · SITFA Lite»). Si alguna consulta quedó detenida, aparece <b>Reintentar las que faltan</b>: descarga solo esas, en un lote nuevo.</p>""",
                  'a4_descarga_terminada.png')
     body += '<div class="page"></div><h2>4. Búsqueda litigantes</h2>'
     body += step(5, 'Tribunales y estado', '<p>Marca tribunales (1) y uno o varios estados (2). Fechas opcionales, igual que en Seguimiento.</p>',
@@ -148,7 +149,8 @@ def uso():
 <tr><td>Sesión expirada</td><td>Inicia sesión de nuevo en SITFA, reconecta desde el ícono y repite el lote.</td></tr>
 <tr><td>No se pudo capturar la consulta vacía</td><td>Deja Chrome visible durante el lote.</td></tr>
 <tr><td>Sin conexión</td><td>Pulsa el ícono SITFA Lite en la pestaña de SITFA y pega el código actual.</td></tr>
-<tr><td>Lote cancelado / detenido</td><td>Los archivos guardados quedan; repite en un lote nuevo.</td></tr></table>
+<tr><td>Lote cancelado / detenido</td><td>Los archivos guardados quedan; pulsa <b>Reintentar las que faltan</b>.</td></tr></table>
+<p><b>Ayuda:</b> el menú «Más» abre este manual y los videos; <b>F1</b> abre el manual de uso.</p>
 <p><b>Privacidad:</b> la extensión usa tu sesión de Chrome; el programa no ve contraseñas ni cookies. Comunicación solo local (127.0.0.1) con código de conexión. Los archivos quedan solo en tu equipo.</p>"""
     return page('Manual de uso', 'Seguimiento · Búsqueda litigantes · Informes por vencer · Medidas por vencer', body)
 

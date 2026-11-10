@@ -42,6 +42,9 @@ jobs:
             if ($warn -match "missing module named '?$mod") { throw "PyInstaller no encontró $mod" }
           }
           Copy-Item LEEME.md, ORIGEN_COMPONENTES.txt, VERIFICACION.txt dist/Meta4/
+          # Manual y video: «Más › Manual» y F1 los abren desde aquí.
+          New-Item -ItemType Directory -Path dist/Meta4/manuales -Force | Out-Null
+          Copy-Item ../docs/manuales/Manual_Meta4.pdf, ../docs/manuales/Flow_Video_Meta4.mp4 dist/Meta4/manuales/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: Meta4-Windows-x64

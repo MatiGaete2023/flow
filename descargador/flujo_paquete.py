@@ -194,6 +194,29 @@ def _proceso(control):
     return state
 
 
+def pendientes(destino, dias=7):
+    """Paquetes cortados en `destino` (los últimos `dias`), del más reciente al más antiguo: [(carpeta, fase)].
+
+    Solo los que quedaron EN_CURSO o INCOMPLETO: los PARCIALES terminaron y se revisan en el Asistente."""
+    import time
+
+    destino, limite, encontrados = Path(destino), time.time() - dias * 86400, []
+    try:
+        candidatos = list(destino.glob('Paquete CSMP */respaldo/' + PROCESO))
+    except OSError:
+        return []
+    for control in candidatos:
+        try:
+            if control.stat().st_mtime < limite:
+                continue
+            state = json.loads(control.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        if isinstance(state, dict) and state.get('estado') in ('EN_CURSO', 'INCOMPLETO'):
+            encontrados.append((control.stat().st_mtime, control.parent.parent, state.get('fase', '')))
+    return [(carpeta, fase) for _, carpeta, fase in sorted(encontrados, reverse=True)]
+
+
 def _alcance(root, state):
     """Alcance guardado del paquete; los paquetes anteriores a 2.8.2 solo lo tienen en su lote de bitácoras."""
     if isinstance(state.get('seleccion'), dict):

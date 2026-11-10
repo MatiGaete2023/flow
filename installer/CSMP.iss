@@ -29,6 +29,7 @@ Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Gr
 Source: "..\dist\integral\CSMP_Integral\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\integral\SITFA_Descargador\*"; DestDir: "{app}\SITFA_Descargador"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\dist\integral\extension\*"; DestDir: "{app}\extension"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\integral\manuales\*"; DestDir: "{app}\manuales"; Flags: ignoreversion
 [Icons]
 Name: "{autoprograms}\Flow CSMP"; Filename: "{app}\CSMP_Integral.exe"
 Name: "{autodesktop}\Flow CSMP"; Filename: "{app}\CSMP_Integral.exe"; Tasks: desktopicon

@@ -18,6 +18,7 @@ from PIL import Image, ImageDraw  # noqa: E402
 import video  # noqa: E402
 from narrado import build  # noqa: E402
 
+CORTOS = {'retomar': ('Descargador SITFA', 'Descargador 2.9.0', 'Flow_Video_Retomar_Paquete.mp4')}
 PRODUCTOS = {
     'asistente': ('Asistente CSMP', 'Asistente 0.5.0.dev11', 'Flow_Video_Asistente_CSMP.mp4'),
     'descargador': ('Descargador SITFA', 'Descargador 2.9.0', 'Flow_Video_Descargador_SITFA.mp4'),
@@ -47,8 +48,10 @@ def tarjeta(cabecera, titulo, lineas, segundos):
 
 
 def guion(producto, capturas, manuales):
-    cajas = json.loads((capturas / producto / 'cajas.json').read_text(encoding='utf-8'))
-    nombre, version, _ = PRODUCTOS[producto]
+    cajas = (
+        json.loads((capturas / producto / 'cajas.json').read_text(encoding='utf-8')) if producto in PRODUCTOS else {}
+    )
+    nombre, version, _ = {**PRODUCTOS, **CORTOS}[producto]
     cabecera = f'Flow · {version}'
 
     def sc(imagen, n, texto, paso, total, zoom=1.5):
@@ -59,6 +62,32 @@ def guion(producto, capturas, manuales):
     def cd(titulo, lineas):
         return lambda s: tarjeta(cabecera, titulo, lineas, max(s, 3.0))
 
+    if producto == 'retomar':
+        cajas = json.loads((capturas / 'descargador' / 'cajas.json').read_text(encoding='utf-8'))
+
+        def sd(imagen, n, texto, paso, total, zoom=1.3):
+            caja = tuple(cajas[imagen][n - 1])
+            ruta = capturas / 'descargador' / 'raw' / imagen
+            return lambda s: video.scene(ruta, caja, texto, paso, total, seconds=max(s, 4.2), zoom=zoom)
+
+        return [
+            (
+                'En menos de un minuto: retomar un paquete que se cortó.',
+                cd('Retomar un paquete', ['Sin repetir lo ya hecho.']),
+            ),
+            (
+                'Si un paquete quedó sin terminar, al abrir el Descargador aparece este aviso. Conecta Chrome y pulsa Retomar.',
+                sd('04_retomar.png', 1, 'Aviso: paquete sin terminar → Retomar.', 1, 3),
+            ),
+            (
+                'Para elegir otra carpeta, usa el menú Más, Retomar paquete.',
+                sd('04_retomar.png', 2, 'Más › Retomar paquete…', 2, 3, zoom=1.5),
+            ),
+            (
+                'El programa reutiliza las consultas validadas y las bitácoras ya leídas, y vuelve a crear el zip.',
+                sd('03_paquete.png', 1, 'Termina el paquete sin repetir lo listo.', 3, 3, zoom=1.5),
+            ),
+        ]
     if producto == 'asistente':
         t = 6
         return [
@@ -122,7 +151,7 @@ def guion(producto, capturas, manuales):
                 ),
             ),
             (
-                'Primero conecta Chrome. Pulsa Abrir mi Chrome en Sitfa, inicia sesión, copia el código y pégalo en la extensión.',
+                'Primero conecta Chrome, en tres pasos que se marcan al cumplirse: abre Sitfa, copia el código y pégalo en la extensión.',
                 sc('01_sin_conexion.png', 1, 'Abrir SITFA y copiar el código.', 1, t),
             ),
             (
@@ -130,17 +159,17 @@ def guion(producto, capturas, manuales):
                 sc('02_seguimiento.png', 1, 'La consulta se elige en la lista de la izquierda.', 2, t, zoom=1.3),
             ),
             (
-                'Elige tribunales y modalidades. Las fechas son opcionales, con calendario.',
-                sc('02_seguimiento.png', 3, 'Tribunales, modalidades y fechas.', 3, t),
+                'Todo se marca con un clic, en fichas: tribunales, modalidad, registros y período. Las fechas son opcionales, con calendario.',
+                sc('02_seguimiento.png', 3, 'Fichas: tribunales, modalidad, registros y período.', 3, t, zoom=1.2),
             ),
             (
-                'Con Consultar y crear paquete, el programa consulta, lee las bitácoras y entrega el zip. Las fichas definen qué '
-                'se incluye, por ejemplo el pe de efe cuando una consulta no tiene registros.',
-                sc('03_paquete.png', 2, 'Consultar y crear paquete · fichas de lo que se incluye.', 4, t, zoom=1.3),
+                'Abajo hay una sola acción: Consultar y crear paquete. Consulta, lee las bitácoras y entrega el zip. La fila Incluir '
+                'define qué va en el paquete, por ejemplo el pe de efe cuando una consulta no tiene registros.',
+                sc('03_paquete.png', 2, 'Una acción principal · fila «Incluir».', 4, t, zoom=1.3),
             ),
             (
-                'Si un paquete se corta, en el menú Más usa Retomar paquete. No repite lo que ya estaba listo.',
-                sc('04_avanzado.png', 1, 'Avanzado y recuperación · Más › Retomar paquete…', 5, t, zoom=1.2),
+                'Si un paquete se corta, al abrir el programa un aviso ofrece Retomar. No repite lo que ya estaba listo.',
+                sc('04_retomar.png', 1, 'Aviso con «Retomar».', 5, t, zoom=1.2),
             ),
             (
                 'Eso es todo. Mientras descarga, deja abiertas la pestaña de Sitfa y la de conexión.',
@@ -203,7 +232,7 @@ def main(capturas, manuales, modelo, salida, voz='ef_dora'):
     capturas, manuales, salida = Path(capturas), Path(manuales), Path(salida)
     salida.mkdir(parents=True, exist_ok=True)
     tts = Kokoro(str(Path(modelo) / 'kokoro-v1.0.onnx'), str(Path(modelo) / 'voices-v1.0.bin'))
-    for producto, (_, _, archivo) in PRODUCTOS.items():
+    for producto, (_, _, archivo) in {**PRODUCTOS, **CORTOS}.items():
         segundos = build(guion(producto, capturas, manuales), voz, tts, salida / archivo)
         print(archivo, round(segundos, 1), 's')
 

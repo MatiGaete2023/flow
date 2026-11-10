@@ -121,3 +121,87 @@ def test_refresh_no_reempaqueta_la_vista(app):
     for _ in range(5):
         app.refresh()
     assert not llamadas
+
+
+def test_conexion_guiada_marca_los_pasos(app):
+    assert app.setup_button.winfo_exists()
+    app.copy_code()
+    assert app.step_marks[2].cget('text') == '✓' and app.step_marks[1].cget('text') == '1'
+    app.process_event('opened', None)
+    assert app.step_marks[1].cget('text') == '✓'
+
+
+def test_recuerda_la_seleccion_por_consulta(app, tmp_path):
+    app.bridge.connected = True
+    esperar(app, lambda: app.catalog is not None)
+    app.tribunals.set(['902'])
+    app.tabs.set(['Espera'])
+    app.modalities.set(['1'])
+    app.refresh()
+    app.start()
+    esperar(app, lambda: app.showing_results and not app.busy)
+    guardado = app.prefs.data['selecciones']['seguimiento']
+    assert guardado['tribunals'] == ['902'] and guardado['tabs'] == ['Espera']
+    # Al volver a cargar las opciones se proponen las mismas.
+    app.primary()
+    app.tribunals.set(['901'])
+    app.apply_catalog(app.catalog)
+    assert app.tribunals.get() == ('902',) and app.modalities.get() == ('1',)
+
+
+def test_fecha_invalida_se_marca_en_el_lugar(app):
+    app.bridge.connected = True
+    esperar(app, lambda: app.catalog is not None)
+    app.tribunals.set(['901'])
+    app.period.set(['Por fecha'])
+    app.from_date.set('31/02/2026')
+    app.refresh()
+    assert app.date_error.cget('text') == 'Fecha DD/MM/AAAA'
+    assert str(app.from_field.entry.cget('style')) == 'Bad.TEntry'
+    assert app.download_button.instate(['disabled'])
+    app.from_date.set('10/10/2026')
+    app.to_date.set('01/10/2026')
+    app.refresh()
+    assert 'posterior' in app.date_error.cget('text')
+    app.to_date.set('31/10/2026')
+    app.refresh()
+    assert app.date_error.cget('text') == '' and app.download_button.instate(['!disabled'])
+
+
+def test_reintentar_solo_las_que_faltan(app):
+    app.bridge.connected = True
+    esperar(app, lambda: app.catalog is not None)
+    app.tribunals.set(['901', '902'])
+    app.tabs.set(['Espera'])
+    app.modalities.set(['1'])
+    app.refresh()
+    app.start()
+    esperar(app, lambda: app.showing_results and not app.busy)
+    assert app.pending() == [] and not app.retry_button.winfo_manager()
+    # Una consulta que quedó detenida se ofrece para reintentar, sola.
+    app.results.set('2', 'bad', 'detenida')
+    app.refresh()
+    assert app.retry_button.winfo_manager() and '(1)' in app.retry_button.cget('text')
+    segunda = app.last_plan[1]
+    app.retry()
+    esperar(app, lambda: app.showing_results and not app.busy)
+    assert app.last_plan == [segunda] and app.pending() == []
+
+
+def test_detener_no_se_muestra_como_error(app):
+    app.running = True
+    app.cancel.set()
+    app.process_event('error', 'Lote cancelado. Se conservan los archivos verificados.')
+    assert app.window.banner.kind == 'info' and app.summary == 'Detenido'
+    app.cancel.clear()
+    app.process_event('error', 'SITFA no respondió.')
+    assert app.window.banner.kind == 'bad'
+
+
+def test_avance_en_el_titulo_y_carpeta_en_el_pie(app):
+    app.process_event('query', {'index': 2, 'total': 5, 'label': 'Seguimiento - Espera'})
+    assert app.root.title().startswith('2 de 5 · SITFA Lite')
+    app.running = True
+    app.process_event('done', {'queries': 5, 'records': 1, 'files': 1, 'pdfs': 0})
+    assert app.root.title() == app.window.title
+    assert app.folder_link.cget('text').startswith('Carpeta: ')

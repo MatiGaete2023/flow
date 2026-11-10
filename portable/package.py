@@ -48,6 +48,10 @@ def main():
     shutil.copy2(binary, bundle / binary.name)
     shutil.copy2(report, bundle / report.name)
     shutil.copy2(ROOT / "portable/LEEME.md", bundle / "LEEME.md")
+    # Manual y video junto al EXE: «Más › Manual» y F1 los abren desde aquí.
+    (bundle / "manuales").mkdir()
+    for name in ("Manual_Anonimizador_CSMP.pdf", "Flow_Video_Anonimizador_CSMP.mp4"):
+        shutil.copy2(ROOT / "docs/manuales" / name, bundle / "manuales" / name)
     versions = {name: importlib.metadata.version(name) for name in DEPENDENCIES}
     verification = {
         "commit": commit(),

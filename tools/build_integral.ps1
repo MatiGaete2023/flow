@@ -43,6 +43,11 @@ try {
     CheckedPython @('-m','PyInstaller','--clean','--noconfirm','--distpath',$outputRoot,'SITFA_Descargador.spec')
 } finally { Pop-Location }
 Copy-Item -LiteralPath (Join-Path $downloaderRoot 'extension') -Destination $outputRoot -Recurse -Force
+# Manuales y videos junto a los programas: «Más › Manual» y F1 los abren desde aquí.
+$manuales = New-Item -ItemType Directory -Path (Join-Path $outputRoot 'manuales') -Force
+foreach ($doc in @('Manual_Asistente_CSMP.pdf','Flow_Video_Asistente_CSMP.mp4','Manual_Descargador_SITFA.pdf','Flow_Video_Descargador_SITFA.mp4','Flow_Video_Retomar_Paquete.mp4')) {
+    Copy-Item -LiteralPath (Join-Path $csmpRoot "docs/manuales/$doc") -Destination $manuales -Force
+}
 Copy-Item -LiteralPath (Join-Path $csmpRoot 'docs/GUIA_ENTREGA_MVP_20261008.md') -Destination (Join-Path $outputRoot 'GUIA_INTEGRAL.md') -Force
 foreach ($manual in @('MANUAL_DESCARGADOR_MVP_20261008.md','MANUAL_ASISTENTE_MVP_20261008.md','ACEPTACION_INSTITUCIONAL_PENDIENTE.md','REGRESIONES_PRUEBAS_USUARIO_20261009.md','CORRECCION_REFERENCIAS_ZIP_20261009.md')) {
     Copy-Item -LiteralPath (Join-Path $csmpRoot "docs/$manual") -Destination $outputRoot -Force

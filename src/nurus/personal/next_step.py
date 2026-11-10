@@ -40,6 +40,31 @@ def labels(values):
     return out
 
 
+def sidebar_counts(app, values):
+    """Pasos numerados en la barra lateral con lo que queda en cada uno: «1 Trabajo · 4 avisos»."""
+    from .app_base import PAGE_LABELS
+
+    if not hasattr(app, 'tabs') or not hasattr(app.tabs, 'set_text'):
+        return
+    extra = {}
+    if values:
+        extra = {
+            'Trabajo': f"{values['revisar']} aviso{'s' if values['revisar'] != 1 else ''}" if values['revisar'] else '',
+            'Correos': str(values['correos']) if values['correos'] else '',
+            'Resoluciones': str(values['resoluciones']) if values['resoluciones'] else '',
+            'Resultados': f"{values['resultados']} por revisar" if values['resultados'] else '',
+        }
+    for name, label in PAGE_LABELS.items():
+        app.tabs.set_text(app.pages[name], label + (f' · {extra[name]}' if extra.get(name) else ''))
+    empty = getattr(app, 'work_empty', None)
+    if empty is not None:
+        if values is None:
+            empty.place(relx=0.5, rely=0.55, anchor='center')
+            empty.lift()
+        else:
+            empty.place_forget()
+
+
 def text(values):
     return ' → '.join(labels(values))
 
@@ -195,6 +220,7 @@ class NextStepBar(ui.Frame):
         self.values = counts(work, drafts, projects, checks)
         for (key, _, _), label in zip(STEPS, labels(self.values), strict=True):
             self.buttons[key].configure(text=label)
+        sidebar_counts(app, self.values if work else None)
         states = {'importar': 'Cargado' if work else 'Pendiente', 'revisar': 'Disponible' if work else 'Bloqueado'}
         if work and self.values['revisar']:
             states['revisar'] = 'Atención'

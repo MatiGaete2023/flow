@@ -142,9 +142,9 @@ def descargador(salida):
 
     root = tk.Tk()
     app = d.Application(root, start_worker=False, bridge_factory=Puente)
-    app.dest.set(r'C:\Users\usuario\Documents\Descargas SITFA')
+    app.dest.set(str(base / 'Documents' / 'Descargas SITFA'))
     cam = Camara(root, salida, 1100, 860)
-    cam.foto('01_sin_conexion.png', abrir=app.open_button, codigo=app.copy_button, mas=app.topbar.menu_button)
+    cam.foto('01_sin_conexion.png', abrir=app.open_button, codigo=app.copy_button, instalar=app.setup_button)
     app.process_event('connected', 'Chrome conectado.')
     app.process_event('catalog', catalog('seguimiento'))
     app.refresh()
@@ -152,18 +152,24 @@ def descargador(salida):
         '02_seguimiento.png',
         consultas=app.side,
         estado=app.topbar.pill,
-        tribunales=app.trib_button,
+        tribunales=app.trib_chips,
         paquete=app.pipeline_button,
     )
     cam.foto(
-        '03_paquete.png', paquete=app.pipeline_button, incluir=app.calendar_choice.master, avanzado=app.advanced_toggle
+        '03_paquete.png', paquete=app.pipeline_button, incluir=app.form.rows['incluir'][1], carpeta=app.folder_link
     )
-    app.toggle_advanced()
-    cam.foto('04_avanzado.png', acciones=app.advanced_actions)
-    app.toggle_advanced()
+    # Paquete cortado: el aviso ofrece retomarlo sin buscar la carpeta.
+    cortado = Path(app.dest.get()) / 'Paquete CSMP 2026-11-03 10-15-00-000000' / 'respaldo'
+    cortado.mkdir(parents=True, exist_ok=True)
+    (cortado / 'proceso.json').write_text('{"estado": "INCOMPLETO", "fase": "bitacoras", "carpetas": {}}')
+    app.offer_resume()
+    cam.foto('04_retomar.png', aviso=app.banner, mas=app.topbar.menu_button)
+    app.banner.hide()
+    app.side.select('Seguimiento de litigantes / órdenes')
+    app._side_selected('Seguimiento de litigantes / órdenes')
     app.process_event('catalog', catalog('litigantes'))
     app.refresh()
-    cam.foto('05_litigantes.png', consultas=app.side, estado=app.state_combo)
+    cam.foto('05_litigantes.png', consultas=app.side, estado=app.state_chips)
     cam.cerrar()
     root.destroy()
 
@@ -179,13 +185,13 @@ def meta4(salida):
     base = Path(tempfile.mkdtemp())
     lotes, bitacoras = cuatro_lotes(base / 'Descargas SITFA')
     root = tk.Tk()
-    app = Meta4.App(root)
+    app = Meta4.App(root, prefs_path=base / 'prefs.json')
     app.folder.set(r'C:\Users\usuario\Documents\Meta4')
     cam = Camara(root, salida, 820, 600)
-    cam.foto('01_inicio.png', agregar=app.add_button, mas=app.window.top.menu_button)
+    cam.foto('01_inicio.png', agregar=app.empty_add, mas=app.window.top.menu_button)
     app.diaries.set(str(bitacoras))
     app.set_sources(lotes)
-    app.cutoff.set('2026-10-16')
+    app.cutoff.set('16/10/2026')
     cam.foto('02_lotes.png', lotes=app.lots, tribunales=app.courts, corte=app.cutoff_entry, generar=app.generate)
     app.folder.set(str(base / 'salidas'))
     app.start()
@@ -233,13 +239,19 @@ def lite(salida):
     base = Path(tempfile.mkdtemp())
     root = tk.Tk()
     app = sitfa_lite.Application(root, bridge_factory=Puente, preferences_path=base / 'prefs.json')
-    app.dest.set(str(base))
+    app.dest.set(str(base / 'Documents' / 'SITFA Lite'))
     cam = Camara(root, salida, 1000, 680)
 
     def fila(nombre):
         return app.form.rows[nombre][1]
 
-    cam.foto('a0_inicio.png', abrir=app.open_button, copiar=app.copy_button, mas=app.window.top.menu_button)
+    cam.foto(
+        'a0_inicio.png',
+        abrir=app.open_button,
+        copiar=app.copy_button,
+        mas=app.window.top.menu_button,
+        instalar=app.setup_button,
+    )
     app.bridge.connected = True
     cam.esperar(lambda: app.catalog is not None and not app.busy)
     cam.foto('a1_conectado.png', estado=app.window.top.pill, consultas=app.side, descargar=app.download_button)

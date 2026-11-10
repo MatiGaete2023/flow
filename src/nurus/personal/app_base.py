@@ -85,6 +85,15 @@ def launch_without_blocking(path, startfile=None, wait=0.5, result=None):
     return thread.is_alive()
 
 
+PAGE_LABELS = {
+    'Trabajo': '1 Trabajo',
+    'Correos': '2 Correos',
+    'Resoluciones': '3 Resoluciones',
+    'Resultados': '4 Resultados',
+    'Configuración': 'Configuración',
+}
+
+
 class App(ctk.CTk):
     def __init__(self, configuration=None):
         self.cfg = configuration or Configuration()
@@ -95,7 +104,7 @@ class App(ctk.CTk):
         ttk.install_theme(self)
         from nurus import __version__
 
-        self.title('CSMP Assistant personal · ' + __version__)
+        self.title('Asistente CSMP · ' + __version__)
         self.geometry('1120x720')
         self.minsize(820, 560)
         self.work = None
@@ -122,14 +131,15 @@ class App(ctk.CTk):
         sidebar.grid_propagate(False)
         sidebar.pack_propagate(False)
         ctk.CTkLabel(
-            sidebar, text='CSMP\nAssistant', font=('Segoe UI', 22, 'bold'), justify='left', text_color=ttk.TEXT
+            sidebar, text='Asistente\nCSMP', font=('Segoe UI', 22, 'bold'), justify='left', text_color=ttk.TEXT
         ).pack(padx=16, pady=(24, 18), anchor='w')
         self.tabs = ttk.PageStack(self, sidebar)
         self.tabs.grid(row=0, column=1, sticky='nsew', padx=12, pady=12)
         self.pages = {}
-        for name in ('Trabajo', 'Correos', 'Resoluciones', 'Resultados', 'Configuración'):
+        # Los pasos del flujo van numerados; la barra «Siguiente paso» agrega cuántos quedan en cada uno.
+        for name, label in PAGE_LABELS.items():
             frame = ttk.Frame(self.tabs, padding=10)
-            self.tabs.add(frame, text=name)
+            self.tabs.add(frame, text=label)
             self.pages[name] = frame
         self._work_page()
         self._mail_page()
@@ -452,6 +462,12 @@ class App(ctk.CTk):
             '<Control-f>': self._shortcut_find,
             '<F5>': self._shortcut_refresh,
             '<Control-k>': lambda event: (show_palette(self), 'break')[1],
+            '<F1>': lambda event: (
+                __import__('nurus.personal.commands', fromlist=['open_doc']).open_doc(
+                    self, 'Manual_Asistente_CSMP.pdf'
+                ),
+                'break',
+            )[1],
         }
         for sequence, handler in shortcuts.items():
             guarded = self._unless_modal(handler)

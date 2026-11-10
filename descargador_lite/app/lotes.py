@@ -122,7 +122,15 @@ class Batch:
     def plan(self, catalog):
         if not self.tribunals:
             raise m.PocError('Marca al menos un tribunal.')
-        for values in (self.tribunals, self.modalities, self.tabs, self.informes, self.medidas, self.states, self.months):
+        for values in (
+            self.tribunals,
+            self.modalities,
+            self.tabs,
+            self.informes,
+            self.medidas,
+            self.states,
+            self.months,
+        ):
             if len(values) != len(set(values)):
                 raise m.PocError('El lote tiene opciones repetidas.')
         if self.screen == 'seguimiento':
@@ -434,7 +442,9 @@ class BatchRunner:
                 raise m.PocError('La pantalla de evidencia no coincide con la respuesta recibida.')
             _, native_first = response_profile(native_html.decode('utf-8'), pairs, selection, self.catalog)
             if native_first is not None:
-                raise m.PocError('La consulta cambió y ahora tiene registros. Repite el lote; no se guardó un PDF vacío.')
+                raise m.PocError(
+                    'La consulta cambió y ahora tiene registros. Repite el lote; no se guardó un PDF vacío.'
+                )
             native_root = m.root_html(native_html.decode('utf-8'))
             banners = native_root.xpath('//*[@id="sitfaContextoConsulta"]')
             context_text = 'Consulta solicitada · ' + ' · '.join(label + ': ' + value for label, value in context)

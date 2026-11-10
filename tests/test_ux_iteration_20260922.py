@@ -107,7 +107,7 @@ def test_ui_source_keeps_secondary_actions_and_exposes_requested_hierarchy():
     app = plano('src/nurus/personal/app_base.py')
     mail = plano('src/nurus/personal/mail_view.py')
     work = plano('src/nurus/personal/work_view.py')
-    assert "text='ActualizarExcel'" in work  # El atajo F5 vive en la paleta Ctrl+K, no en el botón.
+    assert "label='ActualizarExcel'" in work  # En «Más» (barra corta); el atajo F5 vive en la paleta Ctrl+K.
     resolutions = plano('src/nurus/personal/resolution_view.py')
     assert 'GenerarWord' in resolutions and 'Preparar/actualizarproyectos' in resolutions
     assert 'Guardarborradores' in mail and 'Guardareste' in mail and 'Preparartodos' in mail
@@ -120,3 +120,47 @@ def test_ui_source_keeps_secondary_actions_and_exposes_requested_hierarchy():
     assert work.index("split.add(table,weight=2)") < work.index("split.add(edit,weight=3)")
     assert "messagebox.showinfo('Catastroincorporado'" not in app
     assert "✓Catastroincorporado" in app
+
+
+def test_asistente_nombre_unico_pasos_numerados_y_estado_vacio():
+    root = Path(__file__).parents[1]
+    app = (root / 'src/nurus/personal/app_base.py').read_text(encoding='utf-8')
+    work = (root / 'src/nurus/personal/work_view.py').read_text(encoding='utf-8')
+    assert "'Asistente CSMP · '" in app and 'CSMP Assistant' not in app
+    assert "'1 Trabajo'" in app and "'2 Correos'" in app and "'3 Resoluciones'" in app
+    assert 'Importa el paquete del Descargador' in work and "text='Más ▾'" in work
+    from nurus.personal.next_step import sidebar_counts
+
+    class Pila:
+        def __init__(self):
+            self.textos = {}
+
+        def set_text(self, page, text):
+            self.textos[page] = text
+
+    class Vacio:
+        def __init__(self):
+            self.visible = None
+
+        def place(self, **_):
+            self.visible = True
+
+        def lift(self):
+            pass
+
+        def place_forget(self):
+            self.visible = False
+
+    class App:
+        tabs = Pila()
+        pages = {n: n for n in ('Trabajo', 'Correos', 'Resoluciones', 'Resultados', 'Configuración')}
+        work_empty = Vacio()
+
+    sidebar_counts(App, None)
+    assert App.work_empty.visible and App.tabs.textos['Correos'] == '2 Correos'
+    sidebar_counts(App, {'revisar': 4, 'exportar': True, 'correos': 3, 'resoluciones': 0, 'resultados': 1})
+    assert not App.work_empty.visible
+    assert App.tabs.textos['Trabajo'] == '1 Trabajo · 4 avisos' and App.tabs.textos['Correos'] == '2 Correos · 3'
+    assert App.tabs.textos['Resoluciones'] == '3 Resoluciones' and App.tabs.textos['Resultados'].endswith(
+        '1 por revisar'
+    )

@@ -44,8 +44,9 @@ def main(src, out):
         'r01_extensiones.png': [b('dev')],
         'r02_modo_desarrollador.png': [b('load')],
         'r03_extension_cargada.png': [b('card')],
-        'r04_menu_extensiones.png': [[1150, 46, 32, 32], [1086, 212, 24, 24]],
-        'r05_fijada.png': [[1116, 49, 28, 28]],
+        # Capturas de Windows (capturas_chrome_win.py) traen sus recuadros; las de Linux usan los de siempre.
+        'r04_menu_extensiones.png': web.get('r04', [[1150, 46, 32, 32], [1086, 212, 24, 24]]),
+        'r05_fijada.png': web.get('r05', [[1116, 49, 28, 28]]),
         'r06_conexion.png': [],
         'r07_codigo_pegado.png': [b('code'), b('connect')],
     }

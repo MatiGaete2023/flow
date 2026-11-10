@@ -88,20 +88,23 @@ def asistente(img):
     c += f"""<p>El Asistente CSMP prepara el trabajo de seguimiento a partir del paquete del Descargador (o de la planilla RUS):
 revisa cada registro con las reglas vigentes, propone correos y resoluciones, y los deja como <b>borradores</b>.
 Nunca envía correos ni escribe en RUS: Outlook solo guarda borradores, con copia fija a {CC}.</p>
-<table><tr><th>Página</th><th>Para qué</th></tr>
-<tr><td>Trabajo</td><td>Revisar registros, observaciones y avisos.</td></tr>
-<tr><td>Correos</td><td>Preparar y guardar borradores de Outlook.</td></tr>
-<tr><td>Resoluciones</td><td>Preparar y generar los proyectos Word.</td></tr>
-<tr><td>Resultados</td><td>Abrir y entregar lo generado.</td></tr>
+<table><tr><th>Paso</th><th>Para qué</th></tr>
+<tr><td>1 Trabajo</td><td>Revisar registros, observaciones y avisos.</td></tr>
+<tr><td>2 Correos</td><td>Preparar y guardar borradores de Outlook.</td></tr>
+<tr><td>3 Resoluciones</td><td>Preparar y generar los proyectos Word.</td></tr>
+<tr><td>4 Resultados</td><td>Abrir y entregar lo generado.</td></tr>
 <tr><td>Configuración</td><td>Apariencia, parámetros, plantillas y contactos.</td></tr></table>
 <div class="note">Atajos: <b>Ctrl+K</b> busca cualquier acción, <b>Ctrl+O</b> abre un Excel, <b>F5</b> actualiza el Excel,
-<b>Ctrl+S</b> guarda y <b>Ctrl+Enter</b> aplica la edición.</div>"""
+<b>Ctrl+S</b> guarda y <b>Ctrl+Enter</b> aplica la edición. La barra lateral muestra cuánto queda en cada paso
+(por ejemplo, «1 Trabajo · 4 avisos»).</div>"""
     c += seccion('1. Importar el paquete')
     c += paso(
         1,
         'Pulsa «Importar paquete»',
         """<p>Elige el <code>Captura_CSMP.zip</code> que entregó el Descargador
-y confirma la fecha de corte. El Asistente crea una copia Excel revisable; el original no se modifica.</p>""",
+y confirma la fecha de corte. El Asistente crea una copia Excel revisable; el original no se modifica.</p>
+<p>El botón <b>Más</b>, junto a «Importar paquete», tiene «Importar el último paquete», «Actualizar Excel» y «Archivo y
+opciones…» (elegir un Excel, hoja y carpeta de salida).</p>""",
         i('01_inicio.png'),
     )
     c += seccion('2. Revisar en Trabajo')
@@ -161,29 +164,32 @@ def descargador(img):
     c = seccion('Qué hace')
     c += """<p>El Descargador SITFA consulta SITFA desde tu propio Chrome, descarga los XLS de RUS con todas sus páginas, lee
 las bitácoras y crea el paquete <code>Captura_CSMP.zip</code> para el Asistente. No escribe en RUS.</p>
-<div class="note">Instalación de la extensión (una vez): menú <b>Más › Instalar extensión…</b>, activa el modo desarrollador
+<div class="note">Instalación de la extensión (una vez): botón <b>Instalar extensión…</b> (o menú Más), activa el modo desarrollador
 en <code>chrome://extensions</code>, pulsa «Cargar extensión sin empaquetar» y elige la carpeta <code>extension</code>. El programa y la
 extensión deben tener la misma versión (2.9.0).</div>"""
     c += seccion('1. Conectar Chrome')
     c += paso(
         1,
         'Abrir SITFA y pegar el código',
-        """<ol><li><b>Abrir mi Chrome en SITFA</b> e inicia sesión.</li>
+        """<p>Tres pasos; cada uno muestra ✓ al cumplirse.</p>
+<ol><li><b>Abrir mi Chrome en SITFA</b> e inicia sesión.</li>
 <li><b>Copiar</b> el código; en la pestaña de SITFA pulsa el ícono de la extensión, pégalo y pulsa Conectar.</li>
-<li>El menú <b>Más</b> tiene instalar extensión, código, desconectar, carpeta de descarga y apariencia.</li></ol>
-<p>Al conectar, este recuadro desaparece y las opciones de SITFA se cargan solas.</p>""",
+<li><b>Instalar extensión…</b> solo la primera vez.</li></ol>
+<p>Al conectar, esta pantalla desaparece y las opciones de SITFA se cargan solas.</p>""",
         i('01_sin_conexion.png'),
     )
     c += seccion('2. Elegir qué descargar')
     c += paso(
         2,
-        'Consulta, tribunales y modalidades',
+        'Consulta y filtros como fichas',
         """<ol><li>La lista de la izquierda elige la consulta:
 <b>Seguimiento</b> crea el paquete; las demás se descargan sueltas.</li>
 <li>Arriba a la derecha, el estado de Chrome.</li>
-<li><b>Elegir tribunales…</b> y <b>Elegir modalidades…</b>; debajo, registros, filtro de cumplimiento o tipo de informe, y
-fechas con calendario (opcional).</li>
-<li><b>Consultar y crear paquete</b> hace todo de una vez.</li></ol>""",
+<li>Todo se marca con un clic en la misma pantalla: tribunales (con «Todos»), modalidad, registros, filtro de
+cumplimiento o tipo de informe, período (sin filtro o por fecha, con calendario) y otros filtros. Una fecha mal escrita
+se marca en rojo en el lugar.</li>
+<li>Abajo, una sola acción: <b>Consultar y crear paquete</b> (o <b>Descargar</b> en las otras consultas). Enter la pulsa;
+Esc detiene.</li></ol>""",
         i('02_seguimiento.png'),
     )
     c += seccion('3. Crear el paquete')
@@ -191,28 +197,31 @@ fechas con calendario (opcional).</li>
         3,
         'Qué incluye el paquete',
         """<ol><li><b>Consultar y crear paquete</b>: consulta, lee bitácoras y entrega
-el ZIP con sus originales en <code>respaldo</code>.</li>
-<li>Fichas de lo que se incluye: XLSX consolidado, reutilizar bitácoras de hoy, calendario de informes, historia de la
-causa (prueba), informes por vencer, un paquete por hoja, <b>PDF si no hay registros</b> y meses de bitácora.</li>
-<li><b>Avanzado / recuperación</b> abre las acciones sueltas.</li></ol>
+el ZIP con sus originales en <code>respaldo</code>. Mientras trabaja aparecen <b>Pausar</b> y <b>Detener</b>.</li>
+<li>Fila «Incluir»: XLSX consolidado, reutilizar bitácoras de hoy, calendario de informes, informes por vencer, un paquete
+por hoja, <b>PDF si no hay registros</b>, historia de la causa (prueba) y meses de bitácora.</li>
+<li>La carpeta de descarga se ve abajo a la izquierda; un clic la cambia.</li></ol>
 <p>Con «PDF si no hay registros» desmarcado, la consulta vacía queda registrada sin pantallazo; el paquete lo informa como
 <code>VACIA_SIN_PDF</code> y el Asistente lo muestra.</p>""",
         i('03_paquete.png'),
     )
     c += paso(
         4,
-        'Avanzado y recuperación',
-        """<p>Descargar el lote completo, descarga conjunta CSMP, leer bitácoras del lote,
-reintentar lecturas fallidas, pausar y crear paquete de un lote ya descargado. Si un paquete se cortó, usa
-<b>Más › Retomar paquete…</b>: no repite lo ya validado ni las bitácoras leídas.</p>""",
-        i('04_avanzado.png'),
+        'Retomar un paquete cortado',
+        """<ol><li>Si un paquete reciente quedó sin terminar, al abrir el programa un aviso
+ofrece <b>Retomar</b>: no repite lo ya validado ni las bitácoras leídas.</li>
+<li>El menú <b>Más</b> reúne lo demás: descargar sin crear paquete, descarga conjunta CSMP, leer bitácoras del lote,
+reintentar lecturas fallidas, crear paquete de un lote ya descargado, abrir carpetas, favoritas, <b>Retomar
+paquete…</b> (para elegir otra carpeta), manual y video.</li></ol>""",
+        i('04_retomar.png'),
     )
     c += seccion('4. Otras consultas')
     c += paso(
         5,
         'Litigantes, calendarios y resoluciones firmadas',
         """<p>Al elegir otra consulta en la lista (1), SITFA
-abre esa pantalla y aparecen solo sus controles: estado de órdenes (2) en litigantes, mes y año en los calendarios.</p>""",
+abre esa pantalla y aparecen solo sus fichas: estado de órdenes (2) en litigantes, mes y año en los calendarios. La
+acción principal pasa a <b>Descargar</b>.</p>""",
         i('05_litigantes.png'),
     )
     c += """<h2 style="margin-top:14px">Problemas frecuentes</h2><table><tr><th>Mensaje</th><th>Qué hacer</th></tr>
@@ -233,9 +242,10 @@ Descargador. No se conecta a SITFA ni a RUS: solo lee carpetas locales.</p>"""
         1,
         'Agregar lote…',
         """<ol><li><b>Agregar lote…</b>: elige la carpeta de un lote del Descargador o una
-carpeta con varios (FAE y Residencia, Espera y Cumplimiento).</li>
-<li>El menú <b>Más</b> tiene quitar o vaciar lotes, bitácoras en otra carpeta, destino de resultados y regenerar desde
-un Registros revisado.</li></ol>""",
+carpeta con varios (FAE y Residencia, Espera y Cumplimiento). Desde la segunda vez aparece también <b>Usar el último
+lote</b>.</li>
+<li>El menú <b>Más</b> tiene quitar o vaciar lotes, bitácoras en otra carpeta, destino de resultados, regenerar desde
+un Registros revisado, manual y video.</li></ol>""",
         i('01_inicio.png'),
     )
     c += paso(
@@ -244,8 +254,9 @@ un Registros revisado.</li></ol>""",
         """<ol><li>Cada lote dice cuántos lotes encontró y si trae
 bitácoras (en naranja si faltan).</li>
 <li>Tribunales: todas las fichas marcadas incluyen todos; si desmarcas alguno, la planilla queda marcada como parcial.
-Clic en «Tribunales» marca o desmarca todos.</li>
-<li>Fecha de corte (AAAA-MM-DD); se ajusta sola al día de lectura de las bitácoras.</li>
+La ficha «Todos» marca o desmarca todos.</li>
+<li>Fecha de corte DD/MM/AAAA, con calendario; se ajusta sola al día de lectura de las bitácoras y avisa en el lugar si
+está mal escrita o es futura.</li>
 <li><b>Generar Meta 4</b>.</li></ol>""",
         i('02_lotes.png'),
     )
@@ -255,7 +266,8 @@ Clic en «Tribunales» marca o desmarca todos.</li>
         'Avisos y resultados',
         """<ol><li>Los avisos (por ejemplo, lectura de bitácoras incompleta) quedan en
 la ventana; las filas afectadas quedan en amarillo en la planilla.</li>
-<li>El resumen dice cuántos registros y alertas hubo; <b>Abrir resultados</b> abre la carpeta.</li></ol>""",
+<li>El resumen dice cuántos registros y alertas hubo; <b>Abrir resultados</b> abre la carpeta. Doble clic en un aviso
+abre <code>Registros.xlsx</code>, con el detalle en la hoja ERRORES_Y_ADVERTENCIAS.</li></ol>""",
         i('03_generado.png'),
     )
     return pagina('Meta 4', 'Meta 4 2.6.0', 'Registros y bitácoras del Descargador → planilla Meta 4', c)
@@ -273,7 +285,8 @@ nada sale del equipo.</p>
         1,
         'Modo y entradas',
         """<ol><li><b>Estricto</b> (recomendado) omite los textos libres completos;
-<b>Conservador</b> mantiene observaciones sustituyendo identidades detectables.</li>
+<b>Conservador</b> mantiene observaciones sustituyendo identidades detectables. Bajo la barra, una línea explica el modo
+elegido.</li>
 <li><b>Agregar archivos…</b></li><li><b>Agregar carpeta…</b></li></ol>""",
         i('01_inicio.png'),
     )
@@ -281,10 +294,11 @@ nada sale del equipo.</p>
         2,
         'Anonimizar',
         """<ol><li>Las entradas se listan por número y tipo, sin nombres (pueden identificar
-personas).</li>
-<li><b>Anonimizar</b>: la copia queda junto al original o en la carpeta de destino.</li>
+personas); el nombre aparece solo al pasar el mouse. <b>Supr</b> quita la entrada elegida.</li>
+<li><b>Anonimizar</b>: la copia queda junto al original o en la carpeta de destino. El pie resume las opciones activas
+(por ejemplo, «fechas +7 días · semilla definida»).</li>
 <li>El menú <b>Más</b> tiene carpeta de destino, desplazar fechas, frase de semilla, fechas de nacimiento al 1 de enero,
-ZIP estricto y el último informe.</li></ol>""",
+ZIP estricto, quitar entradas, el último informe, manual y video.</li></ol>""",
         i('02_listo.png'),
     )
     c += seccion('2. Resultado')

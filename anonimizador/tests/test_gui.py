@@ -81,3 +81,29 @@ def test_desplazar_fechas_con_valor_invalido_no_falla(app, monkeypatch):
     monkeypatch.setattr(gui.simpledialog, "askinteger", lambda *a, **k: vistos.append(k["initialvalue"]) or 7)
     app.ask_shift()
     assert vistos == [0] and app.shift.get() == "7"
+
+
+def test_quitar_una_entrada_nombre_al_pasar_y_opciones_en_el_pie(app, tmp_path):
+    app.inputs = [tmp_path / "a.xlsx", tmp_path / "b.csv"]
+    app.shift.set("7")
+    app.seed.set("frase")
+    app.refresh()
+    resumen = app.window.footer.summary.get()
+    assert "fechas +7 días" in resumen and "semilla definida" in resumen
+    # La lista solo dice «Entrada n»; el nombre aparece al pasar el mouse.
+    assert "a.xlsx" not in app.list.tree.item("1", "values")[1] and app.row_names["1"] == "a.xlsx"
+    app.list.tree.selection_set("1")
+    app.remove_selected()
+    assert app.inputs == [tmp_path / "b.csv"]
+    # Explicación del modo elegido.
+    assert app.mode_help.cget("text").startswith("Estricto")
+    app.modes.set(["conservador"])
+    app._mode_changed()
+    assert app.mode_help.cget("text").startswith("Conservador")
+
+
+def test_menu_bloqueado_mientras_procesa(app):
+    app.lock(True)
+    assert app.window.top.menu.entrycget(0, "state") == "disabled"
+    app.lock(False)
+    assert app.window.top.menu.entrycget(0, "state") == "normal"

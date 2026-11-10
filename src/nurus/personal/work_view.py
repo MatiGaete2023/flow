@@ -115,27 +115,27 @@ def build(app):
         else:
             top.pack(fill='x', after=bar, pady=5)
 
-    view_button(bar, text='Archivo / opciones', width=145, command=toggle_file).pack(side='left', padx=5)
     app.import_button = view_button(
         bar, text='Importar paquete', width=130, role='primary', command=lambda: app._guard(app._import_capture)
     )
-    app.import_button.pack(side='left', padx=(5, 2))
-    view_button(
+    app.import_button.pack(side='left', padx=(8, 4))
+    # Barra corta: una acción principal; lo demás en «Más».
+    app.work_more_menu = more = tk.Menu(page, tearoff=False, font=('Segoe UI', 11))
+    more.add_command(label='Importar el último paquete', command=lambda: app._guard(app._import_latest_capture))
+    more.add_command(label='Actualizar Excel', command=lambda: app._guard(app._refresh))
+    more.add_separator()
+    more.add_command(label='Archivo y opciones…', command=toggle_file)
+    app.work_more_button = view_button(
         bar,
-        text='Último',
-        width=60,
+        text='Más ▾',
+        width=70,
         fg_color='transparent',
         border_width=1,
-        command=lambda: app._guard(app._import_latest_capture),
-    ).pack(side='left', padx=(0, 5))
-    view_button(
-        bar,
-        text='Actualizar Excel',
-        width=145,
-        fg_color='transparent',
-        border_width=1,
-        command=lambda: app._guard(app._refresh),
-    ).pack(side='left')
+        command=lambda: more.tk_popup(
+            app.work_more_button.winfo_rootx(), app.work_more_button.winfo_rooty() + app.work_more_button.winfo_height()
+        ),
+    )
+    app.work_more_button.pack(side='left')
     app.work_primary_button = view_button(
         bar, text='Procesar Excel', command=lambda: app._guard(app._export_current if app.work else app._process)
     )
@@ -226,6 +226,13 @@ def build(app):
         side='left', padx=3
     )
     view_button(filters, text='Siguiente aviso', width=110, command=lambda: app._next_incident(1)).pack(side='left')
+    # Sin trabajo, la tabla dice qué hacer en vez de mostrarse vacía.
+    app.work_empty = ui.Frame(table, fg_color='transparent')
+    ui.Label(app.work_empty, text='Importa el paquete del Descargador', font=('Segoe UI', 15, 'bold')).pack(pady=(0, 4))
+    ui.Label(app.work_empty, text='Captura_CSMP.zip · o elige un Excel en Más › Archivo y opciones').pack(pady=(0, 10))
+    view_button(
+        app.work_empty, text='Importar paquete', role='primary', command=lambda: app._guard(app._import_capture)
+    ).pack()
     app.records = app._tree(table, WORK_COLUMNS)
     app.records.configure(height=5)
     vista = app.cfg.data.get('vista', {})

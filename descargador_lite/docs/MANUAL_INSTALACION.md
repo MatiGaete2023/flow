@@ -26,7 +26,7 @@ El instalador crea en el menú Inicio la carpeta **SITFA Lite** con:
 
 La extensión es la que consulta SITFA con tu sesión. Se instala en modo desarrollador porque es de uso local y no está publicada en Chrome Web Store.
 
-1. Abre SITFA Lite y en el menú **Más** elige **Instalar extensión…**. Esto:
+1. Abre SITFA Lite y pulsa **Instalar extensión…** (abajo en la pantalla de conexión; también en el menú **Más**). Esto:
    - copia al portapapeles la ruta de la carpeta `extension`,
    - abre `chrome://extensions` en tu Chrome.
 2. En `chrome://extensions`, activa **Modo de desarrollador** (interruptor arriba a la derecha).

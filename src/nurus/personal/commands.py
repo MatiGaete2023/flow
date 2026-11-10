@@ -14,6 +14,33 @@ class Command:
     reason: str = ''
 
 
+def find_doc(name):
+    """Manual o video junto al programa instalado ({app}/manuales) o en docs/manuales del repositorio."""
+    import sys
+    from pathlib import Path
+
+    folders = []
+    if getattr(sys, 'frozen', False):
+        exe = Path(sys.executable).resolve().parent
+        folders += [exe / 'manuales', exe.parent / 'manuales']
+    folders.append(Path(__file__).resolve().parents[3] / 'docs' / 'manuales')
+    return next((folder / name for folder in folders if (folder / name).is_file()), None)
+
+
+def open_doc(app, name):
+    import os
+    import subprocess
+    import sys
+
+    path = find_doc(name)
+    if path is None:
+        app.status.set(f'No se encontró {name} junto al programa: búscalo en la carpeta de manuales de la entrega.')
+    elif sys.platform == 'win32':
+        os.startfile(path)  # noqa: S606 - manual local de la entrega
+    else:
+        subprocess.Popen(['xdg-open', str(path)])
+
+
 def commands(app):
     from .mail_controls import mail_block  # misma condición que el botón de Correos
 
@@ -30,6 +57,8 @@ def commands(app):
         Command('Buscar registros · Ctrl+F', app._shortcut_find, lambda: bool(app.work), 'Carga un trabajo primero.'),
         Command('Actualizar Excel · F5', app._refresh, ready, 'Genera la copia de trabajo primero.'),
         Command('Abrir carpeta de productos', app._open_output_folder, ready, 'Genera la copia de trabajo primero.'),
+        Command('Manual de uso (PDF) · F1', lambda: open_doc(app, 'Manual_Asistente_CSMP.pdf'), lambda: True),
+        Command('Video: Asistente CSMP', lambda: open_doc(app, 'Flow_Video_Asistente_CSMP.mp4'), lambda: True),
     ]
     for name, page in app.pages.items():
         items.append(Command('Ir a ' + name, lambda p=page: app.tabs.select(p), lambda: True))

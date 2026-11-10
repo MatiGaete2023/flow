@@ -1,4 +1,5 @@
 """Ventana Tk con datos ficticios. Se omite si no hay tkinter o pantalla (en Linux: xvfb-run)."""
+
 from datetime import date
 import json
 import os
@@ -27,12 +28,12 @@ def raiz():
 
 
 @pytest.fixture
-def ventana(monkeypatch, raiz):
+def ventana(monkeypatch, raiz, tmp_path):
     shown = []
     for name in ('showinfo', 'showwarning', 'showerror'):
         monkeypatch.setattr(Meta4.messagebox, name, lambda *a, _n=name, **k: shown.append((_n, a)))
     root = tk.Toplevel(raiz)
-    app = Meta4.App(root)
+    app = Meta4.App(root, prefs_path=tmp_path / 'prefs.json')
     yield app, shown
     if not app.busy:
         app.close()
@@ -66,7 +67,7 @@ def test_requires_source_and_valid_date(ventana):
     app.sources = ['x']
     app.cutoff.set('2026-13-01')
     app.start()
-    assert 'AAAA-MM-DD' in app.window.banner.text.get()
+    assert 'DD/MM/AAAA' in app.window.banner.text.get()
     assert not shown
 
 
@@ -143,8 +144,10 @@ def test_output_folder_name_is_short_and_unique(tmp_path):
     first = Meta4.nueva_salida(tmp_path, ' regenerado')
     assert len(first.name) == len('Resultado META4 2026-10-29 15-09-27 regenerado')
     first.mkdir()
-    assert Meta4.nueva_salida(tmp_path, ' regenerado').name in (first.name + ' (2)',
-                                                                 Meta4.nueva_salida(tmp_path, ' regenerado').name)
+    assert Meta4.nueva_salida(tmp_path, ' regenerado').name in (
+        first.name + ' (2)',
+        Meta4.nueva_salida(tmp_path, ' regenerado').name,
+    )
 
 
 def test_escribir_la_fecha_no_recorre_las_carpetas(ventana, tmp_path, monkeypatch):
@@ -156,3 +159,36 @@ def test_escribir_la_fecha_no_recorre_las_carpetas(ventana, tmp_path, monkeypatc
     for valor in ('2026-10-1', '2026-10-16'):
         app.cutoff.set(valor)
     assert not llamadas and '4 lotes' in app.window.footer.summary.get()
+
+
+def test_corte_estado_vacio_y_ultimo_lote(ventana, tmp_path, monkeypatch):
+    app, shown = ventana
+    # Sin lotes: la fila dice qué hacer, con el botón dentro.
+    app.root.update()
+    assert app.empty.winfo_manager() and not app.lots_tree.winfo_manager()
+    # Corte con formato del resto de Flow y aviso en el lugar.
+    assert app.cutoff.get() == date.today().strftime('%d/%m/%Y')
+    app.cutoff.set('31/02/2026')
+    assert app.cutoff_error.cget('text') == 'Fecha DD/MM/AAAA'
+    app.cutoff.set('01/01/2999')
+    assert 'futuro' in app.cutoff_error.cget('text')
+    app.cutoff.set('16/10/2026')
+    assert app.cutoff_error.cget('text') == ''
+    # El último lote agregado se ofrece la próxima vez.
+    source = lote(tmp_path)
+    monkeypatch.setattr(Meta4.filedialog, 'askdirectory', lambda **k: str(source))
+    app.pick_source()
+    assert app.lots_tree.winfo_manager() or not app.empty.winfo_manager()
+    otra = Meta4.App(Meta4.tk.Toplevel(app.root), prefs_path=tmp_path / 'prefs.json')
+    try:
+        assert otra.last_lot() == str(source) and 'registros' in otra.last_button.cget('text')
+        otra.use_last()
+        assert otra.sources == [str(source)]
+    finally:
+        otra.root.destroy()
+    # Mientras genera, las acciones del menú que cambian los lotes se ven deshabilitadas.
+    app.busy = True
+    app.refresh()
+    assert app.window.top.menu.entrycget(0, 'state') == 'disabled'
+    app.busy = False
+    app.refresh()
