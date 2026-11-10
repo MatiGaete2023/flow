@@ -69,6 +69,7 @@ def main(extension, salida):
         v = Ventana(page, salida)
         page.goto('chrome://extensions/')
         page.wait_for_timeout(1500)
+        page.mouse.click(700, 500)  # quita la selección de la barra de direcciones
         v.caja('#devMode', 'dev')
         v.foto('r01_extensiones.png')
         page.locator('#devMode').click()
@@ -94,14 +95,15 @@ def main(extension, salida):
         puzzle = (w - 114, top - 25)
         v.clic_pantalla(x + puzzle[0], y + puzzle[1])
         page.wait_for_timeout(1200)
-        pin = (puzzle[0] - 80, puzzle[1] + 150)
+        pin = (puzzle[0] - 70, puzzle[1] + 156)
         v.boxes['r04'] = [[puzzle[0] - 16, puzzle[1] - 16, 32, 32], [pin[0] - 12, pin[1] - 12, 24, 24]]
         v.foto('r04_menu_extensiones.png')
         v.clic_pantalla(x + pin[0], y + pin[1])
         page.wait_for_timeout(800)
-        page.keyboard.press('Escape')
-        page.wait_for_timeout(600)
-        v.boxes['r05'] = [[puzzle[0] - 64, puzzle[1] - 14, 28, 28]]
+        # Cerrar el menú de extensiones con un clic en la página (Esc no lo cierra si el foco quedó en el alfiler).
+        v.clic_pantalla(x + 300, y + top + 520)
+        page.wait_for_timeout(700)
+        v.boxes['r05'] = [[puzzle[0] - 50, puzzle[1] - 14, 28, 28]]
         v.foto('r05_fijada.png')
         worker = ctx.service_workers[0] if ctx.service_workers else ctx.wait_for_event('serviceworker')
         ident = worker.url.split('/')[2]

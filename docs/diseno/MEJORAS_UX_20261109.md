@@ -1,7 +1,8 @@
 # Mejoras de diseño y experiencia — propuestas, 9 de noviembre de 2026
 
-Informe de propuestas: **nada de esto está implementado**. Ninguna cambia lo que las herramientas hacen (consultas,
-reglas, archivos que generan); solo cómo se ve y cuántos pasos pide. Base: lectura del código de las ventanas y las
+**Estado (10 de noviembre de 2026): las 32 propuestas están aplicadas en la rama `Rediseno`** (commit `52391c8` y
+siguientes), con pruebas de cada una. Ninguna cambia lo que las herramientas hacen (consultas, reglas, archivos que
+generan); solo cómo se ve y cuántos pasos pide. Al final, «Cómo quedó» resume cada una. Base: lectura del código de las ventanas y las
 capturas tomadas en Windows (`docs/manuales/capturas_windows/`). No se probó con usuarios ni con SITFA real.
 
 Esfuerzo: **S** = horas · **M** = 1–2 días · **L** = varios días.
@@ -101,3 +102,47 @@ Esfuerzo: **S** = horas · **M** = 1–2 días · **L** = varios días.
 
 - Tema oscuro, rediseño de íconos o animaciones: costo alto, beneficio bajo para el uso diario.
 - Cambios en reglas, textos tradicionales o formatos de salida: fuera de alcance por regla del proyecto.
+
+## Cómo quedó (10 de noviembre de 2026)
+
+| # | Aplicado | Dónde |
+| --- | --- | --- |
+| 1 | Fichas y lista lateral sin relieve ni anillo de foco | `ui/flowkit.py` (`_flat_toolbutton`) |
+| 2 | Aviso con «×» y tonos info, listo, aviso y error | `Banner.show(kind=…)` |
+| 3 | Manual y video en «Más»; los instaladores los copian a `manuales/` | `Window.add_docs`, workflows y `CSMP.iss` |
+| 4 | Enter, Esc y F1 (en el Asistente, F1 y la paleta Ctrl+K) | `Window`, Descargador, `app_base.py` |
+| 5 | Ficha «Todos» en tribunales, estado y mes | `Chips(all_label=…)` |
+| 6 | Acciones del menú deshabilitadas a la vista mientras trabaja | `TopBar.add(busy_lock=True)` |
+| 7 | DD/MM/AAAA en Lite, Descargador y Meta 4 (Meta 4 acepta también AAAA-MM-DD) | `parse_date`, `DateField` |
+| 8 | «3 de 8 · SITFA Lite» en la barra de tareas (Lite, Descargador, Anonimizador) | `Window.set_progress` |
+| 9, 18 | Conexión en tres pasos con ✓ e «Instalar extensión…» visible | Lite y Descargador |
+| 10 | Selección recordada por consulta, solo con opciones que SITFA siga ofreciendo | Lite (`selecciones`) |
+| 11, 19 | Fecha mal escrita, invertida o futura marcada en rojo en el lugar | Lite, Descargador, Meta 4 |
+| 12 | Carpeta de descarga en el pie, con clic para cambiarla | Lite y Descargador |
+| 13 | Pista «doble clic para abrir» y «Reintentar las que faltan (n)» | Lite |
+| 14 | Detener se informa en tono neutro | Lite |
+| 15 | Filtros del Descargador como fichas en la misma pantalla, con «Período» | Descargador |
+| 16 | Una acción principal (crear paquete o descargar); Pausar y Detener solo mientras trabaja; el resto en «Más» | Descargador |
+| 17 | Aviso «Retomar» al abrir si un paquete reciente quedó EN_CURSO o INCOMPLETO | `flujo_paquete.pendientes` |
+| 20 | «Usar el último lote» | Meta 4 (`preferencias.json` local) |
+| 21 | Doble clic en un aviso abre Registros.xlsx (hoja ERRORES_Y_ADVERTENCIAS) | Meta 4 |
+| 22 | Estado vacío con el botón dentro | Meta 4 |
+| 23 | «Quitar entrada elegida» y tecla Supr | Anonimizador |
+| 24 | Nombre de la entrada solo al pasar el mouse | Anonimizador (`Tooltip`) |
+| 25 | Opciones activas en el pie | Anonimizador |
+| 26 | Línea que explica el modo elegido | Anonimizador |
+| 27 | «1 Trabajo · 4 avisos», «2 Correos · 3»… en la barra lateral | Asistente (`sidebar_counts`) |
+| 28 | Barra superior: modo, «Importar paquete» y «Más ▾» | Asistente |
+| 29 | Estado vacío en Trabajo con «Importar paquete» | Asistente |
+| 30 | «Asistente CSMP» en la ventana y la barra lateral | Asistente |
+| 31 | Capturas de Chrome tomadas en Windows | `tools/manuales/capturas_chrome_win.py` |
+| 32 | Videos cortos: «Descargar Seguimiento de un tribunal» (Lite) y «Retomar un paquete» (Descargador) | `narrado.py`, `videos.py` |
+
+Límites conocidos:
+
+- La barra lateral del Asistente cuenta avisos, correos, resoluciones y productos por revisar con los mismos números de
+  la barra «Siguiente paso»; no distingue «por preparar» de «preparados».
+- El Descargador conserva sin mostrar los controles anteriores (botones y listas) porque el resto del código y sus
+  pruebas leen de ellos el estado; las fichas los mantienen sincronizados.
+- Las capturas del rompecabezas y del alfiler de Chrome dependen de la posición de la barra de Chrome en el runner de
+  Windows; si no calzan, se conservan las anteriores.
