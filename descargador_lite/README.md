@@ -15,8 +15,9 @@ No escribe en RUS.
 ## Documentos
 
 - Manuales ilustrados en PDF: [instalación](docs/SITFA_Lite_Manual_Instalacion.pdf) · [uso](docs/SITFA_Lite_Manual_Uso.pdf)
-- [Video: instalación y uso completo](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (3 min 39 s, narrado, con subtítulos)
-- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (87 s, narrado)
+- [Video: instalación y uso completo](docs/SITFA_Lite_Video_Instalacion_y_Uso.mp4) (3 min 54 s, narrado, con subtítulos)
+- [Video: instalar la extensión](docs/SITFA_Lite_Video_Instalar_Extension.mp4) (1 min 34 s, narrado)
+- [Video: descargar Seguimiento de un tribunal](docs/SITFA_Lite_Video_Descargar_Seguimiento.mp4) (24 s, narrado)
 - [Manual de instalación](docs/MANUAL_INSTALACION.md)
 - [Manual de uso](docs/MANUAL_USO.md)
 
@@ -60,4 +61,4 @@ La versión vive en `app/version.py` y debe coincidir con `extension/manifest.js
 
 ## Regenerar manuales ilustrados y video
 
-Todo con datos ficticios. Capturas del programa: en Windows, con el workflow «Capturas Windows para manuales y videos» (`tools/manuales/capturas.py lite`, quedan en `docs/manuales/capturas_windows/lite/`). Capturas de Chrome (Linux + Xvfb + Chromium de Playwright): `build/manual_visual/capturas_chrome.js` (ventana completa) y `capturas_chrome_contenido.js` (página, en español). Luego `anotar.py`, `manuales_pdf.py` + `pdf.js` para los PDF, y `narrado.py` para los videos (voz local Kokoro, `es-419`; modelo en github.com/thewh1teagle/kokoro-onnx/releases).
+Todo con datos ficticios. Capturas del programa: en Windows, con el workflow «Capturas Windows para manuales y videos» (`tools/manuales/capturas.py lite`, quedan en `docs/manuales/capturas_windows/lite/`). Capturas de Chrome: en Windows, en el mismo workflow (`tools/manuales/capturas_chrome_win.py`, quedan en `docs/manuales/capturas_windows/chrome/`); en Linux, `build/manual_visual/capturas_chrome.js` y `capturas_chrome_contenido.js`. Luego `anotar.py`, `manuales_pdf.py` + `pdf.js` para los PDF, y `narrado.py` para los videos (voz local Kokoro, `es-419`; modelo en github.com/thewh1teagle/kokoro-onnx/releases).
