@@ -268,7 +268,10 @@ class Application:
         self.folder_link = ttk.Button(bar, command=self.browse, style='Link.TButton')
         self.browse_button = self.folder_link
         self.folder_link.pack(side='left', padx=(0, 10))
-        ttk.Label(bar, textvariable=self.preview, style='BarMuted.TLabel').pack(side='left', fill='x', expand=True)
+        # width=1: el resumen usa el espacio libre sin fijar el ancho mínimo de la ventana.
+        ttk.Label(bar, textvariable=self.preview, style='BarMuted.TLabel', width=1).pack(
+            side='left', fill='x', expand=True
+        )
         self.pipeline_button = ttk.Button(
             bar, text='Consultar y crear paquete', style='Primary.TButton', command=self.primary_action
         )

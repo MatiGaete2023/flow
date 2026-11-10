@@ -108,10 +108,14 @@ def test_piezas_de_experiencia(tmp_path):
         # Enter pulsa la acción principal; Esc llama a on_escape.
         escapes = []
         window.on_escape = lambda: escapes.append(1)
-        root.update()
-        window.body.event_generate('<Return>')
-        window.body.event_generate('<Escape>')
+        # Se llama al manejador: Windows no entrega eventos de teclado a una ventana sin foco.
+        from types import SimpleNamespace
+
+        window._enter(SimpleNamespace(widget=window.body))
+        window._enter(SimpleNamespace(widget=ttk_entry(window.body)))
+        window.on_escape()
         assert pulsado == [1] and escapes == [1]
+        assert '<Key-Escape>' in root.bind() and '<Key-F1>' in root.bind()
         # Manuales: se buscan junto al programa; si falta, aviso en vez de error.
         (tmp_path / 'manuales').mkdir()
         (tmp_path / 'manuales' / 'Guia.pdf').write_bytes(b'%PDF')
@@ -124,6 +128,12 @@ def test_piezas_de_experiencia(tmp_path):
             ui.parse_date('31/02/2026')
     finally:
         root.destroy()
+
+
+def ttk_entry(parent):
+    from tkinter import ttk
+
+    return ttk.Entry(parent)
 
 
 def ttk_map(root, style, option):
