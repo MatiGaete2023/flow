@@ -8,8 +8,9 @@ es revisión del Ejecutor, no la E3 independiente. Nada se declara aceptado.
 
 - Análisis estático: Ruff (F, B, SIM, RUF100, ARG, ERA) y Vulture sobre todo el árbol; cruce de cada función y constante
   de las ventanas contra sus usos en producto, pruebas y herramientas.
-- Lectura completa de `ui/flowkit.py`, `descargador_lite/app/sitfa_lite.py`, `META4_Bitacoras/Meta4.py` y
-  `anonimizador/anonimizador_csmp/gui.py`; lectura dirigida del resto.
+- Lectura completa de `ui/flowkit.py`, `descargador_lite/app/sitfa_lite.py`, `META4_Bitacoras/Meta4.py`,
+  `anonimizador/anonimizador_csmp/gui.py` y `descargador/descargador.py` (10 de noviembre); el Asistente
+  (`src/nurus/`), solo con análisis estático y lectura dirigida.
 - Pruebas antes y después de cada cambio.
 
 ## Hallazgos y corrección
@@ -29,6 +30,9 @@ es revisión del Ejecutor, no la E3 independiente. Nada se declara aceptado.
 | A-11 | SITFA Lite `motor.py` | Código sin uso | `PAGE_FIELD`, `TOTAL_FIELD`, `TARGET`, `LAJA_FAE`, `LAJA_ESPERA`: heredados del Descargador, sin uso en el Lite. | Eliminados (en el Descargador los usan sus pruebas: se conservan). |
 | A-12 | Manuales Lite | Código sin uso y roto | `video.py`: `main`, `complete` y `encode` (videos sin voz) apuntaban a recuadros que ya no existen; `capturas_programa.py` duplicaba a `tools/manuales/capturas.py lite`. | Eliminados; `video.py` queda como biblioteca de escenas. |
 | A-13 | Varios | Código sin uso | `Banner.parent_manager` (kit), expresión `IDENT` (extractor de historia), clave repetida `history_complete`, import y f-string sin uso en dos pruebas. | Eliminados. |
+| A-14 | Descargador | Error | «Instalar extensión…» fallaba sin mostrar nada si Chrome no estaba en las rutas habituales. | Avisa y muestra igual las instrucciones. |
+| A-15 | Descargador | Error | Si Chrome se conectaba mientras corría otra operación, las opciones no se cargaban y ya no hay botón visible para pedirlas. | Se cargan solas al quedar libre (una vez). |
+| A-16 | Descargador y su extensión | Omisión | Diez mensajes mandaban a «Cargar opciones» o al menú «Herramientas», que ya no existen. | Apuntan a «Más › Recargar opciones de SITFA» y «Más › Retomar paquete…». |
 
 ## Revisado y dejado como está
 
@@ -41,13 +45,15 @@ es revisión del Ejecutor, no la E3 independiente. Nada se declara aceptado.
 - Hallazgos de Vulture sobre atributos COM de Office, métodos `do_GET`/`do_POST` y campos de modelos: falsos positivos.
 - `src/nurus/personal/motor/` (reglas y umbrales): sin cambios, por regla del proyecto.
 - `descargador_lite/docs/EVALUACION.md`: documento de diseño sin enlaces; no va en el instalador.
+- Descargador: los botones «Cargar opciones» y «Desconectar» y el selector de pantalla siguen creados sin mostrarse;
+  el resto del código y las pruebas los usan para el estado. Retirarlos es parte de la propuesta 16 del informe de mejoras.
 
 ## Verificación
 
 | Suite | Resultado |
 | --- | --- |
 | Asistente (`tests/`) | 1.257 aprobadas, 11 omitidas, 5 xfail |
-| Descargador | 376 aprobadas |
+| Descargador | 378 aprobadas (2 pruebas nuevas: A-14 y A-15) |
 | SITFA Lite | 20 aprobadas |
 | Meta 4 | 131 aprobadas |
 | Anonimizador | 100 aprobadas, 1 omitida |
@@ -56,6 +62,6 @@ es revisión del Ejecutor, no la E3 independiente. Nada se declara aceptado.
 
 ## Pendiente
 
-- El instalador del Descargador no se ha recompilado desde el cambio de texto «Cargar extensión sin empaquetar».
+- Instalador del Descargador: recompilado el 10 de noviembre con estas correcciones (workflow «Entrega Rediseno»).
 - E3 independiente y prueba con SITFA real.
 - Propuestas de diseño y experiencia: `docs/diseno/MEJORAS_UX_20261109.md`.

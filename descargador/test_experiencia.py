@@ -73,6 +73,48 @@ if __name__ == '__main__':
 
 class PreviousDataExperienceTests(unittest.TestCase):
     @isolated_gui
+    def test_conexion_durante_otra_operacion_carga_opciones_al_quedar_libre(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Application(root, start_worker=False)
+        try:
+            app.auto_catalog = True
+            app.busy = True
+            app.process_event('connected', 'Chrome conectado.')
+            self.assertTrue(app.commands.empty())
+            app.process_event('idle', None)
+            root.update()
+            self.assertEqual(app.commands.get_nowait(), ('catalog', 'seguimiento'))
+            # Una sola vez: si la carga falla no se reintenta en bucle.
+            app.process_event('idle', None)
+            root.update()
+            self.assertTrue(app.commands.empty())
+        finally:
+            dispose_interface(app, root)
+
+    @isolated_gui
+    def test_instalar_extension_sin_chrome_muestra_las_instrucciones(self):
+        import descargador as d
+        from unittest.mock import patch
+
+        root = tk.Tk()
+        root.withdraw()
+        app = Application(root, start_worker=False)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                (Path(temp) / 'manifest.json').write_text('{}', encoding='utf-8')
+                with (
+                    patch('contrato_integral.extension_dir', return_value=Path(temp)),
+                    patch.object(d, 'open_chrome', side_effect=d.m.PocError('No se encontró Chrome instalado.')),
+                    patch.object(d.messagebox, 'showinfo') as info,
+                ):
+                    app.setup()
+            info.assert_called_once()
+            self.assertIn('chrome://extensions', app.status.get())
+        finally:
+            dispose_interface(app, root)
+
+    @isolated_gui
     def test_previous_diaries_and_sheets_build_package_without_chrome(self):
         from unittest.mock import patch
         from preferencias import Preferences

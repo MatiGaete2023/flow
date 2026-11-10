@@ -19,6 +19,7 @@ from perfiles import SCREENS
 from pausa import PauseGate
 from preferencias import Preferences, pending_plan
 
+RELOAD = 'Más › Recargar opciones de SITFA'
 ALL_TRIBUNALS = 'Todos los tribunales disponibles'
 ALL_MODALITIES = 'Todas las modalidades'
 TAB_OPTIONS = {
@@ -880,7 +881,11 @@ class Application:
             self.status.set('Abriendo la consulta elegida en SITFA…')
             self.enqueue('catalog')
         else:
-            self.status.set('Pulsa Cargar opciones para abrir y preparar la consulta elegida en SITFA.')
+            self.status.set(
+                f'Elige «{RELOAD}» para preparar la consulta elegida.'
+                if self.connected
+                else 'Conecta tu Chrome para cargar las opciones de la consulta elegida.'
+            )
 
     def select_tribunals(self, ids):
         if not self.catalog or set(ids) - set(self.catalog['tribunales']):
@@ -949,7 +954,11 @@ class Application:
         self.root.clipboard_clear()
         self.root.clipboard_append(str(directory))
         self.root.update()
-        open_chrome('chrome://extensions/')
+        try:
+            open_chrome('chrome://extensions/')
+        except m.PocError as exc:
+            # Sin Chrome en las rutas habituales: las instrucciones siguen sirviendo si se abre a mano.
+            self.status.set(f'{exc} Abre chrome://extensions a mano.')
         messagebox.showinfo(
             'Instalación única en tu Chrome',
             'Activa Modo de desarrollador y pulsa Cargar extensión sin empaquetar.\n\nElige exactamente esta carpeta (su ruta '
@@ -1496,9 +1505,7 @@ class Application:
                     + command.upper()
                     + ': '
                     + str(exc)
-                    + (
-                        ' Para continuar sin repetir lo ya hecho: Herramientas › Retomar paquete….' if retomable else ''
-                    ),
+                    + (' Para continuar sin repetir lo ya hecho: Más › Retomar paquete….' if retomable else ''),
                 )
             except Exception as exc:
                 if type(exc).__module__ == 'nurus.capture.contract' and type(exc).__name__ == 'CaptureError':
@@ -1658,8 +1665,11 @@ class Application:
             self.catalog = None
             self.status.set(value)
             # Sin botón «Cargar opciones»: al conectar se traen las opciones de la pantalla elegida.
-            if getattr(self, 'auto_catalog', False) and not self.busy:
-                self.root.after(0, lambda: self.enqueue('catalog'))
+            if getattr(self, 'auto_catalog', False):
+                if self.busy:
+                    self._catalog_pending = True  # se cargan al quedar libre (evento idle)
+                else:
+                    self.root.after(0, lambda: self.enqueue('catalog'))
         elif name == 'disconnected':
             self.connected = False
             self.catalog = None
@@ -1759,6 +1769,10 @@ class Application:
             self.busy = False
             self.operation = None
             self.progress.stop()
+            if getattr(self, '_catalog_pending', False):
+                self._catalog_pending = False
+                if self.connected and self.catalog is None:
+                    self.root.after(0, lambda: self.enqueue('catalog'))
         elif name == 'exit':
             try:
                 if self.root.clipboard_get() == self.code.get():

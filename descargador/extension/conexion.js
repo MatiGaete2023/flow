@@ -28,10 +28,10 @@ const messages={
   LOCAL_TIMEOUT:"El descargador local no respondió a tiempo. Comprueba que siga abierto y vuelve a conectar.",
   LOCAL_PROTOCOL:"El descargador y la extensión no completaron el enlace. Actualiza ambos y vuelve a conectar.",
   SITE_ACCESS:"El enlace local funciona, pero Chrome no permite acceder a la pestaña SITFA. Comprueba que siga abierta y que la extensión tenga acceso a familia.pjud.cl. Abre de nuevo la conexión desde esa pestaña.",
-  FOLLOWUP_REQUIRED:"El enlace local funciona, pero no se encuentra el formulario de Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y vuelve a pulsar Cargar opciones en el descargador.",
+  FOLLOWUP_REQUIRED:"El enlace local funciona, pero no se encuentra el formulario de Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y, en el Descargador, elige «Más › Recargar opciones de SITFA».",
   MULTIPLE_FORMS:"Se encontró más de un formulario de Seguimiento. Abre la conexión desde una pestaña con un solo formulario.",
   SITFA_TASK:"SITFA no respondió como se esperaba. Revisa la sesión y la pantalla de consulta elegida.",
-  SCREEN_OPEN:"No se pudo abrir la pantalla elegida en SITFA. Revisa la sesión, entra a una pantalla de consulta y vuelve a Cargar opciones.",
+  SCREEN_OPEN:"No se pudo abrir la pantalla elegida en SITFA. Revisa la sesión, entra a una pantalla de consulta y, en el Descargador, elige «Más › Recargar opciones de SITFA».",
   EVIDENCE_CAPTURE:"No se pudo capturar la consulta vacía. Mantén SITFA abierto en una ventana visible, pulsa de nuevo el icono de la extensión desde SITFA y vuelve a conectar. El lote conserva los archivos guardados.",
   EVIDENCE_OPEN:"No se pudo cargar la vista SITFA para el PDF de la consulta vacía. Revisa que la sesión siga abierta y actualiza la extensión y el descargador juntos. Los archivos anteriores se conservan.",
 };
@@ -137,7 +137,7 @@ byId("connect").addEventListener("click",async()=>{
     await bridge("/connect",{});
     running=true;connecting=false;byId("code").value="";
     byId("connect").disabled=true;byId("disconnect").disabled=false;
-    status("Conectado. Vuelve al descargador y pulsa Cargar opciones. Mantén abierta esta pestaña.");
+    status("Conectado. Vuelve al Descargador: las opciones se cargan solas. Mantén abierta esta pestaña.");
     while (running) {
       const task=await bridge("/next");
       if (!running) break;

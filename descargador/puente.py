@@ -164,7 +164,7 @@ class Bridge:
                             self.reply(403, {'error': 'EXTENSION_CHANGED'})
                             return
                         parent.origin = self.extension_origin()
-                    parent.emit('connected', 'Chrome conectado. Entra a Seguimiento y pulsa Cargar opciones.')
+                    parent.emit('connected', 'Chrome conectado. Las opciones de SITFA se cargan solas.')
                     self.reply(200, {'ok': True})
                     return
                 if self.path != '/complete':
@@ -249,10 +249,10 @@ class Bridge:
                     'HISTORY_TIMEOUT': 'SITFA no respondió a tiempo al abrir la historia.',
                     'HISTORY_RESPONSE': 'SITFA no entregó una historia válida. Revisa la sesión.',
                     'HISTORY_REFLECTED': 'La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.',
-                    'FOLLOWUP_REQUIRED': 'El enlace con Chrome funciona, pero no se encuentra Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y vuelve a Cargar opciones.',
+                    'FOLLOWUP_REQUIRED': 'El enlace con Chrome funciona, pero no se encuentra Seguimiento. Entra a Seguimiento en la pestaña original de SITFA y elige «Más › Recargar opciones de SITFA».',
                     'SITE_ACCESS': 'Chrome no permite acceder a la pestaña SITFA. Revisa que siga abierta y que la extensión tenga acceso a familia.pjud.cl; abre de nuevo la conexión desde esa pestaña.',
                     'MULTIPLE_FORMS': 'Hay más de un formulario de Seguimiento en esa pestaña. Abre la conexión desde una pestaña con un solo formulario.',
-                    'SCREEN_OPEN': 'No se pudo abrir la pantalla elegida. Revisa la sesión SITFA y vuelve a Cargar opciones.',
+                    'SCREEN_OPEN': 'No se pudo abrir la pantalla elegida. Revisa la sesión SITFA y elige «Más › Recargar opciones de SITFA».',
                     'EVIDENCE_CAPTURE': 'No se pudo capturar la consulta vacía. Mantén SITFA visible, pulsa el icono de la extensión desde SITFA y vuelve a conectar. Los archivos guardados se conservan.',
                     'EVIDENCE_OPEN': 'No se pudo cargar la vista SITFA para generar el PDF de la consulta vacía. Revisa la sesión y actualiza la extensión y el descargador juntos. Los archivos guardados se conservan.',
                 }

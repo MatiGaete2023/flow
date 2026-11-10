@@ -756,7 +756,7 @@ class DiaryRunner:
         if session.openings >= MAX_LECTURAS_POR_LOTE:
             raise LimiteLecturas(
                 f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                'Usa «Herramientas › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
+                'Usa «Más › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
             )
         session.openings += 1
         result = self.bridge.call('diary_open', {'params': record['params'], 'timeout': 60000})
@@ -795,7 +795,7 @@ class DiaryRunner:
             reading['error'] = 'Pendiente: se alcanzó el máximo de lecturas del lote.'
             raise LimiteLecturas(
                 f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                'Usa «Herramientas › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
+                'Usa «Más › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
             )
         if pause and self.cancel.wait(self.pause):
             session.detener_si_cancelada()
