@@ -18,7 +18,9 @@ from nurus.personal.config import (
 )
 from nurus.personal.motor.textos import ESTRUCTURA
 
-ACLARACION = 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.'
+ACLARACION = 'La historia es de la causa'
+# Textos de la revisión 5 cuyas claves siguen en el catálogo (varias se retiraron el 11-nov-2026).
+REV5_VIGENTES = {k: v for k, v in LEGACY_TEXTS_REV5.items() if k.split('.', 1)[1] in defaults()['textos']['HISTORIA']}
 
 
 def _cuerpo(fila_):
@@ -30,17 +32,18 @@ def test_estructura_coincide_con_las_oraciones_de_cada_texto_base():
     for clave, letras in ESTRUCTURA.items():
         ambito, nombre = clave.split('.', 1)
         oraciones = re.split(r'(?<=\.)\s+', textos[ambito][nombre]['texto'].strip())
-        assert len(oraciones) == len(letras), clave
+        # Una sola letra deja el texto entero en ese grupo (hecho y sugerencia juntos); varias, una por oración.
+        assert len(letras) == 1 or len(oraciones) == len(letras), clave
         assert set(letras) <= set('CATF'), clave
 
 
 def test_espera_ordena_constancias_luego_acciones_del_centro_y_al_final_el_tribunal(tmp_path):
     f = esp(tmp_path, fila(1) + [45], extra=[''], encabezados=['CURADOR'])
+    # El hecho y su sugerencia van juntos al final (11-nov-2026): separados, «asociarlo» quedaba sin objeto.
     assert _cuerpo(f) == (
-        'Medida revisada, a la espera de ingreso efectivo. Al 14 de octubre de 2026, RUS registra 45 días de espera. '
-        'No registra curador ad litem en RUS. '
+        'Medida revisada, a la espera de ingreso efectivo. '
         'Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. '
-        'Se sugiere asociarlo informáticamente.'
+        'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.'
     )
     assert f.actions == ['programa_espera', 'PC_IE']  # el orden del texto no cambia las acciones
 
@@ -66,8 +69,8 @@ def test_texto_editado_con_otra_cantidad_de_oraciones_se_conserva_entero(tmp_pat
 def test_ficha_sin_registro_deja_la_sugerencia_al_tribunal_para_el_final(tmp_path):
     f = cum(tmp_path, cumplimiento(1, 'RTA UNO', egreso='2027-03-01', dpe=100), hist(('Prorroga', '2026-10-07', 3)))
     cuerpo = _cuerpo(f)
-    assert cuerpo.index('se prorroga la medida') < cuerpo.index('No registra ficha individual en RUS.')
-    assert cuerpo.endswith('Se sugiere confeccionarla.')
+    assert cuerpo.index('consta el trámite «Prorroga»') < cuerpo.index('No registra ficha individual en RUS.')
+    assert cuerpo.endswith('No registra ficha individual en RUS. Se sugiere confeccionarla.')
 
 
 def test_reiterar_ausencia_de_ficha_es_gestion_del_tribunal_y_va_al_final(tmp_path):
@@ -79,13 +82,13 @@ def test_reiterar_ausencia_de_ficha_es_gestion_del_tribunal_y_va_al_final(tmp_pa
         previa,
     )
     cuerpo = _cuerpo(f)
-    assert cuerpo.index('se prorroga la medida') < cuerpo.index(
-        'Se reitera la observación del 20 de septiembre de 2026'
+    assert cuerpo.index('consta el trámite «Prorroga»') < cuerpo.index('No registra ficha FAE en RUS;')
+    assert cuerpo.endswith(
+        'No registra ficha FAE en RUS; se reitera la sugerencia formulada en la observación del 20 de septiembre de 2026.'
     )
-    assert cuerpo.endswith('sobre la ausencia de ficha FAE en RUS.')
 
 
-def test_aclaracion_de_causa_en_cumplimiento_con_hermanos(tmp_path):
+def test_cumplimiento_con_hermanos_cita_el_tramite_sin_aclaracion_ni_atribucion(tmp_path):
     h = hist(('Prorroga', '2026-10-07', 3))
     filas = [
         fila(1, rit='C-1-2026', rut='11111111-1') + cumplimiento(1, egreso='2027-03-01', dpe=100)[5:],
@@ -93,13 +96,17 @@ def test_aclaracion_de_causa_en_cumplimiento_con_hermanos(tmp_path):
     ]
     trabajo = correr(tmp_path, 'CUMPLIMIENTO', CUMPLIMIENTO, filas, {0: h, 1: h})
     for f in trabajo.rows:
-        assert _cuerpo(f).endswith(ACLARACION) and _cuerpo(f).count(ACLARACION) == 1
+        # Sin «hasta», sin egreso de RUS unido a la prórroga y sin la aclaración eliminada el 11-nov-2026.
+        assert _cuerpo(f) == (
+            'Medida revisada. Se hace presente que en resolución de fecha 7 de octubre de 2026 (folio 3), '
+            'consta el trámite «Prorroga».'
+        )
         assert f.avisos == []  # hermanos no son duplicidad
     solo = correr(tmp_path, 'CUMPLIMIENTO', CUMPLIMIENTO, filas[:1], {0: h}).rows[0]
-    assert ACLARACION not in solo.observation
+    assert ACLARACION not in solo.observation and 'egreso proyectado el 1 de marzo de 2027' in solo.observation
 
 
-def test_aclaracion_de_causa_en_informes_solo_con_varios_ninos_y_una_cita(tmp_path):
+def test_informes_con_varios_ninos_conserva_las_acciones_y_cita_el_tramite(tmp_path):
     columnas = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO']
     filas = [
         fila(1, rit='C-1-2026', rut='11111111-1') + ['2026-09-20'],
@@ -107,10 +114,19 @@ def test_aclaracion_de_causa_en_informes_solo_con_varios_ninos_y_una_cita(tmp_pa
     ]
     h = hist(('Ingreso informe de cumplimiento X', '2026-09-25', 7))
     trabajo = correr(tmp_path, 'INFORMES', columnas, filas, {0: h, 1: h})
-    assert all(_cuerpo(f).endswith(ACLARACION) for f in trabajo.rows)
-    # Varios informes del mismo niño no son varios niños.
+    # Un trámite de la causa no retira la gestión de dos niños: no se puede vincular a ninguno (11-nov-2026).
+    for f in trabajo.rows:
+        assert ACLARACION not in f.observation and f.actions == ['programa_vencido', 'PC_INFO']
+        assert sorted(f.rules) == ['HISTORIA.BASE_TRAMITE', 'INFORMES.I01_VENCIDO_GENERAL']
+        assert 'consta el trámite «Ingreso informe de cumplimiento X»' in f.observation
+        assert [a[:2] for a in f.avisos] == [(2, 'INFORME_SIN_ATRIBUIR')]
+    # Dos informes vencidos del mismo niño y un solo ingreso: tampoco se sabe cuál es; ambos conservan la gestión.
     mismo = [fila(1, rit='C-1-2026') + ['2026-08-20'], fila(1, rit='C-1-2026') + ['2026-09-20']]
-    assert ACLARACION not in correr(tmp_path, 'INFORMES', columnas, mismo, {0: h, 1: h}).rows[0].observation
+    for f in correr(tmp_path, 'INFORMES', columnas, mismo, {0: h, 1: h}).rows:
+        assert f.actions == ['programa_vencido', 'PC_INFO'] and 'Registra 2 informes vencidos' in f.observation
+    # Filas repetidas del mismo vencimiento no son dos informes.
+    repetida = [fila(1, rit='C-1-2026') + ['2026-09-20'], fila(1, rit='C-1-2026') + ['2026-09-20']]
+    assert 'informes vencidos' not in correr(tmp_path, 'INFORMES', columnas, repetida, {}).rows[0].observation
 
 
 def test_egreso_posterior_a_la_mayoria_de_edad(tmp_path):
@@ -133,15 +149,16 @@ def test_egreso_posterior_a_la_mayoria_de_edad(tmp_path):
     assert 'posterior a la mayoría' not in cum(tmp_path, cumplimiento(1, egreso='2027-09-01', dpe=100)).observation
 
 
-def test_informe_por_vencer_con_la_fecha_de_egreso_no_se_repite(tmp_path):
+def test_informe_por_vencer_se_dice_si_vence_el_dia_del_egreso_o_antes(tmp_path):
     from test_reglas_cumplimiento import CRUCE, _cumplimiento
 
     def ejecutar(fecha):
         cruce = [CRUCE, ['X-1-2026', '11111111-0', 'Persona Ficticia 1', 'LAJA', 'PRM UNO', fecha]]
         return _cumplimiento(tmp_path, [(5, 10, '2026-10-09', '2026-10-24')], cruce=cruce).rows[0]
 
+    # Medida e informe son hechos distintos aunque compartan la fecha (11-nov-2026).
     igual = ejecutar('2026-10-24')
-    assert 'CUMPLIMIENTO.C10_HOJA2' not in igual.rules and 'Próximo informe de avance' not in igual.observation
+    assert 'CUMPLIMIENTO.C10_HOJA2' in igual.rules and 'Próximo informe de avance' in igual.observation
     otra = ejecutar('2026-12-01')
     assert 'CUMPLIMIENTO.C10_HOJA2' in otra.rules
 
@@ -188,7 +205,7 @@ def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
 
     datos = _escribir(tmp_path / 'a', antiguos)
     base = defaults()['textos']
-    assert datos['revision_textos'] == TEXT_REVISION == 7
+    assert datos['revision_textos'] == TEXT_REVISION == 8
     for clave in LEGACY_TEXTS_REV4:
         ambito, nombre = clave.split('.', 1)
         esperado = (
@@ -198,7 +215,7 @@ def test_migracion_de_textos_rev4_cambia_solo_los_que_siguen_iguales(tmp_path):
         )
         assert datos['textos'][ambito][nombre]['texto'] == esperado, clave
     # Las claves nuevas se completan en una configuración que no las tiene.
-    assert 'C2_PRORROGA_HASTA' in datos['textos']['HISTORIA'] and 'R11_SIN_EFECTO' in datos['textos']['HISTORIA']
+    assert 'R11_SIN_EFECTO' in datos['textos']['HISTORIA']
 
 
 @pytest.mark.parametrize('clave', sorted(LEGACY_TEXTS_REV4))
@@ -213,24 +230,24 @@ def test_los_textos_antiguos_tienen_las_mismas_variables_que_los_nuevos(clave):
 def test_migracion_de_textos_rev5_adopta_el_formato_de_resolucion_y_respeta_lo_editado(tmp_path):
     def antiguos(d):
         d['revision_textos'] = 5
-        for clave, previo in LEGACY_TEXTS_REV5.items():
+        for clave, previo in REV5_VIGENTES.items():
             ambito, nombre = clave.split('.', 1)
             d['textos'][ambito][nombre]['texto'] = previo
-        d['textos']['HISTORIA']['CURADOR_DESIGNADO']['texto'] = 'Texto propio {FECHA} {FOLIO}.'
+        d['textos']['HISTORIA']['CONTINUIDAD_ATENCION']['texto'] = 'Texto propio {FECHA} {FOLIO}.'
         for clave in ('R11_ORDEN', 'R11_SIN_EFECTO', 'R11_TERMINO', 'R11_PIDE_CUENTA'):
             d['textos']['HISTORIA'].pop(clave)
         d['umbrales'].pop('ventana_busqueda')
 
     datos = _escribir(tmp_path / 'r5', antiguos)
     base = defaults()['textos']['HISTORIA']
-    for clave in LEGACY_TEXTS_REV5:
+    for clave in REV5_VIGENTES:
         nombre = clave.split('.', 1)[1]
-        esperado = 'Texto propio {FECHA} {FOLIO}.' if nombre == 'CURADOR_DESIGNADO' else base[nombre]['texto']
+        esperado = 'Texto propio {FECHA} {FOLIO}.' if nombre == 'CONTINUIDAD_ATENCION' else base[nombre]['texto']
         assert datos['textos']['HISTORIA'][nombre]['texto'] == esperado, nombre
     assert datos['umbrales']['ventana_busqueda'] == 60 and 'R11_ORDEN' in datos['textos']['HISTORIA']
 
 
-@pytest.mark.parametrize('clave', sorted(LEGACY_TEXTS_REV5))
+@pytest.mark.parametrize('clave', sorted(REV5_VIGENTES))
 def test_los_textos_rev5_tienen_las_mismas_variables_que_los_nuevos(clave):
     import string
 
@@ -245,13 +262,6 @@ def _con_umbral(tmp_path, clave, valor, filas, historias, modo='CUMPLIMIENTO', e
     return correr(tmp_path, modo, encabezados, filas, historias, None, config).rows[0]
 
 
-def test_ventana_de_ingreso_efectivo_es_un_umbral(tmp_path):
-    fila_ = cumplimiento(1, dc=100, ingreso='2026-06-01')
-    h = hist(('Ingreso efectivo', '2026-06-20', 5))  # 19 días después
-    assert 'informada al Tribunal' in _cuerpo(_con_umbral(tmp_path, 'ventana_ingreso', 30, [fila_], {0: h}))
-    assert 'informada al Tribunal' not in _cuerpo(_con_umbral(tmp_path, 'ventana_ingreso', 10, [fila_], {0: h}))
-
-
 def test_prorroga_reciente_es_un_umbral(tmp_path):
     fila_ = cumplimiento(1, egreso='2026-10-29', dpe=15)
     h = hist(('Prorroga', '2026-08-14', 3))  # 61 días antes del corte
@@ -261,12 +271,13 @@ def test_prorroga_reciente_es_un_umbral(tmp_path):
 
 def test_una_configuracion_sin_los_umbrales_nuevos_se_completa(tmp_path):
     def sin_umbrales(d):
-        for clave in ('prorroga_reciente', 'ventana_ingreso', 'lista_espera_larga'):
+        for clave in ('prorroga_reciente', 'ventana_busqueda'):
             d['umbrales'].pop(clave)
+        # Umbrales retirados el 11-nov-2026: una configuración que aún los guarda abre sin error.
+        d['umbrales'].update(ventana_ingreso=30, lista_espera_larga=100)
 
     datos = _escribir(tmp_path / 'u', sin_umbrales)
-    assert (datos['umbrales']['prorroga_reciente'], datos['umbrales']['ventana_ingreso']) == (90, 30)
-    assert datos['umbrales']['lista_espera_larga'] == 100
+    assert (datos['umbrales']['prorroga_reciente'], datos['umbrales']['ventana_busqueda']) == (90, 60)
 
 
 def test_deja_sin_efecto_dr_y_mn_marcan_tambien_en_cumplimiento(tmp_path):
@@ -361,7 +372,7 @@ def test_migracion_de_textos_rev6_ajusta_la_redaccion_aprobada_y_respeta_lo_edit
 
     datos = _escribir(tmp_path / 'r6', antiguos)
     base = defaults()['textos']['HISTORIA']
-    assert datos['revision_textos'] == TEXT_REVISION == 7
+    assert datos['revision_textos'] == TEXT_REVISION == 8
     assert datos['textos']['HISTORIA']['R11_TERMINO']['texto'] == 'Texto propio {FECHA} {FOLIO}.'
     assert datos['textos']['HISTORIA']['R11_SIN_EFECTO']['texto'] == base['R11_SIN_EFECTO']['texto']
     assert datos['textos']['HISTORIA']['T5_INSTITUCIONES']['texto'].startswith('Atendido que en sistema')

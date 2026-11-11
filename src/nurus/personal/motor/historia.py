@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import date
+import json
 
 from nurus.rus.columns import normalize
 
@@ -21,6 +22,7 @@ class Tramite:
     fecha: date
     folio_txt: str
     folio: int
+    tipo: str = ''
 
 
 @dataclass(frozen=True)
@@ -41,9 +43,15 @@ class Historia:
         return self.cobertura in PRESENCIA
 
 
-    def buscar(self, *nombres):
+    def en_ventana(self, tramite):
+        """False para el último trámite anterior a la ventana que el paquete conserva solo como contexto."""
+        return self.desde is None or tramite.fecha >= self.desde
+
+    def buscar(self, *nombres, contexto=False):
+        """Trámites con esos nombres. Los anteriores a la ventana solo se entregan con contexto=True: sirven para
+        saber si una situación sigue vigente, nunca para redactar una constancia nueva."""
         claves = {clave(n) for n in nombres}
-        return [t for t in self.tramites if t.clave in claves]
+        return [t for t in self.tramites if t.clave in claves and (contexto or self.en_ventana(t))]
 
     def al_corte(self, corte):
         """Vista sustantiva: conserva la fuente y nunca acredita ausencia antes de su ventana."""
@@ -70,6 +78,15 @@ def ultimo(tramites):
     return max(tramites, key=lambda t: (t.fecha, t.folio)) if tramites else None
 
 
+def _tipo(fila):
+    """Columna «Trámite» de SITFA (Resolución, Escrito, Actuación); viaja en raw_json. '' si no se conoce."""
+    try:
+        crudo = json.loads(fila.get('raw_json') or '{}')
+    except ValueError:
+        return ''
+    return str(crudo.get('Trámite', '') if isinstance(crudo, dict) else '').strip()
+
+
 def construir(filas, cobertura, desde=None, hasta=None):
     """filas: dicts de la tabla historia_tramites. Descarta filas sin fecha ISO o sin descripción."""
     tramites = []
@@ -79,7 +96,7 @@ def construir(filas, cobertura, desde=None, hasta=None):
         if fecha is None or not desc:
             continue
         folio_txt = str(fila.get('folio', '')).strip()
-        tramites.append(Tramite(desc, clave(desc), fecha, folio_txt, _folio(folio_txt)))
+        tramites.append(Tramite(desc, clave(desc), fecha, folio_txt, _folio(folio_txt), _tipo(fila)))
     tramites.sort(key=lambda t: (t.fecha, t.folio))
     return Historia(cobertura, desde, hasta, tuple(tramites))
 

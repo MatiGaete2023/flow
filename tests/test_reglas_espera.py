@@ -17,13 +17,13 @@ def test_rt01_derivacion_sin_seguimiento_solo_si_coincide_al_inicio(tmp_path):
     filas = _espera(tmp_path, [('LAJA', 'OPD COMUNAL', 90), ('LAJA', 'PRM OPDIMA', 90)])
     assert filas[0].rules == ['COMUN.NO_SEGUIMIENTO'] and filas[0].actions == []
     assert 'COMUN.NO_SEGUIMIENTO' not in filas[1].rules
-    assert filas[1].rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS']
+    assert filas[1].rules == ['ESPERA.E05_PROYECTO_Y_CORREO']
 
 
 def test_rt04_dce_solo_correo_desde_el_primer_dia_y_sin_word(tmp_path):
     filas = _espera(tmp_path, [('LAJA', 'DCE UNO', 29), ('LAJA', 'DCE UNO', 30), ('MULCHEN', 'DCE UNO', 31)])
     for fila in filas:
-        assert fila.rules == ['ESPERA.E05_SOLO_CORREO', 'HISTORIA.E05_DIAS']
+        assert fila.rules == ['ESPERA.E05_SOLO_CORREO']
         assert fila.actions == [CORREO]
 
 
@@ -31,7 +31,7 @@ def test_rt04_dce_solo_correo_desde_el_primer_dia_y_sin_word(tmp_path):
 def test_rt05_laja_mulchen_tramo_exacto(tmp_path, tribunal):
     filas = _espera(tmp_path, [(tribunal, 'PRM UNO', 29), (tribunal, 'PRM UNO', 30)])
     assert filas[0].rules == ['ESPERA.E06_SIN_RESOLUCION'] and filas[0].actions == []
-    assert filas[1].rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS']
+    assert filas[1].rules == ['ESPERA.E05_PROYECTO_Y_CORREO']
     assert filas[1].actions == [CORREO, PROYECTO]
 
 
@@ -41,7 +41,7 @@ def test_rt06_tome_cortes_29_30_59_60(tmp_path):
         ['ESPERA.E06_SIN_RESOLUCION'],
         ['ESPERA.E06_SIN_RESOLUCION'],
         ['ESPERA.E06_SIN_RESOLUCION'],
-        ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS'],
+        ['ESPERA.E05_PROYECTO_Y_CORREO'],
     ]
     assert [f.actions for f in filas] == [[], [], [], [CORREO, PROYECTO]]
 

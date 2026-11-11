@@ -114,6 +114,27 @@ def cargar(manifest_path):
     return estado, causas
 
 
+def contexto_anterior(anteriores):
+    """Último trámite anterior a la ventana de cada nomenclatura de contexto (decisión del usuario, 11-nov-2026).
+
+    La respuesta de SITFA ya trae la historia completa; el paquete conserva, además de la ventana, solo estas filas
+    para que una orden de búsqueda vigente, una sentencia o una designación antiguas no dejen de verse al salir de
+    la ventana. El Asistente las usa como contexto, nunca para redactar una constancia nueva."""
+    from nurus.bitacora_html import normalize
+    from nurus.personal.motor.vocabulario import CONTEXTO
+
+    nombres = {normalize(nombre) for nombre in CONTEXTO}
+    ultimos = {}
+    for fila in anteriores:
+        nombre = normalize(fila['descripcion'])
+        if nombre not in nombres or not fila['fecha_iso']:
+            continue
+        orden = (fila['fecha_iso'], int(fila['folio']) if fila['folio'].isdigit() else -1)
+        if nombre not in ultimos or orden > ultimos[nombre][0]:
+            ultimos[nombre] = (orden, fila)
+    return [fila for _, fila in sorted(ultimos.values(), key=lambda par: par[1]['fila'])]
+
+
 def _folio_clave(folio):
     return (0, -int(folio)) if folio.isdigit() else (1, 0)
 

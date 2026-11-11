@@ -516,13 +516,16 @@ class Work:
             if not due or due >= today:
                 continue
             ident = tuple(historical_match(cell(r, f)) for f in ('tribunal', 'rit', 'rut', 'programa'))
+            # Con paquete, el identificador de ingreso separa dos ingresos del mismo NNA al mismo programa.
+            ident += (str(r.values.get('SITFA_INGRESO_RUS', '') or '').strip(),)
             if ident[1]:
                 groups.setdefault(ident, []).append((r.record_id, due))
         accumulated = {}
         for items in groups.values():
-            if len(items) > 1:
-                oldest = min(due for _, due in items)
-                accumulated.update({rid: (len(items), oldest) for rid, _ in items})
+            # Se cuentan vencimientos distintos, no filas: una fila repetida no es otro informe (11-nov-2026).
+            dues = {due for _, due in items}
+            if len(dues) > 1:
+                accumulated.update({rid: (len(dues), min(dues)) for rid, _ in items})
         # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
         return causas_con_varios(rows), accumulated
 

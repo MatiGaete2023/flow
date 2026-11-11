@@ -3,14 +3,10 @@
 from historia_fixtures import CUMPLIMIENTO, bita, correr, cum, cumplimiento, hist
 
 
-def test_ingreso_efectivo_verificado_por_la_historia_en_30_dias(tmp_path):
-    informado = 'La fecha de ingreso efectivo informada al Tribunal corresponde al 1 de junio de 2026.'
-    # La historia guarda la fecha de la resolución, días después de la de RUS: es el mismo ingreso.
-    for fecha in ('2026-06-01', '2026-06-06', '2026-07-01'):
-        f = cum(tmp_path, cumplimiento(1, dc=100, ingreso='2026-06-01'), hist(('Ingreso efectivo', fecha, 5)))
-        assert f.observation.split(': ', 1)[1] == 'Medida revisada. ' + informado and f.actions == []
-    # Anterior a RUS, más de 30 días después o ausente: se ignora, sin contraste ni «no consta».
-    for fecha in ('2026-05-31', '2026-07-02'):
+def test_ingreso_efectivo_de_la_historia_ya_no_se_dice_en_cumplimiento(tmp_path):
+    # «La fecha de ingreso efectivo informada al Tribunal…» se retiró (11-nov-2026): la historia acredita que existe
+    # el trámite, no la fecha informada, y la frase se repetía meses después del ingreso.
+    for fecha in ('2026-06-01', '2026-06-06', '2026-07-01', '2026-05-31', '2026-07-02'):
         f = cum(tmp_path, cumplimiento(1, dc=100, ingreso='2026-06-01'), hist(('Ingreso efectivo', fecha, 5)))
         assert f.observation.endswith('Medida revisada, sin observaciones.')
     assert cum(tmp_path, cumplimiento(1, dc=100, ingreso='2026-06-01'), hist()).rules == [
@@ -32,18 +28,26 @@ def _prorroga(tmp_path, tramite, *, egreso, dpe, bitacora=None):
     return cum(tmp_path, cumplimiento(1, egreso=egreso, dpe=dpe, dc=100 if dpe >= 0 else dpe), hist(tramite), bitacora)
 
 
-def test_prorroga_vigente_dice_hasta_cuando_el_egreso_proyectado(tmp_path):
+def test_prorroga_vigente_se_cita_como_tramite_y_el_egreso_de_rus_va_aparte(tmp_path):
+    # La historia acredita el trámite «Prorroga», no su término: sin «hasta» (11-nov-2026).
     f = _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2027-03-01', dpe=100)
     assert f.observation.split(': ', 1)[1] == (
         'Medida revisada. Se hace presente que en resolución de fecha 7 de octubre de 2026 (folio 3), '
-        'se prorroga la medida hasta el 1 de marzo de 2027.'
+        'consta el trámite «Prorroga». RUS registra como fecha de egreso proyectado el 1 de marzo de 2027.'
     )
-    assert f.avisos == [] and f.rules == ['HISTORIA.C2_PRORROGA_HASTA', 'HISTORIA.MEDIDA_REVISADA']
+    assert f.avisos == [] and f.rules == [
+        'HISTORIA.BASE_TRAMITE',
+        'HISTORIA.EGRESO_PROYECTADO',
+        'HISTORIA.MEDIDA_REVISADA',
+    ]
 
 
-def test_prorroga_con_medida_por_vencer_prevalece_el_texto_de_la_medida_y_marca_prioritaria(tmp_path):
+def test_prorroga_con_medida_por_vencer_se_cita_junto_a_la_medida_y_marca_prioritaria(tmp_path):
     f = _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2026-10-29', dpe=15)
-    assert f.observation.split(': ', 1)[1] == 'Medida próxima a vencer en RUS el 29 de octubre de 2026.'
+    assert f.observation.split(': ', 1)[1] == (
+        'Medida próxima a vencer en RUS el 29 de octubre de 2026. Se hace presente que en resolución de fecha '
+        '7 de octubre de 2026 (folio 3), consta el trámite «Prorroga».'
+    )
     assert [a[:2] for a in f.avisos] == [(1, 'PRORROGA_REVISAR')] and f.actions == ['medidas']
     # Prórroga de más de 90 días: ni frase ni marca.
     antigua = _prorroga(tmp_path, ('Prorroga', '2026-07-01', 3), egreso='2026-10-29', dpe=15)
@@ -54,9 +58,12 @@ def test_prorroga_con_medida_por_vencer_prevalece_el_texto_de_la_medida_y_marca_
     assert fuera.avisos == []  # 91 días
 
 
-def test_prorroga_con_medida_vencida_no_se_afirma_solo_se_marca(tmp_path):
+def test_prorroga_con_medida_vencida_se_cita_junto_a_la_medida_y_se_marca(tmp_path):
     f = _prorroga(tmp_path, ('Prorroga', '2026-08-01', 3), egreso='2026-10-01', dpe=-13)
-    assert f.observation.split(': ', 1)[1] == 'Medida vencida en RUS desde el 1 de octubre de 2026.'
+    assert f.observation.split(': ', 1)[1] == (
+        'Medida vencida en RUS desde el 1 de octubre de 2026. Se hace presente que en resolución de fecha '
+        '1 de agosto de 2026 (folio 3), consta el trámite «Prorroga».'
+    )
     assert [a[:2] for a in f.avisos] == [(1, 'PRORROGA_REVISAR')] and f.actions == ['medidas']
     antigua = _prorroga(tmp_path, ('Prorroga', '2026-06-20', 3), egreso='2026-10-01', dpe=-13)
     assert antigua.observation.endswith('Medida vencida en RUS desde el 1 de octubre de 2026.')
@@ -66,7 +73,7 @@ def test_prorroga_con_medida_vencida_no_se_afirma_solo_se_marca(tmp_path):
 def test_prorroga_posterior_al_egreso_de_rus_indica_que_rus_no_la_refleja(tmp_path):
     f = _prorroga(tmp_path, ('Prorroga', '2026-10-07', 3), egreso='2026-09-01', dpe=100)
     assert [a[:2] for a in f.avisos] == [(1, 'PRORROGA_REVISAR')]
-    assert 'prorroga' not in f.observation.lower()
+    assert 'consta el trámite «Prorroga»' in f.observation and 'hasta' not in f.observation
 
 
 def test_prorroga_ya_mencionada_en_la_bitacora_se_ignora_con_su_marca(tmp_path):
@@ -94,11 +101,12 @@ def test_fichas_de_la_historia_no_agregan_texto_a_la_observacion(tmp_path):
     assert 'ficha' not in reciente.observation.lower()
 
 
-def test_c5_reitera_vencida_conserva_la_accion(tmp_path):
-    previa = bita(('2026-09-20', 'Persona X: Medida vencida en RUS desde el 1 de septiembre de 2026.'))
+def test_la_medida_vencida_no_se_reitera_y_conserva_su_fecha(tmp_path):
+    # Una observación previa de otro vencimiento no es el mismo episodio: se dice la fecha vigente (11-nov-2026).
+    previa = bita(('2026-05-01', 'Persona X: Medida vencida en RUS desde el 1 de abril de 2026.'))
     f = cum(tmp_path, cumplimiento(1, dpe=-5, dc=-5, egreso='2026-09-01'), bitacora=previa)
-    assert 'Se reitera la observación del 20 de septiembre de 2026 sobre la medida vencida en RUS.' in f.observation
-    assert 'Medida vencida en RUS desde' not in f.observation and f.actions == ['medidas']
+    assert f.observation.split(': ', 1)[1] == 'Medida vencida en RUS desde el 1 de septiembre de 2026.'
+    assert f.rules == ['CUMPLIMIENTO.C04_VENCIDA'] and f.actions == ['medidas']
 
 
 def test_no_consta_prorroga_ya_no_se_aplica(tmp_path):
@@ -106,7 +114,8 @@ def test_no_consta_prorroga_ya_no_se_aplica(tmp_path):
     for historia in (hist(('Ficha FAE', '2026-10-01', 1)), hist(cobertura='VACIA_COMPROBADA'), None):
         f = cum(tmp_path, datos, historia)
         assert f.observation.split(': ', 1)[1] == 'Medida vencida en RUS desde el 1 de septiembre de 2026.'
-        assert f.avisos == [] and f.actions == ['medidas']
+        # Un trámite sin regla solo deja su marca de nivel 3; nunca texto ni «no consta prórroga».
+        assert [a[1] for a in f.avisos if a[1] != 'TRAMITES_SIN_REGLA'] == [] and f.actions == ['medidas']
 
 
 def test_solicitud_dce_en_cumplimiento_con_medida_vencida(tmp_path):
@@ -168,7 +177,8 @@ def test_mayoria_de_edad_marca_siempre_por_la_edad(tmp_path):
     vigente = cum(tmp_path, cumplimiento(1, nac='2008-01-01'))
     assert vigente.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in vigente.avisos] == [(3, 'REVISAR_MAYORIA')]
     vencida = cum(tmp_path, cumplimiento(1, dpe=-5, dc=-5, egreso='2026-09-01', nac='2008-01-01'))
-    assert vencida.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in vencida.avisos] == [(3, 'REVISAR_MAYORIA')]
+    assert vencida.rules == ['COMUN.MAYORIA_EDAD', 'CUMPLIMIENTO.C04_VENCIDA']
+    assert [a[:2] for a in vencida.avisos] == [(3, 'REVISAR_MAYORIA')] and vencida.actions == ['medidas']
 
 
 def test_ingreso_reciente_con_medida_por_vencer_dice_el_egreso_una_sola_vez(tmp_path):

@@ -54,7 +54,9 @@ def componer(pfx, fragmentos) -> str:
         return ""
     texto = " ".join(partes)
     texto = re.sub(r"\s+", " ", texto).replace("..", ".")
-    return f"{pfx or ''}{texto}"
+    # El mismo hecho se dice una vez (11-nov-2026): una oración idéntica a otra anterior no se repite.
+    oraciones = list(dict.fromkeys(re.split(r"(?<=\.)\s+", texto)))
+    return f"{pfx or ''}{' '.join(oraciones)}"
 
 class Incidencias:
     def __init__(self):

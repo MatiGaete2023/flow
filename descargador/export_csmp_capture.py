@@ -13,7 +13,7 @@ from nurus.capture.diaries import import_lotes, diary_paths
 from resultados import tables, table_mode, inside, headers_and_rows, parse_day
 import motor as m
 from nurus.capture.coverage import aggregate
-from nurus.capture.historias import cargar as cargar_historias, literal
+from nurus.capture.historias import cargar as cargar_historias, contexto_anterior, literal
 
 
 def calendar_date(normalized):
@@ -552,7 +552,8 @@ def _historia(manifest, data, query, incident, cid, captured):
             incident(qid, 'HISTORIA_NO_LEIDA', 'La historia no se leyó (lote cancelado o con tope).')
         for codigo in causa.get('advertencias', []):
             incident(qid, codigo, 'Advertencia del lector de historia.')
-        for fila in item['ventana']:
+        # Ventana completa más el último trámite anterior de las nomenclaturas de contexto (solo esas filas).
+        for fila in [*item['ventana'], *contexto_anterior(item['anteriores'])]:
             common = {k: '' for k in COMMON}
             common.update(
                 capture_id=cid,

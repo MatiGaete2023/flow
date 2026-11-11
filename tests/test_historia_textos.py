@@ -13,20 +13,12 @@ ESPERADO = {
     'CONTINUIDAD_ATENCION': {'FECHA', 'FOLIO'},
     'INFORME_INGRESADO': {'FECHA', 'FOLIO'},
     'E04_CON_FOLIO': {'FECHA_RESOLUCION', 'FOLIO', 'PROGRAMA'},
-    'R3_MULTI': set(),
     'REITERA': {'FECHA_ANTERIOR', 'MATERIA'},
     'MATERIA_CURADOR': set(),
     'MATERIA_SIN_FICHA': set(),
     'MATERIA_SIN_FAE': set(),
-    'MATERIA_VENCIDA': set(),
-    'E05_DIAS': {'CORTE', 'N'},
-    'E10_LISTA': {'N'},
     'MEDIDA_SIN_VIGENCIA': {'FECHA_EGRESO_PROYECTADO'},
-    'C2_PRORROGA_HASTA': {'FECHA', 'FECHA_EGRESO_PROYECTADO', 'FOLIO'},
-    'INGRESO_INFORMADO': {'FECHA_INGRESO'},
     'SERVICIO_INGRESO': {'FECHA', 'FOLIO', 'PROGRAMA'},
-    'CURADOR_SIN_EFECTO': {'FECHA', 'FOLIO'},
-    'CURADOR_DESIGNADO': {'FECHA', 'FOLIO'},
     'EGRESO_POSTERIOR_MAYORIA': set(),
     'EGRESO_POSTERIOR_MAYORIA_FECHA': {'FECHA_MAYORIA'},
     'EGRESO_PROYECTADO': {'FECHA_EGRESO_PROYECTADO'},
@@ -42,6 +34,8 @@ ESPERADO = {
     'T5_INSTITUCIONES': {'N', 'PNOMBRE'},
 }
 
+PENDIENTES = {'REITERA', 'MATERIA_CURADOR', 'MATERIA_SIN_FICHA', 'MATERIA_SIN_FAE'}
+
 
 def _campos(texto):
     return {campo for _, campo, _, _ in string.Formatter().parse(texto) if campo}
@@ -52,7 +46,8 @@ def test_claves_y_variables_coinciden_exactamente():
     assert set(textos) == set(ESPERADO)
     for clave, entrada in textos.items():
         assert _campos(entrada['texto']) == ESPERADO[clave], clave
-        assert entrada['confirmado'] is True and entrada['nota'], clave
+        # Las redacciones del 11-nov-2026 quedan sin confirmar hasta que el usuario las apruebe.
+        assert entrada['confirmado'] is (clave not in PENDIENTES) and entrada['nota'], clave
 
 
 def test_la_configuracion_valida_y_una_guardada_sin_el_scope_queda_completa(tmp_path):

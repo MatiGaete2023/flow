@@ -23,6 +23,9 @@
     },
     "REITERA_OBSERVACION": {
       "texto": "Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}."
+    },
+    "CURADOR_SIN_DESIGNACION": {
+      "texto": "No registra curador ad litem en RUS."
     }
   },
   "ESPERA": {
@@ -37,6 +40,9 @@
     },
     "E06_SIN_RESOLUCION": {
       "texto": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}."
+    },
+    "E07_PROYECCION": {
+      "texto": "Medida revisada, a la espera de ingreso efectivo. {PROYECCION}"
     }
   },
   "CUMPLIMIENTO": {
@@ -86,6 +92,9 @@
     },
     "I02_POR_VENCER_GENERAL": {
       "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}."
+    },
+    "I02_MARGEN_DCE": {
+      "texto": "Informe diagnóstico vencido en RUS desde el {FECHA_VENCIMIENTO}. Se remite correo al programa {PROGRAMA} requiriendo su envío a más tardar el {FECHA_LIMITE}."
     }
   },
   "HISTORIA": {
@@ -101,29 +110,17 @@
     "E04_CON_FOLIO": {
       "texto": "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado en resolución de fecha {FECHA_RESOLUCION} (folio {FOLIO}). (Observación administrativa; no requiere gestión del Tribunal)."
     },
-    "R3_MULTI": {
-      "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado."
-    },
     "REITERA": {
-      "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}."
+      "texto": "{MATERIA}; se reitera la sugerencia formulada en la observación del {FECHA_ANTERIOR}."
     },
     "MATERIA_CURADOR": {
-      "texto": "la ausencia de curador ad litem en RUS"
+      "texto": "No registra curador ad litem en RUS"
     },
     "MATERIA_SIN_FICHA": {
-      "texto": "la ausencia de ficha individual en RUS"
+      "texto": "No registra ficha individual en RUS"
     },
     "MATERIA_SIN_FAE": {
-      "texto": "la ausencia de ficha FAE en RUS"
-    },
-    "MATERIA_VENCIDA": {
-      "texto": "la medida vencida en RUS"
-    },
-    "E05_DIAS": {
-      "texto": "Al {CORTE}, RUS registra {N} días de espera."
-    },
-    "E10_LISTA": {
-      "texto": "Registra {N} días en lista de espera."
+      "texto": "No registra ficha FAE en RUS"
     },
     "MEDIDA_SIN_VIGENCIA": {
       "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}."
@@ -149,20 +146,8 @@
     "T5_INSTITUCIONES": {
       "texto": "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."
     },
-    "C2_PRORROGA_HASTA": {
-      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}."
-    },
-    "INGRESO_INFORMADO": {
-      "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}."
-    },
     "SERVICIO_INGRESO": {
       "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO})."
-    },
-    "CURADOR_SIN_EFECTO": {
-      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la designación de curador ad litem."
-    },
-    "CURADOR_DESIGNADO": {
-      "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se designó curador ad litem."
     },
     "EGRESO_POSTERIOR_MAYORIA": {
       "texto": "El egreso proyectado es posterior a la mayoría de edad."

@@ -24,7 +24,7 @@ def test_regla1_folio_de_la_resolucion_de_ingreso_solo_si_es_unico(tmp_path):
 def test_ingreso_efectivo_con_rus_en_espera_aplica_reglas_normales_y_solo_marca(tmp_path):
     # «Ingreso efectivo» es de Cumplimiento (el programa informa que el NNA ya está en intervención).
     f = esp(tmp_path, fila(1) + [45], hist(('Ingreso efectivo', '2026-10-02', 41)))
-    assert f.rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E05_DIAS'] and f.actions == [
+    assert f.rules == ['ESPERA.E05_PROYECTO_Y_CORREO'] and f.actions == [
         'programa_espera',
         'PC_IE',
     ]
@@ -64,7 +64,8 @@ def test_regla6_hermanos_en_la_misma_causa_y_programa_no_son_duplicidad(tmp_path
     assert all(r.avisos == [] for r in trabajo.rows)
     h = hist(('Orden de búsqueda', '2026-10-02', 41))
     con = correr(tmp_path, 'ESPERA', ESPERA, filas, {0: h, 1: h}).rows[0]
-    assert 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.' in con.observation
+    # La aclaración «La historia es de la causa…» se eliminó de las observaciones (11-nov-2026).
+    assert 'se decretó orden de búsqueda' in con.observation and 'La historia es de la causa' not in con.observation
     assert [a[1] for a in con.avisos] == ['R11_BUSQUEDA_VIGENTE']
 
 
@@ -78,18 +79,19 @@ def test_ingreso_efectivo_anterior_al_inicio_de_la_espera_no_marca(tmp_path):
     assert [a[1] for a in sin_dias.avisos] == ['R3_INGRESO_EFECTIVO']
 
 
-def test_aclaracion_de_causa_es_transversal_y_sale_una_vez_al_final(tmp_path):
-    aclaracion = 'La historia es de la causa y no permite atribuirlo a un ingreso determinado.'
+def test_causa_con_varios_registros_no_lleva_aclaracion_ni_frases_que_atribuyen(tmp_path):
+    aclaracion = 'La historia es de la causa'
     filas = [fila(1, rit='C-1-2026', rut='11111111-1') + [45], fila(2, rit='C-1-2026', rut='22222222-2') + [45]]
     h = hist(
         ('Ing.Serv. protección especializada y otras redes', '2026-10-02', 41),
         ('Pide cuenta búsqueda', '2026-10-05', 42),
     )
     f = correr(tmp_path, 'ESPERA', ESPERA, filas, {0: h, 1: h}).rows[0]
-    assert f.observation.endswith(aclaracion) and f.observation.count(aclaracion) == 1
-    # Un solo registro en la causa, o ninguna cita de la historia: no se aclara.
+    # Con hermanos, «Tribunal dispone ingreso a {programa de la fila}» no se afirma; la búsqueda es de la causa y se cita.
+    assert aclaracion not in f.observation and 'Tribunal dispone ingreso' not in f.observation
+    assert 'consta el trámite «Pide cuenta búsqueda»' in f.observation
     solo = correr(tmp_path, 'ESPERA', ESPERA, filas[:1], {0: h}).rows[0]
-    assert aclaracion not in solo.observation
+    assert aclaracion not in solo.observation and 'Tribunal dispone ingreso a PRM UNO' in solo.observation
     sin_cita = correr(tmp_path, 'ESPERA', ESPERA, filas, {0: hist(), 1: hist()}).rows[0]
     assert aclaracion not in sin_cita.observation
 
@@ -112,27 +114,11 @@ def test_servicio_dice_lo_resuelto_y_las_constancias_dce_no_van_en_espera(tmp_pa
     assert 'Ing.Serv.' not in sv.observation
 
 
-def test_lista_de_espera_larga_reemplaza_los_dias_de_espera(tmp_path):
+def test_los_dias_de_espera_no_se_escriben_ni_en_lista_larga(tmp_path):
+    # Decisión del usuario (11-nov-2026): ni «RUS registra N días de espera» ni «Registra N días en lista de espera».
     larga = esp(tmp_path, fila(1, 'RTA UNO') + [120])
-    assert 'Registra 120 días en lista de espera.' in larga.observation
-    # Los días de espera se dicen una vez: «lista de espera larga» reemplaza a «RUS registra N días de espera».
-    assert 'días de espera.' not in larga.observation.replace('lista de espera.', '')
-    assert larga.rules == ['ESPERA.E05_PROYECTO_Y_CORREO', 'HISTORIA.E10_LISTA'] and larga.actions == [
-        'programa_espera',
-        'PC_IE',
-    ]
-    assert 'lista de espera' not in esp(tmp_path, fila(1, 'RTA UNO') + [100]).observation
-    assert 'lista de espera' not in esp(tmp_path, fila(1, 'PRM UNO') + [120]).observation
-    # El umbral es configurable (lista_espera_larga).
-    from copy import deepcopy
-
-    from historia_fixtures import ESPERA, correr
-    from nurus.personal.config import defaults
-
-    config = deepcopy(defaults())
-    config['umbrales']['lista_espera_larga'] = 150
-    otra = correr(tmp_path, 'ESPERA', ESPERA, [fila(1, 'RTA UNO') + [120]], None, None, config).rows[0]
-    assert 'lista de espera' not in otra.observation
+    assert 'días' not in larga.observation and 'lista de espera' not in larga.observation
+    assert larga.rules == ['ESPERA.E05_PROYECTO_Y_CORREO'] and larga.actions == ['programa_espera', 'PC_IE']
 
 
 def test_reitera_curador_cita_la_primera_observacion(tmp_path):
@@ -144,10 +130,16 @@ def test_reitera_curador_cita_la_primera_observacion(tmp_path):
         ),
     )
     f = esp(tmp_path, fila(1) + [3], bitacora=previa, extra=[''], encabezados=['CURADOR'])
-    assert (
-        'Se reitera la observación del 1 de septiembre de 2026 sobre la ausencia de curador ad litem en RUS.'
-        in f.observation
+    # La reiteración es autosuficiente: dice lo que falta y cita la primera observación completa (11-nov-2026).
+    assert f.observation.endswith(
+        'No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 1 de septiembre de 2026.'
     )
+    # Con un trámite de curador posterior a esa observación la situación cambió: no se reitera.
+    cambio = esp(
+        tmp_path, fila(1) + [3], hist(('Designa abogado', '2026-10-01', 9)), previa, extra=[''], encabezados=['CURADOR']
+    )
+    assert 'se reitera' not in cambio.observation and 'consta el trámite «Designa abogado»' in cambio.observation
+    assert cambio.observation.endswith('No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.')
     assert 'Se sugiere asociarlo' not in f.observation
     sin = esp(tmp_path, fila(1) + [3], extra=[''], encabezados=['CURADOR'])
     assert 'Se sugiere asociarlo informáticamente.' in sin.observation
@@ -228,8 +220,11 @@ def test_busqueda_anterior_a_dos_meses_o_ya_observada_no_genera_texto(tmp_path):
 def test_c3_derecho_oido_solo_sin_fecha_en_rus(tmp_path):
     h = hist(('Derecho a ser oído', '2026-09-10', 12))
     enc = ['FEC. OIDO']
+    # La historia acredita la nomenclatura en la causa, no la fecha en que la persona fue oída: se cita como trámite.
+    sin_rus = esp(tmp_path, fila(1) + [3], h, extra=[''], encabezados=enc).observation
+    assert 'Oído el' not in sin_rus
     assert (
-        'Oído el 10 de septiembre de 2026.' in esp(tmp_path, fila(1) + [3], h, extra=[''], encabezados=enc).observation
+        'en resolución de fecha 10 de septiembre de 2026 (folio 12), consta el trámite «Derecho a ser oído».' in sin_rus
     )
     f = esp(tmp_path, fila(1) + [3], h, extra=['2026-10-01'], encabezados=enc)
     assert 'Oído el 1 de octubre de 2026.' in f.observation and '10 de septiembre' not in f.observation
@@ -287,19 +282,21 @@ def test_curador_dado_de_baja_o_designado_solo_se_dice_si_rus_no_tiene_curador(t
     f = esp(tmp_path, fila(1) + [3], hist(baja), **sin_rus)
     assert f.observation.split(': ', 1)[1] == (
         'Medida revisada, a la espera de ingreso efectivo al programa PRM UNO. '
-        'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 4), se dejó sin efecto la designación de curador ad litem. '
-        'No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.'
+        'Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 4), consta el trámite «Deja sin efecto designación C. Ad-Litem». '
+        'No registra curador ad litem en RUS.'
     )
+    assert 'Se sugiere asociarlo' not in f.observation  # sin designación vigente no hay a quién asociar
     assert [a[:2] for a in f.avisos] == [(2, 'CURADOR_SIN_EFECTO')]
     # Designación posterior a la baja: se dice la designación (el curador falta en RUS) y se omite la baja.
     d = esp(tmp_path, fila(1) + [3], hist(baja, designa), **sin_rus)
-    assert 'se designó curador ad litem' in d.observation and 'se dejó sin efecto' not in d.observation
+    assert 'consta el trámite «Designa abogado»' in d.observation and 'Deja sin efecto' not in d.observation
+    assert d.observation.endswith('No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.')
     assert [a[:2] for a in d.avisos] == [(2, 'CURADOR_DESIGNADO')]
     # Baja posterior a la designación: manda la baja.
     b = esp(
         tmp_path, fila(1) + [3], hist(designa, ('Deja sin efecto designación C. Ad-Litem', '2026-10-05', 6)), **sin_rus
     )
-    assert 'se dejó sin efecto' in b.observation and 'se designó' not in b.observation
+    assert 'Deja sin efecto designación' in b.observation and 'Designa abogado' not in b.observation
     # Con curador en RUS no se puede verificar la vigencia desde la historia: se ignora, sin marca.
     con_rus = '(11-1)ABOGADO UNO - Institución: Programa Mi Abogado'
     r = esp(tmp_path, fila(1) + [3], hist(baja, designa), extra=[con_rus], encabezados=['CURADOR'])
@@ -319,9 +316,13 @@ def test_busqueda_conector_por_posicion_y_bitacora_sin_falsos_positivos(tmp_path
         ),
     )
     assert dos.observation.count('Posteriormente,') == 1 and dos.observation.count('Luego,') == 1
-    # Un número suelto (el día de otra fecha) no prueba que la bitácora ya observó esta orden de búsqueda.
-    otra = bita(('2026-09-05', 'Persona X: orden de búsqueda de fecha 3 de marzo de 2026 (folio 40).'))
+    # Criterio único de novedad (11-nov-2026): una orden posterior a la última observación se dice aunque la bitácora
+    # hable de otra búsqueda; una anterior a esa observación no se repite y conserva su marca de orden vigente.
+    otra = bita(('2026-08-20', 'Persona X: orden de búsqueda de fecha 3 de marzo de 2026 (folio 40).'))
     assert 'orden de búsqueda' in esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 3)), otra).observation
+    posterior = bita(('2026-09-05', 'Persona X: Medida revisada, sin observaciones.'))
+    vista = esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 3)), posterior)
+    assert 'orden de búsqueda' not in vista.observation and [a[1] for a in vista.avisos] == ['R11_BUSQUEDA_VIGENTE']
     misma = bita(('2026-09-05', 'Persona X: consta orden de búsqueda (folio 3).'))
     assert 'orden de búsqueda' not in esp(tmp_path, fila(1) + [3], hist((ORDEN, '2026-09-01', 3)), misma).observation
 
