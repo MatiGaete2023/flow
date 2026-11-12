@@ -60,5 +60,10 @@ lee otro formato de lote. La prueba 33 es la que lo confirma.
 | 35 | Meta 4: regenerar | Genera Meta 4 con datos ficticios; cambia FECHA OBS. y ETAPA ÚLTIMA OBS. en Registros.xlsx y usa «Regenerar desde Registros revisado…» | Una nueva carpeta con cinco archivos, fecha corregida y ALERTA recalculada, aunque se haya escrito a mano una ALERTA incorrecta |
 | 36 | Meta 4: conservación y errores | Repite la regeneración con la misma salida; prueba sin Bitacoras_del_mes.xlsx y con FECHA OBS. ilegible | Se rechazan esas entradas, no quedan productos parciales y los originales siguen intactos |
 
-La regeneración no acredita todavía el formato de una plantilla Excel personalizada. La prueba real de
-Meta 4 con lotes capturados y el cotejo frente a Python siguen pendientes.
+| 37 | Plantilla personalizada | Seleccionar en Meta 4 una plantilla XLSX ficticia con otro color de cabecera y otro ancho; generar y regenerar | Estilos y anchos visibles en las cuatro hojas, fechas día-mes-año, totales correctos; no cambia la plantilla original |
+| 38 | Plantilla incompatible | Elegir una plantilla XLSX que no tenga todas las hojas o falte una fila modelo | Mensaje concreto de error, sin carpeta final ni modificación de archivos originales |
+
+Las pruebas automáticas verifican estilos, anchos, alturas, fechas y que el contenido de las
+hojas no cambie. **Falta la comprobación funcional en Windows real con SITFA, Outlook y Excel
+2010/365**, incluida la comparación Meta 4 frente al producto Python (prueba 33). Ninguna
+prueba automática equivale a la aceptación del usuario.
