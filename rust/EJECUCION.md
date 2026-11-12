@@ -25,9 +25,11 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance anterior a esta continuación: `050a425` (8.1 y 8.2 terminados; CI Linux/Windows PASA).
-- **Foco activo: 8.3b, plantilla Excel propia.** 8.3a ya permite regenerar los productos desde un
-  `Registros.xlsx` revisado, sin cambiar el original. Queda adaptar la plantilla de la planilla, luego 8.4
-  (verificación con el usuario en Windows real). No considerar aceptado el producto.
+- **Foco activo: 8.4, pruebas de uso real en Windows por el usuario.** 8.3a/b
+  implementados: regeneración desde `Registros.xlsx` y estilos de plantilla XLSX
+  opcional en los cuatro informes. La CI de Linux y las pruebas ficticias de
+  captura aprobaron la implementación de 8.3b. La verificación Windows final
+  se obtiene del workflow de la rama. La aceptación no puede simularse.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -197,11 +199,13 @@ guardar el código de conexión, y cualquier escritura en RUS.
 - [x] 8.1 `flow-meta4`: cálculo, cinco productos, consola y pestaña (sobre lotes de Flow).
 - [x] 8.2 Manual (`LEEME.md`) y guía de pruebas (`GUIA_PRUEBAS_WINDOWS.md`, 34 pruebas). Sin instalador: un
       `flow.exe` y la carpeta `extension`.
-- [ ] 8.3 Meta 4: regeneración y plantilla propia (`meta4_bitacoras.py::regenerar`,
+- [x] 8.3 Meta 4: regeneración y plantilla propia (`meta4_bitacoras.py::regenerar`,
       `generate_meta4.py::load_template`); leer lotes del Descargador Python solo si el usuario lo pide.
   - [x] 8.3a Regenerar los cinco productos desde `Registros.xlsx` revisado y el reporte original;
         recalcular alertas, conservar bitácoras, no sobrescribir, comando y pestaña.
-  - [ ] 8.3b Importar una plantilla Excel personalizada conservando su formato y verificarla.
+  - [x] 8.3b Aplicar estilos de plantillas XLSX compatibles (colores, bordes, fuentes, números,
+        anchos, alturas y tema) a las cuatro hojas sin copiar contenido activo ni macros;
+        usarla en consola y ventana y comprobar que ningún valor cambia.
 - [ ] 8.4 Prueba del usuario en Windows real y su resultado. Nada está aceptado hasta entonces.
 
 ## 4. Guía por paso (fuentes en el Python)
@@ -435,3 +439,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   corrección de fecha, alerta manipulada, fuente ausente, fecha ilegible y no sobrescritura. Los reportes nuevos
   conservan también la atribución de consultas sin bitácora por tribunal; en reportes antiguos sin ese dato no
   se inventa la asociación. El soporte de plantillas y la aceptación en Windows real siguen pendientes.
+
+- 2026-11-12: 8.3b implementada. Plantilla XLSX opcional con cuatro hojas y filas modelo.
+  Se copian únicamente estilos por rol de fila, anchos, alturas y tema a la planilla
+  reconstruida; el formato de fechas es dd-mm-yyyy. El XLSX modelo no se modifica:
+  se rechazan formatos incompatibles, macros, vínculos externos, dibujos/celdas combinadas
+  en hojas modelo. Se verifica igualdad de todos los valores y hojas antes/después de
+  aplicar estilos y se rechaza una salida parcial. Consola y pestaña actualizadas.
+  Pruebas ficticias en Linux PASA; solo 8.4 depende del uso real y decisión del usuario.
