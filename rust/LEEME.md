@@ -26,9 +26,12 @@ Estado: en desarrollo, **sin aceptación del usuario**. Ver [EJECUCION.md](EJECU
 2. Abre tu sesión de SITFA en Chrome. En Flow, pestaña **Captura**, pulsa «Abrir conexión local» y «Copiar código
    de conexión». Pulsa el icono de la extensión Flow desde la pestaña SITFA, pega el código y conecta.
 3. Vuelve a Flow, elige la pantalla, pulsa «Cargar opciones» y marca tribunales, modalidades y pestañas, o meses y
-   año según la consulta. Revisa el filtro de fechas y pulsa «Descargar» para elegir la carpeta de destino.
+   año según la consulta. En Seguimiento puedes activar bitácoras, historia y calendario por ingreso; elige de uno
+   a cuatro meses naturales. Revisa el filtro de fechas y pulsa «Descargar» para elegir la carpeta de destino.
 4. Cada página se verifica antes de guardarse. «Detener» conserva lo comprobado; «Retomar lote…» permite elegir
-   la carpeta incompleta. No edites sus archivos mientras Flow descarga o retoma.
+   la carpeta incompleta. Las lecturas verificadas del día pueden reutilizarse entre lotes de la misma carpeta
+   padre. Máximo por corrida: 600 bitácoras/calendarios y 600 historias; Retomar continúa desde el avance guardado.
+   Si falla una ventana, conserva los Excel y las demás lecturas. No edites sus archivos mientras Flow descarga o retoma.
 5. Al terminar, «Llevar Excel verificados a Trabajo» carga las tablas de intervención. Litigantes y calendarios
    quedan como consultas en la carpeta del lote. Si se activa la opción, una consulta vacía produce un PDF con su
    selección visible. Mantén abiertas las pestañas de SITFA y conexión durante el lote.
@@ -52,9 +55,9 @@ flow producir ARCHIVO --salida CARPETA [--modalidades TEXTO] [--contactos contac
 
 ## Qué todavía no hace
 
-- Captura descarga los Excel de Seguimiento, litigantes y calendarios. La lectura directa de bitácoras, historia y
-  calendario por ingreso sigue pendiente; mientras tanto se puede abrir el ZIP del Descargador Python, que ya
-  incorpora esas entradas al análisis.
+- Captura incorpora bitácora, historia y calendario verificados al análisis. Siguen pendientes los avisos de
+  cronología CT-05/07/11 y los controles por paquete N-03/N-04, órdenes de búsqueda y cotejo de calendario;
+  ver el estado detallado en EJECUCION.md.
 - Anonimizador y Meta 4 siguen siendo las herramientas Python.
 
 ## Desarrollo

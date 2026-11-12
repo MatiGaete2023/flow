@@ -12,10 +12,12 @@ let etapa="entrada";
   const lineas=[];const pendientes=[];
   entrada.on('line',s=>{if(pendientes.length)pendientes.shift()(s);else lineas.push(s);});
   const siguiente=()=>lineas.length?Promise.resolve(lineas.shift()):new Promise(r=>pendientes.push(r));
-  const {codigo,vacia}=JSON.parse(await siguiente());console.error('Ensayo: entrada recibida.');
+  const {codigo,vacia,lecturas}=JSON.parse(await siguiente());console.error('Ensayo: entrada recibida.');
   const raiz=path.resolve(__dirname,'..');
   const casos=JSON.parse(await fs.readFile(path.join(raiz,'crates/flow-captura/tests/datos/sitfa_ficticio.json'),'utf8'));
-  const caso=casos.find(c=>c.nombre==='seguimiento/Espera'+(vacia?'/vacia':''));
+  const pestana=lecturas?'Cumplimiento':'Espera';
+  const caso=casos.find(c=>c.nombre==='seguimiento/'+pestana+(vacia?'/vacia':''));
+  const lector=lecturas?require('./lecturas_chrome.cjs')(caso,JSON.parse(await fs.readFile(path.join(raiz,'crates/flow-captura/tests/datos/lecturas_ficticias.json'),'utf8'))):null;
   const perfil=await fs.mkdtemp(path.join(os.tmpdir(),'flow-chrome-ficticio-'));
   let contexto;
   try {
@@ -25,22 +27,24 @@ let etapa="entrada";
     let actual=1,consultas=0,descargas=0;
     await contexto.route('https://familia.pjud.cl/**',async route=>{
       const req=route.request();const u=new URL(req.url());
+      if(lector&&/\/(Encrypt_AjaxAccion|ConsultaDetalleAtPublicoAccion|IrPopUpInformesAccion)\.do$/.test(u.pathname))return lector.responder(u,route);
       if(u.pathname.startsWith('/sitfa/reportes/')) {
         descargas++;return route.fulfill({status:200,contentType:'application/vnd.ms-excel',body:caso[actual===2?'excel2':'excel']});
       }
       if(req.method()==='POST'){
-        consultas++;const pares=new URLSearchParams(req.postData());actual=Number(pares.get('NUM_PaginaEspera')||1);
+        consultas++;const pares=new URLSearchParams(req.postData());actual=Number(pares.get('NUM_Pagina'+pestana)||1);
         return route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:caso[actual===2?'html2':'html']});
       }
       // Formulario ficticio con los manejadores que la extensión necesita. No envían formularios.
-      let html=caso.html.replace('name="COD_Lengueta" value=""','name="COD_Lengueta" value="tdEspera"');
+      let html=caso.html.replace('name="COD_Lengueta" value=""','name="COD_Lengueta" value="td'+pestana+'"');
+      html=html.replace('name="TIP_Informe"','name="TIP_Informe" id="TIP_Informe"');
       const extra=`<input type="checkbox" name="CHK_Consulta" value="on"><input name="FLG_Consulta" value="0">
-        <select name="TIP_Informe" id="TIP_Informe"><option value="0">Todas</option></select>
+        ${html.includes('name="TIP_Informe"')?'':'<select name="TIP_Informe" id="TIP_Informe"><option value="0">Todas</option></select>'}
         <input type="submit" name="irAccion" value="Buscar medida">
         <button type="button" id="tdEspera">Espera</button><button type="button" id="tdCumplimiento">Cumplimiento</button>
         <button type="button" id="tdInforme">Informes</button><button type="button" id="tdEgreso">Egresados</button>`;
       html=html.replace('</form>',extra+'</form>').replace('</body>',`<script>
-        var idLengueta='tdEspera';
+        var idLengueta='td${pestana}';
         function Lengueta(id){idLengueta=id;document.querySelector('[name="COD_Lengueta"]').value=id;
           document.getElementById('TIP_Informe').innerHTML=(id==='tdInforme'?[1,2,3]:[0,4,5]).map(v=>'<option value="'+v+'">Filtro '+v+'</option>').join('');}
         function Envio(){return true;}function Seleccion(){}
@@ -67,7 +71,8 @@ let etapa="entrada";
     await conexion.locator('#code').fill(codigo);await conexion.locator('#connect').click();
     await siguiente();
     assert.equal(await pagina.evaluate(()=>document.querySelector('#sitfaDescargaLocal')===null),true);
-    assert.equal(await pagina.locator('[name="COD_Lengueta"]').inputValue(),'tdEspera');
+    assert.equal(await pagina.locator('[name="COD_Lengueta"]').inputValue(),'td'+pestana);
+    if(lector)assert.deepEqual(lector.cuentas,{bitacora:6,historia:6,calendario:6});
     assert.equal(descargas,vacia?0:2);assert.ok(consultas>=1);
     await conexion.locator('#disconnect').click({timeout:8000});
     console.log('Extensión MV3: consultas limitadas, descarga verificada y formulario restaurado.');

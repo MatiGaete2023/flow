@@ -109,6 +109,7 @@ fn plan(c: &Value, evidencia: bool) -> Lote {
         conservar_filtros: false,
         evidencia,
         pausa_ms: 250,
+        lecturas: Default::default(),
     }
 }
 

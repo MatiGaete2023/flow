@@ -1,0 +1,120 @@
+use flow_captura::{
+    lotes::{huella, Resumen},
+    recoleccion, vinculos,
+};
+use flow_motor::Config;
+use flow_trabajo::captura;
+use serde_json::{json, Value};
+
+struct Temporal(std::path::PathBuf);
+impl Temporal {
+    fn nueva() -> Self {
+        let p = std::env::temp_dir().join(format!(
+            "flow-trabajo-captura-ficticia-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        std::fs::create_dir(&p).unwrap();
+        Self(p)
+    }
+}
+impl Drop for Temporal {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+fn preparar() -> (Temporal, Resumen) {
+    let t = Temporal::nueva();
+    let seleccion = json!({"tribunal":"901","screen":"seguimiento","tab":"Cumplimiento","modality":"2","report":null,"state":null,"month":null,"year":null});
+    let mut r:Resumen=serde_json::from_value(json!({"version":1,"lote":{"consultas":[seleccion],"fechas":null,"conservar_filtros":false,"evidencia":false,"pausa_ms":250,"lecturas":{"bitacoras":true,"historia":true,"calendario":true,"meses":4}},"estado":"VALIDADA","terminadas":[0],"vacias":[],"archivos":[],"avisos":[],"lecturas":[],"paginas_lectura":[]})).unwrap();
+    let casos: Vec<Value> = serde_json::from_str(include_str!("../../flow-captura/tests/datos/vinculos_ficticios.json")).unwrap();
+    let html = casos[0]["html"].as_str().unwrap().replace("tablaEspera", "tablaCumplimiento");
+    let v = vinculos::extraer(html.as_bytes(), &r.lote.consultas[0]).unwrap().remove(0);
+    r.paginas_lectura.push(recoleccion::Pagina { consulta: 0, numero: 1, vinculos: vec![v.clone()] });
+    let datos = [
+        (
+            "historia",
+            json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[{"descripcion":"Derecho a ser oído","fecha_iso":"2026-10-10","folio":"1"}]}),
+        ),
+        ("bitacora", json!({"entries":[{"fecha":"2026-10-11","texto":"Se informa derecho a ser oído aplicado el 10/10/2026."}]})),
+        (
+            "calendario",
+            json!({"proyecciones":[{"estado":"PENDIENTE","fecha_proyeccion":"2026-11-01"},{"estado":"RECIBIDO","fecha_proyeccion":"2026-10-22"}]}),
+        ),
+    ];
+    for (tipo, datos) in datos {
+        let clave = recoleccion::clave(tipo, &v);
+        let bytes = serde_json::to_vec(&json!({"version":1,"tipo":tipo,"clave":clave,"vinculo":v,"datos":datos})).unwrap();
+        let archivo = format!("{tipo}.json");
+        std::fs::write(t.0.join(&archivo), &bytes).unwrap();
+        r.lecturas.push(recoleccion::Referencia {
+            tipo: tipo.into(),
+            clave,
+            archivo,
+            sha256: huella(&bytes),
+            capturada: "2026-10-20T12:00:00Z".into(),
+            meses: 4,
+            tribunal: "901".into(),
+            causa: "100".into(),
+            ingreso: "201".into(),
+            reutilizada: false,
+        });
+    }
+    for pagina in 1..=2 {
+        let nombre = if pagina == 1 { "Persona Ficticia" } else { "Otra Persona Ficticia" };
+        let html=format!("<html><table><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Tribunal</th><th>DIAS DE CUMPLIMIENTO</th><th>DIAS PARA EGRESAR</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>{nombre}</td><td>PRM Centro Ficticio</td><td>Laja</td><td>100</td><td>100</td></tr></table></html>");
+        let nombre = format!("pagina-{pagina}.xls");
+        std::fs::write(t.0.join(&nombre), &html).unwrap();
+        r.archivos.push(flow_captura::lotes::Archivo {
+            nombre,
+            sha256: huella(html.as_bytes()),
+            consulta: 0,
+            pagina,
+            total: 2,
+            registros: 1,
+        });
+    }
+    (t, r)
+}
+
+#[test]
+fn contextos_se_aplican_por_identidad_completa_y_paginas_comparten_prepase() {
+    let (t, mut r) = preparar();
+    let corte = "2026-10-20".parse().unwrap();
+    // Otra consulta puede incluir el mismo ingreso en otra etapa; no sustituye el vínculo de esta consulta.
+    let mut otra = r.lote.consultas[0].clone();
+    otra.tab = "Espera".into();
+    r.lote.consultas.push(otra);
+    let mut pagina = r.paginas_lectura[0].clone();
+    pagina.consulta = 1;
+    pagina.vinculos[0].etapa = "2".into();
+    r.paginas_lectura.push(pagina);
+    // Sin la bitácora, la historia propone dejar constancia del derecho a ser oído.
+    let bit = r.lecturas.remove(1);
+    let sin = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
+    assert!(sin[0].filas[0].propuesta.reglas.contains(&"COMUN.OIDO".into()));
+    assert!(!sin[0].filas[1].propuesta.reglas.contains(&"COMUN.OIDO".into()));
+    r.lecturas.push(bit);
+    let trabajos = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
+    assert_eq!(trabajos.len(), 1);
+    let filas = &trabajos[0].filas;
+    assert_eq!(filas.len(), 2);
+    assert!(!filas[0].propuesta.reglas.contains(&"COMUN.OIDO".into()));
+    assert_eq!(filas[0].proximo_informe, Some("2026-11-01".parse().unwrap()));
+    assert_eq!(filas[1].proximo_informe, None);
+    assert!(filas.iter().all(|f| f.propuesta.marcas.iter().any(|m| m.codigo == "R6_DUPLICIDAD")));
+}
+
+#[test]
+fn contexto_o_descarga_alterados_impiden_importacion() {
+    let (t, r) = preparar();
+    let corte = "2026-10-20".parse().unwrap();
+    let referencia = &r.lecturas[0];
+    let ruta = t.0.join(&referencia.archivo);
+    let original = std::fs::read(&ruta).unwrap();
+    std::fs::write(&ruta, b"{}").unwrap();
+    assert!(captura::importar(&t.0, &r, corte, &Config::default()).is_err());
+    std::fs::write(&ruta, original).unwrap();
+    std::fs::write(t.0.join(&r.archivos[0].nombre), b"alterado ficticio").unwrap();
+    assert!(captura::importar(&t.0, &r, corte, &Config::default()).is_err());
+}

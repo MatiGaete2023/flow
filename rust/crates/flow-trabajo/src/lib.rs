@@ -1,6 +1,7 @@
 //! El trabajo del día: una tabla de RUS analizada, con la observación propuesta y la que el usuario deja.
 
 pub mod almacen;
+pub mod captura;
 pub mod paquete;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};

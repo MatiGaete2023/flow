@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
     fs::{self, OpenOptions},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
@@ -19,6 +19,7 @@ use std::{
 
 pub const CAPACIDADES: &str = "FLOW_CAPACIDADES";
 pub const VERSION_EXTENSION: &str = "0.2.0";
+const MAX_RESUMEN: usize = 64 * 1024 * 1024;
 
 pub trait Conexion: Send + Sync {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String>;
@@ -102,6 +103,8 @@ pub struct Lote {
     pub conservar_filtros: bool,
     pub evidencia: bool,
     pub pausa_ms: u64,
+    #[serde(default)]
+    pub lecturas: crate::recoleccion::Opciones,
 }
 
 impl Lote {
@@ -112,6 +115,7 @@ impl Lote {
         if self.pausa_ms < 250 || self.pausa_ms > 60_000 {
             return Err("La pausa debe ser de 250 a 60000 ms.".into());
         }
+        self.lecturas.validar()?;
         if let Some(f) = &self.fechas {
             f.validar()?;
         }
@@ -147,12 +151,21 @@ pub struct Resumen {
     pub vacias: Vec<usize>,
     pub archivos: Vec<Archivo>,
     pub avisos: Vec<String>,
+    #[serde(default)]
+    pub paginas_lectura: Vec<crate::recoleccion::Pagina>,
+    #[serde(default)]
+    pub lecturas: Vec<crate::recoleccion::Referencia>,
 }
 
 impl Resumen {
     pub fn leer(carpeta: &Path) -> Result<Self, String> {
-        let datos = fs::read(carpeta.join("resumen.json")).map_err(|_| "No se pudo leer el avance del lote.")?;
-        if datos.len() > 8 * 1024 * 1024 {
+        let mut datos = vec![];
+        fs::File::open(carpeta.join("resumen.json"))
+            .map_err(|_| "No se pudo leer el avance del lote.")?
+            .take(MAX_RESUMEN as u64 + 1)
+            .read_to_end(&mut datos)
+            .map_err(|_| "No se pudo leer el avance del lote.")?;
+        if datos.len() > MAX_RESUMEN {
             return Err("El avance del lote es demasiado grande.".into());
         }
         let r: Self = serde_json::from_slice(&datos).map_err(|_| "El avance del lote no se reconoce.")?;
@@ -168,6 +181,10 @@ impl Resumen {
                     || !a.sha256.bytes().all(|b| b.is_ascii_hexdigit())
             })
             || r.terminadas.iter().chain(&r.vacias).any(|i| *i >= r.lote.consultas.len())
+            || r.lecturas.iter().any(|l| {
+                ruta_archivo(carpeta, &l.archivo).is_err() || l.sha256.len() != 64 || !l.sha256.bytes().all(|b| b.is_ascii_hexdigit())
+            })
+            || r.paginas_lectura.iter().any(|p| p.consulta >= r.lote.consultas.len() || p.numero == 0 || p.numero > 500)
         {
             return Err("El avance del lote contiene referencias inválidas.".into());
         }
@@ -176,6 +193,9 @@ impl Resumen {
     pub fn guardar(&self, carpeta: &Path) -> Result<(), String> {
         let temporal = carpeta.join("resumen.tmp");
         let datos = serde_json::to_vec_pretty(self).map_err(|_| "No se pudo preparar el avance del lote.")?;
+        if datos.len() > MAX_RESUMEN {
+            return Err("El avance excede el tamaño permitido; se conserva el checkpoint anterior.".into());
+        }
         let mut archivo = fs::File::create(&temporal).map_err(|_| "No se pudo guardar el avance del lote.")?;
         archivo.write_all(&datos).and_then(|_| archivo.sync_all()).map_err(|_| "No se pudo guardar el avance del lote.")?;
         fs::rename(&temporal, carpeta.join("resumen.json")).map_err(|_| "No se pudo completar el guardado del avance del lote.".into())
@@ -198,7 +218,7 @@ pub fn huella(datos: &[u8]) -> String {
     format!("{:x}", Sha256::digest(datos))
 }
 
-fn exclusivo(ruta: &Path, datos: &[u8]) -> Result<(), String> {
+pub(crate) fn exclusivo(ruta: &Path, datos: &[u8]) -> Result<(), String> {
     let mut archivo = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -234,7 +254,7 @@ fn cancelado(cancelar: &AtomicBool) -> Result<(), String> {
     }
 }
 
-fn pausa(ms: u64, cancelar: &AtomicBool) -> Result<(), String> {
+pub(crate) fn pausa(ms: u64, cancelar: &AtomicBool) -> Result<(), String> {
     for _ in 0..ms.div_ceil(50) {
         cancelado(cancelar)?;
         std::thread::sleep(Duration::from_millis(50));
@@ -313,6 +333,8 @@ pub fn ejecutar(
             vacias: vec![],
             archivos: vec![],
             avisos: vec![],
+            paginas_lectura: vec![],
+            lecturas: vec![],
         }
     };
     // Ningún archivo desaparecido o editado se da por completado al reanudar.
@@ -324,6 +346,7 @@ pub fn ejecutar(
         }
     }
     resumen.estado = "EN_CURSO".into();
+    let mut recoleccion = crate::recoleccion::Recoleccion::nueva(carpeta, &resumen)?;
     resumen.guardar(carpeta)?;
     if let Err(e) = pedir(conexion, "lock", json!({})) {
         resumen.estado = "INCOMPLETA".into();
@@ -381,8 +404,8 @@ pub fn ejecutar(
                     let mut verificador = VerificadorDescargas::default();
                     for numero in 1..=primera.total {
                         cancelado(cancelar)?;
-                        let pagina = if numero == 1 {
-                            primera.clone()
+                        let (pagina, html_pagina) = if numero == 1 {
+                            (primera.clone(), html.clone())
                         } else {
                             pausa(lote.pausa_ms, cancelar)?;
                             let siguientes = siguiente_consulta(&pares, &perfil, &primera, numero)?;
@@ -391,7 +414,7 @@ pub fn ejecutar(
                             else {
                                 return Err("La consulta cambió durante la descarga.".into());
                             };
-                            p
+                            (p, html)
                         };
                         let previo = resumen.archivos.iter().find(|a| a.consulta == indice && a.pagina == numero);
                         let nombre = format!("consulta-{:03}-p{numero:03}-de-{:03}.xls", indice + 1, primera.total);
@@ -431,12 +454,24 @@ pub fn ejecutar(
                             lote.consultas.len(),
                             primera.total
                         ));
+                        if lote.lecturas.activa() && s.screen == "seguimiento" {
+                            recoleccion.pagina(
+                                conexion,
+                                catalogo,
+                                &mut resumen,
+                                crate::recoleccion::PaginaActual { consulta: indice, numero, html: &html_pagina },
+                                crate::recoleccion::Control { cancelar, progreso },
+                            )?;
+                        }
                     }
                 }
             }
-            resumen.terminadas.push(indice);
+            if recoleccion.completa(indice) {
+                resumen.terminadas.push(indice);
+            }
             resumen.guardar(carpeta)?;
         }
+        recoleccion.terminar(&mut resumen)?;
         Ok(())
     })();
     match conexion.llamar("unlock", json!({}), Duration::from_secs(8)) {

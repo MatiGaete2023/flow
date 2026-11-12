@@ -25,9 +25,9 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.4c (lecturas dentro del lote y paso a Trabajo)**;
-  lectores, vínculos y protocolo de lectura están terminados, pero aún falta la integración al lote.
-  Los pendientes 5b.2, 5b.3 y 6.1 siguen abiertos; no se consideran terminados por este avance.
+- **Foco activo: 5b.2, avisos de bitácora y cronología.** La fase 7 terminó: lectores, vínculos, extensión,
+  lote, checkpoints y paso a Trabajo. Continuar con CT-05/07/11 y el texto COMUN.REITERA_OBSERVACION.
+  Después siguen 5b.3, 6.1, 8.1 y 8.2; no se consideran terminados por este avance.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -170,14 +170,14 @@ Pasos:
       textos (y `tipo`/`version` de `capabilities`, que el programa verifica); pestaña «Captura» con código de
       conexión, opciones y avance; lo descargado pasa directo a Trabajo. Probar de punta a punta con Playwright +
       Chromium (están en este contenedor) contra el SITFA ficticio.
-- [ ] 7.4 Bitácoras, historia de la causa y calendario (`descargador/lectura_bitacoras.py`,
+- [x] 7.4 Bitácoras, historia de la causa y calendario (`descargador/lectura_bitacoras.py`,
       `lectura_historia.py`, `extension/pagina.js` del Descargador integral, `src/nurus/bitacora_html.py`,
       `historia_html.py`, `calendario_html.py`). Ritmo y límite de 600 lecturas por lote (decisión m).
   - [x] 7.4a Lectores locales de las tres ventanas, identidad de bitácora/calendario y ventana de 1 a 4 meses;
         oráculo de ventanas ficticias contra Python y pruebas negativas.
   - [x] 7.4b Extracción y cotejo de los enlaces del listado actual, adaptación de los comandos de lectura
         `diary_open`, `history_open`, `calendar_open` y negociación de sus protocolos; sin persistir valores cifrados.
-  - [ ] 7.4c Integración con lotes, checkpoints, reutilización de lecturas del día, tope de 600, controles de período
+  - [x] 7.4c Integración con lotes, checkpoints, reutilización de lecturas del día, tope de 600, controles de período
         y paso de los contextos verificados a Trabajo; pruebas de extremo a extremo de las lecturas.
 
 Prohibido en toda la fase: leer cookies o contraseñas, enviar formularios que no sean las consultas listadas,
@@ -303,3 +303,17 @@ guardar el código de conexión, y cualquier escritura en RUS.
   74 PASA. Pruebas JS de bitácora, historia y calendario, Clippy, compilación cruzada Windows y dos recorridos MV3
   (descarga y PDF vacío) PASA. Los comandos quedan disponibles, pero la fase sigue abierta hasta 7.4c: invocarlos
   dentro de cada página vigente, con ritmo y checkpoints, y pasar solamente contextos verificados al análisis.
+
+- 2026-11-12: 7.4c: lecturas durante cada página vigente del lote; selección independiente en Captura y período
+  de 1–4 meses naturales. Pausa cancelable antes de cada lectura; límite compartido de 600 bitácoras/calendarios
+  y otro de 600 historias por corrida, como en Python. Guarda JSON estructurado con SHA-256 y vínculo, sin HTML
+  ni valores cifrados. Reutiliza lecturas verificadas del mismo día entre los diez lotes hermanos más recientes;
+  bitácora/historia requieren el mismo período. Los fallos parciales conservan Excel y lecturas y dejan la consulta
+  pendiente; Retomar coteja páginas y reintenta lo que falta. Trabajo verifica huellas, vincula por los cuatro
+  campos completos dentro de su consulta y reúne páginas antes del pre-pase; historia, bitácora y próximo informe
+  llegan al motor vigente. No atribuye contextos de otra persona por compartir RIT o RUT.
+  Pruebas nuevas: límite de lecturas, cuatro de persistencia/reutilización/reanudación y dos de importación,
+  identidad y archivos alterados. Suite completa: 81 PASA. Recorrido MV3 real con SITFA ficticio: dos Excel y
+  18 lecturas verificadas (seis de cada tipo), filtros restaurados; nuevo escenario `probar_captura -- --lecturas`
+  incluido en CI. Clippy sin advertencias y comprobación cruzada Windows PASA; CI nativa del paso anterior
+  `1b7950b` PASA (run 43263570103). Continúa en 5b.2; este paso no implementa todavía los avisos CT/N/OB ni Meta 4/anonimizador.

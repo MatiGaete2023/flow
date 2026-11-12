@@ -20,7 +20,7 @@ use std::{
 enum Evento {
     Opciones(Result<Value, String>),
     Avance(String),
-    Fin(PathBuf, Result<Resumen, String>),
+    Fin(PathBuf, Box<Result<Resumen, String>>),
 }
 
 pub struct Captura {
@@ -40,6 +40,7 @@ pub struct Captura {
     hasta: String,
     filtros: bool,
     evidencia: bool,
+    lecturas: flow_captura::recoleccion::Opciones,
     receptor: Option<Receiver<Evento>>,
     cancelar: Arc<AtomicBool>,
     mensaje: String,
@@ -66,6 +67,7 @@ impl Default for Captura {
             hasta: chrono::Local::now().format("%d/%m/%Y").to_string(),
             filtros: false,
             evidencia: true,
+            lecturas: Default::default(),
             receptor: None,
             cancelar: Arc::new(AtomicBool::new(false)),
             mensaje: "Abre SITFA en Chrome y conecta la extensión de Flow.".into(),
@@ -131,7 +133,7 @@ impl Captura {
                 Evento::Fin(carpeta, r) => {
                     self.receptor = None;
                     self.carpeta = Some(carpeta.clone());
-                    match r {
+                    match *r {
                         Ok(resumen) => {
                             self.mensaje = format!(
                                 "Lote terminado: {} consultas, {} sin registros. Puedes llevar los Excel a Trabajo.",
@@ -221,6 +223,7 @@ impl Captura {
             conservar_filtros: self.filtros,
             evidencia: self.evidencia,
             pausa_ms: 1000,
+            lecturas: self.lecturas.clone(),
         };
         lote.validar(catalogo)?;
         Ok(lote)
@@ -243,7 +246,7 @@ impl Captura {
                 ctx.request_repaint();
             };
             let r = lotes::ejecutar(puente.as_ref(), &catalogo, &lote, &carpeta, retomar, &cancelar, &progreso);
-            let _ = tx.send(Evento::Fin(carpeta, r));
+            let _ = tx.send(Evento::Fin(carpeta, Box::new(r)));
             ctx.request_repaint();
         });
     }
@@ -308,6 +311,14 @@ impl Captura {
             ui.add_enabled_ui(!ocupada && self.catalogo.is_some(), |ui| {
                 marcas(ui, "Tribunales", &mut self.tribunales);
                 if self.pantalla == "seguimiento" {
+                    ui.label(egui::RichText::new("Lecturas por ingreso y causa").strong());
+                    ui.horizontal_wrapped(|ui| {
+                        ui.checkbox(&mut self.lecturas.bitacoras,"Leer bitácoras");
+                        ui.checkbox(&mut self.lecturas.historia,"Leer historia de la causa");
+                        ui.checkbox(&mut self.lecturas.calendario,"Leer calendario del ingreso");
+                    });
+                    ui.horizontal(|ui| {ui.label("Período:");ui.add(egui::DragValue::new(&mut self.lecturas.meses).range(1..=4));ui.label("meses naturales");});
+                    ui.label("Reutiliza lecturas verificadas de hoy. Máximo de 600 bitácoras/calendarios y 600 historias por corrida; Retomar conserva el avance.");
                     marcas(ui, "Modalidades", &mut self.modalidades);
                     ui.horizontal_wrapped(|ui| {
                         for (n, m) in &mut self.pestañas {

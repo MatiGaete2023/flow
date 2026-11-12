@@ -51,7 +51,7 @@ pub fn listar(datos: &Path) -> Vec<(PathBuf, SystemTime)> {
         .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
         .filter_map(|e| e.metadata().and_then(|m| m.modified()).ok().map(|t| (e.path(), t)))
         .collect();
-    salida.sort_by(|a, b| b.1.cmp(&a.1));
+    salida.sort_by_key(|a| std::cmp::Reverse(a.1));
     salida
 }
 

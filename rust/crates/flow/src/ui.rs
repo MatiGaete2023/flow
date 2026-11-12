@@ -209,36 +209,12 @@ impl App {
         let Some(corte) = self.fecha_corte() else {
             return self.mal("Revisa la fecha de corte antes de llevar la captura a Trabajo.");
         };
-        let mut trabajos: Vec<Trabajo> = vec![];
+        let mut trabajos = match flow_trabajo::captura::importar(&carpeta, &resumen, corte, &self.motor) {
+            Ok(t) => t,
+            Err(e) => return self.mal(e),
+        };
         for archivo in &resumen.archivos {
-            if !archivo.nombre.ends_with(".xls") {
-                continue;
-            }
-            let seleccion = &resumen.lote.consultas[archivo.consulta];
-            let datos = match std::fs::read(carpeta.join(&archivo.nombre)) {
-                Ok(datos) if flow_captura::lotes::huella(&datos) == archivo.sha256 => datos,
-                _ => return self.mal("Cambió una descarga desde su verificación. Revisa o retoma el lote antes de importarlo."),
-            };
             self.resultados.push(format!("Descarga verificada: {}", carpeta.join(&archivo.nombre).display()));
-            // Litigantes y calendarios son productos de consulta; las tablas de intervención van a Trabajo.
-            let Some(etapa) = Etapa::desde(&seleccion.tab) else {
-                continue;
-            };
-            match cli::cargar_bytes(&archivo.nombre, datos, Some(etapa), None, corte, &self.motor) {
-                Ok(nuevos) => {
-                    for nuevo in nuevos {
-                        if let Some(actual) = trabajos.iter_mut().find(|t| t.etapa == nuevo.etapa && t.cabeceras == nuevo.cabeceras) {
-                            actual.sha256 = flow_captura::lotes::huella(format!("{}{}", actual.sha256, nuevo.sha256).as_bytes());
-                            actual.archivo = format!("Lote {}", carpeta.file_name().unwrap_or_default().to_string_lossy());
-                            actual.filas.extend(nuevo.filas);
-                            actual.avisos.extend(nuevo.avisos);
-                        } else {
-                            trabajos.push(nuevo);
-                        }
-                    }
-                }
-                Err(e) => return self.mal(format!("La descarga se conserva; no se pudo analizar: {e}")),
-            }
         }
         if trabajos.is_empty() {
             self.pestana = Pestana::Resultados;
@@ -1005,6 +981,7 @@ mod pruebas_captura {
             conservar_filtros: false,
             evidencia: false,
             pausa_ms: 250,
+            lecturas: Default::default(),
         };
         let resumen = flow_captura::lotes::Resumen {
             version: 1,
@@ -1021,6 +998,8 @@ mod pruebas_captura {
                 registros: 3,
             }],
             avisos: vec![],
+            paginas_lectura: vec![],
+            lecturas: vec![],
         };
         (base, resumen)
     }

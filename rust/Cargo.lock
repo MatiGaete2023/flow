@@ -1443,6 +1443,7 @@ name = "flow-trabajo"
 version = "0.2.0"
 dependencies = [
  "chrono",
+ "flow-captura",
  "flow-dominio",
  "flow-motor",
  "flow-tabular",

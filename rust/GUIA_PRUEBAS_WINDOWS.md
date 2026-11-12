@@ -26,5 +26,9 @@ Anota PASA o FALLA y, si falla, el texto exacto del mensaje.
 | 16 | Consulta vacía | Activar PDF y consultar una selección conocida sin registros | PDF con selección visible; ningún XLS vacío presentado como descarga válida |
 | 17 | Captura → Trabajo | Llevar las descargas de Seguimiento a Trabajo | Etapa y registros correctos; se pueden preparar productos tras revisarlos |
 
+| 18 | Lecturas adicionales | Activar bitácoras, historia y calendario en una consulta pequeña | Tres lecturas por registro cuando existen enlaces comprobables; contextos asociados al ingreso correcto en Trabajo |
+| 19 | Reintentar lectura | Detener o interrumpir una lectura y retomar la misma carpeta | Conserva lo verificado; reintenta lo pendiente, muestra errores sin convertirlos en listas vacías |
+| 20 | Reutilización del día | Repetir la consulta en otro lote de la misma carpeta padre | Reutiliza lecturas verificadas de hoy; al ampliar el período vuelve a leer bitácora e historia |
+
 La prueba 8 es la más importante: el acceso a Outlook se escribió sin poder ejecutarlo. Si falla, los `.eml` de la
 prueba 7 cumplen la misma función.
