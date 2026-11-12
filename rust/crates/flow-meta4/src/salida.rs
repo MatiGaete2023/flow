@@ -463,6 +463,20 @@ pub fn reporte(m: &Meta4, totales: &BTreeMap<String, usize>) -> Value {
 
 /// Escribe los cinco productos en una carpeta nueva. Si algo falla, no queda nada publicado.
 pub fn publicar(m: &Meta4, destino: &Path) -> Result<Vec<PathBuf>, String> {
+    publicar_interno(m, destino, None)
+}
+
+/// Regeneración desde Registros.xlsx revisado. La bitácora no cambia ni se sustituye por una vacía.
+pub fn publicar_regenerado(
+    m: &Meta4, destino: &Path, bitacoras_originales: &Path, huella_registros: &str
+) -> Result<Vec<PathBuf>, String> {
+    if !bitacoras_originales.is_file() {
+        return Err("Falta Bitacoras_del_mes.xlsx original: no se regenera perdiendo bitácoras.".into());
+    }
+    publicar_interno(m, destino, Some((bitacoras_originales, huella_registros)))
+}
+
+fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>) -> Result<Vec<PathBuf>, String> {
     crate::validar_destino(destino)?;
     let padre = destino.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
     std::fs::create_dir_all(padre).map_err(|e| format!("No se pudo crear {}: {e}", padre.display()))?;
@@ -487,8 +501,19 @@ pub fn publicar(m: &Meta4, destino: &Path) -> Result<Vec<PathBuf>, String> {
         }
         registros(m, &temporal.join(&nombres[1]))?;
         consolidado(m, &temporal.join(&nombres[2]))?;
-        bitacoras_del_mes(m, &temporal.join(&nombres[3]))?;
-        let texto = serde_json::to_string_pretty(&reporte(m, &totales)).map_err(|e| e.to_string())?;
+        if let Some((original, _)) = regenerar {
+            // No se reinterpreta el texto íntegro de bitácoras: se copia el libro comprobado.
+            std::fs::copy(original, temporal.join(&nombres[3]))
+                .map_err(|e| format!("No se pudo conservar Bitacoras_del_mes.xlsx: {e}"))?;
+        } else {
+            bitacoras_del_mes(m, &temporal.join(&nombres[3]))?;
+        }
+        let mut informe = reporte(m, &totales);
+        if let Some((_, huella)) = regenerar {
+            informe["regenerado_desde"] = json!("Registros.xlsx revisado");
+            informe["sha256_registros_revisados"] = json!(huella);
+        }
+        let texto = serde_json::to_string_pretty(&informe).map_err(|e| e.to_string())?;
         std::fs::write(temporal.join(&nombres[4]), texto).map_err(|e| format!("No se pudo guardar el reporte: {e}"))
     };
     if let Err(e) = escribir() {
