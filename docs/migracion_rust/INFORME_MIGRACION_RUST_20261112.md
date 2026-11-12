@@ -339,3 +339,40 @@ Un proyecto nuevo en Rust **sí es razonable**, y el orden recomendado cambia:
 5. Captura desde SITFA (puente y extensión).
 
 El Anonimizador sigue siendo buen piloto en ambos escenarios.
+
+## 12. Decisión del usuario sobre prohibiciones (12 de noviembre de 2026)
+
+Fuente: «No se levantan lo siguiente: No se ingresan datos a rus y saturno, no se envian correos electronicos, todos
+los correos con cc al ucc».
+
+### Se mantienen en el proyecto nuevo
+
+1. Sin ingreso de datos en RUS ni SATURNO.
+2. Sin envío de correos: solo borradores.
+3. Todo correo con CC a `ucc_concepcion@pjud.cl`.
+
+### Quedan revisables (el usuario no las mantuvo)
+
+- Motor y textos intocables, y paridad golden como puerta.
+- Paridad exacta con Python.
+- Separación Asistente/Descargador (el Asistente no navega SITFA).
+- Paquetes de trabajo, revisión E3 y acta de la versión Python como requisito previo.
+
+### Supuesto de este informe, pendiente de confirmación
+
+El usuario no mencionó «sin datos reales en repo, CI ni conversaciones» ni «sin credenciales, cookies ni tokens».
+Este informe las **mantiene**: no dependen del proyecto (sección 11) y coinciden con las restricciones permanentes
+de trabajo del usuario. Si el usuario decide otra cosa, debe decirlo expresamente.
+
+### Cómo se garantizan en Rust
+
+- **RUS/SATURNO:** el programa solo hace lecturas. La extensión declara `escritura_rus: false` y el programa rechaza
+  una extensión que declare otra cosa (igual que hoy). No existe módulo de registro.
+- **Sin envío:** el adaptador de Outlook expone una sola operación, guardar borrador. No hay función de envío que
+  llamar. Una prueba falla si aparece `Send` en ese crate.
+- **CC fijo:** constante única en el adaptador; el borrador se construye siempre con ella y no es configurable.
+
+### Plan resultante
+
+Proyecto nuevo, una sola aplicación, motor rediseñado, Python como oráculo opcional. Orden de la sección 11:
+especificación → núcleo de lectura y motor → interfaz y productos → captura desde SITFA.
