@@ -11,3 +11,5 @@ flow-captura = { path = "../flow-captura" }
 chrono.workspace = true
 serde_json.workspace = true
 rust_xlsxwriter = "0.102"
+quick-xml = "0.41"
+zip = { version = "2", default-features = false, features = ["deflate"] }
