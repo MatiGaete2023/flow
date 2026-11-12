@@ -367,7 +367,7 @@ pub fn aplicar(plantilla: &Path, generado: &Path) -> Result<(), String> {
     let mut fuente = ZipArchive::new(Cursor::new(generado_bytes)).map_err(|_| "La planilla generada no es XLSX.".to_string())?;
     let temporal = generado.with_extension("meta4-temporal-xlsx");
     if temporal.exists() { return Err("Ya existe un temporal de plantilla: no se sobrescribe.".into()); }
-    let operacion = || -> Result<(), String> {
+    let mut operacion = || -> Result<(), String> {
         let mut escritor = ZipWriter::new(std::fs::File::create(&temporal).map_err(|e| e.to_string())?);
         let opciones = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for i in 0..fuente.len() {
