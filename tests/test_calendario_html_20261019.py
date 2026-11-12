@@ -86,3 +86,12 @@ def test_fecha_con_hora_se_lee_y_la_ilegible_informa_columna_y_forma():
         read_calendar(page([('01/06/2026', 'No informado', 'PENDIENTE')]), ARGS)
     with pytest.raises(ValueError, match='«Fecha Proyección» \\(forma «9999-99-99»\\)'):
         read_calendar(page([('2026-06-01', '', 'PENDIENTE')]), ARGS)
+
+
+def test_fecha_de_informe_vacia_con_guiones_separados():
+    # Prueba del usuario (12-nov-2026): SITFA entrega «- - -» y el calendario quedaba sin leer.
+    for vacio in ('- - -', '-  -', ' - '):
+        calendario = read_calendar(page([('01/09/2026', vacio, 'PENDIENTE')]), ARGS)
+        assert calendario['proyecciones'][0]['fecha_informe'] == ''
+    with pytest.raises(ValueError, match='fecha ilegible'):
+        read_calendar(page([('01/09/2026', '- x -', 'PENDIENTE')]), ARGS)
