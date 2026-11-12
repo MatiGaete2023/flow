@@ -5,10 +5,11 @@
 
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
-mod cli;
-mod ui;
+mod anonimo_ui;
 mod captura_ui;
+mod cli;
 mod cronologia_ui;
+mod ui;
 
 #[cfg(windows)]
 extern "system" {

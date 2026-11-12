@@ -91,3 +91,9 @@ fn estructuras_e_identidades_excesivas_no_llegan_a_publicarse() {
     let json = serde_json::json!({"Nombre":"Identcanario ".repeat(100)});
     assert!(formatos::anonimizar("nombre.json", &serde_json::to_vec(&json).unwrap(), opciones()).is_err());
 }
+#[test]
+fn excel_preserva_coordenadas_de_tabla_desplazada(){
+ use calamine::Reader;
+ let mut w=rust_xlsxwriter::Workbook::new();let h=w.add_worksheet();h.write_string(2,1,"RIT").unwrap();h.write_string(2,2,"Nombre").unwrap();h.write_string(3,1,"P-1-2099").unwrap();h.write_string(3,2,"Identcanario Apelcanario").unwrap();
+ let salida=formatos::anonimizar("desplazado.xlsx",&w.save_to_buffer().unwrap(),opciones()).unwrap();let mut libro=calamine::open_workbook_auto_from_rs(std::io::Cursor::new(salida.datos().to_vec())).unwrap();let rango=libro.worksheet_range_at(0).unwrap().unwrap();assert_eq!(rango.start(),Some((2,1)));assert_eq!(rango.get_value((2,1)),Some(&calamine::Data::String("RIT".into())));assert!(matches!(rango.get_value((3,2)),Some(calamine::Data::String(s)) if !s.contains("Identcanario")));
+}

@@ -21,6 +21,7 @@ pub enum Entrada {
     Html(Vec<crate::documentos::Bloque>),
     Ics(Vec<String>),
     Word(Vec<String>),
+    Zip(crate::archivos::Archivo),
 }
 fn extension(nombre: &str) -> String {
     std::path::Path::new(nombre).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase()
@@ -37,15 +38,21 @@ fn leer_excel(nombre: &str, datos: &[u8], biff: bool) -> Result<Entrada, String>
             return Err("La hoja supera los límites de lectura.".into());
         }
         formulas |= libro.worksheet_formula(&nombre).map(|r| r.rows().flatten().any(|s| !s.is_empty())).unwrap_or(false);
-        let mut filas = vec![];
+        let (inicio_fila, inicio_col) = rango.start().unwrap_or_default();
+        let ancho = inicio_col as usize + rango.width();
+        let alto = inicio_fila as usize + rango.height();
+        if ancho.saturating_mul(alto) > 2_000_000 {
+            return Err("La hoja supera los límites de lectura.".into());
+        }
+        let mut filas = vec![vec![Celda::Vacia; ancho]; inicio_fila as usize];
+        celdas += ancho.saturating_mul(inicio_fila as usize);
         for fila in rango.rows() {
-            celdas += fila.len();
+            celdas += fila.len() + inicio_col as usize;
             if celdas > 2_000_000 {
                 return Err("El libro contiene demasiadas celdas.".into());
             }
-            let fila = fila
-                .iter()
-                .map(|d| match d {
+            let fila = std::iter::repeat_n(Celda::Vacia, inicio_col as usize)
+                .chain(fila.iter().map(|d| match d {
                     Data::Empty | Data::Error(_) => Celda::Vacia,
                     Data::String(s) => Celda::Texto(s.clone()),
                     Data::Int(n) => Celda::Numero(*n as f64),
@@ -55,7 +62,7 @@ fn leer_excel(nombre: &str, datos: &[u8], biff: bool) -> Result<Entrada, String>
                         d.as_datetime().map(|d| Celda::Texto(d.format("%Y-%m-%dT%H:%M:%S").to_string())).unwrap_or(Celda::Vacia)
                     }
                     Data::DateTimeIso(s) | Data::DurationIso(s) => Celda::Texto(s.clone()),
-                })
+                }))
                 .collect();
             filas.push(fila);
         }
@@ -139,6 +146,13 @@ pub fn validar_zip(datos: &[u8]) -> Result<Vec<(String, Vec<u8>)>, String> {
 }
 
 pub fn cargar(nombre: &str, datos: &[u8]) -> Result<Entrada, String> {
+    cargar_interno(nombre, datos, 0, &mut (200 * 1024 * 1024))
+}
+pub(crate) fn cargar_interno(nombre: &str, datos: &[u8], nivel: usize, presupuesto: &mut usize) -> Result<Entrada, String> {
+    if nivel > 3 || datos.len() > *presupuesto {
+        return Err("Archivo anidado o volumen excesivo.".into());
+    }
+    *presupuesto -= datos.len();
     if datos.is_empty() || datos.len() > MAX_ARCHIVO {
         return Err("Archivo vacío o superior a 80 MiB.".into());
     }
@@ -156,7 +170,7 @@ pub fn cargar(nombre: &str, datos: &[u8]) -> Result<Entrada, String> {
         if miembros.iter().any(|(n, _)| n == "word/document.xml") {
             return Ok(Entrada::Word(crate::documentos::parrafos_docx(&miembros)?));
         }
-        return Err("ZIP genérico no admitido por esta versión.".into());
+        return crate::archivos::leer(miembros, nivel, presupuesto).map(Entrada::Zip);
     }
     if datos.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
         return leer_excel(nombre, datos, true);
@@ -262,7 +276,7 @@ fn limite_json(v: &Value) -> Result<(), String> {
     }
     Ok(())
 }
-fn seed_json(sesion: &mut Sesion, v: &Value, key: &str, prof: usize) -> Result<(), String> {
+pub(crate) fn seed_json(sesion: &mut Sesion, v: &Value, key: &str, prof: usize) -> Result<(), String> {
     if prof == 0 {
         limite_json(v)?;
     }
@@ -348,6 +362,7 @@ pub(crate) fn transformar_linea(sesion: &mut Sesion, l: &str) -> Result<String, 
 }
 pub fn recolectar(sesion: &mut Sesion, entrada: &Entrada) -> Result<(), String> {
     match entrada {
+        Entrada::Zip(a) => crate::archivos::semillar(sesion, a)?,
         Entrada::Html(b) => crate::documentos::semillar_html(sesion, b)?,
         Entrada::Ics(l) => crate::calendario::semillar(sesion, l),
         Entrada::Word(p) => {
@@ -389,7 +404,7 @@ pub fn recolectar(sesion: &mut Sesion, entrada: &Entrada) -> Result<(), String> 
     Ok(())
 }
 
-fn json(sesion: &mut Sesion, v: &Value, key: &str, prof: usize, textos: &mut Vec<(String, bool)>) -> Result<Value, String> {
+pub(crate) fn json(sesion: &mut Sesion, v: &Value, key: &str, prof: usize, textos: &mut Vec<(String, bool)>) -> Result<Value, String> {
     if prof > 60 {
         return Err("JSON demasiado profundo.".into());
     }
@@ -495,6 +510,22 @@ pub(crate) fn tabla(sesion: &mut Sesion, filas: &[Vec<Celda>], textos: &mut Vec<
     Ok(out)
 }
 
+pub(crate) fn nombres_hojas(hojas: &[Hoja]) -> Vec<String> {
+    let mut usados = BTreeSet::new();
+    hojas
+        .iter()
+        .enumerate()
+        .map(|(i, h)| {
+            let mut nombre = if texto::titulo_seguro(&h.nombre) { h.nombre.clone() } else { format!("Hoja{}", i + 1) };
+            let mut n = i + 1;
+            while !usados.insert(nombre.to_lowercase()) {
+                n += 1;
+                nombre = format!("Hoja{n}");
+            }
+            nombre
+        })
+        .collect()
+}
 fn xlsx(hojas: &[Hoja]) -> Result<Vec<u8>, String> {
     let mut libro = rust_xlsxwriter::Workbook::new();
     for h in hojas {
@@ -522,6 +553,7 @@ pub fn transformar(sesion: &mut Sesion, entrada: &Entrada) -> Result<Salida, Str
     sesion.verificar(&[])?;
     let mut textos = vec![];
     let (datos, extension) = match entrada {
+        Entrada::Zip(a) => (crate::archivos::transformar(sesion, a, &mut textos)?, "zip"),
         Entrada::Html(b) => (crate::documentos::html(sesion, b, &mut textos)?, "html"),
         Entrada::Ics(l) => (crate::calendario::transformar(sesion, l, &mut textos)?, "ics"),
         Entrada::Word(p) => (crate::documentos::docx(sesion, p, &mut textos)?, "docx"),
@@ -572,14 +604,8 @@ pub fn transformar(sesion: &mut Sesion, entrada: &Entrada) -> Result<Salida, Str
         }
         Entrada::Excel(libro, _) => {
             let mut hojas = vec![];
-            let mut nombres = BTreeSet::new();
-            for (i, h) in libro.hojas.iter().enumerate() {
-                let mut nombre = if texto::titulo_seguro(&h.nombre) { h.nombre.clone() } else { format!("Hoja{}", i + 1) };
-                let mut numero = i + 1;
-                while !nombres.insert(nombre.to_lowercase()) {
-                    numero += 1;
-                    nombre = format!("Hoja{numero}");
-                }
+            let nombres = nombres_hojas(&libro.hojas);
+            for (h, nombre) in libro.hojas.iter().zip(nombres) {
                 textos.push((nombre.clone(), true));
                 hojas.push(Hoja { nombre, filas: tabla(sesion, &h.filas, &mut textos)? });
             }

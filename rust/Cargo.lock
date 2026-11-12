@@ -1380,6 +1380,7 @@ dependencies = [
  "chrono",
  "eframe",
  "egui_extras",
+ "flow-anonimo",
  "flow-captura",
  "flow-dominio",
  "flow-motor",

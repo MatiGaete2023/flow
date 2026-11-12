@@ -1,8 +1,10 @@
 //! Anonimización local en dos pasadas. No publica una copia hasta revisar su contenido y nunca sobrescribe.
+pub mod archivos;
 pub mod calendario;
 pub mod documentos;
 pub mod formatos;
 mod limites;
+pub mod lote;
 pub mod texto;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

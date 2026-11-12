@@ -232,10 +232,14 @@ pub struct Sesion {
     rits_usados: BTreeSet<String>,
     indices: Option<(Nodo, Nodo)>,
     pub avisos: BTreeSet<String>,
+    pub(crate) rutas: BTreeMap<String, String>,
     fallo: bool,
 }
 impl Sesion {
     pub fn nueva(opciones: Opciones) -> Result<Self, String> {
+        if opciones.semilla.len() > 4096 {
+            return Err("La semilla supera el tamaño admitido.".into());
+        }
         if opciones.desplazar_dias.unsigned_abs() > 36500 {
             return Err("El desplazamiento excede cien años.".into());
         }
@@ -261,6 +265,7 @@ impl Sesion {
             avisos,
             fallo: false,
             indices: None,
+            rutas: BTreeMap::new(),
         })
     }
     fn numero(&mut self, tipo: &str, key: &str, modulo: u64) -> u64 {
@@ -509,12 +514,65 @@ impl Sesion {
         }
         Ok(t)
     }
+    pub fn token(&mut self, clave: &str, s: &str) -> String {
+        if s.is_empty() {
+            return String::new();
+        }
+        let key = if clave == "parent_event_id" { "event_id" } else { clave };
+        if matches!(key, "sha256" | "source_sha256") {
+            return self.pseudo("hash", s);
+        }
+        if matches!(key, "original_file" | "local_file") {
+            if let Some(n) = self.rutas.get(s) {
+                return n.clone();
+            }
+            let base = s.rsplit(['/', '\\']).next().unwrap_or(s);
+            if let Some(n) = self.rutas.get(base) {
+                return n.clone();
+            }
+        }
+        let token = self.pseudo(&format!("tok:{key}"), s);
+        if key == "original_sheet" {
+            return format!("Hoja{}", token.rsplit('_').next().unwrap_or("1"));
+        }
+        if key == "original_file" {
+            let ext = std::path::Path::new(s)
+                .extension()
+                .and_then(|s| s.to_str())
+                .filter(|s| ["xls", "xlsx", "html", "csv", "txt", "json", "docx", "ics"].contains(s))
+                .unwrap_or("txt");
+            return format!("fuente_{}.{ext}", token.rsplit('_').next().unwrap_or("1"));
+        }
+        token
+    }
     pub fn valor(&mut self, clave: &str, s: &str) -> Result<String, String> {
         if s.is_empty() {
             return Ok(s.into());
         }
         if credencial(clave) {
             return Ok("[credencial omitida]".into());
+        }
+        if [
+            "path",
+            "filename",
+            "archivo",
+            "file",
+            "local_file",
+            "original_file",
+            "source",
+            "origen",
+            "ruta",
+            "folder",
+            "carpeta",
+            "directorio",
+            "directory",
+            "destino",
+            "target",
+        ]
+        .contains(&clave.to_lowercase().as_str())
+            && (s.contains(['/', '\\']) || s.contains('.') || self.rutas.contains_key(s))
+        {
+            return Ok(self.token("original_file", s));
         }
         let n = normal(s);
         if en("PLACEHOLDERS", &n) && (!n.is_empty() || !s.chars().any(char::is_alphabetic)) {
@@ -527,7 +585,7 @@ impl Sesion {
             Some(Clase::Correo) => self.pseudo("mail", s),
             Some(Clase::Telefono) => self.pseudo("telefono", s),
             Some(Clase::Direccion) => self.pseudo("direccion", s),
-            Some(Clase::Identificador) => self.pseudo(&format!("tok:{}", clave.to_lowercase()), s),
+            Some(Clase::Identificador) => self.token(&clave.to_lowercase(), s),
             Some(Clase::Huella) => self.pseudo("hash", s),
             Some(Clase::Persona | Clase::Curador) => {
                 let nuevo = self.texto(s, false, false)?;
@@ -538,7 +596,7 @@ impl Sesion {
                 }
             }
             Some(Clase::Texto) => self.texto(s, true, false)?,
-            Some(Clase::Tecnico) => self.pseudo(&format!("tok:{}", VOCAB["TECHNICAL"][normal(clave)].as_str().unwrap_or("id")), s),
+            Some(Clase::Tecnico) => self.token(VOCAB["TECHNICAL"][normal(clave)].as_str().unwrap_or("id"), s),
             _ if protegido(clave) || en("SAFE_EXTRA_KEYS", &normal(clave)) => self.texto(s, false, true)?,
             _ if estructural(s) => s.to_string(),
             _ => self.texto(s, true, false)?,

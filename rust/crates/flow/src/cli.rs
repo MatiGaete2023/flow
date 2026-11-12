@@ -11,6 +11,7 @@ Uso:
   flow observar ARCHIVO [--etapa espera|cumplimiento|informes] [--hoja NOMBRE] [--corte AAAA-MM-DD] [--json]
   flow producir ARCHIVO --salida CARPETA [--etapa E] [--hoja H] [--corte AAAA-MM-DD]
                 [--modalidades TEXTO] [--contactos contactos.json] [--outlook]
+  flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA [--modo estricto|conservador]\n                  [--desplazar-dias N] [--generalizar-nacimiento] [--rechazar-no-admitidos] [--semilla-stdin]
   flow ayuda
 
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
@@ -247,6 +248,7 @@ pub fn ejecutar(args: &[String]) -> i32 {
         }
         Some("observar") => observar(&args[1..]),
         Some("producir") => producir(&args[1..]),
+        Some("anonimizar") => anonimizar(&args[1..]),
         Some(otro) => Err((2, format!("Comando desconocido: {otro}.\n\n{AYUDA}"))),
     };
     match resultado {
@@ -256,4 +258,50 @@ pub fn ejecutar(args: &[String]) -> i32 {
             codigo
         }
     }
+}
+
+fn anonimizar(args: &[String]) -> Result<(), (i32, String)> {
+    let o = opciones(args, &["salida", "modo", "desplazar-dias"]).map_err(|e| (2, e))?;
+    if !o.banderas.iter().all(|k| ["generalizar-nacimiento", "rechazar-no-admitidos", "semilla-stdin"].contains(&k.as_str()))
+        || o.posicionales.is_empty()
+    {
+        return Err((2, "Uso: flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA".into()));
+    }
+    let destino = o.valor("salida").ok_or((2, "Falta --salida CARPETA.".into()))?;
+    let modo = match o.valor("modo").unwrap_or("estricto") {
+        "estricto" => flow_anonimo::Modo::Estricto,
+        "conservador" => flow_anonimo::Modo::Conservador,
+        _ => return Err((2, "Modo desconocido: use estricto o conservador.".into())),
+    };
+    let dias =
+        o.valor("desplazar-dias").unwrap_or("0").parse().map_err(|_| (2, "El desplazamiento debe ser un número entero de días.".into()))?;
+    let mut semilla = String::new();
+    if o.bandera("semilla-stdin") {
+        use std::io::Read;
+        std::io::stdin()
+            .take(4097)
+            .read_to_string(&mut semilla)
+            .map_err(|_| (1, "No se pudo leer la semilla de la entrada estándar.".into()))?;
+        if semilla.len() > 4096 {
+            return Err((2, "La semilla supera el tamaño admitido.".into()));
+        }
+        semilla = semilla.trim_end_matches(['\r', '\n']).into();
+    }
+    let opciones = flow_anonimo::Opciones {
+        modo,
+        desplazar_dias: dias,
+        generalizar_nacimiento: o.bandera("generalizar-nacimiento"),
+        semilla,
+        rechazar_no_admitidos: o.bandera("rechazar-no-admitidos"),
+    };
+    let entradas = o.posicionales.iter().map(std::path::PathBuf::from).collect::<Vec<_>>();
+    let r = flow_anonimo::lote::ejecutar(&entradas, Path::new(destino), opciones, &std::sync::atomic::AtomicBool::new(false), |_| {})
+        .map_err(|e| (1, e))?;
+    println!(
+        "{} copias verificadas; {} entradas excluidas.\nResultados: {}\nRevise INFORME.json y las copias antes de compartirlas.",
+        r.informe.archivos.len(),
+        r.informe.excluidos,
+        r.carpeta.display()
+    );
+    Ok(())
 }

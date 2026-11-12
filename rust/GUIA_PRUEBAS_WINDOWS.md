@@ -40,3 +40,9 @@ Anota PASA o FALLA y, si falla, el texto exacto del mensaje.
 
 La prueba 8 es la más importante: el acceso a Outlook se escribió sin poder ejecutarlo. Si falla, los `.eml` de la
 prueba 7 cumplen la misma función.
+
+| 27 | Anonimizador | Agregar dos archivos ficticios que compartan un nombre y crear copias | Mismo seudónimo, nombres de archivo neutros e INFORME.json; originales intactos |
+| 28 | Cancelación de anonimización | Cancelar una selección de prueba mientras procesa | Mensaje de cancelación; sin copias parciales publicadas |
+| 29 | ZIP anonimizado | Anonimizar un CSMP_CAPTURE ficticio y abrir la copia en Trabajo | Huellas válidas, referencias coherentes; adjuntos no admitidos excluidos e informados |
+
+La anonimización requiere revisar las copias antes de compartirlas, especialmente en modo Conservador.

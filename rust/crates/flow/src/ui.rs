@@ -20,6 +20,7 @@ enum Pestana {
     Resoluciones,
     Resultados,
     Contactos,
+    Anonimo,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -62,6 +63,7 @@ struct App {
     ayuda: bool,
     sin_guardar: bool,
     captura: crate::captura_ui::Captura,
+    anonimo: crate::anonimo_ui::Anonimo,
 }
 
 fn ruta_ajustes(datos: &Path) -> PathBuf {
@@ -72,7 +74,7 @@ fn ruta_contactos(datos: &Path) -> PathBuf {
     datos.join("contactos.json")
 }
 
-fn abrir_en_sistema(ruta: &Path) {
+pub(crate) fn abrir_en_sistema(ruta: &Path) {
     #[cfg(windows)]
     let _ = std::process::Command::new("explorer").arg(ruta).spawn();
     #[cfg(target_os = "macos")]
@@ -130,6 +132,7 @@ impl App {
             ayuda: false,
             sin_guardar: false,
             captura: Default::default(),
+            anonimo: Default::default(),
         };
         if let Some(ruta) = archivo {
             app.cargar(ruta);
@@ -441,6 +444,7 @@ impl App {
                 (Pestana::Resoluciones, "3 · Resoluciones"),
                 (Pestana::Resultados, "4 · Resultados"),
                 (Pestana::Contactos, "Contactos"),
+                (Pestana::Anonimo, "Anonimizador"),
             ] {
                 ui.selectable_value(&mut self.pestana, p, nombre);
             }
@@ -913,6 +917,7 @@ impl eframe::App for App {
             Pestana::Resoluciones => self.vista_resoluciones(ui),
             Pestana::Resultados => self.vista_resultados(ui),
             Pestana::Contactos => self.vista_contactos(ui),
+            Pestana::Anonimo => self.anonimo.mostrar(ui, ctx),
         });
         if self.ayuda {
             let mut abierta = true;

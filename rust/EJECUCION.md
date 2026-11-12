@@ -25,11 +25,9 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 6.1b.2, ZIP/CSMP_CAPTURE y carpetas.** Núcleo 6.1a y documentos 6.1b.1 terminados; 6.1 sigue abierto.
-  Continuar desde `anonimizador/anonimizador_csmp/archive.py`, `capture.py` y `engine.py`: sesión común en dos
-  pasadas, archivos comprimidos y carpetas; después integrar consola y ventana (6.1c). Todavía no se expone como
-  Anonimizador completo en el ejecutable.
-  Siguen 8.1 (Meta 4) y 8.2 (manual, guía, instalador y cierre); el producto completo aún no está terminado.
+- **Foco activo: 8.1, Meta 4.** Fase 6.1 terminada: ZIP/CSMP_CAPTURE, carpetas y sesión común, informe,
+  consola y ventana con progreso/cancelación. Continuar con `META4_Bitacoras/scripts/` y `LEEME.md`.
+  Siguen exportación ZIP nativa de Captura y 8.2 (manual, guía, instalador y cierre). El producto completo sigue abierto.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -124,16 +122,16 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
       proyecciones del calendario por ingreso (`calendario_ingreso.py`), registros EGRESADOS (hoy se omiten).
 
 ### Fase 6 — Anonimizador
-- [ ] 6.1 `flow-anonimo` + `flow anonimizar`, modos y verificación «falla cerrado» del Anonimizador Python.
+- [x] 6.1 `flow-anonimo` + `flow anonimizar`, modos y verificación «falla cerrado» del Anonimizador Python.
   - [x] 6.1a Núcleo local: texto, JSON/JSONL anidado, CSV/TSV y Excel BIFF/OOXML/XML 2003/HTML con salida XLSX;
         seudónimos, fechas, clasificación de columnas y revisión antes de publicar sin sobrescribir.
   - [x] 6.1b.1 HTML independiente, ICS y DOCX; dimensiones/celdas declaradas de XLSX antes de calamine y tamaño
         de identidades antes de construir sus índices. Pruebas de documentos y entradas adversas.
-  - [ ] 6.1b.2 ZIP genéricos y CSMP_CAPTURE, carpetas y sesión común entre archivos; rehacer manifiestos y
+  - [x] 6.1b.2 ZIP genéricos y CSMP_CAPTURE, carpetas y sesión común entre archivos; rehacer manifiestos y
         huellas, relaciones y metadatos; exclusión/rechazo e informe. Validar las referencias entre todas las
         tablas: `parent_event_id` debe usar el mismo seudónimo que `event_id`, además de las identidades remotas
         presentes en `filters_json`, JSON normalizado y consolidado. Nunca copiar miembros sin tratarlos.
-  - [ ] 6.1c Subcomando, ventana con trabajo en hilo, avance/cancelación e instrucciones de revisión manual.
+  - [x] 6.1c Subcomando, ventana con trabajo en hilo, avance/cancelación e instrucciones de revisión manual.
         Los formatos aún no portados deben seguir rechazándose; no copiar miembros sin tratarlos.
 
 ### Fase 7 — Captura SITFA
@@ -396,3 +394,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   coordenadas/conteos Excel adversos y estructuras/identidades excesivas. Suite completa 107 PASA; Clippy y
   comprobación cruzada Windows PASA. CI anterior `c937fbd`: Linux/MV3 y Windows PASA (run 43283361127).
   Continúa en 6.1b.2; no están portados todavía ZIP genérico, CSMP_CAPTURE, carpetas, consola ni ventana.
+
+- 2026-11-12: 6.1b.2/6.1c: ZIP genéricos y CSMP_CAPTURE reconstruidos sin copiar archivos sin tratar,
+  huellas nuevas y claves foráneas coherentes (incluido evento padre). Tres paquetes sintéticos pasan el
+  contrato estricto Python; prueba adicional de documento/evento. Carpetas en dos pasadas con sesión común,
+  nombres neutros, límites, exclusión/rechazo, informe sin identidades ni semilla, cancelación y limpieza de
+  salidas propias. Consola `anonimizar` y pestaña con hilo de trabajo; semilla solo en RAM. Preserva coordenadas
+  de celdas Excel. Suite completa: 114 pruebas, más una prueba focal de coordenadas Excel (115 en total); comprobación Windows cruzada y clippy focal del anonimizador.
+  CI del avance anterior `d9faef6`: Linux y Windows aprobados (43287539795). META4 y cierre siguen pendientes.

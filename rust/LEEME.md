@@ -58,9 +58,31 @@ En el detalle de Trabajo se muestran la cronología de bitácora, los avisos CT/
 calendario por ingreso. La reiteración conserva las acciones de la propuesta original. Revisa los avisos antes
 de preparar productos.
 
+## Anonimizador
+
+En la pestaña **Anonimizador**, agrega archivos o carpetas y elige un destino existente. Cada ejecución crea
+una carpeta nueva con nombres neutros, copias verificadas e `INFORME.json`; no modifica los originales.
+Por defecto usa modo Estricto. Conservador conserva más texto y exige una revisión más cuidadosa.
+Puedes desplazar fechas, generalizar nacimientos y usar una semilla para repetir seudónimos. La semilla solo
+permanece en memoria; no se guarda en ajustes ni informes. La cancelación elimina las copias parciales del lote.
+
+Admite Excel, CSV/TSV, JSON/JSONL, texto, HTML, ICS, DOCX sin objetos y ZIP, incluidos CSMP_CAPTURE con huellas
+recalculadas. Se excluyen PDF, imágenes, objetos incrustados y formatos no admitidos; puedes exigir rechazo
+completo si aparece uno. Todos los archivos de la selección comparten la misma sesión de seudónimos.
+Los documentos se reconstruyen: pueden perder formato, propiedades, enlaces y objetos. **Revisa el informe y
+las copias antes de compartirlas. Ningún control automático garantiza anonimato absoluto.**
+
+```text
+flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA
+                [--modo estricto|conservador] [--desplazar-dias N] [--generalizar-nacimiento]
+                [--rechazar-no-admitidos] [--semilla-stdin]
+```
+
+`--semilla-stdin` lee la semilla de la entrada estándar, sin incluirla en argumentos o informes.
+
 ## Qué todavía no hace
 
-- Anonimizador y Meta 4 siguen siendo las herramientas Python.
+- Meta 4 sigue siendo la herramienta Python.
 
 ## Desarrollo
 

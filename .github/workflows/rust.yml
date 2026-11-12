@@ -31,6 +31,8 @@ jobs:
         working-directory: .
         run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
       - run: cargo test --workspace --locked
+      - name: Contrato del anonimizador con Python
+        run: python3 pruebas/anonimo_contrato.py
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
