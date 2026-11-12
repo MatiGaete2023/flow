@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-Privado"
+publish = false
+
+[workspace.dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std", "serde", "clock"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+unicode-normalization = "0.1"
+flow-dominio = { path = "crates/flow-dominio" }
+flow-motor = { path = "crates/flow-motor" }
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+strip = true

@@ -1,0 +1,20 @@
+{
+ "espera_dce": 0,
+ "espera_laja": 30,
+ "espera_mulchen": 30,
+ "espera_tome": 60,
+ "proyecto_tome": 60,
+ "mayoria": 60,
+ "oido": 45,
+ "resolucion_reciente": 30,
+ "ingreso_reciente": 30,
+ "medida": 45,
+ "informe": 30,
+ "ficha_antigua": 180,
+ "ficha_reciente": 30,
+ "ficha_fae": 120,
+ "prorroga_reciente": 90,
+ "ventana_ingreso": 30,
+ "lista_espera_larga": 100,
+ "ventana_busqueda": 60
+}
