@@ -123,3 +123,34 @@ fn plantilla_incompleta_rechazada_sin_publicacion() {
     assert!(!destino.exists(), "no se publica ningún producto parcial");
     assert!(!tmp.0.join(".en-curso-Resultado").exists(), "se limpia la carpeta temporal");
 }
+
+#[test]
+fn plantilla_tambien_funciona_al_regenerar_registros() {
+    let tmp = Temporal::nueva();
+    let modelo = tmp.0.join("modelo.xlsx");
+    plantilla(&modelo, false);
+    let origen = tmp.0.join("Original");
+    salida::publicar(&meta(), &origen).unwrap();
+    let revisados = tmp.0.join("Revisados");
+    std::fs::create_dir(&revisados).unwrap();
+    for nombre in ["Registros.xlsx", "Reporte META4.json", "Bitacoras_del_mes.xlsx"] {
+        std::fs::copy(origen.join(nombre), revisados.join(nombre)).unwrap();
+    }
+    let antes = std::fs::read(revisados.join("Registros.xlsx")).unwrap();
+    let resultado = tmp.0.join("Regenerado");
+    let rutas = flow_meta4::regenerar::ejecutar_con_plantilla(
+        &revisados.join("Registros.xlsx"), &resultado, Some(&modelo)
+    ).unwrap();
+    assert_eq!(rutas.len(), 5);
+    assert!(rutas.iter().all(|p| p.is_file()));
+    let estilos = parte(&rutas[0], "xl/styles.xml");
+    assert!(estilos.contains("C5A3FF"));
+    let libro = flow_tabular::leer(&rutas[0]).unwrap();
+    let hoja = libro.hojas.iter().find(|h| h.nombre == "Residencia Cumplimiento").unwrap();
+    let fila = hoja.filas.iter().find(|f| f.first().is_some_and(|c| c.texto() == "P-1-2099")).unwrap();
+    assert_eq!(fila[7].fecha(), Some(dia("2026-10-12")));
+    let reporte: serde_json::Value = serde_json::from_slice(&std::fs::read(&rutas[4]).unwrap()).unwrap();
+    assert_eq!(reporte["regenerado_desde"], "Registros.xlsx revisado");
+    assert_eq!(reporte["plantilla"], "Plantilla XLSX personalizada, estilos verificados");
+    assert_eq!(std::fs::read(revisados.join("Registros.xlsx")).unwrap(), antes);
+}
