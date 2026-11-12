@@ -65,7 +65,7 @@ jobs:
       - name: Arranque real del ejecutable Windows (consola, sin SITFA)
         shell: pwsh
         run: |
-          & .\\target\\release\\flow.exe ayuda | Out-Null
+          & ./target/release/flow.exe ayuda | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "flow.exe no inició correctamente en Windows" }
       - name: Huella del ejecutable
         shell: pwsh
