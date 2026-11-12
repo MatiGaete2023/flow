@@ -1,0 +1,937 @@
+[
+ {
+  "columna": "DERIVACION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROGRAMA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "NOMBRE CENTRO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "TRIBUNAL",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. NACIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.NACIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA NACIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC NACIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. OIDO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.OIDO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC OIDO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHAOIDO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. RESOLUCION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.RESOLUCION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA RESOLUCION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC RESOLUCION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROXS. AUDS.",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROXS AUDS",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROX AUD",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROXIMA AUDIENCIA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROX. AUD.",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "PROX. AUDS.",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "F. VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "F.VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FVENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA DE VENCIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "T ESPERA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "T_ESPERA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS_ESPERA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "TESPERA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS DE ESPERA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS DE CUMPLIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS CUMPLIMIENTO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS PARA EGRESAR",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "DIAS EGRESAR",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.INGRESO EFECTIVO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. INGRESO EFECTIVO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC INGRESO EFECTIVO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.EGRESO PROYECTADO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. EGRESO PROYECTADO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC EGRESO PROYECTADO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.ACT.F.FAE",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. ACT. F. FAE",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC ACT F FAE",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.ACT.F.FAE/FAS",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. ACT. F. FAE/FAS",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC.ACT.F.INDIVIDUAL",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC. ACT. F. INDIVIDUAL",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FEC ACT F INDIVIDUAL",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "MODALIDAD",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "ESTADO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "ETAPA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "COBERTURA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "TIPO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "TIPO OBSERVACION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "MATERIA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "MEDIDA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "REGION",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "COMUNA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA CENTRO",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "FECHA TRIBUNAL",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "nombre",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "apellido",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "nna",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "menor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "nino",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "nina",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "joven",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "usuario",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "beneficiario",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "victima",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "ruc",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "madre",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "padre",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "litigante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "abogado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "apoderado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "tutor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "hermano",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "familiar",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "responsable",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "profesional",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "dupla",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "contacto",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "referente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "cuidador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "adulto",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "educador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "psicolog",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "trabajador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "asistente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "denunciante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "imputado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "demandante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "demandado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "solicitante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "interviniente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "defensor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "fiscal",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "juez",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "magistrado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "consejero",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "funcionario",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "digitador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "encargado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "supervisor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "coordinador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "autor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "paciente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "hijo",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "hija",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "adolescente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "conyuge",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "pareja",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "acusado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "querellante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "sujeto",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "titular",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "representante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "tia",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "tio",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "abuelo",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "abuela",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "padrastro",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "madrastra",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "pariente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "testigo",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "perito",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "terapeuta",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "interventor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "delegado",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "gestor",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "tramitador",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "firmante",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "remitente",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "destinatario",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "creado por",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "modificado por",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "ingresado por",
+  "tipo": "persona",
+  "protegido": false
+ },
+ {
+  "columna": "nombre centro",
+  "tipo": null,
+  "protegido": true
+ },
+ {
+  "columna": "nombre programa",
+  "tipo": null,
+  "protegido": false
+ },
+ {
+  "columna": "nombre tribunal",
+  "tipo": null,
+  "protegido": false
+ },
+ {
+  "columna": "nombre proyecto",
+  "tipo": null,
+  "protegido": false
+ },
+ {
+  "columna": "nombre institucion",
+  "tipo": null,
+  "protegido": false
+ },
+ {
+  "columna": "observacion",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "obs",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "glosa",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "detalle",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "texto",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "comentario",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "nota",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "motivo",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "respuesta",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "descripcion",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "mensaje",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "referencia",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "error",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "antecedente",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "resumen",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "fundamento",
+  "tipo": "texto",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa causa rus",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa ingreso rus",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa persona rus",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa centro rus",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa sha256",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa archivo",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "sitfa hoja",
+  "tipo": "tech",
+  "protegido": false
+ },
+ {
+  "columna": "RIT",
+  "tipo": "rit",
+  "protegido": false
+ },
+ {
+  "columna": "RUT MENOR",
+  "tipo": "rut",
+  "protegido": false
+ },
+ {
+  "columna": "RUN",
+  "tipo": "rut",
+  "protegido": false
+ },
+ {
+  "columna": "Rut1",
+  "tipo": "rut",
+  "protegido": false
+ },
+ {
+  "columna": "RIT2",
+  "tipo": "rit",
+  "protegido": false
+ },
+ {
+  "columna": "CUR. AD LITEM",
+  "tipo": "curador",
+  "protegido": false
+ },
+ {
+  "columna": "Correo",
+  "tipo": "mail",
+  "protegido": false
+ },
+ {
+  "columna": "Telefono",
+  "tipo": "telefono",
+  "protegido": false
+ },
+ {
+  "columna": "Domicilio",
+  "tipo": "direccion",
+  "protegido": false
+ },
+ {
+  "columna": "normalized_json",
+  "tipo": "json",
+  "protegido": false
+ },
+ {
+  "columna": "source_sha256",
+  "tipo": "hash",
+  "protegido": false
+ },
+ {
+  "columna": "Cause_ID",
+  "tipo": "ident",
+  "protegido": false
+ },
+ {
+  "columna": "Folio",
+  "tipo": "ident",
+  "protegido": false
+ },
+ {
+  "columna": "CAUSA RUS",
+  "tipo": "ident",
+  "protegido": false
+ },
+ {
+  "columna": "ID Ingreso",
+  "tipo": "ident",
+  "protegido": false
+ },
+ {
+  "columna": "categoria libre",
+  "tipo": null,
+  "protegido": false
+ }
+]

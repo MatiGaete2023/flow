@@ -25,9 +25,10 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 6.1, Anonimizador Rust.** La fase 7 y 5b.2/5b.3 terminaron. Continuar desde
-  `anonimizador/anonimizador_csmp/` y su LEEME, con salida nueva y verificación que falle cerrado.
-  Después siguen 8.1 (Meta 4) y 8.2 (manual, guía, instalador y cierre); el producto completo aún no está terminado.
+- **Foco activo: 6.1b, formatos restantes del Anonimizador.** El núcleo 6.1a está probado, pero 6.1 sigue abierto.
+  Continuar desde `anonimizador/anonimizador_csmp/`: HTML independiente, ICS, DOCX, ZIP/CSMP_CAPTURE y carpetas;
+  después integrar línea de comandos y ventana (6.1c). No hay todavía un Anonimizador completo en el ejecutable.
+  Siguen 8.1 (Meta 4) y 8.2 (manual, guía, instalador y cierre); el producto completo aún no está terminado.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -122,7 +123,15 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
       proyecciones del calendario por ingreso (`calendario_ingreso.py`), registros EGRESADOS (hoy se omiten).
 
 ### Fase 6 — Anonimizador
-- [ ] 6.1 `flow-anonimo` + `flow anonimizar` (xlsx/xls/csv/json/txt), verificación «falla cerrado».
+- [ ] 6.1 `flow-anonimo` + `flow anonimizar`, modos y verificación «falla cerrado» del Anonimizador Python.
+  - [x] 6.1a Núcleo local: texto, JSON/JSONL anidado, CSV/TSV y Excel BIFF/OOXML/XML 2003/HTML con salida XLSX;
+        seudónimos, fechas, clasificación de columnas y revisión antes de publicar sin sobrescribir.
+  - [ ] 6.1b HTML independiente, ICS, DOCX, ZIP y CSMP_CAPTURE, carpetas y sesión común entre archivos;
+        rehacer manifiestos y huellas, relaciones y metadatos; opciones de exclusión/rechazo e informe.
+        Revisar también los límites de dimensiones/celdas de XLSX **antes** de llamar a calamine y limitar el
+        tamaño de identidades antes de construir sus índices. Validar fórmulas sin caché y entradas adversas.
+  - [ ] 6.1c Subcomando, ventana con trabajo en hilo, avance/cancelación e instrucciones de revisión manual.
+        Los formatos aún no portados deben seguir rechazándose; no copiar miembros sin tratarlos.
 
 ### Fase 7 — Captura SITFA
 
@@ -354,3 +363,21 @@ guardar el código de conexión, y cualquier escritura en RUS.
   nativa y consulta local; suite completa 90 PASA. Clippy y comprobación cruzada Windows PASA. La CI completa del
   avance anterior `c2dc05b`, incluidas las pruebas y el ejecutable nativo Windows, PASA (run 43270528975).
   Siguiente: 6.1; no considerar terminados Anonimizador, Meta 4 ni la entrega del producto.
+
+- 2026-11-12: 6.1a: nuevo `flow-anonimo`, aún sin integrar al ejecutable. Dos pasadas, modo Estricto (omite texto
+  libre) y Conservador (reemplaza patrones/nombres y advierte revisión), seudónimos de sesión y semilla HMAC en RAM.
+  JSON anidado y JSONL, CSV/TSV con delimitador y neutralización de fórmulas, TXT/MD/LOG, XLS BIFF/OOXML/XML 2003/HTML
+  reconstruidos como XLSX solo con valores. Preserva fechas y horas, desplazamiento y generalización de nacimiento.
+  RUT ficticios con DV inválido; RIT del año reservado 2099, conservando su letra porque el motor distingue causas
+  P. Evita RIT ya presentes. Revisión final de nombres e identificadores antes de devolver una salida publicable;
+  nombres y rutas de archivos nuevos independientes del original, publicación exclusiva con temporal/enlace físico.
+  Código/señales de credenciales etiquetadas se omiten también en Conservador. Ninguna red ni modificación de
+  originales. Archivos/entradas ZIP con rutas inseguras, cifrado, enlaces, expansión excesiva o DTD/ENTITY se rechazan.
+  Límites actuales: 80 MiB por archivo, dos millones de celdas/nodos; identidades no latinas o demasiado cortas
+  fallan cerrado y deben mantenerse así hasta implementar y probar su tratamiento. El Conservador no acredita
+  anonimización absoluta: falta su presentación al usuario y la revisión manual documentada.
+  `python3 rust/oraculo/generar_anonimo.py` reproduce vocabulario y 187 clasificaciones iguales a Python.
+  Doce pruebas nuevas cubren relaciones, nombres entre archivos, RUT/DV, RIT/telefonía, JSON anidado, fechas/horas,
+  las tres variantes XLS, conservación de columnas útiles, publicación sin sobrescritura y entradas rechazadas.
+  Suite completa: 102 PASA; Clippy del crate y comprobación cruzada Windows PASA. CI del avance 5b.3 `8abdaf0`
+  completa en Linux/MV3/Windows: run 43273832868 PASA. La fase 6.1 sigue abierta: completar 6.1b y 6.1c.
