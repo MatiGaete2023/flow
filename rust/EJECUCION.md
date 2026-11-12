@@ -89,10 +89,10 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [x] 3.3 `flow observar ARCHIVO --etapa E --corte F` imprime JSON; comparado con Python sobre fixtures ficticios.
 
 ### Fase 4 — Productos
-- [ ] 4.1 Excel de salida con observaciones (libro nuevo `.xlsx`, columnas originales + OBSERVACIÓN + avisos).
-- [ ] 4.2 Correos: destinatarios por programa (contactos locales), asunto, cuerpo, tabla; CC fijo.
-- [ ] 4.3 `flow-outlook`: `guardar_borrador` por COM; prueba `sin_envio`.
-- [ ] 4.4 Word: proyectos PC_IE, PC_INFO, NOMENCL desde plantillas `.docx`.
+- [x] 4.1 Excel de salida con observaciones (libro nuevo `.xlsx`, columnas originales + OBSERVACIÓN + avisos).
+- [x] 4.2 Correos: destinatarios por programa (contactos locales), asunto, cuerpo, tabla; CC fijo.
+- [x] 4.3 `flow-outlook`: `guardar_borrador` por COM; prueba `sin_envio`.
+- [x] 4.4 Word: proyectos PC_IE, PC_INFO, NOMENCL desde plantillas `.docx`.
 - [ ] 4.5 `flow-almacen`: guardar/cargar trabajo, retención 60 días / 10 sesiones.
 
 ### Fase 5 — Interfaz
@@ -151,3 +151,12 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
   `docs/evidencia_p0/golden`: mismas observaciones, reglas, acciones y avisos que `semantic.json`. CI en
   `.github/workflows/rust.yml` (no se ha visto correr todavía: revisar el primer resultado en GitHub Actions).
   Pendiente de 3.3: CT-07 (`COMUN.REITERA_OBSERVACION`), que necesita bitácora y se hace con la captura (fase 7).
+- 2026-11-12: `flow-productos` (Excel de observaciones, nóminas, borradores con CC fijo y salida `.eml` con
+  `X-Unsent: 1`, Word con un proyecto por página) y `flow-outlook` (COM por IDispatch: crear, llenar, adjuntar y
+  guardar; verificado solo con `cargo check --target x86_64-pc-windows-gnu`, **nunca ejecutado contra Outlook real**:
+  es lo primero que debe probar el usuario en Windows). Comando `flow producir`. Word validado con python-docx y el
+  `.eml` con el módulo `email` de Python.
+  Decisiones: NOMENCLATURA se deduce de la regla (C10_ESCRITO o P_FINALIZADA); Tomé no trae plantillas Word (el
+  usuario las deja en su carpeta de datos como `TOME_PC_IE.docx`); un documento Word por tribunal y tipo.
+  No portado del Python (decidir con el usuario si hace falta): firma de Outlook preservada, elección de cuenta,
+  cuerpo HTML, edición libre del texto del proyecto, parches de matriz, diario de recibos.

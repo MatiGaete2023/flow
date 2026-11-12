@@ -1,0 +1,78 @@
+{
+ "tribunales": {
+  "TOME": "Juzgado de Familia de Tomé",
+  "LAJA": "Jgdo. L. y G. de Laja",
+  "MULCHEN": "Jgdo. L. y G. de Mulchén"
+ },
+ "modalidades": [
+  "Cuidado alternativo residencial",
+  "Intervención ambulatoria de reparación",
+  "Cuidado alternativo familia de acogida",
+  "Diagnóstico Clínico Especializado (DCE)"
+ ],
+ "plantillas": {
+  "espera": {
+   "nombre": "Espera · informativo al tribunal",
+   "asunto": "Revisión pestaña \"Espera\" del módulo RUS — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+   "adjunto": "opcional",
+   "usa_modalidades": true
+  },
+  "cumplimiento": {
+   "nombre": "Cumplimiento · informativo al tribunal",
+   "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+   "adjunto": "opcional",
+   "usa_modalidades": true
+  },
+  "informes": {
+   "nombre": "Informes · informativo al tribunal",
+   "asunto": "Revisión pestaña \"Informes\" del módulo RUS — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+   "adjunto": "opcional",
+   "usa_modalidades": true
+  },
+  "medidas": {
+   "nombre": "Medidas sin vigencia y por vencer",
+   "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+   "adjunto": "obligatorio",
+   "usa_modalidades": true
+  },
+  "proyectos": {
+   "nombre": "Reporte de proyectos de resolución",
+   "asunto": "Reporte de proyectos de resolución — {TRIBUNAL} — {PERIODO}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se remite reporte de proyectos de resolución elaborados durante {PERIODO}, para su conocimiento y gestión.\n\nAtte. a Ud.,",
+   "adjunto": "obligatorio",
+   "usa_modalidades": false
+  },
+  "especial": {
+   "nombre": "Gestión particular / situación especial",
+   "asunto": "Gestión particular RUS — {TRIBUNAL} — {FECHA}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se remiten antecedentes para revisión y gestión particular del Tribunal.\n\nAtte. a Ud.,",
+   "adjunto": "opcional",
+   "usa_modalidades": false
+  },
+  "programa_espera": {
+   "nombre": "Lista de espera · programa",
+   "asunto": "Lista de espera — {PROGRAMA} — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de {PROGRAMA}, correspondientes a {TRIBUNAL}. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,",
+   "adjunto": "obligatorio",
+   "usa_modalidades": false
+  },
+  "programa_vencido": {
+   "nombre": "Informes pendientes · programa",
+   "asunto": "Informes pendientes — {PROGRAMA} — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a {PROGRAMA} y {TRIBUNAL}. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,",
+   "adjunto": "obligatorio",
+   "usa_modalidades": false
+  },
+  "programa_por_vencer": {
+   "nombre": "Informes por vencer · programa",
+   "asunto": "Informes por vencer — {PROGRAMA} — {TRIBUNAL}",
+   "cuerpo": "Buen día:\n\nJunto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.\n\nAtte. a Ud.,",
+   "adjunto": "obligatorio",
+   "usa_modalidades": false
+  }
+ }
+}
