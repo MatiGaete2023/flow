@@ -1,5 +1,7 @@
 //! El trabajo del día: una tabla de RUS analizada, con la observación propuesta y la que el usuario deja.
 
+pub mod almacen;
+
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};
 use flow_motor::{analizar, Config, Entrada, Resultado};
 use flow_tabular::{Libro, Tabla};

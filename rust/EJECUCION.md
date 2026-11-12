@@ -93,11 +93,11 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [x] 4.2 Correos: destinatarios por programa (contactos locales), asunto, cuerpo, tabla; CC fijo.
 - [x] 4.3 `flow-outlook`: `guardar_borrador` por COM; prueba `sin_envio`.
 - [x] 4.4 Word: proyectos PC_IE, PC_INFO, NOMENCL desde plantillas `.docx`.
-- [ ] 4.5 `flow-almacen`: guardar/cargar trabajo, retención 60 días / 10 sesiones.
+- [x] 4.5 `flow-almacen`: guardar/cargar trabajo, retención 60 días / 10 sesiones.
 
 ### Fase 5 — Interfaz
-- [ ] 5.1 Ventana: Trabajo (abrir Excel, tabla, editar observación), Correos, Resoluciones, Resultados.
-- [ ] 5.2 Prueba de humo con `xvfb-run` y captura.
+- [x] 5.1 Ventana: Trabajo (abrir Excel, tabla, editar observación), Correos, Resoluciones, Resultados.
+- [x] 5.2 Prueba de humo con `xvfb-run` y captura.
 
 ### Fase 6 — Anonimizador
 - [ ] 6.1 `flow-anonimo` + `flow anonimizar` (xlsx/xls/csv/json/txt), verificación «falla cerrado».
@@ -160,3 +160,10 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
   usuario las deja en su carpeta de datos como `TOME_PC_IE.docx`); un documento Word por tribunal y tipo.
   No portado del Python (decidir con el usuario si hace falta): firma de Outlook preservada, elección de cuenta,
   cuerpo HTML, edición libre del texto del proyecto, parches de matriz, diario de recibos.
+- 2026-11-12: almacén local (`flow-trabajo::almacen`, retención 60 días / 10 sesiones) y ventana egui
+  (`crates/flow/src/ui.rs`): Trabajo (tabla, filtros, edición, revisada), Correos (modalidades, borradores editables,
+  guardar en Outlook o `.eml`, aprende contactos), Resoluciones (completar faltantes, generar Word), Resultados y
+  Contactos. Sin argumentos abre la ventana; con comando, consola. Probada en Linux con `xvfb-run` y clics de
+  `xdotool` (capturas con datos ficticios en `rust/docs/capturas/`). `cargo check --target x86_64-pc-windows-gnu`
+  pasa para todo el workspace. **No probado en Windows real.**
+  Para probar la ventana en Linux hacen falta `libxkbcommon-x11-0`, `libegl1` y `libgl1-mesa-dri`.
