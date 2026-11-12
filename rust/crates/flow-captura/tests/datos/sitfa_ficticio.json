@@ -1,0 +1,1204 @@
+[
+  {
+    "nombre": "seguimiento/Espera",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Espera",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdEspera"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "NUM_PaginaEspera",
+        ""
+      ],
+      [
+        "NUM_TotalEspera",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEspera\" value=\"1\"><input name=\"NUM_TotalEspera\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-2</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": [
+      [
+        "X-10-2099",
+        "PERSONA FICTICIA ('901', 'ESPERA', '2', NONE) 1-0",
+        1
+      ],
+      [
+        "X-11-2099",
+        "PERSONA FICTICIA ('901', 'ESPERA', '2', NONE) 1-1",
+        1
+      ],
+      [
+        "X-12-2099",
+        "PERSONA FICTICIA ('901', 'ESPERA', '2', NONE) 1-2",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 2,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 1-2</td></tr></table></html>",
+    "html2": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEspera\" value=\"2\"><input name=\"NUM_TotalEspera\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-2</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "excel2": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Espera', '2', None) 2-2</td></tr></table></html>"
+  },
+  {
+    "nombre": "seguimiento/Espera/vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Espera",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdEspera"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "NUM_PaginaEspera",
+        ""
+      ],
+      [
+        "NUM_TotalEspera",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEspera\" value=\"1\"><input name=\"NUM_TotalEspera\" value=\"1\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Sin registros</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "seguimiento/Cumplimiento",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": "4",
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdCumplimiento"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "TIP_Informe",
+        "4"
+      ],
+      [
+        "NUM_PaginaCumplimiento",
+        ""
+      ],
+      [
+        "NUM_TotalCumplimiento",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"4\" selected>4</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaCumplimiento\" value=\"1\"><input name=\"NUM_TotalCumplimiento\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-2</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": [
+      [
+        "X-10-2099",
+        "PERSONA FICTICIA ('901', 'CUMPLIMIENTO', '2', '4') 1-0",
+        1
+      ],
+      [
+        "X-11-2099",
+        "PERSONA FICTICIA ('901', 'CUMPLIMIENTO', '2', '4') 1-1",
+        1
+      ],
+      [
+        "X-12-2099",
+        "PERSONA FICTICIA ('901', 'CUMPLIMIENTO', '2', '4') 1-2",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 2,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 1-2</td></tr></table></html>",
+    "html2": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"4\" selected>4</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaCumplimiento\" value=\"2\"><input name=\"NUM_TotalCumplimiento\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-2</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "excel2": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Cumplimiento', '2', '4') 2-2</td></tr></table></html>"
+  },
+  {
+    "nombre": "seguimiento/Cumplimiento/vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": "4",
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdCumplimiento"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "TIP_Informe",
+        "4"
+      ],
+      [
+        "NUM_PaginaCumplimiento",
+        ""
+      ],
+      [
+        "NUM_TotalCumplimiento",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"4\" selected>4</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaCumplimiento\" value=\"1\"><input name=\"NUM_TotalCumplimiento\" value=\"1\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Sin registros</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "seguimiento/Informes",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Informes",
+      "modality": "2",
+      "report": "1",
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdInforme"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "TIP_Informe",
+        "1"
+      ],
+      [
+        "NUM_PaginaInforme",
+        ""
+      ],
+      [
+        "NUM_TotalInforme",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"1\"><input name=\"NUM_TotalInforme\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-2</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": [
+      [
+        "X-10-2099",
+        "PERSONA FICTICIA ('901', 'INFORMES', '2', '1') 1-0",
+        1
+      ],
+      [
+        "X-11-2099",
+        "PERSONA FICTICIA ('901', 'INFORMES', '2', '1') 1-1",
+        1
+      ],
+      [
+        "X-12-2099",
+        "PERSONA FICTICIA ('901', 'INFORMES', '2', '1') 1-2",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 2,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 1-2</td></tr></table></html>",
+    "html2": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"2\"><input name=\"NUM_TotalInforme\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-2</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "excel2": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Informes', '2', '1') 2-2</td></tr></table></html>"
+  },
+  {
+    "nombre": "seguimiento/Informes/vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Informes",
+      "modality": "2",
+      "report": "1",
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdInforme"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "TIP_Informe",
+        "1"
+      ],
+      [
+        "NUM_PaginaInforme",
+        ""
+      ],
+      [
+        "NUM_TotalInforme",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"TIP_Informe\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"1\"><input name=\"NUM_TotalInforme\" value=\"1\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Sin registros</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "seguimiento/Egresados",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Egresados",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdEgreso"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "NUM_PaginaEgreso",
+        ""
+      ],
+      [
+        "NUM_TotalEgreso",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEgreso\" value=\"1\"><input name=\"NUM_TotalEgreso\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-2</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": [
+      [
+        "X-10-2099",
+        "PERSONA FICTICIA ('901', 'EGRESADOS', '2', NONE) 1-0",
+        1
+      ],
+      [
+        "X-11-2099",
+        "PERSONA FICTICIA ('901', 'EGRESADOS', '2', NONE) 1-1",
+        1
+      ],
+      [
+        "X-12-2099",
+        "PERSONA FICTICIA ('901', 'EGRESADOS', '2', NONE) 1-2",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 2,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 1-2</td></tr></table></html>",
+    "html2": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEgreso\" value=\"2\"><input name=\"NUM_TotalEgreso\" value=\"2\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-2</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "excel2": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', 'Egresados', '2', None) 2-2</td></tr></table></html>"
+  },
+  {
+    "nombre": "seguimiento/Egresados/vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "Egresados",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "seguimiento",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {
+        "1": "Residencia",
+        "2": "Ambulatorio",
+        "3": "FAE",
+        "4": "DCE"
+      },
+      "informes": {
+        "1": "Por vencer (a 25 días)",
+        "2": "Vencidos",
+        "3": "Recibidos"
+      },
+      "medidas": {
+        "4": "Por vencer (a 45 días)",
+        "5": "Vencidos"
+      },
+      "pestanas": [
+        "Espera",
+        "Cumplimiento",
+        "Informes",
+        "Egresados"
+      ],
+      "seleccion": {
+        "tribunal": "901",
+        "modalidad": "2",
+        "desde": "01/10/2026",
+        "hasta": "30/10/2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "COD_Lengueta",
+        "tdEgreso"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "NUM_PaginaEgreso",
+        ""
+      ],
+      [
+        "NUM_TotalEgreso",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Buscar medida"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"COD_Lengueta\" value=\"\"><input name=\"NUM_PaginaEgreso\" value=\"1\"><input name=\"NUM_TotalEgreso\" value=\"1\"><table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaCumplimiento\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaInforme\"><tr><td>RIT</td><td>Nombre</td></tr></table><table id=\"tablaEgresados\"><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Sin registros</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_listdemo.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "litigantes/",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "litigantes",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "litigantes",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {
+        "1": "Pendientes",
+        "2": "Cumplidas"
+      },
+      "meses": {},
+      "anios": {},
+      "seleccion": {
+        "estado": "1"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "COD_EstBusqueda",
+        "1"
+      ],
+      [
+        "NUM_PaginaInforme",
+        ""
+      ],
+      [
+        "NUM_Total",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Consulta Informe"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"COD_EstBusqueda\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"1\"><input name=\"NUM_Total\" value=\"2\"><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', '1') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', '1') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', '1') 1-2</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_BusquedaLit.xls\");}</script></body></html>",
+    "registros": [
+      [
+        "X-10-2099",
+        "PERSONA FICTICIA ('901', '1') 1-0",
+        1
+      ],
+      [
+        "X-11-2099",
+        "PERSONA FICTICIA ('901', '1') 1-1",
+        1
+      ],
+      [
+        "X-12-2099",
+        "PERSONA FICTICIA ('901', '1') 1-2",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 2,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_BusquedaLit.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-10-2099</td><td>Persona ficticia ('901', '1') 1-0</td></tr><tr><td>X-11-2099</td><td>Persona ficticia ('901', '1') 1-1</td></tr><tr><td>X-12-2099</td><td>Persona ficticia ('901', '1') 1-2</td></tr></table></html>",
+    "html2": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"COD_EstBusqueda\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"2\"><input name=\"NUM_Total\" value=\"2\"><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', '1') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', '1') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', '1') 2-2</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_BusquedaLit.xls\");}</script></body></html>",
+    "excel2": "<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>X-20-2099</td><td>Persona ficticia ('901', '1') 2-0</td></tr><tr><td>X-21-2099</td><td>Persona ficticia ('901', '1') 2-1</td></tr><tr><td>X-22-2099</td><td>Persona ficticia ('901', '1') 2-2</td></tr></table></html>"
+  },
+  {
+    "nombre": "litigantes//vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "litigantes",
+      "state": "1",
+      "month": null,
+      "year": null
+    },
+    "catalogo": {
+      "pantalla": "litigantes",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {
+        "1": "Pendientes",
+        "2": "Cumplidas"
+      },
+      "meses": {},
+      "anios": {},
+      "seleccion": {
+        "estado": "1"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "2"
+      ],
+      [
+        "COD_EstBusqueda",
+        "1"
+      ],
+      [
+        "NUM_PaginaInforme",
+        ""
+      ],
+      [
+        "NUM_Total",
+        ""
+      ],
+      [
+        "FLG_Consulta",
+        "0"
+      ],
+      [
+        "irAccion",
+        "Consulta Informe"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"2\" selected>2</option></select><select name=\"COD_EstBusqueda\"><option value=\"1\" selected>1</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><input name=\"NUM_PaginaInforme\" value=\"1\"><input name=\"NUM_Total\" value=\"1\"><table><tr><td>RIT</td><td>Nombre</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_BusquedaLit.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "calendario_informes/",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "calendario_informes",
+      "state": "1",
+      "month": "10",
+      "year": "2026"
+    },
+    "catalogo": {
+      "pantalla": "calendario_informes",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {},
+      "meses": {
+        "1": "Enero",
+        "2": "Febrero",
+        "3": "Marzo",
+        "4": "Abril",
+        "5": "Mayo",
+        "6": "Junio",
+        "7": "Julio",
+        "8": "Agosto",
+        "9": "Septiembre",
+        "10": "Octubre",
+        "11": "Noviembre",
+        "12": "Diciembre"
+      },
+      "anios": {
+        "2026": "2026",
+        "2027": "2027"
+      },
+      "seleccion": {
+        "mes": "10",
+        "anio": "2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "1"
+      ],
+      [
+        "COD_Mes_sel",
+        "10"
+      ],
+      [
+        "COD_Anio_Sel",
+        "2026"
+      ],
+      [
+        "irAccion",
+        "Buscar Inf."
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"1\" selected>1</option></select><select name=\"COD_Mes_sel\"><option value=\"10\" selected>10</option></select><select name=\"COD_Anio_Sel\"><option value=\"2026\" selected>2026</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><table id=\"TablaCalendarioSemana\"><tr><td>C-10-2099</td></tr><tr><td>C-11-2099</td></tr></table><table id=\"TablaCalendarioDia\"><tr><td>C-10-2099</td></tr><tr><td>C-11-2099</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_InfoPorVencer.xls\");}Ritxdias[dia] = \"C-10-2099\"; Nombresxdias[dia] = \"Persona ficticia ('901', '10') 1-0\";Ritxdias[dia] = \"C-11-2099\"; Nombresxdias[dia] = \"Persona ficticia ('901', '10') 1-1\";</script></body></html>",
+    "registros": [
+      [
+        "C-10-2099",
+        "PERSONA FICTICIA ('901', '10') 1-0",
+        1
+      ],
+      [
+        "C-11-2099",
+        "PERSONA FICTICIA ('901', '10') 1-1",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 1,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_InfoPorVencer.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td><td>Fecha Vencimiento</td></tr><tr><td>C-10-2099</td><td>Persona ficticia ('901', '10') 1-0</td><td>15/10/2026</td></tr><tr><td>C-11-2099</td><td>Persona ficticia ('901', '10') 1-1</td><td>15/10/2026</td></tr></table></html>"
+  },
+  {
+    "nombre": "calendario_informes//vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "calendario_informes",
+      "state": "1",
+      "month": "10",
+      "year": "2026"
+    },
+    "catalogo": {
+      "pantalla": "calendario_informes",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {},
+      "meses": {
+        "1": "Enero",
+        "2": "Febrero",
+        "3": "Marzo",
+        "4": "Abril",
+        "5": "Mayo",
+        "6": "Junio",
+        "7": "Julio",
+        "8": "Agosto",
+        "9": "Septiembre",
+        "10": "Octubre",
+        "11": "Noviembre",
+        "12": "Diciembre"
+      },
+      "anios": {
+        "2026": "2026",
+        "2027": "2027"
+      },
+      "seleccion": {
+        "mes": "10",
+        "anio": "2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "1"
+      ],
+      [
+        "COD_Mes_sel",
+        "10"
+      ],
+      [
+        "COD_Anio_Sel",
+        "2026"
+      ],
+      [
+        "irAccion",
+        "Buscar Inf."
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"1\" selected>1</option></select><select name=\"COD_Mes_sel\"><option value=\"10\" selected>10</option></select><select name=\"COD_Anio_Sel\"><option value=\"2026\" selected>2026</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><table id=\"TablaCalendarioSemana\"></table><table id=\"TablaCalendarioDia\"></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_InfoPorVencer.xls\");}</script></body></html>",
+    "registros": []
+  },
+  {
+    "nombre": "calendario_medidas/",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "calendario_medidas",
+      "state": "1",
+      "month": "10",
+      "year": "2026"
+    },
+    "catalogo": {
+      "pantalla": "calendario_medidas",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {},
+      "meses": {
+        "1": "Enero",
+        "2": "Febrero",
+        "3": "Marzo",
+        "4": "Abril",
+        "5": "Mayo",
+        "6": "Junio",
+        "7": "Julio",
+        "8": "Agosto",
+        "9": "Septiembre",
+        "10": "Octubre",
+        "11": "Noviembre",
+        "12": "Diciembre"
+      },
+      "anios": {
+        "2026": "2026",
+        "2027": "2027"
+      },
+      "seleccion": {
+        "mes": "10",
+        "anio": "2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "1"
+      ],
+      [
+        "COD_Mes_sel",
+        "10"
+      ],
+      [
+        "COD_Anio_Sel",
+        "2026"
+      ],
+      [
+        "irAccion",
+        "Buscar"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"1\" selected>1</option></select><select name=\"COD_Mes_sel\"><option value=\"10\" selected>10</option></select><select name=\"COD_Anio_Sel\"><option value=\"2026\" selected>2026</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><table id=\"TablaCalendarioSemana\"><tr><td>C-10-2099</td></tr><tr><td>C-11-2099</td></tr></table><table id=\"TablaCalendarioDia\"><tr><td>C-10-2099</td></tr><tr><td>C-11-2099</td></tr></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_MedPorVencer.xls\");}Ritxdias[dia] = \"C-10-2099\"; Nombresxdias[dia] = \"Persona ficticia ('901', '10') 1-0\";Ritxdias[dia] = \"C-11-2099\"; Nombresxdias[dia] = \"Persona ficticia ('901', '10') 1-1\";</script></body></html>",
+    "registros": [
+      [
+        "C-10-2099",
+        "PERSONA FICTICIA ('901', '10') 1-0",
+        1
+      ],
+      [
+        "C-11-2099",
+        "PERSONA FICTICIA ('901', '10') 1-1",
+        1
+      ]
+    ],
+    "actual": 1,
+    "total": 1,
+    "url": "https://familia.pjud.cl/sitfa/reportes/u1_MedPorVencer.xls",
+    "excel": "<html><table><tr><td>RIT</td><td>Nombre</td><td>Fecha Vencimiento</td></tr><tr><td>C-10-2099</td><td>Persona ficticia ('901', '10') 1-0</td><td>15/10/2026</td></tr><tr><td>C-11-2099</td><td>Persona ficticia ('901', '10') 1-1</td><td>15/10/2026</td></tr></table></html>"
+  },
+  {
+    "nombre": "calendario_medidas//vacia",
+    "seleccion": {
+      "tribunal": "901",
+      "tab": "",
+      "modality": "",
+      "report": null,
+      "screen": "calendario_medidas",
+      "state": "1",
+      "month": "10",
+      "year": "2026"
+    },
+    "catalogo": {
+      "pantalla": "calendario_medidas",
+      "tribunales": {
+        "901": "Juzgado de Familia Ficticio Norte",
+        "902": "Juzgado de Familia Ficticio Sur"
+      },
+      "modalidades": {},
+      "informes": {},
+      "medidas": {},
+      "pestanas": [],
+      "estados": {},
+      "meses": {
+        "1": "Enero",
+        "2": "Febrero",
+        "3": "Marzo",
+        "4": "Abril",
+        "5": "Mayo",
+        "6": "Junio",
+        "7": "Julio",
+        "8": "Agosto",
+        "9": "Septiembre",
+        "10": "Octubre",
+        "11": "Noviembre",
+        "12": "Diciembre"
+      },
+      "anios": {
+        "2026": "2026",
+        "2027": "2027"
+      },
+      "seleccion": {
+        "mes": "10",
+        "anio": "2026"
+      }
+    },
+    "pares": [
+      [
+        "COD_Tribunal_sel",
+        "901"
+      ],
+      [
+        "TIP_Consulta",
+        "1"
+      ],
+      [
+        "COD_Mes_sel",
+        "10"
+      ],
+      [
+        "COD_Anio_Sel",
+        "2026"
+      ],
+      [
+        "irAccion",
+        "Buscar"
+      ]
+    ],
+    "html": "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\"><select name=\"COD_Tribunal_sel\"><option value=\"901\" selected>901</option></select><select name=\"TIP_Consulta\"><option value=\"1\" selected>1</option></select><select name=\"COD_Mes_sel\"><option value=\"10\" selected>10</option></select><select name=\"COD_Anio_Sel\"><option value=\"2026\" selected>2026</option></select><input name=\"FEC_Inicio\" value=\"\"><input name=\"FEC_Fin\" value=\"\"><table id=\"TablaCalendarioSemana\"></table><table id=\"TablaCalendarioDia\"></table></form><script>function ShowExcel(){window.open(\"https://familia.pjud.cl/sitfa/reportes/u1_MedPorVencer.xls\");}</script></body></html>",
+    "registros": []
+  }
+]

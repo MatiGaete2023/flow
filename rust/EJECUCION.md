@@ -1,6 +1,6 @@
 # Flow en Rust — plan de ejecución y estado
 
-**Si eres otra IA o persona que retoma: lee este archivo entero y sigue desde el primer paso sin marcar.**
+**Si eres otra IA o persona que retoma: lee este archivo entero y sigue desde el foco activo indicado abajo.**
 Actualiza la tabla de estado y haz commit al terminar cada paso.
 
 ## 0. Cómo retomar
@@ -19,6 +19,16 @@ cd rust && cargo test --workspace
 - El código Python del repo es la **especificación y el oráculo**. No se modifica.
 - Antes de cada commit: `python3 tools/check_real_ids.py --stage && python3 tools/check_contactos.py --stage`.
 - Commits pequeños, mensaje en español, push a `origin rust/producto`.
+
+### Punto de continuación (12-nov-2026)
+
+- Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
+  (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
+- Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
+- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.3 (lote, extensión y ventana)** después de 7.2.
+  Los pendientes 5b.2, 5b.3 y 6.1 siguen abiertos; no se consideran terminados por este avance.
+- Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
+  `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 
 ## 1. Reglas que no se negocian (decisión del usuario, 12-nov-2026)
 
@@ -148,9 +158,11 @@ Pasos:
 - [x] 7.1 `flow-captura::puente`: servidor HTTP con el protocolo del punto 3 y `llamar(comando, payload, plazo)`.
       Pruebas con un cliente HTTP en el mismo test: código malo → 403; origen distinto → 403; tarea → resultado;
       plazo vencido → `TASK_EXPIRED`. Fuente: `descargador_lite/app/puente.py`.
-- [ ] 7.2 `flow-captura::sitfa`: validación de respuestas y paginación (puntos 5). Fuente: `motor.py`,
+- [x] 7.2 `flow-captura::sitfa`: validación de respuestas y paginación (puntos 5). Fuente: `motor.py`,
       `perfiles.py`, `filtros_respuesta.py`. Probar con HTML del SITFA ficticio
-      (`descargador_lite/tests/sitfa_ficticio.py` lo genera; guardar muestras en `tests/datos/`).
+      (`descargador_lite/tests/sitfa_ficticio.py` lo genera; muestras en `tests/datos/sitfa_ficticio.json`).
+      Incluye cotejo XLS/HTML con multiplicidad, rechazo de páginas/filas repetidas y verificación del mes del
+      calendario. La biblioteca todavía no está conectada al lote ni a la ventana (7.3).
 - [ ] 7.3 Lote, extensión y ventana: copiar `descargador_lite/extension/` a `rust/extension/` cambiando nombre y
       textos (y `tipo`/`version` de `capabilities`, que el programa verifica); pestaña «Captura» con código de
       conexión, opciones y avance; lo descargado pasa directo a Trabajo. Probar de punta a punta con Playwright +
@@ -227,3 +239,18 @@ guardar el código de conexión, y cualquier escritura en RUS.
   sistema) y ejecutado bajo Wine: consola y ventana funcionan con datos ficticios. Entregado al usuario.
 - 2026-11-12: importación del paquete ZIP del Descargador, con varias etapas por archivo (botones «Ver ETAPA»).
   Mismas observaciones, reglas, acciones y marcas que el Asistente en el paquete ficticio con historia.
+- 2026-11-12: retomada la captura desde `aa455a2`. Paso 7.2: perfiles de las cuatro pantallas y cuatro pestañas,
+  parámetros de consulta en lista cerrada, formulario/destino/filtros, selector dinámico auditado (sin ejecutar
+  JavaScript), paginación de hasta 500 páginas, exportación limitada al sitio y cotejo de registros del XLS.
+  El calendario exige fechas del mes/año consultados; las descargas repetidas se detectan por huella y por filas
+  completas, conservando las distintas medidas de una misma persona.
+  Oráculo reproducible: `python3 rust/oraculo/generar_sitfa.py` (14 respuestas ficticias, cotejadas con Python,
+  RIT del año reservado 2099). Regresiones en `crates/flow-captura/tests/sitfa.rs` (17 pruebas nuevas).
+  Verificación: suite anterior de `aa455a2` reproducida desde un archivo temporal del commit: 36 pruebas;
+  suite completa actual: 53 pruebas, sin fallos. Clippy de `flow-captura` y comprobación del workspace para
+  `x86_64-pc-windows-gnu`; controles de identidades y contactos sobre los cambios. No se ha probado contra SITFA
+  ni en Windows real; la prueba nativa Windows corresponde a la CI y el uso real sigue pendiente del usuario.
+  Siguiente: 7.3; usar `Perfil::desde_catalogo`, `validar_respuesta`, `siguiente_consulta` y
+  `VerificadorDescargas` antes de guardar o importar cada descarga. La negociación de capacidades
+  (`escritura_rus:false` y versiones/protocolos exactos), el lote, los checkpoints, la extensión y la interfaz
+  aún corresponden a 7.3. El estado de `VerificadorDescargas` debe durar toda una consulta y reiniciarse al cambiarla.

@@ -2,5 +2,6 @@
 //! Solo lectura: no existe ningún comando que escriba en RUS. No se leen cookies ni contraseñas.
 
 pub mod puente;
+pub mod sitfa;
 
 pub use puente::{ErrorPuente, Puente};
