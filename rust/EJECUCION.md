@@ -317,3 +317,8 @@ guardar el código de conexión, y cualquier escritura en RUS.
   18 lecturas verificadas (seis de cada tipo), filtros restaurados; nuevo escenario `probar_captura -- --lecturas`
   incluido en CI. Clippy sin advertencias y comprobación cruzada Windows PASA; CI nativa del paso anterior
   `1b7950b` PASA (run 43263570103). Continúa en 5b.2; este paso no implementa todavía los avisos CT/N/OB ni Meta 4/anonimizador.
+
+- 2026-11-12: CI de `66c0cf2`: Linux y los tres recorridos MV3 PASA (run 43268712430). Windows detectó una
+  colisión de carpetas temporales entre pruebas paralelas: `SystemTime` tiene menor precisión allí. Las tres
+  fábricas nuevas de carpetas de prueba incorporan un contador atómico, además de proceso y reloj. No se altera
+  el flujo del producto ni se evita la ejecución paralela de pruebas.

@@ -53,13 +53,16 @@ impl Conexion for Ficticia {
     }
 }
 
+static SECUENCIA:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+
 struct Temporal(PathBuf);
 impl Temporal {
     fn nueva() -> Self {
         let p = std::env::temp_dir().join(format!(
-            "flow-recoleccion-ficticia-{}-{}",
+            "flow-recoleccion-ficticia-{}-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
+            SECUENCIA.fetch_add(1,std::sync::atomic::Ordering::Relaxed)
         ));
         std::fs::create_dir(&p).unwrap();
         Self(p)

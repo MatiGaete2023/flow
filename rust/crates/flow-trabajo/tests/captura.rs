@@ -6,13 +6,16 @@ use flow_motor::Config;
 use flow_trabajo::captura;
 use serde_json::{json, Value};
 
+static SECUENCIA:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+
 struct Temporal(std::path::PathBuf);
 impl Temporal {
     fn nueva() -> Self {
         let p = std::env::temp_dir().join(format!(
-            "flow-trabajo-captura-ficticia-{}-{}",
+            "flow-trabajo-captura-ficticia-{}-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
+            SECUENCIA.fetch_add(1,std::sync::atomic::Ordering::Relaxed)
         ));
         std::fs::create_dir(&p).unwrap();
         Self(p)

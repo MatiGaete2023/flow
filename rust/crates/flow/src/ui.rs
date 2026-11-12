@@ -954,11 +954,14 @@ pub fn abrir(archivo: Option<PathBuf>) -> i32 {
 mod pruebas_captura {
     use super::*;
 
+    static SECUENCIA:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+
     fn preparar() -> (PathBuf, flow_captura::lotes::Resumen) {
         let base = std::env::temp_dir().join(format!(
-            "flow-ui-ficticia-{}-{}",
+            "flow-ui-ficticia-{}-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
+            SECUENCIA.fetch_add(1,std::sync::atomic::Ordering::Relaxed)
         ));
         std::fs::create_dir(&base).unwrap();
         let datos = std::fs::read(format!("{}/../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx", env!("CARGO_MANIFEST_DIR"))).unwrap();
