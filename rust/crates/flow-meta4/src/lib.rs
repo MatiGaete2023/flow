@@ -4,6 +4,7 @@
 
 pub mod salida;
 pub mod tribunales;
+pub mod regenerar;
 
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use flow_captura::lotes::{huella, ruta_archivo, Resumen};
