@@ -1,0 +1,84 @@
+{
+ "corte": "2026-10-08",
+ "filas": [
+  {
+   "id": "r0",
+   "observacion": "Persona PRM: Próximo informe de avance de PRM Ficticio vence el 12 de octubre de 2026.",
+   "reglas": [
+    "CUMPLIMIENTO.C10_HOJA2"
+   ],
+   "acciones": [
+    "programa_por_vencer"
+   ],
+   "avisos": [
+    "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+    "Q-03: el mismo ingreso figura en Cumplimiento y Egresados en este lote; revisar su estado en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 12 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 10 de octubre de 2026; revisar en RUS.",
+    "N-03: la causa tiene 2 ingresos en este trabajo; considerar un solo correo o proyecto."
+   ],
+   "proximo": "2026-10-12"
+  },
+  {
+   "id": "r1",
+   "observacion": "",
+   "reglas": [],
+   "acciones": [],
+   "avisos": [
+    "Tipo de fuente fuera del motor tradicional; no evaluado.",
+    "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+    "Q-03: el mismo ingreso figura en Cumplimiento y Egresados en este lote; revisar su estado en RUS.",
+    "N-04: medida egresada que sigue con informe pendiente en RUS; revisar."
+   ],
+   "proximo": "2026-10-12"
+  },
+  {
+   "id": "r2",
+   "observacion": "Persona PRM: Se remite correo al programa PRM Ficticio informando que el próximo informe de avance vence el 9 de octubre de 2026.",
+   "reglas": [
+    "INFORMES.I02_POR_VENCER_GENERAL"
+   ],
+   "acciones": [
+    "programa_por_vencer"
+   ],
+   "avisos": [
+    "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 10 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 12 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 10 de octubre de 2026; revisar en RUS.",
+    "N-03: la causa tiene 2 ingresos en este trabajo; considerar un solo correo o proyecto.",
+    "N-04: medida egresada que sigue con informe pendiente en RUS; revisar."
+   ],
+   "proximo": "2026-10-12"
+  },
+  {
+   "id": "r3",
+   "observacion": "Persona PRM: Se remite correo al programa PRM Ficticio informando que el próximo informe de avance vence el 9 de octubre de 2026.",
+   "reglas": [
+    "INFORMES.I02_POR_VENCER_GENERAL"
+   ],
+   "acciones": [
+    "programa_por_vencer"
+   ],
+   "avisos": [
+    "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+    "N-03: la causa tiene 2 ingresos en este trabajo; considerar un solo correo o proyecto."
+   ],
+   "proximo": null
+  },
+  {
+   "id": "r4",
+   "observacion": "",
+   "reglas": [],
+   "acciones": [],
+   "avisos": [
+    "Tipo de fuente fuera del motor tradicional; no evaluado.",
+    "Identidad de ingreso no verificada; no se relacionan fuentes por RIT o nombre.",
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de julio de 2026 (99 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 1 de enero de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (Pendiente).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ],
+   "proximo": null
+  }
+ ]
+}

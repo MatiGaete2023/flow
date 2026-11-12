@@ -34,5 +34,9 @@ Anota PASA o FALLA y, si falla, el texto exacto del mensaje.
 | 22 | Reiteración | Cargar una fila cuya propuesta repita la última observación del centro | Frase de reiteración con fecha; texto previo en Revisar y las mismas acciones; persiste al reabrir la sesión |
 | 23 | Avisos de bitácora | Comparar un caso conocido de Al tribunal sin respuesta y un E-05 antiguo | CT-05/CT-11 solo con origen acreditado y el plazo cumplido; no crean acciones nuevas |
 
+| 24 | Egresados | Importar un ZIP o lote con Egresados e Informes del mismo ingreso | Egresados visible, sin propuesta ni acciones; N-04 si queda informe pendiente; Q-03 ante estados incompatibles |
+| 25 | Búsqueda Lit | Importar el XLS del menú 94 o su lote/ZIP | Columnas conservadas, avisos OB solo para órdenes activas; no genera correos ni proyectos |
+| 26 | Calendario por ingreso | Comparar una fila con proyecciones y Hoja2 | Fechas y estados visibles; Hoja2 conserva prioridad y CAL-03 avisa diferencias una vez por vista |
+
 La prueba 8 es la más importante: el acceso a Outlook se escribió sin poder ejecutarlo. Si falla, los `.eml` de la
 prueba 7 cumplen la misma función.

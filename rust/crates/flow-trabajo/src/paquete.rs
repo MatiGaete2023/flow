@@ -274,18 +274,43 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
             calendario.entry(identidad(fila)).or_default().push(v);
         }
     }
+    let mut proyectados: HashMap<Identidad, Vec<crate::controles::Proyeccion>> = HashMap::new();
+    for fila in
+        tabla("calendarios").iter().filter(|f| dato(f, "association") == "VERIFICADA" && dato(f, "event_type") == "INFORME_PROYECTADO")
+    {
+        if let Some(fecha) = dia(dato(fila, "event_at")) {
+            proyectados
+                .entry(identidad(fila))
+                .or_default()
+                .push(crate::controles::Proyeccion { fecha, estado: dato(fila, "status").into() });
+        }
+    }
+    for items in proyectados.values_mut() {
+        items.sort();
+        items.dedup();
+    }
     let mut avisos = Vec::new();
-    let mut fuera = 0usize;
-    let mut por_etapa: BTreeMap<u8, (Etapa, Vec<Fila>)> = BTreeMap::new();
+    let mut por_etapa: BTreeMap<(u8, String), (Etapa, Vec<Fila>)> = BTreeMap::new();
     let mut contexto = Contexto { proximos: Some(HashMap::new()), ..Contexto::default() };
     for (n, r) in registros.iter().enumerate() {
-        let Some(etapa) = etapa_de(dato(r, "record_type")) else {
-            fuera += 1;
-            continue;
-        };
+        let tipo = dato(r, "record_type");
+        let etapa = etapa_de(tipo).unwrap_or(Etapa::Espera);
         let id = dato(r, "record_id").to_string();
         let columnas_fila = normalizado(r);
         let nombres: Vec<String> = columnas_fila.iter().map(|(k, _)| k.clone()).collect();
+        let pantalla = pantallas.get(dato(r, "query_id")).copied().unwrap_or("");
+        let origen = crate::controles::Origen {
+            sistema: dato(r, "source_system").into(),
+            tribunal: dato(r, "court_code").into(),
+            causa: dato(r, "cause_id").into(),
+            ingreso: dato(r, "ingreso_id").into(),
+            tipo: tipo.into(),
+            pantalla: pantalla.into(),
+            verificada: verificada(r),
+            valores: if etapa_de(tipo).is_none() { columnas_fila.iter().cloned().collect() } else { Default::default() },
+        };
+        contexto.origenes.insert(id.clone(), origen);
+
         let mapeo = columnas::mapear(&nombres, etapa).map_err(|e| format!("Registro {id}: {e}"))?;
         let mut registro = Registro::default();
         for (campo, i) in &mapeo {
@@ -314,17 +339,19 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
             if let Some(b) = bitacoras.get(&ident) {
                 contexto.bitacoras.insert(id.clone(), b.clone());
             }
-            if let Some(fechas) = calendario.get(&ident) {
-                if fechas.iter().all(|f| *f == fechas[0]) {
-                    contexto.proximos.as_mut().unwrap().insert(id.clone(), fechas[0]);
-                }
+            let hoja2 = calendario.get(&ident).and_then(|fechas| fechas.iter().all(|f| *f == fechas[0]).then_some(fechas[0]));
+            let items = proyectados.get(&ident).map(Vec::as_slice).unwrap_or(&[]);
+            contexto.calendarios.insert(id.clone(), items.to_vec());
+            if matches!(etapa, Etapa::Cumplimiento | Etapa::Informes) {
+                let vencimiento = if etapa == Etapa::Informes { registro.fecha("vencimiento") } else { None };
+                contexto.avisos.insert(id.clone(), crate::controles::cotejar(items, corte, vencimiento, hoja2));
+            }
+            if let Some(d) = hoja2.or_else(|| crate::controles::proxima(items, corte)) {
+                contexto.proximos.as_mut().unwrap().insert(id.clone(), d);
             }
         }
         let numero = dato(r, "original_row").parse().unwrap_or(n + 2);
-        por_etapa.entry(etapa as u8).or_insert_with(|| (etapa, Vec::new())).1.push(Fila { id, numero, celdas, registro });
-    }
-    if fuera > 0 {
-        avisos.push(format!("{fuera} registros de otro tipo (egresados u otros) no se evalúan."));
+        por_etapa.entry((etapa as u8, tipo.into())).or_insert_with(|| (etapa, Vec::new())).1.push(Fila { id, numero, celdas, registro });
     }
     if let Some(estados) = c.manifiesto["table_states"].as_object() {
         let faltan: Vec<String> = estados
@@ -337,18 +364,32 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
         }
     }
     let mut trabajos = Vec::new();
-    for (_, (etapa, filas)) in por_etapa {
+    for ((_, tipo), (etapa, mut filas)) in por_etapa {
         let canonicas = columnas::canonicas(etapa);
         // Solo se declaran las columnas que algún registro trae: una columna ausente no es un dato vacío.
         let presentes: Vec<bool> = canonicas.iter().map(|(campo, _)| filas.iter().any(|f| f.registro.tiene(campo))).collect();
         let mut cabeceras: Vec<String> = canonicas.iter().map(|(_, titulo)| titulo.to_string()).collect();
         cabeceras.push("MODALIDAD".into());
-        let mapeo = canonicas.iter().enumerate().filter(|(i, _)| presentes[*i]).map(|(i, (campo, _))| (campo.to_string(), i)).collect();
-        let tabla = Tabla { etapa, hoja: "Paquete".into(), fila_cabecera: 1, cabeceras, mapeo, filas, cruce: Vec::new(), avisos: avisos.clone() };
+        let mut mapeo = canonicas.iter().enumerate().filter(|(i, _)| presentes[*i]).map(|(i, (campo, _))| (campo.to_string(), i)).collect();
+        if etapa_de(&tipo).is_none() {
+            cabeceras = filas
+                .iter()
+                .flat_map(|f| contexto.origenes[&f.id].valores.keys().cloned())
+                .collect::<std::collections::BTreeSet<_>>()
+                .into_iter()
+                .collect();
+            mapeo = columnas::mapear(&cabeceras, Etapa::Espera)?;
+            for fila in &mut filas {
+                fila.celdas = cabeceras.iter().map(|k| contexto.origenes[&fila.id].valores.get(k).cloned().unwrap_or_default()).collect();
+            }
+        }
+        let tabla =
+            Tabla { etapa, hoja: "Paquete".into(), fila_cabecera: 1, cabeceras, mapeo, filas, cruce: Vec::new(), avisos: avisos.clone() };
         trabajos.push(analizar_filas(nombre, &huella, &tabla, corte, config, &contexto));
     }
+    crate::controles::paquete(&mut trabajos);
     if trabajos.is_empty() {
-        return Err("El paquete no trae registros de Espera, Cumplimiento ni Informes.".into());
+        return Err("El paquete no trae registros para mostrar.".into());
     }
     Ok(Paquete { trabajos, avisos })
 }

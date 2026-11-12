@@ -166,12 +166,12 @@ pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
         .collect();
     let hoja = libro.add_worksheet();
     let en = |x: XlsxError| x.to_string();
-    hoja.set_name(trabajo.etapa.nombre()).map_err(en)?;
+    hoja.set_name(trabajo.nombre()).map_err(en)?;
     tabla(hoja, &cabeceras, &filas, &e).map_err(en)?;
     let resumen = libro.add_worksheet();
     resumen.set_name("Resumen").map_err(en)?;
     let datos = [
-        ("Etapa", trabajo.etapa.nombre().to_string()),
+        ("Etapa", trabajo.nombre().to_string()),
         ("Fecha de corte", trabajo.corte.format("%d/%m/%Y").to_string()),
         ("Archivo de origen", trabajo.archivo.clone()),
         ("Huella SHA-256 del origen", trabajo.sha256.clone()),

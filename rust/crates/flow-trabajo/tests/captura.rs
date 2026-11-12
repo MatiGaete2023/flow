@@ -144,3 +144,53 @@ fn lectura_nativa_aplica_reiteracion_sin_cambiar_acciones() {
     assert!(fila.propuesta.avisos.iter().any(|a| a.contains(&previa.observacion)));
     assert!(nuevo[0].filas[1].cronologia.is_none());
 }
+
+#[test]
+fn calendario91_conserva_prioridad_y_coteja_la_proyeccion_del_ingreso() {
+    let (t, mut r) = preparar();
+    let mut s = r.lote.consultas[0].clone();
+    s.screen = "calendario_informes".into();
+    s.tab = String::new();
+    r.lote.consultas.push(s);
+    let html=b"<html><table><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivacion</th><th>Tribunal</th><th>FECHA VENCIMIENTO</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>Laja</td><td>2026-10-30</td></tr></table></html>";
+    std::fs::write(t.0.join("calendario.xls"), html).unwrap();
+    r.archivos.push(flow_captura::lotes::Archivo {
+        nombre: "calendario.xls".into(),
+        sha256: huella(html),
+        consulta: 1,
+        pagina: 1,
+        total: 1,
+        registros: 1,
+    });
+    let trabajos = captura::importar(&t.0, &r, "2026-10-20".parse().unwrap(), &Config::default()).unwrap();
+    assert_eq!(trabajos.len(), 1);
+    let fila = &trabajos[0].filas[0];
+    assert_eq!(fila.proximo_informe, Some("2026-10-30".parse().unwrap()));
+    assert_eq!(fila.calendario.len(), 2);
+    assert_eq!(fila.propuesta.avisos.iter().filter(|a| a.starts_with("CAL-03:")).count(), 1);
+    assert_eq!(trabajos[0].filas[1].proximo_informe, None);
+}
+
+#[test]
+fn egresados_no_generan_observaciones_y_participan_en_n04_y_q03() {
+    let (t, mut r) = preparar();
+    for (i, tab) in [(1, "Egresados"), (2, "Informes")] {
+        let mut s = r.lote.consultas[0].clone();
+        s.tab = tab.into();
+        r.lote.consultas.push(s);
+        let mut p = r.paginas_lectura[0].clone();
+        p.consulta = i;
+        r.paginas_lectura.push(p);
+        let html=b"<html><table><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivacion</th><th>Tribunal</th><th>FECHA VENCIMIENTO</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>Laja</td><td>2026-10-30</td></tr></table></html>";
+        let nombre = format!("consulta-auxiliar-{i}.xls");
+        std::fs::write(t.0.join(&nombre), html).unwrap();
+        r.archivos.push(flow_captura::lotes::Archivo { nombre, sha256: huella(html), consulta: i, pagina: 1, total: 1, registros: 1 });
+    }
+    let trabajos = captura::importar(&t.0, &r, "2026-10-20".parse().unwrap(), &Config::default()).unwrap();
+    assert_eq!(trabajos.len(), 3);
+    let egresados = trabajos.iter().find(|t| t.nombre() == "EGRESADOS").unwrap();
+    let fila = &egresados.filas[0];
+    assert!(fila.observacion.is_empty() && fila.propuesta.acciones.is_empty() && fila.propuesta.reglas.is_empty());
+    assert!(fila.propuesta.avisos.iter().any(|a| a.starts_with("N-04:")));
+    assert!(fila.propuesta.avisos.iter().any(|a| a.starts_with("Q-03:")));
+}

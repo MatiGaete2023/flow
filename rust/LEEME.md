@@ -32,8 +32,9 @@ Estado: en desarrollo, **sin aceptación del usuario**. Ver [EJECUCION.md](EJECU
    la carpeta incompleta. Las lecturas verificadas del día pueden reutilizarse entre lotes de la misma carpeta
    padre. Máximo por corrida: 600 bitácoras/calendarios y 600 historias; Retomar continúa desde el avance guardado.
    Si falla una ventana, conserva los Excel y las demás lecturas. No edites sus archivos mientras Flow descarga o retoma.
-5. Al terminar, «Llevar Excel verificados a Trabajo» carga las tablas de intervención. Litigantes y calendarios
-   quedan como consultas en la carpeta del lote. Si se activa la opción, una consulta vacía produce un PDF con su
+5. Al terminar, «Llevar Excel verificados a Trabajo» carga las tablas de intervención. Egresados y órdenes de
+   búsqueda aparecen con sus avisos, sin observaciones ni acciones automáticas. Los calendarios quedan como
+   consultas y aportan el cruce cuando sus columnas lo permiten. Si se activa la opción, una consulta vacía produce un PDF con su
    selección visible. Mantén abiertas las pestañas de SITFA y conexión durante el lote.
 
 El código de conexión cambia al cerrar y abrir el enlace; no se guarda. Chrome conserva tu sesión y contraseña.
@@ -53,12 +54,12 @@ flow observar ARCHIVO [--etapa espera|cumplimiento|informes] [--corte AAAA-MM-DD
 flow producir ARCHIVO --salida CARPETA [--modalidades TEXTO] [--contactos contactos.json] [--outlook]
 ```
 
+En el detalle de Trabajo se muestran la cronología de bitácora, los avisos CT/N/OB y las proyecciones del
+calendario por ingreso. La reiteración conserva las acciones de la propuesta original. Revisa los avisos antes
+de preparar productos.
+
 ## Qué todavía no hace
 
-- Captura incorpora bitácora, historia y calendario verificados al análisis. El detalle muestra cronología y
-  avisos CT-05/07/11; al repetir la última observación del centro propone la reiteración aprobada y conserva
-  las acciones. Siguen pendientes los controles por paquete N-03/N-04, órdenes de búsqueda y cotejo de calendario;
-  ver el estado detallado en EJECUCION.md.
 - Anonimizador y Meta 4 siguen siendo las herramientas Python.
 
 ## Desarrollo

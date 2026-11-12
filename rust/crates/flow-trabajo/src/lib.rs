@@ -2,6 +2,8 @@
 
 pub mod almacen;
 pub mod captura;
+pub mod consulta;
+pub mod controles;
 pub mod cronologia;
 pub mod paquete;
 
@@ -29,6 +31,10 @@ pub struct FilaTrabajo {
     pub proximo_informe: Option<Fecha>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cronologia: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origen: Option<controles::Origen>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub calendario: Vec<controles::Proyeccion>,
 }
 
 impl FilaTrabajo {
@@ -47,6 +53,8 @@ impl FilaTrabajo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Trabajo {
     pub etapa: Etapa,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fuente: Option<String>,
     pub corte: Fecha,
     pub archivo: String,
     pub sha256: String,
@@ -66,6 +74,9 @@ pub struct Contexto {
     /// Próximo informe por registro (calendario verificado); reemplaza a la hoja de cruce.
     pub proximos: Option<HashMap<String, Fecha>>,
     pub cronologias: HashMap<String, serde_json::Value>,
+    pub origenes: HashMap<String, controles::Origen>,
+    pub calendarios: HashMap<String, Vec<controles::Proyeccion>>,
+    pub avisos: HashMap<String, Vec<String>>,
 }
 
 /// Analiza toda la tabla: pre-pase por causa y luego fila por fila.
@@ -91,23 +102,50 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                 (Some(mapa), _) => mapa.get(&fila.id).copied(),
                 (None, _) => tabla.proximo_informe(&fila.registro, corte),
             };
-            let mut propuesta = analizar(&Entrada {
-                etapa: tabla.etapa,
-                registro: &fila.registro,
-                corte,
-                config,
-                historia: contexto.historias.get(&fila.id),
-                bitacora: contexto.bitacoras.get(&fila.id).map(Vec::as_slice).unwrap_or(&[]),
-                duplicidad: duplicidad[i],
-                acumulado: acumulado[i],
-                fecha_hoja2: proximo,
-            });
+            let origen = contexto.origenes.get(&fila.id).cloned();
+            let mut propuesta = if origen.as_ref().is_some_and(|o| !o.tradicional()) {
+                Resultado {
+                    observacion: String::new(),
+                    reglas: vec![],
+                    acciones: vec![],
+                    avisos: vec!["Tipo de fuente fuera del motor tradicional; no evaluado.".into()],
+                    marcas: vec![],
+                    excluido: false,
+                }
+            } else {
+                analizar(&Entrada {
+                    etapa: tabla.etapa,
+                    registro: &fila.registro,
+                    corte,
+                    config,
+                    historia: contexto.historias.get(&fila.id),
+                    bitacora: contexto.bitacoras.get(&fila.id).map(Vec::as_slice).unwrap_or(&[]),
+                    duplicidad: duplicidad[i],
+                    acumulado: acumulado[i],
+                    fecha_hoja2: proximo,
+                })
+            };
             let cronologia = contexto.cronologias.get(&fila.id).cloned();
             if let Some(display) = &cronologia {
                 propuesta
                     .avisos
                     .push("Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.".into());
+                propuesta.avisos.extend(contexto.avisos.get(&fila.id).into_iter().flatten().cloned());
                 cronologia::reiterar(&mut propuesta, display, config);
+            }
+            if cronologia.is_none() {
+                if origen.as_ref().is_some_and(|o| o.clave().is_none()) {
+                    propuesta.avisos.push("Identidad de ingreso no verificada; no se relacionan fuentes por RIT o nombre.".into());
+                }
+                propuesta.avisos.extend(contexto.avisos.get(&fila.id).into_iter().flatten().cloned());
+            }
+            if origen.as_ref().is_some_and(|o| o.pantalla == "litigantes") {
+                let valores = origen
+                    .as_ref()
+                    .filter(|o| !o.valores.is_empty())
+                    .map(|o| o.valores.clone())
+                    .unwrap_or_else(|| tabla.cabeceras.iter().cloned().zip(fila.celdas.iter().cloned()).collect());
+                controles::agregar(&mut propuesta.avisos, controles::orden(&valores, corte));
             }
             FilaTrabajo {
                 id: fila.id.clone(),
@@ -119,6 +157,8 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                 revisada: false,
                 proximo_informe: proximo,
                 cronologia,
+                origen,
+                calendario: contexto.calendarios.get(&fila.id).cloned().unwrap_or_default(),
             }
         })
         .collect::<Vec<_>>();
@@ -127,6 +167,13 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
     }
     Trabajo {
         etapa: tabla.etapa,
+        fuente: tabla.filas.first().and_then(|f| contexto.origenes.get(&f.id)).filter(|o| !o.tradicional()).map(|o| {
+            if o.pantalla == "litigantes" {
+                "BUSQUEDA_LITIGANTES".into()
+            } else {
+                o.tipo.clone()
+            }
+        }),
         corte,
         archivo: archivo.to_string(),
         sha256: sha256.to_string(),
@@ -140,6 +187,9 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
 }
 
 impl Trabajo {
+    pub fn nombre(&self) -> &str {
+        self.fuente.as_deref().unwrap_or(self.etapa.nombre())
+    }
     pub fn con_observacion(&self) -> usize {
         self.filas.iter().filter(|f| !f.observacion.is_empty()).count()
     }

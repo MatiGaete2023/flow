@@ -81,6 +81,9 @@ pub fn cargar_bytes(
     }
     let libro = flow_tabular::leer_bytes(nombre, datos)?;
     if etapa.is_none() && hoja.is_none() {
+        if let Some(tipo) = flow_trabajo::consulta::detectar(&libro) {
+            return Ok(vec![flow_trabajo::consulta::analizar(&libro, tipo, corte, config)?]);
+        }
         let tablas = flow_tabular::leer_todas(&libro);
         if !tablas.is_empty() {
             return Ok(tablas.iter().map(|t| analizar_tabla(&libro, t, corte, config, &Contexto::default())).collect());
@@ -93,7 +96,7 @@ pub fn cargar_bytes(
 fn imprimir(trabajo: &Trabajo) {
     println!(
         "{} · hoja «{}» · corte {} · {} registros, {} con observación",
-        trabajo.etapa.nombre(),
+        trabajo.nombre(),
         trabajo.hoja,
         trabajo.corte,
         trabajo.filas.len(),
@@ -166,10 +169,10 @@ pub fn producir_todo(
     plantillas_usuario: Option<&Path>,
 ) -> Result<Producido, String> {
     use flow_productos::{correos, excel, word};
-    let nombre = format!("Flow {} {}", trabajo.etapa.nombre(), trabajo.corte.format("%Y-%m-%d"));
+    let nombre = format!("Flow {} {}", trabajo.nombre(), trabajo.corte.format("%Y-%m-%d"));
     let carpeta = excel::carpeta_nueva(salida, &nombre)?;
     let mut p = Producido { carpeta: carpeta.clone(), ..Producido::default() };
-    let libro = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.etapa.nombre()), "xlsx");
+    let libro = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.nombre()), "xlsx");
     excel::observaciones(trabajo, &libro)?;
     p.creados.push(format!("Excel de observaciones: {}", libro.display()));
     let opciones = correos::Opciones { modalidades: modalidades.to_string(), hoy: None };

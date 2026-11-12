@@ -1,0 +1,3223 @@
+{
+ "ordenes": [
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (sin estado).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (Pendiente).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-10",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (sin estado).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (Pendiente).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-09",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 8 de agosto de 2026 (61 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (sin estado).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 8 de agosto de 2026 (61 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 8 de agosto de 2026 (61 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (Pendiente).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-08-08",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 30 de junio de 2026 (100 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (sin estado).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 30 de junio de 2026 (100 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 30 de junio de 2026 (100 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2018.",
+    "OB-03: el envío de la orden no figura como realizado (Pendiente).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 8 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O. B.": "Inactiva",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "2026-06-30",
+    "FEC. NACIMIENTO": "2000-10-08",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niña",
+    "CURADOR": "",
+    "PROX. AUDS.": "07/10/2026; 09/10/2026; 08/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Niño",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "TIPO LITIGANTE": "Adolescente",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-08",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "CURADOR": "---",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado.",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FEC NACIMIENTO": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "---",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-09",
+    "TIPO LITIGANTE": "Niño",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Niño"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "ilegible",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "---",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adolescente",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 1 de enero de 2027 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026.",
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "TIPO LITIGANTE": "Adulto",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FEC NACIMIENTO": "2008-10-09",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "2008-10-08",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "ilegible"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días).",
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 8 de octubre de 2026."
+   ]
+  },
+  {
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adolescente",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "PROX AUDS": "09/10/2026"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-05: audiencia fijada para el 9 de octubre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "valores": {
+    "ESTADO O B": "ACTIVA",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "2026-01-01",
+    "FEC NACIMIENTO": "ilegible",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "Curador ficticio"
+   },
+   "corte": "2026-10-08",
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (280 días)."
+   ]
+  },
+  {
+   "valores": {
+    "FEC NACIMIENTO": "2008-10-09",
+    "CURADOR": "Curador ficticio",
+    "PROX AUDS": "01/01/2027"
+   },
+   "corte": "2026-10-08",
+   "avisos": []
+  }
+ ],
+ "calendarios": [
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": "2026-10-09",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-08",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 6 de enero de 2027; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2026-10-09",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": null,
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": "2027-01-06",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 9 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 9 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 6 de enero de 2027; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 9 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": null,
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": "2026-12-08",
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": null,
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": null,
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-07",
+   "proxima": "2026-10-09",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 7 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso proyecta el próximo informe el 9 de octubre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 6 de enero de 2027; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2027-01-06",
+   "proxima": "2027-01-06",
+   "avisos": [
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 6 de enero de 2027; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": "2026-10-08",
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de octubre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2027-01-06",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-08",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 9 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-09",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-10-09",
+   "primera": "2026-10-09",
+   "proxima": "2026-10-09",
+   "avisos": []
+  },
+  {
+   "items": [
+    {
+     "fecha": "2027-01-06",
+     "estado": "ENVIADO"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso no tiene informes pendientes; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 8 de diciembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-09",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-12-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-08",
+   "hoja2": "2026-10-09",
+   "primera": "2026-12-08",
+   "proxima": "2026-12-08",
+   "avisos": [
+    "CAL-03: la pestaña Informes indica vencimiento el 8 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 8 de diciembre de 2026; revisar en RUS.",
+    "CAL-03: Hoja2 (calendario 91) indica el 9 de octubre de 2026 y el calendario del ingreso proyecta el próximo informe el 8 de diciembre de 2026; revisar en RUS."
+   ]
+  },
+  {
+   "items": [
+    {
+     "fecha": "2026-10-07",
+     "estado": "PENDIENTE"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "ENVIADO"
+    },
+    {
+     "fecha": "2026-10-08",
+     "estado": "PENDIENTE"
+    }
+   ],
+   "corte": "2026-10-08",
+   "vencimiento": null,
+   "hoja2": null,
+   "primera": "2026-10-07",
+   "proxima": null,
+   "avisos": []
+  },
+  {
+   "items": [],
+   "corte": "2026-10-08",
+   "vencimiento": "2026-10-09",
+   "hoja2": "2026-12-08",
+   "primera": null,
+   "proxima": null,
+   "avisos": []
+  }
+ ]
+}

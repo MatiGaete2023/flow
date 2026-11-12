@@ -25,9 +25,9 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 5b.3, controles por paquete y calendario por ingreso.** La fase 7 y 5b.2 terminaron.
-  Continuar con N-03/N-04, órdenes de búsqueda OB-01..05, proyecciones/cotejo CAL-03 y registros EGRESADOS.
-  Después siguen 6.1, 8.1 y 8.2; no se consideran terminados por este avance.
+- **Foco activo: 6.1, Anonimizador Rust.** La fase 7 y 5b.2/5b.3 terminaron. Continuar desde
+  `anonimizador/anonimizador_csmp/` y su LEEME, con salida nueva y verificación que falle cerrado.
+  Después siguen 8.1 (Meta 4) y 8.2 (manual, guía, instalador y cierre); el producto completo aún no está terminado.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -118,7 +118,7 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [x] 5b.2 Avisos de bitácora CT-05, CT-07 (con texto `COMUN.REITERA_OBSERVACION`) y CT-11
       (`src/nurus/personal/bitacora_avisos.py`; necesita la cronología de `capture/temporal.py` y una razón de
       similitud como `difflib.SequenceMatcher`).
-- [ ] 5b.3 Avisos N-03/N-04 (`contexto_excel.marcar_paquete`), OB-01..05 (`ordenes_busqueda.py`), cotejo y
+- [x] 5b.3 Avisos N-03/N-04 (`contexto_excel.marcar_paquete`), OB-01..05 (`ordenes_busqueda.py`), cotejo y
       proyecciones del calendario por ingreso (`calendario_ingreso.py`), registros EGRESADOS (hoy se omiten).
 
 ### Fase 6 — Anonimizador
@@ -336,3 +336,21 @@ guardar el código de conexión, y cualquier escritura en RUS.
   entre diferencial e integración; suite completa 85 PASA, Clippy y comprobación cruzada Windows PASA. CI del
   arreglo `0d2fdff`: Linux/MV3 y pruebas Windows PASA; compilación release aún en curso al escribir esta nota.
   Siguiente: 5b.3, sin considerar terminados anonimización, Meta 4 ni entrega.
+
+- 2026-11-12: 5b.3: controles por identidad remota verificada N-03/N-04 y Q-03; órdenes de búsqueda activas
+  OB-01..05 conservando columnas ausentes frente a vacías; calendario proyectado por ingreso y cotejo CAL-03.
+  Hoja2 conserva la prioridad; el calendario del ingreso aporta la próxima PENDIENTE solo si Hoja2 no aporta
+  fecha (sin aplicar a esa proyección el límite de 60 días del listado calendario 91), igual que Python.
+  Las proyecciones se conservan y muestran en el detalle; no alteran la fecha original de Informes ni duplican
+  observaciones. En lotes nativos el calendario 91 se cruza por selección de tribunal e identidad completa y
+  avisa si no trae las columnas necesarias. Solo una fecha inequívoca aporta contexto.
+  EGRESADOS y Búsqueda Lit se conservan como trabajos auxiliares con fuente explícita, columnas originales y
+  avisos. No ejecutan el motor tradicional ni generan acciones. Internamente mantienen la etapa de lectura
+  ESPERA, como el importador Python, y `fuente`/`nombre()` identifican su tipo real en la ventana, Excel y sesión;
+  no se modificó el enum ni las reglas del motor. Las sesiones de auxiliares ya no pueden sobrescribir las de
+  Espera del mismo ZIP. La apertura local detecta Búsqueda Lit por su columna de estado y Egresados por nombre.
+  Oráculo: `python3 rust/oraculo/generar_controles.py`: 94 órdenes, 100 calendarios y un ZIP ficticio con cinco
+  registros y cuatro tipos de fuente, cotejados con Python. Cinco pruebas nuevas entre diferencial, importación
+  nativa y consulta local; suite completa 90 PASA. Clippy y comprobación cruzada Windows PASA. La CI completa del
+  avance anterior `c2dc05b`, incluidas las pruebas y el ejecutable nativo Windows, PASA (run 43270528975).
+  Siguiente: 6.1; no considerar terminados Anonimizador, Meta 4 ni la entrega del producto.

@@ -54,8 +54,9 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
         }
     }
     let mut tablas: Vec<(Tabla, Vec<String>)> = vec![];
-    let mut contexto = Contexto { proximos: resumen.lote.lecturas.calendario.then(HashMap::new), ..Default::default() };
+    let mut contexto = Contexto { proximos: Some(HashMap::new()), ..Default::default() };
     let mut avisos = resumen.avisos.clone();
+    let mut libros = HashMap::new();
     for archivo in &resumen.archivos {
         let ruta = ruta_archivo(carpeta, &archivo.nombre)?;
         if std::fs::metadata(&ruta).map_err(|_| "Falta una descarga del lote.")?.len() > 80 * 1024 * 1024 {
@@ -65,23 +66,90 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
         if huella(&datos) != archivo.sha256 {
             return Err("Cambió una descarga desde su verificación; no se importó el lote.".into());
         }
+        if archivo.nombre.ends_with(".xls") {
+            libros.insert(archivo.nombre.clone(), flow_tabular::leer_bytes(&archivo.nombre, datos)?);
+        }
+    }
+    let mut calendario91: HashMap<(String, [String; 4]), BTreeSet<Fecha>> = HashMap::new();
+    for archivo in &resumen.archivos {
         let seleccion = resumen.lote.consultas.get(archivo.consulta).ok_or("La descarga no identifica su consulta.")?;
-        if !archivo.nombre.ends_with(".xls") {
+        if seleccion.screen != "calendario_informes" {
             continue;
         }
-        let Some(etapa) = Etapa::desde(&seleccion.tab) else {
+        let Some(libro) = libros.get(&archivo.nombre) else {
             continue;
         };
-        let libro = flow_tabular::leer_bytes(&archivo.nombre, datos)?;
-        let mut tabla = flow_tabular::leer_tabla(&libro, Some(etapa), None)?;
+        match flow_tabular::leer_tabla(libro, Some(Etapa::Informes), None) {
+            Ok(tabla) => {
+                for f in &tabla.filas {
+                    if let Some(d) = f.registro.fecha("vencimiento").filter(|d| *d > corte && (*d - corte).num_days() <= 60) {
+                        let key = vinculos::identidad(
+                            &f.registro.texto("rit"),
+                            &f.registro.texto("rut"),
+                            &f.registro.texto("nombre"),
+                            &f.registro.texto("programa"),
+                        );
+                        calendario91.entry((seleccion.tribunal.clone(), key)).or_default().insert(d);
+                    }
+                }
+            }
+            Err(_) => avisos.push(format!(
+                "Consulta {}: calendario 91 sin columnas suficientes para el cruce; conserva el Excel para revisión.",
+                archivo.consulta + 1
+            )),
+        }
+    }
+    for archivo in &resumen.archivos {
+        let seleccion = resumen.lote.consultas.get(archivo.consulta).ok_or("La descarga no identifica su consulta.")?;
+        let Some(libro) = libros.get(&archivo.nombre) else {
+            continue;
+        };
+        let (mut tabla, tipo) = if seleccion.screen == "litigantes" {
+            (flow_tabular::leer_consulta(libro, "BUSQUEDA_LITIGANTES")?, "OTRO".to_string())
+        } else if seleccion.tab == "Egresados" {
+            (flow_tabular::leer_consulta(libro, "EGRESADOS")?, "EGRESADOS".to_string())
+        } else if let Some(etapa) = Etapa::desde(&seleccion.tab) {
+            (flow_tabular::leer_tabla(libro, Some(etapa), None)?, etapa.nombre().to_string())
+        } else {
+            continue;
+        };
+        let cruces = tabla
+            .filas
+            .iter()
+            .filter_map(|f| tabla.proximo_informe(&f.registro, corte).map(|d| (f.id.clone(), d)))
+            .collect::<HashMap<_, _>>();
         for fila in &mut tabla.filas {
+            let mut hoja2 = cruces.get(&fila.id).copied();
             fila.id = format!("captura-{}-{}-{}", archivo.consulta, archivo.pagina, fila.id);
+            if let Some(d) = hoja2 {
+                contexto.proximos.as_mut().unwrap().insert(fila.id.clone(), d);
+            }
+            let mut origen = crate::controles::Origen {
+                sistema: "RUS".into(),
+                tribunal: seleccion.tribunal.clone(),
+                causa: String::new(),
+                ingreso: String::new(),
+                tipo: tipo.clone(),
+                pantalla: seleccion.screen.clone(),
+                verificada: false,
+                valores: Default::default(),
+            };
+            if !origen.tradicional() {
+                origen.valores = tabla.cabeceras.iter().cloned().zip(fila.celdas.iter().cloned()).collect();
+            }
+
             let identidad = vinculos::identidad(
                 &fila.registro.texto("rit"),
                 &fila.registro.texto("rut"),
                 &fila.registro.texto("nombre"),
                 &fila.registro.texto("programa"),
             );
+            if let Some(fechas) = calendario91.get(&(seleccion.tribunal.clone(), identidad.clone())).filter(|fs| fs.len() == 1) {
+                hoja2 = fechas.first().copied();
+            }
+            if let Some(d) = hoja2 {
+                contexto.proximos.as_mut().unwrap().insert(fila.id.clone(), d);
+            }
             let candidatos = indice.get(&(archivo.consulta, identidad)).map(Vec::as_slice).unwrap_or(&[]);
             let remotos = candidatos
                 .iter()
@@ -99,6 +167,9 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                 None
             };
             if let Some(v) = remoto {
+                origen.causa = v.causa.clone();
+                origen.ingreso = v.ingreso.clone();
+                origen.verificada = true;
                 let snapshot = lecturas.get(&recoleccion::clave("bitacora", v));
                 let eventos = snapshot.map(|l| crate::cronologia::desde_lectura(&l["datos"])).unwrap_or_default();
                 contexto.cronologias.insert(
@@ -116,17 +187,29 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                     contexto.bitacoras.insert(fila.id.clone(), eventos);
                 }
                 if let Some(lectura) = lecturas.get(&recoleccion::clave("calendario", v)) {
-                    let proxima = lectura["datos"]["proyecciones"]
+                    let mut items = lectura["datos"]["proyecciones"]
                         .as_array()
                         .into_iter()
                         .flatten()
-                        .filter(|p| p["estado"] == "PENDIENTE")
-                        .filter_map(|p| fecha(&p["fecha_proyeccion"]))
-                        .filter(|f| *f > corte && (*f - corte).num_days() <= 60)
-                        .min();
-                    if let Some(proxima) = proxima {
-                        contexto.proximos.get_or_insert_with(HashMap::new).insert(fila.id.clone(), proxima);
+                        .filter_map(|p| {
+                            Some(crate::controles::Proyeccion {
+                                fecha: fecha(&p["fecha_proyeccion"])?,
+                                estado: p["estado"].as_str()?.into(),
+                            })
+                        })
+                        .collect::<Vec<_>>();
+                    items.sort();
+                    items.dedup();
+                    if matches!(tabla.etapa, Etapa::Cumplimiento | Etapa::Informes) {
+                        let vencimiento = if tabla.etapa == Etapa::Informes { fila.registro.fecha("vencimiento") } else { None };
+                        contexto.avisos.insert(fila.id.clone(), crate::controles::cotejar(&items, corte, vencimiento, hoja2));
+                        if hoja2.is_none() {
+                            if let Some(d) = crate::controles::proxima(&items, corte) {
+                                contexto.proximos.as_mut().unwrap().insert(fila.id.clone(), d);
+                            }
+                        }
                     }
+                    contexto.calendarios.insert(fila.id.clone(), items);
                 }
             } else if resumen.lote.lecturas.bitacoras || resumen.lote.lecturas.calendario {
                 avisos.push(format!(
@@ -142,28 +225,33 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                     }
                 }
             }
+            contexto.origenes.insert(fila.id.clone(), origen);
             // La modalidad del listado sigue disponible aunque el Excel no traiga una columna con ese dato.
             if !fila.registro.tiene("modalidad") {
                 fila.registro.poner("modalidad", Celda::Texto(seleccion.modality.clone()));
             }
         }
-        if let Some((actual, huellas)) = tablas.iter_mut().find(|(t, _)| t.etapa == tabla.etapa && t.cabeceras == tabla.cabeceras) {
+        if let Some((actual, huellas)) =
+            tablas.iter_mut().find(|(t, _)| t.etapa == tabla.etapa && t.hoja == tabla.hoja && t.cabeceras == tabla.cabeceras)
+        {
             actual.filas.extend(tabla.filas);
             actual.avisos.extend(tabla.avisos);
             actual.cruce.extend(tabla.cruce);
-            huellas.push(libro.sha256);
+            huellas.push(libro.sha256.clone());
         } else {
-            tablas.push((tabla, vec![libro.sha256]));
+            tablas.push((tabla, vec![libro.sha256.clone()]));
         }
     }
     avisos.sort();
     avisos.dedup();
     let nombre = format!("Lote {}", carpeta.file_name().unwrap_or_default().to_string_lossy());
-    Ok(tablas
+    let mut trabajos = tablas
         .into_iter()
         .map(|(mut tabla, huellas)| {
             tabla.avisos.extend(avisos.clone());
             analizar_filas(&nombre, &huella(huellas.join("|").as_bytes()), &tabla, corte, config, &contexto)
         })
-        .collect())
+        .collect::<Vec<_>>();
+    crate::controles::paquete(&mut trabajos);
+    Ok(trabajos)
 }

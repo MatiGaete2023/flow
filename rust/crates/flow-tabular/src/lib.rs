@@ -6,4 +6,4 @@ pub mod libro;
 pub mod tabla;
 
 pub use libro::{leer, leer_bytes, Formato, Hoja, Libro};
-pub use tabla::{candidatas, leer_tabla, leer_todas, Candidata, Fila, Tabla};
+pub use tabla::{candidatas, leer_consulta, leer_tabla, leer_todas, Candidata, Fila, Tabla};

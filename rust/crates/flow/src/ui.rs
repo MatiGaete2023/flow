@@ -156,14 +156,10 @@ impl App {
         match cli::cargar(&ruta, self.etapa, None, corte, &self.motor) {
             Ok(mut trabajos) => {
                 let trabajo = trabajos.remove(0);
-                let mut texto = format!(
-                    "{}: {} registros, {} con observación.",
-                    trabajo.etapa.nombre(),
-                    trabajo.filas.len(),
-                    trabajo.con_observacion()
-                );
+                let mut texto =
+                    format!("{}: {} registros, {} con observación.", trabajo.nombre(), trabajo.filas.len(), trabajo.con_observacion());
                 if !trabajos.is_empty() {
-                    let nombres: Vec<&str> = trabajos.iter().map(|t| t.etapa.nombre()).collect();
+                    let nombres: Vec<&str> = trabajos.iter().map(|t| t.nombre()).collect();
                     texto.push_str(&format!(" El archivo trae además: {}.", nombres.join(", ")));
                 }
                 self.activar(trabajo);
@@ -193,7 +189,7 @@ impl App {
         if let Some(actual) = self.trabajo.take() {
             self.otros.push(actual);
         }
-        let texto = format!("{}: {} registros.", nuevo.etapa.nombre(), nuevo.filas.len());
+        let texto = format!("{}: {} registros.", nuevo.nombre(), nuevo.filas.len());
         self.activar(nuevo);
         self.bien(texto);
     }
@@ -244,7 +240,7 @@ impl App {
         match almacen::listar(&self.datos).first().map(|(r, _)| almacen::cargar(r)) {
             Some(Ok(t)) => {
                 self.corte = t.corte.format("%d/%m/%Y").to_string();
-                let texto = format!("Trabajo reanudado: {} del {} ({}).", t.etapa.nombre(), self.corte, t.archivo);
+                let texto = format!("Trabajo reanudado: {} del {} ({}).", t.nombre(), self.corte, t.archivo);
                 self.activar(t);
                 self.otros.clear();
                 self.archivo = None;
@@ -269,7 +265,7 @@ impl App {
             }
         }
         let base = self.ajustes.salida.clone()?;
-        let nombre = format!("Flow {} {}", trabajo.etapa.nombre(), trabajo.corte.format("%Y-%m-%d"));
+        let nombre = format!("Flow {} {}", trabajo.nombre(), trabajo.corte.format("%Y-%m-%d"));
         match excel::carpeta_nueva(&base, &nombre) {
             Ok(carpeta) => {
                 self.carpeta = Some(carpeta.clone());
@@ -285,7 +281,7 @@ impl App {
     fn guardar_excel(&mut self) {
         let Some(carpeta) = self.carpeta_productos() else { return };
         let Some(trabajo) = &self.trabajo else { return };
-        let destino = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.etapa.nombre()), "xlsx");
+        let destino = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.nombre()), "xlsx");
         match excel::observaciones(trabajo, &destino) {
             Ok(()) => {
                 self.resultados.push(format!("Excel de observaciones · {}", destino.display()));
@@ -478,13 +474,13 @@ impl App {
         let mut cambiar = None;
         ui.horizontal_wrapped(|ui| {
             for (i, otro) in self.otros.iter().enumerate() {
-                if ui.button(format!("Ver {} ({})", otro.etapa.nombre(), otro.filas.len())).clicked() {
+                if ui.button(format!("Ver {} ({})", otro.nombre(), otro.filas.len())).clicked() {
                     cambiar = Some(i);
                 }
             }
             ui.label(format!(
                 "{} · «{}» · {} registros · {} por revisar",
-                trabajo.etapa.nombre(),
+                trabajo.nombre(),
                 trabajo.archivo,
                 trabajo.filas.len(),
                 trabajo.por_revisar()
@@ -568,7 +564,14 @@ impl App {
                         ui.label(format!("· {a}"));
                     }
                 }
-                crate::cronologia_ui::mostrar(ui,fila,&self.motor,trabajo.corte);
+                crate::cronologia_ui::mostrar(ui, fila, &self.motor, trabajo.corte);
+                if !fila.calendario.is_empty() {
+                    ui.collapsing("Calendario del ingreso", |ui| {
+                        for p in &fila.calendario {
+                            ui.label(format!("{} · {}", p.fecha.format("%d/%m/%Y"), p.estado));
+                        }
+                    });
+                }
                 if !fila.propuesta.acciones.is_empty() {
                     ui.add_space(6.0);
                     ui.label(RichText::new("Acciones que origina").strong());

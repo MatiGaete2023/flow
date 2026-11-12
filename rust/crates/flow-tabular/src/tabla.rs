@@ -221,6 +221,34 @@ pub fn leer_todas(libro: &Libro) -> Vec<Tabla> {
     salida
 }
 
+/// Fuentes auxiliares conocidas. Conservan sus columnas, sin fingir que satisfacen las de una etapa del motor.
+pub fn leer_consulta(libro: &Libro, tipo: &str) -> Result<Tabla, String> {
+    if !matches!(tipo, "EGRESADOS" | "BUSQUEDA_LITIGANTES") {
+        return Err("Tipo de consulta auxiliar no permitido.".into());
+    }
+    let mut candidatas = vec![];
+    for hoja in &libro.hojas {
+        for (n, fila) in hoja.filas.iter().take(FILAS_A_REVISAR).enumerate() {
+            let cabeceras = cabeceras_de(fila);
+            if columnas::duplicadas(&cabeceras).is_some() {
+                continue;
+            }
+            let Ok(mapeo) = columnas::mapear(&cabeceras, Etapa::Espera) else {
+                continue;
+            };
+            if mapeo.contains_key("nombre") && (mapeo.contains_key("rit") || mapeo.contains_key("rut")) {
+                candidatas.push((hoja, n + 1, cabeceras, mapeo));
+            }
+        }
+    }
+    if candidatas.len() != 1 {
+        return Err("La consulta auxiliar no contiene una tabla única de personas reconocible.".into());
+    }
+    let (hoja, fila_cabecera, cabeceras, mapeo) = candidatas.remove(0);
+    let filas = filas_de(libro, hoja, fila_cabecera, &mapeo);
+    Ok(Tabla { etapa: Etapa::Espera, hoja: tipo.into(), fila_cabecera, cabeceras, mapeo, filas, cruce: vec![], avisos: vec![] })
+}
+
 impl Tabla {
     /// Próximo informe según el cruce: última fila con vencimiento posterior al corte para la identidad completa.
     pub fn proximo_informe(&self, registro: &Registro, corte: Fecha) -> Option<Fecha> {

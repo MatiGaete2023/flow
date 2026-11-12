@@ -28,7 +28,7 @@ fn sesiones(datos: &Path) -> PathBuf {
 pub fn guardar(datos: &Path, trabajo: &Trabajo) -> Result<PathBuf, String> {
     let carpeta = sesiones(datos);
     std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear la carpeta de sesiones: {e}"))?;
-    let nombre = format!("{}_{}_{}.json", trabajo.corte.format("%Y%m%d"), trabajo.etapa.nombre(), &trabajo.sha256[..12.min(trabajo.sha256.len())]);
+    let nombre = format!("{}_{}_{}.json", trabajo.corte.format("%Y%m%d"), trabajo.nombre(), &trabajo.sha256[..12.min(trabajo.sha256.len())]);
     let destino = carpeta.join(nombre);
     let temporal = destino.with_extension("json.tmp");
     let texto = serde_json::to_string(trabajo).map_err(|e| e.to_string())?;
