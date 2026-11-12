@@ -100,7 +100,7 @@ fn plantilla_colores_alturas_y_fechas_sin_alterar_valores() {
     let styles = parte(&resultados[0], "xl/styles.xml");
     assert!(styles.contains("C5A3FF"), "el color personalizado de cabecera se importó");
     assert!(styles.contains("dd-mm-yyyy"), "las fechas se formatean en día-mes-año");
-    let xml = parte(&resultados[0], "xl/worksheets/sheet4.xml");
+    let xml = parte(&resultados[0], "xl/worksheets/sheet2.xml");
     assert!(xml.contains("ht=\"38\""), "altura de cabecera personalizada");
     assert!(xml.contains("width=\"35\"") || xml.contains("width=\"35.0\""), "ancho personalizado");
     let hoja = final_libro.hojas.iter().find(|h| h.nombre == "Residencia Cumplimiento").unwrap();
