@@ -48,7 +48,7 @@ rust/
     flow-tabular          lectura de Excel RUS (.xls BIFF/HTML/XML 2003, .xlsx), cabeceras y mapeo de columnas
     flow-productos        Excel de observaciones y nóminas, Word de proyectos, cuerpo de correos
     flow-outlook          borradores por COM (solo Windows); en otros sistemas, simulación para pruebas
-    flow-almacen          trabajo guardado, retención
+    flow-trabajo          tabla analizada + observación final editable; guardar/cargar y retención
     flow-captura          puente local con la extensión de Chrome, lotes (fase posterior)
     flow-anonimo          anonimizador (fase posterior)
     flow-meta4            Meta 4 (fase posterior)
@@ -75,7 +75,7 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 
 ### Fase 1 — Base
 - [x] 1.1 Workspace, `flow-dominio` (Celda, fechas, texto), datos copiados.
-- [ ] 1.2 CI `.github/workflows/rust.yml`: test Linux + compilación Windows que publica el `.exe` como artefacto.
+- [x] 1.2 CI `.github/workflows/rust.yml`: test Linux + compilación Windows que publica el `.exe` como artefacto.
 
 ### Fase 2 — Motor
 - [x] 2.1 `flow-motor`: textos, composición, comunes, Espera, Cumplimiento, Informes, Historia, acciones.
@@ -83,10 +83,10 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [x] 2.3 Prueba diferencial en verde (`cargo test -p flow-motor`).
 
 ### Fase 3 — Lectura
-- [ ] 3.1 `flow-tabular`: detección por contenido, BIFF/OOXML (calamine), HTML y XML 2003 (propio).
-- [ ] 3.2 Fila de cabecera, mapeo de columnas (`src/nurus/rus/columns.py`), hoja 2 de cruce, pre-pase
+- [x] 3.1 `flow-tabular`: detección por contenido, BIFF/OOXML (calamine), HTML y XML 2003 (propio).
+- [x] 3.2 Fila de cabecera, mapeo de columnas (`src/nurus/rus/columns.py`), hoja 2 de cruce, pre-pase
       (duplicidad, acumulados).
-- [ ] 3.3 `flow observar ARCHIVO --etapa E --corte F` imprime JSON; comparado con Python sobre fixtures ficticios.
+- [x] 3.3 `flow observar ARCHIVO --etapa E --corte F` imprime JSON; comparado con Python sobre fixtures ficticios.
 
 ### Fase 4 — Productos
 - [ ] 4.1 Excel de salida con observaciones (libro nuevo `.xlsx`, columnas originales + OBSERVACIÓN + avisos).
@@ -129,7 +129,14 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 
 ## 5. Diferencias aceptadas con el Python
 
-(Se agregan aquí a medida que aparecen, con motivo.)
+- **Fechas en texto libre.** Python acepta cualquier formato que entienda pandas; Rust solo los cuatro listados en
+  la sección 2. Lo demás es «ilegible» y genera incidencia.
+- **Filas de totales.** Python toma como registro cualquier fila con un dato en una columna reconocida; Rust exige
+  dos. Evita que «Total: 2» bajo RIT se analice como causa.
+- **Etapa deducida.** Rust deduce la etapa por el nombre de la hoja, por ser la única compatible o por el nombre
+  del archivo; Python la pide siempre.
+- **Hoja de cruce.** Rust la detecta sola si hay exactamente una hoja con las seis columnas; no hay selector.
+- **Época 1904 de Excel:** no soportada (RUS no la usa).
 
 ## 6. Bitácora de avance
 
@@ -139,3 +146,8 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
   los otros 3 no los usa el motor (`COMUN.REITERA_OBSERVACION` es CT-07 y se aplica fuera del motor: revisar
   `src/nurus/personal/bitacora_avisos.py` al hacer el paso 3.3; `C09_BASE_BREVE` y `HISTORIA.VARIOS` no se alcanzan).
   Se comprobó que la prueba detecta una mutación de texto (13 casos fallan al cambiar «Asimismo»).
+- 2026-11-12: `flow-tabular` (BIFF, OOXML, XML 2003, HTML; encabezado desplazado; cruce), `flow-trabajo`
+  (pre-pase + análisis de la tabla) y ejecutable `flow observar`. Prueba de punta a punta con los libros ficticios de
+  `docs/evidencia_p0/golden`: mismas observaciones, reglas, acciones y avisos que `semantic.json`. CI en
+  `.github/workflows/rust.yml` (no se ha visto correr todavía: revisar el primer resultado en GitHub Actions).
+  Pendiente de 3.3: CT-07 (`COMUN.REITERA_OBSERVACION`), que necesita bitácora y se hace con la captura (fase 7).

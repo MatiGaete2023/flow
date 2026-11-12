@@ -1,0 +1,58 @@
+name: Flow en Rust
+
+on:
+  push:
+    branches: ["rust/**"]
+    paths: ["rust/**", ".github/workflows/rust.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: Dependencias de sistema para la ventana
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libgtk-3-dev
+      - name: Identidades y contactos (solo datos ficticios)
+        working-directory: .
+        run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
+      - run: cargo test --workspace --locked
+
+  windows:
+    needs: pruebas
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: cargo test --workspace --locked
+      - run: cargo build --release --locked -p flow
+      - name: Huella del ejecutable
+        shell: pwsh
+        run: (Get-FileHash target/release/flow.exe -Algorithm SHA256).Hash | Out-File target/release/flow.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Windows
+          path: |
+            rust/target/release/flow.exe
+            rust/target/release/flow.exe.sha256
+          retention-days: 14

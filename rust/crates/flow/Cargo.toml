@@ -1,0 +1,17 @@
+[package]
+name = "flow"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "flow"
+path = "src/main.rs"
+
+[dependencies]
+flow-dominio.workspace = true
+flow-motor.workspace = true
+flow-tabular = { path = "../flow-tabular" }
+flow-trabajo = { path = "../flow-trabajo" }
+chrono.workspace = true
+serde_json.workspace = true
