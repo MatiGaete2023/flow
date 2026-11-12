@@ -203,6 +203,11 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
 
 /// Regenera los cinco productos en una carpeta nueva, sin sobrescribir ni modificar los originales.
 pub fn ejecutar(registros: &Path, destino: &Path) -> Result<Vec<PathBuf>, String> {
+    ejecutar_con_plantilla(registros, destino, None)
+}
+pub fn ejecutar_con_plantilla(registros: &Path, destino: &Path, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
     let estado = cargar(registros)?;
-    crate::salida::publicar_regenerado(&estado.meta, destino, &estado.bitacoras, &estado.huella_registros)
+    crate::salida::publicar_regenerado_con_plantilla(
+        &estado.meta, destino, &estado.bitacoras, &estado.huella_registros, plantilla
+    )
 }
