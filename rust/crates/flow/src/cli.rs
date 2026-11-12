@@ -14,6 +14,7 @@ Uso:
   flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA [--modo estricto|conservador]\n                  [--desplazar-dias N] [--generalizar-nacimiento] [--rechazar-no-admitidos] [--semilla-stdin]
   flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD]
              [--tribunales \"Laja,Tomé\"]
+  flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA
   flow ayuda
 
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
@@ -278,6 +279,20 @@ fn meta4(args: &[String]) -> Result<(), (i32, String)> {
     Ok(())
 }
 
+/// Regenera Meta 4 desde el Registros.xlsx corregido y el reporte original.
+fn meta4_regenerar(args: &[String]) -> Result<(), (i32, String)> {
+    let o = opciones(args, &["salida"]).map_err(|e| (2, e))?;
+    if o.posicionales.len() != 1 || o.banderas.len() != 0 || o.pares.len() != 1 {
+        return Err((2, "Uso: flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA.".into()));
+    }
+    let destino = o.valor("salida").ok_or((2, "Falta --salida.".to_string()))?;
+    let rutas = flow_meta4::regenerar::ejecutar(Path::new(&o.posicionales[0]), Path::new(destino))
+        .map_err(|e| (1, e))?;
+    println!("Meta 4 regenerado desde Registros.xlsx revisado:");
+    for ruta in rutas { println!("  creado · {}", ruta.display()); }
+    Ok(())
+}
+
 pub fn ejecutar(args: &[String]) -> i32 {
     let resultado = match args.first().map(String::as_str) {
         None | Some("ayuda" | "--ayuda" | "-h" | "--help") => {
@@ -288,6 +303,7 @@ pub fn ejecutar(args: &[String]) -> i32 {
         Some("producir") => producir(&args[1..]),
         Some("anonimizar") => anonimizar(&args[1..]),
         Some("meta4") => meta4(&args[1..]),
+        Some("meta4-regenerar") => meta4_regenerar(&args[1..]),
         Some(otro) => Err((2, format!("Comando desconocido: {otro}.\n\n{AYUDA}"))),
     };
     match resultado {
