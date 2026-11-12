@@ -38,7 +38,8 @@ fn meta() -> flow_meta4::Meta4 {
             fecha_obs: Some(NaiveDate::from_ymd_opt(2026, 10, 12).unwrap()),
             etapa_ultima: "Espera".into(), control: "VERIFICADA EN EL PERÍODO".into(), alerta: ALERTA.into(),
         }],
-        observaciones: Vec::new(), lecturas: Vec::new(), sin_bitacoras: Vec::new(),
+        observaciones: Vec::new(), lecturas: Vec::new(),
+        sin_bitacoras: vec![("Consulta ficticia sin bitácora".into(), "TOMÉ".into())],
         filtros: Vec::new(), lotes: vec!["Lote ficticio".into()], avisos: Vec::new(),
     }
 }
@@ -111,6 +112,8 @@ fn regenera_desde_fecha_editada_sin_alterar_el_original() {
     let reporte: serde_json::Value = serde_json::from_slice(&std::fs::read(&archivos[4]).unwrap()).unwrap();
     assert_eq!(reporte["alertas"], 0);
     assert_eq!(reporte["regenerado_desde"], "Registros.xlsx revisado");
+    assert_eq!(reporte["consultas_sin_bitacoras_detalle"][0]["tribunal"], "TOMÉ");
+    assert_eq!(reporte["resumen_por_tribunal"][0]["CONSULTAS SIN BITÁCORAS"], 1);
     assert!(regenerar::ejecutar(&registros, &destino).is_err(), "no se sobrescribe");
 }
 

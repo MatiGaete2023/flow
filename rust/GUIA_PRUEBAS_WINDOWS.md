@@ -56,3 +56,9 @@ La anonimización requiere revisar las copias antes de compartirlas, especialmen
 Meta 4 se construyó sobre las reglas de la herramienta actual pero **no se comparó archivo contra archivo**, porque
 lee otro formato de lote. La prueba 33 es la que lo confirma.
 
+
+| 35 | Meta 4: regenerar | Genera Meta 4 con datos ficticios; cambia FECHA OBS. y ETAPA ÚLTIMA OBS. en Registros.xlsx y usa «Regenerar desde Registros revisado…» | Una nueva carpeta con cinco archivos, fecha corregida y ALERTA recalculada, aunque se haya escrito a mano una ALERTA incorrecta |
+| 36 | Meta 4: conservación y errores | Repite la regeneración con la misma salida; prueba sin Bitacoras_del_mes.xlsx y con FECHA OBS. ilegible | Se rechazan esas entradas, no quedan productos parciales y los originales siguen intactos |
+
+La regeneración no acredita todavía el formato de una plantilla Excel personalizada. La prueba real de
+Meta 4 con lotes capturados y el cotejo frente a Python siguen pendientes.

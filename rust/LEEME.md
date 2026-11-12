@@ -99,11 +99,25 @@ Seguimiento → Espera y Cumplimiento de FAE y Residencia y sus bitácoras. Revi
 flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD] [--tribunales "Laja,Tomé"]
 ```
 
+### Regenerar Meta 4 después de revisar Registros.xlsx
+
+Abre Meta 4 y pulsa **«Regenerar desde Registros revisado…»**. Selecciona `Registros.xlsx` del resultado
+anterior, ya corregido, y elige la carpeta de salida. También se puede usar la consola:
+
+```text
+flow meta4-regenerar "CARPETA/Registros.xlsx" --salida "CARPETA_NUEVA"
+```
+
+El archivo `Reporte META4.json` y `Bitacoras_del_mes.xlsx` originales deben estar junto a
+`Registros.xlsx`. Flow conserva las bitácoras, toma el período y los tribunales del reporte, relee las fechas
+y etapas corregidas y recalcula las alertas. No altera la carpeta anterior y rechaza una salida existente.
+El libro nuevo de Registros reconstruye las columnas conocidas: no copia hojas o columnas añadidas a mano.
+
 ## Qué todavía no hace
 
 - Meta 4 lee los lotes capturados por Flow, no las carpetas del Descargador Python.
-- Meta 4 no tiene aún «Regenerar desde Registros revisado» ni plantilla propia de la planilla: si corriges
-  `Registros.xlsx` a mano, la planilla no se rehace sola.
+- Meta 4 todavía no importa una **plantilla Excel personalizada** para reproducir su formato propio:
+  genera su diseño estándar. El código Python antiguo sí admite una plantilla.
 - No hay instalador: es un solo `flow.exe` más la carpeta `extension`. Se copian y se usan.
 
 ## Desarrollo

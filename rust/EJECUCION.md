@@ -24,10 +24,10 @@ cd rust && cargo test --workspace
 
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
-- Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 8.1, Meta 4.** Fase 6.1 terminada: ZIP/CSMP_CAPTURE, carpetas y sesión común, informe,
-  consola y ventana con progreso/cancelación. Continuar con `META4_Bitacoras/scripts/` y `LEEME.md`.
-  Siguen exportación ZIP nativa de Captura y 8.2 (manual, guía, instalador y cierre). El producto completo sigue abierto.
+- Último avance anterior a esta continuación: `050a425` (8.1 y 8.2 terminados; CI Linux/Windows PASA).
+- **Foco activo: 8.3b, plantilla Excel propia.** 8.3a ya permite regenerar los productos desde un
+  `Registros.xlsx` revisado, sin cambiar el original. Queda adaptar la plantilla de la planilla, luego 8.4
+  (verificación con el usuario en Windows real). No considerar aceptado el producto.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -197,8 +197,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
 - [x] 8.1 `flow-meta4`: cálculo, cinco productos, consola y pestaña (sobre lotes de Flow).
 - [x] 8.2 Manual (`LEEME.md`) y guía de pruebas (`GUIA_PRUEBAS_WINDOWS.md`, 34 pruebas). Sin instalador: un
       `flow.exe` y la carpeta `extension`.
-- [ ] 8.3 Meta 4: «Regenerar desde Registros revisado» y plantilla propia (`meta4_bitacoras.py::regenerar`,
-      `generate_meta4.py::load_template`); leer también lotes del Descargador Python si el usuario lo pide.
+- [ ] 8.3 Meta 4: regeneración y plantilla propia (`meta4_bitacoras.py::regenerar`,
+      `generate_meta4.py::load_template`); leer lotes del Descargador Python solo si el usuario lo pide.
+  - [x] 8.3a Regenerar los cinco productos desde `Registros.xlsx` revisado y el reporte original;
+        recalcular alertas, conservar bitácoras, no sobrescribir, comando y pestaña.
+  - [ ] 8.3b Importar una plantilla Excel personalizada conservando su formato y verificarla.
 - [ ] 8.4 Prueba del usuario en Windows real y su resultado. Nada está aceptado hasta entonces.
 
 ## 4. Guía por paso (fuentes en el Python)
@@ -425,3 +428,10 @@ guardar el código de conexión, y cualquier escritura en RUS.
   corrida, en el que cada calendario cuenta igual que una bitácora (decisión del 19-oct, con prueba propia
   `test_calendario_cuenta_en_el_maximo_de_lecturas`); con calendario activo alcanza para 300 ingresos y hay que
   «Retomar». **No se cambió**: es decisión del usuario (subir el tope, contar el calendario aparte o seguir retomando).
+
+- 2026-11-12: 8.3a: importación estricta de Registros.xlsx revisado y su reporte (período, filtros, tribunal),
+  cálculo de alertas desde la etapa revisada, publicación atómica en nueva carpeta y conservación literal del
+  libro Bitacoras_del_mes.xlsx. Consola `flow meta4-regenerar` y botón en pestaña Meta 4; pruebas ficticias con
+  corrección de fecha, alerta manipulada, fuente ausente, fecha ilegible y no sobrescritura. Los reportes nuevos
+  conservan también la atribución de consultas sin bitácora por tribunal; en reportes antiguos sin ese dato no
+  se inventa la asociación. El soporte de plantillas y la aceptación en Windows real siguen pendientes.

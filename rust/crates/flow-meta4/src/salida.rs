@@ -454,6 +454,8 @@ pub fn reporte(m: &Meta4, totales: &BTreeMap<String, usize>) -> Value {
         "fuera_de_meta4": m.registros.iter().filter(|r| r.categoria.is_none() || r.tribunal.is_none()).count(),
         "conteo_por_control": controles,
         "consultas_sin_bitacoras": m.sin_bitacoras.iter().map(|(c, _)| c).collect::<Vec<_>>(),
+        "consultas_sin_bitacoras_detalle": m.sin_bitacoras.iter()
+            .map(|(consulta, tribunal)| json!({"consulta": consulta, "tribunal": tribunal})).collect::<Vec<_>>(),
         "filtros_registros": m.filtros,
         "lotes": m.lotes,
         "avisos": m.avisos,

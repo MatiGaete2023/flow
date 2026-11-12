@@ -7,7 +7,7 @@ use chrono::NaiveDate;
 use flow_dominio::Celda;
 use flow_tabular::{Formato, Hoja};
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 /// Estado comprobado del libro revisado y del reporte original; la bitácora se conserva intacta.
@@ -163,14 +163,32 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
     }
     let bitacoras = carpeta.join("Bitacoras_del_mes.xlsx");
     let controles = lecturas(&bitacoras)?;
-    let sin_bitacoras = textos(&previo["consultas_sin_bitacoras"], "consultas_sin_bitacoras")?
-        .into_iter().map(|label| {
-            let t = tribunal(&label).unwrap_or(SIN_TRIBUNAL);
-            (label, t.to_string())
-        }).collect();
+    // Los reportes nuevos registran la asociación exacta consulta/tribunal.
+    // Los anteriores solo guardaban la etiqueta: no se inventa una atribución.
+    let sin_bitacoras: Vec<(String, String)> = if let Some(detalle) = previo["consultas_sin_bitacoras_detalle"].as_array() {
+        if detalle.len() > 10000 {
+            return Err("Demasiadas consultas sin bitácoras en el reporte.".into());
+        }
+        let mut filas = Vec::new();
+        for item in detalle {
+            let etiqueta = item["consulta"].as_str().ok_or("Consulta sin bitácora inválida.")?;
+            let nombre = item["tribunal"].as_str().ok_or("Tribunal de consulta sin bitácora inválido.")?;
+            if tribunal(nombre) != Some(nombre) && nombre != SIN_TRIBUNAL {
+                return Err("Tribunal no reconocido en las consultas sin bitácoras.".into());
+            }
+            filas.push((etiqueta.to_string(), nombre.to_string()));
+        }
+        filas
+    } else {
+        textos(&previo["consultas_sin_bitacoras"], "consultas_sin_bitacoras")?
+            .into_iter().map(|etiqueta| (etiqueta, SIN_TRIBUNAL.to_string())).collect()
+    };
     let filtros = textos(&previo["filtros_registros"], "filtros_registros")?;
     let lotes = textos(&previo["lotes"], "lotes")?;
     let mut avisos = textos(&previo["avisos"], "avisos")?;
+    if previo.get("consultas_sin_bitacoras_detalle").is_none() && !sin_bitacoras.is_empty() {
+        avisos.push("El reporte original no conserva el tribunal de cada consulta sin bitácoras: se muestran sin atribuir, sin inferir un tribunal.".into());
+    }
     avisos.push("Regenerado desde Registros.xlsx revisado; se preservó Bitacoras_del_mes.xlsx.".into());
     let sin_clasificar = registros_revisados.iter().filter(|r| r.categoria.is_none() || r.tribunal.is_none()).count();
     if sin_clasificar > 0 {
@@ -186,11 +204,5 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
 /// Regenera los cinco productos en una carpeta nueva, sin sobrescribir ni modificar los originales.
 pub fn ejecutar(registros: &Path, destino: &Path) -> Result<Vec<PathBuf>, String> {
     let estado = cargar(registros)?;
-    let original = registros.canonicalize().map_err(|e| e.to_string())?;
-    let destino_real = destino.parent().unwrap_or(Path::new(".")).canonicalize()
-        .map_err(|e| format!("La carpeta padre de salida no existe: {e}"))?;
-    if destino_real == original.parent().unwrap_or(Path::new(".")) && destino.file_name().is_none() {
-        return Err("La salida debe ser una carpeta nueva.".into());
-    }
     crate::salida::publicar_regenerado(&estado.meta, destino, &estado.bitacoras, &estado.huella_registros)
 }
