@@ -101,8 +101,11 @@ fn plantilla_colores_alturas_y_fechas_sin_alterar_valores() {
     assert!(styles.contains("C5A3FF"), "el color personalizado de cabecera se importó");
     assert!(styles.contains("dd-mm-yyyy"), "las fechas se formatean en día-mes-año");
     let xml = parte(&resultados[0], "xl/worksheets/sheet2.xml");
-    assert!(xml.contains("ht=\"38\""), "altura de cabecera personalizada");
-    assert!(xml.contains("width=\"35\"") || xml.contains("width=\"35.0\""), "ancho personalizado");
+    assert!(xml.contains("ht=\"38"), "altura de cabecera personalizada: no se encontró ht=38");
+    let xml_origen = parte(&modelo, "xl/worksheets/sheet2.xml");
+    let desde = xml_origen.find("<cols>").unwrap();
+    let hasta = xml_origen[desde..].find("</cols>").unwrap() + desde + "</cols>".len();
+    assert!(xml.contains(&xml_origen[desde..hasta]), "los anchos deben copiarse exactamente del modelo");
     let hoja = final_libro.hojas.iter().find(|h| h.nombre == "Residencia Cumplimiento").unwrap();
     let fila = hoja.filas.iter().find(|f| f.first().is_some_and(|v| v.texto() == "P-1-2099")).unwrap();
     assert_eq!(fila[7].fecha(), Some(dia("2026-10-12")));
