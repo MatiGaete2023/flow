@@ -96,7 +96,7 @@ Seguimiento → Espera y Cumplimiento de FAE y Residencia y sus bitácoras. Revi
 - La misma consulta en dos lotes se rechaza, para no duplicar registros.
 
 ```text
-flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD] [--tribunales "Laja,Tomé"]
+flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD] [--tribunales "Laja,Tomé"] [--plantilla PLANTILLA.xlsx]
 ```
 
 ### Regenerar Meta 4 después de revisar Registros.xlsx
@@ -105,7 +105,7 @@ Abre Meta 4 y pulsa **«Regenerar desde Registros revisado…»**. Selecciona `R
 anterior, ya corregido, y elige la carpeta de salida. También se puede usar la consola:
 
 ```text
-flow meta4-regenerar "CARPETA/Registros.xlsx" --salida "CARPETA_NUEVA"
+flow meta4-regenerar "CARPETA/Registros.xlsx" --salida "CARPETA_NUEVA" [--plantilla PLANTILLA.xlsx]
 ```
 
 El archivo `Reporte META4.json` y `Bitacoras_del_mes.xlsx` originales deben estar junto a
@@ -116,8 +116,18 @@ El libro nuevo de Registros reconstruye las columnas conocidas: no copia hojas o
 ## Qué todavía no hace
 
 - Meta 4 lee los lotes capturados por Flow, no las carpetas del Descargador Python.
-- Meta 4 todavía no importa una **plantilla Excel personalizada** para reproducir su formato propio:
-  genera su diseño estándar. El código Python antiguo sí admite una plantilla.
+- La plantilla Excel personalizada es **opcional**: en la pestaña Meta 4 pulsa «Elegir plantilla Excel…».
+  También se admite en consola añadiendo `--plantilla "C:\\Ruta\\plantilla.xlsx"` a los comandos
+  `meta4` y `meta4-regenerar`. Sin plantilla se utiliza el diseño estándar.
+- La plantilla debe ser un `.xlsx` con las cuatro hojas `Residencia Espera`,
+  `Residencia Cumplimiento`, `FAE Espera` y `FAE Cumplimiento`. Cada hoja debe traer
+  las filas modelo de tribunal, informe, fecha, cabecera RIT, un registro de ejemplo,
+  «SIN REGISTROS» y «TOTAL:». Flow reutiliza estilos de celda, anchos, alturas y tema
+  para reconstruir las cuatro hojas con **los datos calculados**, no con los datos
+  de ejemplo de la plantilla. Las fechas se muestran como día-mes-año.
+- No se importan fórmulas, dibujos, macros, relaciones externas ni objetos de la
+  plantilla. Se rechazan hojas modelo combinadas y plantillas incompletas. El
+  archivo aportado nunca se modifica, y un error impide publicar productos parciales.
 - No hay instalador: es un solo `flow.exe` más la carpeta `extension`. Se copian y se usan.
 
 ## Desarrollo
