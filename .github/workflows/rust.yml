@@ -62,6 +62,11 @@ jobs:
           workspaces: rust
       - run: cargo test --workspace --locked
       - run: cargo build --release --locked -p flow
+      - name: Arranque real del ejecutable Windows (consola, sin SITFA)
+        shell: pwsh
+        run: |
+          & .\\target\\release\\flow.exe ayuda | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "flow.exe no inició correctamente en Windows" }
       - name: Huella del ejecutable
         shell: pwsh
         run: (Get-FileHash target/release/flow.exe -Algorithm SHA256).Hash | Out-File target/release/flow.exe.sha256
