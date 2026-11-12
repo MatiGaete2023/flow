@@ -1456,8 +1456,10 @@ dependencies = [
  "flow-captura",
  "flow-dominio",
  "flow-tabular",
+ "quick-xml 0.41.0",
  "rust_xlsxwriter",
  "serde_json",
+ "zip 2.6.1",
 ]
 
 [[package]]
