@@ -311,13 +311,18 @@ fn estilos_con_fecha(original: &str, indices: &BTreeSet<usize>) -> Result<(Strin
     let fmt = format!("<numFmt numFmtId=\"{formato_id}\" formatCode=\"dd-mm-yyyy\"/>");
     if let Some(inicio) = nuevo.find("<numFmts") {
         let fin_apertura = inicio + nuevo[inicio..].find('>').ok_or("numFmts incompleto.")? + 1;
-        let cierre = fin_apertura + nuevo[fin_apertura..].find("</numFmts>").ok_or("numFmts sin cierre.")?;
         let n = nuevo[inicio..fin_apertura].to_string();
-        let anterior = n.split("count=\"").nth(1).and_then(|p| p.split('"').next()).and_then(|p| p.parse::<usize>().ok()).unwrap_or(0);
-        let cabecera = poner_attr(&n, "count", &(anterior+1).to_string())?;
-        nuevo.replace_range(inicio..fin_apertura, &cabecera);
-        let cierre = cierre + (cabecera.len() - n.len());
-        nuevo.insert_str(cierre, &fmt);
+        if n.ends_with("/>") {
+            // Plantillas sin formatos personalizados pueden usar <numFmts count="0"/>.
+            nuevo.replace_range(inicio..fin_apertura, &format!("<numFmts count=\"1\">{fmt}</numFmts>"));
+        } else {
+            let cierre = fin_apertura + nuevo[fin_apertura..].find("</numFmts>").ok_or("numFmts sin cierre.")?;
+            let anterior = n.split("count=\"").nth(1).and_then(|p| p.split('"').next()).and_then(|p| p.parse::<usize>().ok()).unwrap_or(0);
+            let cabecera = poner_attr(&n, "count", &(anterior+1).to_string())?;
+            nuevo.replace_range(inicio..fin_apertura, &cabecera);
+            let cierre = cierre + (cabecera.len() - n.len());
+            nuevo.insert_str(cierre, &fmt);
+        }
     } else {
         let root = nuevo.find("<styleSheet").ok_or("styles.xml no es un estilo de Excel.")?;
         let fin = root + nuevo[root..].find('>').ok_or("styleSheet incompleto.")? + 1;
