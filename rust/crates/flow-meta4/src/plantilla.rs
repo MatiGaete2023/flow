@@ -16,7 +16,6 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const LIMITE_PLANTILLA: usize = 20 * 1024 * 1024;
 const LIMITE_XML: u64 = 8 * 1024 * 1024;
-const PAPEL: [&str; 7] = ["título", "informe", "fecha", "cabecera", "dato", "sin registros", "total"];
 
 #[derive(Clone)]
 struct Muestra {
@@ -290,7 +289,7 @@ fn estilos_con_fecha(original: &str, indices: &BTreeSet<usize>) -> Result<(Strin
     let formato_id = mayor + 1;
     let mut nuevos = String::new();
     let mut ids = BTreeMap::new();
-    for (i, base) in indices {
+    for i in indices {
         let estilo = xfs[*i].clone();
         let (inicio_tag, resto) = estilo.split_once('>').ok_or("xf de estilo incompleto.")?;
         let cierre_tag = format!("{inicio_tag}>");
@@ -409,6 +408,8 @@ pub fn aplicar(plantilla: &Path, generado: &Path) -> Result<(), String> {
     };
     if let Err(e) = operacion() { let _ = std::fs::remove_file(&temporal); return Err(e); }
     // Solo sobre un libro de salida recién creado por Flow.
+    // En Windows no se puede renombrar sobre una ruta existente.
+    std::fs::remove_file(generado).map_err(|e| format!("No se pudo sustituir la planilla recién generada: {e}"))?;
     std::fs::rename(&temporal, generado).map_err(|e| {
         let _ = std::fs::remove_file(&temporal);
         format!("No se pudo aplicar la plantilla: {e}")
