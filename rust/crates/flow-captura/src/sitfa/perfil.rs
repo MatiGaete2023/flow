@@ -1,6 +1,6 @@
 //! Consultas de lectura auditadas de SITFA Lite. Ningún valor del catálogo amplía la lista de operaciones.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -13,7 +13,7 @@ pub const PESTANAS: [(&str, &str, &str, &str, &str); 4] = [
     ("Egresados", "tdEgreso", "NUM_PaginaEgreso", "NUM_TotalEgreso", "tablaEgresados"),
 ];
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Seleccion {
     pub tribunal: String,
     #[serde(default = "seguimiento")]

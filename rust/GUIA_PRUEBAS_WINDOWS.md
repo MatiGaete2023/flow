@@ -20,6 +20,11 @@ Anota PASA o FALLA y, si falla, el texto exacto del mensaje.
 | 10 | Word | Resoluciones → Preparar → Generar Word | Un documento por tribunal y tipo; un proyecto por página; formato igual al de la plantilla |
 | 11 | Tildes y ñ | Nombres, programas y carpetas con tildes | Se ven y se guardan bien |
 | 12 | Antivirus | Copiar `flow.exe` al equipo de trabajo | No lo bloquea (si lo bloquea, anotar el aviso) |
+| 13 | Conexión Chrome | Instalar la extensión incluida, abrir SITFA, Captura → copiar código → icono Flow → conectar | «Chrome conectado»; las opciones corresponden a la pantalla elegida |
+| 14 | Captura de varias páginas | Elegir una consulta conocida con varias páginas | XLS y `resumen.json`, conteos correctos; al terminar restaura los filtros |
+| 15 | Cancelar y retomar | Detener entre páginas y retomar la misma carpeta | Conserva lo verificado y completa sin duplicar; rechaza un archivo alterado |
+| 16 | Consulta vacía | Activar PDF y consultar una selección conocida sin registros | PDF con selección visible; ningún XLS vacío presentado como descarga válida |
+| 17 | Captura → Trabajo | Llevar las descargas de Seguimiento a Trabajo | Etapa y registros correctos; se pueden preparar productos tras revisarlos |
 
 La prueba 8 es la más importante: el acceso a Outlook se escribió sin poder ejecutarlo. Si falla, los `.eml` de la
 prueba 7 cumplen la misma función.

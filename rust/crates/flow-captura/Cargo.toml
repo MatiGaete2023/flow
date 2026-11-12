@@ -15,3 +15,7 @@ regex.workspace = true
 chrono.workspace = true
 unicode-normalization.workspace = true
 scraper = { version = "0.24", default-features = false }
+base64 = "0.22"
+sha2 = "0.10"
+flate2 = "1"
+image = { version = "0.25", default-features = false, features = ["png"] }

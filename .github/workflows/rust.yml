@@ -31,6 +31,16 @@ jobs:
         working-directory: .
         run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
       - run: cargo test --workspace --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar Chromium para pruebas ficticias
+        working-directory: rust/pruebas
+        run: npm ci && npx playwright install --with-deps chromium
+      - name: Captura con extensión MV3 y SITFA ficticio
+        run: |
+          cargo run --locked -p flow-captura --example probar_captura
+          cargo run --locked -p flow-captura --example probar_captura -- --vacia
 
   windows:
     needs: pruebas
@@ -49,10 +59,14 @@ jobs:
       - name: Huella del ejecutable
         shell: pwsh
         run: (Get-FileHash target/release/flow.exe -Algorithm SHA256).Hash | Out-File target/release/flow.exe.sha256
+      - name: Preparar carpeta de uso
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path entrega | Out-Null
+          Copy-Item target/release/flow.exe, target/release/flow.exe.sha256, LEEME.md, GUIA_PRUEBAS_WINDOWS.md -Destination entrega
+          Copy-Item extension -Destination entrega/extension -Recurse
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Windows
-          path: |
-            rust/target/release/flow.exe
-            rust/target/release/flow.exe.sha256
+          path: rust/entrega/
           retention-days: 14

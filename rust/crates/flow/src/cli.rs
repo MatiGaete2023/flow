@@ -58,8 +58,19 @@ impl Opciones {
 pub fn cargar(ruta: &Path, etapa: Option<Etapa>, hoja: Option<&str>, corte: Fecha, config: &Config) -> Result<Vec<Trabajo>, String> {
     let datos = std::fs::read(ruta).map_err(|e| format!("No se pudo leer {}: {e}", ruta.display()))?;
     let nombre = ruta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    cargar_bytes(&nombre, datos, etapa, hoja, corte, config)
+}
+
+pub fn cargar_bytes(
+    nombre: &str,
+    datos: Vec<u8>,
+    etapa: Option<Etapa>,
+    hoja: Option<&str>,
+    corte: Fecha,
+    config: &Config,
+) -> Result<Vec<Trabajo>, String> {
     if flow_trabajo::paquete::es_paquete(&datos) {
-        let mut trabajos = flow_trabajo::paquete::importar(&nombre, &datos, corte, config)?.trabajos;
+        let mut trabajos = flow_trabajo::paquete::importar(nombre, &datos, corte, config)?.trabajos;
         if let Some(e) = etapa {
             trabajos.retain(|t| t.etapa == e);
             if trabajos.is_empty() {
@@ -68,7 +79,7 @@ pub fn cargar(ruta: &Path, etapa: Option<Etapa>, hoja: Option<&str>, corte: Fech
         }
         return Ok(trabajos);
     }
-    let libro = flow_tabular::leer_bytes(&nombre, datos)?;
+    let libro = flow_tabular::leer_bytes(nombre, datos)?;
     if etapa.is_none() && hoja.is_none() {
         let tablas = flow_tabular::leer_todas(&libro);
         if !tablas.is_empty() {
@@ -175,7 +186,9 @@ pub fn producir_todo(
             if en_outlook && faltan.is_empty() {
                 match flow_outlook::guardar_borrador(&borrador)? {
                     flow_outlook::Resultado::Guardado => p.creados.push(format!("Borrador en Outlook: {} → {quien}", borrador.asunto)),
-                    flow_outlook::Resultado::Incierto(m) => p.pendientes.push(format!("Borrador para {quien}: {m} Revisa Borradores antes de reintentar.")),
+                    flow_outlook::Resultado::Incierto(m) => {
+                        p.pendientes.push(format!("Borrador para {quien}: {m} Revisa Borradores antes de reintentar."))
+                    }
                 }
             } else {
                 let ruta = correos::guardar_eml(&borrador, &carpeta.join("correos"))?;

@@ -1,4 +1,6 @@
 target/
+node_modules/
+entrega/
 # El .gitignore de la raíz excluye Office para que nunca entre un archivo real.
 # Estas dos carpetas solo contienen plantillas sin datos y libros de prueba ficticios.
 !datos/plantillas/*.docx

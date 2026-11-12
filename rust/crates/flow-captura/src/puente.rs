@@ -305,7 +305,27 @@ impl Puente {
         }
         let codigo = datos["error"].as_str().unwrap_or("SITFA_TASK");
         let conocido = matches!(codigo, "FOLLOWUP_REQUIRED" | "SITE_ACCESS" | "MULTIPLE_FORMS" | "SCREEN_OPEN" | "EVIDENCE_CAPTURE" | "EVIDENCE_OPEN");
-        Err(error(if conocido { codigo } else { "SITFA_TASK" }, mensaje_de(codigo)))
+        let motivo = datos["motivo"].as_str().filter(|m| {
+            matches!(
+                *m,
+                "estructura"
+                    | "sesion"
+                    | "cambio"
+                    | "pantalla"
+                    | "tiempo"
+                    | "pagina"
+                    | "acceso"
+                    | "permiso"
+                    | "pestaña"
+                    | "ventana"
+                    | "captura"
+            )
+        });
+        let mensaje = match motivo {
+            Some(m) if matches!(codigo, "EVIDENCE_CAPTURE" | "EVIDENCE_OPEN") => format!("{} Motivo técnico: {m}.", mensaje_de(codigo)),
+            _ => mensaje_de(codigo).to_string(),
+        };
+        Err(error(if conocido { codigo } else { "SITFA_TASK" }, &mensaje))
     }
 
     pub fn cerrar(&self) {

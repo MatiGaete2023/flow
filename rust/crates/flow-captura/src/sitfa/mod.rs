@@ -306,6 +306,31 @@ pub fn siguiente_consulta(pares: &[(String, String)], perfil: &Perfil, primera: 
     Ok(resultado)
 }
 
+/// La vista del PDF debe identificar la consulta y mostrar los controles efectivamente seleccionados.
+pub fn validar_pantalla_evidencia(datos: &[u8], pares: &Pares, perfil: &Perfil, contexto: &[[String; 2]]) -> Result<(), String> {
+    if validar_respuesta(datos, pares, perfil, None)? != Respuesta::SinRegistros {
+        return Err("La consulta cambió y ahora tiene registros; repite el lote.".into());
+    }
+    let raiz = Html::parse_document(&flow_tabular::html::decodificar(datos));
+    let banners: Vec<_> = raiz.select(&selector("#sitfaContextoConsulta")).collect();
+    let texto = format!("Consulta solicitada · {}", contexto.iter().map(|[k, v]| format!("{k}: {v}")).collect::<Vec<_>>().join(" · "));
+    let json = serde_json::to_string(contexto).map_err(|_| "Contexto de consulta inválido.")?;
+    if banners.len() != 1
+        || banners[0].value().attr("data-context") != Some(json.as_str())
+        || banners[0].text().collect::<String>() != texto
+    {
+        return Err("La pantalla de evidencia no identifica la consulta solicitada.".into());
+    }
+    let form = raiz.select(&selector("form[name='InformesPpalForm']")).next().ok_or("Falta el formulario de evidencia.")?;
+    let campos = campos(form)?;
+    if perfil.objetivo.iter().any(|(k, v)| campos.get(k) != Some(v))
+        || pares.iter().filter(|(k, _)| matches!(k.as_str(), "FEC_Inicio" | "FEC_Fin")).any(|(k, v)| campos.get(k) != Some(v))
+    {
+        return Err("Los controles de la pantalla a capturar no corresponden a la selección.".into());
+    }
+    Ok(())
+}
+
 #[derive(Debug)]
 pub struct DescargaVerificada {
     pub libro: Libro,

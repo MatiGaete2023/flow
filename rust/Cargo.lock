@@ -483,6 +483,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1342,6 +1348,7 @@ dependencies = [
  "chrono",
  "eframe",
  "egui_extras",
+ "flow-captura",
  "flow-dominio",
  "flow-motor",
  "flow-outlook",
@@ -1357,14 +1364,18 @@ dependencies = [
 name = "flow-captura"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "chrono",
+ "flate2",
  "flow-dominio",
  "flow-tabular",
  "getrandom 0.2.17",
+ "image",
  "regex",
  "scraper",
  "serde",
  "serde_json",
+ "sha2",
  "tiny_http",
  "unicode-normalization",
 ]

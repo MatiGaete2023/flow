@@ -25,10 +25,12 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.3 (lote, extensión y ventana)** después de 7.2.
+- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.4 (bitácoras, historia y calendario por ingreso)**.
   Los pendientes 5b.2, 5b.3 y 6.1 siguen abiertos; no se consideran terminados por este avance.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
+- Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
+  cerrar 5b.2/5b.3, 6.1, 8.1 y 8.2; no confundir un paso terminado con la entrega final del producto.
 
 ## 1. Reglas que no se negocian (decisión del usuario, 12-nov-2026)
 
@@ -59,11 +61,11 @@ rust/
     flow-productos        Excel de observaciones y nóminas, Word de proyectos, cuerpo de correos
     flow-outlook          borradores por COM (solo Windows); en otros sistemas, simulación para pruebas
     flow-trabajo          tabla analizada + observación final editable; guardar/cargar y retención
-    flow-captura          puente local con la extensión de Chrome, lotes (fase posterior)
+    flow-captura          puente local, validación, lotes, checkpoints, PDF y reanudación
     flow-anonimo          anonimizador (fase posterior)
     flow-meta4            Meta 4 (fase posterior)
     flow                  ejecutable: subcomandos y ventana (egui)
-  extension/              extensión Chrome MV3 (fase de captura)
+  extension/              extensión Chrome MV3 de Flow (solo consultas)
 ```
 
 Decisiones técnicas tomadas (cambiar solo con motivo escrito aquí):
@@ -162,8 +164,8 @@ Pasos:
       `perfiles.py`, `filtros_respuesta.py`. Probar con HTML del SITFA ficticio
       (`descargador_lite/tests/sitfa_ficticio.py` lo genera; muestras en `tests/datos/sitfa_ficticio.json`).
       Incluye cotejo XLS/HTML con multiplicidad, rechazo de páginas/filas repetidas y verificación del mes del
-      calendario. La biblioteca todavía no está conectada al lote ni a la ventana (7.3).
-- [ ] 7.3 Lote, extensión y ventana: copiar `descargador_lite/extension/` a `rust/extension/` cambiando nombre y
+      calendario. Conectada al lote y a la ventana en 7.3.
+- [x] 7.3 Lote, extensión y ventana: copiar `descargador_lite/extension/` a `rust/extension/` cambiando nombre y
       textos (y `tipo`/`version` de `capabilities`, que el programa verifica); pestaña «Captura» con código de
       conexión, opciones y avance; lo descargado pasa directo a Trabajo. Probar de punta a punta con Playwright +
       Chromium (están en este contenedor) contra el SITFA ficticio.
@@ -254,3 +256,20 @@ guardar el código de conexión, y cualquier escritura en RUS.
   `VerificadorDescargas` antes de guardar o importar cada descarga. La negociación de capacidades
   (`escritura_rus:false` y versiones/protocolos exactos), el lote, los checkpoints, la extensión y la interfaz
   aún corresponden a 7.3. El estado de `VerificadorDescargas` debe durar toda una consulta y reiniciarse al cambiarla.
+- 2026-11-12: 7.3 completo: pestaña Captura con conexión, carga de opciones por pantalla, selección múltiple,
+  fechas, filtros, descarga, cancelación y Retomar. Las llamadas a Chrome corren en un hilo; la interfaz sigue
+  respondiendo. Negociación de versión/protocolos y `escritura_rus:false` obligatoria antes de consultar.
+  Cada página se coteja antes de guardarse sin sobrescribir; `resumen.json` conserva el avance. Al reanudar se
+  verifican las huellas, se cotejan las páginas parciales con la respuesta actual y se reutilizan las válidas.
+  PDF de consulta vacía desde PNG, sin imágenes intermedias; se acredita la selección visible y su huella.
+  Los Excel de intervención pasan a Trabajo con la etapa de la consulta, agrupando páginas; se comprueba de
+  nuevo la huella antes de analizar los mismos bytes. Litigantes y calendarios quedan como archivos de consulta.
+  Pruebas nuevas: 6 del lote y 2 del pase a Trabajo; más dos recorridos con el puente Rust y la extensión MV3
+  real en Chromium contra páginas ficticias (dos páginas XLS y consulta vacía con PDF). La prueba pulsa la acción
+  de la extensión mediante CDP `Extensions.triggerAction` sobre el target de tipo `tab`, sin ampliar permisos:
+  así Chrome concede `activeTab` igual que al pulsar el icono. No se contacta con SITFA real.
+  Reproducir: `cd rust/pruebas && npm ci && npx playwright install chromium`, luego desde `rust/`:
+  `cargo run --locked -p flow-captura --example probar_captura` y el mismo comando con `-- --vacia`.
+  CI Linux ejecuta ambos; el artefacto Windows incluye la extensión. El commit anterior, `f8f78bf`, pasó pruebas
+  y compilación Windows nativas en [run 43252413001](https://github.com/MatiGaete2023/flow/actions/runs/43252413001).
+  El uso real en SITFA y Outlook sigue sin ejecutarse. Próximo paso de desarrollo: 7.4.

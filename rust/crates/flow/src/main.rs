@@ -7,6 +7,7 @@
 
 mod cli;
 mod ui;
+mod captura_ui;
 
 #[cfg(windows)]
 extern "system" {

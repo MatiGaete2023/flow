@@ -19,6 +19,23 @@ Estado: en desarrollo, **sin aceptación del usuario**. Ver [EJECUCION.md](EJECU
 4. **Resoluciones:** «Preparar proyectos», completa lo que falte (por ejemplo la duración) y «Generar Word».
 5. **Resultados:** lista de lo creado y acceso a la carpeta.
 
+## Captura desde SITFA
+
+1. Descomprime la carpeta `extension` incluida con Flow. En Chrome abre `chrome://extensions`, activa el modo
+   desarrollador y pulsa «Cargar descomprimida» para elegir esa carpeta.
+2. Abre tu sesión de SITFA en Chrome. En Flow, pestaña **Captura**, pulsa «Abrir conexión local» y «Copiar código
+   de conexión». Pulsa el icono de la extensión Flow desde la pestaña SITFA, pega el código y conecta.
+3. Vuelve a Flow, elige la pantalla, pulsa «Cargar opciones» y marca tribunales, modalidades y pestañas, o meses y
+   año según la consulta. Revisa el filtro de fechas y pulsa «Descargar» para elegir la carpeta de destino.
+4. Cada página se verifica antes de guardarse. «Detener» conserva lo comprobado; «Retomar lote…» permite elegir
+   la carpeta incompleta. No edites sus archivos mientras Flow descarga o retoma.
+5. Al terminar, «Llevar Excel verificados a Trabajo» carga las tablas de intervención. Litigantes y calendarios
+   quedan como consultas en la carpeta del lote. Si se activa la opción, una consulta vacía produce un PDF con su
+   selección visible. Mantén abiertas las pestañas de SITFA y conexión durante el lote.
+
+El código de conexión cambia al cerrar y abrir el enlace; no se guarda. Chrome conserva tu sesión y contraseña.
+La extensión de Flow y el programa deben pertenecer a la misma entrega.
+
 En **Contactos** se guardan los correos de programas y tribunales, el CC adicional y la firma. Quedan solo en el
 equipo (`%APPDATA%\Flow`), junto con el trabajo en curso (hasta 10 sesiones, 60 días).
 
@@ -35,9 +52,9 @@ flow producir ARCHIVO --salida CARPETA [--modalidades TEXTO] [--contactos contac
 
 ## Qué todavía no hace
 
-- No descarga desde SITFA: se sigue usando el Descargador actual para obtener los Excel.
-- No lee bitácoras ni historia de la causa: las reglas que dependen de ellas ya están en el motor, pero sin esa
-  entrada no se activan.
+- Captura descarga los Excel de Seguimiento, litigantes y calendarios. La lectura directa de bitácoras, historia y
+  calendario por ingreso sigue pendiente; mientras tanto se puede abrir el ZIP del Descargador Python, que ya
+  incorpora esas entradas al análisis.
 - Anonimizador y Meta 4 siguen siendo las herramientas Python.
 
 ## Desarrollo

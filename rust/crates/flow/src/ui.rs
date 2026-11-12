@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Pestana {
+    Captura,
     Trabajo,
     Correos,
     Resoluciones,
@@ -60,6 +61,7 @@ struct App {
     nuevo: (String, String),
     ayuda: bool,
     sin_guardar: bool,
+    captura: crate::captura_ui::Captura,
 }
 
 fn ruta_ajustes(datos: &Path) -> PathBuf {
@@ -92,7 +94,10 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
 
 impl App {
     fn nueva(archivo: Option<PathBuf>) -> Self {
-        let datos = almacen::carpeta_datos();
+        Self::con_datos(almacen::carpeta_datos(), archivo)
+    }
+
+    fn con_datos(datos: PathBuf, archivo: Option<PathBuf>) -> Self {
         let _ = std::fs::create_dir_all(&datos);
         almacen::aplicar_retencion(&datos, std::time::SystemTime::now());
         let ajustes = std::fs::read_to_string(ruta_ajustes(&datos))
@@ -124,6 +129,7 @@ impl App {
             nuevo: Default::default(),
             ayuda: false,
             sin_guardar: false,
+            captura: Default::default(),
         };
         if let Some(ruta) = archivo {
             app.cargar(ruta);
@@ -197,6 +203,55 @@ impl App {
         if let Some(ruta) = dialogo.pick_file() {
             self.cargar(ruta);
         }
+    }
+
+    fn importar_captura(&mut self, carpeta: PathBuf, resumen: flow_captura::lotes::Resumen) {
+        let Some(corte) = self.fecha_corte() else {
+            return self.mal("Revisa la fecha de corte antes de llevar la captura a Trabajo.");
+        };
+        let mut trabajos: Vec<Trabajo> = vec![];
+        for archivo in &resumen.archivos {
+            if !archivo.nombre.ends_with(".xls") {
+                continue;
+            }
+            let seleccion = &resumen.lote.consultas[archivo.consulta];
+            let datos = match std::fs::read(carpeta.join(&archivo.nombre)) {
+                Ok(datos) if flow_captura::lotes::huella(&datos) == archivo.sha256 => datos,
+                _ => return self.mal("Cambió una descarga desde su verificación. Revisa o retoma el lote antes de importarlo."),
+            };
+            self.resultados.push(format!("Descarga verificada: {}", carpeta.join(&archivo.nombre).display()));
+            // Litigantes y calendarios son productos de consulta; las tablas de intervención van a Trabajo.
+            let Some(etapa) = Etapa::desde(&seleccion.tab) else {
+                continue;
+            };
+            match cli::cargar_bytes(&archivo.nombre, datos, Some(etapa), None, corte, &self.motor) {
+                Ok(nuevos) => {
+                    for nuevo in nuevos {
+                        if let Some(actual) = trabajos.iter_mut().find(|t| t.etapa == nuevo.etapa && t.cabeceras == nuevo.cabeceras) {
+                            actual.sha256 = flow_captura::lotes::huella(format!("{}{}", actual.sha256, nuevo.sha256).as_bytes());
+                            actual.archivo = format!("Lote {}", carpeta.file_name().unwrap_or_default().to_string_lossy());
+                            actual.filas.extend(nuevo.filas);
+                            actual.avisos.extend(nuevo.avisos);
+                        } else {
+                            trabajos.push(nuevo);
+                        }
+                    }
+                }
+                Err(e) => return self.mal(format!("La descarga se conserva; no se pudo analizar: {e}")),
+            }
+        }
+        if trabajos.is_empty() {
+            self.pestana = Pestana::Resultados;
+            return self.bien("Las consultas están verificadas en la carpeta del lote. No traen tablas de intervención para analizar.");
+        }
+        self.guardar_sesion();
+        let actual = trabajos.remove(0);
+        self.activar(actual);
+        self.otros = trabajos;
+        self.archivo = None;
+        self.pestana = Pestana::Trabajo;
+        self.guardar_sesion();
+        self.bien("Captura cargada. Revisa las observaciones antes de preparar los productos.");
     }
 
     fn guardar_sesion(&mut self) {
@@ -408,6 +463,7 @@ impl App {
         });
         ui.horizontal(|ui| {
             for (p, nombre) in [
+                (Pestana::Captura, "Captura"),
                 (Pestana::Trabajo, "1 · Trabajo"),
                 (Pestana::Correos, "2 · Correos"),
                 (Pestana::Resoluciones, "3 · Resoluciones"),
@@ -852,11 +908,7 @@ quien la registra y responde por ella es el usuario.";
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let (abrir, guardar, ayuda) = ctx.input(|i| {
-            (
-                i.modifiers.command && i.key_pressed(Key::O),
-                i.modifiers.command && i.key_pressed(Key::S),
-                i.key_pressed(Key::F1),
-            )
+            (i.modifiers.command && i.key_pressed(Key::O), i.modifiers.command && i.key_pressed(Key::S), i.key_pressed(Key::F1))
         });
         if abrir {
             self.elegir_archivo();
@@ -871,6 +923,11 @@ impl eframe::App for App {
         egui::TopBottomPanel::top("barra").show(ctx, |ui| self.barra(ui));
         egui::TopBottomPanel::bottom("pie").show(ctx, |ui| self.pie(ui));
         egui::CentralPanel::default().show(ctx, |ui| match self.pestana {
+            Pestana::Captura => {
+                if let Some((carpeta, resumen)) = self.captura.mostrar(ui, ctx) {
+                    self.importar_captura(carpeta, resumen)
+                }
+            }
             Pestana::Trabajo => self.vista_trabajo(ui),
             Pestana::Correos => self.vista_correos(ui),
             Pestana::Resoluciones => self.vista_resoluciones(ui),
@@ -891,6 +948,7 @@ impl eframe::App for App {
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.captura.cerrar();
         self.guardar_sesion();
         let _ = self.contactos.guardar(&ruta_contactos(&self.datos));
     }
@@ -906,11 +964,90 @@ pub fn abrir(archivo: Option<PathBuf>) -> i32 {
             cc.egui_ctx.set_theme(egui::ThemePreference::System);
             cc.egui_ctx.set_zoom_factor(1.15);
             Ok(Box::new(App::nueva(archivo)))
-        })) {
+        }),
+    ) {
         Ok(()) => 0,
         Err(e) => {
             eprintln!("No se pudo abrir la ventana: {e}");
             1
         }
+    }
+}
+
+#[cfg(test)]
+mod pruebas_captura {
+    use super::*;
+
+    fn preparar() -> (PathBuf, flow_captura::lotes::Resumen) {
+        let base = std::env::temp_dir().join(format!(
+            "flow-ui-ficticia-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        std::fs::create_dir(&base).unwrap();
+        let datos = std::fs::read(format!("{}/../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx", env!("CARGO_MANIFEST_DIR"))).unwrap();
+        let sha256 = flow_captura::lotes::huella(&datos);
+        // El nombre del archivo no anuncia la etapa: esta viene de la consulta verificada.
+        std::fs::write(base.join("consulta-001-p001-de-001.xls"), datos).unwrap();
+        let seleccion = flow_captura::sitfa::Seleccion {
+            tribunal: "901".into(),
+            screen: "seguimiento".into(),
+            tab: "Espera".into(),
+            modality: "2".into(),
+            report: None,
+            state: None,
+            month: None,
+            year: None,
+        };
+        let lote = flow_captura::lotes::Lote {
+            consultas: vec![seleccion],
+            fechas: None,
+            conservar_filtros: false,
+            evidencia: false,
+            pausa_ms: 250,
+        };
+        let resumen = flow_captura::lotes::Resumen {
+            version: 1,
+            lote,
+            estado: "VALIDADA".into(),
+            terminadas: vec![0],
+            vacias: vec![],
+            archivos: vec![flow_captura::lotes::Archivo {
+                nombre: "consulta-001-p001-de-001.xls".into(),
+                sha256,
+                consulta: 0,
+                pagina: 1,
+                total: 1,
+                registros: 3,
+            }],
+            avisos: vec![],
+        };
+        (base, resumen)
+    }
+
+    #[test]
+    fn descarga_verificada_pasa_a_trabajo_con_etapa_y_sesion() {
+        let (base, resumen) = preparar();
+        let mut app = App::con_datos(base.join("sesiones-ficticias"), None);
+        app.corte = "08/10/2026".into();
+        app.importar_captura(base.clone(), resumen);
+        let trabajo = app.trabajo.as_ref().unwrap();
+        assert_eq!(trabajo.etapa, Etapa::Espera);
+        assert_eq!(trabajo.filas.len(), 3);
+        assert_eq!(almacen::listar(&app.datos).len(), 1);
+        assert!(app.mensaje.as_ref().is_some_and(|(error, _)| !error));
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn no_importa_archivo_que_cambio_despues_de_la_descarga() {
+        let (base, resumen) = preparar();
+        std::fs::write(base.join(&resumen.archivos[0].nombre), b"contenido ficticio modificado").unwrap();
+        let mut app = App::con_datos(base.join("sesiones-ficticias"), None);
+        app.importar_captura(base.clone(), resumen);
+        assert!(app.trabajo.is_none());
+        assert!(app.mensaje.as_ref().is_some_and(|(error, _)| *error));
+        assert!(almacen::listar(&app.datos).is_empty());
+        std::fs::remove_dir_all(base).unwrap();
     }
 }
