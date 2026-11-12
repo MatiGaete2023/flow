@@ -465,7 +465,11 @@ pub fn reporte(m: &Meta4, totales: &BTreeMap<String, usize>) -> Value {
 
 /// Escribe los cinco productos en una carpeta nueva. Si algo falla, no queda nada publicado.
 pub fn publicar(m: &Meta4, destino: &Path) -> Result<Vec<PathBuf>, String> {
-    publicar_interno(m, destino, None)
+    publicar_con_plantilla(m, destino, None)
+}
+/// Genera Meta 4 con una plantilla de estilos XLSX opcional.
+pub fn publicar_con_plantilla(m: &Meta4, destino: &Path, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
+    publicar_interno(m, destino, None, plantilla)
 }
 
 /// Regeneración desde Registros.xlsx revisado. La bitácora no cambia ni se sustituye por una vacía.
@@ -475,10 +479,17 @@ pub fn publicar_regenerado(
     if !bitacoras_originales.is_file() {
         return Err("Falta Bitacoras_del_mes.xlsx original: no se regenera perdiendo bitácoras.".into());
     }
-    publicar_interno(m, destino, Some((bitacoras_originales, huella_registros)))
+    publicar_regenerado_con_plantilla(m, destino, bitacoras_originales, huella_registros, None)
 }
-
-fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>) -> Result<Vec<PathBuf>, String> {
+pub fn publicar_regenerado_con_plantilla(
+    m: &Meta4, destino: &Path, bitacoras_originales: &Path, huella_registros: &str, plantilla: Option<&Path>
+) -> Result<Vec<PathBuf>, String> {
+    if !bitacoras_originales.is_file() {
+        return Err("Falta Bitacoras_del_mes.xlsx original: no se regenera perdiendo bitácoras.".into());
+    }
+    publicar_interno(m, destino, Some((bitacoras_originales, huella_registros)), plantilla)
+}
+fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
     crate::validar_destino(destino)?;
     let padre = destino.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
     std::fs::create_dir_all(padre).map_err(|e| format!("No se pudo crear {}: {e}", padre.display()))?;
@@ -496,6 +507,9 @@ fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>)
     ];
     let escribir = || -> Result<(), String> {
         let totales = planilla(m, &temporal.join(&nombres[0]))?;
+        if let Some(archivo) = plantilla {
+            crate::plantilla::aplicar(archivo, &temporal.join(&nombres[0]))?;
+        }
         // Verificación final: lo escrito en la planilla suma lo mismo que los registros clasificados.
         let esperados = m.registros.iter().filter(|r| r.categoria.is_some() && r.tribunal.is_some()).count();
         if totales.values().sum::<usize>() != esperados {
@@ -511,6 +525,9 @@ fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>)
             bitacoras_del_mes(m, &temporal.join(&nombres[3]))?;
         }
         let mut informe = reporte(m, &totales);
+        if plantilla.is_some() {
+            informe["plantilla"] = json!("Plantilla XLSX personalizada, estilos verificados");
+        }
         if let Some((_, huella)) = regenerar {
             informe["regenerado_desde"] = json!("Registros.xlsx revisado");
             informe["sha256_registros_revisados"] = json!(huella);
