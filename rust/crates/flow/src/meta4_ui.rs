@@ -12,6 +12,7 @@ pub struct Meta4 {
     mensaje: Option<(bool, String)>,
     avisos: Vec<String>,
     resultado: Option<PathBuf>,
+    plantilla: Option<PathBuf>,
 }
 
 impl Default for Meta4 {
@@ -24,6 +25,7 @@ impl Default for Meta4 {
             mensaje: None,
             avisos: Vec::new(),
             resultado: None,
+            plantilla: None,
         }
     }
 }
@@ -53,7 +55,7 @@ impl Meta4 {
                 destino = base.join(format!("Resultado META4 {} ({n})", corte.format("%Y-%m-%d")));
                 n += 1;
             }
-            salida::publicar(&m, &destino).map(|_| (m, destino))
+            salida::publicar_con_plantilla(&m, &destino, self.plantilla.as_deref()).map(|_| (m, destino))
         });
         match resultado {
             Ok((m, destino)) => {
@@ -92,7 +94,7 @@ impl Meta4 {
                 destino = base.join(format!("META4 regenerado {} ({n})", corte.format("%Y-%m-%d")));
                 n += 1;
             }
-            regenerar::ejecutar(&archivo, &destino).map(|_| destino)
+            regenerar::ejecutar_con_plantilla(&archivo, &destino, self.plantilla.as_deref()).map(|_| destino)
         });
         match resultado {
             Ok(destino) => {
@@ -143,6 +145,21 @@ impl Meta4 {
             }
         });
         ui.add_space(6.0);
+        ui.horizontal(|ui| {
+            if ui.button("Elegir plantilla Excel…").clicked() {
+                if let Some(plantilla) = rfd::FileDialog::new().add_filter("Plantilla Excel", &["xlsx"]).pick_file() {
+                    self.plantilla = Some(plantilla);
+                }
+            }
+            if self.plantilla.is_some() && ui.button("Sin plantilla").clicked() {
+                self.plantilla = None;
+            }
+            if let Some(plantilla) = &self.plantilla {
+                ui.label(format!("Plantilla: {}", plantilla.file_name().unwrap_or_default().to_string_lossy()));
+            } else {
+                ui.weak("Formato estándar");
+            }
+        });
         ui.horizontal(|ui| {
             if ui.add_enabled(!self.lotes.is_empty(), egui::Button::new("Generar Meta 4")).clicked() {
                 self.generar();
