@@ -40,6 +40,8 @@ struct App {
     contactos: Contactos,
     motor: Config,
     trabajo: Option<Trabajo>,
+    /// Otras etapas del mismo archivo (un paquete o un consolidado traen varias).
+    otros: Vec<Trabajo>,
     archivo: Option<PathBuf>,
     corte: String,
     etapa: Option<Etapa>,
@@ -103,6 +105,7 @@ impl App {
             ajustes,
             motor: Config::default(),
             trabajo: None,
+            otros: Vec::new(),
             archivo: None,
             corte: flow_tabular::libro::hoy().format("%d/%m/%Y").to_string(),
             etapa: None,
@@ -145,20 +148,21 @@ impl App {
             return self.mal("La fecha de corte no se entiende. Usa dd/mm/aaaa.");
         };
         match cli::cargar(&ruta, self.etapa, None, corte, &self.motor) {
-            Ok(trabajo) => {
-                let texto = format!(
+            Ok(mut trabajos) => {
+                let trabajo = trabajos.remove(0);
+                let mut texto = format!(
                     "{}: {} registros, {} con observación.",
                     trabajo.etapa.nombre(),
                     trabajo.filas.len(),
                     trabajo.con_observacion()
                 );
-                self.etapa = Some(trabajo.etapa);
-                self.seleccion = (!trabajo.filas.is_empty()).then_some(0);
-                self.trabajo = Some(trabajo);
+                if !trabajos.is_empty() {
+                    let nombres: Vec<&str> = trabajos.iter().map(|t| t.etapa.nombre()).collect();
+                    texto.push_str(&format!(" El archivo trae además: {}.", nombres.join(", ")));
+                }
+                self.activar(trabajo);
+                self.otros = trabajos;
                 self.archivo = Some(ruta);
-                self.borradores.clear();
-                self.proyectos.clear();
-                self.carpeta = None;
                 self.pestana = Pestana::Trabajo;
                 self.guardar_sesion();
                 self.bien(texto);
@@ -167,8 +171,29 @@ impl App {
         }
     }
 
+    /// Deja un trabajo como el activo y descarta los productos preparados del anterior.
+    fn activar(&mut self, trabajo: Trabajo) {
+        self.seleccion = (!trabajo.filas.is_empty()).then_some(0);
+        self.trabajo = Some(trabajo);
+        self.borradores.clear();
+        self.proyectos.clear();
+        self.carpeta = None;
+    }
+
+    /// Cambia a otra etapa del mismo archivo conservando las ediciones de ambas.
+    fn cambiar_etapa(&mut self, indice: usize) {
+        self.guardar_sesion();
+        let nuevo = self.otros.remove(indice);
+        if let Some(actual) = self.trabajo.take() {
+            self.otros.push(actual);
+        }
+        let texto = format!("{}: {} registros.", nuevo.etapa.nombre(), nuevo.filas.len());
+        self.activar(nuevo);
+        self.bien(texto);
+    }
+
     fn elegir_archivo(&mut self) {
-        let dialogo = rfd::FileDialog::new().add_filter("Excel de RUS", &["xls", "xlsx", "xlsm"]).set_title("Elegir Excel de RUS");
+        let dialogo = rfd::FileDialog::new().add_filter("Excel de RUS o paquete del Descargador", &["xls", "xlsx", "xlsm", "zip"]).set_title("Elegir Excel de RUS o paquete ZIP");
         if let Some(ruta) = dialogo.pick_file() {
             self.cargar(ruta);
         }
@@ -188,14 +213,10 @@ impl App {
         match almacen::listar(&self.datos).first().map(|(r, _)| almacen::cargar(r)) {
             Some(Ok(t)) => {
                 self.corte = t.corte.format("%d/%m/%Y").to_string();
-                self.etapa = Some(t.etapa);
-                self.seleccion = (!t.filas.is_empty()).then_some(0);
                 let texto = format!("Trabajo reanudado: {} del {} ({}).", t.etapa.nombre(), self.corte, t.archivo);
-                self.trabajo = Some(t);
+                self.activar(t);
+                self.otros.clear();
                 self.archivo = None;
-                self.borradores.clear();
-                self.proyectos.clear();
-                self.carpeta = None;
                 self.bien(texto);
             }
             Some(Err(e)) => self.mal(e),
@@ -358,7 +379,7 @@ impl App {
         ui.horizontal_wrapped(|ui| {
             ui.heading("Flow");
             ui.separator();
-            if ui.button("Abrir Excel de RUS…  (Ctrl+O)").clicked() {
+            if ui.button("Abrir Excel o paquete…  (Ctrl+O)").clicked() {
                 self.elegir_archivo();
             }
             if ui.button("Reanudar último").clicked() {
@@ -416,13 +437,19 @@ impl App {
         let Some(trabajo) = &mut self.trabajo else {
             ui.add_space(30.0);
             ui.vertical_centered(|ui| {
-                ui.heading("Abre el Excel descargado de RUS");
+                ui.heading("Abre el Excel de RUS o el paquete ZIP del Descargador");
                 ui.label("Flow lee Espera, Cumplimiento o Informes, propone la observación de cada registro\ny prepara el Excel, los borradores de correo y los proyectos de resolución.");
             });
             return;
         };
         let mut guardar_excel = false;
+        let mut cambiar = None;
         ui.horizontal_wrapped(|ui| {
+            for (i, otro) in self.otros.iter().enumerate() {
+                if ui.button(format!("Ver {} ({})", otro.etapa.nombre(), otro.filas.len())).clicked() {
+                    cambiar = Some(i);
+                }
+            }
             ui.label(format!(
                 "{} · «{}» · {} registros · {} por revisar",
                 trabajo.etapa.nombre(),
@@ -584,6 +611,9 @@ impl App {
         if guardar_excel {
             self.guardar_sesion();
             self.guardar_excel();
+        }
+        if let Some(i) = cambiar {
+            self.cambiar_etapa(i);
         }
     }
 

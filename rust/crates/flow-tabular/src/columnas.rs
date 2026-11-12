@@ -141,3 +141,13 @@ pub fn duplicadas(cabeceras: &[String]) -> Option<String> {
     }
     None
 }
+
+/// Nombre de columna canónico de un campo (el primero de sus alias) para una etapa, en orden estable.
+pub fn canonicas(etapa: Etapa) -> Vec<(&'static str, &'static str)> {
+    let propias = match etapa {
+        Etapa::Espera => ESPERA,
+        Etapa::Cumplimiento => CUMPLIMIENTO,
+        Etapa::Informes => INFORMES,
+    };
+    COMUNES.iter().chain(propias.iter()).map(|(campo, alias)| (*campo, alias[0])).collect()
+}

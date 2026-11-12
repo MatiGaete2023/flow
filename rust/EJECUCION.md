@@ -99,6 +99,15 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [x] 5.1 Ventana: Trabajo (abrir Excel, tabla, editar observación), Correos, Resoluciones, Resultados.
 - [x] 5.2 Prueba de humo con `xvfb-run` y captura.
 
+### Fase 5b — Paquete del Descargador (agregada)
+- [x] 5b.1 `flow-trabajo::paquete`: importa el ZIP `CSMP_CAPTURE` (huellas verificadas), historia por causa, bitácora
+      por ingreso y próximo informe del calendario. Oráculo `oraculo/generar_paquete.py` contra `import_capture`.
+- [ ] 5b.2 Avisos de bitácora CT-05, CT-07 (con texto `COMUN.REITERA_OBSERVACION`) y CT-11
+      (`src/nurus/personal/bitacora_avisos.py`; necesita la cronología de `capture/temporal.py` y una razón de
+      similitud como `difflib.SequenceMatcher`).
+- [ ] 5b.3 Avisos N-03/N-04 (`contexto_excel.marcar_paquete`), OB-01..05 (`ordenes_busqueda.py`), cotejo y
+      proyecciones del calendario por ingreso (`calendario_ingreso.py`), registros EGRESADOS (hoy se omiten).
+
 ### Fase 6 — Anonimizador
 - [ ] 6.1 `flow-anonimo` + `flow anonimizar` (xlsx/xls/csv/json/txt), verificación «falla cerrado».
 
@@ -167,3 +176,8 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
   `xdotool` (capturas con datos ficticios en `rust/docs/capturas/`). `cargo check --target x86_64-pc-windows-gnu`
   pasa para todo el workspace. **No probado en Windows real.**
   Para probar la ventana en Linux hacen falta `libxkbcommon-x11-0`, `libegl1` y `libgl1-mesa-dri`.
+- 2026-11-12: CI corregida (el `.gitignore` raíz excluía `.docx`/`.xls`/`.zip`; `rust/.gitignore` los readmite solo
+  en carpetas de plantillas y datos de prueba). `flow.exe` compilado en Linux con mingw (10,9 MB, solo DLL del
+  sistema) y ejecutado bajo Wine: consola y ventana funcionan con datos ficticios. Entregado al usuario.
+- 2026-11-12: importación del paquete ZIP del Descargador, con varias etapas por archivo (botones «Ver ETAPA»).
+  Mismas observaciones, reglas, acciones y marcas que el Asistente en el paquete ficticio con historia.

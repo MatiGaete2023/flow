@@ -16,6 +16,7 @@ Uso:
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
 (.eml, o en Outlook con --outlook) y los proyectos Word. Los borradores siempre llevan CC a ucc_concepcion@pjud.cl.
 
+ARCHIVO es un Excel de RUS (.xls o .xlsx) o el paquete ZIP del Descargador.
 Sin --corte se usa la fecha de hoy. Sin --etapa se deduce del archivo.
 No escribe en RUS ni SATURNO y no envía correos.";
 
@@ -52,29 +53,33 @@ impl Opciones {
     }
 }
 
-/// Lee y analiza un archivo de RUS.
-pub fn cargar(ruta: &Path, etapa: Option<Etapa>, hoja: Option<&str>, corte: Fecha, config: &Config) -> Result<Trabajo, String> {
-    let libro = flow_tabular::leer(ruta)?;
+/// Lee y analiza un archivo: un Excel de RUS (una o varias etapas) o un paquete ZIP del Descargador.
+/// Devuelve un trabajo por etapa.
+pub fn cargar(ruta: &Path, etapa: Option<Etapa>, hoja: Option<&str>, corte: Fecha, config: &Config) -> Result<Vec<Trabajo>, String> {
+    let datos = std::fs::read(ruta).map_err(|e| format!("No se pudo leer {}: {e}", ruta.display()))?;
+    let nombre = ruta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    if flow_trabajo::paquete::es_paquete(&datos) {
+        let mut trabajos = flow_trabajo::paquete::importar(&nombre, &datos, corte, config)?.trabajos;
+        if let Some(e) = etapa {
+            trabajos.retain(|t| t.etapa == e);
+            if trabajos.is_empty() {
+                return Err(format!("El paquete no trae registros de {}.", e.nombre()));
+            }
+        }
+        return Ok(trabajos);
+    }
+    let libro = flow_tabular::leer_bytes(&nombre, datos)?;
+    if etapa.is_none() && hoja.is_none() {
+        let tablas = flow_tabular::leer_todas(&libro);
+        if !tablas.is_empty() {
+            return Ok(tablas.iter().map(|t| analizar_tabla(&libro, t, corte, config, &Contexto::default())).collect());
+        }
+    }
     let tabla = flow_tabular::leer_tabla(&libro, etapa, hoja)?;
-    Ok(analizar_tabla(&libro, &tabla, corte, config, &Contexto::default()))
+    Ok(vec![analizar_tabla(&libro, &tabla, corte, config, &Contexto::default())])
 }
 
-fn observar(args: &[String]) -> Result<(), (i32, String)> {
-    let o = opciones(args, &["etapa", "hoja", "corte"]).map_err(|e| (2, e))?;
-    let [archivo] = o.posicionales.as_slice() else { return Err((2, "Indica un archivo.".into())) };
-    let etapa = match o.valor("etapa") {
-        Some(t) => Some(Etapa::desde(t).ok_or((2, format!("Etapa desconocida: {t}.")))?),
-        None => None,
-    };
-    let corte = match o.valor("corte") {
-        Some(t) => t.parse().map_err(|_| (2, format!("Fecha de corte inválida: {t}. Usa AAAA-MM-DD.")))?,
-        None => flow_tabular::libro::hoy(),
-    };
-    let trabajo = cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))?;
-    if o.bandera("json") {
-        println!("{}", serde_json::to_string_pretty(&trabajo).map_err(|e| (1, e.to_string()))?);
-        return Ok(());
-    }
+fn imprimir(trabajo: &Trabajo) {
     println!(
         "{} · hoja «{}» · corte {} · {} registros, {} con observación",
         trabajo.etapa.nombre(),
@@ -98,6 +103,23 @@ fn observar(args: &[String]) -> Result<(), (i32, String)> {
         for aviso in &fila.propuesta.avisos {
             println!("  aviso: {aviso}");
         }
+    }
+}
+
+fn observar(args: &[String]) -> Result<(), (i32, String)> {
+    let o = opciones(args, &["etapa", "hoja", "corte"]).map_err(|e| (2, e))?;
+    let [archivo] = o.posicionales.as_slice() else { return Err((2, "Indica un archivo.".into())) };
+    let (etapa, corte) = comunes(&o)?;
+    let trabajos = cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))?;
+    if o.bandera("json") {
+        println!("{}", serde_json::to_string_pretty(&trabajos).map_err(|e| (1, e.to_string()))?);
+        return Ok(());
+    }
+    for (i, trabajo) in trabajos.iter().enumerate() {
+        if i > 0 {
+            println!();
+        }
+        imprimir(trabajo);
     }
     Ok(())
 }
@@ -187,15 +209,16 @@ fn producir(args: &[String]) -> Result<(), (i32, String)> {
     let salida = o.valor("salida").ok_or((2, "Indica la carpeta de --salida.".to_string()))?;
     let (etapa, corte) = comunes(&o)?;
     let contactos = o.valor("contactos").map(|r| flow_productos::correos::Contactos::cargar(Path::new(r))).unwrap_or_default();
-    let trabajo = cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))?;
-    let p = producir_todo(&trabajo, Path::new(salida), o.valor("modalidades").unwrap_or(""), &contactos, o.bandera("outlook"), None)
-        .map_err(|e| (1, e))?;
-    println!("Carpeta: {}", p.carpeta.display());
-    for linea in &p.creados {
-        println!("  creado · {linea}");
-    }
-    for linea in &p.pendientes {
-        println!("  pendiente · {linea}");
+    for trabajo in cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))? {
+        let p = producir_todo(&trabajo, Path::new(salida), o.valor("modalidades").unwrap_or(""), &contactos, o.bandera("outlook"), None)
+            .map_err(|e| (1, e))?;
+        println!("Carpeta: {}", p.carpeta.display());
+        for linea in &p.creados {
+            println!("  creado · {linea}");
+        }
+        for linea in &p.pendientes {
+            println!("  pendiente · {linea}");
+        }
     }
     Ok(())
 }

@@ -1,0 +1,79 @@
+{
+ "corte": "2026-08-20",
+ "filas": [
+  {
+   "id": "r0",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ficticio ordenado en resolución de fecha 1 de agosto de 2026 (folio 7). (Observación administrativa; no requiere gestión del Tribunal). Medida revisada, a la espera de ingreso efectivo. Al 20 de agosto de 2026, RUS registra 40 días de espera. Se hace presente que en resolución de fecha 5 de agosto de 2026 (folio 9), se decretó orden de búsqueda. Posteriormente, en resolución de fecha 10 de agosto de 2026 (folio 10), se pidió cuenta de la búsqueda. Asimismo, se hace presente que en resolución de fecha 12 de agosto de 2026 (folio 12), consta respuesta sobre la continuidad de atención. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "HISTORIA.E04_CON_FOLIO",
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.E05_DIAS",
+    "HISTORIA.R11_ORDEN",
+    "HISTORIA.R11_PIDE_CUENTA",
+    "HISTORIA.CONTINUIDAD_ATENCION"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": [
+    {
+     "nivel": 1,
+     "codigo": "R11_BUSQUEDA_VIGENTE",
+     "texto": "Orden de búsqueda vigente"
+    }
+   ]
+  },
+  {
+   "id": "r1",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ficticio ordenado en resolución de fecha 1 de agosto de 2026 (folio 7). (Observación administrativa; no requiere gestión del Tribunal). Medida revisada, a la espera de ingreso efectivo. Al 20 de agosto de 2026, RUS registra 40 días de espera. Se hace presente que en resolución de fecha 5 de agosto de 2026 (folio 9), se decretó orden de búsqueda. Posteriormente, en resolución de fecha 10 de agosto de 2026 (folio 10), se pidió cuenta de la búsqueda. Asimismo, se hace presente que en resolución de fecha 12 de agosto de 2026 (folio 12), consta respuesta sobre la continuidad de atención. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "HISTORIA.E04_CON_FOLIO",
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.E05_DIAS",
+    "HISTORIA.R11_ORDEN",
+    "HISTORIA.R11_PIDE_CUENTA",
+    "HISTORIA.CONTINUIDAD_ATENCION"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": [
+    {
+     "nivel": 1,
+     "codigo": "R11_BUSQUEDA_VIGENTE",
+     "texto": "Orden de búsqueda vigente"
+    }
+   ]
+  },
+  {
+   "id": "r2",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ficticio ordenado el 1 de agosto de 2026. (Observación administrativa; no requiere gestión del Tribunal). Medida revisada, a la espera de ingreso efectivo. Al 20 de agosto de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "ESPERA.E04_RESOLUCION_RECIENTE",
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.E05_DIAS"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": []
+  },
+  {
+   "id": "r3",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ficticio ordenado el 1 de agosto de 2026. (Observación administrativa; no requiere gestión del Tribunal). Medida revisada, a la espera de ingreso efectivo. Al 20 de agosto de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "ESPERA.E04_RESOLUCION_RECIENTE",
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.E05_DIAS"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": []
+  }
+ ]
+}

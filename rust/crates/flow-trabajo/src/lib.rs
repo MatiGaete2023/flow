@@ -1,6 +1,7 @@
 //! El trabajo del día: una tabla de RUS analizada, con la observación propuesta y la que el usuario deja.
 
 pub mod almacen;
+pub mod paquete;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};
 use flow_motor::{analizar, Config, Entrada, Resultado};
@@ -64,6 +65,11 @@ pub struct Contexto {
 
 /// Analiza toda la tabla: pre-pase por causa y luego fila por fila.
 pub fn analizar_tabla(libro: &Libro, tabla: &Tabla, corte: Fecha, config: &Config, contexto: &Contexto) -> Trabajo {
+    analizar_filas(&libro.nombre, &libro.sha256, tabla, corte, config, contexto)
+}
+
+/// Como `analizar_tabla`, para tablas que no vienen de un libro (paquete de captura).
+pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, config: &Config, contexto: &Contexto) -> Trabajo {
     let registros: Vec<Registro> = tabla.filas.iter().map(|f| f.registro.clone()).collect();
     let (duplicidad, acumulado) = match tabla.etapa {
         Etapa::Informes => (flow_motor::causas_con_varios(&registros), flow_motor::acumulados(&registros, corte)),
@@ -109,8 +115,8 @@ pub fn analizar_tabla(libro: &Libro, tabla: &Tabla, corte: Fecha, config: &Confi
     Trabajo {
         etapa: tabla.etapa,
         corte,
-        archivo: libro.nombre.clone(),
-        sha256: libro.sha256.clone(),
+        archivo: archivo.to_string(),
+        sha256: sha256.to_string(),
         hoja: tabla.hoja.clone(),
         fila_cabecera: tabla.fila_cabecera,
         cabeceras: tabla.cabeceras.clone(),

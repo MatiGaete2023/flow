@@ -3,3 +3,4 @@ target/
 # Estas dos carpetas solo contienen plantillas sin datos y libros de prueba ficticios.
 !datos/plantillas/*.docx
 !crates/flow-tabular/tests/datos/*.xls
+!crates/flow-trabajo/tests/datos/*.zip
