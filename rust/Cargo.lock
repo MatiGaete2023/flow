@@ -1366,6 +1366,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "chrono",
+ "encoding_rs",
  "flate2",
  "flow-dominio",
  "flow-tabular",

@@ -19,3 +19,4 @@ base64 = "0.22"
 sha2 = "0.10"
 flate2 = "1"
 image = { version = "0.25", default-features = false, features = ["png"] }
+encoding_rs = "0.8"

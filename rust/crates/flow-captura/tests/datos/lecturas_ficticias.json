@@ -1,0 +1,419 @@
+[
+  {
+    "tipo": "bitacora",
+    "html": "<html><body><form name=\"InformesPpalForm\" action=\"/SITFAWEB/InformesDAction.do\"><input type=\"hidden\" name=\"tipo_popUp\" value=\"\"><input type=\"hidden\" name=\"COD_Tribunal\" value=\"11\"><input type=\"hidden\" name=\"CRR_IdCausa\" value=\"22\"><input type=\"hidden\" name=\"ID_Ingreso\" value=\"33\"><input type=\"hidden\" name=\"COD_Etapa\" value=\"3\"><input type=\"hidden\" name=\"TIP_Consulta\" value=\"2\"><input type=\"hidden\" name=\"RIT_Causa\" value=\"P-12-2099\"><input type=\"hidden\" name=\"GLS_Nombre\" value=\"Persona Ficticia\"><input type=\"hidden\" name=\"GLS_Centro\" value=\"Centro de prueba\"><table id=\"TablaInforme\"><tr><td>Tipo Observación</td><td>Etapa</td><td>Fecha Centro</td><td>Usuario Centro</td><td>Observación Centro</td><td>Fecha Tribunal</td><td>Usuario Tribunal</td><td>Observación Tribunal</td><td>Acción</td></tr><tr><td>Al tribunal</td><td>Cumplimiento</td><td>12/08/2026 10:13</td><td>Centro</td><td>Texto recortado</td><td>---</td><td>---</td><td>Recortado</td><td><img id=\"44\" onclick=\"MuestraDiv(this.id,3)\"><img id=\"44\"></td></tr><input type=\"hidden\" name=\"HOBS_Centro_44\" value=\"Texto completo que la tabla oculta.\"><input type=\"hidden\" name=\"HOBS_Tribunal_44\" value=\"---\"><input type=\"hidden\" name=\"HCOD_Estado_44\" value=\"6\"><input type=\"hidden\" name=\"HFUN_Tribunal_44\" value=\"USR\"><input type=\"hidden\" name=\"HFLG_Envio_44\" value=\"1\"></table></form></body></html><script>/* RUS añade un script al final */</script>",
+    "params": {
+      "tipo_popUp": "12",
+      "COD_Tribunal": "11",
+      "CRR_IdCausa": "22",
+      "ID_Ingreso": "33",
+      "COD_Etapa": "3",
+      "TIP_Consulta": "2"
+    },
+    "esperado": {
+      "tribunal_codigo": "11",
+      "causa_id": "22",
+      "ingreso_id": "33",
+      "rit": "P-12-2099",
+      "persona": "Persona Ficticia",
+      "centro": "Centro de prueba",
+      "entries": [
+        {
+          "tribunal_codigo": "11",
+          "causa_id": "22",
+          "ingreso_id": "33",
+          "rit": "P-12-2099",
+          "persona": "Persona Ficticia",
+          "centro": "Centro de prueba",
+          "entry_id": "44",
+          "fecha": "2026-08-12T10:13:00",
+          "autor": "Centro",
+          "tipo": "Al tribunal",
+          "etapa": "Cumplimiento",
+          "texto": "Texto completo que la tabla oculta.",
+          "origen": "centro",
+          "respuesta": "",
+          "fecha_respuesta": "",
+          "respuesta_comprobada": true,
+          "fuente": "ficticio.html",
+          "fila_fuente": 1
+        }
+      ],
+      "coverage": "PARCIAL",
+      "captured_at": "2026-11-12T12:00:00Z",
+      "stage_code": "3",
+      "source": "ficticio.html",
+      "row_metadata": [
+        {
+          "entry_id": "44",
+          "state": "6",
+          "send_to_tribunal": "1",
+          "tribunal_user": "USR"
+        }
+      ],
+      "warnings": [],
+      "html_sha256": "ae8fbaf15f4f8e21ebe8df2cdc52a8fed422d75d2033e64c24a5330baca7008d",
+      "captures": 1,
+      "error": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo."
+    }
+  },
+  {
+    "tipo": "bitacora",
+    "html": "<html><body><form name=\"InformesPpalForm\" action=\"/SITFAWEB/InformesDAction.do\"><input type=\"hidden\" name=\"tipo_popUp\" value=\"\"><input type=\"hidden\" name=\"COD_Tribunal\" value=\"11\"><input type=\"hidden\" name=\"CRR_IdCausa\" value=\"22\"><input type=\"hidden\" name=\"ID_Ingreso\" value=\"33\"><input type=\"hidden\" name=\"COD_Etapa\" value=\"3\"><input type=\"hidden\" name=\"TIP_Consulta\" value=\"2\"><input type=\"hidden\" name=\"RIT_Causa\" value=\"P-12-2099\"><input type=\"hidden\" name=\"GLS_Nombre\" value=\"Persona Ficticia\"><input type=\"hidden\" name=\"GLS_Centro\" value=\"Centro de prueba\"><table id=\"TablaInforme\"><tr><td>Tipo Observación</td><td>Etapa</td><td>Fecha Centro</td><td>Usuario Centro</td><td>Observación Centro</td><td>Fecha Tribunal</td><td>Usuario Tribunal</td><td>Observación Tribunal</td><td>Acción</td></tr><tr><td>Al tribunal</td><td>Cumplimiento</td><td>12/08/2026 10:13</td><td>Centro</td><td>Texto recortado</td><td>13/08/2026 11:00</td><td>---</td><td>Recortado</td><td><img id=\"44\" onclick=\"MuestraDiv(this.id,3)\"><img id=\"44\"></td></tr><input type=\"hidden\" name=\"HOBS_Centro_44\" value=\"Observación ficticia con tildes, ñ y = literal.\"><input type=\"hidden\" name=\"HOBS_Tribunal_44\" value=\"Respuesta del tribunal\"><input type=\"hidden\" name=\"HCOD_Estado_44\" value=\"6\"><input type=\"hidden\" name=\"HFUN_Tribunal_44\" value=\"USR\"><input type=\"hidden\" name=\"HFLG_Envio_44\" value=\"1\"></table></form></body></html><script>/* RUS añade un script al final */</script>",
+    "params": {
+      "tipo_popUp": "12",
+      "COD_Tribunal": "11",
+      "CRR_IdCausa": "22",
+      "ID_Ingreso": "33",
+      "COD_Etapa": "3",
+      "TIP_Consulta": "2"
+    },
+    "esperado": {
+      "tribunal_codigo": "11",
+      "causa_id": "22",
+      "ingreso_id": "33",
+      "rit": "P-12-2099",
+      "persona": "Persona Ficticia",
+      "centro": "Centro de prueba",
+      "entries": [
+        {
+          "tribunal_codigo": "11",
+          "causa_id": "22",
+          "ingreso_id": "33",
+          "rit": "P-12-2099",
+          "persona": "Persona Ficticia",
+          "centro": "Centro de prueba",
+          "entry_id": "44",
+          "fecha": "2026-08-12T10:13:00",
+          "autor": "Centro",
+          "tipo": "Al tribunal",
+          "etapa": "Cumplimiento",
+          "texto": "Observación ficticia con tildes, ñ y = literal.",
+          "origen": "centro",
+          "respuesta": "Respuesta del tribunal",
+          "fecha_respuesta": "2026-08-13T11:00:00",
+          "respuesta_comprobada": true,
+          "fuente": "ficticio.html",
+          "fila_fuente": 1
+        }
+      ],
+      "coverage": "PARCIAL",
+      "captured_at": "2026-11-12T12:00:00Z",
+      "stage_code": "3",
+      "source": "ficticio.html",
+      "row_metadata": [
+        {
+          "entry_id": "44",
+          "state": "6",
+          "send_to_tribunal": "1",
+          "tribunal_user": "USR"
+        }
+      ],
+      "warnings": [],
+      "html_sha256": "10c22df28ad62687f4db4b117451c256d1e4c33e530ce38bde5f300363f08476",
+      "captures": 1,
+      "error": "Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo."
+    }
+  },
+  {
+    "tipo": "historia",
+    "html": "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\n<meta name=\"GENERATOR\" content=\"IBM WebSphere Studio\">\n<title>Consulta Detalle Causa</title>\n<script language=\"JavaScript\">\nfunction InformeHistoria (crr_idtramite, flg_doc_reservado, gls_etapa,gls_tiptramite,gls_despliegue,fecha_tramite)\n {\n this.crr_idtramite = crr_idtramite;\n this.flg_doc_reservado = flg_doc_reservado;\n this.gls_etapa = gls_etapa;\n this.gls_tiptramite = gls_tiptramite;\n this.gls_despliegue = gls_despliegue;\n this.fecha_tramite = fecha_tramite;\n }\nvar historia = new Array();\n</script>\n</head>\n<body class=\"scrollColor\">\n<form name=\"AtPublicoPpalForm\" method=\"post\" action=\"/SITFAWEB/AtPublicoDAction.do\">\n<div class=\"container-fluid\" id=\"app\"><div class=\"row\"><div class=\"col-xs-12\"><div class=\"panel panel-default\">\n<div class=\"panel-heading\"><strong>Informaci&oacute;n de la Causa</strong> <strong>[Causa Reservada]</strong></div>\n<div class=\"panel-body\">\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RIT:</label> C-99999-2099</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Caratulado:</label> NOMBRECANARIO APELLIDOCANARIO</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">F. Ingreso:</label> 01/01/2099</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RUC:</label> 99- 9-9999999-9</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Proc.:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Forma Inicio:</label> Requerimiento</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Est. Adm.:</label> Sin archivar</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Etapa:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Estado Proc.:</label> Concluido</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-8\"><label class=\"form-check-label\">Tribunal:</label> Juzgado Canario de Prueba</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Texto Requerimiento :</label><img src=\"pdf.gif\" onclick=\"ShowPDFO('REQCANARIO')\"></div>\n</div>\n</div></div></div></div>\n<ul class=\"nav nav-tabs\">\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(1,100)\">Litigantes</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(2,100)\">Materias</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(3,100)\">Plazos</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(4,100)\">Remisi&oacute;n</a></li>\n</ul>\n<ul class=\"nav nav-pills\">\n<li><a href=\"#\" onclick=\"Lengueta('Historia')\">Historia</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Notificaciones')\">Notificaci&oacute;n</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Diligencias')\">Diligencias</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Escritos')\">Escritos</a></li>\n</ul>\n<div class=\"row\"><div class=\"col-xs-12\"><div class=\"table-responsive\">\n<table class=\"table table-sm table-bordered table-hover\">\n<thead><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Tr&aacute;mite</th><th>Desc. Tr&aacute;mite</th><th>Referencia</th><th>Fecha Tram</th></tr></thead>\n<tbody>\n<script>historia[0] = new InformeHistoria(1001,'N','Cumplimiento','Resolucion','Tengase presente canario','13/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9120</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO1','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,1001,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Resoluci&oacute;n</td><td class=\"textoBarra\">Tengase presente canario</td>\n<td class=\"textoBarra\">Pone en conocimiento CANARIOREF</td><td class=\"textoBarra\">13/10/2099</td></tr>\n<script>historia[1] = new InformeHistoria(1000,'N','Cumplimiento','Escrito','Acompana documentos','09/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9119</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Reservado\" border=\"0\" height=\"16\" onclick=\"Reservado('TOKENDOCCANARIO2')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --><img src=\"anexo.gif\" onclick=\"ShowAnexos(1000,49)\"></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Escrito</td><td class=\"textoBarra\">Acompa&ntilde;a documentos</td>\n<td class=\"textoBarra\">Sin referencia.</td><td class=\"textoBarra\">09/10/2099</td></tr>\n<script>historia[2] = new InformeHistoria(999,'N','Cumplimiento','Actuacion','Opinion consejero tecnico canario','02/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9117</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO3','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,999,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Actuaci&oacute;n</td>\n<td class=\"textoBarra\">Opini&oacute;n consejero t&eacute;cnico canario con un texto bastante m&aacute;s largo que los dem&aacute;s para probar tramos</td>\n<td class=\"textoBarra\">Not+aper NOMBRECANARIO/Tp</td><td class=\"textoBarra\">02/10/2099</td></tr>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9001</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" src=\"pdf.gif\" onclick=\"ShowPDF('TOKENDOCCANARIO4','pdf')\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td></tr></tbody></table></div></div></div></form></body></html>\n",
+    "esperado": {
+      "encabezado": {
+        "RIT": "C-99999-2099",
+        "Caratulado": "NOMBRECANARIO APELLIDOCANARIO",
+        "F. Ingreso": "01/01/2099",
+        "RUC": "99- 9-9999999-9",
+        "Proc.": "Cumplimiento",
+        "Forma Inicio": "Requerimiento",
+        "Est. Adm.": "Sin archivar",
+        "Etapa": "Cumplimiento",
+        "Estado Proc.": "Concluido",
+        "Tribunal": "Juzgado Canario de Prueba"
+      },
+      "reservada": true,
+      "filas": [
+        {
+          "fila": 1,
+          "folio": "9120",
+          "etapa": "Cumplimiento",
+          "tramite": "Resolución",
+          "descripcion": "Tengase presente canario",
+          "referencia": "Pone en conocimiento CANARIOREF",
+          "fecha_texto": "13/10/2099",
+          "fecha_iso": "2099-10-13",
+          "anexo": false
+        },
+        {
+          "fila": 2,
+          "folio": "9119",
+          "etapa": "Cumplimiento",
+          "tramite": "Escrito",
+          "descripcion": "Acompaña documentos",
+          "referencia": "Sin referencia.",
+          "fecha_texto": "09/10/2099",
+          "fecha_iso": "2099-10-09",
+          "anexo": true
+        },
+        {
+          "fila": 3,
+          "folio": "9117",
+          "etapa": "Cumplimiento",
+          "tramite": "Actuación",
+          "descripcion": "Opinión consejero técnico canario con un texto bastante más largo que los demás para probar tramos",
+          "referencia": "Not+aper NOMBRECANARIO/Tp",
+          "fecha_texto": "02/10/2099",
+          "fecha_iso": "2099-10-02",
+          "anexo": false
+        }
+      ],
+      "vacio_explicito": false,
+      "advertencias": [
+        {
+          "codigo": "HISTORIA_FILA_INCOMPLETA",
+          "fila": 4,
+          "folio": "9001"
+        }
+      ],
+      "sha256": "16c0ab812eeb1ec5d518d0fb0b1495f44a565549aabcf6a88f3632431923e577",
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z"
+    }
+  },
+  {
+    "tipo": "historia",
+    "html": "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\n<meta name=\"GENERATOR\" content=\"IBM WebSphere Studio\">\n<title>Consulta Detalle Causa</title>\n<script language=\"JavaScript\">\nfunction InformeHistoria (crr_idtramite, flg_doc_reservado, gls_etapa,gls_tiptramite,gls_despliegue,fecha_tramite)\n {\n this.crr_idtramite = crr_idtramite;\n this.flg_doc_reservado = flg_doc_reservado;\n this.gls_etapa = gls_etapa;\n this.gls_tiptramite = gls_tiptramite;\n this.gls_despliegue = gls_despliegue;\n this.fecha_tramite = fecha_tramite;\n }\nvar historia = new Array();\n</script>\n</head>\n<body class=\"scrollColor\">\n<form name=\"AtPublicoPpalForm\" method=\"post\" action=\"/SITFAWEB/AtPublicoDAction.do\">\n<div class=\"container-fluid\" id=\"app\"><div class=\"row\"><div class=\"col-xs-12\"><div class=\"panel panel-default\">\n<div class=\"panel-heading\"><strong>Informaci&oacute;n de la Causa</strong> <strong>[Causa Reservada]</strong></div>\n<div class=\"panel-body\">\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RIT:</label> C-99999-2099</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Caratulado:</label> NOMBRECANARIO APELLIDOCANARIO</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">F. Ingreso:</label> 01/01/2099</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RUC:</label> 99- 9-9999999-9</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Proc.:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Forma Inicio:</label> Requerimiento</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Est. Adm.:</label> Sin archivar</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Etapa:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Estado Proc.:</label> Concluido</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-8\"><label class=\"form-check-label\">Tribunal:</label> Juzgado Canario de Prueba</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Texto Requerimiento :</label><img src=\"pdf.gif\" onclick=\"ShowPDFO('REQCANARIO')\"></div>\n</div>\n</div></div></div></div>\n<ul class=\"nav nav-tabs\">\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(1,100)\">Litigantes</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(2,100)\">Materias</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(3,100)\">Plazos</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(4,100)\">Remisi&oacute;n</a></li>\n</ul>\n<ul class=\"nav nav-pills\">\n<li><a href=\"#\" onclick=\"Lengueta('Historia')\">Historia</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Notificaciones')\">Notificaci&oacute;n</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Diligencias')\">Diligencias</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Escritos')\">Escritos</a></li>\n</ul>\n<div class=\"row\"><div class=\"col-xs-12\"><div class=\"table-responsive\">\n<table class=\"table table-sm table-bordered table-hover\">\n<thead><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Tr&aacute;mite</th><th>Desc. Tr&aacute;mite</th><th>Referencia</th><th>Fecha Tram</th></tr></thead>\n<tbody></tbody></table></div></div></div></form></body></html>\n",
+    "esperado": {
+      "encabezado": {
+        "RIT": "C-99999-2099",
+        "Caratulado": "NOMBRECANARIO APELLIDOCANARIO",
+        "F. Ingreso": "01/01/2099",
+        "RUC": "99- 9-9999999-9",
+        "Proc.": "Cumplimiento",
+        "Forma Inicio": "Requerimiento",
+        "Est. Adm.": "Sin archivar",
+        "Etapa": "Cumplimiento",
+        "Estado Proc.": "Concluido",
+        "Tribunal": "Juzgado Canario de Prueba"
+      },
+      "reservada": true,
+      "filas": [],
+      "vacio_explicito": true,
+      "advertencias": [],
+      "sha256": "36896728ee2865444794bed89fb679d6adac76a416b3a0db6207cecad4cddedb",
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z"
+    }
+  },
+  {
+    "tipo": "historia",
+    "html": "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\n<meta name=\"GENERATOR\" content=\"IBM WebSphere Studio\">\n<title>Consulta Detalle Causa</title>\n<script language=\"JavaScript\">\nfunction InformeHistoria (crr_idtramite, flg_doc_reservado, gls_etapa,gls_tiptramite,gls_despliegue,fecha_tramite)\n {\n this.crr_idtramite = crr_idtramite;\n this.flg_doc_reservado = flg_doc_reservado;\n this.gls_etapa = gls_etapa;\n this.gls_tiptramite = gls_tiptramite;\n this.gls_despliegue = gls_despliegue;\n this.fecha_tramite = fecha_tramite;\n }\nvar historia = new Array();\n</script>\n</head>\n<body class=\"scrollColor\">\n<form name=\"AtPublicoPpalForm\" method=\"post\" action=\"/SITFAWEB/AtPublicoDAction.do\">\n<div class=\"container-fluid\" id=\"app\"><div class=\"row\"><div class=\"col-xs-12\"><div class=\"panel panel-default\">\n<div class=\"panel-heading\"><strong>Informaci&oacute;n de la Causa</strong> <strong>[Causa Reservada]</strong></div>\n<div class=\"panel-body\">\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RIT:</label> C-99999-2099</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Caratulado:</label> NOMBRECANARIO APELLIDOCANARIO</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">F. Ingreso:</label> 01/01/2099</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RUC:</label> 99- 9-9999999-9</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Proc.:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Forma Inicio:</label> Requerimiento</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Est. Adm.:</label> Sin archivar</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Etapa:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Estado Proc.:</label> Concluido</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-8\"><label class=\"form-check-label\">Tribunal:</label> Juzgado Canario de Prueba</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Texto Requerimiento :</label><img src=\"pdf.gif\" onclick=\"ShowPDFO('REQCANARIO')\"></div>\n</div>\n</div></div></div></div>\n<ul class=\"nav nav-tabs\">\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(1,100)\">Litigantes</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(2,100)\">Materias</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(3,100)\">Plazos</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(4,100)\">Remisi&oacute;n</a></li>\n</ul>\n<ul class=\"nav nav-pills\">\n<li><a href=\"#\" onclick=\"Lengueta('Historia')\">Historia</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Notificaciones')\">Notificaci&oacute;n</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Diligencias')\">Diligencias</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Escritos')\">Escritos</a></li>\n</ul>\n<div class=\"row\"><div class=\"col-xs-12\"><div class=\"table-responsive\">\n<table class=\"table table-sm table-bordered table-hover\">\n<thead><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Tr&aacute;mite</th><th>Desc. Tr&aacute;mite</th><th>Referencia</th><th>Fecha Tram</th></tr></thead>\n<tbody>\n<script>historia[0] = new InformeHistoria(1001,'N','Cumplimiento','Resolucion','Tengase presente canario','13/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9120</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO1','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,1001,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Resoluci&oacute;n</td><td class=\"textoBarra\">Tengase presente canario</td>\n<td class=\"textoBarra\">Pone en conocimiento CANARIOREF</td><td class=\"textoBarra\">13/10/2099</td></tr>\n<script>historia[1] = new InformeHistoria(1000,'N','Cumplimiento','Escrito','Acompana documentos','09/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9119</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Reservado\" border=\"0\" height=\"16\" onclick=\"Reservado('TOKENDOCCANARIO2')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --><img src=\"anexo.gif\" onclick=\"ShowAnexos(1000,49)\"></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Escrito</td><td class=\"textoBarra\">Acompa&ntilde;a documentos</td>\n<td class=\"textoBarra\">Sin referencia.</td><td class=\"textoBarra\">ilegible</td></tr>\n<script>historia[2] = new InformeHistoria(999,'N','Cumplimiento','Actuacion','Opinion consejero tecnico canario','02/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9117</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO3','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,999,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Actuaci&oacute;n</td>\n<td class=\"textoBarra\">Opini&oacute;n consejero t&eacute;cnico canario con un texto bastante m&aacute;s largo que los dem&aacute;s para probar tramos</td>\n<td class=\"textoBarra\">Not+aper NOMBRECANARIO/Tp</td><td class=\"textoBarra\">02/10/2099</td></tr>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9001</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" src=\"pdf.gif\" onclick=\"ShowPDF('TOKENDOCCANARIO4','pdf')\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td></tr></tbody></table></div></div></div></form></body></html>\n",
+    "esperado": {
+      "encabezado": {
+        "RIT": "C-99999-2099",
+        "Caratulado": "NOMBRECANARIO APELLIDOCANARIO",
+        "F. Ingreso": "01/01/2099",
+        "RUC": "99- 9-9999999-9",
+        "Proc.": "Cumplimiento",
+        "Forma Inicio": "Requerimiento",
+        "Est. Adm.": "Sin archivar",
+        "Etapa": "Cumplimiento",
+        "Estado Proc.": "Concluido",
+        "Tribunal": "Juzgado Canario de Prueba"
+      },
+      "reservada": true,
+      "filas": [
+        {
+          "fila": 1,
+          "folio": "9120",
+          "etapa": "Cumplimiento",
+          "tramite": "Resolución",
+          "descripcion": "Tengase presente canario",
+          "referencia": "Pone en conocimiento CANARIOREF",
+          "fecha_texto": "13/10/2099",
+          "fecha_iso": "2099-10-13",
+          "anexo": false
+        },
+        {
+          "fila": 2,
+          "folio": "9119",
+          "etapa": "Cumplimiento",
+          "tramite": "Escrito",
+          "descripcion": "Acompaña documentos",
+          "referencia": "Sin referencia.",
+          "fecha_texto": "ilegible",
+          "fecha_iso": "",
+          "anexo": true
+        },
+        {
+          "fila": 3,
+          "folio": "9117",
+          "etapa": "Cumplimiento",
+          "tramite": "Actuación",
+          "descripcion": "Opinión consejero técnico canario con un texto bastante más largo que los demás para probar tramos",
+          "referencia": "Not+aper NOMBRECANARIO/Tp",
+          "fecha_texto": "02/10/2099",
+          "fecha_iso": "2099-10-02",
+          "anexo": false
+        }
+      ],
+      "vacio_explicito": false,
+      "advertencias": [
+        {
+          "codigo": "HISTORIA_FECHA_ILEGIBLE",
+          "fila": 2,
+          "folio": "9119"
+        },
+        {
+          "codigo": "HISTORIA_FILA_INCOMPLETA",
+          "fila": 4,
+          "folio": "9001"
+        }
+      ],
+      "sha256": "690f713ed93bfd817b1acd65902f45f521700d8283467fbe93885bec544a621e",
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z"
+    }
+  },
+  {
+    "tipo": "historia",
+    "html": "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\n<meta name=\"GENERATOR\" content=\"IBM WebSphere Studio\">\n<title>Consulta Detalle Causa</title>\n<script language=\"JavaScript\">\nfunction InformeHistoria (crr_idtramite, flg_doc_reservado, gls_etapa,gls_tiptramite,gls_despliegue,fecha_tramite)\n {\n this.crr_idtramite = crr_idtramite;\n this.flg_doc_reservado = flg_doc_reservado;\n this.gls_etapa = gls_etapa;\n this.gls_tiptramite = gls_tiptramite;\n this.gls_despliegue = gls_despliegue;\n this.fecha_tramite = fecha_tramite;\n }\nvar historia = new Array();\n</script>\n</head>\n<body class=\"scrollColor\">\n<form name=\"AtPublicoPpalForm\" method=\"post\" action=\"/SITFAWEB/AtPublicoDAction.do\">\n<div class=\"container-fluid\" id=\"app\"><div class=\"row\"><div class=\"col-xs-12\"><div class=\"panel panel-default\">\n<div class=\"panel-heading\"><strong>Informaci&oacute;n de la Causa</strong> <strong>[Causa Reservada]</strong></div>\n<div class=\"panel-body\">\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RIT:</label> C-99999-2099</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Caratulado:</label> NOMBRECANARIO APELLIDOCANARIO</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">F. Ingreso:</label> 01/01/2099</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">RUC:</label> 99- 9-9999999-9</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Proc.:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Forma Inicio:</label> Requerimiento</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Est. Adm.:</label> Sin archivar</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Etapa:</label> Cumplimiento</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Estado Proc.:</label> Concluido</div>\n</div>\n<div class=\"row\">\n<div class=\"col-xs-8\"><label class=\"form-check-label\">Tribunal:</label> Juzgado Canario de Prueba</div>\n<div class=\"col-xs-4\"><label class=\"form-check-label\">Texto Requerimiento :</label><img src=\"pdf.gif\" onclick=\"ShowPDFO('REQCANARIO')\"></div>\n</div>\n</div></div></div></div>\n<ul class=\"nav nav-tabs\">\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(1,100)\">Litigantes</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(2,100)\">Materias</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(3,100)\">Plazos</a></li>\n<li><a href=\"#\" onclick=\"ShowPopUpCabecera(4,100)\">Remisi&oacute;n</a></li>\n</ul>\n<ul class=\"nav nav-pills\">\n<li><a href=\"#\" onclick=\"Lengueta('Historia')\">Historia</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Notificaciones')\">Notificaci&oacute;n</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Diligencias')\">Diligencias</a></li>\n<li><a href=\"#\" onclick=\"Lengueta('Escritos')\">Escritos</a></li>\n</ul>\n<div class=\"row\"><div class=\"col-xs-12\"><div class=\"table-responsive\">\n<table class=\"table table-sm table-bordered table-hover\">\n<thead><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Tr&aacute;mite</th><th>Desc. Tr&aacute;mite</th><th>Referencia</th><th>Fecha Tram</th></tr></thead>\n<tbody>\n<script>historia[0] = new InformeHistoria(1001,'N','Cumplimiento','Resolucion','Tengase presente canario','13/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9120</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO1','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,1001,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Resoluci&oacute;n</td><td class=\"textoBarra\">Tengase presente canario</td>\n<td class=\"textoBarra\">Pone en conocimiento CANARIOREF</td><td class=\"textoBarra\">13/10/2099</td></tr>\n<script>historia[1] = new InformeHistoria(1000,'N','Cumplimiento','Escrito','Acompana documentos','09/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9119</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Reservado\" border=\"0\" height=\"16\" onclick=\"Reservado('TOKENDOCCANARIO2')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --><img src=\"anexo.gif\" onclick=\"ShowAnexos(1000,49)\"></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Escrito</td><td class=\"textoBarra\">Acompa&ntilde;a documentos</td>\n<td class=\"textoBarra\">Sin referencia.</td><td class=\"textoBarra\">09/10/2099</td></tr>\n<script>historia[2] = new InformeHistoria(999,'N','Cumplimiento','Actuacion','Opinion consejero tecnico canario','02/10/2099');</script>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9117</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" border=\"0\" height=\"16\" onclick=\"ShowPDF('TOKENDOCCANARIO3','pdf')\" src=\"pdf.gif\" style=\"cursor:pointer\" width=\"16\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\" onclick=\"ShowPopUpLengueta(1,999,49,100,3,0)\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td>\n<td class=\"textoBarra\">Cumplimiento</td><td class=\"textoBarra\">Actuaci&oacute;n</td>\n<td class=\"textoBarra\">Opini&oacute;n consejero t&eacute;cnico canario con un texto bastante m&aacute;s largo que los dem&aacute;s para probar tramos</td>\n<td class=\"textoBarra\">Not+aper NOMBRECANARIO/Tp</td><td class=\"textoBarra\">02/10/2099</td></tr>\n<tr><td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\">9001</td>\n<td align=\"center\" bordercolor=\"#FFFFFF\" class=\"textoBarra\" width=\"5%\"><img alt=\"Ver documento\" src=\"pdf.gif\" onclick=\"ShowPDF('TOKENDOCCANARIO4','pdf')\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><img src=\"sel.gif\"></td>\n<td align=\"center\" class=\"textoBarra\" width=\"5%\"><!--  *******  ARCHIVOS ANEXOS  *******   --></td></tr></tbody></table></div></div></div></form><ul class=\"pagination\"></ul></body></html>\n",
+    "esperado": {
+      "encabezado": {
+        "RIT": "C-99999-2099",
+        "Caratulado": "NOMBRECANARIO APELLIDOCANARIO",
+        "F. Ingreso": "01/01/2099",
+        "RUC": "99- 9-9999999-9",
+        "Proc.": "Cumplimiento",
+        "Forma Inicio": "Requerimiento",
+        "Est. Adm.": "Sin archivar",
+        "Etapa": "Cumplimiento",
+        "Estado Proc.": "Concluido",
+        "Tribunal": "Juzgado Canario de Prueba"
+      },
+      "reservada": true,
+      "filas": [
+        {
+          "fila": 1,
+          "folio": "9120",
+          "etapa": "Cumplimiento",
+          "tramite": "Resolución",
+          "descripcion": "Tengase presente canario",
+          "referencia": "Pone en conocimiento CANARIOREF",
+          "fecha_texto": "13/10/2099",
+          "fecha_iso": "2099-10-13",
+          "anexo": false
+        },
+        {
+          "fila": 2,
+          "folio": "9119",
+          "etapa": "Cumplimiento",
+          "tramite": "Escrito",
+          "descripcion": "Acompaña documentos",
+          "referencia": "Sin referencia.",
+          "fecha_texto": "09/10/2099",
+          "fecha_iso": "2099-10-09",
+          "anexo": true
+        },
+        {
+          "fila": 3,
+          "folio": "9117",
+          "etapa": "Cumplimiento",
+          "tramite": "Actuación",
+          "descripcion": "Opinión consejero técnico canario con un texto bastante más largo que los demás para probar tramos",
+          "referencia": "Not+aper NOMBRECANARIO/Tp",
+          "fecha_texto": "02/10/2099",
+          "fecha_iso": "2099-10-02",
+          "anexo": false
+        }
+      ],
+      "vacio_explicito": false,
+      "advertencias": [
+        {
+          "codigo": "HISTORIA_FILA_INCOMPLETA",
+          "fila": 4,
+          "folio": "9001"
+        },
+        {
+          "codigo": "HISTORIA_POSIBLE_PAGINACION",
+          "fila": 0,
+          "folio": ""
+        }
+      ],
+      "sha256": "32dcc9eeae3bbf2ed7bb1703d60ab9fc1587288782c40d6ade28bf0db3392eee",
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z"
+    }
+  },
+  {
+    "tipo": "calendario",
+    "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr></table></form></body></html>",
+    "args": [
+      "100",
+      "300",
+      "49",
+      "400",
+      "X-1-2099",
+      "01/03/2026",
+      "PRM Ficticio",
+      "Persona Ficticia",
+      "6 Meses",
+      "3 Meses",
+      "201",
+      "1"
+    ],
+    "esperado": {
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "proyecciones": [],
+      "plazo_remision_meses": 3,
+      "plazo_intervencion_meses": 6,
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z",
+      "html_sha256": "4d7f65889540bfbf3c7dd77c6110b11f8c4509fc285bc6b4dafb3ac4a32357d5"
+    }
+  },
+  {
+    "tipo": "calendario",
+    "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+    "args": [
+      "100",
+      "300",
+      "49",
+      "400",
+      "X-1-2099",
+      "01/03/2026",
+      "PRM Ficticio",
+      "Persona Ficticia",
+      "6 Meses",
+      "3 Meses",
+      "201",
+      "1"
+    ],
+    "esperado": {
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "proyecciones": [
+        {
+          "fila": 1,
+          "fecha_proyeccion": "2026-06-01",
+          "fecha_informe": "2026-05-28",
+          "estado": "ENVIADO"
+        },
+        {
+          "fila": 2,
+          "fecha_proyeccion": "2026-09-01",
+          "fecha_informe": "",
+          "estado": "PENDIENTE"
+        }
+      ],
+      "plazo_remision_meses": 3,
+      "plazo_intervencion_meses": 6,
+      "source": "ficticio.html",
+      "captured_at": "2026-11-12T12:00:00Z",
+      "html_sha256": "9245adfea4a1eb1d233444ac83b3956c7887a66a07da44c4da290591567ab6cd"
+    }
+  }
+]

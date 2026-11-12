@@ -25,7 +25,8 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.4 (bitácoras, historia y calendario por ingreso)**.
+- **Foco activo: fase 7, Captura SITFA.** Continuar con **7.4b (enlaces verificados y protocolo de lectura)**;
+  los lectores locales de 7.4a están terminados, pero aún no se conectan al lote.
   Los pendientes 5b.2, 5b.3 y 6.1 siguen abiertos; no se consideran terminados por este avance.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
@@ -172,6 +173,12 @@ Pasos:
 - [ ] 7.4 Bitácoras, historia de la causa y calendario (`descargador/lectura_bitacoras.py`,
       `lectura_historia.py`, `extension/pagina.js` del Descargador integral, `src/nurus/bitacora_html.py`,
       `historia_html.py`, `calendario_html.py`). Ritmo y límite de 600 lecturas por lote (decisión m).
+  - [x] 7.4a Lectores locales de las tres ventanas, identidad de bitácora/calendario y ventana de 1 a 4 meses;
+        oráculo de ventanas ficticias contra Python y pruebas negativas.
+  - [ ] 7.4b Extracción y cotejo de los enlaces del listado actual, adaptación de los comandos de lectura
+        `diary_open`, `history_open`, `calendar_open` y negociación de sus protocolos; sin persistir valores cifrados.
+  - [ ] 7.4c Integración con lotes, checkpoints, reutilización de lecturas del día, tope de 600, controles de período
+        y paso de los contextos verificados a Trabajo; pruebas de extremo a extremo de las lecturas.
 
 Prohibido en toda la fase: leer cookies o contraseñas, enviar formularios que no sean las consultas listadas,
 guardar el código de conexión, y cualquier escritura en RUS.
@@ -273,3 +280,15 @@ guardar el código de conexión, y cualquier escritura en RUS.
   CI Linux ejecuta ambos; el artefacto Windows incluye la extensión. El commit anterior, `f8f78bf`, pasó pruebas
   y compilación Windows nativas en [run 43252413001](https://github.com/MatiGaete2023/flow/actions/runs/43252413001).
   El uso real en SITFA y Outlook sigue sin ejecutarse. Próximo paso de desarrollo: 7.4.
+- 2026-11-12: 7.4a: `flow-captura::lecturas` porta los lectores de `bitacora_html.py`, `historia_html.py` y
+  `calendario_html.py`. La bitácora vincula los textos completos con el ID de observación, coteja la identidad
+  remota y conserva respuesta, fecha, estado y metadatos de envío. Mantiene cobertura PARCIAL: una ventana no
+  acredita por sí sola todo el historial remoto. Historia lee solo la tabla visible, conserva fechas ilegibles
+  con advertencia y detecta posible paginación; nunca sigue enlaces de documentos. El calendario coteja tribunal,
+  causa e ingreso y exige coherencia entre ENVIADO/PENDIENTE y fecha del informe. Límite local de 8 MiB por ventana;
+  UTF-8/Windows-1252 y alias auditados, con error ante bytes inválidos. Una respuesta cortada o de acceso no se
+  convierte en una lista vacía. Ventana de meses naturales (1–4) con fechas futuras y sin fecha separadas.
+  Oráculo reproducible: `python3 rust/oraculo/generar_lecturas.py` (8 ventanas ficticias; mismas salidas que Python).
+  Siete pruebas nuevas, suite completa 68 PASA, Clippy y comprobación cruzada Windows PASA. El paso 7.4 sigue
+  abierto hasta integrar protocolo/lote/UI: continuar en 7.4b desde `descargador/vinculos.py` y los tres comandos
+  de `descargador/extension/pagina.js`. CI nativa y Chromium del avance 7.3: run 43259160734 PASA.
