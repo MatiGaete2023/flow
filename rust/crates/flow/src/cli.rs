@@ -13,8 +13,8 @@ Uso:
                 [--modalidades TEXTO] [--contactos contactos.json] [--outlook]
   flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA [--modo estricto|conservador]\n                  [--desplazar-dias N] [--generalizar-nacimiento] [--rechazar-no-admitidos] [--semilla-stdin]
   flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD]
-             [--tribunales \"Laja,Tomé\"]
-  flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA
+             [--tribunales \"Laja,Tomé\"] [--plantilla PLANTILLA.xlsx]
+  flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA [--plantilla PLANTILLA.xlsx]
   flow ayuda
 
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
@@ -245,7 +245,7 @@ fn producir(args: &[String]) -> Result<(), (i32, String)> {
 
 /// Meta 4 desde lotes de captura locales. La carpeta de salida debe ser nueva.
 fn meta4(args: &[String]) -> Result<(), (i32, String)> {
-    let o = opciones(args, &["salida", "corte", "emision", "tribunales"]).map_err(|e| (2, e))?;
+    let o = opciones(args, &["salida", "corte", "emision", "tribunales", "plantilla"]).map_err(|e| (2, e))?;
     if o.posicionales.is_empty() {
         return Err((2, "Indica al menos la carpeta de un lote capturado.".into()));
     }
@@ -263,7 +263,9 @@ fn meta4(args: &[String]) -> Result<(), (i32, String)> {
     let lotes: Vec<std::path::PathBuf> = o.posicionales.iter().map(std::path::PathBuf::from).collect();
     let tribunales: Vec<String> = o.valor("tribunales").unwrap_or("").split(',').map(|t| t.trim().to_string()).collect();
     let m = flow_meta4::calcular(&lotes, corte, emision, &tribunales).map_err(|e| (1, e))?;
-    let rutas = flow_meta4::salida::publicar(&m, Path::new(salida)).map_err(|e| (1, e))?;
+    let rutas = flow_meta4::salida::publicar_con_plantilla(
+        &m, Path::new(salida), o.valor("plantilla").map(Path::new)
+    ).map_err(|e| (1, e))?;
     println!(
         "Meta 4: {} registros, {} alertas, {} por revisar.",
         m.registros.len(),
@@ -281,13 +283,15 @@ fn meta4(args: &[String]) -> Result<(), (i32, String)> {
 
 /// Regenera Meta 4 desde el Registros.xlsx corregido y el reporte original.
 fn meta4_regenerar(args: &[String]) -> Result<(), (i32, String)> {
-    let o = opciones(args, &["salida"]).map_err(|e| (2, e))?;
-    if o.posicionales.len() != 1 || o.banderas.len() != 0 || o.pares.len() != 1 {
-        return Err((2, "Uso: flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA.".into()));
+    let o = opciones(args, &["salida", "plantilla"]).map_err(|e| (2, e))?;
+    if o.posicionales.len() != 1 || !o.banderas.is_empty() || o.valor("salida").is_none()
+        || o.pares.len() != (1 + usize::from(o.valor("plantilla").is_some())) {
+        return Err((2, "Uso: flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA [--plantilla PLANTILLA.xlsx].".into()));
     }
     let destino = o.valor("salida").ok_or((2, "Falta --salida.".to_string()))?;
-    let rutas = flow_meta4::regenerar::ejecutar(Path::new(&o.posicionales[0]), Path::new(destino))
-        .map_err(|e| (1, e))?;
+    let rutas = flow_meta4::regenerar::ejecutar_con_plantilla(
+        Path::new(&o.posicionales[0]), Path::new(destino), o.valor("plantilla").map(Path::new)
+    ).map_err(|e| (1, e))?;
     println!("Meta 4 regenerado desde Registros.xlsx revisado:");
     for ruta in rutas { println!("  creado · {}", ruta.display()); }
     Ok(())
