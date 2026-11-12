@@ -1,0 +1,12 @@
+[package]
+name = "flow-captura"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+flow-dominio.workspace = true
+flow-tabular = { path = "../flow-tabular" }
+serde_json.workspace = true
+tiny_http = "0.12"
+getrandom = "0.2"

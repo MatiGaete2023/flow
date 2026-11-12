@@ -145,7 +145,7 @@ Cómo funciona hoy (leído en `descargador_lite/`):
 
 Pasos:
 
-- [ ] 7.1 `flow-captura::puente`: servidor HTTP con el protocolo del punto 3 y `llamar(comando, payload, plazo)`.
+- [x] 7.1 `flow-captura::puente`: servidor HTTP con el protocolo del punto 3 y `llamar(comando, payload, plazo)`.
       Pruebas con un cliente HTTP en el mismo test: código malo → 403; origen distinto → 403; tarea → resultado;
       plazo vencido → `TASK_EXPIRED`. Fuente: `descargador_lite/app/puente.py`.
 - [ ] 7.2 `flow-captura::sitfa`: validación de respuestas y paginación (puntos 5). Fuente: `motor.py`,
