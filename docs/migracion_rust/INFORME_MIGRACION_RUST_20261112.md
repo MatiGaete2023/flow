@@ -18,6 +18,9 @@ Convención: **N1** hecho medido en el repo · **N2** inferencia con supuesto ·
   aceptó: reabre toda la validación en Windows con datos reales, que solo puede hacer el usuario. Si el objetivo es
   «sistema en producción sin intervención manual», el camino corto es firmar el acta, no cambiar de lenguaje.
 
+**Alcance de este veredicto:** vale para el escenario «migrar el proyecto actual conservando sus reglas de gobierno».
+El escenario «proyecto nuevo» cambia la conclusión y está en la sección 11.
+
 ## 2. Inventario (N1)
 
 Medido con `git ls-files` y `wc -l` sobre `Rediseno`. «Producto» excluye pruebas.
@@ -273,3 +276,66 @@ Ordenado de más a menos útil para este repo (N2 salvo indicación):
 
 Una sola decisión: **A, B o C**, y si se empieza **antes o después del acta (WP-02)**. Con B, lo siguiente es la
 Fase 0, punto 3 (las tres pruebas de concepto).
+
+## 11. Escenario «proyecto nuevo» (observación del usuario, 12 de noviembre de 2026)
+
+El usuario observa que el análisis anterior hereda prohibiciones del proyecto Python y que el de Rust sería un
+proyecto nuevo, donde esas prohibiciones pueden o no aplicar. La observación es correcta en parte: las secciones 1,
+5 y 7 trataron como fijas reglas que son de gobierno del proyecto anterior. Se separan aquí.
+
+### Reglas que eran del proyecto anterior (revisables en uno nuevo)
+
+- Motor y textos intocables, y paridad golden como puerta.
+- Paquetes de trabajo, revisión E3, `verificar_wp.py` y línea base.
+- Acta de la versión Python como requisito previo.
+- El Asistente no navega SITFA ni inicia el Descargador.
+- Paridad exacta con Python (mismos libros, mismo Word, misma interfaz, mismos manuales).
+- Sin fusión a `main` ni releases sin autorización (un repo nuevo tiene sus propias ramas).
+
+### Restricciones que no dependen del proyecto
+
+- Datos reales de causas fuera de repositorios, CI y conversaciones con agentes. Son datos de niños, niñas y
+  adolescentes en causas de familia; la restricción viene de la naturaleza del dato, no del plan (N2).
+- Sin credenciales, cookies ni tokens en código o registros.
+- Correos solo como borrador y con CC fijo: está en las restricciones permanentes del usuario para su trabajo, no
+  solo en `AGENTS.md`.
+- Escritura automática en RUS o SATURNO: técnicamente es una decisión del usuario, pero el riesgo es institucional
+  y el efecto no se deshace. Si se quisiera levantar, merece una decisión aparte y explícita, no venir incluida en
+  la migración.
+
+### Qué cambia en el análisis
+
+- **El riesgo del motor baja.** Ya no hay que traducir regla por regla imitando a pandas: se puede rediseñar el
+  motor con fechas y números tipados. Las 28 reglas de historia y `textos_base.json` pasan a ser especificación, no
+  código a calcar.
+- **Word deja de ser riesgo alto.** Sin obligación de imitar `docxcompose`, se puede generar un documento por
+  proyecto o diseñar las plantillas para Rust.
+- **Una sola aplicación.** Sin la separación Descargador/Asistente, el paquete ZIP entre ambos deja de ser
+  necesario como puente interno (queda como exportación). Menos código: se elimina buena parte de contrato,
+  importación, reconciliación y verificación de paquetes (N2).
+- **La pérdida de manuales, capturas y videos deja de contar:** un producto nuevo los hace de nuevo igual.
+- **La advertencia sobre el acta se debilita:** un proyecto nuevo define su propia aceptación.
+
+### Qué no cambia
+
+- **El cuello de botella sigue siendo la validación del usuario en Windows con datos reales**, y ahora es mayor:
+  sin paridad obligatoria no hay oráculo automático. Recomendación: usar el Python actual como oráculo
+  **opcional** (comparar y explicar cada diferencia, sin exigir igualdad).
+- Las interfaces se hacen desde cero en ambos escenarios.
+- COM con Outlook y Office sigue siendo verboso y solo se prueba en Windows.
+- La extensión de Chrome sigue en JavaScript.
+- El conocimiento acumulado (reglas, casos límite, decisiones a–ab del plan vigente) es el activo; perderlo por
+  empezar «en limpio» sería el error más caro. Debe entrar al proyecto nuevo como especificación y casos de prueba.
+
+### Veredicto para este escenario
+
+Un proyecto nuevo en Rust **sí es razonable**, y el orden recomendado cambia:
+
+1. Especificación: extraer del repo actual reglas, textos, formatos de entrada y casos de prueba ficticios.
+2. Decidir qué restricciones revisables se levantan (lista de arriba) y la forma del producto (una aplicación o
+   varias).
+3. Núcleo de lectura (Excel, HTML) y motor nuevo, probados por línea de comandos contra los fixtures.
+4. Interfaz única y productos (Excel, Word, borradores).
+5. Captura desde SITFA (puente y extensión).
+
+El Anonimizador sigue siendo buen piloto en ambos escenarios.
