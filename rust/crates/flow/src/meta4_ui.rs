@@ -1,7 +1,7 @@
 //! Pestaña Meta 4: lee lotes de captura locales y genera la planilla y sus consolidados. No se conecta a nada.
 use eframe::egui::{self, Color32, RichText};
 use flow_dominio::celda::fecha_de_texto;
-use flow_meta4::{calcular, salida, tribunales::TRIBUNALES};
+use flow_meta4::{calcular, regenerar, salida, tribunales::TRIBUNALES};
 use std::path::PathBuf;
 
 pub struct Meta4 {
@@ -70,6 +70,39 @@ impl Meta4 {
         }
     }
 
+    /// Reconstruye desde Registros.xlsx revisado, sin volver a capturar ni modificar el origen.
+    fn regenerar(&mut self) {
+        let Some(archivo) = rfd::FileDialog::new()
+            .set_title("Elegir Registros.xlsx revisado")
+            .add_filter("Libro Excel", &["xlsx"])
+            .pick_file() else { return };
+        if self.destino.is_none() {
+            self.destino = rfd::FileDialog::new()
+                .set_title("Carpeta donde dejar la regeneración")
+                .pick_folder();
+        }
+        let Some(base) = self.destino.clone() else { return };
+        self.avisos.clear();
+        self.resultado = None;
+        let corte = regenerar::cargar(&archivo).map(|c| c.meta.corte);
+        let resultado = corte.and_then(|corte| {
+            let mut destino = base.join(format!("META4 regenerado {}", corte.format("%Y-%m-%d")));
+            let mut n = 2;
+            while destino.exists() {
+                destino = base.join(format!("META4 regenerado {} ({n})", corte.format("%Y-%m-%d")));
+                n += 1;
+            }
+            regenerar::ejecutar(&archivo, &destino).map(|_| destino)
+        });
+        match resultado {
+            Ok(destino) => {
+                self.mensaje = Some((false, "Meta 4 regenerado desde Registros.xlsx revisado. Se conservaron las bitácoras.".into()));
+                self.resultado = Some(destino);
+            }
+            Err(e) => self.mensaje = Some((true, e)),
+        }
+    }
+
     pub fn mostrar(&mut self, ui: &mut egui::Ui) {
         ui.label("Genera la planilla Meta 4 con lo que ya capturó Flow: Espera y Cumplimiento de FAE y Residencia, con sus bitácoras.");
         ui.add_space(4.0);
@@ -113,6 +146,11 @@ impl Meta4 {
         ui.horizontal(|ui| {
             if ui.add_enabled(!self.lotes.is_empty(), egui::Button::new("Generar Meta 4")).clicked() {
                 self.generar();
+            }
+            if ui.button("Regenerar desde Registros revisado…")
+                .on_hover_text("Usa Registros.xlsx y Reporte META4.json del resultado anterior; no cambia los originales.")
+                .clicked() {
+                self.regenerar();
             }
             if let Some(carpeta) = &self.resultado {
                 if ui.button("Abrir resultados").clicked() {
