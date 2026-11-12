@@ -194,8 +194,12 @@ Prohibido en toda la fase: leer cookies o contraseñas, enviar formularios que n
 guardar el código de conexión, y cualquier escritura en RUS.
 
 ### Fase 8 — Meta 4 y cierre
-- [ ] 8.1 `flow-meta4`.
-- [ ] 8.2 Manual de uso, guía de pruebas del usuario, instalador.
+- [x] 8.1 `flow-meta4`: cálculo, cinco productos, consola y pestaña (sobre lotes de Flow).
+- [x] 8.2 Manual (`LEEME.md`) y guía de pruebas (`GUIA_PRUEBAS_WINDOWS.md`, 34 pruebas). Sin instalador: un
+      `flow.exe` y la carpeta `extension`.
+- [ ] 8.3 Meta 4: «Regenerar desde Registros revisado» y plantilla propia (`meta4_bitacoras.py::regenerar`,
+      `generate_meta4.py::load_template`); leer también lotes del Descargador Python si el usuario lo pide.
+- [ ] 8.4 Prueba del usuario en Windows real y su resultado. Nada está aceptado hasta entonces.
 
 ## 4. Guía por paso (fuentes en el Python)
 
@@ -402,3 +406,22 @@ guardar el código de conexión, y cualquier escritura en RUS.
   salidas propias. Consola `anonimizar` y pestaña con hilo de trabajo; semilla solo en RAM. Preserva coordenadas
   de celdas Excel. Suite completa: 114 pruebas, más una prueba focal de coordenadas Excel (115 en total); comprobación Windows cruzada y clippy focal del anonimizador.
   CI del avance anterior `d9faef6`: Linux y Windows aprobados (43287539795). META4 y cierre siguen pendientes.
+
+- 2026-11-12: 8.1 Meta 4. Crate `flow-meta4` sobre los lotes de captura de Flow (`resumen.json`, XLS verificados,
+  vínculos y lecturas de bitácora): período de mes calendario móvil, última observación del centro de etapa
+  Espera/Cumplimiento (Informes no participa), empate → revisar, alerta roja, controles (verificada, sin observación,
+  lectura no completada, no verificable, leída antes del corte, identidad/nombre visible, ambigua, sin bitácora),
+  filtro de tribunales con `- parcial`, consulta repetida entre lotes rechazada, publicación atómica en carpeta
+  nueva. Salidas: planilla de cuatro hojas con bloques por tribunal y hoja de control, Registros, consolidado con
+  resumen por tribunal/duplicados/alertas, bitácoras del mes y reporte JSON sin datos de personas.
+  Diferencias deliberadas con el Python: no acepta el alias «LA» en una celda; no lee lotes del Descargador Python,
+  PDF de consulta vacía ni carpetas de reportes sueltos; sin regenerar ni plantilla (8.3). Paridad **por reglas**
+  (mismos ejemplos del LEEME de Meta 4), no por comparación de archivos. Suite completa: 39 conjuntos PASA.
+- 2026-11-12: prueba del usuario en el Descargador Python: «Calendario de informes no leído: fecha ilegible en
+  Fecha Informe (forma - - -)». Causa: SITFA escribe la fecha vacía con guiones separados y el lector solo aceptaba
+  `-`, `--` y `---`. Corregido en `src/nurus/calendario_html.py` (rama `Rediseno`, commit 38fa03d) y en
+  `flow-captura::lecturas::fecha_calendario`, con prueba en ambos.
+  El usuario también informa que los paquetes grandes no leen todas las bitácoras. Causa: tope de 600 lecturas por
+  corrida, en el que cada calendario cuenta igual que una bitácora (decisión del 19-oct, con prueba propia
+  `test_calendario_cuenta_en_el_maximo_de_lecturas`); con calendario activo alcanza para 300 ingresos y hay que
+  «Retomar». **No se cambió**: es decisión del usuario (subir el tope, contar el calendario aparte o seguir retomando).

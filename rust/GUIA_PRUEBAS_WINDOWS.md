@@ -46,3 +46,13 @@ prueba 7 cumplen la misma función.
 | 29 | ZIP anonimizado | Anonimizar un CSMP_CAPTURE ficticio y abrir la copia en Trabajo | Huellas válidas, referencias coherentes; adjuntos no admitidos excluidos e informados |
 
 La anonimización requiere revisar las copias antes de compartirlas, especialmente en modo Conservador.
+
+| 30 | Meta 4 | Capturar Espera y Cumplimiento de FAE o Residencia de un tribunal con bitácoras; Meta 4 → agregar el lote → Generar | Carpeta nueva con cinco archivos; cada registro en su hoja y tribunal |
+| 31 | Meta 4: fecha | Comparar FECHA OBS. de 10 filas con la bitácora en SITFA | Es la última observación del centro de Espera o Cumplimiento dentro del mes; las de Informes no cuentan |
+| 32 | Meta 4: alerta | Buscar un registro en Cumplimiento cuya última observación sea de Espera | Fila roja con nota; aparece en «Alertas y revisión» |
+| 33 | Meta 4 frente al actual | Generar el mismo mes con la herramienta Meta 4 actual y comparar totales por hoja | Mismos totales; anotar cada diferencia |
+| 34 | Calendario con «- - -» | Repetir la captura que dio «fecha ilegible en Fecha Informe» | El calendario se lee; ya no aparece el aviso |
+
+Meta 4 se construyó sobre las reglas de la herramienta actual pero **no se comparó archivo contra archivo**, porque
+lee otro formato de lote. La prueba 33 es la que lo confirma.
+

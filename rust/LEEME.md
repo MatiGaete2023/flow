@@ -80,9 +80,31 @@ flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA
 
 `--semilla-stdin` lee la semilla de la entrada estándar, sin incluirla en argumentos o informes.
 
+## Meta 4
+
+En la pestaña **Meta 4**, agrega los lotes capturados por Flow (la carpeta que contiene `resumen.json`) con
+Seguimiento → Espera y Cumplimiento de FAE y Residencia y sus bitácoras. Revisa la fecha de corte y pulsa
+«Generar Meta 4». Sin marcar tribunales van todos; con alguno marcado, la planilla termina en `- parcial`.
+
+- Usa las observaciones del **mes calendario que termina en el corte** (16/09 a 16/10; 28/02 a 31/03).
+- FECHA OBS. es la observación del centro más reciente cuya columna Etapa sea Espera o Cumplimiento. Informes no
+  participa. Sin observación en ese mes queda vacía; no se toma de meses anteriores.
+- Rojo: registro en Cumplimiento cuya última observación es de Espera. Amarillo: revisar el control de bitácora
+  (lectura no completada, leída antes del corte, identidad visible distinta, sin bitácora asociada, empate).
+- Cada ejecución crea una carpeta nueva con `META 4 - actualizado AAAA-MM.xlsx`, `Registros.xlsx`,
+  `Registros consolidados.xlsx`, `Bitacoras_del_mes.xlsx` y `Reporte META4.json`. Un error no deja nada a medias.
+- La misma consulta en dos lotes se rechaza, para no duplicar registros.
+
+```text
+flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD] [--tribunales "Laja,Tomé"]
+```
+
 ## Qué todavía no hace
 
-- Meta 4 sigue siendo la herramienta Python.
+- Meta 4 lee los lotes capturados por Flow, no las carpetas del Descargador Python.
+- Meta 4 no tiene aún «Regenerar desde Registros revisado» ni plantilla propia de la planilla: si corriges
+  `Registros.xlsx` a mano, la planilla no se rehace sola.
+- No hay instalador: es un solo `flow.exe` más la carpeta `extension`. Se copian y se usan.
 
 ## Desarrollo
 

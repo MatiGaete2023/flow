@@ -296,7 +296,8 @@ pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Valu
 
 fn fecha_calendario(s: &str, opcional: bool) -> Result<String, String> {
     let s = s.trim();
-    if opcional && matches!(s, "" | "-" | "--" | "---") {
+    // SITFA escribe la fecha vacía como guiones, a veces separados («- - -»).
+    if opcional && s.chars().all(|c| c == '-' || c.is_whitespace()) {
         return Ok(String::new());
     }
     static FORMA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A\d{2}/\d{2}/\d{4}(?: \d{1,2}:\d{2}(?::\d{2})?)?\z").unwrap());
@@ -382,4 +383,20 @@ pub fn leer_calendario(datos: &[u8], args: &[String], fuente: &str, capturada: &
     Ok(
         json!({"tribunal_codigo":tribunal,"causa_id":causa,"ingreso_id":ingreso,"proyecciones":proyecciones,"plazo_remision_meses":plazo("plazo remision"),"plazo_intervencion_meses":plazo("plazo intervencion"),"source":fuente,"captured_at":capturada,"html_sha256":crate::lotes::huella(datos)}),
     )
+}
+
+#[cfg(test)]
+mod pruebas_fecha_vacia {
+    use super::fecha_calendario;
+
+    #[test]
+    fn guiones_separados_son_fecha_vacia_solo_si_es_opcional() {
+        // Prueba del usuario (12-nov-2026): SITFA entrega «- - -» en «Fecha Informe».
+        for vacio in ["", "---", "- - -", "-  -", " - "] {
+            assert_eq!(fecha_calendario(vacio, true).unwrap(), "");
+            assert!(fecha_calendario(vacio, false).is_err());
+        }
+        assert!(fecha_calendario("- x -", true).is_err());
+        assert_eq!(fecha_calendario("28/05/2026 13:16", true).unwrap(), "2026-05-28");
+    }
 }
