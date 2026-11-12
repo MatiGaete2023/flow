@@ -12,6 +12,8 @@ Uso:
   flow producir ARCHIVO --salida CARPETA [--etapa E] [--hoja H] [--corte AAAA-MM-DD]
                 [--modalidades TEXTO] [--contactos contactos.json] [--outlook]
   flow anonimizar ARCHIVO_O_CARPETA... --salida CARPETA [--modo estricto|conservador]\n                  [--desplazar-dias N] [--generalizar-nacimiento] [--rechazar-no-admitidos] [--semilla-stdin]
+  flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD]
+             [--tribunales \"Laja,Tomé\"]
   flow ayuda
 
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
@@ -240,6 +242,42 @@ fn producir(args: &[String]) -> Result<(), (i32, String)> {
     Ok(())
 }
 
+/// Meta 4 desde lotes de captura locales. La carpeta de salida debe ser nueva.
+fn meta4(args: &[String]) -> Result<(), (i32, String)> {
+    let o = opciones(args, &["salida", "corte", "emision", "tribunales"]).map_err(|e| (2, e))?;
+    if o.posicionales.is_empty() {
+        return Err((2, "Indica al menos la carpeta de un lote capturado.".into()));
+    }
+    let salida = o.valor("salida").ok_or((2, "Indica la carpeta nueva de --salida.".to_string()))?;
+    let fecha = |nombre: &str| -> Result<Fecha, (i32, String)> {
+        match o.valor(nombre) {
+            Some(t) => t.parse().map_err(|_| (2, format!("Fecha inválida en --{nombre}: {t}. Usa AAAA-MM-DD."))),
+            None => Ok(flow_tabular::libro::hoy()),
+        }
+    };
+    let (corte, emision) = (fecha("corte")?, fecha("emision")?);
+    if corte > flow_tabular::libro::hoy() {
+        return Err((2, "La fecha de corte no puede ser futura.".into()));
+    }
+    let lotes: Vec<std::path::PathBuf> = o.posicionales.iter().map(std::path::PathBuf::from).collect();
+    let tribunales: Vec<String> = o.valor("tribunales").unwrap_or("").split(',').map(|t| t.trim().to_string()).collect();
+    let m = flow_meta4::calcular(&lotes, corte, emision, &tribunales).map_err(|e| (1, e))?;
+    let rutas = flow_meta4::salida::publicar(&m, Path::new(salida)).map_err(|e| (1, e))?;
+    println!(
+        "Meta 4: {} registros, {} alertas, {} por revisar.",
+        m.registros.len(),
+        m.registros.iter().filter(|r| !r.alerta.is_empty()).count(),
+        m.registros.iter().filter(|r| r.requiere_revision()).count()
+    );
+    for ruta in rutas {
+        println!("  creado · {}", ruta.display());
+    }
+    for aviso in &m.avisos {
+        println!("  aviso · {aviso}");
+    }
+    Ok(())
+}
+
 pub fn ejecutar(args: &[String]) -> i32 {
     let resultado = match args.first().map(String::as_str) {
         None | Some("ayuda" | "--ayuda" | "-h" | "--help") => {
@@ -249,6 +287,7 @@ pub fn ejecutar(args: &[String]) -> i32 {
         Some("observar") => observar(&args[1..]),
         Some("producir") => producir(&args[1..]),
         Some("anonimizar") => anonimizar(&args[1..]),
+        Some("meta4") => meta4(&args[1..]),
         Some(otro) => Err((2, format!("Comando desconocido: {otro}.\n\n{AYUDA}"))),
     };
     match resultado {

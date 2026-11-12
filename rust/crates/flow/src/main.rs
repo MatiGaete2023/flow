@@ -8,6 +8,7 @@
 mod anonimo_ui;
 mod captura_ui;
 mod cli;
+mod meta4_ui;
 mod cronologia_ui;
 mod ui;
 

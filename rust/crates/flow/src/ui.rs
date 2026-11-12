@@ -21,6 +21,7 @@ enum Pestana {
     Resultados,
     Contactos,
     Anonimo,
+    Meta4,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -64,6 +65,7 @@ struct App {
     sin_guardar: bool,
     captura: crate::captura_ui::Captura,
     anonimo: crate::anonimo_ui::Anonimo,
+    meta4: crate::meta4_ui::Meta4,
 }
 
 fn ruta_ajustes(datos: &Path) -> PathBuf {
@@ -133,6 +135,7 @@ impl App {
             sin_guardar: false,
             captura: Default::default(),
             anonimo: Default::default(),
+            meta4: Default::default(),
         };
         if let Some(ruta) = archivo {
             app.cargar(ruta);
@@ -445,6 +448,7 @@ impl App {
                 (Pestana::Resultados, "4 · Resultados"),
                 (Pestana::Contactos, "Contactos"),
                 (Pestana::Anonimo, "Anonimizador"),
+                (Pestana::Meta4, "Meta 4"),
             ] {
                 ui.selectable_value(&mut self.pestana, p, nombre);
             }
@@ -918,6 +922,7 @@ impl eframe::App for App {
             Pestana::Resultados => self.vista_resultados(ui),
             Pestana::Contactos => self.vista_contactos(ui),
             Pestana::Anonimo => self.anonimo.mostrar(ui, ctx),
+            Pestana::Meta4 => self.meta4.mostrar(ui),
         });
         if self.ayuda {
             let mut abierta = true;

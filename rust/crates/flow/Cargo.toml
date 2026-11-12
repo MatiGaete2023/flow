@@ -17,6 +17,7 @@ flow-productos = { path = "../flow-productos" }
 flow-outlook = { path = "../flow-outlook" }
 flow-anonimo = { path = "../flow-anonimo" }
 flow-captura = { path = "../flow-captura" }
+flow-meta4 = { path = "../flow-meta4" }
 chrono.workspace = true
 serde_json.workspace = true
 serde = { workspace = true }

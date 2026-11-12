@@ -1383,6 +1383,7 @@ dependencies = [
  "flow-anonimo",
  "flow-captura",
  "flow-dominio",
+ "flow-meta4",
  "flow-motor",
  "flow-outlook",
  "flow-productos",
@@ -1445,6 +1446,18 @@ dependencies = [
  "regex",
  "serde",
  "unicode-normalization",
+]
+
+[[package]]
+name = "flow-meta4"
+version = "0.2.0"
+dependencies = [
+ "chrono",
+ "flow-captura",
+ "flow-dominio",
+ "flow-tabular",
+ "rust_xlsxwriter",
+ "serde_json",
 ]
 
 [[package]]
