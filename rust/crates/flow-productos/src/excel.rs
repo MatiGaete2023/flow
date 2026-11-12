@@ -21,6 +21,18 @@ pub fn ruta_nueva(carpeta: &Path, nombre: &str, extension: &str) -> PathBuf {
     ruta
 }
 
+/// Carpeta nueva dentro de `base`: agrega « (2)», « (3)»… si el nombre está ocupado. La crea.
+pub fn carpeta_nueva(base: &Path, nombre: &str) -> Result<PathBuf, String> {
+    let mut carpeta = base.join(nombre);
+    let mut n = 2;
+    while carpeta.exists() {
+        carpeta = base.join(format!("{nombre} ({n})"));
+        n += 1;
+    }
+    std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear {}: {e}", carpeta.display()))?;
+    Ok(carpeta)
+}
+
 /// Un nombre no lleva paréntesis ni lo escrito en ellos.
 pub fn sin_parentesis(texto: &str) -> String {
     let mut salida = String::new();

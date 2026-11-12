@@ -134,9 +134,7 @@ pub fn producir_todo(
 ) -> Result<Producido, String> {
     use flow_productos::{correos, excel, word};
     let nombre = format!("Flow {} {}", trabajo.etapa.nombre(), trabajo.corte.format("%Y-%m-%d"));
-    let carpeta = excel::ruta_nueva(salida, &nombre, "d").with_extension("");
-    let carpeta = if carpeta.exists() { excel::ruta_nueva(salida, &format!("{nombre} (otra)"), "d").with_extension("") } else { carpeta };
-    std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear {}: {e}", carpeta.display()))?;
+    let carpeta = excel::carpeta_nueva(salida, &nombre)?;
     let mut p = Producido { carpeta: carpeta.clone(), ..Producido::default() };
     let libro = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.etapa.nombre()), "xlsx");
     excel::observaciones(trabajo, &libro)?;

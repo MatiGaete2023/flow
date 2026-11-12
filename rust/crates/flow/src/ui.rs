@@ -218,14 +218,13 @@ impl App {
         }
         let base = self.ajustes.salida.clone()?;
         let nombre = format!("Flow {} {}", trabajo.etapa.nombre(), trabajo.corte.format("%Y-%m-%d"));
-        let carpeta = excel::ruta_nueva(&base, &nombre, "tmp").with_extension("");
-        match std::fs::create_dir_all(&carpeta) {
-            Ok(()) => {
+        match excel::carpeta_nueva(&base, &nombre) {
+            Ok(carpeta) => {
                 self.carpeta = Some(carpeta.clone());
                 Some(carpeta)
             }
             Err(e) => {
-                self.mal(format!("No se pudo crear {}: {e}", carpeta.display()));
+                self.mal(e);
                 None
             }
         }
@@ -465,7 +464,7 @@ impl App {
             .collect();
         let mut seleccion = self.seleccion;
         let mut cambio = false;
-        egui::SidePanel::right("detalle").resizable(true).default_width(470.0).show_inside(ui, |ui| {
+        egui::SidePanel::right("detalle").resizable(true).default_width(410.0).show_inside(ui, |ui| {
             let Some(fila) = seleccion.and_then(|i| trabajo.filas.get_mut(i)) else {
                 ui.label("Elige un registro de la lista.");
                 return;
@@ -531,8 +530,8 @@ impl App {
                 .sense(egui::Sense::click())
                 .column(Column::exact(44.0))
                 .column(Column::exact(96.0))
-                .column(Column::initial(170.0).clip(true).resizable(true))
-                .column(Column::initial(150.0).clip(true).resizable(true))
+                .column(Column::initial(140.0).clip(true).resizable(true))
+                .column(Column::initial(120.0).clip(true).resizable(true))
                 .column(Column::exact(54.0))
                 .column(Column::remainder().clip(true))
                 .header(alto, |mut h| {
