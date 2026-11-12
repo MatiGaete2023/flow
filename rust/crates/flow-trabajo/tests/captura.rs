@@ -6,7 +6,7 @@ use flow_motor::Config;
 use flow_trabajo::captura;
 use serde_json::{json, Value};
 
-static SECUENCIA:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+static SECUENCIA: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 struct Temporal(std::path::PathBuf);
 impl Temporal {
@@ -15,7 +15,7 @@ impl Temporal {
             "flow-trabajo-captura-ficticia-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
-            SECUENCIA.fetch_add(1,std::sync::atomic::Ordering::Relaxed)
+            SECUENCIA.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         std::fs::create_dir(&p).unwrap();
         Self(p)
@@ -120,4 +120,27 @@ fn contexto_o_descarga_alterados_impiden_importacion() {
     std::fs::write(&ruta, original).unwrap();
     std::fs::write(t.0.join(&r.archivos[0].nombre), b"alterado ficticio").unwrap();
     assert!(captura::importar(&t.0, &r, corte, &Config::default()).is_err());
+}
+
+#[test]
+fn lectura_nativa_aplica_reiteracion_sin_cambiar_acciones() {
+    let (t, mut r) = preparar();
+    r.lecturas.retain(|l| l.tipo != "historia");
+    let corte = "2026-10-20".parse().unwrap();
+    let config = Config::default();
+    let inicial = captura::importar(&t.0, &r, corte, &config).unwrap();
+    let previa = &inicial[0].filas[0].propuesta;
+    let referencia = r.lecturas.iter_mut().find(|r| r.tipo == "bitacora").unwrap();
+    let mut lectura = recoleccion::leer(&t.0, referencia).unwrap();
+    lectura["datos"] = json!({"coverage":"PARCIAL","entries":[{"entry_id":"44","fecha":"2026-10-19T12:00:00","origen":"centro","autor":"Centro ficticio","tipo":"Al tribunal","texto":previa.observacion,"respuesta":"","fecha_respuesta":""}]});
+    let bytes = serde_json::to_vec(&lectura).unwrap();
+    std::fs::write(t.0.join(&referencia.archivo), &bytes).unwrap();
+    referencia.sha256 = huella(&bytes);
+    let nuevo = captura::importar(&t.0, &r, corte, &config).unwrap();
+    let fila = &nuevo[0].filas[0];
+    assert_eq!(fila.cronologia.as_ref().unwrap()["status"], "ACREDITADA");
+    assert!(fila.propuesta.reglas.contains(&"COMUN.REITERA_OBSERVACION".into()));
+    assert_eq!(fila.propuesta.acciones, previa.acciones);
+    assert!(fila.propuesta.avisos.iter().any(|a| a.contains(&previa.observacion)));
+    assert!(nuevo[0].filas[1].cronologia.is_none());
 }

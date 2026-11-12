@@ -25,9 +25,9 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 5b.2, avisos de bitácora y cronología.** La fase 7 terminó: lectores, vínculos, extensión,
-  lote, checkpoints y paso a Trabajo. Continuar con CT-05/07/11 y el texto COMUN.REITERA_OBSERVACION.
-  Después siguen 5b.3, 6.1, 8.1 y 8.2; no se consideran terminados por este avance.
+- **Foco activo: 5b.3, controles por paquete y calendario por ingreso.** La fase 7 y 5b.2 terminaron.
+  Continuar con N-03/N-04, órdenes de búsqueda OB-01..05, proyecciones/cotejo CAL-03 y registros EGRESADOS.
+  Después siguen 6.1, 8.1 y 8.2; no se consideran terminados por este avance.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -115,7 +115,7 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 ### Fase 5b — Paquete del Descargador (agregada)
 - [x] 5b.1 `flow-trabajo::paquete`: importa el ZIP `CSMP_CAPTURE` (huellas verificadas), historia por causa, bitácora
       por ingreso y próximo informe del calendario. Oráculo `oraculo/generar_paquete.py` contra `import_capture`.
-- [ ] 5b.2 Avisos de bitácora CT-05, CT-07 (con texto `COMUN.REITERA_OBSERVACION`) y CT-11
+- [x] 5b.2 Avisos de bitácora CT-05, CT-07 (con texto `COMUN.REITERA_OBSERVACION`) y CT-11
       (`src/nurus/personal/bitacora_avisos.py`; necesita la cronología de `capture/temporal.py` y una razón de
       similitud como `difflib.SequenceMatcher`).
 - [ ] 5b.3 Avisos N-03/N-04 (`contexto_excel.marcar_paquete`), OB-01..05 (`ordenes_busqueda.py`), cotejo y
@@ -322,3 +322,17 @@ guardar el código de conexión, y cualquier escritura en RUS.
   colisión de carpetas temporales entre pruebas paralelas: `SystemTime` tiene menor precisión allí. Las tres
   fábricas nuevas de carpetas de prueba incorporan un contador atómico, además de proceso y reloj. No se altera
   el flujo del producto ni se evita la ejecución paralela de pruebas.
+
+- 2026-11-12: 5b.2: `flow-trabajo::cronologia` porta la vista CT-01/02 de cuatro meses naturales y los avisos
+  CT-05, CT-07 y CT-11. Respeta origen acreditado, cobertura, corte y empates con hora/zona inciertas; distingue
+  no solicitada, no leída, origen desconocido y sin entradas capturadas. La similitud reproduce
+  `difflib.SequenceMatcher(autojunk=False)`, sin ignorar caracteres repetidos. CT-07 aplica literalmente
+  `COMUN.REITERA_OBSERVACION`, conserva el prefijo y las acciones y guarda el texto previo en el aviso; se puede
+  desactivar con la misma regla. Integrado tanto en ZIP CSMP_CAPTURE como en capturas nativas, con identidad
+  verificada. La cronología persiste en las sesiones; el detalle muestra observaciones, respuestas, posteriores,
+  empates y avisos. Los avisos CT no generan acciones nuevas.
+  Oráculo reproducible: `python3 rust/oraculo/generar_cronologia.py`: 164 cronologías (incluidos los límites
+  29/30 días y similitud 0,91/0,92), 256 comparaciones y un ZIP ficticio cotejado con Python. Cuatro pruebas nuevas
+  entre diferencial e integración; suite completa 85 PASA, Clippy y comprobación cruzada Windows PASA. CI del
+  arreglo `0d2fdff`: Linux/MV3 y pruebas Windows PASA; compilación release aún en curso al escribir esta nota.
+  Siguiente: 5b.3, sin considerar terminados anonimización, Meta 4 ni entrega.

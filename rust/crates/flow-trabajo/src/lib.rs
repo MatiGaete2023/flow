@@ -2,6 +2,7 @@
 
 pub mod almacen;
 pub mod captura;
+pub mod cronologia;
 pub mod paquete;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};
@@ -26,6 +27,8 @@ pub struct FilaTrabajo {
     /// Próximo informe según el cruce (solo Cumplimiento).
     #[serde(default)]
     pub proximo_informe: Option<Fecha>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cronologia: Option<serde_json::Value>,
 }
 
 impl FilaTrabajo {
@@ -62,6 +65,7 @@ pub struct Contexto {
     pub bitacoras: HashMap<String, Vec<Observacion>>,
     /// Próximo informe por registro (calendario verificado); reemplaza a la hoja de cruce.
     pub proximos: Option<HashMap<String, Fecha>>,
+    pub cronologias: HashMap<String, serde_json::Value>,
 }
 
 /// Analiza toda la tabla: pre-pase por causa y luego fila por fila.
@@ -87,7 +91,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                 (Some(mapa), _) => mapa.get(&fila.id).copied(),
                 (None, _) => tabla.proximo_informe(&fila.registro, corte),
             };
-            let propuesta = analizar(&Entrada {
+            let mut propuesta = analizar(&Entrada {
                 etapa: tabla.etapa,
                 registro: &fila.registro,
                 corte,
@@ -98,6 +102,13 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                 acumulado: acumulado[i],
                 fecha_hoja2: proximo,
             });
+            let cronologia = contexto.cronologias.get(&fila.id).cloned();
+            if let Some(display) = &cronologia {
+                propuesta
+                    .avisos
+                    .push("Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.".into());
+                cronologia::reiterar(&mut propuesta, display, config);
+            }
             FilaTrabajo {
                 id: fila.id.clone(),
                 numero: fila.numero,
@@ -107,6 +118,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                 propuesta,
                 revisada: false,
                 proximo_informe: proximo,
+                cronologia,
             }
         })
         .collect::<Vec<_>>();

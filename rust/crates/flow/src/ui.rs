@@ -568,6 +568,7 @@ impl App {
                         ui.label(format!("· {a}"));
                     }
                 }
+                crate::cronologia_ui::mostrar(ui,fila,&self.motor,trabajo.corte);
                 if !fila.propuesta.acciones.is_empty() {
                     ui.add_space(6.0);
                     ui.label(RichText::new("Acciones que origina").strong());

@@ -30,5 +30,9 @@ Anota PASA o FALLA y, si falla, el texto exacto del mensaje.
 | 19 | Reintentar lectura | Detener o interrumpir una lectura y retomar la misma carpeta | Conserva lo verificado; reintenta lo pendiente, muestra errores sin convertirlos en listas vacías |
 | 20 | Reutilización del día | Repetir la consulta en otro lote de la misma carpeta padre | Reutiliza lecturas verificadas de hoy; al ampliar el período vuelve a leer bitácora e historia |
 
+| 21 | Cronología | Abrir un ZIP o lote con bitácora y mirar el detalle de una fila | Texto íntegro, respuestas y posteriores; los empates sin hora fiable aparecen como inciertos |
+| 22 | Reiteración | Cargar una fila cuya propuesta repita la última observación del centro | Frase de reiteración con fecha; texto previo en Revisar y las mismas acciones; persiste al reabrir la sesión |
+| 23 | Avisos de bitácora | Comparar un caso conocido de Al tribunal sin respuesta y un E-05 antiguo | CT-05/CT-11 solo con origen acreditado y el plazo cumplido; no crean acciones nuevas |
+
 La prueba 8 es la más importante: el acceso a Outlook se escribió sin poder ejecutarlo. Si falla, los `.eml` de la
 prueba 7 cumplen la misma función.

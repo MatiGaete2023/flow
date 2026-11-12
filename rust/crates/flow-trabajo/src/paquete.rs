@@ -235,6 +235,22 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
         return Err("La captura excede 20.000 registros; divide la exportación en lotes.".into());
     }
     let por_causa = historias(&c);
+    let solicitadas = c.manifiesto["table_states"]["bitacoras"] != "NO_SOLICITADA";
+    let mut lecturas: HashMap<Identidad, bool> = HashMap::new();
+    for q in tabla("consultas").iter().filter(|q| dato(q, "screen") == "bitacoras") {
+        if let Ok(filtros) = serde_json::from_str::<Value>(dato(q, "filters_json")) {
+            if filtros["remote_identity"].is_object() {
+                let ident = ["source_system", "court_code", "cause_id", "ingreso_id"]
+                    .map(|k| filtros["remote_identity"][k].as_str().unwrap_or("").to_string());
+                let leida = !matches!(dato(q, "coverage"), "FALLIDA" | "NO_CONSULTADA");
+                lecturas.entry(ident).and_modify(|l| *l |= leida).or_insert(leida);
+            }
+        }
+    }
+    let mut eventos_cronologia: HashMap<Identidad, Vec<Value>> = HashMap::new();
+    for e in tabla("bitacoras").iter().filter(|e| verificada(e) && e.get("scope").is_none_or(|s| s == "INGRESO")) {
+        eventos_cronologia.entry(identidad(e)).or_default().push(serde_json::to_value(e).map_err(|_| "Evento de bitácora ilegible.")?);
+    }
     let mut bitacoras: HashMap<Identidad, Vec<Observacion>> = HashMap::new();
     for evento in tabla("bitacoras") {
         let de_ingreso = evento.get("scope").is_none_or(|s| s == "INGRESO");
@@ -281,6 +297,17 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
         celdas.push(Celda::Texto(dato(r, "modality_raw").to_string()));
         if verificada(r) {
             let ident = identidad(r);
+            if ident.iter().all(|k| !k.is_empty()) {
+                contexto.cronologias.insert(
+                    id.clone(),
+                    crate::cronologia::mostrar(
+                        eventos_cronologia.get(&ident).map(Vec::as_slice).unwrap_or(&[]),
+                        corte,
+                        solicitadas,
+                        if lecturas.is_empty() { true } else { lecturas.get(&ident).copied().unwrap_or(false) },
+                    ),
+                );
+            }
             if let Some(h) = por_causa.get(&[ident[0].clone(), ident[1].clone(), ident[2].clone()]) {
                 contexto.historias.insert(id.clone(), h.clone());
             }

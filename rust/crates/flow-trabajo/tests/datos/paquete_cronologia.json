@@ -1,0 +1,106 @@
+{
+ "corte": "2026-10-08",
+ "filas": [
+  {
+   "id": "r0",
+   "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+   "reglas": [
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.E05_DIAS",
+    "COMUN.REITERA_OBSERVACION"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "avisos": [
+    "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
+    "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "cronologia": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-08",
+    "period_to": "2026-10-08",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "capture_id": "ficticia-20261008-1-0",
+      "query_id": "q1",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "X-1-2099",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-0",
+      "person_id": "persona-ficticia-0",
+      "program_id": "programa-ficticio",
+      "modality_raw": "1",
+      "modality_code": "1",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "2",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "event_id": "e0",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "author": "Usuario ficticio",
+      "event_type": "Al tribunal",
+      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "response": "",
+      "response_at": "",
+      "identity_status": "VERIFICADA"
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "capture_id": "ficticia-20261008-1-0",
+      "query_id": "q1",
+      "source_system": "RUS",
+      "court_code": "FICTICIO",
+      "court_name": "Laja",
+      "rit_original": "X-1-2099",
+      "cause_id": "causa-ficticia-0",
+      "ingreso_id": "ingreso-ficticio-0",
+      "person_id": "persona-ficticia-0",
+      "program_id": "programa-ficticio",
+      "modality_raw": "1",
+      "modality_code": "1",
+      "tab": "Espera",
+      "captured_at": "2026-10-08T15:00:00-03:00",
+      "original_file": "fuente-ficticia.xls",
+      "original_sheet": "Hoja1",
+      "original_row": "2",
+      "source_sha256": "e9d435d478ad741e06091a59d7cf42fc4fe3775f6f1678340866023d7af68de4",
+      "coverage": "COMPLETA",
+      "event_id": "e0",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "author": "Usuario ficticio",
+      "event_type": "Al tribunal",
+      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "response": "",
+      "response_at": "",
+      "identity_status": "VERIFICADA"
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "alertas": []
+  }
+ ]
+}

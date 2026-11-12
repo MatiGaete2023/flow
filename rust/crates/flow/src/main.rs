@@ -8,6 +8,7 @@
 mod cli;
 mod ui;
 mod captura_ui;
+mod cronologia_ui;
 
 #[cfg(windows)]
 extern "system" {

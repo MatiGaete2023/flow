@@ -55,8 +55,9 @@ flow producir ARCHIVO --salida CARPETA [--modalidades TEXTO] [--contactos contac
 
 ## Qué todavía no hace
 
-- Captura incorpora bitácora, historia y calendario verificados al análisis. Siguen pendientes los avisos de
-  cronología CT-05/07/11 y los controles por paquete N-03/N-04, órdenes de búsqueda y cotejo de calendario;
+- Captura incorpora bitácora, historia y calendario verificados al análisis. El detalle muestra cronología y
+  avisos CT-05/07/11; al repetir la última observación del centro propone la reiteración aprobada y conserva
+  las acciones. Siguen pendientes los controles por paquete N-03/N-04, órdenes de búsqueda y cotejo de calendario;
   ver el estado detallado en EJECUCION.md.
 - Anonimizador y Meta 4 siguen siendo las herramientas Python.
 

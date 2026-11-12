@@ -99,6 +99,12 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                 None
             };
             if let Some(v) = remoto {
+                let snapshot = lecturas.get(&recoleccion::clave("bitacora", v));
+                let eventos = snapshot.map(|l| crate::cronologia::desde_lectura(&l["datos"])).unwrap_or_default();
+                contexto.cronologias.insert(
+                    fila.id.clone(),
+                    crate::cronologia::mostrar(&eventos, corte, resumen.lote.lecturas.bitacoras, snapshot.is_some()),
+                );
                 if let Some(lectura) = lecturas.get(&recoleccion::clave("bitacora", v)) {
                     let eventos = lectura["datos"]["entries"]
                         .as_array()
