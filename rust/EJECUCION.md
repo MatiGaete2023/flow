@@ -112,9 +112,55 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [ ] 6.1 `flow-anonimo` + `flow anonimizar` (xlsx/xls/csv/json/txt), verificación «falla cerrado».
 
 ### Fase 7 — Captura SITFA
-- [ ] 7.1 `flow-captura`: puente HTTP 127.0.0.1 (protocolo de `descargador/puente.py`).
-- [ ] 7.2 Extensión adaptada desde `descargador/extension/`; consultas y descarga XLS por lote.
-- [ ] 7.3 Bitácoras e historia; paso directo a Trabajo.
+
+Se porta primero el alcance de **SITFA Lite** (descargar los XLS); bitácoras e historia quedan para 7.4. Mientras,
+el Descargador Python sigue sirviendo y su ZIP se importa con 5b.1.
+
+Cómo funciona hoy (leído en `descargador_lite/`):
+
+1. El programa abre un servidor HTTP en `127.0.0.1:<puerto libre>` y muestra el código `<puerto>-<32 hex>`.
+2. El usuario pulsa el icono de la extensión en la pestaña SITFA; se abre `conexion.html`, pega el código.
+3. La extensión hace `POST /connect` y luego un ciclo `GET /next` (espera larga de 4 s; responde `{"idle":true}` o
+   una tarea `{id, command, payload}`) y `POST /complete` con `{id, ok, result | error, motivo?}`.
+   Cabeceras obligatorias: `X-Sitfa-Code` (los 32 hex, comparación en tiempo constante) y `X-Sitfa-Extension`
+   (id de la extensión, `[a-p]{32}`); `Origin` `chrome-extension://<id>` si viene. El primer origen queda fijado.
+   CORS: `Access-Control-Allow-Origin` solo a ese origen, `Allow-Private-Network: true`, `Cache-Control: no-store`.
+   Límite de cuerpo 112 MiB. Sin registro de peticiones. Código y tareas solo en RAM.
+4. Comandos permitidos (lista cerrada): `capabilities`, `catalog`, `lock`, `unlock`, `prepare`, `search`,
+   `download`, `evidence_open`, `evidence_capture`, `evidence_close`.
+   - `capabilities` → `{tipo, version, protocolos, escritura_rus:false}`; el programa exige versión y protocolos
+     iguales y **rechaza si `escritura_rus` no es `false`**.
+   - `catalog {screen?}` → tribunales, modalidades, informes, medidas, pestañas, estados, meses, años, selección.
+   - `lock` / `unlock`: cubre la página y restaura el formulario.
+   - `prepare {selection, dates, keep_filters}` → `{pairs}` (el formulario tal como lo enviaría SITFA).
+   - `search {pairs, timeout}` → `{status, type, body(base64 del HTML)}`.
+   - `download {url, timeout}` → igual, con el XLS. Solo `https://familia.pjud.cl/sitfa/reportes/<nombre>.xls`.
+5. El programa valida cada respuesta antes de guardar (`descargador_lite/app/motor.py`): no es página de login;
+   un solo formulario `InformesPpalForm` con el destino esperado; mismo tribunal, modalidad y pestaña; sin campos
+   `csrf|token|nonce`; paginación `1 ≤ actual ≤ total ≤ 500`; la URL de exportación cumple el patrón; y los
+   registros (RIT + nombre) del XLS coinciden con los de las páginas HTML. Consulta vacía → PDF de evidencia.
+6. Lote (`lotes.py`): por cada selección (tribunal × pestaña × modalidad): `prepare` → `search` página 1 →
+   resto de páginas → `download` → verificación → guardar con nombre seguro, `resumen.json` y `verificacion.json`.
+   Pausa entre consultas, cancelación, y nunca sobrescribe.
+
+Pasos:
+
+- [ ] 7.1 `flow-captura::puente`: servidor HTTP con el protocolo del punto 3 y `llamar(comando, payload, plazo)`.
+      Pruebas con un cliente HTTP en el mismo test: código malo → 403; origen distinto → 403; tarea → resultado;
+      plazo vencido → `TASK_EXPIRED`. Fuente: `descargador_lite/app/puente.py`.
+- [ ] 7.2 `flow-captura::sitfa`: validación de respuestas y paginación (puntos 5). Fuente: `motor.py`,
+      `perfiles.py`, `filtros_respuesta.py`. Probar con HTML del SITFA ficticio
+      (`descargador_lite/tests/sitfa_ficticio.py` lo genera; guardar muestras en `tests/datos/`).
+- [ ] 7.3 Lote, extensión y ventana: copiar `descargador_lite/extension/` a `rust/extension/` cambiando nombre y
+      textos (y `tipo`/`version` de `capabilities`, que el programa verifica); pestaña «Captura» con código de
+      conexión, opciones y avance; lo descargado pasa directo a Trabajo. Probar de punta a punta con Playwright +
+      Chromium (están en este contenedor) contra el SITFA ficticio.
+- [ ] 7.4 Bitácoras, historia de la causa y calendario (`descargador/lectura_bitacoras.py`,
+      `lectura_historia.py`, `extension/pagina.js` del Descargador integral, `src/nurus/bitacora_html.py`,
+      `historia_html.py`, `calendario_html.py`). Ritmo y límite de 600 lecturas por lote (decisión m).
+
+Prohibido en toda la fase: leer cookies o contraseñas, enviar formularios que no sean las consultas listadas,
+guardar el código de conexión, y cualquier escritura en RUS.
 
 ### Fase 8 — Meta 4 y cierre
 - [ ] 8.1 `flow-meta4`.
