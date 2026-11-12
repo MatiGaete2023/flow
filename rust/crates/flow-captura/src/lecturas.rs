@@ -33,10 +33,10 @@ fn sel(s: &str) -> Selector {
 fn normalizar(s: &str) -> String {
     flow_dominio::texto::normalizar_columna(s)
 }
-fn texto(e: ElementRef<'_>) -> String {
+pub(crate) fn texto(e: ElementRef<'_>) -> String {
     let partes = e
         .descendants()
-        .filter(|n| !n.ancestors().filter_map(ElementRef::wrap).any(|e| matches!(e.value().name(), "script" | "style" | "noscript")))
+        .filter(|n| !n.ancestors().filter_map(ElementRef::wrap).any(|e| matches!(e.value().name(), "script" | "style" | "noscript" | "template")))
         .filter_map(|n| n.value().as_text())
         .map(|t| t.as_ref())
         .collect::<Vec<_>>()

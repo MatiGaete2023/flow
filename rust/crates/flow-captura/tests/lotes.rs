@@ -38,7 +38,7 @@ impl Conexion for Ficticio<'_> {
         estado.2.push(comando.into());
         match comando {
             "capabilities" => Ok(
-                json!({"tipo":"FLOW_CAPACIDADES","version":"0.1.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1},"escritura_rus":false}),
+                json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false}),
             ),
             "catalog" => Ok(self.caso["catalogo"].clone()),
             "lock" | "unlock" | "evidence_close" => Ok(json!({"ok":true,"restored":true})),
@@ -213,7 +213,7 @@ fn consulta_vacia_solo_genera_pdf_si_se_pide_y_queda_acreditada() {
 #[test]
 fn capacidades_y_respuestas_fuera_de_contrato_fallan_cerrado() {
     let correcto =
-        json!({"tipo":"FLOW_CAPACIDADES","version":"0.1.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1},"escritura_rus":false});
+        json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false});
     lotes::comprobar_capacidades(&correcto).unwrap();
     for (campo, valor) in [
         ("escritura_rus", json!(true)),

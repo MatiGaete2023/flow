@@ -39,6 +39,9 @@ jobs:
         run: npm ci && npx playwright install --with-deps chromium
       - name: Captura con extensión MV3 y SITFA ficticio
         run: |
+          node pruebas/bitacoras_extension.cjs
+          node pruebas/calendario_extension.cjs
+          node pruebas/historia_extension.cjs
           cargo run --locked -p flow-captura --example probar_captura
           cargo run --locked -p flow-captura --example probar_captura -- --vacia
 

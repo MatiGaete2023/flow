@@ -1343,7 +1343,7 @@ dependencies = [
 
 [[package]]
 name = "flow"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "eframe",
@@ -1362,7 +1362,7 @@ dependencies = [
 
 [[package]]
 name = "flow-captura"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "base64",
  "chrono",
@@ -1383,7 +1383,7 @@ dependencies = [
 
 [[package]]
 name = "flow-dominio"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "regex",
@@ -1393,7 +1393,7 @@ dependencies = [
 
 [[package]]
 name = "flow-motor"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "flow-dominio",
@@ -1403,7 +1403,7 @@ dependencies = [
 
 [[package]]
 name = "flow-outlook"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "flow-dominio",
  "flow-productos",
@@ -1412,7 +1412,7 @@ dependencies = [
 
 [[package]]
 name = "flow-productos"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "flow-dominio",
@@ -1428,7 +1428,7 @@ dependencies = [
 
 [[package]]
 name = "flow-tabular"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "calamine",
  "chrono",
@@ -1440,7 +1440,7 @@ dependencies = [
 
 [[package]]
 name = "flow-trabajo"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "flow-dominio",

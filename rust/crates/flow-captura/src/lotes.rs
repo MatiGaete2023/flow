@@ -18,7 +18,7 @@ use std::{
 };
 
 pub const CAPACIDADES: &str = "FLOW_CAPACIDADES";
-pub const VERSION_EXTENSION: &str = "0.1.0";
+pub const VERSION_EXTENSION: &str = "0.2.0";
 
 pub trait Conexion: Send + Sync {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String>;
@@ -36,10 +36,10 @@ fn pedir(c: &dyn Conexion, comando: &str, payload: Value) -> Result<Value, Strin
 
 pub fn comprobar_capacidades(v: &Value) -> Result<(), String> {
     if *v
-        != json!({"tipo":CAPACIDADES,"version":VERSION_EXTENSION,"protocolos":{"descarga_xls":1,"pdf_sin_registros":1},"escritura_rus":false})
+        != json!({"tipo":CAPACIDADES,"version":VERSION_EXTENSION,"protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false})
     {
         return Err(
-            "La extensión no corresponde a esta versión de Flow o no garantiza consultas de solo lectura. Recarga rust/extension.".into()
+            "La extensión no corresponde a esta versión de Flow o no garantiza consultas de solo lectura. Carga la carpeta extension de esta entrega y vuelve a conectar.".into()
         );
     }
     Ok(())

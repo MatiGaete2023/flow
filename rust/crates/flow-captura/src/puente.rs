@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use tiny_http::{Header, Method, Request, Response, Server};
 
 /// Lista cerrada de órdenes que el programa puede pedir a la extensión. Todas son de lectura.
-pub const COMANDOS: [&str; 10] = [
+pub const COMANDOS: [&str; 13] = [
     "catalog",
     "capabilities",
     "lock",
@@ -22,6 +22,9 @@ pub const COMANDOS: [&str; 10] = [
     "evidence_open",
     "evidence_capture",
     "evidence_close",
+    "diary_open",
+    "history_open",
+    "calendar_open",
 ];
 const CUERPO_MAXIMO: usize = 112 * 1024 * 1024;
 const ESPERA_TAREA: Duration = Duration::from_secs(4);
@@ -46,6 +49,13 @@ fn error(codigo: &str, mensaje: &str) -> ErrorPuente {
 
 fn mensaje_de(codigo: &str) -> &'static str {
     match codigo {
+        "DIARY_CONTEXT" | "HISTORY_CONTEXT" | "CALENDAR_CONTEXT" => "No se conserva el listado actual para leer la ventana. Retoma la consulta sin navegar en SITFA.",
+        "DIARY_LINK" | "HISTORY_LINK" | "CALENDAR_LINK" => "El enlace no está comprobado en el listado actual; no se abrió una causa por suposición.",
+        "DIARY_IDENTITY" | "HISTORY_IDENTITY" | "CALENDAR_IDENTITY" => "La identidad de la ventana no coincide con el tribunal, causa o ingreso del listado.",
+        "DIARY_NETWORK" | "HISTORY_NETWORK" | "CALENDAR_NETWORK" => "Falló el contacto con SITFA al abrir la ventana de lectura. Revisa la sesión y retoma el lote.",
+        "DIARY_TIMEOUT" | "HISTORY_TIMEOUT" | "CALENDAR_TIMEOUT" => "SITFA no respondió a tiempo al abrir la ventana. Retoma las lecturas pendientes.",
+        "DIARY_RESPONSE" | "HISTORY_RESPONSE" | "CALENDAR_RESPONSE" => "SITFA no entregó una ventana de lectura válida. No se considera una ventana sin datos.",
+        "HISTORY_REFLECTED" => "La ventana repite valores internos de SITFA y se descartó antes de guardarse. Informa el código HISTORY_REFLECTED.",
         "FOLLOWUP_REQUIRED" => {
             "El enlace con Chrome funciona, pero no se encuentra la pantalla de consulta. Entra a Seguimiento en la \
              pestaña original de SITFA y vuelve a cargar las opciones."
@@ -304,7 +314,10 @@ impl Puente {
             return Ok(datos["result"].clone());
         }
         let codigo = datos["error"].as_str().unwrap_or("SITFA_TASK");
-        let conocido = matches!(codigo, "FOLLOWUP_REQUIRED" | "SITE_ACCESS" | "MULTIPLE_FORMS" | "SCREEN_OPEN" | "EVIDENCE_CAPTURE" | "EVIDENCE_OPEN");
+        let conocido = matches!(codigo, "FOLLOWUP_REQUIRED" | "SITE_ACCESS" | "MULTIPLE_FORMS" | "SCREEN_OPEN" | "EVIDENCE_CAPTURE" | "EVIDENCE_OPEN"
+            | "DIARY_CONTEXT" | "DIARY_LINK" | "DIARY_IDENTITY" | "DIARY_NETWORK" | "DIARY_TIMEOUT" | "DIARY_RESPONSE"
+            | "HISTORY_CONTEXT" | "HISTORY_LINK" | "HISTORY_IDENTITY" | "HISTORY_NETWORK" | "HISTORY_TIMEOUT" | "HISTORY_RESPONSE" | "HISTORY_REFLECTED"
+            | "CALENDAR_CONTEXT" | "CALENDAR_LINK" | "CALENDAR_IDENTITY" | "CALENDAR_NETWORK" | "CALENDAR_TIMEOUT" | "CALENDAR_RESPONSE");
         let motivo = datos["motivo"].as_str().filter(|m| {
             matches!(
                 *m,

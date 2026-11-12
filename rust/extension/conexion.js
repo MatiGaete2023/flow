@@ -2,6 +2,26 @@ const byId=id=>document.getElementById(id);
 let running=false,connecting=false,endpoint=null,key=null,frameId=null,busy=false;
 const tabId=Number(new URLSearchParams(location.search).get("tab"));
 const messages={
+  DIARY_CONTEXT:"No se conserva el listado actual para abrir bitácoras. Vuelve a consultar el lote sin navegar en RUS durante la lectura.",
+  DIARY_LINK:"El enlace de la bitácora está ausente o repetido en el listado actual. No se abrió una causa por suposición.",
+  DIARY_IDENTITY:"La identidad solicitada no coincide con el tribunal, modalidad e ingreso del listado actual.",
+  DIARY_NETWORK:"La consulta de bitácora falló al contactar con RUS o recibió una redirección. Comprueba la sesión y reintenta el lote.",
+  DIARY_TIMEOUT:"RUS no respondió a tiempo al abrir la bitácora. Reintenta las lecturas fallidas.",
+  DIARY_RESPONSE:"RUS no entregó una respuesta válida de bitácora. Revisa la sesión y reintenta las lecturas fallidas.",
+  CALENDAR_CONTEXT:"No se conserva el listado actual para abrir el calendario de informes. Vuelve a consultar sin navegar en SITFA.",
+  CALENDAR_LINK:"El enlace del calendario de informes no está en el listado actual. No se abrió un ingreso por suposición.",
+  CALENDAR_IDENTITY:"El calendario de informes no coincide con el tribunal e ingreso del listado actual.",
+  CALENDAR_NETWORK:"Falló el contacto con SITFA al abrir el calendario de informes. Comprueba la sesión.",
+  CALENDAR_TIMEOUT:"SITFA no respondió a tiempo al abrir el calendario de informes.",
+  CALENDAR_RESPONSE:"SITFA no entregó un calendario de informes válido. Revisa la sesión.",
+  HISTORY_CONTEXT:"No se conserva el listado actual para abrir la historia. Vuelve a consultar sin navegar en SITFA.",
+  HISTORY_LINK:"El enlace de historia no está en el listado actual. No se abrió una causa por suposición.",
+  HISTORY_IDENTITY:"La causa pedida no coincide con el tribunal del listado actual.",
+  HISTORY_NETWORK:"Falló el contacto con SITFA al abrir la historia. Comprueba la sesión.",
+  HISTORY_TIMEOUT:"SITFA no respondió a tiempo al abrir la historia.",
+  HISTORY_RESPONSE:"SITFA no entregó una historia válida. Revisa la sesión.",
+  HISTORY_REFLECTED:"La ventana de historia repite valores internos de SITFA; se descartó para no exponerlos. Informa este código.",
+
   CONNECTION_CODE:"Flow rechazó el código. Copia el código actual de la ventana que está abierta; cambia al reiniciar o desconectar.",
   EXTENSION_ORIGIN:"Flow rechazó el origen de la extensión. Actualiza Flow y recarga la extensión en chrome://extensions.",
   EXTENSION_CHANGED:"Flow está vinculado a otra copia de la extensión. Pulsa Desconectar en Flow y usa el nuevo código.",
@@ -47,7 +67,7 @@ async function inject(command,payload={}) {
     evidenceReasons.includes(candidates[0].result.motivo)?{motivo:candidates[0].result.motivo}:{});
   frameId=candidates[0].frameId;return candidates[0].result;
 }
-const allowedCommands=["catalog","capabilities","lock","unlock","prepare","search","download","evidence_open","evidence_capture","evidence_close"];
+const allowedCommands=["catalog","capabilities","lock","unlock","prepare","search","download","evidence_open","evidence_capture","evidence_close","diary_open","history_open","calendar_open"];
 async function execute(command,payload={}) {
   if(!allowedCommands.includes(command)) throw failure("SITFA_TASK");
   if(command==="evidence_capture") {

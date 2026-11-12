@@ -6,5 +6,6 @@ pub mod sitfa;
 pub mod lotes;
 pub mod evidencia;
 pub mod lecturas;
+pub mod vinculos;
 
 pub use puente::{ErrorPuente, Puente};
