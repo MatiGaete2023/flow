@@ -18,6 +18,9 @@ pub enum Entrada {
     Texto(String, String),
     Csv(Vec<Vec<String>>, u8),
     Excel(Libro, bool),
+    Html(Vec<crate::documentos::Bloque>),
+    Ics(Vec<String>),
+    Word(Vec<String>),
 }
 fn extension(nombre: &str) -> String {
     std::path::Path::new(nombre).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase()
@@ -142,10 +145,18 @@ pub fn cargar(nombre: &str, datos: &[u8]) -> Result<Entrada, String> {
     let ext = extension(nombre);
     if datos.starts_with(b"PK") {
         let miembros = validar_zip(datos)?;
-        if !miembros.iter().any(|(n, _)| n == "xl/workbook.xml") {
-            return Err("Ese ZIP no es un libro Excel admitido.".into());
+        if miembros.iter().any(|(n, _)| n == "xl/workbook.xml") {
+            for (n, raw) in &miembros {
+                if n.to_lowercase().ends_with(".xml") {
+                    crate::limites::xml_excel(raw)?;
+                }
+            }
+            return leer_excel(nombre, datos, false);
         }
-        return leer_excel(nombre, datos, false);
+        if miembros.iter().any(|(n, _)| n == "word/document.xml") {
+            return Ok(Entrada::Word(crate::documentos::parrafos_docx(&miembros)?));
+        }
+        return Err("ZIP genérico no admitido por esta versión.".into());
     }
     if datos.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
         return leer_excel(nombre, datos, true);
@@ -168,11 +179,14 @@ pub fn cargar(nombre: &str, datos: &[u8]) -> Result<Entrada, String> {
     }
     if minus.starts_with("<html") || minus.starts_with("<table") || minus.starts_with("<!doctype html") {
         if !matches!(ext.as_str(), "xls" | "xlsx" | "xlsm") {
-            return Err("HTML independiente no admitido por esta versión.".into());
+            return crate::documentos::leer_html(&s).map(Entrada::Html);
         }
         return flow_tabular::leer_bytes(nombre, datos.to_vec())
             .map(|l| Entrada::Excel(l, false))
             .map_err(|_| "No se pudo leer el Excel HTML.".into());
+    }
+    if ext == "ics" || minus.starts_with("begin:vcalendar") {
+        return crate::calendario::lineas(&s).map(Entrada::Ics);
     }
     if ext == "jsonl" {
         let mut values = vec![];
@@ -285,7 +299,7 @@ fn par(linea: &str) -> Option<(&str, &str)> {
     (label.len() <= 80 && (!label.is_empty()) && (texto::clase(label).is_some() || texto::protegido(label) || texto::credencial(label)))
         .then_some((label, valor.trim()))
 }
-fn seed_tabla(sesion: &mut Sesion, filas: &[Vec<Celda>]) -> Result<(), String> {
+pub(crate) fn seed_tabla(sesion: &mut Sesion, filas: &[Vec<Celda>]) -> Result<(), String> {
     let encabezado = cabecera(filas);
     for (n, fila) in filas.iter().enumerate() {
         for (i, valor) in fila.iter().enumerate() {
@@ -317,8 +331,30 @@ fn seed_tabla(sesion: &mut Sesion, filas: &[Vec<Celda>]) -> Result<(), String> {
     }
     Ok(())
 }
+pub(crate) fn semillar_linea(sesion: &mut Sesion, l: &str) {
+    sesion.reservar(l);
+    if let Some((label, valor)) = par(l) {
+        if tipo_persona(texto::clase(label)) {
+            sesion.persona(valor);
+        }
+    }
+}
+pub(crate) fn transformar_linea(sesion: &mut Sesion, l: &str) -> Result<String, String> {
+    if let Some((label, valor)) = par(l) {
+        Ok(format!("{label}: {}", sesion.valor(label, valor)?))
+    } else {
+        sesion.valor("", l)
+    }
+}
 pub fn recolectar(sesion: &mut Sesion, entrada: &Entrada) -> Result<(), String> {
     match entrada {
+        Entrada::Html(b) => crate::documentos::semillar_html(sesion, b)?,
+        Entrada::Ics(l) => crate::calendario::semillar(sesion, l),
+        Entrada::Word(p) => {
+            for l in p {
+                semillar_linea(sesion, l);
+            }
+        }
         Entrada::Json(v) => seed_json(sesion, v, "", 0)?,
         Entrada::JsonLineas(xs) => {
             for v in xs {
@@ -394,7 +430,7 @@ fn json(sesion: &mut Sesion, v: &Value, key: &str, prof: usize, textos: &mut Vec
     })
 }
 
-fn tabla(sesion: &mut Sesion, filas: &[Vec<Celda>], textos: &mut Vec<(String, bool)>) -> Result<Vec<Vec<Celda>>, String> {
+pub(crate) fn tabla(sesion: &mut Sesion, filas: &[Vec<Celda>], textos: &mut Vec<(String, bool)>) -> Result<Vec<Vec<Celda>>, String> {
     let encabezado = cabecera(filas);
     let mut out = vec![];
     for (r, fila) in filas.iter().enumerate() {
@@ -483,8 +519,12 @@ fn xlsx(hojas: &[Hoja]) -> Result<Vec<u8>, String> {
 }
 pub fn transformar(sesion: &mut Sesion, entrada: &Entrada) -> Result<Salida, String> {
     recolectar(sesion, entrada)?;
+    sesion.verificar(&[])?;
     let mut textos = vec![];
     let (datos, extension) = match entrada {
+        Entrada::Html(b) => (crate::documentos::html(sesion, b, &mut textos)?, "html"),
+        Entrada::Ics(l) => (crate::calendario::transformar(sesion, l, &mut textos)?, "ics"),
+        Entrada::Word(p) => (crate::documentos::docx(sesion, p, &mut textos)?, "docx"),
         Entrada::Json(v) => {
             (serde_json::to_vec_pretty(&json(sesion, v, "", 0, &mut textos)?).map_err(|_| "No se pudo reconstruir JSON.")?, "json")
         }

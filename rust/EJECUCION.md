@@ -25,9 +25,10 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance antes de retomar: `aa455a2`, puente con Chrome (7.1).
-- **Foco activo: 6.1b, formatos restantes del Anonimizador.** El núcleo 6.1a está probado, pero 6.1 sigue abierto.
-  Continuar desde `anonimizador/anonimizador_csmp/`: HTML independiente, ICS, DOCX, ZIP/CSMP_CAPTURE y carpetas;
-  después integrar línea de comandos y ventana (6.1c). No hay todavía un Anonimizador completo en el ejecutable.
+- **Foco activo: 6.1b.2, ZIP/CSMP_CAPTURE y carpetas.** Núcleo 6.1a y documentos 6.1b.1 terminados; 6.1 sigue abierto.
+  Continuar desde `anonimizador/anonimizador_csmp/archive.py`, `capture.py` y `engine.py`: sesión común en dos
+  pasadas, archivos comprimidos y carpetas; después integrar consola y ventana (6.1c). Todavía no se expone como
+  Anonimizador completo en el ejecutable.
   Siguen 8.1 (Meta 4) y 8.2 (manual, guía, instalador y cierre); el producto completo aún no está terminado.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
@@ -126,10 +127,12 @@ Marcar `[x]` al terminar. Un paso está terminado cuando su verificación pasa.
 - [ ] 6.1 `flow-anonimo` + `flow anonimizar`, modos y verificación «falla cerrado» del Anonimizador Python.
   - [x] 6.1a Núcleo local: texto, JSON/JSONL anidado, CSV/TSV y Excel BIFF/OOXML/XML 2003/HTML con salida XLSX;
         seudónimos, fechas, clasificación de columnas y revisión antes de publicar sin sobrescribir.
-  - [ ] 6.1b HTML independiente, ICS, DOCX, ZIP y CSMP_CAPTURE, carpetas y sesión común entre archivos;
-        rehacer manifiestos y huellas, relaciones y metadatos; opciones de exclusión/rechazo e informe.
-        Revisar también los límites de dimensiones/celdas de XLSX **antes** de llamar a calamine y limitar el
-        tamaño de identidades antes de construir sus índices. Validar fórmulas sin caché y entradas adversas.
+  - [x] 6.1b.1 HTML independiente, ICS y DOCX; dimensiones/celdas declaradas de XLSX antes de calamine y tamaño
+        de identidades antes de construir sus índices. Pruebas de documentos y entradas adversas.
+  - [ ] 6.1b.2 ZIP genéricos y CSMP_CAPTURE, carpetas y sesión común entre archivos; rehacer manifiestos y
+        huellas, relaciones y metadatos; exclusión/rechazo e informe. Validar las referencias entre todas las
+        tablas: `parent_event_id` debe usar el mismo seudónimo que `event_id`, además de las identidades remotas
+        presentes en `filters_json`, JSON normalizado y consolidado. Nunca copiar miembros sin tratarlos.
   - [ ] 6.1c Subcomando, ventana con trabajo en hilo, avance/cancelación e instrucciones de revisión manual.
         Los formatos aún no portados deben seguir rechazándose; no copiar miembros sin tratarlos.
 
@@ -381,3 +384,15 @@ guardar el código de conexión, y cualquier escritura en RUS.
   las tres variantes XLS, conservación de columnas útiles, publicación sin sobrescritura y entradas rechazadas.
   Suite completa: 102 PASA; Clippy del crate y comprobación cruzada Windows PASA. CI del avance 5b.3 `8abdaf0`
   completa en Linux/MV3/Windows: run 43273832868 PASA. La fase 6.1 sigue abierta: completar 6.1b y 6.1c.
+
+- 2026-11-12: 6.1b.1: HTML independiente reconstruido solo como párrafos/tablas, sin atributos, scripts, imágenes
+  ni vínculos. ICS conserva fechas, horas, zonas IANA y recurrencia con gramática cerrada; cambia UID, trata los
+  textos y excluye alarmas, asistentes, organizadores y propiedades no admitidas. No conserva parámetros libres.
+  Word reúne párrafos entre runs y lee también encabezados, pies, notas y comentarios; reconstruye un DOCX mínimo
+  de texto, sin formato, relaciones ni metadatos del original. Rechaza imágenes, objetos y macros incrustados.
+  Antes de abrir XLSX, revisa dimensiones, coordenadas y conteos XML para evitar reservas desmesuradas. Identidades
+  de más de 512 bytes o 64 palabras fallan cerrado; HTML con profundidad >128 o más de 200.000 elementos se rechaza.
+  Cinco pruebas nuevas: HTML sin contenido activo, ICS con zona/hora/pliegues, Word con metadatos y texto partido,
+  coordenadas/conteos Excel adversos y estructuras/identidades excesivas. Suite completa 107 PASA; Clippy y
+  comprobación cruzada Windows PASA. CI anterior `c937fbd`: Linux/MV3 y Windows PASA (run 43283361127).
+  Continúa en 6.1b.2; no están portados todavía ZIP genérico, CSMP_CAPTURE, carpetas, consola ni ventana.

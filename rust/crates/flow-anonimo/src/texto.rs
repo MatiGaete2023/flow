@@ -355,6 +355,10 @@ impl Sesion {
         }
     }
     pub fn persona(&mut self, s: &str) {
+        if s.len() > 512 || s.split_whitespace().count() > 64 {
+            self.fallo = true;
+            return;
+        }
         let n = normal(s);
         if s.chars().any(|c| c.is_alphabetic() && !ascii(&c.to_string()).chars().any(|a| a.is_ascii_alphabetic())) {
             self.fallo = true;
