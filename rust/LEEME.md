@@ -39,7 +39,7 @@ falla. Una copia de respaldo de un guardado incierto no debe usarse antes de com
    a cuatro meses naturales. Revisa el filtro de fechas y pulsa «Descargar» para elegir la carpeta de destino.
 4. Cada página se verifica antes de guardarse. «Detener» conserva lo comprobado; «Retomar lote…» permite elegir
    la carpeta incompleta. Las lecturas verificadas del día pueden reutilizarse entre lotes de la misma carpeta
-   padre. Máximo por corrida: 600 bitácoras/calendarios y 600 historias; Retomar continúa desde el avance guardado.
+   padre. Máximo por corrida: 2000 bitácoras/calendarios y 2000 historias; Retomar continúa desde el avance guardado.
    Si falla una ventana, conserva los Excel y las demás lecturas. No edites sus archivos mientras Flow descarga o retoma.
 5. Al terminar, «Llevar Excel verificados a Trabajo» carga las tablas de intervención. Egresados y órdenes de
    búsqueda aparecen con sus avisos, sin observaciones ni acciones automáticas. Los calendarios quedan como

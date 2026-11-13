@@ -14,7 +14,9 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-pub const TOPE: usize = 600;
+/// Lecturas por corrida (bitácoras y calendarios comparten el tope; las historias tienen uno igual aparte).
+/// Usuario, 13-nov-2026: subido de 600 a 2000. No se elimina: evita una corrida sin fin si la sesión de SITFA se cae.
+pub const TOPE: usize = 2000;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Opciones {
@@ -113,14 +115,14 @@ impl Recoleccion {
     fn reservar(&mut self, tipo: &str) -> Result<(), String> {
         if tipo == "historia" {
             if self.historias >= TOPE {
-                return Err("Se alcanzó el máximo de 600 historias de esta corrida. Retoma el lote para continuar.".into());
+                return Err(format!("Se alcanzó el máximo de {TOPE} historias de esta corrida. Retoma el lote para continuar."));
             }
             self.historias += 1;
         } else {
             if self.aperturas >= TOPE {
-                return Err(
-                    "Se alcanzó el máximo de 600 lecturas de bitácoras/calendarios de esta corrida. Retoma el lote para continuar.".into(),
-                );
+                return Err(format!(
+                    "Se alcanzó el máximo de {TOPE} lecturas de bitácoras/calendarios de esta corrida. Retoma el lote para continuar."
+                ));
             }
             self.aperturas += 1;
         }
@@ -389,13 +391,13 @@ mod pruebas_limite {
             pendientes: 0,
             consultas_incompletas: BTreeSet::new(),
         };
-        for _ in 0..300 {
+        for _ in 0..TOPE / 2 {
             r.reservar("bitacora").unwrap();
             r.reservar("calendario").unwrap();
         }
         assert!(r.reservar("bitacora").is_err());
         assert!(r.reservar("calendario").is_err());
-        for _ in 0..600 {
+        for _ in 0..TOPE {
             r.reservar("historia").unwrap();
         }
         assert!(r.reservar("historia").is_err());

@@ -462,3 +462,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   producido. Se reforzó además el aviso por página con un fallo real simulado; una mutación que omite la
   página reproduce la pérdida del aviso y hace fallar la prueba. Código restaurado y cinco pruebas de
   recolección aprobadas. Solo la comprobación personal de 8.4 permanece fuera de las pruebas automáticas.
+
+- 2026-11-13: decisión del usuario sobre el tope de lecturas: «Sube el tope o elimínalo, si no causa problemas».
+  Se sube a 2000 por corrida (bitácoras y calendarios comparten el tope; historias 2000 aparte) en el Descargador
+  Python (rama `Rediseno`, 2cbacfd; 382 pruebas PASA) y en Flow (`flow-captura::recoleccion::TOPE`). No se
+  elimina: el paquete ZIP tiene su propio límite (80 MiB, 200.000 filas) y el tope evita corridas sin fin con la
+  sesión caída. Si un paquete de ~1000 ingresos con calendario excede el ZIP, usar «Un paquete por hoja».
+  Pendiente solo 8.4 (prueba del usuario en Windows real).
+

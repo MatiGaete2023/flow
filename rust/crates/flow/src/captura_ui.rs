@@ -318,7 +318,7 @@ impl Captura {
                         ui.checkbox(&mut self.lecturas.calendario,"Leer calendario del ingreso");
                     });
                     ui.horizontal(|ui| {ui.label("Período:");ui.add(egui::DragValue::new(&mut self.lecturas.meses).range(1..=4));ui.label("meses naturales");});
-                    ui.label("Reutiliza lecturas verificadas de hoy. Máximo de 600 bitácoras/calendarios y 600 historias por corrida; Retomar conserva el avance.");
+                    ui.label("Reutiliza lecturas verificadas de hoy. Máximo de 2000 bitácoras/calendarios y 2000 historias por corrida; Retomar conserva el avance.");
                     marcas(ui, "Modalidades", &mut self.modalidades);
                     ui.horizontal_wrapped(|ui| {
                         for (n, m) in &mut self.pestañas {
