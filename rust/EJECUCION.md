@@ -25,11 +25,11 @@ cd rust && cargo test --workspace
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance anterior a esta continuación: `050a425` (8.1 y 8.2 terminados; CI Linux/Windows PASA).
-- **Foco activo: revisión funcional del 13-nov y verificación final de entrega.** Se incorporó la base remota
-  `0e56732` (META4, regeneración y plantillas; CI 43308319894 aprobada en Linux y Windows).
-  Se corrigen los diez hallazgos reportados por el usuario, con pruebas sintéticas de regresión y recibos de
-  Outlook persistidos. Detalle: `REVISION_20261113.md`. El paso 8.4 sigue siendo la prueba del usuario en su
-  equipo y perfil reales; no puede sustituirse por CI ni marcarse aceptado automáticamente.
+- **Foco activo: 8.4, prueba del usuario en su equipo y perfil reales.** Los diez hallazgos del 13-nov
+  están corregidos en `06be5cb`, con 144 pruebas, Clippy del ejecutable y comprobación cruzada Windows.
+  CI 43360472798 aprobada en Linux/MV3 y Windows, con construcción, arranque del EXE y artefacto `Flow_Windows`.
+  Detalle y regresiones: `REVISION_20261113.md`. Se conservó la base remota `0e56732` de META4,
+  regeneración y plantillas. El uso real de SITFA/Outlook y la aceptación no se sustituyen por CI.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -207,6 +207,8 @@ guardar el código de conexión, y cualquier escritura en RUS.
         anchos, alturas y tema) a las cuatro hojas sin copiar contenido activo ni macros;
         usarla en consola y ventana y comprobar que ningún valor cambia.
 - [ ] 8.4 Prueba del usuario en Windows real y su resultado. Nada está aceptado hasta entonces.
+- [x] 8.5 Revisión funcional del 13-nov: diez hallazgos corregidos, regresiones de datos locales,
+      alcance de META4, estados de Outlook, reintentos y capturas; evidencia en `REVISION_20261113.md`.
 
 ## 4. Guía por paso (fuentes en el Python)
 
@@ -454,3 +456,9 @@ guardar el código de conexión, y cualquier escritura en RUS.
   protegidos ante errores y guardados atómicos; PDF huérfano recuperable; avisos por página; apertura de Excel
   recupera la sesión editada; caché única de plantillas. Regresiones y límites en `REVISION_20261113.md`.
   Se conservaron los avances remotos de regeneración y plantillas; no se añadieron ramas ni se modificó Python.
+
+- 2026-11-13: CI de `06be5cb` (43360472798) aprobada: pruebas Linux, contrato Python del anonimizador,
+  Chrome/MV3 sintético, pruebas nativas Windows, release y arranque de consola. Artefacto `Flow_Windows`
+  producido. Se reforzó además el aviso por página con un fallo real simulado; una mutación que omite la
+  página reproduce la pérdida del aviso y hace fallar la prueba. Código restaurado y cinco pruebas de
+  recolección aprobadas. Solo la comprobación personal de 8.4 permanece fuera de las pruebas automáticas.
