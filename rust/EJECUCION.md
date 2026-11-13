@@ -493,3 +493,9 @@ guardar el código de conexión, y cualquier escritura en RUS.
   qué pestañas abre: `Flow_Asistente`, `Flow_Descargador` (sin «Llevar a Trabajo»: abre la carpeta del lote),
   `Flow_Anonimizador`, `Flow_Meta4`; `flow.exe` sigue con todo. La CI copia el mismo binario con esos nombres,
   publica `SHA256SUMS.txt` y sube un artefacto por herramienta (`Flow_<Herramienta>_Windows`) más `Flow_Windows`.
+- 2026-11-13 · Prueba del usuario con Flow_Descargador (Cumplimiento, tribunal ficticio omitido): «Lote detenido: No se
+  encontró una única exportación XLS auditada.» Causa: Flow exigía exactamente un `window.open("url")` o
+  `window.open("url","nombre")` en `ShowExcel`; el Descargador Python toma el primero con URL literal, con cualquier
+  número de argumentos (p. ej. opciones de ventana). Alineado en `sitfa::exportacion` (sigue rechazando URL
+  concatenadas y fuera de `familia.pjud.cl/sitfa/reportes/*.xls`). Si vuelve a fallar, el mensaje indica solo la
+  estructura (cuántas aperturas y si su argumento es texto o variable), sin valores. **No verificado con SITFA real.**

@@ -93,9 +93,10 @@ fn campos(formulario: ElementRef<'_>) -> Result<BTreeMap<String, String>, Error>
 
 static SHOW_EXCEL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\bfunction\s+ShowExcel\s*\(\s*\)\s*\{").unwrap());
 static FUNCION: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\bfunction\s+\w+\s*\(").unwrap());
-static ABRIR: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"window\.open\s*\(\s*(?:"([^"\r\n]+)"|'([^'\r\n]+)')\s*(?:,\s*(?:"[^"\r\n]*"|'[^'\r\n]*')\s*)?\)"#).unwrap()
-});
+// Igual que `motor.py::export_url`: el primer `window.open` con una URL literal dentro de `ShowExcel`, sin importar
+// cuántos argumentos más lleve (nombre de ventana, opciones). Se exige que la URL sea un literal completo (no una
+// concatenación); después se valida contra el sitio y la plantilla.
+static ABRIR: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"window\.open\s*\(\s*(?:"([^"\r\n]+)"|'([^'\r\n]+)')\s*[,)]"#).unwrap());
 static URL_XLS: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\Ahttps://familia\.pjud\.cl/sitfa/reportes/[A-Za-z0-9_-]+\.xls\z").unwrap());
 
@@ -116,17 +117,31 @@ fn plantilla_url<'a>(url: &'a str, perfil: &Perfil) -> Result<&'a str, Error> {
 }
 
 fn exportacion(scripts: &str, perfil: &Perfil) -> Result<String, Error> {
-    let funciones: Vec<_> = SHOW_EXCEL.find_iter(scripts).collect();
-    if funciones.len() != 1 {
-        return Err("SITFA no entregó un único enlace Excel para esta consulta.".into());
-    }
-    let bloque = &scripts[funciones[0].end()..];
+    // Como el Descargador: la primera definición de ShowExcel.
+    let inicio = SHOW_EXCEL.find(scripts).ok_or("SITFA no entregó un enlace Excel para esta consulta.")?;
+    let bloque = &scripts[inicio.end()..];
     let bloque = &bloque[..FUNCION.find(bloque).map(|m| m.start()).unwrap_or(bloque.len())];
-    let enlaces: Vec<_> = ABRIR.captures_iter(bloque).collect();
-    if enlaces.len() != 1 {
-        return Err("No se encontró una única exportación XLS auditada.".into());
-    }
-    let url = enlaces[0].get(1).or_else(|| enlaces[0].get(2)).unwrap().as_str();
+    let url = ABRIR
+        .captures(bloque)
+        .and_then(|c| c.get(1).or_else(|| c.get(2)))
+        .ok_or_else(|| {
+            // Solo estructura, nunca la URL ni otros valores: cuántas aperturas hay y cómo empieza su argumento.
+            let aperturas: Vec<&str> = bloque
+                .match_indices("window.open")
+                .map(|(i, _)| match bloque[i + 11..].trim_start().strip_prefix('(').map(str::trim_start).and_then(|r| r.chars().next()) {
+                    Some('"' | '\'') => "texto",
+                    Some(c) if c.is_alphabetic() || c == '_' => "variable",
+                    Some(_) => "otro",
+                    None => "vacío",
+                })
+                .collect();
+            format!(
+                "No se encontró la exportación XLS en la página de SITFA (ShowExcel con {} apertura(s) de ventana: {}).",
+                aperturas.len(),
+                if aperturas.is_empty() { "ninguna".to_string() } else { aperturas.join(", ") }
+            )
+        })?
+        .as_str();
     plantilla_url(url, perfil)?;
     Ok(url.into())
 }

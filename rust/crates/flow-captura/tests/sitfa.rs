@@ -233,6 +233,25 @@ fn no_confunde_otra_pestana_con_consulta_vacia() {
     assert!(validar_respuesta(c.html.as_bytes(), &c.pares, &perfil(&c), Some((2, &primera))).is_err());
 }
 
+/// Prueba del usuario 13-nov: «Lote detenido: No se encontró una única exportación XLS auditada.» El Descargador
+/// Python toma el primer `window.open` literal de `ShowExcel`, con cualquier número de argumentos.
+#[test]
+fn exportacion_con_opciones_de_ventana_o_varias_aperturas_como_el_descargador() {
+    let c = caso("seguimiento/Espera");
+    let url = c.url.clone().unwrap();
+    let original = format!("window.open(\"{url}\");");
+    assert!(c.html.contains(&original));
+    for nuevo in [
+        format!("window.open(\"{url}\", \"Excel\", \"width=800,height=600,scrollbars=yes\");"),
+        format!("window.open( '{url}' ,'_blank');"),
+        format!("var w = window.open(\"{url}\",\"\",\"menubar=yes\"); if (!w) {{ window.open(\"{url}\"); }}"),
+    ] {
+        let html = c.html.replace(&original, &nuevo);
+        let Respuesta::ConRegistros(p) = validar_respuesta(html.as_bytes(), &c.pares, &perfil(&c), None).expect(&nuevo) else { panic!() };
+        assert_eq!(p.excel_url, url);
+    }
+}
+
 #[test]
 fn rechaza_urls_no_permitidas_y_expresiones() {
     let c = caso("seguimiento/Espera");
