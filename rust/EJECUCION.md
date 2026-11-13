@@ -470,3 +470,12 @@ guardar el código de conexión, y cualquier escritura en RUS.
   sesión caída. Si un paquete de ~1000 ingresos con calendario excede el ZIP, usar «Un paquete por hoja».
   Pendiente solo 8.4 (prueba del usuario en Windows real).
 
+- 2026-11-13: prueba del usuario en Windows: «el módulo para tomar capturas no funciona, se queda pegado en la carga
+  de opciones». Reproducción con la ventana real de Flow, Chromium, la extensión de Flow y SITFA ficticio: con la
+  pestaña en Seguimiento carga; el código esperaba hasta 70 s por llamada (dos llamadas) sin aviso ni forma de
+  cancelar, y pedía la versión antes que las opciones (al revés que el Descargador Python, que sí le funciona).
+  Corrección en `flow-captura::lotes::catalogo` (opciones primero con 40 s, versión después con 15 s) y en
+  `captura_ui.rs` (segundos transcurridos, indicador y botón Cancelar). Con SITFA fuera de una pantalla de consulta
+  ahora muestra en segundos «Entra a Seguimiento…». Prueba nueva en `flow-captura/tests/lotes.rs`.
+  **No reproducido con SITFA real**: si persiste, pedir al usuario el texto de la pestaña de conexión de Chrome.
+

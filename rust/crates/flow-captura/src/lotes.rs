@@ -50,8 +50,14 @@ pub fn catalogo(conexion: &dyn Conexion, pantalla: &str) -> Result<Value, String
     if !matches!(pantalla, "seguimiento" | "litigantes" | "calendario_informes" | "calendario_medidas") {
         return Err("Pantalla no permitida.".into());
     }
-    comprobar_capacidades(&pedir(conexion, "capabilities", json!({}))?)?;
-    let catalogo = pedir(conexion, "catalog", json!({"screen":pantalla}))?;
+    // Como el Descargador: primero las opciones, que abren la pantalla elegida si la pestaña está en otra y dan un
+    // mensaje claro si SITFA no muestra una pantalla de consulta; después, la comprobación de la extensión.
+    // Plazos acotados: abrir la pantalla toma hasta 15 s en la extensión; nada justifica esperar más de 40 s.
+    let catalogo = conexion.llamar("catalog", json!({"screen":pantalla}), Duration::from_secs(40))?;
+    let capacidades = conexion.llamar("capabilities", json!({}), Duration::from_secs(15)).map_err(|_| {
+        "La extensión respondió las opciones, pero no confirmó su versión. Carga la carpeta extension de esta entrega de Flow en chrome://extensions y vuelve a conectar.".to_string()
+    })?;
+    comprobar_capacidades(&capacidades)?;
     if catalogo["pantalla"].as_str() != Some(pantalla) || !catalogo["tribunales"].is_object() {
         return Err("La extensión no devolvió las opciones de la pantalla elegida.".into());
     }

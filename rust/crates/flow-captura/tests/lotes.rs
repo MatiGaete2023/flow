@@ -259,3 +259,38 @@ fn retomar_evidencia_sin_checkpoint_conserva_pdf_y_completa_consulta() {
     assert!(r.avisos.iter().any(|s| s.contains("sin checkpoint")));
     assert_eq!(Resumen::leer(&c.0).unwrap().archivos.len(), 1);
 }
+
+/// Extensión que responde solo lo indicado y registra el orden y plazo de cada orden.
+struct Orden {
+    catalogo: Result<Value, String>,
+    llamadas: Mutex<Vec<(String, Duration)>>,
+}
+
+impl Conexion for Orden {
+    fn llamar(&self, comando: &str, _payload: Value, plazo: Duration) -> Result<Value, String> {
+        self.llamadas.lock().unwrap().push((comando.into(), plazo));
+        match comando {
+            "catalog" => self.catalogo.clone(),
+            "capabilities" => Ok(json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false})),
+            _ => Err("orden no esperada".into()),
+        }
+    }
+}
+
+#[test]
+fn opciones_se_piden_antes_que_la_version_y_con_plazos_acotados() {
+    // Prueba del usuario (13-nov-2026): «se queda pegado en la carga de opciones».
+    let bien = Orden { catalogo: Ok(caso("seguimiento/Espera")["catalogo"].clone()), llamadas: Mutex::new(vec![]) };
+    lotes::catalogo(&bien, "seguimiento").unwrap();
+    let llamadas = bien.llamadas.lock().unwrap().clone();
+    assert_eq!(llamadas.iter().map(|(c, _)| c.as_str()).collect::<Vec<_>>(), ["catalog", "capabilities"]);
+    assert!(llamadas.iter().all(|(_, p)| *p <= Duration::from_secs(40)), "{llamadas:?}");
+    // SITFA sin pantalla de consulta: el mensaje de la extensión llega tal cual y no se espera nada más.
+    let sin_pantalla = Orden {
+        catalogo: Err("El enlace con Chrome funciona, pero no se encuentra la pantalla de consulta.".into()),
+        llamadas: Mutex::new(vec![]),
+    };
+    let error = lotes::catalogo(&sin_pantalla, "seguimiento").unwrap_err();
+    assert!(error.contains("pantalla de consulta"), "{error}");
+    assert_eq!(sin_pantalla.llamadas.lock().unwrap().len(), 1);
+}

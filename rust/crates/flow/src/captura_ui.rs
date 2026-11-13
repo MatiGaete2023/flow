@@ -42,6 +42,8 @@ pub struct Captura {
     evidencia: bool,
     lecturas: flow_captura::recoleccion::Opciones,
     receptor: Option<Receiver<Evento>>,
+    /// Inicio de la carga de opciones en curso, para mostrar el tiempo y permitir cancelarla.
+    cargando: Option<std::time::Instant>,
     cancelar: Arc<AtomicBool>,
     mensaje: String,
     carpeta: Option<PathBuf>,
@@ -69,6 +71,7 @@ impl Default for Captura {
             evidencia: true,
             lecturas: Default::default(),
             receptor: None,
+            cargando: None,
             cancelar: Arc::new(AtomicBool::new(false)),
             mensaje: "Abre SITFA en Chrome y conecta la extensión de Flow.".into(),
             carpeta: None,
@@ -108,6 +111,7 @@ impl Captura {
                 Evento::Avance(m) => self.mensaje = m,
                 Evento::Opciones(r) => {
                     self.receptor = None;
+                    self.cargando = None;
                     match r {
                         Ok(c) => {
                             self.tribunales = opciones(&c, "tribunales");
@@ -157,7 +161,8 @@ impl Captura {
         let ctx = ctx.clone();
         let (tx, rx) = channel();
         self.receptor = Some(rx);
-        self.mensaje = "Comprobando extensión y cargando opciones…".into();
+        self.cargando = Some(std::time::Instant::now());
+        self.mensaje = "Pidiendo las opciones a Chrome…".into();
         std::thread::spawn(move || {
             let r = lotes::catalogo(puente.as_ref(), &pantalla);
             let _ = tx.send(Evento::Opciones(r));
@@ -303,7 +308,20 @@ impl Captura {
                 self.catalogo = None;
                 self.fechas = false;
             }
-            if ui.add_enabled(self.puente.as_ref().is_some_and(|p| p.conectado()), egui::Button::new("Cargar opciones")).clicked() {
+            if let Some(inicio) = self.cargando {
+                ui.spinner();
+                ui.label(format!(
+                    "Cargando opciones… {} s. Mira la pestaña de conexión en Chrome: ahí dice qué está haciendo.",
+                    inicio.elapsed().as_secs()
+                ));
+                if ui.button("Cancelar").clicked() {
+                    // La respuesta tardía de Chrome se descarta; la conexión sigue abierta.
+                    self.receptor = None;
+                    self.cargando = None;
+                    self.mensaje = "Carga de opciones cancelada. Revisa que la pestaña SITFA muestre la pantalla de consulta y vuelve a intentar.".into();
+                }
+                ctx.request_repaint_after(Duration::from_millis(500));
+            } else if ui.add_enabled(self.puente.as_ref().is_some_and(|p| p.conectado()), egui::Button::new("Cargar opciones")).clicked() {
                 self.cargar_opciones(ctx);
             }
         });
