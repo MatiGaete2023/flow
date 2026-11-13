@@ -98,3 +98,46 @@ fn proyectos_word_por_tribunal() {
     println!("{}", rutas.iter().map(|r| r.display().to_string()).collect::<Vec<_>>().join("\n"));
     std::fs::remove_dir_all(dir).unwrap();
 }
+#[test]
+fn consultas_auxiliares_no_producen_correos_ni_proyectos() {
+    let mut t = trabajo(Etapa::Espera);
+    let dir = carpeta("consulta-sin-acciones");
+    for tipo in ["EGRESADOS", "BUSQUEDA_LITIGANTES"] {
+        t.fuente = Some(tipo.into());
+        for correo in Tipo::TODOS {
+            assert!(correos::preparar(
+                &t,
+                correo,
+                &Opciones { modalidades: "FAE".into(), ..Default::default() },
+                &Contactos::default(),
+                &dir
+            )
+            .unwrap()
+            .is_empty());
+        }
+        assert!(word::proyectos(&t, t.corte, None).is_empty());
+    }
+    assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 0);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+#[test]
+fn contactos_ilegibles_no_se_reemplazan_y_guardado_se_relee() {
+    let p = carpeta("contactos-protegidos");
+    let ruta = p.join("contactos.json");
+    assert_eq!(Contactos::cargar(&ruta).unwrap(), Contactos::default());
+    let malo = br#"{"programas": {"programa ficticio":"ficticio@example.invalid"}"#;
+    std::fs::write(&ruta, malo).unwrap();
+    assert!(Contactos::cargar(&ruta).is_err());
+    assert!(Contactos::default().guardar(&ruta).is_err());
+    assert_eq!(std::fs::read(&ruta).unwrap(), malo);
+    std::fs::remove_file(&ruta).unwrap();
+    let mut contactos = Contactos::default();
+    contactos.firma = "Firma ficticia".into();
+    contactos.guardar(&ruta).unwrap();
+    assert_eq!(Contactos::cargar(&ruta).unwrap(), contactos);
+    contactos.cc_adicional = "ficticio@example.invalid".into();
+    contactos.guardar(&ruta).unwrap();
+    assert_eq!(Contactos::cargar(&ruta).unwrap(), contactos);
+    assert_eq!(std::fs::read_dir(&p).unwrap().count(), 1);
+    std::fs::remove_dir_all(p).unwrap();
+}

@@ -19,6 +19,15 @@ Estado: en desarrollo, **sin aceptación del usuario**. Ver [EJECUCION.md](EJECU
 4. **Resoluciones:** «Preparar proyectos», completa lo que falte (por ejemplo la duración) y «Generar Word».
 5. **Resultados:** lista de lo creado y acceso a la carpeta.
 
+Al volver a abrir el mismo archivo y corte, Flow recupera las ediciones y marcas guardadas.
+«Volver a analizar» descarta esas ediciones por elección del usuario. Si una sesión o los contactos no se
+pueden leer, Flow avisa y conserva el archivo anterior; no lo sustituye por datos vacíos.
+
+Los guardados en Outlook tienen un recibo local: repetir el botón o el comando omite los ya guardados.
+Un resultado incierto exige revisar personalmente Borradores y resolver su estado desde el detalle del
+correo. La consola conserva una copia `.eml` de respaldo y continúa con los demás productos si Outlook
+falla. Una copia de respaldo de un guardado incierto no debe usarse antes de comprobar Outlook.
+
 ## Captura desde SITFA
 
 1. Descomprime la carpeta `extension` incluida con Flow. En Chrome abre `chrome://extensions`, activa el modo

@@ -8,6 +8,7 @@ use flow_trabajo::{FilaTrabajo, Trabajo};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 #[derive(Debug, Clone, Deserialize)]
 struct Plantilla {
@@ -25,13 +26,14 @@ struct Base {
     plantillas: BTreeMap<String, Plantilla>,
 }
 
-fn base() -> Base {
-    serde_json::from_str(include_str!("../../../datos/correos.json")).expect("correos.json")
+static BASE: LazyLock<Base> = LazyLock::new(|| serde_json::from_str(include_str!("../../../datos/correos.json")).expect("correos.json"));
+fn base() -> &'static Base {
+    &BASE
 }
 
 /// Modalidades que se ofrecen por defecto para el alcance de los correos al tribunal.
 pub fn modalidades_base() -> Vec<String> {
-    base().modalidades
+    base().modalidades.clone()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -49,8 +51,7 @@ pub enum Tipo {
 }
 
 impl Tipo {
-    pub const TODOS: [Tipo; 5] =
-        [Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas, Tipo::Informativo];
+    pub const TODOS: [Tipo; 5] = [Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas, Tipo::Informativo];
 
     /// Acción del motor que alimenta este correo; el informativo no depende de una acción.
     pub fn accion(self) -> Option<&'static str> {
@@ -101,12 +102,8 @@ pub struct Contactos {
 impl Contactos {
     pub fn de_programa(&self, programa: &str) -> String {
         let clave = normalizar_columna(programa.trim());
-        let mut halladas: Vec<&String> = self
-            .programas
-            .iter()
-            .filter(|(k, v)| normalizar_columna(k.trim()) == clave && !v.trim().is_empty())
-            .map(|(_, v)| v)
-            .collect();
+        let mut halladas: Vec<&String> =
+            self.programas.iter().filter(|(k, v)| normalizar_columna(k.trim()) == clave && !v.trim().is_empty()).map(|(_, v)| v).collect();
         halladas.dedup();
         if halladas.len() == 1 {
             halladas[0].clone()
@@ -114,15 +111,38 @@ impl Contactos {
             String::new()
         }
     }
-    pub fn cargar(ruta: &Path) -> Contactos {
-        std::fs::read_to_string(ruta).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+    pub fn cargar(ruta: &Path) -> Result<Contactos, String> {
+        use std::io::Read;
+        let archivo = match std::fs::File::open(ruta) {
+            Ok(f) => f,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Self::default()),
+            Err(_) => return Err("No se pudieron leer los contactos. El archivo se conserva y no se reemplazará.".into()),
+        };
+        let mut raw = vec![];
+        archivo
+            .take(2 * 1024 * 1024 + 1)
+            .read_to_end(&mut raw)
+            .map_err(|_| "No se pudieron leer los contactos; el archivo se conserva.")?;
+        if raw.len() > 2 * 1024 * 1024 {
+            return Err("El archivo de contactos supera 2 MiB; se conserva sin modificar.".into());
+        }
+        serde_json::from_slice(&raw)
+            .map_err(|_| "El archivo de contactos no contiene JSON válido. Corríjalo o recupere una copia; no se reemplazará.".into())
     }
     pub fn guardar(&self, ruta: &Path) -> Result<(), String> {
-        if let Some(carpeta) = ruta.parent() {
-            std::fs::create_dir_all(carpeta).map_err(|e| e.to_string())?;
-        }
-        let texto = serde_json::to_string_pretty(self).map_err(|e| e.to_string())?;
-        std::fs::write(ruta, texto).map_err(|e| format!("No se pudieron guardar los contactos: {e}"))
+        use std::io::Write;
+        // Una carga fallida nunca se convierte en un archivo vacío al editar o cerrar la aplicación.
+        Self::cargar(ruta)?;
+        let carpeta = ruta.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
+        std::fs::create_dir_all(carpeta).map_err(|_| "No se pudo crear la carpeta de contactos.")?;
+        let texto = serde_json::to_vec_pretty(self).map_err(|_| "No se pudieron preparar los contactos.")?;
+        let mut tmp = tempfile::NamedTempFile::new_in(carpeta)
+            .map_err(|_| "No se pudieron preparar los contactos; el archivo anterior se conserva.")?;
+        tmp.write_all(&texto)
+            .and_then(|_| tmp.as_file().sync_all())
+            .map_err(|_| "No se pudieron guardar los contactos; el archivo anterior se conserva.")?;
+        tmp.persist(ruta).map_err(|_| "No se pudo reemplazar el archivo de contactos; el anterior se conserva.")?;
+        Ok(())
     }
 }
 
@@ -206,6 +226,9 @@ pub fn preparar(
     contactos: &Contactos,
     carpeta: &Path,
 ) -> Result<Vec<Borrador>, String> {
+    if trabajo.fuente.is_some() {
+        return Ok(Vec::new());
+    }
     let base = base();
     let clave_plantilla = tipo.plantilla(trabajo.etapa);
     let plantilla = &base.plantillas[clave_plantilla];

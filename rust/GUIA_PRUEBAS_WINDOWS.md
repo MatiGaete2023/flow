@@ -67,3 +67,15 @@ Las pruebas automáticas verifican estilos, anchos, alturas, fechas y que el con
 hojas no cambie. **Falta la comprobación funcional en Windows real con SITFA, Outlook y Excel
 2010/365**, incluida la comparación Meta 4 frente al producto Python (prueba 33). Ninguna
 prueba automática equivale a la aceptación del usuario.
+
+## Regresiones de la revisión del 13 de noviembre
+
+| # | Prueba | Esperado |
+| --- | --- | --- |
+| 35 | Abrir nuevamente el mismo Excel y corte después de editar y marcar filas | Recupera las ediciones y marcas. |
+| 36 | Probar contactos JSON incompletos usando una copia ficticia | Avisa y conserva el archivo, también al cerrar. |
+| 37 | Guardar dos veces el mismo lote de borradores | El segundo intento omite los ya guardados; inciertos se muestran como pendientes. |
+| 38 | META4 con corte anterior a la captura y ventana insuficiente | Fecha vacía y aviso de período no cubierto. |
+| 39 | META4 parcial | Las dos hojas de Bitacoras_del_mes.xlsx solo contienen personas de los tribunales elegidos. |
+
+Estas pruebas complementan las regresiones automáticas; no requieren compartir archivos ni capturas reales.

@@ -2,10 +2,10 @@
 //! en el mes, a partir de las capturas locales de Flow. No se conecta a SITFA ni a RUS: solo lee carpetas.
 //! Reglas tomadas de `META4_Bitacoras/scripts/meta4_bitacoras.py` 2.6.0.
 
+pub mod plantilla;
+pub mod regenerar;
 pub mod salida;
 pub mod tribunales;
-pub mod regenerar;
-pub mod plantilla;
 
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use flow_captura::lotes::{huella, ruta_archivo, Resumen};
@@ -24,6 +24,7 @@ pub const NO_COMPLETADA: &str = "LECTURA NO COMPLETADA";
 pub const NO_VERIFICABLE: &str = "BITÁCORA NO VERIFICABLE";
 pub const IDENTIDAD_VISIBLE: &str = "REVISAR IDENTIDAD VISIBLE";
 pub const NOMBRE_VISIBLE: &str = "REVISAR NOMBRE VISIBLE (fecha tomada de la bitácora)";
+pub const PERIODO_INCOMPLETO: &str = "REVISAR: la bitácora guardada no cubre todo el período";
 pub const LEIDA_ANTES: &str = "REVISAR: bitácora leída antes de la fecha de corte";
 pub const SIN_BITACORA: &str = "SIN BITÁCORA ASOCIADA";
 pub const AMBIGUA: &str = "IDENTIDAD AMBIGUA";
@@ -327,6 +328,12 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
                                         (IDENTIDAD_VISIBLE.to_string(), None)
                                     } else if leida.is_none_or(|d| d < corte) {
                                         (LEIDA_ANTES.to_string(), None)
+                                    } else if !matches!(
+                                        (datos["desde"].as_str().and_then(|s|s.parse::<NaiveDate>().ok()),
+                                         datos["hasta"].as_str().and_then(|s|s.parse::<NaiveDate>().ok())),
+                                        (Some(desde),Some(hasta)) if desde<=inicio&&hasta>=fin
+                                    ) {
+                                        (PERIODO_INCOMPLETO.to_string(), None)
                                     } else {
                                         let persona = datos["persona"].as_str().unwrap_or("");
                                         let aviso = (!persona.is_empty() && !nombres_compatibles(persona, &fila.registro.texto("nombre")))
@@ -400,6 +407,7 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
         }
         m.registros.retain(|r| r.tribunal.is_some_and(|t| elegidos.contains(&t)));
         m.observaciones.retain(|o| elegidos.iter().any(|t| *t == o.tribunal));
+        m.lecturas.retain(|l| elegidos.iter().any(|t| *t == l.tribunal));
         m.sin_bitacoras.retain(|(_, t)| elegidos.iter().any(|e| e == t));
     }
     let fuera = m.registros.iter().filter(|r| r.categoria.is_none() || r.tribunal.is_none()).count();
@@ -411,6 +419,10 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
     }
     if !m.filtros.is_empty() {
         m.avisos.push(format!("Lotes con filtros: META 4 contiene solo lo que entregó cada filtro ({}).", m.filtros.join("; ")));
+    }
+    let incompletas = m.registros.iter().filter(|r| r.control == PERIODO_INCOMPLETO).count();
+    if incompletas > 0 {
+        m.avisos.push(format!("{incompletas} bitácoras no cubren todo el período de Meta 4; sus fechas quedan vacías. Vuelva a leerlas con una ventana mayor o ajuste el corte."));
     }
     let antes = m.registros.iter().filter(|r| r.control == LEIDA_ANTES).count();
     if antes > 0 {

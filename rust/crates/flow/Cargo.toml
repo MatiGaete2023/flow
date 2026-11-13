@@ -24,3 +24,6 @@ serde = { workspace = true }
 eframe = "0.31"
 egui_extras = "0.31"
 rfd = "0.15"
+sha2 = "0.10"
+tempfile = "3"
+zip = { version="2",default-features=false,features=["deflate"] }

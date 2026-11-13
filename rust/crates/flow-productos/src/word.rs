@@ -13,11 +13,8 @@ use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-pub const TIPOS: [(&str, &str); 3] = [
-    ("PC_IE", "Pide cuenta ingreso efectivo"),
-    ("PC_INFO", "Pide cuenta informe"),
-    ("NOMENCL", "Nomenclatura"),
-];
+pub const TIPOS: [(&str, &str); 3] =
+    [("PC_IE", "Pide cuenta ingreso efectivo"), ("PC_INFO", "Pide cuenta informe"), ("NOMENCL", "Nomenclatura")];
 
 static NODO_T: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<w:t(\s[^>]*)?>([^<]*)</w:t>").unwrap());
 static VARIABLE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\{\{([A-Z_]+)\}\}").unwrap());
@@ -246,6 +243,9 @@ fn revisar_faltantes(p: &mut Proyecto, carpeta_usuario: Option<&Path>) {
 
 /// Proyectos que corresponden al trabajo: uno por fila con acción de proyecto.
 pub fn proyectos(trabajo: &Trabajo, hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
+    if trabajo.fuente.is_some() {
+        return Vec::new();
+    }
     let mut salida = Vec::new();
     for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
         let (Some(tipo), Some(tribunal)) = (fila.proyecto(), Tribunal::desde(&valor(fila, "tribunal"))) else { continue };

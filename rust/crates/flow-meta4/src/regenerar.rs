@@ -97,8 +97,9 @@ fn lecturas(bitacoras: &Path) -> Result<Vec<Lectura>, String> {
     let requeridas = ["TRIBUNAL", "RIT", "NOMBRE", "PROGRAMA", "CAUSA ID", "INGRESO ID", "CONTROL"];
     let mut indices = Vec::new();
     for titulo in requeridas {
-        indices.push(encabezado.iter().position(|c| norma(&c.texto()) == norma(titulo))
-            .ok_or(format!("Control de lecturas no tiene {titulo}."))?);
+        indices.push(
+            encabezado.iter().position(|c| norma(&c.texto()) == norma(titulo)).ok_or(format!("Control de lecturas no tiene {titulo}."))?,
+        );
     }
     let mut salida = Vec::new();
     for fila in hoja.filas.iter().skip(1) {
@@ -113,6 +114,29 @@ fn lecturas(bitacoras: &Path) -> Result<Vec<Lectura>, String> {
         });
     }
     Ok(salida)
+}
+
+fn validar_alcance_bitacoras(path: &Path, elegidos: &[&str]) -> Result<(), String> {
+    let libro = flow_tabular::leer(path)?;
+    for hoja in &libro.hojas {
+        if !["OBSERVACIONES DEL MES", "CONTROL DE LECTURAS"].contains(&norma(&hoja.nombre).as_str()) {
+            return Err(
+                "La bitácora parcial contiene una hoja cuyo alcance no puede comprobarse. Vuelva a generar Meta 4 desde el lote.".into()
+            );
+        }
+        let encabezado = hoja.filas.first().ok_or("Una hoja de bitácoras está vacía.")?;
+        let columna = encabezado
+            .iter()
+            .position(|c| norma(&c.texto()) == "TRIBUNAL")
+            .ok_or("No se puede verificar el tribunal de las bitácoras parciales.")?;
+        for fila in hoja.filas.iter().skip(1).filter(|r| r.iter().any(|c| !c.es_vacia())) {
+            let nombre = fila.get(columna).map(Celda::texto).unwrap_or_default();
+            if tribunal(&nombre).is_none_or(|t| !elegidos.contains(&t)) {
+                return Err("Bitacoras_del_mes.xlsx contiene datos de un tribunal fuera del filtro original. Vuelva a generar la copia parcial desde los lotes; no se publicó nada.".into());
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Carga únicamente los productos producidos por Flow y el Excel revisado; verifica la estructura.
@@ -135,8 +159,10 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
     let emision = fecha_iso(&previo["fecha_emision"], "fecha_emision")?;
     let tribunales = match &previo["tribunales_incluidos"] {
         Value::String(t) if t == "Todos" => None,
-        Value::Array(_) => Some(normalizar_tribunales(&textos(&previo["tribunales_incluidos"], "tribunales_incluidos")?)?
-            .ok_or("La lista de tribunales está vacía.")?),
+        Value::Array(_) => Some(
+            normalizar_tribunales(&textos(&previo["tribunales_incluidos"], "tribunales_incluidos")?)?
+                .ok_or("La lista de tribunales está vacía.")?,
+        ),
         _ => return Err("El filtro de tribunales del reporte es ilegible.".into()),
     };
     let libro = flow_tabular::leer(registros)?;
@@ -163,6 +189,9 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
     }
     let bitacoras = carpeta.join("Bitacoras_del_mes.xlsx");
     let controles = lecturas(&bitacoras)?;
+    if let Some(elegidos) = &tribunales {
+        validar_alcance_bitacoras(&bitacoras, elegidos)?;
+    }
     // Los reportes nuevos registran la asociación exacta consulta/tribunal.
     // Los anteriores solo guardaban la etiqueta: no se inventa una atribución.
     let sin_bitacoras: Vec<(String, String)> = if let Some(detalle) = previo["consultas_sin_bitacoras_detalle"].as_array() {

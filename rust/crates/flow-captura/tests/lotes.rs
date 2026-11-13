@@ -213,8 +213,7 @@ fn consulta_vacia_solo_genera_pdf_si_se_pide_y_queda_acreditada() {
 
 #[test]
 fn capacidades_y_respuestas_fuera_de_contrato_fallan_cerrado() {
-    let correcto =
-        json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false});
+    let correcto = json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false});
     lotes::comprobar_capacidades(&correcto).unwrap();
     for (campo, valor) in [
         ("escritura_rus", json!(true)),
@@ -236,4 +235,27 @@ fn capacidades_y_respuestas_fuera_de_contrato_fallan_cerrado() {
         assert!(lotes::cuerpo(&v, false).is_err());
     }
     assert!(flow_captura::evidencia::png_a_pdf(&json!({"png":STANDARD.encode("no-es-png"),"digest":"otra"}), "esperada").is_err());
+}
+#[test]
+fn retomar_evidencia_sin_checkpoint_conserva_pdf_y_completa_consulta() {
+    let f = Ficticio { caso: caso("seguimiento/Espera/vacia"), estado: Mutex::new((1, 0, vec![])), cancelar: None, falla: false };
+    let c = Carpeta::nueva();
+    let lote = plan(&f.caso, true);
+    let cancelar = AtomicBool::new(false);
+    let mut r = lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, false, &cancelar, &|_| {}).unwrap();
+    let original = c.0.join(&r.archivos[0].nombre);
+    let pdf = std::fs::read(&original).unwrap();
+    r.archivos.clear();
+    r.vacias.clear();
+    r.terminadas.clear();
+    r.estado = "INCOMPLETA".into();
+    r.guardar(&c.0).unwrap();
+    let r = lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, true, &cancelar, &|_| {}).unwrap();
+    assert_eq!(r.estado, "VALIDADA");
+    assert_eq!(r.archivos.len(), 1);
+    assert_eq!(r.vacias, vec![0]);
+    assert_ne!(c.0.join(&r.archivos[0].nombre), original);
+    assert_eq!(std::fs::read(original).unwrap(), pdf);
+    assert!(r.avisos.iter().any(|s| s.contains("sin checkpoint")));
+    assert_eq!(Resumen::leer(&c.0).unwrap().archivos.len(), 1);
 }

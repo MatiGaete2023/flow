@@ -208,3 +208,32 @@ fn ampliar_periodo_relee_bitacora_e_historia_pero_reutiliza_calendario() {
     assert_eq!(*f.comandos.lock().unwrap(), vec!["diary_open", "history_open", "calendar_open", "diary_open", "history_open"]);
     assert_eq!(copia.lecturas.iter().filter(|l| l.reutilizada).count(), 1);
 }
+#[test]
+fn avisos_de_filas_homonimas_en_paginas_distintas_no_se_borran() {
+    let t = Temporal::nueva();
+    let c = t.0.join("lote");
+    std::fs::create_dir(&c).unwrap();
+    let mut resumen = resumen();
+    let f = Ficticia { fallar_historia: false, comandos: Mutex::new(vec![]) };
+    let mut r = Recoleccion::con_fecha(&c, &resumen, "2026-10-20".parse().unwrap()).unwrap();
+    leer_pagina(&mut r, &f, &mut resumen);
+    let filas = resumen.paginas_lectura[0].vinculos.iter().map(|v| v.fila).collect::<Vec<_>>();
+    assert!(!filas.is_empty());
+    for fila in &filas {
+        resumen.avisos.push(format!("Consulta 1, página 1, fila {fila}: historia pendiente. Aviso ficticio de otra página."));
+    }
+    r.pagina(
+        &f,
+        &json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),
+        &mut resumen,
+        PaginaActual { consulta: 0, numero: 2, html: pagina().as_bytes() },
+        Control { cancelar: &AtomicBool::new(false), progreso: &|_| {} },
+    )
+    .unwrap();
+    for fila in filas {
+        assert!(resumen
+            .avisos
+            .iter()
+            .any(|s| s == &format!("Consulta 1, página 1, fila {fila}: historia pendiente. Aviso ficticio de otra página.")));
+    }
+}

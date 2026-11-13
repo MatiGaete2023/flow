@@ -6,6 +6,7 @@
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
 mod anonimo_ui;
+mod borradores;
 mod captura_ui;
 mod cli;
 mod meta4_ui;

@@ -67,10 +67,16 @@ fn editar_libro(origen: &Path, destino: &Path, fecha_ilegal: bool) {
                     } else { valor.clone() }
                 } else { valor.clone() };
                 match editado {
-                    Celda::Vacia => {},
-                    Celda::Texto(t) => { hoja.write_string(f as u32, c as u16, &t).unwrap(); },
-                    Celda::Numero(n) => { hoja.write_number(f as u32, c as u16, n).unwrap(); },
-                    Celda::Fecha(d) => { hoja.write_string(f as u32, c as u16, d.to_string()).unwrap(); },
+                    Celda::Vacia => {}
+                    Celda::Texto(t) => {
+                        hoja.write_string(f as u32, c as u16, &t).unwrap();
+                    }
+                    Celda::Numero(n) => {
+                        hoja.write_number(f as u32, c as u16, n).unwrap();
+                    }
+                    Celda::Fecha(d) => {
+                        hoja.write_string(f as u32, c as u16, d.to_string()).unwrap();
+                    }
                 }
             }
         }
@@ -137,4 +143,26 @@ fn fecha_ilegible_o_fuentes_faltantes_no_publican() {
     std::fs::remove_file(revisados.join("Bitacoras_del_mes.xlsx")).unwrap();
     assert!(regenerar::ejecutar(&registros, &destino).is_err());
     assert!(!destino.exists());
+}
+
+#[test]
+fn no_regenera_copia_parcial_antigua_con_lecturas_de_otro_tribunal() {
+    let t = Temporal::nueva();
+    let fuente = t.0.join("Parcial");
+    let mut m = meta();
+    m.tribunales = Some(vec!["TOMÉ"]);
+    m.lecturas.push(flow_meta4::Lectura {
+        tribunal: "LAJA".into(),
+        rit: "P-2-2099".into(),
+        nombre: "Identcanario Apelcanario".into(),
+        programa: "FAE Ficticio".into(),
+        causa: "c202".into(),
+        ingreso: "202".into(),
+        control: "OK".into(),
+    });
+    salida::publicar(&m, &fuente).unwrap();
+    let destino = t.0.join("Regenerado");
+    assert!(regenerar::ejecutar(&fuente.join("Registros.xlsx"), &destino).unwrap_err().contains("fuera del filtro"));
+    assert!(!destino.exists());
+    assert!(fuente.join("Bitacoras_del_mes.xlsx").exists());
 }

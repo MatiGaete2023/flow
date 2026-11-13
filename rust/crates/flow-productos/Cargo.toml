@@ -12,6 +12,7 @@ chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 regex.workspace = true
+tempfile = "3"
 rust_xlsxwriter = "0.102"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 

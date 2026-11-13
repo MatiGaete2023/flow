@@ -315,12 +315,12 @@ impl Recoleccion {
                 if !habilitada {
                     continue;
                 }
-                let prefijo = format!("Consulta {}, fila {}: {tipo} ", actual.consulta + 1, v.fila);
+                let prefijo = format!("Consulta {}, página {}, fila {}: {tipo} ", actual.consulta + 1, actual.numero, v.fila);
                 resumen.avisos.retain(|s| {
                     !s.starts_with(&format!("{prefijo}pendiente.")) && !s.starts_with(&format!("{prefijo}sin vínculo comprobado;"))
                 });
                 if !vinculada {
-                    let aviso = format!("Consulta {}, fila {}: {tipo} sin vínculo comprobado; no evaluable.", actual.consulta + 1, v.fila);
+                    let aviso = format!("{prefijo}sin vínculo comprobado; no evaluable.");
                     if !resumen.avisos.contains(&aviso) {
                         resumen.avisos.push(aviso);
                     }
@@ -331,7 +331,12 @@ impl Recoleccion {
                 }
                 self.reservar(tipo)?;
                 lotes::pausa(pausa, control.cancelar)?;
-                (control.progreso)(format!("Consulta {} · fila {} · leyendo {tipo}", actual.consulta + 1, v.fila));
+                (control.progreso)(format!(
+                    "Consulta {} · página {} · fila {} · leyendo {tipo}",
+                    actual.consulta + 1,
+                    actual.numero,
+                    v.fila
+                ));
                 let lectura = match tipo {
                     "bitacora" => vinculos::abrir_bitacora(conexion, &v, &seleccion.modality),
                     "historia" => vinculos::abrir_historia(conexion, &v, tribunal),
@@ -342,7 +347,7 @@ impl Recoleccion {
                     Err(e) => {
                         self.pendientes += 1;
                         self.consultas_incompletas.insert(actual.consulta);
-                        let aviso = format!("Consulta {}, fila {}: {tipo} pendiente. {e}", actual.consulta + 1, v.fila);
+                        let aviso = format!("{prefijo}pendiente. {e}");
                         if !resumen.avisos.contains(&aviso) {
                             resumen.avisos.push(aviso);
                         }

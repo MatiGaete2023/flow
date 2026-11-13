@@ -172,6 +172,25 @@ pub fn producir_todo(
     en_outlook: bool,
     plantillas_usuario: Option<&Path>,
 ) -> Result<Producido, String> {
+    let datos = flow_trabajo::almacen::carpeta_datos();
+    producir_interno(
+        trabajo,
+        salida,
+        modalidades,
+        contactos,
+        if en_outlook { Some((&datos, &flow_outlook::guardar_borrador)) } else { None },
+        plantillas_usuario,
+    )
+}
+type Guardador<'a> = dyn Fn(&flow_productos::correos::Borrador) -> Result<flow_outlook::Resultado, String> + 'a;
+fn producir_interno(
+    trabajo: &Trabajo,
+    salida: &Path,
+    modalidades: &str,
+    contactos: &flow_productos::correos::Contactos,
+    outlook: Option<(&Path, &Guardador<'_>)>,
+    plantillas_usuario: Option<&Path>,
+) -> Result<Producido, String> {
     use flow_productos::{correos, excel, word};
     let nombre = format!("Flow {} {}", trabajo.nombre(), trabajo.corte.format("%Y-%m-%d"));
     let carpeta = excel::carpeta_nueva(salida, &nombre)?;
@@ -180,32 +199,57 @@ pub fn producir_todo(
     excel::observaciones(trabajo, &libro)?;
     p.creados.push(format!("Excel de observaciones: {}", libro.display()));
     let opciones = correos::Opciones { modalidades: modalidades.to_string(), hoy: None };
-    for tipo in correos::Tipo::TODOS {
+    for tipo in correos::Tipo::TODOS.into_iter().filter(|_| trabajo.fuente.is_none()) {
         if tipo.usa_modalidades(trabajo.etapa) && modalidades.trim().is_empty() {
             if tipo == correos::Tipo::Informativo || trabajo.filas.iter().any(|f| tipo.accion().is_some_and(|a| f.tiene_accion(a))) {
                 p.pendientes.push(format!("{}: falta indicar las modalidades.", tipo.titulo(trabajo.etapa)));
             }
             continue;
         }
-        for borrador in correos::preparar(trabajo, tipo, &opciones, contactos, &carpeta.join("correos"))? {
+        let preparados = match correos::preparar(trabajo, tipo, &opciones, contactos, &carpeta.join("correos")) {
+            Ok(bs) => bs,
+            Err(e) => {
+                p.pendientes.push(e);
+                continue;
+            }
+        };
+        for borrador in preparados {
             let quien = if borrador.programa.is_empty() { borrador.tribunal.clone() } else { borrador.programa.clone() };
             let faltan = borrador.faltantes();
-            if en_outlook && faltan.is_empty() {
-                match flow_outlook::guardar_borrador(&borrador)? {
-                    flow_outlook::Resultado::Guardado => p.creados.push(format!("Borrador en Outlook: {} → {quien}", borrador.asunto)),
-                    flow_outlook::Resultado::Incierto(m) => {
-                        p.pendientes.push(format!("Borrador para {quien}: {m} Revisa Borradores antes de reintentar."))
+            let mut respaldo = true;
+            if let Some((datos, guardar)) = outlook.filter(|_| faltan.is_empty()) {
+                match crate::borradores::ejecutar(datos, &borrador, guardar) {
+                    crate::borradores::Resultado::Guardado => {
+                        p.creados.push(format!("Borrador en Outlook: {} → {quien}", borrador.asunto));
+                        respaldo = false;
                     }
+                    crate::borradores::Resultado::YaGuardado => {
+                        p.creados.push(format!("Ya estaba en Outlook; no se duplicó: {} → {quien}", borrador.asunto));
+                        respaldo = false;
+                    }
+                    crate::borradores::Resultado::Incierto(m) => p.pendientes.push(format!(
+                        "Borrador para {quien}: guardado incierto. {m} La copia .eml es solo respaldo: revise Outlook antes de usarla."
+                    )),
+                    crate::borradores::Resultado::Bloqueado(e) => p
+                        .pendientes
+                        .push(format!("Borrador para {quien}: no se intentó guardar en Outlook. {e} La copia .eml es solo respaldo.")),
+                    crate::borradores::Resultado::Fallido(e) => p
+                        .pendientes
+                        .push(format!("Borrador para {quien}: no guardado en Outlook. {e} Se intenta conservar una copia .eml.")),
                 }
-            } else {
-                let ruta = correos::guardar_eml(&borrador, &carpeta.join("correos"))?;
-                p.creados.push(format!("Borrador .eml: {}", ruta.display()));
-                if !faltan.is_empty() {
-                    p.pendientes.push(format!("Borrador para {quien}: falta {}.", faltan.join(", ")));
+            }
+            if respaldo {
+                match correos::guardar_eml(&borrador, &carpeta.join("correos")) {
+                    Ok(ruta) => p.creados.push(format!("Borrador .eml: {}", ruta.display())),
+                    Err(e) => p.pendientes.push(format!("Borrador para {quien}: {e}")),
                 }
+            }
+            if !faltan.is_empty() {
+                p.pendientes.push(format!("Borrador para {quien}: falta {}.", faltan.join(", ")));
             }
         }
     }
+
     let proyectos = word::proyectos(trabajo, trabajo.corte, plantillas_usuario);
     for pr in proyectos.iter().filter(|x| !x.listo()) {
         let motivo = if pr.sin_plantilla {
@@ -216,10 +260,20 @@ pub fn producir_todo(
         p.pendientes.push(format!("Proyecto {} {}: {motivo}.", pr.tipo, pr.rit));
     }
     if proyectos.iter().any(|x| x.listo()) {
-        for ruta in word::generar(&proyectos, &carpeta.join("proyectos"), plantillas_usuario)? {
-            p.creados.push(format!("Proyectos Word: {}", ruta.display()));
+        match word::generar(&proyectos, &carpeta.join("proyectos"), plantillas_usuario) {
+            Ok(rutas) => {
+                for ruta in rutas {
+                    p.creados.push(format!("Proyectos Word: {}", ruta.display()));
+                }
+            }
+            Err(e) => p.pendientes.push(format!("Proyectos Word: {e}")),
         }
     }
+    let reporte = serde_json::json!({"creados":p.creados,"pendientes":p.pendientes});
+    if let Err(e) = std::fs::write(carpeta.join("Productos.json"), serde_json::to_vec_pretty(&reporte).map_err(|e| e.to_string())?) {
+        p.pendientes.push(format!("No se pudo guardar el inventario de productos: {e}"));
+    }
+
     Ok(p)
 }
 
@@ -228,7 +282,12 @@ fn producir(args: &[String]) -> Result<(), (i32, String)> {
     let [archivo] = o.posicionales.as_slice() else { return Err((2, "Indica un archivo.".into())) };
     let salida = o.valor("salida").ok_or((2, "Indica la carpeta de --salida.".to_string()))?;
     let (etapa, corte) = comunes(&o)?;
-    let contactos = o.valor("contactos").map(|r| flow_productos::correos::Contactos::cargar(Path::new(r))).unwrap_or_default();
+    let contactos = o
+        .valor("contactos")
+        .map(|r| flow_productos::correos::Contactos::cargar(Path::new(r)))
+        .transpose()
+        .map_err(|e| (1, e))?
+        .unwrap_or_default();
     for trabajo in cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))? {
         let p = producir_todo(&trabajo, Path::new(salida), o.valor("modalidades").unwrap_or(""), &contactos, o.bandera("outlook"), None)
             .map_err(|e| (1, e))?;
@@ -263,9 +322,8 @@ fn meta4(args: &[String]) -> Result<(), (i32, String)> {
     let lotes: Vec<std::path::PathBuf> = o.posicionales.iter().map(std::path::PathBuf::from).collect();
     let tribunales: Vec<String> = o.valor("tribunales").unwrap_or("").split(',').map(|t| t.trim().to_string()).collect();
     let m = flow_meta4::calcular(&lotes, corte, emision, &tribunales).map_err(|e| (1, e))?;
-    let rutas = flow_meta4::salida::publicar_con_plantilla(
-        &m, Path::new(salida), o.valor("plantilla").map(Path::new)
-    ).map_err(|e| (1, e))?;
+    let rutas =
+        flow_meta4::salida::publicar_con_plantilla(&m, Path::new(salida), o.valor("plantilla").map(Path::new)).map_err(|e| (1, e))?;
     println!(
         "Meta 4: {} registros, {} alertas, {} por revisar.",
         m.registros.len(),
@@ -284,16 +342,24 @@ fn meta4(args: &[String]) -> Result<(), (i32, String)> {
 /// Regenera Meta 4 desde el Registros.xlsx corregido y el reporte original.
 fn meta4_regenerar(args: &[String]) -> Result<(), (i32, String)> {
     let o = opciones(args, &["salida", "plantilla"]).map_err(|e| (2, e))?;
-    if o.posicionales.len() != 1 || !o.banderas.is_empty() || o.valor("salida").is_none()
-        || o.pares.len() != (1 + usize::from(o.valor("plantilla").is_some())) {
+    if o.posicionales.len() != 1
+        || !o.banderas.is_empty()
+        || o.valor("salida").is_none()
+        || o.pares.len() != (1 + usize::from(o.valor("plantilla").is_some()))
+    {
         return Err((2, "Uso: flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA [--plantilla PLANTILLA.xlsx].".into()));
     }
     let destino = o.valor("salida").ok_or((2, "Falta --salida.".to_string()))?;
     let rutas = flow_meta4::regenerar::ejecutar_con_plantilla(
-        Path::new(&o.posicionales[0]), Path::new(destino), o.valor("plantilla").map(Path::new)
-    ).map_err(|e| (1, e))?;
+        Path::new(&o.posicionales[0]),
+        Path::new(destino),
+        o.valor("plantilla").map(Path::new),
+    )
+    .map_err(|e| (1, e))?;
     println!("Meta 4 regenerado desde Registros.xlsx revisado:");
-    for ruta in rutas { println!("  creado · {}", ruta.display()); }
+    for ruta in rutas {
+        println!("  creado · {}", ruta.display());
+    }
     Ok(())
 }
 
@@ -363,4 +429,42 @@ fn anonimizar(args: &[String]) -> Result<(), (i32, String)> {
         r.carpeta.display()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod pruebas_producir {
+    use super::*;
+    #[test]
+    fn fallo_outlook_conserva_eml_continua_word_y_reintento_no_duplica_guardados() {
+        let temp = tempfile::tempdir().unwrap();
+        let origen = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx");
+        let t = cargar(&origen, Some(Etapa::Espera), None, "2026-10-08".parse().unwrap(), &Config::default()).unwrap().remove(0);
+        let mut contactos = flow_productos::correos::Contactos::default();
+        for f in &t.filas {
+            contactos.programas.insert(f.registro.texto("programa"), "ficticio@example.invalid".into());
+        }
+        for t in ["LAJA", "MULCHEN", "TOME"] {
+            contactos.tribunales.insert(t.into(), "ficticio@example.invalid".into());
+        }
+        let n = std::cell::Cell::new(0);
+        let guardar = |_: &flow_productos::correos::Borrador| {
+            n.set(n.get() + 1);
+            if n.get() == 2 {
+                Err("Fallo ficticio al adjuntar".into())
+            } else {
+                Ok(flow_outlook::Resultado::Guardado)
+            }
+        };
+        let datos = temp.path().join("datos");
+        let r = producir_interno(&t, temp.path(), "FAE", &contactos, Some((&datos, &guardar)), None).unwrap();
+        let primero = n.get();
+        assert!(primero >= 3);
+        assert!(r.creados.iter().any(|s| s.contains(".eml")));
+        assert!(r.creados.iter().any(|s| s.contains(".docx")));
+        assert!(r.pendientes.iter().any(|s| s.contains("Fallo ficticio al adjuntar")));
+        assert!(r.carpeta.join("Productos.json").is_file());
+        let r2 = producir_interno(&t, temp.path(), "FAE", &contactos, Some((&datos, &guardar)), None).unwrap();
+        assert_eq!(n.get(), primero + 1);
+        assert!(r2.creados.iter().any(|s| s.contains("no se duplicó")));
+    }
 }

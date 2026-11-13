@@ -387,8 +387,25 @@ pub fn ejecutar(
                     if lote.evidencia && !resumen.archivos.iter().any(|a| a.consulta == indice && a.nombre.ends_with(".pdf")) {
                         cancelado(cancelar)?;
                         let pdf = evidencia(conexion, &pares, &perfil, &contexto(s, catalogo, lote.fechas.as_ref()))?;
-                        let nombre = format!("consulta-{:03}-SIN-REGISTROS.pdf", indice + 1);
+                        let base = format!("consulta-{:03}-SIN-REGISTROS", indice + 1);
+                        let mut nombre = format!("{base}.pdf");
+                        let mut recuperadas = 0;
+                        // La evidencia huérfana no tiene un checkpoint que acredite su consulta. Se conserva
+                        // y se crea otra copia verificada con nombre libre, sin quedar bloqueados al retomar.
+                        while ruta_archivo(carpeta, &nombre)?.try_exists().map_err(|_| "No se pudo comprobar la evidencia local.")? {
+                            recuperadas += 1;
+                            if recuperadas > 100 {
+                                return Err("Demasiadas evidencias sin checkpoint; elija otro lote.".into());
+                            }
+                            nombre = format!("{base}-recuperada-{recuperadas}.pdf");
+                        }
                         exclusivo(&ruta_archivo(carpeta, &nombre)?, &pdf)?;
+                        if recuperadas > 0 {
+                            resumen.avisos.push(format!(
+                                "Consulta {}: se creó una evidencia nueva; la copia anterior sin checkpoint se conservó.",
+                                indice + 1
+                            ));
+                        }
                         resumen.archivos.push(Archivo {
                             nombre,
                             sha256: huella(&pdf),
@@ -397,8 +414,11 @@ pub fn ejecutar(
                             total: 1,
                             registros: 0,
                         });
+                        resumen.guardar(carpeta)?;
                     }
-                    resumen.vacias.push(indice);
+                    if !resumen.vacias.contains(&indice) {
+                        resumen.vacias.push(indice);
+                    }
                 }
                 Respuesta::ConRegistros(primera) => {
                     let mut verificador = VerificadorDescargas::default();

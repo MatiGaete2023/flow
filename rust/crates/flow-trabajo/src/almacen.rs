@@ -24,12 +24,40 @@ fn sesiones(datos: &Path) -> PathBuf {
     datos.join("sesiones")
 }
 
+fn ruta_sesion(datos: &Path, trabajo: &Trabajo) -> PathBuf {
+    sesiones(datos).join(format!(
+        "{}_{}_{}.json",
+        trabajo.corte.format("%Y%m%d"),
+        trabajo.nombre(),
+        &trabajo.sha256[..12.min(trabajo.sha256.len())]
+    ))
+}
+/// Recupera la sesión del mismo origen y corte antes de activar un análisis recién abierto.
+/// Un archivo dañado o una colisión de nombre detienen la apertura y conservan la copia anterior.
+pub fn recuperar(datos: &Path, nuevo: &Trabajo) -> Result<Option<Trabajo>, String> {
+    let ruta = ruta_sesion(datos, nuevo);
+    if !ruta.try_exists().map_err(|_| "No se pudo comprobar la sesión anterior; no se reemplazará.")? {
+        return Ok(None);
+    }
+    let anterior = cargar(&ruta)?;
+    if anterior.sha256 != nuevo.sha256
+        || anterior.corte != nuevo.corte
+        || anterior.etapa != nuevo.etapa
+        || anterior.fuente != nuevo.fuente
+        || anterior.hoja != nuevo.hoja
+        || anterior.cabeceras != nuevo.cabeceras
+        || anterior.filas.iter().map(|f| &f.id).ne(nuevo.filas.iter().map(|f| &f.id))
+    {
+        return Err("Existe una sesión distinta con el mismo nombre. Consérvela antes de volver a analizar; no se reemplazó.".into());
+    }
+    Ok(Some(anterior))
+}
+
 /// Guarda el trabajo como sesión. El nombre depende del origen y del corte: volver a guardar reemplaza la misma.
 pub fn guardar(datos: &Path, trabajo: &Trabajo) -> Result<PathBuf, String> {
     let carpeta = sesiones(datos);
     std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear la carpeta de sesiones: {e}"))?;
-    let nombre = format!("{}_{}_{}.json", trabajo.corte.format("%Y%m%d"), trabajo.nombre(), &trabajo.sha256[..12.min(trabajo.sha256.len())]);
-    let destino = carpeta.join(nombre);
+    let destino = ruta_sesion(datos, trabajo);
     let temporal = destino.with_extension("json.tmp");
     let texto = serde_json::to_string(trabajo).map_err(|e| e.to_string())?;
     std::fs::write(&temporal, texto).map_err(|e| format!("No se pudo guardar la sesión: {e}"))?;

@@ -20,16 +20,16 @@ cd rust && cargo test --workspace
 - Antes de cada commit: `python3 tools/check_real_ids.py --stage && python3 tools/check_contactos.py --stage`.
 - Commits pequeños, mensaje en español, push a `origin rust/producto`.
 
-### Punto de continuación (12-nov-2026)
+### Punto de continuación (13-nov-2026)
 
 - Revisión de las tres ramas: `informe/migracion-rust` (`86fba39`) es antecesora de `plan/proyecto-rust`
   (`ef97158`), y ambas están contenidas en `rust/producto`. No hay trabajo divergente que integrar.
 - Último avance anterior a esta continuación: `050a425` (8.1 y 8.2 terminados; CI Linux/Windows PASA).
-- **Foco activo: 8.4, pruebas de uso real en Windows por el usuario.** 8.3a/b
-  implementados: regeneración desde `Registros.xlsx` y estilos de plantilla XLSX
-  opcional en los cuatro informes. La CI de Linux y las pruebas ficticias de
-  captura aprobaron la implementación de 8.3b. La verificación Windows final
-  se obtiene del workflow de la rama. La aceptación no puede simularse.
+- **Foco activo: revisión funcional del 13-nov y verificación final de entrega.** Se incorporó la base remota
+  `0e56732` (META4, regeneración y plantillas; CI 43308319894 aprobada en Linux y Windows).
+  Se corrigen los diez hallazgos reportados por el usuario, con pruebas sintéticas de regresión y recibos de
+  Outlook persistidos. Detalle: `REVISION_20261113.md`. El paso 8.4 sigue siendo la prueba del usuario en su
+  equipo y perfil reales; no puede sustituirse por CI ni marcarse aceptado automáticamente.
 - Instrucción actual del usuario: continuar sobre la misma parte y sin ramas nuevas. Trabajar directamente en
   `rust/producto`; la convención antigua de una rama por fase del plan general queda sustituida para este trabajo.
 - Objetivo ampliado vigente: terminar todos los pasos y pruebas y dejar un producto listo para usar. Tras 7.4,
@@ -447,3 +447,10 @@ guardar el código de conexión, y cualquier escritura en RUS.
   en hojas modelo. Se verifica igualdad de todos los valores y hojas antes/después de
   aplicar estilos y se rechaza una salida parcial. Consola y pestaña actualizadas.
   Pruebas ficticias en Linux PASA; solo 8.4 depende del uso real y decisión del usuario.
+
+- 2026-11-13: incorporada la revisión funcional de diez hallazgos sobre `0e56732`: límites de ventana y alcance
+  parcial en META4; consultas auxiliares sin productos de gestión; Outlook con recibos previos/posteriores,
+  exclusión de guardados e inciertos en reintentos, bloqueo entre procesos y respaldo .eml en consola; contactos
+  protegidos ante errores y guardados atómicos; PDF huérfano recuperable; avisos por página; apertura de Excel
+  recupera la sesión editada; caché única de plantillas. Regresiones y límites en `REVISION_20261113.md`.
+  Se conservaron los avances remotos de regeneración y plantillas; no se añadieron ramas ni se modificó Python.

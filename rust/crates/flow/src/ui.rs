@@ -41,6 +41,7 @@ struct App {
     datos: PathBuf,
     ajustes: Ajustes,
     contactos: Contactos,
+    contactos_error: Option<String>,
     motor: Config,
     trabajo: Option<Trabajo>,
     /// Otras etapas del mismo archivo (un paquete o un consolidado traen varias).
@@ -55,6 +56,7 @@ struct App {
     modalidades: Vec<(String, bool)>,
     otra_modalidad: String,
     borradores: Vec<Borrador>,
+    estados_borradores: std::collections::BTreeMap<usize, crate::borradores::Estado>,
     proyectos: Vec<word::Proyecto>,
     resultados: Vec<String>,
     carpeta: Option<PathBuf>,
@@ -104,12 +106,14 @@ impl App {
     fn con_datos(datos: PathBuf, archivo: Option<PathBuf>) -> Self {
         let _ = std::fs::create_dir_all(&datos);
         almacen::aplicar_retencion(&datos, std::time::SystemTime::now());
-        let ajustes = std::fs::read_to_string(ruta_ajustes(&datos))
-            .ok()
-            .and_then(|t| serde_json::from_str(&t).ok())
-            .unwrap_or_default();
+        let ajustes = std::fs::read_to_string(ruta_ajustes(&datos)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+        let (contactos, contactos_error) = match Contactos::cargar(&ruta_contactos(&datos)) {
+            Ok(c) => (c, None),
+            Err(e) => (Contactos::default(), Some(e)),
+        };
         let mut app = App {
-            contactos: Contactos::cargar(&ruta_contactos(&datos)),
+            contactos,
+            contactos_error: contactos_error.clone(),
             datos,
             ajustes,
             motor: Config::default(),
@@ -125,10 +129,11 @@ impl App {
             modalidades: correos::modalidades_base().into_iter().map(|m| (m, false)).collect(),
             otra_modalidad: String::new(),
             borradores: Vec::new(),
+            estados_borradores: Default::default(),
             proyectos: Vec::new(),
             resultados: Vec::new(),
             carpeta: None,
-            mensaje: None,
+            mensaje: contactos_error.map(|e| (true, e)),
             outlook: flow_outlook::disponible(),
             nuevo: Default::default(),
             ayuda: false,
@@ -155,18 +160,45 @@ impl App {
         fecha_de_texto(&self.corte)
     }
 
+    fn recuperar_trabajos(&mut self, trabajos: &mut [Trabajo]) -> Result<usize, String> {
+        let mut recuperados = 0;
+        for trabajo in trabajos {
+            if let Some(anterior) = almacen::recuperar(&self.datos, trabajo)? {
+                *trabajo = anterior;
+                recuperados += 1;
+            }
+        }
+        Ok(recuperados)
+    }
     fn cargar(&mut self, ruta: PathBuf) {
+        self.cargar_modo(ruta, false);
+    }
+    fn cargar_modo(&mut self, ruta: PathBuf, reanalizar: bool) {
         let Some(corte) = self.fecha_corte() else {
             return self.mal("La fecha de corte no se entiende. Usa dd/mm/aaaa.");
         };
         match cli::cargar(&ruta, self.etapa, None, corte, &self.motor) {
             Ok(mut trabajos) => {
+                if !self.guardar_sesion() {
+                    return;
+                }
+                let recuperados = if reanalizar {
+                    0
+                } else {
+                    match self.recuperar_trabajos(&mut trabajos) {
+                        Ok(n) => n,
+                        Err(e) => return self.mal(e),
+                    }
+                };
                 let trabajo = trabajos.remove(0);
                 let mut texto =
                     format!("{}: {} registros, {} con observación.", trabajo.nombre(), trabajo.filas.len(), trabajo.con_observacion());
                 if !trabajos.is_empty() {
                     let nombres: Vec<&str> = trabajos.iter().map(|t| t.nombre()).collect();
                     texto.push_str(&format!(" El archivo trae además: {}.", nombres.join(", ")));
+                }
+                if recuperados > 0 {
+                    texto.push_str(" Se recuperaron las ediciones y marcas de la sesión guardada.");
                 }
                 self.activar(trabajo);
                 self.otros = trabajos;
@@ -184,6 +216,7 @@ impl App {
         self.seleccion = (!trabajo.filas.is_empty()).then_some(0);
         self.trabajo = Some(trabajo);
         self.borradores.clear();
+        self.estados_borradores.clear();
         self.proyectos.clear();
         self.carpeta = None;
     }
@@ -222,7 +255,12 @@ impl App {
             self.pestana = Pestana::Resultados;
             return self.bien("Las consultas están verificadas en la carpeta del lote. No traen tablas de intervención para analizar.");
         }
-        self.guardar_sesion();
+        if !self.guardar_sesion() {
+            return;
+        }
+        if let Err(e) = self.recuperar_trabajos(&mut trabajos) {
+            return self.mal(e);
+        }
         let actual = trabajos.remove(0);
         self.activar(actual);
         self.otros = trabajos;
@@ -232,14 +270,15 @@ impl App {
         self.bien("Captura cargada. Revisa las observaciones antes de preparar los productos.");
     }
 
-    fn guardar_sesion(&mut self) {
+    fn guardar_sesion(&mut self) -> bool {
         if let Some(t) = &self.trabajo {
             if let Err(e) = almacen::guardar(&self.datos, t) {
                 self.mal(e);
-            } else {
-                self.sin_guardar = false;
+                return false;
             }
         }
+        self.sin_guardar = false;
+        true
     }
 
     fn reanudar(&mut self) {
@@ -310,6 +349,9 @@ impl App {
     }
 
     fn preparar_borradores(&mut self) {
+        if self.trabajo.as_ref().is_some_and(|t| t.fuente.is_some()) {
+            return self.mal("Esta consulta auxiliar no genera borradores ni proyectos de resolución.");
+        }
         let Some(carpeta) = self.carpeta_productos() else { return };
         let Some(trabajo) = &self.trabajo else { return };
         let opciones = correos::Opciones { modalidades: self.texto_modalidades(), hoy: Some(flow_tabular::libro::hoy()) };
@@ -335,50 +377,81 @@ impl App {
             )
         };
         self.borradores = lista;
+        self.estados_borradores.clear();
         self.bien(texto);
     }
 
     /// Guarda los borradores listos. En Outlook quedan en Borradores; si no, como archivos .eml sin enviar.
     fn guardar_borradores(&mut self, en_outlook: bool) {
-        let Some(carpeta) = self.carpeta_productos() else { return };
-        let mut hechos = 0;
+        self.guardar_borradores_con(en_outlook, &flow_outlook::guardar_borrador);
+    }
+    fn guardar_borradores_con(&mut self, en_outlook: bool, guardar: &dyn Fn(&Borrador) -> Result<flow_outlook::Resultado, String>) {
+        let Some(carpeta) = self.carpeta_productos() else {
+            return;
+        };
+        let (mut hechos, mut ya_guardados, mut aprendidos) = (0, 0, 0);
         let mut problemas = Vec::new();
-        let mut aprendidos = 0;
-        for b in self.borradores.iter().filter(|b| !b.omitido) {
+        for (i, b) in self.borradores.iter().enumerate().filter(|(_, b)| !b.omitido) {
             let quien = if b.programa.is_empty() { b.tribunal.clone() } else { b.programa.clone() };
             if !b.faltantes().is_empty() {
                 problemas.push(format!("{quien}: falta {}", b.faltantes().join(", ")));
                 continue;
             }
-            let resultado = if en_outlook {
-                flow_outlook::guardar_borrador(b).map(|r| match r {
-                    flow_outlook::Resultado::Guardado => format!("Borrador en Outlook · {} → {quien}", b.asunto),
-                    flow_outlook::Resultado::Incierto(m) => format!("REVISAR en Outlook · {quien}: {m}"),
-                })
-            } else {
-                correos::guardar_eml(b, &carpeta.join("correos")).map(|r| format!("Borrador .eml · {}", r.display()))
-            };
-            match resultado {
-                Ok(linea) => {
-                    hechos += 1;
-                    self.resultados.push(linea);
-                    // Dirección escrita a mano para un programa sin contacto: se recuerda para el próximo lote.
-                    if !b.programa.is_empty() && self.contactos.de_programa(&b.programa).is_empty() {
-                        self.contactos.programas.insert(b.programa.clone(), correos::direcciones(&b.para).join("; "));
-                        aprendidos += 1;
+            let linea = if en_outlook {
+                match crate::borradores::ejecutar(&self.datos, b, guardar) {
+                    crate::borradores::Resultado::Guardado => {
+                        self.estados_borradores.insert(i, crate::borradores::Estado::Guardado);
+                        format!("Borrador en Outlook · {} → {quien}", b.asunto)
+                    }
+                    crate::borradores::Resultado::YaGuardado => {
+                        self.estados_borradores.insert(i, crate::borradores::Estado::Guardado);
+                        ya_guardados += 1;
+                        continue;
+                    }
+                    crate::borradores::Resultado::Incierto(m) => {
+                        self.estados_borradores.insert(i, crate::borradores::Estado::Incierto);
+                        problemas.push(format!("{quien}: guardado incierto. {m}"));
+                        self.resultados.push(format!("REVISAR en Outlook · {quien}: {m}"));
+                        continue;
+                    }
+                    crate::borradores::Resultado::Bloqueado(e) => {
+                        self.estados_borradores.remove(&i);
+                        problemas.push(format!("{quien}: no se intentó guardar. {e}"));
+                        continue;
+                    }
+                    crate::borradores::Resultado::Fallido(e) => {
+                        self.estados_borradores.insert(i, crate::borradores::Estado::NoGuardado);
+                        problemas.push(format!("{quien}: {e}"));
+                        continue;
                     }
                 }
-                Err(e) => problemas.push(format!("{quien}: {e}")),
+            } else {
+                match correos::guardar_eml(b, &carpeta.join("correos")) {
+                    Ok(p) => format!("Borrador .eml · {}", p.display()),
+                    Err(e) => {
+                        problemas.push(format!("{quien}: {e}"));
+                        continue;
+                    }
+                }
+            };
+            hechos += 1;
+            self.resultados.push(linea);
+            if self.contactos_error.is_none() && !b.programa.is_empty() && self.contactos.de_programa(&b.programa).is_empty() {
+                self.contactos.programas.insert(b.programa.clone(), correos::direcciones(&b.para).join("; "));
+                aprendidos += 1;
             }
         }
         if aprendidos > 0 {
-            let _ = self.contactos.guardar(&ruta_contactos(&self.datos));
+            if let Err(e) = self.contactos.guardar(&ruta_contactos(&self.datos)) {
+                problemas.push(e);
+            }
         }
         let destino = if en_outlook { "en Borradores de Outlook" } else { "como archivos .eml" };
+        let resumen = format!("{hechos} guardados {destino}; {ya_guardados} ya estaban guardados y se omitieron.");
         if problemas.is_empty() {
-            self.bien(format!("{hechos} borradores guardados {destino}. Ninguno fue enviado."));
+            self.bien(format!("{resumen} Ninguno fue enviado."));
         } else {
-            self.mal(format!("{hechos} guardados {destino}. Pendientes: {}.", problemas.join("; ")));
+            self.mal(format!("{resumen} Pendientes: {}.", problemas.join("; ")));
         }
     }
 
@@ -431,7 +504,7 @@ impl App {
             });
             if self.archivo.is_some() && ui.button("Volver a analizar").on_hover_text("Descarta las ediciones").clicked() {
                 let ruta = self.archivo.clone().unwrap();
-                self.cargar(ruta);
+                self.cargar_modo(ruta, true);
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("Ayuda (F1)").clicked() {
@@ -456,6 +529,12 @@ impl App {
     }
 
     fn pie(&mut self, ui: &mut egui::Ui) {
+        if self.contactos_error.is_some() {
+            ui.colored_label(
+                Color32::from_rgb(190, 40, 40),
+                "Contactos no disponibles: revise la pestaña Contactos. El archivo anterior se conserva.",
+            );
+        }
         ui.horizontal_wrapped(|ui| {
             match &self.mensaje {
                 Some((true, texto)) => ui.colored_label(Color32::from_rgb(190, 40, 40), texto),
@@ -692,6 +771,7 @@ impl App {
             }
         });
         ui.separator();
+        let mut aviso_recibo: Option<Result<String, String>> = None;
         egui::ScrollArea::vertical().show(ui, |ui| {
             for (i, b) in self.borradores.iter_mut().enumerate() {
                 let quien = if b.programa.is_empty() { b.tribunal.clone() } else { format!("{} · {}", b.programa, b.tribunal) };
@@ -706,18 +786,71 @@ impl App {
                 );
                 egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).show(ui, |ui| {
                     ui.checkbox(&mut b.omitido, "No guardar este borrador");
+                    let mut editado = false;
                     egui::Grid::new(("campos", i)).num_columns(2).show(ui, |ui| {
                         ui.label("Para");
-                        ui.add(egui::TextEdit::singleline(&mut b.para).desired_width(520.0).hint_text("correo del destinatario"));
+                        editado |= ui
+                            .add(egui::TextEdit::singleline(&mut b.para).desired_width(520.0).hint_text("correo del destinatario"))
+                            .changed();
                         ui.end_row();
                         ui.label("CC");
                         ui.label(&b.cc).on_hover_text("El CC fijo va en todos los correos y no se puede quitar.");
                         ui.end_row();
                         ui.label("Asunto");
-                        ui.add(egui::TextEdit::singleline(&mut b.asunto).desired_width(520.0));
+                        editado |= ui.add(egui::TextEdit::singleline(&mut b.asunto).desired_width(520.0)).changed();
                         ui.end_row();
                     });
-                    ui.add(egui::TextEdit::multiline(&mut b.cuerpo).desired_width(f32::INFINITY).desired_rows(6));
+                    editado |= ui.add(egui::TextEdit::multiline(&mut b.cuerpo).desired_width(f32::INFINITY).desired_rows(6)).changed();
+                    if editado {
+                        self.estados_borradores.remove(&i);
+                    }
+                    if ui.small_button("Consultar recibo local de Outlook").clicked() {
+                        match crate::borradores::estado(&self.datos, b) {
+                            Ok(Some(e)) => {
+                                self.estados_borradores.insert(i, e);
+                            }
+                            Ok(None) => {
+                                self.estados_borradores.remove(&i);
+                                aviso_recibo = Some(Ok("Sin guardado previo de este borrador.".into()));
+                            }
+                            Err(e) => aviso_recibo = Some(Err(e)),
+                        }
+                    }
+                    if let Some(estado) = self.estados_borradores.get(&i).copied() {
+                        match estado {
+                            crate::borradores::Estado::Guardado => {
+                                ui.label("Guardado en Outlook; un nuevo clic no lo duplica.");
+                            }
+                            crate::borradores::Estado::NoGuardado => {
+                                ui.label("No guardado; puede reintentar o crear una copia .eml.");
+                            }
+                            _ => {
+                                ui.colored_label(
+                                    Color32::from_rgb(190, 40, 40),
+                                    "Guardado incierto: compruebe personalmente la carpeta Borradores de Outlook.",
+                                );
+                                for (existe, etiqueta) in
+                                    [(true, "Comprobé que está en Outlook"), (false, "Comprobé que no está; permitir reintento")]
+                                {
+                                    if ui.small_button(etiqueta).clicked() {
+                                        match crate::borradores::resolver(&self.datos, b, existe) {
+                                            Ok(()) => {
+                                                self.estados_borradores.insert(
+                                                    i,
+                                                    if existe {
+                                                        crate::borradores::Estado::Guardado
+                                                    } else {
+                                                        crate::borradores::Estado::NoGuardado
+                                                    },
+                                                );
+                                            }
+                                            Err(e) => aviso_recibo = Some(Err(e)),
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     for adjunto in &b.adjuntos {
                         ui.horizontal(|ui| {
                             ui.label(format!("Adjunto: {}", adjunto.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()));
@@ -729,6 +862,12 @@ impl App {
                 });
             }
         });
+        if let Some(aviso) = aviso_recibo {
+            match aviso {
+                Ok(s) => self.bien(s),
+                Err(e) => self.mal(e),
+            }
+        }
         if preparar {
             self.preparar_borradores();
         }
@@ -830,6 +969,21 @@ impl App {
     }
 
     fn vista_contactos(&mut self, ui: &mut egui::Ui) {
+        if let Some(error) = &self.contactos_error {
+            ui.colored_label(Color32::from_rgb(190, 40, 40), error);
+            ui.label("El archivo de contactos permanece intacto. Corríjalo o recupere una copia y pulse Releer.");
+            if ui.button("Releer contactos").clicked() {
+                match Contactos::cargar(&ruta_contactos(&self.datos)) {
+                    Ok(c) => {
+                        self.contactos = c;
+                        self.contactos_error = None;
+                        self.bien("Contactos recuperados.");
+                    }
+                    Err(e) => self.contactos_error = Some(e),
+                }
+            }
+            return;
+        }
         let mut guardar = false;
         ui.label("Estas direcciones se guardan solo en este equipo.");
         ui.add_space(4.0);
@@ -940,7 +1094,11 @@ impl eframe::App for App {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.captura.cerrar();
         self.guardar_sesion();
-        let _ = self.contactos.guardar(&ruta_contactos(&self.datos));
+        if self.contactos_error.is_none() {
+            if let Err(e) = self.contactos.guardar(&ruta_contactos(&self.datos)) {
+                eprintln!("{e}");
+            }
+        }
     }
 }
 
@@ -1044,6 +1202,90 @@ mod pruebas_captura {
         assert!(app.trabajo.is_none());
         assert!(app.mensaje.as_ref().is_some_and(|(error, _)| *error));
         assert!(almacen::listar(&app.datos).is_empty());
+        std::fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn abrir_el_mismo_excel_recupera_ediciones_y_marcas() {
+        let (base, _) = preparar();
+        let datos = base.join("datos");
+        let archivo = base.join("consulta-001-p001-de-001.xls");
+        let mut app = App::con_datos(datos.clone(), None);
+        app.corte = "08/10/2026".into();
+        app.cargar(archivo.clone());
+        let t = app.trabajo.as_mut().unwrap();
+        t.filas[0].observacion = "Edición ficticia conservada".into();
+        t.filas[0].revisada = true;
+        assert!(app.guardar_sesion());
+        let mut nueva = App::con_datos(datos, None);
+        nueva.corte = "08/10/2026".into();
+        nueva.cargar(archivo);
+        let t = nueva.trabajo.as_ref().unwrap();
+        assert_eq!(t.filas[0].observacion, "Edición ficticia conservada");
+        assert!(t.filas[0].revisada);
+        std::fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn contacto_y_sesion_danados_se_conservan_al_abrir_y_cerrar() {
+        let (base, _) = preparar();
+        let datos = base.join("datos");
+        std::fs::create_dir(&datos).unwrap();
+        let contactos = datos.join("contactos.json");
+        std::fs::write(&contactos, b"incompleto ficticio").unwrap();
+        let mut app = App::con_datos(datos.clone(), None);
+        assert!(app.contactos_error.is_some());
+        eframe::App::on_exit(&mut app, None);
+        assert_eq!(std::fs::read(&contactos).unwrap(), b"incompleto ficticio");
+        let archivo = base.join("consulta-001-p001-de-001.xls");
+        app.corte = "08/10/2026".into();
+        app.cargar(archivo.clone());
+        let ruta = almacen::listar(&datos)[0].0.clone();
+        std::fs::write(&ruta, b"sesion incompleta ficticia").unwrap();
+        let mut nueva = App::con_datos(datos, None);
+        nueva.corte = "08/10/2026".into();
+        nueva.cargar(archivo);
+        assert!(nueva.trabajo.is_none());
+        assert_eq!(std::fs::read(ruta).unwrap(), b"sesion incompleta ficticia");
+        std::fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    fn guardado_incierto_no_cuenta_como_exito_y_un_segundo_clic_no_duplica() {
+        let (base, resumen) = preparar();
+        let mut app = App::con_datos(base.join("datos"), None);
+        app.corte = "08/10/2026".into();
+        app.importar_captura(base.clone(), resumen);
+        let salida = base.join("salida");
+        std::fs::create_dir(&salida).unwrap();
+        app.ajustes.salida = Some(salida);
+        app.borradores = (0..4)
+            .map(|i| Borrador {
+                tipo: Tipo::Informativo,
+                tribunal: "Laja".into(),
+                programa: String::new(),
+                para: "ficticio@example.invalid".into(),
+                cc: CC_FIJO.into(),
+                asunto: format!("Asunto ficticio {i}"),
+                cuerpo: "Texto ficticio".into(),
+                adjuntos: vec![],
+                filas: vec![format!("fila-{i}")],
+                omitido: false,
+            })
+            .collect();
+        let n = std::cell::Cell::new(0);
+        let guardar = |b: &Borrador| {
+            n.set(n.get() + 1);
+            if b.asunto.ends_with('2') {
+                Ok(flow_outlook::Resultado::Incierto("Fallo ficticio de confirmación".into()))
+            } else {
+                Ok(flow_outlook::Resultado::Guardado)
+            }
+        };
+        app.guardar_borradores_con(true, &guardar);
+        assert_eq!(n.get(), 4);
+        assert!(app.mensaje.as_ref().is_some_and(|(error, s)| *error && s.starts_with("3 guardados")));
+        app.guardar_borradores_con(true, &guardar);
+        assert_eq!(n.get(), 4);
+        assert!(app.mensaje.as_ref().is_some_and(|(error, s)| *error && s.contains("3 ya estaban guardados")));
+        assert_eq!(app.estados_borradores[&2], crate::borradores::Estado::Incierto);
         std::fs::remove_dir_all(base).unwrap();
     }
 }

@@ -70,23 +70,41 @@ fn lote(carpeta: &Path, capturada: &str) -> Resumen {
     let v3 = vinculo("X-3-2099", "33333333-1", "EMILIA TORO", "=RES con signo igual", "203");
     r.paginas_lectura.push(Pagina { consulta: 0, numero: 1, vinculos: vec![v1.clone(), v2.clone(), v3] });
     let entradas = [
-        (&v1, "Pérez Soto Sofía", json!([
+        (
+            &v1,
+            "Pérez Soto Sofía",
+            json!([
             {"entry_id":"1","fecha":"2026-10-05T10:00:00","etapa":"Cumplimiento","tipo":"Al tribunal","texto":"Observación ficticia uno"},
             {"entry_id":"2","fecha":"2026-10-12T09:30:00","etapa":"Espera","tipo":"Al tribunal","texto":"Observación ficticia dos"},
-            {"entry_id":"3","fecha":"2026-08-01T09:30:00","etapa":"Cumplimiento","tipo":"Al tribunal","texto":"Fuera del período"}])),
-        (&v2, "Matías Rojas Díaz", json!([
+            {"entry_id":"3","fecha":"2026-08-01T09:30:00","etapa":"Cumplimiento","tipo":"Al tribunal","texto":"Fuera del período"}]),
+        ),
+        (
+            &v2,
+            "Matías Rojas Díaz",
+            json!([
             {"entry_id":"4","fecha":"2026-10-08T11:00:00","etapa":"Cumplimiento","tipo":"Al tribunal","texto":"Observación ficticia tres"},
-            {"entry_id":"5","fecha":"2026-10-14T11:00:00","etapa":"Informes","tipo":"Al tribunal","texto":"De informes, no participa"}])),
+            {"entry_id":"5","fecha":"2026-10-14T11:00:00","etapa":"Informes","tipo":"Al tribunal","texto":"De informes, no participa"}]),
+        ),
     ];
     for (n, (v, persona, entries)) in entradas.into_iter().enumerate() {
         let clave = recoleccion::clave("bitacora", v);
-        let datos = json!({"rit": v.rit, "persona": persona, "entries": entries});
+        let hasta = chrono::DateTime::parse_from_rfc3339(capturada).unwrap().with_timezone(&chrono::Local).date_naive();
+        let desde = flow_meta4::periodo(hasta).0;
+        let datos = json!({"rit": v.rit, "persona": persona, "entries": entries,"desde":desde,"hasta":hasta});
         let bytes = serde_json::to_vec(&json!({"version":1,"tipo":"bitacora","clave":clave,"vinculo":v,"datos":datos})).unwrap();
         let archivo = format!("bitacora-{n}.json");
         std::fs::write(carpeta.join(&archivo), &bytes).unwrap();
         r.lecturas.push(Referencia {
-            tipo: "bitacora".into(), clave, archivo, sha256: huella(&bytes), capturada: capturada.into(), meses: 1,
-            tribunal: "901".into(), causa: v.causa.clone(), ingreso: v.ingreso.clone(), reutilizada: false,
+            tipo: "bitacora".into(),
+            clave,
+            archivo,
+            sha256: huella(&bytes),
+            capturada: capturada.into(),
+            meses: 1,
+            tribunal: "901".into(),
+            causa: v.causa.clone(),
+            ingreso: v.ingreso.clone(),
+            reutilizada: false,
         });
     }
     r.guardar(carpeta).unwrap();
@@ -121,7 +139,10 @@ fn calcula_fechas_alertas_y_controles() {
     assert_eq!(m.sin_bitacoras.len(), 1);
     let resumen = salida::resumen(&m);
     let total = resumen.last().unwrap();
-    assert_eq!((total["TOTAL REGISTROS"].as_i64(), total["ALERTAS"].as_i64(), total["REVISAR BITÁCORA"].as_i64()), (Some(4), Some(1), Some(2)));
+    assert_eq!(
+        (total["TOTAL REGISTROS"].as_i64(), total["ALERTAS"].as_i64(), total["REVISAR BITÁCORA"].as_i64()),
+        (Some(4), Some(1), Some(2))
+    );
     assert_eq!(resumen[0]["TRIBUNAL"], "LAJA");
 
     // Publicación: cinco archivos en carpeta nueva; no se sobrescribe.
@@ -167,6 +188,23 @@ fn lectura_anterior_al_corte_filtro_y_lotes_repetidos() {
     assert!(calcular(&[carpeta.clone()], dia("2026-10-14"), dia("2026-10-14"), &["Yumbel".into()]).is_err());
     let rutas = salida::publicar(&laja, &t.0.join("Parcial")).unwrap();
     assert!(rutas[0].to_string_lossy().ends_with("META 4 - actualizado 2026-10 - parcial.xlsx"));
+    assert!(laja.lecturas.is_empty(), "las lecturas de Tomé están fuera del filtro de Laja");
+    let libro = flow_tabular::leer(&t.0.join("Parcial").join("Bitacoras_del_mes.xlsx")).unwrap();
+    for h in libro.hojas {
+        for fila in h.filas {
+            for celda in fila {
+                let s = celda.texto();
+                assert!(
+                    !s.contains("X-1-2099")
+                        && !s.contains("SOFÍA")
+                        && !s.contains("TOMÉ")
+                        && !s.contains("RLP Hogar Ficticio")
+                        && !s.contains("c201")
+                );
+            }
+        }
+    }
+
     // La misma consulta en dos lotes se rechaza: duplicaría registros.
     let copia = t.0.join("Lote repetido");
     lote(&copia, "2026-10-14T15:00:00-03:00");
@@ -186,4 +224,54 @@ fn sin_observacion_en_el_mes_deja_la_fecha_vacia() {
     let sofia = m.registros.iter().find(|r| r.texto("RIT") == "X-1-2099").unwrap();
     assert_eq!((sofia.fecha_obs, sofia.control.as_str()), (None, SIN_OBSERVACION));
     assert!(sofia.alerta.is_empty());
+}
+
+#[test]
+fn lectura_posterior_al_corte_con_ventana_insuficiente_no_afirma_ausencia() {
+    let t = Temporal::nueva();
+    let carpeta = t.0.join("Lote ficticio");
+    lote(&carpeta, "2026-10-30T15:00:00-03:00");
+    let m = calcular(std::slice::from_ref(&carpeta), dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap();
+    let fila = m.registros.iter().find(|r| r.texto("RIT") == "X-1-2099").unwrap();
+    assert!(fila.fecha_obs.is_none());
+    assert_eq!(fila.control, flow_meta4::PERIODO_INCOMPLETO);
+    assert!(fila.etapa_ultima.is_empty());
+    assert!(m.avisos.iter().any(|s| s.contains("no cubren todo el período")));
+    assert!(m.observaciones.is_empty());
+    // Una ventana ausente tampoco permite afirmar que no hubo observaciones.
+    let mut resumen = Resumen::leer(&carpeta).unwrap();
+    for referencia in &mut resumen.lecturas {
+        let path = carpeta.join(&referencia.archivo);
+        let mut datos: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        datos["datos"].as_object_mut().unwrap().remove("desde");
+        let raw = serde_json::to_vec(&datos).unwrap();
+        std::fs::write(path, &raw).unwrap();
+        referencia.sha256 = huella(&raw);
+    }
+    resumen.guardar(&carpeta).unwrap();
+    let m = calcular(&[carpeta], dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap();
+    assert_eq!(m.registros[0].control, flow_meta4::PERIODO_INCOMPLETO);
+}
+#[test]
+fn cuatrocientos_cincuenta_calculos_coinciden_con_python() {
+    let casos: Vec<serde_json::Value> = serde_json::from_str(include_str!("datos/calculo_python.json")).unwrap();
+    for c in casos {
+        let corte = dia(c["corte"].as_str().unwrap());
+        assert_eq!(flow_meta4::periodo(corte).0.to_string(), c["desde"]);
+        let entradas = c["entradas"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| {
+                (
+                    chrono::NaiveDateTime::parse_from_str(e["fecha"].as_str().unwrap(), "%Y-%m-%dT%H:%M:%S").unwrap(),
+                    e["etapa"].as_str().unwrap().to_string(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let (fecha, etapa, control) = flow_meta4::ultima(&entradas, corte);
+        assert_eq!(fecha.map(|f| f.to_string()), c["fecha"].as_str().map(str::to_string));
+        assert_eq!(etapa, c["etapa"].as_str().unwrap_or(""));
+        assert_eq!(control, c["control"]);
+    }
 }
