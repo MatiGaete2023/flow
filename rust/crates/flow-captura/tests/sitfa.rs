@@ -150,7 +150,38 @@ fn radio_auditado_y_seleccion_ambigua() {
     let html = c.html.replace(original, radios);
     assert!(validar_respuesta(html.as_bytes(), &c.pares, &perfil(&c), None).is_ok());
     rechaza(&c, &html.replace("value='1'", "value='1' checked"));
-    rechaza(&c, &c.html.replace("selected>2", "selected>2</option><option value='3' selected>3"));
+    // Igual que el Descargador: con varias opciones marcadas vale la primera.
+    let dos = c.html.replace("selected>2", "selected>2</option><option value='3' selected>3");
+    assert!(validar_respuesta(dos.as_bytes(), &c.pares, &perfil(&c), None).is_ok());
+    rechaza(&c, &c.html.replace("<option value=\"2\" selected>2", "<option value='3' selected>3</option><option value=\"2\" selected>2"));
+}
+
+/// Estructuras que SITFA usa en listados grandes y que el Descargador acepta: título en `th`, cabecera en `thead`,
+/// paginación en `tfoot` y una tabla dentro de una celda. Antes Flow detenía el lote con
+/// «No se pudieron identificar todos los registros de la consulta.» o «tabla anidada no auditada».
+#[test]
+fn listado_con_titulo_pie_y_tabla_anidada_se_cuenta_como_el_descargador() {
+    let c = caso("seguimiento/Espera");
+    let esperado = pagina(&c).registros;
+    let cabecera = "<table id=\"tablaEspera\"><tr><td>RIT</td><td>Nombre</td></tr>";
+    assert!(c.html.contains(cabecera));
+    for reemplazo in [
+        "<table id=\"tablaEspera\"><tr><th colspan='2'>Listado de causas</th></tr><tr><td>RIT</td><td>Nombre</td></tr>",
+        "<table id=\"tablaEspera\"><thead><tr><td colspan='2'>Página 1 de 2</td></tr><tr><td>RIT</td><td>Nombre</td></tr></thead>",
+        "<table id=\"tablaEspera\"><tfoot><tr><td>Página</td><td><a>1</a> <a>2</a></td></tr></tfoot><tr><td>RIT</td><td>Nombre</td></tr>",
+    ] {
+        let html = c.html.replace(cabecera, reemplazo);
+        let Respuesta::ConRegistros(p) = validar_respuesta(html.as_bytes(), &c.pares, &perfil(&c), None).expect(reemplazo) else {
+            panic!("{reemplazo}")
+        };
+        assert_eq!(p.registros, esperado, "{reemplazo}");
+    }
+    // Tabla dentro de la celda de un registro (p. ej. íconos de acciones): su texto queda en la celda y no suma filas.
+    let anidada = c.html.replacen("<td>X-10-2099</td>", "<td>X-10-2099<table><tr><td></td></tr></table></td>", 1);
+    let Respuesta::ConRegistros(p) = validar_respuesta(anidada.as_bytes(), &c.pares, &perfil(&c), None).unwrap() else { panic!() };
+    assert_eq!(p.registros, esperado);
+    // Una fila de datos desconocida en el cuerpo sigue deteniendo la consulta: nunca se omite en silencio.
+    rechaza(&c, &c.html.replace(cabecera, &format!("{cabecera}<tr><td>Fila extraña</td><td>sin RIT</td></tr>")));
 }
 
 #[test]

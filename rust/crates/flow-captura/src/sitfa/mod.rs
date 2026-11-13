@@ -7,7 +7,7 @@ mod registros;
 
 pub use perfil::{Perfil, Seleccion};
 use perfil::{DESTINO, DESTINO_ABSOLUTO, PESTANAS};
-use registros::{clave, columnas, contar, grilla, normalizar, registro};
+use registros::{clave, columnas, contar, contar_listado, filas_de_datos, grilla, grilla_con_cuerpo, normalizar, registro};
 
 use chrono::Datelike;
 use flow_tabular::{leer_bytes, Libro};
@@ -74,14 +74,11 @@ fn campos(formulario: ElementRef<'_>) -> Result<BTreeMap<String, String>, Error>
         };
         let valor = match el.value().name() {
             "select" => {
-                let opciones: Vec<_> = el.select(&selector("option")).collect();
-                let marcadas: Vec<_> = opciones.iter().filter(|o| o.value().attr("selected").is_some()).collect();
-                if marcadas.len() > 1 {
-                    return Err("Formulario ambiguo: selector con varias opciones elegidas.".into());
-                }
-                marcadas
-                    .first()
-                    .copied()
+                // Como `fields_from_form` del Descargador: opciones hijas directas; la primera marcada o, si no hay, la primera.
+                let opciones: Vec<_> = el.children().filter_map(ElementRef::wrap).filter(|o| o.value().name() == "option").collect();
+                opciones
+                    .iter()
+                    .find(|o| o.value().attr("selected").is_some())
                     .or(opciones.first())
                     .map(|o| o.value().attr("value").unwrap_or("").to_string())
                     .unwrap_or_default()
@@ -108,7 +105,7 @@ fn plantilla_url<'a>(url: &'a str, perfil: &Perfil) -> Result<&'a str, Error> {
         return Err("El enlace Excel está fuera del sitio permitido.".into());
     }
     let nombre = url.rsplit('/').next().unwrap().strip_suffix(".xls").unwrap();
-    let plantilla = nombre.rsplit_once('_').map(|(_, p)| p).ok_or("El nombre Excel no se puede reconocer.")?;
+    let plantilla = nombre.rsplit_once('_').map_or(nombre, |(_, p)| p);
     if !plantilla.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
         || plantilla.is_empty() && !(perfil.pantalla == "seguimiento" && perfil.objetivo["TIP_Consulta"] == "4")
         || perfil.plantilla.is_some_and(|p| p != plantilla)
@@ -162,7 +159,7 @@ fn registros_calendario(raiz: &Html, scripts: &str) -> Result<Registros, Error> 
     }
     for id in ["TablaCalendarioSemana", "TablaCalendarioDia"] {
         let tablas: Vec<_> = raiz.select(&selector(&format!("table[id='{id}']"))).collect();
-        if tablas.len() != 1 || grilla(tablas[0])?.len() != valores[0].len() {
+        if tablas.len() != 1 || filas_de_datos(tablas[0])? != valores[0].len() {
             return Err("SITFA cambió la estructura del calendario.".into());
         }
     }
@@ -177,18 +174,18 @@ fn tabla_registros(form: ElementRef<'_>, perfil: &Perfil) -> Result<Registros, E
     let mut candidatas = Vec::new();
     for tabla in form.select(&selector("table")) {
         if perfil.pantalla == "litigantes" {
-            let filas = grilla(tabla)?;
-            if filas.iter().map(|f| columnas(f)).collect::<Result<Vec<_>, _>>()?.iter().any(Option::is_some) {
+            let filas = grilla_con_cuerpo(tabla)?;
+            if filas.iter().map(|(f, _)| columnas(f)).collect::<Result<Vec<_>, _>>()?.iter().any(Option::is_some) {
                 candidatas.push(filas);
             }
         } else if tabla.value().attr("id") == Some(perfil.tabla) {
-            candidatas.push(grilla(tabla)?);
+            candidatas.push(grilla_con_cuerpo(tabla)?);
         }
     }
     if candidatas.len() != 1 {
         return Err("No se encontró un único listado de la consulta seleccionada.".into());
     }
-    contar(&candidatas[0], true)
+    contar_listado(&candidatas[0])
 }
 
 /// Valida la página recibida. Para continuar se exige el número pedido y la primera página validada:
@@ -255,7 +252,7 @@ pub fn validar_respuesta(
             if perfil.pantalla == "seguimiento" && pestaña == Some("") {
                 for tabla in form.select(&selector("table")) {
                     if PESTANAS.iter().any(|t| t.4 != perfil.tabla && tabla.value().attr("id") == Some(t.4))
-                        && !contar(&grilla(tabla)?, true)?.is_empty()
+                        && !contar(&grilla(tabla)?)?.is_empty()
                     {
                         return Err("La respuesta vacía no coincide con la pestaña seleccionada.".into());
                     }
@@ -353,7 +350,7 @@ impl VerificadorDescargas {
             if filas.len() > 200_000 || filas.iter().any(|f| f.len() > 200) {
                 return Err("El Excel supera los límites de filas o columnas.".into());
             }
-            let registros = contar(&filas, false)?;
+            let registros = contar(&filas)?;
             if !registros.is_empty() {
                 candidatas.push((filas, registros));
             }

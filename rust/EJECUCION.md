@@ -479,3 +479,13 @@ guardar el código de conexión, y cualquier escritura en RUS.
   ahora muestra en segundos «Entra a Seguimiento…». Prueba nueva en `flow-captura/tests/lotes.rs`.
   **No reproducido con SITFA real**: si persiste, pedir al usuario el texto de la pestaña de conexión de Chrome.
 
+- 2026-11-13 · Captura «sin descargas» (resumen INCOMPLETA, sin archivos). Revisión contra `motor.py` del Descargador:
+  Flow era más estricto y detenía la consulta en estructuras que el Descargador acepta. Alineado en
+  `flow-captura::sitfa::{mod,registros}`: (1) el listado cuenta solo filas de datos del cuerpo
+  (`./tr[td] | ./tbody/tr[td]`); títulos en `th`, `thead` y paginación en `tfoot` ya no detienen el lote;
+  (2) tabla dentro de una celda: aporta su texto (antes «tabla anidada no auditada»); (3) calendario: coteja filas
+  de datos, no todas (antes la fila de encabezado provocaba «SITFA cambió la estructura del calendario»);
+  (4) selector con varias opciones marcadas: vale la primera; (5) Excel sin `_` en el nombre: plantilla = nombre;
+  (6) la comprobación de otras pestañas en respuesta vacía no es estricta. Se mantiene: una fila de datos
+  desconocida en el cuerpo detiene la consulta. Prueba nueva en `tests/sitfa.rs`. **No verificado con SITFA real**:
+  si persiste, pedir al usuario la línea «Lote detenido: …» del resumen.
