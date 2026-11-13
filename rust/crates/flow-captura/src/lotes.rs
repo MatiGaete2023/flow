@@ -505,6 +505,11 @@ pub fn ejecutar(
         _ => resumen.avisos.push("No se pudo confirmar la restauración de los filtros de SITFA. Revisa el formulario.".into()),
     }
     resumen.estado = if resultado.is_ok() { "VALIDADA" } else { "INCOMPLETA" }.into();
+    if let Err(e) = &resultado {
+        // El motivo queda en el avance del lote, no solo en pantalla. Todos los mensajes de este módulo son textos
+        // fijos del programa: no incluyen valores de SITFA ni datos de personas.
+        resumen.avisos.push(format!("Lote detenido: {e}"));
+    }
     resumen.guardar(carpeta)?;
     resultado?;
     Ok(resumen)
