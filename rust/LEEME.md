@@ -8,6 +8,19 @@ prepara el Excel de observaciones, los borradores de correo y los proyectos de r
 
 Estado: en desarrollo, **sin aceptación del usuario**. Ver [EJECUCION.md](EJECUCION.md).
 
+## Ejecutables
+
+El mismo programa se entrega con varios nombres; cada uno abre solo su herramienta:
+
+- `Flow_Asistente.exe`: Trabajo, Correos, Resoluciones, Resultados y Contactos (reemplaza a NuRus/CSMP).
+- `Flow_Descargador.exe`: captura desde SITFA con la extensión (carpeta `extension`).
+- `Flow_Anonimizador.exe`: copias con identidades ficticias.
+- `Flow_Meta4.exe`: planilla Meta 4 desde lotes del Descargador.
+- `flow.exe`: todo junto, con la Captura llevando los Excel directo a Trabajo.
+
+Si cambias el nombre del archivo, se abre según el nuevo nombre (sin «Asistente», «Descargador», «Anonimizador»
+ni «Meta4» abre todo). Las huellas SHA-256 están en `SHA256SUMS.txt`.
+
 ## Usar
 
 1. Abre `flow.exe`. (Windows puede avisar que el editor es desconocido: el archivo no está firmado.)

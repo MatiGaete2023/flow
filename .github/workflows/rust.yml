@@ -67,17 +67,47 @@ jobs:
         run: |
           & ./target/release/flow.exe ayuda | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "flow.exe no inició correctamente en Windows" }
-      - name: Huella del ejecutable
-        shell: pwsh
-        run: (Get-FileHash target/release/flow.exe -Algorithm SHA256).Hash | Out-File target/release/flow.exe.sha256
-      - name: Preparar carpeta de uso
+      - name: Preparar carpeta de uso (Flow completo y una copia por herramienta)
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path entrega | Out-Null
-          Copy-Item target/release/flow.exe, target/release/flow.exe.sha256, LEEME.md, GUIA_PRUEBAS_WINDOWS.md -Destination entrega
+          # El mismo programa abre solo la herramienta que indica el nombre del .exe.
+          foreach ($n in 'flow', 'Flow_Asistente', 'Flow_Descargador', 'Flow_Anonimizador', 'Flow_Meta4') {
+            Copy-Item target/release/flow.exe -Destination "entrega/$n.exe"
+          }
+          Get-ChildItem entrega/*.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" } | Out-File entrega/SHA256SUMS.txt
+          Copy-Item LEEME.md, GUIA_PRUEBAS_WINDOWS.md -Destination entrega
           Copy-Item extension -Destination entrega/extension -Recurse
+      - name: Herramientas sueltas para descargar por separado
+        shell: pwsh
+        run: |
+          foreach ($n in 'Asistente', 'Descargador', 'Anonimizador', 'Meta4') {
+            New-Item -ItemType Directory -Path "sueltas/$n" | Out-Null
+            Copy-Item "entrega/Flow_$n.exe", LEEME.md -Destination "sueltas/$n"
+          }
+          Copy-Item extension -Destination sueltas/Descargador/extension -Recurse
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Windows
           path: rust/entrega/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Asistente_Windows
+          path: rust/sueltas/Asistente/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Descargador_Windows
+          path: rust/sueltas/Descargador/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Anonimizador_Windows
+          path: rust/sueltas/Anonimizador/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Meta4_Windows
+          path: rust/sueltas/Meta4/
           retention-days: 14

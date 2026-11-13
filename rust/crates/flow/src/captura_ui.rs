@@ -24,6 +24,8 @@ enum Evento {
 }
 
 pub struct Captura {
+    /// Flow Descargador: solo descarga y verifica; no ofrece llevar los Excel a Trabajo.
+    pub independiente: bool,
     puente: Option<Arc<Puente>>,
     pantalla: String,
     catalogo: Option<Value>,
@@ -50,9 +52,17 @@ pub struct Captura {
     listo: Option<(PathBuf, Resumen)>,
 }
 
+impl Captura {
+    /// Mantiene disponible el lote terminado (el Descargador puede volver a abrir su carpeta).
+    pub fn listo_de_nuevo(&mut self, carpeta: std::path::PathBuf, resumen: flow_captura::lotes::Resumen) {
+        self.listo = Some((carpeta, resumen));
+    }
+}
+
 impl Default for Captura {
     fn default() -> Self {
         Self {
+            independiente: false,
             puente: None,
             pantalla: "seguimiento".into(),
             catalogo: None,
@@ -140,9 +150,14 @@ impl Captura {
                     match *r {
                         Ok(resumen) => {
                             self.mensaje = format!(
-                                "Lote terminado: {} consultas, {} sin registros. Puedes llevar los Excel a Trabajo.",
+                                "Lote terminado: {} consultas, {} sin registros. {}",
                                 resumen.terminadas.len(),
-                                resumen.vacias.len()
+                                resumen.vacias.len(),
+                                if self.independiente {
+                                    "Los Excel verificados quedaron en la carpeta del lote; ábrelos en Flow Asistente."
+                                } else {
+                                    "Puedes llevar los Excel a Trabajo."
+                                }
                             );
                             self.listo = Some((carpeta, resumen));
                         }
@@ -404,7 +419,12 @@ impl Captura {
             }
         });
         ui.label(&self.mensaje);
-        let llevar = self.listo.is_some() && ui.button("Llevar Excel verificados a Trabajo").clicked();
+        let llevar = self.listo.is_some()
+            && if self.independiente {
+                ui.button("Abrir carpeta del lote").clicked()
+            } else {
+                ui.button("Llevar Excel verificados a Trabajo").clicked()
+            };
         if self.puente.is_some() {
             ctx.request_repaint_after(Duration::from_millis(250));
         }

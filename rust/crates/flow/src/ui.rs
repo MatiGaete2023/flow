@@ -24,6 +24,68 @@ enum Pestana {
     Meta4,
 }
 
+/// Qué herramienta abre el ejecutable. Se decide por su nombre (`Flow_Descargador.exe`, …); `flow.exe` abre todas.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Herramienta {
+    Todas,
+    Asistente,
+    Descargador,
+    Anonimizador,
+    Meta4,
+}
+
+impl Herramienta {
+    pub fn desde_ejecutable(nombre: &str) -> Self {
+        let n = nombre.to_lowercase();
+        if n.contains("descargador") || n.contains("captura") {
+            Herramienta::Descargador
+        } else if n.contains("anonim") {
+            Herramienta::Anonimizador
+        } else if n.contains("meta4") || n.contains("meta_4") || n.contains("meta-4") {
+            Herramienta::Meta4
+        } else if n.contains("asistente") {
+            Herramienta::Asistente
+        } else {
+            Herramienta::Todas
+        }
+    }
+
+    pub fn titulo(self) -> &'static str {
+        match self {
+            Herramienta::Todas => "Flow",
+            Herramienta::Asistente => "Flow · Asistente",
+            Herramienta::Descargador => "Flow · Descargador",
+            Herramienta::Anonimizador => "Flow · Anonimizador",
+            Herramienta::Meta4 => "Flow · Meta 4",
+        }
+    }
+
+    fn pestanas(self) -> &'static [(Pestana, &'static str)] {
+        const TODAS: &[(Pestana, &str)] = &[
+            (Pestana::Captura, "Captura"),
+            (Pestana::Trabajo, "1 · Trabajo"),
+            (Pestana::Correos, "2 · Correos"),
+            (Pestana::Resoluciones, "3 · Resoluciones"),
+            (Pestana::Resultados, "4 · Resultados"),
+            (Pestana::Contactos, "Contactos"),
+            (Pestana::Anonimo, "Anonimizador"),
+            (Pestana::Meta4, "Meta 4"),
+        ];
+        match self {
+            Herramienta::Todas => TODAS,
+            Herramienta::Asistente => &TODAS[1..6],
+            Herramienta::Descargador => &TODAS[0..1],
+            Herramienta::Anonimizador => &TODAS[6..7],
+            Herramienta::Meta4 => &TODAS[7..8],
+        }
+    }
+
+    /// Las herramientas sueltas no analizan RUS: no muestran apertura de Excel, corte ni etapa.
+    fn analiza_rus(self) -> bool {
+        matches!(self, Herramienta::Todas | Herramienta::Asistente)
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Filtro {
     Todos,
@@ -38,6 +100,7 @@ struct Ajustes {
 }
 
 struct App {
+    herramienta: Herramienta,
     datos: PathBuf,
     ajustes: Ajustes,
     contactos: Contactos,
@@ -99,8 +162,18 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
 }
 
 impl App {
-    fn nueva(archivo: Option<PathBuf>) -> Self {
-        Self::con_datos(almacen::carpeta_datos(), archivo)
+    fn nueva(archivo: Option<PathBuf>, herramienta: Herramienta) -> Self {
+        let mut app = Self::con_datos(almacen::carpeta_datos(), archivo);
+        app.usar_herramienta(herramienta);
+        app
+    }
+
+    fn usar_herramienta(&mut self, herramienta: Herramienta) {
+        self.herramienta = herramienta;
+        self.captura.independiente = herramienta == Herramienta::Descargador;
+        if !herramienta.pestanas().iter().any(|(p, _)| *p == self.pestana) {
+            self.pestana = herramienta.pestanas()[0].0;
+        }
     }
 
     fn con_datos(datos: PathBuf, archivo: Option<PathBuf>) -> Self {
@@ -112,6 +185,7 @@ impl App {
             Err(e) => (Contactos::default(), Some(e)),
         };
         let mut app = App {
+            herramienta: Herramienta::Todas,
             contactos,
             contactos_error: contactos_error.clone(),
             datos,
@@ -483,7 +557,15 @@ impl App {
 
     fn barra(&mut self, ui: &mut egui::Ui) {
         ui.horizontal_wrapped(|ui| {
-            ui.heading("Flow");
+            ui.heading(self.herramienta.titulo());
+            if !self.herramienta.analiza_rus() {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("Ayuda (F1)").clicked() {
+                        self.ayuda = true;
+                    }
+                });
+                return;
+            }
             ui.separator();
             if ui.button("Abrir Excel o paquete…  (Ctrl+O)").clicked() {
                 self.elegir_archivo();
@@ -512,20 +594,14 @@ impl App {
                 }
             });
         });
-        ui.horizontal(|ui| {
-            for (p, nombre) in [
-                (Pestana::Captura, "Captura"),
-                (Pestana::Trabajo, "1 · Trabajo"),
-                (Pestana::Correos, "2 · Correos"),
-                (Pestana::Resoluciones, "3 · Resoluciones"),
-                (Pestana::Resultados, "4 · Resultados"),
-                (Pestana::Contactos, "Contactos"),
-                (Pestana::Anonimo, "Anonimizador"),
-                (Pestana::Meta4, "Meta 4"),
-            ] {
-                ui.selectable_value(&mut self.pestana, p, nombre);
-            }
-        });
+        let pestanas = self.herramienta.pestanas();
+        if pestanas.len() > 1 {
+            ui.horizontal(|ui| {
+                for (p, nombre) in pestanas {
+                    ui.selectable_value(&mut self.pestana, *p, *nombre);
+                }
+            });
+        }
     }
 
     fn pie(&mut self, ui: &mut egui::Ui) {
@@ -1040,6 +1116,17 @@ impl App {
     }
 }
 
+const TEXTO_AYUDA_DESCARGADOR: &str = "Descarga consultas de SITFA desde tu propia sesión de Chrome, con la extensión \
+Flow. Abre la conexión local, copia el código y pégalo en la extensión desde la pestaña SITFA. Elige pantalla, \
+opciones y carpeta. Cada página se verifica antes de guardarse; el resumen del lote queda en la carpeta.\n\n\
+Flow no escribe en SITFA, RUS ni SATURNO. Para analizar los Excel descargados, ábrelos en Flow Asistente.";
+
+const TEXTO_AYUDA_ANONIMIZADOR: &str = "Elige los archivos o la carpeta, revisa la vista previa y genera las copias \
+anonimizadas en otra carpeta. Los originales no se modifican. Revisa las copias antes de compartirlas.";
+
+const TEXTO_AYUDA_META4: &str = "Agrega las carpetas de lote que dejó Flow Descargador (las que contienen resumen.json), \
+indica la fecha de corte y genera la planilla Meta 4. Los lotes no se modifican. Revisa la planilla antes de usarla.";
+
 const TEXTO_AYUDA: &str = "1 · Trabajo: abre el Excel de RUS (Ctrl+O). Revisa cada observación; puedes editarla y marcarla como \
 revisada. Ctrl+S guarda el Excel de observaciones.\n\n2 · Correos: marca las modalidades, prepara los borradores, \
 revisa destinatario y texto, y guárdalos. Quedan en Borradores de Outlook o como archivos .eml. Flow nunca envía.\n\n\
@@ -1052,7 +1139,7 @@ impl eframe::App for App {
         let (abrir, guardar, ayuda) = ctx.input(|i| {
             (i.modifiers.command && i.key_pressed(Key::O), i.modifiers.command && i.key_pressed(Key::S), i.key_pressed(Key::F1))
         });
-        if abrir {
+        if abrir && self.herramienta.analiza_rus() {
             self.elegir_archivo();
         }
         if guardar && self.trabajo.is_some() {
@@ -1067,7 +1154,18 @@ impl eframe::App for App {
         egui::CentralPanel::default().show(ctx, |ui| match self.pestana {
             Pestana::Captura => {
                 if let Some((carpeta, resumen)) = self.captura.mostrar(ui, ctx) {
-                    self.importar_captura(carpeta, resumen)
+                    if self.herramienta == Herramienta::Descargador {
+                        // El Descargador solo descarga y verifica; el análisis se hace en el Asistente.
+                        abrir_en_sistema(&carpeta);
+                        self.bien(format!(
+                            "Lote verificado en {} ({} archivo(s)). Para analizarlo, abre esos Excel en Flow Asistente.",
+                            carpeta.display(),
+                            resumen.archivos.len()
+                        ));
+                        self.captura.listo_de_nuevo(carpeta, resumen);
+                    } else {
+                        self.importar_captura(carpeta, resumen)
+                    }
                 }
             }
             Pestana::Trabajo => self.vista_trabajo(ui),
@@ -1081,7 +1179,12 @@ impl eframe::App for App {
         if self.ayuda {
             let mut abierta = true;
             egui::Window::new("Cómo se usa Flow").open(&mut abierta).collapsible(false).default_width(520.0).show(ctx, |ui| {
-                ui.label(TEXTO_AYUDA);
+                ui.label(match self.herramienta {
+                    Herramienta::Descargador => TEXTO_AYUDA_DESCARGADOR,
+                    Herramienta::Anonimizador => TEXTO_AYUDA_ANONIMIZADOR,
+                    Herramienta::Meta4 => TEXTO_AYUDA_META4,
+                    Herramienta::Todas | Herramienta::Asistente => TEXTO_AYUDA,
+                });
             });
             self.ayuda = abierta;
         }
@@ -1103,15 +1206,15 @@ impl eframe::App for App {
 }
 
 /// Abre la ventana. `archivo` permite arrastrar un Excel sobre el ejecutable.
-pub fn abrir(archivo: Option<PathBuf>) -> i32 {
+pub fn abrir(archivo: Option<PathBuf>, herramienta: Herramienta) -> i32 {
     let opciones = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1180.0, 720.0]).with_min_inner_size([900.0, 560.0]).with_title("Flow"),
+        viewport: egui::ViewportBuilder::default().with_inner_size([1180.0, 720.0]).with_min_inner_size([900.0, 560.0]).with_title(herramienta.titulo()),
         ..Default::default()
     };
-    match eframe::run_native("Flow", opciones, Box::new(|cc| {
+    match eframe::run_native(herramienta.titulo(), opciones, Box::new(|cc| {
             cc.egui_ctx.set_theme(egui::ThemePreference::System);
             cc.egui_ctx.set_zoom_factor(1.15);
-            Ok(Box::new(App::nueva(archivo)))
+            Ok(Box::new(App::nueva(archivo, herramienta)))
         }),
     ) {
         Ok(()) => 0,
@@ -1119,6 +1222,28 @@ pub fn abrir(archivo: Option<PathBuf>) -> i32 {
             eprintln!("No se pudo abrir la ventana: {e}");
             1
         }
+    }
+}
+
+#[cfg(test)]
+mod pruebas_herramientas {
+    use super::*;
+
+    #[test]
+    fn nombre_del_ejecutable_elige_la_herramienta_y_sus_pestanas() {
+        for (nombre, h, primera) in [
+            ("flow", Herramienta::Todas, Pestana::Captura),
+            ("Flow_Asistente", Herramienta::Asistente, Pestana::Trabajo),
+            ("Flow_Descargador", Herramienta::Descargador, Pestana::Captura),
+            ("Flow_Anonimizador", Herramienta::Anonimizador, Pestana::Anonimo),
+            ("Flow_Meta4", Herramienta::Meta4, Pestana::Meta4),
+        ] {
+            assert_eq!(Herramienta::desde_ejecutable(nombre), h);
+            assert!(h.pestanas()[0].0 == primera, "{nombre}");
+        }
+        assert_eq!(Herramienta::Todas.pestanas().len(), 8);
+        assert_eq!(Herramienta::Asistente.pestanas().len(), 5);
+        assert!(!Herramienta::Descargador.analiza_rus() && Herramienta::Asistente.analiza_rus());
     }
 }
 

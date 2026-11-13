@@ -489,3 +489,7 @@ guardar el código de conexión, y cualquier escritura en RUS.
   (6) la comprobación de otras pestañas en respuesta vacía no es estricta. Se mantiene: una fila de datos
   desconocida en el cuerpo detiene la consulta. Prueba nueva en `tests/sitfa.rs`. **No verificado con SITFA real**:
   si persiste, pedir al usuario la línea «Lote detenido: …» del resumen.
+- 2026-11-13 · Ejecutables por herramienta (pedido del usuario). `ui::Herramienta` decide por el nombre del `.exe`
+  qué pestañas abre: `Flow_Asistente`, `Flow_Descargador` (sin «Llevar a Trabajo»: abre la carpeta del lote),
+  `Flow_Anonimizador`, `Flow_Meta4`; `flow.exe` sigue con todo. La CI copia el mismo binario con esos nombres,
+  publica `SHA256SUMS.txt` y sube un artefacto por herramienta (`Flow_<Herramienta>_Windows`) más `Flow_Windows`.

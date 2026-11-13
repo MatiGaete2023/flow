@@ -32,5 +32,6 @@ fn main() {
             std::process::exit(cli::ejecutar(&args));
         }
     };
-    std::process::exit(ui::abrir(archivo));
+    let nombre = std::env::current_exe().ok().and_then(|r| r.file_stem().map(|n| n.to_string_lossy().into_owned())).unwrap_or_default();
+    std::process::exit(ui::abrir(archivo, ui::Herramienta::desde_ejecutable(&nombre)));
 }
