@@ -194,7 +194,10 @@ def anonymous_diagnostic(data):
 
 PAUSA_SITFA_S = 1.0
 CHECKPOINT_CADA = 25
-MAX_LECTURAS_POR_LOTE = 600  # decisión m (13-oct): la carga habitual (344) superaba 300
+# Decisión m (13-oct): 300 → 600. Usuario, 13-nov-2026: «Sube el tope o elimínalo, si no causa problemas»: los
+# paquetes grandes con calendario (dos lecturas por ingreso) no alcanzaban. No se elimina: el paquete ZIP tiene
+# su propio límite (80 MiB, 200.000 filas) y el tope evita una corrida sin fin con la sesión caída.
+MAX_LECTURAS_POR_LOTE = 2000
 REUTILIZAR_HORAS = 12  # EF-04: solo lecturas del mismo día local y de menos de 12 h
 REUTILIZAR_CARPETAS = 10  # D4: hasta 10 sesiones anteriores
 

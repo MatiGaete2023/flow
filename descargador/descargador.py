@@ -796,7 +796,7 @@ class Application:
         if self.read_history.get():
             self.history_package_choice.grid()
             self.status.set(
-                'Se abrirá una historia por causa (no por registro), hasta 600 por lote. La consulta tardará más.'
+                'Se abrirá una historia por causa (no por registro), hasta 2000 por lote. La consulta tardará más.'
             )
         else:
             self.history_package_choice.grid_remove()

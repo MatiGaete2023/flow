@@ -2,6 +2,11 @@
 
 Contenido del README hasta la versión 2.7.5 (9 de octubre de 2026), trasladado por WP-24. Vigente: [README](README.md).
 
+**13 de noviembre de 2026 · rama Rediseno** (solo el Descargador; la extensión no cambia):
+- Máximo de lecturas por corrida: 600 → 2000 (bitácoras y calendarios, que cuentan igual) y 600 → 2000 historias.
+  Con calendario activo alcanza para unos 1000 ingresos antes de tener que «Retomar paquete…». Decisión del usuario.
+- El calendario acepta la fecha de informe vacía escrita como «- - -»; antes quedaba «no leído» por fecha ilegible.
+
 **2.9.0, 3 de noviembre de 2026 · rama Rediseno** (Descargador y extensión; recargar ambos juntos). Sobre 2.8.3:
 - Lista lateral de consultas (Seguimiento para el paquete; Medidas, Resoluciones firmadas, Informes y Litigantes
   para descargar sueltas); elegir una carga sus opciones sola.

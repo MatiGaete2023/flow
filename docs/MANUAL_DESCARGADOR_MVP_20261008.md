@@ -29,7 +29,7 @@ La consulta de firmas continúa retirada: no hay campo activo de días ni hoja v
 
 Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «Consultar y crear paquete» (apagada por defecto; se recuerda).
 
-- **Qué lee:** de cada causa del lote, la tabla de la pestaña *Historia* (Folio, Etapa, Trámite, Desc. Trámite, Referencia, Fecha Tram, anexo sí/no) y el encabezado de la causa. Una lectura por causa, hasta 600 por lote, con pausa.
+- **Qué lee:** de cada causa del lote, la tabla de la pestaña *Historia* (Folio, Etapa, Trámite, Desc. Trámite, Referencia, Fecha Tram, anexo sí/no) y el encabezado de la causa. Una lectura por causa, hasta 2000 por lote, con pausa.
 - **Qué no hace:** no abre PDF ni anexos, no lee Notificación, Diligencias ni Escritos, no consulta por RIT ni nombre; solo usa el enlace de historia del listado vigente.
 - **Ventana:** los últimos 4 meses hasta la fecha de lectura; el Excel declara Desde y Hasta. No acredita ausencia de trámites fuera de ese rango.
 - **Productos:** `Historia_SITFA.xlsx` en la carpeta del paquete; con **Incluir historia en el paquete**, la tabla `historia_tramites` del ZIP (de la causa, no de un ingreso). El HTML íntegro queda en `respaldo/…/historia/`, nunca en el ZIP.
