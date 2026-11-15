@@ -5,7 +5,7 @@ import json
 import unicodedata
 from calendar import monthrange
 
-RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-7'
+RULESET_VERSION = 'baseline-20261008+context-preview-2+historia-8'
 # Reglas activas solo para mostrar (D5, WP-50). Debe coincidir con contracts/csmp_context_v1/catalog.json.
 # CT-05, CT-07 y CT-11: avisos de bitácora solo mostrar (decisión del usuario 19-oct-2026, paquete 2).
 DISPLAY_RULES = ('CT-01', 'CT-02', 'CT-05', 'CT-07', 'CT-11')

@@ -39,7 +39,8 @@ def _forma(texto):
 
 def _fecha(texto, columna, *, opcional=False):
     texto = texto.strip()
-    if opcional and texto in ('', '-', '--', '---'):
+    # SITFA escribe la fecha vacía como guiones, a veces separados («- - -»): solo guiones y espacios es «sin fecha».
+    if opcional and not texto.replace('-', '').strip():
         return ''
     encontrada = FECHA.fullmatch(texto)
     try:

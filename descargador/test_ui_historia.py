@@ -26,7 +26,7 @@ def test_casillas_de_historia(tmp_path):
             root.update_idletasks()
             anchos = [fila.winfo_reqwidth() for fila in app.pipeline_button.master.master.pack_slaves()]
             assert max(anchos) <= 1000 - 24, anchos
-            assert 'hasta 600' in app.status.get()
+            assert 'hasta 2000' in app.status.get()
             assert app.prefs.data['leer_historia'] is True
             app.process_event('history_progress',{'causa':'C-1-2099','estado':'LEIDA'})
             app.process_event('history_progress',{'causa':'C-2-2099','estado':'FALLIDA'})

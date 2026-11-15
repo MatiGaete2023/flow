@@ -32,3 +32,43 @@ ESCRITOS = {
     'RESIDENCIAL': 'Inf. Cump Centro Residencial',
 }
 RESIDENCIA_PREFIJOS = ('rta', 'rtt', 'res', 'rfa', 'rva')
+
+# Sin regla ni marca por decisión del usuario (decisión x): no cuentan como «trámites sin regla».
+IGNORADAS = (
+    'Resp. Diagnóstico clínico especializado',
+    'Resp. Rectificación DCE (escrito)',
+    'SPE. Resp. Rectificación DCE (escrito)',
+    'Derivación Dirección Reg.',
+    'Pide cuenta Derivación D.R.',
+    'Resp. Derivación dir. regional',
+)
+CONOCIDAS = (
+    INGRESO_EFECTIVO,
+    PRORROGA,
+    INGRESO_INFORME_X,
+    ORDEN_BUSQUEDA,
+    *BUSQUEDA_SEGUIMIENTO,
+    SIN_EFECTO_MN,
+    SIN_EFECTO_DR,
+    CONTINUIDAD,
+    SOLICITUD_DCE,
+    DERECHO_OIDO,
+    SERVICIO,
+    CONCILIACION,
+    DICTACION_SENTENCIA,
+    EGRESO_SERVICIO,
+    *CURADOR,
+    *ESCRITOS.values(),
+    *IGNORADAS,
+)
+# Último trámite anterior a la ventana que el Descargador conserva como contexto (11-nov-2026).
+CONTEXTO = (
+    ORDEN_BUSQUEDA,
+    TERMINO_BUSQUEDA,
+    SIN_EFECTO_BUSQUEDA,
+    CONCILIACION,
+    DICTACION_SENTENCIA,
+    EGRESO_SERVICIO,
+    *CURADOR,
+    PRORROGA,
+)

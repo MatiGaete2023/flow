@@ -16,12 +16,12 @@ def test_umbrales_y_revision_por_defecto():
     umbrales = defaults()['umbrales']
     assert umbrales['espera_dce'] == 0 and umbrales['espera_tome'] == 60
     assert umbrales['espera_tome'] <= umbrales['proyecto_tome']
-    assert defaults()['revision_textos'] == TEXT_REVISION == 7
+    assert defaults()['revision_textos'] == TEXT_REVISION == 8
 
 
 @pytest.mark.parametrize('espera', [0, 1, 29, 200])
 def test_dce_correo_desde_el_primer_dia(tmp_path, espera):
-    assert _regla_espera(tmp_path, 'LAJA', 'DCE UNO', espera) == ['ESPERA.E05_SOLO_CORREO', 'HISTORIA.E05_DIAS']
+    assert _regla_espera(tmp_path, 'LAJA', 'DCE UNO', espera) == ['ESPERA.E05_SOLO_CORREO']
 
 
 def test_dce_sin_t_espera_sigue_en_e06(tmp_path):
@@ -37,15 +37,14 @@ def test_tome_bajo_60_dias_queda_en_e06(tmp_path, espera):
 def test_tome_desde_60_dias_sale_correo_y_proyecto(tmp_path, espera):
     assert _regla_espera(tmp_path, 'TOME', 'AFT UNO', espera) == [
         'ESPERA.E05_PROYECTO_Y_CORREO',
-        'HISTORIA.E05_DIAS',
     ]
 
 
-def test_e05_agrega_los_dias_de_espera_con_la_fecha_de_corte(tmp_path):
+def test_e05_no_escribe_los_dias_de_espera(tmp_path):
     fila_ = esp(tmp_path, fila(1, 'PRM UNO', 'LAJA') + [45])
-    # Constancias primero (los días de espera) y la acción del Centro al final (decisión x).
+    # Los días de espera deciden la gestión pero no se escriben (decisión del usuario, 11-nov-2026).
     assert fila_.observation.split(': ', 1)[1] == (
-        'Medida revisada, a la espera de ingreso efectivo. Al 14 de octubre de 2026, RUS registra 45 días de espera. '
+        'Medida revisada, a la espera de ingreso efectivo. '
         'Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.'
     )
 
@@ -65,10 +64,16 @@ def test_cumplimiento_mayor_de_edad_marca(tmp_path):
     assert r.rules == ['COMUN.MAYORIA_EDAD'] and [a[:2] for a in r.avisos] == [(3, 'REVISAR_MAYORIA')]
 
 
-def test_cumplimiento_mayor_de_edad_marca_aunque_la_medida_este_vencida(tmp_path):
+def test_cumplimiento_mayor_de_edad_conserva_la_medida_vencida_y_su_nomina(tmp_path):
     r = cum(tmp_path, cumplimiento(1, dc=-5, dpe=-5, egreso='2026-10-01', nac='2000-01-01'))
     marcas = [a[:2] for a in r.avisos]
-    assert r.rules == ['COMUN.MAYORIA_EDAD'] and marcas == [(3, 'REVISAR_MAYORIA')]
+    # La mayoría de edad encabeza y no borra el estado de la medida (11-nov-2026).
+    assert r.rules == ['COMUN.MAYORIA_EDAD', 'CUMPLIMIENTO.C04_VENCIDA'] and marcas == [(3, 'REVISAR_MAYORIA')]
+    assert r.actions == ['medidas']
+    assert r.observation.split(': ', 1)[1] == (
+        'Persona alcanzó la mayoría de edad el 1 de enero de 2018. Medida vencida en RUS desde el 1 de octubre de 2026. '
+        'Se sugiere egresar la medida.'
+    )
 
 
 def test_sin_seguimiento_vencida_agrega_medida_sin_vigencia(tmp_path):

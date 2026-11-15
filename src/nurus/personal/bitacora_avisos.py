@@ -1,7 +1,8 @@
-"""Avisos de bitácora «solo mostrar» (decisión del usuario, 19 de octubre de 2026): CT-05, CT-07 y CT-11.
+"""Avisos de bitácora (decisión del usuario, 19 de octubre de 2026): CT-05, CT-07 y CT-11.
 
 Las entradas «Centro» de la bitácora RUS son las observaciones propias del CSMP; el tribunal responde en
-«Observación Tribunal». Los avisos no cambian la observación propuesta, reglas, acciones ni umbrales.
+«Observación Tribunal». Los avisos no cambian reglas, acciones ni umbrales. `aplicar_reiteracion` sí cambia el texto:
+reemplaza una observación idéntica a la anterior por «Se reitera observación anterior del…» (ver sus condiciones).
 """
 
 from datetime import date
@@ -11,6 +12,19 @@ from nurus.rus.columns import normalize
 
 DIAS_CORREO_E05 = 30
 SIMILITUD = 0.92
+# No se reiteran (decisión del usuario, 11-nov-2026): observaciones que consignan una gestión del Centro (correo o
+# proyecto de resolución), derivaciones sin seguimiento, la proyección de ingreso copiada de la bitácora y las que ya
+# llevan una reiteración por materia. Reiterarlas ocultaba una gestión nueva o encadenaba reiteraciones.
+NO_REITERAR = (
+    'ESPERA.E05_',
+    'ESPERA.E07_',
+    'INFORMES.I01_',
+    'INFORMES.I02_',
+    'HISTORIA.C10_ESCRITO',
+    'HISTORIA.P_FINALIZADA',
+    'HISTORIA.REITERA',
+    'COMUN.NO_SEGUIMIENTO',
+)
 
 
 def _dia(evento):
@@ -39,6 +53,24 @@ def repite_ultima(display, propuesta):
         if SequenceMatcher(None, cuerpo, _cuerpo(evento.get('text', '')), autojunk=False).ratio() >= SIMILITUD:
             return evento
     return None
+
+
+def _es_reiteracion(evento):
+    return 'se reitera observacion anterior' in normalize(evento.get('text', '') or '')
+
+
+def identica_anterior(display, propuesta):
+    """Última entrada «Centro» que no es una reiteración, si su texto es idéntico a la propuesta (sin distinguir
+    mayúsculas, tildes ni espacios); None si difiere en cualquier dato. Una fecha, un número o un estado distinto es
+    una novedad y se escribe completa."""
+    if not display or display.get('status') != 'ACREDITADA':
+        return None
+    cuerpo = _cuerpo(propuesta)
+    entradas = [e for e in display.get('center_period') or display.get('last_center') or () if not _es_reiteracion(e)]
+    if not cuerpo or not entradas:
+        return None
+    ultima = max(entradas, key=lambda e: (e.get('event_at', ''), e.get('event_id', '')))
+    return ultima if _cuerpo(ultima.get('text', '')) == cuerpo else None
 
 
 def avisos(display, propuesta, reglas, textos, as_of):
@@ -81,8 +113,9 @@ def avisos(display, propuesta, reglas, textos, as_of):
 
 
 def aplicar_reiteracion(rows, contexts, config):
-    """CT-07 con texto (decisión del usuario 19-oct-2026): si la observación propuesta repite la última del centro,
-    se consigna «Se reitera observación anterior del {fecha}» para toda la observación. Acciones sin cambios.
+    """CT-07 con texto (decisión del usuario 19-oct-2026, acotada el 11-nov-2026): si la observación propuesta es
+    idéntica a la última del centro que no sea ya una reiteración, se consigna «Se reitera observación anterior del
+    {fecha}». No se aplica a las reglas de NO_REITERAR ni a filas excluidas. Acciones sin cambios.
     """
     from .motor.utilidades import fecha_es
 
@@ -91,7 +124,9 @@ def aplicar_reiteracion(rows, contexts, config):
         return
     plantilla = config['textos']['COMUN']['REITERA_OBSERVACION']['texto']
     for row in rows:
-        evento = repite_ultima(contexts.get(row.id, {}).get('display'), row.observation)
+        if getattr(row, 'excluded', False) or any(str(regla_fila).startswith(NO_REITERAR) for regla_fila in row.rules):
+            continue
+        evento = identica_anterior(contexts.get(row.id, {}).get('display'), row.observation)
         if not evento:
             continue
         head, sep, _ = row.observation.partition(': ')

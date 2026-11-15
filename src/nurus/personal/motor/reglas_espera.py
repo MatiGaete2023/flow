@@ -1,12 +1,39 @@
 from .contexto import marcar, parametro
 # -*- coding: utf-8 -*-
+import re
 from .contexto import datetime as Clock, current
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import (fecha_es, limpiar_nombre, es_dce, es_derivacion_sin_seg,
     tiene_curador_real, get_int, calcular_edad_exacta, dias_para_mayoria, fecha_mayoria,
     titulo_programa, fechas_varias, lista_fechas_es)
-from .textos import render
+from .textos import render, con_grupo
 from . import reglas_historia as H
+
+# E-04 declara «no requiere gestión del Tribunal»: sobra si la misma observación pide o consigna una gestión.
+_ADMINISTRATIVA = re.compile(r'\s*\(Observación administrativa[^)]*\)\.?')
+
+
+def _con_gestion(fragmentos):
+    for fragmento in fragmentos:
+        grupos = {grupo for _, grupo in getattr(fragmento, 'partes', ())} or {getattr(fragmento, 'grupo', 'C')}
+        if fragmento and grupos & {'A', 'T'}:
+            return True
+    return False
+
+
+def _sin_parentesis(fragmentos):
+    """Quita el paréntesis de E-04 cuando la observación trae una acción del Centro o una gestión del Tribunal."""
+    if not _con_gestion(fragmentos):
+        return fragmentos
+    salida = []
+    for fragmento in fragmentos:
+        texto = str(fragmento)
+        if fragmento and _ADMINISTRATIVA.search(texto) and not getattr(fragmento, 'partes', ()):
+            limpio = con_grupo(_ADMINISTRATIVA.sub('', texto).strip(), getattr(fragmento, 'grupo', 'C'))
+            limpio.dato = getattr(fragmento, 'dato', '')
+            fragmento = limpio
+        salida.append(fragmento)
+    return salida
 
 
 def _rit(row, cols): return row.get(cols.get('rit'), '') if cols.get('rit') else ''
@@ -54,6 +81,9 @@ def _curador(row, cols):
         return []
     celda=row.get(cols.get('curador'))
     if not tiene_curador_real(celda):
+        # Designación dejada sin efecto (causa de un registro): no hay a quién asociar; se dice sin sugerencia.
+        if H.curador_sin_efecto(True) and 'COMUN.CURADOR' not in current.get()['config']['desactivadas']:
+            return [render('COMUN','CURADOR_SIN_DESIGNACION')]
         return [H.reitera('CURADOR') or render('COMUN','CURADOR')]
     return H.curador_instituciones(celda, _pnombre(str(row.get(cols.get('nombre'), ''))))
 
@@ -93,7 +123,15 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     H.marcas_sin_efecto()
     fres=fecha_valida(row.get(cols.get('resolucion'))) if cols.get('resolucion') else None
     e04=False
-    if fres:
+    # Proyección de ingreso informada por el programa (11-nov-2026): se copia esa oración de la última observación
+    # mientras el mes proyectado no llegue; no se repiten correo ni proyecto. Llegado el mes, reglas por defecto.
+    proyeccion=H.proyeccion_ingreso(hoy)
+    if proyeccion:
+        texto=render('ESPERA','E07_PROYECCION', PROYECCION=proyeccion)
+        if texto:
+            frags.append(texto); principal=True
+        else: proyeccion=''
+    if fres and not proyeccion:
         d=(hoy-_date(fres)).days
         if 0 <= d < parametro('resolucion_reciente'):
             folio=H.folio_resolucion(fres)
@@ -103,30 +141,24 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     if cols.get('espera') and (espera is None or espera < 0):
         incidencias.agregar(fila_excel, _rit(row, cols), 'E-05/E-06',
                             'tiempo de espera ausente o inválido (G-05)')
-    # «Registra N días en lista de espera» (residencial, más de 100) dice lo mismo que los días de espera: se dice una vez.
-    larga=H.lista_larga(programa, espera)
+    # Los días de espera no se escriben en la observación (decisión del usuario, 11-nov-2026): solo deciden la gestión.
     threshold = (parametro('espera_dce') if es_dce(programa) else
                  parametro('espera_' + tribunal.lower()) if tribunal in ('LAJA','MULCHEN','TOME') else 30)
-    if espera is not None and espera >= threshold:
+    if espera is not None and espera >= threshold and not proyeccion:
         if es_dce(programa):
             frags.append(render('ESPERA','E05_SOLO_CORREO')); principal=True
-            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal in ('LAJA','MULCHEN'):
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO')); principal=True
-            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         elif tribunal == 'TOME':
             frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO' if espera >= parametro('proyecto_tome') else 'E05_SOLO_CORREO')); principal=True
-            if not larga: frags.append(render('HISTORIA','E05_DIAS', CORTE=fecha_es(hoy), N=espera))
         else:
             incidencias.agregar(fila_excel, _rit(row, cols), 'E-05', 'tribunal no reconocido — regla omitida (G-06)')
     # E-06 es el fallback del §9.1: dispara siempre que no haya principal
     # (incluye T ESPERA ausente/ inválido y tribunal no reconocido — D11).
     if not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
-    frags += H.lista_espera_larga(programa, espera)
     # Con E-04 la resolución de ingreso ya se dijo: el trámite «Ing.Serv.» no la repite (un dato, una vez).
     frags += ([] if e04 else H.servicio(programa)) + H.busqueda_historia()
     frags += H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _complementarias(row, cols, incidencias, fila_excel)
-    frags += H.aclaracion_causa()
-    return componer(pfx, frags)
+    return componer(pfx, _sin_parentesis(frags))

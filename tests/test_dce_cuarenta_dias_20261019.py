@@ -20,7 +20,10 @@ def test_dce_vencido_hasta_diez_dias_recibe_correo_con_fecha_limite(tmp_path, as
     row = _fila(tmp_path, 'DCE CENTRO', as_of)
     assert row.actions == ['programa_por_vencer']
     assert 'PC_INFO' not in row.actions
-    assert 'debe ser remitido a más tardar el 22 de septiembre de 2026' in row.observation
+    # El vencimiento es el de RUS; el margen solo fija el plazo del correo (11-nov-2026).
+    assert 'Informe diagnóstico vencido en RUS desde el 12 de septiembre de 2026.' in row.observation
+    assert 'requiriendo su envío a más tardar el 22 de septiembre de 2026' in row.observation
+    assert row.rules == ['INFORMES.I02_MARGEN_DCE']
 
 
 def test_dce_vencido_mas_de_diez_dias_pide_cuenta(tmp_path):

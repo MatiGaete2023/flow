@@ -29,7 +29,7 @@ def test_busqueda_empareja_el_cierre_con_la_orden_anterior_mas_cercana():
     h = hist((ORDEN, '2026-08-01', 10), (ORDEN, '2026-09-01', 20), (TERMINO, '2026-09-15', 30))
     pares, vigentes = busqueda(h)
     assert [(c.folio, o.folio) for c, o in pares] == [(30, 20)]
-    assert [o.folio for o in vigentes] == []  # el término posterior cierra ambas por folio
+    assert [o.folio for o in vigentes] == [10]  # un término cierra solo su orden más cercana (11-nov-2026)
 
 
 def test_busqueda_orden_posterior_al_cierre_queda_vigente_y_cierre_huerfano_no_tiene_orden():
@@ -54,7 +54,15 @@ def test_materias_de_reitera_y_no_se_reitera_lo_reiterado():
     assert materias('Persona: No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.') == {
         'CURADOR'
     }
-    assert materias('Medida vencida en RUS desde el 1 de septiembre de 2026.') == {'VENCIDA'}
+    # La medida vencida ya no se reitera (11-nov-2026): no es una materia.
+    assert materias('Medida vencida en RUS desde el 1 de septiembre de 2026.') == set()
+    # Una reiteración no es la observación original, lleve o no el prefijo «Nombre SIGLA: ».
+    assert (
+        materias(
+            'Persona PRM: No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 1 de septiembre de 2026.'
+        )
+        == set()
+    )
     assert materias('No registra ficha individual en RUS. Se sugiere confeccionarla.') == {'SIN_FICHA'}
     assert materias('Pedro no registra ficha FAE en RUS. Se sugiere confeccionarla.') == {'SIN_FAE'}
     assert (
@@ -110,4 +118,4 @@ def test_busqueda_empareja_con_la_orden_mas_cercana_aunque_tenga_folio_no_numeri
         ('Termino de búsqueda', '2026-08-10', 30),
     )
     pares, vigentes = busqueda(h)
-    assert pares[0][1].folio_txt == 's/f' and vigentes == []
+    assert pares[0][1].folio_txt == 's/f' and [o.folio for o in vigentes] == [10]

@@ -145,3 +145,32 @@ Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sig
   intégralos». Informe y salvedad de independencia (la resolución de la fusión es de la misma sesión):
   `docs/implementacion/revision/E3_INTEGRACION_20261021.md`. No autoriza aceptación institucional, fusión a `main` ni
   release.
+
+## Decisiones del 11 de noviembre de 2026
+
+- ac) Ajustes al motor de observaciones tras la revisión independiente del 11-nov. Fuente: «Aplica estos cambios en el
+  repositorio, todos los que hemos conversado acá», más las indicaciones expresas del usuario de ese día. Reglas
+  `historia-8`, textos revisión 8 (`v9.5.0`). Nada queda aceptado; cambia `motor/` y `textos_base.json` (categoría j: E3).
+  1. Indicaciones del usuario: la reiteración de toda la observación no se aplica a gestiones del Centro (correo,
+     proyecto) ni a derivaciones sin seguimiento; se elimina «La historia es de la causa y no permite atribuirlo…»; se
+     eliminan «Al F, RUS registra N días de espera» y «Registra N días en lista de espera»; en Espera, si la última
+     observación dice «…proyecta ingreso efectivo para el mes de M», se copia esa oración mientras M no llegue y, con
+     el mes del corte o uno pasado, rige la regla por defecto de cada tribunal (sin forzar proyecto y correo).
+  2. Composición: hecho y sugerencia juntos (curador, fichas); una oración idéntica no se repite; el paréntesis de E-04
+     se omite si la observación trae una acción o una gestión.
+  3. Reiteración: CT-07 solo con texto idéntico y contra la última observación que no sea reiteración; por materia,
+     frase autosuficiente, sin medida vencida y sin reiterar si hubo un trámite de curador posterior.
+  4. Historia: un trámite de la causa no retira gestiones ni afirma hechos personales en causas con varios registros o
+     con varios informes vencidos; prórroga sin «hasta»; curador y oído citados como trámite; se retira «fecha de
+     ingreso efectivo informada»; el trámite se nombra como resolución, escrito o actuación; una constancia se dice solo
+     si es posterior a la última observación de la bitácora; marca de nivel 3 para trámites sin regla.
+  5. Prioridades: la mayoría de edad conserva la medida vencida o por vencer y su nómina; el próximo informe se dice
+     con la medida por vencer si vence el día del egreso o antes; DCE en margen dice el vencimiento de RUS y el plazo;
+     los acumulados cuentan vencimientos distintos por ingreso; un término de búsqueda cierra una sola orden.
+  6. Descargador: el paquete conserva, además de la ventana, el último trámite anterior de búsqueda, sentencia,
+     conciliación, egreso de servicio, curador y prórroga, solo como contexto (amplía la decisión o sin tráfico nuevo).
+  7. Decisiones anteriores que esto modifica: x.1, x.2, x.4, x.6, x.8, x.9, x.10 (umbrales `ventana_ingreso` y
+     `lista_espera_larga` retirados), y.2, y.9, u.1 para E-10, A2 y la reiteración del 19-oct.
+  8. Pendiente del usuario: confirmar las redacciones nuevas (`confirmado:false`: REITERA y sus materias,
+     `CURADOR_SIN_DESIGNACION`, `E07_PROYECCION`, `I02_MARGEN_DCE`) y decidir si la prórroga con medida vencida debe
+     llevar una sugerencia al tribunal (hoy solo se cita el trámite).

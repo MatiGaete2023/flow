@@ -15,13 +15,16 @@ ESTRUCTURA = {
     'INFORMES.I01_VENCIDO_GENERAL': 'CA',
     'INFORMES.I02_POR_VENCER_DCE': 'A',
     'INFORMES.I02_POR_VENCER_GENERAL': 'A',
-    'COMUN.CURADOR': 'CT',
-    'CUMPLIMIENTO.C07_SIN_FICHA': 'CT',
-    'CUMPLIMIENTO.C07_FICHA_ANTIGUA': 'CT',
-    'CUMPLIMIENTO.C08_FICHA_FAE': 'CT',
+    'INFORMES.I02_MARGEN_DCE': 'CA',
+    # El hecho y su sugerencia van juntos, en el grupo del Tribunal (11-nov-2026): separados, la sugerencia quedaba
+    # sin objeto («Se sugiere asociarlo…» lejos de «No registra curador…»).
+    'COMUN.CURADOR': 'T',
+    'CUMPLIMIENTO.C07_SIN_FICHA': 'T',
+    'CUMPLIMIENTO.C07_FICHA_ANTIGUA': 'T',
+    'CUMPLIMIENTO.C08_FICHA_FAE': 'T',
+    'COMUN.MAYORIA_EDAD': 'CT',
     'HISTORIA.C10_ESCRITO': 'CA',
     'HISTORIA.T5_INSTITUCIONES': 'T',
-    'HISTORIA.R3_MULTI': 'F',
 }
 
 
@@ -29,14 +32,11 @@ ESTRUCTURA = {
 # la fecha de vencimiento de la medida, los días de espera), componer() conserva el primer fragmento y omite el resto.
 DATOS = {
     'CUMPLIMIENTO.C03_INGRESO_RECIENTE': 'ingreso_efectivo',
-    'HISTORIA.INGRESO_INFORMADO': 'ingreso_efectivo',
     'CUMPLIMIENTO.C04_VENCIDA': 'vencimiento',
     'CUMPLIMIENTO.C05_VENCE_HOY': 'vencimiento',
     'CUMPLIMIENTO.C05_POR_VENCER': 'vencimiento',
     'HISTORIA.MEDIDA_SIN_VIGENCIA': 'vencimiento',
     'HISTORIA.EGRESO_PROYECTADO': 'vencimiento',
-    'HISTORIA.E05_DIAS': 'dias_espera',
-    'HISTORIA.E10_LISTA': 'dias_espera',
 }
 
 

@@ -25,8 +25,9 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
         incidencias.agregar(fila_excel, row.get(cols.get('rit'), '') if cols.get('rit') else '', 'I-01/I-02', 'sin fecha de vencimiento (G-05)'); return ''
     vd=fv.date() if hasattr(fv,'date') else fv; dias=(vd-Clock.now().date()).days
     fecha=fv
-    if es_dce(programa) and -MARGEN_DCE <= dias < 0:
-        key='I02_POR_VENCER_DCE'; fecha=vd+timedelta(days=MARGEN_DCE)
+    margen = es_dce(programa) and -MARGEN_DCE <= dias < 0
+    if margen:
+        key='I02_MARGEN_DCE'; fecha=vd+timedelta(days=MARGEN_DCE)
     elif dias < 0: key='I01_VENCIDO_DCE' if es_dce(programa) else 'I01_VENCIDO_GENERAL'
     elif 0 <= dias <= parametro('informe'): key='I02_POR_VENCER_DCE' if es_dce(programa) else 'I02_POR_VENCER_GENERAL'
     else: return ''
@@ -35,16 +36,23 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     # El vencimiento para contrastar la historia es el de RUS (decisión u); el margen DCE de WA-7 solo cambia la
     # frase y su plazo. Un informe ingresado tras el vencimiento desmiente también al DCE dentro del margen.
     vencido = dias < 0
-    i1 = H.informe_historia(fv, vencido)
-    i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None)
+    # Un trámite de la causa solo retira la gestión si se puede vincular a este informe (11-nov-2026): causa de un
+    # registro y un único informe vencido. Si no, se conservan correo y proyecto y el trámite queda como constancia.
+    atribuible = not H.varios_registros() and not H.varios_vencidos()
+    i1 = H.informe_historia(fv, vencido, atribuible)
+    i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None) if atribuible else []
+    if vencido and not atribuible and i1:
+        H.marcar(2, 'INFORME_SIN_ATRIBUIR', 'Ingreso de informe en la causa que no se puede atribuir a este informe: se conservan las acciones')
     if vencido and not (i1 or i3) and H.informe_previo(programa, fv):
         # Un ingreso o escrito anterior al vencimiento no acredita a qué período corresponde: se conservan las acciones.
         H.marcar(2, 'ENTREGA_ANTERIOR', 'Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión')
-    if vencido and (i1 or i3):
+    if vencido and atribuible and (i1 or i3):
         H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
         principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))
+    elif margen:
+        # El vencimiento es el que RUS registra; el margen solo fija el plazo del correo.
+        principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv), FECHA_LIMITE=fecha_es(fecha))
     else:
         principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha))
     fr = [principal] + i1 + i3 + H.informes_acumulados()
-    fr += H.aclaracion_causa()
     return componer(pfx, fr)

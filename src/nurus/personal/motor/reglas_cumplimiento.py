@@ -31,8 +31,14 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         return componer(pfx, frags)
     fn=fecha_valida(row.get(cols.get('nacimiento'))) if cols.get('nacimiento') else None
     if fn and (calcular_edad_exacta(fn) or 0) >= 18:
+        # La mayoría de edad encabeza, pero no borra el estado de la medida ni su nómina (11-nov-2026).
         marcar(3, 'REVISAR_MAYORIA', 'Mayoría de edad')
-        return componer(pfx,[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))])
+        frags=[render('COMUN','MAYORIA_EDAD', PNOMBRE=pn, FECHA_MAYORIA=fecha_es(fecha_mayoria(fn)))]
+        if H.vencida_valida(vencida):
+            frags.append(render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
+        elif fegr and dpe is not None and 0 <= dpe <= parametro('medida') and not vencida:
+            frags.append(render('CUMPLIMIENTO','C05_VENCE_HOY' if dpe == 0 else 'C05_POR_VENCER', FECHA_EGRESO_PROYECTADO=fecha_es(fegr)))
+        return componer(pfx, frags)
     finalizada=H.causa_finalizada(_rit(row, cols))
     if finalizada: return componer(pfx, finalizada)
     H.marcar_duplicidad()
@@ -59,22 +65,20 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04/C-05',
                             'días para egresar ausentes o inválidos (G-05)')
     vok=H.vencida_valida(vencida)
-    reiterada=False
     if vencida:
-        previa=H.reitera('VENCIDA') if vok else ''
-        reiterada=bool(previa)
-        frags.append(previa or render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
+        frags.append(render('CUMPLIMIENTO','C04_VENCIDA', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
     elif ((dpe is not None and dpe < 0) or (dc is not None and dc < 0)) and not fegr:
         incidencias.agregar(fila_excel, _rit(row, cols), 'C-04', 'sin egreso proyectado (G-05)')
     if c05:
         frags.append(render('CUMPLIMIENTO','C05_VENCE_HOY' if dpe == 0 else 'C05_POR_VENCER', FECHA_EGRESO_PROYECTADO=fecha_es(fegr))); principal=True
     # La fecha de egreso se dice una sola vez (decisión x): la dice la frase de la medida o la de ingreso reciente.
-    egreso_dicho=bool((vencida and not reiterada) or c05 or (c03 and fegr))
-    if fecha_hoja2 and ((not vencida and not c05) or c03):
-        if not (egreso_dicho and fegr and _d(fecha_hoja2) == _d(fegr)):
-            frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
+    egreso_dicho=bool(vencida or c05 or (c03 and fegr))
+    # Próximo informe (11-nov-2026): se dice también con la medida por vencer si el informe vence el día del egreso o
+    # antes; con la medida vencida se omite. Medida e informe son hechos distintos aunque compartan la fecha.
+    antes_del_egreso=bool(c05 and fecha_hoja2 and _d(fecha_hoja2) <= _d(fegr))
+    if fecha_hoja2 and ((not vencida and not c05) or c03 or antes_del_egreso):
+        frags.append(render('CUMPLIMIENTO','C10_HOJA2', PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha_hoja2))); principal=True
     # Las frases se ordenan por grupo al componer: constancias, acciones del Centro, gestión del Tribunal.
-    if not c03: frags += H.ingreso_informado(fing)
     frags += H.prorroga(hoy, fegr, bool(vencida and vok), c05, egreso_dicho)
     frags += H.solicitud_dce(programa, vok) + H.escrito_sin_ingreso(programa)
     frags += H.busqueda_historia() + H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
@@ -100,5 +104,4 @@ def generar_observacion_cumplimiento(row, tribunal, cols, fecha_hoja2=None, inci
         return componer(pfx, [render('CUMPLIMIENTO','C09_SIN_OBSERVACIONES')])
     if not principal and H.solo_historia():
         frags.insert(0, render('HISTORIA','MEDIDA_REVISADA'))
-    frags += H.aclaracion_causa()
     return componer(pfx, frags)

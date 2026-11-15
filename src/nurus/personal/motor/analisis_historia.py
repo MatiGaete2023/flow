@@ -12,7 +12,6 @@ MATERIAS = {
     'CURADOR': ('no registra curador ad litem',),
     'SIN_FICHA': ('no registra ficha individual',),
     'SIN_FAE': ('no registra ficha fae',),
-    'VENCIDA': ('medida vencida en rus',),
 }
 _INSTITUCION = re.compile(r'Instituci[oó]n:\s*(.+)$', re.IGNORECASE)
 
@@ -26,14 +25,16 @@ def posterior(a, b):
 
 def busqueda(historia):
     """(cierres, vigentes). cierres: lista de (cierre, orden|None), la orden es la anterior más cercana.
-    vigentes: órdenes sin ningún cierre posterior."""
-    ordenes = historia.buscar(ORDEN)
-    cierres = historia.buscar(*CIERRES)
+    vigentes: órdenes que ningún cierre tiene como su orden más cercana (un término cierra una sola orden).
+    Cuenta también el último trámite anterior a la ventana que el paquete conserva como contexto."""
+    ordenes = historia.buscar(ORDEN, contexto=True)
+    cierres = historia.buscar(*CIERRES, contexto=True)
     pares = []
     for cierre in cierres:
         previas = [o for o in ordenes if posterior(cierre, o)]
         pares.append((cierre, max(previas, key=lambda o: (o.fecha, o.folio)) if previas else None))
-    vigentes = [o for o in ordenes if not any(posterior(c, o) for c in cierres)]
+    cerradas = [orden for _, orden in pares if orden is not None]
+    vigentes = [o for o in ordenes if o not in cerradas]
     return pares, vigentes
 
 
@@ -49,10 +50,10 @@ def instituciones(celda):
 
 def materias(texto):
     """Materias de REITERA presentes en el texto de una observación previa."""
-    limpio = clave(texto)
-    if limpio.startswith('se reitera'):
-        return set()
-    return {m for m, patrones in MATERIAS.items() if any(p in limpio for p in patrones)}
+    # Por oración: una oración que reitera no es la observación original, lleve o no el prefijo «Nombre SIGLA: ».
+    oraciones = [clave(o) for o in re.split(r'(?<=\.)\s+', str(texto or ''))]
+    oraciones = [o for o in oraciones if 'se reitera' not in o]
+    return {m for m, patrones in MATERIAS.items() if any(p in o for p in patrones for o in oraciones)}
 
 
 def primera_observacion(bitacora, materia, antes_de):

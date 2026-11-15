@@ -95,6 +95,7 @@ def test_dce_en_el_margen_con_informe_anterior_al_vencimiento_conserva_el_aviso(
     f = inf(
         tmp_path, fila(1, 'DCE UNO') + ['2026-10-09'], hist(('Ingreso informe de cumplimiento X', '2026-07-01', 30))
     )
-    assert f.rules == ['INFORMES.I02_POR_VENCER_DCE'] and f.actions == ['programa_por_vencer']
+    assert f.rules == ['INFORMES.I02_MARGEN_DCE'] and f.actions == ['programa_por_vencer']
     assert 'a más tardar el 19 de octubre de 2026' in f.observation and 'folio 30' not in f.observation
+    assert 'vencido en RUS desde el 9 de octubre de 2026' in f.observation
     assert [a[:2] for a in f.avisos] == [(2, 'ENTREGA_ANTERIOR')]

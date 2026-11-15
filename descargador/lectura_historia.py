@@ -16,7 +16,7 @@ from nurus.capture.temporal import earliest
 from nurus.historia_html import read_historia, separar_ventana
 
 MANIFEST = 'historias.json'
-MAX_HISTORIAS_POR_LOTE = 600
+MAX_HISTORIAS_POR_LOTE = 2000  # mismo criterio que MAX_LECTURAS_POR_LOTE (13-nov-2026)
 MAX_BYTES = 8 * 1024 * 1024
 LEIDAS = ('LEIDA', 'VACIA_COMPROBADA')
 

@@ -20,10 +20,9 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_PROYECTO_Y_CORREO",
-            "HISTORIA.E05_DIAS"
+            "ESPERA.E05_PROYECTO_Y_CORREO"
           ],
           "actions": [
             "programa_espera",
@@ -47,10 +46,9 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_SOLO_CORREO",
-            "HISTORIA.E05_DIAS"
+            "ESPERA.E05_SOLO_CORREO"
           ],
           "actions": [
             "programa_espera"
@@ -73,10 +71,9 @@
             "FEC. RESOLUCION": "2026-08-01 00:00:00",
             "DURACION": "6 meses"
           },
-          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+          "observation": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
           "rules": [
-            "ESPERA.E05_PROYECTO_Y_CORREO",
-            "HISTORIA.E05_DIAS"
+            "ESPERA.E05_PROYECTO_Y_CORREO"
           ],
           "actions": [
             "programa_espera",
@@ -336,19 +333,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -384,7 +381,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -500,19 +497,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_SOLO_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_SOLO_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -548,7 +545,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -664,19 +661,19 @@
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -712,7 +709,7 @@
                 "style": null
               },
               {
-                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
+                "value": "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1225,13 +1222,13 @@
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1269,13 +1266,13 @@
                 "style": null
               },
               {
-                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 30 días de espera. Se remite correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_SOLO_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_SOLO_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -1313,13 +1310,13 @@
                 "style": null
               },
               {
-                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 60 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+                "value": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
                 "type": "s",
                 "format": "General",
                 "style": null
               },
               {
-                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\", \"HISTORIA.E05_DIAS\"]",
+                "value": "[\"ESPERA.E05_PROYECTO_Y_CORREO\"]",
                 "type": "s",
                 "format": "General",
                 "style": null
@@ -5212,7 +5209,7 @@
   },
   "config": {
     "version": 1,
-    "revision_textos": 7,
+    "revision_textos": 8,
     "revision_correos": 3,
     "perfil": "Asistente v9.1; prioridad confirmada por usuario",
     "umbrales": {
@@ -5231,14 +5228,12 @@
       "ficha_reciente": 30,
       "ficha_fae": 120,
       "prorroga_reciente": 90,
-      "ventana_ingreso": 30,
-      "lista_espera_larga": 100,
       "ventana_busqueda": 60
     },
     "desactivadas": [],
     "textos": {
       "_meta": {
-        "version": "v9.4.0",
+        "version": "v9.5.0",
         "descripcion": "Textos operativos aprobados 2026-09-22; redacción concisa y acciones ejecutadas."
       },
       "COMUN": {
@@ -5281,6 +5276,11 @@
           "texto": "Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}.",
           "confirmado": true,
           "nota": "CT-07; aprobado por el usuario 2026-10-19: si la observación propuesta repite la última del centro en la bitácora, se consigna esta frase para toda la observación"
+        },
+        "CURADOR_SIN_DESIGNACION": {
+          "texto": "No registra curador ad litem en RUS.",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — curador con designación dejada sin efecto"
         }
       },
       "ESPERA": {
@@ -5303,6 +5303,11 @@
           "texto": "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — E-06"
+        },
+        "E07_PROYECCION": {
+          "texto": "Medida revisada, a la espera de ingreso efectivo. {PROYECCION}",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — proyección de ingreso informada por el programa (U5)"
         }
       },
       "CUMPLIMIENTO": {
@@ -5382,6 +5387,11 @@
           "texto": "Se remite correo al programa {PROGRAMA} informando que el próximo informe de avance vence el {FECHA_VENCIMIENTO}.",
           "confirmado": true,
           "nota": "Catálogo v2 2026-07-14 — I-02"
+        },
+        "I02_MARGEN_DCE": {
+          "texto": "Informe diagnóstico vencido en RUS desde el {FECHA_VENCIMIENTO}. Se remite correo al programa {PROGRAMA} requiriendo su envío a más tardar el {FECHA_LIMITE}.",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — DCE dentro del margen de 10 días"
         }
       },
       "HISTORIA": {
@@ -5405,45 +5415,25 @@
           "confirmado": true,
           "nota": "Espera, regla 1 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
-        "R3_MULTI": {
-          "texto": "La historia es de la causa y no permite atribuirlo a un ingreso determinado.",
-          "confirmado": true,
-          "nota": "Espera, regla 3 (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
-        },
         "REITERA": {
-          "texto": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}.",
-          "confirmado": true,
-          "nota": "REITERA — redacción abreviada aprobada por el usuario el 15-oct-2026"
+          "texto": "{MATERIA}; se reitera la sugerencia formulada en la observación del {FECHA_ANTERIOR}.",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — reiteración autosuficiente"
         },
         "MATERIA_CURADOR": {
-          "texto": "la ausencia de curador ad litem en RUS",
-          "confirmado": true,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+          "texto": "No registra curador ad litem en RUS",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — reiteración autosuficiente"
         },
         "MATERIA_SIN_FICHA": {
-          "texto": "la ausencia de ficha individual en RUS",
-          "confirmado": true,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
+          "texto": "No registra ficha individual en RUS",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — reiteración autosuficiente"
         },
         "MATERIA_SIN_FAE": {
-          "texto": "la ausencia de ficha FAE en RUS",
-          "confirmado": true,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
-        },
-        "MATERIA_VENCIDA": {
-          "texto": "la medida vencida en RUS",
-          "confirmado": true,
-          "nota": "REITERA, materia (propuesta) — doc reglas 14-oct-2026 — redacción aprobada por el usuario el 14-oct-2026"
-        },
-        "E05_DIAS": {
-          "texto": "Al {CORTE}, RUS registra {N} días de espera.",
-          "confirmado": true,
-          "nota": "Espera, E-05 ampliada — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
-        },
-        "E10_LISTA": {
-          "texto": "Registra {N} días en lista de espera.",
-          "confirmado": true,
-          "nota": "Espera, E10 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
+          "texto": "No registra ficha FAE en RUS",
+          "confirmado": false,
+          "nota": "Propuesta del 11-nov-2026 aplicada por instrucción del usuario; redacción pendiente de su confirmación — reiteración autosuficiente"
         },
         "MEDIDA_SIN_VIGENCIA": {
           "texto": "Medida sin vigencia en RUS desde el {FECHA_EGRESO_PROYECTADO}.",
@@ -5485,30 +5475,10 @@
           "confirmado": true,
           "nota": "Transversal T5 — doc reglas 14-oct-2026; aprobado por el usuario el 16-oct-2026"
         },
-        "C2_PRORROGA_HASTA": {
-          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se prorroga la medida hasta el {FECHA_EGRESO_PROYECTADO}.",
-          "confirmado": true,
-          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
-        },
-        "INGRESO_INFORMADO": {
-          "texto": "La fecha de ingreso efectivo informada al Tribunal corresponde al {FECHA_INGRESO}.",
-          "confirmado": true,
-          "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
-        },
         "SERVICIO_INGRESO": {
           "texto": "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO}).",
           "confirmado": true,
           "nota": "Decisión x, 15-oct-2026: redacción dictada por el usuario"
-        },
-        "CURADOR_SIN_EFECTO": {
-          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la designación de curador ad litem.",
-          "confirmado": true,
-          "nota": "Decisión x, 15-oct-2026: redacción propuesta y aprobada por el usuario"
-        },
-        "CURADOR_DESIGNADO": {
-          "texto": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se designó curador ad litem.",
-          "confirmado": true,
-          "nota": "Decisión x, 15-oct-2026: redacción análoga a la anterior; aprobado por el usuario el 15-oct-2026"
         },
         "EGRESO_POSTERIOR_MAYORIA": {
           "texto": "El egreso proyectado es posterior a la mayoría de edad.",
@@ -5682,10 +5652,9 @@
   "reglas_rus": {
     "ESPERA": [
       {
-        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Registra 120 días en lista de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+        "observation": "Persona RVA: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Persona, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
         "rules": [
           "ESPERA.E05_PROYECTO_Y_CORREO",
-          "HISTORIA.E10_LISTA",
           "HISTORIA.T5_INSTITUCIONES"
         ],
         "actions": [

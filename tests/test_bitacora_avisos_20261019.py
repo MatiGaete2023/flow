@@ -85,7 +85,61 @@ def test_avisos_aparecen_en_columna_y_panel_sin_cambiar_la_observacion(tmp_path)
     )
 
 
-def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
+def _reiterar(previas, propuesta, reglas=(), acciones=(), excluida=False):
+    from nurus.personal.bitacora_avisos import aplicar_reiteracion
+    from nurus.personal.work import Row
+
+    fila = Row('r', 2, {}, propuesta, list(reglas), list(acciones), [], excluida)
+    eventos = [_entrada(str(n), fecha, texto) for n, (fecha, texto) in enumerate(previas)]
+    aplicar_reiteracion([fila], {'r': {'display': display_chronology(eventos, CORTE)}}, defaults())
+    return fila
+
+
+def test_ct07_reitera_solo_una_observacion_identica_y_sin_gestion():
+    texto = 'Persona PRM: Medida vencida en RUS desde el 1 de septiembre de 2026.'
+    fila = _reiterar([('2026-09-10', texto)], texto, ['CUMPLIMIENTO.C04_VENCIDA'], ['medidas'])
+    assert fila.observation == 'Persona PRM: Se reitera observación anterior del 10 de septiembre de 2026.'
+    assert fila.rules[-1] == 'COMUN.REITERA_OBSERVACION' and fila.actions == ['medidas']
+    assert any(
+        w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and texto in w for w in fila.warnings
+    )
+    # Cambia un dato (la fecha): es una novedad y se escribe completa.
+    otra = texto.replace('1 de septiembre', '2 de septiembre')
+    assert _reiterar([('2026-09-10', texto)], otra, ['CUMPLIMIENTO.C04_VENCIDA']).observation == otra
+
+
+def test_ct07_no_reitera_gestiones_del_centro_ni_derivaciones_sin_seguimiento():
+    for regla, cuerpo in [
+        ('ESPERA.E05_SOLO_CORREO', CORREO),
+        ('ESPERA.E05_PROYECTO_Y_CORREO', TEXTOS['ESPERA']['E05_PROYECTO_Y_CORREO']['texto']),
+        ('INFORMES.I01_VENCIDO_GENERAL', 'Informe de avance vencido desde el 1 de julio de 2026. Se deja constancia…'),
+        ('INFORMES.I02_POR_VENCER_GENERAL', 'Se remite correo al programa PRM UNO informando…'),
+        ('HISTORIA.C10_ESCRITO', 'Informe de avance recepcionado…'),
+        ('HISTORIA.P_FINALIZADA', TEXTOS['HISTORIA']['P_FINALIZADA']['texto']),
+        ('ESPERA.E07_PROYECCION', 'Medida revisada, a la espera de ingreso efectivo. Programa proyecta ingreso…'),
+        ('COMUN.NO_SEGUIMIENTO', 'La derivación OPD no se encuentra sujeta a seguimiento por este Centro.'),
+    ]:
+        texto = 'Persona PRM: ' + cuerpo
+        assert _reiterar([('2026-09-10', texto)], texto, [regla]).observation == texto, regla
+    sin = 'Persona OPD: La derivación OPD no se encuentra sujeta a seguimiento por este Centro.'
+    assert _reiterar([('2026-09-10', sin)], sin, [], excluida=True).observation == sin
+
+
+def test_ct07_compara_con_la_ultima_que_no_es_reiteracion_y_no_encadena():
+    texto = 'Persona PRM: Medida revisada, sin observaciones.'
+    previas = [
+        ('2026-08-10', texto),
+        ('2026-09-10', 'Persona PRM: Se reitera observación anterior del 10 de agosto de 2026.'),
+    ]
+    # Sin alternancia: la última entrada es una reiteración y se compara con la anterior completa.
+    fila = _reiterar(previas, texto, ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES'])
+    assert fila.observation == 'Persona PRM: Se reitera observación anterior del 10 de agosto de 2026.'
+    # Una reiteración por materia no se reemplaza por otra reiteración.
+    materia = 'Persona PRM: No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 1 de agosto de 2026.'
+    assert _reiterar([('2026-09-10', materia)], materia, ['HISTORIA.REITERA', 'COMUN.CURADOR']).observation == materia
+
+
+def test_ct07_en_el_paquete_no_reitera_la_espera_con_correo_y_proyecto(tmp_path):
     (tmp_path / 'b0').mkdir()
     _, base = importar(tmp_path / 'b0')
     propuesta = base['r0'].observation
@@ -93,20 +147,9 @@ def test_ct07_reitera_toda_la_observacion_repetida(tmp_path):
     def repetir(t):
         t['bitacoras'][0]['text'] = propuesta
 
-    work, rows = importar(tmp_path, repetir)
-    fila = rows['r0']
-    prefijo = propuesta.partition(': ')[0] + ': '
-    assert fila.observation == prefijo + 'Se reitera observación anterior del 10 de septiembre de 2026.'
-    assert fila.rules[-1] == 'COMUN.REITERA_OBSERVACION'
-    assert fila.actions == base['r0'].actions
-    assert any(
-        w.startswith('CT-07: la observación propuesta repetía la del 10/09/2026') and propuesta in w
-        for w in fila.warnings
-    )
-    # La propuesta vigente es la reiteración: ya no corresponde el aviso CT-07.
-    assert 'CT-07' not in dict(
-        avisos(work.capture_context['r0']['display'], fila.observation, fila.rules, TEXTOS, CORTE)
-    )
+    _, rows = importar(tmp_path, repetir)
+    assert rows['r0'].observation == propuesta and rows['r0'].actions == base['r0'].actions
+    assert 'COMUN.REITERA_OBSERVACION' not in rows['r0'].rules
 
 
 def test_ct07_reiteracion_desactivable(tmp_path):

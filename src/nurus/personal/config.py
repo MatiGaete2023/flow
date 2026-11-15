@@ -32,8 +32,6 @@ UMBRALES = dict(
     ficha_reciente=30,
     ficha_fae=120,
     prorroga_reciente=90,
-    ventana_ingreso=30,
-    lista_espera_larga=100,
     ventana_busqueda=60,
 )
 PARAMETER_LABELS = {
@@ -52,11 +50,9 @@ PARAMETER_LABELS = {
     'ficha_reciente': 'Ficha individual reciente: hasta',
     'ficha_fae': 'Ficha FAE ausente: ingreso hace más de',
     'prorroga_reciente': 'Prórroga reciente (marcar para revisión): hasta',
-    'ventana_ingreso': 'Ingreso efectivo en la historia: hasta',
-    'lista_espera_larga': 'Lista de espera residencial larga: más de',
     'ventana_busqueda': 'Órdenes de búsqueda: solo la historia de los últimos',
 }
-TEXT_REVISION = 7
+TEXT_REVISION = 8
 LEGACY_UMBRALES_REV3 = {'espera_dce': 30, 'espera_tome': 30}
 LEGACY_PROX_AUDIENCIA_REV3 = 'Audiencia fijada para el {FECHA_AUDIENCIA}.'
 CORREO_REVISION = 3
@@ -109,6 +105,14 @@ LEGACY_TEXTS_REV6 = {
     "HISTORIA.R11_SIN_EFECTO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
     "HISTORIA.R11_TERMINO": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
     "HISTORIA.T5_INSTITUCIONES": "Atendido a que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+}
+# Revisión 8 (11-nov-2026): la reiteración por materia es autosuficiente. Los cuatro textos se migran juntos: la
+# frase nueva solo tiene sentido con las materias nuevas, así que basta uno personalizado para conservar los cuatro.
+LEGACY_TEXTS_REV7 = {
+    "HISTORIA.REITERA": "Se reitera la observación del {FECHA_ANTERIOR} sobre {MATERIA}.",
+    "HISTORIA.MATERIA_CURADOR": "la ausencia de curador ad litem en RUS",
+    "HISTORIA.MATERIA_SIN_FICHA": "la ausencia de ficha individual en RUS",
+    "HISTORIA.MATERIA_SIN_FAE": "la ausencia de ficha FAE en RUS",
 }
 LEGACY_CORREO_BODIES = {
     'espera': 'Buen día:\n\nJunto con saludar, se informa que en la pestaña Espera del módulo RUS en SITFA se revisaron todos los registros correspondientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,',
@@ -437,6 +441,13 @@ class Configuration:
                     key in base.get(scope, {})
                     and updated['textos'].get(scope, {}).get(key, {}).get('texto') == previous
                 ):
+                    updated['textos'][scope][key]['texto'] = base[scope][key]['texto']
+            reitera = [full_key.split('.', 1) for full_key in LEGACY_TEXTS_REV7]
+            if all(
+                updated['textos'].get(scope, {}).get(key, {}).get('texto') == LEGACY_TEXTS_REV7[scope + '.' + key]
+                for scope, key in reitera
+            ):
+                for scope, key in reitera:
                     updated['textos'][scope][key]['texto'] = base[scope][key]['texto']
             updated['revision_textos'] = TEXT_REVISION
             self.save(updated)
