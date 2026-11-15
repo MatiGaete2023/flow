@@ -69,16 +69,18 @@ impl Frag {
 }
 
 /// Grupo de cada oración de los textos que mezclan grupos; los demás son constancias.
+/// El hecho y su sugerencia van juntos, en el grupo del Tribunal (curador, fichas).
 fn estructura(clave: &str) -> &'static str {
     match clave {
         "ESPERA.E05_SOLO_CORREO" | "ESPERA.E05_PROYECTO_Y_CORREO" => "CA",
         "INFORMES.I01_VENCIDO_DCE" | "INFORMES.I01_VENCIDO_GENERAL" => "CA",
         "INFORMES.I02_POR_VENCER_DCE" | "INFORMES.I02_POR_VENCER_GENERAL" => "A",
-        "COMUN.CURADOR" => "CT",
-        "CUMPLIMIENTO.C07_SIN_FICHA" | "CUMPLIMIENTO.C07_FICHA_ANTIGUA" | "CUMPLIMIENTO.C08_FICHA_FAE" => "CT",
+        "INFORMES.I02_MARGEN_DCE" => "CA",
+        "COMUN.CURADOR" => "T",
+        "CUMPLIMIENTO.C07_SIN_FICHA" | "CUMPLIMIENTO.C07_FICHA_ANTIGUA" | "CUMPLIMIENTO.C08_FICHA_FAE" => "T",
+        "COMUN.MAYORIA_EDAD" => "CT",
         "HISTORIA.C10_ESCRITO" => "CA",
         "HISTORIA.T5_INSTITUCIONES" => "T",
-        "HISTORIA.R3_MULTI" => "F",
         _ => "C",
     }
 }
@@ -86,13 +88,12 @@ fn estructura(clave: &str) -> &'static str {
 /// Un dato se dice una sola vez: reglas que llegan a la misma información comparten etiqueta.
 fn dato_de(clave: &str) -> &'static str {
     match clave {
-        "CUMPLIMIENTO.C03_INGRESO_RECIENTE" | "HISTORIA.INGRESO_INFORMADO" => "ingreso_efectivo",
+        "CUMPLIMIENTO.C03_INGRESO_RECIENTE" => "ingreso_efectivo",
         "CUMPLIMIENTO.C04_VENCIDA"
         | "CUMPLIMIENTO.C05_VENCE_HOY"
         | "CUMPLIMIENTO.C05_POR_VENCER"
         | "HISTORIA.MEDIDA_SIN_VIGENCIA"
         | "HISTORIA.EGRESO_PROYECTADO" => "vencimiento",
-        "HISTORIA.E05_DIAS" | "HISTORIA.E10_LISTA" => "dias_espera",
         _ => "",
     }
 }
@@ -106,7 +107,7 @@ fn formatear(plantilla: &str, datos: &[(&str, String)]) -> String {
 }
 
 /// Divide en oraciones: corta en los espacios que siguen a un punto.
-fn oraciones(texto: &str) -> Vec<String> {
+pub(crate) fn oraciones(texto: &str) -> Vec<String> {
     let mut salida = Vec::new();
     let mut actual = String::new();
     let mut previo = ' ';
@@ -163,8 +164,14 @@ impl<'a> Ctx<'a> {
         self.historia.as_ref().filter(|h| h.con_datos())
     }
 
+    /// Trámites de la ventana con esos nombres.
     pub fn tramites(&self, nombres: &[&str]) -> Vec<Tramite> {
-        self.h().map(|h| h.buscar(nombres).into_iter().cloned().collect()).unwrap_or_default()
+        self.tramites_con(nombres, false)
+    }
+
+    /// Con `contexto`, también el último trámite anterior a la ventana que el paquete conserva.
+    pub fn tramites_con(&self, nombres: &[&str], contexto: bool) -> Vec<Tramite> {
+        self.h().map(|h| h.buscar_con(nombres, contexto).into_iter().cloned().collect()).unwrap_or_default()
     }
 
     /// Texto de una regla. Vacío si está desactivada o invalidada para esta fila.
@@ -254,7 +261,14 @@ pub fn componer(prefijo: &str, fragmentos: &[Frag]) -> String {
         return String::new();
     }
     let texto = partes.join(" ").split_whitespace().collect::<Vec<_>>().join(" ").replace("..", ".");
-    format!("{prefijo}{texto}")
+    // El mismo hecho se dice una vez: una oración idéntica a otra anterior no se repite.
+    let mut unicas: Vec<String> = Vec::new();
+    for oracion in oraciones(&texto) {
+        if !unicas.contains(&oracion) {
+            unicas.push(oracion);
+        }
+    }
+    format!("{prefijo}{}", unicas.join(" "))
 }
 
 #[cfg(test)]

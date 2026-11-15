@@ -5,17 +5,13 @@
    "id": "r0",
    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
    "reglas": [
-    "ESPERA.E05_PROYECTO_Y_CORREO",
-    "HISTORIA.E05_DIAS",
+    "ESPERA.E06_SIN_RESOLUCION",
     "COMUN.REITERA_OBSERVACION"
    ],
-   "acciones": [
-    "programa_espera",
-    "PC_IE"
-   ],
+   "acciones": [],
    "avisos": [
     "Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.",
-    "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+    "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM Ficticio."
    ],
    "cronologia": {
     "version": "solo-mostrar-4",
@@ -51,7 +47,7 @@
       "origin_verified": "true",
       "author": "Usuario ficticio",
       "event_type": "Al tribunal",
-      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM Ficticio.",
       "response": "",
       "response_at": "",
       "identity_status": "VERIFICADA"
@@ -89,7 +85,7 @@
       "origin_verified": "true",
       "author": "Usuario ficticio",
       "event_type": "Al tribunal",
-      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Al 8 de octubre de 2026, RUS registra 40 días de espera. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+      "text": "Persona PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM Ficticio.",
       "response": "",
       "response_at": "",
       "identity_status": "VERIFICADA"

@@ -621,6 +621,1301 @@
    "eventos": [
     {
      "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "ESPERA.E05_SOLO_CORREO"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "ESPERA.E05_SOLO_CORREO"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "ESPERA.E07_PROYECCION"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "ESPERA.E07_PROYECCION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "INFORMES.I02_MARGEN_DCE"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "INFORMES.I02_MARGEN_DCE"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "HISTORIA.REITERA"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "HISTORIA.REITERA"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "COMUN.NO_SEGUIMIENTO"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "COMUN.NO_SEGUIMIENTO"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "HISTORIA.C10_ESCRITO"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "HISTORIA.C10_ESCRITO"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "HISTORIA.P_FINALIZADA"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [
+     "HISTORIA.P_FINALIZADA"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [
+    "HISTORIA.BASE_TRAMITE"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+    "reglas": [
+     "HISTORIA.BASE_TRAMITE",
+     "COMUN.REITERA_OBSERVACION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": [
+     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
+    ]
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    },
+    {
+     "event_id": "b",
+     "event_at": "2026-10-05",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "b",
+      "event_at": "2026-10-05",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     },
+     {
+      "event_id": "b",
+      "event_at": "2026-10-05",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+    "reglas": [
+     "COMUN.REITERA_OBSERVACION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": [
+     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
+    ]
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Otra observación",
+     "event_type": "Observación",
+     "response": ""
+    },
+    {
+     "event_id": "b",
+     "event_at": "2026-10-05",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "b",
+      "event_at": "2026-10-05",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otra observación",
+      "event_type": "Observación",
+      "response": ""
+     },
+     {
+      "event_id": "b",
+      "event_at": "2026-10-05",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    },
+    {
+     "event_id": "b",
+     "event_at": "2026-10-03",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Otra observación",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "b",
+      "event_at": "2026-10-03",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otra observación",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     },
+     {
+      "event_id": "b",
+      "event_at": "2026-10-03",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otra observación",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "b",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Otra observación",
+     "event_type": "Observación",
+     "response": ""
+    },
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     },
+     {
+      "event_id": "b",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otra observación",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     },
+     {
+      "event_id": "b",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otra observación",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "PÉRSONA PRM: SÉ SOLICITA ACTUALIZAR ANTÉCÉDÉNTÉS DÉ LA MÉDIDA.  ",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "PÉRSONA PRM: SÉ SOLICITA ACTUALIZAR ANTÉCÉDÉNTÉS DÉ LA MÉDIDA.  ",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "PÉRSONA PRM: SÉ SOLICITA ACTUALIZAR ANTÉCÉDÉNTÉS DÉ LA MÉDIDA.  ",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+    "reglas": [
+     "COMUN.REITERA_OBSERVACION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": [
+     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
+    ]
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Se solicita actualizar antecedentes de la medida hoy.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida hoy.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida hoy.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Otro Nombre PRM: Se solicita actualizar antecedentes de la medida.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+   "reglas": [],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otro Nombre PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Otro Nombre PRM: Se solicita actualizar antecedentes de la medida.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+    "reglas": [
+     "COMUN.REITERA_OBSERVACION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": [
+     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
+    ]
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
      "event_at": "2026-10-01T12:00:00+00:00",
      "time_precision": "DIA",
      "time_zone": "DESCONOCIDA",
@@ -1012,16 +2307,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Se reitera observación anterior del 1 de octubre de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    ]
+    "avisos": []
    }
   },
   {
@@ -1369,16 +2660,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 1 de marzo de 2024.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 01/03/2024; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -2223,16 +3510,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 30 de septiembre de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 30/09/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -4104,16 +5387,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 30 de marzo de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 30/03/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -5766,16 +7045,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 2 de julio de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 02/07/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -6205,16 +7480,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 1 de marzo de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 01/03/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -7546,16 +8817,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 2 de marzo de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 02/03/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -9374,16 +10641,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 1 de diciembre de 2025.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 01/12/2025; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -10018,16 +11281,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 1 de marzo de 2024.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 01/03/2024; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -10221,16 +11480,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 2 de julio de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 02/07/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -10709,16 +11964,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 28 de febrero de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 28/02/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -11436,16 +12687,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 28 de febrero de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 28/02/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -11577,16 +12824,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 30 de junio de 2024.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 30/06/2024; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -14048,16 +15291,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 2 de octubre de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 02/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -14687,16 +15926,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 3 de julio de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 03/07/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {
@@ -16441,16 +17676,12 @@
     ]
    ],
    "reiteracion": {
-    "observacion": "Persona PRM: Se reitera observación anterior del 2 de marzo de 2026.",
-    "reglas": [
-     "COMUN.REITERA_OBSERVACION"
-    ],
+    "observacion": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
+    "reglas": [],
     "acciones": [
      "programa_espera"
     ],
-    "avisos": [
-     "CT-07: la observación propuesta repetía la del 02/03/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Se solicita actualizar antecedentes de la medida."
-    ]
+    "avisos": []
    }
   },
   {

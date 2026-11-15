@@ -166,6 +166,44 @@ fn repite<'a>(display: &'a Value, propuesta: &str) -> Option<&'a Value> {
     }
     lista(display, "last_center").find(|e| similitud(&cuerpo, &self::cuerpo(texto(e, "text"))) >= 0.92)
 }
+/// No se reiteran: observaciones que consignan una gestión del Centro (correo o proyecto de resolución), derivaciones
+/// sin seguimiento, la proyección de ingreso copiada de la bitácora y las que ya llevan una reiteración por materia.
+const NO_REITERAR: [&str; 8] = [
+    "ESPERA.E05_",
+    "ESPERA.E07_",
+    "INFORMES.I01_",
+    "INFORMES.I02_",
+    "HISTORIA.C10_ESCRITO",
+    "HISTORIA.P_FINALIZADA",
+    "HISTORIA.REITERA",
+    "COMUN.NO_SEGUIMIENTO",
+];
+
+fn es_reiteracion(e: &Value) -> bool {
+    normalizar_columna(texto(e, "text")).contains("se reitera observacion anterior")
+}
+
+/// Última entrada «Centro» que no es una reiteración, si su texto es idéntico a la propuesta (sin distinguir
+/// mayúsculas, tildes ni espacios). Una fecha, un número o un estado distinto es una novedad y se escribe completa.
+fn identica_anterior<'a>(display: &'a Value, propuesta: &str) -> Option<&'a Value> {
+    if display["status"] != "ACREDITADA" {
+        return None;
+    }
+    let cuerpo = cuerpo(propuesta);
+    let periodo = display["center_period"].as_array().filter(|xs| !xs.is_empty());
+    let entradas = periodo.or_else(|| display["last_center"].as_array()).into_iter().flatten().filter(|e| !es_reiteracion(e));
+    // Como max() de Python: ante empate gana la primera.
+    let mut ultima: Option<&Value> = None;
+    for e in entradas {
+        let llave = |v: &Value| (texto(v, "event_at").to_string(), texto(v, "event_id").to_string());
+        if ultima.is_none_or(|u| llave(e) > llave(u)) {
+            ultima = Some(e);
+        }
+    }
+    let ultima = ultima?;
+    (!cuerpo.is_empty() && self::cuerpo(texto(ultima, "text")) == cuerpo).then_some(ultima)
+}
+
 fn fecha_corta(e: &Value) -> String {
     dia(e).map(|d| d.format("%d/%m/%Y").to_string()).unwrap_or_default()
 }
@@ -211,12 +249,17 @@ pub fn avisos(display: &Value, propuesta: &str, reglas: &[String], config: &Conf
     result
 }
 
+/// CT-07 con texto: si la observación propuesta es idéntica a la última del centro que no sea ya una reiteración, se
+/// consigna «Se reitera observación anterior del {fecha}». No se aplica a NO_REITERAR ni a filas excluidas.
 pub fn reiterar(propuesta: &mut Resultado, display: &Value, config: &Config) {
     let regla = "COMUN.REITERA_OBSERVACION";
     if config.desactivadas.contains(regla) {
         return;
     }
-    let Some(e) = repite(display, &propuesta.observacion) else {
+    if propuesta.excluido || propuesta.reglas.iter().any(|r| NO_REITERAR.iter().any(|p| r.starts_with(p))) {
+        return;
+    }
+    let Some(e) = identica_anterior(display, &propuesta.observacion) else {
         return;
     };
     let Some(plantilla) = config.textos.get(regla) else {

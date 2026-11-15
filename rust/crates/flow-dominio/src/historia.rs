@@ -15,6 +15,9 @@ pub struct Tramite {
     /// Folio numérico, o -1 si no es un número.
     #[serde(default = "sin_folio")]
     pub folio: i64,
+    /// Columna «Trámite» de SITFA (Resolución, Escrito, Actuación); vacío si no se conoce.
+    #[serde(default)]
+    pub tipo: String,
 }
 
 fn sin_folio() -> i64 {
@@ -24,12 +27,14 @@ fn sin_folio() -> i64 {
 impl Tramite {
     pub fn nuevo(desc: &str, fecha: NaiveDate, folio: &str) -> Self {
         let folio_txt = folio.trim().to_string();
-        let numero = if !folio_txt.is_empty() && folio_txt.bytes().all(|b| b.is_ascii_digit()) {
-            folio_txt.parse().unwrap_or(-1)
-        } else {
-            -1
-        };
-        Tramite { desc: desc.trim().to_string(), clave: clave(desc), fecha, folio_txt, folio: numero }
+        let numero =
+            if !folio_txt.is_empty() && folio_txt.bytes().all(|b| b.is_ascii_digit()) { folio_txt.parse().unwrap_or(-1) } else { -1 };
+        Tramite { desc: desc.trim().to_string(), clave: clave(desc), fecha, folio_txt, folio: numero, tipo: String::new() }
+    }
+    /// El mismo trámite con la columna «Trámite» de SITFA.
+    pub fn con_tipo(mut self, tipo: &str) -> Self {
+        self.tipo = tipo.trim().to_string();
+        self
     }
     pub fn id(&self) -> (String, NaiveDate, String) {
         (self.clave.clone(), self.fecha, self.folio_txt.clone())
@@ -77,9 +82,21 @@ impl Historia {
         matches!(self.cobertura.as_str(), "COMPLETA" | "PARCIAL")
     }
 
+    /// False para el último trámite anterior a la ventana que el paquete conserva solo como contexto.
+    pub fn en_ventana(&self, tramite: &Tramite) -> bool {
+        self.desde.is_none_or(|d| tramite.fecha >= d)
+    }
+
+    /// Trámites con esos nombres dentro de la ventana.
     pub fn buscar(&self, nombres: &[&str]) -> Vec<&Tramite> {
+        self.buscar_con(nombres, false)
+    }
+
+    /// Con `contexto`, también los anteriores a la ventana: sirven para saber si una situación sigue vigente,
+    /// nunca para redactar una constancia nueva.
+    pub fn buscar_con(&self, nombres: &[&str], contexto: bool) -> Vec<&Tramite> {
         let claves: Vec<String> = nombres.iter().map(|n| clave(n)).collect();
-        self.tramites.iter().filter(|t| claves.contains(&t.clave)).collect()
+        self.tramites.iter().filter(|t| claves.contains(&t.clave) && (contexto || self.en_ventana(t))).collect()
     }
 
     /// Vista al corte: nunca acredita ausencia antes de su ventana ni usa trámites posteriores al corte.

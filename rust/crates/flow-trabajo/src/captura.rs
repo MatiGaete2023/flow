@@ -32,7 +32,9 @@ fn historia(valor: &Value, corte: Fecha) -> Historia {
         .into_iter()
         .flatten()
         .filter_map(|f| {
-            Some(Tramite::nuevo(f["descripcion"].as_str().unwrap_or(""), fecha(&f["fecha_iso"])?, f["folio"].as_str().unwrap_or("")))
+            let tramite =
+                Tramite::nuevo(f["descripcion"].as_str().unwrap_or(""), fecha(&f["fecha_iso"])?, f["folio"].as_str().unwrap_or(""));
+            Some(tramite.con_tipo(f["tramite"].as_str().unwrap_or("")))
         })
         .collect();
     Historia::nueva(cobertura, fecha(&valor["desde"]), fecha(&valor["hasta"]), tramites).al_corte(corte)

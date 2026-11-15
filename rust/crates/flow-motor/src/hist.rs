@@ -2,10 +2,12 @@
 //! Cada función devuelve fragmentos (vacío si no aplica).
 
 use crate::ctx::{Ctx, Duplicidad, Frag};
-use chrono::{Duration, NaiveDate};
+use chrono::{Datelike, Duration, NaiveDate};
 use flow_dominio::historia::ultimo;
 use flow_dominio::texto::{clave, contiene_token, es_dce, fecha_es, fecha_mayoria, normalizar, titulo_programa};
 use flow_dominio::Tramite;
+use regex::Regex;
+use std::sync::LazyLock;
 
 // Nombres de nomenclatura (Desc. Trámite). «Ingreso» es la resolución que ordena el ingreso (Espera);
 // «Ingreso efectivo» es el trámite con que el programa informa la intervención (Cumplimiento).
@@ -29,31 +31,68 @@ pub const DESIGNA_ABOGADO: &str = "Designa abogado";
 pub const SIN_EFECTO_CURADOR: &str = "Deja sin efecto designación C. Ad-litem";
 const RESIDENCIA_PREFIJOS: [&str; 5] = ["rta", "rtt", "res", "rfa", "rva"];
 
-/// Constancias que citan trámites: con ellas, una causa de varios registros lleva la aclaración final.
-const CITAN: [&str; 15] = [
-    "HISTORIA.BASE_TRAMITE",
-    "HISTORIA.VARIOS",
-    "HISTORIA.E04_CON_FOLIO",
-    "HISTORIA.C2_PRORROGA_HASTA",
-    "HISTORIA.SERVICIO_INGRESO",
-    "HISTORIA.CURADOR_SIN_EFECTO",
-    "HISTORIA.CURADOR_DESIGNADO",
-    "HISTORIA.R11_ORDEN",
-    "HISTORIA.R11_PIDE_CUENTA",
-    "HISTORIA.R11_SIN_EFECTO",
-    "HISTORIA.R11_TERMINO",
-    "HISTORIA.SOLICITUD_DCE",
-    "HISTORIA.CONTINUIDAD_ATENCION",
-    "HISTORIA.INFORME_INGRESADO",
-    "HISTORIA.C10_ESCRITO",
+/// Sin regla ni marca por decisión del usuario: no cuentan como «trámites sin regla».
+const IGNORADAS: [&str; 6] = [
+    "Resp. Diagnóstico clínico especializado",
+    "Resp. Rectificación DCE (escrito)",
+    "SPE. Resp. Rectificación DCE (escrito)",
+    "Derivación Dirección Reg.",
+    "Pide cuenta Derivación D.R.",
+    "Resp. Derivación dir. regional",
 ];
+/// Nomenclaturas que alguna regla reconoce (`vocabulario.py::CONOCIDAS`).
+const CONOCIDAS: [&str; 21] = [
+    INGRESO_EFECTIVO,
+    PRORROGA,
+    INGRESO_INFORME_X,
+    ORDEN_BUSQUEDA,
+    PIDE_CUENTA_BUSQUEDA,
+    SIN_EFECTO_BUSQUEDA,
+    TERMINO_BUSQUEDA,
+    SIN_EFECTO_MN,
+    SIN_EFECTO_DR,
+    CONTINUIDAD,
+    SOLICITUD_DCE,
+    DERECHO_OIDO,
+    SERVICIO,
+    CONCILIACION,
+    DICTACION_SENTENCIA,
+    EGRESO_SERVICIO,
+    DESIGNA_ABOGADO,
+    SIN_EFECTO_CURADOR,
+    "Inf. Cump Programa Ambulatorio",
+    "Inf. Cump FAE/FAS",
+    "Inf. Cump Centro Residencial",
+];
+/// Último trámite anterior a la ventana que el Descargador conserva como contexto (`vocabulario.py::CONTEXTO`).
+pub const CONTEXTO: [&str; 9] = [
+    ORDEN_BUSQUEDA,
+    TERMINO_BUSQUEDA,
+    SIN_EFECTO_BUSQUEDA,
+    CONCILIACION,
+    DICTACION_SENTENCIA,
+    EGRESO_SERVICIO,
+    DESIGNA_ABOGADO,
+    SIN_EFECTO_CURADOR,
+    PRORROGA,
+];
+
+const RESOLUCION: &str = "en resolución de fecha";
+const MESES: [&str; 12] =
+    ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+static PROYECCION: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r"(?i)proyecta\s+(?:el\s+)?ingreso(?:\s+efectivo)?\s+para\s+(?:el\s+mes\s+de\s+|el\s+|)({}|setiembre)\b(?:\s+(?:de\s+|del\s+)?(\d{{4}}))?",
+        MESES.join("|")
+    ))
+    .unwrap()
+});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Materia {
     Curador,
     SinFicha,
     SinFae,
-    Vencida,
 }
 
 impl Materia {
@@ -62,7 +101,6 @@ impl Materia {
             Materia::Curador => ("COMUN.CURADOR", "MATERIA_CURADOR"),
             Materia::SinFicha => ("CUMPLIMIENTO.C07_SIN_FICHA", "MATERIA_SIN_FICHA"),
             Materia::SinFae => ("CUMPLIMIENTO.C08_FICHA_FAE", "MATERIA_SIN_FAE"),
-            Materia::Vencida => ("CUMPLIMIENTO.C04_VENCIDA", "MATERIA_VENCIDA"),
         }
     }
     fn patron(self) -> &'static str {
@@ -70,7 +108,6 @@ impl Materia {
             Materia::Curador => "no registra curador ad litem",
             Materia::SinFicha => "no registra ficha individual",
             Materia::SinFae => "no registra ficha fae",
-            Materia::Vencida => "medida vencida en rus",
         }
     }
 }
@@ -117,9 +154,54 @@ fn folio_fecha(t: &Tramite) -> [(&'static str, String); 2] {
     [("FOLIO", t.folio_visible().to_string()), ("FECHA", fecha_es(t.fecha))]
 }
 
-/// Tramites aún no citados en esta fila.
-fn pendientes(ctx: &Ctx, nombres: &[&str]) -> Vec<Tramite> {
-    ctx.tramites(nombres).into_iter().filter(|t| !ctx.emitidos.contains(&t.id())).collect()
+/// La causa tiene más de un registro en la nómina: la historia, que es de la causa, no se puede atribuir a esta fila.
+/// No se afirman hechos personales ni se retiran gestiones por un trámite.
+pub fn varios_registros(ctx: &Ctx) -> bool {
+    ctx.duplicidad.is_some()
+}
+
+/// Nombra el trámite por lo que es: «en resolución de fecha» pasa a «en escrito de fecha» o «en actuación de fecha»
+/// según la columna «Trámite» de SITFA. Sin ese dato se conserva «resolución».
+fn cita(fragmento: Frag, tramite: &Tramite) -> Frag {
+    let nuevo = match clave(&tramite.tipo).as_str() {
+        "escrito" => "en escrito de fecha",
+        "actuacion" => "en actuación de fecha",
+        _ => return fragmento,
+    };
+    if fragmento.es_vacio() || !fragmento.texto.contains(RESOLUCION) {
+        return fragmento;
+    }
+    Frag {
+        texto: fragmento.texto.replacen(RESOLUCION, nuevo, 1),
+        grupo: fragmento.grupo,
+        partes: fragmento.partes.iter().map(|(t, g)| (t.replacen(RESOLUCION, nuevo, 1), *g)).collect(),
+        dato: fragmento.dato,
+    }
+}
+
+/// Fecha de la última observación de la bitácora del ingreso, o None si no hay bitácora.
+pub fn ultima_observacion(ctx: &Ctx) -> Option<NaiveDate> {
+    ctx.bitacora.last().map(|o| o.fecha)
+}
+
+/// Una observación de la bitácora, del día del trámite o posterior, ya cita su folio («folio N»).
+fn citado(ctx: &Ctx, tramite: &Tramite) -> bool {
+    !tramite.folio_txt.is_empty()
+        && ctx.bitacora.iter().any(|o| o.fecha >= tramite.fecha && cita_folio(&clave(&o.texto), &tramite.folio_txt))
+}
+
+/// Una constancia de historia se dice solo si el trámite es de la fecha de la última observación o posterior y esa
+/// bitácora no citó ya su folio. Sin bitácora, todo trámite de la ventana es novedad.
+pub fn novedad(ctx: &Ctx, tramite: &Tramite) -> bool {
+    if ultima_observacion(ctx).is_some_and(|u| tramite.fecha < u) {
+        return false;
+    }
+    !citado(ctx, tramite)
+}
+
+/// Trámites aún no citados en esta fila y que son novedad.
+fn nuevos(ctx: &Ctx, nombres: &[&str]) -> Vec<Tramite> {
+    ctx.tramites(nombres).into_iter().filter(|t| !ctx.emitidos.contains(&t.id()) && novedad(ctx, t)).collect()
 }
 
 /// Texto base de uno o varios trámites del mismo nombre; omite los ya citados.
@@ -128,18 +210,18 @@ fn constancia(ctx: &mut Ctx, lista: Vec<Tramite>) -> Frag {
     let Some(ult) = ultimo(&refs(&lista)).cloned() else { return Frag::vacio() };
     ctx.emitidos.extend(lista.iter().map(Tramite::id));
     let mut datos = vec![("DESC", ult.desc.clone()), ("FECHA", fecha_es(ult.fecha)), ("FOLIO", ult.folio_visible().to_string())];
-    if lista.len() == 1 {
+    let texto = if lista.len() == 1 {
         ctx.render("HISTORIA", "BASE_TRAMITE", &datos)
     } else {
         datos.push(("N", lista.len().to_string()));
         ctx.render("HISTORIA", "VARIOS", &datos)
-    }
+    };
+    cita(texto, &ult)
 }
 
 /// Regla 1: folio del trámite «Ing.Serv. …» fechado el día de la resolución de RUS; None si no hay o hay varios.
 pub fn folio_resolucion(ctx: &mut Ctx, fecha: NaiveDate) -> Option<String> {
-    let ingresos: Vec<Tramite> =
-        ctx.tramites(&[SERVICIO]).into_iter().filter(|t| t.fecha == fecha && !t.folio_txt.is_empty()).collect();
+    let ingresos: Vec<Tramite> = ctx.tramites(&[SERVICIO]).into_iter().filter(|t| t.fecha == fecha && !t.folio_txt.is_empty()).collect();
     let mut folios: Vec<&str> = ingresos.iter().map(|t| t.folio_txt.as_str()).collect();
     folios.sort_unstable();
     folios.dedup();
@@ -164,16 +246,27 @@ pub fn ingreso_efectivo_en_espera(ctx: &mut Ctx, corte: NaiveDate, espera: Optio
     }
 }
 
-pub fn lista_larga(ctx: &Ctx, programa: &str, espera: Option<i64>) -> bool {
-    espera.is_some_and(|e| intervencion(programa) == Intervencion::Residencial && e > ctx.umbral("lista_espera_larga"))
-}
-
-pub fn lista_espera_larga(ctx: &mut Ctx, programa: &str, espera: Option<i64>) -> Vec<Frag> {
-    if lista_larga(ctx, programa, espera) {
-        vec![ctx.render("HISTORIA", "E10_LISTA", &[("N", espera.unwrap().to_string())])]
-    } else {
-        Vec::new()
+/// Espera: si la última observación de la bitácora dice «…proyecta ingreso efectivo para el mes de M», devuelve esa
+/// oración tal como está escrita mientras M sea posterior al mes del corte; si no, vacío.
+pub fn proyeccion_ingreso(ctx: &Ctx, corte: NaiveDate) -> String {
+    let Some(ultima) = ctx.bitacora.last() else { return String::new() };
+    let texto = ultima.texto.split_whitespace().collect::<Vec<_>>().join(" ");
+    let Some(hallazgo) = PROYECCION.captures(&texto) else { return String::new() };
+    let entero = hallazgo.get(0).unwrap();
+    let nombre = hallazgo[1].to_lowercase();
+    let mes = if nombre == "setiembre" { 9 } else { MESES.iter().position(|m| *m == nombre).map_or(0, |p| p as u32 + 1) };
+    let anio = match hallazgo.get(2).and_then(|a| a.as_str().parse::<i32>().ok()) {
+        Some(a) => a,
+        None => ultima.fecha.year() + i32::from(mes < ultima.fecha.month()),
+    };
+    if (anio, mes) <= (corte.year(), corte.month()) {
+        return String::new();
     }
+    let previo = &texto[..entero.start()];
+    let corte_previo = [previo.rfind(". "), previo.rfind(": ")].into_iter().flatten().max();
+    let inicio = corte_previo.map_or(0, |c| c + 2);
+    let fin = texto[entero.end()..].find('.').map_or(texto.len(), |p| entero.end() + p + 1);
+    texto[inicio..fin].trim().to_string()
 }
 
 pub fn marcar_duplicidad(ctx: &mut Ctx) {
@@ -182,63 +275,79 @@ pub fn marcar_duplicidad(ctx: &mut Ctx) {
     }
 }
 
+/// Materias de REITERA presentes en una observación previa, por oración: una oración que reitera no es la original.
 fn materias(texto: &str) -> Vec<Materia> {
-    let limpio = clave(texto);
-    if limpio.starts_with("se reitera") {
-        return Vec::new();
-    }
-    [Materia::Curador, Materia::SinFicha, Materia::SinFae, Materia::Vencida]
+    let oraciones: Vec<String> = crate::ctx::oraciones(texto).iter().map(|o| clave(o)).filter(|o| !o.contains("se reitera")).collect();
+    [Materia::Curador, Materia::SinFicha, Materia::SinFae]
         .into_iter()
-        .filter(|m| limpio.contains(m.patron()))
+        .filter(|m| oraciones.iter().any(|o| o.contains(m.patron())))
         .collect()
 }
 
-/// REITERA: vacío si no hay observación previa de la materia o la regla original está desactivada.
+/// REITERA: vacío si no hay observación previa de la materia o la regla original está desactivada. Con un trámite de
+/// curador posterior a la observación citada la situación cambió y no se reitera.
 pub fn reitera(ctx: &mut Ctx, materia: Materia) -> Frag {
     let (original, clave_materia) = materia.original();
     if ctx.desactivada(original) {
         return Frag::vacio();
     }
     let hoy = ctx.hoy;
-    let Some(fecha) = ctx.bitacora.iter().find(|o| o.fecha < hoy && materias(&o.texto).contains(&materia)).map(|o| o.fecha)
-    else {
+    let Some(fecha) = ctx.bitacora.iter().find(|o| o.fecha < hoy && materias(&o.texto).contains(&materia)).map(|o| o.fecha) else {
         return Frag::vacio();
     };
+    if materia == Materia::Curador && ctx.tramites_con(&[DESIGNA_ABOGADO, SIN_EFECTO_CURADOR], true).iter().any(|t| t.fecha > fecha) {
+        return Frag::vacio();
+    }
     let texto_materia = ctx.render("HISTORIA", clave_materia, &[]).texto;
     let frag = ctx.render("HISTORIA", "REITERA", &[("FECHA_ANTERIOR", fecha_es(fecha)), ("MATERIA", texto_materia)]);
     if frag.es_vacio() {
         return frag;
     }
     ctx.eventos.push(original.to_string());
-    // Reiterar la ausencia de curador o de ficha es gestión del Tribunal; reiterar el vencimiento es constancia.
-    Frag::simple(frag.texto, if materia == Materia::Vencida { 'C' } else { 'T' })
+    // Reiterar la ausencia de curador o de ficha es gestión del Tribunal.
+    Frag::simple(frag.texto, 'T')
 }
 
-/// Última designación o baja de curador de la historia, solo si RUS no registra curador.
+/// (trámite, es_baja) del último trámite de curador de la causa, incluido el contexto anterior a la ventana.
+fn ultimo_curador(ctx: &Ctx) -> Option<(Tramite, bool)> {
+    let designa = ultimo(&refs(&ctx.tramites_con(&[DESIGNA_ABOGADO], true))).cloned();
+    let baja = ultimo(&refs(&ctx.tramites_con(&[SIN_EFECTO_CURADOR], true))).cloned();
+    match (designa, baja) {
+        (None, None) => None,
+        (None, Some(b)) => Some((b, true)),
+        (Some(d), None) => Some((d, false)),
+        (Some(d), Some(b)) => Some(if d.posterior_a(&b) { (d, false) } else { (b, true) }),
+    }
+}
+
+/// RUS no registra curador y lo último de la causa es «Deja sin efecto designación C. Ad-litem», en una causa de un
+/// solo registro: no hay a quién asociar y la observación no lo sugiere.
+pub fn curador_sin_efecto(ctx: &Ctx, rus_sin_curador: bool) -> bool {
+    if !rus_sin_curador || varios_registros(ctx) {
+        return false;
+    }
+    ultimo_curador(ctx).is_some_and(|(_, baja)| baja)
+}
+
+/// Último trámite de curador de la historia, solo si RUS no registra curador y la causa tiene un solo registro.
+/// Se cita con su nombre literal: la nomenclatura no acredita que sea curador ni de quién.
 pub fn curador_designaciones(ctx: &mut Ctx, rus_sin_curador: bool) -> Vec<Frag> {
-    if !rus_sin_curador {
+    if !rus_sin_curador || varios_registros(ctx) {
         return Vec::new();
     }
-    let designa = ultimo(&refs(&ctx.tramites(&[DESIGNA_ABOGADO]))).cloned();
-    let baja = ultimo(&refs(&ctx.tramites(&[SIN_EFECTO_CURADOR]))).cloned();
-    let (ult, es_baja) = match (designa, baja) {
-        (None, None) => return Vec::new(),
-        (None, Some(b)) => (b, true),
-        (Some(d), None) => (d, false),
-        (Some(d), Some(b)) => {
-            if d.posterior_a(&b) {
-                (d, false)
-            } else {
-                (b, true)
-            }
-        }
-    };
-    if !ctx.emitidos.insert(ult.id()) {
+    let Some((ult, es_baja)) = ultimo_curador(ctx) else { return Vec::new() };
+    let Some(h) = ctx.h() else { return Vec::new() };
+    if !h.en_ventana(&ult) || ctx.emitidos.contains(&ult.id()) || !novedad(ctx, &ult) {
         return Vec::new();
     }
     let llave = if es_baja { "CURADOR_SIN_EFECTO" } else { "CURADOR_DESIGNADO" };
     ctx.marcar(2, llave, "Curador ad litem en la historia y RUS sin curador registrado");
-    vec![ctx.render("HISTORIA", llave, &folio_fecha(&ult))]
+    let texto = constancia(ctx, vec![ult]);
+    if texto.es_vacio() {
+        Vec::new()
+    } else {
+        vec![texto]
+    }
 }
 
 /// Categorías distintas tras «Institución:» en una celda «(RUT)NOMBRE - Institución: X#(RUT)…».
@@ -272,31 +381,38 @@ pub fn curador_instituciones(ctx: &mut Ctx, celda: &str, pnombre: &str) -> Vec<F
     vec![ctx.render("HISTORIA", "T5_INSTITUCIONES", &[("N", cantidad.to_string()), ("PNOMBRE", pnombre.to_string())])]
 }
 
-fn ultimo_pendiente(ctx: &mut Ctx, nombre: &str) -> Option<Tramite> {
-    let ult = ultimo(&refs(&pendientes(ctx, &[nombre]))).cloned()?;
+fn ultimo_nuevo(ctx: &mut Ctx, nombre: &str) -> Option<Tramite> {
+    let ult = ultimo(&refs(&nuevos(ctx, &[nombre]))).cloned()?;
     ctx.emitidos.insert(ult.id());
     Some(ult)
 }
 
-/// Espera: resolución que dispone el ingreso al programa («Ing.Serv. …»).
+/// Espera: resolución que dispone el ingreso al programa («Ing.Serv. …»); el programa es el de la fila de RUS, por
+/// eso solo se dice en causas de un registro.
 pub fn servicio(ctx: &mut Ctx, programa: &str) -> Vec<Frag> {
-    let Some(ult) = ultimo_pendiente(ctx, SERVICIO) else { return Vec::new() };
+    if varios_registros(ctx) {
+        return Vec::new();
+    }
+    let Some(ult) = ultimo_nuevo(ctx, SERVICIO) else { return Vec::new() };
     let [folio, fecha] = folio_fecha(&ult);
-    vec![ctx.render("HISTORIA", "SERVICIO_INGRESO", &[("PROGRAMA", titulo_programa(programa)), folio, fecha])]
+    let texto = ctx.render("HISTORIA", "SERVICIO_INGRESO", &[("PROGRAMA", titulo_programa(programa)), folio, fecha]);
+    vec![cita(texto, &ult)]
 }
 
 pub fn continuidad(ctx: &mut Ctx) -> Vec<Frag> {
-    let Some(ult) = ultimo_pendiente(ctx, CONTINUIDAD) else { return Vec::new() };
-    vec![ctx.render("HISTORIA", "CONTINUIDAD_ATENCION", &folio_fecha(&ult))]
+    let Some(ult) = ultimo_nuevo(ctx, CONTINUIDAD) else { return Vec::new() };
+    let texto = ctx.render("HISTORIA", "CONTINUIDAD_ATENCION", &folio_fecha(&ult));
+    vec![cita(texto, &ult)]
 }
 
 /// Cumplimiento DCE con la medida vencida: informe clínico diagnóstico ordenado en autos.
 pub fn solicitud_dce(ctx: &mut Ctx, programa: &str, vencida: bool) -> Vec<Frag> {
-    if !vencida || intervencion(programa) != Intervencion::Dce {
+    if !vencida || intervencion(programa) != Intervencion::Dce || varios_registros(ctx) {
         return Vec::new();
     }
-    let Some(ult) = ultimo_pendiente(ctx, SOLICITUD_DCE) else { return Vec::new() };
-    vec![ctx.render("HISTORIA", "SOLICITUD_DCE", &folio_fecha(&ult))]
+    let Some(ult) = ultimo_nuevo(ctx, SOLICITUD_DCE) else { return Vec::new() };
+    let texto = ctx.render("HISTORIA", "SOLICITUD_DCE", &folio_fecha(&ult));
+    vec![cita(texto, &ult)]
 }
 
 pub fn marcas_sin_efecto(ctx: &mut Ctx) {
@@ -306,6 +422,33 @@ pub fn marcas_sin_efecto(ctx: &mut Ctx) {
     if !ctx.tramites(&[SIN_EFECTO_MN]).is_empty() {
         ctx.marcar(2, "DEJA_SIN_EFECTO_MN", "Deja sin efecto medida interconexión M.N. en la historia");
     }
+    tramites_sin_regla(ctx);
+}
+
+/// Deja rastro de lo que el motor no reconoce: trámites nuevos de la ventana cuyo nombre no está en el vocabulario.
+/// Solo marca (nivel 3); nunca va al texto para RUS.
+fn tramites_sin_regla(ctx: &mut Ctx) {
+    let Some(h) = ctx.h() else { return };
+    let conocidas: Vec<String> = CONOCIDAS.iter().chain(IGNORADAS.iter()).map(|n| clave(n)).collect();
+    let mut nombres: Vec<(String, String)> = Vec::new();
+    for t in &h.tramites {
+        if h.en_ventana(t) && !conocidas.contains(&t.clave) && novedad(ctx, t) {
+            match nombres.iter_mut().find(|(c, _)| *c == t.clave) {
+                Some(par) => par.1 = t.desc.clone(),
+                None => nombres.push((t.clave.clone(), t.desc.clone())),
+            }
+        }
+    }
+    if nombres.is_empty() {
+        return;
+    }
+    let mut lista: Vec<String> = nombres.into_iter().map(|(_, d)| d).collect();
+    lista.sort();
+    let mut detalle = lista.iter().take(5).cloned().collect::<Vec<_>>().join(", ");
+    if lista.len() > 5 {
+        detalle.push_str(&format!(" y {} más", lista.len() - 5));
+    }
+    ctx.marcar(3, "TRAMITES_SIN_REGLA", &format!("Trámites sin regla en la historia ({}): {detalle}", lista.len()));
 }
 
 /// «folio 12», «folio n 12» o «folio no 12» como palabra, sin más dígitos después.
@@ -334,8 +477,7 @@ fn en_bitacora(ctx: &Ctx, tramite: &Tramite, materia: &str) -> bool {
     let fecha = clave(&fecha_es(tramite.fecha));
     ctx.bitacora.iter().filter(|o| o.fecha >= tramite.fecha).any(|o| {
         let texto = clave(&o.texto);
-        texto.contains(materia)
-            && (texto.contains(&fecha) || (!tramite.folio_txt.is_empty() && cita_folio(&texto, &tramite.folio_txt)))
+        texto.contains(materia) && (texto.contains(&fecha) || (!tramite.folio_txt.is_empty() && cita_folio(&texto, &tramite.folio_txt)))
     })
 }
 
@@ -355,17 +497,28 @@ fn frase_busqueda(ctx: &mut Ctx, tramite: &Tramite, posicion: usize) -> Frag {
     Frag::simple(format!("{deseado}{}", &frag.texto[actual.len()..]), 'C')
 }
 
-/// R11: primero la orden de búsqueda y luego sus trámites; solo si el último es reciente y la bitácora no lo observó.
+/// Órdenes de búsqueda vigentes: las que ningún cierre tiene como su orden más cercana (un término cierra una sola
+/// orden). Cuenta también el último trámite anterior a la ventana conservado como contexto.
+fn busquedas_vigentes(ctx: &Ctx) -> Vec<Tramite> {
+    let ordenes = ctx.tramites_con(&[ORDEN_BUSQUEDA], true);
+    let cierres = ctx.tramites_con(&[TERMINO_BUSQUEDA, SIN_EFECTO_BUSQUEDA], true);
+    let cerradas: Vec<&Tramite> =
+        cierres.iter().filter_map(|c| ultimo(&ordenes.iter().filter(|o| c.posterior_a(o)).collect::<Vec<_>>())).collect();
+    ordenes.iter().filter(|o| !cerradas.contains(o)).cloned().collect()
+}
+
+/// R11: primero la orden de búsqueda y luego sus trámites. Con bitácora, se dice si su último trámite es novedad; sin
+/// bitácora, si cae en los últimos `ventana_busqueda` días. La orden puede ser anterior a la ventana (contexto).
 pub fn busqueda_historia(ctx: &mut Ctx) -> Vec<Frag> {
-    if ctx.h().is_none() {
-        return Vec::new();
-    }
-    let ordenes = ctx.tramites(&[ORDEN_BUSQUEDA]);
-    let cierres = ctx.tramites(&[TERMINO_BUSQUEDA, SIN_EFECTO_BUSQUEDA]);
-    if ordenes.iter().any(|o| !cierres.iter().any(|c| c.posterior_a(o))) {
+    let Some(h) = ctx.h() else { return Vec::new() };
+    let h = h.clone();
+    if !busquedas_vigentes(ctx).is_empty() {
         ctx.marcar(1, "R11_BUSQUEDA_VIGENTE", "Orden de búsqueda vigente");
     }
     let desde = ctx.hoy - Duration::days(ctx.umbral("ventana_busqueda"));
+    let con_bitacora = ultima_observacion(ctx).is_some();
+    let reciente = |ctx: &Ctx, t: &Tramite| h.en_ventana(t) && if con_bitacora { novedad(ctx, t) } else { t.fecha >= desde };
+    let ordenes = ctx.tramites_con(&[ORDEN_BUSQUEDA], true);
     let seguimiento = ctx.tramites(&[PIDE_CUENTA_BUSQUEDA, SIN_EFECTO_BUSQUEDA, TERMINO_BUSQUEDA]);
     let mut cadenas: Vec<Vec<Tramite>> = ordenes.iter().map(|o| vec![o.clone()]).collect();
     let mut huerfanos = Vec::new();
@@ -390,7 +543,7 @@ pub fn busqueda_historia(ctx: &mut Ctx) -> Vec<Frag> {
         let destino = ordenes.iter().rposition(|o| o.id() == orden.id()).unwrap_or(i);
         let cadena = cadenas[destino].clone();
         let final_cadena = cadena.last().unwrap();
-        if final_cadena.fecha < desde || ctx.emitidos.contains(&orden.id()) || en_bitacora(ctx, final_cadena, "busqueda") {
+        if !reciente(ctx, final_cadena) || ctx.emitidos.contains(&orden.id()) || en_bitacora(ctx, final_cadena, "busqueda") {
             continue;
         }
         ctx.emitidos.extend(cadena.iter().map(Tramite::id));
@@ -407,7 +560,7 @@ pub fn busqueda_historia(ctx: &mut Ctx) -> Vec<Frag> {
         }
     }
     for t in huerfanos {
-        if t.fecha >= desde && !en_bitacora(ctx, &t, "busqueda") {
+        if reciente(ctx, &t) && !en_bitacora(ctx, &t, "busqueda") {
             let texto = constancia(ctx, vec![t]);
             if !texto.es_vacio() {
                 salida.push(texto);
@@ -426,27 +579,24 @@ pub fn oido_en_bitacora(ctx: &Ctx, fecha: NaiveDate) -> bool {
     })
 }
 
-/// Solo si RUS no tiene fecha de oído: usa la última aplicación de la historia.
+/// Solo si RUS no tiene fecha de oído. La historia acredita que se aplicó la nomenclatura en la causa, no la fecha en
+/// que la persona fue oída: se cita como trámite.
 pub fn derecho_oido(ctx: &mut Ctx) -> Vec<Frag> {
     let lista = ctx.tramites(&[DERECHO_OIDO]);
     let Some(ult) = ultimo(&refs(&lista)).cloned() else { return Vec::new() };
-    if oido_en_bitacora(ctx, ult.fecha) {
+    if oido_en_bitacora(ctx, ult.fecha) || !novedad(ctx, &ult) {
         return Vec::new();
     }
-    vec![ctx.render("COMUN", "OIDO", &[("FECHA_OIDO", fecha_es(ult.fecha))])]
-}
-
-/// Cumplimiento sin ingreso reciente: si la historia confirma el ingreso, se dice la fecha de RUS.
-pub fn ingreso_informado(ctx: &mut Ctx, fecha_ingreso: Option<NaiveDate>) -> Vec<Frag> {
-    let Some(inicio) = fecha_ingreso else { return Vec::new() };
-    let limite = inicio + Duration::days(ctx.umbral("ventana_ingreso"));
-    if !ctx.tramites(&[INGRESO_EFECTIVO]).iter().any(|t| inicio <= t.fecha && t.fecha <= limite) {
-        return Vec::new();
+    let texto = constancia(ctx, vec![ult]);
+    if texto.es_vacio() {
+        Vec::new()
+    } else {
+        vec![texto]
     }
-    vec![ctx.render("HISTORIA", "INGRESO_INFORMADO", &[("FECHA_INGRESO", fecha_es(inicio))])]
 }
 
-/// Prórroga: no se afirma con la medida vencida, por vencer o si RUS no la refleja; reciente → marca prioritaria.
+/// Prórroga: la historia acredita el trámite, no su término; se cita como trámite y el egreso de RUS se dice aparte.
+/// Con la medida vencida, por vencer o sin reflejar en RUS solo se dice si es reciente y la causa tiene un registro.
 pub fn prorroga(
     ctx: &mut Ctx,
     corte: NaiveDate,
@@ -455,30 +605,37 @@ pub fn prorroga(
     por_vencer: bool,
     egreso_dicho: bool,
 ) -> Vec<Frag> {
-    let lista = pendientes(ctx, &[PRORROGA]);
+    let lista: Vec<Tramite> = ctx.tramites(&[PRORROGA]).into_iter().filter(|t| !ctx.emitidos.contains(&t.id())).collect();
     let (Some(ult), Some(egreso)) = (ultimo(&refs(&lista)).cloned(), egreso) else { return Vec::new() };
     if en_bitacora(ctx, &ult, "prorrog") {
         return Vec::new();
     }
-    ctx.emitidos.extend(lista.iter().map(Tramite::id));
     let reciente = (corte - ult.fecha).num_days() <= ctx.umbral("prorroga_reciente");
     let sin_reflejar = egreso < ult.fecha;
-    if reciente && (vencida || por_vencer || sin_reflejar) {
-        ctx.marcar(
-            1,
-            "PRORROGA_REVISAR",
-            "Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS",
-        );
+    let pendiente = vencida || por_vencer || sin_reflejar;
+    if reciente && pendiente {
+        ctx.marcar(1, "PRORROGA_REVISAR", "Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS");
     }
-    if vencida || por_vencer || sin_reflejar || egreso_dicho {
+    // La marca avisa de un registro pendiente en RUS y se mantiene; la frase solo se dice si el trámite es novedad.
+    if !novedad(ctx, &ult) || (pendiente && (!reciente || varios_registros(ctx))) {
+        ctx.emitidos.extend(lista.iter().map(Tramite::id));
         return Vec::new();
     }
-    let [folio, fecha] = folio_fecha(&ult);
-    vec![ctx.render("HISTORIA", "C2_PRORROGA_HASTA", &[folio, fecha, ("FECHA_EGRESO_PROYECTADO", fecha_es(egreso))])]
+    let mut salida = vec![constancia(ctx, vec![ult])];
+    ctx.emitidos.extend(lista.iter().map(Tramite::id));
+    if !pendiente && !egreso_dicho && !varios_registros(ctx) {
+        salida.push(ctx.render("HISTORIA", "EGRESO_PROYECTADO", &[("FECHA_EGRESO_PROYECTADO", fecha_es(egreso))]));
+    }
+    salida.retain(|f| !f.es_vacio());
+    salida
 }
 
-/// C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior.
+/// C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior. Con varios registros no se
+/// sabe de quién es el informe y no se propone el proyecto.
 pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDate>) -> Vec<Frag> {
+    if varios_registros(ctx) {
+        return Vec::new();
+    }
     let mut candidatos = escrito_de(intervencion(programa)).map(|n| ctx.tramites(&[n])).unwrap_or_default();
     if let Some(d) = desde {
         candidatos.retain(|t| t.fecha >= d);
@@ -488,22 +645,31 @@ pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDat
         return Vec::new();
     }
     ctx.emitidos.insert(escrito.id());
-    vec![ctx.render(
+    let texto = ctx.render(
         "HISTORIA",
         "C10_ESCRITO",
         &[("FOLIO_ESCRITO", escrito.folio_visible().to_string()), ("FECHA_ESCRITO", fecha_es(escrito.fecha))],
-    )]
+    );
+    vec![cita(texto, &escrito)]
 }
 
-/// Informes: «Ingreso informe de cumplimiento X». Vencido: solo cuenta uno del día del vencimiento o posterior.
-pub fn informe_historia(ctx: &mut Ctx, vencimiento: NaiveDate, vencido: bool) -> Vec<Frag> {
-    let mut lista = pendientes(ctx, &[INGRESO_INFORME_X]);
+/// Informes: «Ingreso informe de cumplimiento X». Vencido: solo cuenta uno del día del vencimiento o posterior. Si
+/// no se puede atribuir a este informe (varios registros o varios vencidos), se cita como trámite de la causa.
+pub fn informe_historia(ctx: &mut Ctx, vencimiento: NaiveDate, vencido: bool, atribuible: bool) -> Vec<Frag> {
+    let mut lista: Vec<Tramite> = ctx.tramites(&[INGRESO_INFORME_X]);
     if vencido {
         lista.retain(|t| t.fecha >= vencimiento);
     }
+    lista.retain(|t| !ctx.emitidos.contains(&t.id()));
     let Some(ult) = ultimo(&refs(&lista)).cloned() else { return Vec::new() };
+    if !atribuible {
+        let texto = if novedad(ctx, &ult) { constancia(ctx, vec![ult]) } else { Frag::vacio() };
+        ctx.emitidos.extend(lista.iter().map(Tramite::id));
+        return if texto.es_vacio() { Vec::new() } else { vec![texto] };
+    }
     ctx.emitidos.extend(lista.iter().map(Tramite::id));
-    vec![ctx.render("HISTORIA", "INFORME_INGRESADO", &folio_fecha(&ult))]
+    let texto = ctx.render("HISTORIA", "INFORME_INGRESADO", &folio_fecha(&ult));
+    vec![cita(texto, &ult)]
 }
 
 /// Presencia de un ingreso o escrito anterior al vencimiento, sin inferir a qué período corresponde.
@@ -511,6 +677,11 @@ pub fn informe_previo(ctx: &Ctx, programa: &str, vencimiento: NaiveDate) -> bool
     let mut nombres = vec![INGRESO_INFORME_X];
     nombres.extend(escrito_de(intervencion(programa)));
     ctx.tramites(&nombres).iter().any(|t| t.fecha < vencimiento)
+}
+
+/// El pre-pase encontró más de un informe vencido (fechas distintas) del mismo ingreso.
+pub fn varios_vencidos(ctx: &Ctx) -> bool {
+    ctx.acumulado.is_some_and(|(n, _)| n >= 2)
 }
 
 /// J2: informes vencidos acumulados del mismo ingreso.
@@ -523,12 +694,7 @@ pub fn informes_acumulados(ctx: &mut Ctx) -> Vec<Frag> {
     }
 }
 
-pub fn egreso_posterior_mayoria(
-    ctx: &mut Ctx,
-    nacimiento: Option<NaiveDate>,
-    egreso: Option<NaiveDate>,
-    mayoria_dicha: bool,
-) -> Vec<Frag> {
+pub fn egreso_posterior_mayoria(ctx: &mut Ctx, nacimiento: Option<NaiveDate>, egreso: Option<NaiveDate>, mayoria_dicha: bool) -> Vec<Frag> {
     let (Some(nac), Some(egreso)) = (nacimiento, egreso) else { return Vec::new() };
     let mayoria = fecha_mayoria(nac);
     if egreso <= mayoria {
@@ -541,31 +707,16 @@ pub fn egreso_posterior_mayoria(
     }
 }
 
-/// La historia es de la causa: con varios registros en la nómina no se atribuye a un ingreso.
-pub fn aclaracion_causa(ctx: &mut Ctx) -> Vec<Frag> {
-    if ctx.duplicidad.is_none() {
-        return Vec::new();
-    }
-    if !ctx.eventos.iter().any(|e| CITAN.contains(&e.as_str()) && !ctx.desactivada(e)) {
-        return Vec::new();
-    }
-    let texto = ctx.render("HISTORIA", "R3_MULTI", &[]);
-    if texto.es_vacio() {
-        Vec::new()
-    } else {
-        vec![texto]
-    }
-}
-
-/// Causa P con conciliación o sentencia y sin egreso de servicio en esa fecha o posterior.
+/// Causa P con conciliación o sentencia y sin egreso de servicio en esa fecha o posterior. El cierre puede ser el
+/// último trámite anterior a la ventana conservado como contexto.
 pub fn causa_finalizada(ctx: &mut Ctx, rit: &str) -> Vec<Frag> {
     if !rit.trim().to_uppercase().starts_with('P') {
         return Vec::new();
     }
-    let Some(cierre) = ultimo(&refs(&ctx.tramites(&[CONCILIACION, DICTACION_SENTENCIA]))).cloned() else {
+    let Some(cierre) = ultimo(&refs(&ctx.tramites_con(&[CONCILIACION, DICTACION_SENTENCIA], true))).cloned() else {
         return Vec::new();
     };
-    if ctx.tramites(&[EGRESO_SERVICIO]).iter().any(|t| t.fecha >= cierre.fecha) {
+    if ctx.tramites_con(&[EGRESO_SERVICIO], true).iter().any(|t| t.fecha >= cierre.fecha) {
         return Vec::new();
     }
     vec![ctx.render("HISTORIA", "P_FINALIZADA", &[])]

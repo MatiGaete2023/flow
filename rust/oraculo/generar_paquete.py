@@ -34,6 +34,12 @@ def main():
         ('Resp. continuidad de atención', '2026-08-12', 12),
     ]
     metadata, tablas = captura_con_historia(tramites, registros=4)
+    # Columna «Trámite» de SITFA en raw_json: la constancia nombra el trámite como resolución, escrito o actuación.
+    tipos = {'Orden de búsqueda': 'Actuación', 'Pide cuenta búsqueda': 'Resolución', 'Resp. continuidad de atención': 'Escrito'}
+    for fila in tablas['historia_tramites']:
+        if fila['description'] in tipos:
+            fila['raw_json'] = json.dumps({'Trámite': tipos[fila['description']], 'Desc. Trámite': fila['description']},
+                                          ensure_ascii=False)
     destino = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
     destino.mkdir(parents=True, exist_ok=True)
     paquete = destino / 'paquete_historia.zip'

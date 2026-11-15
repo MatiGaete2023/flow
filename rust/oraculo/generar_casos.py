@@ -57,7 +57,10 @@ TRAMITES = [
     'Dictación de sentencia', 'Egreso de servicio protección especializada y otras redes', 'Designa abogado',
     'Deja sin efecto designación C. Ad-litem', 'Inf. Cump Programa Ambulatorio', 'Inf. Cump FAE/FAS',
     'Inf. Cump Centro Residencial', 'Resp. Diagnóstico clínico especializado', 'Mero trámite',
+    'Audiencia preparatoria ficticia', 'Resp. Rectificación DCE (escrito)',
 ]
+# Columna «Trámite» de SITFA: nombra la constancia como resolución, escrito o actuación.
+TIPOS = ['', '', 'Resolución', 'Escrito', 'Actuación', 'actuacion']
 MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre',
          'noviembre', 'diciembre']
 CAMPOS_FECHA = ('nacimiento', 'resolucion', 'ingreso', 'egreso_proy', 'oido', 'ficha_ind', 'ficha_fae', 'vencimiento')
@@ -154,7 +157,8 @@ class Gen:
             if anclas and self.r.random() < 0.35:
                 # Trámite fechado el mismo día (o cerca) de una fecha de RUS: resolución, vencimiento, ingreso.
                 dia = self.r.choice(anclas) + timedelta(days=self.r.choice([0, 0, 0, 1, 5, 20, -1]))
-            tramites.append({'desc': self.r.choice(TRAMITES), 'fecha': dia.isoformat(), 'folio_txt': folio})
+            tramites.append({'desc': self.r.choice(TRAMITES), 'fecha': dia.isoformat(), 'folio_txt': folio,
+                             'tipo': self.r.choice(TIPOS)})
         desde = self.dia(-130, -100) if self.r.random() < 0.8 else None
         if self.r.random() < 0.05:
             desde = self.dia(1, 30)
@@ -168,6 +172,11 @@ class Gen:
             'No registra ficha individual en RUS. Se sugiere confeccionarla.',
             'Sofía no registra ficha FAE en RUS.', 'Medida vencida en RUS desde el 1 de enero de 2026.',
             'Se reitera la observación sobre la medida vencida en RUS.', 'Medida revisada, sin observaciones.',
+            'Sofía PRM: No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 1 de '
+            'julio de 2026.',
+            'Sofía PRM: Medida revisada. El programa proyecta ingreso efectivo para el mes de diciembre. Se informa.',
+            'Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027.',
+            'Medida revisada. Proyecta ingreso efectivo para el mes de octubre.',
         ]
         for _ in range(self.r.randint(0, 3)):
             salida.append({'fecha': self.dia(-120, 10).isoformat(), 'texto': self.r.choice(frases)})
@@ -252,7 +261,8 @@ def esperado(caso):
     historia = None
     if caso['historia'] is not None:
         h = caso['historia']
-        filas = [{'event_at': t['fecha'], 'description': t['desc'], 'folio': t['folio_txt']} for t in h['tramites']]
+        filas = [{'event_at': t['fecha'], 'description': t['desc'], 'folio': t['folio_txt'],
+                  'raw_json': json.dumps({'Trámite': t.get('tipo', '')}, ensure_ascii=False)} for t in h['tramites']]
         historia = H.construir(filas, h['cobertura'], H.dia_iso(h['desde']), H.dia_iso(h['hasta']))
     bitacora = H.observaciones([{'event_at': o['fecha'], 'text': o['texto']} for o in caso['bitacora']])
     hoja2 = date.fromisoformat(caso['fecha_hoja2']) if caso['fecha_hoja2'] else None
@@ -311,24 +321,34 @@ def dirigidos(etapa):
     def f(dias):
         return {'t': 'fecha', 'v': (CORTE + timedelta(days=dias)).isoformat()}
 
-    def tr(desc, dias, folio):
-        return {'desc': desc, 'fecha': (CORTE + timedelta(days=dias)).isoformat(), 'folio_txt': folio}
+    def n(valor):
+        return {'t': 'numero', 'v': valor}
 
-    def caso(numero, campos, tramites, bitacora=(), duplicidad=None):
+    def tr(desc, dias, folio, tipo=''):
+        return {'desc': desc, 'fecha': (CORTE + timedelta(days=dias)).isoformat(), 'folio_txt': folio, 'tipo': tipo}
+
+    def obs(dias, texto):
+        return {'fecha': (CORTE + timedelta(days=dias)).isoformat(), 'texto': texto}
+
+    def caso(numero, campos, tramites, bitacora=(), duplicidad=None, acumulado=None, hoja2=None):
         base = {'tribunal': t('Juzgado de Letras de Laja'), 'nombre': t('SOFÍA PÉREZ'), 'rit': t('X-10-2099'),
                 'rut': t('11111111-K'), 'curador': t('(11111111-K)ANA EJEMPLO')}
         base.update(campos)
         return {'id': f'{etapa[:3]}-D{numero:02d}', 'etapa': etapa, 'corte': CORTE.isoformat(), 'desactivadas': [],
-                'campos': base, 'bitacora': list(bitacora), 'duplicidad': duplicidad, 'acumulado': None,
-                'fecha_hoja2': None,
+                'campos': base, 'bitacora': list(bitacora), 'duplicidad': duplicidad,
+                'acumulado': [acumulado[0], (CORTE + timedelta(days=acumulado[1])).isoformat()] if acumulado else None,
+                'fecha_hoja2': (CORTE + timedelta(days=hoja2)).isoformat() if hoja2 is not None else None,
                 'historia': {'cobertura': 'COMPLETA', 'desde': (CORTE - timedelta(days=120)).isoformat(),
                              'hasta': CORTE.isoformat(), 'tramites': list(tramites)}}
 
     busqueda = [tr('Orden de búsqueda', -30, '10'), tr('Pide cuenta búsqueda', -20, '11'),
                 tr('Pide cuenta búsqueda', -15, '12'), tr('Termino de búsqueda', -10, '13')]
     servicio = 'Ing.Serv. protección especializada y otras redes'
+    desconocidos = [tr(f'Trámite ficticio {letra}', -40 + i, str(50 + i)) for i, letra in enumerate('ABCDEFG')]
     if etapa == 'ESPERA':
-        e = {'programa': t('PRM Laja'), 'espera': {'t': 'numero', 'v': 5}, 'resolucion': f(-5)}
+        e = {'programa': t('PRM Laja'), 'espera': n(5), 'resolucion': f(-5)}
+        larga = {'programa': t('PRM Laja'), 'espera': n(60), 'resolucion': f(-50)}
+        sin_curador = {**e, 'curador': t('NO POSEE')}
         return [
             caso(1, e, [tr(servicio, -5, '7')]),
             caso(2, e, [tr(servicio, -5, '7'), tr(servicio, -5, '8')]),
@@ -336,19 +356,75 @@ def dirigidos(etapa):
             caso(4, e, busqueda, [{'fecha': (CORTE - timedelta(days=9)).isoformat(),
                                    'texto': 'Consta término de la búsqueda en folio 13.'}]),
             caso(5, e, [tr('Pide cuenta búsqueda', -3, '40'), tr('Orden de búsqueda', -100, '2')]),
+            # Proyección de ingreso informada por el programa (E-07): mes futuro, mes del corte, mes pasado, «setiembre».
+            caso(6, larga, [], [obs(-20, 'Sofía PRM: Medida revisada. El programa proyecta ingreso efectivo para el mes '
+                                         'de diciembre. Se informa al Tribunal.')]),
+            caso(7, larga, [], [obs(-20, 'Proyecta ingreso efectivo para el mes de noviembre.')]),
+            caso(8, larga, [], [obs(-20, 'El programa proyecta ingreso efectivo para el mes de octubre de 2026.')]),
+            caso(9, e, [], [obs(-23, 'Sofía PRM: Se proyecta el ingreso para setiembre')]),
+            caso(10, larga, [], [obs(-40, 'Proyecta ingreso efectivo para el mes de marzo del 2027.'),
+                                 obs(-10, 'Sofía PRM: Medida revisada, sin observaciones.')]),
+            # E-04 con una gestión del Tribunal: sin el paréntesis administrativo.
+            caso(11, sin_curador, []),
+            caso(12, e, []),
+            # Curador: designación dejada sin efecto; designación anterior a la ventana posterior a la observación.
+            caso(13, sin_curador, [tr('Deja sin efecto designación C. Ad-litem', -30, '20', 'Resolución')]),
+            caso(14, sin_curador, [tr('Designa abogado', -125, '3')],
+                 [obs(-140, 'Sofía PRM: No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.')]),
+            caso(15, sin_curador, [tr('Designa abogado', -30, '21', 'Escrito')], duplicidad='OTRO_REGISTRO'),
+            # Orden de búsqueda anterior a la ventana (contexto) y su cierre reciente: R11 completo.
+            caso(16, larga, [tr('Orden de búsqueda', -150, '1'), tr('Deja sin efecto búsqueda', -10, '30', 'Actuación')]),
+            caso(17, larga, [tr('Orden de búsqueda', -150, '1'), tr('Orden de búsqueda', -60, '5'),
+                             tr('Termino de búsqueda', -10, '30')]),
+            # Trámites sin regla (marca de nivel 3 con «y N más»), y novedad respecto de la última observación.
+            caso(18, larga, desconocidos),
+            caso(19, larga, desconocidos + [tr(servicio, -45, '9', 'Escrito')], [obs(-35, 'Revisado folio 56.')]),
+            caso(20, larga, [tr(servicio, -45, '9', 'Escrito'), tr('Resp. continuidad de atención', -30, '11', 'Actuación')]),
+            caso(21, larga, [tr('Derecho a ser oído', -20, '14', 'Actuación')]),
         ]
     if etapa == 'CUMPLIMIENTO':
         dce = {'programa': t('DCE Los Ángeles'), 'ingreso': f(-50), 'egreso_proy': f(-10),
-               'dias_cumpl': {'t': 'numero', 'v': 50}, 'dias_egresar': {'t': 'numero', 'v': -10}}
+               'dias_cumpl': n(50), 'dias_egresar': n(-10)}
         fae = {'programa': t('FAE PRO Biobío'), 'ingreso': f(-200), 'egreso_proy': f(100),
-               'dias_cumpl': {'t': 'numero', 'v': 200}, 'dias_egresar': {'t': 'numero', 'v': 100},
-               'ficha_fae': t('')}
+               'dias_cumpl': n(200), 'dias_egresar': n(100), 'ficha_fae': t('')}
         previa = [{'fecha': (CORTE - timedelta(days=40)).isoformat(), 'texto': 'Sofía no registra ficha FAE en RUS.'}]
+        mayor = {'nacimiento': f(-19 * 366)}
+        vigente = {'programa': t('PRM Laja'), 'ingreso': f(-200), 'egreso_proy': f(100), 'dias_cumpl': n(200),
+                   'dias_egresar': n(100)}
+        vencida = {**vigente, 'egreso_proy': f(-10), 'dias_egresar': n(-10)}
+        por_vencer = {**vigente, 'egreso_proy': f(20), 'dias_egresar': n(20)}
         return [
             caso(1, dce, [tr('SPE. Resp. Solicitud DCE (escrito)', -20, '15')]),
             caso(2, dce, [tr('SPE. Resp. Solicitud DCE (escrito)', -20, '15')] + busqueda),
             caso(3, fae, [], previa),
             caso(4, fae, [tr('Prorroga', -15, '30'), tr('Inf. Cump FAE/FAS', -8, '31')], previa),
+            # La mayoría de edad conserva la medida vencida o por vencer.
+            caso(5, {**vencida, **mayor}, []),
+            caso(6, {**por_vencer, **mayor}, []),
+            caso(7, {**vigente, **mayor}, []),
+            # Próximo informe con la medida por vencer: el día del egreso o antes se dice; después, no.
+            caso(8, por_vencer, [], hoja2=20),
+            caso(9, por_vencer, [], hoja2=10),
+            caso(10, por_vencer, [], hoja2=40),
+            caso(11, vencida, [], hoja2=5),
+            # Prórroga: citada como trámite; egreso de RUS aparte; con varios registros solo con la medida vigente.
+            caso(12, vigente, [tr('Prorroga', -15, '30', 'Resolución')]),
+            caso(13, vencida, [tr('Prorroga', -15, '30')]),
+            caso(14, vencida, [tr('Prorroga', -15, '30')], duplicidad='OTRO_REGISTRO'),
+            caso(15, vigente, [tr('Prorroga', -15, '30')], duplicidad='OTRO_REGISTRO'),
+            caso(16, vigente, [tr('Prorroga', -15, '30')], [obs(-5, 'Sofía PRM: Medida revisada, sin observaciones.')]),
+            caso(17, vigente, [tr('Prorroga', -150, '2')]),
+            # Causa P con la sentencia anterior a la ventana (contexto).
+            caso(18, {**vigente, 'rit': t('P-10-2099')}, [tr('Dictación de sentencia', -150, '4')]),
+            caso(19, {**vigente, 'rit': t('P-10-2099')},
+                 [tr('Dictación de sentencia', -150, '4'), tr('Egreso de servicio protección especializada y otras redes',
+                                                                -20, '9')]),
+            # Oído citado como trámite; escrito sin ingreso con varios registros; designación de curador.
+            caso(20, vigente, [tr('Derecho a ser oído', -20, '14', 'Actuación')]),
+            caso(21, vigente, [tr('Inf. Cump Programa Ambulatorio', -8, '31', 'Escrito')]),
+            caso(22, vigente, [tr('Inf. Cump Programa Ambulatorio', -8, '31')], duplicidad='OTRO_REGISTRO'),
+            caso(23, {**vigente, 'curador': t('---')}, [tr('Designa abogado', -30, '21', 'Escrito')]),
+            caso(24, vigente, desconocidos[:3]),
         ]
     dce = {'programa': t('DCE Los Ángeles'), 'vencimiento': f(-20)}
     gen = {'programa': t('PRM Laja'), 'vencimiento': f(-20)}
@@ -357,11 +433,20 @@ def dirigidos(etapa):
         caso(2, gen, [tr('Ingreso informe de cumplimiento X', -5, '21')], duplicidad='OTRO_REGISTRO'),
         caso(3, gen, [tr('Inf. Cump Programa Ambulatorio', -5, '22')]),
         caso(4, gen, [tr('Ingreso informe de cumplimiento X', -40, '9')]),
+        # DCE dentro del margen: vencimiento de RUS y plazo del correo.
+        caso(5, {**dce, 'vencimiento': f(-5)}, []),
+        caso(6, {**dce, 'vencimiento': f(-10)}, [tr('Ingreso informe de cumplimiento X', -2, '21', 'Escrito')]),
+        # Varios informes vencidos del ingreso: el trámite no se atribuye y se conservan las acciones.
+        caso(7, gen, [tr('Ingreso informe de cumplimiento X', -5, '21')], acumulado=(2, -50)),
+        caso(8, gen, [tr('Ingreso informe de cumplimiento X', -5, '21')], [obs(-1, 'Revisado.')], acumulado=(3, -80)),
+        caso(9, gen, [tr('Inf. Cump Programa Ambulatorio', -5, '22')], acumulado=(2, -50)),
+        caso(10, gen, [tr('Inf. Cump Programa Ambulatorio', -5, '22', 'Escrito')]),
+        caso(11, {**gen, 'vencimiento': f(10)}, [tr('Ingreso informe de cumplimiento X', -5, '21', 'Actuación')]),
     ]
 
 
 def main():
-    cantidad = int(sys.argv[1]) if len(sys.argv) > 1 else 700
+    cantidad = int(sys.argv[1]) if len(sys.argv) > 1 else 900
     semilla = int(sys.argv[2]) if len(sys.argv) > 2 else 20261112
     destino = RAIZ / 'rust' / 'casos'
     destino.mkdir(exist_ok=True)
@@ -385,7 +470,17 @@ def main():
     for etapa in ('espera', 'cumplimiento', 'informes'):
         for c in json.loads((destino / f'{etapa}.json').read_text(encoding='utf-8')):
             vistas.update(c['esperado']['reglas'])
-    print('Reglas sin ningún caso:', sorted(todas - vistas))
+    # Textos que el motor por fila no emite: la reiteración CT-07 la aplica bitacora_avisos.aplicar_reiteracion (la
+    # coteja generar_cronologia.py); C09_BASE_BREVE no tiene uso en el Python vigente y HISTORIA.VARIOS solo lo
+    # alcanzaría constancias(), que no tiene llamadores (constancia() siempre recibe un trámite).
+    fuera_del_motor = {'COMUN.REITERA_OBSERVACION', 'CUMPLIMIENTO.C09_BASE_BREVE', 'HISTORIA.VARIOS'}
+    print('Reglas sin ningún caso:', sorted(todas - vistas - fuera_del_motor))
+    print('Fuera del motor por fila (sin caso por diseño):', sorted(fuera_del_motor & (todas - vistas)))
+    marcas = set()
+    for etapa in ('espera', 'cumplimiento', 'informes'):
+        for c in json.loads((destino / f'{etapa}.json').read_text(encoding='utf-8')):
+            marcas.update(m['codigo'] for m in c['esperado']['marcas'])
+    print('Marcas vistas:', sorted(marcas))
 
 
 if __name__ == '__main__':

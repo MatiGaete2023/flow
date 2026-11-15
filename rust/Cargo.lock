@@ -1471,6 +1471,7 @@ version = "0.2.0"
 dependencies = [
  "chrono",
  "flow-dominio",
+ "regex",
  "serde",
  "serde_json",
 ]

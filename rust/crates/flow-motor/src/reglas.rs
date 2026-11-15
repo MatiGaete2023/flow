@@ -5,10 +5,12 @@ use crate::ctx::{componer, Ctx, Frag};
 use crate::hist::{self as h, Materia};
 use chrono::{Duration, NaiveDate};
 use flow_dominio::texto::{
-    contiene_token, dias_para_mayoria, edad_exacta, es_dce, es_derivacion_sin_seguimiento, fecha_es, fecha_mayoria,
-    lista_fechas_es, prefijo_observacion, primer_nombre, tiene_curador_real, titulo_programa,
+    contiene_token, dias_para_mayoria, edad_exacta, es_dce, es_derivacion_sin_seguimiento, fecha_es, fecha_mayoria, lista_fechas_es,
+    prefijo_observacion, primer_nombre, tiene_curador_real, titulo_programa,
 };
 use flow_dominio::{Registro, Tribunal};
+use regex::Regex;
+use std::sync::LazyLock;
 
 /// Días de margen tras el vencimiento RUS antes de pedir cuenta de un diagnóstico DCE.
 const MARGEN_DCE: i64 = 10;
@@ -47,6 +49,32 @@ fn oido(ctx: &mut Ctx, r: &Registro) -> Vec<Frag> {
     }
 }
 
+/// E-04 declara «no requiere gestión del Tribunal»: sobra si la misma observación pide o consigna una gestión.
+static ADMINISTRATIVA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s*\(Observación administrativa[^)]*\)\.?").unwrap());
+
+fn con_gestion(fragmentos: &[Frag]) -> bool {
+    fragmentos.iter().any(|f| {
+        !f.es_vacio()
+            && if f.partes.is_empty() { matches!(f.grupo, 'A' | 'T') } else { f.partes.iter().any(|(_, g)| matches!(g, 'A' | 'T')) }
+    })
+}
+
+/// Quita el paréntesis de E-04 cuando la observación trae una acción del Centro o una gestión del Tribunal.
+fn sin_parentesis(fragmentos: Vec<Frag>) -> Vec<Frag> {
+    if !con_gestion(&fragmentos) {
+        return fragmentos;
+    }
+    fragmentos
+        .into_iter()
+        .map(|f| {
+            if f.es_vacio() || !f.partes.is_empty() || !ADMINISTRATIVA.is_match(&f.texto) {
+                return f;
+            }
+            Frag { texto: ADMINISTRATIVA.replace_all(&f.texto, "").trim().to_string(), ..f }
+        })
+        .collect()
+}
+
 fn rus_sin_curador(r: &Registro) -> bool {
     r.tiene("curador") && !tiene_curador_real(&r.texto("curador"))
 }
@@ -57,6 +85,10 @@ fn curador(ctx: &mut Ctx, r: &Registro) -> Vec<Frag> {
     }
     let celda = r.texto("curador");
     if !tiene_curador_real(&celda) {
+        // Designación dejada sin efecto (causa de un registro): no hay a quién asociar; se dice sin sugerencia.
+        if h::curador_sin_efecto(ctx, true) && !ctx.desactivada("COMUN.CURADOR") {
+            return vec![ctx.render("COMUN", "CURADOR_SIN_DESIGNACION", &[])];
+        }
         let previa = h::reitera(ctx, Materia::Curador);
         return vec![if previa.es_vacio() { ctx.render("COMUN", "CURADOR", &[]) } else { previa }];
     }
@@ -101,7 +133,19 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
     h::ingreso_efectivo_en_espera(ctx, hoy, espera);
     h::marcas_sin_efecto(ctx);
     let mut e04 = false;
-    if let Some(fres) = r.fecha("resolucion") {
+    // Proyección de ingreso informada por el programa: se copia de la última observación mientras el mes proyectado
+    // no llegue; no se repiten correo ni proyecto. Llegado el mes, reglas por defecto.
+    let mut proyeccion = h::proyeccion_ingreso(ctx, hoy);
+    if !proyeccion.is_empty() {
+        let texto = ctx.render("ESPERA", "E07_PROYECCION", &[("PROYECCION", proyeccion.clone())]);
+        if texto.es_vacio() {
+            proyeccion.clear();
+        } else {
+            frags.push(texto);
+            principal = true;
+        }
+    }
+    if let Some(fres) = r.fecha("resolucion").filter(|_| proyeccion.is_empty()) {
         let d = (hoy - fres).num_days();
         if 0 <= d && d < ctx.umbral("resolucion_reciente") {
             let datos = [("PROGRAMA", prog.clone()), ("FECHA_RESOLUCION", fecha_es(fres))];
@@ -116,15 +160,10 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
     if r.tiene("espera") && espera.is_none_or(|e| e < 0) {
         ctx.incidencia("E-05/E-06", "tiempo de espera ausente o inválido (G-05)");
     }
-    // «Registra N días en lista de espera» dice lo mismo que los días de espera: se dice una vez.
-    let larga = h::lista_larga(ctx, &programa, espera);
+    // Los días de espera no se escriben en la observación: solo deciden la gestión.
     let dce = es_dce(&programa);
-    let umbral = if dce {
-        ctx.umbral("espera_dce")
-    } else {
-        ctx.umbral(&format!("espera_{}", tribunal.nombre().to_lowercase()))
-    };
-    if let Some(dias) = espera.filter(|e| *e >= umbral) {
+    let umbral = if dce { ctx.umbral("espera_dce") } else { ctx.umbral(&format!("espera_{}", tribunal.nombre().to_lowercase())) };
+    if let Some(dias) = espera.filter(|e| *e >= umbral && proyeccion.is_empty()) {
         let texto = if dce {
             "E05_SOLO_CORREO"
         } else if tribunal == Tribunal::Tome && dias < ctx.umbral("proyecto_tome") {
@@ -134,14 +173,10 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
         };
         frags.push(ctx.render("ESPERA", texto, &[]));
         principal = true;
-        if !larga {
-            frags.push(ctx.render("HISTORIA", "E05_DIAS", &[("CORTE", fecha_es(hoy)), ("N", dias.to_string())]));
-        }
     }
     if !principal {
         frags.push(ctx.render("ESPERA", "E06_SIN_RESOLUCION", &[("PROGRAMA", prog.clone())]));
     }
-    frags.extend(h::lista_espera_larga(ctx, &programa, espera));
     // Con E-04 la resolución de ingreso ya se dijo: el trámite «Ing.Serv.» no la repite.
     if !e04 {
         frags.extend(h::servicio(ctx, &programa));
@@ -150,8 +185,7 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
     frags.extend(h::continuidad(ctx));
     frags.extend(h::curador_designaciones(ctx, rus_sin_curador(r)));
     frags.extend(complementarias(ctx, r));
-    frags.extend(h::aclaracion_causa(ctx));
-    componer(&pfx, &frags)
+    componer(&pfx, &sin_parentesis(frags))
 }
 
 pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>) -> String {
@@ -177,8 +211,16 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
     let nac = r.fecha("nacimiento");
     let mayoria = nac.map(|n| [("PNOMBRE", pn.clone()), ("FECHA_MAYORIA", fecha_es(fecha_mayoria(n)))]);
     if nac.is_some_and(|n| edad_exacta(n, hoy) >= 18) {
+        // La mayoría de edad encabeza, pero no borra el estado de la medida ni su nómina.
         ctx.marcar(3, "REVISAR_MAYORIA", "Mayoría de edad");
-        return componer(&pfx, &[ctx.render("COMUN", "MAYORIA_EDAD", mayoria.as_ref().unwrap())]);
+        let mut frags = vec![ctx.render("COMUN", "MAYORIA_EDAD", mayoria.as_ref().unwrap())];
+        if h::vencida_valida(ctx, vencida) {
+            frags.push(ctx.render("CUMPLIMIENTO", "C04_VENCIDA", egreso.as_ref().unwrap()));
+        } else if fegr.is_some() && dpe.is_some_and(|d| 0 <= d && d <= ctx.umbral("medida")) && !vencida {
+            let texto = if dpe == Some(0) { "C05_VENCE_HOY" } else { "C05_POR_VENCER" };
+            frags.push(ctx.render("CUMPLIMIENTO", texto, egreso.as_ref().unwrap()));
+        }
+        return componer(&pfx, &frags);
     }
     let finalizada = h::causa_finalizada(ctx, &r.texto("rit"));
     if !finalizada.is_empty() {
@@ -221,11 +263,8 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
         ctx.incidencia("C-04/C-05", "días para egresar ausentes o inválidos (G-05)");
     }
     let vok = h::vencida_valida(ctx, vencida);
-    let mut reiterada = false;
     if vencida {
-        let previa = if vok { h::reitera(ctx, Materia::Vencida) } else { Frag::vacio() };
-        reiterada = !previa.es_vacio();
-        frags.push(if reiterada { previa } else { ctx.render("CUMPLIMIENTO", "C04_VENCIDA", egreso.as_ref().unwrap()) });
+        frags.push(ctx.render("CUMPLIMIENTO", "C04_VENCIDA", egreso.as_ref().unwrap()));
         principal = true;
     } else if negativos && fegr.is_none() {
         ctx.incidencia("C-04", "sin egreso proyectado (G-05)");
@@ -236,19 +275,15 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
         principal = true;
     }
     // La fecha de egreso se dice una sola vez: la dice la frase de la medida o la de ingreso reciente.
-    let egreso_dicho = (vencida && !reiterada) || c05 || (c03 && fegr.is_some());
+    let egreso_dicho = vencida || c05 || (c03 && fegr.is_some());
+    // Próximo informe: se dice también con la medida por vencer si el informe vence el día del egreso o antes; con la
+    // medida vencida se omite. Medida e informe son hechos distintos aunque compartan la fecha.
     if let Some(h2) = fecha_hoja2 {
-        if ((!vencida && !c05) || c03) && !(egreso_dicho && fegr == Some(h2)) {
-            frags.push(ctx.render(
-                "CUMPLIMIENTO",
-                "C10_HOJA2",
-                &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(h2))],
-            ));
+        let antes_del_egreso = c05 && fegr.is_some_and(|f| h2 <= f);
+        if (!vencida && !c05) || c03 || antes_del_egreso {
+            frags.push(ctx.render("CUMPLIMIENTO", "C10_HOJA2", &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(h2))]));
             principal = true;
         }
-    }
-    if !c03 {
-        frags.extend(h::ingreso_informado(ctx, fing));
     }
     frags.extend(h::prorroga(ctx, hoy, fegr, vencida && vok, c05, egreso_dicho));
     frags.extend(h::solicitud_dce(ctx, &programa, vok));
@@ -281,11 +316,7 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
             ctx.incidencia("C-08", "ficha FAE no evaluable: sin columna disponible (G-05)");
         } else if fing.is_some_and(|f| (hoy - f).num_days() > ctx.umbral("ficha_fae")) && r.fecha("ficha_fae").is_none() {
             let previa = h::reitera(ctx, Materia::SinFae);
-            frags.push(if previa.es_vacio() {
-                ctx.render("CUMPLIMIENTO", "C08_FICHA_FAE", &[("PNOMBRE", pn.clone())])
-            } else {
-                previa
-            });
+            frags.push(if previa.es_vacio() { ctx.render("CUMPLIMIENTO", "C08_FICHA_FAE", &[("PNOMBRE", pn.clone())]) } else { previa });
         }
     }
     if !principal && frags.is_empty() {
@@ -294,7 +325,6 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
     if !principal && h::solo_historia(ctx) {
         frags.insert(0, ctx.render("HISTORIA", "MEDIDA_REVISADA", &[]));
     }
-    frags.extend(h::aclaracion_causa(ctx));
     componer(&pfx, &frags)
 }
 
@@ -314,9 +344,10 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
     let dias = (fv - ctx.hoy).num_days();
     let dce = es_dce(&programa);
     let mut fecha = fv;
-    let llave = if dce && -MARGEN_DCE <= dias && dias < 0 {
+    let margen = dce && (-MARGEN_DCE..0).contains(&dias);
+    let llave = if margen {
         fecha = fv + Duration::days(MARGEN_DCE);
-        "I02_POR_VENCER_DCE"
+        "I02_MARGEN_DCE"
     } else if dias < 0 {
         if dce {
             "I01_VENCIDO_DCE"
@@ -338,8 +369,18 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
     }
     // El vencimiento para contrastar la historia es el de RUS; el margen DCE solo cambia la frase y su plazo.
     let vencido = dias < 0;
-    let i1 = h::informe_historia(ctx, fv, vencido);
-    let i3 = h::escrito_sin_ingreso(ctx, &programa, vencido.then_some(fv));
+    // Un trámite de la causa solo retira la gestión si se puede vincular a este informe: causa de un registro y un
+    // único informe vencido. Si no, se conservan correo y proyecto y el trámite queda como constancia.
+    let atribuible = !h::varios_registros(ctx) && !h::varios_vencidos(ctx);
+    let i1 = h::informe_historia(ctx, fv, vencido, atribuible);
+    let i3 = if atribuible { h::escrito_sin_ingreso(ctx, &programa, vencido.then_some(fv)) } else { Vec::new() };
+    if vencido && !atribuible && !i1.is_empty() {
+        ctx.marcar(
+            2,
+            "INFORME_SIN_ATRIBUIR",
+            "Ingreso de informe en la causa que no se puede atribuir a este informe: se conservan las acciones",
+        );
+    }
     let contradicho = !(i1.is_empty() && i3.is_empty());
     if vencido && !contradicho && h::informe_previo(ctx, &programa, fv) {
         ctx.marcar(
@@ -348,10 +389,13 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
             "Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión",
         );
     }
-    let principal = if vencido && contradicho {
+    let principal = if vencido && atribuible && contradicho {
         ctx.marcar(2, "I01_CONTRADICHA", "Informe vencido en RUS contradicho por la historia");
         let texto = if dce { "I01_SIN_ENVIO_DCE" } else { "I01_SIN_ENVIO_GENERAL" };
         ctx.render("HISTORIA", texto, &[("FECHA_VENCIMIENTO", fecha_es(fv))])
+    } else if margen {
+        // El vencimiento es el que RUS registra; el margen solo fija el plazo del correo.
+        ctx.render("INFORMES", llave, &[("PROGRAMA", prog), ("FECHA_VENCIMIENTO", fecha_es(fv)), ("FECHA_LIMITE", fecha_es(fecha))])
     } else {
         ctx.render("INFORMES", llave, &[("PROGRAMA", prog), ("FECHA_VENCIMIENTO", fecha_es(fecha))])
     };
@@ -359,6 +403,5 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
     frags.extend(i1);
     frags.extend(i3);
     frags.extend(h::informes_acumulados(ctx));
-    frags.extend(h::aclaracion_causa(ctx));
     componer(&pfx, &frags)
 }

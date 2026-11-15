@@ -14,7 +14,5 @@
  "ficha_reciente": 30,
  "ficha_fae": 120,
  "prorroga_reciente": 90,
- "ventana_ingreso": 30,
- "lista_espera_larga": 100,
  "ventana_busqueda": 60
 }

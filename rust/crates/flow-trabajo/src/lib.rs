@@ -88,7 +88,12 @@ pub fn analizar_tabla(libro: &Libro, tabla: &Tabla, corte: Fecha, config: &Confi
 pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, config: &Config, contexto: &Contexto) -> Trabajo {
     let registros: Vec<Registro> = tabla.filas.iter().map(|f| f.registro.clone()).collect();
     let (duplicidad, acumulado) = match tabla.etapa {
-        Etapa::Informes => (flow_motor::causas_con_varios(&registros), flow_motor::acumulados(&registros, corte)),
+        Etapa::Informes => {
+            // Con paquete, el identificador de ingreso separa dos ingresos del mismo NNA al mismo programa.
+            let ingresos: Vec<String> =
+                tabla.filas.iter().map(|f| contexto.origenes.get(&f.id).map(|o| o.ingreso.clone()).unwrap_or_default()).collect();
+            (flow_motor::causas_con_varios(&registros), flow_motor::acumulados_por_ingreso(&registros, &ingresos, corte))
+        }
         _ => (flow_motor::duplicidades(&registros), vec![None; registros.len()]),
     };
     let mut avisos = tabla.avisos.clone();

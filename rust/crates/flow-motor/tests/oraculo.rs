@@ -12,6 +12,9 @@ struct TramiteCaso {
     desc: String,
     fecha: NaiveDate,
     folio_txt: String,
+    /// Columna «Trámite» de SITFA (Resolución, Escrito, Actuación).
+    #[serde(default)]
+    tipo: String,
 }
 
 #[derive(Deserialize)]
@@ -57,7 +60,7 @@ fn comparar(archivo: &str) {
         config.desactivadas = caso.desactivadas.iter().cloned().collect();
         let registro = Registro { campos: caso.campos.clone() };
         let historia = caso.historia.as_ref().map(|h| {
-            let tramites = h.tramites.iter().map(|t| Tramite::nuevo(&t.desc, t.fecha, &t.folio_txt)).collect();
+            let tramites = h.tramites.iter().map(|t| Tramite::nuevo(&t.desc, t.fecha, &t.folio_txt).con_tipo(&t.tipo)).collect();
             Historia::nueva(&h.cobertura, h.desde, h.hasta, tramites)
         });
         let obtenido = analizar(&Entrada {

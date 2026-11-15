@@ -37,7 +37,7 @@ fn preparar() -> (Temporal, Resumen) {
     let datos = [
         (
             "historia",
-            json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[{"descripcion":"Derecho a ser oído","fecha_iso":"2026-10-10","folio":"1"}]}),
+            json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[{"descripcion":"Derecho a ser oído","fecha_iso":"2026-10-10","folio":"1","tramite":"Actuación"}]}),
         ),
         ("bitacora", json!({"entries":[{"fecha":"2026-10-11","texto":"Se informa derecho a ser oído aplicado el 10/10/2026."}]})),
         (
@@ -92,17 +92,22 @@ fn contextos_se_aplican_por_identidad_completa_y_paginas_comparten_prepase() {
     pagina.consulta = 1;
     pagina.vinculos[0].etapa = "2".into();
     r.paginas_lectura.push(pagina);
-    // Sin la bitácora, la historia propone dejar constancia del derecho a ser oído.
+    // Sin la bitácora, la historia propone dejar constancia del derecho a ser oído, citado como trámite de la causa
+    // (decisión del usuario, 11-nov-2026: la historia acredita la nomenclatura, no la fecha en que se oyó).
     let bit = r.lecturas.remove(1);
     let sin = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
-    assert!(sin[0].filas[0].propuesta.reglas.contains(&"COMUN.OIDO".into()));
-    assert!(!sin[0].filas[1].propuesta.reglas.contains(&"COMUN.OIDO".into()));
+    let oido =
+        |p: &flow_motor::Resultado| p.reglas.contains(&"HISTORIA.BASE_TRAMITE".into()) && p.observacion.contains("«Derecho a ser oído»");
+    assert!(oido(&sin[0].filas[0].propuesta));
+    // La columna «Trámite» de la lectura nombra la constancia (actuación, no resolución).
+    assert!(sin[0].filas[0].propuesta.observacion.contains("en actuación de fecha 10 de octubre de 2026 (folio 1)"));
+    assert!(!oido(&sin[0].filas[1].propuesta));
     r.lecturas.push(bit);
     let trabajos = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
     assert_eq!(trabajos.len(), 1);
     let filas = &trabajos[0].filas;
     assert_eq!(filas.len(), 2);
-    assert!(!filas[0].propuesta.reglas.contains(&"COMUN.OIDO".into()));
+    assert!(!oido(&filas[0].propuesta));
     assert_eq!(filas[0].proximo_informe, Some("2026-11-01".parse().unwrap()));
     assert_eq!(filas[1].proximo_informe, None);
     assert!(filas.iter().all(|f| f.propuesta.marcas.iter().any(|m| m.codigo == "R6_DUPLICIDAD")));

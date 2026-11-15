@@ -107,9 +107,8 @@ fn avisos_fila(e: &Entrada) -> Vec<String> {
         let mut audiencias = celda.fechas_varias().0;
         audiencias.sort_unstable();
         audiencias.dedup();
-        if let Some(a) = audiencias
-            .into_iter()
-            .find(|a| e.corte <= *a && *a < venc && venc <= *a + Duration::days(VENTANA_INFORME_AUDIENCIA))
+        if let Some(a) =
+            audiencias.into_iter().find(|a| e.corte <= *a && *a < venc && venc <= *a + Duration::days(VENTANA_INFORME_AUDIENCIA))
         {
             out.push(format!(
                 "N-02: audiencia el {} y el informe vence el {}; se sugiere solicitarlo antes de la audiencia.",
@@ -143,18 +142,13 @@ pub fn analizar(e: &Entrada) -> Resultado {
     if e.etapa == Etapa::Cumplimiento {
         let negativo = |campo: &str| r.celda(campo).and_then(|c| c.entero_laxo()).is_some_and(|n| n < 0);
         if r.fecha("egreso_proy").is_some_and(|f| f > e.corte) && (negativo("dias_cumpl") || negativo("dias_egresar")) {
-            avisos.push(
-                "Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida."
-                    .to_string(),
-            );
+            avisos.push("Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.".to_string());
             ctx.invalidas.push("CUMPLIMIENTO.C04_VENCIDA");
         }
     }
     let observacion = match Tribunal::desde(&r.texto("tribunal")) {
         None => {
-            avisos.push(
-                "Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.".to_string(),
-            );
+            avisos.push("Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.".to_string());
             String::new()
         }
         Some(tribunal) => match e.etapa {
@@ -214,28 +208,77 @@ pub fn causas_con_varios(registros: &[Registro]) -> Vec<Option<Duplicidad>> {
         causas.entry(causa.clone()).or_default().insert((rut_clave(r.texto("rut").trim()), clave(r.texto("programa").trim())));
         de_fila[i] = Some(causa);
     }
-    de_fila
-        .into_iter()
-        .map(|c| c.filter(|causa| causas[causa].len() > 1).map(|_| Duplicidad::OtroRegistro))
-        .collect()
+    de_fila.into_iter().map(|c| c.filter(|causa| causas[causa].len() > 1).map(|_| Duplicidad::OtroRegistro)).collect()
 }
 
 /// Pre-pase de Informes: informes vencidos del mismo ingreso → (cantidad, vencimiento más antiguo).
 pub fn acumulados(registros: &[Registro], corte: NaiveDate) -> Vec<Option<(i64, NaiveDate)>> {
-    let mut grupos: HashMap<[String; 4], Vec<(usize, NaiveDate)>> = HashMap::new();
+    acumulados_por_ingreso(registros, &vec![String::new(); registros.len()], corte)
+}
+
+/// Como `acumulados`, con el identificador de ingreso de SITFA de cada fila (vacío si no viene de un paquete): separa
+/// dos ingresos del mismo NNA al mismo programa. Cuenta vencimientos distintos, no filas: una fila repetida no es otro
+/// informe.
+pub fn acumulados_por_ingreso(registros: &[Registro], ingresos: &[String], corte: NaiveDate) -> Vec<Option<(i64, NaiveDate)>> {
+    let mut grupos: HashMap<[String; 5], Vec<(usize, NaiveDate)>> = HashMap::new();
     for (i, r) in registros.iter().enumerate() {
         let Some(vence) = r.fecha("vencimiento").filter(|v| *v < corte) else { continue };
-        let ident = ["tribunal", "rit", "rut", "programa"].map(|c| identidad(r.texto(c).trim()));
-        if !ident[1].is_empty() {
-            grupos.entry(ident).or_default().push((i, vence));
+        let [tribunal, rit, rut, programa] = ["tribunal", "rit", "rut", "programa"].map(|c| identidad(r.texto(c).trim()));
+        let ingreso = ingresos.get(i).map(|s| s.trim().to_string()).unwrap_or_default();
+        if !rit.is_empty() {
+            grupos.entry([tribunal, rit, rut, programa, ingreso]).or_default().push((i, vence));
         }
     }
     let mut salida = vec![None; registros.len()];
-    for items in grupos.values().filter(|v| v.len() > 1) {
-        let mas_antiguo = items.iter().map(|(_, v)| *v).min().unwrap();
-        for (i, _) in items {
-            salida[*i] = Some((items.len() as i64, mas_antiguo));
+    for items in grupos.values() {
+        let vencimientos: BTreeSet<NaiveDate> = items.iter().map(|(_, v)| *v).collect();
+        if vencimientos.len() > 1 {
+            let mas_antiguo = *vencimientos.first().unwrap();
+            for (i, _) in items {
+                salida[*i] = Some((vencimientos.len() as i64, mas_antiguo));
+            }
         }
     }
     salida
+}
+
+#[cfg(test)]
+mod pruebas {
+    use super::*;
+    use flow_dominio::Celda;
+
+    fn informe(rit: &str, vence: &str) -> Registro {
+        let mut r = Registro::default();
+        for (campo, valor) in [("tribunal", "Laja"), ("rit", rit), ("rut", "11111111-K"), ("programa", "PRM Laja"), ("vencimiento", vence)]
+        {
+            r.poner(campo, Celda::Texto(valor.into()));
+        }
+        r
+    }
+
+    /// `work.py` (11-nov-2026): se cuentan vencimientos distintos, no filas, y el ingreso de SITFA separa grupos.
+    #[test]
+    fn acumulados_cuentan_vencimientos_distintos_por_ingreso() {
+        let corte: NaiveDate = "2026-11-12".parse().unwrap();
+        let antiguo: NaiveDate = "2026-09-01".parse().unwrap();
+        let filas = [
+            informe("X-1-2099", "2026-10-01"),
+            informe("X-1-2099", "2026-10-01"),
+            informe("X-2-2099", "2026-10-01"),
+            informe("X-2-2099", "2026-09-01"),
+            informe("X-2-2099", "2026-12-01"),
+            informe("X-3-2099", "2026-10-01"),
+            informe("X-3-2099", "2026-09-01"),
+        ];
+        let ingresos: Vec<String> = ["", "", "", "", "", "201", "202"].map(String::from).to_vec();
+        let salida = acumulados_por_ingreso(&filas, &ingresos, corte);
+        assert_eq!(salida[0], None, "una fila repetida no es otro informe");
+        assert_eq!(salida[1], None);
+        assert_eq!(salida[2], Some((2, antiguo)));
+        assert_eq!(salida[3], Some((2, antiguo)));
+        assert_eq!(salida[4], None, "un informe por vencer no se acumula");
+        assert_eq!(salida[5], None, "ingresos distintos no se acumulan");
+        assert_eq!(salida[6], None);
+        assert_eq!(acumulados(&filas, corte)[5], Some((2, antiguo)));
+    }
 }

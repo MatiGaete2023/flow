@@ -47,6 +47,18 @@ def main():
     agregar([evento('a','2026-10-01') | {'text':base}],desactivadas=['COMUN.REITERA_OBSERVACION'])
     agregar([evento('a','2026-10-01') | {'text':base}],propuesta='X'*41+': '+base)
     agregar([evento('a','2026-10-01') | {'text':'Nombre PRM: '+config['textos']['ESPERA']['E05_SOLO_CORREO']['texto']}],reglas=['ESPERA.E05_SOLO_CORREO'])
+    # CT-07 con texto (11-nov-2026): solo idéntica, contra la última que no sea reiteración, nunca sobre NO_REITERAR.
+    reiterada='Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.'
+    for reglas in (['ESPERA.E05_SOLO_CORREO'],['ESPERA.E07_PROYECCION'],['INFORMES.I02_MARGEN_DCE'],['HISTORIA.REITERA'],
+                   ['COMUN.NO_SEGUIMIENTO'],['HISTORIA.C10_ESCRITO'],['HISTORIA.P_FINALIZADA'],['HISTORIA.BASE_TRAMITE']):
+        agregar([evento('a','2026-10-01') | {'text':base}],reglas=reglas)
+    agregar([evento('a','2026-10-01') | {'text':base},evento('b','2026-10-05') | {'text':reiterada}])
+    agregar([evento('a','2026-10-01') | {'text':'Otra observación'},evento('b','2026-10-05') | {'text':reiterada}])
+    agregar([evento('a','2026-10-01') | {'text':base},evento('b','2026-10-03') | {'text':'Otra observación'}])
+    agregar([evento('b','2026-10-01') | {'text':'Otra observación'},evento('a','2026-10-01') | {'text':base}])
+    agregar([evento('a','2026-10-01') | {'text':base.upper().replace('E','É')+'  '}])
+    agregar([evento('a','2026-10-01') | {'text':base[:-1]+' hoy.'}])
+    agregar([evento('a','2026-10-01') | {'text':'Otro Nombre PRM: '+base.split(': ',1)[1]}])
     # Empates con hora desconocida; con segundos y zona cierta; diferencias de huso horario.
     for certain in [False,True]:
         entries=[evento('a','2026-10-01T12:00:00+00:00'),evento('b','2026-10-01T11:30:00-01:00'),evento('c','2026-10-01T13:00:00Z') | {'origin':'OTRO'}]
@@ -81,6 +93,11 @@ def main():
         for row in tabla:
             for k,v in row.items():
                 if isinstance(v,str):row[k]=v.replace('FICT-0-2026','X-1-2099')
+    # Espera bajo el umbral: sin correo ni proyecto (E-05 no se reitera, decisión del usuario 11-nov-2026), así la
+    # observación idéntica a la anterior sí se reitera.
+    for row in tablas['registros']:
+        for campo in ('raw_json','normalized_json'):
+            datos=json.loads(row[campo]);datos['T ESPERA']='5';row[campo]=json.dumps(datos,ensure_ascii=False)
     destino=salida.parent/'paquete_cronologia.zip'
     destino.unlink(missing_ok=True)
     write_capture(destino,metadata,tablas)

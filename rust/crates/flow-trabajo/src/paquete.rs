@@ -103,8 +103,7 @@ fn abrir(datos: &[u8]) -> Result<Contenido, String> {
         entrada.by_ref().take(LIMITE + 1).read_to_end(&mut salida).map_err(|e| format!("No se pudo leer {nombre}: {e}"))?;
         Ok(salida)
     };
-    let manifiesto: Value =
-        serde_json::from_slice(&leer("manifest.json")?).map_err(|e| format!("Manifiesto ilegible: {e}"))?;
+    let manifiesto: Value = serde_json::from_slice(&leer("manifest.json")?).map_err(|e| format!("Manifiesto ilegible: {e}"))?;
     if manifiesto["schema_id"].as_str() != Some("CSMP_CAPTURE") {
         return Err("El archivo no es un paquete de captura CSMP.".into());
     }
@@ -171,6 +170,18 @@ fn normalizado(fila: &FilaCsv) -> Vec<(String, Celda)> {
     }
 }
 
+/// Columna «Trámite» de SITFA (Resolución, Escrito, Actuación); viaja en raw_json. Vacío si no se conoce.
+fn tipo_tramite(fila: &FilaCsv) -> String {
+    match serde_json::from_str::<Value>(dato(fila, "raw_json")) {
+        Ok(Value::Object(mapa)) => match mapa.get("Trámite") {
+            Some(Value::String(s)) => s.trim().to_string(),
+            Some(Value::Null) | None => String::new(),
+            Some(otro) => otro.to_string().trim().to_string(),
+        },
+        _ => String::new(),
+    }
+}
+
 /// Historia por causa: de varias consultas de la misma causa gana la de mejor cobertura.
 fn historias(c: &Contenido) -> HashMap<[String; 3], Historia> {
     let vacio = Vec::new();
@@ -200,7 +211,10 @@ fn historias(c: &Contenido) -> HashMap<[String; 3], Historia> {
         let tramites = filas
             .iter()
             .filter(|f| dato(f, "query_id") == id)
-            .filter_map(|f| dia(dato(f, "event_at")).map(|fecha| Tramite::nuevo(dato(f, "description"), fecha, dato(f, "folio"))))
+            .filter_map(|f| {
+                dia(dato(f, "event_at"))
+                    .map(|fecha| Tramite::nuevo(dato(f, "description"), fecha, dato(f, "folio")).con_tipo(&tipo_tramite(f)))
+            })
             .collect();
         let ventana = |k: &str| filtros["ventana"][k].as_str().and_then(dia);
         salida.insert(clave, (puntaje, Historia::nueva(cobertura, ventana("desde"), ventana("hasta"), tramites)));
