@@ -17,7 +17,10 @@ static LEXICO: LazyLock<Regex> = LazyLock::new(|| {
     ))
     .unwrap()
 });
-static RIT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A[A-Z]{1,3}-\d{1,7}-\d{4}\z").unwrap());
+/// Como `vinculos.extract` (bitácora) del Descargador: cualquier RIT `[A-Z]+-\d+-\d{4}`.
+static RIT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A[A-Z]+-\d+-\d{4}\z").unwrap());
+/// Como `vinculos.extract_historia`: la historia solo se abre con el formato acotado.
+static RIT_HISTORIA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A[A-Z]{1,3}-\d{1,7}-\d{4}\z").unwrap());
 
 pub fn normalizar(s: &str) -> String {
     s.nfkd().filter(|c| !is_combining_mark(*c)).collect::<String>().to_uppercase().split_whitespace().collect::<Vec<_>>().join(" ")
@@ -39,13 +42,8 @@ fn literal(s: &str) -> Option<String> {
     if s.bytes().all(|b| b.is_ascii_digit()) && s.len() <= 20 {
         return Some(s.into());
     }
-    if s.starts_with('"') {
-        return serde_json::from_str(s).ok();
-    }
-    if !s.starts_with('\'') || !s.ends_with('\'') || s.len() < 2 {
-        return None;
-    }
-    serde_json::from_str(&format!("\"{}\"", s[1..s.len() - 1].replace("\\'", "'").replace('"', "\\\""))).ok()
+    // Como `ast.literal_eval` en `vinculos.calls`: comillas simples o dobles con los mismos escapes.
+    crate::sitfa::cadena_literal(s)
 }
 
 /// Solo llamadas directas con argumentos literales. Descarta comentarios, cadenas, plantillas y regex.
@@ -153,8 +151,12 @@ pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, Stri
         "Egresados" => "tablaEgresados",
         _ => return Err("Pestaña no permitida.".into()),
     };
-    let html = crate::lecturas::decodificar(datos)?;
-    let doc = Html::parse_document(&html);
+    // El listado ya pasó `validar_respuesta`: se decodifica igual que allí (sin el tope de 8 MiB ni la lista corta de
+    // codificaciones de las ventanas de lectura).
+    if datos.is_empty() || datos.len() > flow_tabular::libro::LIMITE_BYTES {
+        return Err("Respuesta HTML vacía o demasiado grande.".into());
+    }
+    let doc = Html::parse_document(&flow_tabular::html::decodificar(datos));
     let tablas = doc.select(&sel(&format!("form[name='InformesPpalForm'] table[id='{tabla_id}']"))).collect::<Vec<_>>();
     if tablas.len() != 1 {
         return Err("No se identifica una tabla única de registros.".into());
@@ -219,22 +221,24 @@ pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, Stri
         let obs = llamadas(&comandos, "ShowObservaciones");
         let hist = llamadas(&comandos, "ShowHistoria");
         let cal = llamadas(&comandos, "ShowInformesProgramados");
-        if hist.len() == 1
+        // La concordancia de ShowHistoria acredita la causa para la bitácora (como `extract`); la historia además exige
+        // el RIT acotado (como `extract_historia`).
+        let historia_concordante = hist.len() == 1
             && hist[0].len() == 3
             && hist[0][0] == seleccion.tribunal
             && normalizar(&hist[0][1]) == normalizar(&v.rit)
-            && numerico(&hist[0][2])
-        {
+            && numerico(&hist[0][2]);
+        if historia_concordante {
             v.causa = hist[0][2].clone();
             v.rit_enlace = hist[0][1].clone();
-            v.historia_verificada = true;
+            v.historia_verificada = RIT_HISTORIA.is_match(&normalizar(&v.rit));
         }
         if obs.len() == 1
             && obs[0].len() == 6
             && obs[0].iter().all(|s| numerico(s))
             && obs[0][1] == seleccion.tribunal
             && matches!(obs[0][3].as_str(), "11" | "12" | "13")
-            && (hist.is_empty() || v.historia_verificada && v.causa == obs[0][0])
+            && (hist.is_empty() || historia_concordante && v.causa == obs[0][0])
         {
             v.causa = obs[0][0].clone();
             v.ingreso = obs[0][2].clone();
@@ -296,8 +300,8 @@ pub fn descartar_ambiguos(filas: &mut [Vinculo]) {
 }
 
 fn recibir(conexion: &dyn crate::lotes::Conexion, comando: &str, payload: serde_json::Value) -> Result<(Vec<u8>, String), String> {
-    crate::lotes::comprobar_capacidades(&conexion.llamar("capabilities", serde_json::json!({}), std::time::Duration::from_secs(10))?)?;
-    let respuesta = conexion.llamar(comando, payload.clone(), std::time::Duration::from_secs(70))?;
+    // La versión de la extensión se comprueba una vez por lote en `lotes::ejecutar`, como el Descargador.
+    let respuesta = conexion.llamar(comando, payload.clone(), crate::lotes::PLAZO)?;
     let campo = if comando == "calendar_open" { "args" } else { "params" };
     if respuesta[campo] != payload[campo] {
         return Err("La extensión devolvió otra identidad de lectura.".into());

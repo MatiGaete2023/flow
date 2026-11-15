@@ -499,3 +499,13 @@ guardar el código de conexión, y cualquier escritura en RUS.
   número de argumentos (p. ej. opciones de ventana). Alineado en `sitfa::exportacion` (sigue rechazando URL
   concatenadas y fuera de `familia.pjud.cl/sitfa/reportes/*.xls`). Si vuelve a fallar, el mensaje indica solo la
   estructura (cuántas aperturas y si su argumento es texto o variable), sin valores. **No verificado con SITFA real.**
+- 2026-11-15 · Paridad Descargador (revisión de captura). A1: una lectura por ingreso fallida o un listado sin vínculos
+  legibles ya no detiene el lote: queda como aviso «…pendiente(s).», la consulta con XLS verificados sigue en
+  `terminadas`, el lote termina `VALIDADA` con «Quedaron N lecturas…» y «Retomar lote…» recorre solo esas consultas
+  (XLS desde disco); corta tras 5 bitácoras fallidas seguidas (`MAX_FALLAS_SEGUIDAS`). Sin campos nuevos en `Resumen`.
+  M3: vínculos del listado siempre en Seguimiento (Meta 4 los ignora si no se pidieron bitácoras). M4: listado con
+  `flow_tabular::html::decodificar`. M1: 252 entidades HTML 4 + `apos`. B5: HTML detectado más allá de 4 KiB.
+  M2: `==` no cuenta como asignación; literales con escapes como `ast.literal_eval`. M5: avisos de restauración
+  separados con código técnico. B1, B3, B4 (75 s; `capabilities` una vez por lote), B8 (sin casillas repetidas).
+  Historia: `contexto_anterior` como `nurus.capture.historias` (campo nuevo en la lectura; falta usarlo en
+  `flow-trabajo/src/captura.rs`). Pruebas ficticias nuevas. **No verificado con SITFA real.**

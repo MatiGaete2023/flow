@@ -115,7 +115,8 @@ fn lectura_exige_capacidades_identidad_huella_y_fecha_antes_de_aceptar_datos(){
     struct Ficticia {mutacion:&'static str,datos:String,lecturas:std::sync::atomic::AtomicUsize}
     impl Conexion for Ficticia {
         fn llamar(&self,comando:&str,payload:Value,_plazo:std::time::Duration)->Result<Value,String>{
-            if comando=="capabilities"{return Ok(json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":self.mutacion=="escritura"}));}
+            // B4: la versión de la extensión se comprueba una vez por lote (`lotes::ejecutar`), no en cada lectura.
+            assert_ne!(comando,"capabilities","una lectura no vuelve a pedir capabilities");
             assert_eq!(comando,"diary_open");self.lecturas.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
             let datos=if self.mutacion=="html_ajeno"{self.datos.replace("name=\"ID_Ingreso\" value=\"201\"","name=\"ID_Ingreso\" value=\"999\"")}else{self.datos.clone()};
             let mut r=json!({"status":200,"type":"text/html","body":STANDARD.encode(datos.as_bytes()),"params":payload["params"],"digest":flow_captura::lotes::huella(datos.as_bytes()),"startedAt":"2026-11-12T12:00:00Z"});
@@ -128,8 +129,25 @@ fn lectura_exige_capacidades_identidad_huella_y_fecha_antes_de_aceptar_datos(){
         .replace("name=\"CRR_IdCausa\" value=\"22\"","name=\"CRR_IdCausa\" value=\"100\"").replace("name=\"ID_Ingreso\" value=\"33\"","name=\"ID_Ingreso\" value=\"201\"");
     let positiva=Ficticia{mutacion:"ninguna",datos:datos.clone(),lecturas:Default::default()};
     assert_eq!(vinculos::abrir_bitacora(&positiva,&v,"2").unwrap()["coverage"],"PARCIAL");
-    for mutacion in ["params","digest","startedAt","html_ajeno","escritura"]{
+    for mutacion in ["params","digest","startedAt","html_ajeno"]{
         let f=Ficticia{mutacion,datos:datos.clone(),lecturas:Default::default()};assert!(vinculos::abrir_bitacora(&f,&v,"2").is_err(),"{mutacion}");
-        assert_eq!(f.lecturas.load(std::sync::atomic::Ordering::SeqCst),usize::from(mutacion!="escritura"));
+        assert_eq!(f.lecturas.load(std::sync::atomic::Ordering::SeqCst),1);
     }
+}
+
+/// B3: el listado de bitácoras acepta RIT `[A-Z]+-\d+-\d{4}` como `vinculos.extract`; la historia mantiene el formato
+/// acotado de `extract_historia`. M4: el listado se decodifica como `validar_respuesta`, no con el lector estricto de
+/// ventanas. Los argumentos con escapes que acepta `ast.literal_eval` también se leen.
+#[test]
+fn rit_largo_y_charset_no_listado_como_el_descargador() {
+    let caso = casos().remove(0);
+    let html = caso["html"].as_str().unwrap().replace("X-1-2099", "ABCD-12345678-2099");
+    let filas = extraer(html.as_bytes(), &seleccion()).unwrap();
+    assert_eq!(filas.len(), 1, "la fila con RIT largo no debe desaparecer");
+    assert!(filas[0].bitacora_verificada);
+    assert!(!filas[0].historia_verificada);
+    let html = caso["html"].as_str().unwrap().replace("<html>", "<html><head><meta charset=\"us-ascii\"></head>");
+    assert!(extraer(html.as_bytes(), &seleccion()).unwrap()[0].bitacora_verificada);
+    let html = caso["html"].as_str().unwrap().replace("ShowObservaciones('100'", "ShowObservaciones('\\x3100'");
+    assert!(extraer(html.as_bytes(), &seleccion()).unwrap()[0].bitacora_verificada);
 }

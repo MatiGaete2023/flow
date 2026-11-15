@@ -46,16 +46,21 @@ pub struct Libro {
     pub hojas: Vec<Hoja>,
 }
 
+fn contiene(datos: &[u8], buscado: &[u8]) -> bool {
+    datos.windows(buscado.len()).any(|w| w.eq_ignore_ascii_case(buscado))
+}
+
+/// Por firma: BIFF y OOXML por sus bytes iniciales; XML 2003 por su espacio de nombres al inicio. Lo demás es HTML si
+/// contiene una tabla o un documento HTML en cualquier punto: el Descargador lo entrega a lxml sin mirar los primeros
+/// bytes, y SITFA puede anteponer estilos o metadatos XML de Office de más de 4 KiB.
 pub fn detectar(datos: &[u8]) -> Option<Formato> {
-    let inicio = &datos[..datos.len().min(4096)];
-    let bajo = String::from_utf8_lossy(inicio).to_lowercase();
     if datos.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
         Some(Formato::XlsBiff)
     } else if datos.starts_with(b"PK\x03\x04") {
         Some(Formato::Xlsx)
-    } else if bajo.contains("urn:schemas-microsoft-com:office:spreadsheet") {
+    } else if contiene(&datos[..datos.len().min(4096)], b"urn:schemas-microsoft-com:office:spreadsheet") {
         Some(Formato::Xml2003)
-    } else if bajo.contains("<html") || bajo.contains("<table") {
+    } else if contiene(datos, b"<html") || contiene(datos, b"<table") {
         Some(Formato::Html)
     } else {
         None
@@ -181,9 +186,9 @@ fn hojas_xml2003(datos: &[u8]) -> Result<Vec<Hoja>, String> {
                     if let (Some(v), Some(f)) = (valor.take(), fila.as_mut()) {
                         let celda = match tipo.as_str() {
                             "Number" => v.trim().parse().map(Celda::Numero).unwrap_or(Celda::Texto(v)),
-                            "DateTime" => flow_dominio::celda::fecha_de_texto(v.trim_end_matches('Z'))
-                                .map(Celda::Fecha)
-                                .unwrap_or(Celda::Texto(v)),
+                            "DateTime" => {
+                                flow_dominio::celda::fecha_de_texto(v.trim_end_matches('Z')).map(Celda::Fecha).unwrap_or(Celda::Texto(v))
+                            }
                             _ if v.is_empty() => Celda::Vacia,
                             _ => Celda::Texto(v),
                         };
@@ -230,11 +235,9 @@ pub fn leer_bytes(nombre: &str, datos: Vec<u8>) -> Result<Libro, String> {
             hojas_calamine(libro)?
         }
         Formato::Xml2003 => hojas_xml2003(&datos)?,
-        Formato::Html => html::tablas(&datos)?
-            .into_iter()
-            .enumerate()
-            .map(|(i, filas)| Hoja { nombre: format!("Tabla{}", i + 1), filas })
-            .collect(),
+        Formato::Html => {
+            html::tablas(&datos)?.into_iter().enumerate().map(|(i, filas)| Hoja { nombre: format!("Tabla{}", i + 1), filas }).collect()
+        }
     };
     if hojas.is_empty() {
         return Err("El libro no contiene hojas.".into());
@@ -251,4 +254,26 @@ pub fn leer(ruta: &Path) -> Result<Libro, String> {
 /// Fecha de corte sugerida por el nombre del archivo no se usa: el corte lo decide el usuario.
 pub fn hoy() -> NaiveDate {
     chrono::Local::now().date_naive()
+}
+
+#[cfg(test)]
+mod pruebas {
+    use super::*;
+
+    #[test]
+    fn detecta_html_con_cabecera_larga() {
+        // Como el Descargador (lxml): una tabla HTML precedida de más de 4 KiB de estilos o XML de Office sigue siendo HTML.
+        let mut datos = b"<?xml version=\"1.0\"?><xml><o:DocumentProperties></o:DocumentProperties></xml><style>".to_vec();
+        datos.extend(std::iter::repeat_n(b'.', 6000));
+        datos.extend(b"</style><TABLE><tr><td>RIT</td><td>NOMBRE</td></tr><tr><td>X-1-2099</td><td>Ficticia</td></tr></TABLE>");
+        assert_eq!(detectar(&datos), Some(Formato::Html));
+        let libro = leer_bytes("ficticio.xls", datos).unwrap();
+        assert_eq!(libro.hojas[0].filas[1][0], Celda::Texto("X-1-2099".into()));
+        // Sin tabla ni html no hay formato; los binarios y el XML 2003 conservan su detección.
+        assert_eq!(detectar(&[b'x'; 9000]), None);
+        let mut xml = b"<?xml version=\"1.0\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\">".to_vec();
+        xml.extend(b"<Worksheet><Table></Table></Worksheet></Workbook>");
+        assert_eq!(detectar(&xml), Some(Formato::Xml2003));
+        assert_eq!(detectar(b"PK\x03\x04<table>"), Some(Formato::Xlsx));
+    }
 }

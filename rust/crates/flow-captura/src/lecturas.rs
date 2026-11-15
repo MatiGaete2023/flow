@@ -36,7 +36,9 @@ fn normalizar(s: &str) -> String {
 pub(crate) fn texto(e: ElementRef<'_>) -> String {
     let partes = e
         .descendants()
-        .filter(|n| !n.ancestors().filter_map(ElementRef::wrap).any(|e| matches!(e.value().name(), "script" | "style" | "noscript" | "template")))
+        .filter(|n| {
+            !n.ancestors().filter_map(ElementRef::wrap).any(|e| matches!(e.value().name(), "script" | "style" | "noscript" | "template"))
+        })
         .filter_map(|n| n.value().as_text())
         .map(|t| t.as_ref())
         .collect::<Vec<_>>()
@@ -128,6 +130,21 @@ fn fecha_hora(s: &str, opcional: bool) -> Result<String, String> {
         .map_err(|_| "La captura contiene una fecha de bitácora ilegible.".into())
 }
 
+/// Como `nurus.bitacora_html`: se comparan la ruta y, si la hay, el origen; la consulta y el fragmento no importan.
+fn destino_bitacora(action: &str) -> bool {
+    let sin_fragmento = action.split('#').next().unwrap_or("");
+    let ruta = sin_fragmento.split('?').next().unwrap_or("");
+    let ruta = match ruta.split_once("://") {
+        Some((esquema, resto)) if esquema.eq_ignore_ascii_case("https") => match resto.split_once('/') {
+            Some(("familia.pjud.cl", _)) => &resto["familia.pjud.cl".len()..],
+            _ => return false,
+        },
+        Some(_) => return false,
+        None => ruta,
+    };
+    ruta == "/SITFAWEB/InformesDAction.do"
+}
+
 pub fn leer_bitacora(datos: &[u8], params: &BTreeMap<String, String>, fuente: &str, capturada: &str) -> Result<Value, String> {
     let tipo = params.get("tipo_popUp").map(String::as_str).unwrap_or("");
     if !matches!(tipo, "11" | "12" | "13") {
@@ -135,8 +152,7 @@ pub fn leer_bitacora(datos: &[u8], params: &BTreeMap<String, String>, fuente: &s
     }
     let doc = documento(datos)?;
     let form = formulario(&doc)?;
-    if !matches!(form.value().attr("action"), Some("/SITFAWEB/InformesDAction.do" | "https://familia.pjud.cl/SITFAWEB/InformesDAction.do"))
-    {
+    if !destino_bitacora(form.value().attr("action").unwrap_or("")) {
         return Err("El formulario de bitácora no tiene el destino esperado.".into());
     }
     let mut contexto = BTreeMap::new();

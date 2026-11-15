@@ -161,8 +161,12 @@ fn fallo_parcial_conserva_lo_leido_y_reintenta_solo_lo_pendiente() {
     let mut r = Recoleccion::con_fecha(&c, &resumen, fecha).unwrap();
     leer_pagina(&mut r, &f, &mut resumen);
     resumen.terminadas.push(0);
-    assert!(r.terminar(&mut resumen).is_err());
-    assert!(resumen.terminadas.is_empty());
+    // A1: como el Descargador, la lectura fallida queda anotada aparte; la consulta con sus XLS sigue terminada
+    // y el retomar la vuelve a recorrer solo para reintentar lo pendiente.
+    r.terminar(&mut resumen).unwrap();
+    assert_eq!(resumen.terminadas, vec![0]);
+    assert_eq!(recoleccion::consultas_pendientes(&resumen).into_iter().collect::<Vec<_>>(), vec![0]);
+    assert_eq!(recoleccion::lecturas_pendientes(&resumen), 1);
     assert_eq!(resumen.lecturas.len(), 2);
     let f = Ficticia { fallar_historia: false, comandos: Mutex::new(vec![]) };
     let mut r = Recoleccion::con_fecha(&c, &resumen, fecha).unwrap();
@@ -170,7 +174,76 @@ fn fallo_parcial_conserva_lo_leido_y_reintenta_solo_lo_pendiente() {
     r.terminar(&mut resumen).unwrap();
     assert_eq!(*f.comandos.lock().unwrap(), vec!["history_open"]);
     assert_eq!(resumen.lecturas.len(), 3);
-    assert!(!resumen.avisos.iter().any(|s| s.contains("pendiente.")));
+    assert!(!resumen.avisos.iter().any(|s| s.contains("pendiente")), "{:?}", resumen.avisos);
+    assert!(recoleccion::consultas_pendientes(&resumen).is_empty());
+}
+
+/// A1: un listado cuyos vínculos no se pueden leer no detiene el lote; queda como aviso y se reintenta al retomar.
+#[test]
+fn vinculos_ilegibles_quedan_como_aviso_y_no_detienen() {
+    let t = Temporal::nueva();
+    let c = t.0.join("lote");
+    std::fs::create_dir(&c).unwrap();
+    let mut resumen = resumen();
+    let f = Ficticia { fallar_historia: false, comandos: Mutex::new(vec![]) };
+    let mut r = Recoleccion::con_fecha(&c, &resumen, "2026-10-20".parse().unwrap()).unwrap();
+    // Dos tablas con el mismo id: `extraer` falla; antes eso abortaba todo el lote.
+    let doble = pagina().replace("</form>", "<table id=\"tablaCumplimiento\"></table></form>");
+    r.pagina(
+        &f,
+        &json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),
+        &mut resumen,
+        PaginaActual { consulta: 0, numero: 1, html: doble.as_bytes() },
+        Control { cancelar: &AtomicBool::new(false), progreso: &|_| {} },
+    )
+    .unwrap();
+    assert!(f.comandos.lock().unwrap().is_empty());
+    assert!(resumen.avisos.iter().any(|s| s.starts_with("Consulta 1, página 1: vínculos del listado pendientes.")), "{:?}", resumen.avisos);
+    assert_eq!(recoleccion::consultas_pendientes(&resumen).into_iter().collect::<Vec<_>>(), vec![0]);
+    leer_pagina(&mut r, &f, &mut resumen);
+    assert!(recoleccion::consultas_pendientes(&resumen).is_empty(), "{:?}", resumen.avisos);
+}
+
+/// A1: como `MAX_FALLAS_SEGUIDAS` del Descargador, cinco bitácoras fallidas seguidas detienen el lote; menos no.
+#[test]
+fn cinco_bitacoras_fallidas_seguidas_detienen_el_lote() {
+    struct Caida(Mutex<usize>);
+    impl Conexion for Caida {
+        fn llamar(&self, comando: &str, _payload: Value, _plazo: Duration) -> Result<Value, String> {
+            assert_eq!(comando, "diary_open");
+            *self.0.lock().unwrap() += 1;
+            Err("Fallo ficticio de sesión.".into())
+        }
+    }
+    let t = Temporal::nueva();
+    let c = t.0.join("lote");
+    std::fs::create_dir(&c).unwrap();
+    let mut resumen = resumen();
+    resumen.lote.lecturas = Opciones { bitacoras: true, historia: false, calendario: false, meses: 4 };
+    let f = Caida(Mutex::new(0));
+    let mut r = Recoleccion::con_fecha(&c, &resumen, "2026-10-20".parse().unwrap()).unwrap();
+    let base = pagina();
+    let mut resultados = vec![];
+    for numero in 1..=5 {
+        // Cada página es un ingreso distinto (otro ID_Ingreso, otra persona) para que ninguno se descarte como ambiguo.
+        let html = base
+            .replace("'201'", &format!("'2{numero:02}'"))
+            .replace("Persona Ficticia", &format!("Persona Ficticia {numero}"))
+            .replace("'100'", &format!("'1{numero:02}'"))
+            .replace("X-1-2099", &format!("X-{numero}-2099"));
+        resultados.push(r.pagina(
+            &f,
+            &json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),
+            &mut resumen,
+            PaginaActual { consulta: 0, numero, html: html.as_bytes() },
+            Control { cancelar: &AtomicBool::new(false), progreso: &|_| {} },
+        ));
+    }
+    assert_eq!(*f.0.lock().unwrap(), 5);
+    assert!(resultados[..4].iter().all(Result::is_ok), "{resultados:?}");
+    let error = resultados[4].clone().unwrap_err();
+    assert!(error.contains("5 bitácoras seguidas fallaron"), "{error}");
+    assert_eq!(recoleccion::lecturas_pendientes(&resumen), 5);
 }
 
 #[test]

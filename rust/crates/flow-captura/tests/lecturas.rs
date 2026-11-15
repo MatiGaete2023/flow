@@ -112,3 +112,27 @@ fn ventana_de_meses_naturales_conserva_fechas_ilegibles_y_excluye_futuras() {
     assert!(flow_captura::lecturas::separar_ventana(&filas, corte, 0).is_err());
     assert!(flow_captura::lecturas::separar_ventana(&filas, corte, 5).is_err());
 }
+
+/// B3: como `nurus.bitacora_html`, el destino del formulario se compara por ruta y origen; la consulta no importa.
+#[test]
+fn destino_de_bitacora_admite_consulta_pero_no_otro_origen() {
+    let c = casos().into_iter().find(|c| c["tipo"] == "bitacora").unwrap();
+    let html = c["html"].as_str().unwrap();
+    for bueno in ["/SITFAWEB/InformesDAction.do?accion=ver", "https://familia.pjud.cl/SITFAWEB/InformesDAction.do?x=1#y"] {
+        let v = html.replace("action=\"/SITFAWEB/InformesDAction.do\"", &format!("action=\"{bueno}\""));
+        let mut leida = leer(&c, v.as_bytes()).unwrap();
+        let mut esperado = c["esperado"].clone();
+        leida.as_object_mut().unwrap().remove("html_sha256");
+        esperado.as_object_mut().unwrap().remove("html_sha256");
+        assert_eq!(leida, esperado, "{bueno}");
+    }
+    for malo in [
+        "https://otro.invalid/SITFAWEB/InformesDAction.do",
+        "//familia.pjud.cl/SITFAWEB/InformesDAction.do",
+        "/SITFAWEB/Otra.do?/SITFAWEB/InformesDAction.do",
+        "http://familia.pjud.cl/SITFAWEB/InformesDAction.do",
+    ] {
+        let v = html.replace("action=\"/SITFAWEB/InformesDAction.do\"", &format!("action=\"{malo}\""));
+        assert!(leer(&c, v.as_bytes()).is_err(), "{malo}");
+    }
+}

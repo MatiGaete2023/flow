@@ -146,22 +146,76 @@ fn exportacion(scripts: &str, perfil: &Perfil) -> Result<String, Error> {
     Ok(url.into())
 }
 
-fn literal_js(literal: &str) -> Result<String, Error> {
-    // Los calendarios auditados contienen solo literales de texto, nunca expresiones.
-    let json = if literal.starts_with('\'') {
-        format!("\"{}\"", literal[1..literal.len() - 1].replace("\\'", "'").replace('"', "\\\""))
-    } else {
-        literal.to_string()
+/// Una cadena literal entre comillas simples o dobles, con los escapes que acepta `ast.literal_eval` del Descargador
+/// (`\\xHH`, `\\uXXXX`, `\\UXXXXXXXX`, octales, `\\'`, `\\"`, `\\n`…). Un escape desconocido se conserva tal cual, como
+/// en Python. No evalúa expresiones: cualquier otra cosa es `None`.
+pub(crate) fn cadena_literal(literal: &str) -> Option<String> {
+    let comilla = literal.chars().next().filter(|c| matches!(c, '"' | '\''))?;
+    let cuerpo = literal.strip_prefix(comilla)?.strip_suffix(comilla)?;
+    let mut salida = String::with_capacity(cuerpo.len());
+    let mut chars = cuerpo.chars().peekable();
+    let hex = |chars: &mut std::iter::Peekable<std::str::Chars<'_>>, n: usize| -> Option<char> {
+        let digitos: String = (0..n).map(|_| chars.next().filter(char::is_ascii_hexdigit)).collect::<Option<_>>()?;
+        char::from_u32(u32::from_str_radix(&digitos, 16).ok()?)
     };
-    serde_json::from_str::<String>(&json)
+    while let Some(c) = chars.next() {
+        if c == comilla || matches!(c, '\n' | '\r') {
+            return None;
+        }
+        if c != '\\' {
+            salida.push(c);
+            continue;
+        }
+        match chars.next()? {
+            '\n' => {}
+            '\\' => salida.push('\\'),
+            '\'' => salida.push('\''),
+            '"' => salida.push('"'),
+            'a' => salida.push('\u{7}'),
+            'b' => salida.push('\u{8}'),
+            'f' => salida.push('\u{c}'),
+            'n' => salida.push('\n'),
+            'r' => salida.push('\r'),
+            't' => salida.push('\t'),
+            'v' => salida.push('\u{b}'),
+            'x' => salida.push(hex(&mut chars, 2)?),
+            'u' => salida.push(hex(&mut chars, 4)?),
+            'U' => salida.push(hex(&mut chars, 8)?),
+            d @ '0'..='7' => {
+                let mut valor = d.to_digit(8).unwrap();
+                for _ in 0..2 {
+                    match chars.peek().and_then(|c| c.to_digit(8)) {
+                        Some(o) => {
+                            valor = valor * 8 + o;
+                            chars.next();
+                        }
+                        None => break,
+                    }
+                }
+                salida.push(char::from_u32(valor)?);
+            }
+            otro => {
+                salida.push('\\');
+                salida.push(otro);
+            }
+        }
+    }
+    Some(salida)
+}
+
+fn literal_js(literal: &str) -> Result<String, Error> {
+    // Los calendarios auditados contienen solo literales de texto, nunca expresiones. Como `motor.result_records`:
+    // `\\/` pasa a `/` antes de leer el literal y después se resuelven las entidades HTML.
+    cadena_literal(&literal.replace("\\/", "/"))
         .map(|s| flow_tabular::html::sin_entidades(&s))
-        .map_err(|_| "No se pueden comprobar los registros del calendario.".into())
+        .ok_or_else(|| "No se pueden comprobar los registros del calendario.".into())
 }
 
 fn registros_calendario(raiz: &Html, scripts: &str) -> Result<Registros, Error> {
     let mut valores = Vec::new();
     for nombre in ["Ritxdias", "Nombresxdias"] {
-        let asignacion = Regex::new(&format!(r"\b{nombre}\[dia\]\s*=")).unwrap();
+        // `==` es una comparación, no una asignación.
+        let asignacion = Regex::new(&format!(r"\b{nombre}\[dia\]\s*=(?:[^=]|\z)")).unwrap();
         let literal = Regex::new(&format!(r#"\b{nombre}\[dia\]\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')\s*;"#)).unwrap();
         let textos: Vec<_> = literal.captures_iter(scripts).map(|c| literal_js(&c[1])).collect::<Result<_, _>>()?;
         if textos.len() != asignacion.find_iter(scripts).count() {
@@ -259,9 +313,8 @@ pub fn validar_respuesta(
             return Err("Una página de continuación quedó vacía; repetir la consulta.".into());
         }
         if !perfil.calendario() {
-            if !matches!(fields.get(perfil.total).map(String::as_str), None | Some("" | "0" | "1"))
-                || !matches!(fields.get(perfil.pagina).map(String::as_str), None | Some("" | "0" | "1"))
-            {
+            // Como `perfiles.response_profile`: solo el total; el número de página no se revisa en una respuesta vacía.
+            if !matches!(fields.get(perfil.total).map(String::as_str), None | Some("" | "0" | "1")) {
                 return Err("La respuesta vacía tiene una paginación incoherente.".into());
             }
             if perfil.pantalla == "seguimiento" && pestaña == Some("") {

@@ -17,6 +17,98 @@ use std::{
 /// Lecturas por corrida (bitácoras y calendarios comparten el tope; las historias tienen uno igual aparte).
 /// Usuario, 13-nov-2026: subido de 600 a 2000. No se elimina: evita una corrida sin fin si la sesión de SITFA se cae.
 pub const TOPE: usize = 2000;
+/// Como `MAX_FALLAS_SEGUIDAS` de `descargador/lectura_bitacoras.py`: tantas bitácoras fallidas seguidas detienen el lote
+/// (la sesión de SITFA probablemente cayó). Solo cuentan las bitácoras; una leída reinicia la cuenta.
+pub const MAX_FALLAS_SEGUIDAS: usize = 5;
+
+static PENDIENTE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+    regex::Regex::new(
+        r"\AConsulta (\d+), página \d+(?:, fila \d+: (?:bitacora|historia|calendario) pendiente|: vínculos del listado pendientes)\.",
+    )
+    .unwrap()
+});
+const RESUMEN_PENDIENTES: &str = "Los Excel verificados se conservan. Quedaron ";
+
+/// Consultas (índice desde 0) con lecturas por ingreso pendientes según los avisos del avance. Sus XLS ya están
+/// verificados; al retomar se vuelven a recorrer solo para reintentar esas lecturas.
+pub fn consultas_pendientes(resumen: &Resumen) -> BTreeSet<usize> {
+    resumen
+        .avisos
+        .iter()
+        .filter_map(|a| PENDIENTE.captures(a)?[1].parse::<usize>().ok()?.checked_sub(1))
+        .filter(|i| *i < resumen.lote.consultas.len())
+        .collect()
+}
+
+/// Lecturas (o páginas de vínculos) pendientes anotadas en el avance.
+pub fn lecturas_pendientes(resumen: &Resumen) -> usize {
+    resumen.avisos.iter().filter(|a| PENDIENTE.is_match(a)).count()
+}
+
+/// Nomenclaturas de contexto de `nurus/personal/motor/vocabulario.py::CONTEXTO` (igual a `flow_motor::hist::CONTEXTO`).
+const CONTEXTO: [&str; 9] = [
+    "Orden de búsqueda",
+    "Termino de búsqueda",
+    "Deja sin efecto búsqueda",
+    "Conciliacion",
+    "Dictación de sentencia",
+    "Egreso de servicio protección especializada y otras redes",
+    "Designa abogado",
+    "Deja sin efecto designación C. Ad-litem",
+    "Prorroga",
+];
+
+/// `nurus.bitacora_html.normalize`: NFKD sin lo no ASCII, minúsculas, `-().` como espacio y espacios colapsados
+/// (el recorte es previo al reemplazo, como en Python).
+fn normalizar_tramite(s: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    let ascii: String = s.nfkd().filter(char::is_ascii).collect::<String>().to_lowercase().trim().to_string();
+    let sin_signos: String = ascii.chars().map(|c| if matches!(c, '-' | '(' | ')' | '.') { ' ' } else { c }).collect();
+    let mut salida = String::with_capacity(sin_signos.len());
+    let mut espacio = false;
+    for c in sin_signos.chars() {
+        if c.is_whitespace() {
+            if !espacio {
+                salida.push(' ');
+            }
+            espacio = true;
+        } else {
+            salida.push(c);
+            espacio = false;
+        }
+    }
+    salida
+}
+
+/// Como `nurus.capture.historias.contexto_anterior`: de las filas anteriores a la ventana, solo el último trámite
+/// (por fecha y folio) de cada nomenclatura de contexto, en el orden de la historia. Sirve para que una orden de
+/// búsqueda, una sentencia o una designación antiguas sigan viéndose; nunca para redactar una constancia nueva.
+pub fn contexto_anterior(anteriores: &[Value]) -> Vec<Value> {
+    let nombres: BTreeSet<String> = CONTEXTO.iter().map(|n| normalizar_tramite(n)).collect();
+    let mut ultimos: BTreeMap<String, ((String, i128), &Value)> = BTreeMap::new();
+    for fila in anteriores {
+        let nombre = normalizar_tramite(fila["descripcion"].as_str().unwrap_or(""));
+        let fecha = fila["fecha_iso"].as_str().unwrap_or("");
+        if !nombres.contains(&nombre) || fecha.is_empty() {
+            continue;
+        }
+        let folio = fila["folio"].as_str().unwrap_or("");
+        let numero = if !folio.is_empty() && folio.bytes().all(|b| b.is_ascii_digit()) { folio.parse().unwrap_or(i128::MAX) } else { -1 };
+        let orden = (fecha.to_string(), numero);
+        if ultimos.get(&nombre).is_none_or(|(o, _)| orden > *o) {
+            ultimos.insert(nombre, (orden, fila));
+        }
+    }
+    let mut salida: Vec<&Value> = ultimos.into_values().map(|(_, f)| f).collect();
+    salida.sort_by_key(|f| f["fila"].as_u64().unwrap_or(u64::MAX));
+    salida.into_iter().cloned().collect()
+}
+
+fn anotar(resumen: &mut Resumen, aviso: String) {
+    if !resumen.avisos.contains(&aviso) {
+        resumen.avisos.push(aviso);
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Opciones {
@@ -107,8 +199,7 @@ pub struct Recoleccion {
     previas: BTreeMap<String, (PathBuf, Referencia)>,
     aperturas: usize,
     historias: usize,
-    pendientes: usize,
-    consultas_incompletas: BTreeSet<usize>,
+    fallas_seguidas: usize,
 }
 
 impl Recoleccion {
@@ -159,15 +250,7 @@ impl Recoleccion {
                 previas.insert(r.clave.clone(), (carpeta.to_path_buf(), r.clone()));
             }
         }
-        Ok(Self {
-            hoy,
-            carpeta: carpeta.to_path_buf(),
-            previas,
-            aperturas: 0,
-            historias: 0,
-            pendientes: 0,
-            consultas_incompletas: BTreeSet::new(),
-        })
+        Ok(Self { hoy, carpeta: carpeta.to_path_buf(), previas, aperturas: 0, historias: 0, fallas_seguidas: 0 })
     }
 
     fn persistir(
@@ -212,6 +295,8 @@ impl Recoleccion {
             valor["desde"] = json!(desde.to_string());
             valor["hasta"] = json!(hasta.to_string());
             valor["anteriores"] = json!(anteriores.len());
+            // Lotes anteriores no traen este campo: quien lo lea debe tratar su ausencia como lista vacía.
+            valor["contexto_anterior"] = json!(contexto_anterior(&anteriores));
             if futura {
                 valor["advertencias"]
                     .as_array_mut()
@@ -286,7 +371,19 @@ impl Recoleccion {
         let seleccion = resumen.lote.consultas[actual.consulta].clone();
         let opciones = resumen.lote.lecturas.clone();
         let pausa = resumen.lote.pausa_ms;
-        let enlaces = vinculos::extraer(actual.html, &seleccion)?;
+        // Como el Descargador (`motor.search_page` y `lectura_historia.pagina`): un listado cuyos vínculos no se pueden
+        // leer queda anotado aparte y nunca detiene el lote; los XLS verificados siguen disponibles.
+        let prefijo_listado = format!("Consulta {}, página {}: vínculos del listado ", actual.consulta + 1, actual.numero);
+        resumen.avisos.retain(|s| !s.starts_with(&prefijo_listado));
+        let enlaces = match vinculos::extraer(actual.html, &seleccion) {
+            Ok(enlaces) => enlaces,
+            Err(e) => {
+                let estado = if opciones.activa() { "pendientes" } else { "no leídos" };
+                anotar(resumen, format!("{prefijo_listado}{estado}. {e}"));
+                resumen.guardar(&self.carpeta)?;
+                return Ok(());
+            }
+        };
         resumen.paginas_lectura.retain(|p| p.consulta != actual.consulta || p.numero != actual.numero);
         resumen.paginas_lectura.push(Pagina { consulta: actual.consulta, numero: actual.numero, vinculos: enlaces });
         let mut todos = resumen.paginas_lectura.iter().flat_map(|p| p.vinculos.clone()).collect::<Vec<_>>();
@@ -298,6 +395,9 @@ impl Recoleccion {
             }
         }
         resumen.guardar(&self.carpeta)?;
+        if !opciones.activa() {
+            return Ok(());
+        }
         let enlaces =
             resumen.paginas_lectura.iter().find(|p| p.consulta == actual.consulta && p.numero == actual.numero).unwrap().vinculos.clone();
         for v in enlaces {
@@ -328,7 +428,11 @@ impl Recoleccion {
                     }
                     continue;
                 }
-                if self.reutilizar(resumen, tipo, &v, opciones.meses)? {
+                // Como `session.reutilizar` del Descargador: una copia previa que no se puede reutilizar se lee en SITFA.
+                if self.reutilizar(resumen, tipo, &v, opciones.meses).unwrap_or(false) {
+                    if tipo == "bitacora" {
+                        self.fallas_seguidas = 0;
+                    }
                     continue;
                 }
                 self.reservar(tipo)?;
@@ -345,15 +449,24 @@ impl Recoleccion {
                     _ => vinculos::abrir_calendario(conexion, &v),
                 };
                 match lectura {
-                    Ok(datos) => self.persistir(resumen, tipo, &v, datos, opciones.meses, false)?,
-                    Err(e) => {
-                        self.pendientes += 1;
-                        self.consultas_incompletas.insert(actual.consulta);
-                        let aviso = format!("{prefijo}pendiente. {e}");
-                        if !resumen.avisos.contains(&aviso) {
-                            resumen.avisos.push(aviso);
+                    Ok(datos) => {
+                        self.persistir(resumen, tipo, &v, datos, opciones.meses, false)?;
+                        if tipo == "bitacora" {
+                            self.fallas_seguidas = 0;
                         }
+                    }
+                    Err(e) => {
+                        anotar(resumen, format!("{prefijo}pendiente. {e}"));
                         resumen.guardar(&self.carpeta)?;
+                        if tipo == "bitacora" {
+                            self.fallas_seguidas += 1;
+                            if self.fallas_seguidas >= MAX_FALLAS_SEGUIDAS {
+                                return Err(format!(
+                                    "{MAX_FALLAS_SEGUIDAS} bitácoras seguidas fallaron ({e}). Se detuvo el lote para no esperar en cada \
+                                     causa. Revisa la sesión SITFA y usa «Retomar lote…»: no se vuelve a leer lo ya leído."
+                                ));
+                            }
+                        }
                     }
                 }
             }
@@ -361,25 +474,40 @@ impl Recoleccion {
         Ok(())
     }
 
+    /// Anota cuántas lecturas quedaron pendientes. No quita consultas de `terminadas`: sus XLS están verificados y
+    /// las lecturas fallidas se reintentan al retomar (`consultas_pendientes`).
     pub fn terminar(&self, resumen: &mut Resumen) -> Result<(), String> {
-        resumen.terminadas.retain(|i| !self.consultas_incompletas.contains(i));
-        if self.pendientes != 0 {
-            Err(format!(
-                "Los Excel verificados se conservan. Quedaron {} lecturas pendientes; retoma el lote para reintentarlas.",
-                self.pendientes
-            ))
-        } else {
-            Ok(())
+        resumen.avisos.retain(|s| !s.starts_with(RESUMEN_PENDIENTES));
+        let pendientes = lecturas_pendientes(resumen);
+        if pendientes != 0 {
+            resumen
+                .avisos
+                .push(format!("{RESUMEN_PENDIENTES}{pendientes} lecturas por ingreso pendientes; retoma el lote para reintentarlas."));
         }
-    }
-    pub fn completa(&self, consulta: usize) -> bool {
-        !self.consultas_incompletas.contains(&consulta)
+        resumen.guardar(&self.carpeta)
     }
 }
 
 #[cfg(test)]
 mod pruebas_limite {
     use super::*;
+
+    #[test]
+    fn contexto_anterior_conserva_el_ultimo_de_cada_nomenclatura_como_python() {
+        let fila = |fila: u64, folio: &str, descripcion: &str, fecha: &str| json!({"fila":fila,"folio":folio,"descripcion":descripcion,"fecha_iso":fecha,"tramite":"Resolución"});
+        let anteriores = vec![
+            fila(3, "50", "Orden de busqueda", "2099-01-10"),
+            fila(4, "40", "ORDEN DE BÚSQUEDA", "2099-01-05"),
+            fila(5, "60", "Dictación de sentencia", "2099-01-10"),
+            fila(6, "61", "Dictacion  de sentencia", "2099-01-10"),
+            fila(7, "70", "Acompaña documentos", "2099-02-01"),
+            fila(8, "80", "Designa abogado", ""),
+            fila(9, "s/n", "Deja sin efecto designación C. Ad-litem", "2099-01-01"),
+        ];
+        let contexto = contexto_anterior(&anteriores);
+        let filas: Vec<u64> = contexto.iter().map(|f| f["fila"].as_u64().unwrap()).collect();
+        assert_eq!(filas, vec![3, 6, 9]);
+    }
     #[test]
     fn tope_comparte_bitacoras_calendario_y_separa_historias() {
         let mut r = Recoleccion {
@@ -388,8 +516,7 @@ mod pruebas_limite {
             previas: BTreeMap::new(),
             aperturas: 0,
             historias: 0,
-            pendientes: 0,
-            consultas_incompletas: BTreeSet::new(),
+            fallas_seguidas: 0,
         };
         for _ in 0..TOPE / 2 {
             r.reservar("bitacora").unwrap();

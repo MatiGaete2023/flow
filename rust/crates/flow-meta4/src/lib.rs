@@ -233,11 +233,14 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
             lecturas.insert(r.clave.clone(), recoleccion::leer(carpeta, r));
             capturadas.insert(r.clave.clone(), r.capturada.clone());
         }
-        let mut todos: Vec<Vinculo> = resumen.paginas_lectura.iter().flat_map(|p| p.vinculos.clone()).collect();
+        // Captura guarda los vínculos del listado en todo lote de Seguimiento (como el Descargador); sin lectura de
+        // bitácoras pedida, la consulta sigue contando como «sin bitácoras leídas».
+        let paginas: &[recoleccion::Pagina] = if resumen.lote.lecturas.bitacoras { &resumen.paginas_lectura } else { &[] };
+        let mut todos: Vec<Vinculo> = paginas.iter().flat_map(|p| p.vinculos.clone()).collect();
         vinculos::descartar_ambiguos(&mut todos);
         let mut indice: HashMap<(usize, [String; 4]), Vec<Vinculo>> = HashMap::new();
         let mut siguiente = todos.into_iter();
-        for pagina in &resumen.paginas_lectura {
+        for pagina in paginas {
             for _ in &pagina.vinculos {
                 let v = siguiente.next().expect("vínculo");
                 indice.entry((pagina.consulta, v.clave())).or_default().push(v);
@@ -391,7 +394,7 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
                     m.registros.push(r);
                 }
             }
-            if filas_consulta > 0 && !resumen.paginas_lectura.iter().any(|p| p.consulta == numero) {
+            if filas_consulta > 0 && !paginas.iter().any(|p| p.consulta == numero) {
                 m.sin_bitacoras.push((format!("{etiqueta}: {nombre_consulta}"), tribunal_consulta));
             }
         }
@@ -484,5 +487,44 @@ mod pruebas {
         assert!(nombres_compatibles("Sofía Pérez", "SOFIA ANDREA PEREZ SOTO"));
         assert!(!nombres_compatibles("Sofía", "Sofía Pérez"));
         assert!(!nombres_compatibles("Matías Rojas", "Sofía Pérez"));
+    }
+}
+
+#[cfg(test)]
+mod pruebas_vinculos_sin_lectura {
+    use super::*;
+    use serde_json::json;
+
+    /// M3: Captura guarda los vínculos del listado aunque no se pidan bitácoras; Meta 4 sigue informando la consulta
+    /// como «sin bitácoras leídas» y la fila como sin bitácora, no como «lectura no completada».
+    #[test]
+    fn vinculos_sin_lectura_de_bitacoras_cuentan_como_sin_bitacoras() {
+        let carpeta = std::env::temp_dir().join(format!("flow-meta4-m3-ficticio-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&carpeta);
+        std::fs::create_dir_all(&carpeta).unwrap();
+        let espera = "<html><table><tr><th>RIT</th><th>Tribunal</th><th>RUT</th><th>Nombre</th><th>Tipo</th><th>Sexo</th>\
+            <th>Derivación</th><th>T Espera</th><th>Fec. Resolución</th></tr>\
+            <tr><td>X-4-2099</td><td>Jgdo. L. y G. de Laja</td><td>44444444-2</td><td>LUCAS ARAYA</td><td>Protección</td><td>M</td><td>FAE PRO Ficticio</td><td>35</td><td>05/09/2026</td></tr>\
+            </table></html>";
+        std::fs::write(carpeta.join("espera.xls"), espera).unwrap();
+        let vinculo = json!({"fila": 1, "rit": "X-4-2099", "rut": "44444444-2", "nombre": "LUCAS ARAYA", "programa": "FAE PRO Ficticio",
+            "tribunal": "901", "causa": "c1", "ingreso": "i1", "etapa": "3", "antiguo": "", "tipo_popup": "12", "rit_enlace": "X-4-2099",
+            "calendario": null, "bitacora_verificada": true, "historia_verificada": false, "diagnostico": ""});
+        let resumen: Resumen = serde_json::from_value(json!({
+            "version": 1,
+            "lote": {"consultas": [{"tribunal":"901","screen":"seguimiento","tab":"Espera","modality":"3","report":null,"state":null,"month":null,"year":null}],
+                     "fechas": null, "conservar_filtros": false, "evidencia": false, "pausa_ms": 250,
+                     "lecturas": {"bitacoras": false, "historia": false, "calendario": false, "meses": 1}},
+            "estado": "VALIDADA", "terminadas": [0], "vacias": [],
+            "archivos": [{"nombre": "espera.xls", "sha256": huella(espera.as_bytes()), "consulta": 0, "pagina": 1, "total": 1, "registros": 1}],
+            "avisos": [], "paginas_lectura": [{"consulta": 0, "numero": 1, "vinculos": [vinculo]}]
+        }))
+        .unwrap();
+        resumen.guardar(&carpeta).unwrap();
+        let dia = |s: &str| s.parse::<NaiveDate>().unwrap();
+        let m = calcular(std::slice::from_ref(&carpeta), dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap();
+        let _ = std::fs::remove_dir_all(&carpeta);
+        assert_eq!(m.sin_bitacoras.len(), 1);
+        assert_eq!(m.registros[0].control, SIN_BITACORA);
     }
 }

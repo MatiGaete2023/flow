@@ -21,18 +21,48 @@ pub const CAPACIDADES: &str = "FLOW_CAPACIDADES";
 pub const VERSION_EXTENSION: &str = "0.2.0";
 const MAX_RESUMEN: usize = 64 * 1024 * 1024;
 
+/// Plazo por orden a la extensión, como `puente.call(timeout=75)` del Descargador.
+pub const PLAZO: Duration = Duration::from_secs(75);
+
 pub trait Conexion: Send + Sync {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String>;
+    /// Como `llamar`, con el código técnico estable del error (`TIEMPO`, `SITFA_TASK`…), nunca texto de SITFA.
+    fn llamar_con_codigo(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, (String, String)> {
+        self.llamar(comando, payload, plazo).map_err(|m| ("SITFA_TASK".into(), m))
+    }
 }
 
 impl Conexion for Puente {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String> {
         Puente::llamar(self, comando, payload, plazo).map_err(|e| e.mensaje)
     }
+    fn llamar_con_codigo(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, (String, String)> {
+        Puente::llamar(self, comando, payload, plazo).map_err(|e| (e.codigo, e.mensaje))
+    }
 }
 
 fn pedir(c: &dyn Conexion, comando: &str, payload: Value) -> Result<Value, String> {
-    c.llamar(comando, payload, Duration::from_secs(70))
+    c.llamar(comando, payload, PLAZO)
+}
+
+/// Aviso al desbloquear, separado como en `descargador/lotes.py`, con un código técnico sin datos de personas.
+pub fn aviso_restauracion(respuesta: &Result<Value, (String, String)>) -> Option<String> {
+    let codigo = match respuesta {
+        Ok(v) if v["restored"].as_bool() == Some(false) => {
+            return Some(
+                "No se restauraron todos los filtros de SITFA. Revisa el formulario antes de volver a consultar; los archivos \
+                 verificados se conservan. (Código técnico: restored:false.)"
+                    .into(),
+            )
+        }
+        Ok(_) => return None,
+        Err((codigo, _)) if codigo == "TIEMPO" => "tiempo".to_string(),
+        Err((codigo, _)) => codigo.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_').take(40).collect(),
+    };
+    Some(format!(
+        "No se pudo confirmar la restauración de los filtros de SITFA. Revisa la pestaña antes de volver a consultar; los \
+         archivos verificados se conservan. (Código técnico: {codigo}.)"
+    ))
 }
 
 pub fn comprobar_capacidades(v: &Value) -> Result<(), String> {
@@ -52,8 +82,8 @@ pub fn catalogo(conexion: &dyn Conexion, pantalla: &str) -> Result<Value, String
     }
     // Como el Descargador: primero las opciones, que abren la pantalla elegida si la pestaña está en otra y dan un
     // mensaje claro si SITFA no muestra una pantalla de consulta; después, la comprobación de la extensión.
-    // Plazos acotados: abrir la pantalla toma hasta 15 s en la extensión; nada justifica esperar más de 40 s.
-    let catalogo = conexion.llamar("catalog", json!({"screen":pantalla}), Duration::from_secs(40))?;
+    // Mismo plazo que el Descargador (75 s): con SITFA lento, abrir la pantalla elegida puede tardar.
+    let catalogo = conexion.llamar("catalog", json!({"screen":pantalla}), PLAZO)?;
     let capacidades = conexion.llamar("capabilities", json!({}), Duration::from_secs(15)).map_err(|_| {
         "La extensión respondió las opciones, pero no confirmó su versión. Carga la carpeta extension de esta entrega de Flow en chrome://extensions y vuelve a conectar.".to_string()
     })?;
@@ -362,7 +392,9 @@ pub fn ejecutar(
     let resultado: Result<(), String> = (|| {
         for (indice, s) in lote.consultas.iter().enumerate() {
             cancelado(cancelar)?;
-            if resumen.terminadas.contains(&indice) {
+            // Una consulta terminada con lecturas pendientes se recorre otra vez: sus XLS se releen del disco y solo
+            // se reintentan las lecturas fallidas.
+            if resumen.terminadas.contains(&indice) && !crate::recoleccion::consultas_pendientes(&resumen).contains(&indice) {
                 continue;
             }
             progreso(format!("Consulta {} de {} · {}", indice + 1, lote.consultas.len(), s.tab));
@@ -480,7 +512,9 @@ pub fn ejecutar(
                             lote.consultas.len(),
                             primera.total
                         ));
-                        if lote.lecturas.activa() && s.screen == "seguimiento" {
+                        // Como `motor.search_page`: en Seguimiento los vínculos del listado se guardan siempre, aunque
+                        // no se pidan lecturas por ingreso.
+                        if s.screen == "seguimiento" {
                             recoleccion.pagina(
                                 conexion,
                                 catalogo,
@@ -492,7 +526,7 @@ pub fn ejecutar(
                     }
                 }
             }
-            if recoleccion.completa(indice) {
+            if !resumen.terminadas.contains(&indice) {
                 resumen.terminadas.push(indice);
             }
             resumen.guardar(carpeta)?;
@@ -500,9 +534,8 @@ pub fn ejecutar(
         recoleccion.terminar(&mut resumen)?;
         Ok(())
     })();
-    match conexion.llamar("unlock", json!({}), Duration::from_secs(8)) {
-        Ok(v) if v["restored"].as_bool() != Some(false) => (),
-        _ => resumen.avisos.push("No se pudo confirmar la restauración de los filtros de SITFA. Revisa el formulario.".into()),
+    if let Some(aviso) = aviso_restauracion(&conexion.llamar_con_codigo("unlock", json!({}), Duration::from_secs(8))) {
+        resumen.avisos.push(aviso);
     }
     resumen.estado = if resultado.is_ok() { "VALIDADA" } else { "INCOMPLETA" }.into();
     if let Err(e) = &resultado {

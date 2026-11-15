@@ -97,6 +97,45 @@ fn opciones(catalogo: &Value, clave: &str) -> Vec<(String, String, bool)> {
         .unwrap_or_default()
 }
 
+/// «Todas las medidas» (clave `0`) una sola vez aunque el catálogo de SITFA también la traiga, y sin claves repetidas:
+/// dos casillas con la misma clave generaban consultas repetidas.
+fn medidas(catalogo: &Value) -> Vec<(String, String, bool)> {
+    let mut salida = vec![("0".to_string(), "Todas las medidas".to_string(), true)];
+    for (k, n, m) in opciones(catalogo, "medidas") {
+        if !salida.iter().any(|(c, _, _)| *c == k) {
+            salida.push((k, n, m));
+        }
+    }
+    salida
+}
+
+/// Mensaje de fin de lote; menciona las lecturas por ingreso que quedaron pendientes (sus XLS ya están verificados).
+fn mensaje_fin(resumen: &Resumen, independiente: bool) -> String {
+    let pendientes = flow_captura::recoleccion::lecturas_pendientes(resumen);
+    format!(
+        "Lote terminado: {} consultas, {} sin registros. {}{}",
+        resumen.terminadas.len(),
+        resumen.vacias.len(),
+        if independiente {
+            "Los Excel verificados quedaron en la carpeta del lote; ábrelos en Flow Asistente."
+        } else {
+            "Puedes llevar los Excel a Trabajo."
+        },
+        if pendientes > 0 {
+            format!(" Quedaron {pendientes} lecturas por ingreso pendientes; usa «Retomar lote…» para reintentarlas.")
+        } else {
+            String::new()
+        }
+    )
+}
+
+/// Tras un lote detenido, el Descargador puede abrir la carpeta si hay archivos verificados; Trabajo solo recibe el lote
+/// si todas sus consultas tienen sus XLS verificados (o quedaron sin registros).
+fn disponible_tras_error(resumen: &Resumen, independiente: bool) -> bool {
+    !resumen.archivos.is_empty()
+        && (independiente || (0..resumen.lote.consultas.len()).all(|i| resumen.terminadas.contains(&i) || resumen.vacias.contains(&i)))
+}
+
 fn marcas(ui: &mut egui::Ui, titulo: &str, opciones: &mut [(String, String, bool)]) {
     ui.label(egui::RichText::new(titulo).strong());
     ui.horizontal_wrapped(|ui| {
@@ -127,8 +166,7 @@ impl Captura {
                             self.tribunales = opciones(&c, "tribunales");
                             self.modalidades = opciones(&c, "modalidades");
                             self.informes = opciones(&c, "informes");
-                            self.medidas = vec![("0".into(), "Todas las medidas".into(), true)];
-                            self.medidas.extend(opciones(&c, "medidas"));
+                            self.medidas = medidas(&c);
                             self.estados = opciones(&c, "estados");
                             self.meses = opciones(&c, "meses");
                             self.pestañas = c["pestanas"]
@@ -149,19 +187,17 @@ impl Captura {
                     self.carpeta = Some(carpeta.clone());
                     match *r {
                         Ok(resumen) => {
-                            self.mensaje = format!(
-                                "Lote terminado: {} consultas, {} sin registros. {}",
-                                resumen.terminadas.len(),
-                                resumen.vacias.len(),
-                                if self.independiente {
-                                    "Los Excel verificados quedaron en la carpeta del lote; ábrelos en Flow Asistente."
-                                } else {
-                                    "Puedes llevar los Excel a Trabajo."
-                                }
-                            );
+                            self.mensaje = mensaje_fin(&resumen, self.independiente);
                             self.listo = Some((carpeta, resumen));
                         }
-                        Err(e) => self.mensaje = e,
+                        Err(e) => {
+                            self.mensaje = e;
+                            if let Ok(resumen) = Resumen::leer(&carpeta) {
+                                if disponible_tras_error(&resumen, self.independiente) {
+                                    self.listo = Some((carpeta, resumen));
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -218,7 +254,9 @@ impl Captura {
                             s.tab = tab.clone();
                             s.modality = modalidad.clone();
                             s.report = report;
-                            consultas.push(s);
+                            if !consultas.contains(&s) {
+                                consultas.push(s);
+                            }
                         }
                     }
                 }
@@ -333,7 +371,9 @@ impl Captura {
                     // La respuesta tardía de Chrome se descarta; la conexión sigue abierta.
                     self.receptor = None;
                     self.cargando = None;
-                    self.mensaje = "Carga de opciones cancelada. Revisa que la pestaña SITFA muestre la pantalla de consulta y vuelve a intentar.".into();
+                    self.mensaje =
+                        "Carga de opciones cancelada. Revisa que la pestaña SITFA muestre la pantalla de consulta y vuelve a intentar."
+                            .into();
                 }
                 ctx.request_repaint_after(Duration::from_millis(500));
             } else if ui.add_enabled(self.puente.as_ref().is_some_and(|p| p.conectado()), egui::Button::new("Cargar opciones")).clicked() {
@@ -441,5 +481,43 @@ impl Captura {
             let _ = p.llamar("unlock", serde_json::json!({}), Duration::from_secs(2));
             p.cerrar();
         }
+    }
+}
+
+#[cfg(test)]
+mod pruebas {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn todas_las_medidas_aparece_una_sola_vez() {
+        let c = json!({"medidas": {"0": "Todas", "5": "Medida ficticia", "6": "Otra ficticia"}});
+        let m = medidas(&c);
+        assert_eq!(m.iter().map(|(k, _, _)| k.as_str()).collect::<Vec<_>>(), ["0", "5", "6"]);
+        assert_eq!(m[0].1, "Todas las medidas");
+    }
+
+    fn resumen(terminadas: Vec<usize>, avisos: Vec<String>) -> Resumen {
+        serde_json::from_value(json!({
+            "version": 1,
+            "lote": {"consultas": [{"tribunal":"901","screen":"seguimiento","tab":"Espera","modality":"2","report":null,"state":null,"month":null,"year":null},
+                                   {"tribunal":"901","screen":"seguimiento","tab":"Cumplimiento","modality":"2","report":null,"state":null,"month":null,"year":null}],
+                     "fechas": null, "conservar_filtros": false, "evidencia": false, "pausa_ms": 250},
+            "estado": "INCOMPLETA", "terminadas": terminadas, "vacias": [],
+            "archivos": [{"nombre": "a.xls", "sha256": "0".repeat(64), "consulta": 0, "pagina": 1, "total": 1, "registros": 1}],
+            "avisos": avisos
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn fin_con_lecturas_pendientes_lo_dice_y_lote_detenido_sigue_disponible_si_corresponde() {
+        let r = resumen(vec![0, 1], vec!["Consulta 1, página 1, fila 2: bitacora pendiente. Fallo ficticio.".into()]);
+        assert!(mensaje_fin(&r, false).contains("Quedaron 1 lecturas por ingreso pendientes"));
+        assert!(!mensaje_fin(&resumen(vec![0, 1], vec![]), true).contains("pendientes"));
+        assert!(disponible_tras_error(&r, false));
+        let parcial = resumen(vec![0], vec![]);
+        assert!(disponible_tras_error(&parcial, true), "el Descargador puede abrir la carpeta");
+        assert!(!disponible_tras_error(&parcial, false), "Trabajo no recibe un lote con consultas sin XLS");
     }
 }

@@ -354,3 +354,27 @@ fn datos_no_utf8_y_entidades_se_comparan_con_nombre_completo() {
     let bytes = excel.chars().map(|c| c as u8).collect();
     VerificadorDescargas::default().verificar(bytes, &p, &perfil(&c)).unwrap();
 }
+
+/// M2: `==` no es una asignación; los escapes que Python (`ast.literal_eval`) acepta también se leen.
+#[test]
+fn calendario_ignora_comparaciones_y_lee_escapes_como_python() {
+    let c = caso("calendario_informes/");
+    let con_comparacion = c.html.replace("Ritxdias[dia] = \"C-10-2099\";", "if (Ritxdias[dia] == \"\") {} Ritxdias[dia] = \"C-10-2099\";");
+    validar_respuesta(con_comparacion.as_bytes(), &c.pares, &perfil(&c), None).unwrap();
+    let original = pagina(&c);
+    let escapes =
+        c.html.replace("Nombresxdias[dia] = \"Persona ficticia (", "Nombresxdias[dia] = \"Persona \\x66icticia \\u0028\\'x\\'\\/\\\\ (");
+    let Respuesta::ConRegistros(p) = validar_respuesta(escapes.as_bytes(), &c.pares, &perfil(&c), None).unwrap() else { panic!() };
+    assert_eq!(p.registros.len(), original.registros.len());
+    assert!(p.registros.keys().any(|(_, n)| n.starts_with("PERSONA FICTICIA ('X'/\\ (")), "{:?}", p.registros);
+    let simples = c.html.replace("Ritxdias[dia] = \"C-10-2099\";", "Ritxdias[dia] = 'C-10-\\x32099';");
+    assert_eq!(pagina(&Caso { html: simples, ..caso("calendario_informes/") }).registros, original.registros);
+}
+
+/// B1: como `perfiles.response_profile`, la respuesta vacía solo revisa el total, no el número de página.
+#[test]
+fn respuesta_vacia_no_exige_numero_de_pagina() {
+    let c = caso("seguimiento/Espera/vacia");
+    let html = c.html.replace("NUM_PaginaEspera\" value=\"1", "NUM_PaginaEspera\" value=\"7");
+    assert_eq!(validar_respuesta(html.as_bytes(), &c.pares, &perfil(&c), None).unwrap(), Respuesta::SinRegistros);
+}

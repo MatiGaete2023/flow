@@ -271,7 +271,9 @@ impl Conexion for Orden {
         self.llamadas.lock().unwrap().push((comando.into(), plazo));
         match comando {
             "catalog" => self.catalogo.clone(),
-            "capabilities" => Ok(json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false})),
+            "capabilities" => Ok(
+                json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,"bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false}),
+            ),
             _ => Err("orden no esperada".into()),
         }
     }
@@ -284,7 +286,7 @@ fn opciones_se_piden_antes_que_la_version_y_con_plazos_acotados() {
     lotes::catalogo(&bien, "seguimiento").unwrap();
     let llamadas = bien.llamadas.lock().unwrap().clone();
     assert_eq!(llamadas.iter().map(|(c, _)| c.as_str()).collect::<Vec<_>>(), ["catalog", "capabilities"]);
-    assert!(llamadas.iter().all(|(_, p)| *p <= Duration::from_secs(40)), "{llamadas:?}");
+    assert!(llamadas.iter().all(|(_, p)| *p <= Duration::from_secs(75)), "{llamadas:?}");
     // SITFA sin pantalla de consulta: el mensaje de la extensión llega tal cual y no se espera nada más.
     let sin_pantalla = Orden {
         catalogo: Err("El enlace con Chrome funciona, pero no se encuentra la pantalla de consulta.".into()),
@@ -293,4 +295,146 @@ fn opciones_se_piden_antes_que_la_version_y_con_plazos_acotados() {
     let error = lotes::catalogo(&sin_pantalla, "seguimiento").unwrap_err();
     assert!(error.contains("pantalla de consulta"), "{error}");
     assert_eq!(sin_pantalla.llamadas.lock().unwrap().len(), 1);
+}
+
+/// Listado ficticio de Espera con identidad completa y un enlace de bitácora por fila; delega el resto en `Ficticio`.
+struct ConLecturas<'a> {
+    base: Ficticio<'a>,
+    /// Cuántas de las próximas aperturas de bitácora fallan.
+    fallas: Mutex<usize>,
+    aperturas: Mutex<usize>,
+}
+
+fn con_enlaces(html: &str) -> String {
+    let mut html = html.replace(
+        "<tr><td>RIT</td><td>Nombre</td></tr>",
+        "<tr><td>RIT</td><td>RUT</td><td>Nombre</td><td>Derivación</td><td>Acciones</td></tr>",
+    );
+    for p in 1..=2 {
+        for f in 0..3 {
+            html = html
+                .replace(&format!("<td>X-{p}{f}-2099</td><td>Persona"), &format!("<td>X-{p}{f}-2099</td><td>1{p}{f}-0</td><td>Persona"));
+            html = html.replace(
+                &format!("{p}-{f}</td></tr>"),
+                &format!("{p}-{f}</td><td>PRM Ficticio</td><td><a onclick=\"ShowObservaciones('5{p}{f}','901','7{p}{f}','12','3','0')\">Obs</a></td></tr>"),
+            );
+        }
+    }
+    html
+}
+
+impl Conexion for ConLecturas<'_> {
+    fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String> {
+        match comando {
+            "search" => {
+                let r = self.base.llamar(comando, payload, plazo)?;
+                let html = String::from_utf8(STANDARD.decode(r["body"].as_str().unwrap()).unwrap()).unwrap();
+                Ok(codificado(&con_enlaces(&html)))
+            }
+            "diary_open" => {
+                *self.aperturas.lock().unwrap() += 1;
+                let mut fallas = self.fallas.lock().unwrap();
+                if *fallas > 0 {
+                    *fallas -= 1;
+                    return Err("Fallo ficticio de bitácora.".into());
+                }
+                let p = &payload["params"];
+                let casos: Vec<Value> = serde_json::from_str(include_str!("datos/lecturas_ficticias.json")).unwrap();
+                let html = casos[0]["html"]
+                    .as_str()
+                    .unwrap()
+                    .replace("name=\"COD_Tribunal\" value=\"11\"", "name=\"COD_Tribunal\" value=\"901\"")
+                    .replace(
+                        "name=\"CRR_IdCausa\" value=\"22\"",
+                        &format!("name=\"CRR_IdCausa\" value=\"{}\"", p["CRR_IdCausa"].as_str().unwrap()),
+                    )
+                    .replace(
+                        "name=\"ID_Ingreso\" value=\"33\"",
+                        &format!("name=\"ID_Ingreso\" value=\"{}\"", p["ID_Ingreso"].as_str().unwrap()),
+                    );
+                let mut r = json!({"status":200,"type":"text/html","body":STANDARD.encode(html.as_bytes()),"digest":lotes::huella(html.as_bytes()),"startedAt":chrono::Utc::now().to_rfc3339()});
+                r["params"] = p.clone();
+                Ok(r)
+            }
+            _ => self.base.llamar(comando, payload, plazo),
+        }
+    }
+}
+
+fn con_lecturas(fallas: usize) -> ConLecturas<'static> {
+    ConLecturas {
+        base: Ficticio { caso: caso("seguimiento/Espera"), estado: Mutex::new((1, 0, vec![])), cancelar: None, falla: false },
+        fallas: Mutex::new(fallas),
+        aperturas: Mutex::new(0),
+    }
+}
+
+/// A1: lecturas fallidas no quitan la consulta de `terminadas`, el lote termina con sus XLS y el retomar reintenta
+/// solo las pendientes.
+#[test]
+fn lecturas_fallidas_no_impiden_terminar_y_se_reintentan_al_retomar() {
+    let f = con_lecturas(4);
+    let c = Carpeta::nueva();
+    let mut lote = plan(&f.base.caso, false);
+    lote.lecturas.bitacoras = true;
+    let r = lotes::ejecutar(&f, &f.base.caso["catalogo"], &lote, &c.0, false, &AtomicBool::new(false), &|_| {}).unwrap();
+    assert_eq!(r.estado, "VALIDADA");
+    assert_eq!(r.terminadas, vec![0]);
+    assert_eq!(r.archivos.len(), 2);
+    assert_eq!(r.lecturas.len(), 2);
+    assert_eq!(flow_captura::recoleccion::lecturas_pendientes(&r), 4);
+    assert!(r.avisos.iter().any(|a| a.contains("Quedaron 4 lecturas")), "{:?}", r.avisos);
+    assert_eq!(*f.aperturas.lock().unwrap(), 6);
+    // B4: la versión de la extensión se pide una vez por lote, no por lectura.
+    assert_eq!(f.base.estado.lock().unwrap().2.iter().filter(|c| *c == "capabilities").count(), 1);
+    let r = lotes::ejecutar(&f, &f.base.caso["catalogo"], &lote, &c.0, true, &AtomicBool::new(false), &|_| {}).unwrap();
+    assert_eq!(r.terminadas, vec![0]);
+    assert_eq!(r.lecturas.len(), 6);
+    assert_eq!(flow_captura::recoleccion::lecturas_pendientes(&r), 0, "{:?}", r.avisos);
+    assert!(!r.avisos.iter().any(|a| a.contains("pendiente")), "{:?}", r.avisos);
+    assert_eq!(*f.aperturas.lock().unwrap(), 10, "solo se reabren las cuatro pendientes");
+    assert_eq!(f.base.estado.lock().unwrap().1, 2, "los XLS verificados no se vuelven a descargar");
+}
+
+/// A1: cinco bitácoras fallidas seguidas detienen el lote (como `MAX_FALLAS_SEGUIDAS`), con los XLS conservados.
+#[test]
+fn cinco_bitacoras_seguidas_fallidas_detienen_el_lote() {
+    let f = con_lecturas(usize::MAX);
+    let c = Carpeta::nueva();
+    let mut lote = plan(&f.base.caso, false);
+    lote.lecturas.bitacoras = true;
+    let e = lotes::ejecutar(&f, &f.base.caso["catalogo"], &lote, &c.0, false, &AtomicBool::new(false), &|_| {}).unwrap_err();
+    assert!(e.contains("5 bitácoras seguidas fallaron"), "{e}");
+    assert_eq!(*f.aperturas.lock().unwrap(), 5);
+    let r = Resumen::leer(&c.0).unwrap();
+    assert_eq!(r.estado, "INCOMPLETA");
+    assert_eq!(r.archivos.len(), 2);
+}
+
+/// M3: en Seguimiento los vínculos del listado se guardan aunque no se pidan lecturas, sin abrir ventanas.
+#[test]
+fn vinculos_del_listado_se_guardan_sin_lecturas() {
+    let f = con_lecturas(0);
+    let c = Carpeta::nueva();
+    let lote = plan(&f.base.caso, false);
+    assert!(!lote.lecturas.activa());
+    let r = lotes::ejecutar(&f, &f.base.caso["catalogo"], &lote, &c.0, false, &AtomicBool::new(false), &|_| {}).unwrap();
+    assert_eq!(r.paginas_lectura.len(), 2);
+    assert!(r.paginas_lectura.iter().all(|p| p.vinculos.len() == 3 && p.vinculos.iter().all(|v| v.bitacora_verificada)));
+    assert_eq!(*f.aperturas.lock().unwrap(), 0);
+    assert!(r.lecturas.is_empty());
+}
+
+/// M5: «restored:false» y la falta de confirmación son avisos distintos, con un código técnico sin datos personales.
+#[test]
+fn restauracion_de_filtros_separa_avisos_con_codigo() {
+    let no_restaurado = lotes::aviso_restauracion(&Ok(json!({"ok":true,"restored":false}))).unwrap();
+    assert!(no_restaurado.starts_with("No se restauraron todos los filtros de SITFA."), "{no_restaurado}");
+    assert!(no_restaurado.contains("restored:false"));
+    assert_eq!(lotes::aviso_restauracion(&Ok(json!({"ok":true,"restored":true}))), None);
+    let tiempo = lotes::aviso_restauracion(&Err(("TIEMPO".into(), "Chrome no respondió a tiempo.".into()))).unwrap();
+    assert!(tiempo.starts_with("No se pudo confirmar la restauración de los filtros de SITFA."), "{tiempo}");
+    assert!(tiempo.contains("(Código técnico: tiempo.)"));
+    let codigo = lotes::aviso_restauracion(&Err(("SITE_ACCESS".into(), "texto".into()))).unwrap();
+    assert!(codigo.contains("(Código técnico: SITE_ACCESS.)") && !codigo.contains("texto"), "{codigo}");
 }
