@@ -531,3 +531,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   ilegible deja solo esa bitácora no verificable; textos >32767 se truncan; la UI propone el corte por día de lectura,
   ofrece solo los tribunales presentes y expande carpetas con varios lotes. Pendiente: nombre del tribunal en el
   Resumen de Captura. Suite completa: 204 pruebas, 0 fallos.
+- 2026-11-16 · **Decisiones del usuario** sobre `rust/REVISION_20261115.md` (regla general: «en caso de dudas, para
+  todo, dejarlo igual que en Python»): (1) proyectos Word agrupados como Python; (2) Word se genera solo:
+  NOMENCLATURA automática y variables faltantes como en Python; (3) correo «Medidas» con un adjunto por programa;
+  (4) se agregan los correos «Reporte de proyectos» y «Gestión particular»; (5) sin selector de cuenta Outlook ni
+  apertura de carpetas de lote (sin cambios); (6) retención automática de sesiones se mantiene; (7) la sesión guarda
+  también borradores y proyectos; (8) Anonimizador sin cambios; (9) Meta 4 acepta «LA» como Los Ángeles;
+  (10) Excel de observaciones reutiliza columnas y escribe TT/CC como Python; (11) Meta 4 exige el PDF de evidencia
+  para contar una consulta vacía; (12) se acepta que el Anonimizador reemplace valores que Python deja.
