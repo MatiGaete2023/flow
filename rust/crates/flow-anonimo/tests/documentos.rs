@@ -29,8 +29,12 @@ fn ics_preserva_hora_zona_y_relaciones_sin_asistentes_ni_alarmas() {
     }
     assert!(s.lines().all(|l| l.len() <= 75));
     assert!(!out.avisos().is_empty());
-    assert!(formatos::anonimizar("mala.ics", b"BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART:ilegible\nEND:VEVENT\nEND:VCALENDAR", opciones())
-        .is_err());
+    // Una fecha ilegible se omite con aviso (Python la conserva); la estructura rota sigue rechazándose.
+    let ilegible =
+        formatos::anonimizar("mala.ics", b"BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART:ilegible\nEND:VEVENT\nEND:VCALENDAR", opciones())
+            .unwrap();
+    assert!(!String::from_utf8_lossy(ilegible.datos()).contains("ilegible"));
+    assert!(formatos::anonimizar("rota.ics", b"BEGIN:VCALENDAR\nBEGIN:VEVENT\nEND:VCALENDAR", opciones()).is_err());
 }
 
 fn word(media: bool) -> Vec<u8> {
@@ -89,11 +93,24 @@ fn estructuras_e_identidades_excesivas_no_llegan_a_publicarse() {
     let html = format!("<html><body>{}texto{}</body></html>", "<div>".repeat(1000), "</div>".repeat(1000));
     assert!(formatos::cargar("profundo.html", html.as_bytes()).is_err());
     let json = serde_json::json!({"Nombre":"Identcanario ".repeat(100)});
-    assert!(formatos::anonimizar("nombre.json", &serde_json::to_vec(&json).unwrap(), opciones()).is_err());
+    // A1: una identidad demasiado larga no se registra, pero la celda se publica como seudónimo completo.
+    let salida = formatos::anonimizar("nombre.json", &serde_json::to_vec(&json).unwrap(), opciones()).unwrap();
+    let v: serde_json::Value = serde_json::from_slice(salida.datos()).unwrap();
+    assert!(v["Nombre"].as_str().unwrap().starts_with("Persona Ficticia "));
 }
 #[test]
-fn excel_preserva_coordenadas_de_tabla_desplazada(){
- use calamine::Reader;
- let mut w=rust_xlsxwriter::Workbook::new();let h=w.add_worksheet();h.write_string(2,1,"RIT").unwrap();h.write_string(2,2,"Nombre").unwrap();h.write_string(3,1,"P-1-2099").unwrap();h.write_string(3,2,"Identcanario Apelcanario").unwrap();
- let salida=formatos::anonimizar("desplazado.xlsx",&w.save_to_buffer().unwrap(),opciones()).unwrap();let mut libro=calamine::open_workbook_auto_from_rs(std::io::Cursor::new(salida.datos().to_vec())).unwrap();let rango=libro.worksheet_range_at(0).unwrap().unwrap();assert_eq!(rango.start(),Some((2,1)));assert_eq!(rango.get_value((2,1)),Some(&calamine::Data::String("RIT".into())));assert!(matches!(rango.get_value((3,2)),Some(calamine::Data::String(s)) if !s.contains("Identcanario")));
+fn excel_preserva_coordenadas_de_tabla_desplazada() {
+    use calamine::Reader;
+    let mut w = rust_xlsxwriter::Workbook::new();
+    let h = w.add_worksheet();
+    h.write_string(2, 1, "RIT").unwrap();
+    h.write_string(2, 2, "Nombre").unwrap();
+    h.write_string(3, 1, "P-1-2099").unwrap();
+    h.write_string(3, 2, "Identcanario Apelcanario").unwrap();
+    let salida = formatos::anonimizar("desplazado.xlsx", &w.save_to_buffer().unwrap(), opciones()).unwrap();
+    let mut libro = calamine::open_workbook_auto_from_rs(std::io::Cursor::new(salida.datos().to_vec())).unwrap();
+    let rango = libro.worksheet_range_at(0).unwrap().unwrap();
+    assert_eq!(rango.start(), Some((2, 1)));
+    assert_eq!(rango.get_value((2, 1)), Some(&calamine::Data::String("RIT".into())));
+    assert!(matches!(rango.get_value((3,2)),Some(calamine::Data::String(s)) if !s.contains("Identcanario")));
 }

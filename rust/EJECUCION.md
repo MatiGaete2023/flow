@@ -509,3 +509,10 @@ guardar el código de conexión, y cualquier escritura en RUS.
   separados con código técnico. B1, B3, B4 (75 s; `capabilities` una vez por lote), B8 (sin casillas repetidas).
   Historia: `contexto_anterior` como `nurus.capture.historias` (campo nuevo en la lectura; falta usarlo en
   `flow-trabajo/src/captura.rs`). Pruebas ficticias nuevas. **No verificado con SITFA real.**
+- 2026-11-16 · flow-anonimo, paridad con Python (A1–A10): identidades fuera de límites ya no abortan (la celda sale
+  como seudónimo); un archivo que falla no cancela el lote (INFORME.json `rechazados`, «Archivo N» y motivo fijo);
+  encabezados según `grid.header_row`, conservados en Estricto y revisados como protegidos; JSON por extensión con
+  NDJSON y NaN; texto sin extensión, `.text` y controles; HTML por contenido; CSV con `|`; ICS de Outlook tolerante;
+  nombres ZIP normalizados como safezip; etiquetas de 40 caracteres depuradas; nombres de archivo de `resumen.json`
+  como `fuente_N`; Excel conserva fechas y lógicos; la semilla persiste; ocultos saltados; estado INCOMPLETO/VERIFICADO
+  del ZIP. Se mantiene el barrido final `verificar`. Pruebas: `tests/paridad.rs` (13).

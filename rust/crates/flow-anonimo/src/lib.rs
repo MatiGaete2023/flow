@@ -54,7 +54,8 @@ impl Salida {
 pub fn publicar(carpeta: &std::path::Path, salida: &Salida) -> Result<std::path::PathBuf, String> {
     use std::io::Write;
     if salida.datos.len() > MAX_ARCHIVO
-        || !["xlsx", "csv", "tsv", "json", "jsonl", "txt", "md", "log", "html", "ics", "docx", "zip"].contains(&salida.extension.as_str())
+        || !["xlsx", "csv", "tsv", "json", "jsonl", "ndjson", "txt", "text", "md", "log", "html", "ics", "docx", "zip"]
+            .contains(&salida.extension.as_str())
     {
         return Err("La salida excede el formato o tamaño permitidos.".into());
     }

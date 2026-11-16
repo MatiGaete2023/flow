@@ -13,12 +13,20 @@ pub struct Avance {
     pub completados: usize,
     pub total: usize,
 }
+/// Archivo de la selección que no produjo copia. `entrada` es una etiqueta neutra («Archivo N», en el orden de
+/// lectura); el motivo es un mensaje fijo del programa: ninguno de los dos contiene datos del archivo.
+#[derive(Serialize, Clone, Debug)]
+pub struct Rechazo {
+    pub entrada: String,
+    pub motivo: String,
+}
 #[derive(Serialize)]
 pub struct Informe {
     pub version: u32,
     pub modo: String,
     pub archivos: Vec<String>,
     pub excluidos: usize,
+    pub rechazados: Vec<Rechazo>,
     pub avisos: Vec<String>,
     pub revision_manual: String,
 }
@@ -33,6 +41,7 @@ fn comprobar(cancelar: &AtomicBool) -> Result<(), String> {
         Ok(())
     }
 }
+/// Recorre la selección sin seguir enlaces. Dentro de una carpeta elegida se saltan los ocultos (`engine._expand`).
 fn listar(
     p: &Path,
     archivos: &mut BTreeSet<PathBuf>,
@@ -40,6 +49,9 @@ fn listar(
     nivel: usize,
     cancelar: &AtomicBool,
 ) -> Result<(), String> {
+    if nivel > 0 && p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with('.')) {
+        return Ok(());
+    }
     comprobar(cancelar)?;
     if nivel > 32 {
         return Err("La carpeta supera la profundidad permitida.".into());
@@ -101,46 +113,70 @@ pub fn ejecutar(
     }
     let total = archivos.len();
     let mut cargados = vec![];
-    let mut excluidos = 0;
+    let mut rechazados = vec![];
     let mut presupuesto = 200 * 1024 * 1024usize;
+    // Cada archivo se rechaza por separado (`engine.run`): uno dañado no impide publicar los demás.
+    let rechazar = |rechazados: &mut Vec<Rechazo>, i: usize, motivo: String| -> Result<(), String> {
+        if opciones.rechazar_no_admitidos {
+            return Err("Una entrada no es admitida o no superó la revisión; no se publicó el lote.".into());
+        }
+        rechazados.push(Rechazo { entrada: format!("Archivo {}", i + 1), motivo });
+        Ok(())
+    };
     for (i, p) in archivos.into_iter().enumerate() {
         comprobar(cancelar)?;
         progreso(Avance { fase: "Leyendo", completados: i, total });
-        let f = std::fs::File::open(&p).map_err(|_| "No se pudo leer un archivo seleccionado.")?;
-        let mut raw = vec![];
-        f.take((MAX_ARCHIVO + 1) as u64).read_to_end(&mut raw).map_err(|_| "No se pudo completar la lectura.")?;
+        let leido = (|| {
+            let meta = std::fs::metadata(&p).map_err(|_| "No se pudo leer el archivo.")?;
+            if meta.len() > MAX_ARCHIVO as u64 {
+                return Err("El archivo supera 80 MiB.".to_string());
+            }
+            let f = std::fs::File::open(&p).map_err(|_| "No se pudo leer el archivo.")?;
+            let mut raw = vec![];
+            f.take((MAX_ARCHIVO + 1) as u64).read_to_end(&mut raw).map_err(|_| "No se pudo completar la lectura.")?;
+            if raw.len() > MAX_ARCHIVO {
+                return Err("El archivo supera 80 MiB.".to_string());
+            }
+            Ok(raw)
+        })();
+        let raw = match leido {
+            Ok(raw) => raw,
+            Err(e) => {
+                rechazar(&mut rechazados, i, e)?;
+                continue;
+            }
+        };
         presupuesto = presupuesto.checked_sub(raw.len()).ok_or("La selección supera 200 MiB; divídela en grupos menores.")?;
-        if raw.len() > MAX_ARCHIVO {
-            return Err("Un archivo supera 80 MiB; no se procesa el lote.".into());
-        }
         let nombre = p.file_name().and_then(|s| s.to_str()).unwrap_or("");
         match formatos::cargar(nombre, &raw) {
-            Ok(e) => cargados.push(e),
-            Err(_) => {
-                if opciones.rechazar_no_admitidos {
-                    return Err("Una entrada no es admitida o está dañada; no se publicó el lote.".into());
-                }
-                excluidos += 1;
-            }
+            Ok(e) => cargados.push((i, e)),
+            Err(e) => rechazar(&mut rechazados, i, e)?,
         }
     }
     if cargados.is_empty() {
         return Err("Ningún archivo seleccionado es admitido.".into());
     }
     let modo = format!("{:?}", opciones.modo);
-    let mut sesion = Sesion::nueva(opciones)?;
-    for (i, e) in cargados.iter().enumerate() {
+    let mut sesion = Sesion::nueva(opciones.clone())?;
+    for (n, (_, e)) in cargados.iter().enumerate() {
         comprobar(cancelar)?;
-        progreso(Avance { fase: "Reconociendo identidades", completados: i, total: cargados.len() });
-        formatos::recolectar(&mut sesion, e)?;
+        progreso(Avance { fase: "Reconociendo identidades", completados: n, total: cargados.len() });
+        // Como `engine.run`: un archivo que falla al reconocer identidades se rechazará al anonimizarlo.
+        let _ = formatos::recolectar(&mut sesion, e);
     }
     let mut salidas: Vec<Salida> = vec![];
     let mut bytes = 0usize;
     let mut avisos = BTreeSet::new();
-    for (i, e) in cargados.iter().enumerate() {
+    for (n, (i, e)) in cargados.iter().enumerate() {
         comprobar(cancelar)?;
-        progreso(Avance { fase: "Anonimizando y verificando", completados: i, total: cargados.len() });
-        let s = formatos::transformar(&mut sesion, e)?;
+        progreso(Avance { fase: "Anonimizando y verificando", completados: n, total: cargados.len() });
+        let s = match formatos::transformar(&mut sesion, e) {
+            Ok(s) => s,
+            Err(motivo) => {
+                rechazar(&mut rechazados, *i, motivo)?;
+                continue;
+            }
+        };
         bytes += s.datos().len();
         if bytes > 200 * 1024 * 1024 {
             return Err("Las copias superan el tamaño permitido; divide la selección.".into());
@@ -148,6 +184,10 @@ pub fn ejecutar(
         avisos.extend(s.avisos().iter().cloned());
         salidas.push(s);
     }
+    if salidas.is_empty() {
+        return Err("Ninguna copia superó la revisión final; no se publicó nada.".into());
+    }
+    rechazados.sort_by_key(|r| r.entrada.trim_start_matches("Archivo ").parse::<usize>().unwrap_or(0));
     comprobar(cancelar)?;
     let carpeta = nueva_carpeta(destino)?;
     let publicacion = (|| {
@@ -158,7 +198,7 @@ pub fn ejecutar(
             let p = crate::publicar(&carpeta, s)?;
             nombres.push(p.file_name().unwrap().to_string_lossy().into_owned());
         }
-        let informe=Informe{version:1,modo,archivos:nombres,excluidos,avisos:avisos.into_iter().collect(),revision_manual:"Revise las copias y el informe antes de compartir. La revisión automática no garantiza anonimato absoluto. Los originales no se modificaron.".into()};
+        let informe=Informe{version:1,modo,archivos:nombres,excluidos:rechazados.len(),rechazados:rechazados.clone(),avisos:avisos.into_iter().collect(),revision_manual:"Revise las copias y el informe antes de compartir. La revisión automática no garantiza anonimato absoluto. Los originales no se modificaron.".into()};
         let raw = serde_json::to_vec_pretty(&informe).map_err(|_| "No se pudo generar el informe.")?;
         std::fs::write(carpeta.join("INFORME.json"), raw).map_err(|_| "No se pudo guardar el informe.")?;
         comprobar(cancelar)?;

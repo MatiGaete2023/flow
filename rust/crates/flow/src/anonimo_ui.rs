@@ -63,7 +63,8 @@ impl Anonimo {
             modo: if self.conservador { Modo::Conservador } else { Modo::Estricto },
             desplazar_dias: self.dias,
             generalizar_nacimiento: self.nacimiento,
-            semilla: std::mem::take(&mut self.semilla),
+            // Como Python, la semilla se conserva en memoria entre ejecuciones para repetir seudónimos; no se guarda.
+            semilla: self.semilla.clone(),
             rechazar_no_admitidos: self.rechazar,
         };
         let (tx, rx) = channel();
@@ -104,11 +105,15 @@ impl Anonimo {
             self.receptor = None;
             match r {
                 Ok(r) => {
-                    self.mensaje = format!(
-                        "{} copias verificadas; {} entradas excluidas. Revise INFORME.json y las copias antes de compartir.",
-                        r.informe.archivos.len(),
-                        r.informe.excluidos
-                    );
+                    self.mensaje = if r.informe.rechazados.is_empty() {
+                        format!("{} copias verificadas. Revise INFORME.json y las copias antes de compartir.", r.informe.archivos.len())
+                    } else {
+                        format!(
+                            "{} copias verificadas; {} archivo(s) no se crearon (ver «rechazados» en INFORME.json). Revise las copias antes de compartir.",
+                            r.informe.archivos.len(),
+                            r.informe.excluidos
+                        )
+                    };
                     self.resultado = Some(r.carpeta)
                 }
                 Err(e) => self.mensaje = e,
@@ -143,11 +148,12 @@ impl Anonimo {
                 ui.add(egui::DragValue::new(&mut self.dias).range(-36500..=36500));
             });
             ui.checkbox(&mut self.nacimiento, "Generalizar fecha de nacimiento al 1 de enero");
-            ui.checkbox(&mut self.rechazar, "Rechazar la selección completa si incluye archivos no admitidos");
+            ui.checkbox(&mut self.rechazar, "Rechazar la selección completa si un archivo no es admitido o no supera la revisión");
             ui.horizontal(|ui| {
                 ui.label("Semilla opcional:");
-                ui.add(egui::TextEdit::singleline(&mut self.semilla).password(true))
-                    .on_hover_text("Permite repetir los mismos seudónimos. Solo permanece en memoria durante esta ejecución.");
+                ui.add(egui::TextEdit::singleline(&mut self.semilla).password(true)).on_hover_text(
+                    "Permite repetir los mismos seudónimos. Permanece solo en memoria mientras la ventana está abierta; nunca se guarda.",
+                );
             });
             ui.horizontal(|ui| {
                 if ui.button("Destino…").clicked() {

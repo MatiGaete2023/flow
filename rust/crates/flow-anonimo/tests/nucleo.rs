@@ -79,7 +79,14 @@ fn fechas_horas_formula_y_numeros_utiles_se_conservan_sin_codigo_activo() {
     let out = formatos::anonimizar("tabla.xlsx", &libro.save_to_buffer().unwrap(), opciones()).unwrap();
     let entrada = flow_tabular::leer_bytes("salida.xlsx", out.datos().to_vec()).unwrap();
     assert_eq!(entrada.hojas[0].nombre, "Espera");
-    assert_eq!(entrada.hojas[0].filas[1][5].texto(), "2026-10-08T15:16:17");
+    // A9: la fecha y hora sigue siendo una fecha de Excel, como en Python.
+    use calamine::Reader;
+    let mut libro = calamine::open_workbook_auto_from_rs(Cursor::new(out.datos().to_vec())).unwrap();
+    let rango = libro.worksheet_range_at(0).unwrap().unwrap();
+    match rango.get_value((1, 5)) {
+        Some(calamine::Data::DateTime(d)) => assert_eq!(d.as_datetime().unwrap().to_string(), "2026-10-08 15:16:17"),
+        otro => panic!("tipo inesperado: {otro:?}"),
+    }
 }
 
 #[test]
@@ -175,9 +182,12 @@ fn rit_anonimos_no_se_confunden_con_telefonos_y_conservan_relacion_de_formatos()
 }
 
 #[test]
-fn identidad_con_caracteres_no_admitidos_falla_cerrado() {
+fn identidad_sin_transliteracion_se_reemplaza_completa() {
+    // A1: Python deja este valor intacto; Rust publica la copia con un seudónimo de celda completa.
     let input = json!({"Nombre":"测试标识"});
-    assert!(formatos::anonimizar("datos.json", &serde_json::to_vec(&input).unwrap(), opciones()).is_err());
+    let salida = formatos::anonimizar("datos.json", &serde_json::to_vec(&input).unwrap(), opciones()).unwrap();
+    let v: Value = serde_json::from_slice(salida.datos()).unwrap();
+    assert!(v["Nombre"].as_str().unwrap().starts_with("Persona Ficticia "));
 }
 
 #[test]

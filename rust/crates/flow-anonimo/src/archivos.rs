@@ -19,8 +19,17 @@ pub struct Miembro {
     tipo: String,
 }
 pub enum Archivo {
-    General { miembros: Vec<Miembro>, omitidos: usize },
-    Captura { manifest: Value, tablas: BTreeMap<String, Filas>, miembros: Vec<Miembro> },
+    /// `estado`: INCOMPLETO o VERIFICADO tomado de `manifiesto.json`/`indice.txt` del original (`archive._specials`).
+    General {
+        miembros: Vec<Miembro>,
+        omitidos: usize,
+        estado: String,
+    },
+    Captura {
+        manifest: Value,
+        tablas: BTreeMap<String, Filas>,
+        miembros: Vec<Miembro>,
+    },
 }
 fn hash(raw: &[u8]) -> String {
     format!("{:x}", Sha256::digest(raw))
@@ -192,9 +201,26 @@ pub fn leer(entries: Vec<(String, Vec<u8>)>, nivel: usize, presupuesto: &mut usi
         referencias(&tablas)?;
         return Ok(Archivo::Captura { manifest: m, tablas, miembros });
     }
-    let (mut miembros, mut omitidos) = (vec![], 0);
+    let (mut miembros, mut omitidos, mut estado) = (vec![], 0, "VERIFICADO".to_string());
+    // Solo se conserva el estado, y solo si es uno de los dos valores conocidos; nada más del manifiesto original.
+    let conocido = |v: &str| {
+        let v = v.trim().to_uppercase();
+        ["INCOMPLETO", "VERIFICADO"].contains(&v.as_str()).then_some(v)
+    };
+    let especial = |n: &str| n.rsplit('/').next().unwrap_or("").to_lowercase();
+    if let Some((_, raw)) = entries.iter().find(|(n, _)| especial(n) == "manifiesto.json") {
+        let m = serde_json::from_slice::<Value>(raw.strip_prefix(b"\xef\xbb\xbf".as_slice()).unwrap_or(raw)).ok();
+        if let Some(v) = m.as_ref().filter(|m| m["archivos"].is_array()).and_then(|m| m["estado"].as_str()).and_then(conocido) {
+            estado = v;
+        }
+    }
+    if let Some((_, raw)) = entries.iter().find(|(n, _)| especial(n) == "indice.txt") {
+        if let Some(v) = String::from_utf8_lossy(raw).lines().next().and_then(|l| conocido(l.trim_start_matches('\u{feff}'))) {
+            estado = v;
+        }
+    }
     for (nombre, raw) in entries {
-        let base = nombre.rsplit('/').next().unwrap_or("").to_lowercase();
+        let base = especial(&nombre);
         if matches!(base.as_str(), "manifiesto.json" | "indice.txt") {
             continue;
         }
@@ -206,7 +232,7 @@ pub fn leer(entries: Vec<(String, Vec<u8>)>, nivel: usize, presupuesto: &mut usi
     if miembros.is_empty() {
         return Err("El ZIP no contiene archivos que puedan anonimizarse.".into());
     }
-    Ok(Archivo::General { miembros, omitidos })
+    Ok(Archivo::General { miembros, omitidos, estado })
 }
 pub fn semillar(sesion: &mut Sesion, a: &Archivo) -> Result<(), String> {
     let miembros = match a {
@@ -239,8 +265,7 @@ pub fn semillar(sesion: &mut Sesion, a: &Archivo) -> Result<(), String> {
 }
 fn ext(e: &Entrada) -> &str {
     match e {
-        Entrada::Json(_) => "json",
-        Entrada::JsonLineas(_) => "jsonl",
+        Entrada::Json(_, e) | Entrada::JsonLineas(_, e) => e,
         Entrada::Texto(_, e) => e,
         Entrada::Csv(_, b) if *b == b'\t' => "tsv",
         Entrada::Csv(_, _) => "csv",
@@ -378,7 +403,8 @@ fn procesar(sesion: &mut Sesion, a: &Archivo, textos: &mut Vec<(String, bool)>) 
                     nueva.insert(k.clone(), campo(sesion, k, v, &id, textos)?);
                 }
                 if let Some(original) = fila.get("original_file").filter(|s| incluidos.contains_key(*s)) {
-                    if let Some(Entrada::Excel(libro, _)) = miembros.iter().find(|m| &m.nombre == original).and_then(|m| m.entrada.as_ref())
+                    if let Some(Entrada::Excel(libro, ..)) =
+                        miembros.iter().find(|m| &m.nombre == original).and_then(|m| m.entrada.as_ref())
                     {
                         if let Some(i) = libro.hojas.iter().position(|h| Some(&h.nombre) == fila.get("original_sheet")) {
                             nueva.insert("original_sheet".into(), formatos::nombres_hojas(&libro.hojas)[i].clone());
@@ -412,17 +438,22 @@ fn procesar(sesion: &mut Sesion, a: &Archivo, textos: &mut Vec<(String, bool)>) 
         let manifest = json!({"schema_id":"CSMP_CAPTURE","schema_version":if payload.contains_key("consolidado/consolidado.xlsx"){"1.1.0"}else{"1.0.0"},"capture_id":id,"captured_at":sesion.desplazar(manifest["captured_at"].as_str().unwrap_or(""),false),"downloader":{"version":"anonimizador-local","commit":"COPIA_LOCAL"},"contains_sensitive_data":true,"originals_authorized":!incluidos.is_empty(),"queries":consultas,"table_states":manifest["table_states"],"mapping_version":"anonimizado-local","required_features":[],"files":files});
         payload.insert("manifest.json".into(), serde_json::to_vec_pretty(&manifest).map_err(|_| "No se pudo reconstruir el manifiesto.")?);
     } else {
+        let estado = match a {
+            Archivo::General { estado, .. } => estado.as_str(),
+            _ => "VERIFICADO",
+        };
         if payload.is_empty() {
             return Err("El ZIP no conserva archivos que puedan publicarse.".into());
         }
         payload.insert(
             "MANIFIESTO.json".into(),
-            serde_json::to_vec_pretty(&json!({"tipo":"ANONIMIZADO_LOCAL","archivos":files,"omitidos":omitidos}))
+            serde_json::to_vec_pretty(&json!({"tipo":"ANONIMIZADO_LOCAL","estado":estado,"archivos":files,"omitidos":omitidos}))
                 .map_err(|_| "No se pudo construir manifiesto.")?,
         );
-        let indice = files
-            .iter()
-            .map(|f| format!("{} {} {}", f["path"].as_str().unwrap_or(""), f["bytes"], f["sha256"].as_str().unwrap_or("")))
+        let indice = std::iter::once(estado.to_string())
+            .chain(
+                files.iter().map(|f| format!("{} {} {}", f["path"].as_str().unwrap_or(""), f["bytes"], f["sha256"].as_str().unwrap_or(""))),
+            )
             .collect::<Vec<_>>()
             .join("\n");
         payload.insert("INDICE.txt".into(), indice.into_bytes());

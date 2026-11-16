@@ -69,6 +69,10 @@ fn prefijos(lista: &str, s: &str) -> bool {
 pub fn parece_nombre(s: &str) -> bool {
     CANDIDATO.captures_iter(s).any(|c| !institucional(&c[0]))
 }
+/// Equivale a `scrub_unknown(texto) != texto` de Python: nombre propio no institucional, o rol seguido de nombre.
+pub fn parece_identidad(s: &str) -> bool {
+    parece_nombre(s) || ROL.captures_iter(s).any(|c| !institucional(&c[2]))
+}
 pub fn titulo_seguro(s: &str) -> bool {
     static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(&format!("^(?:{})$", VOCAB["SAFE_TITLE"].as_str().unwrap())).unwrap());
     RE.is_match(&normal(s))
@@ -103,6 +107,62 @@ fn institucional(s: &str) -> bool {
     let n = normal(s);
     let palabras = n.split_whitespace().filter(|p| !en("STOPWORDS", p)).collect::<Vec<_>>();
     !palabras.is_empty() && palabras.iter().all(|p| en("INSTITUTIONAL", p))
+}
+
+/// Valor con forma de nombre de archivo de extensión conocida (`consulta-001-p001-de-001.xls`): devuelve la raíz.
+pub fn nombre_archivo(s: &str) -> Option<&str> {
+    static RE: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(?i)^([\w.\-]+)\.(?:xls|xlsx|xlsm|csv|tsv|json|jsonl|ndjson|txt|text|md|log|html|htm|ics|docx|zip|pdf|xml)$").unwrap()
+    });
+    RE.captures(s.trim()).map(|c| c.get(1).unwrap().as_str())
+}
+/// Palabras que son claves o títulos de columna conocidos: no se registran como parte suelta de un nombre.
+fn palabra_clave(p: &str) -> bool {
+    [
+        "nombre",
+        "nombres",
+        "apellido",
+        "apellidos",
+        "rit",
+        "rut",
+        "run",
+        "consulta",
+        "consultas",
+        "causa",
+        "ingreso",
+        "programa",
+        "tribunal",
+        "correo",
+        "email",
+        "mail",
+        "telefono",
+        "celular",
+        "direccion",
+        "domicilio",
+        "curador",
+        "folio",
+        "fecha",
+        "estado",
+        "tipo",
+        "archivo",
+        "archivos",
+        "pagina",
+        "registros",
+        "xls",
+        "xlsx",
+        "xlsm",
+        "csv",
+        "tsv",
+        "json",
+        "jsonl",
+        "txt",
+        "html",
+        "docx",
+        "zip",
+        "pdf",
+    ]
+    .contains(&p)
+        || en("SAFE_EXTRA_KEYS", p)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -359,41 +419,52 @@ impl Sesion {
             self.reservados.insert(format!("{}-{}-{}", c[1].to_uppercase(), c[2].parse::<u64>().unwrap_or(0), &c[3]));
         }
     }
-    pub fn persona(&mut self, s: &str) {
+    /// Registra un nombre para reemplazarlo en todo el lote. Devuelve `false` si el valor no se registra
+    /// (vacío, marcador, muy corto, demasiado largo o nombre de archivo); quien lo llama debe reemplazar la
+    /// celda completa por un seudónimo. Solo el desborde del diccionario hace fallar la sesión.
+    pub fn persona(&mut self, s: &str) -> bool {
+        let s = s.trim();
         if s.len() > 512 || s.split_whitespace().count() > 64 {
-            self.fallo = true;
-            return;
+            return false;
+        }
+        if let Some(raiz) = nombre_archivo(s) {
+            let raiz = raiz.replace(['_', '-'], " ");
+            if parece_nombre(&raiz) {
+                self.persona(&raiz);
+            }
+            return false;
         }
         let n = normal(s);
-        if s.chars().any(|c| c.is_alphabetic() && !ascii(&c.to_string()).chars().any(|a| a.is_ascii_alphabetic())) {
+        if en("PLACEHOLDERS", &n) || n.chars().filter(|c| c.is_ascii_alphabetic()).count() < 3 {
+            return false;
+        }
+        if self.nombres.contains_key(&n) {
+            return true;
+        }
+        if self.fallo || self.nombres.len() > 100_000 {
             self.fallo = true;
-            return;
-        }
-        if en("PLACEHOLDERS", &n) {
-            return;
-        }
-        if n.chars().filter(|c| c.is_ascii_alphabetic()).count() < 3 && s.chars().any(char::is_alphabetic) {
-            self.fallo = true;
-            return;
-        }
-        if n.len() < 3 || !n.chars().any(|c| c.is_ascii_alphabetic()) {
-            return;
-        }
-        if self.nombres.contains_key(&n) || self.fallo {
-            return;
+            return false;
         }
         self.indices = None;
         let fake = self.pseudo("persona", s);
         let numero = fake.rsplit(' ').next().unwrap().to_string();
-        self.nombres.entry(n.clone()).or_insert(fake);
-        for (i, p) in n.split_whitespace().enumerate().filter(|(_, p)| p.len() >= 3 && !en("STOPWORDS", p)) {
-            self.partes.entry(p.into()).or_insert_with(|| format!("{}{numero}", if i == 0 { "Nombre" } else { "Apellido" }));
+        // También con las palabras como las corta el reemplazo («D’Angelo» -> «d angelo»): el apóstrofo no las une.
+        let tokens = PALABRAS.find_iter(s).map(|m| normal(m.as_str())).filter(|p| !p.is_empty()).collect::<Vec<_>>().join(" ");
+        for clave in [n.clone(), tokens] {
+            if clave.is_empty() {
+                continue;
+            }
+            self.nombres.entry(clave.clone()).or_insert_with(|| fake.clone());
+            for (i, p) in clave.split_whitespace().enumerate().filter(|(_, p)| p.len() >= 3 && !en("STOPWORDS", p)) {
+                self.partes.entry(p.into()).or_insert_with(|| format!("{}{numero}", if i == 0 { "Nombre" } else { "Apellido" }));
+            }
         }
+        true
     }
     fn nombres_en(&mut self, s: &str, solo_completos: bool) -> String {
         if self.indices.is_none() {
             let (mut completos, mut todos) = (Nodo::default(), Nodo::default());
-            for (k, v) in &self.partes {
+            for (k, v) in self.partes.iter().filter(|(k, _)| !palabra_clave(k)) {
                 todos.insertar(k, v);
             }
             for (k, v) in &self.nombres {
@@ -410,7 +481,7 @@ impl Sesion {
             let mut nodo = indice;
             let mut mejor = None;
             for j in i..tokens.len() {
-                if j > i && !s[tokens[j - 1].end()..tokens[j].start()].chars().all(|c| c.is_whitespace() || "-.,".contains(c)) {
+                if j > i && !s[tokens[j - 1].end()..tokens[j].start()].chars().all(|c| c.is_whitespace() || "-.,'’".contains(c)) {
                     break;
                 }
                 let Some(siguiente) = nodo.hijos.get(&normalizados[j]) else {
@@ -587,6 +658,8 @@ impl Sesion {
             Some(Clase::Direccion) => self.pseudo("direccion", s),
             Some(Clase::Identificador) => self.token(&clave.to_lowercase(), s),
             Some(Clase::Huella) => self.pseudo("hash", s),
+            Some(Clase::Persona | Clase::Curador) if nombre_archivo(s).is_some() => self.token("original_file", s),
+            Some(Clase::Persona | Clase::Curador) if !self.persona(s) => self.pseudo("persona", s),
             Some(Clase::Persona | Clase::Curador) => {
                 let nuevo = self.texto(s, false, false)?;
                 if nuevo == s && !institucional(s) {
