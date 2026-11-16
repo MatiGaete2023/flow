@@ -294,7 +294,25 @@ fn correr(sitfa: &dyn Sitfa, raiz: &Path, mut proceso: Proceso, prefs: &Preferen
                 "Se pidió el calendario de informes por vencer y no quedó completo en el paquete.".into(),
             ));
         }
-        let producto = exportar::exportar(&lotes_paquete, &destino, &opciones)?;
+        let mut completos = completos;
+        let producto = match exportar::exportar(&lotes_paquete, &destino, &opciones) {
+            // El calendario de informes nunca impide el paquete de siempre: se crea sin él y queda PARCIAL.
+            Err(e) if lotes_paquete.len() > 1 => {
+                let aviso = format!("El calendario de informes por vencer no pudo incluirse en el paquete: {e}");
+                sitfa.avance(aviso.clone());
+                avisos.push(aviso);
+                completos = false;
+                lotes_paquete.truncate(1);
+                if !opciones.avisos.iter().any(|(c, _)| c == "CALENDARIO_INCOMPLETO") {
+                    opciones.avisos.push((
+                        "CALENDARIO_INCOMPLETO".into(),
+                        "Se pidió el calendario de informes por vencer y no quedó completo en el paquete.".into(),
+                    ));
+                }
+                exportar::exportar(&lotes_paquete, &destino, &opciones)?
+            }
+            otro => otro?,
+        };
         avisos.extend(producto.avisos.iter().cloned());
         // Lecturas por ingreso pendientes, un calendario incompleto o la historia fuera del paquete lo dejan PARCIAL.
         let parcial = recoleccion::lecturas_pendientes(&resumen) > 0 || !completos || !producto.avisos.is_empty();
@@ -341,26 +359,7 @@ fn informes_por_vencer(
             let nombre = format!("informes-{año}-{mes}");
             proceso.fase = nombre.clone();
             escribir(raiz, proceso)?;
-            let plan = Lote {
-                consultas: tribunales
-                    .iter()
-                    .map(|t| Seleccion {
-                        tribunal: t.clone(),
-                        screen: "calendario_informes".into(),
-                        tab: String::new(),
-                        modality: String::new(),
-                        report: None,
-                        state: None,
-                        month: Some(mes.clone()),
-                        year: Some(año.clone()),
-                    })
-                    .collect(),
-                fechas: None,
-                conservar_filtros: false,
-                evidencia: prefs.pdf_sin_registros,
-                pausa_ms: prefs.pausa_ms,
-                lecturas: Default::default(),
-            };
+            let plan = plan_informes(&tribunales, mes, año, prefs);
             lotes_informes.push(fase_lote(sitfa, raiz, proceso, &nombre, &plan)?);
         }
         Ok(())
@@ -377,6 +376,30 @@ fn informes_por_vencer(
     }
     let completo = lotes_informes.len() == meses.len();
     Ok((lotes_informes, completo))
+}
+
+/// Lote del calendario de informes por vencer de un mes, para los tribunales del paquete.
+pub fn plan_informes(tribunales: &[String], mes: &str, año: &str, prefs: &Preferencias) -> Lote {
+    Lote {
+        consultas: tribunales
+            .iter()
+            .map(|t| Seleccion {
+                tribunal: t.clone(),
+                screen: "calendario_informes".into(),
+                tab: String::new(),
+                modality: String::new(),
+                report: None,
+                state: None,
+                month: Some(mes.into()),
+                year: Some(año.into()),
+            })
+            .collect(),
+        fechas: None,
+        conservar_filtros: false,
+        evidencia: prefs.pdf_sin_registros,
+        pausa_ms: prefs.pausa_ms,
+        lecturas: Default::default(),
+    }
 }
 
 #[cfg(test)]

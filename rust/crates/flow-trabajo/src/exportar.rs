@@ -329,20 +329,35 @@ fn identidad_remota(tribunal: &str, causa: &str, ingreso: &str) -> Value {
     json!({"source_system":"RUS","court_code":tribunal,"cause_id":causa,"ingreso_id":ingreso})
 }
 
-/// Tabla de la descarga según la consulta, con el tipo de registro del contrato (`table_mode`).
+/// Tabla de la descarga según la consulta, con el tipo de registro del contrato (`table_mode`). Como `tables()` del
+/// Descargador, una página sin las columnas que pide el motor (p. ej. un calendario sin Derivación ni Tribunal) se lee
+/// igual como tabla de personas: el tipo de registro lo da la consulta, no las columnas.
 fn tabla_de(libro: &flow_tabular::Libro, s: &Seleccion) -> Result<(flow_tabular::Tabla, String), String> {
-    match s.screen.as_str() {
+    let generica = || flow_tabular::leer_consulta(libro, "EGRESADOS");
+    let (estricta, tipo) = match s.screen.as_str() {
         "seguimiento" => match Etapa::desde(&s.tab) {
-            Some(etapa) => Ok((flow_tabular::leer_tabla(libro, Some(etapa), None)?, etapa.nombre().into())),
+            Some(etapa) => (flow_tabular::leer_tabla(libro, Some(etapa), None), etapa.nombre().to_string()),
             None => {
                 let tipo = if matches!(s.tab.as_str(), "Egresados" | "Egreso") { "EGRESADOS" } else { "OTRO" };
-                Ok((flow_tabular::leer_consulta(libro, "EGRESADOS")?, tipo.into()))
+                (generica(), tipo.to_string())
             }
         },
-        "calendario_informes" => Ok((flow_tabular::leer_tabla(libro, Some(Etapa::Informes), None)?, "INFORMES".into())),
-        "litigantes" => Ok((flow_tabular::leer_consulta(libro, "BUSQUEDA_LITIGANTES")?, "OTRO".into())),
-        _ => Err("Las consultas de medidas por vencer no se llevan al paquete del Asistente.".into()),
+        "calendario_informes" => (flow_tabular::leer_tabla(libro, Some(Etapa::Informes), None), "INFORMES".into()),
+        "litigantes" => (flow_tabular::leer_consulta(libro, "BUSQUEDA_LITIGANTES"), "OTRO".into()),
+        _ => return Err("Las consultas de medidas por vencer no se llevan al paquete del Asistente.".into()),
+    };
+    match estricta {
+        Ok(t) => Ok((t, tipo)),
+        Err(e) => generica().map(|t| (t, tipo)).map_err(|_| e),
     }
+}
+
+/// Vencimiento de una fila de calendario de informes (`calendar_date`), aunque la tabla se haya leído como genérica.
+fn vencimiento(tabla: &flow_tabular::Tabla, f: &flow_tabular::Fila) -> Option<chrono::NaiveDate> {
+    f.registro.fecha("vencimiento").or_else(|| {
+        let i = *flow_tabular::columnas::mapear(&tabla.cabeceras, Etapa::Informes).ok()?.get("vencimiento")?;
+        f.celdas.get(i)?.fecha()
+    })
 }
 
 /// Registros (y calendario de informes) de un lote.
@@ -512,7 +527,7 @@ fn registros(d: &mut Datos, li: usize, lote: &Lote) -> Result<(), String> {
             if s.screen == "calendario_informes" {
                 let mut calendario = comun;
                 calendario.insert("calendar_id", format!("cal-{rid}"));
-                calendario.insert("event_at", f.registro.fecha("vencimiento").map(|v| v.to_string()).unwrap_or_default());
+                calendario.insert("event_at", vencimiento(&tabla, f).map(|v| v.to_string()).unwrap_or_default());
                 calendario.insert("event_type", "INFORME".into());
                 calendario.insert("status", "SEGUN_FUENTE".into());
                 calendario.insert("association", if verificada { "VERIFICADA" } else { "NO_ASOCIADO" }.into());

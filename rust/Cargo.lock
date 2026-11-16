@@ -1519,6 +1519,7 @@ dependencies = [
 name = "flow-trabajo"
 version = "0.2.0"
 dependencies = [
+ "base64",
  "chrono",
  "flow-captura",
  "flow-dominio",

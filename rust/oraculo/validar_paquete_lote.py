@@ -5,7 +5,8 @@ Uso (desde la raíz del repo, con el Python del entorno de pruebas):
     python rust/oraculo/validar_paquete_lote.py
 
 Lee, en rust/crates/flow-trabajo/tests/datos/, paquete_desde_lote.zip («Crear paquete de este lote») y
-paquete_flujo.zip («Consultar y crear paquete», con calendario de informes por vencer) y escribe el .json de cada uno
+paquete_flujo.zip («Consultar y crear paquete», con calendario de informes por vencer) y paquete_calendario.zip
+(calendario real del SITFA ficticio, solo RIT, Nombre y Fecha Vencimiento) y escribe el .json de cada uno
 al lado. Los regenera `FLOW_REGENERAR=1 cargo test -p flow-trabajo --test exportar --test flujo`.
 Termina con error si `read_capture` (validate_manifest, huellas, filas y cobertura) rechaza un paquete.
 """
@@ -53,7 +54,7 @@ def validar(paquete):
 
 def main():
     datos = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
-    for nombre in ('paquete_desde_lote.zip', 'paquete_flujo.zip'):
+    for nombre in ('paquete_desde_lote.zip', 'paquete_flujo.zip', 'paquete_calendario.zip'):
         print('==', nombre)
         validar(datos / nombre)
 

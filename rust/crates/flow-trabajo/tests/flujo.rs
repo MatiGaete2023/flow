@@ -24,9 +24,11 @@ struct Falso {
     /// La próxima consulta de Seguimiento se corta.
     cortar: AtomicBool,
     cancelar: AtomicBool,
+    /// El Excel del calendario cambia después de verificarse: el paquete no puede incluirlo.
+    alterar: AtomicBool,
 }
 
-fn calendario(carpeta: &Path, lote: &Lote) -> Resumen {
+fn calendario(carpeta: &Path, lote: &Lote, alterar: bool) -> Resumen {
     let mes = lote.consultas[0].month.clone().unwrap();
     let mut r: Resumen = serde_json::from_value(json!({"version":1,"lote":lote,"estado":"VALIDADA","terminadas":[0],
         "vacias":[],"archivos":[],"avisos":[],"inicio":"2026-10-20T12:00:00-03:00",
@@ -40,7 +42,7 @@ fn calendario(carpeta: &Path, lote: &Lote) -> Resumen {
             comun::RUT
         );
         let nombre = "consulta-001-p001-de-001.xls";
-        std::fs::write(carpeta.join(nombre), &xls).unwrap();
+        std::fs::write(carpeta.join(nombre), if alterar { "alterado ficticio" } else { xls.as_str() }).unwrap();
         r.archivos.push(Archivo { nombre: nombre.into(), sha256: huella(xls.as_bytes()), consulta: 0, pagina: 1, total: 1, registros: 1 });
     } else {
         r.vacias.push(0);
@@ -60,7 +62,7 @@ impl flujo::Sitfa for Falso {
                 *self.falla_mes.lock().unwrap() = None;
                 return Err("Fallo ficticio del calendario.".into());
             }
-            return Ok(calendario(carpeta, lote));
+            return Ok(calendario(carpeta, lote, self.alterar.load(Ordering::SeqCst)));
         }
         assert!(lote.lecturas.bitacoras, "las bitácoras siempre se leen");
         let mut r = lote_con(carpeta, !retomar);
@@ -154,6 +156,25 @@ fn paquete_parcial_se_retoma_hasta_completo() {
 }
 
 #[test]
+fn calendario_que_no_entra_al_paquete_no_lo_impide() {
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    sitfa.alterar.store(true, Ordering::SeqCst);
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &prefs(), HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial);
+    assert!(
+        r.avisos.iter().any(|a| a.starts_with("El calendario de informes por vencer no pudo incluirse en el paquete:")),
+        "{:?}",
+        r.avisos
+    );
+    let zip = std::fs::read(&r.paquete).unwrap();
+    let trabajos = paquete::importar("x.zip", &zip, HOY.parse().unwrap(), &Config::default()).unwrap().trabajos;
+    assert_eq!(trabajos[0].filas[0].proximo_informe, None);
+    let control: Value = serde_json::from_slice(&std::fs::read(r.carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
+    assert_eq!(control["estado"], "PARCIAL");
+}
+
+#[test]
 fn corte_en_las_consultas_deja_incompleto_y_retomar_continua() {
     let destino = Temporal::nueva();
     let sitfa = Falso::default();
@@ -202,5 +223,59 @@ fn paquete_del_flujo_igual_que_el_asistente_python() {
         assert_eq!(json!(f.propuesta.acciones), e["acciones"], "{rit}");
         let estado = f.cronologia.as_ref().map(|c| c["status"].clone()).unwrap_or(json!(""));
         assert_eq!(estado, e["cronologia"], "{rit}");
+    }
+}
+
+/// SITFA ficticio del calendario de informes por vencer (`calendario_informes/` de `sitfa_ficticio.json`): su Excel
+/// trae solo RIT, Nombre y Fecha Vencimiento.
+struct CalendarioFicticio {
+    caso: Value,
+}
+
+impl flow_captura::lotes::Conexion for CalendarioFicticio {
+    fn llamar(&self, comando: &str, _payload: Value, _plazo: std::time::Duration) -> Result<Value, String> {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        let codificado = |s: &str| json!({"status":200,"type":"text/html; charset=utf-8","body":STANDARD.encode(s)});
+        match comando {
+            "capabilities" => Ok(json!({"tipo":"FLOW_CAPACIDADES","version":"0.2.0","protocolos":{"descarga_xls":1,"pdf_sin_registros":1,
+                "bitacoras_lectura":1,"historia_lectura":1,"calendario_lectura":1},"escritura_rus":false})),
+            "catalog" => Ok(self.caso["catalogo"].clone()),
+            "lock" | "unlock" => Ok(json!({"ok":true,"restored":true})),
+            "prepare" => Ok(json!({"pairs":self.caso["pares"]})),
+            "search" => Ok(codificado(self.caso["html"].as_str().unwrap())),
+            "download" => Ok(codificado(self.caso["excel"].as_str().unwrap())),
+            _ => Err(format!("Comando inesperado: {comando}")),
+        }
+    }
+}
+
+/// El lote del calendario que arma el flujo pasa la validación real del lote y su Excel reducido entra al paquete.
+#[test]
+fn calendario_real_con_columnas_reducidas_entra_al_paquete() {
+    let casos: Vec<Value> = serde_json::from_str(include_str!("../../flow-captura/tests/datos/sitfa_ficticio.json")).unwrap();
+    let conexion = CalendarioFicticio { caso: casos.into_iter().find(|c| c["nombre"] == "calendario_informes/").unwrap() };
+    let cancelar = AtomicBool::new(false);
+    let sitfa =
+        flujo::EnChrome { conexion: &conexion, catalogo: &json!({}), cancelar: &cancelar, progreso: &|_| {}, informes: Default::default() };
+    use flujo::Sitfa;
+    sitfa.catalogo_informes().unwrap();
+    let t = Temporal::nueva();
+    let seguimiento = t.0.join("seguimiento");
+    let informes = t.0.join("informes");
+    std::fs::create_dir(&seguimiento).unwrap();
+    std::fs::create_dir(&informes).unwrap();
+    let prefs = flujo::Preferencias { pausa_ms: 250, pdf_sin_registros: false, ..prefs() };
+    let plan = flujo::plan_informes(&["901".into()], "10", "2026", &prefs);
+    let cal = sitfa.lote(&plan, &informes, false).unwrap();
+    assert_eq!(cal.estado, "VALIDADA");
+    assert_eq!(cal.tribunales["901"], "Juzgado de Familia Ficticio Norte");
+    let r = lote_con(&seguimiento, false);
+    let lotes = [exportar::Lote { carpeta: &seguimiento, resumen: &r }, exportar::Lote { carpeta: &informes, resumen: &cal }];
+    let p = exportar::construir(&lotes, &Default::default()).unwrap();
+    let corte = HOY.parse().unwrap();
+    let trabajos = paquete::importar("x.zip", &p.datos, corte, &Config::default()).unwrap().trabajos;
+    assert_eq!(trabajos.len(), 1, "el calendario solo aporta fechas al cruce");
+    if std::env::var_os("FLOW_REGENERAR").is_some() {
+        std::fs::write(datos().join("paquete_calendario.zip"), &p.datos).unwrap();
     }
 }

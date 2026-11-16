@@ -581,3 +581,8 @@ guardar el código de conexión, y cualquier escritura en RUS.
   paquetes anteriores del mismo destino. El ZIP del flujo ficticio pasa `read_capture`/`import_capture` de Python
   (oráculo `validar_paquete_lote.py`) y el Asistente Rust lo abre con «Abrir Excel o paquete…». Suite: 240 pruebas,
   0 fallos. Faltan: preferencias persistentes, aviso automático de paquetes cortados al abrir, `paquete_por_hoja`.
+- 2026-11-16 · Descargador, paquete robusto: como `tables()` del Descargador, una página que no trae las columnas del
+  motor (el calendario de informes real trae solo RIT, Nombre y Fecha Vencimiento; un listado sin Tribunal) se lleva
+  al paquete como tabla de personas con el tipo de registro de su consulta; si el calendario aun así no entra, el
+  paquete se crea sin él (CALENDARIO_INCOMPLETO, PARCIAL). El lote del calendario que arma el flujo pasa por
+  `lotes::ejecutar` real con el SITFA ficticio y su ZIP pasa `read_capture` de Python. Suite: 242 pruebas, 0 fallos.
