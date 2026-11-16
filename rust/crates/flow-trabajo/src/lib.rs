@@ -44,9 +44,20 @@ impl FilaTrabajo {
     pub fn tiene_accion(&self, accion: &str) -> bool {
         self.propuesta.acciones.iter().any(|a| a == accion)
     }
-    /// Proyecto de resolución que corresponde (PC_IE, PC_INFO o NOMENCL), si hay.
+    /// Tipos de proyecto de resolución (PC_IE, PC_INFO, NOMENCL) entre las acciones, en el orden de las acciones
+    /// (`resolutions.py`: `[kind for kind in row.actions if kind in KINDS]`). Puede haber varios por fila.
+    pub fn proyectos(&self) -> Vec<&str> {
+        let mut salida: Vec<&str> = Vec::new();
+        for a in &self.propuesta.acciones {
+            if matches!(a.as_str(), "PC_IE" | "PC_INFO" | "NOMENCL") && !salida.contains(&a.as_str()) {
+                salida.push(a);
+            }
+        }
+        salida
+    }
+    /// Primer tipo de proyecto de las acciones (`resolutions.py::suggested_resolution`), si hay.
     pub fn proyecto(&self) -> Option<&str> {
-        ["PC_IE", "PC_INFO", "NOMENCL"].into_iter().find(|p| self.tiene_accion(p))
+        self.proyectos().first().copied()
     }
 }
 
@@ -67,6 +78,10 @@ pub struct Trabajo {
     /// Reglas con que se calculó cada `propuesta` (`version_reglas`). Vacía en sesiones anteriores a este campo.
     #[serde(default)]
     pub version_reglas: String,
+    /// Estado de la ventana guardado con la sesión (`session.py::capture`, versión 2): borradores, proyectos, selección
+    /// preparada y preferencias. Este crate no lo interpreta; ver `almacen::PRODUCTOS_SESION`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sesion: Option<serde_json::Value>,
 }
 
 /// Cambio de reglas que no se refleja en las fuentes del motor ni en sus datos: subir a mano.
@@ -204,6 +219,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
         filas,
         avisos,
         version_reglas: version_reglas(config),
+        sesion: None,
     }
 }
 

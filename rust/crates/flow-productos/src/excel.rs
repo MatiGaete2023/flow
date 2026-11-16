@@ -84,45 +84,76 @@ struct Estilos {
     cabecera: Format,
     texto: Format,
     fecha: Format,
-    observacion: Format,
+    numero: Format,
 }
 
+/// `personal/excel_presentation.py`: Calibri 11, borde fino negro, ajuste de texto arriba; cabecera azul petróleo.
 fn estilos() -> Estilos {
-    let base = Format::new().set_border(FormatBorder::Thin).set_border_color(Color::RGB(0xDDE2E9)).set_align(FormatAlign::Top);
+    let base = Format::new()
+        .set_font_name("Calibri")
+        .set_font_size(11)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::Black)
+        .set_text_wrap()
+        .set_align(FormatAlign::Top);
     Estilos {
-        cabecera: Format::new()
-            .set_bold()
-            .set_background_color(Color::RGB(0x2F5BD3))
-            .set_font_color(Color::White)
-            .set_border(FormatBorder::Thin)
-            .set_text_wrap()
-            .set_align(FormatAlign::VerticalCenter),
+        cabecera: base.clone().set_bold().set_font_color(Color::White).set_background_color(Color::RGB(0x195F7B)),
         fecha: base.clone().set_num_format("dd/mm/yyyy"),
-        observacion: base.clone().set_text_wrap(),
-        texto: base,
+        texto: base.clone().set_num_format("@"),
+        numero: base,
     }
 }
 
 fn escribir(hoja: &mut Worksheet, fila: u32, col: u16, celda: &Celda, e: &Estilos) -> Result<(), XlsxError> {
     match celda {
-        Celda::Vacia => hoja.write_blank(fila, col, &e.texto)?,
+        Celda::Vacia => hoja.write_blank(fila, col, &e.numero)?,
         // write_string nunca interpreta fórmulas: un texto que empieza con «=» queda como texto.
         Celda::Texto(t) => hoja.write_string_with_format(fila, col, t, &e.texto)?,
-        Celda::Numero(n) => hoja.write_number_with_format(fila, col, *n, &e.texto)?,
+        Celda::Numero(n) => hoja.write_number_with_format(fila, col, *n, &e.numero)?,
         Celda::Fecha(f) => match ExcelDateTime::from_ymd(f.year() as u16, f.month() as u8, f.day() as u8) {
             Ok(fecha) => hoja.write_datetime_with_format(fila, col, &fecha, &e.fecha)?,
-            Err(_) => hoja.write_string_with_format(fila, col, &celda.texto(), &e.texto)?,
+            Err(_) => hoja.write_string_with_format(fila, col, celda.texto(), &e.texto)?,
         },
     };
     Ok(())
 }
 
-fn ancho(cabecera: &str) -> f64 {
-    match cabecera {
-        "OBSERVACION" => 90.0,
-        "REVISAR" => 50.0,
-        c => (c.chars().count() as f64 + 4.0).clamp(12.0, 34.0),
+/// `excel_presentation.py::column_width`.
+pub fn ancho(cabecera: &str) -> f64 {
+    let t = cabecera.to_uppercase();
+    let tiene = |xs: &[&str]| xs.iter().any(|x| t.contains(x));
+    if tiene(&["OBSERVACION", "OBSERVACIÓN", "DETALLE", "TEXTO", "TRÁMITE", "TRAMITE"]) {
+        65.0
+    } else if tiene(&["NOMBRE", "PERSONA"]) {
+        35.0
+    } else if tiene(&["PROGRAMA", "DERIVACION"]) {
+        30.0
+    } else if t.contains("TRIBUNAL") {
+        28.0
+    } else if t == "RIT" {
+        17.0
+    } else if t.contains("RUT") {
+        16.0
+    } else if tiene(&["FECHA", "F.", "VENCIMIENTO", "EGRESO"]) {
+        19.0
+    } else if tiene(&["ESPERA", "DÍAS", "DIAS"]) {
+        14.0
+    } else {
+        24.0
     }
+}
+
+/// Líneas que ocupa una fila (`format_sheet`): cada parte separada por salto, según el ancho de su columna.
+fn lineas(cabeceras: &[String], celdas: &[Celda]) -> usize {
+    celdas
+        .iter()
+        .zip(cabeceras)
+        .map(|(c, cab)| {
+            let util = (ancho(cab) - 3.0).max(8.0);
+            c.texto().split('\n').map(|parte| ((parte.chars().count() as f64 / util).ceil() as usize).max(1)).sum::<usize>()
+        })
+        .max()
+        .unwrap_or(1)
 }
 
 fn tabla(hoja: &mut Worksheet, cabeceras: &[String], filas: &[Vec<Celda>], e: &Estilos) -> Result<(), XlsxError> {
@@ -132,15 +163,24 @@ fn tabla(hoja: &mut Worksheet, cabeceras: &[String], filas: &[Vec<Celda>], e: &E
     }
     for (f, celdas) in filas.iter().enumerate() {
         for (c, celda) in celdas.iter().enumerate().take(cabeceras.len()) {
-            if matches!(cabeceras[c].as_str(), "OBSERVACION" | "REVISAR") {
-                hoja.write_string_with_format(f as u32 + 1, c as u16, celda.texto(), &e.observacion)?;
-            } else {
-                escribir(hoja, f as u32 + 1, c as u16, celda, e)?;
-            }
+            escribir(hoja, f as u32 + 1, c as u16, celda, e)?;
+        }
+        // Un texto muy largo queda al ajuste automático de Excel en vez de forzar una altura recortada.
+        let n = lineas(cabeceras, celdas);
+        if n <= 12 {
+            hoja.set_row_height(f as u32 + 1, (15 * n + 5).max(22) as f64)?;
         }
     }
     hoja.set_freeze_panes(1, 0)?;
-    if !filas.is_empty() && !cabeceras.is_empty() {
+    hoja.set_repeat_rows(0, 0)?;
+    hoja.set_landscape();
+    hoja.set_paper_size(9);
+    hoja.set_print_fit_to_pages(1, 0);
+    hoja.set_margins(0.3, 0.3, 0.45, 0.45, 0.2, 0.2);
+    hoja.set_footer("&CPágina &P de &N");
+    hoja.set_print_center_horizontally(true);
+    hoja.set_row_height(0, 32)?;
+    if !cabeceras.is_empty() {
         hoja.autofilter(0, 0, filas.len() as u32, cabeceras.len() as u16 - 1)?;
     }
     Ok(())
@@ -160,22 +200,83 @@ pub fn revisar(fila: &FilaTrabajo) -> String {
     partes.join("\n")
 }
 
-/// Libro con las columnas originales de RUS más OBSERVACION, FECHA_OBS, RES y REVISAR.
+/// `services/exports.py::_normalized_header`: mayúsculas, «_» como espacio y espacios simples (conserva tildes).
+pub fn cabecera_normalizada(texto: &str) -> String {
+    texto.trim().to_uppercase().replace('_', " ").split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// `services/exports.py::_column_plan`: cada título usa la columna existente con ese nombre o una nueva al final, en
+/// orden. Una columna repetida es un error. Posiciones desde 0.
+pub fn plan_columnas(cabeceras: &[String], titulos: &[&str]) -> Result<Vec<usize>, String> {
+    let posiciones = |nombre: &str| -> Vec<usize> {
+        cabeceras.iter().enumerate().filter(|(_, c)| cabecera_normalizada(c) == nombre).map(|(i, _)| i).collect()
+    };
+    for t in titulos {
+        let nombre = cabecera_normalizada(t);
+        if posiciones(&nombre).len() > 1 {
+            return Err(format!("Hay más de una columna '{nombre}'; no se puede anotar sin ambigüedad."));
+        }
+    }
+    let mut ultima = cabeceras.len();
+    let mut salida = Vec::new();
+    for t in titulos {
+        let pos = posiciones(&cabecera_normalizada(t)).first().copied().unwrap_or(ultima);
+        salida.push(pos);
+        ultima = ultima.max(pos + 1);
+    }
+    Ok(salida)
+}
+
+/// Columnas que Flow anota, en el orden de la copia revisada de Python, más REVISAR (propia de Flow).
+pub const ANOTADAS: [&str; 6] = ["OBSERVACION", "FECHA_OBS", "TT", "CC", "RES", "REVISAR"];
+
+fn en_blanco(celda: &Celda) -> bool {
+    celda.texto().trim().is_empty()
+}
+
+/// Libro con las columnas originales de RUS y OBSERVACION, FECHA_OBS, TT, CC, RES y REVISAR. Una columna que ya
+/// existe en el origen se reutiliza en su lugar (`_column_plan`); las demás se agregan al final.
+///
+/// Como la copia de Python: una OBSERVACION o un RES ya escritos en el origen se conservan, salvo que el usuario
+/// haya editado la observación en Flow; TT y CC no se calculan (quedan los del origen). FECHA_OBS (propio de Flow)
+/// toma la fecha de corte solo donde Flow escribe la observación y la celda está vacía.
 pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
     let e = estilos();
     let mut libro = Workbook::new();
     let usadas = trabajo.cabeceras.iter().rposition(|c| !c.is_empty()).map_or(0, |p| p + 1);
     let mut cabeceras: Vec<String> = trabajo.cabeceras[..usadas].to_vec();
-    cabeceras.extend(["OBSERVACION", "FECHA_OBS", "RES", "REVISAR"].map(String::from));
+    let plan = plan_columnas(&cabeceras, &ANOTADAS)?;
+    let total = plan.iter().map(|p| p + 1).max().unwrap_or(0).max(usadas);
+    cabeceras.resize(total, String::new());
+    for (titulo, &pos) in ANOTADAS.iter().zip(&plan) {
+        if cabeceras[pos].trim().is_empty() {
+            cabeceras[pos] = titulo.to_string();
+        }
+    }
+    let [obs, fecha, _tt, _cc, res, rev] = [plan[0], plan[1], plan[2], plan[3], plan[4], plan[5]];
     let filas: Vec<Vec<Celda>> = trabajo
         .filas
         .iter()
         .map(|f| {
-            let mut celdas: Vec<Celda> = (0..usadas).map(|i| f.celdas.get(i).cloned().unwrap_or_default()).collect();
-            celdas.push(Celda::Texto(f.observacion.clone()));
-            celdas.push(if f.observacion.is_empty() { Celda::Vacia } else { Celda::Fecha(trabajo.corte) });
-            celdas.push(f.proyecto().map(|p| Celda::Texto(p.to_string())).unwrap_or_default());
-            celdas.push(Celda::Texto(revisar(f)));
+            let mut celdas: Vec<Celda> =
+                (0..total).map(|i| if i < usadas { f.celdas.get(i).cloned().unwrap_or_default() } else { Celda::Vacia }).collect();
+            if f.editada() || en_blanco(&celdas[obs]) {
+                celdas[obs] = if f.observacion.is_empty() { Celda::Vacia } else { Celda::Texto(f.observacion.clone()) };
+                if en_blanco(&celdas[fecha]) && !f.observacion.is_empty() {
+                    celdas[fecha] = Celda::Fecha(trabajo.corte);
+                }
+            }
+            if en_blanco(&celdas[res]) {
+                celdas[res] = f.proyecto().map(|p| Celda::Texto(p.to_string())).unwrap_or_default();
+            }
+            let mut nota = revisar(f);
+            let conservada = celdas[obs].texto();
+            if conservada.trim() != f.observacion.trim() {
+                // Lo que se ve en Trabajo no es lo que queda en el archivo: se dice en la misma fila.
+                let aviso = format!("Se conservó la OBSERVACION del origen; propuesta de Flow: {}", f.observacion);
+                nota = if nota.is_empty() { aviso } else { format!("{nota}\n{aviso}") };
+            }
+            celdas[rev] = Celda::Texto(nota);
             celdas
         })
         .collect();
@@ -183,6 +284,18 @@ pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
     let en = |x: XlsxError| x.to_string();
     hoja.set_name(trabajo.nombre()).map_err(en)?;
     tabla(hoja, &cabeceras, &filas, &e).map_err(en)?;
+    if !filas.is_empty() {
+        // Lista cerrada para RES (`_portable_resolution_validation`); vacío significa que no corresponde proyecto.
+        let validacion = rust_xlsxwriter::DataValidation::new()
+            .allow_list_strings(&["PC_IE", "PC_INFO", "NOMENCL"])
+            .and_then(|v| v.set_error_title("Tipo RES no válido"))
+            .and_then(|v| v.set_error_message("Usa PC_IE, PC_INFO o NOMENCL, o deja la celda vacía."))
+            .and_then(|v| v.set_input_title("Tipo de resolución"))
+            .and_then(|v| v.set_input_message("Selecciona PC_IE, PC_INFO o NOMENCL. Vacío significa que no corresponde proyecto."))
+            .map_err(en)?
+            .ignore_blank(true);
+        hoja.add_data_validation(1, res as u16, filas.len() as u32, res as u16, &validacion).map_err(en)?;
+    }
     let resumen = libro.add_worksheet();
     resumen.set_name("Resumen").map_err(en)?;
     let datos = [
@@ -204,11 +317,26 @@ pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
     guardar(libro, destino)
 }
 
+/// `outputs.py::mail_metric_key`: qué dato lleva la nómina (días de espera, vencimiento o egreso proyectado). Los
+/// tipos sin dato propio (reporte de proyectos) usan el de la etapa.
+pub fn clave_metrica(etapa: Etapa, tipo: &str) -> &'static str {
+    match tipo {
+        "espera" | "programa_espera" => "espera",
+        "informes" | "programa_vencido" | "programa_por_vencer" => "vencimiento",
+        "cumplimiento" | "medidas" => "egreso_proy",
+        _ => match etapa {
+            Etapa::Cumplimiento => "egreso_proy",
+            Etapa::Informes => "vencimiento",
+            Etapa::Espera => "espera",
+        },
+    }
+}
+
 /// Dato que acompaña a cada registro en una nómina: días de espera, vencimiento o egreso proyectado.
 pub fn metrica(trabajo: &Trabajo, fila: &FilaTrabajo, tipo: &str) -> String {
-    let texto = match tipo {
-        "programa_espera" => valor(fila, "espera"),
-        "programa_vencido" | "programa_por_vencer" => {
+    let texto = match clave_metrica(trabajo.etapa, tipo) {
+        "espera" => valor(fila, "espera"),
+        "vencimiento" => {
             let propio = valor(fila, "vencimiento");
             if propio.is_empty() && trabajo.etapa == Etapa::Cumplimiento {
                 fila.proximo_informe.map(|f| f.format("%d/%m/%Y").to_string()).unwrap_or_default()
@@ -246,7 +374,19 @@ pub fn nomina(trabajo: &Trabajo, filas: &[&FilaTrabajo], tipo: &str, destino: &P
                 .collect(),
         ),
         _ => (
-            vec!["RIT", "TRIBUNAL", "RUT", "NOMBRE", "PROGRAMA", "F. EGRESO PROYECTADO", "OBSERVACION"],
+            vec![
+                "RIT",
+                "TRIBUNAL",
+                "RUT",
+                "NOMBRE",
+                "PROGRAMA",
+                match clave_metrica(trabajo.etapa, tipo) {
+                    "espera" => "T ESPERA",
+                    "vencimiento" => "F. VENCIMIENTO",
+                    _ => "F. EGRESO PROYECTADO",
+                },
+                "OBSERVACION",
+            ],
             filas
                 .iter()
                 .map(|f| {
@@ -274,6 +414,42 @@ pub fn nomina(trabajo: &Trabajo, filas: &[&FilaTrabajo], tipo: &str, destino: &P
 #[cfg(test)]
 mod pruebas {
     use super::*;
+
+    fn cab(xs: &[&str]) -> Vec<String> {
+        xs.iter().map(|x| x.to_string()).collect()
+    }
+
+    #[test]
+    fn plan_de_columnas_como_column_plan() {
+        // Resultados de `services/exports.py::_column_plan` (base 0) con los mismos encabezados ficticios.
+        assert_eq!(plan_columnas(&cab(&["RIT", "NOMBRE"]), &ANOTADAS).unwrap(), [2, 3, 4, 5, 6, 7]);
+        assert_eq!(plan_columnas(&cab(&["RIT", "observacion", "x", "Fecha obs", "RES"]), &ANOTADAS).unwrap(), [1, 3, 5, 6, 4, 7]);
+        assert_eq!(plan_columnas(&cab(&["RIT", "TT", "  cc ", "RES", "OBSERVACIÓN"]), &ANOTADAS).unwrap(), [5, 6, 1, 2, 3, 7]);
+        assert_eq!(
+            plan_columnas(&cab(&["A", "RES", "res"]), &ANOTADAS).unwrap_err(),
+            "Hay más de una columna 'RES'; no se puede anotar sin ambigüedad."
+        );
+    }
+
+    #[test]
+    fn anchos_como_excel_presentation() {
+        let titulos = [
+            "RIT",
+            "TRIBUNAL",
+            "RUT",
+            "NOMBRE",
+            "PROGRAMA",
+            "T ESPERA",
+            "OBSERVACION",
+            "REVISAR",
+            "F. VENCIMIENTO",
+            "DERIVACION",
+            "FEC.EGRESO PROYECTADO",
+            "DIAS DE CUMPLIMIENTO",
+        ];
+        let python = [17.0, 28.0, 16.0, 35.0, 30.0, 14.0, 65.0, 24.0, 19.0, 30.0, 19.0, 14.0];
+        assert_eq!(titulos.map(ancho), python);
+    }
 
     #[test]
     fn nombres_sin_parentesis() {

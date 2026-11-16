@@ -50,27 +50,14 @@ fn a_xml(texto: &str) -> String {
     texto.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
-/// Sustituye las variables de un párrafo aunque estén partidas entre varios tramos de texto, sin tocar estilos.
-fn rellenar_parrafo(parrafo: &str, valores: &BTreeMap<String, String>, estricto: bool) -> Result<String, String> {
-    let nodos: Vec<(std::ops::Range<usize>, String)> =
-        NODO_T.captures_iter(parrafo).map(|c| (c.get(0).unwrap().range(), sin_xml(&c[2]))).collect();
-    let completo: String = nodos.iter().map(|(_, t)| t.as_str()).collect();
-    if !VARIABLE.is_match(&completo) {
-        return Ok(parrafo.to_string());
-    }
+/// Reemplaza tramos `(inicio, fin, texto)` del texto visible de un párrafo, aunque crucen varios `<w:t>`, sin tocar
+/// estilos: el reemplazo queda en el primer tramo tocado (como `fill_docx`). Los tramos no se solapan.
+fn reemplazar_tramos(parrafo: &str, nodos: &[(std::ops::Range<usize>, String)], cambios: &[(usize, usize, String)]) -> String {
     let mut textos: Vec<String> = nodos.iter().map(|(_, t)| t.clone()).collect();
     let mut tocados = vec![false; textos.len()];
-    let hallazgos: Vec<(usize, usize, String)> =
-        VARIABLE.captures_iter(&completo).map(|c| (c.get(0).unwrap().start(), c.get(0).unwrap().end(), c[1].to_string())).collect();
-    for (inicio, fin, clave) in hallazgos.into_iter().rev() {
-        let reemplazo = valores.get(&clave).map(|v| v.trim()).unwrap_or("");
-        if reemplazo.is_empty() {
-            if estricto {
-                return Err(format!("Falta la variable Word: {clave}"));
-            }
-            continue;
-        }
-        // Tramos que tocan la variable, con sus posiciones en el texto completo actual.
+    for (inicio, fin, reemplazo) in cambios.iter().rev() {
+        let (inicio, fin) = (*inicio, *fin);
+        // Tramos que tocan el cambio, con sus posiciones en el texto completo actual.
         let mut pos = 0;
         let mut afectados = Vec::new();
         for (i, t) in textos.iter().enumerate() {
@@ -80,7 +67,7 @@ fn rellenar_parrafo(parrafo: &str, valores: &BTreeMap<String, String>, estricto:
             }
             pos = b;
         }
-        let (primero, a) = afectados[0];
+        let Some(&(primero, a)) = afectados.first() else { continue };
         let (ultimo, la) = *afectados.last().unwrap();
         let prefijo = textos[primero][..inicio - a].to_string();
         let sufijo = textos[ultimo][fin - la..].to_string();
@@ -103,6 +90,128 @@ fn rellenar_parrafo(parrafo: &str, valores: &BTreeMap<String, String>, estricto:
         cursor = rango.end;
     }
     salida.push_str(&parrafo[cursor..]);
+    salida
+}
+
+fn nodos(parrafo: &str) -> Vec<(std::ops::Range<usize>, String)> {
+    NODO_T.captures_iter(parrafo).map(|c| (c.get(0).unwrap().range(), sin_xml(&c[2]))).collect()
+}
+
+fn texto_de(nodos: &[(std::ops::Range<usize>, String)]) -> String {
+    nodos.iter().map(|(_, t)| t.as_str()).collect()
+}
+
+/// Sustituye las variables de un párrafo aunque estén partidas entre varios tramos de texto, sin tocar estilos.
+fn rellenar_parrafo(parrafo: &str, valores: &BTreeMap<String, String>, estricto: bool) -> Result<String, String> {
+    let nodos = nodos(parrafo);
+    let completo = texto_de(&nodos);
+    if !VARIABLE.is_match(&completo) {
+        return Ok(parrafo.to_string());
+    }
+    let mut cambios = Vec::new();
+    for c in VARIABLE.captures_iter(&completo) {
+        let m = c.get(0).unwrap();
+        let reemplazo = valores.get(&c[1]).map(|v| v.trim()).unwrap_or("");
+        if reemplazo.is_empty() {
+            if estricto {
+                return Err(format!("Falta la variable Word: {}", &c[1]));
+            }
+            continue;
+        }
+        cambios.push((m.start(), m.end(), reemplazo.to_string()));
+    }
+    Ok(reemplazar_tramos(parrafo, &nodos, &cambios))
+}
+
+/// `str.replace(viejo, nuevo)` sobre el texto visible del párrafo.
+fn reemplazar_texto(parrafo: &str, viejo: &str, nuevo: &str) -> String {
+    if viejo.is_empty() {
+        return parrafo.to_string();
+    }
+    let nodos = nodos(parrafo);
+    let completo = texto_de(&nodos);
+    let cambios: Vec<(usize, usize, String)> =
+        completo.match_indices(viejo).map(|(i, _)| (i, i + viejo.len(), nuevo.to_string())).collect();
+    if cambios.is_empty() {
+        return parrafo.to_string();
+    }
+    reemplazar_tramos(parrafo, &nodos, &cambios)
+}
+
+/// Reemplazos de plural de `resolutions.py::render_project`, en orden.
+fn reemplazos_plural(p: &Plural) -> Vec<(&'static str, &'static str)> {
+    let mut r = vec![
+        ("la persona aludida", "las personas individualizadas"),
+        ("del niño sujeto de protección", "de los niños, niñas o adolescentes individualizados"),
+        ("del niño, niña o adolescente", "de los niños, niñas o adolescentes"),
+    ];
+    if p.varios_programas {
+        r.extend([
+            ("al organismo interventor", "a los organismos interventores"),
+            ("al programa interventor", "a los programas intervinientes"),
+            ("a la institución", "a las instituciones correspondientes"),
+            ("de dicho programa", "de dichos programas"),
+        ]);
+    }
+    if p.varias_fechas {
+        r.push(("con fecha ", "con fechas "));
+    }
+    r
+}
+
+/// Párrafo `<w:p>` de un fragmento de `split_inclusive("</w:p>")`: posición de su apertura, si la hay.
+fn apertura_parrafo(fragmento: &str) -> Option<usize> {
+    let a = fragmento.rfind("<w:p>");
+    let b = fragmento.rfind("<w:p ");
+    a.max(b)
+}
+
+fn aperturas_tabla(texto: &str) -> isize {
+    (texto.matches("<w:tbl>").count() + texto.matches("<w:tbl ").count()) as isize - texto.matches("</w:tbl>").count() as isize
+}
+
+/// Cuerpo de un proyecto: variables y, con varias personas, los reemplazos de plural y el párrafo «Personas
+/// comprendidas» (`render_project`).
+fn cuerpo_proyecto(cuerpo: &str, valores: &BTreeMap<String, String>, plural: Option<&Plural>) -> Result<String, String> {
+    let lleno = rellenar_xml(cuerpo, valores, true)?;
+    let Some(plural) = plural.filter(|p| p.plural) else { return Ok(lleno) };
+    let nombre = valores.get("NOMBRE").map(String::as_str).unwrap_or("");
+    let rut = valores.get("RUT").map(String::as_str).unwrap_or("");
+    let reemplazos = reemplazos_plural(plural);
+    let mut salida = String::with_capacity(lleno.len());
+    let mut profundidad: isize = 0;
+    let mut ancla: Option<usize> = None;
+    for fragmento in lleno.split_inclusive("</w:p>") {
+        let mut parrafo = fragmento.to_string();
+        for marca in ["cédula de identidad N°", "cédula de identidad N.º"] {
+            let par = format!("{nombre}, {marca} {rut}");
+            if texto_de(&nodos(&parrafo)).contains(&par) {
+                parrafo = reemplazar_texto(&parrafo, &par, &plural.personas.replace("cédula de identidad N°", marca));
+            }
+        }
+        for (viejo, nuevo) in &reemplazos {
+            parrafo = reemplazar_texto(&parrafo, viejo, nuevo);
+        }
+        if let Some(pos) = apertura_parrafo(&parrafo).filter(|_| fragmento.ends_with("</w:p>")) {
+            let antes = profundidad + aperturas_tabla(&parrafo[..pos]);
+            let texto = texto_de(&nodos(&parrafo));
+            if ancla.is_none() && antes == 0 && !texto.contains("{{") && texto.trim().starts_with("RIT") {
+                ancla = Some(salida.len() + pos);
+            }
+        }
+        profundidad += aperturas_tabla(&parrafo);
+        salida.push_str(&parrafo);
+    }
+    if plural.varios_programas {
+        let detalle = format!(
+            "<w:p><w:r><w:t xml:space=\"preserve\">{}</w:t></w:r></w:p>",
+            a_xml(&format!("Personas comprendidas: {}.", plural.detalle))
+        );
+        match ancla {
+            Some(pos) => salida.insert_str(pos, &detalle),
+            None => salida.push_str(&detalle),
+        }
+    }
     Ok(salida)
 }
 
@@ -146,6 +255,11 @@ pub fn variables(docx: &[u8]) -> Result<BTreeSet<String>, String> {
 
 /// Un documento con un proyecto por juego de valores, cada uno en página nueva.
 pub fn componer(docx: &[u8], lote: &[BTreeMap<String, String>]) -> Result<Vec<u8>, String> {
+    let lote: Vec<(&BTreeMap<String, String>, Option<&Plural>)> = lote.iter().map(|v| (v, None)).collect();
+    componer_con(docx, &lote)
+}
+
+fn componer_con(docx: &[u8], lote: &[(&BTreeMap<String, String>, Option<&Plural>)]) -> Result<Vec<u8>, String> {
     if lote.is_empty() {
         return Err("No hay proyectos para generar.".into());
     }
@@ -159,18 +273,18 @@ pub fn componer(docx: &[u8], lote: &[BTreeMap<String, String>]) -> Result<Vec<u8
             let fin = xml[inicio..fin_cuerpo].rfind("<w:sectPr").map_or(fin_cuerpo, |p| inicio + p);
             let cuerpo = &xml[inicio..fin];
             let mut armado = String::from(&xml[..inicio]);
-            for (i, valores) in lote.iter().enumerate() {
+            for (i, (valores, plural)) in lote.iter().enumerate() {
                 if i > 0 {
                     armado.push_str(SALTO_PAGINA);
                 }
-                armado.push_str(&rellenar_xml(cuerpo, valores, true)?);
+                armado.push_str(&cuerpo_proyecto(cuerpo, valores, *plural)?);
             }
             armado.push_str(&xml[fin..]);
             armado.into_bytes()
         } else if nombre.starts_with("word/") && nombre.ends_with(".xml") {
             // Encabezados y pies: valores del primer proyecto; una variable sin valor se deja como está.
             match String::from_utf8(datos.clone()) {
-                Ok(xml) if xml.contains("{{") => rellenar_xml(&xml, &lote[0], false)?.into_bytes(),
+                Ok(xml) if xml.contains("{{") => rellenar_xml(&xml, lote[0].0, false)?.into_bytes(),
                 _ => datos,
             }
         } else {
@@ -182,20 +296,38 @@ pub fn componer(docx: &[u8], lote: &[BTreeMap<String, String>]) -> Result<Vec<u8
     Ok(salida.finish().map_err(|e| e.to_string())?.into_inner())
 }
 
+/// Varias personas en un mismo proyecto (`grouped_values`: `_PLURAL`, `PERSONAS`, `DETALLE_PERSONAS`…).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Plural {
+    pub plural: bool,
+    pub varios_programas: bool,
+    pub varias_fechas: bool,
+    /// «A, cédula de identidad N° 1 y B, cédula de identidad N° 2».
+    pub personas: String,
+    /// «A, cédula de identidad N° 1, programa P; B, …».
+    pub detalle: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Proyecto {
-    pub fila: String,
+    /// Todas las filas no excluidas de la causa (tribunal + RIT), en el orden del trabajo.
+    pub filas: Vec<String>,
     pub tribunal: Tribunal,
     /// PC_IE, PC_INFO o NOMENCL.
     pub tipo: String,
     pub rit: String,
     pub valores: BTreeMap<String, String>,
-    /// Variables de la plantilla que no tienen valor: el usuario las completa antes de generar.
+    /// Valores al prepararlo: lo que difiere es edición del usuario y se conserva al volver a preparar.
+    #[serde(default)]
+    pub originales: BTreeMap<String, String>,
+    /// Variables de la plantilla sin dato, que quedan como «[COMPLETAR X]» en el Word (no impiden generarlo).
     pub faltantes: Vec<String>,
     /// No hay plantilla para este tribunal y tipo.
     pub sin_plantilla: bool,
     #[serde(default)]
     pub omitido: bool,
+    #[serde(default)]
+    pub plural: Plural,
 }
 
 /// Nomenclatura que el proyecto pide aplicar, según la regla que lo originó.
@@ -228,6 +360,68 @@ fn valores_de(trabajo: &Trabajo, fila: &FilaTrabajo, hoy: Fecha) -> BTreeMap<Str
     v
 }
 
+/// `resolutions.py::join_names`: sin vacíos ni repetidos; «A», «A y B», «A, B y C».
+pub fn unir<I: IntoIterator<Item = S>, S: AsRef<str>>(valores: I) -> String {
+    let mut lista: Vec<String> = Vec::new();
+    for v in valores {
+        let v = v.as_ref().trim();
+        if !v.is_empty() && !lista.iter().any(|x| x == v) {
+            lista.push(v.to_string());
+        }
+    }
+    match lista.len() {
+        0 => String::new(),
+        1 => lista.remove(0),
+        n => format!("{} y {}", lista[..n - 1].join(", "), lista[n - 1]),
+    }
+}
+
+/// `resolutions.py::grouped_values`: valores de la primera fila de la causa y NOMBRE, RUT, PROGRAMA,
+/// FECHA_RESOLUCION y DURACION de todas, unidos con «A y B».
+fn valores_agrupados(trabajo: &Trabajo, filas: &[&FilaTrabajo], tipo: &str, hoy: Fecha) -> (BTreeMap<String, String>, Plural) {
+    let de_cada: Vec<BTreeMap<String, String>> = filas.iter().map(|f| valores_de(trabajo, f, hoy)).collect();
+    let mut v = de_cada[0].clone();
+    for clave in ["NOMBRE", "RUT", "PROGRAMA", "FECHA_RESOLUCION", "DURACION"] {
+        v.insert(clave.into(), unir(de_cada.iter().map(|x| x[clave].as_str())));
+    }
+    // NOMENCLATURA automática (propia de Flow): de la fila de la causa que originó la nomenclatura.
+    if tipo == "NOMENCL" {
+        let n = filas.iter().filter(|f| f.tiene_accion("NOMENCL")).map(|f| nomenclatura(f)).find(|n| !n.is_empty());
+        v.insert("NOMENCLATURA".into(), n.unwrap_or("").to_string());
+    }
+    // Clave (nombre y RUT normalizados) → nombre, RUT y programas de esa persona.
+    type Persona = ((String, String), (String, String, Vec<String>));
+    let mut personas: Vec<Persona> = Vec::new();
+    for f in filas {
+        let (nombre, rut, programa) = (valor(f, "nombre"), valor(f, "rut"), valor(f, "programa"));
+        let clave = (normalizar_columna(&nombre), normalizar_columna(&rut));
+        match personas.iter_mut().find(|(k, _)| *k == clave) {
+            Some((_, p)) => p.2.push(programa),
+            None => personas.push((clave, (nombre, rut, vec![programa]))),
+        }
+    }
+    let identidad =
+        |nombre: &str, rut: &str| format!("{nombre}, cédula de identidad N° {}", if rut.is_empty() { "[COMPLETAR RUT]" } else { rut });
+    let programas: BTreeSet<String> = filas.iter().map(|f| normalizar_columna(&valor(f, "programa"))).collect();
+    let fechas: BTreeSet<&str> = de_cada.iter().map(|x| x["FECHA_RESOLUCION"].as_str()).filter(|x| !x.is_empty()).collect();
+    let plural = Plural {
+        plural: personas.len() > 1,
+        varios_programas: programas.len() > 1,
+        varias_fechas: fechas.len() > 1,
+        personas: unir(personas.iter().map(|(_, (n, r, _))| identidad(n, r))),
+        detalle: personas
+            .iter()
+            .map(|(_, (n, r, ps))| format!("{}, programa {}", identidad(n, r), unir(ps)))
+            .collect::<Vec<_>>()
+            .join("; "),
+    };
+    (v, plural)
+}
+
+fn completar(variable: &str) -> String {
+    format!("[COMPLETAR {}]", variable.replace('_', " "))
+}
+
 fn revisar_faltantes(p: &mut Proyecto, carpeta_usuario: Option<&Path>) {
     match plantilla(p.tribunal, &p.tipo, carpeta_usuario).and_then(|d| variables(&d).ok()) {
         None => {
@@ -236,38 +430,149 @@ fn revisar_faltantes(p: &mut Proyecto, carpeta_usuario: Option<&Path>) {
         }
         Some(vars) => {
             p.sin_plantilla = false;
-            p.faltantes = vars.into_iter().filter(|v| p.valores.get(v).is_none_or(|x| x.trim().is_empty())).collect();
+            p.faltantes = vars
+                .into_iter()
+                .filter(|v| p.valores.get(v).is_none_or(|x| x.trim().is_empty() || x.to_uppercase().contains("[COMPLETAR")))
+                .collect();
         }
     }
 }
 
-/// Proyectos que corresponden al trabajo: uno por fila con acción de proyecto.
-pub fn proyectos(trabajo: &Trabajo, hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
+/// `resolutions.py::observation_resolution_kind`: tipo que la observación nombra, si lo hace.
+pub fn tipo_por_observacion(observacion: &str) -> Option<&'static str> {
+    let t = normalizar_columna(observacion);
+    if t.is_empty() {
+        None
+    } else if t.contains("nomencl") {
+        Some("NOMENCL")
+    } else if t.contains("pc info") {
+        Some("PC_INFO")
+    } else if t.contains("pc ie") {
+        Some("PC_IE")
+    } else if ["informe", "diagnostico", "diagnostico clinico"].iter().any(|p| t.contains(p)) {
+        Some("PC_INFO")
+    } else if ["ingreso efectivo", "fecha estimada de ingreso", "ingreso al programa"].iter().any(|p| t.contains(p)) {
+        Some("PC_IE")
+    } else {
+        None
+    }
+}
+
+/// `resolutions.py::automatic_project_selections` (planilla sin RES): por cada fila no excluida con acciones de
+/// proyecto, el tipo que nombra la observación o, si no nombra ninguno, todos los tipos de sus acciones.
+pub fn selecciones(trabajo: &Trabajo) -> Vec<(String, String)> {
     if trabajo.fuente.is_some() {
         return Vec::new();
     }
     let mut salida = Vec::new();
     for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
-        let (Some(tipo), Some(tribunal)) = (fila.proyecto(), Tribunal::desde(&valor(fila, "tribunal"))) else { continue };
+        let sugeridos = fila.proyectos();
+        if sugeridos.is_empty() {
+            continue;
+        }
+        let tipos = match tipo_por_observacion(&fila.observacion) {
+            Some(t) => vec![t],
+            None => sugeridos,
+        };
+        salida.extend(tipos.into_iter().map(|t| (fila.id.clone(), t.to_string())));
+    }
+    salida
+}
+
+fn causa(fila: &FilaTrabajo) -> Option<(Tribunal, String)> {
+    Some((Tribunal::desde(&valor(fila, "tribunal"))?, normalizar_columna(&valor(fila, "rit"))))
+}
+
+/// Proyectos que corresponden al trabajo (`selecciones` + `preparar`).
+pub fn proyectos(trabajo: &Trabajo, hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
+    preparar(trabajo, &selecciones(trabajo), hoy, carpeta_usuario)
+}
+
+/// `resolutions.py::prepare_projects`: un proyecto por tribunal + RIT + tipo con todas las filas no excluidas de la
+/// causa. Las variables sin dato quedan como «[COMPLETAR X]».
+pub fn preparar(trabajo: &Trabajo, selecciones: &[(String, String)], hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
+    if trabajo.fuente.is_some() {
+        return Vec::new();
+    }
+    let mut por_causa: Vec<((Tribunal, String), Vec<&FilaTrabajo>)> = Vec::new();
+    for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
+        let Some(clave) = causa(fila) else { continue };
+        match por_causa.iter_mut().find(|(k, _)| *k == clave) {
+            Some((_, filas)) => filas.push(fila),
+            None => por_causa.push((clave, vec![fila])),
+        }
+    }
+    let mut grupos: Vec<((Tribunal, String), String)> = Vec::new();
+    for (id, tipo) in selecciones {
+        if !TIPOS.iter().any(|(t, _)| t == tipo) {
+            continue;
+        }
+        let Some(fila) = trabajo.filas.iter().find(|f| &f.id == id && !f.propuesta.excluido) else { continue };
+        let Some(clave) = causa(fila) else { continue };
+        let grupo = (clave, tipo.clone());
+        if !grupos.contains(&grupo) {
+            grupos.push(grupo);
+        }
+    }
+    let mut salida = Vec::new();
+    for (clave, tipo) in grupos {
+        let Some((_, filas)) = por_causa.iter().find(|(k, _)| *k == clave) else { continue };
+        let (valores, plural) = valores_agrupados(trabajo, filas, &tipo, hoy);
         let mut p = Proyecto {
-            fila: fila.id.clone(),
-            tribunal,
-            tipo: tipo.to_string(),
-            rit: valor(fila, "rit"),
-            valores: valores_de(trabajo, fila, hoy),
+            filas: filas.iter().map(|f| f.id.clone()).collect(),
+            tribunal: clave.0,
+            tipo,
+            rit: valor(filas[0], "rit"),
+            valores,
+            originales: BTreeMap::new(),
             faltantes: Vec::new(),
             sin_plantilla: false,
             omitido: false,
+            plural,
         };
         revisar_faltantes(&mut p, carpeta_usuario);
+        for v in p.faltantes.clone() {
+            if p.valores.get(&v).is_none_or(|x| x.trim().is_empty()) {
+                p.valores.insert(v.clone(), completar(&v));
+            }
+        }
+        p.originales = p.valores.clone();
         salida.push(p);
     }
     salida
 }
 
+/// `session.py::merge_project_edits`: al volver a preparar, los valores que el usuario cambió en un proyecto del mismo
+/// tribunal, RIT y tipo se conservan, y también si lo había omitido.
+pub fn conservar_ediciones(previos: &[Proyecto], nuevos: &mut [Proyecto], carpeta_usuario: Option<&Path>) {
+    for p in nuevos.iter_mut() {
+        let Some(viejo) = previos.iter().find(|v| v.tribunal == p.tribunal && v.rit == p.rit && v.tipo == p.tipo) else { continue };
+        let editados: Vec<(String, String)> = viejo
+            .valores
+            .iter()
+            .filter(|(k, v)| viejo.originales.get(*k).is_some_and(|o| o != *v))
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+        if !editados.is_empty() {
+            p.valores.extend(editados);
+            p.actualizar(carpeta_usuario);
+        }
+        p.omitido = viejo.omitido;
+    }
+}
+
 impl Proyecto {
+    /// Fila principal (la primera de la causa).
+    pub fn fila(&self) -> &str {
+        self.filas.first().map(String::as_str).unwrap_or("")
+    }
+    /// Variables de la plantilla que el usuario dejó vacías: `fill_docx` no puede generarlas.
+    pub fn vacias(&self) -> Vec<&str> {
+        self.faltantes.iter().filter(|v| self.valores.get(*v).is_none_or(|x| x.trim().is_empty())).map(String::as_str).collect()
+    }
+    /// Se genera aunque queden «[COMPLETAR X]» (`require_complete(..., allow_review_markers=True)`).
     pub fn listo(&self) -> bool {
-        !self.omitido && !self.sin_plantilla && self.faltantes.is_empty()
+        !self.omitido && !self.sin_plantilla && self.vacias().is_empty()
     }
     /// Tras editar un valor a mano.
     pub fn actualizar(&mut self, carpeta_usuario: Option<&Path>) {
@@ -288,8 +593,8 @@ pub fn generar(lista: &[Proyecto], carpeta: &Path, carpeta_usuario: Option<&Path
     let mut rutas = Vec::new();
     for ((tribunal, tipo), grupo) in grupos {
         let docx = plantilla(tribunal, &tipo, carpeta_usuario).ok_or("Falta la plantilla.")?;
-        let lote: Vec<BTreeMap<String, String>> = grupo.iter().map(|p| p.valores.clone()).collect();
-        let datos = componer(&docx, &lote)?;
+        let lote: Vec<(&BTreeMap<String, String>, Option<&Plural>)> = grupo.iter().map(|p| (&p.valores, Some(&p.plural))).collect();
+        let datos = componer_con(&docx, &lote)?;
         let ruta = ruta_nueva(carpeta, &format!("Proyectos {tipo} - {} ({})", tribunal.titulo(), grupo.len()), "docx");
         std::fs::write(&ruta, datos).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
         rutas.push(ruta);
@@ -303,6 +608,18 @@ mod pruebas {
 
     fn valores(pares: &[(&str, &str)]) -> BTreeMap<String, String> {
         pares.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    }
+
+    #[test]
+    fn union_y_tipo_por_observacion_como_python() {
+        // `join_names(['A','B','A',' ','C'])` y `observation_resolution_kind` del Asistente Python.
+        assert_eq!(unir(["A", "B", "A", " ", "C"]), "A, B y C");
+        assert_eq!(unir(["A"]), "A");
+        assert_eq!(unir([""; 0]), "");
+        assert_eq!(tipo_por_observacion("Observación ficticia sin tipo."), None);
+        assert_eq!(tipo_por_observacion("Se solicita PC IE ficticio."), Some("PC_IE"));
+        assert_eq!(tipo_por_observacion("Pedir informe ficticio"), Some("PC_INFO"));
+        assert_eq!(tipo_por_observacion("Aplicar NOMENCLATURA ficticia"), Some("NOMENCL"));
     }
 
     #[test]

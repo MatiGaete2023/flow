@@ -8,6 +8,11 @@ use std::time::{Duration, SystemTime};
 pub const DIAS_RETENCION: u64 = 60;
 pub const SESIONES_MAXIMAS: usize = 10;
 
+/// Claves de `Trabajo::sesion` con productos preparados: dependen de las propuestas y se descartan con aviso si
+/// cambian las reglas (decisión del encargo). Python, en cambio, los conserva marcados como obsoletos (`stale`) y exige
+/// volver a prepararlos antes de guardar o generar.
+pub const PRODUCTOS_SESION: [&str; 3] = ["borradores", "proyectos", "seleccion_preparada"];
+
 /// Carpeta de datos: `FLOW_DATOS` si está definida; en Windows `%APPDATA%\Flow`; si no, `~/.local/share/flow`.
 pub fn carpeta_datos() -> PathBuf {
     if let Some(ruta) = std::env::var_os("FLOW_DATOS").filter(|v| !v.is_empty()) {
@@ -37,7 +42,8 @@ fn ruta_sesion(datos: &Path, trabajo: &Trabajo) -> PathBuf {
 ///
 /// - Calculada con las mismas reglas: reemplaza a `nuevo` tal como quedó.
 /// - Con otras reglas (`version_reglas`): queda la propuesta recién calculada y solo se traen las ediciones de la
-///   observación y las marcas de revisada del usuario.
+///   observación, las marcas de revisada del usuario y las preferencias de la sesión; los borradores y proyectos
+///   preparados (`PRODUCTOS_SESION`) se descartan con aviso.
 /// - Ilegible (dañada o de un formato anterior): se aparta con otro nombre, sin borrarla, y se analiza de nuevo.
 /// - Una colisión de nombre con otro origen detiene la apertura y conserva la copia anterior.
 pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<String>), String> {
@@ -74,8 +80,20 @@ pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<Stri
         }
         fila.revisada = previa.revisada;
     }
-    let aviso = "La sesión guardada se calculó con otras reglas: se recalcularon las propuestas y se conservaron tus ediciones y marcas.";
-    Ok((true, Some(aviso.into())))
+    let mut aviso =
+        "La sesión guardada se calculó con otras reglas: se recalcularon las propuestas y se conservaron tus ediciones y marcas."
+            .to_string();
+    if let Some(serde_json::Value::Object(mut estado)) = anterior.sesion {
+        let mut descartados = false;
+        for clave in PRODUCTOS_SESION {
+            descartados |= estado.remove(clave).is_some_and(|v| v.as_array().is_none_or(|a| !a.is_empty()));
+        }
+        if descartados {
+            aviso.push_str(" Los borradores y proyectos preparados se descartaron: vuelve a prepararlos.");
+        }
+        nuevo.sesion = Some(serde_json::Value::Object(estado));
+    }
+    Ok((true, Some(aviso)))
 }
 
 /// Mueve una sesión ilegible a `<nombre>.json.ilegible` (o `.ilegible-2`…): fuera de `listar` y de la retención.
@@ -181,11 +199,19 @@ mod pruebas {
         }
         viejo.filas[0].observacion = "Edición ficticia del usuario.".into();
         viejo.filas[1].revisada = true;
+        viejo.sesion = Some(serde_json::json!({
+            "version": 2,
+            "borradores": [{"asunto": "Borrador ficticio"}],
+            "proyectos": [],
+            "modalidades": ["Modalidad ficticia"],
+        }));
         guardar(&datos, &viejo).unwrap();
         let mut nuevo = analizado();
         let recien = nuevo.clone();
         let (recuperada, aviso) = recuperar(&datos, &mut nuevo).unwrap();
-        assert!(recuperada && aviso.is_some_and(|a| a.contains("otras reglas")));
+        assert!(recuperada && aviso.is_some_and(|a| a.contains("otras reglas") && a.contains("se descartaron")));
+        // Los productos preparados se descartan; las preferencias se conservan.
+        assert_eq!(nuevo.sesion, Some(serde_json::json!({"version": 2, "modalidades": ["Modalidad ficticia"]})));
         assert_eq!(nuevo.version_reglas, recien.version_reglas);
         assert_eq!(nuevo.filas[0].observacion, "Edición ficticia del usuario.");
         assert!(nuevo.filas[1].revisada && !nuevo.filas[0].revisada);
@@ -196,6 +222,7 @@ mod pruebas {
         guardar(&datos, &nuevo).unwrap();
         let mut otra = analizado();
         assert_eq!(recuperar(&datos, &mut otra).unwrap(), (true, None));
+        assert_eq!(otra.sesion, nuevo.sesion, "con las mismas reglas la sesión vuelve tal cual");
         assert_eq!(otra.filas[0].observacion, "Edición ficticia del usuario.");
         assert_eq!(otra.avisos, recien.avisos);
         std::fs::remove_dir_all(datos).unwrap();

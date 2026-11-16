@@ -28,11 +28,17 @@ ni «Meta4» abre todo). Las huellas SHA-256 están en `SHA256SUMS.txt`.
    Revisa cada fila; puedes editar la observación y marcarla como revisada. Ctrl+S guarda el Excel de observaciones.
    La primera vez pide la carpeta donde dejar los productos.
 3. **Correos:** marca las modalidades revisadas, «Preparar borradores», completa los destinatarios que falten y
-   guarda: en Borradores de Outlook, o como archivos `.eml` que Outlook abre como correo sin enviar.
-4. **Resoluciones:** «Preparar proyectos», completa lo que falte (por ejemplo la duración) y «Generar Word».
+   guarda: en Borradores de Outlook, o como archivos `.eml` que Outlook abre como correo sin enviar. Todos llevan
+   el CC fijo. El correo de medidas adjunta una nómina por programa. «Reporte de proyectos» (registros con Word
+   generado, con su Período) y «Gestión particular» se preparan aparte con «Preparar este tipo».
+4. **Resoluciones:** «Preparar proyectos» agrupa un proyecto por tribunal, RIT y tipo con todas las personas de la
+   causa; revisa los valores y «Generar Word». Lo que falte (por ejemplo la duración) queda como
+   `[COMPLETAR DURACION]` para completarlo en el documento.
 5. **Resultados:** lista de lo creado y acceso a la carpeta.
 
-Al volver a abrir el mismo archivo y corte, Flow recupera las ediciones y marcas guardadas.
+Al volver a abrir el mismo archivo y corte, Flow recupera las ediciones y marcas guardadas, los borradores y
+proyectos preparados (con sus cambios) y las modalidades marcadas. Si cambiaron las reglas, recalcula las
+propuestas, conserva ediciones y marcas y descarta los borradores y proyectos preparados, con aviso.
 «Volver a analizar» descarta esas ediciones por elección del usuario. Si una sesión o los contactos no se
 pueden leer, Flow avisa y conserva el archivo anterior; no lo sustituye por datos vacíos.
 

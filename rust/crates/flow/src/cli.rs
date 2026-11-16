@@ -199,9 +199,13 @@ fn producir_interno(
     excel::observaciones(trabajo, &libro)?;
     p.creados.push(format!("Excel de observaciones: {}", libro.display()));
     // Las modalidades escritas filtran las filas solo si todas se reconocen (RES, AMB, FAE, DCE).
-    let opciones =
-        correos::Opciones { modalidades: modalidades.to_string(), hoy: None, claves_modalidad: correos::claves_de_texto(modalidades) };
-    for tipo in correos::Tipo::TODOS.into_iter().filter(|_| trabajo.fuente.is_none()) {
+    let opciones = correos::Opciones {
+        modalidades: modalidades.to_string(),
+        claves_modalidad: correos::claves_de_texto(modalidades),
+        ..Default::default()
+    };
+    // Como «Preparar todos» de Python: el reporte de proyectos y la gestión particular se preparan a pedido.
+    for tipo in correos::Tipo::AUTOMATICOS.into_iter().filter(|_| trabajo.fuente.is_none()) {
         if tipo.usa_modalidades(trabajo.etapa) && modalidades.trim().is_empty() {
             if tipo == correos::Tipo::Informativo || trabajo.filas.iter().any(|f| tipo.accion().is_some_and(|a| f.tiene_accion(a))) {
                 p.pendientes.push(format!("{}: falta indicar las modalidades.", tipo.titulo(trabajo.etapa)));
@@ -253,11 +257,16 @@ fn producir_interno(
     }
 
     let proyectos = word::proyectos(trabajo, trabajo.corte, plantillas_usuario);
-    for pr in proyectos.iter().filter(|x| !x.listo()) {
+    for pr in &proyectos {
         let motivo = if pr.sin_plantilla {
             format!("no hay plantilla {} para {}", pr.tipo, pr.tribunal.titulo())
+        } else if !pr.listo() {
+            format!("falta {}", pr.vacias().join(", "))
+        } else if !pr.faltantes.is_empty() {
+            // Como el Asistente Python: se genera con «[COMPLETAR X]» para completarlo en el Word.
+            format!("generado con [COMPLETAR …] en {}; complétalo en el Word", pr.faltantes.join(", "))
         } else {
-            format!("falta {}", pr.faltantes.join(", "))
+            continue;
         };
         p.pendientes.push(format!("Proyecto {} {}: {motivo}.", pr.tipo, pr.rit));
     }

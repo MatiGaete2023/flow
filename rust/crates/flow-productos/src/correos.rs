@@ -48,10 +48,26 @@ pub enum Tipo {
     Medidas,
     /// Al tribunal: se revisó la pestaña.
     Informativo,
+    /// Al tribunal: reporte de proyectos de resolución (filas con Word generado). Solo a pedido.
+    Proyectos,
+    /// Al tribunal: gestión particular / situación especial. Solo a pedido.
+    Especial,
 }
 
 impl Tipo {
-    pub const TODOS: [Tipo; 5] = [Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas, Tipo::Informativo];
+    pub const TODOS: [Tipo; 7] = [
+        Tipo::ProgramaEspera,
+        Tipo::ProgramaVencido,
+        Tipo::ProgramaPorVencer,
+        Tipo::Medidas,
+        Tipo::Informativo,
+        Tipo::Proyectos,
+        Tipo::Especial,
+    ];
+    /// Los que «Preparar borradores» arma de una vez (`prepare_required_drafts`): el informativo de la etapa y los
+    /// que surgen de las acciones. «Reporte de proyectos» y «Gestión particular» solo se preparan a pedido.
+    pub const AUTOMATICOS: [Tipo; 5] =
+        [Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas, Tipo::Informativo];
 
     /// Acción del motor que alimenta este correo; el informativo no depende de una acción.
     pub fn accion(self) -> Option<&'static str> {
@@ -60,7 +76,7 @@ impl Tipo {
             Tipo::ProgramaVencido => Some("programa_vencido"),
             Tipo::ProgramaPorVencer => Some("programa_por_vencer"),
             Tipo::Medidas => Some("medidas"),
-            Tipo::Informativo => None,
+            Tipo::Informativo | Tipo::Proyectos | Tipo::Especial => None,
         }
     }
     pub fn a_programa(self) -> bool {
@@ -73,6 +89,8 @@ impl Tipo {
                 Etapa::Cumplimiento => "cumplimiento",
                 Etapa::Informes => "informes",
             },
+            Tipo::Proyectos => "proyectos",
+            Tipo::Especial => "especial",
             otro => otro.accion().unwrap(),
         }
     }
@@ -203,6 +221,10 @@ pub struct Opciones {
     pub hoy: Option<flow_dominio::Fecha>,
     /// Claves de modalidad (RES, AMB, FAE, DCE) cuyas filas entran. `None`: todas (`modalities.py::selected_row`).
     pub claves_modalidad: Option<BTreeSet<&'static str>>,
+    /// PERIODO de las plantillas que lo usan (reporte de proyectos). En la ventana parte en el mes actual (mm/aaaa).
+    pub periodo: String,
+    /// Filas con proyecto Word generado: las únicas que entran en el reporte de proyectos (recibos `word`).
+    pub con_word: BTreeSet<String>,
 }
 
 /// Modalidades de `src/nurus/personal/modalities.py`: clave y nombre.
@@ -317,12 +339,15 @@ pub fn preparar(
         return Err("Indica las modalidades efectivamente comprendidas.".into());
     }
     let hoy = opciones.hoy.unwrap_or(trabajo.corte).format("%d/%m/%Y").to_string();
+    // «Preparar tipo» de Python solo filtra por modalidad las plantillas que las usan; estos dos nunca.
+    let claves = if matches!(tipo, Tipo::Proyectos | Tipo::Especial) { None } else { opciones.claves_modalidad.as_ref() };
     let mut grupos: BTreeMap<(Tribunal, String), Vec<&FilaTrabajo>> = BTreeMap::new();
     let mut orden: Vec<(Tribunal, String)> = Vec::new();
     for fila in &trabajo.filas {
         if fila.propuesta.excluido
             || tipo.accion().is_some_and(|a| !fila.tiene_accion(a))
-            || !en_modalidades(trabajo, fila, opciones.claves_modalidad.as_ref())
+            || (tipo == Tipo::Proyectos && !opciones.con_word.contains(&fila.id))
+            || !en_modalidades(trabajo, fila, claves)
         {
             continue;
         }
@@ -340,11 +365,14 @@ pub fn preparar(
         let tribunal = clave.0;
         let nombre_tribunal = base.tribunales[tribunal.nombre()].clone();
         let programa = if tipo.a_programa() { valor(filas[0], "programa") } else { String::new() };
+        let tabla = filas.iter().map(|f| format!("{} — {}", valor(f, "rit"), valor(f, "nombre"))).collect::<Vec<_>>().join("\n");
         let contexto = [
             ("TRIBUNAL", nombre_tribunal.as_str()),
             ("PROGRAMA", programa.as_str()),
             ("FECHA", hoy.as_str()),
             ("ALCANCE_MODALIDADES", opciones.modalidades.as_str()),
+            ("PERIODO", opciones.periodo.as_str()),
+            ("TABLA_REGISTROS", tabla.as_str()),
         ];
         let mut cuerpo = rellenar(&plantilla.cuerpo, &contexto)?;
         if !contactos.firma.trim().is_empty() {
@@ -354,14 +382,30 @@ pub fn preparar(
         let mut adjuntos = Vec::new();
         if plantilla.adjunto == "obligatorio" {
             std::fs::create_dir_all(carpeta).map_err(|e| e.to_string())?;
-            let nombre = if tipo.a_programa() {
-                format!("Nómina {} - {}", programa, tribunal.titulo())
+            // Un adjunto por programa dentro del mismo borrador (`outputs.py`: `by_program`, texto tal cual).
+            let mut por_programa: Vec<(String, Vec<&FilaTrabajo>)> = Vec::new();
+            for fila in filas {
+                let p = valor(fila, "programa");
+                match por_programa.iter_mut().find(|(k, _)| *k == p) {
+                    Some((_, v)) => v.push(fila),
+                    None => por_programa.push((p, vec![fila])),
+                }
+            }
+            // Al tribunal, cada nómina se llama como su programa (`program_filename`), en una carpeta propia.
+            let propia = if tipo.a_programa() {
+                None
             } else {
-                format!("Nómina medidas - {}", tribunal.titulo())
+                let nombre = crate::excel::nombre_archivo(&format!("{} - {}", plantilla.nombre, tribunal.titulo()));
+                Some(crate::excel::carpeta_nueva(&carpeta.join("adjuntos"), &nombre)?)
             };
-            let ruta = ruta_nueva(carpeta, &nombre, "xlsx");
-            nomina(trabajo, filas, clave_plantilla, &ruta)?;
-            adjuntos.push(ruta);
+            for (nombre_programa, subconjunto) in por_programa {
+                let ruta = match &propia {
+                    None => ruta_nueva(carpeta, &format!("Nómina {} - {}", nombre_programa, tribunal.titulo()), "xlsx"),
+                    Some(dir) => ruta_nueva(dir, &nombre_programa, "xlsx"),
+                };
+                nomina(trabajo, &subconjunto, clave_plantilla, &ruta)?;
+                adjuntos.push(ruta);
+            }
         }
         salida.push(Borrador {
             tipo,

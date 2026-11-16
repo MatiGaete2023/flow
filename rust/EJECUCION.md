@@ -539,3 +539,13 @@ guardar el código de conexión, y cualquier escritura en RUS.
   también borradores y proyectos; (8) Anonimizador sin cambios; (9) Meta 4 acepta «LA» como Los Ángeles;
   (10) Excel de observaciones reutiliza columnas y escribe TT/CC como Python; (11) Meta 4 exige el PDF de evidencia
   para contar una consulta vacía; (12) se acepta que el Anonimizador reemplace valores que Python deja.
+- 2026-11-16 · Paridad Asistente, decisiones 1, 2, 3, 4, 7 y 10: proyectos Word por tribunal + RIT + tipo con todas
+  las filas de la causa y todos los tipos de sus acciones (salvo que la observación nombre uno), «A y B», plurales y
+  «Personas comprendidas» como `render_project` (texto cotejado con Python); el Word se genera con «[COMPLETAR X]»;
+  al volver a preparar se conservan los valores editados. Medidas: un adjunto por programa. Nuevos «Reporte de
+  proyectos» y «Gestión particular» («Preparar este tipo», CC fijo, solo borradores). La sesión guarda borradores,
+  proyectos, selección, modalidades, período y carpeta (compatible con sesiones anteriores). Excel de observaciones:
+  reutiliza OBSERVACION, FECHA_OBS, TT, CC y RES del origen (`_column_plan`), no pisa lo escrito salvo edición del
+  usuario, lista cerrada en RES y presentación de `excel_presentation`. Suite: 217 pruebas, 0 fallos.
+  Pendiente para paridad total: Word único por lote, productos obsoletos marcados (no descartados), conservar
+  ediciones de borradores al volver a preparar, selección manual de filas.

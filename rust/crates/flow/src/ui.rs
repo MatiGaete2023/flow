@@ -94,6 +94,34 @@ enum Filtro {
     Editados,
 }
 
+/// Versión del estado guardado con la sesión (`session.py`: `version=2`).
+const VERSION_SESION: u32 = 2;
+
+/// Lo que la sesión guarda además del trabajo (`session.py::capture`): borradores y proyectos preparados con sus
+/// ediciones, la selección con que se prepararon los proyectos y las preferencias de la ventana. El estado de cada
+/// borrador en Outlook no se guarda aquí: se lee del diario de recibos.
+#[derive(serde::Serialize, serde::Deserialize, Default)]
+struct EstadoSesion {
+    version: u32,
+    #[serde(default)]
+    borradores: Vec<Borrador>,
+    #[serde(default)]
+    proyectos: Vec<word::Proyecto>,
+    #[serde(default)]
+    seleccion_preparada: Vec<(String, String)>,
+    #[serde(default)]
+    modalidades: Vec<String>,
+    #[serde(default)]
+    otra_modalidad: String,
+    #[serde(default)]
+    periodo: String,
+    /// Filas con proyecto Word generado (recibos `word` de Python): alimentan el reporte de proyectos.
+    #[serde(default)]
+    word_generados: std::collections::BTreeSet<String>,
+    #[serde(default)]
+    carpeta: Option<PathBuf>,
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Default)]
 struct Ajustes {
     salida: Option<PathBuf>,
@@ -121,6 +149,13 @@ struct App {
     borradores: Vec<Borrador>,
     estados_borradores: std::collections::BTreeMap<usize, crate::borradores::Estado>,
     proyectos: Vec<word::Proyecto>,
+    /// Selección (fila, tipo) con que se prepararon los proyectos; si cambia, se preparan de nuevo antes de generar.
+    seleccion_preparada: Vec<(String, String)>,
+    word_generados: std::collections::BTreeSet<String>,
+    /// PERIODO de las plantillas que lo usan (reporte de proyectos).
+    periodo: String,
+    /// Tipo elegido para «Preparar este tipo».
+    tipo_elegido: Tipo,
     resultados: Vec<String>,
     carpeta: Option<PathBuf>,
     mensaje: Option<(bool, String)>,
@@ -203,6 +238,10 @@ impl App {
             borradores: Vec::new(),
             estados_borradores: Default::default(),
             proyectos: Vec::new(),
+            seleccion_preparada: Vec::new(),
+            word_generados: Default::default(),
+            periodo: flow_tabular::libro::hoy().format("%m/%Y").to_string(),
+            tipo_elegido: Tipo::Proyectos,
             resultados: Vec::new(),
             carpeta: None,
             mensaje: contactos_error.map(|e| (true, e)),
@@ -278,7 +317,10 @@ impl App {
                     texto.push(' ');
                     texto.push_str(&aviso);
                 }
-                self.activar(trabajo);
+                if let Some(aviso) = self.activar(trabajo) {
+                    texto.push(' ');
+                    texto.push_str(&aviso);
+                }
                 self.otros = trabajos;
                 self.archivo = Some(ruta);
                 self.pestana = Pestana::Trabajo;
@@ -289,14 +331,65 @@ impl App {
         }
     }
 
-    /// Deja un trabajo como el activo y descarta los productos preparados del anterior.
-    fn activar(&mut self, trabajo: Trabajo) {
+    /// Guarda en el trabajo activo lo preparado en la ventana (`session.py::capture`).
+    fn capturar_estado(&mut self) {
+        let Some(t) = &mut self.trabajo else { return };
+        let estado = EstadoSesion {
+            version: VERSION_SESION,
+            borradores: self.borradores.clone(),
+            proyectos: self.proyectos.clone(),
+            seleccion_preparada: self.seleccion_preparada.clone(),
+            modalidades: self.modalidades.iter().filter(|(_, si)| *si).map(|(m, _)| m.clone()).collect(),
+            otra_modalidad: self.otra_modalidad.clone(),
+            periodo: self.periodo.clone(),
+            word_generados: self.word_generados.clone(),
+            carpeta: self.carpeta.clone(),
+        };
+        t.sesion = serde_json::to_value(&estado).ok();
+    }
+
+    /// Deja un trabajo como el activo: descarta los productos del anterior y recupera los que guardó su sesión
+    /// (`session.py::restore`). Devuelve un texto para mostrar una vez, si corresponde.
+    fn activar(&mut self, trabajo: Trabajo) -> Option<String> {
         self.seleccion = (!trabajo.filas.is_empty()).then_some(0);
-        self.trabajo = Some(trabajo);
         self.borradores.clear();
         self.estados_borradores.clear();
         self.proyectos.clear();
+        self.seleccion_preparada.clear();
+        self.word_generados.clear();
         self.carpeta = None;
+        let aviso = match trabajo.sesion.clone().map(serde_json::from_value::<EstadoSesion>) {
+            None => None,
+            Some(Err(_)) => Some("No se pudieron leer los productos guardados en la sesión; vuelve a prepararlos.".to_string()),
+            Some(Ok(e)) if e.version != VERSION_SESION => {
+                Some("La versión de los productos guardados no es compatible; vuelve a prepararlos.".to_string())
+            }
+            Some(Ok(e)) => {
+                for (m, marcada) in &mut self.modalidades {
+                    *marcada = e.modalidades.contains(m);
+                }
+                self.otra_modalidad = e.otra_modalidad;
+                if !e.periodo.trim().is_empty() {
+                    self.periodo = e.periodo;
+                }
+                self.borradores = e.borradores;
+                self.proyectos = e.proyectos;
+                self.seleccion_preparada = e.seleccion_preparada;
+                self.word_generados = e.word_generados;
+                self.carpeta = e.carpeta.filter(|c| c.is_dir());
+                // El estado en Outlook sale del diario de recibos, no de la sesión.
+                for (i, b) in self.borradores.iter().enumerate() {
+                    if let Ok(Some(estado)) = crate::borradores::estado(&self.datos, b) {
+                        self.estados_borradores.insert(i, estado);
+                    }
+                }
+                (!self.borradores.is_empty() || !self.proyectos.is_empty()).then(|| {
+                    format!("Se recuperaron {} borrador(es) y {} proyecto(s) preparados.", self.borradores.len(), self.proyectos.len())
+                })
+            }
+        };
+        self.trabajo = Some(trabajo);
+        aviso
     }
 
     /// Cambia a otra etapa del mismo archivo conservando las ediciones de ambas.
@@ -306,8 +399,11 @@ impl App {
         if let Some(actual) = self.trabajo.take() {
             self.otros.push(actual);
         }
-        let texto = format!("{}: {} registros.", nuevo.nombre(), nuevo.filas.len());
-        self.activar(nuevo);
+        let mut texto = format!("{}: {} registros.", nuevo.nombre(), nuevo.filas.len());
+        if let Some(aviso) = self.activar(nuevo) {
+            texto.push(' ');
+            texto.push_str(&aviso);
+        }
         self.bien(texto);
     }
 
@@ -343,13 +439,13 @@ impl App {
             Err(e) => return self.mal(e),
         };
         let actual = trabajos.remove(0);
-        self.activar(actual);
+        let recuperado = self.activar(actual);
         self.otros = trabajos;
         self.archivo = None;
         self.pestana = Pestana::Trabajo;
         self.guardar_sesion();
         let mut texto = "Captura cargada. Revisa las observaciones antes de preparar los productos.".to_string();
-        for aviso in avisos {
+        for aviso in avisos.into_iter().chain(recuperado) {
             texto.push(' ');
             texto.push_str(&aviso);
         }
@@ -357,6 +453,7 @@ impl App {
     }
 
     fn guardar_sesion(&mut self) -> bool {
+        self.capturar_estado();
         if let Some(t) = &self.trabajo {
             if let Err(e) = almacen::guardar(&self.datos, t) {
                 self.mal(e);
@@ -378,7 +475,10 @@ impl App {
                          (se conservan tus ediciones y marcas).",
                     );
                 }
-                self.activar(t);
+                if let Some(aviso) = self.activar(t) {
+                    texto.push(' ');
+                    texto.push_str(&aviso);
+                }
                 self.otros.clear();
                 self.archivo = None;
                 self.bien(texto);
@@ -459,11 +559,14 @@ impl App {
             modalidades: self.texto_modalidades(),
             hoy: Some(flow_tabular::libro::hoy()),
             claves_modalidad: self.claves_modalidades(),
+            periodo: self.periodo.clone(),
+            con_word: self.word_generados.clone(),
         };
         let mut lista = Vec::new();
         let mut saltados = Vec::new();
         let mut fallidos = Vec::new();
-        for tipo in Tipo::TODOS {
+        // Como «Preparar todos» de Python: el reporte de proyectos y la gestión particular se preparan a pedido.
+        for tipo in Tipo::AUTOMATICOS {
             if tipo.usa_modalidades(trabajo.etapa) && opciones.modalidades.is_empty() {
                 saltados.push(tipo.titulo(trabajo.etapa));
                 continue;
@@ -490,6 +593,47 @@ impl App {
             self.bien(texto);
         } else {
             self.mal(texto);
+        }
+    }
+
+    /// «Preparar tipo» de Python: prepara solo el tipo elegido (reemplaza la lista preparada). Las modalidades se
+    /// exigen y filtran solo si la plantilla las usa.
+    fn preparar_tipo(&mut self, tipo: Tipo) {
+        if self.trabajo.as_ref().is_some_and(|t| t.fuente.is_some()) {
+            return self.mal("Esta consulta auxiliar no genera borradores ni proyectos de resolución.");
+        }
+        let Some(etapa) = self.trabajo.as_ref().map(|t| t.etapa) else { return };
+        let usa = tipo.usa_modalidades(etapa);
+        let modalidades = if usa { self.texto_modalidades() } else { String::new() };
+        if usa && modalidades.is_empty() {
+            return self.mal("Selecciona al menos una modalidad para este tipo de correo.");
+        }
+        let opciones = correos::Opciones {
+            modalidades,
+            hoy: Some(flow_tabular::libro::hoy()),
+            claves_modalidad: if usa { self.claves_modalidades() } else { None },
+            periodo: self.periodo.trim().to_string(),
+            con_word: self.word_generados.clone(),
+        };
+        let Some(carpeta) = self.carpeta_productos() else { return };
+        let Some(trabajo) = &self.trabajo else { return };
+        match correos::preparar(trabajo, tipo, &opciones, &self.contactos, &carpeta.join("correos")) {
+            Ok(lista) if lista.is_empty() => self.mal(if tipo == Tipo::Proyectos {
+                "No hay registros con proyecto Word generado en este trabajo: genera primero el Word en Resoluciones."
+            } else {
+                "No hay registros del trabajo para este tipo de correo."
+            }),
+            Ok(lista) => {
+                let texto = format!(
+                    "{} borradores de «{}» preparados para revisión; todavía no se guardaron en Outlook.",
+                    lista.len(),
+                    tipo.titulo(etapa)
+                );
+                self.borradores = lista;
+                self.estados_borradores.clear();
+                self.bien(texto);
+            }
+            Err(e) => self.mal(format!("{}: {e}", tipo.titulo(etapa))),
         }
     }
 
@@ -571,15 +715,30 @@ impl App {
         self.datos.join("plantillas")
     }
 
+    /// `_prepare_words`: agrupa por tribunal, RIT y tipo y conserva los valores editados de la preparación anterior.
     fn preparar_proyectos(&mut self) {
         let Some(trabajo) = &self.trabajo else { return };
         let propias = self.plantillas_usuario();
-        self.proyectos = word::proyectos(trabajo, flow_tabular::libro::hoy(), Some(&propias));
-        let listos = self.proyectos.iter().filter(|p| p.listo()).count();
-        self.bien(format!("Proyectos: {}. Listos para generar: {listos}.", self.proyectos.len()));
+        let seleccion = word::selecciones(trabajo);
+        let mut nuevos = word::preparar(trabajo, &seleccion, flow_tabular::libro::hoy(), Some(&propias));
+        word::conservar_ediciones(&self.proyectos, &mut nuevos, Some(&propias));
+        self.proyectos = nuevos;
+        self.seleccion_preparada = seleccion;
+        let por_completar = self.proyectos.iter().filter(|p| p.listo() && !p.faltantes.is_empty()).count();
+        let sin_plantilla = self.proyectos.iter().filter(|p| p.sin_plantilla).count();
+        self.bien(format!(
+            "{} proyectos agrupados por tribunal, RIT y tipo; {sin_plantilla} sin plantilla. {por_completar} llevan datos \
+             [COMPLETAR …] para completar en el Word.",
+            self.proyectos.len()
+        ));
     }
 
     fn generar_word(&mut self) {
+        // Como `_generate_words`: si cambió lo que corresponde preparar, se prepara de nuevo antes de generar.
+        let vigente = self.trabajo.as_ref().map(word::selecciones).unwrap_or_default();
+        if self.proyectos.is_empty() || vigente != self.seleccion_preparada {
+            self.preparar_proyectos();
+        }
         let Some(carpeta) = self.carpeta_productos() else { return };
         let propias = self.plantillas_usuario();
         match word::generar(&self.proyectos, &carpeta.join("proyectos"), Some(&propias)) {
@@ -587,7 +746,13 @@ impl App {
                 for r in &rutas {
                     self.resultados.push(format!("Proyectos Word · {}", r.display()));
                 }
-                self.bien(format!("{} documento(s) Word creados. Revísalos antes de usarlos.", rutas.len()));
+                let filas: Vec<String> = self.proyectos.iter().filter(|p| p.listo()).flat_map(|p| p.filas.clone()).collect();
+                self.word_generados.extend(filas);
+                self.guardar_sesion();
+                self.bien(format!(
+                    "{} documento(s) Word creados. Revísalos y completa lo marcado [COMPLETAR …] antes de usarlos.",
+                    rutas.len()
+                ));
             }
             Err(e) => self.mal(e),
         }
@@ -872,9 +1037,24 @@ impl App {
             ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra…").desired_width(160.0));
         });
         let mut preparar = false;
+        let mut preparar_tipo = None;
         let mut guardar = None;
+        ui.horizontal_wrapped(|ui| {
+            ui.label("Preparar un tipo:");
+            egui::ComboBox::from_id_salt("tipo_correo").selected_text(self.tipo_elegido.titulo(etapa)).show_ui(ui, |ui| {
+                for tipo in Tipo::TODOS {
+                    ui.selectable_value(&mut self.tipo_elegido, tipo, tipo.titulo(etapa));
+                }
+            });
+            if ui.button("Preparar este tipo").on_hover_text("Reemplaza la lista de borradores preparados").clicked() {
+                preparar_tipo = Some(self.tipo_elegido);
+            }
+            ui.label("Período");
+            ui.add(egui::TextEdit::singleline(&mut self.periodo).desired_width(90.0).hint_text("mm/aaaa"))
+                .on_hover_text("Se usa en el reporte de proyectos de resolución.");
+        });
         ui.horizontal(|ui| {
-            if ui.button("Preparar borradores").clicked() {
+            if ui.button("Preparar borradores").on_hover_text("Todos los que surgen del trabajo, como «Preparar todos»").clicked() {
                 preparar = true;
             }
             if !self.borradores.is_empty() {
@@ -904,8 +1084,9 @@ impl App {
                     if faltan.is_empty() { String::new() } else { format!(" — falta {}", faltan.join(", ")) }
                 );
                 egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).show(ui, |ui| {
-                    ui.checkbox(&mut b.omitido, "No guardar este borrador");
                     let mut editado = false;
+                    // Las ediciones y omisiones quedan en la sesión (`session.py::capture`).
+                    self.sin_guardar |= ui.checkbox(&mut b.omitido, "No guardar este borrador").changed();
                     egui::Grid::new(("campos", i)).num_columns(2).show(ui, |ui| {
                         ui.label("Para");
                         editado |= ui
@@ -922,6 +1103,7 @@ impl App {
                     editado |= ui.add(egui::TextEdit::multiline(&mut b.cuerpo).desired_width(f32::INFINITY).desired_rows(6)).changed();
                     if editado {
                         self.estados_borradores.remove(&i);
+                        self.sin_guardar = true;
                     }
                     if ui.small_button("Consultar recibo local de Outlook").clicked() {
                         match crate::borradores::estado(&self.datos, b) {
@@ -989,6 +1171,11 @@ impl App {
         }
         if preparar {
             self.preparar_borradores();
+            self.sin_guardar = true;
+        }
+        if let Some(tipo) = preparar_tipo {
+            self.preparar_tipo(tipo);
+            self.sin_guardar = true;
         }
         if let Some(en_outlook) = guardar {
             self.guardar_borradores(en_outlook);
@@ -1016,7 +1203,10 @@ impl App {
                 abrir_en_sistema(&carpeta);
             }
         });
-        ui.small("Un documento por tribunal y tipo; cada proyecto empieza en página nueva.");
+        ui.small(
+            "Un proyecto por tribunal, RIT y tipo, con todas las personas de la causa; un documento por tribunal y tipo, \
+             cada proyecto en página nueva. Lo que falte queda como [COMPLETAR …] para completarlo en el Word.",
+        );
         ui.separator();
         let propias = self.plantillas_usuario();
         egui::ScrollArea::vertical().show(ui, |ui| {
@@ -1025,17 +1215,19 @@ impl App {
                     "omitido".to_string()
                 } else if p.sin_plantilla {
                     format!("sin plantilla para {}", p.tribunal.titulo())
+                } else if !p.vacias().is_empty() {
+                    format!("vacío: {} (escribe un valor)", p.vacias().join(", "))
                 } else if p.faltantes.is_empty() {
                     "listo".to_string()
                 } else {
-                    format!("falta {}", p.faltantes.join(", "))
+                    format!("listo · por completar en el Word: {}", p.faltantes.join(", "))
                 };
-                egui::CollapsingHeader::new(format!("{} · {} · {} — {}", p.tipo, p.rit, p.tribunal.titulo(), estado))
+                let registros = if p.filas.len() == 1 { "1 registro".to_string() } else { format!("{} registros", p.filas.len()) };
+                egui::CollapsingHeader::new(format!("{} · {} · {} · {registros} — {}", p.tipo, p.rit, p.tribunal.titulo(), estado))
                     .id_salt(("proyecto", i))
                     .default_open(!p.faltantes.is_empty())
                     .show(ui, |ui| {
-                        ui.checkbox(&mut p.omitido, "No generar este proyecto");
-                        let mut cambio = false;
+                        let mut cambio = ui.checkbox(&mut p.omitido, "No generar este proyecto").changed();
                         egui::Grid::new(("valores", i)).num_columns(2).show(ui, |ui| {
                             for (clave, valor) in p.valores.iter_mut() {
                                 ui.label(clave.as_str());
@@ -1047,12 +1239,14 @@ impl App {
                         });
                         if cambio {
                             p.actualizar(Some(&propias));
+                            self.sin_guardar = true;
                         }
                     });
             }
         });
         if preparar {
             self.preparar_proyectos();
+            self.sin_guardar = true;
         }
         if generar {
             self.generar_word();
@@ -1173,8 +1367,10 @@ indica la fecha de corte y genera la planilla Meta 4. Los lotes no se modifican.
 
 const TEXTO_AYUDA: &str = "1 · Trabajo: abre el Excel de RUS (Ctrl+O). Revisa cada observación; puedes editarla y marcarla como \
 revisada. Ctrl+S guarda el Excel de observaciones.\n\n2 · Correos: marca las modalidades, prepara los borradores, \
-revisa destinatario y texto, y guárdalos. Quedan en Borradores de Outlook o como archivos .eml. Flow nunca envía.\n\n\
-3 · Resoluciones: prepara los proyectos, completa lo que falte y genera el Word.\n\n4 · Resultados: lista de lo \
+revisa destinatario y texto, y guárdalos. Quedan en Borradores de Outlook o como archivos .eml. Flow nunca envía. \
+El reporte de proyectos y la gestión particular se preparan con «Preparar este tipo».\n\n\
+3 · Resoluciones: prepara los proyectos (uno por tribunal, RIT y tipo), revisa sus valores y genera el Word; lo que \
+falte queda marcado [COMPLETAR …] para completarlo en el documento.\n\n4 · Resultados: lista de lo \
 creado y acceso a la carpeta.\n\nFlow no escribe en RUS ni en SATURNO. La observación propuesta es una ayuda: \
 quien la registra y responde por ella es el usuario.";
 
@@ -1502,6 +1698,60 @@ mod pruebas_captura {
             "{:?}",
             app.mensaje
         );
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn la_sesion_guarda_borradores_proyectos_y_preferencias() {
+        let (base, _) = preparar();
+        let datos = base.join("datos");
+        let archivo = base.join("consulta-001-p001-de-001.xls");
+        let mut app = App::con_datos(datos.clone(), None);
+        app.corte = "08/10/2026".into();
+        app.cargar(archivo.clone());
+        let salida = base.join("salida");
+        std::fs::create_dir(&salida).unwrap();
+        app.ajustes.salida = Some(salida);
+        app.modalidades[1].1 = true;
+        app.otra_modalidad = "modalidad ficticia".into();
+        app.periodo = "02/2099".into();
+        app.preparar_borradores();
+        assert!(!app.borradores.is_empty(), "{:?}", app.mensaje);
+        app.borradores[0].asunto = "Asunto editado ficticio".into();
+        app.borradores[0].omitido = true;
+        app.preparar_proyectos();
+        assert!(!app.proyectos.is_empty(), "{:?}", app.mensaje);
+        app.proyectos[0].valores.insert("PROGRAMA".into(), "Programa editado ficticio".into());
+        app.proyectos[0].omitido = true;
+        app.guardar_sesion();
+        let (borradores, proyectos, seleccion) = (app.borradores.clone(), app.proyectos.clone(), app.seleccion_preparada.clone());
+        assert!(!seleccion.is_empty());
+
+        let mut nueva = App::con_datos(datos.clone(), None);
+        nueva.corte = "08/10/2026".into();
+        nueva.cargar(archivo.clone());
+        assert_eq!(nueva.borradores, borradores, "borradores con sus ediciones y omisiones");
+        assert_eq!(nueva.proyectos, proyectos, "proyectos con sus valores editados");
+        assert_eq!(nueva.seleccion_preparada, seleccion);
+        assert!(nueva.modalidades[1].1 && !nueva.modalidades[0].1);
+        assert_eq!((nueva.otra_modalidad.as_str(), nueva.periodo.as_str()), ("modalidad ficticia", "02/2099"));
+        assert_eq!(nueva.carpeta, app.carpeta, "los productos siguen en la misma carpeta");
+        assert!(nueva.mensaje.as_ref().is_some_and(|(error, s)| !error && s.contains("Se recuperaron")), "{:?}", nueva.mensaje);
+        // Volver a preparar conserva los valores editados (`merge_project_edits`).
+        nueva.preparar_proyectos();
+        assert_eq!(nueva.proyectos[0].valores["PROGRAMA"], "Programa editado ficticio");
+        assert!(nueva.proyectos[0].omitido);
+
+        // Una sesión anterior a este campo se sigue leyendo: sin productos guardados y sin error.
+        let ruta = almacen::listar(&datos)[0].0.clone();
+        let mut json: serde_json::Value = serde_json::from_slice(&std::fs::read(&ruta).unwrap()).unwrap();
+        json.as_object_mut().unwrap().remove("sesion");
+        std::fs::write(&ruta, serde_json::to_vec(&json).unwrap()).unwrap();
+        let mut antigua = App::con_datos(datos, None);
+        antigua.corte = "08/10/2026".into();
+        antigua.cargar(archivo);
+        assert!(antigua.trabajo.is_some() && antigua.borradores.is_empty() && antigua.proyectos.is_empty());
+        assert!(antigua.mensaje.as_ref().is_some_and(|(error, _)| !error), "{:?}", antigua.mensaje);
         std::fs::remove_dir_all(base).unwrap();
     }
 
