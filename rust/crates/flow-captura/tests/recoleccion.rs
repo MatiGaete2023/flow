@@ -312,3 +312,11 @@ fn avisos_de_filas_homonimas_en_paginas_distintas_no_se_borran() {
     assert!(resumen.avisos.contains(&aviso), "el aviso de la primera página debe conservarse íntegro");
     assert!(resumen.avisos.iter().any(|s| s.contains("historia sin vínculo comprobado;")));
 }
+
+/// Meta 4 reconoce las lecturas pendientes por estos prefijos: el texto que se emite debe ser el que se interpreta.
+#[test]
+fn prefijos_de_aviso_son_los_que_reconoce_retomar() {
+    use flow_captura::recoleccion::{prefijo_lectura, prefijo_listado};
+    assert_eq!(prefijo_lectura(0, 2, 3, "bitacora"), "Consulta 1, página 2, fila 3: bitacora ");
+    assert_eq!(prefijo_listado(4, 1), "Consulta 5, página 1: vínculos del listado ");
+}

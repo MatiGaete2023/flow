@@ -434,7 +434,7 @@ fn controlar_bitacora(
     let (inicio, fin) = periodo(corte);
     let clave = recoleccion::clave("bitacora", v);
     let referencia = resumen.lecturas.iter().find(|r| r.tipo == "bitacora" && r.clave == clave);
-    let fallida = format!("Consulta {}, página {}, fila {}: bitacora pendiente.", pagina.consulta + 1, pagina.numero, v.fila);
+    let fallida = format!("{}pendiente.", flow_captura::recoleccion::prefijo_lectura(pagina.consulta, pagina.numero, v.fila, "bitacora"));
     let mut entradas = Vec::new();
     let (lectura, control) = if !v.bitacora_verificada {
         ("SIN_VINCULO", NO_COMPLETADA.to_string())
@@ -627,7 +627,7 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
                     && resumen
                         .avisos
                         .iter()
-                        .any(|a| a.starts_with(&format!("Consulta {}, página {pagina}: vínculos del listado pendientes", c.numero + 1)))
+                        .any(|a| a.starts_with(&format!("{}pendientes", flow_captura::recoleccion::prefijo_listado(c.numero, pagina))))
             };
             for fila in &c.filas {
                 let mut r = Registro4 {

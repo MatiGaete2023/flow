@@ -29,6 +29,18 @@ static PENDIENTE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|
 });
 const RESUMEN_PENDIENTES: &str = "Los Excel verificados se conservan. Quedaron ";
 
+
+/// Prefijo del aviso de una lectura por ingreso (`tipo`: bitacora, historia o calendario). Meta 4 lo usa para
+/// reconocer las lecturas pendientes: no redactar este texto en otro lugar.
+pub fn prefijo_lectura(consulta: usize, pagina: usize, fila: usize, tipo: &str) -> String {
+    format!("Consulta {}, página {pagina}, fila {fila}: {tipo} ", consulta + 1)
+}
+
+/// Prefijo del aviso de los vínculos del listado de una página.
+pub fn prefijo_listado(consulta: usize, pagina: usize) -> String {
+    format!("Consulta {}, página {pagina}: vínculos del listado ", consulta + 1)
+}
+
 /// Consultas (índice desde 0) con lecturas por ingreso pendientes según los avisos del avance. Sus XLS ya están
 /// verificados; al retomar se vuelven a recorrer solo para reintentar esas lecturas.
 pub fn consultas_pendientes(resumen: &Resumen) -> BTreeSet<usize> {
@@ -373,7 +385,7 @@ impl Recoleccion {
         let pausa = resumen.lote.pausa_ms;
         // Como el Descargador (`motor.search_page` y `lectura_historia.pagina`): un listado cuyos vínculos no se pueden
         // leer queda anotado aparte y nunca detiene el lote; los XLS verificados siguen disponibles.
-        let prefijo_listado = format!("Consulta {}, página {}: vínculos del listado ", actual.consulta + 1, actual.numero);
+        let prefijo_listado = prefijo_listado(actual.consulta, actual.numero);
         resumen.avisos.retain(|s| !s.starts_with(&prefijo_listado));
         let enlaces = match vinculos::extraer(actual.html, &seleccion) {
             Ok(enlaces) => enlaces,
@@ -417,7 +429,7 @@ impl Recoleccion {
                 if !habilitada {
                     continue;
                 }
-                let prefijo = format!("Consulta {}, página {}, fila {}: {tipo} ", actual.consulta + 1, actual.numero, v.fila);
+                let prefijo = prefijo_lectura(actual.consulta, actual.numero, v.fila, tipo);
                 resumen.avisos.retain(|s| {
                     !s.starts_with(&format!("{prefijo}pendiente.")) && !s.starts_with(&format!("{prefijo}sin vínculo comprobado;"))
                 });

@@ -297,7 +297,7 @@ fn m1_lectura_fallida_genera_con_aviso_y_lote_incompleto_se_rechaza() {
     let t = Temporal::nueva();
     let carpeta = t.0.join("Lote ficticio");
     let mut r = lote(&carpeta, "2026-10-16T15:00:00-03:00");
-    r.avisos.push("Consulta 1, página 1, fila 1: bitacora pendiente. Sesión ficticia vencida.".into());
+    r.avisos.push(format!("{}pendiente. Sesión ficticia vencida.", flow_captura::recoleccion::prefijo_lectura(0, 1, 1, "bitacora")));
     r.avisos
         .push("Los Excel verificados se conservan. Quedaron 1 lecturas por ingreso pendientes; retoma el lote para reintentarlas.".into());
     r.guardar(&carpeta).unwrap();
@@ -321,7 +321,7 @@ fn m1_listado_pendiente_queda_como_lectura_no_completada() {
     let mut r = lote(&carpeta, "2026-10-16T15:00:00-03:00");
     r.paginas_lectura.clear();
     r.lecturas.clear();
-    r.avisos.push("Consulta 1, página 1: vínculos del listado pendientes. Listado ficticio ilegible.".into());
+    r.avisos.push(format!("{}pendientes. Listado ficticio ilegible.", flow_captura::recoleccion::prefijo_listado(0, 1)));
     r.guardar(&carpeta).unwrap();
     let m = calcular(&[carpeta], dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap();
     assert!(m.registros.iter().filter(|r| r.lista == "Cumplimiento").all(|r| r.control == NO_COMPLETADA));
