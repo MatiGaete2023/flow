@@ -181,7 +181,9 @@ def observation_resolution_kind(row):
 
 
 def observed_nomenclature(row):
-    """Nomenclatura que nombra la observación revisada: entre comillas tras «nomenclatura», o egreso / informe."""
+    """Nomenclatura que nombra la observación revisada: entre comillas tras «nomenclatura», o egreso / informe.
+
+    '' si la observación no habla de nomenclatura; None si nombra egreso e informe a la vez (ambigua)."""
     raw = str((row.review or {}).get('OBSERVACION', row.observation) or '')
     quoted = _QUOTED_NOMENCLATURE.search(raw)
     if quoted:
@@ -189,7 +191,9 @@ def observed_nomenclature(row):
     text = normalize(raw)
     egreso = 'egreso' in text
     informe = any(part in text for part in ('ingreso informe', 'informe de cumplimiento', 'informe de avance'))
-    if egreso != informe:
+    if egreso and informe:
+        return None
+    if egreso or informe:
         return EGRESO_SERVICIO if egreso else INGRESO_INFORME_X
     return ''
 
@@ -204,7 +208,8 @@ def project_nomenclature(rows):
     """NOMENCLATURA de un proyecto NOMENCL: primero la fila con RES NOMENCL, luego la de la regla, luego el resto.
 
     En cada fila manda la observación revisada (escrita por el usuario) y, si no nombra ninguna, la regla del motor.
-    Vacío si nada la identifica: el Word queda con «[COMPLETAR NOMENCLATURA]»."""
+    Una observación ambigua no cae a la regla (revisión Codex, PR #58). Vacío si nada la identifica: el Word queda
+    con «[COMPLETAR NOMENCLATURA]»."""
 
     def order(row):
         if resolution_kind((row.review or {}).get('RES')) == 'NOMENCL':
@@ -212,7 +217,10 @@ def project_nomenclature(rows):
         return 1 if 'NOMENCL' in (getattr(row, 'actions', None) or []) else 2
 
     for row in sorted(rows, key=order):
-        found = observed_nomenclature(row) or rule_nomenclature(row)
+        observed = observed_nomenclature(row)
+        if observed is None:
+            continue
+        found = observed or rule_nomenclature(row)
         if found:
             return found
     return ''

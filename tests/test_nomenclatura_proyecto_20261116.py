@@ -130,6 +130,27 @@ def test_observacion_ambigua_o_ajena_no_inventa_nomenclatura(tmp_path):
         assert project.values['NOMENCLATURA'] == '[COMPLETAR NOMENCLATURA]'
 
 
+def test_observacion_ambigua_no_cae_a_la_regla(tmp_path):
+    # Revisión Codex (PR #58): con regla C10 y observación que nombra egreso e informe, no se elige por la regla.
+    work = libro(
+        tmp_path,
+        [
+            [
+                'X-13-2099',
+                'LAJA',
+                'Persona Trece',
+                '14141414-1',
+                'AFT EJEMPLO',
+                'Informe de avance; evaluar egreso.',
+                'NOMENCL',
+            ]
+        ],
+    )
+    row = work.rows[0]
+    row.rules = ['HISTORIA.C10_ESCRITO']
+    assert project_nomenclature([row]) == ''
+
+
 def test_nomenclatura_editada_por_el_usuario_se_respeta(tmp_path):
     work = libro(tmp_path, [['X-8-2099', 'LAJA', 'Persona Ocho', '88888888-8', 'AFT EJEMPLO', 'Egreso.', 'NOMENCL']])
     work.rows[0].word_overrides['NOMENCLATURA'] = 'Nomenclatura escrita a mano'
