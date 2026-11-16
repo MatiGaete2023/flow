@@ -1663,6 +1663,8 @@ mod pruebas_captura {
             avisos: vec![],
             paginas_lectura: vec![],
             lecturas: vec![],
+            inicio: String::new(),
+            tribunales: Default::default(),
         };
         (base, resumen)
     }
@@ -1678,6 +1680,22 @@ mod pruebas_captura {
         assert_eq!(trabajo.filas.len(), 3);
         assert_eq!(almacen::listar(&app.datos).len(), 1);
         assert!(app.mensaje.as_ref().is_some_and(|(error, _)| !error));
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn el_paquete_creado_desde_el_lote_se_abre_con_abrir_excel_o_paquete() {
+        let (base, resumen) = preparar();
+        let zip = base.join("paquete").join(flow_trabajo::exportar::NOMBRE);
+        flow_trabajo::exportar::exportar(&[flow_trabajo::exportar::Lote { carpeta: &base, resumen: &resumen }], &zip, &Default::default())
+            .unwrap();
+        let mut app = App::con_datos(base.join("sesiones-ficticias"), None);
+        app.corte = "08/10/2026".into();
+        app.cargar(zip.clone());
+        let trabajo = app.trabajo.as_ref().unwrap();
+        assert_eq!(trabajo.etapa, Etapa::Espera);
+        assert_eq!(trabajo.filas.len(), 3);
+        assert_eq!(app.archivo.as_deref(), Some(zip.as_path()));
         std::fs::remove_dir_all(base).unwrap();
     }
 

@@ -21,6 +21,7 @@ enum Evento {
     Opciones(Result<Value, String>),
     Avance(String),
     Fin(PathBuf, Box<Result<Resumen, String>>),
+    Paquete(Result<String, String>),
 }
 
 pub struct Captura {
@@ -136,6 +137,16 @@ fn disponible_tras_error(resumen: &Resumen, independiente: bool) -> bool {
         && (independiente || (0..resumen.lote.consultas.len()).all(|i| resumen.terminadas.contains(&i) || resumen.vacias.contains(&i)))
 }
 
+/// Resultado de un paquete creado: ruta y bitácoras incluidas, como `reuse` de `package_current_lot`.
+fn mensaje_paquete(destino: &std::path::Path, p: &flow_trabajo::exportar::Producto) -> String {
+    let mut m = format!("Paquete creado: {}. {} Ábrelo en Flow Asistente con «Abrir Excel o paquete…».", destino.display(), p.bitacoras);
+    for a in &p.avisos {
+        m.push(' ');
+        m.push_str(a);
+    }
+    m
+}
+
 fn marcas(ui: &mut egui::Ui, titulo: &str, opciones: &mut [(String, String, bool)]) {
     ui.label(egui::RichText::new(titulo).strong());
     ui.horizontal_wrapped(|ui| {
@@ -181,6 +192,13 @@ impl Captura {
                             self.mensaje = e;
                         }
                     }
+                }
+                Evento::Paquete(r) => {
+                    self.receptor = None;
+                    self.mensaje = match r {
+                        Ok(m) => m,
+                        Err(e) => format!("No se creó el paquete: {e}"),
+                    };
                 }
                 Evento::Fin(carpeta, r) => {
                     self.receptor = None;
@@ -305,6 +323,52 @@ impl Captura {
             };
             let r = lotes::ejecutar(puente.as_ref(), &catalogo, &lote, &carpeta, retomar, &cancelar, &progreso);
             let _ = tx.send(Evento::Fin(carpeta, Box::new(r)));
+            ctx.request_repaint();
+        });
+    }
+
+    /// Lote para «Crear paquete de este lote…»: el recién terminado, el último abierto o uno que elija el usuario.
+    fn lote_para_paquete(&self) -> Option<Result<(PathBuf, Resumen), String>> {
+        if let Some(listo) = &self.listo {
+            return Some(Ok(listo.clone()));
+        }
+        if let Some(r) =
+            self.carpeta.as_ref().and_then(|c| Resumen::leer(c).ok().filter(|r| r.estado == "VALIDADA").map(|r| (c.clone(), r)))
+        {
+            return Some(Ok(r));
+        }
+        let carpeta = rfd::FileDialog::new().set_title("Carpeta del lote verificado").pick_folder()?;
+        Some(Resumen::leer(&carpeta).map(|r| (carpeta, r)))
+    }
+
+    /// Como `create_package` del Descargador: el paquete del Asistente con las hojas y lecturas de este lote.
+    fn crear_paquete(&mut self, ctx: &egui::Context) {
+        let (carpeta, resumen) = match self.lote_para_paquete() {
+            None => return,
+            Some(Err(e)) => return self.mensaje = e,
+            Some(Ok(l)) => l,
+        };
+        let Some(destino) = rfd::FileDialog::new()
+            .set_title("Guardar paquete para el Asistente")
+            .add_filter("Paquete CSMP", &["zip"])
+            .set_directory(carpeta.parent().unwrap_or(&carpeta))
+            .set_file_name(chrono::Local::now().format("Captura_CSMP_%Y-%m-%d_%H%M.zip").to_string())
+            .save_file()
+        else {
+            return;
+        };
+        if destino.exists() {
+            self.mensaje = "Ese archivo ya existe. Elige un nombre nuevo para no reemplazar otro paquete.".into();
+            return;
+        }
+        let (tx, rx) = channel();
+        self.receptor = Some(rx);
+        self.mensaje = "Creando el paquete del lote…".into();
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let lotes = [flow_trabajo::exportar::Lote { carpeta: &carpeta, resumen: &resumen }];
+            let r = flow_trabajo::exportar::exportar(&lotes, &destino, &Default::default()).map(|p| mensaje_paquete(&destino, &p));
+            let _ = tx.send(Evento::Paquete(r));
             ctx.request_repaint();
         });
     }
@@ -449,6 +513,13 @@ impl Captura {
                         Err(e) => self.mensaje = e,
                     }
                 }
+            }
+            if ui
+                .add_enabled(!self.ocupada(), egui::Button::new("Crear paquete de este lote…"))
+                .on_hover_text("Arma Captura_CSMP.zip con los Excel y las lecturas verificadas del lote, para abrirlo en el Asistente.")
+                .clicked()
+            {
+                self.crear_paquete(ctx);
             }
             if ui.add_enabled(self.ocupada(), egui::Button::new("Detener")).clicked() {
                 self.cancelar.store(true, Ordering::SeqCst);

@@ -135,6 +135,11 @@ fn abrir(datos: &[u8]) -> Result<Contenido, String> {
     Ok(Contenido { manifiesto, tablas })
 }
 
+/// Comprueba un paquete recién armado con el mismo lector que la importación (huellas, filas y manifiesto).
+pub(crate) fn comprobar(datos: &[u8]) -> Result<(), String> {
+    abrir(datos).map(|_| ())
+}
+
 fn dato<'a>(fila: &'a FilaCsv, clave: &str) -> &'a str {
     fila.get(clave).map(String::as_str).unwrap_or("")
 }

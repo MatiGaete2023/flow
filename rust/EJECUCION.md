@@ -557,3 +557,15 @@ guardar el código de conexión, y cualquier escritura en RUS.
   RES (`reviewed_resolution_ids`). «Preparar todos» y `producir` exigen modalidades, en el orden de
   `prepare_required_drafts`. Quedan: plantillas con imágenes o numeración en documento aparte; sin rama `structured`
   (Flow no tiene NURUS_DECISIONES). Suite: 225 pruebas, 0 fallos.
+- 2026-11-16 · Descargador, pieza 1 — «Crear paquete de este lote…»: nuevo `flow-trabajo/src/exportar.rs` arma
+  `Captura_CSMP.zip` (`CSMP_CAPTURE_V1` 1.0.0) desde lotes Rust terminados, como `export_csmp_capture.py` con
+  `match_diaries=True`: manifiesto con las 7 tablas, consultas (COMPLETA, VACIA_COMPROBADA con VACIA_SIN_PDF,
+  PARCIAL/NO_CONSULTADA), registros con `raw_json`/`normalized_json` (TRIBUNAL, MODALIDAD o SITFA_MODALIDAD,
+  SITFA_TRIBUNAL_CODIGO y columnas SITFA_* del vínculo; NOMBRE sin paréntesis), identidad VERIFICADA solo con vínculo
+  único (índice `captura::Vinculos`, compartido con la importación del lote), bitácoras por ingreso verificado
+  (pendientes como FALLIDA), calendario del ingreso, calendario de informes con `asociar_calendarios`, historia por
+  causa con `contexto_anterior` (si falla, el paquete sale sin ella y lo avisa) y avisos del flujo. El resumen del
+  lote guarda `inicio` y los nombres de tribunal. Botón en `captura_ui.rs` (Flow_Descargador y flow.exe). Oráculo
+  `rust/oraculo/validar_paquete_lote.py`: `read_capture` de Python acepta el ZIP del lote ficticio y
+  `import_capture` propone lo mismo que `paquete::importar`, que a su vez coincide con `captura::importar` del lote.
+  Sin XLSX consolidado (schema 1.1.0) ni originales. Suite: 233 pruebas, 0 fallos.

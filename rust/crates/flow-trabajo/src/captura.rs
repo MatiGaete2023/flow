@@ -43,21 +43,67 @@ fn historia(valor: &Value, corte: Fecha) -> Historia {
     Historia::nueva(cobertura, fecha(&valor["desde"]), fecha(&valor["hasta"]), tramites).al_corte(corte)
 }
 
+/// Vínculos del listado por consulta e identidad visible (RIT, RUT, nombre, programa), sin los ambiguos: como
+/// `vinculos.match_rows` del Descargador, nunca se cruza solo por nombre. Lo comparten la importación del lote y el
+/// paquete que se crea desde él, para que ambos atribuyan cada fila al mismo ingreso.
+pub struct Vinculos {
+    indice: HashMap<(usize, [String; 4]), Vec<Vinculo>>,
+}
+
+impl Vinculos {
+    pub fn nuevo(resumen: &Resumen) -> Self {
+        let mut vinculos = resumen.paginas_lectura.iter().flat_map(|p| p.vinculos.clone()).collect::<Vec<_>>();
+        vinculos::descartar_ambiguos(&mut vinculos);
+        let mut indice: HashMap<(usize, [String; 4]), Vec<Vinculo>> = HashMap::new();
+        let mut vinculados = vinculos.into_iter();
+        for pagina in &resumen.paginas_lectura {
+            for _ in &pagina.vinculos {
+                let v = vinculados.next().unwrap();
+                indice.entry((pagina.consulta, v.clave())).or_default().push(v);
+            }
+        }
+        Self { indice }
+    }
+
+    fn candidatos(&self, consulta: usize, identidad: &[String; 4]) -> &[Vinculo] {
+        self.indice.get(&(consulta, identidad.clone())).map(Vec::as_slice).unwrap_or(&[])
+    }
+
+    /// Ingreso remoto único (causa, ingreso, etapa) con bitácora comprobada en el tribunal de la consulta.
+    pub fn ingreso(&self, consulta: usize, tribunal: &str, identidad: &[String; 4]) -> Option<&Vinculo> {
+        let candidatos = self.candidatos(consulta, identidad);
+        let validos = || candidatos.iter().filter(|v| v.tribunal == tribunal && v.bitacora_verificada);
+        let remotos = validos().map(|v| (&v.causa, &v.ingreso, &v.etapa)).collect::<BTreeSet<_>>();
+        if remotos.len() == 1 {
+            validos().next()
+        } else {
+            None
+        }
+    }
+
+    /// Causa única con historia comprobada en el tribunal de la consulta.
+    pub fn causa(&self, consulta: usize, tribunal: &str, identidad: &[String; 4]) -> Option<&Vinculo> {
+        let candidatos = self.candidatos(consulta, identidad);
+        let validos = || candidatos.iter().filter(|v| v.tribunal == tribunal && v.historia_verificada);
+        if validos().map(|v| &v.causa).collect::<BTreeSet<_>>().len() == 1 {
+            validos().next()
+        } else {
+            None
+        }
+    }
+
+    /// Hay vínculos del listado para esa fila, aunque ambiguos o sin comprobar.
+    pub fn alguno(&self, consulta: usize, tribunal: &str, identidad: &[String; 4]) -> bool {
+        self.candidatos(consulta, identidad).iter().any(|v| v.tribunal == tribunal)
+    }
+}
+
 pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config) -> Result<Vec<Trabajo>, String> {
     let mut lecturas = BTreeMap::new();
     for r in &resumen.lecturas {
         lecturas.insert(r.clave.clone(), recoleccion::leer(carpeta, r)?);
     }
-    let mut vinculos = resumen.paginas_lectura.iter().flat_map(|p| p.vinculos.clone()).collect::<Vec<_>>();
-    vinculos::descartar_ambiguos(&mut vinculos);
-    let mut indice: HashMap<(usize, [String; 4]), Vec<&Vinculo>> = HashMap::new();
-    let mut vinculados = vinculos.iter();
-    for pagina in &resumen.paginas_lectura {
-        for _ in &pagina.vinculos {
-            let v = vinculados.next().unwrap();
-            indice.entry((pagina.consulta, v.clave())).or_default().push(v);
-        }
-    }
+    let indice = Vinculos::nuevo(resumen);
     let mut tablas: Vec<(Tabla, Vec<String>)> = vec![];
     let mut contexto = Contexto { proximos: Some(HashMap::new()), ..Default::default() };
     let mut avisos = resumen.avisos.clone();
@@ -178,23 +224,7 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
             if let Some(d) = hoja2 {
                 contexto.proximos.as_mut().unwrap().insert(fila.id.clone(), d);
             }
-            let candidatos = indice.get(&(archivo.consulta, identidad)).map(Vec::as_slice).unwrap_or(&[]);
-            let remotos = candidatos
-                .iter()
-                .filter(|v| v.tribunal == seleccion.tribunal && v.bitacora_verificada)
-                .map(|v| (&v.causa, &v.ingreso, &v.etapa))
-                .collect::<BTreeSet<_>>();
-            let historia_causas = candidatos
-                .iter()
-                .filter(|v| v.tribunal == seleccion.tribunal && v.historia_verificada)
-                .map(|v| &v.causa)
-                .collect::<BTreeSet<_>>();
-            let remoto = if remotos.len() == 1 {
-                candidatos.iter().find(|v| v.tribunal == seleccion.tribunal && v.bitacora_verificada).copied()
-            } else {
-                None
-            };
-            if let Some(v) = remoto {
+            if let Some(v) = indice.ingreso(archivo.consulta, &seleccion.tribunal, &identidad) {
                 origen.causa = v.causa.clone();
                 origen.ingreso = v.ingreso.clone();
                 origen.verificada = true;
@@ -246,11 +276,9 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                     fila.numero
                 ));
             }
-            if historia_causas.len() == 1 {
-                if let Some(v) = candidatos.iter().find(|v| v.tribunal == seleccion.tribunal && v.historia_verificada) {
-                    if let Some(lectura) = lecturas.get(&recoleccion::clave("historia", v)) {
-                        contexto.historias.insert(fila.id.clone(), historia(&lectura["datos"], corte));
-                    }
+            if let Some(v) = indice.causa(archivo.consulta, &seleccion.tribunal, &identidad) {
+                if let Some(lectura) = lecturas.get(&recoleccion::clave("historia", v)) {
+                    contexto.historias.insert(fila.id.clone(), historia(&lectura["datos"], corte));
                 }
             }
             contexto.origenes.insert(fila.id.clone(), origen);

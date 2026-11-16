@@ -1524,6 +1524,7 @@ dependencies = [
  "flow-dominio",
  "flow-motor",
  "flow-tabular",
+ "regex",
  "serde",
  "serde_json",
  "sha2",

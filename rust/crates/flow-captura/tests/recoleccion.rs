@@ -102,6 +102,8 @@ fn resumen() -> Resumen {
         avisos: vec![],
         paginas_lectura: vec![],
         lecturas: vec![],
+        inicio: String::new(),
+        tribunales: Default::default(),
     }
 }
 fn pagina() -> String {

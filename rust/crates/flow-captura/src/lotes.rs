@@ -191,6 +191,17 @@ pub struct Resumen {
     pub paginas_lectura: Vec<crate::recoleccion::Pagina>,
     #[serde(default)]
     pub lecturas: Vec<crate::recoleccion::Referencia>,
+    /// Inicio del lote (RFC 3339, segundos enteros): `fecha_hora` del resumen del Descargador. Vacío en lotes previos.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub inicio: String,
+    /// Nombre visible de cada tribunal del lote según el catálogo de SITFA (`tribunal_nombre` de la selección).
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub tribunales: std::collections::BTreeMap<String, String>,
+}
+
+/// Instante local con segundos enteros y zona, como lo acepta `CSMP_CAPTURE_V1`.
+pub fn ahora() -> String {
+    chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%:z").to_string()
 }
 
 impl Resumen {
@@ -371,8 +382,15 @@ pub fn ejecutar(
             avisos: vec![],
             paginas_lectura: vec![],
             lecturas: vec![],
+            inicio: ahora(),
+            tribunales: Default::default(),
         }
     };
+    for s in &lote.consultas {
+        if let Some(nombre) = catalogo["tribunales"][&s.tribunal].as_str() {
+            resumen.tribunales.entry(s.tribunal.clone()).or_insert_with(|| nombre.to_string());
+        }
+    }
     // Ningún archivo desaparecido o editado se da por completado al reanudar.
     for a in &resumen.archivos {
         let datos =
