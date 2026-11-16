@@ -41,6 +41,7 @@ fn meta() -> flow_meta4::Meta4 {
         observaciones: Vec::new(), lecturas: Vec::new(),
         sin_bitacoras: vec![("Consulta ficticia sin bitácora".into(), "TOMÉ".into())],
         filtros: Vec::new(), lotes: vec!["Lote ficticio".into()], avisos: Vec::new(),
+        fuentes: Vec::new(), hojas_previas: Vec::new(),
     }
 }
 /// Copia un producto de prueba a un libro simulado como revisado. Cambia fecha, etapa y ALERTA;
@@ -139,10 +140,47 @@ fn fecha_ilegible_o_fuentes_faltantes_no_publican() {
     let error = regenerar::ejecutar(&registros, &destino).unwrap_err();
     assert!(error.contains("FECHA OBS."), "{error}");
     assert!(!destino.exists());
+}
+
+/// M7: como `regenerar` de Python, Bitacoras_del_mes.xlsx es opcional (no se copia ni se inventa una vacía) y una
+/// fila sin RIT se omite aunque tenga otros datos.
+#[test]
+fn regenera_sin_bitacoras_y_omite_filas_sin_rit() {
+    let temporal = Temporal::nueva();
+    let fuente = temporal.0.join("Original");
+    let originales = salida::publicar(&meta(), &fuente).unwrap();
+    let revisados = temporal.0.join("Revisados");
+    std::fs::create_dir(&revisados).unwrap();
+    let registros = revisados.join("Registros.xlsx");
     editar_libro(&originales[1], &registros, false);
-    std::fs::remove_file(revisados.join("Bitacoras_del_mes.xlsx")).unwrap();
-    assert!(regenerar::ejecutar(&registros, &destino).is_err());
-    assert!(!destino.exists());
+    // Fila extra en CUMPLIMIENTO: sin RIT, con un nombre escrito a mano.
+    let libro = flow_tabular::leer(&registros).unwrap();
+    let mut nuevo = Workbook::new();
+    for original in &libro.hojas {
+        let hoja = nuevo.add_worksheet();
+        hoja.set_name(&original.nombre).unwrap();
+        for (f, fila) in original.filas.iter().enumerate() {
+            for (c, valor) in fila.iter().enumerate() {
+                if !valor.es_vacia() {
+                    hoja.write_string(f as u32, c as u16, valor.texto()).unwrap();
+                }
+            }
+        }
+        if original.nombre == "CUMPLIMIENTO" {
+            let col = original.filas[0].iter().position(|c| c.texto() == "NOMBRE").unwrap();
+            hoja.write_string(original.filas.len() as u32, col as u16, "NOTA SIN RIT").unwrap();
+        }
+    }
+    nuevo.save(&registros).unwrap();
+    std::fs::copy(fuente.join("Reporte META4.json"), revisados.join("Reporte META4.json")).unwrap();
+    let cargado = regenerar::cargar(&registros).unwrap();
+    assert_eq!(cargado.meta.registros.len(), 1, "la fila sin RIT se omite");
+    assert!(cargado.bitacoras.is_none());
+    let destino = temporal.0.join("Regenerado");
+    let archivos = regenerar::ejecutar(&registros, &destino).unwrap();
+    assert_eq!(archivos.len(), 4);
+    assert!(!destino.join("Bitacoras_del_mes.xlsx").exists(), "no se escribe una bitácora vacía");
+    assert!(archivos.iter().all(|p| p.is_file()));
 }
 
 #[test]
@@ -154,10 +192,12 @@ fn no_regenera_copia_parcial_antigua_con_lecturas_de_otro_tribunal() {
     m.lecturas.push(flow_meta4::Lectura {
         tribunal: "LAJA".into(),
         rit: "P-2-2099".into(),
+        rut: "22222222-0".into(),
         nombre: "Identcanario Apelcanario".into(),
         programa: "FAE Ficticio".into(),
         causa: "c202".into(),
         ingreso: "202".into(),
+        lectura: "LEIDA".into(),
         control: "OK".into(),
     });
     salida::publicar(&m, &fuente).unwrap();

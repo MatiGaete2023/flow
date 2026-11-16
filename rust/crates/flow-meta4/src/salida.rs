@@ -2,11 +2,12 @@
 //! un error no deja una planilla parcial.
 
 use crate::tribunales::{norma, TRIBUNALES};
-use crate::{periodo, Meta4, Registro4, SIN_TRIBUNAL};
+use crate::{periodo, Fuente, Meta4, Registro4, SIN_TRIBUNAL};
 use chrono::{Datelike, NaiveDate, Timelike};
 use flow_dominio::Celda;
 use rust_xlsxwriter::{Color, ExcelDateTime, Format, FormatAlign, FormatBorder, Note, Workbook, Worksheet, XlsxError};
 use serde_json::{json, Value};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -42,6 +43,22 @@ pub const HOJAS: [(&str, &str, &str, &str); 4] = [
 fn en(e: XlsxError) -> String {
     e.to_string()
 }
+
+/// Como openpyxl (`check_string`), un texto de más de 32767 caracteres se trunca en vez de abortar. Excel cuenta
+/// unidades UTF-16: si el corte de Python aún no cabe (caracteres fuera del plano básico), se acorta lo necesario.
+pub fn texto_excel(texto: &str, maximo: usize) -> Cow<'_, str> {
+    if texto.encode_utf16().count() <= maximo {
+        return Cow::Borrowed(texto);
+    }
+    let mut corto: String = texto.chars().take(maximo).collect();
+    while corto.encode_utf16().count() > maximo {
+        corto.pop();
+    }
+    Cow::Owned(corto)
+}
+const MAX_TEXTO: usize = 32_767;
+/// rust_xlsxwriter reserva 54 unidades del límite para el encabezado de la nota.
+const MAX_NOTA: usize = 32_767 - 54;
 
 fn es_fecha(titulo: &str) -> bool {
     let n = norma(titulo);
@@ -107,7 +124,7 @@ fn escribir(hoja: &mut Worksheet, fila: u32, col: u16, celda: &Celda, e: &Estilo
     match celda {
         Celda::Vacia => hoja.write_blank(fila, col, &e.normal)?,
         // Siempre como texto: un valor que empieza con «=» no se convierte en fórmula.
-        Celda::Texto(t) => hoja.write_string_with_format(fila, col, t, &e.normal)?,
+        Celda::Texto(t) => hoja.write_string_with_format(fila, col, texto_excel(t, MAX_TEXTO), &e.normal)?,
         Celda::Numero(n) => hoja.write_number_with_format(fila, col, *n, &e.normal)?,
         Celda::Fecha(f) => match fecha_excel(*f) {
             Some(fecha) => hoja.write_datetime_with_format(fila, col, &fecha, &e.fecha)?,
@@ -288,7 +305,7 @@ pub fn planilla(m: &Meta4, destino: &Path) -> Result<BTreeMap<String, usize>, St
                     }
                     if r.requiere_revision() {
                         let motivo = if r.alerta.is_empty() { &r.control } else { &r.alerta };
-                        hoja.insert_note(fila, 7, &Note::new(motivo).set_author("META 4")).map_err(en)?;
+                        hoja.insert_note(fila, 7, &Note::new(texto_excel(motivo, MAX_NOTA)).set_author("META 4")).map_err(en)?;
                     }
                     fila += 1;
                 }
@@ -308,7 +325,7 @@ pub fn planilla(m: &Meta4, destino: &Path) -> Result<BTreeMap<String, usize>, St
     control.set_column_width(2, 60).map_err(en)?;
     for (f, linea) in lineas_control(m).iter().enumerate() {
         for (c, texto) in linea.iter().enumerate() {
-            control.write_string(f as u32, c as u16, texto).map_err(en)?;
+            control.write_string(f as u32, c as u16, texto_excel(texto, MAX_TEXTO)).map_err(en)?;
         }
     }
     libro.save(destino).map_err(|e| format!("No se pudo guardar {}: {e}", destino.display()))?;
@@ -319,7 +336,127 @@ fn con_extra(base: &[&'static str]) -> Vec<&'static str> {
     base.iter().copied().chain(EXTRA).collect()
 }
 
-/// Registros.xlsx: la hoja de trabajo, con todas las columnas de origen y los controles.
+const INVENTARIO: [&str; 12] = [
+    "N°", "ARCHIVO", "RUTA RELATIVA", "TIPO", "TRIBUNAL", "MODALIDAD", "ESTADO", "REGISTROS", "FECHA EMISIÓN", "RESULTADO",
+    "SELECCIONADO", "OBSERVACIÓN",
+];
+const MATRIZ: [&str; 5] = ["TRIBUNAL", "FAE ESPERA", "FAE CUMPLIMIENTO", "RESIDENCIA ESPERA", "RESIDENCIA CUMPLIMIENTO"];
+
+/// Filas de INVENTARIO_ARCHIVOS (`write_inventory_sheet` de Python): un archivo o consulta sin registros por fila.
+pub fn inventario(m: &Meta4) -> Vec<Vec<Celda>> {
+    m.fuentes
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let t = |s: &str| Celda::Texto(s.to_string());
+            let ruta = if f.archivo.is_empty() { f.lote.clone() } else { format!("{}/{}", f.lote, f.archivo) };
+            let observacion = match (f.resultado, f.seleccionado) {
+                ("NO CLASIFICADO", _) => "No se pudo identificar: tribunal",
+                (_, false) => "Fuera del filtro de tribunales",
+                _ if f.tipo == "SIN ARCHIVO" => "Consulta sin registros, sin evidencia PDF",
+                _ => "",
+            };
+            vec![
+                Celda::Numero((i + 1) as f64),
+                t(&f.archivo),
+                t(&ruta),
+                t(f.tipo),
+                t(f.tribunal.unwrap_or("")),
+                t(f.categoria),
+                t(f.lista),
+                Celda::Numero(f.registros as f64),
+                Celda::Vacia,
+                t(f.resultado),
+                t(if f.resultado == "NO CLASIFICADO" {
+                    "N/A"
+                } else if f.seleccionado {
+                    "SÍ"
+                } else {
+                    "NO"
+                }),
+                t(observacion),
+            ]
+        })
+        .collect()
+}
+
+/// Texto de una celda de MATRIZ_COBERTURA (`matrix_cell_text` de Python, modo lotes: sin duplicados posibles).
+fn celda_matriz(m: &Meta4, clave: (&str, &str, &str)) -> String {
+    let (tribunal, categoria, lista) = clave;
+    let es = |f: &&Fuente| f.tribunal == Some(tribunal) && f.categoria == categoria && f.lista == lista;
+    let fuentes: Vec<&Fuente> = m.fuentes.iter().filter(es).collect();
+    let n = m.registros.iter().filter(|r| r.tribunal == Some(tribunal) && r.categoria == Some(categoria) && r.lista == lista).count();
+    let excel = fuentes.iter().any(|f| f.tipo == "EXCEL");
+    if n > 0 || excel {
+        let fuera = m
+            .registros
+            .iter()
+            .filter(|r| r.categoria.is_none() || r.tribunal.is_none())
+            .filter(|r| fuentes.iter().any(|f| f.tipo == "EXCEL" && f.archivo == r.archivo && f.lote == r.lote))
+            .count();
+        let mut texto = format!("EXCEL · {n} registro(s)");
+        if fuera > 0 {
+            texto += &format!(" (+{fuera} fuera de alcance)");
+        }
+        texto
+    } else if fuentes.iter().any(|f| f.tipo == "PDF") {
+        "PDF · 0 registros".into()
+    } else if !fuentes.is_empty() {
+        "SIN REGISTROS · 0 registros".into()
+    } else {
+        "FALTANTE".into()
+    }
+}
+
+/// Filas de MATRIZ_COBERTURA (`write_matrix_sheet` de Python): título, cobertura, encabezado y un tribunal por fila.
+pub fn matriz(m: &Meta4) -> Vec<Vec<Celda>> {
+    let incluido = |t: &str| m.tribunales.as_ref().is_none_or(|e| e.contains(&t));
+    let claves = [("FAE", "Espera"), ("FAE", "Cumplimiento"), ("Residencia", "Espera"), ("Residencia", "Cumplimiento")];
+    let mut cuerpo = Vec::new();
+    let (mut esperadas, mut halladas) = (0, 0);
+    for t in TRIBUNALES {
+        let mut fila = vec![Celda::Texto(t.to_string())];
+        for (categoria, lista) in claves {
+            let texto = if incluido(t) {
+                let texto = celda_matriz(m, (t, categoria, lista));
+                esperadas += 1;
+                halladas += usize::from(texto != "FALTANTE");
+                texto
+            } else {
+                "NO INCLUIDO".into()
+            };
+            fila.push(Celda::Texto(texto));
+        }
+        cuerpo.push(fila);
+    }
+    let mut cobertura = format!("Cobertura: {halladas}/{esperadas} · Faltantes: {} · Combinaciones duplicadas: 0", esperadas - halladas);
+    if let Some(e) = &m.tribunales {
+        cobertura += &format!(" · Tribunales incluidos: {}/{}", e.len(), TRIBUNALES.len());
+    }
+    let mut filas = vec![
+        vec![Celda::Texto("MATRIZ DE COBERTURA DE ARCHIVOS".into())],
+        vec![Celda::Texto(cobertura)],
+        vec![],
+        MATRIZ.iter().map(|t| Celda::Texto(t.to_string())).collect(),
+    ];
+    filas.extend(cuerpo);
+    filas
+}
+
+fn hoja_simple(hoja: &mut Worksheet, filas: &[Vec<Celda>]) -> Result<(), XlsxError> {
+    let e = estilos(None);
+    for (f, fila) in filas.iter().enumerate() {
+        for (c, celda) in fila.iter().enumerate() {
+            if !celda.es_vacia() {
+                escribir(hoja, f as u32, c as u16, celda, &e)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Registros.xlsx: la hoja de trabajo, con todas las columnas de origen y los controles, el inventario de archivos,
+/// la matriz de cobertura y los avisos (`write_registros_workbook` de Python).
 pub fn registros(m: &Meta4, destino: &Path) -> Result<(), String> {
     let mut libro = Workbook::new();
     for (nombre, lista, titulos) in [("ESPERA", "Espera", con_extra(&ESPERA)), ("CUMPLIMIENTO", "Cumplimiento", con_extra(&CUMPLIMIENTO))] {
@@ -328,12 +465,31 @@ pub fn registros(m: &Meta4, destino: &Path) -> Result<(), String> {
         hoja.set_name(nombre).map_err(en)?;
         tabla(hoja, &titulos, &filas).map_err(en)?;
     }
+    if m.hojas_previas.is_empty() {
+        let hoja = libro.add_worksheet();
+        hoja.set_name("INVENTARIO_ARCHIVOS").map_err(en)?;
+        let filas: Vec<(Vec<Celda>, Option<u32>)> = inventario(m).into_iter().map(|f| (f, None)).collect();
+        tabla(hoja, &INVENTARIO, &filas).map_err(en)?;
+        let hoja = libro.add_worksheet();
+        hoja.set_name("MATRIZ_COBERTURA").map_err(en)?;
+        hoja_simple(hoja, &matriz(m)).map_err(en)?;
+        hoja.set_column_width(0, 24).map_err(en)?;
+        for c in 1..5 {
+            hoja.set_column_width(c, 29).map_err(en)?;
+        }
+    } else {
+        for (nombre, filas) in &m.hojas_previas {
+            let hoja = libro.add_worksheet();
+            hoja.set_name(nombre).map_err(en)?;
+            hoja_simple(hoja, filas).map_err(en)?;
+        }
+    }
     let avisos = libro.add_worksheet();
     avisos.set_name("ERRORES_Y_ADVERTENCIAS").map_err(en)?;
     avisos.set_column_width(0, 140).map_err(en)?;
     avisos.write_string_with_format(0, 0, "ADVERTENCIA", &estilos(None).cabecera).map_err(en)?;
     for (i, aviso) in m.avisos.iter().enumerate() {
-        avisos.write_string(i as u32 + 1, 0, aviso).map_err(en)?;
+        avisos.write_string(i as u32 + 1, 0, texto_excel(aviso, MAX_TEXTO)).map_err(en)?;
     }
     libro.save(destino).map_err(|e| format!("No se pudo guardar {}: {e}", destino.display()))
 }
@@ -407,25 +563,26 @@ pub fn bitacoras_del_mes(m: &Meta4, destino: &Path) -> Result<(), String> {
     for (i, o) in m.observaciones.iter().enumerate() {
         let f = i as u32 + 1;
         for (c, texto) in [&o.tribunal, &o.rit, &o.rut, &o.nombre, &o.programa, &o.causa, &o.ingreso].into_iter().enumerate() {
-            hoja.write_string_with_format(f, c as u16, texto, &base.normal).map_err(en)?;
+            hoja.write_string_with_format(f, c as u16, texto_excel(texto, MAX_TEXTO), &base.normal).map_err(en)?;
         }
         let fecha = ExcelDateTime::from_ymd(o.fecha.year() as u16, o.fecha.month() as u8, o.fecha.day() as u8)
             .and_then(|d| d.and_hms(o.fecha.hour() as u16, o.fecha.minute() as u8, o.fecha.second() as f64))
             .map_err(en)?;
         hoja.write_datetime_with_format(f, 7, &fecha, &momento).map_err(en)?;
         for (c, texto) in [(8, &o.etapa), (9, &o.tipo), (10, &o.texto)] {
-            hoja.write_string_with_format(f, c, texto, &base.normal).map_err(en)?;
+            hoja.write_string_with_format(f, c, texto_excel(texto, MAX_TEXTO), &base.normal).map_err(en)?;
         }
     }
     hoja.set_freeze_panes(1, 0).map_err(en)?;
     let control = libro.add_worksheet();
     control.set_name("Control de lecturas").map_err(en)?;
-    let titulos = ["TRIBUNAL", "RIT", "NOMBRE", "PROGRAMA", "CAUSA ID", "INGRESO ID", "CONTROL"];
+    // Como `exportar_bitacoras` de Python: una fila por bitácora, también las no leídas, con RUT y estado de lectura.
+    let titulos = ["TRIBUNAL", "RIT", "RUT", "NOMBRE", "PROGRAMA", "CAUSA ID", "INGRESO ID", "LECTURA", "CONTROL"];
     let filas: Vec<(Vec<Celda>, Option<u32>)> = m
         .lecturas
         .iter()
         .map(|l| {
-            let textos = [&l.tribunal, &l.rit, &l.nombre, &l.programa, &l.causa, &l.ingreso, &l.control];
+            let textos = [&l.tribunal, &l.rit, &l.rut, &l.nombre, &l.programa, &l.causa, &l.ingreso, &l.lectura, &l.control];
             (textos.into_iter().map(|t| Celda::Texto(t.clone())).collect(), None)
         })
         .collect();
@@ -472,24 +629,23 @@ pub fn publicar_con_plantilla(m: &Meta4, destino: &Path, plantilla: Option<&Path
     publicar_interno(m, destino, None, plantilla)
 }
 
-/// Regeneración desde Registros.xlsx revisado. La bitácora no cambia ni se sustituye por una vacía.
+/// Regeneración desde Registros.xlsx revisado. La bitácora original se copia sin cambios; como en Python
+/// (`regenerar`), si no existe no se escribe una vacía en su lugar y no se publica ese archivo.
 pub fn publicar_regenerado(
-    m: &Meta4, destino: &Path, bitacoras_originales: &Path, huella_registros: &str
+    m: &Meta4, destino: &Path, bitacoras_originales: Option<&Path>, huella_registros: &str
 ) -> Result<Vec<PathBuf>, String> {
-    if !bitacoras_originales.is_file() {
-        return Err("Falta Bitacoras_del_mes.xlsx original: no se regenera perdiendo bitácoras.".into());
-    }
     publicar_regenerado_con_plantilla(m, destino, bitacoras_originales, huella_registros, None)
 }
 pub fn publicar_regenerado_con_plantilla(
-    m: &Meta4, destino: &Path, bitacoras_originales: &Path, huella_registros: &str, plantilla: Option<&Path>
+    m: &Meta4, destino: &Path, bitacoras_originales: Option<&Path>, huella_registros: &str, plantilla: Option<&Path>
 ) -> Result<Vec<PathBuf>, String> {
-    if !bitacoras_originales.is_file() {
+    if bitacoras_originales.is_some_and(|b| !b.is_file()) {
         return Err("Falta Bitacoras_del_mes.xlsx original: no se regenera perdiendo bitácoras.".into());
     }
     publicar_interno(m, destino, Some((bitacoras_originales, huella_registros)), plantilla)
 }
-fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
+type Regenerar<'a> = Option<(Option<&'a Path>, &'a str)>;
+fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Regenerar<'_>, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
     crate::validar_destino(destino)?;
     let padre = destino.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
     std::fs::create_dir_all(padre).map_err(|e| format!("No se pudo crear {}: {e}", padre.display()))?;
@@ -519,8 +675,10 @@ fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>,
         consolidado(m, &temporal.join(&nombres[2]))?;
         if let Some((original, _)) = regenerar {
             // No se reinterpreta el texto íntegro de bitácoras: se copia el libro comprobado.
-            std::fs::copy(original, temporal.join(&nombres[3]))
-                .map_err(|e| format!("No se pudo conservar Bitacoras_del_mes.xlsx: {e}"))?;
+            if let Some(original) = original {
+                std::fs::copy(original, temporal.join(&nombres[3]))
+                    .map_err(|e| format!("No se pudo conservar Bitacoras_del_mes.xlsx: {e}"))?;
+            }
         } else {
             bitacoras_del_mes(m, &temporal.join(&nombres[3]))?;
         }
@@ -540,7 +698,7 @@ fn publicar_interno(m: &Meta4, destino: &Path, regenerar: Option<(&Path, &str)>,
         return Err(e);
     }
     std::fs::rename(&temporal, destino).map_err(|e| format!("No se pudo publicar la salida: {e}"))?;
-    Ok(nombres.iter().map(|n| destino.join(n)).collect())
+    Ok(nombres.iter().map(|n| destino.join(n)).filter(|p| p.is_file()).collect())
 }
 
 #[allow(dead_code)]

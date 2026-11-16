@@ -149,15 +149,35 @@ pub struct ObservacionMes {
     pub texto: String,
 }
 
+/// Una fila de «Control de lecturas»: una por bitácora del lote, también las que no se pudieron leer.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Lectura {
     pub tribunal: String,
     pub rit: String,
+    pub rut: String,
     pub nombre: String,
     pub programa: String,
     pub causa: String,
     pub ingreso: String,
+    /// Estado de la lectura con el vocabulario del Descargador: LEIDA, FALLIDA, PENDIENTE o SIN_VINCULO.
+    pub lectura: String,
     pub control: String,
+}
+
+/// Un archivo (o una consulta sin registros) de los lotes, para INVENTARIO_ARCHIVOS y MATRIZ_COBERTURA.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Fuente {
+    pub archivo: String,
+    pub lote: String,
+    /// «EXCEL», «PDF» (evidencia sin registros) o «SIN ARCHIVO» (consulta sin registros sin evidencia).
+    pub tipo: &'static str,
+    pub tribunal: Option<&'static str>,
+    pub categoria: &'static str,
+    pub lista: &'static str,
+    pub registros: usize,
+    /// «PROCESADO», «SIN REGISTROS» o «NO CLASIFICADO».
+    pub resultado: &'static str,
+    pub seleccionado: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -174,6 +194,10 @@ pub struct Meta4 {
     pub filtros: Vec<String>,
     pub lotes: Vec<String>,
     pub avisos: Vec<String>,
+    /// Archivos y consultas sin registros de los lotes (inventario y matriz de cobertura).
+    pub fuentes: Vec<Fuente>,
+    /// Al regenerar: hojas INVENTARIO_ARCHIVOS y MATRIZ_COBERTURA del Registros.xlsx revisado, que se conservan tal cual.
+    pub hojas_previas: Vec<(String, Vec<Vec<Celda>>)>,
 }
 
 fn modalidad(codigo: &str) -> Option<&'static str> {
@@ -196,55 +220,114 @@ pub fn normalizar_tribunales(valores: &[String]) -> Result<Option<Vec<&'static s
     Ok(Some(tribunales::TRIBUNALES.into_iter().filter(|t| elegidos.contains(t)).collect()))
 }
 
-/// Lee uno o varios lotes de Flow y calcula Meta 4. No escribe nada.
-pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, elegidos: &[String]) -> Result<Meta4, String> {
+/// Carpetas de resultados de Meta 4 (terminadas o en curso): nunca son lotes de origen.
+fn es_salida(nombre: &str) -> bool {
+    ["Resultado META4", "Salida META4", "META4 regenerado"].iter().any(|p| nombre.starts_with(p)) || nombre.contains(".en-curso-")
+}
+
+fn buscar_lotes(carpeta: &Path, profundidad: usize, hallados: &mut Vec<PathBuf>) {
+    if carpeta.join("resumen.json").is_file() && !hallados.iter().any(|h| h == carpeta) {
+        hallados.push(carpeta.to_path_buf());
+    }
+    if profundidad == 0 {
+        return;
+    }
+    let mut hijas: Vec<PathBuf> = std::fs::read_dir(carpeta)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+        .filter(|e| !es_salida(&e.file_name().to_string_lossy()))
+        .map(|e| e.path())
+        .collect();
+    hijas.sort();
+    for hija in hijas {
+        buscar_lotes(&hija, profundidad - 1, hallados);
+    }
+}
+
+/// Como `buscar_archivos` (rglob de `resumen.json`) de Python: una carpeta que contiene varios lotes se expande a
+/// todos ellos, sin carpetas de resultados de Meta 4 ni repeticiones. Una carpeta sin ningún lote es un error.
+pub fn expandir_lotes(carpetas: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
+    let mut lotes = Vec::new();
+    for carpeta in carpetas {
+        let antes = lotes.len();
+        let mut hallados = Vec::new();
+        buscar_lotes(carpeta, 8, &mut hallados);
+        for h in hallados {
+            if !lotes.contains(&h) {
+                lotes.push(h);
+            }
+        }
+        if lotes.len() == antes && !carpeta.join("resumen.json").is_file() {
+            return Err(format!("Esta carpeta no contiene un lote de Captura (resumen.json): {}", carpeta.display()));
+        }
+    }
+    Ok(lotes)
+}
+
+/// Día local más reciente con bitácoras leídas en los lotes: propone la fecha de corte (`fecha_lectura` de Python).
+pub fn fecha_lectura(carpetas: &[PathBuf]) -> Option<NaiveDate> {
+    let lotes = expandir_lotes(carpetas).ok()?;
+    lotes
+        .iter()
+        .filter_map(|c| Resumen::leer(c).ok())
+        .flat_map(|r| r.lecturas.into_iter().filter(|l| l.tipo == "bitacora").map(|l| l.capturada))
+        .filter_map(|c| chrono::DateTime::parse_from_rfc3339(&c).ok().map(|f| f.with_timezone(&chrono::Local).date_naive()))
+        .max()
+}
+
+/// Fila del listado, ya leída y verificada.
+struct FilaLeida {
+    archivo: String,
+    pagina: usize,
+    columnas: Vec<(String, Celda)>,
+    rit: String,
+    rut: String,
+    nombre: String,
+    programa: String,
+    tribunal: Option<&'static str>,
+}
+
+/// Consulta de Seguimiento de Espera o Cumplimiento de FAE o Residencia de un lote.
+struct ConsultaLeida {
+    lote: usize,
+    numero: usize,
+    codigo: String,
+    lista: &'static str,
+    categoria: &'static str,
+    nombre: String,
+    vacia: bool,
+    evidencia: Option<String>,
+    paginas_xls: Vec<(String, usize)>,
+    filas: Vec<FilaLeida>,
+    /// Tribunal de la selección, derivado de las filas (o de otra consulta del mismo código).
+    tribunal: Option<&'static str>,
+}
+
+struct LoteLeido {
+    carpeta: PathBuf,
+    etiqueta: String,
+    resumen: Resumen,
+}
+
+/// Lee los lotes y las filas de sus consultas de Meta 4; asigna a cada consulta el tribunal de su selección.
+/// `Resumen` solo guarda el código del tribunal: el nombre se toma del único tribunal que nombran las filas de las
+/// consultas con ese código. Un código cuyas consultas no tienen registros queda sin tribunal.
+fn leer_lotes(carpetas: &[PathBuf]) -> Result<(Vec<LoteLeido>, Vec<ConsultaLeida>), String> {
     if carpetas.is_empty() {
         return Err("Agrega al menos un lote de registros.".into());
     }
-    let tribunales_elegidos = normalizar_tribunales(elegidos)?;
-    let mut m = Meta4 {
-        corte,
-        emision,
-        tribunales: tribunales_elegidos,
-        registros: Vec::new(),
-        observaciones: Vec::new(),
-        lecturas: Vec::new(),
-        sin_bitacoras: Vec::new(),
-        filtros: Vec::new(),
-        lotes: Vec::new(),
-        avisos: Vec::new(),
-    };
-    let (inicio, fin) = periodo(corte);
-    let mut consultas_vistas: HashMap<(String, String, String), String> = HashMap::new();
-    let mut exportadas: BTreeSet<String> = BTreeSet::new();
-    for carpeta in carpetas {
-        let resumen = Resumen::leer(carpeta)?;
+    let mut lotes = Vec::new();
+    let mut consultas = Vec::new();
+    for carpeta in expandir_lotes(carpetas)? {
+        let resumen = Resumen::leer(&carpeta)?;
         let etiqueta = carpeta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        m.lotes.push(etiqueta.clone());
-        if resumen.lote.fechas.is_some() {
-            m.filtros.push(format!("{etiqueta}: filtro de fechas"));
-        }
-        if resumen.lote.conservar_filtros {
-            m.filtros.push(format!("{etiqueta}: filtros del formulario"));
-        }
-        let mut lecturas: HashMap<String, Result<serde_json::Value, String>> = HashMap::new();
-        let mut capturadas: HashMap<String, String> = HashMap::new();
-        for r in resumen.lecturas.iter().filter(|r| r.tipo == "bitacora") {
-            lecturas.insert(r.clave.clone(), recoleccion::leer(carpeta, r));
-            capturadas.insert(r.clave.clone(), r.capturada.clone());
-        }
-        // Captura guarda los vínculos del listado en todo lote de Seguimiento (como el Descargador); sin lectura de
-        // bitácoras pedida, la consulta sigue contando como «sin bitácoras leídas».
-        let paginas: &[recoleccion::Pagina] = if resumen.lote.lecturas.bitacoras { &resumen.paginas_lectura } else { &[] };
-        let mut todos: Vec<Vinculo> = paginas.iter().flat_map(|p| p.vinculos.clone()).collect();
-        vinculos::descartar_ambiguos(&mut todos);
-        let mut indice: HashMap<(usize, [String; 4]), Vec<Vinculo>> = HashMap::new();
-        let mut siguiente = todos.into_iter();
-        for pagina in paginas {
-            for _ in &pagina.vinculos {
-                let v = siguiente.next().expect("vínculo");
-                indice.entry((pagina.consulta, v.clave())).or_default().push(v);
-            }
+        if resumen.estado != "VALIDADA" {
+            return Err(format!(
+                "La descarga de registros está incompleta («{etiqueta}», estado {}). Complétala con «Retomar lote» en Captura antes de generar Meta 4.",
+                resumen.estado
+            ));
         }
         for (numero, seleccion) in resumen.lote.consultas.iter().enumerate() {
             let (Some(etapa), Some(categoria_consulta)) = (Etapa::desde(&seleccion.tab), modalidad(&seleccion.modality)) else {
@@ -258,160 +341,386 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
             if !resumen.terminadas.contains(&numero) && !resumen.vacias.contains(&numero) {
                 return Err(format!("El lote «{etiqueta}» está incompleto: falta la consulta {nombre_consulta}. Retómalo en Captura."));
             }
-            let clave = (seleccion.tribunal.clone(), lista.to_string(), seleccion.modality.clone());
-            if let Some(previo) = consultas_vistas.insert(clave, etiqueta.clone()) {
-                return Err(format!(
-                    "La consulta {nombre_consulta} está en dos lotes («{previo}» y «{etiqueta}»). Quita uno para no duplicar registros."
-                ));
-            }
-            if seleccion.report.as_deref().is_some_and(|r| !r.is_empty() && r != "0") {
-                m.filtros.push(format!("{etiqueta}: filtro de vencimiento en {nombre_consulta}"));
-            }
-            let mut filas_consulta = 0usize;
-            let mut tribunal_consulta = String::new();
+            let mut c = ConsultaLeida {
+                lote: lotes.len(),
+                numero,
+                codigo: seleccion.tribunal.clone(),
+                lista,
+                categoria: categoria_consulta,
+                nombre: nombre_consulta,
+                vacia: resumen.vacias.contains(&numero),
+                evidencia: resumen.archivos.iter().find(|a| a.consulta == numero && a.nombre.ends_with(".pdf")).map(|a| a.nombre.clone()),
+                paginas_xls: Vec::new(),
+                filas: Vec::new(),
+                tribunal: None,
+            };
             for archivo in resumen.archivos.iter().filter(|a| a.consulta == numero && a.nombre.ends_with(".xls")) {
-                let datos = std::fs::read(ruta_archivo(carpeta, &archivo.nombre)?)
+                let datos = std::fs::read(ruta_archivo(&carpeta, &archivo.nombre)?)
                     .map_err(|_| format!("Falta una descarga del lote «{etiqueta}»."))?;
                 if huella(&datos) != archivo.sha256 {
                     return Err(format!("Una descarga del lote «{etiqueta}» cambió desde su verificación."));
                 }
                 let libro = flow_tabular::leer_bytes(&archivo.nombre, datos)?;
                 let tabla = flow_tabular::leer_tabla(&libro, Some(etapa), None)?;
+                c.paginas_xls.push((archivo.nombre.clone(), tabla.filas.len()));
                 for fila in &tabla.filas {
-                    filas_consulta += 1;
-                    let columnas: Vec<(String, Celda)> = tabla
-                        .cabeceras
-                        .iter()
-                        .cloned()
-                        .zip(fila.celdas.iter().cloned())
-                        .filter(|(t, _)| !t.trim().is_empty())
-                        .collect();
-                    let mut r = Registro4 {
-                        lista,
-                        categoria: categoria(&fila.registro.texto("programa")),
-                        tribunal: tribunal(&fila.registro.texto("tribunal")),
-                        columnas,
+                    c.filas.push(FilaLeida {
                         archivo: archivo.nombre.clone(),
-                        lote: etiqueta.clone(),
-                        fecha_obs: None,
-                        etapa_ultima: String::new(),
-                        control: String::new(),
-                        alerta: String::new(),
-                    };
-                    if tribunal_consulta.is_empty() {
-                        tribunal_consulta = r.tribunal_o_sin().to_string();
-                    }
-                    let identidad = vinculos::identidad(
-                        &fila.registro.texto("rit"),
-                        &fila.registro.texto("rut"),
-                        &fila.registro.texto("nombre"),
-                        &fila.registro.texto("programa"),
-                    );
-                    let candidatos: Vec<&Vinculo> = indice
-                        .get(&(numero, identidad))
-                        .map(|v| v.iter().filter(|v| v.tribunal == seleccion.tribunal && v.bitacora_verificada).collect())
-                        .unwrap_or_default();
-                    let remotos: BTreeSet<(&str, &str, &str)> =
-                        candidatos.iter().map(|v| (v.causa.as_str(), v.ingreso.as_str(), v.etapa.as_str())).collect();
-                    r.control = match remotos.len() {
-                        0 => SIN_BITACORA.to_string(),
-                        1 => {
-                            let v = candidatos[0];
-                            let clave = recoleccion::clave("bitacora", v);
-                            let (control, datos) = match lecturas.get(&clave) {
-                                None => (NO_COMPLETADA.to_string(), None),
-                                Some(Err(_)) => (NO_VERIFICABLE.to_string(), None),
-                                Some(Ok(lectura)) => {
-                                    let datos = &lectura["datos"];
-                                    let rit_visible = datos["rit"].as_str().unwrap_or("");
-                                    let leida = chrono::DateTime::parse_from_rfc3339(capturadas.get(&clave).map(String::as_str).unwrap_or(""))
-                                        .map(|f| f.with_timezone(&chrono::Local).date_naive())
-                                        .ok();
-                                    if !rit_visible.is_empty() && norma(rit_visible) != norma(&fila.registro.texto("rit")) {
-                                        (IDENTIDAD_VISIBLE.to_string(), None)
-                                    } else if leida.is_none_or(|d| d < corte) {
-                                        (LEIDA_ANTES.to_string(), None)
-                                    } else if !matches!(
-                                        (datos["desde"].as_str().and_then(|s|s.parse::<NaiveDate>().ok()),
-                                         datos["hasta"].as_str().and_then(|s|s.parse::<NaiveDate>().ok())),
-                                        (Some(desde),Some(hasta)) if desde<=inicio&&hasta>=fin
-                                    ) {
-                                        (PERIODO_INCOMPLETO.to_string(), None)
-                                    } else {
-                                        let persona = datos["persona"].as_str().unwrap_or("");
-                                        let aviso = (!persona.is_empty() && !nombres_compatibles(persona, &fila.registro.texto("nombre")))
-                                            .then_some(NOMBRE_VISIBLE);
-                                        (aviso.unwrap_or("OK").to_string(), Some(datos))
-                                    }
-                                }
-                            };
-                            let mut final_control = control.clone();
-                            if let Some(datos) = datos {
-                                let mut entradas = Vec::new();
-                                for e in datos["entries"].as_array().into_iter().flatten() {
-                                    let fecha = momento(e["fecha"].as_str().unwrap_or(""))
-                                        .ok_or(format!("Fecha de bitácora no reconocida en el lote «{etiqueta}»."))?;
-                                    let etapa_texto = e["etapa"].as_str().unwrap_or("").to_string();
-                                    if inicio <= fecha.date() && fecha.date() <= fin && exportadas.insert(format!("{clave}|{}|{fecha}", e["entry_id"])) {
-                                        m.observaciones.push(ObservacionMes {
-                                            tribunal: r.tribunal_o_sin().to_string(),
-                                            rit: fila.registro.texto("rit"),
-                                            rut: fila.registro.texto("rut"),
-                                            nombre: fila.registro.texto("nombre"),
-                                            programa: fila.registro.texto("programa"),
-                                            causa: v.causa.clone(),
-                                            ingreso: v.ingreso.clone(),
-                                            fecha,
-                                            etapa: etapa_texto.clone(),
-                                            tipo: e["tipo"].as_str().unwrap_or("").to_string(),
-                                            texto: e["texto"].as_str().unwrap_or("").to_string(),
-                                        });
-                                    }
-                                    entradas.push((fecha, etapa_texto));
-                                }
-                                let (dia, etapa_ultima, resultado) = ultima(&entradas, corte);
-                                r.fecha_obs = dia;
-                                r.etapa_ultima = etapa_ultima.to_string();
-                                // El aviso de nombre visible se conserva junto al resultado: la fila queda en amarillo.
-                                final_control = if control == "OK" { resultado.to_string() } else { format!("{resultado} · {control}") };
-                            }
-                            m.lecturas.push(Lectura {
-                                tribunal: r.tribunal_o_sin().to_string(),
-                                rit: fila.registro.texto("rit"),
-                                nombre: fila.registro.texto("nombre"),
-                                programa: fila.registro.texto("programa"),
-                                causa: v.causa.clone(),
-                                ingreso: v.ingreso.clone(),
-                                control: control.clone(),
-                            });
-                            final_control
-                        }
-                        _ => AMBIGUA.to_string(),
-                    };
-                    if r.lista == "Cumplimiento" && r.etapa_ultima == "Espera" {
-                        r.alerta = ALERTA.to_string();
-                    }
-                    m.registros.push(r);
+                        pagina: archivo.pagina,
+                        columnas: tabla
+                            .cabeceras
+                            .iter()
+                            .cloned()
+                            .zip(fila.celdas.iter().cloned())
+                            .filter(|(t, _)| !t.trim().is_empty())
+                            .collect(),
+                        rit: fila.registro.texto("rit"),
+                        rut: fila.registro.texto("rut"),
+                        nombre: fila.registro.texto("nombre"),
+                        programa: fila.registro.texto("programa"),
+                        tribunal: tribunal(&fila.registro.texto("tribunal")),
+                    });
                 }
             }
-            if filas_consulta > 0 && !paginas.iter().any(|p| p.consulta == numero) {
-                m.sin_bitacoras.push((format!("{etiqueta}: {nombre_consulta}"), tribunal_consulta));
-            }
+            let nombres: BTreeSet<&'static str> = c.filas.iter().filter_map(|f| f.tribunal).collect();
+            c.tribunal = (nombres.len() == 1).then(|| *nombres.iter().next().unwrap());
+            consultas.push(c);
+        }
+        lotes.push(LoteLeido { carpeta, etiqueta, resumen });
+    }
+    let mut por_codigo: HashMap<String, BTreeSet<&'static str>> = HashMap::new();
+    for c in &consultas {
+        if let Some(t) = c.tribunal {
+            por_codigo.entry(c.codigo.clone()).or_default().insert(t);
         }
     }
-    if m.registros.is_empty() {
+    for c in consultas.iter_mut().filter(|c| c.tribunal.is_none()) {
+        c.tribunal = por_codigo.get(&c.codigo).filter(|s| s.len() == 1).and_then(|s| s.iter().next().copied());
+    }
+    Ok((lotes, consultas))
+}
+
+/// Tribunales de Meta 4 presentes en los lotes (con registros o con una consulta sin registros), en el orden oficial.
+pub fn tribunales_en_lotes(carpetas: &[PathBuf]) -> Result<Vec<&'static str>, String> {
+    let (_, consultas) = leer_lotes(carpetas)?;
+    let presentes: BTreeSet<&'static str> =
+        consultas.iter().flat_map(|c| c.filas.iter().filter_map(|f| f.tribunal).chain(c.tribunal)).collect();
+    Ok(tribunales::TRIBUNALES.into_iter().filter(|t| presentes.contains(t)).collect())
+}
+
+/// Bitácora de un vínculo del listado, con su control (independiente de la fila, como en `_leer_bitacoras` de Python).
+struct Bitacora {
+    consulta: usize,
+    lectura: Lectura,
+    control: String,
+    /// Observaciones comprobadas: (fecha, etapa, tipo, texto, id). Vacías si la lectura no es utilizable.
+    entradas: Vec<(NaiveDateTime, String, String, String, String)>,
+}
+
+/// Controles con los que la bitácora se exporta a «Observaciones del mes» (Python exporta toda bitácora leída).
+fn exporta_observaciones(control: &str) -> bool {
+    [OK, NOMBRE_VISIBLE, LEIDA_ANTES, IDENTIDAD_VISIBLE].contains(&control)
+}
+const OK: &str = "OK";
+
+fn controlar_bitacora(
+    carpeta: &Path,
+    resumen: &Resumen,
+    pagina: &recoleccion::Pagina,
+    v: &Vinculo,
+    tribunal_consulta: &str,
+    corte: NaiveDate,
+) -> Bitacora {
+    let (inicio, fin) = periodo(corte);
+    let clave = recoleccion::clave("bitacora", v);
+    let referencia = resumen.lecturas.iter().find(|r| r.tipo == "bitacora" && r.clave == clave);
+    let fallida = format!("Consulta {}, página {}, fila {}: bitacora pendiente.", pagina.consulta + 1, pagina.numero, v.fila);
+    let mut entradas = Vec::new();
+    let (lectura, control) = if !v.bitacora_verificada {
+        ("SIN_VINCULO", NO_COMPLETADA.to_string())
+    } else {
+        match referencia {
+            None if resumen.avisos.iter().any(|a| a.starts_with(&fallida)) => ("FALLIDA", NO_COMPLETADA.to_string()),
+            None => ("PENDIENTE", NO_COMPLETADA.to_string()),
+            Some(r) => match recoleccion::leer(carpeta, r) {
+                Err(_) => ("LEIDA", NO_VERIFICABLE.to_string()),
+                Ok(valor) => {
+                    let datos = &valor["datos"];
+                    // Una fecha ilegible deja esta bitácora como no verificable; Meta 4 sigue con las demás.
+                    let leidas: Option<Vec<_>> = datos["entries"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .map(|e| {
+                            let texto = |k: &str| e[k].as_str().unwrap_or("").to_string();
+                            Some((momento(e["fecha"].as_str()?)?, texto("etapa"), texto("tipo"), texto("texto"), e["entry_id"].to_string()))
+                        })
+                        .collect();
+                    match leidas {
+                        None => ("LEIDA", NO_VERIFICABLE.to_string()),
+                        Some(todas) => {
+                            let leida = chrono::DateTime::parse_from_rfc3339(&r.capturada)
+                                .map(|f| f.with_timezone(&chrono::Local).date_naive())
+                                .ok();
+                            let dia = |k: &str| datos[k].as_str().and_then(|s| s.parse::<NaiveDate>().ok());
+                            let persona = datos["persona"].as_str().unwrap_or("");
+                            // Como `control_identidad`: un RIT visible distinto o ausente bloquea; un nombre distinto o
+                            // ausente solo pide revisión.
+                            let control = if norma(datos["rit"].as_str().unwrap_or("")) != norma(&v.rit) {
+                                IDENTIDAD_VISIBLE
+                            } else if leida.is_none_or(|d| d < corte) {
+                                LEIDA_ANTES
+                            } else if !matches!((dia("desde"), dia("hasta")), (Some(d), Some(h)) if d <= inicio && h >= fin) {
+                                PERIODO_INCOMPLETO
+                            } else if !nombres_compatibles(persona, &v.nombre) {
+                                NOMBRE_VISIBLE
+                            } else {
+                                OK
+                            };
+                            if exporta_observaciones(control) {
+                                entradas = todas;
+                            }
+                            ("LEIDA", control.to_string())
+                        }
+                    }
+                }
+            },
+        }
+    };
+    Bitacora {
+        consulta: pagina.consulta,
+        lectura: Lectura {
+            tribunal: tribunal_consulta.to_string(),
+            rit: v.rit.clone(),
+            rut: v.rut.clone(),
+            nombre: v.nombre.clone(),
+            programa: v.programa.clone(),
+            causa: v.causa.clone(),
+            ingreso: v.ingreso.clone(),
+            lectura: lectura.to_string(),
+            control: control.clone(),
+        },
+        control,
+        entradas,
+    }
+}
+
+/// Lee uno o varios lotes de Flow y calcula Meta 4. No escribe nada.
+pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, elegidos: &[String]) -> Result<Meta4, String> {
+    let tribunales_elegidos = normalizar_tribunales(elegidos)?;
+    let (lotes, consultas) = leer_lotes(carpetas)?;
+    let mut m = Meta4 {
+        corte,
+        emision,
+        tribunales: tribunales_elegidos,
+        registros: Vec::new(),
+        observaciones: Vec::new(),
+        lecturas: Vec::new(),
+        sin_bitacoras: Vec::new(),
+        filtros: Vec::new(),
+        lotes: Vec::new(),
+        avisos: Vec::new(),
+        fuentes: Vec::new(),
+        hojas_previas: Vec::new(),
+    };
+    let (inicio, fin) = periodo(corte);
+    // Como Python (`_lote`): la misma consulta solo se rechaza si aparece en dos lotes distintos.
+    let mut consultas_vistas: HashMap<(String, String, String), (usize, String)> = HashMap::new();
+    for (n, lote) in lotes.iter().enumerate() {
+        let (carpeta, etiqueta, resumen) = (&lote.carpeta, &lote.etiqueta, &lote.resumen);
+        m.lotes.push(etiqueta.clone());
+        if resumen.lote.fechas.is_some() {
+            m.filtros.push(format!("{etiqueta}: filtro de fechas"));
+        }
+        if resumen.lote.conservar_filtros {
+            m.filtros.push(format!("{etiqueta}: filtros del formulario"));
+        }
+        let del_lote: Vec<&ConsultaLeida> = consultas.iter().filter(|c| c.lote == n).collect();
+        // Captura guarda los vínculos del listado en todo lote de Seguimiento (como el Descargador); sin lectura de
+        // bitácoras pedida, la consulta sigue contando como «sin bitácoras leídas».
+        let paginas: &[recoleccion::Pagina] = if resumen.lote.lecturas.bitacoras { &resumen.paginas_lectura } else { &[] };
+        let mut todos: Vec<Vinculo> = paginas.iter().flat_map(|p| p.vinculos.clone()).collect();
+        vinculos::descartar_ambiguos(&mut todos);
+        let mut indice: HashMap<(usize, [String; 4]), Vec<Vinculo>> = HashMap::new();
+        let mut bitacoras: HashMap<String, Bitacora> = HashMap::new();
+        let mut siguiente = todos.into_iter();
+        for pagina in paginas {
+            let consulta = del_lote.iter().find(|c| c.numero == pagina.consulta);
+            for _ in &pagina.vinculos {
+                let v = siguiente.next().expect("vínculo");
+                if let Some(c) = consulta {
+                    if let std::collections::hash_map::Entry::Vacant(hueco) = bitacoras.entry(recoleccion::clave("bitacora", &v)) {
+                        let tribunal_consulta = c.tribunal.unwrap_or(SIN_TRIBUNAL);
+                        let b = controlar_bitacora(carpeta, resumen, pagina, &v, tribunal_consulta, corte);
+                        for (fecha, etapa, tipo, texto, _) in b.entradas.iter().filter(|e| inicio <= e.0.date() && e.0.date() <= fin) {
+                            m.observaciones.push(ObservacionMes {
+                                tribunal: tribunal_consulta.to_string(),
+                                rit: v.rit.clone(),
+                                rut: v.rut.clone(),
+                                nombre: v.nombre.clone(),
+                                programa: v.programa.clone(),
+                                causa: v.causa.clone(),
+                                ingreso: v.ingreso.clone(),
+                                fecha: *fecha,
+                                etapa: etapa.clone(),
+                                tipo: tipo.clone(),
+                                texto: texto.clone(),
+                            });
+                        }
+                        m.lecturas.push(b.lectura.clone());
+                        hueco.insert(b);
+                    }
+                }
+                indice.entry((pagina.consulta, v.clave())).or_default().push(v);
+            }
+        }
+        // Bitácoras sin leer (fallidas o pendientes) y páginas sin vínculos: solo las de bitácora, no historia ni calendario.
+        let no_leidas: Vec<&Bitacora> =
+            bitacoras.values().filter(|b| matches!(b.lectura.lectura.as_str(), "FALLIDA" | "PENDIENTE")).collect();
+        let mut pendientes: BTreeSet<usize> = no_leidas.iter().map(|b| b.consulta).collect();
+        let mut listados_pendientes = 0usize;
+        for c in &del_lote {
+            let seleccion = &resumen.lote.consultas[c.numero];
+            let clave = (seleccion.tribunal.clone(), c.lista.to_string(), seleccion.modality.clone());
+            // Se compara el lote, no su nombre: dos carpetas homónimas en lugares distintos son dos lotes.
+            if let Some((indice_previo, previo)) = consultas_vistas.insert(clave, (n, etiqueta.clone())) {
+                if indice_previo != n {
+                    return Err(format!(
+                        "La consulta {} está en dos lotes («{previo}» y «{etiqueta}»). Quita uno para no duplicar registros.",
+                        c.nombre
+                    ));
+                }
+            }
+            if seleccion.report.as_deref().is_some_and(|r| !r.is_empty() && r != "0") {
+                m.filtros.push(format!("{etiqueta}: filtro de vencimiento en {}", c.nombre));
+            }
+            let seleccionado = |t: Option<&'static str>| m.tribunales.as_ref().is_none_or(|e| t.is_some_and(|t| e.contains(&t)));
+            for (archivo, filas) in &c.paginas_xls {
+                m.fuentes.push(Fuente {
+                    archivo: archivo.clone(),
+                    lote: etiqueta.clone(),
+                    tipo: "EXCEL",
+                    tribunal: c.tribunal,
+                    categoria: c.categoria,
+                    lista: c.lista,
+                    registros: *filas,
+                    resultado: "PROCESADO",
+                    seleccionado: seleccionado(c.tribunal),
+                });
+            }
+            if c.vacia {
+                m.fuentes.push(Fuente {
+                    archivo: c.evidencia.clone().unwrap_or_default(),
+                    lote: etiqueta.clone(),
+                    tipo: if c.evidencia.is_some() { "PDF" } else { "SIN ARCHIVO" },
+                    tribunal: c.tribunal,
+                    categoria: c.categoria,
+                    lista: c.lista,
+                    registros: 0,
+                    resultado: if c.tribunal.is_some() { "SIN REGISTROS" } else { "NO CLASIFICADO" },
+                    seleccionado: c.tribunal.is_some() && seleccionado(c.tribunal),
+                });
+            }
+            // Páginas cuyo listado no entregó vínculos con la lectura de bitácoras pedida: sus filas no se leyeron.
+            let listado_pendiente = |pagina: usize| {
+                resumen.lote.lecturas.bitacoras
+                    && resumen
+                        .avisos
+                        .iter()
+                        .any(|a| a.starts_with(&format!("Consulta {}, página {pagina}: vínculos del listado pendientes", c.numero + 1)))
+            };
+            for fila in &c.filas {
+                let mut r = Registro4 {
+                    lista: c.lista,
+                    categoria: categoria(&fila.programa),
+                    tribunal: fila.tribunal,
+                    columnas: fila.columnas.clone(),
+                    archivo: fila.archivo.clone(),
+                    lote: etiqueta.clone(),
+                    fecha_obs: None,
+                    etapa_ultima: String::new(),
+                    control: String::new(),
+                    alerta: String::new(),
+                };
+                let identidad = vinculos::identidad(&fila.rit, &fila.rut, &fila.nombre, &fila.programa);
+                let candidatos: Vec<&Vinculo> = indice
+                    .get(&(c.numero, identidad))
+                    .map(|v| v.iter().filter(|v| v.tribunal == seleccion.tribunal && v.bitacora_verificada).collect())
+                    .unwrap_or_default();
+                let remotos: BTreeSet<(&str, &str, &str)> =
+                    candidatos.iter().map(|v| (v.causa.as_str(), v.ingreso.as_str(), v.etapa.as_str())).collect();
+                r.control = match remotos.len() {
+                    0 if listado_pendiente(fila.pagina) => NO_COMPLETADA.to_string(),
+                    0 => SIN_BITACORA.to_string(),
+                    1 => match bitacoras.get(&recoleccion::clave("bitacora", candidatos[0])) {
+                        None => NO_COMPLETADA.to_string(),
+                        Some(b) if b.control == OK || b.control == NOMBRE_VISIBLE => {
+                            let etapas: Vec<(NaiveDateTime, String)> = b.entradas.iter().map(|e| (e.0, e.1.clone())).collect();
+                            let (dia, etapa_ultima, resultado) = ultima(&etapas, corte);
+                            r.fecha_obs = dia;
+                            r.etapa_ultima = etapa_ultima.to_string();
+                            // El aviso de nombre visible se conserva junto al resultado: la fila queda en amarillo.
+                            if b.control == OK {
+                                resultado.to_string()
+                            } else {
+                                format!("{resultado} · {}", b.control)
+                            }
+                        }
+                        Some(b) => b.control.clone(),
+                    },
+                    _ => AMBIGUA.to_string(),
+                };
+                if r.lista == "Cumplimiento" && r.etapa_ultima == "Espera" {
+                    r.alerta = ALERTA.to_string();
+                }
+                m.registros.push(r);
+            }
+            let listado_sin_leer = c.filas.iter().any(|f| listado_pendiente(f.pagina));
+            if listado_sin_leer {
+                pendientes.insert(c.numero);
+                listados_pendientes +=
+                    c.filas.iter().map(|f| f.pagina).collect::<BTreeSet<_>>().into_iter().filter(|p| listado_pendiente(*p)).count();
+            }
+            if !c.filas.is_empty() && !listado_sin_leer && !paginas.iter().any(|p| p.consulta == c.numero) {
+                m.sin_bitacoras.push((format!("{etiqueta}: {}", c.nombre), c.tribunal.unwrap_or(SIN_TRIBUNAL).to_string()));
+            }
+        }
+        if !pendientes.is_empty() {
+            let consultas: Vec<String> = pendientes.iter().map(|i| (i + 1).to_string()).collect();
+            let listados = if listados_pendientes > 0 {
+                format!(" y {listados_pendientes} páginas del listado quedaron sin vínculos")
+            } else {
+                String::new()
+            };
+            m.avisos.push(format!(
+                "Lote «{etiqueta}»: {} bitácoras no se pudieron leer{listados} (consultas {}); sus registros quedan como \
+                 «{NO_COMPLETADA}». Retoma el lote en Captura para reintentarlas.",
+                no_leidas.len(),
+                consultas.join(", ")
+            ));
+        }
+    }
+    // Como Python: sin registros ni consultas sin registros reconocidas no hay Meta 4; una consulta vacía es evidencia.
+    if m.registros.is_empty() && !consultas.iter().any(|c| c.vacia) {
         return Err("Los lotes no traen registros de Espera o Cumplimiento de FAE o Residencia.".into());
     }
     if let Some(elegidos) = &m.tribunales {
-        for t in elegidos {
-            if !m.registros.iter().any(|r| r.tribunal == Some(*t)) {
-                return Err(format!("El tribunal {t} no tiene registros en los lotes agregados."));
-            }
+        let con_candidatos =
+            m.registros.iter().filter_map(|r| r.tribunal).chain(consultas.iter().filter(|c| c.vacia).filter_map(|c| c.tribunal));
+        if !con_candidatos.into_iter().any(|t| elegidos.contains(&t)) {
+            return Err("Los lotes no contienen registros de los tribunales elegidos.".into());
         }
         m.registros.retain(|r| r.tribunal.is_some_and(|t| elegidos.contains(&t)));
         m.observaciones.retain(|o| elegidos.iter().any(|t| *t == o.tribunal));
         m.lecturas.retain(|l| elegidos.iter().any(|t| *t == l.tribunal));
         m.sin_bitacoras.retain(|(_, t)| elegidos.iter().any(|e| e == t));
+    }
+    let sin_atribuir = consultas.iter().filter(|c| c.vacia && c.tribunal.is_none()).count();
+    if sin_atribuir > 0 {
+        m.avisos.push(format!(
+            "{sin_atribuir} consultas sin registros no se pudieron atribuir a un tribunal (el lote guarda solo su código); \
+             quedan como NO CLASIFICADO en el inventario."
+        ));
     }
     let fuera = m.registros.iter().filter(|r| r.categoria.is_none() || r.tribunal.is_none()).count();
     if fuera > 0 {

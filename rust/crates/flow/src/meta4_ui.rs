@@ -1,13 +1,15 @@
 //! Pestaña Meta 4: lee lotes de captura locales y genera la planilla y sus consolidados. No se conecta a nada.
 use eframe::egui::{self, Color32, RichText};
 use flow_dominio::celda::fecha_de_texto;
-use flow_meta4::{calcular, regenerar, salida, tribunales::TRIBUNALES};
+use flow_meta4::{calcular, fecha_lectura, regenerar, salida, tribunales::TRIBUNALES, tribunales_en_lotes};
 use std::path::PathBuf;
 
 pub struct Meta4 {
     lotes: Vec<PathBuf>,
     corte: String,
     elegidos: Vec<bool>,
+    /// Tribunales presentes en los lotes agregados: solo esos se ofrecen (como `tribunales_disponibles` de Python).
+    disponibles: Vec<&'static str>,
     destino: Option<PathBuf>,
     mensaje: Option<(bool, String)>,
     avisos: Vec<String>,
@@ -21,6 +23,7 @@ impl Default for Meta4 {
             lotes: Vec::new(),
             corte: flow_tabular::libro::hoy().format("%d/%m/%Y").to_string(),
             elegidos: vec![false; TRIBUNALES.len()],
+            disponibles: Vec::new(),
             destino: None,
             mensaje: None,
             avisos: Vec::new(),
@@ -31,6 +34,31 @@ impl Default for Meta4 {
 }
 
 impl Meta4 {
+    /// Al cambiar los lotes: propone el corte según el día de lectura de sus bitácoras (`suggest_cutoff` de Python)
+    /// y deja elegir solo los tribunales presentes.
+    fn lotes_cambiados(&mut self) {
+        self.mensaje = None;
+        let hoy = flow_tabular::libro::hoy();
+        if let Some(dia) = fecha_lectura(&self.lotes).filter(|d| *d < hoy) {
+            self.corte = dia.format("%d/%m/%Y").to_string();
+            self.mensaje = Some((false, format!("Corte ajustado al día de lectura de las bitácoras: {}.", dia.format("%d-%m-%Y"))));
+        }
+        self.disponibles = if self.lotes.is_empty() {
+            Vec::new()
+        } else {
+            match tribunales_en_lotes(&self.lotes) {
+                Ok(t) => t,
+                Err(e) => {
+                    self.mensaje = Some((true, e));
+                    Vec::new()
+                }
+            }
+        };
+        for (t, marcado) in TRIBUNALES.iter().zip(self.elegidos.iter_mut()) {
+            *marcado &= self.disponibles.contains(t);
+        }
+    }
+
     fn generar(&mut self) {
         self.resultado = None;
         self.avisos.clear();
@@ -86,19 +114,24 @@ impl Meta4 {
         let Some(base) = self.destino.clone() else { return };
         self.avisos.clear();
         self.resultado = None;
-        let corte = regenerar::cargar(&archivo).map(|c| c.meta.corte);
-        let resultado = corte.and_then(|corte| {
+        let cargado = regenerar::cargar(&archivo).map(|c| (c.meta.corte, c.bitacoras.is_some()));
+        let resultado = cargado.and_then(|(corte, con_bitacoras)| {
             let mut destino = base.join(format!("META4 regenerado {}", corte.format("%Y-%m-%d")));
             let mut n = 2;
             while destino.exists() {
                 destino = base.join(format!("META4 regenerado {} ({n})", corte.format("%Y-%m-%d")));
                 n += 1;
             }
-            regenerar::ejecutar_con_plantilla(&archivo, &destino, self.plantilla.as_deref()).map(|_| destino)
+            regenerar::ejecutar_con_plantilla(&archivo, &destino, self.plantilla.as_deref()).map(|_| (destino, con_bitacoras))
         });
         match resultado {
-            Ok(destino) => {
-                self.mensaje = Some((false, "Meta 4 regenerado desde Registros.xlsx revisado. Se conservaron las bitácoras.".into()));
+            Ok((destino, con_bitacoras)) => {
+                let bitacoras = if con_bitacoras {
+                    "Se conservaron las bitácoras."
+                } else {
+                    "No había Bitacoras_del_mes.xlsx junto a Registros.xlsx: el resultado no la incluye."
+                };
+                self.mensaje = Some((false, format!("Meta 4 regenerado desde Registros.xlsx revisado. {bitacoras}")));
                 self.resultado = Some(destino);
             }
             Err(e) => self.mensaje = Some((true, e)),
@@ -109,16 +142,23 @@ impl Meta4 {
         ui.label("Genera la planilla Meta 4 con lo que ya capturó Flow: Espera y Cumplimiento de FAE y Residencia, con sus bitácoras.");
         ui.add_space(4.0);
         ui.label(RichText::new("Lotes de registros").strong());
+        ui.weak("Una carpeta con varios lotes (subcarpetas con resumen.json) los agrega todos.");
         ui.horizontal(|ui| {
             if ui.button("Agregar lote…").on_hover_text("La carpeta del lote, la que contiene resumen.json").clicked() {
+                let mut agregados = false;
                 for carpeta in rfd::FileDialog::new().set_title("Carpeta del lote capturado").pick_folders().unwrap_or_default() {
                     if !self.lotes.contains(&carpeta) {
                         self.lotes.push(carpeta);
+                        agregados = true;
                     }
+                }
+                if agregados {
+                    self.lotes_cambiados();
                 }
             }
             if !self.lotes.is_empty() && ui.button("Vaciar").clicked() {
                 self.lotes.clear();
+                self.lotes_cambiados();
             }
         });
         let mut quitar = None;
@@ -132,6 +172,7 @@ impl Meta4 {
         }
         if let Some(i) = quitar {
             self.lotes.remove(i);
+            self.lotes_cambiados();
         }
         ui.add_space(6.0);
         ui.horizontal(|ui| {
@@ -140,8 +181,13 @@ impl Meta4 {
         });
         ui.label(RichText::new("Tribunales (sin marcar ninguno, van todos)").strong());
         ui.horizontal_wrapped(|ui| {
+            if self.disponibles.is_empty() {
+                ui.weak("Agrega lotes para ver sus tribunales.");
+            }
             for (nombre, marcado) in TRIBUNALES.iter().zip(self.elegidos.iter_mut()) {
-                ui.checkbox(marcado, *nombre);
+                if self.disponibles.contains(nombre) {
+                    ui.checkbox(marcado, *nombre);
+                }
             }
         });
         ui.add_space(6.0);

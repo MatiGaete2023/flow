@@ -523,3 +523,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   ediciones y marcas (una sesión ilegible se aparta como `.json.ilegible`); filtro de modalidades como modalities.py;
   un tipo de correo fallido no anula los demás; nombres de archivo como `program_filename`; Outlook conserva la firma
   (HTMLBody, `Save()`, sin envío; ruta COM solo compilada, sin probar en Windows real).
+- 2026-11-16 · Meta 4, paridad con META4_Bitacoras: exige lotes VALIDADA; una lectura fallida o pendiente no
+  bloquea (fila «LECTURA NO COMPLETADA», aviso por lote, Control de lecturas por bitácora con RUT y LECTURA); la misma
+  consulta solo se rechaza en dos lotes distintos; solo hay error si ningún tribunal elegido tiene candidatos
+  (consultas vacías como SIN REGISTROS); Registros.xlsx con INVENTARIO_ARCHIVOS y MATRIZ_COBERTURA; Observaciones del
+  mes incluye LEIDA_ANTES e IDENTIDAD_VISIBLE; regenerar omite filas sin RIT y no exige Bitacoras_del_mes.xlsx; fecha
+  ilegible deja solo esa bitácora no verificable; textos >32767 se truncan; la UI propone el corte por día de lectura,
+  ofrece solo los tribunales presentes y expande carpetas con varios lotes. Pendiente: nombre del tribunal en el
+  Resumen de Captura. Suite completa: 204 pruebas, 0 fallos.

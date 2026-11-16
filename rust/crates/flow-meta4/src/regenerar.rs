@@ -13,7 +13,8 @@ use std::path::{Path, PathBuf};
 /// Estado comprobado del libro revisado y del reporte original; la bitácora se conserva intacta.
 pub struct Regeneracion {
     pub meta: Meta4,
-    pub bitacoras: PathBuf,
+    /// Bitacoras_del_mes.xlsx original; como en Python, es opcional: si no está, no se copia.
+    pub bitacoras: Option<PathBuf>,
     pub huella_registros: String,
 }
 
@@ -51,10 +52,8 @@ fn leer_hoja(hoja: &Hoja, lista: &'static str, esperadas: &[&str]) -> Result<Vec
     }
     let mut registros = Vec::new();
     for (i, fila) in hoja.filas.iter().enumerate().skip(1) {
-        if valor(fila, &cabeceras, "RIT").es_vacia() {
-            if fila.iter().any(|c| !c.es_vacia()) {
-                return Err(format!("La hoja {lista}, fila {} contiene datos pero no tiene RIT.", i + 1));
-            }
+        // Como `leer_registros_editados` de Python: una fila sin RIT se omite.
+        if valor(fila, &cabeceras, "RIT").texto().trim().is_empty() {
             continue;
         }
         let fecha = valor(fila, &cabeceras, "FECHA OBS.");
@@ -95,22 +94,24 @@ fn lecturas(bitacoras: &Path) -> Result<Vec<Lectura>, String> {
         .ok_or("Bitacoras_del_mes.xlsx no contiene Control de lecturas.")?;
     let encabezado = hoja.filas.first().ok_or("Control de lecturas está vacío.")?;
     let requeridas = ["TRIBUNAL", "RIT", "NOMBRE", "PROGRAMA", "CAUSA ID", "INGRESO ID", "CONTROL"];
+    let columna = |titulo: &str| encabezado.iter().position(|c| norma(&c.texto()) == norma(titulo));
     let mut indices = Vec::new();
     for titulo in requeridas {
-        indices.push(
-            encabezado.iter().position(|c| norma(&c.texto()) == norma(titulo)).ok_or(format!("Control de lecturas no tiene {titulo}."))?,
-        );
+        indices.push(columna(titulo).ok_or(format!("Control de lecturas no tiene {titulo}."))?);
     }
+    // RUT y LECTURA se agregaron después: un libro anterior sin ellas se sigue aceptando.
+    let opcionales = [columna("RUT"), columna("LECTURA")];
     let mut salida = Vec::new();
     for fila in hoja.filas.iter().skip(1) {
         if fila.iter().all(Celda::es_vacia) {
             continue;
         }
         let v: Vec<String> = indices.iter().map(|i| fila.get(*i).map(Celda::texto).unwrap_or_default()).collect();
+        let [rut, lectura] = opcionales.map(|i| i.and_then(|i| fila.get(i)).map(Celda::texto).unwrap_or_default());
         salida.push(Lectura {
-            tribunal: v[0].clone(), rit: v[1].clone(), nombre: v[2].clone(),
+            tribunal: v[0].clone(), rit: v[1].clone(), rut, nombre: v[2].clone(),
             programa: v[3].clone(), causa: v[4].clone(), ingreso: v[5].clone(),
-            control: v[6].clone(),
+            lectura, control: v[6].clone(),
         });
     }
     Ok(salida)
@@ -187,11 +188,22 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
             }
         }
     }
-    let bitacoras = carpeta.join("Bitacoras_del_mes.xlsx");
-    let controles = lecturas(&bitacoras)?;
-    if let Some(elegidos) = &tribunales {
-        validar_alcance_bitacoras(&bitacoras, elegidos)?;
-    }
+    let bitacoras = Some(carpeta.join("Bitacoras_del_mes.xlsx")).filter(|b| b.is_file());
+    let controles = match &bitacoras {
+        Some(b) => {
+            let controles = lecturas(b)?;
+            if let Some(elegidos) = &tribunales {
+                validar_alcance_bitacoras(b, elegidos)?;
+            }
+            controles
+        }
+        None => Vec::new(),
+    };
+    // Como Python, el resto del libro revisado se conserva: inventario y matriz de cobertura no se recalculan.
+    let hojas_previas: Vec<(String, Vec<Vec<Celda>>)> = ["INVENTARIO_ARCHIVOS", "MATRIZ_COBERTURA"]
+        .into_iter()
+        .filter_map(|nombre| libro.hojas.iter().find(|h| norma(&h.nombre) == norma(nombre)).map(|h| (nombre.to_string(), h.filas.clone())))
+        .collect();
     // Los reportes nuevos registran la asociación exacta consulta/tribunal.
     // Los anteriores solo guardaban la etiqueta: no se inventa una atribución.
     let sin_bitacoras: Vec<(String, String)> = if let Some(detalle) = previo["consultas_sin_bitacoras_detalle"].as_array() {
@@ -218,14 +230,18 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
     if previo.get("consultas_sin_bitacoras_detalle").is_none() && !sin_bitacoras.is_empty() {
         avisos.push("El reporte original no conserva el tribunal de cada consulta sin bitácoras: se muestran sin atribuir, sin inferir un tribunal.".into());
     }
-    avisos.push("Regenerado desde Registros.xlsx revisado; se preservó Bitacoras_del_mes.xlsx.".into());
+    avisos.push(if bitacoras.is_some() {
+        "Regenerado desde Registros.xlsx revisado; se preservó Bitacoras_del_mes.xlsx.".into()
+    } else {
+        "Regenerado desde Registros.xlsx revisado; no estaba Bitacoras_del_mes.xlsx junto a él y no se incluye.".into()
+    });
     let sin_clasificar = registros_revisados.iter().filter(|r| r.categoria.is_none() || r.tribunal.is_none()).count();
     if sin_clasificar > 0 {
         avisos.push(format!("{sin_clasificar} registros sin clasificación siguen fuera de la planilla."));
     }
     let meta = Meta4 {
         corte, emision, tribunales, registros: registros_revisados, observaciones: Vec::new(),
-        lecturas: controles, sin_bitacoras, filtros, lotes, avisos,
+        lecturas: controles, sin_bitacoras, filtros, lotes, avisos, fuentes: Vec::new(), hojas_previas,
     };
     Ok(Regeneracion { meta, bitacoras, huella_registros: libro.sha256 })
 }
@@ -237,6 +253,6 @@ pub fn ejecutar(registros: &Path, destino: &Path) -> Result<Vec<PathBuf>, String
 pub fn ejecutar_con_plantilla(registros: &Path, destino: &Path, plantilla: Option<&Path>) -> Result<Vec<PathBuf>, String> {
     let estado = cargar(registros)?;
     crate::salida::publicar_regenerado_con_plantilla(
-        &estado.meta, destino, &estado.bitacoras, &estado.huella_registros, plantilla
+        &estado.meta, destino, estado.bitacoras.as_deref(), &estado.huella_registros, plantilla
     )
 }

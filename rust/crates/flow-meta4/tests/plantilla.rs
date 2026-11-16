@@ -42,6 +42,7 @@ fn meta() -> Meta4 {
         }],
         observaciones: Vec::new(), lecturas: Vec::new(), sin_bitacoras: Vec::new(),
         filtros: Vec::new(), lotes: vec!["Lote ficticio".into()], avisos: Vec::new(),
+        fuentes: Vec::new(), hojas_previas: Vec::new(),
     }
 }
 fn plantilla(ruta: &Path, incompleta: bool) {
