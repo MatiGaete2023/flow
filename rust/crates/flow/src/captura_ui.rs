@@ -22,6 +22,8 @@ enum Evento {
     Avance(String),
     Fin(PathBuf, Box<Result<Resumen, String>>),
     Paquete(Result<String, String>),
+    /// «Consultar y crear paquete»: carpeta de destino (o del paquete retomado) y resultado.
+    Flujo(PathBuf, Box<Result<flow_trabajo::flujo::Resultado, String>>),
 }
 
 pub struct Captura {
@@ -43,6 +45,8 @@ pub struct Captura {
     hasta: String,
     filtros: bool,
     evidencia: bool,
+    /// Calendario de informes por vencer en el paquete (`informes_por_vencer`, solo con Cumplimiento).
+    informes_por_vencer: bool,
     lecturas: flow_captura::recoleccion::Opciones,
     receptor: Option<Receiver<Evento>>,
     /// Inicio de la carga de opciones en curso, para mostrar el tiempo y permitir cancelarla.
@@ -80,6 +84,7 @@ impl Default for Captura {
             hasta: chrono::Local::now().format("%d/%m/%Y").to_string(),
             filtros: false,
             evidencia: true,
+            informes_por_vencer: true,
             lecturas: Default::default(),
             receptor: None,
             cargando: None,
@@ -147,6 +152,21 @@ fn mensaje_paquete(destino: &std::path::Path, p: &flow_trabajo::exportar::Produc
     m
 }
 
+/// Fin de «Consultar y crear paquete», como `package_done` del Descargador.
+fn mensaje_flujo(r: &flow_trabajo::flujo::Resultado) -> String {
+    let mut m = format!("Paquete {}: {}. {}", if r.parcial { "PARCIAL" } else { "COMPLETO" }, r.paquete.display(), r.bitacoras);
+    for a in &r.avisos {
+        m.push(' ');
+        m.push_str(a);
+    }
+    if r.parcial {
+        m.push_str(" Puedes abrirlo así en el Asistente o usar «Retomar paquete…» para reintentar lo pendiente.");
+    } else {
+        m.push_str(" Ábrelo en Flow Asistente con «Abrir Excel o paquete…».");
+    }
+    m
+}
+
 fn marcas(ui: &mut egui::Ui, titulo: &str, opciones: &mut [(String, String, bool)]) {
     ui.label(egui::RichText::new(titulo).strong());
     ui.horizontal_wrapped(|ui| {
@@ -192,6 +212,26 @@ impl Captura {
                             self.mensaje = e;
                         }
                     }
+                }
+                Evento::Flujo(carpeta, r) => {
+                    self.receptor = None;
+                    self.mensaje = match *r {
+                        Ok(r) => mensaje_flujo(&r),
+                        Err(e) => {
+                            let raiz = if carpeta.join("respaldo").join(flow_trabajo::flujo::PROCESO).is_file() {
+                                Some(carpeta)
+                            } else {
+                                flow_trabajo::flujo::pendientes(&carpeta, 7).into_iter().next().map(|(c, _)| c)
+                            };
+                            match raiz {
+                                Some(c) => format!(
+                                    "{e} El avance quedó en {}: usa «Retomar paquete…» para continuar sin repetir lo ya hecho.",
+                                    c.display()
+                                ),
+                                None => e,
+                            }
+                        }
+                    };
                 }
                 Evento::Paquete(r) => {
                     self.receptor = None;
@@ -373,6 +413,52 @@ impl Captura {
         });
     }
 
+    fn preferencias(&self) -> flow_trabajo::flujo::Preferencias {
+        flow_trabajo::flujo::Preferencias {
+            leer_historia: self.lecturas.historia,
+            leer_calendarios: self.lecturas.calendario,
+            informes_por_vencer: self.informes_por_vencer,
+            meses_atras: self.lecturas.meses,
+            pdf_sin_registros: self.evidencia,
+            ..Default::default()
+        }
+    }
+
+    /// «Consultar y crear paquete» (con `lote`) o «Retomar paquete…» (sin él, `carpeta` es el paquete cortado).
+    fn iniciar_flujo(&mut self, lote: Option<Lote>, carpeta: PathBuf, ctx: &egui::Context) {
+        let (Some(puente), Some(catalogo)) = (self.puente.clone(), self.catalogo.clone()) else {
+            return;
+        };
+        let (tx, rx) = channel();
+        self.receptor = Some(rx);
+        self.cancelar = Arc::new(AtomicBool::new(false));
+        let cancelar = self.cancelar.clone();
+        let prefs = self.preferencias();
+        let ctx = ctx.clone();
+        self.listo = None;
+        self.mensaje = "Preparando el paquete: consultas, lecturas por ingreso, informes por vencer y ZIP…".into();
+        std::thread::spawn(move || {
+            let progreso = |m| {
+                let _ = tx.send(Evento::Avance(m));
+                ctx.request_repaint();
+            };
+            let sitfa = flow_trabajo::flujo::EnChrome {
+                conexion: puente.as_ref(),
+                catalogo: &catalogo,
+                cancelar: &cancelar,
+                progreso: &progreso,
+                informes: Default::default(),
+            };
+            let hoy = chrono::Local::now().date_naive();
+            let r = match &lote {
+                Some(l) => flow_trabajo::flujo::ejecutar(&sitfa, l, &carpeta, &prefs, hoy),
+                None => flow_trabajo::flujo::retomar(&sitfa, &carpeta, &prefs, hoy),
+            };
+            let _ = tx.send(Evento::Flujo(carpeta, Box::new(r)));
+            ctx.request_repaint();
+        });
+    }
+
     pub fn mostrar(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) -> Option<(PathBuf, Resumen)> {
         self.recibir();
         ui.heading("Captura desde SITFA");
@@ -456,6 +542,11 @@ impl Captura {
                     });
                     ui.horizontal(|ui| {ui.label("Período:");ui.add(egui::DragValue::new(&mut self.lecturas.meses).range(1..=4));ui.label("meses naturales");});
                     ui.label("Reutiliza lecturas verificadas de hoy. Máximo de 2000 bitácoras/calendarios y 2000 historias por corrida; Retomar conserva el avance.");
+                    ui.checkbox(
+                        &mut self.informes_por_vencer,
+                        "Paquete: incluir el calendario de informes por vencer (60 días, con Cumplimiento)",
+                    );
+                    ui.label("«Consultar y crear paquete» siempre lee las bitácoras; historia y calendario del ingreso según las casillas.");
                     marcas(ui, "Modalidades", &mut self.modalidades);
                     ui.horizontal_wrapped(|ui| {
                         for (n, m) in &mut self.pestañas {
@@ -493,6 +584,35 @@ impl Captura {
             });
         });
         ui.horizontal_wrapped(|ui| {
+            let seguimiento = self.pantalla == "seguimiento";
+            if seguimiento
+                && ui
+                    .add_enabled(
+                        !self.ocupada() && self.catalogo.is_some(),
+                        egui::Button::new(egui::RichText::new("Consultar y crear paquete").strong()),
+                    )
+                    .on_hover_text("Consulta Seguimiento, lee las bitácoras y crea Captura_CSMP.zip para el Asistente.")
+                    .clicked()
+            {
+                match self.plan() {
+                    Ok(lote) => {
+                        if let Some(destino) = rfd::FileDialog::new().set_title("Carpeta para los paquetes CSMP").pick_folder() {
+                            self.iniciar_flujo(Some(lote), destino, ctx);
+                        }
+                    }
+                    Err(e) => self.mensaje = e,
+                }
+            }
+            if seguimiento && ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Retomar paquete…")).clicked()
+            {
+                if let Some(c) = rfd::FileDialog::new().set_title("Carpeta «Paquete CSMP …» a retomar").pick_folder() {
+                    if c.join("respaldo").join(flow_trabajo::flujo::PROCESO).is_file() {
+                        self.iniciar_flujo(None, c, ctx);
+                    } else {
+                        self.mensaje = "Elige una carpeta «Paquete CSMP …» (contiene respaldo/proceso.json).".into();
+                    }
+                }
+            }
             if ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Descargar")).clicked() {
                 match self.plan() {
                     Ok(lote) => {

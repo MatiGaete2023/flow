@@ -152,6 +152,30 @@ fn guarda_tres_lecturas_y_retomar_del_mismo_dia_no_abre_otras_ventanas() {
     assert_eq!(f.comandos.lock().unwrap().len(), 3);
 }
 
+/// Como `reuse_base` del Descargador: un paquete nuevo reutiliza las lecturas de hoy de los paquetes anteriores de la
+/// misma carpeta de destino (sus lotes quedan en «Paquete CSMP …/respaldo/»).
+#[test]
+fn paquete_nuevo_reutiliza_lecturas_de_hoy_de_otro_paquete() {
+    let t = Temporal::nueva();
+    let primero = t.0.join("Paquete CSMP 2026-10-20 10-00-00-000001").join("respaldo").join("lote");
+    let segundo = t.0.join("Paquete CSMP 2026-10-20 11-00-00-000001").join("respaldo").join("lote");
+    std::fs::create_dir_all(&primero).unwrap();
+    std::fs::create_dir_all(&segundo).unwrap();
+    let f = Ficticia { fallar_historia: false, comandos: Mutex::new(vec![]) };
+    let fecha = "2026-10-20".parse().unwrap();
+    let mut resumen = resumen();
+    let mut r = Recoleccion::con_fecha(&primero, &resumen, fecha).unwrap();
+    leer_pagina(&mut r, &f, &mut resumen);
+    assert_eq!(f.comandos.lock().unwrap().len(), 3);
+    let mut copia = resumen.clone();
+    copia.lecturas.clear();
+    let mut r = Recoleccion::con_fecha(&segundo, &copia, fecha).unwrap();
+    leer_pagina(&mut r, &f, &mut copia);
+    assert_eq!(copia.lecturas.len(), 3);
+    assert!(copia.lecturas.iter().all(|l| l.reutilizada));
+    assert_eq!(f.comandos.lock().unwrap().len(), 3, "no se abren ventanas nuevas");
+}
+
 #[test]
 fn fallo_parcial_conserva_lo_leido_y_reintenta_solo_lo_pendiente() {
     let t = Temporal::nueva();

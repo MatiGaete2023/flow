@@ -1,0 +1,49 @@
+{
+ "corte": "2026-10-20",
+ "filas": [
+  {
+   "rit": "X-1-2099",
+   "observacion": "Persona PRM: Próximo informe de avance de PRM Centro Ficticio vence el 15 de noviembre de 2026. Se hace presente que en actuación de fecha 10 de octubre de 2026 (folio 9121), consta el trámite «Derecho a ser oído».",
+   "reglas": [
+    "CUMPLIMIENTO.C10_HOJA2",
+    "HISTORIA.BASE_TRAMITE"
+   ],
+   "acciones": [
+    "programa_por_vencer"
+   ],
+   "marcas": [
+    {
+     "nivel": 3,
+     "codigo": "TRAMITES_SIN_REGLA",
+     "texto": "Trámites sin regla en la historia (3): Acompaña documentos, Opinión consejero técnico canario con un texto bastante más largo que los demás para probar tramos, Tengase presente canario"
+    },
+    {
+     "nivel": 1,
+     "codigo": "R11_BUSQUEDA_VIGENTE",
+     "texto": "Orden de búsqueda vigente"
+    }
+   ],
+   "cronologia": "ACREDITADA"
+  },
+  {
+   "rit": "X-2-2099",
+   "observacion": "Otra PRM: Medida revisada, sin observaciones.",
+   "reglas": [
+    "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+   ],
+   "acciones": [],
+   "marcas": [],
+   "cronologia": "ACREDITADA"
+  },
+  {
+   "rit": "X-3-2099",
+   "observacion": "Tercera PRM: Medida revisada, sin observaciones.",
+   "reglas": [
+    "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+   ],
+   "acciones": [],
+   "marcas": [],
+   "cronologia": ""
+  }
+ ]
+}

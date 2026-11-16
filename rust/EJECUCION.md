@@ -569,3 +569,15 @@ guardar el código de conexión, y cualquier escritura en RUS.
   `rust/oraculo/validar_paquete_lote.py`: `read_capture` de Python acepta el ZIP del lote ficticio y
   `import_capture` propone lo mismo que `paquete::importar`, que a su vez coincide con `captura::importar` del lote.
   Sin XLSX consolidado (schema 1.1.0) ni originales. Suite: 233 pruebas, 0 fallos.
+- 2026-11-16 · Descargador, pieza 2 — «Consultar y crear paquete» y «Retomar paquete…» en `captura_ui.rs` (solo
+  Seguimiento, también sin filtros), con `flow-trabajo/src/flujo.rs` como `flujo_paquete.run`: carpeta
+  «Paquete CSMP <fecha>» con `respaldo/proceso.json` (estado, fase, carpetas, selección, reintentos); lote de
+  Seguimiento con bitácoras siempre y historia/calendario del ingreso según las casillas; calendario de informes por
+  vencer de los 60 días siguientes (`meses_informes`, un lote por mes dentro de `respaldo/`, solo con Cumplimiento;
+  un mes fallido avisa, conserva los descargados y deja CALENDARIO_INCOMPLETO); ZIP `Captura_CSMP.zip` al final
+  (el anterior pasa a `respaldo/`). Estados COMPLETO, PARCIAL (lecturas pendientes, calendario incompleto o historia
+  fuera del paquete) e INCOMPLETO (corte o «Detener»); retomar reutiliza lotes validados, continúa los cortados y
+  rechaza un paquete COMPLETO; `pendientes` lista los cortados. Las lecturas de hoy se reutilizan también desde
+  paquetes anteriores del mismo destino. El ZIP del flujo ficticio pasa `read_capture`/`import_capture` de Python
+  (oráculo `validar_paquete_lote.py`) y el Asistente Rust lo abre con «Abrir Excel o paquete…». Suite: 240 pruebas,
+  0 fallos. Faltan: preferencias persistentes, aviso automático de paquetes cortados al abrir, `paquete_por_hoja`.

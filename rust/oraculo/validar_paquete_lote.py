@@ -4,9 +4,10 @@ un lote ficticio y lo importa con el Asistente Python, para que Rust compare lo 
 Uso (desde la raíz del repo, con el Python del entorno de pruebas):
     python rust/oraculo/validar_paquete_lote.py
 
-Lee rust/crates/flow-trabajo/tests/datos/paquete_desde_lote.zip (lo regenera
-`FLOW_REGENERAR=1 cargo test -p flow-trabajo --test exportar`) y escribe paquete_desde_lote.json al lado.
-Termina con error si `read_capture` (validate_manifest, huellas, filas y cobertura) rechaza el paquete.
+Lee, en rust/crates/flow-trabajo/tests/datos/, paquete_desde_lote.zip («Crear paquete de este lote») y
+paquete_flujo.zip («Consultar y crear paquete», con calendario de informes por vencer) y escribe el .json de cada uno
+al lado. Los regenera `FLOW_REGENERAR=1 cargo test -p flow-trabajo --test exportar --test flujo`.
+Termina con error si `read_capture` (validate_manifest, huellas, filas y cobertura) rechaza un paquete.
 """
 
 import json
@@ -24,9 +25,7 @@ from nurus.personal.config import defaults  # noqa: E402
 CORTE = date(2026, 10, 20)
 
 
-def main():
-    datos = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
-    paquete = datos / 'paquete_desde_lote.zip'
+def validar(paquete):
     captura = read_capture(paquete)
     print('Contrato válido:', captura.manifest['schema_id'], captura.manifest['schema_version'])
     print('Estados:', json.dumps(captura.manifest['table_states'], ensure_ascii=False, sort_keys=True))
@@ -45,11 +44,18 @@ def main():
         }
         for r in work.rows
     ]
-    (datos / 'paquete_desde_lote.json').write_text(
+    paquete.with_suffix('.json').write_text(
         json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1) + '\n', encoding='utf-8'
     )
     for f in filas:
         print(f['rit'], '|', f['observacion'][:160], '|', f['reglas'], '|', f['acciones'], '|', f['cronologia'])
+
+
+def main():
+    datos = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
+    for nombre in ('paquete_desde_lote.zip', 'paquete_flujo.zip'):
+        print('==', nombre)
+        validar(datos / nombre)
 
 
 if __name__ == '__main__':

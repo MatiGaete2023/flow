@@ -6,6 +6,7 @@ pub mod consulta;
 pub mod controles;
 pub mod cronologia;
 pub mod exportar;
+pub mod flujo;
 pub mod paquete;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};

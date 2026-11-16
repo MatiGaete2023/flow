@@ -240,13 +240,29 @@ impl Recoleccion {
         let mut previas = BTreeMap::new();
         if resumen.lote.lecturas.activa() {
             // Primero las anteriores y al final el mismo lote: siempre prevalece su checkpoint.
-            let mut carpetas = std::fs::read_dir(carpeta.parent().unwrap_or(carpeta))
-                .into_iter()
-                .flatten()
-                .flatten()
-                .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()) && e.path() != carpeta)
-                .filter_map(|e| e.metadata().and_then(|m| m.modified()).ok().map(|t| (e.path(), t)))
-                .collect::<Vec<_>>();
+            let hermanas = |padre: &Path| {
+                std::fs::read_dir(padre)
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()) && e.path() != carpeta)
+                    .filter_map(|e| e.metadata().and_then(|m| m.modified()).ok().map(|t| (e.path(), t)))
+                    .collect::<Vec<_>>()
+            };
+            let padre = carpeta.parent().unwrap_or(carpeta);
+            let mut carpetas = hermanas(padre);
+            // Dentro de «Paquete CSMP …/respaldo/», como `reuse_base` del Descargador: también los lotes de los
+            // paquetes anteriores de la misma carpeta de destino.
+            if padre.file_name().is_some_and(|n| n == "respaldo") {
+                if let Some(paquete) = padre.parent() {
+                    for (otro, _) in paquete.parent().map(hermanas).unwrap_or_default() {
+                        let es_paquete = otro.file_name().is_some_and(|n| n.to_string_lossy().starts_with("Paquete CSMP "));
+                        if es_paquete && otro != paquete {
+                            carpetas.extend(hermanas(&otro.join("respaldo")));
+                        }
+                    }
+                }
+            }
             carpetas.sort_by_key(|a| std::cmp::Reverse(a.1));
             for (c, _) in carpetas.into_iter().take(10).rev() {
                 if let Ok(r) = Resumen::leer(&c) {
