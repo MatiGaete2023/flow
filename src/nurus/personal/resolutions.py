@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from collections import OrderedDict
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from uuid import uuid4
@@ -23,6 +24,13 @@ KIND_LABELS = {
     'PC_INFO': 'PC_INFO — Pide cuenta informe',
     'NOMENCL': 'NOMENCL — Nomenclatura',
 }
+
+
+# Nomenclaturas que remiten las observaciones de historia (textos_base.json: HISTORIA.P_FINALIZADA y C10_ESCRITO).
+EGRESO_SERVICIO = 'Egreso de servicio protección especializada y otras redes'
+INGRESO_INFORME_X = 'Ingreso Informe de Cumplimiento X'
+NOMENCLATURE_RULES = (('HISTORIA.P_FINALIZADA', EGRESO_SERVICIO), ('HISTORIA.C10_ESCRITO', INGRESO_INFORME_X))
+_QUOTED_NOMENCLATURE = re.compile(r'nomenclatura\s*[«"“]\s*([^»"”\n]+?)\s*[»"”]', re.IGNORECASE)
 
 
 def kind_code(value):
@@ -172,6 +180,44 @@ def observation_resolution_kind(row):
     return None
 
 
+def observed_nomenclature(row):
+    """Nomenclatura que nombra la observación revisada: entre comillas tras «nomenclatura», o egreso / informe."""
+    raw = str((row.review or {}).get('OBSERVACION', row.observation) or '')
+    quoted = _QUOTED_NOMENCLATURE.search(raw)
+    if quoted:
+        return ' '.join(quoted.group(1).split())
+    text = normalize(raw)
+    egreso = 'egreso' in text
+    informe = any(part in text for part in ('ingreso informe', 'informe de cumplimiento', 'informe de avance'))
+    if egreso != informe:
+        return EGRESO_SERVICIO if egreso else INGRESO_INFORME_X
+    return ''
+
+
+def rule_nomenclature(row):
+    """Nomenclatura de la regla que propuso el proyecto (como `nomenclatura` de Flow en Rust)."""
+    rules = set(getattr(row, 'rules', None) or [])
+    return next((name for rule, name in NOMENCLATURE_RULES if rule in rules), '')
+
+
+def project_nomenclature(rows):
+    """NOMENCLATURA de un proyecto NOMENCL: primero la fila con RES NOMENCL, luego la de la regla, luego el resto.
+
+    En cada fila manda la observación revisada (escrita por el usuario) y, si no nombra ninguna, la regla del motor.
+    Vacío si nada la identifica: el Word queda con «[COMPLETAR NOMENCLATURA]»."""
+
+    def order(row):
+        if resolution_kind((row.review or {}).get('RES')) == 'NOMENCL':
+            return 0
+        return 1 if 'NOMENCL' in (getattr(row, 'actions', None) or []) else 2
+
+    for row in sorted(rows, key=order):
+        found = observed_nomenclature(row) or rule_nomenclature(row)
+        if found:
+            return found
+    return ''
+
+
 def automatic_project_selections(work, fallback_kind='PC_IE'):
     """Selecciona proyectos con precedencia RES explícito > observación > regla.
 
@@ -313,8 +359,10 @@ def paragraphs(doc):
                 yield from cell.paragraphs
 
 
-def grouped_values(work, rows):
+def grouped_values(work, rows, kind=None):
     vals = word_values(work, rows[0])
+    if kind == 'NOMENCL' and not vals.get('NOMENCLATURA'):
+        vals['NOMENCLATURA'] = project_nomenclature(rows)
     for key in ('NOMBRE', 'RUT', 'PROGRAMA', 'FECHA_RESOLUCION', 'DURACION'):
         vals[key] = join_names(word_values(work, r).get(key, '') for r in rows)
     persons = OrderedDict()
@@ -339,6 +387,33 @@ def grouped_values(work, rows):
         > 1
     )
     return vals
+
+
+def without_italics(doc):
+    """Ningún texto de la resolución sale en cursiva, aunque la matriz o su estilo la traigan (decisión 16-nov-2026)."""
+    from docx.oxml.ns import qn
+
+    parts = [doc.element.body]
+    for section in doc.sections:
+        for part in (section.header, section.footer, section.first_page_header, section.first_page_footer):
+            if not part.is_linked_to_previous:
+                parts.append(part._element)
+    for root in parts:
+        for run in root.iter(qn('w:r')):
+            rpr = run.get_or_add_rPr()
+            for tag in ('w:i', 'w:iCs'):
+                for node in rpr.findall(qn(tag)):
+                    rpr.remove(node)
+            rpr.get_or_add_i().set(qn('w:val'), '0')
+            rpr.get_or_add_iCs().set(qn('w:val'), '0')
+        for mark in root.iter(qn('w:pPr')):
+            rpr = mark.find(qn('w:rPr'))
+            if rpr is None:
+                continue
+            for tag in ('w:i', 'w:iCs'):
+                for node in rpr.findall(qn(tag)):
+                    rpr.remove(node)
+    return doc
 
 
 def render_project(project, target):
@@ -378,6 +453,7 @@ def render_project(project, target):
                 anchor.insert_paragraph_before(detail)
             else:
                 doc.add_paragraph(detail)
+    without_italics(doc)
     doc.save(target)
     return doc
 
@@ -423,7 +499,7 @@ def prepare_projects(work, selections, template_dir):
             if not template.is_file():
                 errors.append(rit + ': falta matriz ' + court + '/' + kind)
                 continue
-            vals = grouped_values(work, rows)
+            vals = grouped_values(work, rows, kind)
             missing = []
             for key in template_variables(template):
                 if not vals.get(key):
@@ -497,6 +573,7 @@ def generate_projects(work, projects, destination):
         for doc in docs[1:]:
             composer.doc.add_page_break()
             composer.append(doc)
+        without_italics(composer.doc)
         checkpoint()
         progress('Guardando documento Word', len(projects), len(projects))
 
