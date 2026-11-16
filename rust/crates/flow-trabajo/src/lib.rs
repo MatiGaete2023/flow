@@ -64,6 +64,21 @@ pub struct Trabajo {
     pub mapeo: std::collections::BTreeMap<String, usize>,
     pub filas: Vec<FilaTrabajo>,
     pub avisos: Vec<String>,
+    /// Reglas con que se calculó cada `propuesta` (`version_reglas`). Vacía en sesiones anteriores a este campo.
+    #[serde(default)]
+    pub version_reglas: String,
+}
+
+/// Cambio de reglas que no se refleja en las fuentes del motor ni en sus datos: subir a mano.
+const REVISION_REGLAS: &str = "2026-11-15";
+
+/// Versión de las reglas: huella de las fuentes del motor y del dominio, de textos y umbrales (`build.rs`), de la
+/// configuración usada y de `REVISION_REGLAS`. Una sesión con otra versión se recalcula al recuperarla.
+pub fn version_reglas(config: &Config) -> String {
+    use sha2::{Digest, Sha256};
+    let configuracion = serde_json::to_string(config).unwrap_or_default();
+    let crudo = format!("{REVISION_REGLAS}|{}|{configuracion}", env!("FLOW_HUELLA_MOTOR"));
+    Sha256::digest(crudo.as_bytes()).iter().take(8).map(|b| format!("{b:02x}")).collect()
 }
 
 /// Historia y bitácora por registro, cuando vienen de una captura de SITFA.
@@ -188,6 +203,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
         mapeo: tabla.mapeo.clone(),
         filas,
         avisos,
+        version_reglas: version_reglas(config),
     }
 }
 

@@ -14,3 +14,6 @@ serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
 sha2 = "0.10"
+
+[build-dependencies]
+sha2 = "0.10"

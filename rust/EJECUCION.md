@@ -516,3 +516,10 @@ guardar el código de conexión, y cualquier escritura en RUS.
   nombres ZIP normalizados como safezip; etiquetas de 40 caracteres depuradas; nombres de archivo de `resumen.json`
   como `fuente_N`; Excel conserva fechas y lógicos; la semilla persiste; ocultos saltados; estado INCOMPLETO/VERIFICADO
   del ZIP. Se mantiene el barrido final `verificar`. Pruebas: `tests/paridad.rs` (13).
+- 2026-11-16 · Paridad Asistente (A1–A5, M7, M9–M11, B4) y contexto anterior de historia: la hoja de cruce ya no se
+  toma como Informes (se prefiere la hoja con nombre de etapa); encabezado repetido usa la primera fila; sin tabla se
+  conserva el error de mapeo; en un lote, páginas no compatibles quedan como aviso; EGRESADOS/OTRO se mapean por
+  registro; `contexto_anterior` llega al motor; la sesión guarda `version_reglas` y, si cambió, recalcula conservando
+  ediciones y marcas (una sesión ilegible se aparta como `.json.ilegible`); filtro de modalidades como modalities.py;
+  un tipo de correo fallido no anula los demás; nombres de archivo como `program_filename`; Outlook conserva la firma
+  (HTMLBody, `Save()`, sin envío; ruta COM solo compilada, sin probar en Windows real).

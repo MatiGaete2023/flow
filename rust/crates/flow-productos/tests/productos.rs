@@ -65,7 +65,7 @@ fn borradores_llevan_cc_fijo_y_nomina() {
     assert!(eml.contains(&format!("Cc: {CC_FIJO}, otra@example.invalid")));
     // Al tribunal: exige las modalidades y no adjunta.
     assert!(correos::preparar(&t, Tipo::Informativo, &Opciones::default(), &contactos, &dir).is_err());
-    let opciones = Opciones { modalidades: "Intervención ambulatoria de reparación".into(), hoy: None };
+    let opciones = Opciones { modalidades: "Intervención ambulatoria de reparación".into(), ..Opciones::default() };
     let informativos = correos::preparar(&t, Tipo::Informativo, &opciones, &contactos, &dir).unwrap();
     assert!(informativos.iter().all(|b| b.adjuntos.is_empty() && b.cuerpo.contains("Intervención ambulatoria")));
     std::fs::remove_dir_all(dir).unwrap();
@@ -140,4 +140,84 @@ fn contactos_ilegibles_no_se_reemplazan_y_guardado_se_relee() {
     assert_eq!(Contactos::cargar(&ruta).unwrap(), contactos);
     assert_eq!(std::fs::read_dir(&p).unwrap().count(), 1);
     std::fs::remove_dir_all(p).unwrap();
+}
+
+#[test]
+fn modalidad_como_python() {
+    // Casos de `src/nurus/personal/modalities.py::modality`.
+    for (texto, clave) in [
+        ("Cuidado alternativo residencial", "RES"),
+        ("Diagnóstico Clínico Especializado (DCE)", "DCE"),
+        ("DCE Ficticio", "DCE"),
+        ("FAS-Ficticio", "FAE"),
+        ("REMxx Ficticia", "RES"),
+        ("RLP Ficticia", "RES"),
+        ("Residencia Ficticia", "RES"),
+        ("PRM Ficticio", "AMB"),
+        ("aft ficticio", "AMB"),
+        ("PRMX Ficticio", ""),
+        ("2", ""),
+        ("", ""),
+    ] {
+        assert_eq!(correos::modalidad(texto), clave, "{texto}");
+    }
+    assert_eq!(correos::claves_modalidad(["Intervención ambulatoria de reparación"]), Some(["AMB"].into()));
+    assert_eq!(correos::claves_modalidad(["Otra ficticia"]), None, "una modalidad desconocida no filtra");
+    assert_eq!(correos::claves_modalidad(correos::MODALIDADES.map(|m| m.1)), None, "todas = sin filtro");
+    assert_eq!(
+        correos::claves_de_texto("Cuidado alternativo residencial y Diagnóstico Clínico Especializado (DCE)"),
+        Some(["RES", "DCE"].into())
+    );
+}
+
+#[test]
+fn las_modalidades_elegidas_filtran_las_filas() {
+    let mut t = trabajo(Etapa::Espera);
+    let dir = carpeta("modalidades");
+    let contactos = Contactos::default();
+    let todas = Opciones { modalidades: "todas".into(), ..Opciones::default() };
+    let filas = |t: &flow_trabajo::Trabajo, o: &Opciones| -> Vec<String> {
+        correos::preparar(t, Tipo::Informativo, o, &contactos, &dir).unwrap().into_iter().flat_map(|b| b.filas).collect()
+    };
+    let total = filas(&t, &todas);
+    // La modalidad de la consulta de SITFA es un código («2»): no se reconoce y decide el prefijo del programa.
+    for f in &mut t.filas {
+        f.registro.poner("modalidad", flow_dominio::Celda::Texto("2".into()));
+    }
+    let amb = Opciones { modalidades: "la modalidad ambulatoria".into(), claves_modalidad: Some(["AMB"].into()), ..Opciones::default() };
+    let elegidas = filas(&t, &amb);
+    let esperadas: Vec<String> = t
+        .filas
+        .iter()
+        .filter(|f| total.contains(&f.id) && correos::modalidad(&f.registro.texto("programa")) == "AMB")
+        .map(|f| f.id.clone())
+        .collect();
+    assert!(!elegidas.is_empty() && elegidas.len() < total.len(), "{} de {}", elegidas.len(), total.len());
+    let mut a = elegidas.clone();
+    let mut b = esperadas.clone();
+    a.sort();
+    b.sort();
+    assert_eq!(a, b);
+    // Una fila con modalidad explícita reconocida usa esa y no el programa.
+    let otra = t.filas.iter().position(|f| !elegidas.contains(&f.id) && total.contains(&f.id)).unwrap();
+    t.filas[otra].registro.poner("modalidad", flow_dominio::Celda::Texto("Intervención ambulatoria de reparación".into()));
+    let id = t.filas[otra].id.clone();
+    assert!(filas(&t, &amb).contains(&id));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn nombres_de_archivo_como_program_filename() {
+    assert_eq!(excel::nombre_archivo("  PRM: Ficticio/Uno.  "), "PRM_ Ficticio_Uno");
+    assert_eq!(excel::nombre_archivo("con"), "_con");
+    assert_eq!(excel::nombre_archivo("LPT1.Ficticio"), "_LPT1.Ficticio");
+    assert_eq!(excel::nombre_archivo("COM0"), "COM0");
+    assert_eq!(excel::nombre_archivo(" . "), "Programa no informado");
+    let largo = format!("{}. x", "ñ".repeat(119));
+    let n = excel::nombre_archivo(&largo);
+    assert_eq!(n, "ñ".repeat(119), "se corta en 120 caracteres sin partir una letra y sin punto final");
+    let dir = carpeta("nombres");
+    let ruta = excel::ruta_nueva(&dir, &"Nómina ".repeat(40), "xlsx");
+    assert!(ruta.file_stem().unwrap().to_string_lossy().chars().count() <= 120);
+    std::fs::remove_dir_all(dir).unwrap();
 }

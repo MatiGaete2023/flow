@@ -6,7 +6,7 @@ use flow_dominio::texto::normalizar_columna;
 use flow_dominio::{Etapa, Tribunal, CC_FIJO};
 use flow_trabajo::{FilaTrabajo, Trabajo};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -201,6 +201,87 @@ pub struct Opciones {
     /// Modalidades efectivamente comprendidas (correos al tribunal).
     pub modalidades: String,
     pub hoy: Option<flow_dominio::Fecha>,
+    /// Claves de modalidad (RES, AMB, FAE, DCE) cuyas filas entran. `None`: todas (`modalities.py::selected_row`).
+    pub claves_modalidad: Option<BTreeSet<&'static str>>,
+}
+
+/// Modalidades de `src/nurus/personal/modalities.py`: clave y nombre.
+pub const MODALIDADES: [(&str, &str); 4] = [
+    ("RES", "Cuidado alternativo residencial"),
+    ("AMB", "Intervención ambulatoria de reparación"),
+    ("FAE", "Cuidado alternativo familia de acogida"),
+    ("DCE", "Diagnóstico Clínico Especializado (DCE)"),
+];
+
+/// Clave de modalidad de un texto (nombre de modalidad o de programa): `modalities.py::modality`. Vacío si no se sabe.
+pub fn modalidad(programa: &str) -> &'static str {
+    let nombre = normalizar_columna(programa).to_uppercase();
+    for (clave, etiqueta) in MODALIDADES {
+        if nombre == clave || nombre == normalizar_columna(etiqueta).to_uppercase() {
+            return clave;
+        }
+    }
+    let primero = nombre.split(|c: char| c.is_whitespace() || c == '-').next().unwrap_or("");
+    if primero == "DCE" {
+        return "DCE";
+    }
+    if matches!(primero, "FAE" | "FAS") {
+        return "FAE";
+    }
+    if ["REM", "RLP", "RMA", "RFA", "RDS", "RSP", "RPE"].iter().any(|p| primero.starts_with(p))
+        || matches!(primero, "RTA" | "RTT" | "RVA" | "RES" | "RESIDENCIA" | "RESIDENCIAL")
+    {
+        return "RES";
+    }
+    if matches!(primero, "AFT" | "PF" | "PRM" | "PPF" | "PIE" | "PDE" | "PEE" | "PAS" | "DAM" | "OPD" | "PDC") {
+        return "AMB";
+    }
+    ""
+}
+
+/// Claves de una lista de nombres de modalidad. `None` (sin filtro) si la lista está vacía, si alguno no es una
+/// modalidad conocida (no se puede saber qué filas comprende) o si están todas.
+pub fn claves_modalidad<'a>(nombres: impl IntoIterator<Item = &'a str>) -> Option<BTreeSet<&'static str>> {
+    let mut claves = BTreeSet::new();
+    for nombre in nombres {
+        match modalidad(nombre) {
+            "" => return None,
+            clave => {
+                claves.insert(clave);
+            }
+        }
+    }
+    (!claves.is_empty() && claves.len() < MODALIDADES.len()).then_some(claves)
+}
+
+/// Claves desde el texto libre de modalidades («A, B y C»), para la línea de comandos.
+pub fn claves_de_texto(texto: &str) -> Option<BTreeSet<&'static str>> {
+    let partes: Vec<String> = texto.split([',', ';']).flat_map(|p| p.split(" y ")).map(|p| p.trim().to_string()).collect();
+    claves_modalidad(partes.iter().map(String::as_str).filter(|p| !p.is_empty()))
+}
+
+/// La fila entra en las modalidades elegidas (`modalities.py::selected_row`): la modalidad explícita del registro
+/// (o una columna MODALIDAD / TIPO PROGRAMA) y, si no se reconoce, el prefijo del programa.
+pub fn en_modalidades(trabajo: &Trabajo, fila: &FilaTrabajo, claves: Option<&BTreeSet<&'static str>>) -> bool {
+    let Some(claves) = claves else { return true };
+    if claves.len() == MODALIDADES.len() {
+        return true;
+    }
+    let mut explicita = fila.registro.texto("modalidad");
+    if explicita.trim().is_empty() {
+        explicita = trabajo
+            .cabeceras
+            .iter()
+            .position(|c| matches!(normalizar_columna(c).trim(), "modalidad" | "tipo programa"))
+            .and_then(|i| fila.celdas.get(i))
+            .map(|c| c.texto())
+            .unwrap_or_default();
+    }
+    let clave = match modalidad(&explicita) {
+        "" => modalidad(&valor(fila, "programa")),
+        clave => clave,
+    };
+    claves.contains(clave)
 }
 
 fn rellenar(texto: &str, contexto: &[(&str, &str)]) -> Result<String, String> {
@@ -239,7 +320,10 @@ pub fn preparar(
     let mut grupos: BTreeMap<(Tribunal, String), Vec<&FilaTrabajo>> = BTreeMap::new();
     let mut orden: Vec<(Tribunal, String)> = Vec::new();
     for fila in &trabajo.filas {
-        if fila.propuesta.excluido || tipo.accion().is_some_and(|a| !fila.tiene_accion(a)) {
+        if fila.propuesta.excluido
+            || tipo.accion().is_some_and(|a| !fila.tiene_accion(a))
+            || !en_modalidades(trabajo, fila, opciones.claves_modalidad.as_ref())
+        {
             continue;
         }
         let Some(tribunal) = Tribunal::desde(&valor(fila, "tribunal")) else { continue };

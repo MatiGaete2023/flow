@@ -32,14 +32,27 @@ fn ruta_sesion(datos: &Path, trabajo: &Trabajo) -> PathBuf {
         &trabajo.sha256[..12.min(trabajo.sha256.len())]
     ))
 }
-/// Recupera la sesión del mismo origen y corte antes de activar un análisis recién abierto.
-/// Un archivo dañado o una colisión de nombre detienen la apertura y conservan la copia anterior.
-pub fn recuperar(datos: &Path, nuevo: &Trabajo) -> Result<Option<Trabajo>, String> {
+/// Recupera la sesión del mismo origen y corte antes de activar un análisis recién abierto. Devuelve si había una y,
+/// si corresponde, un aviso para mostrar una vez (no se guarda en el trabajo, para no repetirlo en cada apertura).
+///
+/// - Calculada con las mismas reglas: reemplaza a `nuevo` tal como quedó.
+/// - Con otras reglas (`version_reglas`): queda la propuesta recién calculada y solo se traen las ediciones de la
+///   observación y las marcas de revisada del usuario.
+/// - Ilegible (dañada o de un formato anterior): se aparta con otro nombre, sin borrarla, y se analiza de nuevo.
+/// - Una colisión de nombre con otro origen detiene la apertura y conserva la copia anterior.
+pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<String>), String> {
     let ruta = ruta_sesion(datos, nuevo);
     if !ruta.try_exists().map_err(|_| "No se pudo comprobar la sesión anterior; no se reemplazará.")? {
-        return Ok(None);
+        return Ok((false, None));
     }
-    let anterior = cargar(&ruta)?;
+    let anterior = match cargar(&ruta) {
+        Ok(t) => t,
+        Err(e) => {
+            let apartada = apartar(&ruta)?;
+            let aviso = format!("{e} Se analizó de nuevo; la sesión anterior se conserva sin cambios en {}.", apartada.display());
+            return Ok((false, Some(aviso)));
+        }
+    };
     if anterior.sha256 != nuevo.sha256
         || anterior.corte != nuevo.corte
         || anterior.etapa != nuevo.etapa
@@ -50,7 +63,35 @@ pub fn recuperar(datos: &Path, nuevo: &Trabajo) -> Result<Option<Trabajo>, Strin
     {
         return Err("Existe una sesión distinta con el mismo nombre. Consérvela antes de volver a analizar; no se reemplazó.".into());
     }
-    Ok(Some(anterior))
+    if anterior.version_reglas == nuevo.version_reglas {
+        *nuevo = anterior;
+        return Ok((true, None));
+    }
+    for (fila, previa) in nuevo.filas.iter_mut().zip(&anterior.filas) {
+        // Una observación igual a la propuesta anterior era texto del motor: se reemplaza por la nueva.
+        if previa.editada() {
+            fila.observacion = previa.observacion.clone();
+        }
+        fila.revisada = previa.revisada;
+    }
+    let aviso = "La sesión guardada se calculó con otras reglas: se recalcularon las propuestas y se conservaron tus ediciones y marcas.";
+    Ok((true, Some(aviso.into())))
+}
+
+/// Mueve una sesión ilegible a `<nombre>.json.ilegible` (o `.ilegible-2`…): fuera de `listar` y de la retención.
+fn apartar(ruta: &Path) -> Result<PathBuf, String> {
+    let base = ruta.with_extension("json.ilegible");
+    let mut destino = base.clone();
+    let mut n = 2;
+    while destino.try_exists().unwrap_or(true) {
+        if n > 100 {
+            return Err("No se pudo apartar la sesión ilegible; se conserva y no se reemplazará.".into());
+        }
+        destino = PathBuf::from(format!("{}-{n}", base.display()));
+        n += 1;
+    }
+    std::fs::rename(ruta, &destino).map_err(|_| "No se pudo apartar la sesión ilegible; se conserva y no se reemplazará.")?;
+    Ok(destino)
 }
 
 /// Guarda el trabajo como sesión. El nombre depende del origen y del corte: volver a guardar reemplaza la misma.
@@ -99,6 +140,82 @@ pub fn aplicar_retencion(datos: &Path, ahora: SystemTime) -> usize {
 #[cfg(test)]
 mod pruebas {
     use super::*;
+    use flow_dominio::Celda;
+    use flow_tabular::{Formato, Hoja, Libro};
+
+    fn temporal(nombre: &str) -> PathBuf {
+        let p = std::env::temp_dir().join(format!(
+            "flow-almacen-{nombre}-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        std::fs::create_dir_all(&p).unwrap();
+        p
+    }
+
+    fn analizado() -> Trabajo {
+        let texto = |xs: &[&str]| xs.iter().map(|x| Celda::Texto(x.to_string())).collect::<Vec<_>>();
+        let mut filas = vec![texto(&["RIT", "NOMBRE", "PROGRAMA", "TRIBUNAL", "T ESPERA"])];
+        for i in 1..=3 {
+            filas.push(texto(&[&format!("X-{i}-2099"), &format!("Persona Ficticia {i}"), "PRM Ficticio", "Laja", "200"]));
+        }
+        let libro = Libro {
+            nombre: "espera_ficticia.xlsx".into(),
+            sha256: "a".repeat(64),
+            formato: Formato::Xlsx,
+            hojas: vec![Hoja { nombre: "Espera".into(), filas }],
+        };
+        let tabla = flow_tabular::leer_tabla(&libro, None, None).unwrap();
+        crate::analizar_tabla(&libro, &tabla, "2026-10-20".parse().unwrap(), &flow_motor::Config::default(), &Default::default())
+    }
+
+    #[test]
+    fn otras_reglas_recalculan_y_conservan_solo_ediciones_y_marcas() {
+        let datos = temporal("reglas");
+        let mut viejo = analizado();
+        // Sesión de antes del campo: sin versión, con propuestas de un motor anterior.
+        viejo.version_reglas = String::new();
+        for f in &mut viejo.filas {
+            f.propuesta.observacion = "Texto ficticio del motor anterior.".into();
+            f.observacion = f.propuesta.observacion.clone();
+        }
+        viejo.filas[0].observacion = "Edición ficticia del usuario.".into();
+        viejo.filas[1].revisada = true;
+        guardar(&datos, &viejo).unwrap();
+        let mut nuevo = analizado();
+        let recien = nuevo.clone();
+        let (recuperada, aviso) = recuperar(&datos, &mut nuevo).unwrap();
+        assert!(recuperada && aviso.is_some_and(|a| a.contains("otras reglas")));
+        assert_eq!(nuevo.version_reglas, recien.version_reglas);
+        assert_eq!(nuevo.filas[0].observacion, "Edición ficticia del usuario.");
+        assert!(nuevo.filas[1].revisada && !nuevo.filas[0].revisada);
+        assert_eq!(nuevo.filas[2].observacion, recien.filas[2].observacion);
+        assert!(nuevo.filas.iter().zip(&recien.filas).all(|(a, b)| a.propuesta == b.propuesta));
+        assert_eq!(nuevo.avisos, recien.avisos, "el aviso no queda guardado en el trabajo");
+        // Con las mismas reglas se recupera tal cual y sin volver a avisar.
+        guardar(&datos, &nuevo).unwrap();
+        let mut otra = analizado();
+        assert_eq!(recuperar(&datos, &mut otra).unwrap(), (true, None));
+        assert_eq!(otra.filas[0].observacion, "Edición ficticia del usuario.");
+        assert_eq!(otra.avisos, recien.avisos);
+        std::fs::remove_dir_all(datos).unwrap();
+    }
+
+    #[test]
+    fn sesion_ilegible_se_aparta_sin_borrarla_y_no_bloquea() {
+        let datos = temporal("ilegible");
+        let trabajo = analizado();
+        let ruta = guardar(&datos, &trabajo).unwrap();
+        std::fs::write(&ruta, b"sesion incompleta ficticia").unwrap();
+        let mut nuevo = analizado();
+        let (recuperada, aviso) = recuperar(&datos, &mut nuevo).unwrap();
+        assert!(!recuperada && aviso.is_some_and(|a| a.contains("se conserva sin cambios")));
+        assert!(!ruta.exists());
+        let apartada = ruta.with_extension("json.ilegible");
+        assert_eq!(std::fs::read(&apartada).unwrap(), b"sesion incompleta ficticia");
+        assert!(listar(&datos).is_empty(), "la copia apartada no entra en la retención");
+        std::fs::remove_dir_all(datos).unwrap();
+    }
 
     #[test]
     fn retencion_por_cantidad_y_antiguedad() {

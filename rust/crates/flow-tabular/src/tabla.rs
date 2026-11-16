@@ -49,24 +49,68 @@ fn hoja_ignorada(nombre: &str) -> bool {
 }
 
 /// Hojas y filas que parecen el encabezado de una tabla de Espera, Cumplimiento o Informes.
+/// La hoja de cruce del Cumplimiento detectado no es una tabla de Informes (`reader.py::_select_cross`).
 pub fn candidatas(libro: &Libro) -> Vec<Candidata> {
+    sin_hoja_de_cruce(libro, candidatas_y_error(libro).0)
+}
+
+/// Candidatas de cada hoja (la primera fila que sirve como encabezado, como `reader.py::_resolve_header_row`) y el
+/// primer error de mapeo encontrado, para explicarlo si no hay ninguna.
+fn candidatas_y_error(libro: &Libro) -> (Vec<Candidata>, Option<String>) {
     let mut salida = Vec::new();
+    let mut primer_error: Option<String> = None;
     for hoja in libro.hojas.iter().filter(|h| !hoja_ignorada(&h.nombre)) {
         for (i, fila) in hoja.filas.iter().take(FILAS_A_REVISAR).enumerate() {
             let cabeceras = cabeceras_de(fila);
-            if columnas::duplicadas(&cabeceras).is_some() {
+            if let Some(repetida) = columnas::duplicadas(&cabeceras) {
+                // Solo cuenta como error si, sin la repetición, la fila sería el encabezado de una etapa: un título
+                // repetido en una portada no explica nada.
+                let mut unicas: Vec<String> = Vec::new();
+                for c in &cabeceras {
+                    if !unicas.iter().any(|u| normalizar_columna(u) == normalizar_columna(c)) {
+                        unicas.push(c.clone());
+                    }
+                }
+                let parece = ETAPAS.into_iter().any(|e| columnas::mapear(&unicas, e).is_ok_and(|m| columnas::es_tabla_de(&m, e)));
+                if parece && primer_error.is_none() {
+                    primer_error = Some(format!("Encabezados duplicados o equivalentes en «{}»: {repetida}.", hoja.nombre));
+                }
                 continue;
             }
-            let etapas: Vec<Etapa> = ETAPAS
-                .into_iter()
-                .filter(|e| columnas::mapear(&cabeceras, *e).is_ok_and(|m| columnas::es_tabla_de(&m, *e)))
-                .collect();
+            let mut etapas: Vec<Etapa> = Vec::new();
+            for e in ETAPAS {
+                match columnas::mapear(&cabeceras, e) {
+                    Ok(m) if columnas::es_tabla_de(&m, e) => etapas.push(e),
+                    Ok(_) => {}
+                    Err(error) => {
+                        primer_error.get_or_insert_with(|| format!("«{}», fila {}: {error}", hoja.nombre, i + 1));
+                    }
+                }
+            }
             if !etapas.is_empty() {
                 salida.push(Candidata { hoja: hoja.nombre.clone(), fila_cabecera: i + 1, etapas });
+                // Un encabezado repetido más abajo en la misma hoja no es otra tabla.
+                break;
             }
         }
     }
-    salida
+    (salida, primer_error)
+}
+
+/// Quita la hoja que `cruce()` usaría para un Cumplimiento detectado, salvo que también sea un Cumplimiento o que
+/// se llame como una de sus etapas (una hoja «Informes» es la tabla de Informes, como en `reader.py::read_workbook`).
+fn sin_hoja_de_cruce(libro: &Libro, mut todas: Vec<Candidata>) -> Vec<Candidata> {
+    let excluidas: Vec<String> = todas
+        .iter()
+        .filter(|c| c.etapas.contains(&Etapa::Cumplimiento))
+        .filter_map(|c| hoja_cruce(libro, &c.hoja).ok().flatten().map(|(h, _, _)| h.nombre.clone()))
+        .collect();
+    todas.retain(|c| {
+        c.etapas.contains(&Etapa::Cumplimiento)
+            || Etapa::desde(&c.hoja).is_some_and(|e| c.etapas.contains(&e))
+            || !excluidas.contains(&c.hoja)
+    });
+    todas
 }
 
 /// Etapa que corresponde a una candidata cuando no se pidió una: por el nombre de la hoja, por ser la única
@@ -79,8 +123,7 @@ fn etapa_natural(c: &Candidata, archivo: &str) -> Option<Etapa> {
         return Some(c.etapas[0]);
     }
     let nombre = normalizar_columna(archivo);
-    let en_nombre: Vec<Etapa> =
-        c.etapas.iter().copied().filter(|e| nombre.contains(&e.nombre().to_lowercase())).collect();
+    let en_nombre: Vec<Etapa> = c.etapas.iter().copied().filter(|e| nombre.contains(&e.nombre().to_lowercase())).collect();
     (en_nombre.len() == 1).then(|| en_nombre[0])
 }
 
@@ -93,10 +136,7 @@ fn filas_de(libro: &Libro, hoja: &Hoja, fila_cabecera: usize, mapeo: &BTreeMap<S
     let mut filas = Vec::new();
     for (i, celdas) in hoja.filas.iter().enumerate().skip(fila_cabecera) {
         // Totales, pies y notas no son registros: un registro tiene dato en al menos dos columnas reconocidas.
-        let con_dato = mapeo
-            .values()
-            .filter(|col| celdas.get(**col).is_some_and(|c| !flow_dominio::texto::es_vacio(&c.texto())))
-            .count();
+        let con_dato = mapeo.values().filter(|col| celdas.get(**col).is_some_and(|c| !flow_dominio::texto::es_vacio(&c.texto()))).count();
         if con_dato < 2 {
             continue;
         }
@@ -109,9 +149,11 @@ fn filas_de(libro: &Libro, hoja: &Hoja, fila_cabecera: usize, mapeo: &BTreeMap<S
     filas
 }
 
-/// Hoja de cruce: otra hoja con las seis columnas de identidad y vencimiento. Si hay más de una, no se usa ninguna.
-fn cruce(libro: &Libro, principal: &str, avisos: &mut Vec<String>) -> Vec<([String; 5], Fecha)> {
-    let mut encontradas: Vec<(&Hoja, usize, BTreeMap<String, usize>)> = Vec::new();
+type Cruce<'a> = (&'a Hoja, usize, BTreeMap<String, usize>);
+
+/// Hoja de cruce: otra hoja con las seis columnas de identidad y vencimiento. `Err(())` si hay más de una.
+fn hoja_cruce<'a>(libro: &'a Libro, principal: &str) -> Result<Option<Cruce<'a>>, ()> {
+    let mut encontradas: Vec<Cruce<'a>> = Vec::new();
     for hoja in libro.hojas.iter().filter(|h| h.nombre != principal && !hoja_ignorada(&h.nombre)) {
         for (i, fila) in hoja.filas.iter().take(FILAS_A_REVISAR).enumerate() {
             let cabeceras = cabeceras_de(fila);
@@ -125,17 +167,28 @@ fn cruce(libro: &Libro, principal: &str, avisos: &mut Vec<String>) -> Vec<([Stri
             }
         }
     }
-    if encontradas.len() != 1 {
-        avisos.push(if encontradas.is_empty() {
-            "Sin hoja de cruce: no se evalúa el próximo informe (C-10). El resto del análisis continúa.".to_string()
-        } else {
-            "Hay más de una hoja de cruce posible: no se usa ninguna. Deja una sola o corrígela.".to_string()
-        });
-        return Vec::new();
+    match encontradas.len() {
+        0 => Ok(None),
+        1 => Ok(encontradas.pop()),
+        _ => Err(()),
     }
-    let (hoja, fila_cabecera, mapeo) = &encontradas[0];
+}
+
+/// Fechas de la hoja de cruce. Si no hay una única hoja de cruce, no se usa ninguna.
+fn cruce(libro: &Libro, principal: &str, avisos: &mut Vec<String>) -> Vec<([String; 5], Fecha)> {
+    let (hoja, fila_cabecera, mapeo) = match hoja_cruce(libro, principal) {
+        Ok(Some(encontrada)) => encontrada,
+        Ok(None) => {
+            avisos.push("Sin hoja de cruce: no se evalúa el próximo informe (C-10). El resto del análisis continúa.".to_string());
+            return Vec::new();
+        }
+        Err(()) => {
+            avisos.push("Hay más de una hoja de cruce posible: no se usa ninguna. Deja una sola o corrígela.".to_string());
+            return Vec::new();
+        }
+    };
     let mut salida = Vec::new();
-    for celdas in hoja.filas.iter().skip(*fila_cabecera) {
+    for celdas in hoja.filas.iter().skip(fila_cabecera) {
         let texto = |campo: &str| celdas.get(mapeo[campo]).map(Celda::texto).unwrap_or_default();
         if let Some(vence) = celdas.get(mapeo["vencimiento"]).and_then(Celda::fecha) {
             let clave = ["rit", "rut", "nombre", "tribunal", "programa"].map(|c| identidad(&texto(c)));
@@ -168,17 +221,25 @@ fn construir(libro: &Libro, c: &Candidata, etapa: Etapa) -> Result<Tabla, String
 
 /// Lee la tabla de una etapa. Sin `etapa`, se deduce; si no es inequívoca, se pide elegir.
 pub fn leer_tabla(libro: &Libro, etapa: Option<Etapa>, hoja: Option<&str>) -> Result<Tabla, String> {
-    let mut todas = candidatas(libro);
+    let (mut todas, primer_error) = candidatas_y_error(libro);
     if let Some(pedida) = hoja {
+        // Una hoja pedida expresamente se lee aunque tenga la forma de una hoja de cruce.
         todas.retain(|c| c.hoja.trim().eq_ignore_ascii_case(pedida.trim()));
         if todas.is_empty() {
-            return Err(format!("La hoja «{pedida}» no existe o no contiene una tabla de RUS reconocible."));
+            let error = primer_error.filter(|e| e.contains(&format!("«{}»", pedida.trim())));
+            return Err(match error {
+                Some(e) => format!("La hoja «{pedida}» no contiene una tabla de RUS reconocible. {e}"),
+                None => format!("La hoja «{pedida}» no existe o no contiene una tabla de RUS reconocible."),
+            });
         }
+    } else {
+        todas = sin_hoja_de_cruce(libro, todas);
     }
     if todas.is_empty() {
-        return Err("No se identifica una tabla de Espera, Cumplimiento o Informes en el archivo. \
-                    Revisa sus encabezados."
-            .into());
+        // Como `reader.py`, se conserva el error de mapeo original (columna ambigua o duplicada) si lo hubo.
+        return Err(primer_error.unwrap_or_else(|| {
+            "No se identifica una tabla de Espera, Cumplimiento o Informes en el archivo. Revisa sus encabezados.".into()
+        }));
     }
     let mut opciones: Vec<(&Candidata, Etapa)> = match etapa {
         Some(e) => todas.iter().filter(|c| c.etapas.contains(&e)).map(|c| (c, e)).collect(),
@@ -207,18 +268,21 @@ pub fn leer_tabla(libro: &Libro, etapa: Option<Etapa>, hoja: Option<&str>) -> Re
 }
 
 /// Todas las tablas inequívocas del libro (un consolidado trae una hoja por etapa).
+/// Para cada etapa gana la hoja que se llama como ella; después, la primera compatible (`reader.py::read_workbook`).
 pub fn leer_todas(libro: &Libro) -> Vec<Tabla> {
-    let mut salida: Vec<Tabla> = Vec::new();
-    for c in candidatas(libro) {
-        if let Some(e) = etapa_natural(&c, &libro.nombre) {
-            if !salida.iter().any(|t| t.etapa == e) {
-                if let Ok(t) = construir(libro, &c, e) {
-                    salida.push(t);
-                }
+    let todas = candidatas(libro);
+    let mut elegidas: Vec<(usize, Etapa)> = Vec::new();
+    let por_nombre = |i: &usize| Etapa::desde(&todas[*i].hoja).is_some_and(|e| todas[*i].etapas.contains(&e));
+    let (primero, despues): (Vec<usize>, Vec<usize>) = (0..todas.len()).partition(por_nombre);
+    for i in primero.into_iter().chain(despues) {
+        if let Some(e) = etapa_natural(&todas[i], &libro.nombre) {
+            if !elegidas.iter().any(|(_, x)| *x == e) {
+                elegidas.push((i, e));
             }
         }
     }
-    salida
+    elegidas.sort_by_key(|(i, _)| *i);
+    elegidas.into_iter().filter_map(|(i, e)| construir(libro, &todas[i], e).ok()).collect()
 }
 
 /// Fuentes auxiliares conocidas. Conservan sus columnas, sin fingir que satisfacen las de una etapa del motor.

@@ -27,18 +27,23 @@ impl Drop for Temporal {
     }
 }
 fn preparar() -> (Temporal, Resumen) {
+    preparar_con(
+        "X-1-2099",
+        json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[{"descripcion":"Derecho a ser oído","fecha_iso":"2026-10-10","folio":"1","tramite":"Actuación"}]}),
+    )
+}
+
+fn preparar_con(rit: &str, historia: Value) -> (Temporal, Resumen) {
     let t = Temporal::nueva();
     let seleccion = json!({"tribunal":"901","screen":"seguimiento","tab":"Cumplimiento","modality":"2","report":null,"state":null,"month":null,"year":null});
     let mut r:Resumen=serde_json::from_value(json!({"version":1,"lote":{"consultas":[seleccion],"fechas":null,"conservar_filtros":false,"evidencia":false,"pausa_ms":250,"lecturas":{"bitacoras":true,"historia":true,"calendario":true,"meses":4}},"estado":"VALIDADA","terminadas":[0],"vacias":[],"archivos":[],"avisos":[],"lecturas":[],"paginas_lectura":[]})).unwrap();
     let casos: Vec<Value> = serde_json::from_str(include_str!("../../flow-captura/tests/datos/vinculos_ficticios.json")).unwrap();
     let html = casos[0]["html"].as_str().unwrap().replace("tablaEspera", "tablaCumplimiento");
-    let v = vinculos::extraer(html.as_bytes(), &r.lote.consultas[0]).unwrap().remove(0);
+    let mut v = vinculos::extraer(html.as_bytes(), &r.lote.consultas[0]).unwrap().remove(0);
+    v.rit = rit.into();
     r.paginas_lectura.push(recoleccion::Pagina { consulta: 0, numero: 1, vinculos: vec![v.clone()] });
     let datos = [
-        (
-            "historia",
-            json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[{"descripcion":"Derecho a ser oído","fecha_iso":"2026-10-10","folio":"1","tramite":"Actuación"}]}),
-        ),
+        ("historia", historia),
         ("bitacora", json!({"entries":[{"fecha":"2026-10-11","texto":"Se informa derecho a ser oído aplicado el 10/10/2026."}]})),
         (
             "calendario",
@@ -65,7 +70,7 @@ fn preparar() -> (Temporal, Resumen) {
     }
     for pagina in 1..=2 {
         let nombre = if pagina == 1 { "Persona Ficticia" } else { "Otra Persona Ficticia" };
-        let html=format!("<html><table><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Tribunal</th><th>DIAS DE CUMPLIMIENTO</th><th>DIAS PARA EGRESAR</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>{nombre}</td><td>PRM Centro Ficticio</td><td>Laja</td><td>100</td><td>100</td></tr></table></html>");
+        let html=format!("<html><table><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Tribunal</th><th>DIAS DE CUMPLIMIENTO</th><th>DIAS PARA EGRESAR</th></tr><tr><td>{rit}</td><td>11111111-0</td><td>{nombre}</td><td>PRM Centro Ficticio</td><td>Laja</td><td>100</td><td>100</td></tr></table></html>");
         let nombre = format!("pagina-{pagina}.xls");
         std::fs::write(t.0.join(&nombre), &html).unwrap();
         r.archivos.push(flow_captura::lotes::Archivo {
@@ -198,4 +203,57 @@ fn egresados_no_generan_observaciones_y_participan_en_n04_y_q03() {
     assert!(fila.observacion.is_empty() && fila.propuesta.acciones.is_empty() && fila.propuesta.reglas.is_empty());
     assert!(fila.propuesta.avisos.iter().any(|a| a.starts_with("N-04:")));
     assert!(fila.propuesta.avisos.iter().any(|a| a.starts_with("Q-03:")));
+}
+
+#[test]
+fn una_pagina_no_compatible_se_omite_con_aviso_y_el_lote_continua() {
+    let (t, mut r) = preparar();
+    let html = b"<html><table><tr><th>Columna ficticia</th><th>Otra</th></tr><tr><td>a</td><td>b</td></tr></table></html>";
+    std::fs::write(t.0.join("pagina-3.xls"), html).unwrap();
+    r.archivos.push(flow_captura::lotes::Archivo {
+        nombre: "pagina-3.xls".into(),
+        sha256: huella(html),
+        consulta: 0,
+        pagina: 3,
+        total: 3,
+        registros: 1,
+    });
+    let corte = "2026-10-20".parse().unwrap();
+    let trabajos = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
+    assert_eq!(trabajos.len(), 1);
+    assert_eq!(trabajos[0].filas.len(), 2);
+    assert!(
+        trabajos[0].avisos.iter().any(|a| a.starts_with("Consulta 1, página 3:") && a.contains("Se omitió")),
+        "{:?}",
+        trabajos[0].avisos
+    );
+    // Si ninguna página sirve, el error lo explica (no queda un lote vacío en silencio).
+    r.archivos.retain(|a| a.pagina == 3);
+    let error = captura::importar(&t.0, &r, corte, &Config::default()).unwrap_err();
+    assert!(error.contains("Ninguna página") && error.contains("página 3"), "{error}");
+}
+
+#[test]
+fn contexto_anterior_de_la_historia_llega_al_motor_igual_que_un_tramite_de_la_historia() {
+    // Causa P con sentencia anterior a la ventana: el Descargador la conserva en `contexto_anterior`.
+    let sentencia = json!({"descripcion":"Dictación de sentencia","fecha_iso":"2026-03-02","folio":"4","tramite":"Resolución"});
+    let corte = "2026-10-20".parse().unwrap();
+    let con_contexto =
+        json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[],"contexto_anterior":[sentencia.clone()]});
+    let (t, r) = preparar_con("P-1-2099", con_contexto);
+    let a = captura::importar(&t.0, &r, corte, &Config::default()).unwrap();
+    let pa = &a[0].filas[0].propuesta;
+    assert!(pa.reglas.iter().any(|x| x == "HISTORIA.P_FINALIZADA"), "{:?}", pa.reglas);
+    // El paquete entrega todas las filas de historia juntas y `Historia` separa la ventana por fecha:
+    // el mismo trámite dentro de `filas` da exactamente la misma propuesta.
+    let en_filas = json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[sentencia]});
+    let (t2, r2) = preparar_con("P-1-2099", en_filas);
+    let b = captura::importar(&t2.0, &r2, corte, &Config::default()).unwrap();
+    let pb = &b[0].filas[0].propuesta;
+    assert_eq!((&pa.observacion, &pa.reglas, &pa.acciones, &pa.marcas), (&pb.observacion, &pb.reglas, &pb.acciones, &pb.marcas));
+    // Un lote antiguo sin el campo sigue funcionando y no inventa el cierre.
+    let sin = json!({"desde":"2026-06-20","hasta":"2026-10-20","advertencias":[],"filas":[]});
+    let (t3, r3) = preparar_con("P-1-2099", sin);
+    let c = captura::importar(&t3.0, &r3, corte, &Config::default()).unwrap();
+    assert!(!c[0].filas[0].propuesta.reglas.iter().any(|x| x == "HISTORIA.P_FINALIZADA"));
 }

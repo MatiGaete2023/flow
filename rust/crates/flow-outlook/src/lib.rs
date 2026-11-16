@@ -6,6 +6,7 @@ use flow_productos::correos::{direcciones, Borrador};
 
 #[cfg(windows)]
 mod com;
+pub mod html;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Resultado {

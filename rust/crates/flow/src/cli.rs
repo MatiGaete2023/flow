@@ -198,7 +198,9 @@ fn producir_interno(
     let libro = excel::ruta_nueva(&carpeta, &format!("Observaciones {}", trabajo.nombre()), "xlsx");
     excel::observaciones(trabajo, &libro)?;
     p.creados.push(format!("Excel de observaciones: {}", libro.display()));
-    let opciones = correos::Opciones { modalidades: modalidades.to_string(), hoy: None };
+    // Las modalidades escritas filtran las filas solo si todas se reconocen (RES, AMB, FAE, DCE).
+    let opciones =
+        correos::Opciones { modalidades: modalidades.to_string(), hoy: None, claves_modalidad: correos::claves_de_texto(modalidades) };
     for tipo in correos::Tipo::TODOS.into_iter().filter(|_| trabajo.fuente.is_none()) {
         if tipo.usa_modalidades(trabajo.etapa) && modalidades.trim().is_empty() {
             if tipo == correos::Tipo::Informativo || trabajo.filas.iter().any(|f| tipo.accion().is_some_and(|a| f.tiene_accion(a))) {
@@ -456,14 +458,14 @@ mod pruebas_producir {
             }
         };
         let datos = temp.path().join("datos");
-        let r = producir_interno(&t, temp.path(), "FAE", &contactos, Some((&datos, &guardar)), None).unwrap();
+        let r = producir_interno(&t, temp.path(), "todas las modalidades", &contactos, Some((&datos, &guardar)), None).unwrap();
         let primero = n.get();
         assert!(primero >= 3);
         assert!(r.creados.iter().any(|s| s.contains(".eml")));
         assert!(r.creados.iter().any(|s| s.contains(".docx")));
         assert!(r.pendientes.iter().any(|s| s.contains("Fallo ficticio al adjuntar")));
         assert!(r.carpeta.join("Productos.json").is_file());
-        let r2 = producir_interno(&t, temp.path(), "FAE", &contactos, Some((&datos, &guardar)), None).unwrap();
+        let r2 = producir_interno(&t, temp.path(), "todas las modalidades", &contactos, Some((&datos, &guardar)), None).unwrap();
         assert_eq!(n.get(), primero + 1);
         assert!(r2.creados.iter().any(|s| s.contains("no se duplicó")));
     }

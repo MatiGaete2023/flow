@@ -155,9 +155,7 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
         return true;
     }
     let b = flow_dominio::texto::normalizar(buscar);
-    ["rit", "nombre", "programa", "rut", "tribunal"]
-        .iter()
-        .any(|c| flow_dominio::texto::normalizar(&fila.registro.texto(c)).contains(&b))
+    ["rit", "nombre", "programa", "rut", "tribunal"].iter().any(|c| flow_dominio::texto::normalizar(&fila.registro.texto(c)).contains(&b))
         || flow_dominio::texto::normalizar(&fila.observacion).contains(&b)
 }
 
@@ -234,15 +232,16 @@ impl App {
         fecha_de_texto(&self.corte)
     }
 
-    fn recuperar_trabajos(&mut self, trabajos: &mut [Trabajo]) -> Result<usize, String> {
+    /// Recupera las sesiones de los trabajos recién abiertos. Devuelve cuántas y los avisos para mostrar una vez.
+    fn recuperar_trabajos(&mut self, trabajos: &mut [Trabajo]) -> Result<(usize, Vec<String>), String> {
         let mut recuperados = 0;
+        let mut avisos = Vec::new();
         for trabajo in trabajos {
-            if let Some(anterior) = almacen::recuperar(&self.datos, trabajo)? {
-                *trabajo = anterior;
-                recuperados += 1;
-            }
+            let (recuperada, aviso) = almacen::recuperar(&self.datos, trabajo)?;
+            recuperados += usize::from(recuperada);
+            avisos.extend(aviso);
         }
-        Ok(recuperados)
+        Ok((recuperados, avisos))
     }
     fn cargar(&mut self, ruta: PathBuf) {
         self.cargar_modo(ruta, false);
@@ -256,11 +255,11 @@ impl App {
                 if !self.guardar_sesion() {
                     return;
                 }
-                let recuperados = if reanalizar {
-                    0
+                let (recuperados, avisos) = if reanalizar {
+                    (0, Vec::new())
                 } else {
                     match self.recuperar_trabajos(&mut trabajos) {
-                        Ok(n) => n,
+                        Ok(r) => r,
                         Err(e) => return self.mal(e),
                     }
                 };
@@ -273,6 +272,11 @@ impl App {
                 }
                 if recuperados > 0 {
                     texto.push_str(" Se recuperaron las ediciones y marcas de la sesión guardada.");
+                }
+                // Reglas distintas o sesión ilegible: se dice una vez, sin guardarlo en la sesión.
+                for aviso in avisos {
+                    texto.push(' ');
+                    texto.push_str(&aviso);
                 }
                 self.activar(trabajo);
                 self.otros = trabajos;
@@ -308,7 +312,9 @@ impl App {
     }
 
     fn elegir_archivo(&mut self) {
-        let dialogo = rfd::FileDialog::new().add_filter("Excel de RUS o paquete del Descargador", &["xls", "xlsx", "xlsm", "zip"]).set_title("Elegir Excel de RUS o paquete ZIP");
+        let dialogo = rfd::FileDialog::new()
+            .add_filter("Excel de RUS o paquete del Descargador", &["xls", "xlsx", "xlsm", "zip"])
+            .set_title("Elegir Excel de RUS o paquete ZIP");
         if let Some(ruta) = dialogo.pick_file() {
             self.cargar(ruta);
         }
@@ -332,16 +338,22 @@ impl App {
         if !self.guardar_sesion() {
             return;
         }
-        if let Err(e) = self.recuperar_trabajos(&mut trabajos) {
-            return self.mal(e);
-        }
+        let avisos = match self.recuperar_trabajos(&mut trabajos) {
+            Ok((_, avisos)) => avisos,
+            Err(e) => return self.mal(e),
+        };
         let actual = trabajos.remove(0);
         self.activar(actual);
         self.otros = trabajos;
         self.archivo = None;
         self.pestana = Pestana::Trabajo;
         self.guardar_sesion();
-        self.bien("Captura cargada. Revisa las observaciones antes de preparar los productos.");
+        let mut texto = "Captura cargada. Revisa las observaciones antes de preparar los productos.".to_string();
+        for aviso in avisos {
+            texto.push(' ');
+            texto.push_str(&aviso);
+        }
+        self.bien(texto);
     }
 
     fn guardar_sesion(&mut self) -> bool {
@@ -359,7 +371,13 @@ impl App {
         match almacen::listar(&self.datos).first().map(|(r, _)| almacen::cargar(r)) {
             Some(Ok(t)) => {
                 self.corte = t.corte.format("%d/%m/%Y").to_string();
-                let texto = format!("Trabajo reanudado: {} del {} ({}).", t.nombre(), self.corte, t.archivo);
+                let mut texto = format!("Trabajo reanudado: {} del {} ({}).", t.nombre(), self.corte, t.archivo);
+                if t.version_reglas != flow_trabajo::version_reglas(&self.motor) {
+                    texto.push_str(
+                        " Sus propuestas se calcularon con otras reglas: abre de nuevo el archivo para recalcularlas \
+                         (se conservan tus ediciones y marcas).",
+                    );
+                }
                 self.activar(t);
                 self.otros.clear();
                 self.archivo = None;
@@ -422,37 +440,57 @@ impl App {
         }
     }
 
+    /// Claves de las modalidades marcadas para filtrar filas (`modalities.py::selected_row`). Sin marcas, o con
+    /// «Otra…» (no se sabe qué filas comprende), no se filtra.
+    fn claves_modalidades(&self) -> Option<std::collections::BTreeSet<&'static str>> {
+        if !self.otra_modalidad.trim().is_empty() {
+            return None;
+        }
+        correos::claves_modalidad(self.modalidades.iter().filter(|(_, si)| *si).map(|(m, _)| m.as_str()))
+    }
+
     fn preparar_borradores(&mut self) {
         if self.trabajo.as_ref().is_some_and(|t| t.fuente.is_some()) {
             return self.mal("Esta consulta auxiliar no genera borradores ni proyectos de resolución.");
         }
         let Some(carpeta) = self.carpeta_productos() else { return };
         let Some(trabajo) = &self.trabajo else { return };
-        let opciones = correos::Opciones { modalidades: self.texto_modalidades(), hoy: Some(flow_tabular::libro::hoy()) };
+        let opciones = correos::Opciones {
+            modalidades: self.texto_modalidades(),
+            hoy: Some(flow_tabular::libro::hoy()),
+            claves_modalidad: self.claves_modalidades(),
+        };
         let mut lista = Vec::new();
         let mut saltados = Vec::new();
+        let mut fallidos = Vec::new();
         for tipo in Tipo::TODOS {
             if tipo.usa_modalidades(trabajo.etapa) && opciones.modalidades.is_empty() {
                 saltados.push(tipo.titulo(trabajo.etapa));
                 continue;
             }
+            // Como `producir_interno`: un tipo que no se puede preparar no anula los demás.
             match correos::preparar(trabajo, tipo, &opciones, &self.contactos, &carpeta.join("correos")) {
                 Ok(mut nuevos) => lista.append(&mut nuevos),
-                Err(e) => return self.mal(e),
+                Err(e) => fallidos.push(format!("{}: {e}", tipo.titulo(trabajo.etapa))),
             }
         }
-        let texto = if saltados.is_empty() {
-            format!("{} borradores preparados. Revisa cada uno antes de guardarlo.", lista.len())
-        } else {
-            format!(
-                "{} borradores preparados. Sin modalidades marcadas no se preparan: {}.",
-                lista.len(),
-                saltados.join("; ")
-            )
-        };
+        let mut texto = format!("{} borradores preparados.", lista.len());
+        if saltados.is_empty() && fallidos.is_empty() {
+            texto.push_str(" Revisa cada uno antes de guardarlo.");
+        }
+        if !saltados.is_empty() {
+            texto.push_str(&format!(" Sin modalidades marcadas no se preparan: {}.", saltados.join("; ")));
+        }
+        if !fallidos.is_empty() {
+            texto.push_str(&format!(" No se prepararon: {}", fallidos.join(" ")));
+        }
         self.borradores = lista;
         self.estados_borradores.clear();
-        self.bien(texto);
+        if fallidos.is_empty() {
+            self.bien(texto);
+        } else {
+            self.mal(texto);
+        }
     }
 
     /// Guarda los borradores listos. En Outlook quedan en Borradores; si no, como archivos .eml sin enviar.
@@ -689,7 +727,12 @@ impl App {
             };
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.heading(format!("{} · {}", fila.registro.texto("rit"), excel::valor(fila, "nombre")));
-                ui.label(format!("{} · {} · fila {} del Excel", fila.registro.texto("programa"), fila.registro.texto("tribunal"), fila.numero));
+                ui.label(format!(
+                    "{} · {} · fila {} del Excel",
+                    fila.registro.texto("programa"),
+                    fila.registro.texto("tribunal"),
+                    fila.numero
+                ));
                 ui.add_space(6.0);
                 ui.label(RichText::new("Observación").strong());
                 if ui.add(egui::TextEdit::multiline(&mut fila.observacion).desired_width(f32::INFINITY).desired_rows(7)).changed() {
@@ -966,7 +1009,8 @@ impl App {
             if self.proyectos.iter().any(|p| p.listo()) && ui.button("Generar Word").clicked() {
                 generar = true;
             }
-            if ui.button("Carpeta de plantillas propias").on_hover_text("Ej.: TOME_PC_IE.docx con variables {{RIT}}, {{NOMBRE}}…").clicked() {
+            if ui.button("Carpeta de plantillas propias").on_hover_text("Ej.: TOME_PC_IE.docx con variables {{RIT}}, {{NOMBRE}}…").clicked()
+            {
                 let carpeta = self.plantillas_usuario();
                 let _ = std::fs::create_dir_all(&carpeta);
                 abrir_en_sistema(&carpeta);
@@ -1208,10 +1252,16 @@ impl eframe::App for App {
 /// Abre la ventana. `archivo` permite arrastrar un Excel sobre el ejecutable.
 pub fn abrir(archivo: Option<PathBuf>, herramienta: Herramienta) -> i32 {
     let opciones = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([1180.0, 720.0]).with_min_inner_size([900.0, 560.0]).with_title(herramienta.titulo()),
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1180.0, 720.0])
+            .with_min_inner_size([900.0, 560.0])
+            .with_title(herramienta.titulo()),
         ..Default::default()
     };
-    match eframe::run_native(herramienta.titulo(), opciones, Box::new(|cc| {
+    match eframe::run_native(
+        herramienta.titulo(),
+        opciones,
+        Box::new(|cc| {
             cc.egui_ctx.set_theme(egui::ThemePreference::System);
             cc.egui_ctx.set_zoom_factor(1.15);
             Ok(Box::new(App::nueva(archivo, herramienta)))
@@ -1251,14 +1301,14 @@ mod pruebas_herramientas {
 mod pruebas_captura {
     use super::*;
 
-    static SECUENCIA:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+    static SECUENCIA: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
     fn preparar() -> (PathBuf, flow_captura::lotes::Resumen) {
         let base = std::env::temp_dir().join(format!(
             "flow-ui-ficticia-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
-            SECUENCIA.fetch_add(1,std::sync::atomic::Ordering::Relaxed)
+            SECUENCIA.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         std::fs::create_dir(&base).unwrap();
         let datos = std::fs::read(format!("{}/../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx", env!("CARGO_MANIFEST_DIR"))).unwrap();
@@ -1365,11 +1415,20 @@ mod pruebas_captura {
         app.cargar(archivo.clone());
         let ruta = almacen::listar(&datos)[0].0.clone();
         std::fs::write(&ruta, b"sesion incompleta ficticia").unwrap();
-        let mut nueva = App::con_datos(datos, None);
+        let mut nueva = App::con_datos(datos.clone(), None);
         nueva.corte = "08/10/2026".into();
         nueva.cargar(archivo);
-        assert!(nueva.trabajo.is_none());
-        assert_eq!(std::fs::read(ruta).unwrap(), b"sesion incompleta ficticia");
+        // Una sesión ilegible (dañada o de un formato anterior) no impide abrir el archivo: se analiza de nuevo y la
+        // sesión anterior se conserva intacta con otro nombre.
+        assert!(nueva.trabajo.is_some());
+        assert!(nueva.mensaje.as_ref().is_some_and(|(error, s)| !error && s.contains("se conserva sin cambios")));
+        assert_eq!(std::fs::read(ruta.with_extension("json.ilegible")).unwrap(), b"sesion incompleta ficticia");
+        assert_eq!(almacen::listar(&datos).len(), 1, "la sesión nueva se guarda aparte");
+        // Volver a abrir recupera la sesión nueva y no repite el aviso.
+        let mut otra = App::con_datos(datos.clone(), None);
+        otra.corte = "08/10/2026".into();
+        otra.cargar(base.join("consulta-001-p001-de-001.xls"));
+        assert!(otra.mensaje.as_ref().is_some_and(|(error, s)| !error && !s.contains("se conserva sin cambios")));
         std::fs::remove_dir_all(base).unwrap();
     }
     #[test]
@@ -1412,5 +1471,47 @@ mod pruebas_captura {
         assert!(app.mensaje.as_ref().is_some_and(|(error, s)| *error && s.contains("3 ya estaban guardados")));
         assert_eq!(app.estados_borradores[&2], crate::borradores::Estado::Incierto);
         std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn un_tipo_sin_programa_no_anula_los_demas_borradores() {
+        let (base, _) = preparar();
+        let datos = base.join("datos");
+        let archivo = base.join("consulta-001-p001-de-001.xls");
+        let mut app = App::con_datos(datos, None);
+        app.corte = "08/10/2026".into();
+        app.cargar(archivo);
+        let salida = base.join("salida");
+        std::fs::create_dir(&salida).unwrap();
+        app.ajustes.salida = Some(salida);
+        // «Otra…» no filtra filas (con un filtro, la fila sin programa quedaría fuera) y habilita el informativo.
+        app.otra_modalidad = "modalidad ficticia".into();
+        let t = app.trabajo.as_mut().unwrap();
+        // Una fila con acción «programa_espera» y PROGRAMA vacío: ese correo pide completar el programa.
+        let i = t
+            .filas
+            .iter()
+            .position(|f| f.tiene_accion("programa_espera") && flow_dominio::Tribunal::desde(&f.registro.texto("tribunal")).is_some())
+            .expect("caso ficticio con lista de espera");
+        t.filas[i].registro.poner("programa", flow_dominio::Celda::Vacia);
+        app.preparar_borradores();
+        assert!(!app.borradores.is_empty(), "los demás tipos se preparan");
+        assert!(app.borradores.iter().all(|b| b.tipo != Tipo::ProgramaEspera || !b.programa.is_empty()));
+        assert!(
+            app.mensaje.as_ref().is_some_and(|(error, s)| *error && s.contains("No se prepararon") && s.contains("PROGRAMA")),
+            "{:?}",
+            app.mensaje
+        );
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn las_modalidades_marcadas_filtran_filas_y_otra_no_filtra() {
+        let mut app = App::con_datos(std::env::temp_dir().join("flow-ui-modalidades-ficticia"), None);
+        assert_eq!(app.claves_modalidades(), None);
+        app.modalidades[1].1 = true;
+        assert_eq!(app.claves_modalidades(), Some(["AMB"].into()));
+        app.otra_modalidad = "Otra ficticia".into();
+        assert_eq!(app.claves_modalidades(), None);
     }
 }

@@ -392,7 +392,17 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
                 .collect::<std::collections::BTreeSet<_>>()
                 .into_iter()
                 .collect();
-            mapeo = columnas::mapear(&cabeceras, Etapa::Espera)?;
+            // Como `capture_input.py`, cada registro se mapea con sus propias columnas: dos alias del mismo campo en
+            // registros distintos no son una columna ambigua. El mapeo declarado usa la primera columna vista.
+            mapeo = BTreeMap::new();
+            for fila in &filas {
+                let propias: Vec<String> = contexto.origenes[&fila.id].valores.keys().cloned().collect();
+                for (campo, i) in columnas::mapear(&propias, Etapa::Espera).map_err(|e| format!("Registro {}: {e}", fila.id))? {
+                    if let Some(posicion) = cabeceras.iter().position(|c| *c == propias[i]) {
+                        mapeo.entry(campo).or_insert(posicion);
+                    }
+                }
+            }
             for fila in &mut filas {
                 fila.celdas = cabeceras.iter().map(|k| contexto.origenes[&fila.id].valores.get(k).cloned().unwrap_or_default()).collect();
             }
@@ -434,6 +444,45 @@ mod pruebas {
         assert_eq!(filas.len(), 2);
         assert_eq!(filas[0]["b"], "x, \"y\"\nz");
         assert_eq!(filas[1]["b"], "");
+    }
+
+    /// Paquete mínimo ficticio: solo la tabla de registros, con su huella en el manifiesto.
+    fn paquete_ficticio(registros: &[(&str, &str, Value)]) -> Vec<u8> {
+        use std::io::Write;
+        let mut csv = String::from("record_id,record_type,query_id,identity_status,modality_raw,normalized_json\n");
+        for (id, tipo, valores) in registros {
+            csv.push_str(&format!("{id},{tipo},q1,INCIERTA,,\"{}\"\n", valores.to_string().replace('"', "\"\"")));
+        }
+        let manifiesto = serde_json::json!({
+            "schema_id": "CSMP_CAPTURE", "schema_version": "1.0", "required_features": [], "table_states": {},
+            "files": [{"path": "data/registros.csv", "type": "normalized_table", "table": "registros",
+                       "rows": registros.len(), "bytes": csv.len(), "sha256": hex(csv.as_bytes())}],
+        });
+        let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        let opciones = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+        zip.start_file("manifest.json", opciones).unwrap();
+        zip.write_all(manifiesto.to_string().as_bytes()).unwrap();
+        zip.start_file("data/registros.csv", opciones).unwrap();
+        zip.write_all(csv.as_bytes()).unwrap();
+        zip.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn egresados_con_alias_distintos_por_registro_no_son_ambiguos() {
+        let datos = paquete_ficticio(&[
+            ("e1", "EGRESADOS", serde_json::json!({"RIT": "X-1-2099", "RUT": "1-9", "NOMBRE": "Persona Ficticia", "TRIBUNAL": "Laja"})),
+            ("e2", "EGRESADOS", serde_json::json!({"RIT": "X-2-2099", "RUT MENOR": "2-7", "NOMBRE": "Otra Ficticia", "TRIBUNAL": "Laja"})),
+        ]);
+        let corte = "2026-10-20".parse().unwrap();
+        let p = importar("ficticio.zip", &datos, corte, &Config::default()).unwrap();
+        let t = &p.trabajos[0];
+        assert_eq!(t.filas.len(), 2);
+        assert_eq!(t.filas[0].registro.texto("rut"), "1-9");
+        assert_eq!(t.filas[1].registro.texto("rut"), "2-7");
+        assert_eq!(t.cabeceras[t.mapeo["rut"]], "RUT");
+        // Dentro de un mismo registro, dos alias del mismo campo siguen siendo un error (como en Python).
+        let ambiguo = paquete_ficticio(&[("e3", "EGRESADOS", serde_json::json!({"RUT": "1-9", "RUT MENOR": "2-7", "NOMBRE": "X"}))]);
+        assert!(importar("ficticio.zip", &ambiguo, corte, &Config::default()).unwrap_err().contains("Columna ambigua"));
     }
 
     #[test]

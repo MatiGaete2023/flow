@@ -9,9 +9,7 @@ use chrono::Datelike;
 
 /// Ruta que no existe todavía: agrega « (2)», « (3)»… si el nombre está ocupado.
 pub fn ruta_nueva(carpeta: &Path, nombre: &str, extension: &str) -> PathBuf {
-    let limpio: String =
-        nombre.chars().map(|c| if r#"<>:"/\|?*"#.contains(c) || c.is_control() { '_' } else { c }).collect();
-    let limpio = limpio.trim().trim_end_matches('.').to_string();
+    let limpio = nombre_archivo(nombre);
     let mut ruta = carpeta.join(format!("{limpio}.{extension}"));
     let mut n = 2;
     while ruta.exists() {
@@ -19,6 +17,24 @@ pub fn ruta_nueva(carpeta: &Path, nombre: &str, extension: &str) -> PathBuf {
         n += 1;
     }
     ruta
+}
+
+/// Nombre de archivo válido en Windows (`outputs.py::program_filename`): sin caracteres prohibidos ni de control,
+/// sin puntos ni espacios al final, sin nombres reservados (CON, PRN, AUX, NUL, COM1–9, LPT1–9) y de 120 caracteres
+/// como máximo.
+pub fn nombre_archivo(nombre: &str) -> String {
+    let limpio: String = nombre.chars().map(|c| if r#"<>:"/\|?*"#.contains(c) || (c as u32) < 0x20 { '_' } else { c }).collect();
+    let mut limpio = limpio.trim().trim_end_matches(['.', ' ']).to_string();
+    if limpio.is_empty() {
+        limpio = "Programa no informado".into();
+    }
+    let raiz = limpio.split('.').next().unwrap_or("").to_ascii_uppercase();
+    let reservado = matches!(raiz.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || (raiz.len() == 4 && (raiz.starts_with("COM") || raiz.starts_with("LPT")) && matches!(raiz.as_bytes()[3], b'1'..=b'9'));
+    if reservado {
+        limpio.insert(0, '_');
+    }
+    limpio.chars().take(120).collect::<String>().trim_end_matches(['.', ' ']).to_string()
 }
 
 /// Carpeta nueva dentro de `base`: agrega « (2)», « (3)»… si el nombre está ocupado. La crea.
@@ -139,8 +155,7 @@ fn guardar(mut libro: Workbook, destino: &Path) -> Result<(), String> {
 
 /// Lo que hay que mirar en una fila: marcas de revisión y avisos, en una sola celda.
 pub fn revisar(fila: &FilaTrabajo) -> String {
-    let mut partes: Vec<String> =
-        fila.propuesta.marcas.iter().map(|m| format!("[{}] {}", m.nivel, m.texto)).collect();
+    let mut partes: Vec<String> = fila.propuesta.marcas.iter().map(|m| format!("[{}] {}", m.nivel, m.texto)).collect();
     partes.extend(fila.propuesta.avisos.iter().cloned());
     partes.join("\n")
 }

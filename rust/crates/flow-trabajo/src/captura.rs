@@ -27,10 +27,13 @@ fn historia(valor: &Value, corte: Fecha) -> Historia {
     } else {
         "COMPLETA"
     };
+    // `contexto_anterior`: último trámite anterior a la ventana por nomenclatura (lotes nuevos). `Historia` lo separa
+    // de la ventana por su fecha, como el paquete.
     let tramites = valor["filas"]
         .as_array()
         .into_iter()
         .flatten()
+        .chain(valor["contexto_anterior"].as_array().into_iter().flatten())
         .filter_map(|f| {
             let tramite =
                 Tramite::nuevo(f["descripcion"].as_str().unwrap_or(""), fecha(&f["fecha_iso"])?, f["folio"].as_str().unwrap_or(""));
@@ -59,6 +62,7 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
     let mut contexto = Contexto { proximos: Some(HashMap::new()), ..Default::default() };
     let mut avisos = resumen.avisos.clone();
     let mut libros = HashMap::new();
+    let mut omitidas: Vec<String> = Vec::new();
     for archivo in &resumen.archivos {
         let ruta = ruta_archivo(carpeta, &archivo.nombre)?;
         if std::fs::metadata(&ruta).map_err(|_| "Falta una descarga del lote.")?.len() > 80 * 1024 * 1024 {
@@ -69,7 +73,17 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
             return Err("Cambió una descarga desde su verificación; no se importó el lote.".into());
         }
         if archivo.nombre.ends_with(".xls") {
-            libros.insert(archivo.nombre.clone(), flow_tabular::leer_bytes(&archivo.nombre, datos)?);
+            // Una descarga ilegible no anula el resto del lote: queda como aviso (`capture_input.py` mapea por registro).
+            match flow_tabular::leer_bytes(&archivo.nombre, datos) {
+                Ok(libro) => {
+                    libros.insert(archivo.nombre.clone(), libro);
+                }
+                Err(e) => omitidas.push(format!(
+                    "Consulta {}, página {}: no se pudo leer la descarga ({e}); se omitió y el resto del lote continúa.",
+                    archivo.consulta + 1,
+                    archivo.pagina
+                )),
+            }
         }
     }
     let mut calendario91: HashMap<(String, [String; 4]), BTreeSet<Fecha>> = HashMap::new();
@@ -106,14 +120,26 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
         let Some(libro) = libros.get(&archivo.nombre) else {
             continue;
         };
-        let (mut tabla, tipo) = if seleccion.screen == "litigantes" {
-            (flow_tabular::leer_consulta(libro, "BUSQUEDA_LITIGANTES")?, "OTRO".to_string())
+        let (leida, tipo) = if seleccion.screen == "litigantes" {
+            (flow_tabular::leer_consulta(libro, "BUSQUEDA_LITIGANTES"), "OTRO".to_string())
         } else if seleccion.tab == "Egresados" {
-            (flow_tabular::leer_consulta(libro, "EGRESADOS")?, "EGRESADOS".to_string())
+            (flow_tabular::leer_consulta(libro, "EGRESADOS"), "EGRESADOS".to_string())
         } else if let Some(etapa) = Etapa::desde(&seleccion.tab) {
-            (flow_tabular::leer_tabla(libro, Some(etapa), None)?, etapa.nombre().to_string())
+            (flow_tabular::leer_tabla(libro, Some(etapa), None), etapa.nombre().to_string())
         } else {
             continue;
+        };
+        // Una página no compatible se informa y se omite; las demás consultas del lote se importan.
+        let mut tabla = match leida {
+            Ok(t) => t,
+            Err(e) => {
+                omitidas.push(format!(
+                    "Consulta {}, página {}: {e} Se omitió esta página; el resto del lote continúa.",
+                    archivo.consulta + 1,
+                    archivo.pagina
+                ));
+                continue;
+            }
         };
         let cruces = tabla
             .filas
@@ -244,6 +270,10 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
             tablas.push((tabla, vec![libro.sha256.clone()]));
         }
     }
+    if tablas.is_empty() && !omitidas.is_empty() {
+        return Err(format!("Ninguna página del lote se pudo importar. {}", omitidas.join(" ")));
+    }
+    avisos.extend(omitidas);
     avisos.sort();
     avisos.dedup();
     let nombre = format!("Lote {}", carpeta.file_name().unwrap_or_default().to_string_lossy());
