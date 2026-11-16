@@ -353,7 +353,6 @@ pub fn inventario(m: &Meta4) -> Vec<Vec<Celda>> {
             let observacion = match (f.resultado, f.seleccionado) {
                 ("NO CLASIFICADO", _) => "No se pudo identificar: tribunal",
                 (_, false) => "Fuera del filtro de tribunales",
-                _ if f.tipo == "SIN ARCHIVO" => "Consulta sin registros, sin evidencia PDF",
                 _ => "",
             };
             vec![
@@ -401,8 +400,6 @@ fn celda_matriz(m: &Meta4, clave: (&str, &str, &str)) -> String {
         texto
     } else if fuentes.iter().any(|f| f.tipo == "PDF") {
         "PDF · 0 registros".into()
-    } else if !fuentes.is_empty() {
-        "SIN REGISTROS · 0 registros".into()
     } else {
         "FALTANTE".into()
     }

@@ -169,7 +169,7 @@ pub struct Lectura {
 pub struct Fuente {
     pub archivo: String,
     pub lote: String,
-    /// «EXCEL», «PDF» (evidencia sin registros) o «SIN ARCHIVO» (consulta sin registros sin evidencia).
+    /// «EXCEL» o «PDF» (evidencia de una consulta sin registros). Una consulta vacía sin su PDF no es una fuente.
     pub tipo: &'static str,
     pub tribunal: Option<&'static str>,
     pub categoria: &'static str,
@@ -297,7 +297,10 @@ struct ConsultaLeida {
     lista: &'static str,
     categoria: &'static str,
     nombre: String,
+    /// Sin registros y con su PDF de evidencia verificado: cuenta como SIN REGISTROS (`inspect_zero_record_file`).
     vacia: bool,
+    /// Sin registros pero sin PDF de evidencia: como en Python, no es candidata y su combinación queda FALTANTE.
+    vacia_sin_evidencia: bool,
     evidencia: Option<String>,
     paginas_xls: Vec<(String, usize)>,
     filas: Vec<FilaLeida>,
@@ -341,6 +344,21 @@ fn leer_lotes(carpetas: &[PathBuf]) -> Result<(Vec<LoteLeido>, Vec<ConsultaLeida
             if !resumen.terminadas.contains(&numero) && !resumen.vacias.contains(&numero) {
                 return Err(format!("El lote «{etiqueta}» está incompleto: falta la consulta {nombre_consulta}. Retómalo en Captura."));
             }
+            // Como Python (`_lote`), una consulta vacía solo aporta su PDF de evidencia; aquí además se comprueba
+            // que esté en la carpeta y que su huella coincida con la del lote, igual que con los Excel.
+            let evidencia = match resumen.archivos.iter().find(|a| a.consulta == numero && a.nombre.ends_with(".pdf")) {
+                Some(pdf) if resumen.vacias.contains(&numero) => {
+                    let datos = std::fs::read(ruta_archivo(&carpeta, &pdf.nombre)?)
+                        .map_err(|_| format!("Falta la evidencia PDF de la consulta {nombre_consulta} del lote «{etiqueta}»."))?;
+                    if huella(&datos) != pdf.sha256 {
+                        return Err(format!(
+                            "La evidencia PDF de la consulta {nombre_consulta} del lote «{etiqueta}» cambió desde su verificación."
+                        ));
+                    }
+                    Some(pdf.nombre.clone())
+                }
+                _ => None,
+            };
             let mut c = ConsultaLeida {
                 lote: lotes.len(),
                 numero,
@@ -348,8 +366,9 @@ fn leer_lotes(carpetas: &[PathBuf]) -> Result<(Vec<LoteLeido>, Vec<ConsultaLeida
                 lista,
                 categoria: categoria_consulta,
                 nombre: nombre_consulta,
-                vacia: resumen.vacias.contains(&numero),
-                evidencia: resumen.archivos.iter().find(|a| a.consulta == numero && a.nombre.ends_with(".pdf")).map(|a| a.nombre.clone()),
+                vacia: resumen.vacias.contains(&numero) && evidencia.is_some(),
+                vacia_sin_evidencia: resumen.vacias.contains(&numero) && evidencia.is_none(),
+                evidencia,
                 paginas_xls: Vec::new(),
                 filas: Vec::new(),
                 tribunal: None,
@@ -612,7 +631,7 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
                 m.fuentes.push(Fuente {
                     archivo: c.evidencia.clone().unwrap_or_default(),
                     lote: etiqueta.clone(),
-                    tipo: if c.evidencia.is_some() { "PDF" } else { "SIN ARCHIVO" },
+                    tipo: "PDF",
                     tribunal: c.tribunal,
                     categoria: c.categoria,
                     lista: c.lista,
@@ -714,6 +733,21 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
         m.observaciones.retain(|o| elegidos.iter().any(|t| *t == o.tribunal));
         m.lecturas.retain(|l| elegidos.iter().any(|t| *t == l.tribunal));
         m.sin_bitacoras.retain(|(_, t)| elegidos.iter().any(|e| e == t));
+    }
+    // Como Python (`meta4_bitacoras.py:728`), lo que falta fuera de los tribunales elegidos no se informa.
+    let sin_evidencia: Vec<&str> = consultas
+        .iter()
+        .filter(|c| c.vacia_sin_evidencia)
+        .filter(|c| m.tribunales.as_ref().is_none_or(|e| c.tribunal.is_some_and(|t| e.contains(&t))))
+        .map(|c| c.nombre.as_str())
+        .collect();
+    if !sin_evidencia.is_empty() {
+        m.avisos.push(format!(
+            "{} consultas sin registros no traen su PDF de evidencia ({}): no cuentan como SIN REGISTROS y en la \
+             matriz de cobertura su combinación queda FALTANTE. Captura el lote con evidencia para acreditarlas.",
+            sin_evidencia.len(),
+            sin_evidencia.join("; ")
+        ));
     }
     let sin_atribuir = consultas.iter().filter(|c| c.vacia && c.tribunal.is_none()).count();
     if sin_atribuir > 0 {

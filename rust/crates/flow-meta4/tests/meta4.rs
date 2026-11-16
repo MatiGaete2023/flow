@@ -431,6 +431,58 @@ fn m5_tribunal_sin_registros_y_consultas_vacias_no_bloquean() {
     assert_eq!(rutas.len(), 5);
 }
 
+/// Decisión 11 del usuario: como `inspect_zero_record_file` de Python, una consulta vacía cuenta como SIN REGISTROS
+/// solo con su PDF de evidencia. Sin PDF no es candidata (FALTANTE en la matriz, fuera del inventario, con aviso), y un
+/// PDF ausente o alterado detiene Meta 4 igual que un Excel.
+#[test]
+fn consulta_vacia_sin_pdf_de_evidencia_queda_faltante() {
+    let t = Temporal::nueva();
+    let carpeta = t.0.join("Lote sin evidencia");
+    lote_con_vacia(&carpeta, true);
+    let pdf = carpeta.join("consulta-002-SIN-REGISTROS.pdf");
+
+    std::fs::write(&pdf, b"%PDF-1.4 otro contenido ficticio").unwrap();
+    let error = calcular(std::slice::from_ref(&carpeta), dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap_err();
+    assert!(error.contains("evidencia PDF") && error.contains("cambió"), "{error}");
+    std::fs::remove_file(&pdf).unwrap();
+    let error = calcular(std::slice::from_ref(&carpeta), dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap_err();
+    assert!(error.contains("Falta la evidencia PDF"), "{error}");
+
+    let mut r = Resumen::leer(&carpeta).unwrap();
+    r.archivos.retain(|a| !a.nombre.ends_with(".pdf"));
+    r.guardar(&carpeta).unwrap();
+    let m = calcular(std::slice::from_ref(&carpeta), dia("2026-10-16"), dia("2026-10-16"), &["Yumbel".into()]).unwrap();
+    assert!(m.fuentes.iter().all(|f| f.tipo == "EXCEL"), "{:?}", m.fuentes);
+    assert!(m.avisos.iter().any(|a| a.starts_with("1 consultas sin registros no traen su PDF de evidencia")), "{:?}", m.avisos);
+    let destino = t.0.join("Salida");
+    let rutas = salida::publicar(&m, &destino).unwrap();
+    let libro = flow_tabular::leer(&destino.join("Registros.xlsx")).unwrap();
+    let matriz = libro.hojas.iter().find(|h| h.nombre == "MATRIZ_COBERTURA").unwrap();
+    let fila = matriz.filas.iter().find(|f| f.first().is_some_and(|c| c.texto() == "YUMBEL")).unwrap();
+    assert_eq!(fila[1].texto(), "FALTANTE");
+    assert_eq!(fila[2].texto(), "EXCEL · 1 registro(s)");
+    assert!(matriz.filas[1][0].texto().starts_with("Cobertura: 1/4 · Faltantes: 3"), "{}", matriz.filas[1][0].texto());
+    // Como Python (`generate_meta4.py:1824-1827`), la planilla escribe SIN REGISTROS en todo bloque sin filas,
+    // tenga o no evidencia: la diferencia queda en la matriz y en el aviso.
+    let planilla = rutas.iter().find(|r| r.file_name().is_some_and(|n| n.to_string_lossy().starts_with("META 4"))).unwrap();
+    let planilla = flow_tabular::leer(planilla).unwrap();
+    let fae_espera = planilla.hojas.iter().find(|h| h.nombre == "FAE Espera").unwrap();
+    assert!(fae_espera.filas.iter().any(|f| f.first().is_some_and(|c| c.texto() == "SIN REGISTROS")));
+    // Fuera de los tribunales elegidos, la consulta sin evidencia de Yumbel no se informa.
+    let tome = t.0.join("Lote Tomé");
+    lote(&tome, "2026-10-16T15:00:00-03:00");
+    let otro = calcular(&[tome, carpeta.clone()], dia("2026-10-16"), dia("2026-10-16"), &["Tomé".into()]).unwrap();
+    assert!(!otro.avisos.iter().any(|a| a.contains("PDF de evidencia")), "{:?}", otro.avisos);
+
+    // Un lote solo con consultas vacías sin evidencia no tiene candidatos.
+    let vacio = t.0.join("Lote vacío sin evidencia");
+    lote_con_vacia(&vacio, false);
+    let mut r = Resumen::leer(&vacio).unwrap();
+    r.archivos.clear();
+    r.guardar(&vacio).unwrap();
+    assert!(calcular(&[vacio], dia("2026-10-16"), dia("2026-10-16"), &[]).is_err());
+}
+
 /// M6: Registros.xlsx trae INVENTARIO_ARCHIVOS y MATRIZ_COBERTURA; «Control de lecturas» va por bitácora (también las
 /// que no corresponden a una fila) con RUT y LECTURA; «Observaciones del mes» incluye bitácoras leídas antes del corte.
 #[test]
