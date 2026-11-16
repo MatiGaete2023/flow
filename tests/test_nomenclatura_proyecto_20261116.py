@@ -47,7 +47,7 @@ def test_res_nomencl_con_observacion_de_egreso_usa_egreso(tmp_path):
         tmp_path,
         [
             [
-                'X-1-2026',
+                'X-1-2099',
                 'LAJA',
                 'Persona Uno',
                 '11111111-1',
@@ -69,7 +69,7 @@ def test_res_nomencl_con_observacion_de_informe_usa_ingreso(tmp_path):
         tmp_path,
         [
             [
-                'X-2-2026',
+                'X-2-2099',
                 'MULCHEN',
                 'Persona Dos',
                 '22222222-2',
@@ -85,7 +85,7 @@ def test_res_nomencl_con_observacion_de_informe_usa_ingreso(tmp_path):
 
 def test_observacion_con_nomenclatura_entre_comillas_manda(tmp_path):
     texto = 'Se remite proyecto que aplica nomenclatura «Ingreso informe de diagnóstico» para regularizar.'
-    work = libro(tmp_path, [['X-3-2026', 'LAJA', 'Persona Tres', '33333333-3', 'AFT EJEMPLO', texto, 'NOMENCL']])
+    work = libro(tmp_path, [['X-3-2099', 'LAJA', 'Persona Tres', '33333333-3', 'AFT EJEMPLO', texto, 'NOMENCL']])
     (project,) = proyectos(work)
     assert project.values['NOMENCLATURA'] == 'Ingreso informe de diagnóstico'
 
@@ -93,13 +93,13 @@ def test_observacion_con_nomenclatura_entre_comillas_manda(tmp_path):
 def test_la_observacion_de_nomenclatura_elige_el_tipo_y_la_nomenclatura(tmp_path):
     # RES marcado sin tipo: la observación define NOMENCL y cuál nomenclatura.
     texto = 'Se remite proyecto de nomenclatura «Egreso de servicio protección especializada y otras redes».'
-    work = libro(tmp_path, [['X-4-2026', 'LAJA', 'Persona Cuatro', '44444444-4', 'AFT EJEMPLO', texto, 'X']])
+    work = libro(tmp_path, [['X-4-2099', 'LAJA', 'Persona Cuatro', '44444444-4', 'AFT EJEMPLO', texto, 'X']])
     (project,) = proyectos(work)
     assert project.kind == 'NOMENCL' and project.values['NOMENCLATURA'] == EGRESO_SERVICIO
 
 
 def test_sin_observacion_util_la_regla_del_motor_decide(tmp_path):
-    work = libro(tmp_path, [['X-5-2026', 'LAJA', 'Persona Cinco', '55555555-5', 'AFT EJEMPLO', 'Texto.', 'NOMENCL']])
+    work = libro(tmp_path, [['X-5-2099', 'LAJA', 'Persona Cinco', '55555555-5', 'AFT EJEMPLO', 'Texto.', 'NOMENCL']])
     row = work.rows[0]
     row.rules = ['HISTORIA.C10_ESCRITO']
     assert project_nomenclature([row]) == INGRESO_INFORME_X
@@ -115,7 +115,7 @@ def test_observacion_ambigua_o_ajena_no_inventa_nomenclatura(tmp_path):
         tmp_path,
         [
             [
-                'X-6-2026',
+                'X-6-2099',
                 'LAJA',
                 'Persona Seis',
                 '66666666-6',
@@ -123,7 +123,7 @@ def test_observacion_ambigua_o_ajena_no_inventa_nomenclatura(tmp_path):
                 'Informe de avance; evaluar egreso.',
                 'NOMENCL',
             ],
-            ['X-7-2026', 'LAJA', 'Persona Siete', '77777777-7', 'AFT EJEMPLO', 'Texto.', 'NOMENCL'],
+            ['X-7-2099', 'LAJA', 'Persona Siete', '77777777-7', 'AFT EJEMPLO', 'Texto.', 'NOMENCL'],
         ],
     )
     for project in proyectos(work):
@@ -131,7 +131,7 @@ def test_observacion_ambigua_o_ajena_no_inventa_nomenclatura(tmp_path):
 
 
 def test_nomenclatura_editada_por_el_usuario_se_respeta(tmp_path):
-    work = libro(tmp_path, [['X-8-2026', 'LAJA', 'Persona Ocho', '88888888-8', 'AFT EJEMPLO', 'Egreso.', 'NOMENCL']])
+    work = libro(tmp_path, [['X-8-2099', 'LAJA', 'Persona Ocho', '88888888-8', 'AFT EJEMPLO', 'Egreso.', 'NOMENCL']])
     work.rows[0].word_overrides['NOMENCLATURA'] = 'Nomenclatura escrita a mano'
     (project,) = proyectos(work)
     assert project.values['NOMENCLATURA'] == 'Nomenclatura escrita a mano'
@@ -150,10 +150,10 @@ def _cursivas(doc):
 
 def test_word_generado_sin_cursiva_en_ninguna_matriz(tmp_path):
     filas = [
-        ['X-9-2026', 'LAJA', 'Persona Nueve', '99999999-9', 'AFT EJEMPLO', 'Aplicar egreso.', 'NOMENCL'],
-        ['X-10-2026', 'MULCHEN', 'Persona Diez', '10101010-1', 'AFT EJEMPLO', 'Informe de avance.', 'NOMENCL'],
-        ['X-11-2026', 'LAJA', 'Persona Once', '12121212-1', 'AFT EJEMPLO', 'Texto.', 'PC_IE'],
-        ['X-12-2026', 'MULCHEN', 'Persona Doce', '13131313-1', 'AFT EJEMPLO', 'Texto.', 'PC_INFO'],
+        ['X-9-2099', 'LAJA', 'Persona Nueve', '99999999-9', 'AFT EJEMPLO', 'Aplicar egreso.', 'NOMENCL'],
+        ['X-10-2099', 'MULCHEN', 'Persona Diez', '10101010-1', 'AFT EJEMPLO', 'Informe de avance.', 'NOMENCL'],
+        ['X-11-2099', 'LAJA', 'Persona Once', '12121212-1', 'AFT EJEMPLO', 'Texto.', 'PC_IE'],
+        ['X-12-2099', 'MULCHEN', 'Persona Doce', '13131313-1', 'AFT EJEMPLO', 'Texto.', 'PC_INFO'],
     ]
     work = libro(tmp_path, filas)
     projects = proyectos(work)
