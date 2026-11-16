@@ -31,21 +31,21 @@ fn temp() -> PathBuf {
 #[test]
 fn a1_identidades_cortas_largas_o_sin_transliteracion_no_abortan() {
     for valor in ["Łukasz Nowak", "Müller Ñandú", "J", "Jo Li", "Ana", "12345", "Sin nombre"] {
-        let (s, _) = texto("a.csv", format!("RIT,NOMBRE\nC-1-2024,{valor}\n").as_bytes(), estricto());
+        let (s, _) = texto("a.csv", format!("RIT,NOMBRE\nC-1-2099,{valor}\n").as_bytes(), estricto());
         assert!(s.starts_with("RIT,NOMBRE\n"), "{s}");
         assert!(s.contains(",Persona Ficticia "), "{valor}: {s}");
         sin(&s, &[valor]);
     }
-    let (s, _) = texto("nn.txt", b"Nombre: NN\nRIT: C-1-2024\n", estricto());
+    let (s, _) = texto("nn.txt", b"Nombre: NN\nRIT: C-1-2099\n", estricto());
     assert!(s.contains("Nombre: Persona Ficticia "));
     // Más de 512 caracteres con un correo: nunca sale el nombre junto al correo ficticio.
-    let largo = format!("RIT,NOMBRE\nC-1-2024,Ana Canario Ficticio ana.canario@example.com {}\n", "palabra ".repeat(80));
+    let largo = format!("RIT,NOMBRE\nC-1-2099,Ana Canario Ficticio ana.canario@example.com {}\n", "palabra ".repeat(80));
     let (s, _) = texto("l.csv", largo.as_bytes(), estricto());
     sin(&s, &["Canario", "ana.canario", "palabra"]);
 }
 #[test]
 fn a1_nombre_sin_transliteracion_se_reemplaza_en_otro_archivo() {
-    let a = formatos::cargar("a.csv", "RIT,NOMBRE\nC-1-2024,Łukasz Nowakficticio\n".as_bytes()).unwrap();
+    let a = formatos::cargar("a.csv", "RIT,NOMBRE\nC-1-2099,Łukasz Nowakficticio\n".as_bytes()).unwrap();
     let b = formatos::cargar("b.txt", "Se habló con Łukasz Nowakficticio hoy.\n".as_bytes()).unwrap();
     let mut s = Sesion::nueva(conservador()).unwrap();
     formatos::recolectar(&mut s, &a).unwrap();
@@ -58,7 +58,7 @@ fn a1_nombre_sin_transliteracion_se_reemplaza_en_otro_archivo() {
 #[test]
 fn a1_apostrofo_no_deja_apellidos_sueltos() {
     // Python deja «D’Angelo O’Higgins»; Rust reemplaza el nombre completo y sus partes.
-    let (s, _) = texto("f.csv", "RIT,NOMBRE\nC-1-2024,Ana María D’Angeloficticio O’Higginsficticio\n".as_bytes(), estricto());
+    let (s, _) = texto("f.csv", "RIT,NOMBRE\nC-1-2099,Ana María D’Angeloficticio O’Higginsficticio\n".as_bytes(), estricto());
     sin(&s, &["Angeloficticio", "Higginsficticio"]);
 }
 
@@ -112,12 +112,12 @@ fn a3_a4_encabezados_se_conservan_y_nombre_basta_para_detectarlos() {
     assert_eq!(filas[1][0], "Persona Ficticia 1");
     assert_eq!(filas[1][2], "PRM X");
     // Estricto conserva títulos desconocidos (antes «CAMPO n»).
-    let (s, _) = texto("t.csv", b"RIT,Nombre NNA,Observaciones del caso,Comuna\nC-1-2024,Ana Canario Soto,algo,Lota\n", estricto());
+    let (s, _) = texto("t.csv", b"RIT,Nombre NNA,Observaciones del caso,Comuna\nC-1-2099,Ana Canario Soto,algo,Lota\n", estricto());
     assert!(s.starts_with("RIT,Nombre NNA,Observaciones del caso,Comuna\n"), "{s}");
 }
 #[test]
 fn a7_encabezado_protegido_no_dispara_la_revision_final() {
-    let (s, _) = texto("h.csv", b"RIT,NOMBRE\nC-1-2024,Sin nombre\n", estricto());
+    let (s, _) = texto("h.csv", b"RIT,NOMBRE\nC-1-2099,Sin nombre\n", estricto());
     assert!(s.starts_with("RIT,NOMBRE\n") && s.contains("Persona Ficticia"));
 }
 
@@ -125,10 +125,10 @@ fn a7_encabezado_protegido_no_dispara_la_revision_final() {
 #[test]
 fn a5_texto_y_json_como_python() {
     // `.txt/.log/.md/.csv` que empiezan con «[» no son JSON.
-    let (s, e) = texto("log1.txt", b"[2026-01-05 10:00] Contactar a Pedro Canario Rojas\nRIT: C-1-2024\n", conservador());
+    let (s, e) = texto("log1.txt", b"[2026-01-05 10:00] Contactar a Pedro Canario Rojas\nRIT: C-1-2099\n", conservador());
     assert_eq!(e, "txt");
     assert!(s.starts_with("[2026-01-05 10:00] Contactar a [identidad omitida]\nRIT: C-"), "{s}");
-    sin(&s, &["Canario", "C-1-2024"]);
+    sin(&s, &["Canario", "C-1-2099"]);
     let (s, e) = texto("md1.md", "[enlace](x)\nNombre: Ana Canario Muñoz\n".as_bytes(), conservador());
     assert_eq!((s.as_str(), e.as_str()), ("[enlace](x)\nNombre: Persona Ficticia 1\n", "md"));
     let (s, e) = texto("csv1.csv", b"[x],y\n1,2\n", conservador());
@@ -153,14 +153,14 @@ fn a5_texto_y_json_como_python() {
         ("Nombre: Persona Ficticia 1\n".into(), "text".into())
     );
     // Salto de página: Python `splitlines` lo trata como fin de línea.
-    let (s, _) = texto("ff.txt", b"linea uno\x0cNombre: Ana Canario Soto\nRUT: 12.345.678-5\n", conservador());
+    let (s, _) = texto("ff.txt", b"linea uno\x0cNombre: Ana Canario Soto\nRUT: 11.111.111-1\n", conservador());
     assert!(s.starts_with("linea uno\nNombre: Persona Ficticia 1\nRUT: "), "{s}");
-    sin(&s, &["12.345.678-5", "12345678", "\x0c"]);
+    sin(&s, &["11.111.111-1", "11111111", "\x0c"]);
 }
 #[test]
 fn a5_csv_con_barra_html_e_ics_tolerantes() {
-    assert_eq!(texto("pipe.csv", "RIT|Nombre\nC-1-2024|Ana Canario Soto\n".as_bytes(), estricto()).1, "csv");
-    let (s, _) = texto("pipe.csv", "RIT|Nombre\nC-1-2024|Ana Canario Soto\n".as_bytes(), estricto());
+    assert_eq!(texto("pipe.csv", "RIT|Nombre\nC-1-2099|Ana Canario Soto\n".as_bytes(), estricto()).1, "csv");
+    let (s, _) = texto("pipe.csv", "RIT|Nombre\nC-1-2099|Ana Canario Soto\n".as_bytes(), estricto());
     assert!(s.starts_with("RIT|Nombre\nC-") && s.ends_with("|Persona Ficticia 1\n"), "{s}");
     // HTML detectado como `formats.sniff`; .xls HTML sin tablas sale como documento.
     let (s, e) = texto("h1.html", "<meta charset=utf-8><div>Nombre: Ana Canario Soto</div>".as_bytes(), estricto());
@@ -171,19 +171,19 @@ fn a5_csv_con_barra_html_e_ics_tolerantes() {
     assert_eq!(e, "html");
     assert!(s.contains("<p>sin tablas</p>"));
     // ICS de Outlook: zona de Windows, parámetro, componente y parte de regla desconocidos.
-    let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:abc\r\nDTSTART;TZID=Pacific SA Standard Time;X-FOO=Identcanario:20260105T100000\r\nRRULE:FREQ=WEEKLY;X-NAME=Identcanario;COUNT=3\r\nSUMMARY:Audiencia\r\nORGANIZER;CN=Identcanario:mailto:a@b.cl\r\nEND:VEVENT\r\nBEGIN:VJOURNAL\r\nDESCRIPTION:Identcanario\r\nEND:VJOURNAL\r\nEND:VCALENDAR\r\n";
+    let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:abc\r\nDTSTART;TZID=Pacific SA Standard Time;X-FOO=Identcanario:20260105T100000\r\nRRULE:FREQ=WEEKLY;X-NAME=Identcanario;COUNT=3\r\nSUMMARY:Audiencia\r\nORGANIZER;CN=Identcanario:mailto:a@example.test\r\nEND:VEVENT\r\nBEGIN:VJOURNAL\r\nDESCRIPTION:Identcanario\r\nEND:VJOURNAL\r\nEND:VCALENDAR\r\n";
     let (s, _) = texto("o.ics", ics.as_bytes(), conservador());
     assert!(s.contains("DTSTART;TZID=Pacific SA Standard Time:20260105T100000\r\n"), "{s}");
     assert!(s.contains("RRULE:FREQ=WEEKLY;COUNT=3\r\n"));
-    sin(&s, &["Identcanario", "X-FOO", "VJOURNAL", "a@b.cl"]);
+    sin(&s, &["Identcanario", "X-FOO", "VJOURNAL", "a@example.test"]);
     // Zona con caracteres fuera del patrón cerrado: se omite el parámetro, no el evento.
     let (s, _) = texto(
         "z.ics",
-        b"BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Ana Canario <a@b.cl>:20260105T100000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
+        b"BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART;TZID=Ana Canario <a@example.test>:20260105T100000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
         conservador(),
     );
     assert!(s.contains("DTSTART:20260105T100000"));
-    sin(&s, &["Canario", "a@b.cl"]);
+    sin(&s, &["Canario", "a@example.test"]);
 }
 #[test]
 fn a5_zip_normaliza_rutas_como_safezip() {
@@ -207,10 +207,10 @@ fn a5_zip_normaliza_rutas_como_safezip() {
 // A6: etiqueta de hasta 40 caracteres; la etiqueta con un RIT se depura en vez de rechazar el archivo.
 #[test]
 fn a6_etiquetas_de_python_y_rit_en_la_etiqueta() {
-    let (s, _) = texto("r.txt", b"RIT C-1-2024 de la causa: audiencia fijada\nNombre: Ana Canario Soto\n", conservador());
+    let (s, _) = texto("r.txt", b"RIT C-1-2099 de la causa: audiencia fijada\nNombre: Ana Canario Soto\n", conservador());
     assert!(s.contains("Nombre: Persona Ficticia"), "{s}");
-    sin(&s, &["C-1-2024", "Canario"]);
-    let (s, _) = texto("r.txt", b"RIT C-1-2024 de la causa: audiencia fijada\n", estricto());
+    sin(&s, &["C-1-2099", "Canario"]);
+    let (s, _) = texto("r.txt", b"RIT C-1-2099 de la causa: audiencia fijada\n", estricto());
     assert_eq!(s, "[texto omitido]\n");
     // Más de 40 caracteres: no es etiqueta (Python `KV_RE`).
     let (s, _) = texto("l.txt", b"Nombre completo del nino que ingresa al programa: Ana Canario\n", estricto());
@@ -220,7 +220,7 @@ fn a6_etiquetas_de_python_y_rit_en_la_etiqueta() {
 // A8: resumen.json del Descargador Rust.
 #[test]
 fn a8_nombre_de_archivo_no_es_persona_ni_contamina_claves() {
-    let json = br#"{"estado":"VALIDADA","archivos":[{"nombre":"consulta-001-p001-de-001.xls","consulta":0,"pagina":1}],"paginas_lectura":[{"consulta":0,"vinculos":[{"rit":"C-1-2024","nombre":"Ana Canario Soto","programa":"FAE X"}]}]}"#;
+    let json = br#"{"estado":"VALIDADA","archivos":[{"nombre":"consulta-001-p001-de-001.xls","consulta":0,"pagina":1}],"paginas_lectura":[{"consulta":0,"vinculos":[{"rit":"C-1-2099","nombre":"Ana Canario Soto","programa":"FAE X"}]}]}"#;
     let (s, _) = texto("resumen.json", json, conservador());
     let v: Value = serde_json::from_str(&s).unwrap();
     assert_eq!(v["archivos"][0]["consulta"], 0);
@@ -242,7 +242,7 @@ fn a9_excel_conserva_fecha_y_logico() {
     for (c, v) in ["RIT", "Nombre NNA", "FEC. NACIMIENTO", "Flag"].iter().enumerate() {
         hoja.write_string(0, c as u16, *v).unwrap();
     }
-    hoja.write_string(1, 0, "C-12-2024").unwrap();
+    hoja.write_string(1, 0, "C-12-2099").unwrap();
     hoja.write_string(1, 1, "Ana Canario Soto").unwrap();
     let f = rust_xlsxwriter::Format::new().set_num_format("yyyy-mm-dd");
     hoja.write_datetime_with_format(1, 2, rust_xlsxwriter::ExcelDateTime::from_ymd(2015, 3, 4).unwrap(), &f).unwrap();
