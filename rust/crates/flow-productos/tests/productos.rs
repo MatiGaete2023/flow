@@ -471,6 +471,204 @@ fn excel_reutiliza_columnas_del_origen_y_conserva_tt_cc() {
     assert_eq!(filas[1][col("FECHA_OBS")], "08/10/2026");
     assert_eq!(filas[2][col("OBSERVACION")], t.filas[2].observacion);
     assert!(filas.iter().all(|f| f[col("TT")] == "1" && f[col("CC")].is_empty()), "TT y CC no se calculan");
-    assert_eq!(filas[0][col("res")], t.filas[0].proyecto().unwrap_or(""));
+    // El origen trae RES (vacío): Python escribe su valor (`review['RES']`), no la sugerencia del motor.
+    assert_eq!(filas[0][col("res")], "");
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+fn parte(ruta: &std::path::Path, nombre: &str) -> String {
+    use std::io::Read;
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(ruta).unwrap()).unwrap();
+    let mut xml = String::new();
+    zip.by_name(nombre).unwrap().read_to_string(&mut xml).unwrap();
+    xml
+}
+
+#[test]
+fn un_solo_word_con_proyectos_de_varias_plantillas_como_python() {
+    use flow_dominio::Tribunal;
+    let proyecto = |n: usize, tribunal: Tribunal, tipo: &str| {
+        let valores: std::collections::BTreeMap<String, String> = [
+            ("RIT", format!("X-{n}-2099")),
+            ("RUT", "11.111.111-1".into()),
+            ("NOMBRE", format!("Persona Ficticia {n}")),
+            ("PROGRAMA", "PRM Ficticio".into()),
+            ("FECHA", "uno de enero de dos mil noventa y nueve".into()),
+            ("FECHA_RESOLUCION", "dos de enero de dos mil noventa y nueve".into()),
+            ("DURACION", "seis meses".into()),
+            ("NOMENCLATURA", "Nomenclatura ficticia".into()),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v))
+        .collect();
+        word::Proyecto {
+            filas: vec![format!("fila-{n}")],
+            tribunal,
+            tipo: tipo.into(),
+            rit: format!("X-{n}-2099"),
+            originales: valores.clone(),
+            valores,
+            faltantes: vec![],
+            sin_plantilla: false,
+            omitido: false,
+            plural: Default::default(),
+            huella: String::new(),
+        }
+    };
+    let lista = vec![
+        proyecto(1, Tribunal::Laja, "PC_IE"),
+        proyecto(2, Tribunal::Mulchen, "PC_INFO"),
+        proyecto(3, Tribunal::Laja, "PC_INFO"),
+        proyecto(4, Tribunal::Laja, "PC_IE"),
+    ];
+    let dir = carpeta("word-conjunto");
+    let rutas = word::generar(&lista, &dir, None).unwrap();
+    assert_eq!(rutas.len(), 1, "un solo documento, como `generate_projects`");
+    assert!(rutas[0].file_name().unwrap().to_string_lossy().starts_with("Resoluciones_"));
+    // Textos de `render_project` + `Composer(preserve_styles=True)` + `improve_pagination` en Python.
+    let esperado: Vec<String> = include_str!("datos/word_conjunto_python.txt").lines().map(String::from).collect();
+    assert_eq!(parrafos_docx(&rutas[0]), esperado);
+    let documento = parte(&rutas[0], "word/document.xml");
+    assert_eq!(documento.matches(r#"w:type="page""#).count(), 3);
+    // LAJA_PC_INFO usa un «Normal» distinto: como docxcompose, se copia como «Normal_1».
+    let estilos = parte(&rutas[0], "word/styles.xml");
+    assert!(estilos.contains(r#"w:styleId="Normal_1""#) && estilos.contains(r#"<w:name w:val="Normal_1"/>"#));
+    let usados: std::collections::BTreeSet<&str> =
+        documento.match_indices(r#"<w:pStyle w:val=""#).map(|(i, _)| documento[i + 17..].split('"').next().unwrap()).collect();
+    assert_eq!(usados, ["Normal_1"].into());
+    assert!(documento.contains("<w:widowControl/>"));
+    assert_eq!(documento.matches("<w:sectPr").count(), 1);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn seleccion_con_columna_res_como_python() {
+    use flow_dominio::Celda;
+    let mut t = trabajo(Etapa::Espera);
+    // Cinco filas ficticias; el origen trae la columna RES.
+    let base = t.filas[0].clone();
+    t.filas = (0..5)
+        .map(|i| {
+            let mut f = base.clone();
+            f.id = format!("f{i}");
+            f
+        })
+        .collect();
+    let usadas = t.cabeceras.iter().rposition(|c| !c.is_empty()).map_or(0, |p| p + 1);
+    t.cabeceras.truncate(usadas);
+    t.cabeceras.push("RES".into());
+    let datos: [(&str, &str, &[&str], Celda); 5] = [
+        ("Laja", "X-1-2099", &["PC_IE"], Celda::Texto("PC_INFO".into())),
+        ("Laja", "X-1-2099", &[], Celda::Vacia),
+        ("Mulchén", "X-2-2099", &[], Celda::Texto("x".into())),
+        ("Mulchén", "X-3-2099", &["NOMENCL"], Celda::Vacia),
+        ("Laja", "X-4-2099", &["PC_IE", "NOMENCL"], Celda::Texto("Sí".into())),
+    ];
+    for (f, (tribunal, rit, acciones, res)) in t.filas.iter_mut().zip(datos) {
+        f.registro.poner("tribunal", Celda::Texto(tribunal.into()));
+        f.registro.poner("rit", Celda::Texto(rit.into()));
+        f.propuesta.acciones = acciones.iter().map(|a| a.to_string()).collect();
+        f.propuesta.excluido = false;
+        f.observacion = "Observación ficticia sin tipo.".into();
+        f.propuesta.observacion = f.observacion.clone();
+        f.celdas.resize(usadas, Celda::Vacia);
+        f.celdas.push(res);
+    }
+    let par = |a: &str, b: &str| (a.to_string(), b.to_string());
+    // Resultado de `automatic_project_selections` con los mismos datos ficticios.
+    assert_eq!(
+        word::selecciones(&t),
+        vec![par("f0", "PC_INFO"), par("f1", "PC_INFO"), par("f2", "PC_IE"), par("f4", "PC_IE"), par("f4", "NOMENCL")]
+    );
+    // RES presente pero vacío en todas: no hay proyectos.
+    for f in &mut t.filas {
+        *f.celdas.last_mut().unwrap() = Celda::Vacia;
+    }
+    assert!(word::selecciones(&t).is_empty());
+    // Números y textos antiguos (`resolution_marked`).
+    *t.filas[0].celdas.last_mut().unwrap() = Celda::Numero(1.0);
+    *t.filas[1].celdas.last_mut().unwrap() = Celda::Numero(0.0);
+    *t.filas[2].celdas.last_mut().unwrap() = Celda::Texto("ok".into());
+    let sel = word::selecciones(&t);
+    assert_eq!(sel, vec![par("f0", "PC_IE"), par("f1", "PC_IE")], "la causa completa de f0; «0» y «ok» no marcan");
+}
+
+#[test]
+fn productos_quedan_obsoletos_si_cambian_registros_contactos_o_reglas() {
+    use flow_productos::vigencia::Huellas;
+    let mut t = trabajo(Etapa::Espera);
+    let dir = carpeta("obsoletos");
+    let contactos = Contactos::default();
+    let opciones = Opciones { modalidades: "las modalidades ficticias".into(), reglas: "reglas-ficticias".into(), ..Opciones::default() };
+    let lista = correos::preparar(&t, Tipo::Informativo, &opciones, &contactos, &dir).unwrap();
+    let proyectos = word::preparar(&t, &word::selecciones(&t), t.corte, None, "reglas-ficticias");
+    assert!(!lista.is_empty() && !proyectos.is_empty());
+    let plantilla = |p: &word::Proyecto| word::plantilla(p.tribunal, &p.tipo, None);
+    let vigentes = Huellas::nuevas(&t, "reglas-ficticias");
+    assert!(lista.iter().all(|b| !vigentes.borrador_obsoleto(b, &contactos)));
+    assert!(proyectos.iter().all(|p| !vigentes.proyecto_obsoleto(p, plantilla(p).as_deref())));
+    // Otras reglas en el programa (`active_ruleset_version`).
+    let otras = Huellas::nuevas(&t, "otras-reglas-ficticias");
+    assert!(lista.iter().all(|b| otras.borrador_obsoleto(b, &contactos)));
+    // Otros contactos.
+    let mut cambiados = contactos.clone();
+    cambiados.firma = "Firma ficticia".into();
+    assert!(lista.iter().all(|b| vigentes.borrador_obsoleto(b, &cambiados)));
+    // Editar la observación de una fila del proyecto después de prepararlo.
+    let id = proyectos[0].filas[0].clone();
+    t.filas.iter_mut().find(|f| f.id == id).unwrap().observacion = "Edición ficticia posterior.".into();
+    let despues = Huellas::nuevas(&t, "reglas-ficticias");
+    assert!(despues.proyecto_obsoleto(&proyectos[0], plantilla(&proyectos[0]).as_deref()));
+    assert!(lista.iter().any(|b| despues.borrador_obsoleto(b, &contactos)));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn volver_a_preparar_conserva_ediciones_de_borradores() {
+    let t = trabajo(Etapa::Espera);
+    let dir = carpeta("ediciones-borradores");
+    let mut contactos = Contactos::default();
+    let opciones = Opciones { modalidades: "las modalidades ficticias".into(), ..Opciones::default() };
+    let mut previos = correos::preparar(&t, Tipo::Informativo, &opciones, &contactos, &dir).unwrap();
+    previos[0].asunto = "Asunto editado ficticio".into();
+    previos[1].omitido = true;
+    contactos.tribunales.insert("LAJA".into(), "tribunal@example.test".into());
+    contactos.tribunales.insert("MULCHEN".into(), "tribunal@example.test".into());
+    contactos.tribunales.insert("TOME".into(), "tribunal@example.test".into());
+    let mut nuevos = correos::preparar(&t, Tipo::Informativo, &opciones, &contactos, &dir).unwrap();
+    correos::conservar_ediciones(&previos, &mut nuevos);
+    assert_eq!(nuevos[0].asunto, "Asunto editado ficticio", "la edición del usuario se conserva");
+    assert!(nuevos[1].omitido);
+    assert_eq!(nuevos[0].para, "tribunal@example.test", "lo no editado se actualiza");
+    assert_ne!(nuevos[2].asunto, "Asunto editado ficticio");
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn solo_filas_seleccionadas_como_manual_selection() {
+    let mut t = trabajo(Etapa::Espera);
+    let dir = carpeta("manual");
+    let contactos = Contactos::default();
+    // Una fila sin la acción del correo de lista de espera.
+    t.filas[0].propuesta.excluido = false;
+    t.filas[0].propuesta.acciones.retain(|a| a != "programa_espera");
+    let sin_accion = t.filas[0].clone();
+    let elegidas: std::collections::BTreeSet<String> = [sin_accion.id.clone()].into();
+    // Preparar tipo con selección manual: entra aunque el motor no proponga ese correo.
+    let manual = Opciones { seleccion: Some(elegidas.clone()), manual: true, ..Opciones::default() };
+    let lista = correos::preparar(&t, Tipo::ProgramaEspera, &manual, &contactos, &dir).unwrap();
+    assert_eq!(lista.iter().flat_map(|b| b.filas.clone()).collect::<Vec<_>>(), vec![sin_accion.id.clone()]);
+    // «Preparar todos» con selección no fuerza los correos de las acciones.
+    let todos = Opciones { seleccion: Some(elegidas.clone()), modalidades: "las modalidades ficticias".into(), ..Opciones::default() };
+    let (lista, _) = correos::preparar_todos(&t, &todos, &contactos, &dir).unwrap();
+    assert!(lista.iter().all(|b| b.tipo == Tipo::Informativo || b.tipo != Tipo::ProgramaEspera));
+    assert!(lista.iter().all(|b| b.filas == vec![sin_accion.id.clone()]));
+    // Sin modalidades, «Preparar todos» no prepara nada (como Python).
+    assert!(correos::preparar_todos(&t, &Opciones::default(), &contactos, &dir).unwrap_err().contains("modalidad"));
+    // Gestión particular y reporte de proyectos con selección: solo esas filas, sin exigir Word.
+    let especial = correos::preparar(&t, Tipo::Especial, &manual, &contactos, &dir).unwrap();
+    assert_eq!(especial.iter().map(|b| b.filas.len()).sum::<usize>(), 1);
+    let reporte = Opciones { periodo: "01/2099".into(), ..manual.clone() };
+    assert_eq!(correos::preparar(&t, Tipo::Proyectos, &reporte, &contactos, &dir).unwrap().len(), 1);
     std::fs::remove_dir_all(dir).unwrap();
 }

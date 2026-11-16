@@ -12,11 +12,7 @@ fn el_codigo_no_nombra_el_despacho() {
     for entrada in std::fs::read_dir(fuente).unwrap() {
         let ruta = entrada.unwrap().path();
         let texto = std::fs::read_to_string(&ruta).unwrap();
-        assert!(
-            !texto.to_lowercase().contains(&prohibida.to_lowercase()),
-            "{} nombra la operación prohibida",
-            ruta.display()
-        );
+        assert!(!texto.to_lowercase().contains(&prohibida.to_lowercase()), "{} nombra la operación prohibida", ruta.display());
         revisados += 1;
     }
     assert!(revisados >= 2);
@@ -34,6 +30,8 @@ fn borrador(cc: &str) -> Borrador {
         adjuntos: Vec::new(),
         filas: Vec::new(),
         omitido: false,
+        originales: None,
+        huella: String::new(),
     }
 }
 

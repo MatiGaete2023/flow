@@ -30,15 +30,19 @@ ni «Meta4» abre todo). Las huellas SHA-256 están en `SHA256SUMS.txt`.
 3. **Correos:** marca las modalidades revisadas, «Preparar borradores», completa los destinatarios que falten y
    guarda: en Borradores de Outlook, o como archivos `.eml` que Outlook abre como correo sin enviar. Todos llevan
    el CC fijo. El correo de medidas adjunta una nómina por programa. «Reporte de proyectos» (registros con Word
-   generado, con su Período) y «Gestión particular» se preparan aparte con «Preparar este tipo».
+   generado, con su Período) y «Gestión particular» se preparan aparte con «Preparar este tipo». «Preparar
+   borradores» exige marcar modalidades. Para una gestión de algunas filas, márcalas en la primera columna de
+   Trabajo y activa «Solo filas seleccionadas». Volver a preparar conserva lo que editaste en cada borrador.
 4. **Resoluciones:** «Preparar proyectos» agrupa un proyecto por tribunal, RIT y tipo con todas las personas de la
-   causa; revisa los valores y «Generar Word». Lo que falte (por ejemplo la duración) queda como
+   causa (si el Excel trae la columna RES, solo las causas marcadas allí); revisa los valores y «Generar Word»:
+   un solo documento `Resoluciones_<fecha>.docx` con todos. Lo que falte (por ejemplo la duración) queda como
    `[COMPLETAR DURACION]` para completarlo en el documento.
 5. **Resultados:** lista de lo creado y acceso a la carpeta.
 
 Al volver a abrir el mismo archivo y corte, Flow recupera las ediciones y marcas guardadas, los borradores y
-proyectos preparados (con sus cambios) y las modalidades marcadas. Si cambiaron las reglas, recalcula las
-propuestas, conserva ediciones y marcas y descarta los borradores y proyectos preparados, con aviso.
+proyectos preparados (con sus cambios), las filas marcadas y las modalidades. Un borrador o proyecto cuyos
+registros, contactos, plantilla o reglas cambiaron después de prepararlo queda obsoleto: no se guarda ni se genera
+hasta prepararlo de nuevo (el Word se vuelve a preparar solo al generar).
 «Volver a analizar» descarta esas ediciones por elección del usuario. Si una sesión o los contactos no se
 pueden leer, Flow avisa y conserva el archivo anterior; no lo sustituye por datos vacíos.
 

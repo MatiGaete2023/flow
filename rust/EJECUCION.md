@@ -549,3 +549,11 @@ guardar el código de conexión, y cualquier escritura en RUS.
   usuario, lista cerrada en RES y presentación de `excel_presentation`. Suite: 217 pruebas, 0 fallos.
   Pendiente para paridad total: Word único por lote, productos obsoletos marcados (no descartados), conservar
   ediciones de borradores al volver a preparar, selección manual de filas.
+- 2026-11-16 · Paridad Asistente, cierre de diferencias: borradores y proyectos guardan la huella de sus registros,
+  contactos o plantilla y reglas; si cambian quedan obsoletos (no se guardan; al generar el Word se preparan de nuevo).
+  Volver a preparar conserva las ediciones de los borradores (`merge_draft_edits`). Un solo Word
+  (`Resoluciones_<fecha>.docx`) con todos los proyectos y estilos como docxcompose; textos cotejados con Python.
+  «Solo filas seleccionadas en Trabajo» como `manual_selection`; con columna RES en el origen, la selección sigue a
+  RES (`reviewed_resolution_ids`). «Preparar todos» y `producir` exigen modalidades, en el orden de
+  `prepare_required_drafts`. Quedan: plantillas con imágenes o numeración en documento aparte; sin rama `structured`
+  (Flow no tiene NURUS_DECISIONES). Suite: 225 pruebas, 0 fallos.

@@ -120,6 +120,11 @@ struct EstadoSesion {
     word_generados: std::collections::BTreeSet<String>,
     #[serde(default)]
     carpeta: Option<PathBuf>,
+    /// Filas marcadas en Trabajo y «Solo filas seleccionadas» (`preferences['records']`, `manual_mail`).
+    #[serde(default)]
+    marcadas: std::collections::BTreeSet<String>,
+    #[serde(default)]
+    manual: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -156,6 +161,9 @@ struct App {
     periodo: String,
     /// Tipo elegido para «Preparar este tipo».
     tipo_elegido: Tipo,
+    /// Filas marcadas en Trabajo para «Solo filas seleccionadas».
+    marcadas: std::collections::BTreeSet<String>,
+    manual: bool,
     resultados: Vec<String>,
     carpeta: Option<PathBuf>,
     mensaje: Option<(bool, String)>,
@@ -242,6 +250,8 @@ impl App {
             word_generados: Default::default(),
             periodo: flow_tabular::libro::hoy().format("%m/%Y").to_string(),
             tipo_elegido: Tipo::Proyectos,
+            marcadas: Default::default(),
+            manual: false,
             resultados: Vec::new(),
             carpeta: None,
             mensaje: contactos_error.map(|e| (true, e)),
@@ -344,6 +354,8 @@ impl App {
             periodo: self.periodo.clone(),
             word_generados: self.word_generados.clone(),
             carpeta: self.carpeta.clone(),
+            marcadas: self.marcadas.clone(),
+            manual: self.manual,
         };
         t.sesion = serde_json::to_value(&estado).ok();
     }
@@ -357,6 +369,8 @@ impl App {
         self.proyectos.clear();
         self.seleccion_preparada.clear();
         self.word_generados.clear();
+        self.marcadas.clear();
+        self.manual = false;
         self.carpeta = None;
         let aviso = match trabajo.sesion.clone().map(serde_json::from_value::<EstadoSesion>) {
             None => None,
@@ -377,6 +391,8 @@ impl App {
                 self.seleccion_preparada = e.seleccion_preparada;
                 self.word_generados = e.word_generados;
                 self.carpeta = e.carpeta.filter(|c| c.is_dir());
+                self.marcadas = e.marcadas.into_iter().filter(|id| trabajo.filas.iter().any(|f| &f.id == id)).collect();
+                self.manual = e.manual;
                 // El estado en Outlook sale del diario de recibos, no de la sesión.
                 for (i, b) in self.borradores.iter().enumerate() {
                     if let Ok(Some(estado)) = crate::borradores::estado(&self.datos, b) {
@@ -389,6 +405,12 @@ impl App {
             }
         };
         self.trabajo = Some(trabajo);
+        // Productos de otras reglas o de registros que cambiaron: se conservan, pero hay que prepararlos de nuevo.
+        let obsoletos = self.borradores_obsoletos().len() + self.proyectos_obsoletos().len();
+        if obsoletos > 0 {
+            let nota = format!("{obsoletos} producto(s) preparado(s) quedan obsoletos: prepáralos de nuevo antes de guardarlos.");
+            return Some(aviso.map_or(nota.clone(), |a| format!("{a} {nota}")));
+        }
         aviso
     }
 
@@ -549,46 +571,70 @@ impl App {
         correos::claves_modalidad(self.modalidades.iter().filter(|(_, si)| *si).map(|(m, _)| m.as_str()))
     }
 
+    /// Reglas vigentes en el programa (huella de vigencia de los productos).
+    fn reglas(&self) -> String {
+        flow_trabajo::version_reglas(&self.motor)
+    }
+
+    /// `_mail_selected_ids`: con «Solo filas seleccionadas», las marcadas en Trabajo (al menos una).
+    fn seleccion_correos(&self) -> Result<Option<std::collections::BTreeSet<String>>, String> {
+        if !self.manual {
+            return Ok(None);
+        }
+        let ids: std::collections::BTreeSet<String> =
+            self.trabajo.iter().flat_map(|t| &t.filas).filter(|f| self.marcadas.contains(&f.id)).map(|f| f.id.clone()).collect();
+        if ids.is_empty() {
+            return Err("Selecciona los registros de esta gestión en la pestaña Trabajo.".into());
+        }
+        Ok(Some(ids))
+    }
+
+    /// Deja los borradores recién preparados conservando las ediciones de los anteriores (`_display_prepared_drafts`).
+    fn mostrar_borradores(&mut self, mut lista: Vec<Borrador>) {
+        correos::conservar_ediciones(&self.borradores, &mut lista);
+        self.borradores = lista;
+        self.estados_borradores.clear();
+        for (i, b) in self.borradores.iter().enumerate() {
+            if let Ok(Some(estado)) = crate::borradores::estado(&self.datos, b) {
+                self.estados_borradores.insert(i, estado);
+            }
+        }
+    }
+
+    /// «Preparar todos» de Python (`prepare_required_drafts`): exige modalidades; el reporte de proyectos y la gestión
+    /// particular se preparan a pedido.
     fn preparar_borradores(&mut self) {
         if self.trabajo.as_ref().is_some_and(|t| t.fuente.is_some()) {
             return self.mal("Esta consulta auxiliar no genera borradores ni proyectos de resolución.");
         }
-        let Some(carpeta) = self.carpeta_productos() else { return };
-        let Some(trabajo) = &self.trabajo else { return };
+        let seleccion = match self.seleccion_correos() {
+            Ok(s) => s,
+            Err(e) => return self.mal(e),
+        };
         let opciones = correos::Opciones {
             modalidades: self.texto_modalidades(),
             hoy: Some(flow_tabular::libro::hoy()),
             claves_modalidad: self.claves_modalidades(),
             periodo: self.periodo.clone(),
             con_word: self.word_generados.clone(),
+            seleccion,
+            manual: false,
+            reglas: self.reglas(),
         };
-        let mut lista = Vec::new();
-        let mut saltados = Vec::new();
-        let mut fallidos = Vec::new();
-        // Como «Preparar todos» de Python: el reporte de proyectos y la gestión particular se preparan a pedido.
-        for tipo in Tipo::AUTOMATICOS {
-            if tipo.usa_modalidades(trabajo.etapa) && opciones.modalidades.is_empty() {
-                saltados.push(tipo.titulo(trabajo.etapa));
-                continue;
-            }
-            // Como `producir_interno`: un tipo que no se puede preparar no anula los demás.
-            match correos::preparar(trabajo, tipo, &opciones, &self.contactos, &carpeta.join("correos")) {
-                Ok(mut nuevos) => lista.append(&mut nuevos),
-                Err(e) => fallidos.push(format!("{}: {e}", tipo.titulo(trabajo.etapa))),
-            }
+        if opciones.modalidades.is_empty() {
+            return self.mal("Selecciona al menos una modalidad para preparar el conjunto de correos del trabajo.");
         }
-        let mut texto = format!("{} borradores preparados.", lista.len());
-        if saltados.is_empty() && fallidos.is_empty() {
-            texto.push_str(" Revisa cada uno antes de guardarlo.");
-        }
-        if !saltados.is_empty() {
-            texto.push_str(&format!(" Sin modalidades marcadas no se preparan: {}.", saltados.join("; ")));
-        }
+        let Some(carpeta) = self.carpeta_productos() else { return };
+        let Some(trabajo) = &self.trabajo else { return };
+        let (lista, fallidos) = match correos::preparar_todos(trabajo, &opciones, &self.contactos, &carpeta.join("correos")) {
+            Ok(r) => r,
+            Err(e) => return self.mal(e),
+        };
+        let mut texto = format!("{} correos preparados para el alcance elegido. Todavía no se guardaron en Outlook.", lista.len());
         if !fallidos.is_empty() {
             texto.push_str(&format!(" No se prepararon: {}", fallidos.join(" ")));
         }
-        self.borradores = lista;
-        self.estados_borradores.clear();
+        self.mostrar_borradores(lista);
         if fallidos.is_empty() {
             self.bien(texto);
         } else {
@@ -608,12 +654,19 @@ impl App {
         if usa && modalidades.is_empty() {
             return self.mal("Selecciona al menos una modalidad para este tipo de correo.");
         }
+        let seleccion = match self.seleccion_correos() {
+            Ok(s) => s,
+            Err(e) => return self.mal(e),
+        };
         let opciones = correos::Opciones {
             modalidades,
             hoy: Some(flow_tabular::libro::hoy()),
             claves_modalidad: if usa { self.claves_modalidades() } else { None },
             periodo: self.periodo.trim().to_string(),
             con_word: self.word_generados.clone(),
+            manual: seleccion.is_some(),
+            seleccion,
+            reglas: self.reglas(),
         };
         let Some(carpeta) = self.carpeta_productos() else { return };
         let Some(trabajo) = &self.trabajo else { return };
@@ -629,8 +682,7 @@ impl App {
                     lista.len(),
                     tipo.titulo(etapa)
                 );
-                self.borradores = lista;
-                self.estados_borradores.clear();
+                self.mostrar_borradores(lista);
                 self.bien(texto);
             }
             Err(e) => self.mal(format!("{}: {e}", tipo.titulo(etapa))),
@@ -647,8 +699,14 @@ impl App {
         };
         let (mut hechos, mut ya_guardados, mut aprendidos) = (0, 0, 0);
         let mut problemas = Vec::new();
+        // `require_fresh`: antes de cualquier guardado, con la configuración de ahora.
+        let obsoletos = self.borradores_obsoletos();
         for (i, b) in self.borradores.iter().enumerate().filter(|(_, b)| !b.omitido) {
             let quien = if b.programa.is_empty() { b.tribunal.clone() } else { b.programa.clone() };
+            if obsoletos.contains(&i) {
+                problemas.push(format!("{quien}: {}", flow_productos::vigencia::OBSOLETO));
+                continue;
+            }
             if !b.faltantes().is_empty() {
                 problemas.push(format!("{quien}: falta {}", b.faltantes().join(", ")));
                 continue;
@@ -711,6 +769,32 @@ impl App {
         }
     }
 
+    /// Borradores obsoletos (`product_state.stale`): cambiaron sus registros, los contactos o las reglas.
+    fn borradores_obsoletos(&self) -> std::collections::BTreeSet<usize> {
+        let Some(t) = &self.trabajo else { return Default::default() };
+        if self.borradores.is_empty() {
+            return Default::default();
+        }
+        let huellas = flow_productos::vigencia::Huellas::nuevas(t, &self.reglas());
+        self.borradores.iter().enumerate().filter(|(_, b)| huellas.borrador_obsoleto(b, &self.contactos)).map(|(i, _)| i).collect()
+    }
+
+    /// Proyectos obsoletos: cambiaron sus registros, su plantilla o las reglas.
+    fn proyectos_obsoletos(&self) -> std::collections::BTreeSet<usize> {
+        let Some(t) = &self.trabajo else { return Default::default() };
+        if self.proyectos.is_empty() {
+            return Default::default();
+        }
+        let propias = self.plantillas_usuario();
+        let huellas = flow_productos::vigencia::Huellas::nuevas(t, &self.reglas());
+        self.proyectos
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| huellas.proyecto_obsoleto(p, word::plantilla(p.tribunal, &p.tipo, Some(&propias)).as_deref()))
+            .map(|(i, _)| i)
+            .collect()
+    }
+
     fn plantillas_usuario(&self) -> PathBuf {
         self.datos.join("plantillas")
     }
@@ -720,7 +804,7 @@ impl App {
         let Some(trabajo) = &self.trabajo else { return };
         let propias = self.plantillas_usuario();
         let seleccion = word::selecciones(trabajo);
-        let mut nuevos = word::preparar(trabajo, &seleccion, flow_tabular::libro::hoy(), Some(&propias));
+        let mut nuevos = word::preparar(trabajo, &seleccion, flow_tabular::libro::hoy(), Some(&propias), &self.reglas());
         word::conservar_ediciones(&self.proyectos, &mut nuevos, Some(&propias));
         self.proyectos = nuevos;
         self.seleccion_preparada = seleccion;
@@ -734,14 +818,15 @@ impl App {
     }
 
     fn generar_word(&mut self) {
-        // Como `_generate_words`: si cambió lo que corresponde preparar, se prepara de nuevo antes de generar.
+        // Como `_generate_words`: si hay proyectos obsoletos o cambió lo que corresponde preparar, se preparan de
+        // nuevo (conservando las ediciones) antes de generar.
         let vigente = self.trabajo.as_ref().map(word::selecciones).unwrap_or_default();
-        if self.proyectos.is_empty() || vigente != self.seleccion_preparada {
+        if self.proyectos.is_empty() || vigente != self.seleccion_preparada || !self.proyectos_obsoletos().is_empty() {
             self.preparar_proyectos();
         }
         let Some(carpeta) = self.carpeta_productos() else { return };
         let propias = self.plantillas_usuario();
-        match word::generar(&self.proyectos, &carpeta.join("proyectos"), Some(&propias)) {
+        match word::generar(&self.proyectos, &carpeta, Some(&propias)) {
             Ok(rutas) => {
                 for r in &rutas {
                     self.resultados.push(format!("Proyectos Word · {}", r.display()));
@@ -749,10 +834,15 @@ impl App {
                 let filas: Vec<String> = self.proyectos.iter().filter(|p| p.listo()).flat_map(|p| p.filas.clone()).collect();
                 self.word_generados.extend(filas);
                 self.guardar_sesion();
-                self.bien(format!(
-                    "{} documento(s) Word creados. Revísalos y completa lo marcado [COMPLETAR …] antes de usarlos.",
-                    rutas.len()
-                ));
+                let mut texto = format!("Word conjunto generado: {}.", rutas[0].display());
+                if rutas.len() > 1 {
+                    texto.push_str(&format!(
+                        " {} plantilla(s) con imágenes, vínculos o numeración quedaron en documento aparte.",
+                        rutas.len() - 1
+                    ));
+                }
+                texto.push_str(" Revísalo y completa lo marcado [COMPLETAR …] antes de usarlo.");
+                self.bien(texto);
             }
             Err(e) => self.mal(e),
         }
@@ -957,11 +1047,15 @@ impl App {
                 });
             });
         });
+        let marcadas = &mut self.marcadas;
+        let mut cambio_marcas = false;
+        let marcadas_cambio = &mut cambio_marcas;
         egui::CentralPanel::default().show_inside(ui, |ui| {
             let alto = ui.text_style_height(&egui::TextStyle::Body) + 6.0;
             TableBuilder::new(ui)
                 .striped(true)
                 .sense(egui::Sense::click())
+                .column(Column::exact(24.0))
                 .column(Column::exact(44.0))
                 .column(Column::exact(96.0))
                 .column(Column::initial(140.0).clip(true).resizable(true))
@@ -969,7 +1063,7 @@ impl App {
                 .column(Column::exact(54.0))
                 .column(Column::remainder().clip(true))
                 .header(alto, |mut h| {
-                    for titulo in ["Fila", "RIT", "Nombre", "Programa", "Estado", "Observación"] {
+                    for titulo in ["☐", "Fila", "RIT", "Nombre", "Programa", "Estado", "Observación"] {
                         h.col(|ui| {
                             ui.strong(titulo);
                         });
@@ -992,6 +1086,17 @@ impl App {
                         } else if !f.propuesta.marcas.is_empty() || !f.propuesta.avisos.is_empty() {
                             estado.push('!');
                         }
+                        row.col(|ui| {
+                            let mut marcada = marcadas.contains(&f.id);
+                            if ui.checkbox(&mut marcada, "").on_hover_text("Fila elegida para «Solo filas seleccionadas»").changed() {
+                                if marcada {
+                                    marcadas.insert(f.id.clone());
+                                } else {
+                                    marcadas.remove(&f.id);
+                                }
+                                *marcadas_cambio = true;
+                            }
+                        });
                         let celdas = [
                             f.numero.to_string(),
                             f.registro.texto("rit"),
@@ -1012,7 +1117,7 @@ impl App {
                 });
         });
         self.seleccion = seleccion;
-        if cambio {
+        if cambio || cambio_marcas {
             self.sin_guardar = true;
         }
         if guardar_excel {
@@ -1053,6 +1158,12 @@ impl App {
             ui.add(egui::TextEdit::singleline(&mut self.periodo).desired_width(90.0).hint_text("mm/aaaa"))
                 .on_hover_text("Se usa en el reporte de proyectos de resolución.");
         });
+        let marcadas = self.marcadas.len();
+        self.sin_guardar |= ui
+            .checkbox(&mut self.manual, format!("Solo filas seleccionadas en Trabajo ({marcadas})"))
+            .on_hover_text("Marca las filas en la primera columna de Trabajo")
+            .changed();
+        let obsoletos = self.borradores_obsoletos();
         ui.horizontal(|ui| {
             if ui.button("Preparar borradores").on_hover_text("Todos los que surgen del trabajo, como «Preparar todos»").clicked() {
                 preparar = true;
@@ -1076,7 +1187,8 @@ impl App {
                 let quien = if b.programa.is_empty() { b.tribunal.clone() } else { format!("{} · {}", b.programa, b.tribunal) };
                 let faltan = b.faltantes();
                 let titulo = format!(
-                    "{}{} — {} ({}){}",
+                    "{}{}{} — {} ({}){}",
+                    if obsoletos.contains(&i) { "(obsoleto: prepara de nuevo) " } else { "" },
                     if b.omitido { "(omitido) " } else { "" },
                     b.tipo.titulo(etapa),
                     quien,
@@ -1204,14 +1316,17 @@ impl App {
             }
         });
         ui.small(
-            "Un proyecto por tribunal, RIT y tipo, con todas las personas de la causa; un documento por tribunal y tipo, \
-             cada proyecto en página nueva. Lo que falte queda como [COMPLETAR …] para completarlo en el Word.",
+            "Un proyecto por tribunal, RIT y tipo, con todas las personas de la causa; un solo Word con todos, cada \
+             proyecto en página nueva. Lo que falte queda como [COMPLETAR …] para completarlo en el Word.",
         );
         ui.separator();
         let propias = self.plantillas_usuario();
+        let obsoletos = self.proyectos_obsoletos();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for (i, p) in self.proyectos.iter_mut().enumerate() {
-                let estado = if p.omitido {
+                let estado = if obsoletos.contains(&i) {
+                    "obsoleto: cambiaron sus registros o plantilla; se prepara de nuevo al generar".to_string()
+                } else if p.omitido {
                     "omitido".to_string()
                 } else if p.sin_plantilla {
                     format!("sin plantilla para {}", p.tribunal.titulo())
@@ -1369,8 +1484,10 @@ const TEXTO_AYUDA: &str = "1 · Trabajo: abre el Excel de RUS (Ctrl+O). Revisa c
 revisada. Ctrl+S guarda el Excel de observaciones.\n\n2 · Correos: marca las modalidades, prepara los borradores, \
 revisa destinatario y texto, y guárdalos. Quedan en Borradores de Outlook o como archivos .eml. Flow nunca envía. \
 El reporte de proyectos y la gestión particular se preparan con «Preparar este tipo».\n\n\
-3 · Resoluciones: prepara los proyectos (uno por tribunal, RIT y tipo), revisa sus valores y genera el Word; lo que \
-falte queda marcado [COMPLETAR …] para completarlo en el documento.\n\n4 · Resultados: lista de lo \
+Para una gestión de algunas filas, márcalas en Trabajo y activa «Solo filas seleccionadas». Un borrador o proyecto \
+cuyos registros cambiaron queda obsoleto: prepáralo de nuevo.\n\n\
+3 · Resoluciones: prepara los proyectos (uno por tribunal, RIT y tipo), revisa sus valores y genera el Word (uno \
+solo con todos); lo que falte queda marcado [COMPLETAR …] para completarlo en el documento.\n\n4 · Resultados: lista de lo \
 creado y acceso a la carpeta.\n\nFlow no escribe en RUS ni en SATURNO. La observación propuesta es una ayuda: \
 quien la registra y responde por ella es el usuario.";
 
@@ -1648,6 +1765,8 @@ mod pruebas_captura {
                 adjuntos: vec![],
                 filas: vec![format!("fila-{i}")],
                 omitido: false,
+                originales: None,
+                huella: String::new(),
             })
             .collect();
         let n = std::cell::Cell::new(0);
@@ -1752,6 +1871,64 @@ mod pruebas_captura {
         antigua.cargar(archivo);
         assert!(antigua.trabajo.is_some() && antigua.borradores.is_empty() && antigua.proyectos.is_empty());
         assert!(antigua.mensaje.as_ref().is_some_and(|(error, _)| !error), "{:?}", antigua.mensaje);
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn obsoletos_ediciones_conservadas_y_solo_filas_seleccionadas() {
+        let (base, _) = preparar();
+        let datos = base.join("datos");
+        let archivo = base.join("consulta-001-p001-de-001.xls");
+        let mut app = App::con_datos(datos.clone(), None);
+        app.corte = "08/10/2026".into();
+        app.cargar(archivo.clone());
+        let salida = base.join("salida");
+        std::fs::create_dir(&salida).unwrap();
+        app.ajustes.salida = Some(salida);
+        // «Preparar todos» exige modalidades, como Python.
+        app.preparar_borradores();
+        assert!(app.mensaje.as_ref().is_some_and(|(e, s)| *e && s.contains("al menos una modalidad")), "{:?}", app.mensaje);
+        app.otra_modalidad = "modalidad ficticia".into();
+        app.preparar_borradores();
+        assert!(!app.borradores.is_empty(), "{:?}", app.mensaje);
+        assert!(app.borradores_obsoletos().is_empty());
+        app.borradores[0].asunto = "Asunto editado ficticio".into();
+        app.borradores[0].para = "ficticio@example.test".into();
+        // Editar después de preparar deja obsoleto el borrador: no se guarda.
+        let id = app.borradores[0].filas[0].clone();
+        app.trabajo.as_mut().unwrap().filas.iter_mut().find(|f| f.id == id).unwrap().observacion = "Edición ficticia posterior.".into();
+        assert!(app.borradores_obsoletos().contains(&0));
+        let llamados = std::cell::RefCell::new(Vec::new());
+        let guardar = |b: &Borrador| {
+            llamados.borrow_mut().push(b.asunto.clone());
+            Ok(flow_outlook::Resultado::Guardado)
+        };
+        app.guardar_borradores_con(true, &guardar);
+        assert!(!llamados.borrow().contains(&"Asunto editado ficticio".to_string()));
+        assert!(app.mensaje.as_ref().is_some_and(|(e, s)| *e && s.contains("necesita actualizarse")), "{:?}", app.mensaje);
+        // Volver a preparar conserva las ediciones (`merge_draft_edits`) y deja el borrador vigente.
+        app.preparar_borradores();
+        let b = app.borradores.iter().find(|b| b.filas.contains(&id)).unwrap();
+        assert_eq!((b.asunto.as_str(), b.para.as_str()), ("Asunto editado ficticio", "ficticio@example.test"));
+        assert!(app.borradores_obsoletos().is_empty());
+        // «Solo filas seleccionadas»: exige marcar filas y se limita a ellas.
+        app.manual = true;
+        app.preparar_borradores();
+        assert!(app.mensaje.as_ref().is_some_and(|(e, s)| *e && s.contains("Selecciona los registros")));
+        app.marcadas.insert(id.clone());
+        app.preparar_borradores();
+        assert!(!app.borradores.is_empty() && app.borradores.iter().all(|b| b.filas == vec![id.clone()]));
+        app.preparar_proyectos();
+        app.guardar_sesion();
+        // Al reanudar con otras reglas en el programa, los productos se conservan pero quedan obsoletos.
+        let mut nueva = App::con_datos(datos, None);
+        nueva.motor.umbrales.insert("FICTICIO.UMBRAL".into(), 1);
+        nueva.reanudar();
+        assert!(nueva.manual && nueva.marcadas.contains(&id));
+        assert_eq!(nueva.borradores.len(), app.borradores.len());
+        assert_eq!(nueva.borradores_obsoletos().len(), nueva.borradores.len());
+        assert_eq!(nueva.proyectos_obsoletos().len(), nueva.proyectos.len());
+        assert!(nueva.mensaje.as_ref().is_some_and(|(_, s)| s.contains("quedan obsoletos")), "{:?}", nueva.mensaje);
         std::fs::remove_dir_all(base).unwrap();
     }
 

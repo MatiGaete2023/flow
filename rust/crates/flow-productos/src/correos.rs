@@ -66,8 +66,9 @@ impl Tipo {
     ];
     /// Los que «Preparar borradores» arma de una vez (`prepare_required_drafts`): el informativo de la etapa y los
     /// que surgen de las acciones. «Reporte de proyectos» y «Gestión particular» solo se preparan a pedido.
+    /// En el orden de Python: primero el informativo de la etapa, luego los de las acciones.
     pub const AUTOMATICOS: [Tipo; 5] =
-        [Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas, Tipo::Informativo];
+        [Tipo::Informativo, Tipo::ProgramaEspera, Tipo::ProgramaVencido, Tipo::ProgramaPorVencer, Tipo::Medidas];
 
     /// Acción del motor que alimenta este correo; el informativo no depende de una acción.
     pub fn accion(self) -> Option<&'static str> {
@@ -195,6 +196,44 @@ pub struct Borrador {
     /// El usuario lo deja fuera del lote sin borrarlo.
     #[serde(default)]
     pub omitido: bool,
+    /// Texto al prepararlo (`Draft.original`): lo que difiere es edición del usuario y se conserva al volver a preparar.
+    #[serde(default)]
+    pub originales: Option<Originales>,
+    /// Huella de los registros de los que depende (`dependency_hash`; ver `vigencia`). Vacía: sin control.
+    #[serde(default)]
+    pub huella: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Originales {
+    pub para: String,
+    pub cc: String,
+    pub asunto: String,
+    pub cuerpo: String,
+}
+
+/// `session.py::merge_draft_edits`: al volver a preparar, un borrador del mismo tipo, destino, tribunal y programa
+/// conserva lo que el usuario cambió (destinatario, CC, asunto y texto) y su omisión.
+pub fn conservar_ediciones(previos: &[Borrador], nuevos: &mut [Borrador]) {
+    for b in nuevos.iter_mut() {
+        let clave = |x: &Borrador| (x.tipo, x.tipo.a_programa(), x.tribunal.clone(), x.programa.clone());
+        let Some(viejo) = previos.iter().find(|v| clave(v) == clave(b)) else { continue };
+        if let Some(o) = &viejo.originales {
+            if viejo.para != o.para {
+                b.para = viejo.para.clone();
+            }
+            if viejo.cc != o.cc {
+                b.cc = viejo.cc.clone();
+            }
+            if viejo.asunto != o.asunto {
+                b.asunto = viejo.asunto.clone();
+            }
+            if viejo.cuerpo != o.cuerpo {
+                b.cuerpo = viejo.cuerpo.clone();
+            }
+        }
+        b.omitido = viejo.omitido;
+    }
 }
 
 impl Borrador {
@@ -225,6 +264,39 @@ pub struct Opciones {
     pub periodo: String,
     /// Filas con proyecto Word generado: las únicas que entran en el reporte de proyectos (recibos `word`).
     pub con_word: BTreeSet<String>,
+    /// Filas elegidas en Trabajo («Solo filas seleccionadas»). `None`: todas.
+    pub seleccion: Option<BTreeSet<String>>,
+    /// `manual_selection` de «Preparar tipo»: las filas elegidas entran aunque el motor no proponga ese correo (y en el
+    /// reporte de proyectos, aunque no tengan Word).
+    pub manual: bool,
+    /// Reglas vigentes en el programa, para la huella; vacío: las del trabajo.
+    pub reglas: String,
+}
+
+/// `outputs.py::prepare_required_drafts` («Preparar todos»): exige modalidades y prepara el informativo de la etapa y
+/// los correos que surgen de las acciones de las filas elegidas. Un tipo que no se puede preparar no anula los demás
+/// (se informa en la segunda lista).
+pub fn preparar_todos(
+    trabajo: &Trabajo,
+    opciones: &Opciones,
+    contactos: &Contactos,
+    carpeta: &Path,
+) -> Result<(Vec<Borrador>, Vec<String>), String> {
+    if trabajo.fuente.is_some() {
+        return Ok((Vec::new(), Vec::new()));
+    }
+    if opciones.modalidades.trim().is_empty() {
+        return Err("Selecciona al menos una modalidad para preparar el conjunto de correos del trabajo.".into());
+    }
+    let opciones = Opciones { manual: false, ..opciones.clone() };
+    let (mut lista, mut fallidos) = (Vec::new(), Vec::new());
+    for tipo in Tipo::AUTOMATICOS {
+        match preparar(trabajo, tipo, &opciones, contactos, carpeta) {
+            Ok(mut nuevos) => lista.append(&mut nuevos),
+            Err(e) => fallidos.push(format!("{}: {e}", tipo.titulo(trabajo.etapa))),
+        }
+    }
+    Ok((lista, fallidos))
 }
 
 /// Modalidades de `src/nurus/personal/modalities.py`: clave y nombre.
@@ -345,8 +417,9 @@ pub fn preparar(
     let mut orden: Vec<(Tribunal, String)> = Vec::new();
     for fila in &trabajo.filas {
         if fila.propuesta.excluido
-            || tipo.accion().is_some_and(|a| !fila.tiene_accion(a))
-            || (tipo == Tipo::Proyectos && !opciones.con_word.contains(&fila.id))
+            || opciones.seleccion.as_ref().is_some_and(|s| !s.contains(&fila.id))
+            || (!opciones.manual && tipo.accion().is_some_and(|a| !fila.tiene_accion(a)))
+            || (!opciones.manual && tipo == Tipo::Proyectos && !opciones.con_word.contains(&fila.id))
             || !en_modalidades(trabajo, fila, claves)
         {
             continue;
@@ -422,7 +495,15 @@ pub fn preparar(
             adjuntos,
             filas: filas.iter().map(|f| f.id.clone()).collect(),
             omitido: false,
+            originales: None,
+            huella: String::new(),
         });
+    }
+    let reglas = if opciones.reglas.is_empty() { trabajo.version_reglas.as_str() } else { opciones.reglas.as_str() };
+    let huellas = crate::vigencia::Huellas::nuevas(trabajo, reglas);
+    for b in &mut salida {
+        b.originales = Some(Originales { para: b.para.clone(), cc: b.cc.clone(), asunto: b.asunto.clone(), cuerpo: b.cuerpo.clone() });
+        b.huella = huellas.de_borrador(b, contactos);
     }
     Ok(salida)
 }

@@ -193,6 +193,8 @@ mod pruebas {
             adjuntos: vec![],
             filas: vec!["fila-ficticia".into()],
             omitido: false,
+            originales: None,
+            huella: String::new(),
         }
     }
     #[test]

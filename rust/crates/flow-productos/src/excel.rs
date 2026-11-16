@@ -254,6 +254,7 @@ pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
         }
     }
     let [obs, fecha, _tt, _cc, res, rev] = [plan[0], plan[1], plan[2], plan[3], plan[4], plan[5]];
+    let res_origen = crate::word::columna_humana(trabajo, &crate::word::ALIAS_RES);
     let filas: Vec<Vec<Celda>> = trabajo
         .filas
         .iter()
@@ -266,8 +267,12 @@ pub fn observaciones(trabajo: &Trabajo, destino: &Path) -> Result<(), String> {
                     celdas[fecha] = Celda::Fecha(trabajo.corte);
                 }
             }
+            // `resolution_value`: el RES del origen si trae esa columna (aunque esté vacía); si no, el tipo sugerido.
             if en_blanco(&celdas[res]) {
-                celdas[res] = f.proyecto().map(|p| Celda::Texto(p.to_string())).unwrap_or_default();
+                celdas[res] = match res_origen {
+                    Some(i) => f.celdas.get(i).cloned().unwrap_or_default(),
+                    None => f.proyecto().map(|p| Celda::Texto(p.to_string())).unwrap_or_default(),
+                };
             }
             let mut nota = revisar(f);
             let conservada = celdas[obs].texto();

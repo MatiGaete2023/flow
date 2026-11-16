@@ -1,10 +1,10 @@
 //! Proyectos de resolución en Word a partir de plantillas `.docx` con variables `{{NOMBRE}}`.
-//! Todos los proyectos de un mismo tribunal y tipo van en un solo documento, cada uno en página nueva.
+//! Todos los proyectos van en un solo documento (`generate_projects`), cada uno en página nueva.
 
 use crate::excel::{ruta_nueva, valor};
 use crate::numeros::fecha_en_palabras;
 use flow_dominio::texto::normalizar_columna;
-use flow_dominio::{Fecha, Tribunal};
+use flow_dominio::{Celda, Fecha, Tribunal};
 use flow_trabajo::{FilaTrabajo, Trabajo};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -277,7 +277,7 @@ fn componer_con(docx: &[u8], lote: &[(&BTreeMap<String, String>, Option<&Plural>
                 if i > 0 {
                     armado.push_str(SALTO_PAGINA);
                 }
-                armado.push_str(&cuerpo_proyecto(cuerpo, valores, *plural)?);
+                armado.push_str(&crate::compositor::mejorar_paginacion(&cuerpo_proyecto(cuerpo, valores, *plural)?));
             }
             armado.push_str(&xml[fin..]);
             armado.into_bytes()
@@ -328,6 +328,9 @@ pub struct Proyecto {
     pub omitido: bool,
     #[serde(default)]
     pub plural: Plural,
+    /// Huella de los registros y la plantilla de los que depende (`dependency_hash`, `template_hash`).
+    #[serde(default)]
+    pub huella: String,
 }
 
 /// Nomenclatura que el proyecto pide aplicar, según la regla que lo originó.
@@ -458,19 +461,133 @@ pub fn tipo_por_observacion(observacion: &str) -> Option<&'static str> {
     }
 }
 
-/// `resolutions.py::automatic_project_selections` (planilla sin RES): por cada fila no excluida con acciones de
-/// proyecto, el tipo que nombra la observación o, si no nombra ninguno, todos los tipos de sus acciones.
+/// Alias de las columnas humanas (`importing.py`): se toma una columna solo si hay exactamente una.
+pub const ALIAS_RES: [&str; 6] =
+    ["res", "resolucion generada", "resolucion", "generar resolucion", "proyecto resolucion", "proyecto de resolucion"];
+pub const ALIAS_OBSERVACION: [&str; 2] = ["observacion", "observaciones"];
+
+/// Posición de la columna humana del origen con alguno de esos nombres, si hay exactamente una.
+pub fn columna_humana(trabajo: &Trabajo, alias: &[&str]) -> Option<usize> {
+    let alias: Vec<String> = alias.iter().map(|a| normalizar_columna(a)).collect();
+    let halladas: Vec<usize> =
+        trabajo.cabeceras.iter().enumerate().filter(|(_, c)| alias.contains(&normalizar_columna(c))).map(|(i, _)| i).collect();
+    (halladas.len() == 1).then(|| halladas[0])
+}
+
+/// Observación que revisa el usuario (`review['OBSERVACION']`): la editada en Flow o, si el origen trae la columna,
+/// la del origen; si no, la propuesta.
+pub fn observacion_revisada(trabajo: &Trabajo, fila: &FilaTrabajo) -> String {
+    if fila.editada() {
+        return fila.observacion.clone();
+    }
+    match columna_humana(trabajo, &ALIAS_OBSERVACION) {
+        Some(i) => fila.celdas.get(i).map(|c| c.texto()).unwrap_or_default(),
+        None => fila.observacion.clone(),
+    }
+}
+
+/// `resolutions.py::resolution_kind`.
+pub fn tipo_res(celda: &Celda) -> Option<&'static str> {
+    match normalizar_columna(&celda.texto()).replace('_', " ").as_str() {
+        "pc ie" => Some("PC_IE"),
+        "pc info" => Some("PC_INFO"),
+        "nomencl" | "nomenclatura" => Some("NOMENCL"),
+        _ => None,
+    }
+}
+
+/// `resolutions.py::resolution_marked` sobre una celda con valor (`_has_explicit_value`).
+pub fn res_marcado(celda: &Celda) -> bool {
+    if tipo_res(celda).is_some() {
+        return true;
+    }
+    match celda {
+        Celda::Vacia | Celda::Fecha(_) => false,
+        Celda::Numero(n) => *n != 0.0,
+        Celda::Texto(t) => {
+            let crudo = t.trim().to_lowercase().replace(',', ".");
+            if crudo == "1" || crudo == "1.0" {
+                return true;
+            }
+            if crudo == "0" || crudo == "0.0" {
+                return false;
+            }
+            matches!(normalizar_columna(t).as_str(), "si" | "s" | "x" | "true" | "verdadero" | "res" | "resolucion" | "con resolucion")
+        }
+    }
+}
+
+fn explicito(celda: &Celda) -> bool {
+    match celda {
+        Celda::Vacia => false,
+        Celda::Texto(t) => !t.trim().is_empty(),
+        _ => true,
+    }
+}
+
+/// `_case_key`: tribunal y RIT normalizados.
+fn clave_causa(fila: &FilaTrabajo) -> (String, String) {
+    let crudo = valor(fila, "tribunal");
+    let tribunal = Tribunal::desde(&crudo).map(|t| t.nombre().to_string()).unwrap_or_else(|| normalizar_columna(&crudo));
+    (tribunal, normalizar_columna(&valor(fila, "rit")))
+}
+
+/// `resolutions.py::automatic_project_selections`.
+///
+/// - Si el origen trae una columna RES (aunque esté vacía), manda la selección humana: entran las causas con RES
+///   marcado y su tipo sale de RES, si no de la observación, si no de las acciones (y en último caso PC_IE), para todas
+///   las filas de la causa.
+/// - Si no, cada fila con acciones de proyecto aporta el tipo que nombra la observación o, si no nombra ninguno, todos
+///   los tipos de sus acciones.
+///
+/// La rama `structured` de Python depende de decisiones por fila (`NURUS_DECISIONES`) que Flow no tiene.
 pub fn selecciones(trabajo: &Trabajo) -> Vec<(String, String)> {
     if trabajo.fuente.is_some() {
         return Vec::new();
     }
     let mut salida = Vec::new();
+    if let Some(col) = columna_humana(trabajo, &ALIAS_RES) {
+        let mut por_causa: Vec<((String, String), Vec<&'static str>)> = Vec::new();
+        for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
+            let res = fila.celdas.get(col).cloned().unwrap_or_default();
+            if !(explicito(&res) && res_marcado(&res)) {
+                continue;
+            }
+            let mut tipos = match (tipo_res(&res), tipo_por_observacion(&observacion_revisada(trabajo, fila))) {
+                (Some(t), _) | (None, Some(t)) => vec![t],
+                _ => fila.proyectos().into_iter().filter_map(|t| TIPOS.iter().find(|(x, _)| *x == t).map(|(x, _)| *x)).collect(),
+            };
+            if tipos.is_empty() {
+                tipos.push("PC_IE");
+            }
+            let clave = clave_causa(fila);
+            let i = match por_causa.iter().position(|(k, _)| *k == clave) {
+                Some(i) => i,
+                None => {
+                    por_causa.push((clave, Vec::new()));
+                    por_causa.len() - 1
+                }
+            };
+            for t in tipos {
+                if !por_causa[i].1.contains(&t) {
+                    por_causa[i].1.push(t);
+                }
+            }
+        }
+        for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
+            let clave = clave_causa(fila);
+            if let Some((_, tipos)) = por_causa.iter().find(|(k, _)| *k == clave) {
+                salida.extend(tipos.iter().map(|t| (fila.id.clone(), t.to_string())));
+            }
+        }
+        return salida;
+    }
     for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
         let sugeridos = fila.proyectos();
         if sugeridos.is_empty() {
             continue;
         }
-        let tipos = match tipo_por_observacion(&fila.observacion) {
+        let tipos = match tipo_por_observacion(&observacion_revisada(trabajo, fila)) {
             Some(t) => vec![t],
             None => sugeridos,
         };
@@ -485,12 +602,19 @@ fn causa(fila: &FilaTrabajo) -> Option<(Tribunal, String)> {
 
 /// Proyectos que corresponden al trabajo (`selecciones` + `preparar`).
 pub fn proyectos(trabajo: &Trabajo, hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
-    preparar(trabajo, &selecciones(trabajo), hoy, carpeta_usuario)
+    preparar(trabajo, &selecciones(trabajo), hoy, carpeta_usuario, &trabajo.version_reglas)
 }
 
 /// `resolutions.py::prepare_projects`: un proyecto por tribunal + RIT + tipo con todas las filas no excluidas de la
 /// causa. Las variables sin dato quedan como «[COMPLETAR X]».
-pub fn preparar(trabajo: &Trabajo, selecciones: &[(String, String)], hoy: Fecha, carpeta_usuario: Option<&Path>) -> Vec<Proyecto> {
+/// `reglas`: las vigentes en el programa, para la huella de vigencia.
+pub fn preparar(
+    trabajo: &Trabajo,
+    selecciones: &[(String, String)],
+    hoy: Fecha,
+    carpeta_usuario: Option<&Path>,
+    reglas: &str,
+) -> Vec<Proyecto> {
     if trabajo.fuente.is_some() {
         return Vec::new();
     }
@@ -514,6 +638,7 @@ pub fn preparar(trabajo: &Trabajo, selecciones: &[(String, String)], hoy: Fecha,
             grupos.push(grupo);
         }
     }
+    let huellas = crate::vigencia::Huellas::nuevas(trabajo, reglas);
     let mut salida = Vec::new();
     for (clave, tipo) in grupos {
         let Some((_, filas)) = por_causa.iter().find(|(k, _)| *k == clave) else { continue };
@@ -529,6 +654,7 @@ pub fn preparar(trabajo: &Trabajo, selecciones: &[(String, String)], hoy: Fecha,
             sin_plantilla: false,
             omitido: false,
             plural,
+            huella: String::new(),
         };
         revisar_faltantes(&mut p, carpeta_usuario);
         for v in p.faltantes.clone() {
@@ -537,6 +663,7 @@ pub fn preparar(trabajo: &Trabajo, selecciones: &[(String, String)], hoy: Fecha,
             }
         }
         p.originales = p.valores.clone();
+        p.huella = huellas.de_proyecto(&p, plantilla(p.tribunal, &p.tipo, carpeta_usuario).as_deref());
         salida.push(p);
     }
     salida
@@ -580,22 +707,122 @@ impl Proyecto {
     }
 }
 
-/// Genera un documento por tribunal y tipo con los proyectos listos. Devuelve las rutas creadas.
-pub fn generar(lista: &[Proyecto], carpeta: &Path, carpeta_usuario: Option<&Path>) -> Result<Vec<PathBuf>, String> {
-    let mut grupos: BTreeMap<(Tribunal, String), Vec<&Proyecto>> = BTreeMap::new();
-    for p in lista.iter().filter(|p| p.listo()) {
-        grupos.entry((p.tribunal, p.tipo.clone())).or_default().push(p);
+/// Partes del cuerpo de `document.xml`: antes del cuerpo, cuerpo sin la sección final, y sección con el cierre.
+fn dividir(xml: &str) -> Result<(&str, &str, &str), String> {
+    let inicio = xml.find("<w:body>").map(|p| p + "<w:body>".len()).ok_or("La plantilla no tiene cuerpo.")?;
+    let fin_cuerpo = xml.rfind("</w:body>").ok_or("La plantilla no tiene cuerpo.")?;
+    let fin = xml[inicio..fin_cuerpo].rfind("<w:sectPr").map_or(fin_cuerpo, |p| inicio + p);
+    Ok((&xml[..inicio], &xml[inicio..fin], &xml[fin..]))
+}
+
+fn parte_texto(docx: &[u8], nombre: &str) -> Result<String, String> {
+    let datos = partes(docx)?.into_iter().find(|(n, _)| n == nombre).map(|(_, d)| d).unwrap_or_default();
+    String::from_utf8(datos).map_err(|_| format!("{nombre} no es UTF-8."))
+}
+
+/// `require_complete(..., allow_review_markers=True)`: no puede quedar ninguna `{{VARIABLE}}`.
+fn exigir_completo(docx: &[u8]) -> Result<(), String> {
+    let mut pendientes = BTreeSet::new();
+    for (nombre, datos) in partes(docx)? {
+        if nombre.starts_with("word/") && nombre.ends_with(".xml") {
+            let xml = String::from_utf8_lossy(&datos);
+            for parrafo in xml.split_inclusive("</w:p>") {
+                let texto: String = NODO_T.captures_iter(parrafo).map(|c| sin_xml(&c[2])).collect();
+                pendientes.extend(VARIABLE.find_iter(&texto).map(|m| m.as_str().to_string()));
+            }
+        }
     }
-    if grupos.is_empty() {
+    if pendientes.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("Completa los campos Word pendientes: {}", pendientes.into_iter().collect::<Vec<_>>().join(", ")))
+    }
+}
+
+/// Un documento con proyectos de distintas plantillas (`generate_projects`): el paquete del primero y, de los demás, su
+/// cuerpo con sus estilos (`compositor`). Encabezados y pies con los valores del primero.
+fn componer_varias(lote: &[(&[u8], &Proyecto)]) -> Result<Vec<u8>, String> {
+    let (base, primero) = lote.first().ok_or("No hay proyectos para generar.")?;
+    let xml = parte_texto(base, "word/document.xml")?;
+    let (cabeza, cuerpo, cola) = dividir(&xml)?;
+    let mut compositor = crate::compositor::Compositor::nuevo(&parte_texto(base, "word/styles.xml")?);
+    let mut armado = String::from(cabeza);
+    armado.push_str(&crate::compositor::mejorar_paginacion(&cuerpo_proyecto(cuerpo, &primero.valores, Some(&primero.plural))?));
+    for (docx, p) in &lote[1..] {
+        let suyo = parte_texto(docx, "word/document.xml")?;
+        let (_, cuerpo, _) = dividir(&suyo)?;
+        let mut cuerpo = crate::compositor::mejorar_paginacion(&cuerpo_proyecto(cuerpo, &p.valores, Some(&p.plural))?);
+        if docx != base {
+            cuerpo = compositor.agregar(&cuerpo, &parte_texto(docx, "word/styles.xml")?);
+        }
+        armado.push_str(SALTO_PAGINA);
+        armado.push_str(&cuerpo);
+    }
+    armado.push_str(cola);
+    let mut salida = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    let opciones = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    for (nombre, datos) in partes(base)? {
+        let nuevo = if nombre == "word/document.xml" {
+            armado.clone().into_bytes()
+        } else if nombre == "word/styles.xml" {
+            compositor.estilos().as_bytes().to_vec()
+        } else if nombre.starts_with("word/") && nombre.ends_with(".xml") {
+            match String::from_utf8(datos.clone()) {
+                Ok(xml) if xml.contains("{{") => rellenar_xml(&xml, &primero.valores, false)?.into_bytes(),
+                _ => datos,
+            }
+        } else {
+            datos
+        };
+        salida.start_file(nombre, opciones).map_err(|e| e.to_string())?;
+        salida.write_all(&nuevo).map_err(|e| e.to_string())?;
+    }
+    let datos = salida.finish().map_err(|e| e.to_string())?.into_inner();
+    exigir_completo(&datos)?;
+    Ok(datos)
+}
+
+/// `generate_projects`: un solo Word `Resoluciones_<fecha y hora>.docx` con todos los proyectos listos, en su orden y
+/// cada uno en página nueva, aunque sean de distintos tribunales y tipos. Un proyecto cuya plantilla (distinta de la
+/// primera) usa imágenes, vínculos o numeración en el cuerpo no se puede unir: va en otro documento con los de su
+/// plantilla. Devuelve las rutas creadas, la principal primero.
+pub fn generar(lista: &[Proyecto], carpeta: &Path, carpeta_usuario: Option<&Path>) -> Result<Vec<PathBuf>, String> {
+    let listos: Vec<&Proyecto> = lista.iter().filter(|p| p.listo()).collect();
+    if listos.is_empty() {
         return Err("No hay proyectos listos para generar.".into());
+    }
+    let mut lote: Vec<(Vec<u8>, &Proyecto)> = Vec::new();
+    for p in listos {
+        let docx = plantilla(p.tribunal, &p.tipo, carpeta_usuario)
+            .ok_or_else(|| format!("{}: falta matriz {}/{}", p.rit, p.tribunal.nombre(), p.tipo))?;
+        lote.push((docx, p));
+    }
+    let base = lote[0].0.clone();
+    let mut unidos: Vec<(&[u8], &Proyecto)> = Vec::new();
+    let mut aparte: Vec<(&[u8], Vec<&Proyecto>)> = Vec::new();
+    for (docx, p) in &lote {
+        let cuerpo = parte_texto(docx, "word/document.xml")?;
+        if *docx == base || !crate::compositor::necesita_partes(dividir(&cuerpo)?.1) {
+            unidos.push((docx, p));
+        } else {
+            match aparte.iter_mut().find(|(d, _)| *d == docx.as_slice()) {
+                Some((_, v)) => v.push(p),
+                None => aparte.push((docx, vec![p])),
+            }
+        }
     }
     std::fs::create_dir_all(carpeta).map_err(|e| e.to_string())?;
     let mut rutas = Vec::new();
-    for ((tribunal, tipo), grupo) in grupos {
-        let docx = plantilla(tribunal, &tipo, carpeta_usuario).ok_or("Falta la plantilla.")?;
+    let nombre = format!("Resoluciones_{}", chrono::Local::now().format("%Y%m%d_%H%M%S_%6f"));
+    let ruta = ruta_nueva(carpeta, &nombre, "docx");
+    let datos = componer_varias(&unidos)?;
+    std::fs::write(&ruta, datos).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
+    rutas.push(ruta);
+    for (docx, grupo) in aparte {
         let lote: Vec<(&BTreeMap<String, String>, Option<&Plural>)> = grupo.iter().map(|p| (&p.valores, Some(&p.plural))).collect();
-        let datos = componer_con(&docx, &lote)?;
-        let ruta = ruta_nueva(carpeta, &format!("Proyectos {tipo} - {} ({})", tribunal.titulo(), grupo.len()), "docx");
+        let datos = componer_con(docx, &lote)?;
+        exigir_completo(&datos)?;
+        let ruta = ruta_nueva(carpeta, &format!("{nombre} - {} {} aparte", grupo[0].tribunal.titulo(), grupo[0].tipo), "docx");
         std::fs::write(&ruta, datos).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
         rutas.push(ruta);
     }

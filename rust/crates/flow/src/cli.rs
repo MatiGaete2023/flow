@@ -204,21 +204,19 @@ fn producir_interno(
         claves_modalidad: correos::claves_de_texto(modalidades),
         ..Default::default()
     };
-    // Como «Preparar todos» de Python: el reporte de proyectos y la gestión particular se preparan a pedido.
-    for tipo in correos::Tipo::AUTOMATICOS.into_iter().filter(|_| trabajo.fuente.is_none()) {
-        if tipo.usa_modalidades(trabajo.etapa) && modalidades.trim().is_empty() {
-            if tipo == correos::Tipo::Informativo || trabajo.filas.iter().any(|f| tipo.accion().is_some_and(|a| f.tiene_accion(a))) {
-                p.pendientes.push(format!("{}: falta indicar las modalidades.", tipo.titulo(trabajo.etapa)));
-            }
-            continue;
+    // Como «Preparar todos» de Python (`prepare_required_drafts`): exige modalidades; el reporte de proyectos y la
+    // gestión particular se preparan a pedido en la ventana.
+    let preparados = match correos::preparar_todos(trabajo, &opciones, contactos, &carpeta.join("correos")) {
+        Ok((lista, fallidos)) => {
+            p.pendientes.extend(fallidos);
+            lista
         }
-        let preparados = match correos::preparar(trabajo, tipo, &opciones, contactos, &carpeta.join("correos")) {
-            Ok(bs) => bs,
-            Err(e) => {
-                p.pendientes.push(e);
-                continue;
-            }
-        };
+        Err(e) => {
+            p.pendientes.push(format!("Correos: {e}"));
+            Vec::new()
+        }
+    };
+    {
         for borrador in preparados {
             let quien = if borrador.programa.is_empty() { borrador.tribunal.clone() } else { borrador.programa.clone() };
             let faltan = borrador.faltantes();
@@ -271,7 +269,7 @@ fn producir_interno(
         p.pendientes.push(format!("Proyecto {} {}: {motivo}.", pr.tipo, pr.rit));
     }
     if proyectos.iter().any(|x| x.listo()) {
-        match word::generar(&proyectos, &carpeta.join("proyectos"), plantillas_usuario) {
+        match word::generar(&proyectos, &carpeta, plantillas_usuario) {
             Ok(rutas) => {
                 for ruta in rutas {
                     p.creados.push(format!("Proyectos Word: {}", ruta.display()));
@@ -477,5 +475,12 @@ mod pruebas_producir {
         let r2 = producir_interno(&t, temp.path(), "todas las modalidades", &contactos, Some((&datos, &guardar)), None).unwrap();
         assert_eq!(n.get(), primero + 1);
         assert!(r2.creados.iter().any(|s| s.contains("no se duplicó")));
+        // Un solo Word conjunto, como `generate_projects`.
+        assert_eq!(r.creados.iter().filter(|s| s.contains(".docx")).count(), 1);
+        assert!(r.creados.iter().any(|s| s.contains("Resoluciones_")));
+        // Sin modalidades, como «Preparar todos» de Python: no se prepara ningún correo.
+        let r3 = producir_interno(&t, temp.path(), "", &contactos, None, None).unwrap();
+        assert!(!r3.creados.iter().any(|s| s.contains(".eml")));
+        assert!(r3.pendientes.iter().any(|s| s.contains("al menos una modalidad")));
     }
 }

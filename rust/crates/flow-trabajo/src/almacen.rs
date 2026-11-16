@@ -8,9 +8,9 @@ use std::time::{Duration, SystemTime};
 pub const DIAS_RETENCION: u64 = 60;
 pub const SESIONES_MAXIMAS: usize = 10;
 
-/// Claves de `Trabajo::sesion` con productos preparados: dependen de las propuestas y se descartan con aviso si
-/// cambian las reglas (decisión del encargo). Python, en cambio, los conserva marcados como obsoletos (`stale`) y exige
-/// volver a prepararlos antes de guardar o generar.
+/// Claves de `Trabajo::sesion` con productos preparados. Si cambian las reglas se conservan, como en Python: su
+/// huella ya no coincide (`flow_productos::vigencia`), quedan obsoletos y hay que prepararlos de nuevo antes de
+/// guardarlos o generarlos.
 pub const PRODUCTOS_SESION: [&str; 3] = ["borradores", "proyectos", "seleccion_preparada"];
 
 /// Carpeta de datos: `FLOW_DATOS` si está definida; en Windows `%APPDATA%\Flow`; si no, `~/.local/share/flow`.
@@ -41,9 +41,9 @@ fn ruta_sesion(datos: &Path, trabajo: &Trabajo) -> PathBuf {
 /// si corresponde, un aviso para mostrar una vez (no se guarda en el trabajo, para no repetirlo en cada apertura).
 ///
 /// - Calculada con las mismas reglas: reemplaza a `nuevo` tal como quedó.
-/// - Con otras reglas (`version_reglas`): queda la propuesta recién calculada y solo se traen las ediciones de la
-///   observación, las marcas de revisada del usuario y las preferencias de la sesión; los borradores y proyectos
-///   preparados (`PRODUCTOS_SESION`) se descartan con aviso.
+/// - Con otras reglas (`version_reglas`): queda la propuesta recién calculada y se traen las ediciones de la
+///   observación, las marcas de revisada del usuario y el estado de la sesión; los borradores y proyectos preparados
+///   (`PRODUCTOS_SESION`) quedan obsoletos, con aviso.
 /// - Ilegible (dañada o de un formato anterior): se aparta con otro nombre, sin borrarla, y se analiza de nuevo.
 /// - Una colisión de nombre con otro origen detiene la apertura y conserva la copia anterior.
 pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<String>), String> {
@@ -83,13 +83,10 @@ pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<Stri
     let mut aviso =
         "La sesión guardada se calculó con otras reglas: se recalcularon las propuestas y se conservaron tus ediciones y marcas."
             .to_string();
-    if let Some(serde_json::Value::Object(mut estado)) = anterior.sesion {
-        let mut descartados = false;
-        for clave in PRODUCTOS_SESION {
-            descartados |= estado.remove(clave).is_some_and(|v| v.as_array().is_none_or(|a| !a.is_empty()));
-        }
-        if descartados {
-            aviso.push_str(" Los borradores y proyectos preparados se descartaron: vuelve a prepararlos.");
+    if let Some(serde_json::Value::Object(estado)) = anterior.sesion {
+        let hay = PRODUCTOS_SESION.iter().any(|c| estado.get(*c).is_some_and(|v| v.as_array().is_none_or(|a| !a.is_empty())));
+        if hay {
+            aviso.push_str(" Los borradores y proyectos preparados quedan obsoletos: prepáralos de nuevo antes de guardarlos.");
         }
         nuevo.sesion = Some(serde_json::Value::Object(estado));
     }
@@ -209,9 +206,9 @@ mod pruebas {
         let mut nuevo = analizado();
         let recien = nuevo.clone();
         let (recuperada, aviso) = recuperar(&datos, &mut nuevo).unwrap();
-        assert!(recuperada && aviso.is_some_and(|a| a.contains("otras reglas") && a.contains("se descartaron")));
-        // Los productos preparados se descartan; las preferencias se conservan.
-        assert_eq!(nuevo.sesion, Some(serde_json::json!({"version": 2, "modalidades": ["Modalidad ficticia"]})));
+        assert!(recuperada && aviso.is_some_and(|a| a.contains("otras reglas") && a.contains("quedan obsoletos")));
+        // Los productos preparados se conservan (quedan obsoletos por su huella), como en Python.
+        assert_eq!(nuevo.sesion, viejo.sesion);
         assert_eq!(nuevo.version_reglas, recien.version_reglas);
         assert_eq!(nuevo.filas[0].observacion, "Edición ficticia del usuario.");
         assert!(nuevo.filas[1].revisada && !nuevo.filas[0].revisada);

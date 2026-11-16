@@ -1498,6 +1498,7 @@ dependencies = [
  "rust_xlsxwriter",
  "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "zip 2.6.1",
 ]
