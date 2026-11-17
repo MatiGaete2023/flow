@@ -1838,6 +1838,10 @@ revisa destinatario y texto, y guárdalos. Quedan en Borradores de Outlook o com
 El reporte de proyectos y la gestión particular se preparan con «Preparar este tipo».\n\n\
 Para una gestión de algunas filas, márcalas en Trabajo y activa «Solo filas seleccionadas». Un borrador o proyecto \
 cuyos registros cambiaron queda obsoleto: prepáralo de nuevo.\n\n\
+Revisión de bitácoras: abre el paquete, confirma Desde/Hasta/Corte y analiza. No verificable significa que falta \
+evidencia suficiente de autoría o cobertura. El motor usa el contexto completo y propone solo para Sin observación. \
+Revisa evidencia, propuesta y edición; marca Revisada y elige Seleccionados o Todos al exportar Excel + JSON. \
+En tamaño compacto, Configurar reúne criterios y acciones.\n\n\
 3 · Resoluciones: prepara los proyectos (uno por tribunal, RIT y tipo), revisa sus valores y genera el Word (uno \
 solo con todos); lo que falte queda marcado [COMPLETAR …] para completarlo en el documento.\n\n4 · Resultados: lista de lo \
 creado y acceso a la carpeta.\n\nFlow no escribe en RUS ni en SATURNO. La observación propuesta es una ayuda: \
@@ -1954,12 +1958,17 @@ pub fn abrir_demostracion(config:crate::evidencia_ui::Config)->Result<(),String>
         if evidencia.config.pantalla.starts_with("revision"){
             let panel=match evidencia.config.pantalla.as_str(){"revision-evidencia"=>1,"revision-propuesta"=>2,_=>0};
             app.revision.demostracion(crate::demo_paquete::crear()?,&app.motor,panel)?;
+            if evidencia.config.pantalla=="revision-inicial"{app.revision.demostracion_inicial();}
         }
+        if evidencia.config.pantalla=="sin-sesion" {app=App::con_origen(raiz.join("sin-sesion"),None,&[]);app.outlook=false;}
+        if evidencia.config.pantalla=="correo-incierto" {app.estados_borradores.insert(0,crate::borradores::Estado::Incierto);app.correo_activo=Some(0);}
+        if evidencia.config.pantalla=="proyecto-obsoleto" {if let Some(t)=&mut app.trabajo {for f in &mut t.filas {f.observacion="Edición ficticia posterior a preparar proyectos.".into();}}}
         app.mensaje=Some((false,"DEMOSTRACIÓN · Datos ficticios · Almacenamiento temporal aislado".into()));
+        if evidencia.config.pantalla=="error" {app.mal("Fallo ficticio de lectura. El archivo anterior se conserva. Revisa el origen y vuelve a intentarlo; no se publicaron productos.");}
         app.pestana=match evidencia.config.pantalla.as_str(){
-            "correos"=>Pestana::Correos,"resoluciones"=>Pestana::Resoluciones,"resultados"=>Pestana::Resultados,
+            "correos"|"correo-incierto"=>Pestana::Correos,"resoluciones"|"proyecto-obsoleto"=>Pestana::Resoluciones,"resultados"=>Pestana::Resultados,
             "contactos"=>Pestana::Contactos,"captura"=>Pestana::Captura,"anonimizador"=>Pestana::Anonimo,
-            "meta4"=>Pestana::Meta4,"revision"|"revision-evidencia"|"revision-propuesta"=>Pestana::Revision,_=>Pestana::Trabajo,
+            "meta4"=>Pestana::Meta4,"revision"|"revision-evidencia"|"revision-propuesta"|"revision-inicial"=>Pestana::Revision,_=>Pestana::Trabajo,
         };
         app.ayuda=evidencia.config.pantalla=="ayuda";
         app.panel_trabajo=match evidencia.config.pantalla.as_str(){"trabajo-evidencia"=>1,"trabajo-editor"=>2,_=>0};

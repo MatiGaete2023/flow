@@ -17,10 +17,10 @@ pub fn aplicar(ctx: &egui::Context) {
     estilo.visuals.extreme_bg_color = fondo;
     estilo.visuals.faint_bg_color = superficie;
     estilo.visuals.selection.bg_fill = Color32::from_rgb(74, 65, 99);
-    estilo.visuals.selection.stroke = Stroke::new(1.5, lavanda);
+    estilo.visuals.selection.stroke = Stroke::new(1.5_f32, lavanda);
     estilo.visuals.widgets.inactive.bg_fill = superficie;
-    estilo.visuals.widgets.hovered.bg_stroke = Stroke::new(1.5, lavanda);
-    estilo.visuals.widgets.active.bg_stroke = Stroke::new(2.0, menta);
+    estilo.visuals.widgets.hovered.bg_stroke = Stroke::new(1.5_f32, lavanda);
+    estilo.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, menta);
     estilo.visuals.warn_fg_color = AVISO;
     estilo.visuals.error_fg_color = ERROR;
     estilo.spacing.item_spacing = egui::vec2(8.0, 8.0);

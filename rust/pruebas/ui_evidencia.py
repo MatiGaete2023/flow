@@ -28,6 +28,31 @@ def png(ppm):
     return destino
 
 
+def miniatura(ppm):
+    _, size, _, pixels = ppm.read_bytes().split(b"\n", 3)
+    width, height = map(int, size.split())
+    tw, th = 320, 180
+    copia = bytearray(tw * th * 3)
+    for y in range(th):
+        for x in range(tw):
+            origen = (min(height - 1, y * height // th) * width + min(width - 1, x * width // tw)) * 3
+            destino = (y * tw + x) * 3
+            copia[destino:destino + 3] = pixels[origen:origen + 3]
+    return bytes(copia)
+
+
+def mosaico(destino, nombre, vistas):
+    ancho, alto = 320 * 5, 180 * ((len(vistas) + 4) // 5)
+    pixels = bytearray(ancho * alto * 3)
+    for n, vista in enumerate(vistas):
+        for y in range(180):
+            inicio = (((n // 5) * 180 + y) * ancho + (n % 5) * 320) * 3
+            pixels[inicio:inicio + 960] = vista[y * 960:(y + 1) * 960]
+    ppm = destino / (nombre + ".ppm")
+    ppm.write_bytes(f"P6\n{ancho} {alto}\n255\n".encode() + pixels)
+    return png(ppm)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exe", required=True)
@@ -37,12 +62,13 @@ def main():
     destino = Path(args.salida).resolve()
     destino.mkdir(parents=True, exist_ok=False)
     exe = str(Path(args.exe).resolve())
-    pantallas = ["trabajo", "trabajo-evidencia", "trabajo-editor", "correos", "resoluciones", "resultados", "contactos", "captura", "anonimizador", "meta4", "revision", "revision-evidencia", "revision-propuesta", "ayuda", "recalculo"]
+    pantallas = ["trabajo", "trabajo-evidencia", "trabajo-editor", "correos", "resoluciones", "resultados", "contactos", "captura", "anonimizador", "meta4", "revision", "revision-evidencia", "revision-propuesta", "revision-inicial", "ayuda", "recalculo", "sin-sesion", "error", "correo-incierto", "proyecto-obsoleto"]
     if os.name != "nt":
         pantallas.append("teclado")
     dimensiones = [(1366, 768), (1920, 1080)] if args.completa else [(1366, 768)]
     escalas = [1.0, 1.25, 1.5, 2.0] if args.completa else [1.0]
     resultados = []
+    vistas = {}
     for pantalla in pantallas:
         for ancho, alto in dimensiones:
             for escala in escalas:
@@ -68,6 +94,7 @@ def main():
                 ppm = destino / f"{nombre}.ppm"
                 if codigo or not ppm.is_file():
                     raise RuntimeError(f"Falló captura {nombre}: código {codigo}: {stderr[-3000:]}")
+                vistas.setdefault((ancho, alto, escala), []).append(miniatura(ppm))
                 imagen = png(ppm)
                 datos = json.loads(imagen.with_suffix(".json").read_text())
                 if datos["pixeles"] != [ancho, alto]:
@@ -76,13 +103,21 @@ def main():
                     raise RuntimeError("Tab no produjo foco observable en la interfaz real")
                 resultados.append(datos)
     (destino / "MATRIZ_CAPTURAS.json").write_text(json.dumps(resultados, indent=2), encoding="utf-8")
+    (destino / "INDICE_MOSAICOS.json").write_text(json.dumps(pantallas), encoding="utf-8")
+    for (ancho, alto, escala), entradas in vistas.items():
+        nombre = f"mosaico-{ancho}x{alto}-{round(escala * 100)}"
+        imagen = mosaico(destino, nombre, entradas)
+        if escala in (1.0, 2.0):
+            print("FLOW_UI_IMAGE_BEGIN " + imagen.name)
+            print(base64.b64encode(imagen.read_bytes()).decode("ascii"))
+            print("FLOW_UI_IMAGE_END")
     print(f"CAPTURAS_SINTETICAS={len(resultados)}")
     vista = destino / "trabajo-1366x768-100.png"
     print("FLOW_UI_PREVIEW_BEGIN")
     print(base64.b64encode(vista.read_bytes()).decode("ascii"))
     print("FLOW_UI_PREVIEW_END")
     if args.completa:
-        for nombre in ["revision-1366x768-100.png","revision-propuesta-1366x768-200.png","revision-evidencia-1366x768-200.png","contactos-1366x768-200.png"]:
+        for nombre in ["revision-1366x768-100.png","revision-propuesta-1366x768-200.png","revision-evidencia-1366x768-200.png","revision-inicial-1366x768-200.png","correo-incierto-1366x768-200.png","proyecto-obsoleto-1366x768-200.png","contactos-1366x768-200.png"]:
             print("FLOW_UI_IMAGE_BEGIN " + nombre)
             print(base64.b64encode((destino / nombre).read_bytes()).decode("ascii"))
             print("FLOW_UI_IMAGE_END")

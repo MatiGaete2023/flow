@@ -49,6 +49,7 @@ fn combo(ui: &mut egui::Ui, id: &str, valor: &mut String, opciones: &[String]) {
     });
 }
 impl RevisionUi {
+    pub fn demostracion_inicial(&mut self){self.informe=None;self.seleccion.clear();self.activa=None;self.panel=3;self.mensaje="Paquete ficticio abierto. Confirma fechas y pulsa Analizar bitácoras.".into();}
     pub fn demostracion(&mut self,datos:Vec<u8>,config:&Config,panel:u8)->Result<(),String>{
         let desde="2026-11-01".parse().map_err(|_|"Fecha ficticia inválida.")?;
         let hasta="2026-11-17".parse().map_err(|_|"Fecha ficticia inválida.")?;

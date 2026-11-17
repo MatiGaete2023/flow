@@ -1,66 +1,70 @@
-# Flow Estudio D — ejecución en curso
+# Flow Estudio D · estado verificable
 
-Base: cfc12ee2af5e4fb5623671fd17ccf7feb9e1cc11.
-Rama: feat/flow-estudio-d-20261117. PR borrador: #59.
-Fecha: 17 de noviembre de 2026. No es todavía la entrega final para pruebas de usuario.
+Base: cfc12ee2af5e4fb5623671fd17ccf7feb9e1cc11. Rama feat/flow-estudio-d-20261117.
+PR borrador: https://github.com/MatiGaete2023/flow/pull/59. Fecha: 17/11/2026.
+La punta exacta del binario se identifica en CANDIDATO.json de cada entrega.
+Aceptación del usuario pendiente. Sin merge, release ni efectos en sesiones reales.
 
-## Decisiones confirmadas
+## Decisiones cerradas
 
-- B1: intervalo capturado con fechas ajustables, límites inclusivos.
-- B2: ampliar metadatos conservando compatibilidad. La extensión y sus permisos no cambian.
-- Autoría: el lector valida tabla/HOBS_Centro y formulario del ingreso antes de
-  emitir origen=centro. Los campos generalizados del CSV legado solos no acreditan ausencia.
-- Lecturas antiguas reutilizadas sin evidencia original no reciben completitud nueva.
+B1: intervalo capturado con fechas ajustables y límites inclusivos.
+B2: metadatos aditivos con compatibilidad; sin cambios a permisos de la extensión.
+La lectura comprueba formulario/ingreso y tabla de autoría antes de acreditar centro.
+Los rótulos generalizados del CSV legado no prueban autoría. Sin evidencia suficiente,
+No verificable. La revisión no inicia capturas. Una captura explícita no reutiliza
+bitácoras legadas sin evidencia V1; preserva el archivo anterior.
 
-## Estado por paquete
+## Paquetes implementados y verificación
 
-| Paquete | Estado | Evidencia / trabajo restante |
+| Paquete | Implementación | Evidencia |
 |---|---|---|
-| P0 | EN_CURSO | Base e instrucciones revisadas; sin Cargo local. Descarga directa falla. Desarrollo y CI mediante GitHub. Falta baseline completo de verificar_wp.py. |
-| P1 | EN_CURSO | Tema D compartido, controles 28 px, cuerpo 15 px, navegación adaptable. Faltan contraste medido, foco, panel activo en ventanas pequeñas y capturas de escalado. |
-| P2 | EN_CURSO | Editor ancho inferior, tabla/evidencia superiores, confirmación de recálculo. Faltan restauración de distribución, agrupación de etapas y apertura/recuperación contextual. |
-| P3 | EN_CURSO | Etiquetas de correos y menú Plantillas. Faltan reorganización completa de Correos y Resoluciones y sus verificaciones visuales. |
-| P4 | EN_CURSO | Anonimizador con modos y quitar individual/todas; Meta 4 con Todos/Elegir; Captura con etiquetas explícitas. Faltan opciones avanzadas, agrupación Retomar y diseño final. |
-| P5 | EN_CURSO | Importar agrupado y destino rotulado. Faltan bibliotecas tabulares de Resultados/Contactos y ayuda final. |
-| P6 | EN_CURSO | Evidencia aditiva, clasificador, identidad compuesta, cotejo metadata/CSV, duplicados y ZIP acotado. Pruebas Linux del correctivo pasaron; falta confirmar Windows de la punta. |
-| P7 | EN_CURSO | Ruta del motor completo y selección posterior, huella/versión, ediciones separadas. Prueba demuestra que aislar la fila cambia el resultado. Revisión independiente estática cerró cuatro hallazgos. Falta verificación final de punta. |
-| P8 | EN_CURSO | Vista conectada en Asistente/combinado; filtros, evidencia, propuestas, XLSX+JSON todos/seleccionados. Exportación probada en Linux con cancelación intermedia/fallo JSON/colisión. Vista recién enviada a CI; falta QA visual, revisión independiente y Windows final. |
-| P9 | PENDIENTE | Revisión P6/P7 realizada; falta cierre P8 y revisión del candidato completo. |
-| P10 | PENDIENTE | Binario candidato final, manual, matriz de paridad, capturas, inventario/huellas y paquete de entrega. |
+| P0 | Base fijada, instrucciones y contratos leídos | Verificador original ejecutado contra candidato y base; hallazgos heredados idénticos, detalle en qa/CONTROLES_D.md |
+| P1 | Tema D común, cuerpo15/controles28, navegación y panel activo compactos, restaurar distribución | Contraste mínimo medido4.8007; capturas egui reales; Tab real Linux y foco observado |
+| P2 | Trabajo tabla/evidencia/editor, Archivo, recuperación, etapas con conteos, confirmación recálculo | Sesiones/selección/ediciones automatizadas; CtrlS solo Trabajo, prueba con TrabajoA+RevisiónB |
+| P3 | Correos y Resoluciones lista/ficha, modalidades, Período contextual, exclusiones, Plantillas | Controladores y servicios preservados, suite de vigencia/Word/recibos/dobles Outlook |
+| P4 | Captura Retomar y Avanzado, Anonimizador modos/entradas, Meta4 alcance explícito | Suites originales más contrato Python y captura MV3 en Chromium ficticio |
+| P5 | Biblioteca Resultados con búsqueda y carpetas previas; Contactos lista/ficha/importación confirmada; ayuda | Biblioteca acotada sin symlinks, contactos y recuperación; revisión independiente |
+| P6 | Evidencia tipada, cuatro estados, identidad compuesta, duplicados, discrepancias y ZIP seguro | Fixtures de límites/autoría/fechas/identidad y 2000ingresos; revisión independiente cerrada |
+| P7 | Motor sobre paquete completo; selección posterior; huella/versión, propuesta y edición separadas | Prueba diferencia al aislar fila y paridad con contexto completo; revisión cerrada |
+| P8 | UI independiente, segundo plano/cancelación, filtros/selección, evidencia legible y exportación XLSX+JSON atómica | Criterio obsoleto, cancelación/worker, cuatro Revisada, fallo JSON, colisión, cancelación intermedia y primer análisis compacto |
+| P9 | Revisión de contrato, motor, exportación y UI con correcciones | Tres últimos hallazgos cerrados estáticamente en458c58c; pruebas Linux pasan. Falta cierre visual integrado y Windows final |
+| P10 | Guía, fixture ficticio, matriz30controles y empaquetado con procedencia/huellas | Entrega final tras confirmar comprobaciones pendientes |
 
-## Verificación ya observada
+## Pruebas observadas
 
-- Punta inicial 1ba7ffe: Linux y Windows pasaron completos (run 44113902091).
-- b192b88: Linux pasó; siguientes commits iniciaron verificación nueva.
-- 26d8b817: Linux pasó con fixtures de los cuatro hallazgos P6/P7.
-- da317bf8: Linux pasó con publicación no-clobber y pruebas de fallo/cancelación.
-- f0508363: Linux pasó con la vista integrada; Windows seguía en pruebas al escribir este estado.
-- Motor, textos tradicionales y golden existentes permanecen intactos.
-- No se ha probado visualmente escalado, Outlook real ni captura real; no marcar esos casos como pasados.
+- Linux y Windows pasaron suites Rust completas en varias puntas. En315b1f8 Windows
+  pasó tests, release y arranque CLI; la preparación gráfica del servidor falló.
+- En458c58c Linux pasa pruebas nuevas y matriz real de128capturas (16escenarios,
+  2tamaños,4escalas). Windows y matriz ampliada final aún deben confirmarse.
+- Una prueba Windows detectó que rename podía reemplazar una carpeta vacía. Se
+  corrigió con MoveFileExW sin reemplazo y se conserva la prueba.
+- Verificador general315b1f8:1283Asistente,382Descargador,62subpruebas y golden pasan.
+  FALLA inventario48bajas y restricción Python subprocess, idénticas en basecfc12ee2.
+  No se oculta el fallo, no se regenera baseline/golden ni se autoriza integración.
+- Capturas: renderizado real con datos ficticios y almacenamiento temporal aislado.
+  No leen AppData del usuario ni acceden a Outlook.
 
-## Revisión independiente y cierre
+## Revisión independiente y correcciones
 
-P6/P7 encontró y corrigió:
-1. Discrepancia entre metadata y tabla de bitácoras: cotejo bidireccional.
-2. Notas iguales con IDs distintos: identidad y momento de evento conservados.
-3. Cambio a intervalo anterior de una captura: cobertura real conservada.
-4. Costo cuadrático de consultas: índice por ingreso, fixture de 2000 ingresos.
+Se corrigieron discrepancias metadata/CSV, identidad de eventos, conservación de
+cobertura al cambiar intervalo, indexado por ingreso, identidad habitual en Excel,
+publicación sin reemplazo y pruebas de fallos intermedios. Revisada sirve para las
+cuatro categorías. La revisión final encontró primer análisis compacto inaccesible,
+CtrlS desde Revisión exportando Trabajo anterior y reuso legado impidiendo evidencia
+nueva. Las tres correcciones tienen pruebas y cierre estático del revisor.
 
-P8 encontró y corrigió identidad habitual ausente del Excel, carrera de publicación
-POSIX y falta de pruebas intermedias; la revisión independiente cerró esos tres puntos.
-La revisión de UI encontró la marca Revisada restringida a filas con propuesta: se
-separó del editor y se añadió prueba para las cuatro categorías. La evidencia en la
-pantalla se presenta en lenguaje legible, sin exponer JSON como interfaz principal.
+Las capturas al200% motivaron paneles activos, scroll, Revisada sobre el editor y
+barras más compactas. No se certifica una captura por el solo hecho de existir;
+las observaciones y límites están en qa/UI_OBSERVACIONES.md.
 
-## Continuación inmediata
+## Límites de la entrega
 
-1. Comprobar y corregir CI de f0508363, especialmente préstamos de la nueva UI.
-2. Completar P1–P5 contra la matriz obligatoria de 30 controles del kit.
-3. QA sintética real de todas las pantallas y escalas; revisión P8/P9 independiente.
-4. Construir y descargar candidato Windows final con manual, fixtures y huellas.
-5. Auditar cada requisito P0–P10 antes de declarar el producto listo para pruebas de usuario.
+Outlook y captura SITFA reales requieren sesión del usuario y no se han ejecutado.
+Los dobles/fixtures no sustituyen esas pruebas. No cambian motor tradicional, textos,
+golden, permisos MV3, retención ni originales; la semilla permanece en memoria.
+La CI usa Mesa aislada para Windows, sin distribuir DLL ni tocar el sistema.
 
-No fusionar, publicar release ni afirmar aceptación. No usar datos reales ni ejecutar efectos externos.
-
-
+Reproducción: workflow .github/workflows/rust.yml; pruebas/ui_evidencia.py genera la
+matriz; pruebas/verificar_base_plan.py compara el verificador conservando su fallo.
+Rollback por revert de commits en la rama, sin reescribir historial ni borrar datos.
 

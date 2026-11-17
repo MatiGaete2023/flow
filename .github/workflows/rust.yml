@@ -85,14 +85,16 @@ jobs:
           Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.7/mesa3d-26.2.7-release-msvc.7z' -OutFile $mesaArchive
           $digest = (Get-FileHash -LiteralPath $mesaArchive -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($digest -ne 'e61153fb1a8e58b9d80b403030cda619eaffbddd9ff99b34163b996ead03d596') { throw 'Huella Mesa inesperada' }
-          & 7z x $mesaArchive "-o$mesaRoot" -y | Out-Null
+          & 7z l $mesaArchive
+          & 7z x $mesaArchive "-o$mesaRoot" -y
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar Mesa' }
-          $mesaLibraries = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -File -Filter opengl32.dll)
+          Get-ChildItem -LiteralPath $mesaRoot -Recurse -Force | Select-Object -First 40 FullName
+          $mesaLibraries = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -Force -File -Filter opengl32.dll)
           $mesaLibraries | ForEach-Object { Write-Output $_.FullName }
           $opengl = @($mesaLibraries | Where-Object { $_.Directory.Name -eq 'x64' })
           if ($opengl.Count -ne 1) { throw 'No hay un único runtime OpenGL x64' }
           New-Item -ItemType Directory -Path ui-runtime | Out-Null
-          Get-ChildItem -LiteralPath $opengl[0].DirectoryName -File -Filter '*.dll' | Copy-Item -Destination ui-runtime
+          Get-ChildItem -LiteralPath $opengl[0].DirectoryName -Force -File -Filter '*.dll' | Copy-Item -Destination ui-runtime
           Copy-Item -LiteralPath target/release/flow.exe -Destination ui-runtime/flow.exe
           New-Item -ItemType File -Path ui-runtime/flow.exe.local | Out-Null
           if ((Get-FileHash ui-runtime/flow.exe).Hash -ne (Get-FileHash target/release/flow.exe).Hash) { throw 'El binario visual difiere del candidato' }
@@ -116,9 +118,15 @@ jobs:
           foreach ($n in 'flow', 'Flow_Asistente', 'Flow_Descargador', 'Flow_Anonimizador', 'Flow_Meta4') {
             Copy-Item target/release/flow.exe -Destination "entrega/$n.exe"
           }
-          Get-ChildItem entrega/*.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" } | Out-File entrega/SHA256SUMS.txt
-          Copy-Item LEEME.md, GUIA_PRUEBAS_WINDOWS.md -Destination entrega
+          Copy-Item LEEME.md, GUIA_PRUEBAS_WINDOWS.md, GUIA_ESTUDIO_D.md, GUIA_ESTUDIO_D.html, ESTUDIO_D_ESTADO.md, REVISION_BITACORAS_ESQUEMA.md -Destination entrega
+          Copy-Item qa -Destination entrega/qa -Recurse
+          Copy-Item evidencia-ui-windows/Paquete_FICTICIO.zip -Destination entrega
           Copy-Item extension -Destination entrega/extension -Recurse
+          @{ commit = $env:GITHUB_SHA; base = 'cfc12ee2af5e4fb5623671fd17ccf7feb9e1cc11'; rama = $env:GITHUB_REF_NAME; run = $env:GITHUB_RUN_ID; plataforma = 'Windows x64'; tipo = 'Candidato para pruebas del usuario'; aceptacion_usuario = 'PENDIENTE'; outlook_sitfa_reales = 'NO EJECUTADOS'; render_ci = 'Mesa aislada, no distribuida' } | ConvertTo-Json | Set-Content entrega/CANDIDATO.json -Encoding utf8
+          $entregaRoot = (Resolve-Path entrega).Path
+          Get-ChildItem -LiteralPath $entregaRoot -Recurse -File | Sort-Object FullName | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $([IO.Path]::GetRelativePath($entregaRoot, $_.FullName))" } | Set-Content entrega/SHA256SUMS.txt -Encoding utf8
+          Get-Content entrega/CANDIDATO.json
+          Get-Content entrega/SHA256SUMS.txt
       - name: Herramientas sueltas para descargar por separado
         shell: pwsh
         run: |
