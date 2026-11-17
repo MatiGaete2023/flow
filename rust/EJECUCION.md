@@ -611,3 +611,19 @@ guardar el código de conexión, y cualquier escritura en RUS.
   golden, XLS de SITFA HTML (DURACIÓN, Duracion, PLAZO, Vigencia, dos columnas) y XML 2003 con número 6 → «6», lote
   del Descargador («Llevar a Trabajo») y su ZIP: DURACION «6», «6 meses» y vacía, y FECHA_RESOLUCION «uno de agosto
   de dos mil veintiséis» iguales en todas. Suite: 249 pruebas, 0 fallos.
+- 2026-11-17 · Asistente, contactos como Python: (a) si Flow no tiene contactos propios (sin programas ni
+  destinatarios de tribunal; un `contactos.json` vacío de versiones anteriores no cuenta), lee en solo lectura
+  `%LOCALAPPDATA%\CSMP_Personal\contactos.json` (`correos::ruta_csmp`, `Contactos::leer_csmp` =
+  `config.parse_contacts`: lista {Nombre, Mail} o formato histórico, sin inválidos ni ambiguos, «Tribunal: LAJA» a
+  los tribunales), avisa «Contactos tomados de CSMP» y no guarda nada (ni al cerrar ni lo aprendido de los
+  borradores) hasta «Guardar en Flow»; el archivo de CSMP no se modifica. (b) «Importar contactos de CSMP…» (JSON,
+  `app_base._import_contacts`) e «Importar catastro Excel…» (`outputs.import_contacts`: Nombre/Programa y
+  Mail/Correo, direcciones validadas como `config.emails`) muestran nuevos, tribunales que cambian y conflictos (un
+  nombre con otra dirección nunca se sustituye) y solo se guardan con «Confirmar importación». (c) Programas con
+  «Guardar contacto» (nuevo, editar o renombrar, con alias), «Editar», «Quitar» y «Nuevo», con las validaciones de
+  `personalization.save_contact`. (d) `de_programa` = `resolve_contact` con `aliases_base.json` (copiado a
+  `rust/datos/aliases.json`) y los alias del usuario. «No permite generar correos»: sin contactos los borradores se
+  preparaban con el destinatario vacío y al guardar se omitían por «falta destinatario»; Python hace lo mismo
+  (`check_products` los excluye con «Completar destinatario»), así que eso se conserva y ahora se avisa al abrir
+  (`CONTACTOS_FALTAN`, como `CONTACTS_MISSING`). Diferencias: los alias base no se pueden borrar (Python los quita al
+  editar el contacto) y no se carga el ejemplo ficticio `contactos_ejemplo.json`. Suite: 255 pruebas, 0 fallos.

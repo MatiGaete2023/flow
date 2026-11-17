@@ -116,19 +116,249 @@ pub struct Contactos {
     pub cc_adicional: String,
     #[serde(default)]
     pub firma: String,
+    /// Alias que agrega el usuario (alias → nombre del contacto), además de `aliases_base.json` de CSMP.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub aliases: BTreeMap<String, String>,
+}
+
+static ALIASES_BASE: LazyLock<BTreeMap<String, String>> = LazyLock::new(|| {
+    #[derive(Deserialize)]
+    struct Alias {
+        alias: String,
+        nombre_catastro: String,
+    }
+    let lista: Vec<Alias> = serde_json::from_str(include_str!("../../../datos/aliases.json")).expect("aliases.json");
+    lista.into_iter().map(|a| (a.alias, a.nombre_catastro)).collect()
+});
+
+/// Tribunales con destinatarios propios (`correos.tribunales`).
+pub const TRIBUNALES: [&str; 3] = ["LAJA", "MULCHEN", "TOME"];
+
+/// `config.emails`: direcciones separadas por «;», «,» o salto de línea, sin repetir; una inválida es un error.
+pub fn correos_validos(texto: &str) -> Result<Vec<String>, String> {
+    static FORMA: LazyLock<regex::Regex> = LazyLock::new(|| regex::Regex::new(r"\A[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+\z").unwrap());
+    let mut salida: Vec<String> = Vec::new();
+    for parte in texto.split([';', ',', '\n']) {
+        let parte = parte.trim();
+        if !parte.is_empty() && !salida.iter().any(|d| d.to_lowercase() == parte.to_lowercase()) {
+            if !FORMA.is_match(parte) {
+                return Err(format!("Dirección inválida: {parte}"));
+            }
+            salida.push(parte.to_string());
+        }
+    }
+    Ok(salida)
+}
+
+/// `config.parse_contacts`: lista JSON de {Nombre, Mail} o el formato histórico de objetos separados por comas. Se
+/// omiten los registros sin nombre o con una dirección inválida y los nombres con direcciones distintas.
+pub fn leer_lista_csmp(texto: &str) -> Result<BTreeMap<String, String>, String> {
+    let texto = texto.trim().trim_start_matches('\u{feff}').trim();
+    let lista = if texto.starts_with('[') { texto.to_string() } else { format!("[{}]", texto.trim_end_matches(',')) };
+    let registros: Vec<serde_json::Value> =
+        serde_json::from_str(&lista).map_err(|_| "El archivo de contactos de CSMP no contiene una lista JSON válida.".to_string())?;
+    let campo = |r: &serde_json::Value, k: &str| match &r[k] {
+        serde_json::Value::String(s) => s.trim().to_string(),
+        serde_json::Value::Null => String::new(),
+        otro => otro.to_string().trim().to_string(),
+    };
+    let mut contactos = BTreeMap::new();
+    let mut ambiguos = BTreeSet::new();
+    for r in &registros {
+        let (nombre, correo) = (campo(r, "Nombre"), campo(r, "Mail"));
+        if nombre.is_empty() || correos_validos(&correo).is_err() {
+            continue;
+        }
+        match contactos.get(&nombre) {
+            Some(previo) if *previo != correo => {
+                ambiguos.insert(nombre);
+            }
+            _ => {
+                contactos.insert(nombre, correo);
+            }
+        }
+    }
+    for nombre in ambiguos {
+        contactos.remove(&nombre);
+    }
+    Ok(contactos)
+}
+
+/// `config.user_directory() / contactos.json`: los contactos del Asistente Python (%LOCALAPPDATA%\CSMP_Personal).
+pub fn ruta_csmp() -> Option<PathBuf> {
+    let base = std::env::var_os("LOCALAPPDATA")
+        .filter(|v| !v.is_empty())
+        .or_else(|| std::env::var_os("USERPROFILE").filter(|v| !v.is_empty()))
+        .or_else(|| std::env::var_os("HOME").filter(|v| !v.is_empty()))?;
+    Some(PathBuf::from(base).join("CSMP_Personal").join("contactos.json"))
+}
+
+/// Resultado de una importación, a confirmar antes de guardarse: nunca sustituye un contacto con otra dirección.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Importacion {
+    pub contactos: Contactos,
+    /// Contactos que se agregan (o se completan con la misma dirección).
+    pub nuevos: Vec<String>,
+    /// Tribunales cuyos destinatarios cambian («Tribunal: LAJA» del archivo de CSMP).
+    pub tribunales: Vec<String>,
+    /// Nombres con otra dirección ya guardada: se conservan sin cambios.
+    pub conflictos: Vec<String>,
 }
 
 impl Contactos {
+    /// `outputs.resolve_contact`: con los alias de CSMP y los del usuario; una sola dirección o ninguna.
     pub fn de_programa(&self, programa: &str) -> String {
-        let clave = normalizar_columna(programa.trim());
-        let mut halladas: Vec<&String> =
-            self.programas.iter().filter(|(k, v)| normalizar_columna(k.trim()) == clave && !v.trim().is_empty()).map(|(_, v)| v).collect();
-        halladas.dedup();
+        let alias: BTreeMap<String, String> =
+            ALIASES_BASE.iter().chain(self.aliases.iter()).map(|(k, v)| (normalizar_columna(k), normalizar_columna(v))).collect();
+        let clave = normalizar_columna(programa);
+        let clave = alias.get(&clave).cloned().unwrap_or(clave);
+        let halladas: BTreeSet<&String> =
+            self.programas.iter().filter(|(k, v)| normalizar_columna(k) == clave && !v.trim().is_empty()).map(|(_, v)| v).collect();
         if halladas.len() == 1 {
-            halladas[0].clone()
+            halladas.into_iter().next().unwrap().clone()
         } else {
             String::new()
         }
+    }
+
+    /// Alias (base y del usuario) que apuntan a `nombre`.
+    pub fn alias_de(&self, nombre: &str) -> Vec<String> {
+        let mut todos: BTreeMap<&String, &String> = ALIASES_BASE.iter().collect();
+        todos.extend(self.aliases.iter());
+        todos.into_iter().filter(|(_, v)| *v == nombre).map(|(k, _)| k.clone()).collect()
+    }
+
+    /// Contactos del archivo de CSMP (`contactos.json`, lista {Nombre, Mail}): «Tribunal: LAJA» va a los tribunales.
+    pub fn desde_csmp(lista: &BTreeMap<String, String>) -> Contactos {
+        Contactos::default().importar_csmp(lista).contactos
+    }
+
+    /// Lee los contactos del Asistente Python sin modificarlos. `None` si no existen.
+    pub fn leer_csmp(ruta: &Path) -> Result<Option<Contactos>, String> {
+        use std::io::Read;
+        let archivo = match std::fs::File::open(ruta) {
+            Ok(f) => f,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(_) => return Err("No se pudieron leer los contactos de CSMP.".into()),
+        };
+        let mut raw = vec![];
+        archivo.take(2 * 1024 * 1024 + 1).read_to_end(&mut raw).map_err(|_| "No se pudieron leer los contactos de CSMP.")?;
+        if raw.len() > 2 * 1024 * 1024 {
+            return Err("El archivo de contactos de CSMP supera 2 MiB.".into());
+        }
+        let texto = String::from_utf8(raw).map_err(|_| "El archivo de contactos de CSMP no está en UTF-8.")?;
+        let lista = leer_lista_csmp(&texto)?;
+        Ok((!lista.is_empty()).then(|| Contactos::desde_csmp(&lista)))
+    }
+
+    /// `app_base._import_contacts` con un JSON de CSMP: los tribunales reciben sus destinatarios y un programa ya
+    /// guardado con otra dirección queda en conflicto, sin sustituirse.
+    pub fn importar_csmp(&self, lista: &BTreeMap<String, String>) -> Importacion {
+        let mut r = Importacion { contactos: self.clone(), ..Default::default() };
+        for (nombre, correo) in lista {
+            if let Some(clave) = nombre.strip_prefix("Tribunal: ").map(|t| t.trim().to_uppercase()) {
+                if TRIBUNALES.contains(&clave.as_str()) {
+                    let direcciones = correos_validos(correo).unwrap_or_default().join("; ");
+                    if r.contactos.tribunales.get(&clave) != Some(&direcciones) {
+                        r.tribunales.push(clave.clone());
+                    }
+                    r.contactos.tribunales.insert(clave, direcciones);
+                    continue;
+                }
+            }
+            match r.contactos.programas.get(nombre) {
+                Some(previo) if previo != correo => r.conflictos.push(nombre.clone()),
+                Some(_) => {}
+                None => {
+                    r.contactos.programas.insert(nombre.clone(), correo.clone());
+                    r.nuevos.push(nombre.clone());
+                }
+            }
+        }
+        r
+    }
+
+    /// `outputs.import_contacts`: catastro con columnas Nombre/Programa y Mail/Correo (primera fila de títulos). Un
+    /// nombre (normalizado) ya guardado con otra dirección queda en conflicto, sin sustituirse.
+    pub fn importar_catastro(&self, cabeceras: &[String], filas: &[Vec<String>]) -> Result<Importacion, String> {
+        let columnas: BTreeMap<String, usize> = cabeceras.iter().enumerate().map(|(i, c)| (normalizar_columna(c), i)).collect();
+        let nombre = ["nombre", "programa", "nombre programa"].iter().find_map(|k| columnas.get(*k).copied());
+        let correo = ["mail", "correo", "email", "correo electronico"].iter().find_map(|k| columnas.get(*k).copied());
+        let (Some(nombre), Some(correo)) = (nombre, correo) else {
+            return Err("El catastro necesita columnas Nombre/Programa y Mail/Correo.".into());
+        };
+        let mut r = Importacion { contactos: self.clone(), ..Default::default() };
+        for fila in filas {
+            let celda = |i: usize| fila.get(i).map(|s| s.trim().to_string()).unwrap_or_default();
+            let n = celda(nombre);
+            let m = correos_validos(&celda(correo))?.join("; ");
+            if n.is_empty() {
+                continue;
+            }
+            let clave = normalizar_columna(&n);
+            let previas: BTreeSet<&String> =
+                r.contactos.programas.iter().filter(|(k, _)| normalizar_columna(k) == clave).map(|(_, v)| v).collect();
+            if !previas.is_empty() && previas != BTreeSet::from([&m]) {
+                r.conflictos.push(n);
+                continue;
+            }
+            if r.contactos.programas.get(&n) != Some(&m) {
+                r.nuevos.push(n.clone());
+            }
+            r.contactos.programas.insert(n, m);
+        }
+        Ok(r)
+    }
+
+    /// `personalization.save_contact`: guarda un programa nuevo o, con `previo`, edita (o renombra) uno existente, con
+    /// sus alias. No reemplaza otro contacto ni toma alias ajenos. Los alias base de CSMP no se borran.
+    pub fn guardar_programa(&mut self, previo: Option<&str>, nombre: &str, correo: &str, alias: &[String]) -> Result<(), String> {
+        let nombre = nombre.trim();
+        if nombre.is_empty() {
+            return Err("Indica un nombre para el contacto.".into());
+        }
+        let correo = correos_validos(correo)?.join("; ");
+        let n = normalizar_columna;
+        let todos: Vec<(&String, &String)> = ALIASES_BASE.iter().chain(self.aliases.iter()).collect();
+        if todos.iter().any(|(a, t)| n(a) == n(nombre) && Some(t.as_str()) != previo) {
+            return Err(format!("El nombre ya es alias de otro contacto: {nombre}"));
+        }
+        let otros: BTreeSet<String> = self.programas.keys().filter(|k| Some(k.as_str()) != previo).map(|k| n(k)).collect();
+        if otros.contains(&n(nombre)) && Some(nombre) != previo {
+            return Err("Ya existe otro contacto con ese nombre. No se reemplazó.".into());
+        }
+        let mut limpios: Vec<String> = Vec::new();
+        for a in alias.iter().map(|a| a.trim()).filter(|a| !a.is_empty()) {
+            if !limpios.iter().any(|x| x == a) {
+                limpios.push(a.to_string());
+            }
+        }
+        let propios: BTreeSet<&String> = todos.iter().filter(|(_, t)| Some(t.as_str()) == previo).map(|(a, _)| *a).collect();
+        for a in &limpios {
+            if otros.contains(&n(a)) {
+                return Err(format!("El alias coincide con otro contacto: {a}"));
+            }
+            if todos.iter().any(|(k, t)| n(k) == n(a) && !propios.contains(k) && n(t) != n(nombre)) {
+                return Err(format!("El alias ya pertenece a otro contacto: {a}"));
+            }
+        }
+        if let Some(previo) = previo {
+            self.programas.remove(previo);
+            self.aliases.retain(|_, t| t != previo);
+        }
+        for a in limpios {
+            if ALIASES_BASE.get(&a).map(String::as_str) != Some(nombre) {
+                self.aliases.insert(a, nombre.to_string());
+            }
+        }
+        self.programas.insert(nombre.to_string(), correo);
+        Ok(())
+    }
+
+    /// Quita un programa y los alias del usuario que apuntan a él.
+    pub fn quitar_programa(&mut self, nombre: &str) {
+        self.programas.remove(nombre);
+        self.aliases.retain(|_, v| v != nombre);
     }
     pub fn cargar(ruta: &Path) -> Result<Contactos, String> {
         use std::io::Read;

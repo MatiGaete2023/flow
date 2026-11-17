@@ -168,7 +168,14 @@ struct App {
     carpeta: Option<PathBuf>,
     mensaje: Option<(bool, String)>,
     outlook: bool,
-    nuevo: (String, String),
+    /// Programa en edición: (nombre, correos, alias separados por «;»).
+    nuevo: (String, String, String),
+    /// Nombre del programa que se está editando (para renombrar); `None`: contacto nuevo.
+    edicion: Option<String>,
+    /// Contactos leídos del Asistente Python (solo lectura): no se guardan en Flow hasta que el usuario los confirme.
+    contactos_csmp: Option<PathBuf>,
+    /// Importación revisada y pendiente de confirmar: (origen, resultado).
+    importacion: Option<(String, correos::Importacion)>,
     ayuda: bool,
     sin_guardar: bool,
     captura: crate::captura_ui::Captura,
@@ -183,6 +190,16 @@ fn ruta_ajustes(datos: &Path) -> PathBuf {
 fn ruta_contactos(datos: &Path) -> PathBuf {
     datos.join("contactos.json")
 }
+
+/// `config.contacts_missing`: sin programas ni destinatarios de tribunal (un archivo vacío no cuenta como propio).
+fn sin_contactos(c: &Contactos) -> bool {
+    c.programas.is_empty() && c.tribunales.values().all(|v| v.trim().is_empty())
+}
+
+/// `app_base.CONTACTS_MISSING`, con los botones de Flow.
+const CONTACTOS_FALTAN: &str = "Faltan los contactos. En la pestaña Contactos pulsa «Importar contactos de CSMP…» y elige \
+tu contactos.json del Asistente anterior, o «Importar catastro Excel…». Mientras tanto, los correos se preparan con el \
+destinatario pendiente.";
 
 pub(crate) fn abrir_en_sistema(ruta: &Path) {
     #[cfg(windows)]
@@ -204,8 +221,11 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
 
 impl App {
     fn nueva(archivo: Option<PathBuf>, herramienta: Herramienta) -> Self {
-        let mut app = Self::con_datos(almacen::carpeta_datos(), archivo);
+        let mut app = Self::con_origen(almacen::carpeta_datos(), archivo, correos::ruta_csmp());
         app.usar_herramienta(herramienta);
+        if herramienta == Herramienta::Descargador && app.mensaje.as_ref().is_some_and(|(_, m)| m == CONTACTOS_FALTAN) {
+            app.mensaje = None;
+        }
         app
     }
 
@@ -217,14 +237,45 @@ impl App {
         }
     }
 
+    /// Sin leer los contactos de CSMP del equipo (pruebas).
+    #[cfg(test)]
     fn con_datos(datos: PathBuf, archivo: Option<PathBuf>) -> Self {
+        Self::con_origen(datos, archivo, None)
+    }
+
+    /// `csmp`: `contactos.json` del Asistente Python, que se lee (sin modificarlo) si Flow aún no tiene contactos.
+    fn con_origen(datos: PathBuf, archivo: Option<PathBuf>, csmp: Option<PathBuf>) -> Self {
         let _ = std::fs::create_dir_all(&datos);
         almacen::aplicar_retencion(&datos, std::time::SystemTime::now());
         let ajustes = std::fs::read_to_string(ruta_ajustes(&datos)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
-        let (contactos, contactos_error) = match Contactos::cargar(&ruta_contactos(&datos)) {
+        let (mut contactos, contactos_error) = match Contactos::cargar(&ruta_contactos(&datos)) {
             Ok(c) => (c, None),
             Err(e) => (Contactos::default(), Some(e)),
         };
+        let mut aviso_contactos = None;
+        let mut contactos_csmp = None;
+        if contactos_error.is_none() && sin_contactos(&contactos) {
+            match csmp.as_deref().map(Contactos::leer_csmp) {
+                Some(Ok(Some(mut c))) => {
+                    // Lo propio de Flow (CC adicional, firma, alias) se conserva.
+                    c.cc_adicional = contactos.cc_adicional.clone();
+                    c.firma = contactos.firma.clone();
+                    c.aliases = contactos.aliases.clone();
+                    aviso_contactos = Some((
+                        false,
+                        format!(
+                            "Contactos tomados de CSMP ({} programas). Revísalos en la pestaña Contactos y pulsa «Guardar en \
+                             Flow» para conservarlos; el archivo de CSMP no se modifica.",
+                            c.programas.len()
+                        ),
+                    ));
+                    contactos = c;
+                    contactos_csmp = csmp.clone();
+                }
+                Some(Err(e)) => aviso_contactos = Some((true, format!("{e} {CONTACTOS_FALTAN}"))),
+                _ => aviso_contactos = Some((false, CONTACTOS_FALTAN.to_string())),
+            }
+        }
         let mut app = App {
             herramienta: Herramienta::Todas,
             contactos,
@@ -254,9 +305,12 @@ impl App {
             manual: false,
             resultados: Vec::new(),
             carpeta: None,
-            mensaje: contactos_error.map(|e| (true, e)),
+            mensaje: contactos_error.map(|e| (true, e)).or(aviso_contactos),
             outlook: flow_outlook::disponible(),
             nuevo: Default::default(),
+            edicion: None,
+            contactos_csmp,
+            importacion: None,
             ayuda: false,
             sin_guardar: false,
             captura: Default::default(),
@@ -755,7 +809,8 @@ impl App {
                 aprendidos += 1;
             }
         }
-        if aprendidos > 0 {
+        // Con los contactos de CSMP sin confirmar, lo aprendido queda en memoria hasta «Guardar en Flow».
+        if aprendidos > 0 && self.contactos_csmp.is_none() {
             if let Err(e) = self.contactos.guardar(&ruta_contactos(&self.datos)) {
                 problemas.push(e);
             }
@@ -1415,58 +1470,202 @@ impl App {
         }
         let mut guardar = false;
         ui.label("Estas direcciones se guardan solo en este equipo.");
-        ui.add_space(4.0);
-        ui.label(RichText::new("Tribunales").strong());
-        egui::Grid::new("tribunales").num_columns(2).show(ui, |ui| {
-            for clave in ["LAJA", "MULCHEN", "TOME"] {
-                ui.label(clave);
-                let valor = self.contactos.tribunales.entry(clave.to_string()).or_default();
-                guardar |= ui.add(egui::TextEdit::singleline(valor).desired_width(420.0)).lost_focus();
-                ui.end_row();
-            }
-            ui.label("CC adicional");
-            guardar |= ui.add(egui::TextEdit::singleline(&mut self.contactos.cc_adicional).desired_width(420.0)).lost_focus();
-            ui.end_row();
-            ui.label("CC fijo");
-            ui.label(CC_FIJO);
-            ui.end_row();
-        });
-        ui.label(RichText::new("Firma al pie de los correos").strong());
-        guardar |= ui.add(egui::TextEdit::multiline(&mut self.contactos.firma).desired_rows(3).desired_width(520.0)).lost_focus();
-        ui.add_space(6.0);
-        ui.label(RichText::new("Programas").strong());
-        ui.horizontal(|ui| {
-            ui.add(egui::TextEdit::singleline(&mut self.nuevo.0).hint_text("Nombre del programa").desired_width(240.0));
-            ui.add(egui::TextEdit::singleline(&mut self.nuevo.1).hint_text("correo").desired_width(240.0));
-            if ui.button("Agregar").clicked() && !self.nuevo.0.trim().is_empty() && self.nuevo.1.contains('@') {
-                self.contactos.programas.insert(self.nuevo.0.trim().to_string(), self.nuevo.1.trim().to_string());
-                self.nuevo = Default::default();
+        if let Some(ruta) = self.contactos_csmp.clone() {
+            ui.add_space(4.0);
+            ui.colored_label(
+                Color32::from_rgb(160, 100, 0),
+                format!("Contactos tomados de CSMP ({}), solo lectura: no se guardan en Flow hasta que los confirmes.", ruta.display()),
+            );
+            if ui.button("Guardar en Flow").on_hover_text("Copia estos contactos a la carpeta de Flow; CSMP no se modifica.").clicked() {
+                self.contactos_csmp = None;
                 guardar = true;
+                self.bien("Contactos de CSMP guardados en Flow.");
             }
-        });
-        let mut quitar = None;
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            egui::Grid::new("programas").num_columns(3).striped(true).show(ui, |ui| {
-                for (nombre, correo) in self.contactos.programas.iter_mut() {
-                    ui.label(nombre.as_str());
-                    guardar |= ui.add(egui::TextEdit::singleline(correo).desired_width(320.0)).lost_focus();
-                    if ui.small_button("Quitar").clicked() {
-                        quitar = Some(nombre.clone());
-                    }
-                    ui.end_row();
+        }
+        let editable = self.contactos_csmp.is_none();
+        ui.add_space(4.0);
+        ui.add_enabled_ui(editable, |ui| {
+            ui.horizontal(|ui| {
+                if ui
+                    .button("Importar contactos de CSMP…")
+                    .on_hover_text("contactos.json del Asistente anterior (lista Nombre/Mail)")
+                    .clicked()
+                {
+                    self.importar_contactos_json();
+                }
+                if ui.button("Importar catastro Excel…").on_hover_text("Columnas Nombre/Programa y Mail/Correo").clicked() {
+                    self.importar_catastro();
                 }
             });
         });
-        if let Some(nombre) = quitar {
-            self.contactos.programas.remove(&nombre);
-            guardar = true;
+        if let Some((origen, imp)) = self.importacion.clone() {
+            ui.group(|ui| {
+                ui.label(RichText::new(format!("Importación pendiente de confirmar: {origen}")).strong());
+                ui.label(format!("{} contacto(s) nuevos o completados.", imp.nuevos.len()));
+                if !imp.tribunales.is_empty() {
+                    ui.label(format!("Destinatarios de tribunal que cambian: {}.", imp.tribunales.join(", ")));
+                }
+                if !imp.conflictos.is_empty() {
+                    ui.colored_label(
+                        Color32::from_rgb(190, 40, 40),
+                        format!("No se sustituyen (ya tienen otra dirección): {}.", imp.conflictos.join("; ")),
+                    );
+                }
+                ui.horizontal(|ui| {
+                    if ui.button("Confirmar importación").clicked() {
+                        self.confirmar_importacion();
+                    }
+                    if ui.button("Cancelar").clicked() {
+                        self.importacion = None;
+                    }
+                });
+            });
         }
-        if guardar {
+        ui.add_space(4.0);
+        ui.add_enabled_ui(editable, |ui| {
+            ui.label(RichText::new("Tribunales").strong());
+            egui::Grid::new("tribunales").num_columns(2).show(ui, |ui| {
+                for clave in correos::TRIBUNALES {
+                    ui.label(clave);
+                    let valor = self.contactos.tribunales.entry(clave.to_string()).or_default();
+                    guardar |= ui.add(egui::TextEdit::singleline(valor).desired_width(420.0)).lost_focus();
+                    ui.end_row();
+                }
+                ui.label("CC adicional");
+                guardar |= ui.add(egui::TextEdit::singleline(&mut self.contactos.cc_adicional).desired_width(420.0)).lost_focus();
+                ui.end_row();
+                ui.label("CC fijo");
+                ui.label(CC_FIJO);
+                ui.end_row();
+            });
+            ui.label(RichText::new("Firma al pie de los correos").strong());
+            guardar |= ui.add(egui::TextEdit::multiline(&mut self.contactos.firma).desired_rows(3).desired_width(520.0)).lost_focus();
+            ui.add_space(6.0);
+            ui.label(RichText::new("Programas").strong());
+            ui.horizontal(|ui| {
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.0).hint_text("Programa").desired_width(220.0));
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.1).hint_text("Correos (; separados)").desired_width(220.0));
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.2).hint_text("Alias (; separados)").desired_width(200.0));
+                if ui.button("Guardar contacto").clicked() {
+                    let alias: Vec<String> = self.nuevo.2.split(';').map(str::to_string).collect();
+                    match self.contactos.guardar_programa(self.edicion.as_deref(), &self.nuevo.0, &self.nuevo.1, &alias) {
+                        Ok(()) => {
+                            self.edicion = Some(self.nuevo.0.trim().to_string());
+                            guardar = true;
+                            self.bien("Contacto y alias guardados.");
+                        }
+                        Err(e) => self.mal(e),
+                    }
+                }
+                if ui.button("Nuevo").clicked() {
+                    self.nuevo = Default::default();
+                    self.edicion = None;
+                }
+            });
+            let mut quitar = None;
+            let mut editar = None;
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
+                    for (nombre, correo) in &self.contactos.programas {
+                        ui.label(nombre.as_str());
+                        ui.label(if correo.is_empty() { "(sin correo)" } else { correo.as_str() });
+                        if ui.small_button("Editar").clicked() {
+                            editar = Some(nombre.clone());
+                        }
+                        if ui.small_button("Quitar").clicked() {
+                            quitar = Some(nombre.clone());
+                        }
+                        ui.end_row();
+                    }
+                });
+            });
+            if let Some(nombre) = editar {
+                let correo = self.contactos.programas.get(&nombre).cloned().unwrap_or_default();
+                self.nuevo = (nombre.clone(), correo, self.contactos.alias_de(&nombre).join("; "));
+                self.edicion = Some(nombre);
+            }
+            if let Some(nombre) = quitar {
+                self.contactos.quitar_programa(&nombre);
+                if self.edicion.as_deref() == Some(nombre.as_str()) {
+                    self.edicion = None;
+                }
+                guardar = true;
+                self.bien("Contacto eliminado.");
+            }
+        });
+        if guardar && self.contactos_csmp.is_none() {
             if let Err(e) = self.contactos.guardar(&ruta_contactos(&self.datos)) {
                 self.mal(e);
             }
         }
     }
+
+    /// Guarda en Flow la importación revisada (`app_base._import_contacts`, tras confirmar).
+    fn confirmar_importacion(&mut self) {
+        let Some((_, imp)) = self.importacion.take() else { return };
+        self.contactos = imp.contactos;
+        match self.contactos.guardar(&ruta_contactos(&self.datos)) {
+            Ok(()) => self.bien(format!(
+                "✓ Catastro incorporado · {} contactos disponibles · copia local en contactos.json.",
+                self.contactos.programas.len()
+            )),
+            Err(e) => self.mal(e),
+        }
+    }
+
+    /// `app_base._import_contacts` con un JSON de CSMP: se revisa y se confirma antes de guardar.
+    fn importar_contactos_json(&mut self) {
+        let Some(ruta) =
+            rfd::FileDialog::new().add_filter("Contactos de CSMP", &["json"]).set_title("Importar contactos de CSMP").pick_file()
+        else {
+            return;
+        };
+        self.revisar_contactos_json(&ruta);
+    }
+
+    fn revisar_contactos_json(&mut self, ruta: &Path) {
+        let lista = std::fs::metadata(ruta)
+            .ok()
+            .filter(|m| m.len() <= 2 * 1024 * 1024)
+            .ok_or("El archivo de contactos no se pudo leer o supera 2 MiB.".to_string())
+            .and_then(|_| {
+                std::fs::read_to_string(ruta).map_err(|_| "El archivo de contactos no se pudo leer como texto UTF-8.".to_string())
+            })
+            .and_then(|t| correos::leer_lista_csmp(&t));
+        match lista {
+            Ok(lista) => self.importacion = Some((nombre_archivo(ruta), self.contactos.importar_csmp(&lista))),
+            Err(e) => self.mal(e),
+        }
+    }
+
+    /// `outputs.import_contacts`: catastro Excel (primera hoja, primera fila de títulos).
+    fn importar_catastro(&mut self) {
+        let Some(ruta) = rfd::FileDialog::new()
+            .add_filter("Catastro Excel", &["xlsx", "xlsm", "xls"])
+            .set_title("Importar catastro de contactos")
+            .pick_file()
+        else {
+            return;
+        };
+        self.revisar_catastro(&ruta);
+    }
+
+    fn revisar_catastro(&mut self, ruta: &Path) {
+        let resultado = flow_tabular::leer(ruta).map_err(|e| format!("No se pudo leer el catastro: {e}")).and_then(|libro| {
+            let filas: Vec<Vec<String>> =
+                libro.hojas.first().map(|h| h.filas.iter().map(|f| f.iter().map(|c| c.texto()).collect()).collect()).unwrap_or_default();
+            let (cabeceras, resto) = filas.split_first().ok_or("El catastro no tiene filas.".to_string())?;
+            self.contactos.importar_catastro(cabeceras, resto)
+        });
+        match resultado {
+            Ok(imp) => self.importacion = Some((nombre_archivo(ruta), imp)),
+            Err(e) => self.mal(e),
+        }
+    }
+}
+
+fn nombre_archivo(ruta: &Path) -> String {
+    ruta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
 }
 
 const TEXTO_AYUDA_DESCARGADOR: &str = "Descarga consultas de SITFA desde tu propia sesión de Chrome, con la extensión \
@@ -1554,7 +1753,7 @@ impl eframe::App for App {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.captura.cerrar();
         self.guardar_sesion();
-        if self.contactos_error.is_none() {
+        if self.contactos_error.is_none() && self.contactos_csmp.is_none() {
             if let Err(e) = self.contactos.guardar(&ruta_contactos(&self.datos)) {
                 eprintln!("{e}");
             }
@@ -1730,6 +1929,81 @@ mod pruebas_captura {
         assert!(t.filas[0].revisada);
         std::fs::remove_dir_all(base).unwrap();
     }
+    #[test]
+    fn contactos_de_csmp_se_leen_sin_guardarse_hasta_confirmar() {
+        let base = std::env::temp_dir().join(format!("flow-ui-csmp-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let (datos, csmp) = (base.join("datos"), base.join("CSMP_Personal"));
+        std::fs::create_dir_all(&datos).unwrap();
+        std::fs::create_dir_all(&csmp).unwrap();
+        let ruta_csmp = csmp.join("contactos.json");
+        let texto = r#"[{"Nombre":"PRM Ficticio","Mail":"prm@example.invalid"},{"Nombre":"Tribunal: LAJA","Mail":"laja@example.invalid"}]"#;
+        std::fs::write(&ruta_csmp, texto).unwrap();
+        // Un contactos.json de Flow vacío (de una versión anterior) no cuenta como contactos propios.
+        std::fs::write(
+            datos.join("contactos.json"),
+            br#"{"programas":{},"tribunales":{"LAJA":""},"cc_adicional":"","firma":"Firma ficticia"}"#,
+        )
+        .unwrap();
+        let mut app = App::con_origen(datos.clone(), None, Some(ruta_csmp.clone()));
+        assert_eq!(app.contactos_csmp.as_deref(), Some(ruta_csmp.as_path()));
+        assert_eq!(app.contactos.de_programa("prm ficticio"), "prm@example.invalid");
+        assert_eq!(app.contactos.tribunales["LAJA"], "laja@example.invalid");
+        assert_eq!(app.contactos.firma, "Firma ficticia");
+        assert!(app.mensaje.as_ref().unwrap().1.starts_with("Contactos tomados de CSMP"));
+        eframe::App::on_exit(&mut app, None);
+        assert!(Contactos::cargar(&datos.join("contactos.json")).unwrap().programas.is_empty(), "no se guarda sin confirmar");
+        assert_eq!(std::fs::read_to_string(&ruta_csmp).unwrap(), texto, "CSMP no se modifica");
+        // Confirmados, quedan en Flow y ya no se vuelven a tomar de CSMP.
+        app.contactos_csmp = None;
+        eframe::App::on_exit(&mut app, None);
+        std::fs::write(&ruta_csmp, r#"[{"Nombre":"Otro Ficticio","Mail":"otro@example.invalid"}]"#).unwrap();
+        let app = App::con_origen(datos.clone(), None, Some(ruta_csmp.clone()));
+        assert!(app.contactos_csmp.is_none());
+        assert_eq!(app.contactos.programas.keys().collect::<Vec<_>>(), ["PRM Ficticio"]);
+        // Sin contactos en ninguna parte: se avisa y los correos se preparan con el destinatario pendiente.
+        let vacia = base.join("vacia");
+        let app = App::con_origen(vacia, None, Some(base.join("no-existe.json")));
+        assert_eq!(app.mensaje.as_ref().unwrap().1, CONTACTOS_FALTAN);
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn importar_contactos_json_y_catastro_con_confirmacion() {
+        let base = std::env::temp_dir().join(format!("flow-ui-importar-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let datos = base.join("datos");
+        std::fs::create_dir_all(&datos).unwrap();
+        let mut app = App::con_datos(datos.clone(), None);
+        app.contactos.programas.insert("PRM Ficticio".into(), "prm@example.invalid".into());
+        let json = base.join("contactos.json");
+        std::fs::write(
+            &json,
+            r#"[{"Nombre":"PRM Ficticio","Mail":"cambio@example.invalid"},{"Nombre":"FAE Ficticio","Mail":"fae@example.invalid"}]"#,
+        )
+        .unwrap();
+        app.revisar_contactos_json(&json);
+        let (_, imp) = app.importacion.clone().unwrap();
+        assert_eq!(imp.conflictos, ["PRM Ficticio"]);
+        assert!(!ruta_contactos(&datos).exists(), "nada se guarda antes de confirmar");
+        app.confirmar_importacion();
+        let guardados = Contactos::cargar(&ruta_contactos(&datos)).unwrap();
+        assert_eq!(guardados.programas["PRM Ficticio"], "prm@example.invalid");
+        assert_eq!(guardados.programas["FAE Ficticio"], "fae@example.invalid");
+        // Catastro (XLS en HTML, como los de SITFA) con columnas Nombre y Mail.
+        let catastro = base.join("catastro.xls");
+        std::fs::write(
+            &catastro,
+            "<html><table><tr><th>Nombre</th><th>Mail</th></tr><tr><td>DAM Ficticio</td><td>dam@example.invalid</td></tr></table></html>",
+        )
+        .unwrap();
+        app.revisar_catastro(&catastro);
+        assert_eq!(app.importacion.as_ref().unwrap().1.nuevos, ["DAM Ficticio"]);
+        app.importacion = None;
+        assert!(!Contactos::cargar(&ruta_contactos(&datos)).unwrap().programas.contains_key("DAM Ficticio"), "cancelar no guarda");
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
     #[test]
     fn contacto_y_sesion_danados_se_conservan_al_abrir_y_cerrar() {
         let (base, _) = preparar();
