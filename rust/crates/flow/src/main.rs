@@ -15,6 +15,7 @@ mod ui;
 mod revision_bitacoras_ui;
 mod resultados_ui;
 mod tema;
+mod evidencia_ui;
 
 #[cfg(windows)]
 extern "system" {
@@ -23,6 +24,11 @@ extern "system" {
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|s|s=="--demo-ui") {
+        let resultado=crate::evidencia_ui::Config::argumentos(&args).and_then(ui::abrir_demostracion);
+        if let Err(e)=resultado {eprintln!("{e}");std::process::exit(1);}
+        return;
+    }
     let archivo = match args.as_slice() {
         [] => None,
         [unico] if std::path::Path::new(unico).is_file() => Some(std::path::PathBuf::from(unico)),

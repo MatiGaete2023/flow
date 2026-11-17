@@ -191,6 +191,7 @@ struct App {
     anonimo: crate::anonimo_ui::Anonimo,
     meta4: crate::meta4_ui::Meta4,
     revision: crate::revision_bitacoras_ui::RevisionUi,
+    evidencia: Option<crate::evidencia_ui::Captura>,
 }
 
 fn ruta_ajustes(datos: &Path) -> PathBuf {
@@ -339,6 +340,7 @@ impl App {
             anonimo: Default::default(),
             meta4: Default::default(),
             revision: Default::default(),
+            evidencia: None,
         };
         if let Some(ruta) = archivo {
             app.cargar(ruta);
@@ -1758,6 +1760,7 @@ quien la registra y responde por ella es el usuario.";
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if let Some(evidencia)=&mut self.evidencia {evidencia.actualizar(ctx);}
         let (abrir, guardar, ayuda) = ctx.input(|i| {
             (i.modifiers.command && i.key_pressed(Key::O), i.modifiers.command && i.key_pressed(Key::S), i.key_pressed(Key::F1))
         });
@@ -1843,6 +1846,40 @@ impl eframe::App for App {
             }
         }
     }
+}
+
+pub fn abrir_demostracion(config:crate::evidencia_ui::Config)->Result<(),String>{
+    let evidencia=crate::evidencia_ui::Captura::nueva(config)?;
+    let opciones=eframe::NativeOptions {
+        viewport:egui::ViewportBuilder::default().with_inner_size([evidencia.config.ancho,evidencia.config.alto])
+            .with_min_inner_size([320.0,240.0]).with_title("Flow · DEMOSTRACIÓN SINTÉTICA"),
+        ..Default::default()
+    };
+    eframe::run_native("Flow · DEMOSTRACIÓN SINTÉTICA",opciones,Box::new(move|cc|{
+        crate::tema::aplicar(&cc.egui_ctx);cc.egui_ctx.set_zoom_factor(evidencia.config.escala);
+        let raiz=evidencia.temporal.path();
+        let mut app=App::con_origen(raiz.join("datos"),None,&[]);
+        app.outlook=false;
+        let salida=raiz.join("productos");std::fs::create_dir(&salida)?;
+        app.ajustes.salida=Some(salida);
+        let origen=raiz.join("Origen_FICTICIO.xlsx");
+        std::fs::write(&origen,include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx")))?;
+        app.corte="08/10/2026".into();app.cargar(origen);app.seleccion=Some(0);
+        app.contactos.programas.insert("Programa Ficticio".into(),"programa@example.invalid".into());
+        for t in correos::TRIBUNALES {app.contactos.tribunales.insert(t.into(),"tribunal@example.invalid".into());}
+        for (_,activa) in &mut app.modalidades {*activa=true;}
+        app.preparar_borradores();app.preparar_proyectos();
+        app.mensaje=Some((false,"DEMOSTRACIÓN · Datos ficticios · Almacenamiento temporal aislado".into()));
+        app.pestana=match evidencia.config.pantalla.as_str(){
+            "correos"=>Pestana::Correos,"resoluciones"=>Pestana::Resoluciones,"resultados"=>Pestana::Resultados,
+            "contactos"=>Pestana::Contactos,"captura"=>Pestana::Captura,"anonimizador"=>Pestana::Anonimo,
+            "meta4"=>Pestana::Meta4,"revision"=>Pestana::Revision,_=>Pestana::Trabajo,
+        };
+        app.ayuda=evidencia.config.pantalla=="ayuda";
+        app.confirmar_recalculo=evidencia.config.pantalla=="recalculo";
+        app.evidencia=Some(evidencia);
+        Ok(Box::new(app))
+    })).map_err(|e|e.to_string())
 }
 
 /// Abre la ventana. `archivo` permite arrastrar un Excel sobre el ejecutable.

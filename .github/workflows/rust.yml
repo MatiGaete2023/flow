@@ -26,11 +26,21 @@ jobs:
         with:
           workspaces: rust
       - name: Dependencias de sistema para la ventana
-        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libgtk-3-dev
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libgtk-3-dev xvfb libgl1-mesa-dri
       - name: Identidades y contactos (solo datos ficticios)
         working-directory: .
         run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
       - run: cargo test --workspace --locked
+      - name: Compilar y capturar la interfaz con datos ficticios
+        run: |
+          cargo build --locked -p flow
+          xvfb-run -a -s "-screen 0 2200x1400x24" env LIBGL_ALWAYS_SOFTWARE=1 python3 pruebas/ui_evidencia.py --exe target/debug/flow --salida evidencia-ui --completa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Flow_UI_Sintetica_Linux
+          path: rust/evidencia-ui/
+          retention-days: 14
       - name: Contrato del anonimizador con Python
         run: python3 pruebas/anonimo_contrato.py
       - uses: actions/setup-node@v4
@@ -111,3 +121,5 @@ jobs:
           name: Flow_Meta4_Windows
           path: rust/sueltas/Meta4/
           retention-days: 14
+
+
