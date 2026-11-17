@@ -60,6 +60,11 @@ impl RevisionUi {
     fn tiene_ediciones(&self) -> bool {
         self.informe.as_ref().is_some_and(|i|i.motor_aplicado || i.filas.iter().any(|f|f.revisada || f.edicion.is_some()))
     }
+    fn marcar_revisada(&mut self, indice: usize, revisada: bool) -> bool {
+        if self.obsoleto() || self.receptor.is_some() {return false}
+        let Some(fila)=self.informe.as_mut().and_then(|i|i.filas.get_mut(indice))else{return false};
+        fila.revisada=revisada;true
+    }
     fn solicitar(&mut self, accion: Accion, ctx: &egui::Context) {
         let reemplaza=matches!(&accion,Accion::Abrir(_)) || self.obsoleto();
         if self.tiene_ediciones() && reemplaza {self.confirmar=Some(accion);} else {self.ejecutar(accion,ctx);}
@@ -211,6 +216,7 @@ impl RevisionUi {
             if ui.button("Quitar selección").clicked(){self.seleccion.clear();}
         });
         if self.activa.is_none(){self.activa=visibles.first().copied();}
+        let mut revision_cambio=None;
         egui::TopBottomPanel::bottom("revision_editor").resizable(true).default_height(190.0).min_height(100.0).show_inside(ui,|ui|{
             if let Some(f)=self.activa.and_then(|i|informe.filas.get_mut(i)){
                 egui::ScrollArea::vertical().id_salt("revision_editor_scroll").show(ui,|ui|{
@@ -221,12 +227,15 @@ impl RevisionUi {
                         let mut texto=f.edicion.clone().unwrap_or_else(||p.observacion.clone());
                         if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(4)).changed(){f.edicion=Some(texto);}
                         ui.horizontal(|ui|{
-                            ui.add_enabled(!ocupada && !obsoleto,egui::Checkbox::new(&mut f.revisada,"Revisada"));
                             if ui.add_enabled(f.edicion.is_some()&&!ocupada&&!obsoleto,egui::Button::new("Restaurar propuesta")).clicked(){f.edicion=None;}
                             if ui.button("Copiar observación").clicked(){ui.ctx().copy_text(f.edicion.as_ref().unwrap_or(&p.observacion).clone());}
                         });
                         ui.collapsing("Propuesta original, reglas y avisos",|ui|{ui.label(&p.observacion);ui.label(p.reglas.join(" · "));for a in &p.avisos{ui.label(a);}});
                     }else{ui.label("Sin propuesta aplicada. Solo los registros con ausencia verificada pueden recibirla.");}
+                    let mut revisada=f.revisada;
+                    if ui.add_enabled(!ocupada && !obsoleto,egui::Checkbox::new(&mut revisada,"Revisada")).changed(){
+                        if let Some(i)=self.activa{revision_cambio=Some((i,revisada));}
+                    }
                 });
             }else{ui.label("Elige un registro de la tabla.");}
         });
@@ -240,10 +249,25 @@ impl RevisionUi {
                     ui.label(format!("{} eventos elegibles · última fecha {}",f.revision.eventos_elegibles,f.revision.ultima_fecha.map(|d|d.to_string()).unwrap_or_else(||"Sin fecha".into())));
                     ui.label(format!("Período {} a {} · corte {}",informe.desde,informe.hasta,informe.corte));
                     for p in &f.procedencia {ui.small(format!("{} · consulta {} · {} / {} / fila {} · {}",p.registro_id,p.consulta_id,p.archivo,p.tabla,p.fila,p.asociacion));}
-                    for (i,l) in f.lecturas.iter().enumerate() {ui.collapsing(format!("Lectura {} · {}",i+1,l["coverage"].as_str().unwrap_or("Desconocida")),|ui|{
-                        ui.label(serde_json::to_string_pretty(l).unwrap_or_default());
-                    });}
-                    ui.collapsing("Datos de origen",|ui|{ui.label(serde_json::to_string_pretty(&f.valores).unwrap_or_default());});
+                    for (i,l) in f.lecturas.iter().enumerate() {
+                        ui.collapsing(format!("Lectura {} · {}",i+1,l["coverage"].as_str().unwrap_or("Desconocida")),|ui|{
+                            ui.label(format!("Capturada: {}",l["captured_at"].as_str().unwrap_or("Sin fecha acreditada")));
+                            let evidencia=&l["evidencia"];
+                            if evidencia["version"]!=1 {ui.label("Este paquete no conserva la evidencia original necesaria para acreditar una ausencia.");return}
+                            ui.label(format!("Intervalo de lectura: {} a {}",evidencia["desde"].as_str().unwrap_or("desconocido"),evidencia["hasta"].as_str().unwrap_or("desconocido")));
+                            let entradas=evidencia["entries"].as_array();
+                            if entradas.is_some_and(Vec::is_empty){ui.label("Lectura sin entradas capturadas. La clasificación depende de su cobertura verificada.");}
+                            for (n,e) in entradas.into_iter().flatten().take(200).enumerate(){
+                                ui.collapsing(format!("Entrada {} · {} · {}",n+1,e["fecha"].as_str().unwrap_or("Fecha ilegible"),e["autor"].as_str().unwrap_or("Autor desconocido")),|ui|{
+                                    ui.label(format!("{} · {}",e["tipo"].as_str().unwrap_or("Tipo desconocido"),e["etapa"].as_str().unwrap_or("Etapa desconocida")));
+                                    ui.label(match e["origen"].as_str(){Some("centro")=>"Autoría del centro acreditada por la lectura",Some("tribunal"|"programa")=>"Entrada de otro actor",_=>"Autoría desconocida"});
+                                    ui.label(e["texto"].as_str().unwrap_or("Texto ilegible"));
+                                });
+                            }
+                            if entradas.is_some_and(|e|e.len()>200){ui.label("Se muestran las primeras 200 entradas. El informe JSON conserva la evidencia completa.");}
+                        });
+                    }
+                    ui.collapsing("Datos de origen",|ui|{for (campo,v) in f.valores.as_object().into_iter().flat_map(|m|m.iter()){ui.label(format!("{campo}: {}",v.as_str().map(str::to_owned).unwrap_or_else(||v.to_string())));}});
                 }
             });
         });
@@ -267,6 +291,7 @@ impl RevisionUi {
                     if row.response().clicked(){self.activa=Some(i);}
                 }));
         });
+        if let Some((i,revisada))=revision_cambio{self.marcar_revisada(i,revisada);}
         self.confirmacion(ctx);
     }
     fn confirmacion(&mut self, ctx: &egui::Context) {
@@ -312,6 +337,26 @@ mod tests {
         assert_eq!(ui.informe.as_ref().unwrap().contrato,anterior.contrato);
         let(tx,rx)=channel();ui.receptor=Some(rx);drop(tx);ui.recibir();
         assert!(ui.receptor.is_none());assert_eq!(ui.informe.as_ref().unwrap().contrato,anterior.contrato);
+    }
+    #[test]
+    fn se_revisan_todas_las_categorias_aunque_no_tengan_propuesta() {
+        use flow_trabajo::revision_bitacoras::{Evidencia,clasificar};
+        use flow_trabajo::revision_informe::Identidad;
+        let mut ui=ui();let d=ui.informe.as_ref().unwrap().corte;
+        let evidencia=Evidencia {admitido:true,identidad_verificada:true,contradictoria:false,cobertura_completa:Some((d,d)),eventos:Some(vec![])};
+        ui.informe.as_mut().unwrap().filas.push(FilaRevision {
+            identidad:Identidad{sistema:"RUS".into(),tribunal:"901".into(),causa:"100".into(),ingreso:"201".into()},
+            tipo:"ESPERA".into(),valores:serde_json::json!({}),procedencia:vec![],lecturas:vec![],
+            revision:clasificar(&evidencia,d,d).unwrap(),evidencia,propuesta:None,edicion:None,revisada:false,
+        });
+        for c in [C::SinObservacion,C::ConObservacion,C::NoVerificable,C::FueraDeAlcance] {
+            ui.informe.as_mut().unwrap().filas[0].revision.clasificacion=c;
+            assert!(ui.marcar_revisada(0,false));assert!(ui.marcar_revisada(0,true));
+            assert!(ui.informe.as_ref().unwrap().filas[0].revisada);
+        }
+        ui.desde="2026-11-16".into();
+        assert!(!ui.marcar_revisada(0,false));
+        assert!(ui.informe.as_ref().unwrap().filas[0].revisada);
     }
 }
 
