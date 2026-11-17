@@ -611,6 +611,24 @@ pub fn revisar_bitacoras(datos: &[u8], desde: Fecha, hasta: Fecha, corte: Fecha)
         motor_aplicado:false,version_reglas:None })
 }
 
+/// Sugiere el intervalo explícito de las lecturas del paquete, incluso si son parciales.
+/// None en paquetes legados: no se inventa un período a partir de la fecha del archivo.
+pub fn periodo_revision(datos: &[u8]) -> Result<Option<(Fecha, Fecha)>, String> {
+    let c = abrir(datos)?;
+    let mut intervalo: Option<(Fecha,Fecha)> = None;
+    for q in c.tablas.get("consultas").into_iter().flatten().filter(|q|dato(q,"screen")=="bitacoras") {
+        let Ok(f) = serde_json::from_str::<Value>(dato(q,"filters_json")) else {continue};
+        let r = &f["revision_bitacoras"];
+        if r["version"] != 1 {continue}
+        let desde = r["desde"].as_str().and_then(|s|s.parse::<Fecha>().ok());
+        let hasta = r["hasta"].as_str().and_then(|s|s.parse::<Fecha>().ok());
+        if let Some((a,b)) = desde.zip(hasta).filter(|(a,b)|a<=b) {
+            intervalo = Some(intervalo.map(|(x,y)|(x.min(a),y.max(b))).unwrap_or((a,b)));
+        }
+    }
+    Ok(intervalo)
+}
+
 /// Un archivo es un paquete de captura si es un ZIP con `manifest.json`.
 pub fn es_paquete(datos: &[u8]) -> bool {
     datos.starts_with(b"PK") && zip::ZipArchive::new(Cursor::new(datos)).is_ok_and(|mut z| z.by_name("manifest.json").is_ok())

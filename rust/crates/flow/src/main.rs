@@ -12,6 +12,7 @@ mod cli;
 mod meta4_ui;
 mod cronologia_ui;
 mod ui;
+mod revision_bitacoras_ui;
 mod tema;
 
 #[cfg(windows)]
@@ -36,3 +37,5 @@ fn main() {
     let nombre = std::env::current_exe().ok().and_then(|r| r.file_stem().map(|n| n.to_string_lossy().into_owned())).unwrap_or_default();
     std::process::exit(ui::abrir(archivo, ui::Herramienta::desde_ejecutable(&nombre)));
 }
+
+

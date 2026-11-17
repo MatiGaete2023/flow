@@ -22,6 +22,7 @@ enum Pestana {
     Contactos,
     Anonimo,
     Meta4,
+    Revision,
 }
 
 /// Qué herramienta abre el ejecutable. Se decide por su nombre (`Flow_Descargador.exe`, …); `flow.exe` abre todas.
@@ -70,10 +71,15 @@ impl Herramienta {
             (Pestana::Contactos, "Contactos"),
             (Pestana::Anonimo, "Anonimizador"),
             (Pestana::Meta4, "Meta 4"),
+            (Pestana::Revision, "Revisión de bitácoras"),
         ];
         match self {
             Herramienta::Todas => TODAS,
-            Herramienta::Asistente => &TODAS[1..6],
+            Herramienta::Asistente => &[
+                (Pestana::Trabajo,"1 · Trabajo"),(Pestana::Correos,"2 · Correos"),
+                (Pestana::Resoluciones,"3 · Resoluciones"),(Pestana::Resultados,"4 · Resultados"),
+                (Pestana::Contactos,"Contactos"),(Pestana::Revision,"Revisión de bitácoras"),
+            ],
             Herramienta::Descargador => &TODAS[0..1],
             Herramienta::Anonimizador => &TODAS[6..7],
             Herramienta::Meta4 => &TODAS[7..8],
@@ -182,6 +188,7 @@ struct App {
     captura: crate::captura_ui::Captura,
     anonimo: crate::anonimo_ui::Anonimo,
     meta4: crate::meta4_ui::Meta4,
+    revision: crate::revision_bitacoras_ui::RevisionUi,
 }
 
 fn ruta_ajustes(datos: &Path) -> PathBuf {
@@ -327,6 +334,7 @@ impl App {
             captura: Default::default(),
             anonimo: Default::default(),
             meta4: Default::default(),
+            revision: Default::default(),
         };
         if let Some(ruta) = archivo {
             app.cargar(ruta);
@@ -1754,6 +1762,7 @@ impl eframe::App for App {
             Pestana::Contactos => self.vista_contactos(ui),
             Pestana::Anonimo => self.anonimo.mostrar(ui, ctx),
             Pestana::Meta4 => self.meta4.mostrar(ui),
+            Pestana::Revision => self.revision.mostrar(ui, ctx, &self.motor),
         });
         if self.confirmar_recalculo {
             egui::Window::new("Recalcular propuestas").collapsible(false).resizable(false).show(ctx, |ui| {
@@ -1771,6 +1780,10 @@ impl eframe::App for App {
         if self.ayuda {
             let mut abierta = true;
             egui::Window::new("Cómo se usa Flow").open(&mut abierta).collapsible(false).default_width(520.0).show(ctx, |ui| {
+                if self.herramienta.analiza_rus() {
+                    ui.label("Revisión de bitácoras: abre un paquete, confirma las fechas y analiza. Solo la ausencia acreditada habilita propuestas del motor. Revisa su evidencia y exporta todos los clasificados o una selección explícita a Excel y JSON.");
+                    ui.separator();
+                }
                 ui.label(match self.herramienta {
                     Herramienta::Descargador => TEXTO_AYUDA_DESCARGADOR,
                     Herramienta::Anonimizador => TEXTO_AYUDA_ANONIMIZADOR,
@@ -1838,8 +1851,9 @@ mod pruebas_herramientas {
             assert_eq!(Herramienta::desde_ejecutable(nombre), h);
             assert!(h.pestanas()[0].0 == primera, "{nombre}");
         }
-        assert_eq!(Herramienta::Todas.pestanas().len(), 8);
-        assert_eq!(Herramienta::Asistente.pestanas().len(), 5);
+        assert_eq!(Herramienta::Todas.pestanas().len(), 9);
+        assert_eq!(Herramienta::Asistente.pestanas().len(), 6);
+        assert!(Herramienta::Asistente.pestanas().iter().any(|(p,_)| *p == Pestana::Revision));
         assert!(!Herramienta::Descargador.analiza_rus() && Herramienta::Asistente.analiza_rus());
     }
 }
@@ -2289,3 +2303,5 @@ mod pruebas_captura {
         assert_eq!(app.claves_modalidades(), None);
     }
 }
+
+
