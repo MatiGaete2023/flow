@@ -255,12 +255,13 @@ impl RevisionUi {
                     if let Some(p)=&f.propuesta {
                         if p.excluido {ui.label("El motor excluye este registro.");}
                         if p.observacion.is_empty(){ui.label("El motor no produjo texto de observación.");}
-                        let mut texto=f.edicion.clone().unwrap_or_else(||p.observacion.clone());
-                        if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(if compacto{3}else{4})).changed(){f.edicion=Some(texto);}
+                        // Acciones antes del texto: siguen visibles aunque el panel inferior sea bajo.
                         ui.horizontal(|ui|{
                             if ui.add_enabled(f.edicion.is_some()&&!ocupada&&!obsoleto,egui::Button::new("Restaurar propuesta")).clicked(){f.edicion=None;}
                             if ui.add_enabled(!ocupada&&!obsoleto,egui::Button::new("Copiar observación")).clicked(){copiar=self.activa;}
                         });
+                        let mut texto=f.edicion.clone().unwrap_or_else(||p.observacion.clone());
+                        if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(if compacto{3}else{4})).changed(){f.edicion=Some(texto);}
                         ui.collapsing("Propuesta original, reglas y avisos",|ui|{ui.label(&p.observacion);ui.label(p.reglas.join(" · "));for a in &p.avisos{ui.label(a);}});
                     }else{ui.label("Sin propuesta aplicada. Solo los registros con ausencia verificada pueden recibirla.");}
 

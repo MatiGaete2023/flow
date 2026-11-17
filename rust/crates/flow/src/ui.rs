@@ -1689,7 +1689,7 @@ impl App {
                 let ui=&mut columnas[0];
                 ui.heading("Programas");
                 ui.add(egui::TextEdit::singleline(&mut self.buscar_contacto).hint_text("Buscar programa o correo…").desired_width(f32::INFINITY));
-                ui.small(format!("{} contactos",self.contactos.programas.len()));
+                ui.small(match self.contactos.programas.len(){1=>"1 contacto".to_string(),n=>format!("{n} contactos")});
             egui::ScrollArea::vertical().id_salt("lista_contactos").max_height(350.0).show(ui, |ui| {
                 egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
                     for (nombre, correo) in &self.contactos.programas {
