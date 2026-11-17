@@ -6,17 +6,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Clasificacion { SinObservacion, ConObservacion, NoVerificable, FueraDeAlcance }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Autor { Centro, Otro, Desconocido }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Evento {
     pub fecha: Option<Fecha>,
     pub texto: String,
     pub autor: Autor,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Evidencia {
     pub admitido: bool,
     pub identidad_verificada: bool,
@@ -27,7 +27,7 @@ pub struct Evidencia {
     pub eventos: Option<Vec<Evento>>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Revision {
     pub clasificacion: Clasificacion,
     pub motivo: String,
@@ -153,3 +153,5 @@ mod tests {
         assert!(clasificar(&e, d(17), d(1)).is_err());
     }
 }
+
+

@@ -606,6 +606,10 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<(), String> {
         let clave = [l.referencia.tribunal.clone(), l.referencia.causa.clone(), l.referencia.ingreso.clone()];
         match instantaneas.get_mut(&clave) {
             Some((Some(previa), _)) => {
+                if previa.datos["revision_bitacoras"] != l.datos["revision_bitacoras"] {
+                    // No certificar completitud combinando instantáneas diferentes.
+                    previa.datos["revision_bitacoras"] = Value::Null;
+                }
                 let vistas: BTreeSet<String> =
                     previa.datos["entries"].as_array().into_iter().flatten().map(|e| texto(e, "entry_id").to_string()).collect();
                 let nuevas: Vec<Value> = l.datos["entries"]
@@ -679,8 +683,11 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<(), String> {
     let mut filas = Vec::new();
     for (qi, ([tribunal, causa, ingreso], (lectura, motivo))) in instantaneas.into_iter().enumerate() {
         let qid = format!("diary-{qi}");
-        let filtros = json!({"tribunal":tribunal,"tab":"BITACORAS","capture_tables":["bitacoras"],
+        let mut filtros = json!({"tribunal":tribunal,"tab":"BITACORAS","capture_tables":["bitacoras"],
             "remote_identity":identidad_remota(&tribunal, &causa, &ingreso)});
+        if let Some(evidencia) = lectura.as_ref().map(|l| &l.datos["revision_bitacoras"]).filter(|v| v.is_object()) {
+            filtros["revision_bitacoras"] = evidencia.clone();
+        }
         let cobertura = lectura.as_ref().map(|l| texto(&l.datos, "coverage")).filter(|c| !c.is_empty()).unwrap_or("FALLIDA").to_string();
         let cuando = lectura
             .as_ref()
@@ -1187,3 +1194,5 @@ mod pruebas {
         assert_eq!(instante("ilegible"), None);
     }
 }
+
+

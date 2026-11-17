@@ -90,10 +90,22 @@ struct Contenido {
 }
 
 fn abrir(datos: &[u8]) -> Result<Contenido, String> {
+    if datos.len() as u64 > LIMITE { return Err("El paquete supera 80 MB.".into()); }
     let mut zip = zip::ZipArchive::new(Cursor::new(datos)).map_err(|e| format!("El paquete no es un ZIP válido: {e}"))?;
     if zip.len() > ENTRADAS_MAXIMAS {
         return Err("El paquete tiene demasiados archivos.".into());
     }
+    let mut rutas = std::collections::HashSet::new();
+    let mut total = 0u64;
+    for i in 0..zip.len() {
+        let entrada = zip.by_index(i).map_err(|_| "Entrada ZIP ilegible.")?;
+        if !ruta_segura(entrada.name().trim_end_matches('/')) || !rutas.insert(entrada.name().to_string()) {
+            return Err("El ZIP contiene rutas inseguras o duplicadas.".into());
+        }
+        total = total.checked_add(entrada.size()).ok_or("Tamaño ZIP inválido.")?;
+        if total > LIMITE { return Err("El paquete descomprimido supera 80 MB.".into()); }
+    }
+    let mut leidos = 0u64;
     let mut leer = |nombre: &str| -> Result<Vec<u8>, String> {
         let mut entrada = zip.by_name(nombre).map_err(|_| format!("Falta {nombre} en el paquete."))?;
         if entrada.size() > LIMITE {
@@ -101,6 +113,8 @@ fn abrir(datos: &[u8]) -> Result<Contenido, String> {
         }
         let mut salida = Vec::new();
         entrada.by_ref().take(LIMITE + 1).read_to_end(&mut salida).map_err(|e| format!("No se pudo leer {nombre}: {e}"))?;
+        leidos = leidos.checked_add(salida.len() as u64).ok_or("Tamaño descomprimido inválido.")?;
+        if leidos > LIMITE { return Err("La lectura descomprimida supera 80 MB.".into()); }
         Ok(salida)
     };
     let manifiesto: Value = serde_json::from_slice(&leer("manifest.json")?).map_err(|e| format!("Manifiesto ilegible: {e}"))?;
@@ -129,7 +143,9 @@ fn abrir(datos: &[u8]) -> Result<Contenido, String> {
             if Some(filas.len() as u64) != archivo["rows"].as_u64() {
                 return Err(format!("{ruta} no tiene la cantidad de filas declarada."));
             }
-            tablas.insert(archivo["table"].as_str().unwrap_or("").to_string(), filas);
+            if tablas.insert(archivo["table"].as_str().unwrap_or("").to_string(), filas).is_some() {
+                return Err("El manifiesto repite una tabla normalizada.".into());
+            }
         }
     }
     Ok(Contenido { manifiesto, tablas })
@@ -435,6 +451,116 @@ pub fn importar_archivo(ruta: &Path, corte: Fecha, config: &Config) -> Result<Pa
     importar(&nombre, &datos, corte, config)
 }
 
+/// Clasifica con el mismo validador ZIP que Trabajo. La UI conserva estos mismos bytes
+/// para aplicar posteriormente el motor, sin releer un archivo que podría haber cambiado.
+pub fn revisar_bitacoras(datos: &[u8], desde: Fecha, hasta: Fecha, corte: Fecha) -> Result<crate::revision_informe::Informe, String> {
+    use crate::revision_bitacoras::{clasificar, Autor, Evento, Evidencia};
+    use crate::revision_informe::{FilaRevision, Identidad as Id, Informe, Procedencia};
+    if desde > hasta || hasta > corte { return Err("Período inválido o posterior al corte.".into()); }
+    let c = abrir(datos)?;
+    let registros = c.tablas.get("registros").ok_or("El paquete no trae registros.")?;
+    if registros.len() > REGISTROS_MAXIMOS { return Err("El paquete excede 20.000 registros.".into()); }
+    let vacias = Vec::new();
+    let consultas = c.tablas.get("consultas").unwrap_or(&vacias);
+    let pantallas: HashMap<_, _> = consultas.iter().map(|q| (dato(q,"query_id"), dato(q,"screen"))).collect();
+    let solo_cruce = registros.iter().any(|r| pantallas.get(dato(r,"query_id")) != Some(&"calendario_informes"));
+    let fuentes = registros.iter().filter(|r| !(solo_cruce && pantallas.get(dato(r,"query_id")) == Some(&"calendario_informes"))).collect::<Vec<_>>();
+    let mut filas: Vec<FilaRevision> = Vec::new();
+    let mut grupos: BTreeMap<Vec<String>, usize> = BTreeMap::new();
+    let mut duplicados = 0;
+    let mut ids: HashMap<&str, (Vec<String>, Value, bool)> = HashMap::new();
+    for r in &fuentes {
+        let mut signature = identidad(r).to_vec(); signature.push(dato(r,"record_type").into());
+        let valores = serde_json::from_str::<Value>(dato(r,"normalized_json")).unwrap_or(Value::Null);
+        ids.entry(dato(r,"record_id")).and_modify(|(anterior, previos, conflicto)| {
+            *conflicto |= *anterior != signature || *previos != valores;
+        }).or_insert((signature, valores, false));
+    }
+    for (numero, r) in fuentes.iter().enumerate() {
+        let ident = identidad(r);
+        let verificada = verificada(r) && ident.iter().all(|k| !k.trim().is_empty());
+        let tipo = dato(r,"record_type").to_string();
+        let valores = serde_json::from_str::<Value>(dato(r,"normalized_json")).unwrap_or(Value::Null);
+        let mut clave = ident.to_vec(); clave.push(tipo.clone());
+        if !verificada { clave.push(format!("fila-{numero}")); }
+        let procedencia = Procedencia {
+            registro_id:dato(r,"record_id").into(), consulta_id:dato(r,"query_id").into(),
+            archivo:dato(r,"original_file").into(), tabla:dato(r,"original_sheet").into(),
+            fila:dato(r,"original_row").into(), capturada:dato(r,"captured_at").into(),
+            cobertura:dato(r,"coverage").into(), asociacion:dato(r,"identity_status").into(),
+        };
+        if let Some(&i) = grupos.get(&clave) {
+            let previa = &mut filas[i];
+            if previa.valores != valores || ids.get(dato(r,"record_id")).is_some_and(|(_,_,c)| *c) {
+                previa.evidencia.contradictoria = true;
+                previa.revision = clasificar(&previa.evidencia, desde, hasta)?;
+            }
+            previa.procedencia.push(procedencia);
+            duplicados += 1;
+            continue;
+        }
+        let mut lecturas = Vec::new();
+        let mut eventos = Vec::new();
+        let mut conocida = false;
+        let mut completas = true;
+        let mut cobertura = None;
+        let mut contradictoria = valores.is_null() || dato(r,"record_id").is_empty() || ids.get(dato(r,"record_id")).is_some_and(|(_,_,c)| *c);
+        let mut anterior: Option<Value> = None;
+        let mut por_evento: HashMap<String, Value> = HashMap::new();
+        for q in consultas.iter().filter(|q| dato(q,"screen") == "bitacoras") {
+            let Ok(filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { completas = false; continue; };
+            let remoto = &filtros["remote_identity"];
+            if ["source_system","court_code","cause_id","ingreso_id"].iter().enumerate().any(|(i,k)| remoto[*k].as_str() != Some(ident[i].as_str())) { continue; }
+            let raw = &filtros["revision_bitacoras"];
+            lecturas.push(serde_json::json!({"query_id":dato(q,"query_id"),"captured_at":dato(q,"captured_at"),"coverage":dato(q,"coverage"),"evidencia":raw}));
+            if raw["version"] != 1 || !raw["entries"].is_array() { completas = false; continue; }
+            conocida = true;
+            if let Some(previa) = &anterior { if previa != raw { contradictoria = true; } } else { anterior = Some(raw.clone()); }
+            let a = raw["desde"].as_str().and_then(|s| s.parse::<Fecha>().ok());
+            let b = raw["hasta"].as_str().and_then(|s| s.parse::<Fecha>().ok());
+            let captura = chrono::DateTime::parse_from_rfc3339(dato(q,"captured_at")).ok().map(|d| d.date_naive());
+            let captura_raw = raw["captured_at"].as_str().and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map(|d| d.date_naive());
+            if raw["completa"] == true && matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA") &&
+                matches!(raw["coverage"].as_str(),Some("COMPLETA"|"VACIA_COMPROBADA")) &&
+                raw["warnings"].as_array().is_some_and(Vec::is_empty) &&
+                captura == captura_raw && captura.is_some_and(|d| d >= hasta) &&
+                a.zip(b).is_some_and(|(a,b)| a <= b && captura.is_some_and(|c| b <= c)) {
+                cobertura = a.zip(b);
+            } else { completas = false; }
+            for e in raw["entries"].as_array().into_iter().flatten() {
+                let event_id = e["entry_id"].as_str().unwrap_or("");
+                if !event_id.is_empty() {
+                    if let Some(previo) = por_evento.get(event_id) { if previo != e { contradictoria = true; } }
+                    else { por_evento.insert(event_id.into(), e.clone()); }
+                }
+                if !e["texto"].is_string() { completas = false; }
+                eventos.push(Evento {
+                    fecha:e["fecha"].as_str().and_then(dia),
+                    texto:e["texto"].as_str().unwrap_or("").into(),
+                    autor:match e["origen"].as_str() {
+                        Some("centro") => Autor::Centro,
+                        Some("tribunal"|"programa") => Autor::Otro,
+                        _ => Autor::Desconocido,
+                    },
+                });
+            }
+        }
+        let evidencia = Evidencia {
+            admitido:etapa_de(&tipo).is_some(), identidad_verificada:verificada, contradictoria,
+            cobertura_completa:if completas { cobertura } else { None },
+            eventos:if conocida { Some(eventos) } else { None },
+        };
+        let revision = clasificar(&evidencia, desde, hasta)?;
+        grupos.insert(clave, filas.len());
+        filas.push(FilaRevision { identidad:Id { sistema:ident[0].clone(),tribunal:ident[1].clone(),causa:ident[2].clone(),ingreso:ident[3].clone() },
+            tipo, valores, procedencia:vec![procedencia], lecturas, evidencia, revision, propuesta:None, edicion:None, revisada:false });
+    }
+    if filas.is_empty() { return Err("El paquete no trae registros para revisar.".into()); }
+    Ok(Informe { version:1, contrato:c.manifiesto["schema_version"].as_str().unwrap_or("").into(),
+        huella_paquete:hex(datos),desde,hasta,corte,filas_fuente:fuentes.len(),duplicados_registros:duplicados,filas,
+        motor_aplicado:false,version_reglas:None })
+}
+
 /// Un archivo es un paquete de captura si es un ZIP con `manifest.json`.
 pub fn es_paquete(datos: &[u8]) -> bool {
     datos.starts_with(b"PK") && zip::ZipArchive::new(Cursor::new(datos)).is_ok_and(|mut z| z.by_name("manifest.json").is_ok())
@@ -502,3 +628,5 @@ mod pruebas {
         assert!(!ruta_segura("../x") && !ruta_segura("/x") && !ruta_segura("C:\\x") && !ruta_segura("a//b"));
     }
 }
+
+

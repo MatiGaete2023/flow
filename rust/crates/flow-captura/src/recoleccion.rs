@@ -205,6 +205,28 @@ pub fn leer(carpeta: &Path, r: &Referencia) -> Result<Value, String> {
     Ok(valor)
 }
 
+fn evidencia_revision(valor: &Value, capturada: &str, meses: u32) -> Result<Value, String> {
+    let captura = DateTime::parse_from_rfc3339(capturada).map_err(|_| "Fecha de captura inválida.")?;
+    let hasta = captura.with_timezone(&Local).date_naive();
+    let desde = hasta.checked_sub_months(chrono::Months::new(meses)).ok_or("Período inválido.")?;
+    let fecha = |k: &str, defecto: chrono::NaiveDate| -> Result<chrono::NaiveDate, String> {
+        match valor.get(k) {
+            None => Ok(defecto),
+            Some(v) => v.as_str().and_then(|s| s.parse().ok()).ok_or_else(|| format!("Límite {k} inválido.")),
+        }
+    };
+    let desde = fecha("desde", desde)?;
+    let hasta = fecha("hasta", hasta)?;
+    if desde > hasta { return Err("Período invertido en la lectura.".into()); }
+    let entries = valor["entries"].as_array().ok_or("La bitácora no conserva entradas.")?;
+    let fechas_validas = entries.iter().all(|e| e["fecha"].as_str().and_then(|s| s.get(..10)).and_then(|s| s.parse::<chrono::NaiveDate>().ok()).is_some());
+    let sin_avisos = valor["warnings"].as_array().is_some_and(Vec::is_empty);
+    let completa = matches!(valor["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA")) && sin_avisos && fechas_validas;
+    Ok(json!({"version":1,"desde":desde.to_string(),"hasta":hasta.to_string(),
+        "captured_at":capturada,"coverage":valor["coverage"],"completa":completa,
+        "entries":entries,"warnings":valor["warnings"],"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA"}))
+}
+
 pub struct Recoleccion {
     hoy: chrono::NaiveDate,
     carpeta: PathBuf,
@@ -293,6 +315,11 @@ impl Recoleccion {
         let capturada = valor["captured_at"].as_str().unwrap_or("").to_string();
         if DateTime::parse_from_rfc3339(&capturada).is_err() {
             return Err("La lectura no conserva una fecha de captura válida.".into());
+        }
+        // Una lectura reutilizada puede estar recortada: nunca reconstruir su evidencia como completa.
+        // Esta copia aditiva conserva entradas con fecha inválida y autoría antes del recorte legado.
+        if tipo == "bitacora" && !reutilizada && valor.get("revision_bitacoras").is_none() {
+            valor["revision_bitacoras"] = evidencia_revision(&valor, &capturada, meses)?;
         }
         if tipo == "bitacora" && valor.get("desde").is_none() {
             let hasta = DateTime::parse_from_rfc3339(&capturada).unwrap().with_timezone(&Local).date_naive();
@@ -521,6 +548,25 @@ mod pruebas_limite {
     use super::*;
 
     #[test]
+    fn revision_preserva_fechas_ilegibles_y_no_acredita_ausencia() {
+        let valor = json!({"coverage":"COMPLETA","warnings":[],"desde":"2026-10-17","hasta":"2026-11-17",
+            "entries":[{"fecha":"ilegible","origen":"centro","texto":"Nota ficticia"}]});
+        let r = evidencia_revision(&valor, "2026-11-17T12:00:00-03:00", 1).unwrap();
+        assert_eq!(r["entries"], valor["entries"]);
+        assert_eq!(r["completa"], false);
+    }
+
+    #[test]
+    fn revision_acredita_vacio_y_conserva_advertencias() {
+        let mut valor = json!({"coverage":"VACIA_COMPROBADA","warnings":[],"entries":[]});
+        assert_eq!(evidencia_revision(&valor, "2026-11-17T12:00:00-03:00", 1).unwrap()["completa"], true);
+        valor["warnings"] = json!(["Lectura incompleta"]);
+        assert_eq!(evidencia_revision(&valor, "2026-11-17T12:00:00-03:00", 1).unwrap()["completa"], false);
+        valor["desde"] = json!("2026-12-01");
+        assert!(evidencia_revision(&valor, "2026-11-17T12:00:00-03:00", 1).is_err());
+    }
+
+    #[test]
     fn contexto_anterior_conserva_el_ultimo_de_cada_nomenclatura_como_python() {
         let fila = |fila: u64, folio: &str, descripcion: &str, fecha: &str| json!({"fila":fila,"folio":folio,"descripcion":descripcion,"fecha_iso":fecha,"tramite":"Resolución"});
         let anteriores = vec![
@@ -558,3 +604,5 @@ mod pruebas_limite {
         assert!(r.reservar("historia").is_err());
     }
 }
+
+

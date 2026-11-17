@@ -9,6 +9,7 @@ pub mod exportar;
 pub mod flujo;
 pub mod paquete;
 pub mod revision_bitacoras;
+pub mod revision_informe;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};
 use flow_motor::{analizar, Config, Entrada, Resultado};
@@ -237,3 +238,5 @@ impl Trabajo {
         self.filas.iter().filter(|f| !f.revisada && (!f.propuesta.avisos.is_empty() || !f.propuesta.marcas.is_empty())).count()
     }
 }
+
+
