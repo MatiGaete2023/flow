@@ -6,7 +6,7 @@ pub struct Config {pub pantalla:String,pub salida:PathBuf,pub ancho:f32,pub alto
 impl Config {
     pub fn argumentos(args:&[String])->Result<Self,String>{
         if args.len()!=6{return Err("Uso: --demo-ui PANTALLA CARPETA ANCHO ALTO ESCALA".into())}
-        let pantallas=["trabajo","trabajo-evidencia","trabajo-editor","correos","resoluciones","resultados","contactos","captura","anonimizador","meta4","revision","ayuda","recalculo"];
+        let pantallas=["trabajo","trabajo-evidencia","trabajo-editor","correos","resoluciones","resultados","contactos","captura","anonimizador","meta4","revision","revision-evidencia","revision-propuesta","ayuda","recalculo"];
         if !pantallas.contains(&args[1].as_str()){return Err("Pantalla de demostración desconocida.".into())}
         let numero=|i:usize|args[i].parse::<f32>().map_err(|_|"Tamaño o escala inválidos.".to_string());
         let (ancho,alto,escala)=(numero(3)?,numero(4)?,numero(5)?);

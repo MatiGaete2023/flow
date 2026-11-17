@@ -23,6 +23,7 @@ pub struct RevisionUi {
     seleccion: BTreeSet<usize>, activa: Option<usize>, exportar_todos: bool,
     receptor: Option<Receiver<Evento>>, cancelar: Arc<AtomicBool>, mensaje: String,
     resultado: Option<PathBuf>, confirmar: Option<Accion>,
+    panel:u8, distribucion:u64,
 }
 impl Default for RevisionUi {
     fn default() -> Self {
@@ -30,7 +31,7 @@ impl Default for RevisionUi {
             corte:flow_tabular::libro::hoy().to_string(),clase:C::SinObservacion,buscar:String::new(),
             tribunal:String::new(),programa:String::new(),etapa:String::new(),estado_revision:0,
             tribunales:vec![],programas:vec![],busquedas:vec![],seleccion:BTreeSet::new(),activa:None,exportar_todos:false,
-            receptor:None,cancelar:Arc::new(AtomicBool::new(false)),mensaje:String::new(),resultado:None,confirmar:None }
+            receptor:None,cancelar:Arc::new(AtomicBool::new(false)),mensaje:String::new(),resultado:None,confirmar:None,panel:0,distribucion:0 }
     }
 }
 impl Drop for RevisionUi { fn drop(&mut self) {self.cancelar.store(true,Ordering::Relaxed);} }
@@ -48,6 +49,16 @@ fn combo(ui: &mut egui::Ui, id: &str, valor: &mut String, opciones: &[String]) {
     });
 }
 impl RevisionUi {
+    pub fn demostracion(&mut self,datos:Vec<u8>,config:&Config,panel:u8)->Result<(),String>{
+        let desde="2026-11-01".parse().map_err(|_|"Fecha ficticia inválida.")?;
+        let hasta="2026-11-17".parse().map_err(|_|"Fecha ficticia inválida.")?;
+        let mut informe=paquete::revisar_bitacoras(&datos,desde,hasta,hasta)?;
+        revision_informe::aplicar_motor(&mut informe,"Paquete_FICTICIO.zip",&datos,config)?;
+        self.desde=desde.to_string();self.hasta=hasta.to_string();self.corte=hasta.to_string();
+        self.archivo=Some(PathBuf::from("Paquete_FICTICIO.zip"));self.datos=Some(Arc::new(datos));
+        self.instalar(informe,true);self.seleccion.insert(0);self.activa=Some(0);self.panel=panel;
+        self.mensaje="Paquete ficticio: cuatro estados y una propuesta obtenida del motor.".into();Ok(())
+    }
     fn criterio(&self) -> Result<(Fecha,Fecha,Fecha),String> {
         let fecha = |s:&str| fecha_de_texto(s).ok_or("Usa fechas dd/mm/aaaa o aaaa-mm-dd.".to_string());
         let (a,b,c)=(fecha(&self.desde)?,fecha(&self.hasta)?,fecha(&self.corte)?);
@@ -159,8 +170,17 @@ impl RevisionUi {
 
     pub fn mostrar(&mut self, ui: &mut egui::Ui, ctx: &egui::Context, config: &Config) {
         self.recibir();let ocupada=self.receptor.is_some();let obsoleto=self.obsoleto();
-        ui.heading("Revisión de bitácoras");
-        ui.label("Sin observación del centro en el período verificable; las reglas generan propuestas para revisión humana.");
+        let compacto=ui.available_width()<1000.0||ui.available_height()<480.0;
+        if compacto {ui.strong("Revisión de bitácoras");}else{
+            ui.heading("Revisión de bitácoras");
+            ui.label("Sin observación del centro en el período verificable; las reglas generan propuestas para revisión humana.");
+        }
+        ui.horizontal_wrapped(|ui|{
+            if compacto {for (p,n) in [(0,"Lista"),(1,"Evidencia"),(2,"Propuesta")]{ui.selectable_value(&mut self.panel,p,n);}}
+            if ui.button("Restaurar distribución").clicked(){self.distribucion=self.distribucion.wrapping_add(1);self.panel=0;}
+        });
+        let panel=self.panel;
+        crate::paneles_ui::configuracion(ui,compacto&&self.datos.is_some(),"Paquete, período y corte",|ui|{
         ui.add_enabled_ui(!ocupada,|ui|{
             ui.horizontal_wrapped(|ui|{
                 if ui.button("Abrir paquete…").clicked(){if let Some(path)=rfd::FileDialog::new().add_filter("Paquete CSMP",&["zip"]).pick_file(){self.solicitar(Accion::Abrir(path),ctx);}}
@@ -170,19 +190,27 @@ impl RevisionUi {
                 if ui.add_enabled(self.datos.is_some(),egui::Button::new("Analizar bitácoras")).clicked(){self.solicitar(Accion::Analizar,ctx);}
             });
         });
-        if let Some(p)=&self.archivo {ui.small(p.display().to_string());}
+        });
+        if let Some(p)=&self.archivo {ui.small(if compacto{p.file_name().unwrap_or_default().to_string_lossy().into_owned()}else{p.display().to_string()}).on_hover_text(p.display().to_string());}
         if obsoleto {ui.colored_label(ui.visuals().warn_fg_color,"⚠ Cambió el criterio: vuelve a analizar para aplicar reglas o exportar.");}
         if ocupada {ui.horizontal(|ui|{ui.spinner();if ui.button("Cancelar").clicked(){self.cancelar.store(true,Ordering::Relaxed);self.mensaje="Cancelando al terminar la operación actual…".into();}});}
         ui.label(&self.mensaje);
         if let Some(path)=&self.resultado {if ui.button("Abrir resultados").clicked(){crate::ui::abrir_en_sistema(path);}}
         let Some(informe)=self.informe.as_ref()else{self.confirmacion(ctx);return};
         let conteos=informe.conteos();let n=conteos[0];let aplicado=informe.motor_aplicado;
+        let clases=[(C::SinObservacion,conteos[0]),(C::ConObservacion,conteos[1]),(C::NoVerificable,conteos[2]),(C::FueraDeAlcance,conteos[3])];
         ui.horizontal_wrapped(|ui|{
-            ui.label(format!("{} registros lógicos · {} filas fuente · {} duplicados",informe.filas.len(),informe.filas_fuente,informe.duplicados_registros));
-            for (clase,cantidad) in [(C::SinObservacion,conteos[0]),(C::ConObservacion,conteos[1]),(C::NoVerificable,conteos[2]),(C::FueraDeAlcance,conteos[3])] {
-                ui.selectable_value(&mut self.clase,clase,format!("{} ({cantidad})",revision::etiqueta(clase)));
+            if compacto {
+                ui.label(format!("{} registros",informe.filas.len()));
+                egui::ComboBox::from_id_salt("clasificacion_compacta").selected_text(revision::etiqueta(self.clase)).show_ui(ui,|ui|{
+                    for (clase,cantidad) in clases{ui.selectable_value(&mut self.clase,clase,format!("{} ({cantidad})",revision::etiqueta(clase)));}
+                });
+            }else{
+                ui.label(format!("{} registros lógicos · {} filas fuente · {} duplicados",informe.filas.len(),informe.filas_fuente,informe.duplicados_registros));
+                for (clase,cantidad) in clases{ui.selectable_value(&mut self.clase,clase,format!("{} ({cantidad})",revision::etiqueta(clase)));}
             }
         });
+        crate::paneles_ui::configuracion(ui,compacto,"Aplicar reglas y exportar",|ui|{
         ui.add_enabled_ui(!ocupada && !obsoleto,|ui|{
             ui.horizontal_wrapped(|ui|{
                 if ui.add_enabled(n>0 && !aplicado,egui::Button::new(format!("Aplicar motor a {n} registros sin observación"))).on_hover_text("Conserva el conjunto completo para duplicidades y acumulados. No crea correos ni resoluciones.").clicked(){self.motor(config,ctx);}
@@ -191,6 +219,8 @@ impl RevisionUi {
                 if ui.add_enabled(self.exportar_todos || !self.seleccion.is_empty(),egui::Button::new("Exportar listado…")).clicked(){self.exportar(ctx);}
             });
         });
+        });
+        crate::paneles_ui::configuracion(ui,compacto,"Filtros del listado",|ui|{
         ui.horizontal_wrapped(|ui|{
             ui.label("Tribunal");combo(ui,"revision_tribunal",&mut self.tribunal,&self.tribunales);
             ui.label("Programa");combo(ui,"revision_programa",&mut self.programa,&self.programas);
@@ -200,6 +230,7 @@ impl RevisionUi {
             });
             ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar causa, nombre o programa…").desired_width(220.0));
             if ui.button("Limpiar filtros").clicked(){self.buscar.clear();self.tribunal.clear();self.programa.clear();self.etapa.clear();self.estado_revision=0;}
+        });
         });
         let informe=self.informe.as_mut().unwrap();
         let buscar=self.buscar.to_lowercase();
@@ -217,29 +248,33 @@ impl RevisionUi {
         });
         if self.activa.is_none(){self.activa=visibles.first().copied();}
         let mut revision_cambio=None;
-        egui::TopBottomPanel::bottom("revision_editor").resizable(true).default_height(190.0).min_height(100.0).show_inside(ui,|ui|{
+        let mut editor=|ui:&mut egui::Ui|{
             if let Some(f)=self.activa.and_then(|i|informe.filas.get_mut(i)){
                 egui::ScrollArea::vertical().id_salt("revision_editor_scroll").show(ui,|ui|{
                     ui.strong("Propuesta y revisión");ui.small(format!("{} · ingreso {}",valor(f,&["RIT"]),f.identidad.ingreso));
+                    let mut revisada=f.revisada;
+                    if ui.add_enabled(!ocupada && !obsoleto,egui::Checkbox::new(&mut revisada,"Revisada")).changed(){
+                        if let Some(i)=self.activa{revision_cambio=Some((i,revisada));}
+                    }
                     if let Some(p)=&f.propuesta {
                         if p.excluido {ui.label("El motor excluye este registro.");}
                         if p.observacion.is_empty(){ui.label("El motor no produjo texto de observación.");}
                         let mut texto=f.edicion.clone().unwrap_or_else(||p.observacion.clone());
-                        if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(4)).changed(){f.edicion=Some(texto);}
+                        if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(if compacto{3}else{4})).changed(){f.edicion=Some(texto);}
                         ui.horizontal(|ui|{
                             if ui.add_enabled(f.edicion.is_some()&&!ocupada&&!obsoleto,egui::Button::new("Restaurar propuesta")).clicked(){f.edicion=None;}
                             if ui.button("Copiar observación").clicked(){ui.ctx().copy_text(f.edicion.as_ref().unwrap_or(&p.observacion).clone());}
                         });
                         ui.collapsing("Propuesta original, reglas y avisos",|ui|{ui.label(&p.observacion);ui.label(p.reglas.join(" · "));for a in &p.avisos{ui.label(a);}});
                     }else{ui.label("Sin propuesta aplicada. Solo los registros con ausencia verificada pueden recibirla.");}
-                    let mut revisada=f.revisada;
-                    if ui.add_enabled(!ocupada && !obsoleto,egui::Checkbox::new(&mut revisada,"Revisada")).changed(){
-                        if let Some(i)=self.activa{revision_cambio=Some((i,revisada));}
-                    }
+
                 });
             }else{ui.label("Elige un registro de la tabla.");}
-        });
-        egui::SidePanel::right("revision_evidencia").resizable(true).default_width(350.0).min_width(200.0).show_inside(ui,|ui|{
+        };
+        if compacto {if panel==2{editor(ui);}}else{
+            egui::TopBottomPanel::bottom(egui::Id::new(("revision_editor",self.distribucion))).resizable(true).default_height(190.0).min_height(100.0).show_inside(ui,&mut editor);
+        }
+        let mut evidencia=|ui:&mut egui::Ui|{
             egui::ScrollArea::vertical().id_salt("revision_evidencia_scroll").show(ui,|ui|{
                 ui.strong("Evidencia del ingreso");
                 if let Some(f)=self.activa.and_then(|i|informe.filas.get(i)){
@@ -270,7 +305,11 @@ impl RevisionUi {
                     ui.collapsing("Datos de origen",|ui|{for (campo,v) in f.valores.as_object().into_iter().flat_map(|m|m.iter()){ui.label(format!("{campo}: {}",v.as_str().map(str::to_owned).unwrap_or_else(||v.to_string())));}});
                 }
             });
-        });
+        };
+        if compacto {if panel==1{evidencia(ui);}}else{
+            egui::SidePanel::right(egui::Id::new(("revision_evidencia",self.distribucion))).resizable(true).default_width(350.0).min_width(200.0).show_inside(ui,&mut evidencia);
+        }
+        if !compacto||panel==0 {
         egui::CentralPanel::default().show_inside(ui,|ui|{
             TableBuilder::new(ui).striped(true).sense(egui::Sense::click())
                 .column(Column::exact(26.0)).column(Column::initial(100.0).resizable(true)).column(Column::initial(160.0).resizable(true))
@@ -291,6 +330,7 @@ impl RevisionUi {
                     if row.response().clicked(){self.activa=Some(i);}
                 }));
         });
+        }
         if let Some((i,revisada))=revision_cambio{self.marcar_revisada(i,revisada);}
         self.confirmacion(ctx);
     }
@@ -359,4 +399,6 @@ mod tests {
         assert!(ui.informe.as_ref().unwrap().filas[0].revisada);
     }
 }
+
+
 

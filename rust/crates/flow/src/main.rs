@@ -17,6 +17,7 @@ mod resultados_ui;
 mod tema;
 mod evidencia_ui;
 mod paneles_ui;
+mod demo_paquete;
 
 #[cfg(windows)]
 extern "system" {
@@ -25,6 +26,17 @@ extern "system" {
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [accion,destino]=args.as_slice(){
+        if accion=="--paquete-demo" {
+            let r=demo_paquete::crear().and_then(|bytes|{
+                use std::io::Write;
+                let mut f=std::fs::OpenOptions::new().write(true).create_new(true).open(destino).map_err(|e|e.to_string())?;
+                f.write_all(&bytes).map_err(|e|e.to_string())
+            });
+            if let Err(e)=r {eprintln!("{e}");std::process::exit(1);}
+            return;
+        }
+    }
     if args.first().is_some_and(|s|s=="--demo-ui") {
         let resultado=crate::evidencia_ui::Config::argumentos(&args).and_then(ui::abrir_demostracion);
         if let Err(e)=resultado {eprintln!("{e}");std::process::exit(1);}

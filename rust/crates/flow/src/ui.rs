@@ -1930,11 +1930,15 @@ pub fn abrir_demostracion(config:crate::evidencia_ui::Config)->Result<(),String>
         for t in correos::TRIBUNALES {app.contactos.tribunales.insert(t.into(),"tribunal@example.invalid".into());}
         for (_,activa) in &mut app.modalidades {*activa=true;}
         app.preparar_borradores();app.preparar_proyectos();
+        if evidencia.config.pantalla.starts_with("revision"){
+            let panel=match evidencia.config.pantalla.as_str(){"revision-evidencia"=>1,"revision-propuesta"=>2,_=>0};
+            app.revision.demostracion(crate::demo_paquete::crear()?,&app.motor,panel)?;
+        }
         app.mensaje=Some((false,"DEMOSTRACIÓN · Datos ficticios · Almacenamiento temporal aislado".into()));
         app.pestana=match evidencia.config.pantalla.as_str(){
             "correos"=>Pestana::Correos,"resoluciones"=>Pestana::Resoluciones,"resultados"=>Pestana::Resultados,
             "contactos"=>Pestana::Contactos,"captura"=>Pestana::Captura,"anonimizador"=>Pestana::Anonimo,
-            "meta4"=>Pestana::Meta4,"revision"=>Pestana::Revision,_=>Pestana::Trabajo,
+            "meta4"=>Pestana::Meta4,"revision"|"revision-evidencia"|"revision-propuesta"=>Pestana::Revision,_=>Pestana::Trabajo,
         };
         app.ayuda=evidencia.config.pantalla=="ayuda";
         app.panel_trabajo=match evidencia.config.pantalla.as_str(){"trabajo-evidencia"=>1,"trabajo-editor"=>2,_=>0};
