@@ -630,3 +630,7 @@ guardar el código de conexión, y cualquier escritura en RUS.
 - 2026-11-17 · Anonimizador y nombres nuevos del Descargador: `flow-anonimo::texto::nombre_archivo` reconocía solo
   nombres sin espacios, así que «ESP Ambulatorio Jdo Familia X 2.xls» en `resumen.json` se trataba como un nombre de
   persona; ahora admite espacios interiores y el archivo sale como `fuente_N` (prueba A8). Suite: 255 pruebas, 0 fallos.
+- 2026-11-17 · Descargador, nombres: una base que termina en número («… Ficticio 1», una página) ya no choca con
+  la página 1 de otra («… Ficticio» con varias): si el nombre ya figura en `Resumen.archivos` (sin distinguir
+  mayúsculas) se sigue contando el ordinal (diferencia con Python, que fallaría al escribir). Las pruebas de Meta 4
+  usan ahora nombres con espacios del Descargador. Suite: 260 pruebas, 0 fallos.

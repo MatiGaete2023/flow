@@ -331,11 +331,15 @@ fn nombre_siguiente(resumen: &Resumen, catalogo: &Value, indice: usize, paginas:
     let propia = clave_base(&base);
     let repetida = (0..resumen.lote.consultas.len()).filter(|i| clave(*i) == propia).count() > 1;
     let ordinal = resumen.archivos.iter().filter(|a| a.consulta < resumen.lote.consultas.len() && clave(a.consulta) == propia).count() + 1;
-    if paginas > 1 || repetida {
-        format!("{base} {ordinal}.{extension}")
-    } else {
-        format!("{base}.{extension}")
+    let usado = |n: &str| resumen.archivos.iter().any(|a| a.nombre.to_lowercase() == n.to_lowercase());
+    let mut nombre = if paginas > 1 || repetida { format!("{base} {ordinal}.{extension}") } else { format!("{base}.{extension}") };
+    // Una base que termina en número («X 1») puede dar el nombre de otra con ordinal («X» página 1): se sigue contando.
+    let mut siguiente = ordinal;
+    while usado(&nombre) {
+        siguiente += 1;
+        nombre = format!("{base} {siguiente}.{extension}");
     }
+    nombre
 }
 
 pub fn huella(datos: &[u8]) -> String {
@@ -655,4 +659,33 @@ pub fn ejecutar(
     resumen.guardar(carpeta)?;
     resultado?;
     Ok(resumen)
+}
+
+#[cfg(test)]
+mod pruebas {
+    use super::*;
+
+    #[test]
+    fn nombre_ya_usado_por_otra_base_no_choca() {
+        // Tribunal «Ficticio 1» (base «… Ficticio 1», sola) y tribunal «Ficticio» con dos páginas («… Ficticio 1/2»).
+        let catalogo = json!({"tribunales": {"901": "Juzgado de Familia Ficticio 1", "902": "Juzgado de Familia Ficticio"}});
+        let s = |t: &str| Seleccion {
+            tribunal: t.into(),
+            screen: "seguimiento".into(),
+            tab: "Espera".into(),
+            modality: "3".into(),
+            report: None,
+            state: None,
+            month: None,
+            year: None,
+        };
+        let mut r: Resumen = serde_json::from_value(json!({"version":1,"lote":{"consultas":[s("901"), s("902")],"fechas":null,
+            "conservar_filtros":false,"evidencia":false,"pausa_ms":250},"estado":"EN_CURSO","terminadas":[0],"vacias":[],
+            "archivos":[{"nombre":"ESP FAE Jdo Familia Ficticio 1.xls","sha256":"0".repeat(64),"consulta":0,"pagina":1,"total":1,"registros":1}],
+            "avisos":[]}))
+        .unwrap();
+        assert_eq!(nombre_siguiente(&r, &catalogo, 1, 2, "xls"), "ESP FAE Jdo Familia Ficticio 2.xls");
+        r.archivos.clear();
+        assert_eq!(nombre_siguiente(&r, &catalogo, 1, 2, "xls"), "ESP FAE Jdo Familia Ficticio 1.xls");
+    }
 }

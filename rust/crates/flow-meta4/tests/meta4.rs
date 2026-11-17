@@ -58,7 +58,11 @@ fn lote(carpeta: &Path, capturada: &str) -> Resumen {
         <th>Derivación</th><th>T Espera</th><th>Fec. Resolución</th></tr>\
         <tr><td>X-4-2099</td><td>Jgdo. L. y G. de Laja</td><td>44444444-2</td><td>LUCAS ARAYA</td><td>Protección</td><td>M</td><td>FAE PRO Ficticio</td><td>35</td><td>05/09/2026</td></tr>\
         </table></html>";
-    for (i, (nombre, html, registros)) in [("cumplimiento.xls", cumplimiento, 3), ("espera.xls", espera, 1)].into_iter().enumerate() {
+    for (i, (nombre, html, registros)) in
+        [("CUMP Ambulatorio Jdo Familia Ficticio 1.xls", cumplimiento, 3), ("ESP Ambulatorio Jdo Familia Ficticio.xls", espera, 1)]
+            .into_iter()
+            .enumerate()
+    {
         std::fs::write(carpeta.join(nombre), html).unwrap();
         r.archivos.push(Archivo { nombre: nombre.into(), sha256: huella(html.as_bytes()), consulta: i, pagina: 1, total: 1, registros });
     }
@@ -211,7 +215,8 @@ fn lectura_anterior_al_corte_filtro_y_lotes_repetidos() {
     let error = calcular(&[carpeta.clone(), copia], dia("2026-10-14"), dia("2026-10-14"), &[]).unwrap_err();
     assert!(error.contains("dos lotes"), "{error}");
     // Una descarga alterada después de verificada detiene todo.
-    std::fs::write(carpeta.join("espera.xls"), "<html><table><tr><td>alterado</td></tr></table></html>").unwrap();
+    std::fs::write(carpeta.join("ESP Ambulatorio Jdo Familia Ficticio.xls"), "<html><table><tr><td>alterado</td></tr></table></html>")
+        .unwrap();
     assert!(calcular(&[carpeta], dia("2026-10-14"), dia("2026-10-14"), &[]).is_err());
 }
 
@@ -342,7 +347,7 @@ fn m4_consulta_repetida_en_el_mismo_lote_no_se_rechaza() {
     let mut archivo = r.archivos[0].clone();
     archivo.nombre = "cumplimiento-vencimiento.xls".into();
     archivo.consulta = 2;
-    std::fs::copy(carpeta.join("cumplimiento.xls"), carpeta.join(&archivo.nombre)).unwrap();
+    std::fs::copy(carpeta.join("CUMP Ambulatorio Jdo Familia Ficticio 1.xls"), carpeta.join(&archivo.nombre)).unwrap();
     r.archivos.push(archivo);
     r.guardar(&carpeta).unwrap();
     let m = calcular(&[carpeta], dia("2026-10-16"), dia("2026-10-16"), &[]).unwrap();
@@ -373,9 +378,9 @@ fn lote_con_vacia(carpeta: &Path, con_registros: bool) {
             <th>Derivación</th><th>Fec. Resolución</th><th>Fec. Ingreso Efectivo</th><th>DIAS DE CUMPLIMIENTO</th><th>DIAS PARA EGRESAR</th></tr>\
             <tr><td>X-7-2099</td><td>Juzgado de Letras de Yumbel</td><td>77777777-7</td><td>PERSONA FICTICIA</td><td>Protección</td><td>F</td><td>FAE Ficticio</td><td>01/08/2026</td><td>10/08/2026</td><td>60</td><td>100</td></tr>\
             </table></html>";
-        std::fs::write(carpeta.join("cumplimiento.xls"), html).unwrap();
+        std::fs::write(carpeta.join("CUMP Ambulatorio Jdo Familia Ficticio 1.xls"), html).unwrap();
         r.archivos.push(Archivo {
-            nombre: "cumplimiento.xls".into(),
+            nombre: "CUMP Ambulatorio Jdo Familia Ficticio 1.xls".into(),
             sha256: huella(html.as_bytes()),
             consulta: 0,
             pagina: 1,
@@ -502,7 +507,7 @@ fn m6_salidas_con_inventario_matriz_y_control_por_bitacora() {
     assert_eq!(nombres, ["ESPERA", "CUMPLIMIENTO", "INVENTARIO_ARCHIVOS", "MATRIZ_COBERTURA", "ERRORES_Y_ADVERTENCIAS"]);
     let inventario = &registros.hojas[2];
     assert_eq!(inventario.filas.len(), 3);
-    assert_eq!(inventario.filas[1][1].texto(), "cumplimiento.xls");
+    assert_eq!(inventario.filas[1][1].texto(), "CUMP Ambulatorio Jdo Familia Ficticio 1.xls");
     assert_eq!(inventario.filas[1][4].texto(), "TOMÉ");
     let matriz = &registros.hojas[3];
     let tome = matriz.filas.iter().find(|f| f.first().is_some_and(|c| c.texto() == "TOMÉ")).unwrap();
@@ -538,7 +543,7 @@ fn m9_identidad_vacia_fecha_ilegible_atribucion_y_textos_largos() {
         <tr><td>X-5-2099</td><td>Juzgado Ficticio</td><td>55555555-5</td><td>ANA FICTICIA</td><td>Protección</td><td>F</td><td>FAE PRO Ficticio</td><td>10</td><td>05/09/2026</td></tr>\
         <tr><td>X-4-2099</td><td>Jgdo. L. y G. de Laja</td><td>44444444-2</td><td>LUCAS ARAYA</td><td>Protección</td><td>M</td><td>FAE PRO Ficticio</td><td>35</td><td>05/09/2026</td></tr>\
         </table></html>";
-    std::fs::write(carpeta.join("espera.xls"), espera).unwrap();
+    std::fs::write(carpeta.join("ESP Ambulatorio Jdo Familia Ficticio.xls"), espera).unwrap();
     r.archivos[1].sha256 = huella(espera.as_bytes());
     r.archivos[1].registros = 2;
     r.guardar(&carpeta).unwrap();
