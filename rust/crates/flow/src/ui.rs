@@ -934,30 +934,39 @@ impl App {
                 return;
             }
             ui.separator();
-            if ui.button("Abrir Excel o paquete…  (Ctrl+O)").clicked() {
-                self.elegir_archivo();
-            }
-            if ui.button("Reanudar último").clicked() {
-                self.reanudar();
-            }
-            ui.separator();
-            ui.label("Corte:");
-            ui.add(egui::TextEdit::singleline(&mut self.corte).desired_width(86.0)).on_hover_text("dd/mm/aaaa");
-            ui.label("Etapa:");
-            let actual = self.etapa.map_or("Automática", Etapa::nombre);
-            egui::ComboBox::from_id_salt("etapa").selected_text(actual).show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.etapa, None, "Automática");
-                for e in [Etapa::Espera, Etapa::Cumplimiento, Etapa::Informes] {
-                    ui.selectable_value(&mut self.etapa, Some(e), e.nombre());
+            ui.menu_button("Archivo", |ui| {
+                if ui.button("Abrir Excel o paquete…  (Ctrl+O)").clicked() {
+                    ui.close_menu(); self.elegir_archivo();
+                }
+                let recuperable = almacen::listar(&self.datos).first().map(|(r,_)|r.clone());
+                let etiqueta = recuperable.as_ref().and_then(|r|almacen::cargar(r).ok())
+                    .map(|t|format!("Reanudar {} · corte {}",t.archivo,t.corte))
+                    .unwrap_or_else(||"Reanudar último trabajo".into());
+                if ui.add_enabled(recuperable.is_some(),egui::Button::new(etiqueta))
+                    .on_hover_text("Recupera la sesión local más reciente. Sin sesión guardada, esta opción no está disponible.").clicked() {
+                    ui.close_menu(); self.reanudar();
                 }
             });
-            ui.menu_button("Más", |ui| {
-                if ui.add_enabled(self.archivo.is_some(), egui::Button::new("Recalcular propuestas…"))
-                    .on_hover_text("Permite descartar las ediciones después de una confirmación.").clicked() {
-                    self.confirmar_recalculo = true;
-                    ui.close_menu();
-                }
-            });
+            if self.pestana == Pestana::Trabajo {
+                ui.label("Corte:");
+                ui.add(egui::TextEdit::singleline(&mut self.corte).desired_width(86.0)).on_hover_text("dd/mm/aaaa");
+                ui.label("Etapa:");
+                let actual = self.etapa.map_or("Automática", Etapa::nombre);
+                egui::ComboBox::from_id_salt("etapa").selected_text(actual).show_ui(ui, |ui| {
+                    ui.selectable_value(&mut self.etapa, None, "Automática");
+                    for e in [Etapa::Espera, Etapa::Cumplimiento, Etapa::Informes] {
+                        ui.selectable_value(&mut self.etapa, Some(e), e.nombre());
+                    }
+                });
+                ui.menu_button("Más", |ui| {
+                    if ui.add_enabled(self.archivo.is_some(), egui::Button::new("Recalcular propuestas…"))
+                        .on_hover_text("Permite descartar las ediciones después de una confirmación.").clicked() {
+                        self.confirmar_recalculo = true; ui.close_menu();
+                    }
+                });
+            } else if let Some(t) = &self.trabajo {
+                ui.small(format!("{} · {} · corte {}",t.archivo,t.nombre(),t.corte));
+            }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("Ayuda (F1)").clicked() {
                     self.ayuda = true;
@@ -1006,11 +1015,15 @@ impl App {
         let mut guardar_excel = false;
         let mut cambiar = None;
         ui.horizontal_wrapped(|ui| {
-            for (i, otro) in self.otros.iter().enumerate() {
-                if ui.button(format!("Ver {} ({})", otro.nombre(), otro.filas.len())).clicked() {
-                    cambiar = Some(i);
-                }
-            }
+            egui::ComboBox::from_id_salt("tablas_trabajo")
+                .selected_text(format!("{} ({})",trabajo.nombre(),trabajo.filas.len())).show_ui(ui,|ui|{
+                    ui.label(format!("Actual: {} ({})",trabajo.nombre(),trabajo.filas.len()));
+                    for (i,otro) in self.otros.iter().enumerate() {
+                        if ui.selectable_label(false,format!("{} ({})",otro.nombre(),otro.filas.len())).clicked() {
+                            cambiar=Some(i);ui.close_menu();
+                        }
+                    }
+                });
             ui.label(format!(
                 "{} · «{}» · {} registros · {} por revisar",
                 trabajo.nombre(),

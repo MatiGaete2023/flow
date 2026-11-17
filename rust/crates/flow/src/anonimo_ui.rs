@@ -155,17 +155,23 @@ impl Anonimo {
                 ui.selectable_value(&mut self.conservador, true, "Conservador");
             });
             if self.conservador { ui.label("Conserva más texto; requiere una revisión más cuidadosa."); }
+            ui.checkbox(&mut self.rechazar, "Rechazar la selección completa si un archivo no es admitido o no supera la revisión");
+            if self.dias != 0 || self.nacimiento || !self.semilla.is_empty() {
+                ui.label(format!("Opciones activas: fechas {} días · nacimiento {} · semilla {}",self.dias,
+                    if self.nacimiento {"generalizado"}else{"sin cambio"},if self.semilla.is_empty(){"no definida"}else{"solo en memoria"}));
+            }
+            ui.collapsing("Avanzado: fechas y semilla", |ui| {
             ui.horizontal(|ui| {
                 ui.label("Desplazar fechas (días):");
                 ui.add(egui::DragValue::new(&mut self.dias).range(-36500..=36500));
             });
             ui.checkbox(&mut self.nacimiento, "Generalizar fecha de nacimiento al 1 de enero");
-            ui.checkbox(&mut self.rechazar, "Rechazar la selección completa si un archivo no es admitido o no supera la revisión");
             ui.horizontal(|ui| {
                 ui.label("Semilla opcional:");
                 ui.add(egui::TextEdit::singleline(&mut self.semilla).password(true)).on_hover_text(
                     "Permite repetir los mismos seudónimos. Permanece solo en memoria mientras la ventana está abierta; nunca se guarda.",
                 );
+            });
             });
             ui.horizontal(|ui| {
                 if ui.button("Destino…").clicked() {
@@ -198,3 +204,5 @@ impl Anonimo {
         ui.weak("Formatos: Excel, CSV/TSV, JSON/JSONL, texto, HTML, ICS, DOCX sin objetos y ZIP. Los PDF, imágenes y objetos incrustados se excluyen; nunca se copian sin tratar.");
     }
 }
+
+

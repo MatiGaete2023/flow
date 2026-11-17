@@ -578,9 +578,18 @@ impl Captura {
                             ui.text_edit_singleline(&mut self.hasta);
                         });
                     }
-                    ui.checkbox(&mut self.filtros, "Conservar otros filtros del formulario SITFA");
+
                 }
-                ui.checkbox(&mut self.evidencia, "Guardar PDF cuando una consulta no tiene registros");
+                if self.filtros || self.evidencia {
+                    ui.label(format!("Opciones activas: filtros SITFA {} · PDF de consulta vacía {}",
+                        if self.filtros {"conservados"}else{"limpios"},if self.evidencia {"sí"}else{"no"}));
+                }
+                ui.collapsing("Avanzado",|ui| {
+                    if !self.pantalla.starts_with("calendario_") {
+                        ui.checkbox(&mut self.filtros,"Conservar otros filtros del formulario SITFA");
+                    }
+                    ui.checkbox(&mut self.evidencia,"Guardar PDF cuando una consulta no tiene registros");
+                });
             });
         });
         ui.horizontal_wrapped(|ui| {
@@ -603,16 +612,6 @@ impl Captura {
                     Err(e) => self.mensaje = e,
                 }
             }
-            if seguimiento && ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Retomar paquete…")).clicked()
-            {
-                if let Some(c) = rfd::FileDialog::new().set_title("Carpeta «Paquete CSMP …» a retomar").pick_folder() {
-                    if c.join("respaldo").join(flow_trabajo::flujo::PROCESO).is_file() {
-                        self.iniciar_flujo(None, c, ctx);
-                    } else {
-                        self.mensaje = "Elige una carpeta «Paquete CSMP …» (contiene respaldo/proceso.json).".into();
-                    }
-                }
-            }
             if ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Descargar")).clicked() {
                 match self.plan() {
                     Ok(lote) => {
@@ -626,6 +625,18 @@ impl Captura {
                     Err(e) => self.mensaje = e,
                 }
             }
+            ui.menu_button("Retomar",|ui| {
+                ui.small("Paquete: carpeta Paquete CSMP. Lote: carpeta con resumen.json.");
+            if seguimiento && ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Retomar paquete…")).clicked()
+            {
+                if let Some(c) = rfd::FileDialog::new().set_title("Carpeta «Paquete CSMP …» a retomar").pick_folder() {
+                    if c.join("respaldo").join(flow_trabajo::flujo::PROCESO).is_file() {
+                        self.iniciar_flujo(None, c, ctx);
+                    } else {
+                        self.mensaje = "Elige una carpeta «Paquete CSMP …» (contiene respaldo/proceso.json).".into();
+                    }
+                }
+            }
             if ui.add_enabled(!self.ocupada() && self.catalogo.is_some(), egui::Button::new("Retomar lote…")).clicked() {
                 if let Some(c) = rfd::FileDialog::new().set_title("Carpeta del lote incompleto").pick_folder() {
                     match Resumen::leer(&c) {
@@ -634,6 +645,7 @@ impl Captura {
                     }
                 }
             }
+            });
             if ui
                 .add_enabled(!self.ocupada(), egui::Button::new(if self.listo.is_some() { "Crear paquete del lote actual…" } else { "Crear paquete de un lote…" }))
                 .on_hover_text("Arma Captura_CSMP.zip con los Excel y las lecturas verificadas del lote, para abrirlo en el Asistente.")
@@ -712,3 +724,7 @@ mod pruebas {
         assert!(!disponible_tras_error(&parcial, false), "Trabajo no recibe un lote con consultas sin XLS");
     }
 }
+
+
+
+
