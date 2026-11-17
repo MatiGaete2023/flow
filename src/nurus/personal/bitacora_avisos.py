@@ -15,7 +15,9 @@ SIMILITUD = 0.92
 # No se reiteran (decisión del usuario, 11-nov-2026): observaciones que consignan una gestión del Centro (correo o
 # proyecto de resolución), derivaciones sin seguimiento, la proyección de ingreso copiada de la bitácora y las que ya
 # llevan una reiteración por materia. Reiterarlas ocultaba una gestión nueva o encadenaba reiteraciones.
+# «Medida revisada, sin observaciones.» tampoco se reitera: se repite tal cual (decisión del usuario, 17-nov-2026).
 NO_REITERAR = (
+    'CUMPLIMIENTO.C09_SIN_OBSERVACIONES',
     'ESPERA.E05_',
     'ESPERA.E07_',
     'INFORMES.I01_',
