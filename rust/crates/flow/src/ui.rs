@@ -993,12 +993,18 @@ impl App {
             });
         });
         let pestanas = self.herramienta.pestanas();
-        if pestanas.len() > 1 {
-            ui.horizontal_wrapped(|ui| {
-                for (p, nombre) in pestanas {
-                    ui.selectable_value(&mut self.pestana, *p, *nombre);
-                }
-            });
+        if pestanas.len()>1 {
+            if ui.available_width()<1000.0 {
+                let actual=pestanas.iter().find(|(p,_)|*p==self.pestana).map(|(_,n)|*n).unwrap_or("Herramientas");
+                ui.horizontal_wrapped(|ui|{
+                    ui.label("Herramienta:");
+                    egui::ComboBox::from_id_salt("navegacion_compacta").width(260.0).selected_text(actual).show_ui(ui,|ui|{
+                        for (p,nombre) in pestanas {ui.selectable_value(&mut self.pestana,*p,*nombre);}
+                    });
+                });
+            }else{
+                ui.horizontal_wrapped(|ui|{for (p,nombre) in pestanas{ui.selectable_value(&mut self.pestana,*p,*nombre);}});
+            }
         }
     }
 
@@ -1102,9 +1108,6 @@ impl App {
             };
             egui::ScrollArea::vertical().id_salt("editor_observacion").show(ui, |ui| {
                 ui.label(RichText::new("Observación").strong());
-                if ui.add(egui::TextEdit::multiline(&mut fila.observacion).desired_width(f32::INFINITY).desired_rows(7)).changed() {
-                    cambio = true;
-                }
                 ui.horizontal(|ui| {
                     if ui.checkbox(&mut fila.revisada, "Revisada").changed() {
                         cambio = true;
@@ -1117,6 +1120,9 @@ impl App {
                         ui.ctx().copy_text(fila.observacion.clone());
                     }
                 });
+                if ui.add(egui::TextEdit::multiline(&mut fila.observacion).desired_width(f32::INFINITY).desired_rows(if compacto{3}else{7})).changed() {
+                    cambio = true;
+                }
                 if fila.editada() {
                     ui.add_space(4.0);
                     ui.label(RichText::new("Propuesta original").strong());
@@ -1290,9 +1296,13 @@ impl App {
             if ui.button("Preparar este tipo").on_hover_text("Reemplaza la lista de borradores preparados").clicked() {
                 preparar_tipo = Some(self.tipo_elegido);
             }
-            ui.label("Período");
-            ui.add(egui::TextEdit::singleline(&mut self.periodo).desired_width(90.0).hint_text("mm/aaaa"))
-                .on_hover_text("Se usa en el reporte de proyectos de resolución.");
+            if self.tipo_elegido==Tipo::Proyectos {
+                ui.collapsing("Opciones del reporte",|ui|{
+                    ui.label("Período");
+                    ui.add(egui::TextEdit::singleline(&mut self.periodo).desired_width(90.0).hint_text("mm/aaaa"))
+                        .on_hover_text("Se usa en el reporte de proyectos de resolución.");
+                });
+            }
         });
         let marcadas = self.marcadas.len();
         self.sin_guardar |= ui
@@ -2427,6 +2437,8 @@ mod pruebas_captura {
         assert_eq!(app.claves_modalidades(), None);
     }
 }
+
+
 
 
 
