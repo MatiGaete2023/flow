@@ -184,13 +184,30 @@ pub fn leer_lista_csmp(texto: &str) -> Result<BTreeMap<String, String>, String> 
     Ok(contactos)
 }
 
-/// `config.user_directory() / contactos.json`: los contactos del Asistente Python (%LOCALAPPDATA%\CSMP_Personal).
-pub fn ruta_csmp() -> Option<PathBuf> {
-    let base = std::env::var_os("LOCALAPPDATA")
+/// Archivos del Asistente Python donde viven los contactos, en orden de preferencia: la configuración de la app
+/// (`app.py`: %LOCALAPPDATA%\CSMP_Personal_Prototipo_Integral\configuracion.json, con `contactos`,
+/// `correos.tribunales.*.para` y `aliases`, que es donde Python guarda lo editado) y el directorio local
+/// (`config.user_directory() / contactos.json`, %LOCALAPPDATA%\CSMP_Personal).
+pub fn rutas_csmp() -> Vec<PathBuf> {
+    let Some(base) = std::env::var_os("LOCALAPPDATA")
         .filter(|v| !v.is_empty())
         .or_else(|| std::env::var_os("USERPROFILE").filter(|v| !v.is_empty()))
-        .or_else(|| std::env::var_os("HOME").filter(|v| !v.is_empty()))?;
-    Some(PathBuf::from(base).join("CSMP_Personal").join("contactos.json"))
+        .or_else(|| std::env::var_os("HOME").filter(|v| !v.is_empty()))
+    else {
+        return Vec::new();
+    };
+    let base = PathBuf::from(base);
+    vec![base.join("CSMP_Personal_Prototipo_Integral").join("configuracion.json"), base.join("CSMP_Personal").join("contactos.json")]
+}
+
+/// `contactos_ejemplo.json` de Python: contactos ficticios que no son del usuario.
+fn de_ejemplo(nombre: &str, correo: &str) -> bool {
+    matches!(
+        (nombre, correo),
+        ("PRM EJEMPLO UNO", "prm.uno@example.invalid")
+            | ("PIE EJEMPLO DOS", "pie.dos@example.invalid")
+            | ("FAE EJEMPLO TRES", "fae.tres@example.invalid")
+    )
 }
 
 /// Resultado de una importación, a confirmar antes de guardarse: nunca sustituye un contacto con otra dirección.
@@ -233,8 +250,62 @@ impl Contactos {
         Contactos::default().importar_csmp(lista).contactos
     }
 
-    /// Lee los contactos del Asistente Python sin modificarlos. `None` si no existen.
+    /// Lee los contactos del Asistente Python sin modificarlos: `configuracion.json` de la app o `contactos.json`.
+    /// `None` si no existen o solo trae los contactos ficticios de ejemplo.
     pub fn leer_csmp(ruta: &Path) -> Result<Option<Contactos>, String> {
+        if ruta.file_name().is_some_and(|n| n == "configuracion.json") {
+            return Self::leer_configuracion_csmp(ruta);
+        }
+        Self::leer_lista_csmp(ruta)
+    }
+
+    fn leer_configuracion_csmp(ruta: &Path) -> Result<Option<Contactos>, String> {
+        use std::io::Read;
+        let archivo = match std::fs::File::open(ruta) {
+            Ok(f) => f,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(_) => return Err("No se pudo leer la configuración de CSMP.".into()),
+        };
+        let mut raw = vec![];
+        archivo.take(16 * 1024 * 1024 + 1).read_to_end(&mut raw).map_err(|_| "No se pudo leer la configuración de CSMP.")?;
+        if raw.len() > 16 * 1024 * 1024 {
+            return Err("La configuración de CSMP supera 16 MiB.".into());
+        }
+        let v: serde_json::Value = serde_json::from_slice(&raw).map_err(|_| "La configuración de CSMP no contiene JSON válido.")?;
+        let mut c = Contactos::default();
+        for (nombre, correo) in v["contactos"].as_object().into_iter().flatten() {
+            let (nombre, correo) = (nombre.trim(), correo.as_str().unwrap_or("").trim());
+            if !nombre.is_empty() && !de_ejemplo(nombre, correo) && correos_validos(correo).is_ok() {
+                c.programas.insert(nombre.to_string(), correo.to_string());
+            }
+        }
+        for clave in TRIBUNALES {
+            let para: Vec<String> = v["correos"]["tribunales"][clave]["para"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|d| d.as_str())
+                .filter_map(|d| correos_validos(d).ok())
+                .flatten()
+                .collect();
+            if !para.is_empty() {
+                c.tribunales.insert(clave.to_string(), para.join("; "));
+            }
+        }
+        for (alias, destino) in v["aliases"].as_object().into_iter().flatten() {
+            if let Some(destino) = destino.as_str().filter(|d| !d.trim().is_empty()) {
+                if ALIASES_BASE.get(alias).map(String::as_str) != Some(destino) {
+                    c.aliases.insert(alias.clone(), destino.to_string());
+                }
+            }
+        }
+        c.cc_adicional = v["correos"]["cc_adicional"].as_str().unwrap_or("").trim().to_string();
+        c.firma = v["firma"].as_str().unwrap_or("").trim().to_string();
+        let tribunales = c.tribunales.values().any(|d| !d.is_empty());
+        Ok((!c.programas.is_empty() || tribunales).then_some(c))
+    }
+
+    fn leer_lista_csmp(ruta: &Path) -> Result<Option<Contactos>, String> {
         use std::io::Read;
         let archivo = match std::fs::File::open(ruta) {
             Ok(f) => f,
@@ -247,7 +318,8 @@ impl Contactos {
             return Err("El archivo de contactos de CSMP supera 2 MiB.".into());
         }
         let texto = String::from_utf8(raw).map_err(|_| "El archivo de contactos de CSMP no está en UTF-8.")?;
-        let lista = leer_lista_csmp(&texto)?;
+        let mut lista = leer_lista_csmp(&texto)?;
+        lista.retain(|n, c| !de_ejemplo(n, c));
         Ok((!lista.is_empty()).then(|| Contactos::desde_csmp(&lista)))
     }
 

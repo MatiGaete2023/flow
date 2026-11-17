@@ -93,3 +93,36 @@ fn alias_de_programa_como_resolve_contact() {
     assert!(c.aliases.is_empty());
     assert_eq!(c.de_programa("PRM Norte"), "");
 }
+
+#[test]
+fn configuracion_de_la_app_python_es_la_fuente_preferida() {
+    let dir = std::env::temp_dir().join(format!("flow-contactos-config-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let ruta = dir.join("configuracion.json");
+    // Solo el ejemplo ficticio de Python: no son contactos del usuario.
+    std::fs::write(
+        &ruta,
+        r#"{"version":1,"contactos":{"PRM EJEMPLO UNO":"prm.uno@example.invalid"},"correos":{"tribunales":{"LAJA":{"para":[]}}}}"#,
+    )
+    .unwrap();
+    assert_eq!(Contactos::leer_csmp(&ruta).unwrap(), None);
+    let texto = r#"{"version":1,"contactos":{"PRM Ficticio":"prm@example.invalid","Malo":"no-es-correo"},
+        "correos":{"tribunales":{"LAJA":{"para":["laja@example.invalid"]},"TOME":{"para":[]}},"cc_adicional":"cc@example.test"},
+        "aliases":{"PRM Alias Ficticio":"PRM Ficticio","DCE - KAMULAYAN":"DCE - KAMULYAN"},"firma":"Firma ficticia"}"#;
+    std::fs::write(&ruta, texto).unwrap();
+    let c = Contactos::leer_csmp(&ruta).unwrap().unwrap();
+    assert_eq!(c.programas, mapa(&[("PRM Ficticio", "prm@example.invalid")]));
+    assert_eq!(c.tribunales, mapa(&[("LAJA", "laja@example.invalid")]));
+    assert_eq!(c.aliases, mapa(&[("PRM Alias Ficticio", "PRM Ficticio")]), "los alias base no se duplican");
+    assert_eq!(c.de_programa("prm alias ficticio"), "prm@example.invalid");
+    assert_eq!((c.cc_adicional.as_str(), c.firma.as_str()), ("cc@example.test", "Firma ficticia"));
+    assert_eq!(std::fs::read_to_string(&ruta).unwrap(), texto, "no se modifica");
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn alias_base_igual_al_de_python() {
+    let leer = |r: &str| serde_json::from_str::<serde_json::Value>(&std::fs::read_to_string(r).unwrap()).unwrap();
+    let raiz = env!("CARGO_MANIFEST_DIR");
+    assert_eq!(leer(&format!("{raiz}/../../datos/aliases.json")), leer(&format!("{raiz}/../../../src/nurus/personal/aliases_base.json")));
+}

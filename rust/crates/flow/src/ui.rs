@@ -221,7 +221,7 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
 
 impl App {
     fn nueva(archivo: Option<PathBuf>, herramienta: Herramienta) -> Self {
-        let mut app = Self::con_origen(almacen::carpeta_datos(), archivo, correos::ruta_csmp());
+        let mut app = Self::con_origen(almacen::carpeta_datos(), archivo, &correos::rutas_csmp());
         app.usar_herramienta(herramienta);
         if herramienta == Herramienta::Descargador && app.mensaje.as_ref().is_some_and(|(_, m)| m == CONTACTOS_FALTAN) {
             app.mensaje = None;
@@ -240,11 +240,12 @@ impl App {
     /// Sin leer los contactos de CSMP del equipo (pruebas).
     #[cfg(test)]
     fn con_datos(datos: PathBuf, archivo: Option<PathBuf>) -> Self {
-        Self::con_origen(datos, archivo, None)
+        Self::con_origen(datos, archivo, &[])
     }
 
-    /// `csmp`: `contactos.json` del Asistente Python, que se lee (sin modificarlo) si Flow aún no tiene contactos.
-    fn con_origen(datos: PathBuf, archivo: Option<PathBuf>, csmp: Option<PathBuf>) -> Self {
+    /// `csmp`: archivos de contactos del Asistente Python (`correos::rutas_csmp`), que se leen (sin modificarlos) en
+    /// ese orden si Flow aún no tiene contactos.
+    fn con_origen(datos: PathBuf, archivo: Option<PathBuf>, csmp: &[PathBuf]) -> Self {
         let _ = std::fs::create_dir_all(&datos);
         almacen::aplicar_retencion(&datos, std::time::SystemTime::now());
         let ajustes = std::fs::read_to_string(ruta_ajustes(&datos)).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
@@ -255,12 +256,20 @@ impl App {
         let mut aviso_contactos = None;
         let mut contactos_csmp = None;
         if contactos_error.is_none() && sin_contactos(&contactos) {
-            match csmp.as_deref().map(Contactos::leer_csmp) {
-                Some(Ok(Some(mut c))) => {
-                    // Lo propio de Flow (CC adicional, firma, alias) se conserva.
-                    c.cc_adicional = contactos.cc_adicional.clone();
-                    c.firma = contactos.firma.clone();
-                    c.aliases = contactos.aliases.clone();
+            let leidos: Vec<(PathBuf, Result<Option<Contactos>, String>)> =
+                csmp.iter().map(|r| (r.clone(), Contactos::leer_csmp(r))).collect();
+            let hallado = leidos.iter().find_map(|(r, l)| l.as_ref().ok().cloned().flatten().map(|c| (r.clone(), c)));
+            let error = leidos.iter().find_map(|(_, l)| l.as_ref().err().cloned());
+            match (hallado, error) {
+                (Some((ruta, mut c)), _) => {
+                    // Lo propio de Flow (CC adicional, firma, alias) prevalece sobre lo de CSMP.
+                    if !contactos.cc_adicional.trim().is_empty() {
+                        c.cc_adicional = contactos.cc_adicional.clone();
+                    }
+                    if !contactos.firma.trim().is_empty() {
+                        c.firma = contactos.firma.clone();
+                    }
+                    c.aliases.extend(contactos.aliases.clone());
                     aviso_contactos = Some((
                         false,
                         format!(
@@ -270,10 +279,10 @@ impl App {
                         ),
                     ));
                     contactos = c;
-                    contactos_csmp = csmp.clone();
+                    contactos_csmp = Some(ruta);
                 }
-                Some(Err(e)) => aviso_contactos = Some((true, format!("{e} {CONTACTOS_FALTAN}"))),
-                _ => aviso_contactos = Some((false, CONTACTOS_FALTAN.to_string())),
+                (None, Some(e)) => aviso_contactos = Some((true, format!("{e} {CONTACTOS_FALTAN}"))),
+                (None, None) => aviso_contactos = Some((false, CONTACTOS_FALTAN.to_string())),
             }
         }
         let mut app = App {
@@ -1945,7 +1954,7 @@ mod pruebas_captura {
             br#"{"programas":{},"tribunales":{"LAJA":""},"cc_adicional":"","firma":"Firma ficticia"}"#,
         )
         .unwrap();
-        let mut app = App::con_origen(datos.clone(), None, Some(ruta_csmp.clone()));
+        let mut app = App::con_origen(datos.clone(), None, &[base.join("Prototipo").join("configuracion.json"), ruta_csmp.clone()]);
         assert_eq!(app.contactos_csmp.as_deref(), Some(ruta_csmp.as_path()));
         assert_eq!(app.contactos.de_programa("prm ficticio"), "prm@example.invalid");
         assert_eq!(app.contactos.tribunales["LAJA"], "laja@example.invalid");
@@ -1958,13 +1967,33 @@ mod pruebas_captura {
         app.contactos_csmp = None;
         eframe::App::on_exit(&mut app, None);
         std::fs::write(&ruta_csmp, r#"[{"Nombre":"Otro Ficticio","Mail":"otro@example.invalid"}]"#).unwrap();
-        let app = App::con_origen(datos.clone(), None, Some(ruta_csmp.clone()));
+        let app = App::con_origen(datos.clone(), None, &[ruta_csmp.clone()]);
         assert!(app.contactos_csmp.is_none());
         assert_eq!(app.contactos.programas.keys().collect::<Vec<_>>(), ["PRM Ficticio"]);
         // Sin contactos en ninguna parte: se avisa y los correos se preparan con el destinatario pendiente.
         let vacia = base.join("vacia");
-        let app = App::con_origen(vacia, None, Some(base.join("no-existe.json")));
+        let app = App::con_origen(vacia, None, &[base.join("no-existe.json")]);
         assert_eq!(app.mensaje.as_ref().unwrap().1, CONTACTOS_FALTAN);
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn sin_contactos_los_correos_se_preparan_y_quedan_con_destinatario_pendiente() {
+        let (base, _) = preparar();
+        let mut app = App::con_datos(base.join("datos"), None);
+        assert!(sin_contactos(&app.contactos));
+        app.corte = "08/10/2026".into();
+        app.cargar(base.join("consulta-001-p001-de-001.xls"));
+        let salida = base.join("salida");
+        std::fs::create_dir(&salida).unwrap();
+        app.ajustes.salida = Some(salida);
+        app.otra_modalidad = "modalidad ficticia".into();
+        app.preparar_borradores();
+        assert!(app.borradores.iter().any(|b| b.tipo.a_programa() && b.para.is_empty()), "{:?}", app.mensaje);
+        let guardar = |_: &Borrador| Ok(flow_outlook::Resultado::Guardado);
+        app.guardar_borradores_con(true, &guardar);
+        // Como `check_products` de Python: los que no tienen destinatario quedan pendientes («Completar destinatario»).
+        assert!(app.mensaje.as_ref().is_some_and(|(error, s)| *error && s.contains("falta destinatario")), "{:?}", app.mensaje);
         std::fs::remove_dir_all(base).unwrap();
     }
 

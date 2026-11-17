@@ -634,3 +634,10 @@ guardar el código de conexión, y cualquier escritura en RUS.
   la página 1 de otra («… Ficticio» con varias): si el nombre ya figura en `Resumen.archivos` (sin distinguir
   mayúsculas) se sigue contando el ordinal (diferencia con Python, que fallaría al escribir). Las pruebas de Meta 4
   usan ahora nombres con espacios del Descargador. Suite: 260 pruebas, 0 fallos.
+- 2026-11-17 · Asistente, contactos de Python en su fuente real: Python guarda lo editado en
+  `%LOCALAPPDATA%\CSMP_Personal_Prototipo_Integral\configuracion.json` (`contactos`, `correos.tribunales.*.para`,
+  `aliases`, `cc_adicional`, `firma`) y `CSMP_Personal\contactos.json` solo al importar; `correos::rutas_csmp` lee
+  primero la configuración y luego `contactos.json`, siempre en solo lectura y sin los contactos ficticios de
+  `contactos_ejemplo.json`. Prueba de UI: sin contactos los correos se preparan y al guardarlos quedan pendientes
+  por «falta destinatario» (como «Completar destinatario» de `check_products`). `rust/datos/aliases.json` se
+  compara con `aliases_base.json` en una prueba. Suite: 260 pruebas, 0 fallos.
