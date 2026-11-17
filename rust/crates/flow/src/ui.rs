@@ -1073,7 +1073,7 @@ impl App {
             return;
         };
         let mut cambiar = None;
-        crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {
+        crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {ui.horizontal_wrapped(|ui| {
             egui::ComboBox::from_id_salt("tablas_trabajo")
                 .selected_text(format!("{} ({})",trabajo.nombre(),trabajo.filas.len())).show_ui(ui,|ui|{
                     ui.label(format!("Actual: {} ({})",trabajo.nombre(),trabajo.filas.len()));
@@ -1099,9 +1099,9 @@ impl App {
             ] {
                 ui.selectable_value(&mut self.filtro, f, nombre);
             }
-            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar RIT, nombre, programa…").desired_width(190.0));
+            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar RIT, nombre, programa…").desired_width(230.0));
             if ui.button("Limpiar filtros").clicked(){self.filtro=Filtro::Todos;self.buscar.clear();}
-        });
+        });});
         if !trabajo.avisos.is_empty(){
             crate::paneles_ui::configuracion(ui,compacto,&format!("Avisos de fuente ({})",trabajo.avisos.len()),|ui|{
                 for aviso in &trabajo.avisos{ui.colored_label(crate::tema::AVISO,format!("⚠ {aviso}"));}

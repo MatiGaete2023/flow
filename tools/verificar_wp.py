@@ -3,7 +3,7 @@
 Uso:
     python tools/verificar_wp.py --linea-base
         Ejecuta todo y guarda docs/implementacion/linea_base.json.
-    python tools/verificar_wp.py [--lista-eliminadas ARCHIVO ...] [--salida archivo.json]
+    python tools/verificar_wp.py [--lista-eliminadas ARCHIVO [--lista-eliminadas ARCHIVO ...]] [--salida archivo.json]
         Ejecuta todo y compara con la línea base. Código de salida 1 si algún control FALLA.
         --lista-eliminadas: archivo con un nodeid de pytest por línea (p. ej.
         tests/test_x.py::test_y o descargador/test_z.py::Clase::test_w). Cada nodo debe estar

@@ -42,6 +42,7 @@ fn valor(f: &FilaRevision, nombres: &[&str]) -> String {
             .then(||v.as_str().map(str::to_owned).unwrap_or_else(||v.to_string()))
     }).unwrap_or_default()
 }
+fn registros(n: usize) -> String { if n==1 {"1 registro".into()} else {format!("{n} registros")} }
 fn combo(ui: &mut egui::Ui, id: &str, valor: &mut String, opciones: &[String]) {
     egui::ComboBox::from_id_salt(id).selected_text(if valor.is_empty() {"Todos"}else{valor.as_str()}).show_ui(ui,|ui| {
         ui.selectable_value(valor,String::new(),"Todos");
@@ -267,7 +268,7 @@ impl RevisionUi {
             }else{ui.label("Elige un registro de la tabla.");}
         };
         if compacto {if panel==2{editor(ui);}}else{
-            egui::TopBottomPanel::bottom(egui::Id::new(("revision_editor",self.distribucion))).resizable(true).default_height(190.0).min_height(100.0).show_inside(ui,&mut editor);
+            egui::TopBottomPanel::bottom(egui::Id::new(("revision_editor",self.distribucion))).resizable(true).default_height(150.0).min_height(100.0).show_inside(ui,&mut editor);
         }
         let mut evidencia=|ui:&mut egui::Ui|{
             egui::ScrollArea::vertical().id_salt("revision_evidencia_scroll").show(ui,|ui|{
@@ -345,7 +346,8 @@ impl RevisionUi {
     fn acciones(&mut self,ui:&mut egui::Ui,ctx:&egui::Context,config:&Config,ocupada:bool,obsoleto:bool,n:usize,aplicado:bool){
         ui.add_enabled_ui(!ocupada && !obsoleto,|ui|{
             ui.horizontal_wrapped(|ui|{
-                if ui.add_enabled(n>0 && !aplicado,egui::Button::new(format!("Aplicar motor a {n} registros sin observación"))).on_hover_text("Conserva el conjunto completo para duplicidades y acumulados. No crea correos ni resoluciones.").clicked(){self.motor(config,ctx);}
+                let rotulo=if aplicado{format!("Motor aplicado a {}",registros(n))}else{format!("Aplicar motor a {} sin observación",registros(n))};
+                if ui.add_enabled(n>0 && !aplicado,egui::Button::new(rotulo)).on_hover_text("Conserva el conjunto completo para duplicidades y acumulados. No crea correos ni resoluciones.").clicked(){self.motor(config,ctx);}
                 ui.selectable_value(&mut self.exportar_todos,false,format!("Seleccionados ({})",self.seleccion.len()));
                 ui.selectable_value(&mut self.exportar_todos,true,"Todos los clasificados");
                 if ui.add_enabled(self.exportar_todos || !self.seleccion.is_empty(),egui::Button::new("Exportar listado…")).clicked(){self.exportar(ctx);}
@@ -361,7 +363,7 @@ impl RevisionUi {
             egui::ComboBox::from_id_salt("revision_revisada").selected_text(["Toda revisión","Pendientes","Revisadas"][self.estado_revision as usize]).show_ui(ui,|ui|{
                 for (v,n) in [(0,"Toda revisión"),(1,"Pendientes"),(2,"Revisadas")] {ui.selectable_value(&mut self.estado_revision,v,n);}
             });
-            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar causa, nombre o programa…").desired_width(220.0));
+            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar causa, nombre o programa…").desired_width(260.0));
             if ui.button("Limpiar filtros").clicked(){self.buscar.clear();self.tribunal.clear();self.programa.clear();self.etapa.clear();self.estado_revision=0;}
         });
     }
@@ -433,6 +435,10 @@ mod tests {
         assert!(revision.receptor.is_none());
         assert_eq!(revision.seleccion,BTreeSet::from([0,1]));assert_eq!(revision.activa,Some(1));
         assert!(revision.informe.as_ref().unwrap().motor_aplicado,"El mismo criterio no descarta propuestas");
+    }
+    #[test]
+    fn rotulo_de_registros_concuerda_en_numero() {
+        assert_eq!(registros(1),"1 registro");assert_eq!(registros(0),"0 registros");assert_eq!(registros(3),"3 registros");
     }
     #[test]
     fn criterio_obsoleto_no_copia_al_portapapeles() {
