@@ -8,8 +8,10 @@
 - Las DLL de Mesa no se incorporan al producto, no se instalan globalmente y no
   modifican archivos del sistema. Se verifica el SHA-256 del archivo antes de extraerlo.
 
-Runtime de prueba fijado: mesa-dist-win 26.2.7 release MSVC x64.
-SHA-256: e61153fb1a8e58b9d80b403030cda619eaffbddd9ff99b34163b996ead03d596.
+Runtime de prueba fijado: mesa-dist-win 26.2.7 release MinGW x64.
+SHA-256: 19c74aad7b09e682473b8de4c35b47e6498de97b71cae5511a231b8eb02f2b22.
+El paquete MSVC de esa versión no incluye OpenGL por un fallo de compilación
+documentado en la publicación del mantenedor. El workaround oficial es MinGW x64.
 
 Fuentes de la dependencia de pruebas:
 

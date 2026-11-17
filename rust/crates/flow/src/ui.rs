@@ -1300,6 +1300,11 @@ impl App {
             ui.label("Primero abre un Excel en Trabajo.");
             return;
         };
+        let compacto=ui.available_width()<1000.0||ui.available_height()<480.0;
+        let mut preparar = false;
+        let mut preparar_tipo = None;
+        let mut guardar = None;
+        crate::paneles_ui::configuracion(ui,compacto,"Preparación y alcance de Correos",|ui|{
         ui.label(RichText::new("Modalidades comprendidas en la revisión (para los correos al tribunal)").strong());
         ui.horizontal_wrapped(|ui| {
             for (nombre, marcada) in &mut self.modalidades {
@@ -1307,9 +1312,6 @@ impl App {
             }
             ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra modalidad (texto libre)").desired_width(210.0)).on_hover_text("Cambia el alcance de modalidades al preparar; no filtra la tabla.");
         });
-        let mut preparar = false;
-        let mut preparar_tipo = None;
-        let mut guardar = None;
         ui.horizontal_wrapped(|ui| {
             ui.label("Preparar un tipo:");
             egui::ComboBox::from_id_salt("tipo_correo").selected_text(self.tipo_elegido.titulo(etapa)).show_ui(ui, |ui| {
@@ -1333,8 +1335,13 @@ impl App {
             .checkbox(&mut self.manual, format!("Solo filas seleccionadas en Trabajo ({marcadas})"))
             .on_hover_text("Marca las filas en la primera columna de Trabajo")
             .changed();
+        });
+        if compacto {
+            ui.small(format!("Alcance: {} · {}",if self.otra_modalidad.trim().is_empty(){format!("{} modalidades",self.modalidades.iter().filter(|(_,v)|*v).count())}else{"modalidad en texto libre".into()},
+                if self.manual{format!("{} filas seleccionadas",self.marcadas.len())}else{"trabajo completo".into()}));
+        }
         let obsoletos = self.borradores_obsoletos();
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui.button("Preparar borradores").on_hover_text("Todos los que surgen del trabajo, como «Preparar todos»").clicked() {
                 preparar = true;
             }
@@ -1373,39 +1380,6 @@ impl App {
                     if faltan.is_empty() { String::new() } else { format!(" — falta {}", faltan.join(", ")) }
                 );
                 egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).default_open(true).show(ui, |ui| {
-                    let mut editado = false;
-                    // Las ediciones y omisiones quedan en la sesión (`session.py::capture`).
-                    self.sin_guardar |= ui.checkbox(&mut b.omitido, "Excluir este borrador").changed();
-                    egui::Grid::new(("campos", i)).num_columns(2).show(ui, |ui| {
-                        ui.label("Para");
-                        editado |= ui
-                            .add(egui::TextEdit::singleline(&mut b.para).desired_width(520.0).hint_text("correo del destinatario"))
-                            .changed();
-                        ui.end_row();
-                        ui.label("CC");
-                        ui.label(&b.cc).on_hover_text("El CC fijo va en todos los correos y no se puede quitar.");
-                        ui.end_row();
-                        ui.label("Asunto");
-                        editado |= ui.add(egui::TextEdit::singleline(&mut b.asunto).desired_width(520.0)).changed();
-                        ui.end_row();
-                    });
-                    editado |= ui.add(egui::TextEdit::multiline(&mut b.cuerpo).desired_width(f32::INFINITY).desired_rows(6)).changed();
-                    if editado {
-                        self.estados_borradores.remove(&i);
-                        self.sin_guardar = true;
-                    }
-                    if ui.small_button("Consultar recibo local de Outlook").clicked() {
-                        match crate::borradores::estado(&self.datos, b) {
-                            Ok(Some(e)) => {
-                                self.estados_borradores.insert(i, e);
-                            }
-                            Ok(None) => {
-                                self.estados_borradores.remove(&i);
-                                aviso_recibo = Some(Ok("Sin guardado previo de este borrador.".into()));
-                            }
-                            Err(e) => aviso_recibo = Some(Err(e)),
-                        }
-                    }
                     if let Some(estado) = self.estados_borradores.get(&i).copied() {
                         match estado {
                             crate::borradores::Estado::Guardado => {
@@ -1439,6 +1413,39 @@ impl App {
                                     }
                                 }
                             }
+                        }
+                    }
+                    let mut editado = false;
+                    // Las ediciones y omisiones quedan en la sesión (`session.py::capture`).
+                    self.sin_guardar |= ui.checkbox(&mut b.omitido, "Excluir este borrador").changed();
+                    egui::Grid::new(("campos", i)).num_columns(2).show(ui, |ui| {
+                        ui.label("Para");
+                        editado |= ui
+                            .add(egui::TextEdit::singleline(&mut b.para).desired_width(520.0).hint_text("correo del destinatario"))
+                            .changed();
+                        ui.end_row();
+                        ui.label("CC");
+                        ui.label(&b.cc).on_hover_text("El CC fijo va en todos los correos y no se puede quitar.");
+                        ui.end_row();
+                        ui.label("Asunto");
+                        editado |= ui.add(egui::TextEdit::singleline(&mut b.asunto).desired_width(520.0)).changed();
+                        ui.end_row();
+                    });
+                    editado |= ui.add(egui::TextEdit::multiline(&mut b.cuerpo).desired_width(f32::INFINITY).desired_rows(6)).changed();
+                    if editado {
+                        self.estados_borradores.remove(&i);
+                        self.sin_guardar = true;
+                    }
+                    if ui.small_button("Consultar recibo local de Outlook").clicked() {
+                        match crate::borradores::estado(&self.datos, b) {
+                            Ok(Some(e)) => {
+                                self.estados_borradores.insert(i, e);
+                            }
+                            Ok(None) => {
+                                self.estados_borradores.remove(&i);
+                                aviso_recibo = Some(Ok("Sin guardado previo de este borrador.".into()));
+                            }
+                            Err(e) => aviso_recibo = Some(Err(e)),
                         }
                     }
                     for adjunto in &b.adjuntos {
@@ -2113,6 +2120,30 @@ mod pruebas_captura {
         app.atajo_guardar(true);
         assert!(!salida.exists());
         assert!(app.carpeta.is_none());
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn correos_compactos_muestran_incertidumbre_antes_del_editor() {
+        let (base, _) = preparar();
+        let mut app = App::con_datos(base.join("datos"), None);
+        app.corte="08/10/2026".into();app.cargar(base.join("consulta-001-p001-de-001.xls"));
+        let salida=base.join("salida");std::fs::create_dir(&salida).unwrap();app.ajustes.salida=Some(salida);
+        app.otra_modalidad="modalidad ficticia".into();app.preparar_borradores();
+        assert!(!app.borradores.is_empty());
+        app.estados_borradores.insert(0,crate::borradores::Estado::Incierto);app.correo_activo=Some(0);
+        let ctx=egui::Context::default();crate::tema::aplicar(&ctx);
+        let mut pintar=||ctx.run(egui::RawInput{screen_rect:Some(egui::Rect::from_min_size(egui::Pos2::ZERO,egui::vec2(683.0,384.0))),..Default::default()},|ctx|{
+            egui::CentralPanel::default().show(ctx,|ui|app.vista_correos(ui));
+        });
+        let _=pintar();let salida=pintar();
+        for texto in ["Guardado incierto:","Comprobé que está en Outlook","Comprobé que no está; permitir reintento"] {
+            let posicion=salida.shapes.iter().find_map(|s|match &s.shape{
+                egui::epaint::Shape::Text(t) if t.galley.job.text.starts_with(texto)=>Some(t.pos),_=>None
+            }).unwrap_or_else(||panic!("Control de recuperación no visible: {texto}"));
+            assert!(posicion.y<384.0,"Control fuera del área visible: {texto}");
+        }
+        assert_eq!(app.estados_borradores.get(&0),Some(&crate::borradores::Estado::Incierto));
         std::fs::remove_dir_all(base).unwrap();
     }
 

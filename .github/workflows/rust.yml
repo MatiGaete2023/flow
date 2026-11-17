@@ -82,9 +82,9 @@ jobs:
         run: |
           $mesaRoot = Join-Path $env:RUNNER_TEMP 'mesa-flow-d'
           $mesaArchive = Join-Path $env:RUNNER_TEMP 'mesa-flow-d.7z'
-          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.7/mesa3d-26.2.7-release-msvc.7z' -OutFile $mesaArchive
+          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.7/mesa3d-26.2.7-release-mingw.7z' -OutFile $mesaArchive
           $digest = (Get-FileHash -LiteralPath $mesaArchive -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($digest -ne 'e61153fb1a8e58b9d80b403030cda619eaffbddd9ff99b34163b996ead03d596') { throw 'Huella Mesa inesperada' }
+          if ($digest -ne '19c74aad7b09e682473b8de4c35b47e6498de97b71cae5511a231b8eb02f2b22') { throw 'Huella Mesa inesperada' }
           & 7z l $mesaArchive
           & 7z x $mesaArchive "-o$mesaRoot" -y
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar Mesa' }

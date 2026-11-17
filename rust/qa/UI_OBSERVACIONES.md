@@ -30,3 +30,22 @@ Observar correcciones en capturas nuevas, resto de pantallas/escalas, estados no
 de Revisión de bitácoras, teclado/foco, errores/diálogos, y contraste en sus estados.
 No afirmar aceptación ni prueba de Outlook/captura real a partir de esta evidencia.
 
+## Observación de 9f4e01b
+
+Linux pasa303pruebasRust y168capturas reales:20escenarios más teclado,2resoluciones
+y4escalas. Se observaron los mosaicos100/200% de ambas resoluciones y ampliaciones
+de Revisión inicial, Propuesta, borrador incierto y proyecto obsoleto al200%.
+Los mosaicos permiten inspeccionar distribución; no equivalen a leer todos los textos.
+Revisión inicial muestra fechas y Analizar; Propuesta deja Revisada y texto legibles.
+Proyecto obsoleto conserva su estado y valores con scroll.
+
+La captura de Correos al200% aún dejaba el editor bajo todas las opciones. Corrección:
+agrupa preparación/modalidades/alcance en bloque contextual compacto con resumen
+siempre visible, y mueve estado/recuperación Outlook antes de los campos del editor.
+Se añade prueba egui de los tres controles de incertidumbre visibles a683×384.
+Falta observar la captura integrada de este correctivo.
+
+Windows9f pasa tests/release/CLI, pero MesaMSVC26.2.7 no contieneOpenGL. La publicación
+del mantenedor confirma el defecto y recomienda MinGWx64; se cambia la dependencia
+de pruebas con SHA fijado. Esto no modifica el ejecutable ni distribuye el runtime.
+
