@@ -171,30 +171,20 @@ impl RevisionUi {
     pub fn mostrar(&mut self, ui: &mut egui::Ui, ctx: &egui::Context, config: &Config) {
         self.recibir();let ocupada=self.receptor.is_some();let obsoleto=self.obsoleto();
         let compacto=ui.available_width()<1000.0||ui.available_height()<480.0;
-        if compacto {ui.strong("Revisión de bitácoras");}else{
+        if !compacto {
             ui.heading("Revisión de bitácoras");
             ui.label("Sin observación del centro en el período verificable; las reglas generan propuestas para revisión humana.");
         }
         ui.horizontal_wrapped(|ui|{
-            if compacto {for (p,n) in [(0,"Lista"),(1,"Evidencia"),(2,"Propuesta")]{ui.selectable_value(&mut self.panel,p,n);}}
+            if compacto {for (p,n) in [(0,"Lista"),(1,"Evidencia"),(2,"Propuesta"),(3,"Configurar")]{ui.selectable_value(&mut self.panel,p,n);}}
             if ui.button("Restaurar distribución").clicked(){self.distribucion=self.distribucion.wrapping_add(1);self.panel=0;}
         });
         let panel=self.panel;
-        crate::paneles_ui::configuracion(ui,compacto&&self.datos.is_some(),"Paquete, período y corte",|ui|{
-        ui.add_enabled_ui(!ocupada,|ui|{
-            ui.horizontal_wrapped(|ui|{
-                if ui.button("Abrir paquete…").clicked(){if let Some(path)=rfd::FileDialog::new().add_filter("Paquete CSMP",&["zip"]).pick_file(){self.solicitar(Accion::Abrir(path),ctx);}}
-                for (nombre,valor) in [("Desde",&mut self.desde),("Hasta",&mut self.hasta),("Corte",&mut self.corte)] {
-                    ui.label(nombre);ui.add(egui::TextEdit::singleline(valor).desired_width(100.0));
-                }
-                if ui.add_enabled(self.datos.is_some(),egui::Button::new("Analizar bitácoras")).clicked(){self.solicitar(Accion::Analizar,ctx);}
-            });
-        });
-        });
+        if !compacto||self.datos.is_none(){self.criterios(ui,ctx,ocupada);}
         if let Some(p)=&self.archivo {ui.small(if compacto{p.file_name().unwrap_or_default().to_string_lossy().into_owned()}else{p.display().to_string()}).on_hover_text(p.display().to_string());}
         if obsoleto {ui.colored_label(ui.visuals().warn_fg_color,"⚠ Cambió el criterio: vuelve a analizar para aplicar reglas o exportar.");}
         if ocupada {ui.horizontal(|ui|{ui.spinner();if ui.button("Cancelar").clicked(){self.cancelar.store(true,Ordering::Relaxed);self.mensaje="Cancelando al terminar la operación actual…".into();}});}
-        ui.label(&self.mensaje);
+        if compacto{ui.small(&self.mensaje);}else{ui.label(&self.mensaje);}
         if let Some(path)=&self.resultado {if ui.button("Abrir resultados").clicked(){crate::ui::abrir_en_sistema(path);}}
         let Some(informe)=self.informe.as_ref()else{self.confirmacion(ctx);return};
         let conteos=informe.conteos();let n=conteos[0];let aplicado=informe.motor_aplicado;
@@ -210,28 +200,16 @@ impl RevisionUi {
                 for (clase,cantidad) in clases{ui.selectable_value(&mut self.clase,clase,format!("{} ({cantidad})",revision::etiqueta(clase)));}
             }
         });
-        crate::paneles_ui::configuracion(ui,compacto,"Aplicar reglas y exportar",|ui|{
-        ui.add_enabled_ui(!ocupada && !obsoleto,|ui|{
-            ui.horizontal_wrapped(|ui|{
-                if ui.add_enabled(n>0 && !aplicado,egui::Button::new(format!("Aplicar motor a {n} registros sin observación"))).on_hover_text("Conserva el conjunto completo para duplicidades y acumulados. No crea correos ni resoluciones.").clicked(){self.motor(config,ctx);}
-                ui.selectable_value(&mut self.exportar_todos,false,format!("Seleccionados ({})",self.seleccion.len()));
-                ui.selectable_value(&mut self.exportar_todos,true,"Todos los clasificados");
-                if ui.add_enabled(self.exportar_todos || !self.seleccion.is_empty(),egui::Button::new("Exportar listado…")).clicked(){self.exportar(ctx);}
+        if !compacto{self.acciones(ui,ctx,config,ocupada,obsoleto,n,aplicado);}
+        if !compacto{self.filtros(ui);}
+        if compacto&&panel==3 {
+            egui::ScrollArea::vertical().id_salt("revision_configuracion").show(ui,|ui|{
+                self.criterios(ui,ctx,ocupada);
+                ui.separator();self.acciones(ui,ctx,config,ocupada,obsoleto,n,aplicado);
+                ui.separator();self.filtros(ui);
             });
-        });
-        });
-        crate::paneles_ui::configuracion(ui,compacto,"Filtros del listado",|ui|{
-        ui.horizontal_wrapped(|ui|{
-            ui.label("Tribunal");combo(ui,"revision_tribunal",&mut self.tribunal,&self.tribunales);
-            ui.label("Programa");combo(ui,"revision_programa",&mut self.programa,&self.programas);
-            ui.label("Etapa");combo(ui,"revision_etapa",&mut self.etapa,&["ESPERA".into(),"CUMPLIMIENTO".into(),"INFORMES".into(),"EGRESADOS".into()]);
-            egui::ComboBox::from_id_salt("revision_revisada").selected_text(["Toda revisión","Pendientes","Revisadas"][self.estado_revision as usize]).show_ui(ui,|ui|{
-                for (v,n) in [(0,"Toda revisión"),(1,"Pendientes"),(2,"Revisadas")] {ui.selectable_value(&mut self.estado_revision,v,n);}
-            });
-            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar causa, nombre o programa…").desired_width(220.0));
-            if ui.button("Limpiar filtros").clicked(){self.buscar.clear();self.tribunal.clear();self.programa.clear();self.etapa.clear();self.estado_revision=0;}
-        });
-        });
+            self.confirmacion(ctx);return;
+        }
         let informe=self.informe.as_mut().unwrap();
         let buscar=self.buscar.to_lowercase();
         let visibles=informe.filas.iter().enumerate().filter(|(i,f)|f.revision.clasificacion==self.clase &&
@@ -239,7 +217,7 @@ impl RevisionUi {
             (self.programa.is_empty()||valor(f,&["PROGRAMA","NOMBRE PROGRAMA"])==self.programa)&&
             (self.estado_revision==0||(self.estado_revision==2)==f.revisada)&&self.busquedas[*i].contains(&buscar)).map(|(i,_)|i).collect::<Vec<_>>();
         ui.horizontal_wrapped(|ui|{
-            ui.label(format!("{} visibles · {} seleccionados (también pueden estar ocultos)",visibles.len(),self.seleccion.len()));
+            ui.label(if compacto{format!("{} visibles · {} seleccionados",visibles.len(),self.seleccion.len())}else{format!("{} visibles · {} seleccionados (también pueden estar ocultos)",visibles.len(),self.seleccion.len())});
             if ui.button("Siguiente pendiente").clicked(){
                 self.activa=visibles.iter().copied().filter(|&i|!informe.filas[i].revisada).find(|i|self.activa.is_none_or(|a|*i>a))
                     .or_else(||visibles.iter().copied().find(|&i|!informe.filas[i].revisada));
@@ -334,6 +312,41 @@ impl RevisionUi {
         if let Some((i,revisada))=revision_cambio{self.marcar_revisada(i,revisada);}
         self.confirmacion(ctx);
     }
+    fn criterios(&mut self,ui:&mut egui::Ui,ctx:&egui::Context,ocupada:bool){
+        ui.add_enabled_ui(!ocupada,|ui|{
+            ui.horizontal_wrapped(|ui|{
+                if ui.button("Abrir paquete…").clicked(){if let Some(path)=rfd::FileDialog::new().add_filter("Paquete CSMP",&["zip"]).pick_file(){self.solicitar(Accion::Abrir(path),ctx);}}
+                for (nombre,valor) in [("Desde",&mut self.desde),("Hasta",&mut self.hasta),("Corte",&mut self.corte)] {
+                    ui.label(nombre);ui.add(egui::TextEdit::singleline(valor).desired_width(100.0));
+                }
+                if ui.add_enabled(self.datos.is_some(),egui::Button::new("Analizar bitácoras")).clicked(){self.solicitar(Accion::Analizar,ctx);}
+            });
+        });
+    }
+
+    fn acciones(&mut self,ui:&mut egui::Ui,ctx:&egui::Context,config:&Config,ocupada:bool,obsoleto:bool,n:usize,aplicado:bool){
+        ui.add_enabled_ui(!ocupada && !obsoleto,|ui|{
+            ui.horizontal_wrapped(|ui|{
+                if ui.add_enabled(n>0 && !aplicado,egui::Button::new(format!("Aplicar motor a {n} registros sin observación"))).on_hover_text("Conserva el conjunto completo para duplicidades y acumulados. No crea correos ni resoluciones.").clicked(){self.motor(config,ctx);}
+                ui.selectable_value(&mut self.exportar_todos,false,format!("Seleccionados ({})",self.seleccion.len()));
+                ui.selectable_value(&mut self.exportar_todos,true,"Todos los clasificados");
+                if ui.add_enabled(self.exportar_todos || !self.seleccion.is_empty(),egui::Button::new("Exportar listado…")).clicked(){self.exportar(ctx);}
+            });
+        });
+    }
+
+    fn filtros(&mut self,ui:&mut egui::Ui){
+        ui.horizontal_wrapped(|ui|{
+            ui.label("Tribunal");combo(ui,"revision_tribunal",&mut self.tribunal,&self.tribunales);
+            ui.label("Programa");combo(ui,"revision_programa",&mut self.programa,&self.programas);
+            ui.label("Etapa");combo(ui,"revision_etapa",&mut self.etapa,&["ESPERA".into(),"CUMPLIMIENTO".into(),"INFORMES".into(),"EGRESADOS".into()]);
+            egui::ComboBox::from_id_salt("revision_revisada").selected_text(["Toda revisión","Pendientes","Revisadas"][self.estado_revision as usize]).show_ui(ui,|ui|{
+                for (v,n) in [(0,"Toda revisión"),(1,"Pendientes"),(2,"Revisadas")] {ui.selectable_value(&mut self.estado_revision,v,n);}
+            });
+            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar causa, nombre o programa…").desired_width(220.0));
+            if ui.button("Limpiar filtros").clicked(){self.buscar.clear();self.tribunal.clear();self.programa.clear();self.etapa.clear();self.estado_revision=0;}
+        });
+    }
     fn confirmacion(&mut self, ctx: &egui::Context) {
         if self.confirmar.is_none(){return}let mut ejecutar=None;
         egui::Window::new("Descartar revisión actual").collapsible(false).resizable(false).show(ctx,|ui|{
@@ -399,6 +412,8 @@ mod tests {
         assert!(ui.informe.as_ref().unwrap().filas[0].revisada);
     }
 }
+
+
 
 
 

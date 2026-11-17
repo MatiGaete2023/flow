@@ -77,8 +77,29 @@ jobs:
         run: |
           & ./target/release/flow.exe ayuda | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "flow.exe no inició correctamente en Windows" }
+      - name: Preparar OpenGL de software para el servidor de pruebas
+        shell: pwsh
+        run: |
+          $mesaRoot = Join-Path $env:RUNNER_TEMP 'mesa-flow-d'
+          $mesaArchive = Join-Path $env:RUNNER_TEMP 'mesa-flow-d.7z'
+          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.7/mesa3d-26.2.7-release-msvc.7z' -OutFile $mesaArchive
+          $digest = (Get-FileHash -LiteralPath $mesaArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($digest -ne 'e61153fb1a8e58b9d80b403030cda619eaffbddd9ff99b34163b996ead03d596') { throw 'Huella Mesa inesperada' }
+          & 7z x $mesaArchive "-o$mesaRoot" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar Mesa' }
+          $opengl = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -File -Filter opengl32.dll | Where-Object FullName -Match '[\\/]x64[\\/]')
+          if ($opengl.Count -ne 1) { throw 'No hay un único runtime OpenGL x64' }
+          New-Item -ItemType Directory -Path ui-runtime | Out-Null
+          Get-ChildItem -LiteralPath $opengl[0].DirectoryName -File -Filter '*.dll' | Copy-Item -Destination ui-runtime
+          Copy-Item -LiteralPath target/release/flow.exe -Destination ui-runtime/flow.exe
+          New-Item -ItemType File -Path ui-runtime/flow.exe.local | Out-Null
+          if ((Get-FileHash ui-runtime/flow.exe).Hash -ne (Get-FileHash target/release/flow.exe).Hash) { throw 'El binario visual difiere del candidato' }
+          Write-Output "Runtime de prueba Mesa 26.2.7 verificado: $digest"
       - name: Capturar interfaz Windows con datos ficticios
-        run: python pruebas/ui_evidencia.py --exe target/release/flow.exe --salida evidencia-ui-windows --completa
+        env:
+          GALLIUM_DRIVER: llvmpipe
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: python pruebas/ui_evidencia.py --exe ui-runtime/flow.exe --salida evidencia-ui-windows --completa
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -153,12 +174,18 @@ jobs:
           python -m pip install --no-deps --no-build-isolation .
           python -m pip check
       - name: Ejecutar verificar_wp sin regenerar línea base ni golden
-        run: python tools/verificar_wp.py --salida docs/implementacion/verificacion/FLOW_D.json
+        run: python rust/pruebas/verificar_base_plan.py
+      - name: Conservar detalle estructurado del verificador
+        if: always()
+        run: |
+          if [ -f docs/implementacion/verificacion/FLOW_D.json ]; then
+            cat docs/implementacion/verificacion/FLOW_D.json
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Flow_D_Verificacion_Plan
-          path: docs/implementacion/verificacion/FLOW_D.json
+          path: ${{ runner.temp }}/flow-d-verificacion/
           retention-days: 14
 
 
