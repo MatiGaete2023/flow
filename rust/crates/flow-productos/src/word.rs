@@ -351,13 +351,25 @@ fn valores_de(trabajo: &Trabajo, fila: &FilaTrabajo, hoy: Fecha) -> BTreeMap<Str
     }
     v.insert("FECHA".into(), fecha_en_palabras(hoy));
     v.insert("FECHA_RESOLUCION".into(), fila.registro.fecha("resolucion").map(fecha_en_palabras).unwrap_or_default());
-    let duraciones: Vec<String> = trabajo
+    let mut duraciones: Vec<String> = trabajo
         .cabeceras
         .iter()
         .enumerate()
-        .filter(|(_, c)| matches!(normalizar_columna(c).trim(), "duracion" | "plazo" | "vigencia"))
+        .filter(|(_, c)| flow_trabajo::controles::columna_duracion(c))
         .filter_map(|(i, _)| fila.celdas.get(i).map(|c| c.texto().trim().to_string()))
         .collect();
+    // Paquete Captura_CSMP.zip: la tabla del motor no trae la columna; se toma del registro (diferencia deliberada
+    // con `capture_input.py`, que la descarta y deja DURACION vacía).
+    if duraciones.is_empty() {
+        if let Some(o) = &fila.origen {
+            duraciones = o
+                .columnas_word
+                .iter()
+                .filter(|(k, _)| flow_trabajo::controles::columna_duracion(k))
+                .map(|(_, c)| c.texto().trim().to_string())
+                .collect();
+        }
+    }
     v.insert("DURACION".into(), if duraciones.len() == 1 { duraciones[0].clone() } else { String::new() });
     v.insert("NOMENCLATURA".into(), nomenclatura(fila).to_string());
     v

@@ -327,6 +327,12 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
             pantalla: pantalla.into(),
             verificada: verificada(r),
             valores: if etapa_de(tipo).is_none() { columnas_fila.iter().cloned().collect() } else { Default::default() },
+            // Las tablas del motor solo llevan columnas canónicas; DURACION se guarda aparte para los valores Word.
+            columnas_word: if etapa_de(tipo).is_some() {
+                columnas_fila.iter().filter(|(k, _)| crate::controles::columna_duracion(k)).cloned().collect()
+            } else {
+                Default::default()
+            },
         };
         contexto.origenes.insert(id.clone(), origen);
 

@@ -207,6 +207,7 @@ pub fn importar(carpeta: &Path, resumen: &Resumen, corte: Fecha, config: &Config
                 pantalla: seleccion.screen.clone(),
                 verificada: false,
                 valores: Default::default(),
+                columnas_word: Default::default(),
             };
             if !origen.tradicional() {
                 origen.valores = tabla.cabeceras.iter().cloned().zip(fila.celdas.iter().cloned()).collect();

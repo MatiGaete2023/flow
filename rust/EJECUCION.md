@@ -598,3 +598,16 @@ guardar el código de conexión, y cualquier escritura en RUS.
   bases no distingue mayúsculas (Windows) y un nombre reservado de Windows recibe el prefijo «Consulta ». El ZIP del
   calendario regenerado (nombres nuevos y anteriores mezclados) pasa `read_capture`/`import_capture` de Python.
   Suite: 246 pruebas, 0 fallos.
+- 2026-11-17 · Asistente, DURACION de «pide cuenta» por todas las vías: el fallo estaba solo en `Captura_CSMP.zip`.
+  `paquete.rs` arma las tablas del motor con las columnas canónicas (como `capture_input.py`, que lleva a
+  `row.values` solo lo que mapea `columns.py`) y la columna DURACIÓN del registro se perdía; `word.rs::valores_de`
+  la buscaba en `cabeceras`. Comprobado con el Python de referencia: el mismo ZIP con DURACIÓN en `raw_json` y
+  `normalized_json` da DURACION vacía también en `import_capture` + `word_values` (FECHA_RESOLUCION sí sale), y el
+  consolidado XLSX solo sirve de base de la copia Excel (`work._consolidated_base`), no de valores. Diferencia
+  deliberada pedida por el usuario: `controles::Origen.columnas_word` guarda del registro del paquete las columnas
+  «duracion»/«plazo»/«vigencia» (`controles::columna_duracion`, normalizadas) y `valores_de` las usa cuando la tabla
+  no trae la columna; la regla es la de `word_values` (exactamente una, si no vacía) y el texto el mismo del Excel
+  directo. La tabla del motor y el Excel de salida no cambian. Pruebas `flow-productos/tests/duracion.rs`: Excel RUS
+  golden, XLS de SITFA HTML (DURACIÓN, Duracion, PLAZO, Vigencia, dos columnas) y XML 2003 con número 6 → «6», lote
+  del Descargador («Llevar a Trabajo») y su ZIP: DURACION «6», «6 meses» y vacía, y FECHA_RESOLUCION «uno de agosto
+  de dos mil veintiséis» iguales en todas. Suite: 249 pruebas, 0 fallos.

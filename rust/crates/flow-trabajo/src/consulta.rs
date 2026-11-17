@@ -36,6 +36,7 @@ pub fn analizar(libro: &Libro, tipo: &str, corte: Fecha, config: &Config) -> Res
                 pantalla: if tipo == "BUSQUEDA_LITIGANTES" { "litigantes" } else { "seguimiento" }.into(),
                 verificada: false,
                 valores: tabla.cabeceras.iter().cloned().zip(fila.celdas.iter().cloned()).collect(),
+                columnas_word: Default::default(),
             },
         );
     }

@@ -18,6 +18,15 @@ pub struct Origen {
     pub verificada: bool,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub valores: BTreeMap<String, Celda>,
+    /// Columnas del registro de un paquete que el motor no mapea pero usan los valores Word (DURACION: columnas
+    /// «duracion», «plazo» o «vigencia»). Diferencia deliberada con `capture_input.py`, que solo conserva las mapeadas.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub columnas_word: BTreeMap<String, Celda>,
+}
+
+/// Columna de duración para los valores Word (`outputs.py::word_values`).
+pub fn columna_duracion(cabecera: &str) -> bool {
+    matches!(flow_dominio::texto::normalizar_columna(cabecera).trim(), "duracion" | "plazo" | "vigencia")
 }
 impl Origen {
     pub fn clave(&self) -> Option<[String; 4]> {
