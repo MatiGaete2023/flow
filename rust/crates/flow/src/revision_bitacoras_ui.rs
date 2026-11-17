@@ -42,7 +42,8 @@ fn valor(f: &FilaRevision, nombres: &[&str]) -> String {
             .then(||v.as_str().map(str::to_owned).unwrap_or_else(||v.to_string()))
     }).unwrap_or_default()
 }
-fn registros(n: usize) -> String { if n==1 {"1 registro".into()} else {format!("{n} registros")} }
+fn contar(n: usize, singular: &str, plural: &str) -> String { format!("{n} {}", if n==1 {singular} else {plural}) }
+fn registros(n: usize) -> String { contar(n,"registro","registros") }
 fn combo(ui: &mut egui::Ui, id: &str, valor: &mut String, opciones: &[String]) {
     egui::ComboBox::from_id_salt(id).selected_text(if valor.is_empty() {"Todos"}else{valor.as_str()}).show_ui(ui,|ui| {
         ui.selectable_value(valor,String::new(),"Todos");
@@ -209,7 +210,7 @@ impl RevisionUi {
         let clases=[(C::SinObservacion,conteos[0]),(C::ConObservacion,conteos[1]),(C::NoVerificable,conteos[2]),(C::FueraDeAlcance,conteos[3])];
         ui.horizontal_wrapped(|ui|{
             if compacto {
-                ui.label(format!("{} registros",informe.filas.len()));
+                ui.label(registros(informe.filas.len()));
                 egui::ComboBox::from_id_salt("clasificacion_compacta").selected_text(revision::etiqueta(self.clase)).show_ui(ui,|ui|{
                     for (clase,cantidad) in clases{ui.selectable_value(&mut self.clase,clase,format!("{} ({cantidad})",revision::etiqueta(clase)));}
                 });
@@ -235,7 +236,8 @@ impl RevisionUi {
             (self.programa.is_empty()||valor(f,&["PROGRAMA","NOMBRE PROGRAMA"])==self.programa)&&
             (self.estado_revision==0||(self.estado_revision==2)==f.revisada)&&self.busquedas[*i].contains(&buscar)).map(|(i,_)|i).collect::<Vec<_>>();
         if !compacto||panel==0 {ui.horizontal_wrapped(|ui|{
-            ui.label(if compacto{format!("{} visibles · {} seleccionados",visibles.len(),self.seleccion.len())}else{format!("{} visibles · {} seleccionados (también pueden estar ocultos)",visibles.len(),self.seleccion.len())});
+            let conteo=format!("{} · {}",contar(visibles.len(),"visible","visibles"),contar(self.seleccion.len(),"seleccionado","seleccionados"));
+            ui.label(if compacto{conteo}else{format!("{conteo} (también pueden estar ocultos)")});
             if ui.button("Siguiente pendiente").clicked(){
                 self.activa=visibles.iter().copied().filter(|&i|!informe.filas[i].revisada).find(|i|self.activa.is_none_or(|a|*i>a))
                     .or_else(||visibles.iter().copied().find(|&i|!informe.filas[i].revisada));
@@ -440,6 +442,7 @@ mod tests {
     #[test]
     fn rotulo_de_registros_concuerda_en_numero() {
         assert_eq!(registros(1),"1 registro");assert_eq!(registros(0),"0 registros");assert_eq!(registros(3),"3 registros");
+        assert_eq!(contar(1,"visible","visibles"),"1 visible");
     }
     #[test]
     fn criterio_obsoleto_no_copia_al_portapapeles() {
