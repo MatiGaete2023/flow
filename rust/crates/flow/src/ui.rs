@@ -158,8 +158,10 @@ struct App {
     modalidades: Vec<(String, bool)>,
     otra_modalidad: String,
     borradores: Vec<Borrador>,
+    correo_activo: Option<usize>,
     estados_borradores: std::collections::BTreeMap<usize, crate::borradores::Estado>,
     proyectos: Vec<word::Proyecto>,
+    proyecto_activo: Option<usize>,
     /// Selección (fila, tipo) con que se prepararon los proyectos; si cambia, se preparan de nuevo antes de generar.
     seleccion_preparada: Vec<(String, String)>,
     word_generados: std::collections::BTreeSet<String>,
@@ -315,8 +317,10 @@ impl App {
             modalidades: correos::modalidades_base().into_iter().map(|m| (m, false)).collect(),
             otra_modalidad: String::new(),
             borradores: Vec::new(),
+            correo_activo: None,
             estados_borradores: Default::default(),
             proyectos: Vec::new(),
+            proyecto_activo: None,
             seleccion_preparada: Vec::new(),
             word_generados: Default::default(),
             periodo: flow_tabular::libro::hoy().format("%m/%Y").to_string(),
@@ -673,6 +677,7 @@ impl App {
     fn mostrar_borradores(&mut self, mut lista: Vec<Borrador>) {
         correos::conservar_ediciones(&self.borradores, &mut lista);
         self.borradores = lista;
+        self.correo_activo = None;
         self.estados_borradores.clear();
         for (i, b) in self.borradores.iter().enumerate() {
             if let Ok(Some(estado)) = crate::borradores::estado(&self.datos, b) {
@@ -888,6 +893,7 @@ impl App {
         let mut nuevos = word::preparar(trabajo, &seleccion, flow_tabular::libro::hoy(), Some(&propias), &self.reglas());
         word::conservar_ediciones(&self.proyectos, &mut nuevos, Some(&propias));
         self.proyectos = nuevos;
+        self.proyecto_activo = None;
         self.seleccion_preparada = seleccion;
         let por_completar = self.proyectos.iter().filter(|p| p.listo() && !p.faltantes.is_empty()).count();
         let sin_plantilla = self.proyectos.iter().filter(|p| p.sin_plantilla).count();
@@ -1286,9 +1292,16 @@ impl App {
             }
         });
         ui.separator();
+        let incluidos=self.borradores.iter().filter(|b|!b.omitido).count();
+        ui.label(format!("{} incluidos · {} excluidos",incluidos,self.borradores.len()-incluidos));
+        let titulos=self.borradores.iter().enumerate().map(|(i,b)|format!("{}{} · {} · {}",
+            if obsoletos.contains(&i){"⚠ Obsoleto · "}else{""},if b.omitido{"Excluido"}else{"Incluido"},
+            b.tipo.titulo(etapa),if b.programa.is_empty(){b.tribunal.as_str()}else{b.programa.as_str()})).collect::<Vec<_>>();
+        let activo=crate::paneles_ui::selector(ui,"lista_correos",&titulos,&mut self.correo_activo);
         let mut aviso_recibo: Option<Result<String, String>> = None;
         egui::ScrollArea::vertical().show(ui, |ui| {
             for (i, b) in self.borradores.iter_mut().enumerate() {
+                if activo!=Some(i){continue}
                 let quien = if b.programa.is_empty() { b.tribunal.clone() } else { format!("{} · {}", b.programa, b.tribunal) };
                 let faltan = b.faltantes();
                 let titulo = format!(
@@ -1300,7 +1313,7 @@ impl App {
                     if b.filas.len() == 1 { "1 registro".to_string() } else { format!("{} registros", b.filas.len()) },
                     if faltan.is_empty() { String::new() } else { format!(" — falta {}", faltan.join(", ")) }
                 );
-                egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).show(ui, |ui| {
+                egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).default_open(true).show(ui, |ui| {
                     let mut editado = false;
                     // Las ediciones y omisiones quedan en la sesión (`session.py::capture`).
                     self.sin_guardar |= ui.checkbox(&mut b.omitido, "Excluir este borrador").changed();
@@ -1428,8 +1441,12 @@ impl App {
         ui.separator();
         let propias = self.plantillas_usuario();
         let obsoletos = self.proyectos_obsoletos();
+        let titulos=self.proyectos.iter().enumerate().map(|(i,p)|format!("{}{} · {} · {}",
+            if obsoletos.contains(&i){"⚠ Obsoleto · "}else{""},p.tipo,p.rit,p.tribunal.titulo())).collect::<Vec<_>>();
+        let activo=crate::paneles_ui::selector(ui,"lista_resoluciones",&titulos,&mut self.proyecto_activo);
         egui::ScrollArea::vertical().show(ui, |ui| {
             for (i, p) in self.proyectos.iter_mut().enumerate() {
+                if activo!=Some(i){continue}
                 let estado = if obsoletos.contains(&i) {
                     "obsoleto: cambiaron sus registros o plantilla; se prepara de nuevo al generar".to_string()
                 } else if p.omitido {
@@ -1445,8 +1462,7 @@ impl App {
                 };
                 let registros = if p.filas.len() == 1 { "1 registro".to_string() } else { format!("{} registros", p.filas.len()) };
                 egui::CollapsingHeader::new(format!("{} · {} · {} · {registros} — {}", p.tipo, p.rit, p.tribunal.titulo(), estado))
-                    .id_salt(("proyecto", i))
-                    .default_open(!p.faltantes.is_empty())
+                    .id_salt(("proyecto", i)).default_open(true)
                     .show(ui, |ui| {
                         let mut cambio = ui.checkbox(&mut p.omitido, "No generar este proyecto").changed();
                         egui::Grid::new(("valores", i)).num_columns(2).show(ui, |ui| {
@@ -2375,6 +2391,8 @@ mod pruebas_captura {
         assert_eq!(app.claves_modalidades(), None);
     }
 }
+
+
 
 
 

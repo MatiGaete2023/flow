@@ -32,9 +32,11 @@ impl Captura {
             let nombre=format!("{}-{}x{}-{}",self.config.pantalla,self.config.ancho as u32,self.config.alto as u32,(self.config.escala*100.0)as u32);
             let guardar=(||->Result<(),String>{
                 let ruta=self.config.salida.join(format!("{nombre}.ppm"));
-                let mut f=std::fs::OpenOptions::new().create_new(true).write(true).open(&ruta).map_err(|e|e.to_string())?;
+                let archivo=std::fs::OpenOptions::new().create_new(true).write(true).open(&ruta).map_err(|e|e.to_string())?;
+                let mut f=std::io::BufWriter::new(archivo);
                 write!(f,"P6\n{} {}\n255\n",imagen.width(),imagen.height()).map_err(|e|e.to_string())?;
                 for p in &imagen.pixels {let [r,g,b,_]=p.to_array();f.write_all(&[r,g,b]).map_err(|e|e.to_string())?;}
+                f.flush().map_err(|e|e.to_string())?;
                 let rect=ctx.input(|i|i.screen_rect);
                 let metadatos=serde_json::json!({"pantalla":self.config.pantalla,"ancho_solicitado":self.config.ancho,"alto_solicitado":self.config.alto,
                     "escala":self.config.escala,"pixeles":[imagen.width(),imagen.height()],"tamano_efectivo":[rect.width(),rect.height()],

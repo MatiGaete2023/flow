@@ -16,6 +16,7 @@ mod revision_bitacoras_ui;
 mod resultados_ui;
 mod tema;
 mod evidencia_ui;
+mod paneles_ui;
 
 #[cfg(windows)]
 extern "system" {
