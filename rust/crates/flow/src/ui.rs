@@ -1044,20 +1044,12 @@ impl App {
             .collect();
         let mut seleccion = self.seleccion;
         let mut cambio = false;
-        egui::SidePanel::right("detalle").resizable(true).default_width(410.0).show_inside(ui, |ui| {
+        egui::TopBottomPanel::bottom("editor_trabajo").resizable(true).default_height(210.0).min_height(110.0).show_inside(ui, |ui| {
             let Some(fila) = seleccion.and_then(|i| trabajo.filas.get_mut(i)) else {
-                ui.label("Elige un registro de la lista.");
+                ui.label("Elige un registro para revisar su observación.");
                 return;
             };
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.heading(format!("{} · {}", fila.registro.texto("rit"), excel::valor(fila, "nombre")));
-                ui.label(format!(
-                    "{} · {} · fila {} del Excel",
-                    fila.registro.texto("programa"),
-                    fila.registro.texto("tribunal"),
-                    fila.numero
-                ));
-                ui.add_space(6.0);
+            egui::ScrollArea::vertical().id_salt("editor_observacion").show(ui, |ui| {
                 ui.label(RichText::new("Observación").strong());
                 if ui.add(egui::TextEdit::multiline(&mut fila.observacion).desired_width(f32::INFINITY).desired_rows(7)).changed() {
                     cambio = true;
@@ -1079,6 +1071,22 @@ impl App {
                     ui.label(RichText::new("Propuesta original").strong());
                     ui.label(if fila.propuesta.observacion.is_empty() { "(sin observación)" } else { &fila.propuesta.observacion });
                 }
+            });
+        });
+        egui::SidePanel::right("detalle").resizable(true).default_width(410.0).show_inside(ui, |ui| {
+            let Some(fila) = seleccion.and_then(|i| trabajo.filas.get_mut(i)) else {
+                ui.label("Elige un registro de la lista.");
+                return;
+            };
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.heading(format!("{} · {}", fila.registro.texto("rit"), excel::valor(fila, "nombre")));
+                ui.label(format!(
+                    "{} · {} · fila {} del Excel",
+                    fila.registro.texto("programa"),
+                    fila.registro.texto("tribunal"),
+                    fila.numero
+                ));
+                ui.add_space(6.0);
                 if !fila.propuesta.marcas.is_empty() || !fila.propuesta.avisos.is_empty() {
                     ui.add_space(6.0);
                     ui.label(RichText::new("Revisar").strong());
@@ -1208,7 +1216,7 @@ impl App {
             for (nombre, marcada) in &mut self.modalidades {
                 ui.checkbox(marcada, nombre.as_str());
             }
-            ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra modalidad (texto libre)").desired_width(160.0));
+            ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra modalidad (texto libre)").desired_width(210.0)).on_hover_text("Cambia el alcance de modalidades al preparar; no filtra la tabla.");
         });
         let mut preparar = false;
         let mut preparar_tipo = None;
@@ -1377,12 +1385,13 @@ impl App {
             if self.proyectos.iter().any(|p| p.listo()) && ui.button("Generar Word").clicked() {
                 generar = true;
             }
-            if ui.button("Carpeta de plantillas propias").on_hover_text("Ej.: TOME_PC_IE.docx con variables {{RIT}}, {{NOMBRE}}…").clicked()
-            {
-                let carpeta = self.plantillas_usuario();
-                let _ = std::fs::create_dir_all(&carpeta);
-                abrir_en_sistema(&carpeta);
-            }
+            ui.menu_button("Plantillas", |ui| {
+                if ui.button("Carpeta de plantillas propias").on_hover_text("Ej.: TOME_PC_IE.docx con variables {{RIT}}, {{NOMBRE}}…").clicked() {
+                    let carpeta = self.plantillas_usuario();
+                    let _ = std::fs::create_dir_all(&carpeta);
+                    abrir_en_sistema(&carpeta);
+                }
+            });
         });
         ui.small(
             "Un proyecto por tribunal, RIT y tipo, con todas las personas de la causa; un solo Word con todos, cada \
@@ -1445,7 +1454,7 @@ impl App {
                 }
                 ui.label(c.display().to_string());
             }
-            if ui.button("Cambiar carpeta de salida…").clicked() {
+            if ui.button("Destino de próximos productos…").clicked() {
                 if let Some(nueva) = rfd::FileDialog::new().pick_folder() {
                     self.ajustes.salida = Some(nueva);
                     self.carpeta = None;
@@ -1499,9 +1508,9 @@ impl App {
         let editable = self.contactos_csmp.is_none();
         ui.add_space(4.0);
         ui.add_enabled_ui(editable, |ui| {
-            ui.horizontal(|ui| {
+            ui.menu_button("Importar", |ui| {
                 if ui
-                    .button("Importar contactos de CSMP…")
+                    .button("CSMP (JSON)…")
                     .on_hover_text("contactos.json del Asistente anterior (lista Nombre/Mail)")
                     .clicked()
                 {

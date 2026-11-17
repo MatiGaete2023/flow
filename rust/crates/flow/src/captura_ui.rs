@@ -536,7 +536,7 @@ impl Captura {
                 if self.pantalla == "seguimiento" {
                     ui.label(egui::RichText::new("Lecturas por ingreso y causa").strong());
                     ui.horizontal_wrapped(|ui| {
-                        ui.checkbox(&mut self.lecturas.bitacoras,"Leer bitácoras");
+                        ui.checkbox(&mut self.lecturas.bitacoras,"Leer bitácoras al descargar");
                         ui.checkbox(&mut self.lecturas.historia,"Leer historia de la causa");
                         ui.checkbox(&mut self.lecturas.calendario,"Leer calendario del ingreso");
                     });
@@ -546,7 +546,7 @@ impl Captura {
                         &mut self.informes_por_vencer,
                         "Paquete: incluir el calendario de informes por vencer (60 días, con Cumplimiento)",
                     );
-                    ui.label("«Consultar y crear paquete» siempre lee las bitácoras; historia y calendario del ingreso según las casillas.");
+                    ui.label("Bitácoras incluidas en «Consultar y crear paquete». La casilla anterior solo configura «Descargar».");
                     marcas(ui, "Modalidades", &mut self.modalidades);
                     ui.horizontal_wrapped(|ui| {
                         for (n, m) in &mut self.pestañas {
@@ -635,13 +635,13 @@ impl Captura {
                 }
             }
             if ui
-                .add_enabled(!self.ocupada(), egui::Button::new("Crear paquete de este lote…"))
+                .add_enabled(!self.ocupada(), egui::Button::new(if self.listo.is_some() { "Crear paquete del lote actual…" } else { "Crear paquete de un lote…" }))
                 .on_hover_text("Arma Captura_CSMP.zip con los Excel y las lecturas verificadas del lote, para abrirlo en el Asistente.")
                 .clicked()
             {
                 self.crear_paquete(ctx);
             }
-            if ui.add_enabled(self.ocupada(), egui::Button::new("Detener")).clicked() {
+            if ui.add_enabled(self.ocupada(), egui::Button::new("Detener descarga")).clicked() {
                 self.cancelar.store(true, Ordering::SeqCst);
                 self.mensaje = "Deteniendo al finalizar la consulta en curso…".into();
             }

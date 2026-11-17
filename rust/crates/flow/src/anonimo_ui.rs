@@ -122,7 +122,8 @@ impl Anonimo {
         ui.heading("Anonimizador");
         ui.label("Crea copias locales con identidades ficticias. Revise siempre las copias antes de compartirlas.");
         ui.add_enabled_ui(self.receptor.is_none(), |ui| {
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.menu_button("Agregar", |ui| {
                 if ui.button("Agregar archivos…").clicked() {
                     if let Some(ps) = rfd::FileDialog::new().pick_files() {
                         self.entradas.extend(ps);
@@ -133,6 +134,7 @@ impl Anonimo {
                         self.entradas.push(p);
                     }
                 }
+                });
                 if ui.add_enabled(!self.entradas.is_empty(), egui::Button::new("Quitar todas las entradas")).on_hover_text("Quita la selección; conserva los archivos originales.").clicked() {
                     self.entradas.clear();
                 }

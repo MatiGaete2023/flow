@@ -8,6 +8,7 @@ pub struct Meta4 {
     lotes: Vec<PathBuf>,
     corte: String,
     elegidos: Vec<bool>,
+    elegir_tribunales: bool,
     /// Tribunales presentes en los lotes agregados: solo esos se ofrecen (como `tribunales_disponibles` de Python).
     disponibles: Vec<&'static str>,
     destino: Option<PathBuf>,
@@ -23,6 +24,7 @@ impl Default for Meta4 {
             lotes: Vec::new(),
             corte: flow_tabular::libro::hoy().format("%d/%m/%Y").to_string(),
             elegidos: vec![false; TRIBUNALES.len()],
+            elegir_tribunales: false,
             disponibles: Vec::new(),
             destino: None,
             mensaje: None,
@@ -179,14 +181,20 @@ impl Meta4 {
             ui.label("Fecha de corte:");
             ui.add(egui::TextEdit::singleline(&mut self.corte).desired_width(86.0)).on_hover_text("dd/mm/aaaa. Se usa el mes que termina ese día.");
         });
-        ui.label(RichText::new("Tribunales (sin marcar ninguno, van todos)").strong());
+        ui.label(RichText::new("Tribunales").strong());
+        ui.horizontal_wrapped(|ui| {
+            if ui.selectable_value(&mut self.elegir_tribunales, false, "Todos los disponibles").changed() {
+                self.elegidos.fill(false);
+            }
+            ui.selectable_value(&mut self.elegir_tribunales, true, "Elegir tribunales");
+        });
         ui.horizontal_wrapped(|ui| {
             if self.disponibles.is_empty() {
                 ui.weak("Agrega lotes para ver sus tribunales.");
             }
             for (nombre, marcado) in TRIBUNALES.iter().zip(self.elegidos.iter_mut()) {
                 if self.disponibles.contains(nombre) {
-                    ui.checkbox(marcado, *nombre);
+                    ui.add_enabled(self.elegir_tribunales, egui::Checkbox::new(marcado, *nombre));
                 }
             }
         });
@@ -207,7 +215,7 @@ impl Meta4 {
             }
         });
         ui.horizontal(|ui| {
-            if ui.add_enabled(!self.lotes.is_empty(), egui::Button::new("Generar Meta 4")).clicked() {
+            if ui.add_enabled(!self.lotes.is_empty() && (!self.elegir_tribunales || self.elegidos.iter().any(|v| *v)), egui::Button::new("Generar Meta 4")).clicked() {
                 self.generar();
             }
             if ui.button("Regenerar desde Registros revisado…")
