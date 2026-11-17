@@ -231,6 +231,11 @@ fn a8_nombre_de_archivo_no_es_persona_ni_contamina_claves() {
     // Un nombre de archivo con un nombre propio no se publica literal y el nombre se reemplaza en otro lugar.
     let (s, _) = texto("r.json", br#"{"nombre":"Ana_Canario_Soto.xlsx","nota":"Ana Canario Soto"}"#, conservador());
     sin(&s, &["Canario"]);
+    // Los nombres de archivo del Descargador (`lotes.file_base`, con espacios) también son nombres de archivo.
+    let json = br#"{"archivos":[{"nombre":"ESP Ambulatorio Jdo Familia Ficticio Norte 2.xls","consulta":0}]}"#;
+    let (s, _) = texto("resumen.json", json, conservador());
+    let v: Value = serde_json::from_str(&s).unwrap();
+    assert!(v["archivos"][0]["nombre"].as_str().unwrap().starts_with("fuente_"), "{s}");
 }
 
 // A9: fechas y lógicos de Excel conservan su tipo.

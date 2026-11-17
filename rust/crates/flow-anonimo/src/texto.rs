@@ -109,10 +109,14 @@ fn institucional(s: &str) -> bool {
     !palabras.is_empty() && palabras.iter().all(|p| en("INSTITUTIONAL", p))
 }
 
-/// Valor con forma de nombre de archivo de extensión conocida (`consulta-001-p001-de-001.xls`): devuelve la raíz.
+/// Valor con forma de nombre de archivo de extensión conocida (`consulta-001-p001-de-001.xls`, o con espacios
+/// interiores como los del Descargador: `ESP Ambulatorio Jdo Familia X 2.xls`): devuelve la raíz.
 pub fn nombre_archivo(s: &str) -> Option<&str> {
     static RE: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"(?i)^([\w.\-]+)\.(?:xls|xlsx|xlsm|csv|tsv|json|jsonl|ndjson|txt|text|md|log|html|htm|ics|docx|zip|pdf|xml)$").unwrap()
+        Regex::new(
+            r"(?i)^([\w.\-]+(?: [\w.\-]+)*)\.(?:xls|xlsx|xlsm|csv|tsv|json|jsonl|ndjson|txt|text|md|log|html|htm|ics|docx|zip|pdf|xml)$",
+        )
+        .unwrap()
     });
     RE.captures(s.trim()).map(|c| c.get(1).unwrap().as_str())
 }

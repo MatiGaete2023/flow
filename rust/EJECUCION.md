@@ -627,3 +627,6 @@ guardar el código de conexión, y cualquier escritura en RUS.
   (`check_products` los excluye con «Completar destinatario»), así que eso se conserva y ahora se avisa al abrir
   (`CONTACTOS_FALTAN`, como `CONTACTS_MISSING`). Diferencias: los alias base no se pueden borrar (Python los quita al
   editar el contacto) y no se carga el ejemplo ficticio `contactos_ejemplo.json`. Suite: 255 pruebas, 0 fallos.
+- 2026-11-17 · Anonimizador y nombres nuevos del Descargador: `flow-anonimo::texto::nombre_archivo` reconocía solo
+  nombres sin espacios, así que «ESP Ambulatorio Jdo Familia X 2.xls» en `resumen.json` se trataba como un nombre de
+  persona; ahora admite espacios interiores y el archivo sale como `fuente_N` (prueba A8). Suite: 255 pruebas, 0 fallos.
