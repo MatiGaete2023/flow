@@ -12,6 +12,7 @@ mod cli;
 mod meta4_ui;
 mod cronologia_ui;
 mod ui;
+mod tema;
 
 #[cfg(windows)]
 extern "system" {

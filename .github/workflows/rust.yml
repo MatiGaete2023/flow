@@ -2,7 +2,7 @@ name: Flow en Rust
 
 on:
   push:
-    branches: ["rust/**"]
+    branches: ["rust/**", "feat/flow-estudio-d-20261117"]
     paths: ["rust/**", ".github/workflows/rust.yml"]
   workflow_dispatch:
 

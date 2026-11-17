@@ -8,6 +8,7 @@ pub mod cronologia;
 pub mod exportar;
 pub mod flujo;
 pub mod paquete;
+pub mod revision_bitacoras;
 
 use flow_dominio::{Celda, Etapa, Fecha, Historia, Observacion, Registro};
 use flow_motor::{analizar, Config, Entrada, Resultado};

@@ -156,7 +156,7 @@ impl Meta4 {
                     self.lotes_cambiados();
                 }
             }
-            if !self.lotes.is_empty() && ui.button("Vaciar").clicked() {
+            if !self.lotes.is_empty() && ui.button("Quitar todos los lotes").clicked() {
                 self.lotes.clear();
                 self.lotes_cambiados();
             }
@@ -197,7 +197,7 @@ impl Meta4 {
                     self.plantilla = Some(plantilla);
                 }
             }
-            if self.plantilla.is_some() && ui.button("Sin plantilla").clicked() {
+            if self.plantilla.is_some() && ui.button("Usar formato estándar").clicked() {
                 self.plantilla = None;
             }
             if let Some(plantilla) = &self.plantilla {

@@ -133,16 +133,26 @@ impl Anonimo {
                         self.entradas.push(p);
                     }
                 }
-                if ui.button("Vaciar").clicked() {
+                if ui.add_enabled(!self.entradas.is_empty(), egui::Button::new("Quitar todas las entradas")).on_hover_text("Quita la selección; conserva los archivos originales.").clicked() {
                     self.entradas.clear();
                 }
             });
             egui::ScrollArea::vertical().id_salt("entradas_anon").max_height(130.).show(ui, |ui| {
-                for p in &self.entradas {
-                    ui.label(p.display().to_string());
+                let mut quitar = None;
+                for (i, p) in self.entradas.iter().enumerate() {
+                    ui.horizontal(|ui| {
+                        if ui.small_button("Quitar").clicked() { quitar = Some(i); }
+                        ui.label(p.display().to_string());
+                    });
                 }
+                if let Some(i) = quitar { self.entradas.remove(i); }
             });
-            ui.checkbox(&mut self.conservador, "Modo Conservador: conserva más texto; requiere una revisión más cuidadosa");
+            ui.horizontal_wrapped(|ui| {
+                ui.label("Modo:");
+                ui.selectable_value(&mut self.conservador, false, "Estricto");
+                ui.selectable_value(&mut self.conservador, true, "Conservador");
+            });
+            if self.conservador { ui.label("Conserva más texto; requiere una revisión más cuidadosa."); }
             ui.horizontal(|ui| {
                 ui.label("Desplazar fechas (días):");
                 ui.add(egui::DragValue::new(&mut self.dias).range(-36500..=36500));

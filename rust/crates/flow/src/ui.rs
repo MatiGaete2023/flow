@@ -178,6 +178,7 @@ struct App {
     importacion: Option<(String, correos::Importacion)>,
     ayuda: bool,
     sin_guardar: bool,
+    confirmar_recalculo: bool,
     captura: crate::captura_ui::Captura,
     anonimo: crate::anonimo_ui::Anonimo,
     meta4: crate::meta4_ui::Meta4,
@@ -322,6 +323,7 @@ impl App {
             importacion: None,
             ayuda: false,
             sin_guardar: false,
+            confirmar_recalculo: false,
             captura: Default::default(),
             anonimo: Default::default(),
             meta4: Default::default(),
@@ -941,10 +943,13 @@ impl App {
                     ui.selectable_value(&mut self.etapa, Some(e), e.nombre());
                 }
             });
-            if self.archivo.is_some() && ui.button("Volver a analizar").on_hover_text("Descarta las ediciones").clicked() {
-                let ruta = self.archivo.clone().unwrap();
-                self.cargar_modo(ruta, true);
-            }
+            ui.menu_button("Más", |ui| {
+                if ui.add_enabled(self.archivo.is_some(), egui::Button::new("Recalcular propuestas…"))
+                    .on_hover_text("Permite descartar las ediciones después de una confirmación.").clicked() {
+                    self.confirmar_recalculo = true;
+                    ui.close_menu();
+                }
+            });
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("Ayuda (F1)").clicked() {
                     self.ayuda = true;
@@ -953,7 +958,7 @@ impl App {
         });
         let pestanas = self.herramienta.pestanas();
         if pestanas.len() > 1 {
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
                 for (p, nombre) in pestanas {
                     ui.selectable_value(&mut self.pestana, *p, *nombre);
                 }
@@ -1065,7 +1070,7 @@ impl App {
                         fila.observacion = fila.propuesta.observacion.clone();
                         cambio = true;
                     }
-                    if ui.button("Copiar").clicked() {
+                    if ui.button("Copiar observación").clicked() {
                         ui.ctx().copy_text(fila.observacion.clone());
                     }
                 });
@@ -1203,7 +1208,7 @@ impl App {
             for (nombre, marcada) in &mut self.modalidades {
                 ui.checkbox(marcada, nombre.as_str());
             }
-            ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra…").desired_width(160.0));
+            ui.add(egui::TextEdit::singleline(&mut self.otra_modalidad).hint_text("Otra modalidad (texto libre)").desired_width(160.0));
         });
         let mut preparar = false;
         let mut preparar_tipo = None;
@@ -1262,7 +1267,7 @@ impl App {
                 egui::CollapsingHeader::new(titulo).id_salt(("borrador", i)).show(ui, |ui| {
                     let mut editado = false;
                     // Las ediciones y omisiones quedan en la sesión (`session.py::capture`).
-                    self.sin_guardar |= ui.checkbox(&mut b.omitido, "No guardar este borrador").changed();
+                    self.sin_guardar |= ui.checkbox(&mut b.omitido, "Excluir este borrador").changed();
                     egui::Grid::new(("campos", i)).num_columns(2).show(ui, |ui| {
                         ui.label("Para");
                         editado |= ui
@@ -1741,6 +1746,19 @@ impl eframe::App for App {
             Pestana::Anonimo => self.anonimo.mostrar(ui, ctx),
             Pestana::Meta4 => self.meta4.mostrar(ui),
         });
+        if self.confirmar_recalculo {
+            egui::Window::new("Recalcular propuestas").collapsible(false).resizable(false).show(ctx, |ui| {
+                ui.label("Se descartarán las ediciones y marcas de revisión recuperadas para este archivo y corte.");
+                ui.label("Los borradores y proyectos deberán prepararse nuevamente. Esta acción no se puede deshacer desde la sesión.");
+                ui.horizontal(|ui| {
+                    if ui.button("Cancelar").clicked() { self.confirmar_recalculo = false; }
+                    if ui.button("Descartar ediciones y recalcular").clicked() {
+                        self.confirmar_recalculo = false;
+                        if let Some(ruta) = self.archivo.clone() { self.cargar_modo(ruta, true); }
+                    }
+                });
+            });
+        }
         if self.ayuda {
             let mut abierta = true;
             egui::Window::new("Cómo se usa Flow").open(&mut abierta).collapsible(false).default_width(520.0).show(ctx, |ui| {
@@ -1783,8 +1801,7 @@ pub fn abrir(archivo: Option<PathBuf>, herramienta: Herramienta) -> i32 {
         herramienta.titulo(),
         opciones,
         Box::new(|cc| {
-            cc.egui_ctx.set_theme(egui::ThemePreference::System);
-            cc.egui_ctx.set_zoom_factor(1.15);
+            crate::tema::aplicar(&cc.egui_ctx);
             Ok(Box::new(App::nueva(archivo, herramienta)))
         }),
     ) {
