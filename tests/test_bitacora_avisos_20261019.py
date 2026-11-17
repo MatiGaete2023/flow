@@ -118,6 +118,7 @@ def test_ct07_no_reitera_gestiones_del_centro_ni_derivaciones_sin_seguimiento():
         ('HISTORIA.P_FINALIZADA', TEXTOS['HISTORIA']['P_FINALIZADA']['texto']),
         ('ESPERA.E07_PROYECCION', 'Medida revisada, a la espera de ingreso efectivo. Programa proyecta ingreso…'),
         ('COMUN.NO_SEGUIMIENTO', 'La derivación OPD no se encuentra sujeta a seguimiento por este Centro.'),
+        ('CUMPLIMIENTO.C09_SIN_OBSERVACIONES', 'Medida revisada, sin observaciones.'),
     ]:
         texto = 'Persona PRM: ' + cuerpo
         assert _reiterar([('2026-09-10', texto)], texto, [regla]).observation == texto, regla
@@ -126,13 +127,13 @@ def test_ct07_no_reitera_gestiones_del_centro_ni_derivaciones_sin_seguimiento():
 
 
 def test_ct07_compara_con_la_ultima_que_no_es_reiteracion_y_no_encadena():
-    texto = 'Persona PRM: Medida revisada, sin observaciones.'
+    texto = 'Persona PRM: Medida vencida en RUS desde el 1 de julio de 2026.'
     previas = [
         ('2026-08-10', texto),
         ('2026-09-10', 'Persona PRM: Se reitera observación anterior del 10 de agosto de 2026.'),
     ]
     # Sin alternancia: la última entrada es una reiteración y se compara con la anterior completa.
-    fila = _reiterar(previas, texto, ['CUMPLIMIENTO.C09_SIN_OBSERVACIONES'])
+    fila = _reiterar(previas, texto, ['CUMPLIMIENTO.C04_VENCIDA'])
     assert fila.observation == 'Persona PRM: Se reitera observación anterior del 10 de agosto de 2026.'
     # Una reiteración por materia no se reemplaza por otra reiteración.
     materia = 'Persona PRM: No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 1 de agosto de 2026.'
