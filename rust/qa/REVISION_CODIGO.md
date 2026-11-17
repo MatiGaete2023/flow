@@ -3,6 +3,13 @@
 La revisión fue realizada por el subagente revision_p6_p7, dentro de la misma raíz
 del ejecutor. Es una comprobación separada útil, pero NO acredita E3 del repositorio.
 No hay una aprobación formal externa registrada en el PR59.
+El usuario autorizó crear el chat revisor independiente01a1eaf6-0e5e-7842-8fba-0dd991c1e639.
+Ese revisor emitió CAMBIOS sobre9f4e01b: cuatro hallazgos propios del candidato.
+H1: captura habitual siempre PARCIAL; falta prueba de cobertura de fuente.
+H2: metadatos anteriores al recorte reintroducen texto fuera de la política.
+H3: cotejo por día/texto puede ocultar un evento distinto faltante.
+H4: copiar propuesta obsoleta seguía habilitado. La ejecutora corrige H2-H4;
+H1 requiere señal de fuente identificable, sin inventar completitud.
 
 `docs/implementacion/PLAN_IMPLEMENTACION.md`, regla E3, dice: «Revisor y Auditor
 pertenecen siempre a una raíz de agente distinta de la del Ejecutor. Los subagentes

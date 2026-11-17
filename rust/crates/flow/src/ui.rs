@@ -1945,7 +1945,7 @@ pub fn abrir_demostracion(config:crate::evidencia_ui::Config)->Result<(),String>
     let evidencia=crate::evidencia_ui::Captura::nueva(config)?;
     let opciones=eframe::NativeOptions {
         viewport:egui::ViewportBuilder::default().with_inner_size([evidencia.config.ancho,evidencia.config.alto])
-            .with_min_inner_size([320.0,240.0]).with_title("Flow · DEMOSTRACIÓN SINTÉTICA"),
+            .with_min_inner_size([320.0,240.0]).with_clamp_size_to_monitor_size(false).with_title("Flow · DEMOSTRACIÓN SINTÉTICA"),
         ..Default::default()
     };
     eframe::run_native("Flow · DEMOSTRACIÓN SINTÉTICA",opciones,Box::new(move|cc|{
@@ -2120,6 +2120,51 @@ mod pruebas_captura {
         app.atajo_guardar(true);
         assert!(!salida.exists());
         assert!(app.carpeta.is_none());
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn captura_paquete_y_json_no_reintroducen_texto_fuera_del_limite_historico() {
+        use flow_captura::{lotes::Conexion,recoleccion::{Recoleccion,PaginaActual,Control}};
+        use std::sync::atomic::AtomicBool;
+        struct Ficticia;
+        impl Conexion for Ficticia {
+            fn llamar(&self,comando:&str,payload:serde_json::Value,_plazo:std::time::Duration)->Result<serde_json::Value,String>{
+                assert_eq!(comando,"diary_open");
+                let mut r:serde_json::Value=serde_json::from_str(include_str!("../pruebas/respuesta_bitacora_antigua.json")).unwrap();
+                r["params"]=payload["params"].clone();Ok(r)
+            }
+        }
+        let (base,mut resumen)=preparar();
+        resumen.lote.lecturas.bitacoras=true;resumen.lote.lecturas.meses=4;
+        let paginas:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../flow-captura/tests/datos/vinculos_ficticios.json")).unwrap();
+        let mut app=App::con_datos(base.join("datos"),None);app.corte="20/10/2026".into();app.cargar(base.join("consulta-001-p001-de-001.xls"));
+        let f=&app.trabajo.as_ref().unwrap().filas[0];
+        let mut html=paginas[0]["html"].as_str().unwrap().to_string();
+        for (original,campo) in [("X-1-2099","rit"),("11111111-0","rut"),("Persona Ficticia","nombre"),("PRM Centro Ficticio","programa")] {
+            let texto=f.registro.texto(campo);assert!(!texto.is_empty(),"{campo}");
+            html=html.replace(original,&texto.replace('&',"&amp;").replace('<',"&lt;").replace('>',"&gt;"));
+        }
+        let mut captura=Recoleccion::con_fecha(&base,&resumen,"2026-10-20".parse().unwrap()).unwrap();
+        captura.pagina(&Ficticia,&serde_json::json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),&mut resumen,
+            PaginaActual{consulta:0,numero:1,html:html.as_bytes()},
+            Control{cancelar:&AtomicBool::new(false),progreso:&|_|{}}).unwrap();
+        assert_eq!(resumen.lecturas.len(),1);
+        let lectura=flow_captura::recoleccion::leer(&base,&resumen.lecturas[0]).unwrap();
+        assert!(!lectura.to_string().contains("ANTIGUA_NO_PERSISTIR"));
+        assert_eq!(lectura["datos"]["revision_bitacoras"]["anteriores_omitidas"],1);
+        let zip=base.join("paquete.zip");
+        flow_trabajo::exportar::exportar(&[flow_trabajo::exportar::Lote{carpeta:&base,resumen:&resumen}],&zip,&Default::default()).unwrap();
+        let datos=std::fs::read(&zip).unwrap();
+        let mut archivo=zip::ZipArchive::new(std::io::Cursor::new(&datos)).unwrap();
+        for i in 0..archivo.len(){let mut f=archivo.by_index(i).unwrap();let mut texto=String::new();std::io::Read::read_to_string(&mut f,&mut texto).unwrap();assert!(!texto.contains("ANTIGUA_NO_PERSISTIR"));}
+        let desde="2026-06-20".parse().unwrap();let hasta="2026-10-20".parse().unwrap();
+        let informe=flow_trabajo::paquete::revisar_bitacoras(&datos,desde,hasta,hasta).unwrap();
+        assert!(informe.filas.iter().any(|f|!f.lecturas.is_empty()),"La prueba debe asociar la lectura al registro real del fixture");
+        assert!(informe.filas.iter().all(|f|f.revision.clasificacion==flow_trabajo::revision_bitacoras::Clasificacion::NoVerificable));
+        let salida=base.join("informes");std::fs::create_dir(&salida).unwrap();
+        let producto=flow_productos::revision::exportar(&informe,None,&salida,&AtomicBool::new(false)).unwrap();
+        assert!(!std::fs::read_to_string(producto.json).unwrap().contains("ANTIGUA_NO_PERSISTIR"));
         std::fs::remove_dir_all(base).unwrap();
     }
 

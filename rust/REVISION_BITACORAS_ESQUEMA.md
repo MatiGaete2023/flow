@@ -10,8 +10,8 @@ No cambia las columnas ni los campos que consume el motor tradicional.
 - Asociación de lectura: consultas.csv, screen=bitacoras, filters_json.remote_identity.
 - Evidencia nueva: filters_json.revision_bitacoras. El exportador copia el objeto
   lectura.datos.revision_bitacoras; solo lo escribe cuando existe.
-- Captura: recoleccion.rs::persistir llama evidencia_revision antes del recorte
-  legado de entradas. Conserva entries, warnings, coverage, captured_at, desde y hasta.
+- Captura: recoleccion.rs::persistir conserva el mismo límite histórico en entries
+  y en los metadatos. Registra warnings, coverage, captured_at, desde y hasta.
 - Autoría: lecturas.rs::leer_bitacora valida la tabla y sus HOBS_Centro asociados,
   la identidad del formulario y las entradas ocultas antes de emitir origen=centro.
   El clasificador usa ese campo estructurado; no busca palabras en el texto.
@@ -21,11 +21,16 @@ No cambia las columnas ni los campos que consume el motor tradicional.
 ## Objeto adicional
 
 version=1, desde/hasta (fechas civiles ISO inclusivas), captured_at (RFC3339),
-coverage, completa (booleano), entries (entradas originales sin recortar),
-warnings y time_zone=FECHA_CIVIL_DE_LA_CAPTURA.
+coverage, completa (booleano), entries (entradas del intervalo capturado),
+warnings, time_zone=FECHA_CIVIL_DE_LA_CAPTURA y contadores de entradas omitidas.
+No se vuelve a persistir texto anterior al límite histórico. Una fecha ilegible
+deja contador/advertencia de incertidumbre sin retener su texto descartado.
 
 Una lectura nueva solo acredita completitud si coverage es COMPLETA o
 VACIA_COMPROBADA, no tiene advertencias y todas sus entradas tienen fecha válida.
+La ruta actual de SITFA solo declara PARCIAL: el cierre E3 requiere identificar
+una señal fiable de exhaustividad de esa fuente. Los fixtures completos prueban
+el consumidor del contrato, no acreditan por sí solos la captura habitual.
 La importación comprueba además fechas, captura, identidad, período y consistencia.
 No se asigna completitud a lecturas legadas reutilizadas: sus fechas ilegibles
 pueden haber sido descartadas antes. Varias instantáneas diferentes no se combinan
@@ -54,11 +59,16 @@ Misma identidad compuesta y tipo con datos normalizados iguales: una fila lógic
 con todas sus procedencias. Datos distintos o record_id reutilizado para identidades
 distintas: No verificable. Eventos iguales se deduplican; un mismo entry_id con
 contenido distinto o instantáneas diferentes queda No verificable.
+El cotejo CSV conserva consulta, ID de evento y momento/precisión, además del texto.
+Dos eventos con el mismo texto y día pero distintos IDs no se reducen a uno.
 
 ## Verificación
 
 tests/revision_bitacoras.rs genera ZIP sintéticos en memoria: identidad, estados,
 autoría, fechas, duplicados, paquete legado, alteraciones y paridad del motor con
 una fila elegida cuyo cálculo depende de otra no elegida.
-recoleccion.rs prueba preservación de fechas ilegibles y lectura vacía acreditada.
+recoleccion.rs prueba incertidumbre de fechas ilegibles sin texto retenido y el
+recorte histórico. UI prueba captura→ZIP→JSON sin reintroducir texto antiguo.
+El JSON exportado acota eventos/entradas al período elegido, informa omisiones y
+no muta la evidencia en memoria necesaria para volver a analizar otro intervalo.
 

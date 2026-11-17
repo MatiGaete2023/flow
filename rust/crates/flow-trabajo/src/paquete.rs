@@ -460,8 +460,42 @@ struct EvidenciaIngreso {
     cobertura: Option<(Fecha, Fecha)>,
     contradictoria: bool,
     ids: HashMap<String, String>,
-    esperados: std::collections::HashSet<(Fecha, String)>,
-    normalizados: std::collections::HashSet<(Fecha, String)>,
+    // Consulta + ID original + instante/precisión disponible + texto.
+    esperados: std::collections::HashSet<[String; 4]>,
+    normalizados: std::collections::HashSet<[String; 4]>,
+    alias_ids: HashMap<(String, String), Option<String>>,
+    firmas_normalizadas: HashMap<[String; 4], String>,
+}
+
+fn momento_revision(texto: &str, precision: &str) -> Option<String> {
+    if texto.len() == 10 {
+        if precision == "SEGUNDO" { return None; }
+        return texto.parse::<Fecha>().ok().map(|d| format!("DIA:{d}"));
+    }
+    if let Ok(t) = chrono::DateTime::parse_from_rfc3339(texto) {
+        if precision == "DIA" { return None; }
+        // ISO 8601 admite zona: Z y +00:00 son equivalentes. Conservamos fecha y
+        // hora civiles y el desplazamiento acreditado; nunca suponemos zona para
+        // una hora naive ni desplazamos su fecha a UTC para emparejar entradas.
+        return Some(format!("SEGUNDO:{}#{}", t.naive_local().format("%Y-%m-%dT%H:%M:%S%.f"), t.offset().local_minus_utc()));
+    }
+    let t = chrono::NaiveDateTime::parse_from_str(texto, "%Y-%m-%dT%H:%M:%S%.f").ok()?;
+    // El exportador convierte exactamente T00:00:00 a fecha civil sin hora.
+    if texto.ends_with("T00:00:00") && precision != "SEGUNDO" {
+        Some(format!("DIA:{}", t.date()))
+    } else if precision == "DIA" {
+        None
+    } else {
+        Some(format!("SEGUNDO:{}", t.format("%Y-%m-%dT%H:%M:%S%.f")))
+    }
+}
+
+fn alias_revision(d: &mut EvidenciaIngreso, consulta: &str, id: &str) {
+    for alias in [id.to_string(), format!("{consulta}-{id}")] {
+        d.alias_ids.entry((consulta.to_string(), alias))
+            .and_modify(|previo| { if previo.as_deref() != Some(id) { *previo = None; } })
+            .or_insert_with(|| Some(id.to_string()));
+    }
 }
 
 /// Indiza cada consulta y evento una vez. La evidencia no depende del filtro temporal de la UI.
@@ -508,8 +542,16 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
                 if !e["texto"].is_string() { d.incompleta = true; }
                 let fecha = e["fecha"].as_str().and_then(dia);
                 let texto = e["texto"].as_str().unwrap_or("").to_string();
-                if let Some(fecha) = fecha.filter(|f| a.is_some_and(|a| *f >= a)) {
-                    if !texto.trim().is_empty() { d.esperados.insert((fecha,texto.clone())); }
+                if fecha.is_some_and(|f| a.is_some_and(|a| f >= a)) {
+                    if !texto.trim().is_empty() {
+                        let consulta = dato(q,"query_id");
+                        if id.is_empty() || consulta.is_empty() {
+                            d.contradictoria = true;
+                        } else if let Some(momento) = momento_revision(e["fecha"].as_str().unwrap_or(""), "") {
+                            alias_revision(d, consulta, &id);
+                            d.esperados.insert([consulta.into(), id.clone(), momento, texto.clone()]);
+                        } else { d.contradictoria = true; }
+                    }
                 }
                 d.eventos.push(Evento { id, momento:e["fecha"].as_str().unwrap_or("").into(), fecha, texto,
                     autor:match e["origen"].as_str() {
@@ -531,8 +573,18 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         let d = salida.entry(ident).or_default();
         if !verificada(e) { d.contradictoria = true; }
         if !dato(e,"text").trim().is_empty() {
-            if let Some(fecha) = dia(dato(e,"event_at")) { d.normalizados.insert((fecha,dato(e,"text").into())); }
-            else { d.contradictoria = true; }
+            let consulta = dato(e,"query_id");
+            let id = d.alias_ids.get(&(consulta.into(),dato(e,"event_id").into())).cloned().flatten();
+            if let (Some(id), Some(momento)) = (id, momento_revision(dato(e,"event_at"), dato(e,"time_precision"))) {
+                let clave = [consulta.into(),id.clone(),momento,dato(e,"text").into()];
+                let mut campos = e.iter().map(|(k,v)|(k.clone(),v.clone())).collect::<BTreeMap<_,_>>();
+                campos.insert("event_id".into(),id);
+                let firma = hex(serde_json::to_string(&campos).unwrap_or_default().as_bytes());
+                if let Some(previa) = d.firmas_normalizadas.insert(clave.clone(),firma.clone()) {
+                    if previa != firma { d.contradictoria = true; }
+                }
+                d.normalizados.insert(clave);
+            } else { d.contradictoria = true; }
         }
     }
     for d in salida.values_mut() {

@@ -19,6 +19,22 @@ fn habitual(f: &flow_trabajo::revision_informe::FilaRevision, aliases: &[&str]) 
     }).unwrap_or_default()
 }
 
+fn fila_json(f:&flow_trabajo::revision_informe::FilaRevision,informe:&Informe)->Result<serde_json::Value,String>{
+    let mut fila=serde_json::to_value(f).map_err(|e|e.to_string())?;
+    let dentro=|v:&serde_json::Value|v.as_str().and_then(|s|s.get(..10)).and_then(|s|s.parse::<chrono::NaiveDate>().ok()).is_some_and(|d|d>=informe.desde&&d<=informe.hasta);
+    let mut eventos_omitidos=0;let mut entradas_omitidas=0;
+    if let Some(eventos)=fila["evidencia"]["eventos"].as_array_mut(){
+        let antes=eventos.len();eventos.retain(|e|dentro(&e["fecha"]));eventos_omitidos=antes-eventos.len();
+    }
+    for lectura in fila["lecturas"].as_array_mut().into_iter().flatten(){
+        if let Some(entradas)=lectura["evidencia"]["entries"].as_array_mut(){
+            let antes=entradas.len();entradas.retain(|e|dentro(&e["fecha"]));entradas_omitidas+=antes-entradas.len();
+        }
+    }
+    fila["omisiones_exportacion"]=json!({"evidencia_acotada_al_periodo":true,"eventos":eventos_omitidos,"entradas":entradas_omitidas});
+    Ok(fila)
+}
+
 #[cfg(target_os = "linux")]
 fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> {
     use std::os::unix::ffi::OsStrExt;
@@ -129,7 +145,7 @@ fn exportar_con(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, 
     libro.save(temporal.path().join(&excel_nombre)).map_err(|e|e.to_string())?;
     despues_excel(temporal.path())?;
     verificar()?;
-    let filas = indices.iter().map(|&i| &informe.filas[i]).collect::<Vec<_>>();
+    let filas = indices.iter().map(|&i|fila_json(&informe.filas[i],informe)).collect::<Result<Vec<_>,_>>()?;
     let reporte = json!({"version":1,"alcance":alcance,"huella_paquete":informe.huella_paquete,"contrato":informe.contrato,
         "desde":informe.desde,"hasta":informe.hasta,"corte":informe.corte,"filas_fuente":informe.filas_fuente,
         "total_registros":informe.filas.len(),"conteos_totales":totales,"conteos_exportados":exportados,
@@ -179,6 +195,21 @@ mod tests {
         assert!(!sheet.contains("<f>"));
         let mut book = String::new(); zip.by_name("xl/workbook.xml").unwrap().read_to_string(&mut book).unwrap();
         for nombre in ["Sin observación","Con observación","No verificables","Fuera de alcance","Resumen"] { assert!(book.contains(nombre)); }
+    }
+    #[test]
+    fn json_acota_evidencia_al_periodo_sin_mutar_el_informe() {
+        use flow_trabajo::revision_bitacoras::{Evento,Autor};
+        let mut reporte=informe();let antes="2026-11-16".parse().unwrap();let d=reporte.desde;
+        reporte.filas[0].evidencia.eventos=Some(vec![Evento{id:"e0".into(),momento:antes.to_string(),fecha:Some(antes),texto:"FUERA_NO_EXPORTAR".into(),autor:Autor::Centro},
+            Evento{id:"e1".into(),momento:d.to_string(),fecha:Some(d),texto:"Dentro".into(),autor:Autor::Centro}]);
+        reporte.filas[0].lecturas=vec![json!({"evidencia":{"entries":[{"fecha":"2026-11-16","texto":"FUERA_NO_EXPORTAR"},{"fecha":"2026-11-17","texto":"Dentro"}]}})];
+        let original=serde_json::to_value(&reporte).unwrap();let base=tempfile::tempdir().unwrap();
+        let producto=exportar(&reporte,None,base.path(),&AtomicBool::new(false)).unwrap();
+        let texto=std::fs::read_to_string(producto.json).unwrap();assert!(!texto.contains("FUERA_NO_EXPORTAR"));
+        let data:serde_json::Value=serde_json::from_str(&texto).unwrap();
+        assert_eq!(data["filas"][0]["omisiones_exportacion"],json!({"evidencia_acotada_al_periodo":true,"eventos":1,"entradas":1}));
+        assert_eq!(data["filas"][0]["evidencia"]["eventos"].as_array().unwrap().len(),1);
+        assert_eq!(serde_json::to_value(&reporte).unwrap(),original);
     }
     #[test]
     fn cancelacion_y_seleccion_invalida_no_publican_nada() {

@@ -27,6 +27,7 @@ fn build(rows: Vec<Value>, qs: Vec<Value>) -> Vec<u8> {
             if day.zip(from).is_some_and(|(a,b)|a>=b) {
                 events.push(json!({"query_id":q["query_id"],"source_system":m["source_system"],"court_code":m["court_code"],
                     "cause_id":m["cause_id"],"ingreso_id":m["ingreso_id"],"identity_status":"VERIFICADA",
+                    "event_id":format!("{}-{}",q["query_id"].as_str().unwrap(),e["entry_id"].as_str().unwrap_or("")),
                     "event_at":e["fecha"],"text":e["texto"],"origin":"CENTRO","origin_verified":"true","coverage":q["coverage"]}));
             }
         }
@@ -201,6 +202,68 @@ fn ids_distintos_y_cambio_a_periodo_anterior_conservan_evidencia() {
     assert_eq!(report.conteos(),[0,0,1,0]);
     report.cambiar_periodo(fecha("2026-11-01"),fecha("2026-11-16"),fecha("2026-11-17")).unwrap();
     assert_eq!(report.conteos(),[1,0,0,0]);
+}
+
+#[test]
+fn cotejo_conserva_id_consulta_y_precision_y_solo_deduplica_copias_identicas() {
+    let normalizada = |id: &str, momento: &str| json!({
+        "query_id":"b1","event_id":format!("b1-{id}"),
+        "source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+        "identity_status":"VERIFICADA","event_at":momento,"time_precision":"SEGUNDO",
+        "text":"Nota ficticia","origin":"CENTRO","origin_verified":"true","coverage":"COMPLETA"
+    });
+    let e1 = event("e1","2026-11-17T10:00:00","centro");
+    let e2 = event("e2","2026-11-17T11:00:00","centro");
+    let q = query("b1","201",vec![e1.clone(),e2.clone()],true);
+    let n1 = normalizada("e1","2026-11-17T10:00:00");
+    let n2 = normalizada("e2","2026-11-17T11:00:00");
+    let pack = |q: Value, events: Vec<Value>| build_tables(vec![
+        ("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",events)]);
+    let report = inspect(&pack(q.clone(),vec![n1.clone(),n2.clone()]));
+    assert_eq!(report.conteos(),[0,1,0,0]);
+    assert_eq!(report.filas[0].revision.eventos_elegibles,2);
+    // Antes el conjunto (día,texto) no detectaba la pérdida de esta segunda entrada.
+    assert_eq!(inspect(&pack(q.clone(),vec![n1.clone()])).conteos(),[0,0,1,0]);
+    // Tampoco se acepta una segunda entrada con el mismo ID y otra hora.
+    assert_eq!(inspect(&pack(q,vec![n1.clone(),normalizada("e2","2026-11-17T12:00:00")])).conteos(),[0,0,1,0]);
+    let q = query("b1","201",vec![e1.clone(),e1],true);
+    let report = inspect(&pack(q,vec![n1.clone(),n1]));
+    assert_eq!(report.conteos(),[0,1,0,0]);
+    assert_eq!(report.filas[0].revision.eventos_elegibles,1);
+    assert_eq!(report.filas[0].revision.duplicados_identicos,1);
+    // Compatibilidad: el ID normalizado puede conservarse directamente, sin prefijo.
+    let mut directo = n2; directo["event_id"] = json!("e2");
+    let q = query("b1","201",vec![e2],true);
+    assert_eq!(inspect(&pack(q,vec![directo])).conteos(),[0,1,0,0]);
+    let e = event("midnight","2026-11-17T00:00:00","centro");
+    let mut n = normalizada("midnight","2026-11-17");
+    n["time_precision"] = json!("DIA");
+    let q = query("b1","201",vec![e],true);
+    assert_eq!(inspect(&pack(q.clone(),vec![n.clone()])).conteos(),[0,1,0,0]);
+    let mut distinta = n.clone(); distinta["author"] = json!("Autor distinto");
+    assert_eq!(inspect(&pack(q,vec![n,distinta])).conteos(),[0,0,1,0]);
+}
+
+#[test]
+fn cotejo_iso8601_con_zona_conserva_fecha_civil_y_no_inventa_zona() {
+    let n = |momento: &str| json!({
+        "query_id":"b1","event_id":"b1-e1",
+        "source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+        "identity_status":"VERIFICADA","event_at":momento,"time_precision":"SEGUNDO",
+        "text":"Nota ficticia","origin":"CENTRO","origin_verified":"true","coverage":"COMPLETA"
+    });
+    for (raw, csv, esperado) in [
+        ("2026-11-17T10:00:00Z","2026-11-17T10:00:00+00:00",C::ConObservacion),
+        ("2026-11-17T10:00:00+00:00","2026-11-17T10:00:00Z",C::ConObservacion),
+        ("2026-11-17T10:00:00-03:00","2026-11-17T10:00:00-03:00",C::ConObservacion),
+        ("2026-11-17T10:00:00-03:00","2026-11-17T10:00:00+00:00",C::NoVerificable),
+        ("2026-11-17T10:00:00-03:00","2026-11-17T13:00:00Z",C::NoVerificable),
+        ("2026-11-17T10:00:00","2026-11-17T10:00:00Z",C::NoVerificable),
+    ] {
+        let q = query("b1","201",vec![event("e1",raw,"centro")],true);
+        let bytes = build_tables(vec![("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",vec![n(csv)])]);
+        assert_eq!(inspect(&bytes).filas[0].revision.clasificacion,esperado,"{raw} frente a {csv}");
+    }
 }
 
 #[test]

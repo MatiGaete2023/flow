@@ -63,8 +63,9 @@ anteriores siguen disponibles durante la sesión.
    el contador mantiene su alcance. Seleccionados es la opción inicial. Elige Todos
    los clasificados solo cuando quieras exportar el informe completo.
 9. Exportar listado crea juntos un Excel y un JSON en una carpeta nueva. El Excel
-   tiene Resumen y las cuatro categorías. El JSON conserva evidencia, procedencia,
-   propuesta original, edición y revisión. Abrir resultados lleva a esa carpeta.
+   tiene Resumen y las cuatro categorías. El JSON conserva la evidencia del período
+   exportado, procedencia, propuesta original, edición y revisión. Identifica cuántas
+   entradas se omitieron por quedar fuera de ese período. Abrir resultados lleva a esa carpeta.
 
 Cambiar paquete o período pide confirmación si existen propuestas, ediciones o marcas.
 Hasta volver a analizar, el criterio cambiado impide aplicar reglas o exportar.

@@ -23,3 +23,8 @@ Esto prueba la interfaz sobre ambos sistemas y el renderizado por software del
 servidor. No representa una prueba del controlador gráfico del equipo del usuario
 ni de su sesión real de Outlook o SITFA.
 
+El servidor Windows ofrece un escritorio de1024×768. El modo de demostración
+desactiva el límite al monitor para renderizar los tamaños solicitados sin cambiar
+la resolución del sistema. La matriz exige los píxeles exactos: no acepta una imagen
+de1024×768 como comprobación de1366×768. La ventana de uso normal conserva su política.
+

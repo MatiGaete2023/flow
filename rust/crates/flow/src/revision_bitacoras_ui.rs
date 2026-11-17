@@ -77,6 +77,12 @@ impl RevisionUi {
         let Some(fila)=self.informe.as_mut().and_then(|i|i.filas.get_mut(indice))else{return false};
         fila.revisada=revisada;true
     }
+    fn copiar_observacion(&self,indice:usize,ctx:&egui::Context)->bool {
+        if self.obsoleto()||self.receptor.is_some(){return false}
+        let Some(f)=self.informe.as_ref().and_then(|i|i.filas.get(indice))else{return false};
+        let Some(p)=&f.propuesta else{return false};
+        ctx.copy_text(f.edicion.as_ref().unwrap_or(&p.observacion).clone());true
+    }
     fn solicitar(&mut self, accion: Accion, ctx: &egui::Context) {
         let reemplaza=matches!(&accion,Accion::Abrir(_)) || self.obsoleto();
         if self.tiene_ediciones() && reemplaza {self.confirmar=Some(accion);} else {self.ejecutar(accion,ctx);}
@@ -234,7 +240,7 @@ impl RevisionUi {
             if ui.button("Quitar selección").clicked(){self.seleccion.clear();}
         });}
         if self.activa.is_none(){self.activa=visibles.first().copied();}
-        let mut revision_cambio=None;
+        let mut revision_cambio=None;let mut copiar=None;
         let mut editor=|ui:&mut egui::Ui|{
             if let Some(f)=self.activa.and_then(|i|informe.filas.get_mut(i)){
                 egui::ScrollArea::vertical().id_salt("revision_editor_scroll").show(ui,|ui|{
@@ -250,7 +256,7 @@ impl RevisionUi {
                         if ui.add_enabled(!ocupada && !obsoleto,egui::TextEdit::multiline(&mut texto).desired_width(f32::INFINITY).desired_rows(if compacto{3}else{4})).changed(){f.edicion=Some(texto);}
                         ui.horizontal(|ui|{
                             if ui.add_enabled(f.edicion.is_some()&&!ocupada&&!obsoleto,egui::Button::new("Restaurar propuesta")).clicked(){f.edicion=None;}
-                            if ui.button("Copiar observación").clicked(){ui.ctx().copy_text(f.edicion.as_ref().unwrap_or(&p.observacion).clone());}
+                            if ui.add_enabled(!ocupada&&!obsoleto,egui::Button::new("Copiar observación")).clicked(){copiar=self.activa;}
                         });
                         ui.collapsing("Propuesta original, reglas y avisos",|ui|{ui.label(&p.observacion);ui.label(p.reglas.join(" · "));for a in &p.avisos{ui.label(a);}});
                     }else{ui.label("Sin propuesta aplicada. Solo los registros con ausencia verificada pueden recibirla.");}
@@ -286,7 +292,7 @@ impl RevisionUi {
                                     ui.label(e["texto"].as_str().unwrap_or("Texto ilegible"));
                                 });
                             }
-                            if entradas.is_some_and(|e|e.len()>200){ui.label("Se muestran las primeras 200 entradas. El informe JSON conserva la evidencia completa.");}
+                            if entradas.is_some_and(|e|e.len()>200){ui.label("Se muestran las primeras 200 entradas. El JSON conserva todas las entradas del período exportado.");}
                         });
                     }
                     ui.collapsing("Datos de origen",|ui|{for (campo,v) in f.valores.as_object().into_iter().flat_map(|m|m.iter()){ui.label(format!("{campo}: {}",v.as_str().map(str::to_owned).unwrap_or_else(||v.to_string())));}});
@@ -319,6 +325,7 @@ impl RevisionUi {
         });
         }
         if let Some((i,revisada))=revision_cambio{self.marcar_revisada(i,revisada);}
+        if let Some(i)=copiar{self.copiar_observacion(i,ctx);}
         self.confirmacion(ctx);
     }
     fn criterios(&mut self,ui:&mut egui::Ui,ctx:&egui::Context,ocupada:bool){
@@ -411,6 +418,16 @@ mod tests {
         ui.informe=Some(Informe {version:1,contrato:"1.0.0".into(),huella_paquete:"a".repeat(64),
             desde:d,hasta:d,corte:d,filas_fuente:0,duplicados_registros:0,filas:vec![],motor_aplicado:false,version_reglas:None});
         ui
+    }
+    #[test]
+    fn criterio_obsoleto_no_copia_al_portapapeles() {
+        let mut revision=RevisionUi::default();
+        revision.demostracion(crate::demo_paquete::crear().unwrap(),&Config::default(),2).unwrap();
+        assert!(revision.informe.as_ref().unwrap().filas[0].propuesta.is_some());
+        revision.corte="2026-11-18".into();
+        let ctx=egui::Context::default();
+        assert!(!revision.copiar_observacion(0,&ctx));
+        assert!(ctx.output(|o|o.commands.is_empty()));
     }
     #[test]
     fn criterio_obsoleto_bloquea_motor_y_exportacion_antes_de_efectos() {

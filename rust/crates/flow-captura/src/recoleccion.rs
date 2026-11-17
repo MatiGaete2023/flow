@@ -219,12 +219,21 @@ fn evidencia_revision(valor: &Value, capturada: &str, meses: u32) -> Result<Valu
     let hasta = fecha("hasta", hasta)?;
     if desde > hasta { return Err("Período invertido en la lectura.".into()); }
     let entries = valor["entries"].as_array().ok_or("La bitácora no conserva entradas.")?;
-    let fechas_validas = entries.iter().all(|e| e["fecha"].as_str().and_then(|s| s.get(..10)).and_then(|s| s.parse::<chrono::NaiveDate>().ok()).is_some());
-    let sin_avisos = valor["warnings"].as_array().is_some_and(Vec::is_empty);
+    let fecha_entrada=|e:&Value|e["fecha"].as_str().and_then(|s|s.get(..10)).and_then(|s|s.parse::<chrono::NaiveDate>().ok());
+    let ilegibles=entries.iter().filter(|e|fecha_entrada(e).is_none()).count();
+    let posteriores=entries.iter().filter(|e|fecha_entrada(e).is_some_and(|f|f>hasta)).count();
+    let anteriores=entries.iter().filter(|e|fecha_entrada(e).is_some_and(|f|f<desde)).count();
+    let dentro=entries.iter().filter(|e|fecha_entrada(e).is_some_and(|f|f>=desde&&f<=hasta)).cloned().collect::<Vec<_>>();
+    let mut avisos=valor["warnings"].as_array().cloned().unwrap_or_else(||vec![json!("Advertencias de origen no disponibles.")]);
+    if ilegibles>0 {avisos.push(json!(format!("{ilegibles} entradas sin fecha acreditable: se omite su contenido y no se acredita ausencia.")));}
+    if posteriores>0 {avisos.push(json!(format!("{posteriores} entradas posteriores a la captura: se omite su contenido y no se acredita ausencia.")));}
+    let fechas_validas = ilegibles==0&&posteriores==0;
+    let sin_avisos = avisos.is_empty();
     let completa = matches!(valor["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA")) && sin_avisos && fechas_validas;
     Ok(json!({"version":1,"desde":desde.to_string(),"hasta":hasta.to_string(),
         "captured_at":capturada,"coverage":valor["coverage"],"completa":completa,
-        "entries":entries,"warnings":valor["warnings"],"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA"}))
+        "entries":dentro,"warnings":avisos,"anteriores_omitidas":anteriores,"ilegibles_omitidas":ilegibles,
+        "posteriores_omitidas":posteriores,"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA"}))
 }
 
 pub struct Recoleccion {
@@ -317,7 +326,7 @@ impl Recoleccion {
             return Err("La lectura no conserva una fecha de captura válida.".into());
         }
         // Una lectura reutilizada puede estar recortada: nunca reconstruir su evidencia como completa.
-        // Esta copia aditiva conserva entradas con fecha inválida y autoría antes del recorte legado.
+        // Los metadatos respetan el mismo límite histórico y no retienen texto sin fecha.
         if tipo == "bitacora" && !reutilizada && valor.get("revision_bitacoras").is_none() {
             valor["revision_bitacoras"] = evidencia_revision(&valor, &capturada, meses)?;
         }
@@ -556,12 +565,25 @@ mod pruebas_limite {
     use super::*;
 
     #[test]
-    fn revision_preserva_fechas_ilegibles_y_no_acredita_ausencia() {
+    fn revision_preserva_incertidumbre_sin_retener_texto_de_fecha_ilegible() {
         let valor = json!({"coverage":"COMPLETA","warnings":[],"desde":"2026-10-17","hasta":"2026-11-17",
             "entries":[{"fecha":"ilegible","origen":"centro","texto":"Nota ficticia"}]});
         let r = evidencia_revision(&valor, "2026-11-17T12:00:00-03:00", 1).unwrap();
-        assert_eq!(r["entries"], valor["entries"]);
+        assert_eq!(r["entries"], json!([]));
+        assert_eq!(r["ilegibles_omitidas"],1);
+        assert!(!r.to_string().contains("Nota ficticia"));
         assert_eq!(r["completa"], false);
+    }
+
+    #[test]
+    fn revision_no_reintroduce_textos_fuera_de_la_ventana_historica() {
+        let valor=json!({"coverage":"COMPLETA","warnings":[],"entries":[
+            {"fecha":"2026-01-01","texto":"ANTIGUA_NO_PERSISTIR"},
+            {"fecha":"2026-10-17","texto":"Límite inclusivo"},
+            {"fecha":"2026-11-17","texto":"Dentro"}]});
+        let r=evidencia_revision(&valor,"2026-11-17T12:00:00-03:00",1).unwrap();
+        assert_eq!(r["entries"].as_array().unwrap().len(),2);assert_eq!(r["anteriores_omitidas"],1);
+        assert!(!r.to_string().contains("ANTIGUA_NO_PERSISTIR"));assert_eq!(r["completa"],true);
     }
 
     #[test]
