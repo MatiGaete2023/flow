@@ -1,5 +1,5 @@
 //! Revisión de bitácoras: operaciones locales en segundo plano, evidencia separada de propuestas.
-use eframe::egui::{self, RichText};
+use eframe::egui::{self};
 use egui_extras::{Column, TableBuilder};
 use flow_dominio::{celda::fecha_de_texto, Fecha};
 use flow_motor::Config;

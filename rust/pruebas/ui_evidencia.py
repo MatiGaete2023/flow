@@ -36,7 +36,7 @@ def main():
     destino = Path(args.salida).resolve()
     destino.mkdir(parents=True, exist_ok=False)
     exe = str(Path(args.exe).resolve())
-    pantallas = ["trabajo", "correos", "resoluciones", "resultados", "contactos", "captura", "anonimizador", "meta4", "revision", "ayuda", "recalculo"]
+    pantallas = ["trabajo", "trabajo-evidencia", "trabajo-editor", "correos", "resoluciones", "resultados", "contactos", "captura", "anonimizador", "meta4", "revision", "ayuda", "recalculo"]
     dimensiones = [(1366, 768), (1920, 1080)] if args.completa else [(1366, 768)]
     escalas = [1.0, 1.25, 1.5, 2.0] if args.completa else [1.0]
     resultados = []
@@ -60,6 +60,14 @@ def main():
     print("FLOW_UI_PREVIEW_BEGIN")
     print(base64.b64encode(vista.read_bytes()).decode("ascii"))
     print("FLOW_UI_PREVIEW_END")
+    if args.completa:
+        for nombre in ["trabajo-1366x768-200.png","trabajo-editor-1366x768-200.png","correos-1366x768-100.png","contactos-1366x768-200.png"]:
+            print("FLOW_UI_IMAGE_BEGIN " + nombre)
+            print(base64.b64encode((destino / nombre).read_bytes()).decode("ascii"))
+            print("FLOW_UI_IMAGE_END")
+    print("FLOW_UI_MATRIX_BEGIN")
+    print(json.dumps(resultados))
+    print("FLOW_UI_MATRIX_END")
 
 
 if __name__ == "__main__":

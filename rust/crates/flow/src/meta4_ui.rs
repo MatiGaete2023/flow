@@ -1,5 +1,5 @@
 //! Pestaña Meta 4: lee lotes de captura locales y genera la planilla y sus consolidados. No se conecta a nada.
-use eframe::egui::{self, Color32, RichText};
+use eframe::egui::{self, RichText};
 use flow_dominio::celda::fecha_de_texto;
 use flow_meta4::{calcular, fecha_lectura, regenerar, salida, tribunales::TRIBUNALES, tribunales_en_lotes};
 use std::path::PathBuf;
@@ -234,7 +234,7 @@ impl Meta4 {
         });
         match &self.mensaje {
             Some((true, texto)) => {
-                ui.colored_label(Color32::from_rgb(190, 40, 40), texto);
+                ui.colored_label(crate::tema::ERROR, texto);
             }
             Some((false, texto)) => {
                 ui.label(texto);
@@ -242,9 +242,13 @@ impl Meta4 {
             None => {}
         }
         for aviso in &self.avisos {
-            ui.colored_label(Color32::from_rgb(170, 110, 0), format!("• {aviso}"));
+            ui.colored_label(crate::tema::AVISO, format!("• {aviso}"));
         }
         ui.add_space(6.0);
         ui.weak("Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar el control de bitácora. La fecha es la de la observación del centro; Informes no participa.");
     }
 }
+
+
+
+

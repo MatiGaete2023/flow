@@ -2,7 +2,7 @@
 //! Todo queda en el equipo. No escribe en RUS ni SATURNO y no envía correos.
 
 use crate::cli;
-use eframe::egui::{self, Color32, Key, RichText};
+use eframe::egui::{self, Key, RichText};
 use egui_extras::{Column, TableBuilder};
 use flow_dominio::celda::fecha_de_texto;
 use flow_dominio::{Etapa, Fecha, CC_FIJO};
@@ -182,6 +182,7 @@ struct App {
     /// Nombre del programa que se está editando (para renombrar); `None`: contacto nuevo.
     edicion: Option<String>,
     buscar_contacto: String,
+    ficha_contacto:bool,
     /// Contactos leídos del Asistente Python (solo lectura): no se guardan en Flow hasta que el usuario los confirme.
     contactos_csmp: Option<PathBuf>,
     /// Importación revisada y pendiente de confirmar: (origen, resultado).
@@ -189,6 +190,8 @@ struct App {
     ayuda: bool,
     sin_guardar: bool,
     confirmar_recalculo: bool,
+    panel_trabajo:u8,
+    distribucion:u64,
     captura: crate::captura_ui::Captura,
     anonimo: crate::anonimo_ui::Anonimo,
     meta4: crate::meta4_ui::Meta4,
@@ -335,11 +338,14 @@ impl App {
             nuevo: Default::default(),
             edicion: None,
             buscar_contacto: String::new(),
+            ficha_contacto:false,
             contactos_csmp,
             importacion: None,
             ayuda: false,
             sin_guardar: false,
             confirmar_recalculo: false,
+            panel_trabajo:0,
+            distribucion:0,
             captura: Default::default(),
             anonimo: Default::default(),
             meta4: Default::default(),
@@ -999,24 +1005,35 @@ impl App {
     fn pie(&mut self, ui: &mut egui::Ui) {
         if self.contactos_error.is_some() {
             ui.colored_label(
-                Color32::from_rgb(190, 40, 40),
+                crate::tema::ERROR,
                 "Contactos no disponibles: revise la pestaña Contactos. El archivo anterior se conserva.",
             );
         }
         ui.horizontal_wrapped(|ui| {
             match &self.mensaje {
-                Some((true, texto)) => ui.colored_label(Color32::from_rgb(190, 40, 40), texto),
+                Some((true, texto)) => ui.colored_label(crate::tema::ERROR, format!("⚠ {texto}")),
                 Some((false, texto)) => ui.label(texto),
                 None => ui.label("Abre un Excel de RUS para comenzar."),
             };
         });
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             ui.weak("No escribe en RUS ni SATURNO · No envía correos · CC fijo:");
             ui.label(CC_FIJO);
         });
     }
 
     fn vista_trabajo(&mut self, ui: &mut egui::Ui) {
+        let compacto=ui.available_width()<1000.0 || ui.available_height()<480.0;
+        let mut guardar_excel=false;
+        ui.horizontal_wrapped(|ui|{
+            if compacto {
+                for (p,n) in [(0,"Lista"),(1,"Evidencia"),(2,"Observación")] {ui.selectable_value(&mut self.panel_trabajo,p,n);}
+            }
+            if ui.button("Restaurar distribución").clicked(){self.distribucion=self.distribucion.wrapping_add(1);self.panel_trabajo=0;}
+            if ui.add_enabled(self.trabajo.is_some(),egui::Button::new("Guardar Excel (Ctrl+S)")).clicked(){guardar_excel=true;}
+        });
+        let panel=self.panel_trabajo;
+
         let Some(trabajo) = &mut self.trabajo else {
             ui.add_space(30.0);
             ui.vertical_centered(|ui| {
@@ -1025,9 +1042,8 @@ impl App {
             });
             return;
         };
-        let mut guardar_excel = false;
         let mut cambiar = None;
-        ui.horizontal_wrapped(|ui| {
+        crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {
             egui::ComboBox::from_id_salt("tablas_trabajo")
                 .selected_text(format!("{} ({})",trabajo.nombre(),trabajo.filas.len())).show_ui(ui,|ui|{
                     ui.label(format!("Actual: {} ({})",trabajo.nombre(),trabajo.filas.len()));
@@ -1054,13 +1070,14 @@ impl App {
                 ui.selectable_value(&mut self.filtro, f, nombre);
             }
             ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar RIT, nombre, programa…").desired_width(190.0));
-            if ui.button("Guardar Excel de observaciones  (Ctrl+S)").clicked() {
-                guardar_excel = true;
-            }
+            if ui.button("Limpiar filtros").clicked(){self.filtro=Filtro::Todos;self.buscar.clear();}
         });
-        for aviso in &trabajo.avisos {
-            ui.colored_label(Color32::from_rgb(170, 110, 0), aviso);
+        if !trabajo.avisos.is_empty(){
+            crate::paneles_ui::configuracion(ui,compacto,&format!("Avisos de fuente ({})",trabajo.avisos.len()),|ui|{
+                for aviso in &trabajo.avisos{ui.colored_label(crate::tema::AVISO,format!("⚠ {aviso}"));}
+            });
         }
+        if compacto && (self.filtro!=Filtro::Todos || !self.buscar.is_empty()){ui.small("Filtros de Trabajo activos; abre Filtros y etapas para verlos o limpiarlos.");}
         let filtro = self.filtro;
         let buscar = self.buscar.clone();
         let visibles: Vec<usize> = trabajo
@@ -1078,7 +1095,7 @@ impl App {
             .collect();
         let mut seleccion = self.seleccion;
         let mut cambio = false;
-        egui::TopBottomPanel::bottom("editor_trabajo").resizable(true).default_height(210.0).min_height(110.0).show_inside(ui, |ui| {
+        let mut editor=|ui:&mut egui::Ui| {
             let Some(fila) = seleccion.and_then(|i| trabajo.filas.get_mut(i)) else {
                 ui.label("Elige un registro para revisar su observación.");
                 return;
@@ -1106,8 +1123,11 @@ impl App {
                     ui.label(if fila.propuesta.observacion.is_empty() { "(sin observación)" } else { &fila.propuesta.observacion });
                 }
             });
-        });
-        egui::SidePanel::right("detalle").resizable(true).default_width(410.0).show_inside(ui, |ui| {
+        };
+        if compacto {if panel==2{editor(ui);}}else{
+            egui::TopBottomPanel::bottom(egui::Id::new(("editor_trabajo",self.distribucion))).resizable(true).default_height(210.0).min_height(110.0).show_inside(ui,&mut editor);
+        }
+        let mut detalle=|ui:&mut egui::Ui| {
             let Some(fila) = seleccion.and_then(|i| trabajo.filas.get_mut(i)) else {
                 ui.label("Elige un registro de la lista.");
                 return;
@@ -1126,8 +1146,8 @@ impl App {
                     ui.label(RichText::new("Revisar").strong());
                     for m in &fila.propuesta.marcas {
                         let color = match m.nivel {
-                            1 => Color32::from_rgb(190, 40, 40),
-                            2 => Color32::from_rgb(170, 110, 0),
+                            1 => crate::tema::ERROR,
+                            2 => crate::tema::AVISO,
                             _ => ui.visuals().text_color(),
                         };
                         ui.colored_label(color, format!("● {}", m.texto));
@@ -1157,10 +1177,14 @@ impl App {
                     }
                 });
             });
-        });
+        };
+        if compacto {if panel==1{detalle(ui);}}else{
+            egui::SidePanel::right(egui::Id::new(("detalle",self.distribucion))).resizable(true).default_width(410.0).min_width(220.0).show_inside(ui,&mut detalle);
+        }
         let marcadas = &mut self.marcadas;
         let mut cambio_marcas = false;
         let marcadas_cambio = &mut cambio_marcas;
+        if !compacto || panel==0 {
         egui::CentralPanel::default().show_inside(ui, |ui| {
             let alto = ui.text_style_height(&egui::TextStyle::Body) + 6.0;
             TableBuilder::new(ui)
@@ -1227,6 +1251,7 @@ impl App {
                     });
                 });
         });
+        }
         self.seleccion = seleccion;
         if cambio || cambio_marcas {
             self.sin_guardar = true;
@@ -1357,7 +1382,7 @@ impl App {
                             }
                             _ => {
                                 ui.colored_label(
-                                    Color32::from_rgb(190, 40, 40),
+                                    crate::tema::ERROR,
                                     "Guardado incierto: compruebe personalmente la carpeta Borradores de Outlook.",
                                 );
                                 for (existe, etiqueta) in
@@ -1521,7 +1546,7 @@ impl App {
 
     fn vista_contactos(&mut self, ui: &mut egui::Ui) {
         if let Some(error) = &self.contactos_error {
-            ui.colored_label(Color32::from_rgb(190, 40, 40), error);
+            ui.colored_label(crate::tema::ERROR, error);
             ui.label("El archivo de contactos permanece intacto. Corríjalo o recupere una copia y pulse Releer.");
             if ui.button("Releer contactos").clicked() {
                 match Contactos::cargar(&ruta_contactos(&self.datos)) {
@@ -1540,7 +1565,7 @@ impl App {
         if let Some(ruta) = self.contactos_csmp.clone() {
             ui.add_space(4.0);
             ui.colored_label(
-                Color32::from_rgb(160, 100, 0),
+                crate::tema::AVISO,
                 format!("Contactos tomados de CSMP ({}), solo lectura: no se guardan en Flow hasta que los confirmes.", ruta.display()),
             );
             if ui.button("Guardar en Flow").on_hover_text("Copia estos contactos a la carpeta de Flow; CSMP no se modifica.").clicked() {
@@ -1574,7 +1599,7 @@ impl App {
                 }
                 if !imp.conflictos.is_empty() {
                     ui.colored_label(
-                        Color32::from_rgb(190, 40, 40),
+                        crate::tema::ERROR,
                         format!("No se sustituyen (ya tienen otra dirección): {}.", imp.conflictos.join("; ")),
                     );
                 }
@@ -1613,12 +1638,18 @@ impl App {
             let mut quitar = None;
             let mut editar = None;
             let busqueda=flow_dominio::texto::normalizar(&self.buscar_contacto);
-            ui.columns(2,|columnas|{
+            let compacto=ui.available_width()<900.0;
+            if compacto {ui.horizontal_wrapped(|ui|{
+                ui.selectable_value(&mut self.ficha_contacto,false,"Lista de programas");
+                ui.selectable_value(&mut self.ficha_contacto,true,"Ficha del programa");
+            });}
+            ui.columns(if compacto{1}else{2},|columnas|{
+                if !compacto || !self.ficha_contacto {
                 let ui=&mut columnas[0];
                 ui.heading("Programas");
                 ui.add(egui::TextEdit::singleline(&mut self.buscar_contacto).hint_text("Buscar programa o correo…").desired_width(f32::INFINITY));
                 ui.small(format!("{} contactos",self.contactos.programas.len()));
-            egui::ScrollArea::vertical().id_salt("lista_contactos").show(ui, |ui| {
+            egui::ScrollArea::vertical().id_salt("lista_contactos").max_height(350.0).show(ui, |ui| {
                 egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
                     for (nombre, correo) in &self.contactos.programas {
                         if !flow_dominio::texto::normalizar(&format!("{nombre} {correo}")).contains(&busqueda) {continue;}
@@ -1635,7 +1666,9 @@ impl App {
                 });
             });
 
-                let ui=&mut columnas[1];
+                }
+                if !compacto || self.ficha_contacto {
+                let ui=&mut columnas[if compacto{0}else{1}];
                 ui.heading("Ficha del programa");
                 ui.label(self.edicion.as_deref().unwrap_or("Contacto nuevo"));
                 ui.label("Programa");
@@ -1662,11 +1695,13 @@ impl App {
                 }
             });
 
+                }
             });
             if let Some(nombre) = editar {
                 let correo = self.contactos.programas.get(&nombre).cloned().unwrap_or_default();
                 self.nuevo = (nombre.clone(), correo, self.contactos.alias_de(&nombre).join("; "));
                 self.edicion = Some(nombre);
+                self.ficha_contacto=true;
             }
             if let Some(nombre) = quitar {
                 self.contactos.quitar_programa(&nombre);
@@ -1794,7 +1829,7 @@ impl eframe::App for App {
         egui::TopBottomPanel::bottom("pie").show(ctx, |ui| self.pie(ui));
         egui::CentralPanel::default().show(ctx, |ui| match self.pestana {
             Pestana::Captura => {
-                if let Some((carpeta, resumen)) = self.captura.mostrar(ui, ctx) {
+                if let Some((carpeta, resumen)) = egui::ScrollArea::vertical().id_salt("pagina_captura").show(ui,|ui|self.captura.mostrar(ui,ctx)).inner {
                     if self.herramienta == Herramienta::Descargador {
                         // El Descargador solo descarga y verifica; el análisis se hace en el Asistente.
                         abrir_en_sistema(&carpeta);
@@ -1813,9 +1848,9 @@ impl eframe::App for App {
             Pestana::Correos => self.vista_correos(ui),
             Pestana::Resoluciones => self.vista_resoluciones(ui),
             Pestana::Resultados => self.vista_resultados(ui),
-            Pestana::Contactos => self.vista_contactos(ui),
-            Pestana::Anonimo => self.anonimo.mostrar(ui, ctx),
-            Pestana::Meta4 => self.meta4.mostrar(ui),
+            Pestana::Contactos => {egui::ScrollArea::vertical().id_salt("pagina_contactos").show(ui,|ui|self.vista_contactos(ui));}
+            Pestana::Anonimo => {egui::ScrollArea::vertical().id_salt("pagina_anonimo").show(ui,|ui|self.anonimo.mostrar(ui,ctx));}
+            Pestana::Meta4 => {egui::ScrollArea::vertical().id_salt("pagina_meta4").show(ui,|ui|self.meta4.mostrar(ui));}
             Pestana::Revision => self.revision.mostrar(ui, ctx, &self.motor),
         });
         if self.confirmar_recalculo {
@@ -1892,6 +1927,7 @@ pub fn abrir_demostracion(config:crate::evidencia_ui::Config)->Result<(),String>
             "meta4"=>Pestana::Meta4,"revision"=>Pestana::Revision,_=>Pestana::Trabajo,
         };
         app.ayuda=evidencia.config.pantalla=="ayuda";
+        app.panel_trabajo=match evidencia.config.pantalla.as_str(){"trabajo-evidencia"=>1,"trabajo-editor"=>2,_=>0};
         app.confirmar_recalculo=evidencia.config.pantalla=="recalculo";
         app.evidencia=Some(evidencia);
         Ok(Box::new(app))
@@ -1903,7 +1939,7 @@ pub fn abrir(archivo: Option<PathBuf>, herramienta: Herramienta) -> i32 {
     let opciones = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1180.0, 720.0])
-            .with_min_inner_size([900.0, 560.0])
+            .with_min_inner_size([320.0, 240.0])
             .with_title(herramienta.titulo()),
         ..Default::default()
     };
@@ -2391,6 +2427,12 @@ mod pruebas_captura {
         assert_eq!(app.claves_modalidades(), None);
     }
 }
+
+
+
+
+
+
 
 
 

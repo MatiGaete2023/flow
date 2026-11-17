@@ -1,5 +1,8 @@
 //! Selectores de lista con ficha; en ventanas pequeñas utilizan un único panel.
 use eframe::egui;
+pub fn configuracion(ui:&mut egui::Ui,compacto:bool,titulo:&str,contenido:impl FnOnce(&mut egui::Ui)){
+    if compacto {ui.collapsing(titulo,contenido);}else{contenido(ui);}
+}
 pub fn selector(ui:&mut egui::Ui,id:&str,titulos:&[String],seleccion:&mut Option<usize>)->Option<usize>{
     if seleccion.is_none_or(|i|i>=titulos.len()){*seleccion=if titulos.is_empty(){None}else{Some(0)};}
     if ui.available_width()<950.0 {
