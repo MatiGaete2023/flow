@@ -168,7 +168,9 @@ fn repite<'a>(display: &'a Value, propuesta: &str) -> Option<&'a Value> {
 }
 /// No se reiteran: observaciones que consignan una gestión del Centro (correo o proyecto de resolución), derivaciones
 /// sin seguimiento, la proyección de ingreso copiada de la bitácora y las que ya llevan una reiteración por materia.
-const NO_REITERAR: [&str; 8] = [
+/// «Medida revisada, sin observaciones.» se repite tal cual (decisión del usuario, 17-nov-2026).
+const NO_REITERAR: [&str; 9] = [
+    "CUMPLIMIENTO.C09_SIN_OBSERVACIONES",
     "ESPERA.E05_",
     "ESPERA.E07_",
     "INFORMES.I01_",

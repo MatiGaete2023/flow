@@ -645,3 +645,8 @@ guardar el código de conexión, y cualquier escritura en RUS.
   6 → «6», 6.5 → «6.5», vacía → «», 6.0 → «6»; Rust da lo mismo (prueba con XLSX ficticio). `valores_de` ya no
   recorta el valor (Python usa `str(v)`); `flow_tabular` sí recorta las celdas de texto al leer, así que « 6 meses »
   queda «6 meses» (diferencia solo de espacios). Suite: 260 pruebas, 0 fallos.
+- 2026-11-17 · Decisión del usuario: «Medida revisada, sin observaciones.» (CUMPLIMIENTO.C09_SIN_OBSERVACIONES) no se
+  reitera (CT-07): se repite tal cual. Aplicado en Python (Rediseno e96d99d, `bitacora_avisos.NO_REITERAR`) y en Rust
+  (`flow-trabajo/src/cronologia.rs`); oráculo `generar_cronologia.py` con dos casos nuevos (181 cronologías). Suite:
+  260 pruebas, 0 fallos. Pendiente: portar a Rust el cambio de Python «NOMENCLATURA desde RES + observación»
+  (Rediseno ac1a99c, PR #58, de otra sesión).

@@ -52,6 +52,10 @@ def main():
     for reglas in (['ESPERA.E05_SOLO_CORREO'],['ESPERA.E07_PROYECCION'],['INFORMES.I02_MARGEN_DCE'],['HISTORIA.REITERA'],
                    ['COMUN.NO_SEGUIMIENTO'],['HISTORIA.C10_ESCRITO'],['HISTORIA.P_FINALIZADA'],['HISTORIA.BASE_TRAMITE']):
         agregar([evento('a','2026-10-01') | {'text':base}],reglas=reglas)
+    # 17-nov-2026: «Medida revisada, sin observaciones.» se repite tal cual, nunca se reitera.
+    sin_obs='Persona PRM: '+config['textos']['CUMPLIMIENTO']['C09_SIN_OBSERVACIONES']['texto']
+    agregar([evento('a','2026-10-01') | {'text':sin_obs}],propuesta=sin_obs,reglas=['CUMPLIMIENTO.C09_SIN_OBSERVACIONES'])
+    agregar([evento('a','2026-10-01') | {'text':sin_obs}],propuesta=sin_obs,reglas=['CUMPLIMIENTO.C04_VENCIDA'])
     agregar([evento('a','2026-10-01') | {'text':base},evento('b','2026-10-05') | {'text':reiterada}])
     agregar([evento('a','2026-10-01') | {'text':'Otra observación'},evento('b','2026-10-05') | {'text':reiterada}])
     agregar([evento('a','2026-10-01') | {'text':base},evento('b','2026-10-03') | {'text':'Otra observación'}])

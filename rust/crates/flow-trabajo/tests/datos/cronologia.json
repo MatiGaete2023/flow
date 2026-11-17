@@ -1278,6 +1278,171 @@
      "origin": "CENTRO",
      "origin_verified": "true",
      "coverage": "PARCIAL",
+     "text": "Persona PRM: Medida revisada, sin observaciones.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Medida revisada, sin observaciones.",
+   "reglas": [
+    "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Medida revisada, sin observaciones.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Medida revisada, sin observaciones.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Medida revisada, sin observaciones.",
+    "reglas": [
+     "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": []
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
+     "text": "Persona PRM: Medida revisada, sin observaciones.",
+     "event_type": "Observación",
+     "response": ""
+    }
+   ],
+   "corte": "2026-10-31",
+   "solicitada": true,
+   "leida": true,
+   "propuesta": "Persona PRM: Medida revisada, sin observaciones.",
+   "reglas": [
+    "CUMPLIMIENTO.C04_VENCIDA"
+   ],
+   "desactivadas": [],
+   "display": {
+    "version": "solo-mostrar-4",
+    "period_from": "2026-06-30",
+    "period_to": "2026-10-31",
+    "status": "ACREDITADA",
+    "last_center": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Medida revisada, sin observaciones.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "later": [],
+    "uncertain": [],
+    "unattributed": [],
+    "center_period": [
+     {
+      "event_id": "a",
+      "event_at": "2026-10-01",
+      "time_precision": "DIA",
+      "time_zone": "DESCONOCIDA",
+      "origin": "CENTRO",
+      "origin_verified": "true",
+      "coverage": "PARCIAL",
+      "text": "Persona PRM: Medida revisada, sin observaciones.",
+      "event_type": "Observación",
+      "response": ""
+     }
+    ],
+    "pending_court": [],
+    "outside_horizon": 0,
+    "after_cutoff": 0,
+    "undated": 0
+   },
+   "avisos": [
+    [
+     "CT-07",
+     "La observación propuesta repite la última del centro (01/10/2026); revisar antes de registrarla."
+    ]
+   ],
+   "reiteracion": {
+    "observacion": "Persona PRM: Se reitera observación anterior del 1 de octubre de 2026.",
+    "reglas": [
+     "CUMPLIMIENTO.C04_VENCIDA",
+     "COMUN.REITERA_OBSERVACION"
+    ],
+    "acciones": [
+     "programa_espera"
+    ],
+    "avisos": [
+     "CT-07: la observación propuesta repetía la del 01/10/2026; se consigna la reiteración. Texto propuesto originalmente: Persona PRM: Medida revisada, sin observaciones."
+    ]
+   }
+  },
+  {
+   "eventos": [
+    {
+     "event_id": "a",
+     "event_at": "2026-10-01",
+     "time_precision": "DIA",
+     "time_zone": "DESCONOCIDA",
+     "origin": "CENTRO",
+     "origin_verified": "true",
+     "coverage": "PARCIAL",
      "text": "Persona PRM: Se solicita actualizar antecedentes de la medida.",
      "event_type": "Observación",
      "response": ""
