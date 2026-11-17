@@ -267,6 +267,55 @@ fn cotejo_iso8601_con_zona_conserva_fecha_civil_y_no_inventa_zona() {
 }
 
 #[test]
+fn futuras_fuera_del_rango_no_ocultan_positivo_y_solo_futuras_no_acreditan_ausencia() {
+    let normalizada = |id: &str, momento: &str| json!({
+        "query_id":"b1","event_id":format!("b1-{id}"),
+        "source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+        "identity_status":"VERIFICADA","event_at":momento,"time_precision":"SEGUNDO",
+        "text":"Nota ficticia","origin":"CENTRO","origin_verified":"true","coverage":"COMPLETA"
+    });
+    let valida = event("dentro","2026-11-10T10:00:00","centro");
+    let futura = event("futura","2026-11-18T10:00:00","centro");
+    let n_valida = normalizada("dentro","2026-11-10T10:00:00");
+    let n_futura = normalizada("futura","2026-11-18T10:00:00");
+    let pack = |q: Value, events: Vec<Value>| build_tables(vec![
+        ("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",events)]);
+    for conservar_futura in [false,true] {
+        for incluir_valida in [false,true] {
+            let mut entries = Vec::new();
+            let mut normalizados = Vec::new();
+            if incluir_valida { entries.push(valida.clone()); normalizados.push(n_valida.clone()); }
+            if conservar_futura { entries.push(futura.clone()); }
+            normalizados.push(n_futura.clone());
+            let mut q = query("b1","201",entries,true);
+            let mut filtros: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+            filtros["revision_bitacoras"]["completa"] = json!(false);
+            filtros["revision_bitacoras"]["posteriores_omitidas"] = json!(1);
+            filtros["revision_bitacoras"]["warnings"] = json!(["Una entrada posterior a la captura fue omitida."]);
+            q["filters_json"] = json!(filtros.to_string());
+            let report = inspect(&pack(q.clone(),normalizados));
+            assert_eq!(report.filas[0].revision.clasificacion,if incluir_valida{C::ConObservacion}else{C::NoVerificable});
+            assert!(report.filas[0].revision.cobertura_parcial);
+            assert!(!report.filas[0].evidencia.contradictoria,"El recorte esperado no es contradicción");
+            assert_eq!(report.filas[0].revision.eventos_elegibles,usize::from(incluir_valida));
+            if incluir_valida {
+                assert_eq!(inspect(&pack(q.clone(),vec![n_futura.clone()])).conteos(),[0,0,1,0],
+                    "La nota dentro del rango no puede faltar del CSV.");
+                let mut ajena = n_futura.clone(); ajena["ingreso_id"] = json!("999");
+                assert_eq!(inspect(&pack(q,vec![n_valida.clone(),ajena])).conteos(),[0,0,1,0],
+                    "Incluso la nota futura debe conservar la identidad verificada.");
+            }
+        }
+    }
+    // Aunque el productor omita el contador/aviso por error, la fila futura del CSV
+    // impide una conclusión negativa, sin impedir el positivo válido.
+    let q = query("b1","201",vec![valida],true);
+    let report = inspect(&pack(q,vec![n_valida,n_futura]));
+    assert_eq!(report.conteos(),[0,1,0,0]);
+    assert!(report.filas[0].revision.cobertura_parcial);
+}
+
+#[test]
 fn miles_de_ingresos_se_indizan_una_vez() {
     let mut rows = Vec::new(); let mut queries = Vec::new();
     for i in 0..2000 {

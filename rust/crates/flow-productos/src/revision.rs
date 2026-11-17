@@ -199,7 +199,7 @@ mod tests {
     #[test]
     fn json_acota_evidencia_al_periodo_sin_mutar_el_informe() {
         use flow_trabajo::revision_bitacoras::{Evento,Autor};
-        let mut reporte=informe();let antes="2026-11-16".parse().unwrap();let d=reporte.desde;
+        let mut reporte=informe();let antes:chrono::NaiveDate="2026-11-16".parse().unwrap();let d=reporte.desde;
         reporte.filas[0].evidencia.eventos=Some(vec![Evento{id:"e0".into(),momento:antes.to_string(),fecha:Some(antes),texto:"FUERA_NO_EXPORTAR".into(),autor:Autor::Centro},
             Evento{id:"e1".into(),momento:d.to_string(),fecha:Some(d),texto:"Dentro".into(),autor:Autor::Centro}]);
         reporte.filas[0].lecturas=vec![json!({"evidencia":{"entries":[{"fecha":"2026-11-16","texto":"FUERA_NO_EXPORTAR"},{"fecha":"2026-11-17","texto":"Dentro"}]}})];

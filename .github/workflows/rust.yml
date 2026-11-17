@@ -124,7 +124,15 @@ jobs:
           Copy-Item extension -Destination entrega/extension -Recurse
           @{ commit = $env:GITHUB_SHA; base = 'cfc12ee2af5e4fb5623671fd17ccf7feb9e1cc11'; rama = $env:GITHUB_REF_NAME; run = $env:GITHUB_RUN_ID; plataforma = 'Windows x64'; tipo = 'Candidato para pruebas del usuario'; aceptacion_usuario = 'PENDIENTE'; outlook_sitfa_reales = 'NO EJECUTADOS'; render_ci = 'Mesa aislada, no distribuida' } | ConvertTo-Json | Set-Content entrega/CANDIDATO.json -Encoding utf8
           $entregaRoot = (Resolve-Path entrega).Path
-          Get-ChildItem -LiteralPath $entregaRoot -Recurse -File | Sort-Object FullName | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $([IO.Path]::GetRelativePath($entregaRoot, $_.FullName))" } | Set-Content entrega/SHA256SUMS.txt -Encoding utf8
+          $hashList = Join-Path $entregaRoot 'SHA256SUMS.txt'
+          $archivos = @(Get-ChildItem -LiteralPath $entregaRoot -Recurse -File | Where-Object { $_.FullName -ne $hashList } | Sort-Object FullName)
+          $archivos | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $([IO.Path]::GetRelativePath($entregaRoot, $_.FullName))" } | Set-Content -LiteralPath $hashList -Encoding utf8
+          $huellas = @(Get-Content -LiteralPath $hashList)
+          if ($huellas.Count -ne $archivos.Count) { throw 'Inventario incompleto' }
+          foreach ($linea in $huellas) {
+            $partes = $linea -split '  ', 2
+            if ($partes.Count -ne 2 -or (Get-FileHash -LiteralPath (Join-Path $entregaRoot $partes[1]) -Algorithm SHA256).Hash -ne $partes[0]) { throw 'Huella de entrega incorrecta' }
+          }
           Get-Content entrega/CANDIDATO.json
           Get-Content entrega/SHA256SUMS.txt
       - name: Herramientas sueltas para descargar por separado
@@ -139,27 +147,27 @@ jobs:
         with:
           name: Flow_Windows
           path: rust/entrega/
-          retention-days: 14
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Asistente_Windows
           path: rust/sueltas/Asistente/
-          retention-days: 14
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Descargador_Windows
           path: rust/sueltas/Descargador/
-          retention-days: 14
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Anonimizador_Windows
           path: rust/sueltas/Anonimizador/
-          retention-days: 14
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Meta4_Windows
           path: rust/sueltas/Meta4/
-          retention-days: 14
+          retention-days: 30
 
   verificacion_plan:
     if: contains(github.event.head_commit.message, '[verificar-wp]')

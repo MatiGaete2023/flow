@@ -503,6 +503,7 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
     use crate::revision_bitacoras::{Autor, Evento};
     let mut salida: HashMap<Identidad, EvidenciaIngreso> = HashMap::new();
     let mut consultas: HashMap<String, Identidad> = HashMap::new();
+    let mut rangos: HashMap<String, Option<(Fecha, Fecha)>> = HashMap::new();
     let mut ilegible = false;
     for q in c.tablas.get("consultas").into_iter().flatten().filter(|q| dato(q,"screen") == "bitacoras") {
         let Ok(mut filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { ilegible = true; continue; };
@@ -527,6 +528,12 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
             let b = raw["hasta"].as_str().and_then(|s| s.parse::<Fecha>().ok());
             let captura = chrono::DateTime::parse_from_rfc3339(dato(q,"captured_at")).ok().map(|d| d.date_naive());
             let captura_raw = raw["captured_at"].as_str().and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map(|d| d.date_naive());
+            let rango = a.zip(b).zip(captura).filter(|((a,b),c)| a <= b && a <= c && captura == captura_raw)
+                .map(|((a,b),c)| (a,b.min(c)));
+            if let Some(previo) = rangos.insert(dato(q,"query_id").into(),rango) {
+                if previo != rango { d.contradictoria = true; }
+            }
+            if rango.is_none() || raw["posteriores_omitidas"].as_u64().is_some_and(|n|n>0) || raw["ilegibles_omitidas"].as_u64().is_some_and(|n|n>0) { d.incompleta = true; }
             if raw["completa"] == true && matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA") &&
                 matches!(raw["coverage"].as_str(),Some("COMPLETA"|"VACIA_COMPROBADA")) &&
                 raw["warnings"].as_array().is_some_and(Vec::is_empty) &&
@@ -534,15 +541,18 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
                 d.cobertura = a.zip(b);
             } else { d.incompleta = true; }
             for e in raw["entries"].as_array().into_iter().flatten() {
+                let fecha = e["fecha"].as_str().and_then(dia);
+                let Some((desde,hasta)) = rango else {d.incompleta = true; continue;};
+                let Some(fecha) = fecha else {d.incompleta = true; continue;};
+                if fecha > hasta {d.incompleta = true; continue;}
+                if fecha < desde {continue;}
                 let id = e["entry_id"].as_str().unwrap_or("").to_string();
                 if !id.is_empty() {
                     let firma = hex(e.to_string().as_bytes());
                     if let Some(previa) = d.ids.insert(id.clone(),firma.clone()) { if previa != firma { d.contradictoria = true; } }
                 }
                 if !e["texto"].is_string() { d.incompleta = true; }
-                let fecha = e["fecha"].as_str().and_then(dia);
                 let texto = e["texto"].as_str().unwrap_or("").to_string();
-                if fecha.is_some_and(|f| a.is_some_and(|a| f >= a)) {
                     if !texto.trim().is_empty() {
                         let consulta = dato(q,"query_id");
                         if id.is_empty() || consulta.is_empty() {
@@ -552,8 +562,7 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
                             d.esperados.insert([consulta.into(), id.clone(), momento, texto.clone()]);
                         } else { d.contradictoria = true; }
                     }
-                }
-                d.eventos.push(Evento { id, momento:e["fecha"].as_str().unwrap_or("").into(), fecha, texto,
+                d.eventos.push(Evento { id, momento:e["fecha"].as_str().unwrap_or("").into(), fecha:Some(fecha), texto,
                     autor:match e["origen"].as_str() {
                         Some("centro") => Autor::Centro, Some("tribunal"|"programa") => Autor::Otro, _ => Autor::Desconocido,
                     } });
@@ -564,16 +573,24 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
     // Cotejo de las dos representaciones. El origen generalizado del CSV legado no decide autoría.
     for e in c.tablas.get("bitacoras").into_iter().flatten() {
         let ident = identidad(e);
-        if let Some(consulta) = consultas.get(dato(e,"query_id")) {
+        let consulta_verificada = if let Some(consulta) = consultas.get(dato(e,"query_id")) {
             if consulta != &ident {
                 salida.entry(consulta.clone()).or_default().contradictoria = true;
                 salida.entry(ident.clone()).or_default().contradictoria = true;
             }
-        }
+            consulta == &ident
+        } else {false};
         let d = salida.entry(ident).or_default();
-        if !verificada(e) { d.contradictoria = true; }
+        if !verificada(e) || !consulta_verificada { d.contradictoria = true; }
         if !dato(e,"text").trim().is_empty() {
             let consulta = dato(e,"query_id");
+            if let Some((desde,hasta)) = rangos.get(consulta).copied().flatten() {
+                match dia(dato(e,"event_at")) {
+                    Some(fecha) if fecha > hasta => {d.incompleta = true; continue;}
+                    Some(fecha) if fecha < desde => continue,
+                    _ => {}
+                }
+            }
             let id = d.alias_ids.get(&(consulta.into(),dato(e,"event_id").into())).cloned().flatten();
             if let (Some(id), Some(momento)) = (id, momento_revision(dato(e,"event_at"), dato(e,"time_precision"))) {
                 let clave = [consulta.into(),id.clone(),momento,dato(e,"text").into()];

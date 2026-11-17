@@ -236,6 +236,27 @@ fn evidencia_revision(valor: &Value, capturada: &str, meses: u32) -> Result<Valu
         "posteriores_omitidas":posteriores,"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA"}))
 }
 
+/// Aplica el límite vigente a copias V1 anteriores sin modificar el archivo original
+/// ni convertir una evidencia incompleta en completa.
+pub fn evidencia_para_exportar(valor:&Value,capturada:&str,meses:u32)->Result<Value,String>{
+    if valor["version"]!=1{return Err("Versión de evidencia desconocida.".into())}
+    let captura=DateTime::parse_from_rfc3339(capturada).map_err(|_|"Fecha de captura inválida.")?;
+    let fin=captura.with_timezone(&Local).date_naive();
+    let limite=fin.checked_sub_months(chrono::Months::new(meses)).ok_or("Período inválido.")?;
+    let desde=valor["desde"].as_str().and_then(|s|s.parse::<chrono::NaiveDate>().ok()).ok_or("Falta el comienzo de la evidencia.")?;
+    let hasta=valor["hasta"].as_str().and_then(|s|s.parse::<chrono::NaiveDate>().ok()).ok_or("Falta el término de la evidencia.")?;
+    let mut copia=valor.clone();copia["desde"]=json!(desde.max(limite).to_string());copia["hasta"]=json!(hasta.min(fin).to_string());
+    let mut salida=evidencia_revision(&copia,capturada,meses)?;
+    salida["completa"]=json!(valor["completa"]==true&&salida["completa"]==true);
+    for campo in ["anteriores_omitidas","ilegibles_omitidas","posteriores_omitidas"] {
+        salida[campo]=json!(salida[campo].as_u64().unwrap_or(0).saturating_add(valor[campo].as_u64().unwrap_or(0)));
+    }
+    if salida["ilegibles_omitidas"].as_u64().unwrap_or(0)>0 || salida["posteriores_omitidas"].as_u64().unwrap_or(0)>0 {salida["completa"]=json!(false);}
+    // No se reescribe la fecha de origen para resolver una discrepancia.
+    salida["captured_at"]=valor["captured_at"].clone();
+    Ok(salida)
+}
+
 pub struct Recoleccion {
     hoy: chrono::NaiveDate,
     carpeta: PathBuf,
@@ -329,6 +350,11 @@ impl Recoleccion {
         // Los metadatos respetan el mismo límite histórico y no retienen texto sin fecha.
         if tipo == "bitacora" && !reutilizada && valor.get("revision_bitacoras").is_none() {
             valor["revision_bitacoras"] = evidencia_revision(&valor, &capturada, meses)?;
+        } else if tipo=="bitacora" && valor["revision_bitacoras"].is_object() {
+            match evidencia_para_exportar(&valor["revision_bitacoras"],&capturada,meses) {
+                Ok(acotada)=>valor["revision_bitacoras"]=acotada,
+                Err(_)=>{valor.as_object_mut().unwrap().remove("revision_bitacoras");}
+            }
         }
         if tipo == "bitacora" && valor.get("desde").is_none() {
             let hasta = DateTime::parse_from_rfc3339(&capturada).unwrap().with_timezone(&Local).date_naive();

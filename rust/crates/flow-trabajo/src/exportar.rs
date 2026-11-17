@@ -686,7 +686,12 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<(), String> {
         let mut filtros = json!({"tribunal":tribunal,"tab":"BITACORAS","capture_tables":["bitacoras"],
             "remote_identity":identidad_remota(&tribunal, &causa, &ingreso)});
         if let Some(evidencia) = lectura.as_ref().map(|l| &l.datos["revision_bitacoras"]).filter(|v| v.is_object()) {
-            filtros["revision_bitacoras"] = evidencia.clone();
+            if let Some(l)=lectura.as_ref(){
+                let captura=texto(&l.datos,"captured_at");
+                if let Ok(acotada)=recoleccion::evidencia_para_exportar(evidencia,captura,l.referencia.meses){
+                    filtros["revision_bitacoras"] = acotada;
+                }
+            }
         }
         let cobertura = lectura.as_ref().map(|l| texto(&l.datos, "coverage")).filter(|c| !c.is_empty()).unwrap_or("FALLIDA").to_string();
         let cuando = lectura
