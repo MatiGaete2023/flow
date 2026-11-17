@@ -12,7 +12,37 @@ pub fn etiqueta(c: C) -> &'static str {
         C::NoVerificable => "No verificables", C::FueraDeAlcance => "Fuera de alcance" }
 }
 
+fn habitual(f: &flow_trabajo::revision_informe::FilaRevision, aliases: &[&str]) -> String {
+    let normalizar = flow_dominio::texto::normalizar_columna;
+    f.valores.as_object().into_iter().flat_map(|m| m.iter()).find_map(|(k,v)| {
+        aliases.iter().any(|alias| normalizar(alias) == normalizar(k)).then(|| v.as_str().map(str::to_owned).unwrap_or_else(|| v.to_string()))
+    }).unwrap_or_default()
+}
+
+#[cfg(target_os = "linux")]
+fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> {
+    use std::os::unix::ffi::OsStrExt;
+    use std::ffi::CString;
+    extern "C" { fn renameat2(olddirfd: i32, oldpath: *const std::ffi::c_char, newdirfd: i32, newpath: *const std::ffi::c_char, flags: u32) -> i32; }
+    let origen = CString::new(origen.as_os_str().as_bytes()).map_err(|_|std::io::Error::from(std::io::ErrorKind::InvalidInput))?;
+    let destino = CString::new(destino.as_os_str().as_bytes()).map_err(|_|std::io::Error::from(std::io::ErrorKind::InvalidInput))?;
+    // RENAME_NOREPLACE: la comprobación y publicación son una sola operación del sistema.
+    let resultado = unsafe { renameat2(-100,origen.as_ptr(),-100,destino.as_ptr(),1) };
+    if resultado == 0 { Ok(()) } else { Err(std::io::Error::last_os_error()) }
+}
+#[cfg(windows)]
+fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> { std::fs::rename(origen,destino) }
+#[cfg(not(any(windows,target_os = "linux")))]
+fn publicar(_origen: &Path, _destino: &Path) -> std::io::Result<()> {
+    Err(std::io::Error::new(std::io::ErrorKind::Unsupported,"La publicación segura de carpetas requiere Windows o Linux."))
+}
+
 pub fn exportar(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, cancelar: &AtomicBool) -> Result<Producto, String> {
+    exportar_con(informe,seleccion,destino,cancelar,|_| Ok(()))
+}
+
+fn exportar_con(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, cancelar: &AtomicBool,
+    despues_excel: impl FnOnce(&Path) -> Result<(), String>) -> Result<Producto, String> {
     if !destino.is_dir() { return Err("Elige una carpeta de destino existente.".into()); }
     let indices = match seleccion {
         None => (0..informe.filas.len()).collect::<BTreeSet<_>>(),
@@ -32,7 +62,7 @@ pub fn exportar(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, 
     let mut exportados = [0usize;4];
     let cabezas = ["Sistema","Tribunal","Causa","Ingreso","Etapa","Desde","Hasta","Corte","Control","Motivo",
         "Eventos del centro","Última fecha","Cobertura","Propuesta motor","Edición revisada","Reglas","Avisos","Excluido por motor",
-        "Revisada","IDs origen","Consulta","Archivo","Tabla","Fila","Capturada","Versión reglas"];
+        "Revisada","IDs origen","Consulta","Archivo","Tabla","Fila","Capturada","Versión reglas","RIT","Nombre","RUT","Programa"];
     for (clase, posicion) in [(C::SinObservacion,0),(C::NoVerificable,2),(C::ConObservacion,1),(C::FueraDeAlcance,3)] {
         let hoja = libro.add_worksheet();
         hoja.set_name(etiqueta(clase)).map_err(|e| e.to_string())?;
@@ -55,7 +85,9 @@ pub fn exportar(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, 
                 propuesta.map(|p|p.reglas.join(" | ")).unwrap_or_default(),propuesta.map(|p|p.avisos.join(" | ")).unwrap_or_default(),
                 propuesta.map(|p|if p.excluido {"Sí"}else{"No"}).unwrap_or("Sin aplicar").into(),
                 if f.revisada {"Sí"}else{"No"}.into(),join(|p|&p.registro_id),join(|p|&p.consulta_id),join(|p|&p.archivo),
-                join(|p|&p.tabla),join(|p|&p.fila),join(|p|&p.capturada),informe.version_reglas.clone().unwrap_or_default()];
+                join(|p|&p.tabla),join(|p|&p.fila),join(|p|&p.capturada),informe.version_reglas.clone().unwrap_or_default(),
+                habitual(f,&["RIT","CAUSA"]),habitual(f,&["NOMBRE","NOMBRE NNA","NOMBRE MENOR"]),
+                habitual(f,&["RUT","RUT MENOR","RUT NNA"]),habitual(f,&["PROGRAMA","NOMBRE PROGRAMA"])];
             for (col, valor) in valores.iter().enumerate() { hoja.write_string_with_format(n,col as u16,valor,&texto).map_err(|e|e.to_string())?; }
             n += 1; exportados[posicion] += 1;
         }
@@ -86,6 +118,8 @@ pub fn exportar(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, 
     resumen.set_column_width(1,75).map_err(|e|e.to_string())?;
     verificar()?;
     libro.save(temporal.path().join(&excel_nombre)).map_err(|e|e.to_string())?;
+    despues_excel(temporal.path())?;
+    verificar()?;
     let filas = indices.iter().map(|&i| &informe.filas[i]).collect::<Vec<_>>();
     let reporte = json!({"version":1,"alcance":alcance,"huella_paquete":informe.huella_paquete,"contrato":informe.contrato,
         "desde":informe.desde,"hasta":informe.hasta,"corte":informe.corte,"filas_fuente":informe.filas_fuente,
@@ -98,7 +132,7 @@ pub fn exportar(informe: &Informe, seleccion: Option<&[usize]>, destino: &Path, 
     let sufijo = temporal.path().file_name().unwrap_or_default().to_string_lossy();
     let carpeta = destino.join(format!("{nombre}_{}",sufijo.trim_start_matches(".revision-incompleta-")));
     if carpeta.exists() { return Err("La carpeta final ya existe; vuelva a exportar.".into()); }
-    std::fs::rename(temporal.path(),&carpeta).map_err(|e|e.to_string())?;
+    publicar(temporal.path(),&carpeta).map_err(|e|e.to_string())?;
     Ok(Producto { excel:carpeta.join(excel_nombre),json:carpeta.join(json_nombre),carpeta })
 }
 
@@ -113,7 +147,7 @@ mod tests {
         let revision = clasificar(&evidencia,d,d).unwrap();
         Informe { version:1,contrato:"1.0.0".into(),huella_paquete:"a".repeat(64),desde:d,hasta:d,corte:d,filas_fuente:1,duplicados_registros:0,
             filas:vec![FilaRevision { identidad:Identidad { sistema:"RUS".into(),tribunal:"901".into(),causa:"100".into(),ingreso:"201".into() },
-                tipo:"ESPERA".into(),valores:json!({}),procedencia:vec![],lecturas:vec![],evidencia,revision,propuesta:None,
+                tipo:"ESPERA".into(),valores:json!({"RIT":"X-1-2099","RUT":"11.111.111-1","NOMBRE":"Persona Ficticia","PROGRAMA":"Programa Ficticio"}),procedencia:vec![],lecturas:vec![],evidencia,revision,propuesta:None,
                 edicion:Some("=HYPERLINK(\"https://ficticio.invalid\")".into()),revisada:true }],motor_aplicado:false,version_reglas:None }
     }
     #[test]
@@ -131,6 +165,7 @@ mod tests {
         let mut zip = zip::ZipArchive::new(std::fs::File::open(&a.excel).unwrap()).unwrap();
         let mut strings = String::new(); zip.by_name("xl/sharedStrings.xml").unwrap().read_to_string(&mut strings).unwrap();
         assert!(strings.contains("HYPERLINK"));
+        for valor in ["X-1-2099","Persona Ficticia","11.111.111-1","Programa Ficticio"] { assert!(strings.contains(valor)); }
         let mut sheet = String::new(); zip.by_name("xl/worksheets/sheet1.xml").unwrap().read_to_string(&mut sheet).unwrap();
         assert!(!sheet.contains("<f>"));
         let mut book = String::new(); zip.by_name("xl/workbook.xml").unwrap().read_to_string(&mut book).unwrap();
@@ -143,6 +178,42 @@ mod tests {
         assert!(exportar(&reporte,Some(&[]),base.path(),&AtomicBool::new(false)).is_err());
         assert!(exportar(&reporte,Some(&[20]),base.path(),&AtomicBool::new(false)).is_err());
         assert_eq!(std::fs::read_dir(base.path()).unwrap().count(),0);
+    }
+    #[test]
+    fn cancelacion_despues_del_excel_y_fallo_json_limpian_temporales() {
+        let base = tempfile::tempdir().unwrap(); let reporte = informe();
+        let stop = AtomicBool::new(false);
+        let anterior = exportar(&reporte,None,base.path(),&stop).unwrap();
+        let huella = std::fs::read(&anterior.excel).unwrap();
+        let resultado = exportar_con(&reporte,None,base.path(),&stop,|p| {
+            assert!(p.join("Revision_bitacoras_2026-11-17.xlsx").is_file());
+            stop.store(true,Ordering::Relaxed); Ok(())
+        });
+        assert!(resultado.is_err());
+        stop.store(false,Ordering::Relaxed);
+        let resultado = exportar_con(&reporte,None,base.path(),&stop,|p| {
+            // Un directorio con el nombre JSON fuerza un fallo real de escritura.
+            std::fs::create_dir(p.join("Revision_bitacoras_2026-11-17.json")).map_err(|e|e.to_string())?;
+            Ok(())
+        });
+        assert!(resultado.is_err());
+        assert_eq!(std::fs::read_dir(base.path()).unwrap().count(),1);
+        assert_eq!(std::fs::read(&anterior.excel).unwrap(),huella);
+        assert!(anterior.json.is_file());
+    }
+    #[test]
+    fn publicacion_atomica_no_reemplaza_un_destino_que_aparece() {
+        let base = tempfile::tempdir().unwrap();
+        let origen = base.path().join("temporal"); let destino = base.path().join("final");
+        std::fs::create_dir(&origen).unwrap();
+        std::fs::write(origen.join("producto"),b"nuevo").unwrap();
+        std::fs::create_dir(&destino).unwrap();
+        assert!(publicar(&origen,&destino).is_err());
+        assert!(origen.join("producto").is_file());
+        assert_eq!(std::fs::read_dir(&destino).unwrap().count(),0);
+        std::fs::write(destino.join("producto"),b"anterior").unwrap();
+        assert!(publicar(&origen,&destino).is_err());
+        assert_eq!(std::fs::read(destino.join("producto")).unwrap(),b"anterior");
     }
 }
 
