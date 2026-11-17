@@ -26,7 +26,7 @@ jobs:
         with:
           workspaces: rust
       - name: Dependencias de sistema para la ventana
-        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libgtk-3-dev xvfb libgl1-mesa-dri
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libgtk-3-dev xvfb xdotool libgl1-mesa-dri
       - name: Identidades y contactos (solo datos ficticios)
         working-directory: .
         run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
@@ -77,6 +77,14 @@ jobs:
         run: |
           & ./target/release/flow.exe ayuda | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "flow.exe no inició correctamente en Windows" }
+      - name: Capturar interfaz Windows con datos ficticios
+        run: python pruebas/ui_evidencia.py --exe target/release/flow.exe --salida evidencia-ui-windows --completa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Flow_UI_Sintetica_Windows
+          path: rust/evidencia-ui-windows/
+          retention-days: 14
       - name: Preparar carpeta de uso (Flow completo y una copia por herramienta)
         shell: pwsh
         run: |
@@ -121,6 +129,39 @@ jobs:
           name: Flow_Meta4_Windows
           path: rust/sueltas/Meta4/
           retention-days: 14
+
+  verificacion_plan:
+    if: contains(github.event.head_commit.message, '[verificar-wp]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: ${{ github.workspace }}/src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/linux-py312.lock
+      - name: Preparar verificación vigente del repositorio
+        run: |
+          sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+          python -m pip install --require-hashes -r requirements/linux-py312.lock
+          python -m pip install --no-deps --no-build-isolation .
+          python -m pip check
+      - name: Ejecutar verificar_wp sin regenerar línea base ni golden
+        run: python tools/verificar_wp.py --salida docs/implementacion/verificacion/FLOW_D.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Flow_D_Verificacion_Plan
+          path: docs/implementacion/verificacion/FLOW_D.json
+          retention-days: 14
+
+
 
 
 

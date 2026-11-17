@@ -6,7 +6,7 @@ pub struct Config {pub pantalla:String,pub salida:PathBuf,pub ancho:f32,pub alto
 impl Config {
     pub fn argumentos(args:&[String])->Result<Self,String>{
         if args.len()!=6{return Err("Uso: --demo-ui PANTALLA CARPETA ANCHO ALTO ESCALA".into())}
-        let pantallas=["trabajo","trabajo-evidencia","trabajo-editor","correos","resoluciones","resultados","contactos","captura","anonimizador","meta4","revision","revision-evidencia","revision-propuesta","ayuda","recalculo"];
+        let pantallas=["trabajo","trabajo-evidencia","trabajo-editor","correos","resoluciones","resultados","contactos","captura","anonimizador","meta4","revision","revision-evidencia","revision-propuesta","ayuda","recalculo","teclado"];
         if !pantallas.contains(&args[1].as_str()){return Err("Pantalla de demostración desconocida.".into())}
         let numero=|i:usize|args[i].parse::<f32>().map_err(|_|"Tamaño o escala inválidos.".to_string());
         let (ancho,alto,escala)=(numero(3)?,numero(4)?,numero(5)?);
@@ -40,13 +40,14 @@ impl Captura {
                 let rect=ctx.input(|i|i.screen_rect);
                 let metadatos=serde_json::json!({"pantalla":self.config.pantalla,"ancho_solicitado":self.config.ancho,"alto_solicitado":self.config.alto,
                     "escala":self.config.escala,"pixeles":[imagen.width(),imagen.height()],"tamano_efectivo":[rect.width(),rect.height()],
-                    "sintetico":true,"captura_real_de_egui":true});
+                    "sintetico":true,"captura_real_de_egui":true,"foco_activo":ctx.memory(|m|m.focused().is_some()),
+                    "navegacion_teclado":self.config.pantalla=="teclado"});
                 std::fs::write(self.config.salida.join(format!("{nombre}.json")),serde_json::to_vec_pretty(&metadatos).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;
                 Ok(())
             })();
             if let Err(e)=guardar {eprintln!("Fallo de captura sintética: {e}");}
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-        }else if self.cuadros>=12 && !self.pedida {
+        }else if self.cuadros>=(if self.config.pantalla=="teclado"{90}else{12}) && !self.pedida {
             ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(Default::default()));self.pedida=true;
         }else if self.cuadros>300 {
             eprintln!("No se recibió la captura de la interfaz.");ctx.send_viewport_cmd(egui::ViewportCommand::Close);

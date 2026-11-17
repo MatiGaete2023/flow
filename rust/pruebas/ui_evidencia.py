@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import struct
 import subprocess
+import time
 import zlib
 
 
@@ -37,6 +38,8 @@ def main():
     destino.mkdir(parents=True, exist_ok=False)
     exe = str(Path(args.exe).resolve())
     pantallas = ["trabajo", "trabajo-evidencia", "trabajo-editor", "correos", "resoluciones", "resultados", "contactos", "captura", "anonimizador", "meta4", "revision", "revision-evidencia", "revision-propuesta", "ayuda", "recalculo"]
+    if os.name != "nt":
+        pantallas.append("teclado")
     dimensiones = [(1366, 768), (1920, 1080)] if args.completa else [(1366, 768)]
     escalas = [1.0, 1.25, 1.5, 2.0] if args.completa else [1.0]
     resultados = []
@@ -44,15 +47,33 @@ def main():
         for ancho, alto in dimensiones:
             for escala in escalas:
                 nombre = f"{pantalla}-{ancho}x{alto}-{round(escala * 100)}"
-                proceso = subprocess.run([exe, "--demo-ui", pantalla, str(destino), str(ancho), str(alto), str(escala)],
-                                         capture_output=True, text=True, timeout=40)
+                comando = [exe, "--demo-ui", pantalla, str(destino), str(ancho), str(alto), str(escala)]
+                if pantalla == "teclado":
+                    with subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as proceso:
+                        ventanas = subprocess.run(["xdotool", "search", "--sync", "--onlyvisible", "--all", "--pid", str(proceso.pid), "--name", "Flow"],
+                                                  capture_output=True, text=True, timeout=15, check=True).stdout.split()
+                        if len(ventanas) != 1:
+                            raise RuntimeError(f"No se encontró una única ventana sintética: {ventanas}")
+                        subprocess.run(["xdotool", "windowfocus", "--sync", ventanas[0]], check=True, timeout=5)
+                        foco = subprocess.run(["xdotool", "getwindowfocus"], capture_output=True, text=True, check=True).stdout.strip()
+                        if foco != ventanas[0]:
+                            raise RuntimeError("El foco no pertenece a la demostración")
+                        time.sleep(0.2)
+                        subprocess.run(["xdotool", "key", "--clearmodifiers", "Tab", "Tab", "Tab"], check=True, timeout=5)
+                        stdout, stderr = proceso.communicate(timeout=40)
+                        codigo = proceso.returncode
+                else:
+                    proceso = subprocess.run(comando, capture_output=True, text=True, timeout=40)
+                    codigo, stderr = proceso.returncode, proceso.stderr
                 ppm = destino / f"{nombre}.ppm"
-                if proceso.returncode or not ppm.is_file():
-                    raise RuntimeError(f"Falló captura {nombre}: código {proceso.returncode}: {proceso.stderr[-3000:]}")
+                if codigo or not ppm.is_file():
+                    raise RuntimeError(f"Falló captura {nombre}: código {codigo}: {stderr[-3000:]}")
                 imagen = png(ppm)
                 datos = json.loads(imagen.with_suffix(".json").read_text())
                 if datos["pixeles"] != [ancho, alto]:
                     raise RuntimeError(f"Tamaño observado distinto del solicitado: {datos}")
+                if pantalla == "teclado" and not datos["foco_activo"]:
+                    raise RuntimeError("Tab no produjo foco observable en la interfaz real")
                 resultados.append(datos)
     (destino / "MATRIZ_CAPTURAS.json").write_text(json.dumps(resultados, indent=2), encoding="utf-8")
     print(f"CAPTURAS_SINTETICAS={len(resultados)}")
