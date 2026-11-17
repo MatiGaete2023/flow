@@ -582,7 +582,9 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         } else {false};
         let d = salida.entry(ident).or_default();
         if !verificada(e) || !consulta_verificada { d.contradictoria = true; }
-        if !dato(e,"text").trim().is_empty() {
+        // Solo una consulta con evidencia V1 tiene contraparte para cotejar; la legada ya
+        // quedó incompleta y no debe presentarse como contradicción.
+        if !dato(e,"text").trim().is_empty() && rangos.contains_key(dato(e,"query_id")) {
             let consulta = dato(e,"query_id");
             if let Some((desde,hasta)) = rangos.get(consulta).copied().flatten() {
                 match dia(dato(e,"event_at")) {
