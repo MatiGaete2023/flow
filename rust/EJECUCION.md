@@ -650,3 +650,17 @@ guardar el código de conexión, y cualquier escritura en RUS.
   (`flow-trabajo/src/cronologia.rs`); oráculo `generar_cronologia.py` con dos casos nuevos (181 cronologías). Suite:
   260 pruebas, 0 fallos. Pendiente: portar a Rust el cambio de Python «NOMENCLATURA desde RES + observación»
   (Rediseno ac1a99c, PR #58, de otra sesión).
+- 2026-11-17 · Asistente, NOMENCLATURA desde RES + observación y Word sin cursiva (Python ac1a99c y 93d32f7, PR #58):
+  `word::nomenclatura_proyecto` = `project_nomenclature` (orden: fila con RES NOMENCL, luego acción NOMENCL, luego el
+  resto; en cada una manda `nomenclatura_observada` = `observed_nomenclature` sobre la observación revisada —texto
+  entre comillas tras «nomenclatura», o egreso / informe de avance o cumplimiento— y, si no nombra ninguna, la regla
+  HISTORIA.P_FINALIZADA / C10_ESCRITO; una observación ambigua no cae a la regla). Antes solo miraba la regla de las
+  filas con acción NOMENCL. Ambigua o ausente: «[COMPLETAR NOMENCLATURA]»; una edición del usuario se conserva
+  (`conservar_ediciones`). `sin_cursiva` = `without_italics`: cada tramo lleva `<w:i w:val="0"/><w:iCs w:val="0"/>`
+  y la marca de párrafo pierde `w:i`/`w:iCs`, en el documento combinado y en el aparte, y en encabezados y pies.
+  Oráculo `oraculo/generar_nomenclatura.py` (34 casos, `tests/datos/nomenclatura_python.json`) y
+  `tests/nomenclatura.rs` con los casos de `tests/test_nomenclatura_proyecto_20261116.py`; el Word generado se
+  revisó también con python-docx (`_cursivas` vacío). Diferencias: sin `word_overrides` por fila ni `project.text`
+  editable (la edición va en el valor del proyecto); `without_italics` de Python no toca encabezados de páginas pares,
+  aquí sí (las matrices incluidas no traen encabezados); `valores_de` sigue poniendo la NOMENCLATURA de la regla en
+  proyectos que no son NOMENCL (sin efecto: sus matrices no la usan). Suite: 271 pruebas, 0 fallos.

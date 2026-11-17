@@ -223,6 +223,189 @@ fn rellenar_xml(xml: &str, valores: &BTreeMap<String, String>, estricto: bool) -
     Ok(salida)
 }
 
+static ETIQUETA_XML: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<(/?)([A-Za-z0-9_:]+)[^>]*?(/?)>").unwrap());
+static TRAMO: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<w:r(\s[^>]*)?>").unwrap());
+static PROPIEDADES_PARRAFO: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<w:pPr(\s[^>]*)?>").unwrap());
+const SIN_CURSIVA: &str = r#"<w:i w:val="0"/><w:iCs w:val="0"/>"#;
+/// Hijos de `w:rPr` que van después de `w:i` en el esquema (`CT_RPr`, python-docx).
+const DESPUES_DE_I: &[&str] = &[
+    "w:iCs",
+    "w:caps",
+    "w:smallCaps",
+    "w:strike",
+    "w:dstrike",
+    "w:outline",
+    "w:shadow",
+    "w:emboss",
+    "w:imprint",
+    "w:noProof",
+    "w:snapToGrid",
+    "w:vanish",
+    "w:webHidden",
+    "w:color",
+    "w:spacing",
+    "w:w",
+    "w:kern",
+    "w:position",
+    "w:sz",
+    "w:szCs",
+    "w:highlight",
+    "w:u",
+    "w:effect",
+    "w:bdr",
+    "w:shd",
+    "w:fitText",
+    "w:vertAlign",
+    "w:rtl",
+    "w:cs",
+    "w:em",
+    "w:lang",
+    "w:eastAsianLayout",
+    "w:specVanish",
+    "w:oMath",
+    "w:rPrChange",
+];
+
+/// Fin del elemento que abre en `inicio` (`<w:x ...>`), contando anidados del mismo nombre: posición tras su cierre.
+fn fin_elemento(xml: &str, inicio: usize, nombre: &str) -> Option<usize> {
+    let mut profundidad = 0usize;
+    for c in ETIQUETA_XML.captures_iter(&xml[inicio..]) {
+        if &c[2] != nombre {
+            continue;
+        }
+        let fin = inicio + c.get(0).unwrap().end();
+        if !c[3].is_empty() {
+            if profundidad == 0 {
+                return Some(fin);
+            }
+        } else if c[1].is_empty() {
+            profundidad += 1;
+        } else {
+            profundidad = profundidad.checked_sub(1)?;
+            if profundidad == 0 {
+                return Some(fin);
+            }
+        }
+    }
+    None
+}
+
+/// Contenido de un `w:rPr` sin sus hijos directos `w:i` y `w:iCs`; con `marcar`, agrega `<w:i w:val="0"/><w:iCs
+/// w:val="0"/>` antes del primer hijo que va después en el esquema (`get_or_add_i`).
+fn propiedades_sin_cursiva(dentro: &str, marcar: bool) -> String {
+    let mut salida = String::with_capacity(dentro.len() + SIN_CURSIVA.len());
+    let mut profundidad = 0usize;
+    let mut cursor = 0;
+    let mut puesto = !marcar;
+    for c in ETIQUETA_XML.captures_iter(dentro) {
+        let m = c.get(0).unwrap();
+        let (cierre, nombre, vacio) = (!c[1].is_empty(), &c[2], !c[3].is_empty());
+        salida.push_str(&dentro[cursor..m.start()]);
+        cursor = m.end();
+        if profundidad == 0 && !cierre {
+            if vacio && (nombre == "w:i" || nombre == "w:iCs") {
+                continue;
+            }
+            if !puesto && DESPUES_DE_I.contains(&nombre) {
+                salida.push_str(SIN_CURSIVA);
+                puesto = true;
+            }
+        }
+        salida.push_str(m.as_str());
+        if cierre {
+            profundidad = profundidad.saturating_sub(1);
+        } else if !vacio {
+            profundidad += 1;
+        }
+    }
+    salida.push_str(&dentro[cursor..]);
+    if !puesto {
+        salida.push_str(SIN_CURSIVA);
+    }
+    salida
+}
+
+/// `resolutions.py::without_italics` (decisión del 16-nov-2026): ningún tramo sale en cursiva aunque la matriz o su
+/// estilo la traigan. Cada `w:r` lleva `<w:i w:val="0"/><w:iCs w:val="0"/>` y la marca de párrafo (`w:pPr/w:rPr`)
+/// pierde `w:i` y `w:iCs`.
+fn sin_cursiva(xml: &str) -> String {
+    // Tramos.
+    let mut salida = String::with_capacity(xml.len() + xml.len() / 4);
+    let mut cursor = 0;
+    for m in TRAMO.find_iter(xml) {
+        if m.start() < cursor {
+            continue;
+        }
+        salida.push_str(&xml[cursor..m.end()]);
+        cursor = m.end();
+        let resto = &xml[cursor..];
+        if resto.starts_with("<w:rPr/>") {
+            salida.push_str(&format!("<w:rPr>{SIN_CURSIVA}</w:rPr>"));
+            cursor += "<w:rPr/>".len();
+        } else if resto.starts_with("<w:rPr>") {
+            let Some(fin) = fin_elemento(xml, cursor, "w:rPr") else { continue };
+            let dentro = &xml[cursor + "<w:rPr>".len()..fin - "</w:rPr>".len()];
+            salida.push_str(&format!("<w:rPr>{}</w:rPr>", propiedades_sin_cursiva(dentro, true)));
+            cursor = fin;
+        } else {
+            salida.push_str(&format!("<w:rPr>{SIN_CURSIVA}</w:rPr>"));
+        }
+    }
+    salida.push_str(&xml[cursor..]);
+    // Marcas de párrafo.
+    let xml = salida;
+    let mut salida = String::with_capacity(xml.len());
+    let mut cursor = 0;
+    for m in PROPIEDADES_PARRAFO.find_iter(&xml) {
+        if m.start() < cursor {
+            continue;
+        }
+        let Some(fin) = fin_elemento(&xml, m.start(), "w:pPr") else { continue };
+        salida.push_str(&xml[cursor..m.end()]);
+        let dentro = &xml[m.end()..fin];
+        let mut nuevo = String::with_capacity(dentro.len());
+        let mut c = 0;
+        let mut profundidad = 0usize;
+        for e in ETIQUETA_XML.captures_iter(dentro) {
+            let t = e.get(0).unwrap();
+            let (cierre, vacio) = (!e[1].is_empty(), !e[3].is_empty());
+            if profundidad == 0 && !cierre && !vacio && &e[2] == "w:rPr" && t.start() >= c {
+                if let Some(f) = fin_elemento(dentro, t.start(), "w:rPr") {
+                    nuevo.push_str(&dentro[c..t.end()]);
+                    nuevo.push_str(&propiedades_sin_cursiva(&dentro[t.end()..f - "</w:rPr>".len()], false));
+                    nuevo.push_str("</w:rPr>");
+                    c = f;
+                    continue;
+                }
+            }
+            if t.start() < c {
+                continue;
+            }
+            if cierre {
+                profundidad = profundidad.saturating_sub(1);
+            } else if !vacio {
+                profundidad += 1;
+            }
+        }
+        nuevo.push_str(&dentro[c..]);
+        salida.push_str(&nuevo);
+        cursor = fin;
+    }
+    salida.push_str(&xml[cursor..]);
+    salida
+}
+
+/// Encabezados y pies, a los que `without_italics` también llega.
+fn sin_cursiva_en_parte(nombre: &str, datos: Vec<u8>) -> Vec<u8> {
+    if !((nombre.starts_with("word/header") || nombre.starts_with("word/footer")) && nombre.ends_with(".xml")) {
+        return datos;
+    }
+    match String::from_utf8(datos) {
+        Ok(xml) => sin_cursiva(&xml).into_bytes(),
+        Err(e) => e.into_bytes(),
+    }
+}
+
 fn partes(docx: &[u8]) -> Result<Vec<(String, Vec<u8>)>, String> {
     let mut zip = zip::ZipArchive::new(Cursor::new(docx)).map_err(|e| format!("La plantilla no es un .docx válido: {e}"))?;
     let mut salida = Vec::new();
@@ -280,7 +463,7 @@ fn componer_con(docx: &[u8], lote: &[(&BTreeMap<String, String>, Option<&Plural>
                 armado.push_str(&crate::compositor::mejorar_paginacion(&cuerpo_proyecto(cuerpo, valores, *plural)?));
             }
             armado.push_str(&xml[fin..]);
-            armado.into_bytes()
+            sin_cursiva(&armado).into_bytes()
         } else if nombre.starts_with("word/") && nombre.ends_with(".xml") {
             // Encabezados y pies: valores del primer proyecto; una variable sin valor se deja como está.
             match String::from_utf8(datos.clone()) {
@@ -290,6 +473,7 @@ fn componer_con(docx: &[u8], lote: &[(&BTreeMap<String, String>, Option<&Plural>
         } else {
             datos
         };
+        let nuevo = sin_cursiva_en_parte(&nombre, nuevo);
         salida.start_file(nombre, opciones).map_err(|e| e.to_string())?;
         salida.write_all(&nuevo).map_err(|e| e.to_string())?;
     }
@@ -333,15 +517,61 @@ pub struct Proyecto {
     pub huella: String,
 }
 
-/// Nomenclatura que el proyecto pide aplicar, según la regla que lo originó.
+/// Nomenclaturas que remiten las observaciones de historia (`textos_base.json`: HISTORIA.P_FINALIZADA y C10_ESCRITO).
+pub const EGRESO_SERVICIO: &str = "Egreso de servicio protección especializada y otras redes";
+pub const INGRESO_INFORME_X: &str = "Ingreso Informe de Cumplimiento X";
+const REGLAS_NOMENCLATURA: [(&str, &str); 2] = [("HISTORIA.P_FINALIZADA", EGRESO_SERVICIO), ("HISTORIA.C10_ESCRITO", INGRESO_INFORME_X)];
+static NOMENCLATURA_ENTRE_COMILLAS: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"(?i)nomenclatura\s*[«"“]\s*([^»"”\n]+?)\s*[»"”]"#).unwrap());
+
+/// `resolutions.py::rule_nomenclature`: nomenclatura de la regla que propuso el proyecto.
 fn nomenclatura(fila: &FilaTrabajo) -> &'static str {
-    if fila.propuesta.reglas.iter().any(|r| r == "HISTORIA.P_FINALIZADA") {
-        "Egreso de servicio protección especializada y otras redes"
-    } else if fila.propuesta.reglas.iter().any(|r| r == "HISTORIA.C10_ESCRITO") {
-        "Ingreso Informe de Cumplimiento X"
-    } else {
-        ""
+    REGLAS_NOMENCLATURA.iter().find(|(r, _)| fila.propuesta.reglas.iter().any(|x| x == r)).map_or("", |(_, n)| n)
+}
+
+/// `resolutions.py::observed_nomenclature`: nomenclatura que nombra la observación revisada, entre comillas tras
+/// «nomenclatura», o egreso / informe. `Some("")` si no habla de nomenclatura; `None` si nombra egreso e informe a la
+/// vez (ambigua).
+pub fn nomenclatura_observada(observacion: &str) -> Option<String> {
+    if let Some(c) = NOMENCLATURA_ENTRE_COMILLAS.captures(observacion) {
+        return Some(c[1].split_whitespace().collect::<Vec<_>>().join(" "));
     }
+    let t = normalizar_columna(observacion);
+    let egreso = t.contains("egreso");
+    let informe = ["ingreso informe", "informe de cumplimiento", "informe de avance"].iter().any(|p| t.contains(p));
+    match (egreso, informe) {
+        (true, true) => None,
+        (true, false) => Some(EGRESO_SERVICIO.into()),
+        (false, true) => Some(INGRESO_INFORME_X.into()),
+        (false, false) => Some(String::new()),
+    }
+}
+
+/// `resolutions.py::project_nomenclature`: NOMENCLATURA de un proyecto NOMENCL. Primero la fila con RES NOMENCL, luego
+/// la de la acción NOMENCL, luego el resto (en su orden). En cada fila manda la observación revisada y, si no nombra
+/// ninguna, la regla del motor; una observación ambigua no cae a la regla. Vacío si nada la identifica (el Word queda
+/// con «[COMPLETAR NOMENCLATURA]»).
+pub fn nomenclatura_proyecto(trabajo: &Trabajo, filas: &[&FilaTrabajo]) -> String {
+    let col_res = columna_humana(trabajo, &ALIAS_RES);
+    let orden = |f: &FilaTrabajo| {
+        if col_res.and_then(|i| f.celdas.get(i)).and_then(tipo_res) == Some("NOMENCL") {
+            0
+        } else if f.tiene_accion("NOMENCL") {
+            1
+        } else {
+            2
+        }
+    };
+    let mut ordenadas = filas.to_vec();
+    ordenadas.sort_by_key(|f| orden(f));
+    for fila in ordenadas {
+        let Some(observada) = nomenclatura_observada(&observacion_revisada(trabajo, fila)) else { continue };
+        let hallada = if observada.is_empty() { nomenclatura(fila).to_string() } else { observada };
+        if !hallada.is_empty() {
+            return hallada;
+        }
+    }
+    String::new()
 }
 
 fn valores_de(trabajo: &Trabajo, fila: &FilaTrabajo, hoy: Fecha) -> BTreeMap<String, String> {
@@ -395,10 +625,10 @@ fn valores_agrupados(trabajo: &Trabajo, filas: &[&FilaTrabajo], tipo: &str, hoy:
     for clave in ["NOMBRE", "RUT", "PROGRAMA", "FECHA_RESOLUCION", "DURACION"] {
         v.insert(clave.into(), unir(de_cada.iter().map(|x| x[clave].as_str())));
     }
-    // NOMENCLATURA automática (propia de Flow): de la fila de la causa que originó la nomenclatura.
+    // NOMENCLATURA desde RES + observación y, si no la nombra, la regla del motor (`grouped_values(work, rows, kind)`).
+    // Las ediciones del usuario se respetan al volver a preparar (`conservar_ediciones`).
     if tipo == "NOMENCL" {
-        let n = filas.iter().filter(|f| f.tiene_accion("NOMENCL")).map(|f| nomenclatura(f)).find(|n| !n.is_empty());
-        v.insert("NOMENCLATURA".into(), n.unwrap_or("").to_string());
+        v.insert("NOMENCLATURA".into(), nomenclatura_proyecto(trabajo, filas));
     }
     // Clave (nombre y RUT normalizados) → nombre, RUT y programas de esa persona.
     type Persona = ((String, String), (String, String, Vec<String>));
@@ -771,7 +1001,7 @@ fn componer_varias(lote: &[(&[u8], &Proyecto)]) -> Result<Vec<u8>, String> {
     let opciones = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
     for (nombre, datos) in partes(base)? {
         let nuevo = if nombre == "word/document.xml" {
-            armado.clone().into_bytes()
+            sin_cursiva(&armado).into_bytes()
         } else if nombre == "word/styles.xml" {
             compositor.estilos().as_bytes().to_vec()
         } else if nombre.starts_with("word/") && nombre.ends_with(".xml") {
@@ -782,6 +1012,7 @@ fn componer_varias(lote: &[(&[u8], &Proyecto)]) -> Result<Vec<u8>, String> {
         } else {
             datos
         };
+        let nuevo = sin_cursiva_en_parte(&nombre, nuevo);
         salida.start_file(nombre, opciones).map_err(|e| e.to_string())?;
         salida.write_all(&nuevo).map_err(|e| e.to_string())?;
     }
@@ -855,6 +1086,33 @@ mod pruebas {
         assert_eq!(tipo_por_observacion("Se solicita PC IE ficticio."), Some("PC_IE"));
         assert_eq!(tipo_por_observacion("Pedir informe ficticio"), Some("PC_INFO"));
         assert_eq!(tipo_por_observacion("Aplicar NOMENCLATURA ficticia"), Some("NOMENCL"));
+    }
+
+    #[test]
+    fn sin_cursiva_como_without_italics() {
+        let i0 = r#"<w:i w:val="0"/><w:iCs w:val="0"/>"#;
+        let xml = concat!(
+            r#"<w:p><w:pPr><w:ind w:left="1"/><w:rPr><w:i/><w:iCs/><w:b/></w:rPr></w:pPr>"#,
+            r#"<w:r><w:t>Uno</w:t></w:r>"#,
+            r#"<w:r><w:rPr/><w:t>Dos</w:t></w:r>"#,
+            r#"<w:r><w:rPr><w:rFonts w:ascii="X"/><w:b/><w:i/><w:iCs w:val="1"/><w:sz w:val="24"/></w:rPr><w:t>Tres</w:t></w:r>"#,
+            r#"<w:r w:rsidR="1"><w:rPr><w:i/></w:rPr><w:t>Cuatro</w:t></w:r>"#,
+            r#"<w:ins w:id="1"><w:r><w:rPr><w:u w:val="single"/><w:rPrChange w:id="2"><w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr><w:t>Cinco</w:t></w:r></w:ins>"#,
+            r#"</w:p>"#
+        );
+        let r = sin_cursiva(xml);
+        assert!(r.starts_with(r#"<w:p><w:pPr><w:ind w:left="1"/><w:rPr><w:b/></w:rPr></w:pPr>"#), "{r}");
+        assert!(r.contains(&format!("<w:r><w:rPr>{i0}</w:rPr><w:t>Uno</w:t>")), "{r}");
+        assert!(r.contains(&format!("<w:r><w:rPr>{i0}</w:rPr><w:t>Dos</w:t>")), "{r}");
+        assert!(r.contains(&format!(r#"<w:rPr><w:rFonts w:ascii="X"/><w:b/>{i0}<w:sz w:val="24"/></w:rPr><w:t>Tres"#)), "{r}");
+        assert!(r.contains(&format!(r#"<w:r w:rsidR="1"><w:rPr>{i0}</w:rPr><w:t>Cuatro"#)), "{r}");
+        // Como python-docx: solo los hijos directos; el cambio registrado conserva su formato anterior.
+        assert!(
+            r.contains(&format!(r#"<w:rPr>{i0}<w:u w:val="single"/><w:rPrChange w:id="2"><w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr>"#)),
+            "{r}"
+        );
+        assert!(r.contains(r#"<w:ins w:id="1">"#));
+        assert_eq!(sin_cursiva(&r), r, "idempotente");
     }
 
     #[test]

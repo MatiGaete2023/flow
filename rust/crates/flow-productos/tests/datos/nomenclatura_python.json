@@ -1,0 +1,590 @@
+[
+  {
+    "nombre": "res_egreso",
+    "filas": [
+      {
+        "observacion": "Causa finalizada, aplicar egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "res_informe_avance",
+    "filas": [
+      {
+        "observacion": "Informe de avance a folio 12.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "comillas_angulares",
+    "filas": [
+      {
+        "observacion": "Se remite proyecto que aplica nomenclatura «Ingreso informe de diagnóstico» para regularizar.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso informe de diagnóstico"
+    ],
+    "esperado": "Ingreso informe de diagnóstico"
+  },
+  {
+    "nombre": "comillas_res_x",
+    "filas": [
+      {
+        "observacion": "Se remite proyecto de nomenclatura «Egreso de servicio protección especializada y otras redes».",
+        "res": "X",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "regla_c10",
+    "filas": [
+      {
+        "observacion": "Texto.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "regla_finalizada",
+    "filas": [
+      {
+        "observacion": "Texto.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.P_FINALIZADA"
+        ],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "observacion_prevalece",
+    "filas": [
+      {
+        "observacion": "Se recepciona informe de cumplimiento.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.P_FINALIZADA"
+        ],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "ambigua",
+    "filas": [
+      {
+        "observacion": "Informe de avance; evaluar egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      null
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "ajena",
+    "filas": [
+      {
+        "observacion": "Texto.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "ambigua_no_cae_a_regla",
+    "filas": [
+      {
+        "observacion": "Informe de avance; evaluar egreso.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      null
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "egreso_solo",
+    "filas": [
+      {
+        "observacion": "Egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "informe_avance_mulchen",
+    "filas": [
+      {
+        "observacion": "Informe de avance.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "comillas_rectas",
+    "filas": [
+      {
+        "observacion": "Aplicar NOMENCLATURA \"  Ingreso   informe de diagnóstico  \" por favor.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso informe de diagnóstico"
+    ],
+    "esperado": "Ingreso informe de diagnóstico"
+  },
+  {
+    "nombre": "comillas_curvas",
+    "filas": [
+      {
+        "observacion": "nomenclatura“Egreso por cumplimiento de objetivos”",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso por cumplimiento de objetivos"
+    ],
+    "esperado": "Egreso por cumplimiento de objetivos"
+  },
+  {
+    "nombre": "comillas_mezcladas",
+    "filas": [
+      {
+        "observacion": "Nomenclatura «Egreso ficticio\" y egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso ficticio"
+    ],
+    "esperado": "Egreso ficticio"
+  },
+  {
+    "nombre": "comillas_vacias",
+    "filas": [
+      {
+        "observacion": "Nomenclatura «» pendiente; aplicar egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "comillas_solo_espacios",
+    "filas": [
+      {
+        "observacion": "Nomenclatura «   » y aplicar egreso.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "comillas_con_salto",
+    "filas": [
+      {
+        "observacion": "Nomenclatura «Ingreso\ninforme» egreso.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      null
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "ingreso_informe_con_tilde",
+    "filas": [
+      {
+        "observacion": "INGRESO INFORME ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "egreso_con_mayusculas",
+    "filas": [
+      {
+        "observacion": "EGRESÓ del programa ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "solo_informe_no_basta",
+    "filas": [
+      {
+        "observacion": "Pedir informe ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "vacia_con_regla",
+    "filas": [
+      {
+        "observacion": "",
+        "res": null,
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": [
+          "NOMENCL"
+        ]
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "ambas_reglas",
+    "filas": [
+      {
+        "observacion": "Texto.",
+        "res": null,
+        "reglas": [
+          "HISTORIA.C10_ESCRITO",
+          "HISTORIA.P_FINALIZADA"
+        ],
+        "acciones": [
+          "NOMENCL"
+        ]
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "sin_nada",
+    "filas": [
+      {
+        "observacion": "",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "guion_entre_palabras",
+    "filas": [
+      {
+        "observacion": "Ingreso-informe ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "puntos_entre_palabras",
+    "filas": [
+      {
+        "observacion": "Informe.de.avance ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "tabulador_y_nbsp",
+    "filas": [
+      {
+        "observacion": "Informe\tde cumplimiento ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "egreso_dentro_de_palabra",
+    "filas": [
+      {
+        "observacion": "Reegresado ficticio.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      ""
+    ],
+    "esperado": ""
+  },
+  {
+    "nombre": "orden_res_primero",
+    "filas": [
+      {
+        "observacion": "Aplicar egreso.",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      },
+      {
+        "observacion": "Informe de avance.",
+        "res": "NOMENCL",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes",
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "orden_accion_antes_que_resto",
+    "filas": [
+      {
+        "observacion": "Aplicar egreso.",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      },
+      {
+        "observacion": "",
+        "res": null,
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": [
+          "NOMENCL"
+        ]
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes",
+      ""
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "orden_res_texto_marcado",
+    "filas": [
+      {
+        "observacion": "Aplicar egreso.",
+        "res": "x",
+        "reglas": [],
+        "acciones": []
+      },
+      {
+        "observacion": "Informe de avance.",
+        "res": "nomenclatura",
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes",
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "orden_res_pc_ie_no_cuenta",
+    "filas": [
+      {
+        "observacion": "Aplicar egreso.",
+        "res": "PC_IE",
+        "reglas": [],
+        "acciones": []
+      },
+      {
+        "observacion": "Informe de avance.",
+        "res": null,
+        "reglas": [],
+        "acciones": [
+          "NOMENCL"
+        ]
+      }
+    ],
+    "observadas": [
+      "Egreso de servicio protección especializada y otras redes",
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Ingreso Informe de Cumplimiento X"
+  },
+  {
+    "nombre": "ambigua_salta_a_la_siguiente",
+    "filas": [
+      {
+        "observacion": "Informe de avance; evaluar egreso.",
+        "res": "NOMENCL",
+        "reglas": [
+          "HISTORIA.C10_ESCRITO"
+        ],
+        "acciones": []
+      },
+      {
+        "observacion": "Aplicar egreso.",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      null,
+      "Egreso de servicio protección especializada y otras redes"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  },
+  {
+    "nombre": "resto_en_orden",
+    "filas": [
+      {
+        "observacion": "Texto.",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      },
+      {
+        "observacion": "Texto.",
+        "res": null,
+        "reglas": [
+          "HISTORIA.P_FINALIZADA"
+        ],
+        "acciones": []
+      },
+      {
+        "observacion": "Informe de avance.",
+        "res": null,
+        "reglas": [],
+        "acciones": []
+      }
+    ],
+    "observadas": [
+      "",
+      "",
+      "Ingreso Informe de Cumplimiento X"
+    ],
+    "esperado": "Egreso de servicio protección especializada y otras redes"
+  }
+]
