@@ -31,7 +31,16 @@ fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> {
     if resultado == 0 { Ok(()) } else { Err(std::io::Error::last_os_error()) }
 }
 #[cfg(windows)]
-fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> { std::fs::rename(origen,destino) }
+fn publicar(origen: &Path, destino: &Path) -> std::io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    #[link(name="kernel32")]
+    extern "system" { fn MoveFileExW(origen:*const u16,destino:*const u16,flags:u32)->i32; }
+    let a=origen.as_os_str().encode_wide().chain(Some(0)).collect::<Vec<_>>();
+    let b=destino.as_os_str().encode_wide().chain(Some(0)).collect::<Vec<_>>();
+    // Sin MOVEFILE_REPLACE_EXISTING: rechazar el destino existente en la misma operación.
+    let resultado=unsafe {MoveFileExW(a.as_ptr(),b.as_ptr(),0)};
+    if resultado!=0 {Ok(())}else{Err(std::io::Error::last_os_error())}
+}
 #[cfg(not(any(windows,target_os = "linux")))]
 fn publicar(_origen: &Path, _destino: &Path) -> std::io::Result<()> {
     Err(std::io::Error::new(std::io::ErrorKind::Unsupported,"La publicación segura de carpetas requiere Windows o Linux."))
