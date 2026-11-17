@@ -157,6 +157,19 @@ fn la_observacion_de_nomenclatura_elige_el_tipo_y_la_nomenclatura() {
 }
 
 #[test]
+fn la_columna_observacion_del_origen_manda_sobre_la_propuesta() {
+    // Como `libro()` de Python: la observación revisada sale de la columna OBSERVACION del origen, no de la propuesta.
+    let mut t = libro(&[fila("X-14-2099", "LAJA", "Persona Catorce", "15.151.515-1", "Aplicar egreso.", "NOMENCL")]);
+    t.cabeceras.push("OBSERVACION".into());
+    t.filas[0].celdas.push(Celda::Texto("Informe de avance.".into()));
+    assert!(!t.filas[0].editada());
+    assert_eq!(proyectos(&t)[0].valores["NOMENCLATURA"], INGRESO_INFORME_X);
+    // Una observación editada en Flow es la revisada.
+    t.filas[0].observacion = "Se resuelve egreso.".into();
+    assert_eq!(proyectos(&t)[0].valores["NOMENCLATURA"], EGRESO_SERVICIO);
+}
+
+#[test]
 fn sin_observacion_util_la_regla_del_motor_decide() {
     let mut t = libro(&[fila("X-5-2099", "LAJA", "Persona Cinco", "55.555.555-5", "Texto.", "NOMENCL")]);
     t.filas[0].propuesta.reglas = vec!["HISTORIA.C10_ESCRITO".into()];

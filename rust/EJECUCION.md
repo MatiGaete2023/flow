@@ -663,4 +663,5 @@ guardar el código de conexión, y cualquier escritura en RUS.
   revisó también con python-docx (`_cursivas` vacío). Diferencias: sin `word_overrides` por fila ni `project.text`
   editable (la edición va en el valor del proyecto); `without_italics` de Python no toca encabezados de páginas pares,
   aquí sí (las matrices incluidas no traen encabezados); `valores_de` sigue poniendo la NOMENCLATURA de la regla en
-  proyectos que no son NOMENCL (sin efecto: sus matrices no la usan). Suite: 271 pruebas, 0 fallos.
+  proyectos que no son NOMENCL (sin efecto: sus matrices no la usan). Prueba adicional: con columna OBSERVACION en
+  el origen manda esa columna sobre la propuesta. Suite: 272 pruebas, 0 fallos.
