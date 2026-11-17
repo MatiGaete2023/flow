@@ -586,3 +586,15 @@ guardar el código de conexión, y cualquier escritura en RUS.
   al paquete como tabla de personas con el tipo de registro de su consulta; si el calendario aun así no entra, el
   paquete se crea sin él (CALENDARIO_INCOMPLETO, PARCIAL). El lote del calendario que arma el flujo pasa por
   `lotes::ejecutar` real con el SITFA ficticio y su ZIP pasa `read_capture` de Python. Suite: 242 pruebas, 0 fallos.
+- 2026-11-17 · Descargador, nombres de archivo como Python: `lotes.rs` rotula los XLS y los PDF sin registros con
+  `nombre_seguro`/`nombre_tribunal`/`base_archivo` (= `lotes.safe_name`/`tribunal_name`/`file_base`: «ESP|CUMP
+  <Modalidad> <Tribunal>», «Informes <Tribunal>», «Egresados <Tribunal>», «Litigantes <estado> <tribunal>»,
+  «Medidas por vencer <Tribunal>», con «Jdo Familia», «Jdo Letras», «Jdo Letras y Garantia») y el ordinal ` N`
+  contado por base en todo el lote (XLS: si hay varias páginas o la base se repite; PDF: si la base se repite). El
+  ordinal sale de los archivos ya registrados en `Resumen.archivos`; al retomar, una página verificada conserva el
+  nombre del avance (los lotes anteriores con «consulta-NNN-pNNN-de-NNN.xls» siguen retomándose, exportándose y
+  leyéndose en Meta 4). La carpeta del lote es «AAAA-MM-DD HH-MM-SS» (con microsegundos si coincide el segundo),
+  como `BatchRunner.run`; `exportar::inicio` lee las dos formas. Diferencias deliberadas con Python: el conteo de
+  bases no distingue mayúsculas (Windows) y un nombre reservado de Windows recibe el prefijo «Consulta ». El ZIP del
+  calendario regenerado (nombres nuevos y anteriores mezclados) pasa `read_capture`/`import_capture` de Python.
+  Suite: 246 pruebas, 0 fallos.

@@ -198,11 +198,11 @@ fn inicio(lote: &Lote) -> String {
         return i;
     }
     let nombre = lote.carpeta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-    if let Some(resto) = nombre.strip_prefix("Flow Captura ") {
-        if let Ok(f) = chrono::NaiveDateTime::parse_from_str(resto.get(..19).unwrap_or(""), "%Y-%m-%d %H-%M-%S") {
-            if let Some(local) = f.and_local_timezone(chrono::Local).earliest() {
-                return local.format("%Y-%m-%dT%H:%M:%S%:z").to_string();
-            }
+    // «AAAA-MM-DD HH-MM-SS» como el Descargador; «Flow Captura AAAA-MM-DD HH-MM-SS» en lotes anteriores.
+    let resto = nombre.strip_prefix("Flow Captura ").unwrap_or(&nombre);
+    if let Ok(f) = chrono::NaiveDateTime::parse_from_str(resto.get(..19).unwrap_or(""), "%Y-%m-%d %H-%M-%S") {
+        if let Some(local) = f.and_local_timezone(chrono::Local).earliest() {
+            return local.format("%Y-%m-%dT%H:%M:%S%:z").to_string();
         }
     }
     if let Some(primera) = lote.resumen.lecturas.iter().filter_map(|l| instante(&l.capturada)).min() {

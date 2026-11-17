@@ -117,7 +117,7 @@ fn paquete_parcial_se_retoma_hasta_completo() {
     );
     let control: Value = serde_json::from_slice(&std::fs::read(r.carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
     assert_eq!(control["estado"], "PARCIAL");
-    assert!(control["carpetas"]["consultas"].as_str().unwrap().starts_with("respaldo/Flow Captura "));
+    assert!(control["carpetas"]["consultas"].as_str().unwrap().starts_with("respaldo/20"));
     assert!(flujo::pendientes(&destino.0, 7).is_empty(), "un paquete PARCIAL terminó: se revisa en el Asistente");
     // El paquete parcial ya se abre en el Asistente.
     let zip = std::fs::read(&r.paquete).unwrap();

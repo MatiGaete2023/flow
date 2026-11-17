@@ -438,3 +438,82 @@ fn restauracion_de_filtros_separa_avisos_con_codigo() {
     let codigo = lotes::aviso_restauracion(&Err(("SITE_ACCESS".into(), "texto".into()))).unwrap();
     assert!(codigo.contains("(Código técnico: SITE_ACCESS.)") && !codigo.contains("texto"), "{codigo}");
 }
+
+#[test]
+fn archivos_se_rotulan_como_el_descargador() {
+    // Dos páginas: base con ordinal, como `lotes.filename` (total > 1).
+    let f = Ficticio { caso: caso("seguimiento/Espera"), estado: Mutex::new((1, 0, vec![])), cancelar: None, falla: false };
+    let c = Carpeta::nueva();
+    let lote = plan(&f.caso, false);
+    let r = lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, false, &AtomicBool::new(false), &|_| {}).unwrap();
+    let nombres: Vec<_> = r.archivos.iter().map(|a| a.nombre.as_str()).collect();
+    assert_eq!(nombres, ["ESP Ambulatorio Jdo Familia Ficticio Norte 1.xls", "ESP Ambulatorio Jdo Familia Ficticio Norte 2.xls"]);
+    assert!(nombres.iter().all(|n| c.0.join(n).is_file()));
+    // Sin registros: un PDF con la base sola (la base no se repite en el plan).
+    let f = Ficticio { caso: caso("seguimiento/Espera/vacia"), estado: Mutex::new((1, 0, vec![])), cancelar: None, falla: false };
+    let c = Carpeta::nueva();
+    let r = lotes::ejecutar(&f, &f.caso["catalogo"], &plan(&f.caso, true), &c.0, false, &AtomicBool::new(false), &|_| {}).unwrap();
+    assert_eq!(r.archivos[0].nombre, "ESP Ambulatorio Jdo Familia Ficticio Norte.pdf");
+}
+
+#[test]
+fn bases_de_nombre_como_file_base() {
+    let catalogo = json!({
+        "tribunales": {"901": "Juzgado de Familia Ficticio: Norte.", "902": "Jgdo L y G de Pueblo Ficticio", "903": "JGDO LETRAS DE Villa Ficticia", "904": "Jgdo L de Aldea Ficticia"},
+        "estados": {"1": "Pendientes", "2": "Cumplidas"}
+    });
+    let s = |tribunal: &str, screen: &str, tab: &str, modality: &str| Seleccion {
+        tribunal: tribunal.into(),
+        screen: screen.into(),
+        tab: tab.into(),
+        modality: modality.into(),
+        report: None,
+        state: Some("2".into()),
+        month: None,
+        year: None,
+    };
+    let b = |x: Seleccion| lotes::base_archivo(&x, &catalogo);
+    assert_eq!(b(s("901", "seguimiento", "Espera", "3")), "ESP FAE Jdo Familia Ficticio Norte");
+    assert_eq!(b(s("902", "seguimiento", "Cumplimiento", "1")), "CUMP Residencia Jdo Letras y Garantia Pueblo Ficticio");
+    assert_eq!(b(s("903", "seguimiento", "Informes", "4")), "Informes Jdo Letras Villa Ficticia");
+    assert_eq!(b(s("904", "seguimiento", "Egresados", "2")), "Egresados Jdo Letras Aldea Ficticia");
+    assert_eq!(b(s("901", "litigantes", "", "")), "Litigantes Cumplidas Jdo Familia Ficticio Norte");
+    assert_eq!(b(s("901", "calendario_informes", "", "")), "Informes Jdo Familia Ficticio Norte");
+    assert_eq!(b(s("901", "calendario_medidas", "", "")), "Medidas por vencer Jdo Familia Ficticio Norte");
+    assert_eq!(lotes::nombre_seguro("Á/b\\c*d?e\"f<g>h|i\u{1}.  j. "), "A b c d e f g h i j");
+    assert_eq!(lotes::nombre_seguro(&"x".repeat(300)).chars().count(), 125);
+}
+
+#[test]
+fn retomar_lote_con_nombres_anteriores_conserva_los_del_avance() {
+    let cancelar = AtomicBool::new(false);
+    let c = Carpeta::nueva();
+    let f = Ficticio { caso: caso("seguimiento/Espera"), estado: Mutex::new((1, 0, vec![])), cancelar: Some(&cancelar), falla: false };
+    let lote = plan(&f.caso, false);
+    assert!(lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, false, &cancelar, &|_| {}).is_err());
+    // El avance de un lote anterior tenía los nombres «consulta-NNN-pNNN-de-NNN.xls».
+    let mut r = Resumen::leer(&c.0).unwrap();
+    let viejo = "consulta-001-p001-de-002.xls";
+    std::fs::rename(c.0.join(&r.archivos[0].nombre), c.0.join(viejo)).unwrap();
+    r.archivos[0].nombre = viejo.into();
+    r.guardar(&c.0).unwrap();
+    cancelar.store(false, Ordering::SeqCst);
+    let r = lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, true, &cancelar, &|_| {}).unwrap();
+    assert_eq!(r.estado, "VALIDADA");
+    let nombres: Vec<_> = r.archivos.iter().map(|a| a.nombre.as_str()).collect();
+    assert_eq!(nombres, [viejo, "ESP Ambulatorio Jdo Familia Ficticio Norte 2.xls"]);
+    // Y se vuelve a retomar sin descargar nada.
+    let antes = f.estado.lock().unwrap().1;
+    lotes::ejecutar(&f, &f.caso["catalogo"], &lote, &c.0, true, &cancelar, &|_| {}).unwrap();
+    assert_eq!(f.estado.lock().unwrap().1, antes);
+}
+
+#[test]
+fn carpeta_del_lote_con_fecha_como_el_descargador() {
+    let c = Carpeta::nueva();
+    let a = lotes::carpeta_nueva(&c.0).unwrap();
+    let b = lotes::carpeta_nueva(&c.0).unwrap();
+    let n = a.file_name().unwrap().to_string_lossy().into_owned();
+    assert!(chrono::NaiveDateTime::parse_from_str(&n, "%Y-%m-%d %H-%M-%S").is_ok(), "{n}");
+    assert_ne!(a, b);
+}

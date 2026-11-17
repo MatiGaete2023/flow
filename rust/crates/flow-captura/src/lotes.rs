@@ -261,6 +261,83 @@ pub fn ruta_archivo(carpeta: &Path, nombre: &str) -> Result<PathBuf, String> {
     Ok(carpeta.join(nombre))
 }
 
+/// Modalidades auditadas del Descargador (`lotes.MODALITIES`).
+const MODALIDADES: [(&str, &str); 4] = [("1", "Residencia"), ("2", "Ambulatorio"), ("3", "FAE"), ("4", "DCE")];
+
+/// `lotes.safe_name`: sin tildes, sin caracteres prohibidos en Windows ni puntos, espacios simples y 125 caracteres.
+pub fn nombre_seguro(valor: &str) -> String {
+    use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
+    let limpio: String = valor
+        .nfkd()
+        .filter(|c| !is_combining_mark(*c))
+        .map(|c| if matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' | '.') || (c as u32) < 0x20 { ' ' } else { c })
+        .collect();
+    let unido = limpio.split_whitespace().collect::<Vec<_>>().join(" ");
+    unido.trim_end_matches([' ', '.']).chars().take(125).collect()
+}
+
+/// `lotes.tribunal_name`: abreviaturas de los juzgados.
+pub fn nombre_tribunal(valor: &str) -> String {
+    static REGLAS: std::sync::LazyLock<[(regex::Regex, &str); 3]> = std::sync::LazyLock::new(|| {
+        [
+            (regex::Regex::new(r"(?i)^Juzgado de Familia\s+").unwrap(), "Jdo Familia "),
+            (regex::Regex::new(r"(?i)^Jgdo\s+L\s+y\s+G\s+de\s+").unwrap(), "Jdo Letras y Garantia "),
+            (regex::Regex::new(r"(?i)^Jgdo\s+(?:Letras|L)\s+de\s+").unwrap(), "Jdo Letras "),
+        ]
+    });
+    let mut v = nombre_seguro(valor);
+    for (re, reemplazo) in REGLAS.iter() {
+        v = re.replacen(&v, 1, *reemplazo).into_owned();
+    }
+    v
+}
+
+/// `lotes.file_base`: «ESP|CUMP <Modalidad> <Tribunal>», «Informes <Tribunal>», «Egresados <Tribunal>»,
+/// «Litigantes <estado> <tribunal>» o «Medidas por vencer <Tribunal>». Nunca un nombre reservado de Windows.
+pub fn base_archivo(s: &Seleccion, catalogo: &Value) -> String {
+    let etiqueta = |grupo: &str, valor: &str| catalogo[grupo][valor].as_str().unwrap_or(valor).to_string();
+    let tribunal = nombre_tribunal(&etiqueta("tribunales", &s.tribunal));
+    let base = match (s.screen.as_str(), s.tab.as_str()) {
+        ("calendario_informes", _) | (_, "Informes") => nombre_seguro(&format!("Informes {tribunal}")),
+        ("calendario_medidas", _) => nombre_seguro(&format!("Medidas por vencer {tribunal}")),
+        ("litigantes", _) => nombre_seguro(&format!("Litigantes {} {tribunal}", etiqueta("estados", s.state.as_deref().unwrap_or("1")))),
+        (_, "Egresados") => nombre_seguro(&format!("Egresados {tribunal}")),
+        (_, pestana) => {
+            let modalidad = MODALIDADES.iter().find(|(c, _)| *c == s.modality).map_or(s.modality.as_str(), |(_, n)| n);
+            nombre_seguro(&format!("{} {modalidad} {tribunal}", if pestana == "Espera" { "ESP" } else { "CUMP" }))
+        }
+    };
+    let raiz = base.split('.').next().unwrap_or("").trim().to_ascii_uppercase();
+    let reservado = matches!(raiz.as_str(), "" | "CON" | "PRN" | "AUX" | "NUL")
+        || (raiz.len() == 4 && (raiz.starts_with("COM") || raiz.starts_with("LPT")) && raiz.as_bytes()[3].is_ascii_digit());
+    if reservado {
+        format!("Consulta {base}").trim().to_string()
+    } else {
+        base
+    }
+}
+
+/// Clave de una base para contar repeticiones: Windows no distingue mayúsculas.
+fn clave_base(base: &str) -> String {
+    base.to_lowercase()
+}
+
+/// Nombre del siguiente archivo de la consulta `indice`, como `BatchRunner.run`: la base con un ordinal ` N` (contado
+/// en todo el lote por base) si la consulta tiene varias páginas o la base se repite en el plan. El ordinal sale de
+/// los archivos ya registrados en el avance, que se escriben en el mismo orden; sus nombres nunca se deducen.
+fn nombre_siguiente(resumen: &Resumen, catalogo: &Value, indice: usize, paginas: usize, extension: &str) -> String {
+    let clave = |i: usize| clave_base(&base_archivo(&resumen.lote.consultas[i], catalogo));
+    let base = base_archivo(&resumen.lote.consultas[indice], catalogo);
+    let propia = clave_base(&base);
+    let repetida = (0..resumen.lote.consultas.len()).filter(|i| clave(*i) == propia).count() > 1;
+    let ordinal = resumen.archivos.iter().filter(|a| a.consulta < resumen.lote.consultas.len() && clave(a.consulta) == propia).count() + 1;
+    if paginas > 1 || repetida {
+        format!("{base} {ordinal}.{extension}")
+    } else {
+        format!("{base}.{extension}")
+    }
+}
+
 pub fn huella(datos: &[u8]) -> String {
     format!("{:x}", Sha256::digest(datos))
 }
@@ -279,11 +356,19 @@ pub(crate) fn exclusivo(ruta: &Path, datos: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
+/// Carpeta del lote con la fecha y hora, como `BatchRunner.run` (`%Y-%m-%d %H-%M-%S`; si coincide el segundo, con
+/// microsegundos). Los lotes anteriores («Flow Captura …») se siguen leyendo igual.
 pub fn carpeta_nueva(destino: &Path) -> Result<PathBuf, String> {
     fs::create_dir_all(destino).map_err(|_| "No se pudo crear la carpeta de destino.")?;
-    let nombre = chrono::Local::now().format("Flow Captura %Y-%m-%d %H-%M-%S").to_string();
+    let ahora = chrono::Local::now();
+    let nombre = ahora.format("%Y-%m-%d %H-%M-%S").to_string();
+    let preciso = ahora.format("%Y-%m-%d %H-%M-%S-%6f").to_string();
     for n in 0..1000 {
-        let ruta = destino.join(if n == 0 { nombre.clone() } else { format!("{nombre} ({n})") });
+        let ruta = destino.join(match n {
+            0 => nombre.clone(),
+            1 => preciso.clone(),
+            _ => format!("{preciso} ({n})"),
+        });
         match fs::create_dir(&ruta) {
             Ok(()) => return Ok(ruta),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => (),
@@ -443,8 +528,9 @@ pub fn ejecutar(
                     if lote.evidencia && !resumen.archivos.iter().any(|a| a.consulta == indice && a.nombre.ends_with(".pdf")) {
                         cancelado(cancelar)?;
                         let pdf = evidencia(conexion, &pares, &perfil, &contexto(s, catalogo, lote.fechas.as_ref()))?;
-                        let base = format!("consulta-{:03}-SIN-REGISTROS", indice + 1);
-                        let mut nombre = format!("{base}.pdf");
+                        let primero = nombre_siguiente(&resumen, catalogo, indice, 1, "pdf");
+                        let base = primero.strip_suffix(".pdf").unwrap_or(&primero).to_string();
+                        let mut nombre = primero.clone();
                         let mut recuperadas = 0;
                         // La evidencia huérfana no tiene un checkpoint que acredite su consulta. Se conserva
                         // y se crea otra copia verificada con nombre libre, sin quedar bloqueados al retomar.
@@ -453,7 +539,7 @@ pub fn ejecutar(
                             if recuperadas > 100 {
                                 return Err("Demasiadas evidencias sin checkpoint; elija otro lote.".into());
                             }
-                            nombre = format!("{base}-recuperada-{recuperadas}.pdf");
+                            nombre = format!("{base} recuperada {recuperadas}.pdf");
                         }
                         exclusivo(&ruta_archivo(carpeta, &nombre)?, &pdf)?;
                         if recuperadas > 0 {
@@ -493,9 +579,14 @@ pub fn ejecutar(
                             (p, html)
                         };
                         let previo = resumen.archivos.iter().find(|a| a.consulta == indice && a.pagina == numero);
-                        let nombre = format!("consulta-{:03}-p{numero:03}-de-{:03}.xls", indice + 1, primera.total);
+                        // Al retomar, el nombre de una página ya verificada es el del avance (también en lotes con los
+                        // nombres anteriores «consulta-NNN-pNNN-de-NNN.xls»).
+                        let nombre = match previo {
+                            Some(a) => a.nombre.clone(),
+                            None => nombre_siguiente(&resumen, catalogo, indice, primera.total, "xls"),
+                        };
                         let datos = if let Some(a) = previo {
-                            if a.total != primera.total || a.nombre != nombre {
+                            if a.total != primera.total {
                                 return Err("Cambió el total de páginas del avance guardado.".into());
                             }
                             fs::read(ruta_archivo(carpeta, &a.nombre)?).map_err(|_| "No se pudo releer una descarga verificada.")?
