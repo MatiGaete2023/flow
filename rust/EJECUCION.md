@@ -641,3 +641,7 @@ guardar el código de conexión, y cualquier escritura en RUS.
   `contactos_ejemplo.json`. Prueba de UI: sin contactos los correos se preparan y al guardarlos quedan pendientes
   por «falta destinatario» (como «Completar destinatario» de `check_products`). `rust/datos/aliases.json` se
   compara con `aliases_base.json` en una prueba. Suite: 260 pruebas, 0 fallos.
+- 2026-11-17 · DURACION, formato medido con el Python de referencia (openpyxl + `Work.analyze` + `word_values`):
+  6 → «6», 6.5 → «6.5», vacía → «», 6.0 → «6»; Rust da lo mismo (prueba con XLSX ficticio). `valores_de` ya no
+  recorta el valor (Python usa `str(v)`); `flow_tabular` sí recorta las celdas de texto al leer, así que « 6 meses »
+  queda «6 meses» (diferencia solo de espacios). Suite: 260 pruebas, 0 fallos.

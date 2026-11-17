@@ -119,3 +119,38 @@ fn lote_del_descargador_y_su_paquete_traen_duracion() {
     assert!(!desde_zip[0].cabeceras.iter().any(|k| flow_trabajo::controles::columna_duracion(k)));
     std::fs::remove_dir_all(c).unwrap();
 }
+
+#[test]
+fn numeros_y_vacios_de_excel_como_word_values() {
+    // Medido con el Python de referencia (openpyxl + `Work.analyze` + `word_values`) sobre el mismo libro ficticio:
+    // 6 → «6», 6.5 → «6.5», vacía → «», 6.0 → «6». « 6 meses » Python lo deja sin recortar; `flow_tabular` recorta
+    // toda celda de texto al leer el libro (diferencia conocida, solo de espacios).
+    let mut libro = rust_xlsxwriter::Workbook::new();
+    let hoja = libro.add_worksheet().set_name("ESPERA").unwrap();
+    let titulos = ["RIT", "TRIBUNAL", "NOMBRE", "RUT", "DERIVACION", "T ESPERA", "FECHA VENCIMIENTO", "FEC. RESOLUCION", "DURACIÓN"];
+    for (c, t) in titulos.iter().enumerate() {
+        hoja.write_string(0, c as u16, *t).unwrap();
+    }
+    for i in 1..=5u32 {
+        for (c, t) in [format!("X-{i}-2099"), "LAJA".into(), format!("Persona Ficticia {i}"), "11.111.111-1".into(), "AFT FICTICIO".into()]
+            .iter()
+            .enumerate()
+        {
+            hoja.write_string(i, c as u16, t).unwrap();
+        }
+        hoja.write_number(i, 5, 30.0).unwrap();
+        hoja.write_string(i, 6, "20/10/2026").unwrap();
+        hoja.write_string(i, 7, "01/08/2026").unwrap();
+        match i {
+            1 => hoja.write_number(i, 8, 6.0).map(|_| ()),
+            2 => hoja.write_number(i, 8, 6.5).map(|_| ()),
+            4 => hoja.write_string(i, 8, " 6 meses ").map(|_| ()),
+            5 => hoja.write_number(i, 8, 6.0).map(|_| ()),
+            _ => Ok(()),
+        }
+        .unwrap();
+    }
+    let datos = libro.save_to_buffer().unwrap();
+    let d: Vec<String> = duraciones(&directo("num.xlsx", datos)).into_iter().map(|(_, d, _)| d).collect();
+    assert_eq!(d, ["6", "6.5", "", "6 meses", "6"]);
+}

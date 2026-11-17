@@ -356,18 +356,14 @@ fn valores_de(trabajo: &Trabajo, fila: &FilaTrabajo, hoy: Fecha) -> BTreeMap<Str
         .iter()
         .enumerate()
         .filter(|(_, c)| flow_trabajo::controles::columna_duracion(c))
-        .filter_map(|(i, _)| fila.celdas.get(i).map(|c| c.texto().trim().to_string()))
+        .filter_map(|(i, _)| fila.celdas.get(i).map(|c| c.texto()))
         .collect();
     // Paquete Captura_CSMP.zip: la tabla del motor no trae la columna; se toma del registro (diferencia deliberada
     // con `capture_input.py`, que la descarta y deja DURACION vacía).
     if duraciones.is_empty() {
         if let Some(o) = &fila.origen {
-            duraciones = o
-                .columnas_word
-                .iter()
-                .filter(|(k, _)| flow_trabajo::controles::columna_duracion(k))
-                .map(|(_, c)| c.texto().trim().to_string())
-                .collect();
+            duraciones =
+                o.columnas_word.iter().filter(|(k, _)| flow_trabajo::controles::columna_duracion(k)).map(|(_, c)| c.texto()).collect();
         }
     }
     v.insert("DURACION".into(), if duraciones.len() == 1 { duraciones[0].clone() } else { String::new() });
