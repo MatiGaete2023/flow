@@ -75,6 +75,7 @@ impl Informe {
     /// Cambiar criterio invalida propuestas y ediciones derivadas: la UI pide confirmación antes.
     pub fn cambiar_periodo(&mut self, desde: Fecha, hasta: Fecha, corte: Fecha) -> Result<(), String> {
         if desde > hasta || hasta > corte { return Err("El período debe ser válido y terminar como máximo en el corte.".into()); }
+        if self.desde == desde && self.hasta == hasta && self.corte == corte { return Ok(()); }
         let revisiones = self.filas.iter().map(|f| clasificar(&f.evidencia, desde, hasta)).collect::<Result<Vec<_>, _>>()?;
         self.desde = desde; self.hasta = hasta; self.corte = corte;
         self.motor_aplicado = false; self.version_reglas = None;

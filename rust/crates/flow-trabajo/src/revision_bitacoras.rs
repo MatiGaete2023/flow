@@ -11,6 +11,10 @@ pub enum Autor { Centro, Otro, Desconocido }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Evento {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub momento: String,
     pub fecha: Option<Fecha>,
     pub texto: String,
     pub autor: Autor,
@@ -56,11 +60,17 @@ pub fn clasificar(e: &Evidencia, desde: Fecha, hasta: Fecha) -> Result<Revision,
     } else if !e.identidad_verificada || e.contradictoria {
         r.motivo = "Identidad no verificada o evidencia contradictoria.".into();
     } else if let Some(eventos) = &e.eventos {
-        let mut unicos: Vec<&Evento> = Vec::new();
+        let mut unicos: std::collections::HashMap<&str, &Evento> = std::collections::HashMap::new();
         let mut incierto = false;
         for evento in eventos {
-            if unicos.contains(&evento) { r.duplicados_identicos += 1; continue; }
-            unicos.push(evento);
+            if !evento.id.is_empty() {
+                if let Some(previo) = unicos.insert(&evento.id, evento) {
+                    if previo == evento { r.duplicados_identicos += 1; continue; }
+                    r.motivo = "Un identificador de evento tiene contenidos contradictorios.".into();
+                    r.clasificacion = Clasificacion::NoVerificable;
+                    return Ok(r);
+                }
+            }
             if evento.texto.trim().is_empty() { continue; }
             match evento.fecha {
                 None => incierto = true,
@@ -99,7 +109,7 @@ mod tests {
             cobertura_completa: Some((d(1), d(17))), eventos: Some(vec![]) }
     }
     fn evento(autor: Autor, fecha: Option<Fecha>, texto: &str) -> Evento {
-        Evento { autor, fecha, texto: texto.into() }
+        Evento { id:format!("ficticio-{fecha:?}-{texto}"), momento:fecha.map(|d|d.to_string()).unwrap_or_default(), autor, fecha, texto: texto.into() }
     }
     fn clase(e: &Evidencia) -> Clasificacion { clasificar(e, d(1), d(17)).unwrap().clasificacion }
     #[test]

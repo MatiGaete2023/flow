@@ -17,7 +17,23 @@ fn csv(rows: &[Value]) -> Vec<u8> {
     s.into_bytes()
 }
 fn build(rows: Vec<Value>, qs: Vec<Value>) -> Vec<u8> {
-    let tables = [("registros", rows), ("consultas", qs)];
+    let mut events = Vec::new();
+    for q in &qs {
+        let f: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+        let m = &f["remote_identity"];
+        for e in f["revision_bitacoras"]["entries"].as_array().into_iter().flatten() {
+            let day = e["fecha"].as_str().and_then(|s|s.get(..10)).and_then(|s|s.parse::<chrono::NaiveDate>().ok());
+            let from = f["revision_bitacoras"]["desde"].as_str().and_then(|s|s.parse::<chrono::NaiveDate>().ok());
+            if day.zip(from).is_some_and(|(a,b)|a>=b) {
+                events.push(json!({"query_id":q["query_id"],"source_system":m["source_system"],"court_code":m["court_code"],
+                    "cause_id":m["cause_id"],"ingreso_id":m["ingreso_id"],"identity_status":"VERIFICADA",
+                    "event_at":e["fecha"],"text":e["texto"],"origin":"CENTRO","origin_verified":"true","coverage":q["coverage"]}));
+            }
+        }
+    }
+    build_tables(vec![("registros",rows),("consultas",qs),("bitacoras",events)])
+}
+fn build_tables(tables: Vec<(&str,Vec<Value>)>) -> Vec<u8> {
     let mut files = Vec::new();
     let mut contents = Vec::new();
     for (name, rows) in tables {
@@ -156,5 +172,49 @@ fn zip_alterado_version_no_admitida_y_rutas_inseguras_se_rechazan() {
         let data = zip.finish().unwrap().into_inner();
         assert!(paquete::revisar_bitacoras(&data,fecha("2026-11-01"),fecha("2026-11-17"),fecha("2026-11-17")).is_err());
     }
+}
+
+#[test]
+fn metadatos_y_tabla_normalizada_discrepantes_son_no_verificables() {
+    let q = query("b1","201",vec![],true);
+    let e = json!({"query_id":"b1","source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+        "identity_status":"VERIFICADA","event_at":"2026-11-17","text":"Nota ficticia","origin":"CENTRO","origin_verified":"true","coverage":"COMPLETA"});
+    let data = build_tables(vec![("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",vec![e])]);
+    assert_eq!(inspect(&data).conteos(),[0,0,1,0]);
+    let q = query("b1","201",vec![event("e1","2026-11-17","centro")],true);
+    let data = build_tables(vec![("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",vec![])]);
+    assert_eq!(inspect(&data).conteos(),[0,0,1,0]);
+}
+
+#[test]
+fn ids_distintos_y_cambio_a_periodo_anterior_conservan_evidencia() {
+    let events = vec![event("e1","2026-11-17T10:00:00","centro"),event("e2","2026-11-17T11:00:00","centro")];
+    let data = build(vec![row("r1","201")],vec![query("b1","201",events,true)]);
+    assert_eq!(inspect(&data).filas[0].revision.eventos_elegibles,2);
+    let mut q = query("b1","201",vec![],true);
+    q["captured_at"] = json!("2026-11-16T12:00:00-03:00");
+    let mut f: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+    f["revision_bitacoras"]["captured_at"] = q["captured_at"].clone();
+    f["revision_bitacoras"]["hasta"] = json!("2026-11-16");
+    q["filters_json"] = json!(f.to_string());
+    let mut report = inspect(&build(vec![row("r1","201")],vec![q]));
+    assert_eq!(report.conteos(),[0,0,1,0]);
+    report.cambiar_periodo(fecha("2026-11-01"),fecha("2026-11-16"),fecha("2026-11-17")).unwrap();
+    assert_eq!(report.conteos(),[1,0,0,0]);
+}
+
+#[test]
+fn miles_de_ingresos_se_indizan_una_vez() {
+    let mut rows = Vec::new(); let mut queries = Vec::new();
+    for i in 0..2000 {
+        let id = format!("r{i}"); let ingreso = format!("{}",1000+i);
+        rows.push(row(&id,&ingreso)); queries.push(query(&format!("b{i}"),&ingreso,vec![],true));
+    }
+    let bytes = build(rows,queries);
+    let inicio = std::time::Instant::now();
+    let report = inspect(&bytes);
+    assert_eq!(report.conteos(),[2000,0,0,0]);
+    // Límite holgado para CI y Windows en depuración; evita regresión cuadrática de parseo.
+    assert!(inicio.elapsed() < std::time::Duration::from_secs(20));
 }
 

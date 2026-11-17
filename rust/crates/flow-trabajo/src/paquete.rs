@@ -451,10 +451,101 @@ pub fn importar_archivo(ruta: &Path, corte: Fecha, config: &Config) -> Result<Pa
     importar(&nombre, &datos, corte, config)
 }
 
+#[derive(Default)]
+struct EvidenciaIngreso {
+    lecturas: Vec<Value>,
+    eventos: Vec<crate::revision_bitacoras::Evento>,
+    conocida: bool,
+    incompleta: bool,
+    cobertura: Option<(Fecha, Fecha)>,
+    contradictoria: bool,
+    ids: HashMap<String, String>,
+    esperados: std::collections::HashSet<(Fecha, String)>,
+    normalizados: std::collections::HashSet<(Fecha, String)>,
+}
+
+/// Indiza cada consulta y evento una vez. La evidencia no depende del filtro temporal de la UI.
+fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
+    use crate::revision_bitacoras::{Autor, Evento};
+    let mut salida: HashMap<Identidad, EvidenciaIngreso> = HashMap::new();
+    let mut consultas: HashMap<String, Identidad> = HashMap::new();
+    let mut ilegible = false;
+    for q in c.tablas.get("consultas").into_iter().flatten().filter(|q| dato(q,"screen") == "bitacoras") {
+        let Ok(mut filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { ilegible = true; continue; };
+        let ident = ["source_system","court_code","cause_id","ingreso_id"].map(|k| filtros["remote_identity"][k].as_str().unwrap_or("").to_string());
+        if ident.iter().any(|s| s.trim().is_empty()) { ilegible = true; continue; }
+        if let Some(previa) = consultas.insert(dato(q,"query_id").into(),ident.clone()) {
+            if previa != ident {
+                salida.entry(previa).or_default().contradictoria = true;
+                salida.entry(ident.clone()).or_default().contradictoria = true;
+            }
+        }
+        let raw = filtros["revision_bitacoras"].take();
+        let d = salida.entry(ident).or_default();
+        if raw["version"] != 1 || !raw["entries"].is_array() {
+            d.incompleta = true;
+        } else {
+            if let Some(previa) = d.lecturas.iter().find(|l| l["evidencia"]["version"] == 1) {
+                if previa["evidencia"] != raw { d.contradictoria = true; }
+            }
+            d.conocida = true;
+            let a = raw["desde"].as_str().and_then(|s| s.parse::<Fecha>().ok());
+            let b = raw["hasta"].as_str().and_then(|s| s.parse::<Fecha>().ok());
+            let captura = chrono::DateTime::parse_from_rfc3339(dato(q,"captured_at")).ok().map(|d| d.date_naive());
+            let captura_raw = raw["captured_at"].as_str().and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map(|d| d.date_naive());
+            if raw["completa"] == true && matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA") &&
+                matches!(raw["coverage"].as_str(),Some("COMPLETA"|"VACIA_COMPROBADA")) &&
+                raw["warnings"].as_array().is_some_and(Vec::is_empty) &&
+                captura == captura_raw && a.zip(b).is_some_and(|(a,b)| a <= b && captura.is_some_and(|c| b <= c)) {
+                d.cobertura = a.zip(b);
+            } else { d.incompleta = true; }
+            for e in raw["entries"].as_array().into_iter().flatten() {
+                let id = e["entry_id"].as_str().unwrap_or("").to_string();
+                if !id.is_empty() {
+                    let firma = hex(e.to_string().as_bytes());
+                    if let Some(previa) = d.ids.insert(id.clone(),firma.clone()) { if previa != firma { d.contradictoria = true; } }
+                }
+                if !e["texto"].is_string() { d.incompleta = true; }
+                let fecha = e["fecha"].as_str().and_then(dia);
+                let texto = e["texto"].as_str().unwrap_or("").to_string();
+                if let Some(fecha) = fecha.filter(|f| a.is_some_and(|a| *f >= a)) {
+                    if !texto.trim().is_empty() { d.esperados.insert((fecha,texto.clone())); }
+                }
+                d.eventos.push(Evento { id, momento:e["fecha"].as_str().unwrap_or("").into(), fecha, texto,
+                    autor:match e["origen"].as_str() {
+                        Some("centro") => Autor::Centro, Some("tribunal"|"programa") => Autor::Otro, _ => Autor::Desconocido,
+                    } });
+            }
+        }
+        d.lecturas.push(serde_json::json!({"query_id":dato(q,"query_id"),"captured_at":dato(q,"captured_at"),"coverage":dato(q,"coverage"),"evidencia":raw}));
+    }
+    // Cotejo de las dos representaciones. El origen generalizado del CSV legado no decide autoría.
+    for e in c.tablas.get("bitacoras").into_iter().flatten() {
+        let ident = identidad(e);
+        if let Some(consulta) = consultas.get(dato(e,"query_id")) {
+            if consulta != &ident {
+                salida.entry(consulta.clone()).or_default().contradictoria = true;
+                salida.entry(ident.clone()).or_default().contradictoria = true;
+            }
+        }
+        let d = salida.entry(ident).or_default();
+        if !verificada(e) { d.contradictoria = true; }
+        if !dato(e,"text").trim().is_empty() {
+            if let Some(fecha) = dia(dato(e,"event_at")) { d.normalizados.insert((fecha,dato(e,"text").into())); }
+            else { d.contradictoria = true; }
+        }
+    }
+    for d in salida.values_mut() {
+        if d.conocida && d.esperados != d.normalizados { d.contradictoria = true; }
+        if ilegible { d.incompleta = true; }
+    }
+    salida
+}
+
 /// Clasifica con el mismo validador ZIP que Trabajo. La UI conserva estos mismos bytes
 /// para aplicar posteriormente el motor, sin releer un archivo que podría haber cambiado.
 pub fn revisar_bitacoras(datos: &[u8], desde: Fecha, hasta: Fecha, corte: Fecha) -> Result<crate::revision_informe::Informe, String> {
-    use crate::revision_bitacoras::{clasificar, Autor, Evento, Evidencia};
+    use crate::revision_bitacoras::{clasificar, Evidencia};
     use crate::revision_informe::{FilaRevision, Identidad as Id, Informe, Procedencia};
     if desde > hasta || hasta > corte { return Err("Período inválido o posterior al corte.".into()); }
     let c = abrir(datos)?;
@@ -462,6 +553,7 @@ pub fn revisar_bitacoras(datos: &[u8], desde: Fecha, hasta: Fecha, corte: Fecha)
     if registros.len() > REGISTROS_MAXIMOS { return Err("El paquete excede 20.000 registros.".into()); }
     let vacias = Vec::new();
     let consultas = c.tablas.get("consultas").unwrap_or(&vacias);
+    let indice = evidencias_revision(&c);
     let pantallas: HashMap<_, _> = consultas.iter().map(|q| (dato(q,"query_id"), dato(q,"screen"))).collect();
     let solo_cruce = registros.iter().any(|r| pantallas.get(dato(r,"query_id")) != Some(&"calendario_informes"));
     let fuentes = registros.iter().filter(|r| !(solo_cruce && pantallas.get(dato(r,"query_id")) == Some(&"calendario_informes"))).collect::<Vec<_>>();
@@ -499,56 +591,14 @@ pub fn revisar_bitacoras(datos: &[u8], desde: Fecha, hasta: Fecha, corte: Fecha)
             duplicados += 1;
             continue;
         }
-        let mut lecturas = Vec::new();
-        let mut eventos = Vec::new();
-        let mut conocida = false;
-        let mut completas = true;
-        let mut cobertura = None;
-        let mut contradictoria = valores.is_null() || dato(r,"record_id").is_empty() || ids.get(dato(r,"record_id")).is_some_and(|(_,_,c)| *c);
-        let mut anterior: Option<Value> = None;
-        let mut por_evento: HashMap<String, Value> = HashMap::new();
-        for q in consultas.iter().filter(|q| dato(q,"screen") == "bitacoras") {
-            let Ok(filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { completas = false; continue; };
-            let remoto = &filtros["remote_identity"];
-            if ["source_system","court_code","cause_id","ingreso_id"].iter().enumerate().any(|(i,k)| remoto[*k].as_str() != Some(ident[i].as_str())) { continue; }
-            let raw = &filtros["revision_bitacoras"];
-            lecturas.push(serde_json::json!({"query_id":dato(q,"query_id"),"captured_at":dato(q,"captured_at"),"coverage":dato(q,"coverage"),"evidencia":raw}));
-            if raw["version"] != 1 || !raw["entries"].is_array() { completas = false; continue; }
-            conocida = true;
-            if let Some(previa) = &anterior { if previa != raw { contradictoria = true; } } else { anterior = Some(raw.clone()); }
-            let a = raw["desde"].as_str().and_then(|s| s.parse::<Fecha>().ok());
-            let b = raw["hasta"].as_str().and_then(|s| s.parse::<Fecha>().ok());
-            let captura = chrono::DateTime::parse_from_rfc3339(dato(q,"captured_at")).ok().map(|d| d.date_naive());
-            let captura_raw = raw["captured_at"].as_str().and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok()).map(|d| d.date_naive());
-            if raw["completa"] == true && matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA") &&
-                matches!(raw["coverage"].as_str(),Some("COMPLETA"|"VACIA_COMPROBADA")) &&
-                raw["warnings"].as_array().is_some_and(Vec::is_empty) &&
-                captura == captura_raw && captura.is_some_and(|d| d >= hasta) &&
-                a.zip(b).is_some_and(|(a,b)| a <= b && captura.is_some_and(|c| b <= c)) {
-                cobertura = a.zip(b);
-            } else { completas = false; }
-            for e in raw["entries"].as_array().into_iter().flatten() {
-                let event_id = e["entry_id"].as_str().unwrap_or("");
-                if !event_id.is_empty() {
-                    if let Some(previo) = por_evento.get(event_id) { if previo != e { contradictoria = true; } }
-                    else { por_evento.insert(event_id.into(), e.clone()); }
-                }
-                if !e["texto"].is_string() { completas = false; }
-                eventos.push(Evento {
-                    fecha:e["fecha"].as_str().and_then(dia),
-                    texto:e["texto"].as_str().unwrap_or("").into(),
-                    autor:match e["origen"].as_str() {
-                        Some("centro") => Autor::Centro,
-                        Some("tribunal"|"programa") => Autor::Otro,
-                        _ => Autor::Desconocido,
-                    },
-                });
-            }
-        }
+        let d = indice.get(&ident);
+        let lecturas = d.map(|d|d.lecturas.clone()).unwrap_or_default();
         let evidencia = Evidencia {
-            admitido:etapa_de(&tipo).is_some(), identidad_verificada:verificada, contradictoria,
-            cobertura_completa:if completas { cobertura } else { None },
-            eventos:if conocida { Some(eventos) } else { None },
+            admitido:etapa_de(&tipo).is_some(), identidad_verificada:verificada,
+            contradictoria:valores.is_null() || dato(r,"record_id").is_empty() ||
+                ids.get(dato(r,"record_id")).is_some_and(|(_,_,c)| *c) || d.is_some_and(|d|d.contradictoria),
+            cobertura_completa:d.filter(|d|!d.incompleta).and_then(|d|d.cobertura),
+            eventos:d.filter(|d|d.conocida).map(|d|d.eventos.clone()),
         };
         let revision = clasificar(&evidencia, desde, hasta)?;
         grupos.insert(clave, filas.len());
