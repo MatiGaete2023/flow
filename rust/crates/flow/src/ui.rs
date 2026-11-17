@@ -171,6 +171,7 @@ struct App {
     marcadas: std::collections::BTreeSet<String>,
     manual: bool,
     resultados: Vec<String>,
+    biblioteca: crate::resultados_ui::Biblioteca,
     carpeta: Option<PathBuf>,
     mensaje: Option<(bool, String)>,
     outlook: bool,
@@ -178,6 +179,7 @@ struct App {
     nuevo: (String, String, String),
     /// Nombre del programa que se está editando (para renombrar); `None`: contacto nuevo.
     edicion: Option<String>,
+    buscar_contacto: String,
     /// Contactos leídos del Asistente Python (solo lectura): no se guardan en Flow hasta que el usuario los confirme.
     contactos_csmp: Option<PathBuf>,
     /// Importación revisada y pendiente de confirmar: (origen, resultado).
@@ -321,11 +323,13 @@ impl App {
             marcadas: Default::default(),
             manual: false,
             resultados: Vec::new(),
+            biblioteca: Default::default(),
             carpeta: None,
             mensaje: contactos_error.map(|e| (true, e)).or(aviso_contactos),
             outlook: flow_outlook::disponible(),
             nuevo: Default::default(),
             edicion: None,
+            buscar_contacto: String::new(),
             contactos_csmp,
             importacion: None,
             ayuda: false,
@@ -444,6 +448,7 @@ impl App {
         self.word_generados.clear();
         self.marcadas.clear();
         self.manual = false;
+        self.biblioteca.recordar(self.carpeta.as_deref());
         self.carpeta = None;
         let aviso = match trabajo.sesion.clone().map(serde_json::from_value::<EstadoSesion>) {
             None => None,
@@ -1478,22 +1483,22 @@ impl App {
             if ui.button("Destino de próximos productos…").clicked() {
                 if let Some(nueva) = rfd::FileDialog::new().pick_folder() {
                     self.ajustes.salida = Some(nueva);
-                    self.carpeta = None;
+                    self.biblioteca.recordar(self.carpeta.as_deref());
+        self.carpeta = None;
                     if let Ok(texto) = serde_json::to_string_pretty(&self.ajustes) {
                         let _ = std::fs::write(ruta_ajustes(&self.datos), texto);
                     }
                 }
             }
         });
+        if let Some(destino)=&self.ajustes.salida {ui.small(format!("Destino de próximos productos: {}",destino.display()));}
         ui.separator();
-        if self.resultados.is_empty() {
-            ui.label("Aún no se ha creado ningún producto.");
-        }
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for linea in &self.resultados {
-                ui.label(linea);
-            }
+        ui.collapsing("Registro de operaciones y recibos",|ui|{
+            egui::ScrollArea::vertical().id_salt("registro_productos").max_height(150.0).show(ui,|ui|{
+                for linea in &self.resultados {ui.label(linea);}
+            });
         });
+        self.biblioteca.mostrar(ui,self.carpeta.as_deref());
     }
 
     fn vista_contactos(&mut self, ui: &mut egui::Ui) {
@@ -1567,6 +1572,7 @@ impl App {
         }
         ui.add_space(4.0);
         ui.add_enabled_ui(editable, |ui| {
+            ui.collapsing("Tribunales, CC y firma",|ui| {
             ui.label(RichText::new("Tribunales").strong());
             egui::Grid::new("tribunales").num_columns(2).show(ui, |ui| {
                 for clave in correos::TRIBUNALES {
@@ -1585,11 +1591,42 @@ impl App {
             ui.label(RichText::new("Firma al pie de los correos").strong());
             guardar |= ui.add(egui::TextEdit::multiline(&mut self.contactos.firma).desired_rows(3).desired_width(520.0)).lost_focus();
             ui.add_space(6.0);
-            ui.label(RichText::new("Programas").strong());
-            ui.horizontal(|ui| {
-                ui.add(egui::TextEdit::singleline(&mut self.nuevo.0).hint_text("Programa").desired_width(220.0));
-                ui.add(egui::TextEdit::singleline(&mut self.nuevo.1).hint_text("Correos (; separados)").desired_width(220.0));
-                ui.add(egui::TextEdit::singleline(&mut self.nuevo.2).hint_text("Alias (; separados)").desired_width(200.0));
+            });
+            let mut quitar = None;
+            let mut editar = None;
+            let busqueda=flow_dominio::texto::normalizar(&self.buscar_contacto);
+            ui.columns(2,|columnas|{
+                let ui=&mut columnas[0];
+                ui.heading("Programas");
+                ui.add(egui::TextEdit::singleline(&mut self.buscar_contacto).hint_text("Buscar programa o correo…").desired_width(f32::INFINITY));
+                ui.small(format!("{} contactos",self.contactos.programas.len()));
+            egui::ScrollArea::vertical().id_salt("lista_contactos").show(ui, |ui| {
+                egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
+                    for (nombre, correo) in &self.contactos.programas {
+                        if !flow_dominio::texto::normalizar(&format!("{nombre} {correo}")).contains(&busqueda) {continue;}
+                        ui.label(nombre.as_str());
+                        ui.label(if correo.is_empty() { "(sin correo)" } else { correo.as_str() });
+                        if ui.small_button("Editar").clicked() {
+                            editar = Some(nombre.clone());
+                        }
+                        if ui.small_button("Quitar").clicked() {
+                            quitar = Some(nombre.clone());
+                        }
+                        ui.end_row();
+                    }
+                });
+            });
+
+                let ui=&mut columnas[1];
+                ui.heading("Ficha del programa");
+                ui.label(self.edicion.as_deref().unwrap_or("Contacto nuevo"));
+                ui.label("Programa");
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.0).desired_width(f32::INFINITY));
+                ui.label("Correos separados por punto y coma");
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.1).desired_width(f32::INFINITY));
+                ui.label("Alias separados por punto y coma");
+                ui.add(egui::TextEdit::singleline(&mut self.nuevo.2).desired_width(f32::INFINITY));
+                ui.horizontal_wrapped(|ui| {
                 if ui.button("Guardar contacto").clicked() {
                     let alias: Vec<String> = self.nuevo.2.split(';').map(str::to_string).collect();
                     match self.contactos.guardar_programa(self.edicion.as_deref(), &self.nuevo.0, &self.nuevo.1, &alias) {
@@ -1606,22 +1643,7 @@ impl App {
                     self.edicion = None;
                 }
             });
-            let mut quitar = None;
-            let mut editar = None;
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
-                    for (nombre, correo) in &self.contactos.programas {
-                        ui.label(nombre.as_str());
-                        ui.label(if correo.is_empty() { "(sin correo)" } else { correo.as_str() });
-                        if ui.small_button("Editar").clicked() {
-                            editar = Some(nombre.clone());
-                        }
-                        if ui.small_button("Quitar").clicked() {
-                            quitar = Some(nombre.clone());
-                        }
-                        ui.end_row();
-                    }
-                });
+
             });
             if let Some(nombre) = editar {
                 let correo = self.contactos.programas.get(&nombre).cloned().unwrap_or_default();
@@ -2316,5 +2338,7 @@ mod pruebas_captura {
         assert_eq!(app.claves_modalidades(), None);
     }
 }
+
+
 
 

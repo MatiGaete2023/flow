@@ -13,6 +13,7 @@ mod meta4_ui;
 mod cronologia_ui;
 mod ui;
 mod revision_bitacoras_ui;
+mod resultados_ui;
 mod tema;
 
 #[cfg(windows)]
