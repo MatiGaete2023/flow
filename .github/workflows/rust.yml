@@ -87,7 +87,9 @@ jobs:
           if ($digest -ne 'e61153fb1a8e58b9d80b403030cda619eaffbddd9ff99b34163b996ead03d596') { throw 'Huella Mesa inesperada' }
           & 7z x $mesaArchive "-o$mesaRoot" -y | Out-Null
           if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar Mesa' }
-          $opengl = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -File -Filter opengl32.dll | Where-Object FullName -Match '[\\/]x64[\\/]')
+          $mesaLibraries = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -File -Filter opengl32.dll)
+          $mesaLibraries | ForEach-Object { Write-Output $_.FullName }
+          $opengl = @($mesaLibraries | Where-Object { $_.Directory.Name -eq 'x64' })
           if ($opengl.Count -ne 1) { throw 'No hay un único runtime OpenGL x64' }
           New-Item -ItemType Directory -Path ui-runtime | Out-Null
           Get-ChildItem -LiteralPath $opengl[0].DirectoryName -File -Filter '*.dll' | Copy-Item -Destination ui-runtime

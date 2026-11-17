@@ -122,6 +122,46 @@ fn leer_pagina(r: &mut Recoleccion, f: &Ficticia, resumen: &mut Resumen) {
 }
 
 #[test]
+fn captura_explicita_renueva_bitacora_legada_propia_y_hermana_sin_tocar_original() {
+    for hermana in [false, true] {
+        let t = Temporal::nueva();
+        let c = t.0.join("lote");
+        std::fs::create_dir(&c).unwrap();
+        let mut resumen = resumen();
+        let f = Ficticia { fallar_historia: false, comandos: Mutex::new(vec![]) };
+        let fecha = "2026-10-20".parse().unwrap();
+        let mut r = Recoleccion::con_fecha(&c, &resumen, fecha).unwrap();
+        leer_pagina(&mut r, &f, &mut resumen);
+        let indice = resumen.lecturas.iter().position(|l| l.tipo == "bitacora").unwrap();
+        let mut legado = recoleccion::leer(&c, &resumen.lecturas[indice]).unwrap();
+        legado["datos"].as_object_mut().unwrap().remove("revision_bitacoras");
+        let bytes = serde_json::to_vec(&legado).unwrap();
+        let original = c.join("lectura-legada-ficticia.json");
+        std::fs::write(&original, &bytes).unwrap();
+        resumen.lecturas[indice].archivo = "lectura-legada-ficticia.json".into();
+        resumen.lecturas[indice].sha256 = lotes::huella(&bytes);
+        resumen.guardar(&c).unwrap();
+        let destino = if hermana {
+            let p = t.0.join("otro"); std::fs::create_dir(&p).unwrap();
+            resumen.lecturas.clear(); p
+        } else { c.clone() };
+        f.comandos.lock().unwrap().clear();
+        let mut r = Recoleccion::con_fecha(&destino, &resumen, fecha).unwrap();
+        leer_pagina(&mut r, &f, &mut resumen);
+        assert_eq!(*f.comandos.lock().unwrap(), vec!["diary_open".to_string()], "hermana={hermana}");
+        assert_eq!(std::fs::read(&original).unwrap(), bytes);
+        assert_eq!(resumen.lecturas.len(), 3);
+        let referencia = resumen.lecturas.iter().find(|l| l.tipo == "bitacora").unwrap();
+        let nueva = recoleccion::leer(&destino, referencia).unwrap();
+        assert_eq!(nueva["datos"]["revision_bitacoras"]["version"], 1);
+        assert!(nueva["datos"]["revision_bitacoras"]["entries"].is_array());
+        let mut r = Recoleccion::con_fecha(&destino, &resumen, fecha).unwrap();
+        leer_pagina(&mut r, &f, &mut resumen);
+        assert_eq!(f.comandos.lock().unwrap().len(), 1, "V1 se reutiliza sin lectura adicional");
+    }
+}
+
+#[test]
 fn guarda_tres_lecturas_y_retomar_del_mismo_dia_no_abre_otras_ventanas() {
     let t = Temporal::nueva();
     let c = t.0.join("lote");
@@ -346,3 +386,5 @@ fn prefijos_de_aviso_son_los_que_reconoce_retomar() {
     assert_eq!(prefijo_lectura(0, 2, 3, "bitacora"), "Consulta 1, página 2, fila 3: bitacora ");
     assert_eq!(prefijo_listado(4, 1), "Consulta 5, página 1: vínculos del listado ");
 }
+
+

@@ -180,11 +180,19 @@ impl RevisionUi {
             if ui.button("Restaurar distribución").clicked(){self.distribucion=self.distribucion.wrapping_add(1);self.panel=0;}
         });
         let panel=self.panel;
-        if !compacto||self.datos.is_none(){self.criterios(ui,ctx,ocupada);}
-        if let Some(p)=&self.archivo {ui.small(if compacto{p.file_name().unwrap_or_default().to_string_lossy().into_owned()}else{p.display().to_string()}).on_hover_text(p.display().to_string());}
+        if !compacto||self.informe.is_none(){self.criterios(ui,ctx,ocupada);}
+        if compacto {
+            ui.horizontal(|ui|{
+                ui.menu_button("Paquete y estado",|ui|{
+                    if let Some(p)=&self.archivo {ui.label(p.display().to_string());}
+                    ui.label(&self.mensaje);
+                });
+                ui.add(egui::Label::new(egui::RichText::new(&self.mensaje).small()).truncate()).on_hover_text(&self.mensaje);
+            });
+        }else if let Some(p)=&self.archivo {ui.small(p.display().to_string());}
         if obsoleto {ui.colored_label(ui.visuals().warn_fg_color,"⚠ Cambió el criterio: vuelve a analizar para aplicar reglas o exportar.");}
         if ocupada {ui.horizontal(|ui|{ui.spinner();if ui.button("Cancelar").clicked(){self.cancelar.store(true,Ordering::Relaxed);self.mensaje="Cancelando al terminar la operación actual…".into();}});}
-        if compacto{ui.small(&self.mensaje);}else{ui.label(&self.mensaje);}
+        if !compacto{ui.label(&self.mensaje);}
         if let Some(path)=&self.resultado {if ui.button("Abrir resultados").clicked(){crate::ui::abrir_en_sistema(path);}}
         let Some(informe)=self.informe.as_ref()else{self.confirmacion(ctx);return};
         let conteos=informe.conteos();let n=conteos[0];let aplicado=informe.motor_aplicado;
@@ -216,14 +224,14 @@ impl RevisionUi {
             (self.tribunal.is_empty()||f.identidad.tribunal==self.tribunal)&&(self.etapa.is_empty()||f.tipo==self.etapa)&&
             (self.programa.is_empty()||valor(f,&["PROGRAMA","NOMBRE PROGRAMA"])==self.programa)&&
             (self.estado_revision==0||(self.estado_revision==2)==f.revisada)&&self.busquedas[*i].contains(&buscar)).map(|(i,_)|i).collect::<Vec<_>>();
-        ui.horizontal_wrapped(|ui|{
+        if !compacto||panel==0 {ui.horizontal_wrapped(|ui|{
             ui.label(if compacto{format!("{} visibles · {} seleccionados",visibles.len(),self.seleccion.len())}else{format!("{} visibles · {} seleccionados (también pueden estar ocultos)",visibles.len(),self.seleccion.len())});
             if ui.button("Siguiente pendiente").clicked(){
                 self.activa=visibles.iter().copied().filter(|&i|!informe.filas[i].revisada).find(|i|self.activa.is_none_or(|a|*i>a))
                     .or_else(||visibles.iter().copied().find(|&i|!informe.filas[i].revisada));
             }
             if ui.button("Quitar selección").clicked(){self.seleccion.clear();}
-        });
+        });}
         if self.activa.is_none(){self.activa=visibles.first().copied();}
         let mut revision_cambio=None;
         let mut editor=|ui:&mut egui::Ui|{
@@ -363,6 +371,38 @@ impl RevisionUi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn primer_analisis_compacto_abre_paquete_y_responde_al_boton() {
+        let temporal=tempfile::tempdir().unwrap();
+        let archivo=temporal.path().join("Paquete_FICTICIO.zip");
+        std::fs::write(&archivo,crate::demo_paquete::crear().unwrap()).unwrap();
+        let ctx=egui::Context::default();let mut revision=RevisionUi::default();
+        let esperar=|revision:&mut RevisionUi| {
+            let limite=std::time::Instant::now()+std::time::Duration::from_secs(5);
+            while revision.receptor.is_some() && std::time::Instant::now()<limite {
+                revision.recibir();std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+            assert!(revision.receptor.is_none(),"worker no terminó");
+        };
+        revision.ejecutar(Accion::Abrir(archivo),&ctx);esperar(&mut revision);
+        assert!(revision.datos.is_some());assert!(revision.informe.is_none());
+        revision.desde="2026-11-05".into();
+        let mut pintar=|eventos:Vec<egui::Event>| {
+            ctx.run(egui::RawInput {screen_rect:Some(egui::Rect::from_min_size(egui::Pos2::ZERO,egui::vec2(683.0,384.0))),events:eventos,..Default::default()},|ctx|{
+                egui::CentralPanel::default().show(ctx,|ui|revision.mostrar(ui,ctx,&Config::default()));
+            })
+        };
+        let _=pintar(vec![]);let salida=pintar(vec![]);
+        let posicion=salida.shapes.iter().find_map(|s|match &s.shape {
+            egui::epaint::Shape::Text(t) if t.galley.job.text=="Analizar bitácoras"=>Some(t.pos+t.galley.size()*0.5),_=>None
+        }).expect("Analizar debe estar visible tras abrir el primer paquete compacto");
+        assert!(posicion.y<384.0);
+        let _=pintar(vec![egui::Event::PointerMoved(posicion),egui::Event::PointerButton{pos:posicion,button:egui::PointerButton::Primary,pressed:true,modifiers:Default::default()}]);
+        let _=pintar(vec![egui::Event::PointerButton{pos:posicion,button:egui::PointerButton::Primary,pressed:false,modifiers:Default::default()}]);
+        esperar(&mut revision);
+        let informe=revision.informe.as_ref().expect("El clic debe iniciar el primer análisis");
+        assert_eq!(informe.desde.to_string(),"2026-11-05");assert_eq!(informe.filas.len(),4);
+    }
     fn ui() -> RevisionUi {
         let d:Fecha="2026-11-17".parse().unwrap();
         let mut ui=RevisionUi::default();

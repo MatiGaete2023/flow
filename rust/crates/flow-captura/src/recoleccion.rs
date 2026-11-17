@@ -399,6 +399,14 @@ impl Recoleccion {
             return Ok(false);
         }
         let lectura = leer(&carpeta, &r)?;
+        // Una captura explícita debe obtener la evidencia que el formato legado no conservó.
+        // No se convierte la ausencia de metadatos en una cobertura comprobada.
+        if tipo == "bitacora"
+            && (lectura["datos"]["revision_bitacoras"]["version"].as_u64() != Some(1)
+                || !lectura["datos"]["revision_bitacoras"]["entries"].is_array())
+        {
+            return Ok(false);
+        }
         let anterior: Vinculo =
             serde_json::from_value(lectura["vinculo"].clone()).map_err(|_| "El vínculo de una lectura guardada no se reconoce.")?;
         if vinculos::normalizar(&anterior.rit) != vinculos::normalizar(&v.rit) || tipo != "historia" && anterior.clave() != v.clave() {

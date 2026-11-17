@@ -236,6 +236,12 @@ fn coincide(fila: &FilaTrabajo, buscar: &str) -> bool {
 }
 
 impl App {
+    fn atajo_guardar(&mut self, guardar: bool) {
+        if guardar && self.pestana == Pestana::Trabajo && self.trabajo.is_some() {
+            self.guardar_sesion();
+            self.guardar_excel();
+        }
+    }
     fn nueva(archivo: Option<PathBuf>, herramienta: Herramienta) -> Self {
         let mut app = Self::con_origen(almacen::carpeta_datos(), archivo, &correos::rutas_csmp());
         app.usar_herramienta(herramienta);
@@ -984,7 +990,9 @@ impl App {
                     }
                 });
             } else if let Some(t) = &self.trabajo {
+                if self.pestana != Pestana::Revision {
                 ui.small(format!("{} · {} · corte {}",t.archivo,t.nombre(),t.corte));
+                }
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("Ayuda (F1)").clicked() {
@@ -1009,6 +1017,22 @@ impl App {
     }
 
     fn pie(&mut self, ui: &mut egui::Ui) {
+        if ui.available_width()<1000.0 {
+            ui.horizontal(|ui| {
+                ui.menu_button("Estado",|ui| {
+                    if let Some(e)=&self.contactos_error {ui.colored_label(crate::tema::ERROR,e);}
+                    if let Some((error,texto))=&self.mensaje {
+                        if *error {ui.colored_label(crate::tema::ERROR,texto);} else {ui.label(texto);}
+                    }
+                    ui.label("No escribe en RUS ni SATURNO. No envía correos.");
+                    ui.label(format!("CC fijo: {CC_FIJO}"));
+                });
+                let texto=self.mensaje.as_ref().map(|(_,s)|s.as_str()).unwrap_or("Listo");
+                let color=if self.contactos_error.is_some()||self.mensaje.as_ref().is_some_and(|(e,_)|*e){crate::tema::ERROR}else{ui.visuals().text_color()};
+                ui.add(egui::Label::new(RichText::new(texto).color(color)).truncate()).on_hover_text(texto);
+            });
+            return;
+        }
         if self.contactos_error.is_some() {
             ui.colored_label(
                 crate::tema::ERROR,
@@ -1828,10 +1852,7 @@ impl eframe::App for App {
         if abrir && self.herramienta.analiza_rus() {
             self.elegir_archivo();
         }
-        if guardar && self.trabajo.is_some() {
-            self.guardar_sesion();
-            self.guardar_excel();
-        }
+        self.atajo_guardar(guardar);
         if ayuda {
             self.ayuda = true;
         }
@@ -2066,6 +2087,23 @@ mod pruebas_captura {
         assert_eq!(trabajo.filas.len(), 3);
         assert_eq!(almacen::listar(&app.datos).len(), 1);
         assert!(app.mensaje.as_ref().is_some_and(|(error, _)| !error));
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn guardar_desde_revision_no_exporta_el_trabajo_anterior() {
+        let (base, resumen) = preparar();
+        let mut app = App::con_datos(base.join("sesiones-ficticias"), None);
+        app.corte = "08/10/2026".into();
+        app.importar_captura(base.clone(), resumen);
+        assert!(app.trabajo.is_some());
+        let salida = base.join("salida-atajo");
+        app.ajustes.salida = Some(salida.clone());
+        app.pestana = Pestana::Revision;
+        app.revision.demostracion(crate::demo_paquete::crear().unwrap(), &Config::default(), 2).unwrap();
+        app.atajo_guardar(true);
+        assert!(!salida.exists());
+        assert!(app.carpeta.is_none());
         std::fs::remove_dir_all(base).unwrap();
     }
 
