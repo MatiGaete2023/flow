@@ -44,6 +44,12 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     ev = evidencia_informe()
     folio_res = ev.resolucion_folio if ev else ''
     folio_esc = ev.escrito_historia_folio if ev else ''
+    # Escrito de informe de avance pendiente de resolver, atribuible a este informe: no se pide cuenta de él (18-nov-2026).
+    # Se evalúa primero: contrasta la bandeja con la historia al mismo corte y deja marca si no hay secuencia fiable.
+    pendiente = H.informe_pendiente(programa, fv, atribuible) if vencido else []
+    if pendiente:
+        H.marcar(2, 'I01_ESCRITO_PENDIENTE', 'Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta')
+        return componer(pfx, pendiente + H.informes_acumulados())
     i1 = H.informe_historia(fv, vencido, atribuible, programa, folio_res)
     i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None, folio=folio_esc) if (atribuible or folio_esc) else []
     if vencido and not (atribuible or folio_res or folio_esc) and i1:
@@ -51,11 +57,6 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     if vencido and not (i1 or i3) and H.informe_previo(programa, fv):
         # Un ingreso o escrito anterior al vencimiento no acredita a qué período corresponde: se conservan las acciones.
         H.marcar(2, 'ENTREGA_ANTERIOR', 'Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión')
-    # Escrito de informe de avance pendiente de resolver, atribuible a este informe: no se pide cuenta de él (18-nov-2026).
-    pendiente = H.informe_pendiente(programa, fv, atribuible) if vencido and not (i1 or i3) else []
-    if pendiente:
-        H.marcar(2, 'I01_ESCRITO_PENDIENTE', 'Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta')
-        return componer(pfx, pendiente + H.informes_acumulados())
     if vencido and (atribuible or folio_res or folio_esc) and (i1 or i3):
         H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
         principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))

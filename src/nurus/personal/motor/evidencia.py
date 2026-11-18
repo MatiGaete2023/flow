@@ -21,13 +21,21 @@ CON_FILAS = frozenset(('COMPLETA', 'PARCIAL'))
 
 ESTADO_PENDIENTE = 'pendiente'
 # Histórico de Protección: ambos indicadores sin egreso expresan vigencia (confirmado por el usuario, 18-nov-2026).
-EGRESO_VIGENTE = '--'
 CAUSAL_VIGENTE = 'sin informacion'
 
 
 def clave_texto(texto):
     """Comparación estable: sin acentos, minúsculas, espacios colapsados (también NBSP y Unicode equivalente)."""
     return ' '.join(normalize(str(texto or '').replace(' ', ' ')).split())
+
+
+_GUIONES = '-\u2010\u2011\u2012\u2013\u2014\u2212'
+
+
+def _es_sin_fecha(texto):
+    """«--» tal como lo muestra SITFA (también con guiones Unicode equivalentes). Un guion solo o vacío no basta."""
+    limpio = str(texto or '').replace('\u00a0', ' ').strip()
+    return len(limpio) == 2 and all(c in _GUIONES for c in limpio)
 
 
 @dataclass(frozen=True)
@@ -69,7 +77,7 @@ class ProgramaHistorico:
     def vigente(self):
         """True solo si la fecha es «--» y la causal «SIN INFORMACION» en la misma fila. Un dato ilegible o vacío no
         acredita vigencia."""
-        return clave_texto(self.fecha_egreso) == EGRESO_VIGENTE and clave_texto(self.causal_egreso) == CAUSAL_VIGENTE
+        return _es_sin_fecha(self.fecha_egreso) and clave_texto(self.causal_egreso) == CAUSAL_VIGENTE
 
 
 @dataclass(frozen=True)

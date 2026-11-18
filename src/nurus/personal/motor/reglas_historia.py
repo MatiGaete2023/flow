@@ -675,9 +675,13 @@ def escrito_pendiente(programa, vencimiento=None, atribuible=True):
     if elegido is None:
         marcar(2, 'ESCRITO_PENDIENTE_SIN_ATRIBUIR', 'Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones')
         return None
+    if propios:
+        marcar(2, 'ESCRITO_PENDIENTE', 'Informe de avance pendiente de resolver en la bandeja de Escritos')
+        return elegido  # vínculo explícito con esta proyección: no depende de la secuencia de lecturas
     h = _h()
     nombre = V.ESCRITOS.get(intervencion(programa))
-    en_historia = [t for t in (h.buscar(nombre) if h else []) if vencimiento is None or t.fecha >= _d(vencimiento)]
+    posteriores = (nombre, V.INGRESO_INFORME_X)
+    en_historia = [t for t in (h.buscar(*posteriores) if h else []) if vencimiento is None or t.fecha >= _d(vencimiento)]
     if en_historia:
         lectura = escritos().leido
         hasta = h.hasta

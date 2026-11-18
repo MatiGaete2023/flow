@@ -37,6 +37,8 @@ class Row:
     overrides: dict = field(default_factory=dict)
     word_overrides: dict = field(default_factory=dict)
     avisos: list = field(default_factory=list)
+    # Otros programas vigentes cuya constancia propuso el motor (18-nov-2026): [{'clave', 'programa'}].
+    otros_programas: list = field(default_factory=list)
 
 
 VENTANA_POR_VENCER_DIAS = 60
@@ -349,6 +351,10 @@ class Work:
         cross_by_record=None,
         historia_by_record=None,
         bitacora_by_record=None,
+        escritos_by_record=None,
+        historico_by_record=None,
+        evidencia_by_record=None,
+        bitacora_parcial_by_record=None,
     ):
         from .operations import progress, checkpoint
 
@@ -434,6 +440,11 @@ class Work:
                 'marcas': [],
                 'duplicidad': duplicity.get(record.record_id),
                 'acumulado': accumulated.get(record.record_id),
+                'escritos': (escritos_by_record or {}).get(record.record_id),
+                'historico': (historico_by_record or {}).get(record.record_id),
+                'evidencia_informe': (evidencia_by_record or {}).get(record.record_id),
+                'bitacora_parcial': bool((bitacora_parcial_by_record or {}).get(record.record_id)),
+                'consignados': frozenset(getattr(self, 'consignaciones', {}).get(record.record_id, ())),
             }
             token = current.set(ctx)
             inc = Incidencias()
@@ -489,6 +500,7 @@ class Work:
             )
             self.rows[-1].decisions = {'structured': True, 'mail': {}, 'resolution': 'auto'}
             self.rows[-1].avisos = list(dict.fromkeys(ctx['marcas']))
+            self.rows[-1].otros_programas = list(ctx.get('otros_programas', ()))
         progress('Análisis completo', len(batch.records), len(batch.records))
         return self
 
@@ -528,6 +540,17 @@ class Work:
                 accumulated.update({rid: (len(dues), min(dues)) for rid, _ in items})
         # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
         return causas_con_varios(rows), accumulated
+
+    def consignar(self, row_id, programa):
+        """Registra que el funcionario consignó (o confirmó) la constancia de ingreso efectivo a `programa` para esa
+        fila. Idempotente. Nunca se llama al generar ni exportar una propuesta."""
+        from .motor.evidencia import clave_programa
+
+        mapa = self.__dict__.setdefault('consignaciones', {})
+        llave = clave_programa(programa)
+        if llave and llave not in mapa.setdefault(row_id, []):
+            mapa[row_id].append(llave)
+        return llave
 
     def export(self, destination, *, backend='native', reduced_fidelity=False):
         """Exporta la propuesta o las ediciones humanas vigentes de Trabajo.
