@@ -109,6 +109,13 @@ def cargar(manifest_path):
                     dict.fromkeys([*causa.get('advertencias', []), 'HISTORIA_FECHA_POSTERIOR'])
                 )
             item.update(lectura=lectura, anteriores=anteriores)
+            # La bandeja de Escritos viaja en la misma respuesta de la causa (plan 18-nov-2026). Ausente = no solicitada.
+            from nurus.escritos_html import ESCRITOS_AUSENTE, read_escritos
+
+            try:
+                item['escritos'] = read_escritos(data)
+            except ValueError as exc:
+                item['escritos_error'] = '' if str(exc) == ESCRITOS_AUSENTE else str(exc)
             item['ventana'] = sorted(dentro + posteriores + sin_fecha, key=lambda f: f['fila'])
         causas.append(item)
     return estado, causas

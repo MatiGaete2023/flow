@@ -12,6 +12,7 @@ from pathlib import Path
 from nurus.capture import CaptureError, read_capture, write_capture
 from nurus.capture.contract import COMMON, EXTENDED_TABLES, TABLES
 from nurus.escritos_html import (
+    ESCRITOS_AUSENTE,
     ESCRITOS_NO_VERIFICADA,
     HISTORICO_NO_VERIFICADA,
     INCOMPLETA,
@@ -51,10 +52,11 @@ def test_escritos_con_cabecera_y_cero_filas_es_bandeja_vacia_no_fuente_no_verifi
 @pytest.mark.parametrize(
     'documento,codigo',
     [
-        ('<html><body><p>Escritos</p></body></html>', ESCRITOS_NO_VERIFICADA),  # pestaña sin tabla legible
-        (pagina(['Folio', 'Desc'], [['1', 'x']]), ESCRITOS_NO_VERIFICADA),
+        ('<html><body><p>Escritos</p></body></html>', ESCRITOS_AUSENTE),  # la respuesta no trae la pestaña
+        (pagina(['Folio', 'Desc'], [['1', 'x']]), ESCRITOS_AUSENTE),
+        (pagina(['Tipo Escrito', 'Estado'], [['Inf.', 'Pendiente']]), ESCRITOS_NO_VERIFICADA),  # pestaña sin cuerpo legible
         ('<html><body><table><tr><th>Doc.</th></tr></table>', INCOMPLETA),  # respuesta cortada
-        ('', ESCRITOS_NO_VERIFICADA),
+        ('', ESCRITOS_AUSENTE),
     ],
 )
 def test_escritos_sin_cuerpo_legible_no_se_lee_como_vacio(documento, codigo):

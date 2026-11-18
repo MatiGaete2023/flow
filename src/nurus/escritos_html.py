@@ -20,12 +20,14 @@ from nurus.bitacora_html import decode_snapshot, normalize
 ESCRITOS_HEADERS = ('Doc.', 'Tipo Escrito', 'Solicitante', 'Estado')
 HISTORICO_HEADERS = ('Programa', 'Fecha egreso', 'Causal egreso')
 ESCRITOS_NO_VERIFICADA = 'ESCRITOS_NO_VERIFICADA'
+ESCRITOS_AUSENTE = 'ESCRITOS_AUSENTE'
 HISTORICO_NO_VERIFICADA = 'HISTORICO_NO_VERIFICADA'
 INCOMPLETA = 'ESCRITOS_RESPUESTA_INCOMPLETA'
 SESION = 'ESCRITOS_SESION'
 FILA_CORTA = 'ESCRITOS_FILA_INCOMPLETA'
 MENSAJES = {
     ESCRITOS_NO_VERIFICADA: 'La pestaña Escritos no trae una tabla legible; la fuente queda sin verificar, no vacía.',
+    ESCRITOS_AUSENTE: 'La respuesta no incluye la pestaña Escritos (otra versión de SITFA o no cargada): fuente no solicitada.',
     HISTORICO_NO_VERIFICADA: 'La vista de Ingreso Histórico Protección no trae la tabla esperada; queda sin verificar.',
     INCOMPLETA: 'La respuesta llegó cortada (sin cierre del documento); se reintenta, no se lee como vacía.',
     SESION: 'La respuesta parece la página de ingreso de SITFA; revisa la sesión.',
@@ -40,7 +42,7 @@ def _texto(nodo):
 def _documento(data):
     texto = decode_snapshot(data)
     if not texto.strip():
-        raise ValueError(ESCRITOS_NO_VERIFICADA)
+        raise ValueError(ESCRITOS_AUSENTE)
     if not re.search(r'</html\s*>', texto, re.I):
         raise ValueError(INCOMPLETA)
     documento = html.fromstring(texto)
@@ -87,7 +89,10 @@ def read_escritos(data, *, source='', captured_at=''):
     documento, crudo = _documento(data)
     tablas = _tablas_con(documento, ESCRITOS_HEADERS)
     if len(tablas) != 1:
-        raise ValueError(ESCRITOS_NO_VERIFICADA)
+        # Sin ninguna mención de la columna «Tipo Escrito» la respuesta no trae la pestaña (otra versión de SITFA): la
+        # fuente no se pidió. Con mención pero sin tabla legible, o con varias tablas, queda sin verificar.
+        presente = 'tipo escrito' in normalize(_texto(documento))
+        raise ValueError(ESCRITOS_NO_VERIFICADA if presente or tablas else ESCRITOS_AUSENTE)
     posiciones, cabecera, filas = tablas[0]
     resultado, advertencias = _leer_filas(posiciones, cabecera, filas, ESCRITOS_HEADERS, FILA_CORTA)
     return {
@@ -128,4 +133,4 @@ def mensaje(codigo):
     return MENSAJES.get(codigo, codigo)
 
 
-__all__ = ('ESCRITOS_HEADERS', 'HISTORICO_HEADERS', 'read_escritos', 'read_historico', 'mensaje')
+__all__ = ('ESCRITOS_AUSENTE', 'ESCRITOS_NO_VERIFICADA', 'ESCRITOS_HEADERS', 'HISTORICO_HEADERS', 'read_escritos', 'read_historico', 'mensaje')

@@ -436,13 +436,14 @@ def export_capture(
                 )
     if historia:
         _historia(historia, data, query, incident, cid, captured)
+        _escritos(historia, data, query, incident, cid, captured)
     states = {k: 'NO_SOLICITADA' for k in TABLES}
     states.update(
         consultas=aggregate(q['coverage'] for q in data['consultas']),
         registros=aggregate(
             q['coverage']
             for q in data['consultas']
-            if q['screen'] not in ('bitacoras', 'calendario_ingreso', 'historia_tramites')
+            if q['screen'] not in ('bitacoras', 'calendario_ingreso', 'historia_tramites', 'escritos')
         ),
         incidencias='COMPLETA' if data['incidencias'] else 'VACIA_COMPROBADA',
     )
@@ -459,6 +460,10 @@ def export_capture(
         )
         if not data.get('historia_tramites') and states['historia_tramites'] == 'COMPLETA':
             states['historia_tramites'] = 'VACIA_COMPROBADA'
+    if data.get('escritos') is not None:
+        states['escritos'] = aggregate(q['coverage'] for q in data['consultas'] if q['screen'] == 'escritos')
+        if not data['escritos'] and states['escritos'] == 'COMPLETA':
+            states['escritos'] = 'VACIA_COMPROBADA'
     from contrato_integral import capabilities
 
     build = capabilities()
@@ -482,6 +487,72 @@ HISTORIA_COBERTURA = {
     'PENDIENTE': 'CANCELADA',
     'CANCELADA': 'CANCELADA',
 }
+
+
+def _escritos(manifest, data, query, incident, cid, captured):
+    """Bandeja de Escritos de cada causa leída (alcance CAUSA): una consulta por causa y una fila por escrito. Solo si la
+    respuesta respaldada trae la pestaña; con la pestaña presente pero ilegible la consulta queda FALLIDA, nunca vacía."""
+    estado, causas = cargar_historias(manifest)
+    lote = Path(manifest).resolve().parent.parent.name
+    filas = []
+    consultas = 0
+    for n, item in enumerate(causas, 1):
+        causa = item['causa']
+        lectura, error = item.get('escritos'), item.get('escritos_error')
+        if lectura is None and not error:
+            continue  # la respuesta no trae la pestaña: fuente no solicitada
+        consultas += 1
+        qid = f'escritos-{n}'
+        cobertura = 'FALLIDA' if lectura is None else 'VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'COMPLETA'
+        selection = {
+            'tribunal': causa['tribunal'],
+            'tribunal_nombre': causa.get('tribunal_nombre', ''),
+            'tab': 'ESCRITOS',
+            'escritos_causa': {'source_system': 'RUS', 'court_code': causa['tribunal'], 'cause_id': causa['causa_id']},
+        }
+        cuando = causa.get('leida') or captured
+        row = query(qid, selection, cobertura, cuando, 1, 0 if lectura is None else 1, screen='escritos', error=error or '')
+        if lectura is None:
+            incident(qid, error, 'La pestaña Escritos de la causa no se pudo leer.')
+            continue
+        for codigo in (a['codigo'] for a in lectura['advertencias']):
+            incident(qid, codigo, 'Advertencia del lector de escritos.')
+        for fila in lectura['filas']:
+            common = {k: '' for k in COMMON}
+            common.update(
+                capture_id=cid,
+                query_id=qid,
+                source_system='RUS',
+                court_code=row['court_code'],
+                court_name=row['court_name'],
+                rit_original=causa['rit'],
+                cause_id=causa['causa_id'],
+                modality_code=row['modality_code'],
+                tab='ESCRITOS',
+                captured_at=cuando,
+                original_file=f'respaldo/{lote}/historia/' + causa['archivo'],
+                original_row=str(fila['fila']),
+                source_sha256=causa['sha256'],
+                coverage='COMPLETA',
+            )
+            filas.append(
+                {
+                    **common,
+                    'escrito_id': f'{qid}-{fila["fila"]}',
+                    'scope': 'CAUSA',
+                    'doc': fila['Doc.'],
+                    'escrito_type': fila['Tipo Escrito'],
+                    'requester': fila['Solicitante'],
+                    'escrito_status': fila['Estado'],
+                    'reference': '',
+                    'linked_ingreso_id': '',
+                    'linked_projection': '',
+                    'identity_status': 'CAUSA',
+                    'raw_json': json.dumps(fila['literal'], ensure_ascii=False),
+                }
+            )
+    if consultas:
+        data['escritos'] = filas
 
 
 def _historia(manifest, data, query, incident, cid, captured):
