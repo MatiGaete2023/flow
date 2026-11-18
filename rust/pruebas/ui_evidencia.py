@@ -94,6 +94,9 @@ def main():
                 ppm = destino / f"{nombre}.ppm"
                 if codigo or not ppm.is_file():
                     raise RuntimeError(f"Falló captura {nombre}: código {codigo}: {stderr[-3000:]}")
+                _, _, _, pixeles = ppm.read_bytes().split(b"\n", 3)
+                if pixeles.count(bytes((32, 36, 58))) < ancho * alto // 20:
+                    raise RuntimeError(f"{nombre}: no se ve el fondo índigo de Estudio D")
                 vistas.setdefault((ancho, alto, escala), []).append(miniatura(ppm))
                 imagen = png(ppm)
                 datos = json.loads(imagen.with_suffix(".json").read_text())
@@ -133,4 +136,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

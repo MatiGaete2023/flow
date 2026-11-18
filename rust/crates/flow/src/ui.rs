@@ -2132,7 +2132,7 @@ mod pruebas_captura {
             ("paginada", Clasificacion::NoVerificable),
             ("sin_tabla", Clasificacion::NoVerificable),
         ] {
-            let (base, resumen, _) = capturar_bitacora_ficticia(caso);
+            let (_temporal, base, resumen, _) = capturar_bitacora_ficticia(caso);
             assert_eq!(resumen.lecturas.len(), usize::from(caso != "sin_tabla"));
             if let Some(referencia) = resumen.lecturas.first() {
                 let lectura = flow_captura::recoleccion::leer(&base, referencia).unwrap();
@@ -2143,7 +2143,7 @@ mod pruebas_captura {
                     "con_evento" => "COMPLETA",
                     _ => "PARCIAL",
                 };
-                assert_eq!(evidencia["coverage"], esperada, "{caso}: alcance capturado");
+                assert_eq!(evidencia["coverage"], esperada, "{caso}: alcance capturado; fuente {:?}", lectura["datos"]["alcance_revision_fuente"]);
                 assert_eq!(evidencia["completa"], caso != "paginada", "{caso}: completitud guardada");
             }
             let zip = base.join("paquete.zip");
@@ -2165,11 +2165,10 @@ mod pruebas_captura {
                 assert!(informe.filas[indice].propuesta.is_some());
                 assert!(informe.filas.iter().enumerate().all(|(i, f)| i == indice || f.propuesta.is_none()));
             }
-            std::fs::remove_dir_all(base).unwrap();
         }
     }
 
-    fn capturar_bitacora_ficticia(caso: &str) -> (PathBuf, flow_captura::lotes::Resumen, String) {
+    fn capturar_bitacora_ficticia(caso: &str) -> (tempfile::TempDir, PathBuf, flow_captura::lotes::Resumen, String) {
         use flow_captura::{lotes::Conexion,recoleccion::{Recoleccion,PaginaActual,Control}};
         use std::sync::atomic::AtomicBool;
         struct Ficticia<'a>(&'a str);
@@ -2185,7 +2184,16 @@ mod pruebas_captura {
                 r["params"]=payload["params"].clone();Ok(r)
             }
         }
-        let (base,mut resumen)=preparar();
+        let (preparacion, mut resumen) = preparar();
+        // Recolección reutiliza lecturas de lotes hermanos. Aísla el fixture de
+        // otros casos paralelos con la misma identidad y fecha ficticias.
+        let temporal = tempfile::tempdir().unwrap();
+        let base = temporal.path().join("lote");
+        std::fs::create_dir(&base).unwrap();
+        for archivo in &resumen.archivos {
+            std::fs::copy(preparacion.join(&archivo.nombre), base.join(&archivo.nombre)).unwrap();
+        }
+        std::fs::remove_dir_all(preparacion).unwrap();
         resumen.lote.lecturas.bitacoras=true;resumen.lote.lecturas.meses=4;
         let paginas:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../flow-captura/tests/datos/vinculos_ficticios.json")).unwrap();
         let mut app=App::con_datos(base.join("datos"),None);app.corte="20/10/2026".into();app.cargar(base.join("consulta-001-p001-de-001.xls"));
@@ -2199,14 +2207,15 @@ mod pruebas_captura {
         captura.pagina(&Ficticia(caso),&serde_json::json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),&mut resumen,
             PaginaActual{consulta:0,numero:1,html:html.as_bytes()},
             Control{cancelar:&AtomicBool::new(false),progreso:&|_|{}}).unwrap();
-        (base, resumen, html)
+        assert!(resumen.lecturas.iter().all(|r| !r.reutilizada), "el fixture debe efectuar la lectura");
+        (temporal, base, resumen, html)
     }
 
     #[test]
     fn captura_paquete_y_json_no_reintroducen_texto_fuera_del_limite_historico() {
         use flow_captura::{lotes::Conexion,recoleccion::{Recoleccion,PaginaActual,Control}};
         use std::sync::atomic::AtomicBool;
-        let (base, mut resumen, html) = capturar_bitacora_ficticia("antigua");
+        let (_temporal, base, mut resumen, html) = capturar_bitacora_ficticia("antigua");
         assert_eq!(resumen.lecturas.len(),1);
         let lectura=flow_captura::recoleccion::leer(&base,&resumen.lecturas[0]).unwrap();
         assert!(!lectura.to_string().contains("ANTIGUA_NO_PERSISTIR"));
