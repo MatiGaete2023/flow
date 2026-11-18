@@ -763,6 +763,10 @@ fn explicito(celda: &Celda) -> bool {
     }
 }
 
+/// Informes con evidencia asociada (`resolutions.py::RESUELTAS_POR_EVIDENCIA`).
+const RESUELTAS_POR_EVIDENCIA: [&str; 3] =
+    ["HISTORIA.INFORME_AVANCE_PENDIENTE", "HISTORIA.INFORME_REVISAR_ASOCIACION", "HISTORIA.C10_ESCRITO"];
+
 /// `_case_key`: tribunal y RIT normalizados.
 fn clave_causa(fila: &FilaTrabajo) -> (String, String) {
     let crudo = valor(fila, "tribunal");
@@ -879,7 +883,21 @@ pub fn preparar(
     let huellas = crate::vigencia::Huellas::nuevas(trabajo, reglas);
     let mut salida = Vec::new();
     for (clave, tipo) in grupos {
-        let Some((_, filas)) = por_causa.iter().find(|(k, _)| *k == clave) else { continue };
+        let Some((_, todas)) = por_causa.iter().find(|(k, _)| *k == clave) else { continue };
+        // Plan 18-nov-2026: en un caso con fechas resueltas por evidencia, el proyecto incluye solo las filas que lo piden
+        // por sí mismas; las resueltas (escrito pendiente, ingreso registrado, escrito incorporado) no reaparecen.
+        let con_evidencia = todas.iter().any(|f| f.propuesta.reglas.iter().any(|r| RESUELTAS_POR_EVIDENCIA.contains(&r.as_str())));
+        let col_res = columna_humana(trabajo, &ALIAS_RES);
+        let decidida_por_persona = |f: &FilaTrabajo| col_res.is_some_and(|c| f.celdas.get(c).is_some_and(explicito));
+        let propias: Vec<&FilaTrabajo> = if con_evidencia {
+            todas.iter().copied().filter(|f| f.proyectos().contains(&tipo.as_str()) || decidida_por_persona(f)).collect()
+        } else {
+            todas.clone()
+        };
+        if propias.is_empty() {
+            continue;
+        }
+        let filas = &propias;
         let (valores, plural) = valores_agrupados(trabajo, filas, &tipo, hoy);
         let mut p = Proyecto {
             filas: filas.iter().map(|f| f.id.clone()).collect(),

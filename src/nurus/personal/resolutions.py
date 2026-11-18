@@ -81,6 +81,27 @@ def _case_key(work, row):
     return normalize(court), normalize(value(work, row, 'rit'))
 
 
+# Informes con evidencia asociada (escrito pendiente, ingreso registrado, escrito incorporado): en un caso con varias
+# fechas, cada proyecto incluye solo las filas que lo piden por sí mismas (plan 18-nov-2026). Sin esa evidencia, el
+# proyecto sigue abarcando todo el caso como antes.
+RESUELTAS_POR_EVIDENCIA = frozenset(
+    ('HISTORIA.INFORME_AVANCE_PENDIENTE', 'HISTORIA.INFORME_REVISAR_ASOCIACION', 'HISTORIA.C10_ESCRITO')
+)
+
+
+def _casos_con_evidencia(work):
+    return {
+        _case_key(work, row) for row in work.rows if RESUELTAS_POR_EVIDENCIA & set(getattr(row, 'rules', []))
+    }
+
+
+def _fuera_del_proyecto(row, kind, con_evidencia, work):
+    """True si, en un caso con fechas resueltas por evidencia, esta fila no pide `kind` por sí misma."""
+    if _case_key(work, row) not in con_evidencia or kind in getattr(row, 'actions', []):
+        return False
+    return (getattr(row, 'decisions', None) or {}).get('resolution', 'auto') == 'auto'  # la decisión humana manda
+
+
 def suggested_resolution(row):
     """Tipo de proyecto que el motor identificó para la fila (el primero de sus acciones); None si no hay o está excluida."""
     if getattr(row, 'excluded', False):
@@ -267,12 +288,13 @@ def automatic_project_selections(work, fallback_kind='PC_IE'):
             selected.extend(automatic_project_selections(old, fallback_kind))
         by_id = {row.id: row for row in work.rows}
         cases = {(_case_key(work, by_id[rid]), kind) for rid, kind in selected if rid in by_id}
+        con_evidencia = _casos_con_evidencia(work)
         return [
             (row.id, kind)
             for row in work.rows
             if not row.excluded
             for kind in KINDS
-            if (_case_key(work, row), kind) in cases
+            if (_case_key(work, row), kind) in cases and not _fuera_del_proyecto(row, kind, con_evidencia, work)
         ]
     reviewed = reviewed_resolution_ids(work)
     result = []
@@ -481,6 +503,7 @@ def prepare_projects(work, selections, template_dir):
         court = tribunal(value(work, row, 'tribunal')) or value(work, row, 'tribunal')
         rit = value(work, row, 'rit').strip()
         case_rows.setdefault((court, normalize(rit)), []).append(row)
+    con_evidencia = _casos_con_evidencia(work)
     for rid, kind in selections:
         if rid not in by_id or kind not in KINDS:
             continue
@@ -495,6 +518,8 @@ def prepare_projects(work, selections, template_dir):
         group = groups.setdefault(key, [])
         existing = {r.id for r in group}
         for candidate in case_rows.get((court, normalize(rit)), []):
+            if _fuera_del_proyecto(candidate, kind, con_evidencia, work):
+                continue  # fecha ya resuelta por evidencia: no reaparece en el proyecto de otra fecha del caso
             if candidate.id not in existing:
                 group.append(candidate)
                 existing.add(candidate.id)

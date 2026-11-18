@@ -272,3 +272,42 @@ def test_escrito_incorporado_sin_ingreso_posterior_conserva_el_proyecto_de_nomen
     [f] = informes(tmp_path, 'PRM Laja', '2026-09-20', historias={0: hist((t, '2026-09-25', 30))})
     assert 'se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X»' in f.observation
     assert f.actions == ['NOMENCL']
+
+
+def test_productos_solo_incluyen_la_fecha_exigible_y_nomenclatura_va_por_su_cuenta(tmp_path):
+    """Paso 8: la decisión llega a correo/Word por acciones explícitas, no por el prefijo del identificador de regla."""
+    from nurus.personal.resolutions import automatic_project_selections
+
+    t = 'Inf. Cump Programa Ambulatorio'
+    bandeja = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 8, 20)),))
+    historia = hist((t, '2026-09-25', 30))
+    filas = [fila(1, 'PRM Laja') + [f] for f in ('2026-08-20', '2026-09-20', '2026-10-05')]
+    trabajo = analizar(
+        tmp_path, 'INFORMES', INFORMES, filas,
+        historias={i: historia for i in range(3)}, escritos={i: bandeja for i in range(3)},
+        evidencias={1: EvidenciaInforme(escrito_historia_folio='30')},
+    )  # fmt: skip
+    pendiente, incorporada, exigible = trabajo.rows
+    assert [r.actions for r in trabajo.rows] == [[], ['NOMENCL'], ['programa_vencido', 'PC_INFO']]
+    assert automatic_project_selections(trabajo) == [(incorporada.id, 'NOMENCL'), (exigible.id, 'PC_INFO')]
+    assert 'INFORMES.I01_VENCIDO_GENERAL' not in pendiente.rules + incorporada.rules
+
+
+def test_proyectos_word_no_arrastran_fechas_resueltas_de_otro_periodo(tmp_path):
+    from nurus.personal.config import BASE
+    from nurus.personal.resolutions import automatic_project_selections, prepare_projects
+
+    t = 'Inf. Cump Programa Ambulatorio'
+    bandeja = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 8, 20)),))
+    historia = hist((t, '2026-09-25', 30))
+    filas = [fila(1, 'PRM Laja') + [f] for f in ('2026-08-20', '2026-09-20', '2026-10-05')]
+    trabajo = analizar(
+        tmp_path, 'INFORMES', INFORMES, filas,
+        historias={i: historia for i in range(3)}, escritos={i: bandeja for i in range(3)},
+        evidencias={1: EvidenciaInforme(escrito_historia_folio='30')},
+    )  # fmt: skip
+    trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    proyectos, errores = prepare_projects(trabajo, automatic_project_selections(trabajo), BASE / 'plantillas_word')
+    pendiente, incorporada, exigible = (r.id for r in trabajo.rows)
+    por_tipo = {p.kind: p.record_ids for p in proyectos}
+    assert not errores and por_tipo == {'NOMENCL': [incorporada], 'PC_INFO': [exigible]}
