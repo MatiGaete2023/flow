@@ -24,13 +24,13 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 |---|---|---|
 | 1 Base y línea base | HECHO | este registro |
 | 2 Dato de captura al motor (contrato aditivo) | HECHO en Python y Rust (lector); productor Python solo Escritos | `src/nurus/capture/contract.py` (1.2.0), `capture/escritos.py`, `rust/crates/flow-trabajo/src/{fuentes_nuevas,paquete}.rs` |
-| 3 Escritos en el detalle de causa | HECHO (lector HTML + Descargador Python); **extensión JS/Rust captura: PENDIENTE** | `src/nurus/escritos_html.py`, `src/nurus/capture/historias.py`, `descargador/export_csmp_capture.py::_escritos` |
+| 3 Escritos en el detalle de causa | HECHO: lector HTML, Descargador Python y Descargador Rust (misma respuesta de Historia; ver `lecturas.rs::leer_escritos`, `exportar.rs::escritos_de_causa`). La extensión JS no necesita cambios para la muestra actual (la tabla ya viene en la respuesta); **otras versiones que cargan la pestaña al abrirla: PENDIENTE** | `src/nurus/escritos_html.py`, `src/nurus/capture/historias.py`, `descargador/export_csmp_capture.py::_escritos` |
 | 4 Ingreso Histórico Protección | PARCIAL: lector HTML, tabla del contrato, motor. **Control de captura manual en el Descargador: PENDIENTE** | `escritos_html.read_historico`, tabla `historico_proteccion` |
 | 5 «Solo una vez» + primer nombre | HECHO (bitácora + marca local idempotente `Work.consignar`); **botón en la interfaz: PENDIENTE** | `motor/evidencia.py`, `Work.consignar` |
 | 6 Conservar cada vencimiento / fuentes | PARCIAL: asociación explícita por fecha proyectada; el agrupador `acumulado` sigue contando todas las fechas (decisión abajo) | `capture/escritos.py::evidencia_informe` |
 | 7 Motor y composición | HECHO Python y Rust (oráculo 929 casos + paquete) | `motor/reglas_*.py`, `flow-motor/src/{hist,reglas,ctx,lib}.rs` |
 | 8 Correo/Word/Excel | HECHO por acciones explícitas + filtro de proyectos Word (Python y Rust); Excel/nómina heredan `actions` | `personal/resolutions.py`, `flow-productos/src/word.rs` |
-| 9 Matriz y paridad | PARCIAL: ver `MATRIZ_PARIDAD.md` (8 de 10 escenarios cubiertos) | `tests/test_integracion*.py`, `rust/casos/integracion.json` |
+| 9 Matriz y paridad | CASI COMPLETO: ver `MATRIZ_PARIDAD.md` (9 de 10 escenarios cubiertos) | `tests/test_integracion*.py`, `rust/casos/integracion.json` |
 | 10 Verificar y entregar | PARCIAL: pruebas pasan; falta CI en Windows, Chromium ficticio de la extensión y verificación visual | ver pendientes |
 
 ## Qué se implementó (archivos)
@@ -79,13 +79,13 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Productor real de la asociación explícita** (N3: no hay muestra poblada de Escritos con `Doc.` ni del calendario por proyección; los HAR
    traen Escritos con 0 filas). Definir con una muestra anónima `extraer_estructura_*` cómo enlazar `Doc.` con Historia/calendario antes de poblar `linked_*`.
-2. **Extensión y captura Rust**: `descargador/extension/pagina.js` y `rust/extension/pagina.js`, `flow-captura` (`lecturas.rs`, `recoleccion.rs`,
-   `vinculos.rs`): leer Escritos del detalle (hoy solo Python lo hace desde el HTML respaldado) y el control manual del Histórico de Protección
-   (sin consultas autónomas por RUT). Añadir escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y el workflow `rust.yml`.
+2. **Histórico de Protección en el Descargador (Python y Rust)**: control manual de captura de la tabla visible de la persona
+   seleccionada (sin consultas autónomas por RUT) que produzca la tabla `historico_proteccion`; hoy solo el motor, el contrato y los
+   lectores (`read_historico`) existen. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
 3. **Interfaz**: botón «marcar constancia como consignada» (`Work.consignar`), visualización de las marcas nuevas, guía visual.
-4. **Escenarios sin cubrir** (matriz): dos programas/NNA en una causa y dos ingresos sucesivos al mismo programa con evidencia; cambio de corte,
-   selección oculta, reintento tras cancelación y producto ya editado; caso de estructura real (16 vencimientos/10 ingresos) con datos ficticios.
-5. Paquete **Rust→lector Python** y lote antiguo en ambos sentidos con las tablas nuevas (Rust aún no *escribe* las tablas nuevas).
+4. **Escenario 9 incompleto**: faltan selección oculta, reintento tras cancelación y producto ya editado (cambio de corte y recálculo sí).
+5. Rust: **consignación** (`Contexto.consignaciones` existe, pero ni `Trabajo` la persiste ni la interfaz la marca) y el **botón** en ambas interfaces;
+   `Rust escribe` solo la tabla `escritos` (no `historico_proteccion`).
 6. Anonimizador (`personal/anonymize_package.py`): decidir cómo tratar `requester`/`program_name`/`doc` de las tablas nuevas.
 7. E3 (revisión por otro agente) exigida por `AGENTS.md`/decisión j: tocan `motor/`, `textos_base.json`, `contracts/` y el contrato. Nada está «aceptado».
 8. CI Windows/SITFA y `cargo build --release --locked -p flow`; `tools/verificar_wp.py` (hoy falla por entorno).

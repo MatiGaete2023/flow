@@ -90,7 +90,7 @@ pub struct Trabajo {
 }
 
 /// Cambio de reglas que no se refleja en las fuentes del motor ni en sus datos: subir a mano.
-const REVISION_REGLAS: &str = "2026-11-15";
+const REVISION_REGLAS: &str = "2026-11-18";
 
 /// Versión de las reglas: huella de las fuentes del motor y del dominio, de textos y umbrales (`build.rs`), de la
 /// configuración usada y de `REVISION_REGLAS`. Una sesión con otra versión se recalcula al recuperarla.
