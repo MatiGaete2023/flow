@@ -59,7 +59,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
   `generar_casos.py` se regeneró (los 3 JSON base cambian de forma masiva: se añadieron 3 textos y eso desplaza el muestreo aleatorio de
   reglas desactivadas; el contenido funcional que cambió es solo `INFORME_INGRESADO` → frase de asociación).
 
-## Decisiones tomadas (N2: las tomé yo, el usuario no las ratificó; revisar)
+## Decisiones tomadas (RATIFICADAS por el usuario el 18-nov-2026: «Ratifico, y continua con el plan»; la 6 y la 7 son técnicas)
 1. **Texto del caso «resolución ya consta + calendario pendiente»**: se usa la frase del plan (`INFORME_REVISAR_ASOCIACION`) en lugar de
    `INFORME_INGRESADO` en Informes vencidos con ingreso atribuido; se **conserva** la frase principal «Informe de avance vencido desde…».
    Cambia 2 pruebas existentes (`test_historia_informes.py`) y los casos base del oráculo.

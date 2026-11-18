@@ -201,3 +201,39 @@ def test_recalcular_tras_una_edicion_conserva_las_fuentes_nuevas(tmp_path):
     trabajo.consignar(fila.id, 'FAE X')
     recalculate(trabajo, fila)
     assert 'FAE X' not in fila.observation and fila.otros_programas == []
+
+
+def test_estructura_16_vencimientos_10_ingresos_inventario_y_justificacion(tmp_path):
+    """Escenarios 3, 5 y 10: mismo paquete que compara Rust (`paquete_estructura`)."""
+    import subprocess
+    import sys
+
+    raiz = Path(__file__).parents[1]
+    resultado = subprocess.run(
+        [sys.executable, str(raiz / 'rust/oraculo/generar_paquete_estructura.py')], capture_output=True, text=True, check=True, cwd=raiz
+    )
+    filas = [linea.split(' ', 2) for linea in resultado.stdout.strip().splitlines()]
+    assert len(filas) == 16
+    por_ingreso = {}
+    for ingreso, fecha, resto in filas:
+        por_ingreso.setdefault(ingreso, []).append((fecha, resto))
+    assert len(por_ingreso) == 10 and len(por_ingreso['0']) == 5
+    cinco = [r for _, r in por_ingreso['0']]
+    assert 'INFORME_REVISAR_ASOCIACION' in cinco[0] and 'INFORME_AVANCE_PENDIENTE' in cinco[1] and "['NOMENCL']" in cinco[2]
+    assert all("'PC_INFO'" in r for r in cinco[3:])  # solo las dos fechas que siguen correspondiendo piden cuenta
+    # Dos ingresos sucesivos de la misma persona al mismo programa en una causa: la entrega es ambigua y no cancela productos.
+    assert all("'PC_INFO'" in r for _, r in por_ingreso['3'] + por_ingreso['4'])
+    assert sum("'PC_INFO'" in r for rs in por_ingreso.values() for _, r in rs) == 13
+
+
+def test_cambio_de_corte_no_duplica_constancias_ni_pierde_la_marca(tmp_path):
+    uno = importar(tmp_path, historico=[('FAE X', *VIG)], nombre='c1')
+    uno.consignar(uno.rows[0].id, 'FAE X')
+    tarde = import_capture(
+        paquete(tmp_path, historico=[('FAE X', *VIG)], nombre='c2'), defaults(), as_of=date(2026, 12, 1), previous=uno
+    )
+    assert tarde.as_of == '2026-12-01' and tarde.consignaciones == uno.consignaciones
+    assert 'FAE X' not in tarde.rows[0].observation
+    # Sin la marca, el nuevo corte vuelve a proponer la constancia una sola vez.
+    sin = import_capture(paquete(tmp_path, historico=[('FAE X', *VIG)], nombre='c3'), defaults(), as_of=date(2026, 12, 1))
+    assert sin.rows[0].observation.count('cuenta con ingreso efectivo') == 1

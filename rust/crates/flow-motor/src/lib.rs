@@ -215,7 +215,13 @@ pub fn duplicidades(registros: &[Registro]) -> Vec<Option<Duplicidad>> {
 
 /// Pre-pase de Informes (cada fila es un informe): la causa tiene más de un niño o programa en la nómina.
 pub fn causas_con_varios(registros: &[Registro]) -> Vec<Option<Duplicidad>> {
-    let mut causas: HashMap<(String, String), BTreeSet<(String, String)>> = HashMap::new();
+    causas_con_varios_por_ingreso(registros, &vec![String::new(); registros.len()])
+}
+
+/// Como `causas_con_varios`, con el identificador de ingreso de SITFA de cada fila (vacío si no viene de un paquete):
+/// dos ingresos de la misma persona al mismo programa en una causa no se distinguen por la historia, que es de la causa.
+pub fn causas_con_varios_por_ingreso(registros: &[Registro], ingresos: &[String]) -> Vec<Option<Duplicidad>> {
+    let mut causas: HashMap<(String, String), BTreeSet<(String, String, String)>> = HashMap::new();
     let mut de_fila = vec![None; registros.len()];
     for (i, r) in registros.iter().enumerate() {
         let rit = clave(r.texto("rit").trim());
@@ -223,7 +229,8 @@ pub fn causas_con_varios(registros: &[Registro]) -> Vec<Option<Duplicidad>> {
             continue;
         }
         let causa = (clave(r.texto("tribunal").trim()), rit);
-        causas.entry(causa.clone()).or_default().insert((rut_clave(r.texto("rut").trim()), clave(r.texto("programa").trim())));
+        let ingreso = ingresos.get(i).map(|s| s.trim().to_string()).unwrap_or_default();
+        causas.entry(causa.clone()).or_default().insert((rut_clave(r.texto("rut").trim()), clave(r.texto("programa").trim()), ingreso));
         de_fila[i] = Some(causa);
     }
     de_fila.into_iter().map(|c| c.filter(|causa| causas[causa].len() > 1).map(|_| Duplicidad::OtroRegistro)).collect()

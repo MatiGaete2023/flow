@@ -539,7 +539,13 @@ class Work:
             if len(dues) > 1:
                 accumulated.update({rid: (len(dues), min(dues)) for rid, _ in items})
         # En Informes cada fila es un informe: solo sirve para aclarar que la historia es de una causa con varios niños.
-        return causas_con_varios(rows), accumulated
+        # Con paquete, dos ingresos de la misma persona al mismo programa en una causa tampoco se distinguen por la
+        # historia (que es de la causa): el ingreso separa los registros (plan 18-nov-2026).
+        por_ingreso = [
+            (rid, trib, rit, rut, prog + '\x00' + str(r.values.get('SITFA_INGRESO_RUS', '') or '').strip())
+            for (rid, trib, rit, rut, prog), r in zip(rows, batch.records)
+        ]
+        return causas_con_varios(por_ingreso), accumulated
 
     def consignar(self, row_id, programa):
         """Registra que el funcionario consignó (o confirmó) la constancia de ingreso efectivo a `programa` para esa

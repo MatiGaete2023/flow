@@ -134,7 +134,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
             // Con paquete, el identificador de ingreso separa dos ingresos del mismo NNA al mismo programa.
             let ingresos: Vec<String> =
                 tabla.filas.iter().map(|f| contexto.origenes.get(&f.id).map(|o| o.ingreso.clone()).unwrap_or_default()).collect();
-            (flow_motor::causas_con_varios(&registros), flow_motor::acumulados_por_ingreso(&registros, &ingresos, corte))
+            (flow_motor::causas_con_varios_por_ingreso(&registros, &ingresos), flow_motor::acumulados_por_ingreso(&registros, &ingresos, corte))
         }
         _ => (flow_motor::duplicidades(&registros), vec![None; registros.len()]),
     };

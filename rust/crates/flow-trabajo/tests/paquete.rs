@@ -77,3 +77,25 @@ fn paquete_con_fuentes_nuevas_igual_que_python() {
     }
     assert!(otro > 0 && pendiente > 0 && nomenclatura > 0, "el paquete debe ejercitar las tres ramas nuevas");
 }
+
+/// Escenarios 3, 5 y 10 del plan 18-nov-2026: 16 vencimientos de 10 ingresos (uno con cinco fechas), dos NNA en una causa
+/// y dos ingresos sucesivos de la misma persona al mismo programa (`rust/oraculo/generar_paquete_estructura.py`).
+#[test]
+fn paquete_de_estructura_16_vencimientos_10_ingresos_igual_que_python() {
+    let esperado: Esperado = serde_json::from_slice(&datos("paquete_estructura.json")).unwrap();
+    let zip = datos("paquete_estructura.zip");
+    let p = paquete::importar("paquete_estructura.zip", &zip, esperado.corte, &Config::default()).unwrap();
+    let filas: Vec<_> = p.trabajos.iter().flat_map(|t| t.filas.iter()).collect();
+    assert_eq!(filas.len(), 16);
+    for e in &esperado.filas {
+        let f = filas.iter().find(|f| f.id == e.id).unwrap_or_else(|| panic!("falta {}", e.id));
+        assert_eq!(f.propuesta.observacion, e.observacion, "{}", e.id);
+        assert_eq!(f.propuesta.reglas, e.reglas, "{}", e.id);
+        assert_eq!(f.propuesta.acciones, e.acciones, "{}", e.id);
+        assert_eq!(f.propuesta.marcas, e.marcas, "{}", e.id);
+    }
+    // Inventario: del ingreso con cinco fechas, dos quedan resueltas, una va a nomenclatura y dos piden cuenta.
+    let con_pide_cuenta = esperado.filas.iter().filter(|e| e.acciones.iter().any(|a| a == "PC_INFO")).count();
+    let con_nomenclatura = esperado.filas.iter().filter(|e| e.acciones.iter().any(|a| a == "NOMENCL")).count();
+    assert_eq!((con_pide_cuenta, con_nomenclatura), (13, 1));
+}
