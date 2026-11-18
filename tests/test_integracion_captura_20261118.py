@@ -237,3 +237,15 @@ def test_cambio_de_corte_no_duplica_constancias_ni_pierde_la_marca(tmp_path):
     # Sin la marca, el nuevo corte vuelve a proponer la constancia una sola vez.
     sin = import_capture(paquete(tmp_path, historico=[('FAE X', *VIG)], nombre='c3'), defaults(), as_of=date(2026, 12, 1))
     assert sin.rows[0].observation.count('cuenta con ingreso efectivo') == 1
+
+
+def test_paquete_rust_con_escritos_lo_lee_el_lector_python():
+    """Paquete Rust → lector Python (`rust/crates/flow-trabajo/tests/exportar.rs::escritos_de_la_historia_viajan…`)."""
+    ruta = Path(__file__).parents[1] / 'rust/crates/flow-trabajo/tests/datos/paquete_rust_escritos.zip'
+    captura = read_capture(ruta)
+    assert captura.manifest['schema_version'] == '1.2.0'
+    fila = captura.rows('escritos')[0]
+    assert (fila['doc'], fila['escrito_type'], fila['escrito_status'], fila['scope']) == (
+        'DOC-1', 'Inf. Cump Programa Ambulatorio', 'Pendiente', 'CAUSA'
+    )
+    assert captura.manifest['table_states']['historico_proteccion'] == 'NO_SOLICITADA'

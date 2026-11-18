@@ -136,3 +136,50 @@ fn destino_de_bitacora_admite_consulta_pero_no_otro_origen() {
         assert!(leer(&c, v.as_bytes()).is_err(), "{malo}");
     }
 }
+
+/// Plan 18-nov-2026: Escritos en la misma respuesta de Historia (`nurus/escritos_html.py`). Valores de la misma fila,
+/// ubicados por encabezado; vacía comprobada, ilegible y ausente son estados distintos.
+mod escritos {
+    use super::*;
+    use serde_json::json;
+
+    fn historia_con(bloque: &str) -> Value {
+        let c = casos().into_iter().find(|c| c["tipo"] == "historia").unwrap();
+        let html = c["html"].as_str().unwrap().replace("</body>", &format!("{bloque}</body>"));
+        leer_historia(html.as_bytes(), "ficticio.html", "2026-11-12T12:00:00Z").unwrap()
+    }
+
+    #[test]
+    fn con_filas_en_cualquier_orden_de_columnas() {
+        let h = historia_con(
+            "<table><thead><tr><th>Estado</th><th>Solicitante</th><th>Doc.</th><th>Tipo Escrito</th></tr></thead><tbody>\
+             <tr><td>Pendiente</td><td>Programa X</td><td>D-1</td><td>Inf. Cump FAE/FAS</td></tr>\
+             <tr><td>Resuelto</td><td>Programa X</td><td>D-2</td><td>Otro escrito</td></tr></tbody></table>",
+        );
+        let e = &h["escritos"];
+        assert_eq!(e["vacio_explicito"], false);
+        let lista: Vec<(&str, &str, &str)> = e["filas"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| (f["doc"].as_str().unwrap(), f["tipo"].as_str().unwrap(), f["estado"].as_str().unwrap()))
+            .collect();
+        assert_eq!(lista, [("D-1", "Inf. Cump FAE/FAS", "Pendiente"), ("D-2", "Otro escrito", "Resuelto")]);
+        assert_eq!(e["filas"][0]["literal"]["Estado"], "Pendiente");
+        // La historia de la misma respuesta no cambia.
+        assert!(h["filas"].as_array().unwrap().len() >= 1);
+    }
+
+    #[test]
+    fn cabecera_y_cero_filas_es_vacia_comprobada() {
+        let h = historia_con("<table><thead><tr><th>Doc.</th><th>Tipo Escrito</th><th>Solicitante</th><th>Estado</th></tr></thead><tbody></tbody></table>");
+        assert_eq!((h["escritos"]["vacio_explicito"].clone(), h["escritos"]["filas"].clone()), (json!(true), json!([])));
+    }
+
+    #[test]
+    fn pestana_ilegible_es_error_y_ausente_no_deja_rastro() {
+        let mala = historia_con("<table><thead><tr><th>Tipo Escrito</th><th>Estado</th></tr></thead><tbody><tr><td>x</td></tr></tbody></table>");
+        assert_eq!(mala["escritos"]["error"], "ESCRITOS_NO_VERIFICADA");
+        assert!(historia_con("")["escritos"].is_null(), "sin la pestaña no hay clave: fuente no solicitada");
+    }
+}

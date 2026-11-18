@@ -23,6 +23,8 @@ use std::{
 /// Nombre del paquete que entrega «Consultar y crear paquete».
 pub const NOMBRE: &str = "Captura_CSMP.zip";
 const VERSION: &str = "1.0.0";
+/// Versión aditiva (plan 18-nov-2026) cuando el paquete trae la tabla `escritos`.
+const VERSION_EXTENDIDA: &str = "1.2.0";
 const MAPPING_VERSION: &str = "baseline-20261008-v1";
 
 const COMMON: [&str; 19] = [
@@ -103,6 +105,19 @@ fn columnas(tabla: &str) -> Vec<&'static str> {
             "status",
             "document_id",
             "identity_status",
+        ],
+        "escritos" => &[
+            "escrito_id",
+            "scope",
+            "doc",
+            "escrito_type",
+            "requester",
+            "escrito_status",
+            "reference",
+            "linked_ingreso_id",
+            "linked_projection",
+            "identity_status",
+            "raw_json",
         ],
         _ => &["document_id", "parent_event_id", "scope", "reference", "local_file", "sha256", "download_state", "content_read"],
     };
@@ -249,6 +264,8 @@ struct Datos {
     calendarios: Option<Vec<(Fila, Option<usize>)>>,
     bitacoras: Option<Vec<Fila>>,
     historia: Option<Vec<Fila>>,
+    /// Escritos de la causa leídos de la misma respuesta de Historia (solo si alguna respuesta trajo la pestaña).
+    escritos: Option<Vec<Fila>>,
     incidencias: Vec<Fila>,
     siguiente: usize,
 }
@@ -912,6 +929,7 @@ fn historia(d: &mut Datos, lotes: &[Lote]) -> Result<(), String> {
         }
         let q = d.consultas[i].clone();
         let sha = Some(texto(&lectura.datos, "sha256")).filter(|s| s.len() == 64).unwrap_or(&lectura.referencia.sha256).to_string();
+        escritos_de_causa(d, &lectura.datos["escritos"], &tribunal, &nombre, &causa, &v.rit, &lectura.referencia.archivo, &cuando, &q, &sha);
         let mut ventana = filas_ventana;
         ventana.sort_by_key(|f| f["fila"].as_u64().unwrap_or(u64::MAX));
         for t in ventana.iter().chain(&contexto) {
@@ -949,6 +967,69 @@ fn historia(d: &mut Datos, lotes: &[Lote]) -> Result<(), String> {
     }
     d.historia = Some(filas);
     Ok(())
+}
+
+/// Bandeja de Escritos de una causa (alcance CAUSA): una consulta y una fila por escrito. Sin la pestaña en la respuesta no se
+/// registra nada (fuente no solicitada); con la pestaña ilegible la consulta queda FALLIDA, nunca vacía.
+#[allow(clippy::too_many_arguments)]
+fn escritos_de_causa(d: &mut Datos, e: &Value, tribunal: &str, nombre: &str, causa: &str, rit: &str, archivo: &str, cuando: &str, hist: &Fila, sha: &str) {
+    if e.is_null() {
+        return;
+    }
+    let error = texto(e, "error");
+    let leida = error.is_empty();
+    let vacia = leida && e["vacio_explicito"] == true;
+    let cobertura = if !leida { "FALLIDA" } else if vacia { "VACIA_COMPROBADA" } else { "COMPLETA" };
+    let qid = format!("escritos-{}", hist["query_id"].trim_start_matches("hist-"));
+    let filtros = json!({"tribunal":tribunal,"tribunal_nombre":nombre,"tab":"ESCRITOS",
+        "escritos_causa":{"source_system":"RUS","court_code":tribunal,"cause_id":causa}});
+    let i = d.consulta(Consulta {
+        qid: qid.clone(),
+        filtros,
+        screen: "escritos",
+        tab: "ESCRITOS",
+        court_code: tribunal,
+        court_name: nombre,
+        modality_code: &hist["modality_code"].clone(),
+        coverage: cobertura,
+        when: cuando,
+        expected: 1,
+        saved: usize::from(leida),
+        error,
+    });
+    d.escritos.get_or_insert_with(Vec::new);
+    if !leida {
+        d.aviso(&qid, error, "La pestaña Escritos de la causa no se pudo leer.");
+        return;
+    }
+    for a in e["advertencias"].as_array().into_iter().flatten() {
+        d.aviso(&qid, texto(a, "codigo"), "Advertencia del lector de escritos.");
+    }
+    let q = d.consultas[i].clone();
+    for fila in e["filas"].as_array().into_iter().flatten() {
+        let numero = fila["fila"].as_u64().unwrap_or(1).max(1);
+        let mut f = d.comun(&q);
+        for (k, val) in [
+            ("rit_original", rit.to_string()),
+            ("cause_id", causa.to_string()),
+            ("tab", "ESCRITOS".into()),
+            ("original_file", archivo.to_string()),
+            ("original_row", numero.to_string()),
+            ("source_sha256", sha.to_string()),
+            ("coverage", "COMPLETA".into()),
+            ("escrito_id", format!("{qid}-{numero}")),
+            ("scope", "CAUSA".into()),
+            ("doc", texto(fila, "doc").into()),
+            ("escrito_type", texto(fila, "tipo").into()),
+            ("requester", texto(fila, "solicitante").into()),
+            ("escrito_status", texto(fila, "estado").into()),
+            ("identity_status", "CAUSA".into()),
+            ("raw_json", fila["literal"].to_string()),
+        ] {
+            f.insert(k, val);
+        }
+        d.escritos.get_or_insert_with(Vec::new).push(f);
+    }
 }
 
 fn csv(tabla: &str, filas: &[&Fila]) -> Vec<u8> {
@@ -1001,6 +1082,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         calendarios: None,
         bitacoras: None,
         historia: None,
+        escritos: None,
         incidencias: vec![],
         siguiente: 1,
     };
@@ -1027,7 +1109,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         agregar(
             d.consultas
                 .iter()
-                .filter(|q| !matches!(q["screen"].as_str(), "bitacoras" | "calendario_ingreso" | "historia_tramites"))
+                .filter(|q| !matches!(q["screen"].as_str(), "bitacoras" | "calendario_ingreso" | "historia_tramites" | "escritos"))
                 .map(|q| q["coverage"].as_str()),
         )
         .into(),
@@ -1058,6 +1140,11 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "historia_tramites").map(|q| q["coverage"].as_str()));
         estados.insert("historia_tramites", if h.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
     }
+    if let Some(e) = &d.escritos {
+        let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "escritos").map(|q| q["coverage"].as_str()));
+        estados.insert("escritos", if e.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
+        estados.insert("historico_proteccion", "NO_SOLICITADA".into());
+    }
     let calendarios: Option<Vec<&Fila>> = d.calendarios.as_ref().map(|c| c.iter().map(|(f, _)| f).collect());
     let mut tablas: Vec<(&str, Vec<&Fila>)> =
         vec![("consultas", d.consultas.iter().collect()), ("registros", d.registros.iter().collect())];
@@ -1069,6 +1156,9 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
     }
     if let Some(h) = &d.historia {
         tablas.push(("historia_tramites", h.iter().collect()));
+    }
+    if let Some(e) = &d.escritos {
+        tablas.push(("escritos", e.iter().collect()));
     }
     tablas.push(("incidencias", d.incidencias.iter().collect()));
     let mut archivos = Vec::new();
@@ -1094,7 +1184,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         "queries": consultas,
         "required_features": [],
         "schema_id": "CSMP_CAPTURE",
-        "schema_version": VERSION,
+        "schema_version": if d.escritos.is_some() { VERSION_EXTENDIDA } else { VERSION },
         "table_states": estados,
     });
     contenido.push(("manifest.json".into(), serde_json::to_vec_pretty(&manifiesto).map_err(|_| "No se pudo preparar el manifiesto.")?));

@@ -114,3 +114,40 @@ fn paquete_del_lote_igual_que_el_asistente_python() {
         assert_eq!(estado, e["cronologia"], "{rit}");
     }
 }
+
+/// Plan 18-nov-2026: la bandeja de Escritos que trae la respuesta de Historia viaja al paquete como tabla `escritos`
+/// (versión 1.2.0, aditiva). `paquete_rust_escritos.zip` lo valida el lector Python (`tests/test_integracion_captura_20261118.py`).
+#[test]
+fn escritos_de_la_historia_viajan_al_paquete_1_2_0() {
+    use std::io::Read;
+    let t = Temporal::nueva();
+    let mut r = lote(&t.0);
+    let h = r.lecturas.iter_mut().find(|l| l.tipo == "historia").unwrap();
+    let ruta = t.0.join(&h.archivo);
+    let mut valor: Value = serde_json::from_slice(&std::fs::read(&ruta).unwrap()).unwrap();
+    valor["datos"]["escritos"] = json!({"vacio_explicito":false,"advertencias":[],"filas":[
+        {"fila":1,"doc":"DOC-1","tipo":"Inf. Cump Programa Ambulatorio","solicitante":"Programa Ficticio","estado":"Pendiente",
+         "literal":{"Doc.":"DOC-1","Tipo Escrito":"Inf. Cump Programa Ambulatorio","Solicitante":"Programa Ficticio","Estado":"Pendiente"}}]});
+    let bytes = serde_json::to_vec(&valor).unwrap();
+    std::fs::write(&ruta, &bytes).unwrap();
+    h.sha256 = huella(&bytes);
+    let p = exportar::construir(&[exportar::Lote { carpeta: &t.0, resumen: &r }], &Default::default()).unwrap();
+    let referencia = datos().join("paquete_rust_escritos.zip");
+    if std::env::var_os("FLOW_REGENERAR").is_some() {
+        std::fs::write(&referencia, &p.datos).unwrap();
+    }
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&p.datos)).unwrap();
+    let mut manifiesto = String::new();
+    zip.by_name("manifest.json").unwrap().read_to_string(&mut manifiesto).unwrap();
+    let m: Value = serde_json::from_str(&manifiesto).unwrap();
+    assert_eq!(m["schema_version"], "1.2.0");
+    assert_eq!(m["table_states"]["escritos"], "COMPLETA");
+    assert_eq!(m["table_states"]["historico_proteccion"], "NO_SOLICITADA");
+    let mut tabla = String::new();
+    zip.by_name("data/escritos.csv").unwrap().read_to_string(&mut tabla).unwrap();
+    let filas = paquete::leer_csv(&tabla);
+    assert_eq!(filas.len(), 1);
+    assert_eq!((filas[0]["doc"].as_str(), filas[0]["escrito_status"].as_str(), filas[0]["scope"].as_str()), ("DOC-1", "Pendiente", "CAUSA"));
+    // El mismo importador Rust lo lee sin cambiar las filas del trabajo.
+    assert!(paquete::importar("x.zip", &p.datos, "2026-10-20".parse().unwrap(), &Config::default()).is_ok());
+}

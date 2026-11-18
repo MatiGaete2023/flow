@@ -308,6 +308,46 @@ fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
     }
 }
 
+const ESCRITOS: [&str; 4] = ["Doc.", "Tipo Escrito", "Solicitante", "Estado"];
+
+/// Bandeja de Escritos de la causa, en la misma respuesta que la Historia (`nurus/escritos_html.py::read_escritos`).
+/// Los valores salen de la MISMA fila, ubicando cada columna por su encabezado. Devuelve `Ok(None)` si la respuesta no
+/// trae la pestaña (fuente no solicitada); `Err(código)` si la pestaña está pero no se puede leer (nunca «vacía»).
+fn leer_escritos(doc: &Html) -> Result<Option<Value>, &'static str> {
+    let pedidos: Vec<String> = ESCRITOS.iter().map(|h| normalizar(h)).collect();
+    let mut tablas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        let Some(primera) = filas.first() else { continue };
+        let originales: Vec<String> = celdas(*primera).iter().map(|e| texto(*e)).collect();
+        let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
+        if pedidos.iter().all(|p| cabecera.contains(p)) {
+            tablas.push((cabecera, originales, filas));
+        }
+    }
+    if tablas.len() != 1 {
+        let presente = normalizar(&texto(doc.root_element())).contains("tipo escrito");
+        return if presente || !tablas.is_empty() { Err("ESCRITOS_NO_VERIFICADA") } else { Ok(None) };
+    }
+    let (cabecera, originales, filas) = tablas.pop().unwrap();
+    let posicion = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().skip(1).enumerate() {
+        let c = celdas(*fila);
+        let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) {
+            continue;
+        }
+        if c.len() != cabecera.len() {
+            advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
+            continue;
+        }
+        let literal: BTreeMap<&str, &str> = originales.iter().map(String::as_str).zip(valores.iter().map(String::as_str)).collect();
+        resultado.push(json!({"fila":i + 1,"doc":valores[posicion("Doc.")],"tipo":valores[posicion("Tipo Escrito")],"solicitante":valores[posicion("Solicitante")],"estado":valores[posicion("Estado")],"literal":literal}));
+    }
+    Ok(Some(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"advertencias":advertencias})))
+}
+
 pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {
     let doc = documento(datos)?;
     let mut candidatas = vec![];
@@ -370,9 +410,16 @@ pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Valu
         }
     }
     let reservada = doc.select(&sel(".panel-heading")).any(|e| normalizar(&texto(e)).contains("reservada"));
-    Ok(
-        json!({"encabezado":cabecera,"reservada":reservada,"filas":resultado,"vacio_explicito":filas.len()==1,"advertencias":advertencias,"sha256":crate::lotes::huella(datos),"source":fuente,"captured_at":capturada}),
-    )
+    let mut lectura =
+        json!({"encabezado":cabecera,"reservada":reservada,"filas":resultado,"vacio_explicito":filas.len()==1,"advertencias":advertencias,"sha256":crate::lotes::huella(datos),"source":fuente,"captured_at":capturada});
+    // Plan 18-nov-2026: la bandeja de Escritos viaja en la misma respuesta. Ausente = no solicitada (sin clave); un fallo
+    // de Escritos nunca invalida la historia.
+    match leer_escritos(&doc) {
+        Ok(Some(e)) => lectura["escritos"] = e,
+        Ok(None) => {}
+        Err(codigo) => lectura["escritos"] = json!({"error": codigo}),
+    }
+    Ok(lectura)
 }
 
 fn fecha_calendario(s: &str, opcional: bool) -> Result<String, String> {
