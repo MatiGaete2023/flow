@@ -18,6 +18,7 @@ fn cronologia_avisos_y_reiteracion_son_los_de_python() {
             avisos: vec![],
             marcas: vec![],
             excluido: false,
+            otros_programas: vec![],
         };
         let avisos = cronologia::avisos(&display, &resultado.observacion, &resultado.reglas, &config, corte);
         assert_eq!(json!(avisos), c["avisos"], "avisos {i}");
