@@ -320,7 +320,7 @@ fn recibir(conexion: &dyn crate::lotes::Conexion, comando: &str, payload: serde_
 pub fn abrir_bitacora(conexion: &dyn crate::lotes::Conexion, v: &Vinculo, modalidad: &str) -> Result<serde_json::Value, String> {
     let params = v.params_bitacora(modalidad)?;
     let (datos, capturada) = recibir(conexion, "diary_open", serde_json::json!({"params":params}))?;
-    crate::lecturas::leer_bitacora(&datos, &params, "", &capturada)
+    crate::lecturas::leer_bitacora_en_captura(&datos, &params, &capturada)
 }
 
 pub fn abrir_historia(conexion: &dyn crate::lotes::Conexion, v: &Vinculo, tribunal_nombre: &str) -> Result<serde_json::Value, String> {

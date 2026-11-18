@@ -28,9 +28,16 @@ deja contador/advertencia de incertidumbre sin retener su texto descartado.
 
 Una lectura nueva solo acredita completitud si coverage es COMPLETA o
 VACIA_COMPROBADA, no tiene advertencias y todas sus entradas tienen fecha válida.
-La ruta actual de SITFA solo declara PARCIAL: el cierre E3 requiere identificar
-una señal fiable de exhaustividad de esa fuente. Los fixtures completos prueban
-el consumidor del contrato, no acreditan por sí solos la captura habitual.
+El usuario confirmó el 18/11/2026 que la ventana de bitácora de un ingreso muestra
+todas sus entradas en una respuesta, sin paginación, carga adicional ni filtros
+de fecha, y que la ventana queda vacía cuando no hay observaciones.
+Captura registra el método SITFA_TABLA_INFORME_INGRESO_V1 y la huella de la respuesta
+solo tras verificar identidad, huella, formulario y estructura reconocida.
+La tabla reconocida sin filas se acredita como VACIA_COMPROBADA. Si se detecta
+un control que sugiere recorte, la cobertura queda PARCIAL. Una tabla faltante,
+estructura inválida o respuesta incompleta tampoco acredita ausencia.
+Este alcance rige únicamente para el intervalo conservado por la captura.
+El campo coverage tradicional del lote sigue siendo PARCIAL para sus consumidores.
 La importación comprueba además fechas, captura, identidad, período y consistencia.
 No se asigna completitud a lecturas legadas reutilizadas: sus fechas ilegibles
 pueden haber sido descartadas antes. Varias instantáneas diferentes no se combinan
@@ -69,6 +76,7 @@ autoría, fechas, duplicados, paquete legado, alteraciones y paridad del motor c
 una fila elegida cuyo cálculo depende de otra no elegida.
 recoleccion.rs prueba incertidumbre de fechas ilegibles sin texto retenido y el
 recorte histórico. UI prueba captura→ZIP→JSON sin reintroducir texto antiguo.
+El flujo sintético Captura → ZIP → Revisión → motor prueba una tabla reconocida
+vacía, una con un evento, una con paginador y una sin tabla reconocida.
 El JSON exportado acota eventos/entradas al período elegido, informa omisiones y
 no muta la evidencia en memoria necesaria para volver a analizar otro intervalo.
-

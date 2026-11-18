@@ -146,6 +146,16 @@ fn destino_bitacora(action: &str) -> bool {
 }
 
 pub fn leer_bitacora(datos: &[u8], params: &BTreeMap<String, String>, fuente: &str, capturada: &str) -> Result<Value, String> {
+    leer_bitacora_impl(datos, params, fuente, capturada, false)
+}
+
+fn leer_bitacora_impl(
+    datos: &[u8],
+    params: &BTreeMap<String, String>,
+    fuente: &str,
+    capturada: &str,
+    captura_verificada: bool,
+) -> Result<Value, String> {
     let tipo = params.get("tipo_popUp").map(String::as_str).unwrap_or("");
     if !matches!(tipo, "11" | "12" | "13") {
         return Err("La captura no corresponde a una bitácora RUS.".into());
@@ -240,7 +250,51 @@ pub fn leer_bitacora(datos: &[u8], params: &BTreeMap<String, String>, fuente: &s
     let mut resultado = base;
     let objeto = resultado.as_object_mut().unwrap();
     for (k,v) in json!({"entries":entries,"coverage":"PARCIAL","captured_at":capturada,"stage_code":contexto["COD_Etapa"],"source":fuente,"row_metadata":metadata,"warnings":advertencias,"html_sha256":crate::lotes::huella(datos),"captures":1,"error":"Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo."}).as_object().unwrap(){objeto.insert(k.clone(),v.clone());}
+    if captura_verificada {
+        let queda_vacia = resultado["entries"].as_array().is_some_and(Vec::is_empty);
+        resultado["alcance_revision_fuente"] = json!({
+            "metodo": ALCANCE_BITACORA_SITFA,
+            "coverage": cobertura_bitacora(&doc, queda_vacia),
+            "html_sha256": resultado["html_sha256"],
+        });
+    }
     Ok(resultado)
+}
+
+/// Contrato confirmado por el usuario: la ventana de bitácora de un ingreso
+/// devuelve todas las filas en una sola respuesta, incluso cuando no hay filas.
+pub const ALCANCE_BITACORA_SITFA: &str = "SITFA_TABLA_INFORME_INGRESO_V1";
+
+/// Solo para la respuesta de la conexión verificada de Captura. Un HTML legado
+/// leído fuera de esa conexión conserva su cobertura original.
+pub(crate) fn leer_bitacora_en_captura(
+    datos: &[u8],
+    params: &BTreeMap<String, String>,
+    capturada: &str,
+) -> Result<Value, String> {
+    leer_bitacora_impl(datos, params, "", capturada, true)
+}
+
+fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
+    let controles = sel("iframe, frame, .pagination, .paginacion, .paginador, .pager, [data-page], [data-total-pages], a[rel='next']");
+    let posible_recorte = doc.select(&controles).next().is_some()
+        || doc.select(&sel("input[name], select[name], a, button")).any(|nodo| {
+            let nombre = nodo.value().attr("name").unwrap_or("").to_ascii_lowercase();
+            let rotulo = normalizar(&texto(nodo));
+            nombre.contains("pagina")
+                || nombre.contains("nropag")
+                || nombre.contains("numpag")
+                || nombre.contains("fechadesde")
+                || nombre.contains("fechahasta")
+                || matches!(rotulo.as_str(), "siguiente" | "siguiente pagina" | "mostrar mas" | "cargar mas")
+        });
+    if posible_recorte {
+        "PARCIAL"
+    } else if queda_vacia {
+        "VACIA_COMPROBADA"
+    } else {
+        "COMPLETA"
+    }
 }
 
 pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {

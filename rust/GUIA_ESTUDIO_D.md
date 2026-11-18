@@ -75,6 +75,8 @@ reemplaza una carpeta ya existente ni publica solo la mitad del informe.
 Los paquetes antiguos siguen siendo legibles. Cuando no conservan las pruebas de
 autoría/cobertura requeridas, el resultado es No verificable. Una captura explícita
 nueva obtiene evidencia actual sin convertir el archivo antiguo en una lectura completa.
+Para una captura nueva de SITFA, una tabla de bitácora reconocida y vacía puede
+acreditar ausencia para ese ingreso dentro del intervalo guardado.
 Esta herramienta de revisión no inicia capturas.
 
 ## Prueba inicial con datos ficticios
@@ -115,4 +117,3 @@ La aceptación funcional del usuario queda pendiente hasta realizar estas prueba
 Las huellas de archivos están en SHA256SUMS.txt y la procedencia de compilación en
 CANDIDATO.json. La revisión técnica conserva por separado las fallas heredadas del
 verificador general; esta entrega no autoriza una integración automática ni una release.
-

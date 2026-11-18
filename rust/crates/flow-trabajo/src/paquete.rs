@@ -534,7 +534,16 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
                 if previo != rango { d.contradictoria = true; }
             }
             if rango.is_none() || raw["posteriores_omitidas"].as_u64().is_some_and(|n|n>0) || raw["ilegibles_omitidas"].as_u64().is_some_and(|n|n>0) { d.incompleta = true; }
-            if raw["completa"] == true && matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA") &&
+            let alcance_fuente = &raw["alcance_revision_fuente"];
+            let captura_verificada = dato(q, "coverage") == "PARCIAL"
+                && alcance_fuente["metodo"] == flow_captura::lecturas::ALCANCE_BITACORA_SITFA
+                && alcance_fuente["coverage"] == raw["coverage"]
+                && alcance_fuente["html_sha256"].as_str().is_some_and(|hash| {
+                    hash.len() == 64 && hash.bytes().all(|b| b.is_ascii_hexdigit())
+                });
+            let cobertura_declarada = captura_verificada
+                || matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA");
+            if raw["completa"] == true && cobertura_declarada &&
                 matches!(raw["coverage"].as_str(),Some("COMPLETA"|"VACIA_COMPROBADA")) &&
                 raw["warnings"].as_array().is_some_and(Vec::is_empty) &&
                 captura == captura_raw && a.zip(b).is_some_and(|(a,b)| a <= b && captura.is_some_and(|c| b <= c)) {
@@ -765,5 +774,4 @@ mod pruebas {
         assert!(!ruta_segura("../x") && !ruta_segura("/x") && !ruta_segura("C:\\x") && !ruta_segura("a//b"));
     }
 }
-
 

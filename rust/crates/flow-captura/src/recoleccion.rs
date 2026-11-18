@@ -229,11 +229,18 @@ fn evidencia_revision(valor: &Value, capturada: &str, meses: u32) -> Result<Valu
     if posteriores>0 {avisos.push(json!(format!("{posteriores} entradas posteriores a la captura: se omite su contenido y no se acredita ausencia.")));}
     let fechas_validas = ilegibles==0&&posteriores==0;
     let sin_avisos = avisos.is_empty();
-    let completa = matches!(valor["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA")) && sin_avisos && fechas_validas;
+    let alcance_fuente = &valor["alcance_revision_fuente"];
+    let cobertura = if alcance_fuente["metodo"] == crate::lecturas::ALCANCE_BITACORA_SITFA {
+        &alcance_fuente["coverage"]
+    } else {
+        &valor["coverage"]
+    };
+    let completa = matches!(cobertura.as_str(), Some("COMPLETA" | "VACIA_COMPROBADA")) && sin_avisos && fechas_validas;
     Ok(json!({"version":1,"desde":desde.to_string(),"hasta":hasta.to_string(),
-        "captured_at":capturada,"coverage":valor["coverage"],"completa":completa,
+        "captured_at":capturada,"coverage":cobertura,"completa":completa,
         "entries":dentro,"warnings":avisos,"anteriores_omitidas":anteriores,"ilegibles_omitidas":ilegibles,
-        "posteriores_omitidas":posteriores,"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA"}))
+        "posteriores_omitidas":posteriores,"time_zone":"FECHA_CIVIL_DE_LA_CAPTURA",
+        "alcance_revision_fuente":alcance_fuente}))
 }
 
 /// Aplica el límite vigente a copias V1 anteriores sin modificar el archivo original
@@ -660,5 +667,4 @@ mod pruebas_limite {
         assert!(r.reservar("historia").is_err());
     }
 }
-
 

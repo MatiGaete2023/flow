@@ -2124,14 +2124,54 @@ mod pruebas_captura {
     }
 
     #[test]
-    fn captura_paquete_y_json_no_reintroducen_texto_fuera_del_limite_historico() {
+    fn ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor() {
+        use flow_trabajo::revision_bitacoras::Clasificacion;
+        for (caso, clase) in [
+            ("vacia", Clasificacion::SinObservacion),
+            ("con_evento", Clasificacion::ConObservacion),
+            ("paginada", Clasificacion::NoVerificable),
+            ("sin_tabla", Clasificacion::NoVerificable),
+        ] {
+            let (base, resumen, _) = capturar_bitacora_ficticia(caso);
+            assert_eq!(resumen.lecturas.len(), usize::from(caso != "sin_tabla"));
+            if let Some(referencia) = resumen.lecturas.first() {
+                let lectura = flow_captura::recoleccion::leer(&base, referencia).unwrap();
+                assert_eq!(lectura["datos"]["coverage"], "PARCIAL", "contrato tradicional");
+            }
+            let zip = base.join("paquete.zip");
+            flow_trabajo::exportar::exportar(
+                &[flow_trabajo::exportar::Lote { carpeta: &base, resumen: &resumen }],
+                &zip, &Default::default(),
+            ).unwrap();
+            let datos = std::fs::read(zip).unwrap();
+            let desde = "2026-06-20".parse().unwrap();
+            let hasta = "2026-10-20".parse().unwrap();
+            let mut informe = flow_trabajo::paquete::revisar_bitacoras(&datos, desde, hasta, hasta).unwrap();
+            let indice = informe.filas.iter().position(|fila| fila.identidad.ingreso == "201").unwrap();
+            assert_eq!(informe.filas[indice].revision.clasificacion, clase, "{caso}");
+            if caso == "vacia" {
+                assert_eq!(flow_trabajo::paquete::periodo_revision(&datos).unwrap(), Some((desde, hasta)));
+                flow_trabajo::revision_informe::aplicar_motor(&mut informe, "paquete.zip", &datos, &Config::default()).unwrap();
+                assert!(informe.filas[indice].propuesta.is_some());
+                assert!(informe.filas.iter().enumerate().all(|(i, f)| i == indice || f.propuesta.is_none()));
+            }
+            std::fs::remove_dir_all(base).unwrap();
+        }
+    }
+
+    fn capturar_bitacora_ficticia(caso: &str) -> (PathBuf, flow_captura::lotes::Resumen, String) {
         use flow_captura::{lotes::Conexion,recoleccion::{Recoleccion,PaginaActual,Control}};
         use std::sync::atomic::AtomicBool;
-        struct Ficticia;
-        impl Conexion for Ficticia {
+        struct Ficticia<'a>(&'a str);
+        impl Conexion for Ficticia<'_> {
             fn llamar(&self,comando:&str,payload:serde_json::Value,_plazo:std::time::Duration)->Result<serde_json::Value,String>{
                 assert_eq!(comando,"diary_open");
-                let mut r:serde_json::Value=serde_json::from_str(include_str!("../pruebas/respuesta_bitacora_antigua.json")).unwrap();
+                let mut r: serde_json::Value = if self.0 == "antigua" {
+                    serde_json::from_str(include_str!("../pruebas/respuesta_bitacora_antigua.json")).unwrap()
+                } else {
+                    let casos: serde_json::Value = serde_json::from_str(include_str!("../pruebas/respuestas_bitacoras_revision.json")).unwrap();
+                    casos[self.0].clone()
+                };
                 r["params"]=payload["params"].clone();Ok(r)
             }
         }
@@ -2146,9 +2186,17 @@ mod pruebas_captura {
             html=html.replace(original,&texto.replace('&',"&amp;").replace('<',"&lt;").replace('>',"&gt;"));
         }
         let mut captura=Recoleccion::con_fecha(&base,&resumen,"2026-10-20".parse().unwrap()).unwrap();
-        captura.pagina(&Ficticia,&serde_json::json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),&mut resumen,
+        captura.pagina(&Ficticia(caso),&serde_json::json!({"tribunales":{"901":"Juzgado Canario de Prueba"}}),&mut resumen,
             PaginaActual{consulta:0,numero:1,html:html.as_bytes()},
             Control{cancelar:&AtomicBool::new(false),progreso:&|_|{}}).unwrap();
+        (base, resumen, html)
+    }
+
+    #[test]
+    fn captura_paquete_y_json_no_reintroducen_texto_fuera_del_limite_historico() {
+        use flow_captura::{lotes::Conexion,recoleccion::{Recoleccion,PaginaActual,Control}};
+        use std::sync::atomic::AtomicBool;
+        let (base, mut resumen, html) = capturar_bitacora_ficticia("antigua");
         assert_eq!(resumen.lecturas.len(),1);
         let lectura=flow_captura::recoleccion::leer(&base,&resumen.lecturas[0]).unwrap();
         assert!(!lectura.to_string().contains("ANTIGUA_NO_PERSISTIR"));
@@ -2158,6 +2206,9 @@ mod pruebas_captura {
         let mut anterior=lectura.clone();
         anterior["datos"]["revision_bitacoras"]["entries"]=serde_json::json!([{ "entry_id":"44","fecha":"2026-01-12T10:13:00","origen":"centro","texto":"ANTIGUA_NO_PERSISTIR" }]);
         anterior["datos"]["revision_bitacoras"].as_object_mut().unwrap().remove("anteriores_omitidas");
+        anterior["datos"]["revision_bitacoras"].as_object_mut().unwrap().remove("alcance_revision_fuente");
+        anterior["datos"]["revision_bitacoras"]["coverage"] = serde_json::json!("PARCIAL");
+        anterior["datos"]["revision_bitacoras"]["completa"] = serde_json::json!(false);
         let original=serde_json::to_vec(&anterior).unwrap();let ruta_original=base.join("lectura-v1-anterior.json");
         std::fs::write(&ruta_original,&original).unwrap();
         resumen.lecturas[0].archivo="lectura-v1-anterior.json".into();resumen.lecturas[0].sha256=flow_captura::lotes::huella(&original);
