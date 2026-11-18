@@ -13,7 +13,7 @@ N1: cada fila cita la prueba que la ejerce. Rust se compara literal por literal 
 | 6 | Programa actual A, otro B vigente repetido, C con egreso; fecha sola, causal sola, actual repetido, dos otros | `test_otro_programa_*` (3 pruebas) | `INT-ESP-D01`, `INT-CUM-D02…D05` | CUBIERTO |
 | 7 | Ya observado en Espera y revisión en Cumplimiento; borrador descartado; historia parcial | `test_otro_programa_se_consigna_una_vez…`, `test_constancia_previa…`, `test_marca_local_borrador_descartado_y_bitacora_parcial`, `test_consignar_y_reimportar…` | `INT-CUM-D06…D10` | CUBIERTO |
 | 8 | Excel antiguo / paquete sin Escritos ni Histórico; vacío acreditado, no disponible, fallo | `test_paquete_sin_las_fuentes_nuevas…`, `test_bandeja_sin_filas_utilizables…`, `test_historico_no_verificable…`, `test_pestana_presente_pero_ilegible…` (Descargador) | `INT-CUM-D11/D12`, `paquete_con_historia_igual_que_python` (legado) | CUBIERTO |
-| 9 | Cambio de corte, selección oculta, reintento tras cancelación, producto ya editado | `test_cambio_de_corte_…`, `test_recalcular_tras_una_edicion…` | — | PARCIAL (faltan selección oculta, reintento y producto editado) |
+| 9 | Cambio de corte, selección oculta, reintento tras cancelación, producto ya editado | `test_cambio_de_corte_…`, `test_recalcular_tras_una_edicion…`, `test_consignar_no_sobrescribe_la_edicion_humana…` | — (Rust no persiste consignaciones aún) | PARCIAL (faltan selección oculta y reintento tras cancelación: son de interfaz/cola) |
 | 10 | Caso real reproducido ficticio: 16 vencimientos, 10 ingresos | `test_estructura_16_vencimientos…` | `paquete_de_estructura_…` | CUBIERTO (inventario: 13 pide cuenta, 1 nomenclatura, 2 resueltas) |
 
 Sin pruebas de interfaz (no hay `tkinter` ni Windows en este contenedor).

@@ -84,7 +84,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
    llame a `historico_manual.capturar` con el HTML de la vista abierta a mano y el `SITFA_PERSONA_RUS` de la fila (sin consultas por RUT);
    Ojo: el lote ficticio del Descargador no trae `person_id` y la verificación de pertenencia solo vale con RUT/nombre completo visibles en la vista. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
 3. **Interfaz**: botón «marcar constancia como consignada» (`Work.consignar`), visualización de las marcas nuevas, guía visual.
-4. **Escenario 9 incompleto**: faltan selección oculta, reintento tras cancelación y producto ya editado (cambio de corte y recálculo sí).
+4. **Escenario 9 incompleto**: faltan selección oculta y reintento tras cancelación (de interfaz/cola; cambio de corte, recálculo y producto editado sí).
 5. Rust: **consignación** (`Contexto.consignaciones` existe, pero ni `Trabajo` la persiste ni la interfaz la marca) y el **botón** en ambas interfaces;
 
 6. ~~Anonimizador~~ HECHO: `personal/anonymize_package.py` trata las tablas nuevas (`requester` como persona; `linked_ingreso_id` comparte seudónimo con `ingreso_id`; literales del motor intactos). Prueba: `test_el_anonimizador_trata_las_tablas_nuevas…`.

@@ -293,3 +293,14 @@ def test_el_anonimizador_trata_las_tablas_nuevas_sin_filtrar_nombres_y_conserva_
     historico = anonimo.rows('historico_proteccion')[0]
     assert (historico['egreso_date'], historico['egreso_cause'], historico['ownership']) == ('--', 'SIN INFORMACION', 'VERIFICADA')
     assert escrito['linked_ingreso_id'] in {r['ingreso_id'] for r in anonimo.rows('registros')}
+
+
+def test_consignar_no_sobrescribe_la_edicion_humana_ni_los_productos(tmp_path):
+    """Escenario 9 (producto ya editado): recalcular por una consignación cambia la propuesta, no lo que escribió el funcionario."""
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    fila = trabajo.rows[0]
+    fila.review['OBSERVACION'] = 'Redacción propia del funcionario.'
+    fila.word_overrides = {'RIT': 'editado a mano'}
+    trabajo.consignar(fila.id, 'FAE X')
+    assert fila.review['OBSERVACION'] == 'Redacción propia del funcionario.' and fila.word_overrides == {'RIT': 'editado a mano'}
+    assert 'FAE X' not in fila.observation  # la propuesta del motor sí se actualiza
