@@ -165,6 +165,8 @@ TIPOS = {
     'PRM Laja': 'Inf. Cump Programa Ambulatorio',
     'AFT Laja': 'Inf. Cump Programa Ambulatorio',
     'PIE Tomé': 'Inf. Cump Programa Ambulatorio',
+    'PDE Mulchén': 'Inf. Cump Programa Ambulatorio',
+    'PDC Laja': 'Inf. Cump Programa Ambulatorio',
     'FAE PRO Biobío': 'Inf. Cump FAE/FAS',
     'FAS Tomé': 'Inf. Cump FAE/FAS',
     'RES Residencia Familiar': 'Inf. Cump Centro Residencial',
