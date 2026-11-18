@@ -270,6 +270,13 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
         return Err("La captura excede 20.000 registros; divide la exportación en lotes.".into());
     }
     let por_causa = historias(&c);
+    // Plan 18-nov-2026: Escritos de la causa, Ingreso Histórico Protección de la persona y asociación explícita.
+    let fuentes_escritos = crate::fuentes_nuevas::filas_de_escritos(&c.manifiesto, tabla("escritos"));
+    let historicos = crate::fuentes_nuevas::historicos_por_persona(&c.manifiesto, tabla("historico_proteccion"));
+    let mut historia_por_causa: HashMap<[String; 3], Vec<&FilaCsv>> = HashMap::new();
+    for fila in tabla("historia_tramites") {
+        historia_por_causa.entry(["source_system", "court_code", "cause_id"].map(|k| dato(fila, k).to_string())).or_default().push(fila);
+    }
     let solicitadas = c.manifiesto["table_states"]["bitacoras"] != "NO_SOLICITADA";
     let mut lecturas: HashMap<Identidad, bool> = HashMap::new();
     for q in tabla("consultas").iter().filter(|q| dato(q, "screen") == "bitacoras") {
@@ -379,6 +386,22 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
             }
             if let Some(b) = bitacoras.get(&ident) {
                 contexto.bitacoras.insert(id.clone(), b.clone());
+            }
+            if let Some(e) = crate::fuentes_nuevas::escritos_para(r, &fuentes_escritos) {
+                contexto.escritos.insert(id.clone(), e);
+            }
+            if let Some(h) = historicos.get(&["source_system", "court_code", "person_id"].map(|k| dato(r, k).to_string())) {
+                contexto.historicos.insert(id.clone(), h.clone());
+            }
+            if crate::fuentes_nuevas::bitacora_parcial(&c.manifiesto, tabla("bitacoras"), &ident) {
+                contexto.bitacoras_parciales.insert(id.clone());
+            }
+            if etapa == Etapa::Informes {
+                let causa = ["source_system", "court_code", "cause_id"].map(|k| dato(r, k).to_string());
+                let historia = historia_por_causa.get(&causa).map(Vec::as_slice).unwrap_or(&[]);
+                if let Some(ev) = crate::fuentes_nuevas::evidencia_informe(r, registro.fecha("vencimiento"), &fuentes_escritos, historia) {
+                    contexto.evidencias.insert(id.clone(), ev);
+                }
             }
             let hoja2 = calendario.get(&ident).and_then(|fechas| fechas.iter().all(|f| *f == fechas[0]).then_some(fechas[0]));
             let items = proyectados.get(&ident).map(Vec::as_slice).unwrap_or(&[]);

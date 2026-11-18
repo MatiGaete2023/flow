@@ -1,0 +1,83 @@
+{
+ "corte": "2026-10-08",
+ "filas": [
+  {
+   "id": "r0",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se hace presente que Persona cuenta con ingreso efectivo al programa FAE Biobío. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "ESPERA.E05_PROYECTO_Y_CORREO",
+    "HISTORIA.OTRO_PROGRAMA"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": [],
+   "otros_programas": [
+    {
+     "clave": "fae biobio",
+     "programa": "FAE Biobío"
+    }
+   ]
+  },
+  {
+   "id": "r1",
+   "observacion": "Persona PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+   "reglas": [
+    "ESPERA.E05_PROYECTO_Y_CORREO"
+   ],
+   "acciones": [
+    "programa_espera",
+    "PC_IE"
+   ],
+   "marcas": [],
+   "otros_programas": []
+  },
+  {
+   "id": "r2",
+   "observacion": "Persona PRM: Pendiente de resolver, informe de avance.",
+   "reglas": [
+    "HISTORIA.INFORME_AVANCE_PENDIENTE"
+   ],
+   "acciones": [],
+   "marcas": [
+    {
+     "nivel": 2,
+     "codigo": "ESCRITO_PENDIENTE",
+     "texto": "Informe de avance pendiente de resolver en la bandeja de Escritos"
+    },
+    {
+     "nivel": 2,
+     "codigo": "I01_ESCRITO_PENDIENTE",
+     "texto": "Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta"
+    }
+   ],
+   "otros_programas": []
+  },
+  {
+   "id": "r3",
+   "observacion": "Persona PRM: Informe de avance vencido desde el 25 de agosto de 2026. Se hace presente que el informe de PRM LAJA registra ingreso a folio 31 y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada 25 de agosto de 2026. Informe de avance recepcionado en escrito de fecha 20 de septiembre de 2026 (folio 32). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+   "reglas": [
+    "HISTORIA.INFORME_REVISAR_ASOCIACION",
+    "HISTORIA.C10_ESCRITO",
+    "HISTORIA.I01_SIN_ENVIO_GENERAL"
+   ],
+   "acciones": [
+    "NOMENCL"
+   ],
+   "marcas": [
+    {
+     "nivel": 2,
+     "codigo": "ESCRITO_ESTADOS_INCOMPATIBLES",
+     "texto": "Escrito pendiente en la bandeja y escrito ya incorporado en la historia sin secuencia fiable: revisar"
+    },
+    {
+     "nivel": 2,
+     "codigo": "I01_CONTRADICHA",
+     "texto": "Informe vencido en RUS contradicho por la historia"
+    }
+   ],
+   "otros_programas": []
+  }
+ ]
+}

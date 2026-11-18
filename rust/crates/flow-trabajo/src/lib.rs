@@ -7,6 +7,7 @@ pub mod controles;
 pub mod cronologia;
 pub mod exportar;
 pub mod flujo;
+mod fuentes_nuevas;
 pub mod paquete;
 pub mod revision_bitacoras;
 pub mod revision_informe;
