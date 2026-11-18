@@ -2,6 +2,9 @@
 use eframe::egui::{self, Color32, FontId, Stroke, TextStyle};
 pub const ERROR:Color32=Color32::from_rgb(255,158,166);
 pub const AVISO:Color32=Color32::from_rgb(255,214,128);
+/// Campo de texto y borde de controles: distinguibles del panel (contraste de borde >= 3:1).
+const CAMPO:Color32=Color32::from_rgb(22,25,42);
+const BORDE:Color32=Color32::from_rgb(120,128,170);
 
 pub fn aplicar(ctx: &egui::Context) {
     // El estilo elegido debe persistir después del primer evento de tema de Windows.
@@ -16,11 +19,12 @@ pub fn aplicar(ctx: &egui::Context) {
     estilo.visuals.override_text_color = Some(texto);
     estilo.visuals.panel_fill = fondo;
     estilo.visuals.window_fill = superficie;
-    estilo.visuals.extreme_bg_color = fondo;
+    estilo.visuals.extreme_bg_color = CAMPO;
     estilo.visuals.faint_bg_color = superficie;
     estilo.visuals.selection.bg_fill = Color32::from_rgb(74, 65, 99);
     estilo.visuals.selection.stroke = Stroke::new(1.5_f32, lavanda);
     estilo.visuals.widgets.inactive.bg_fill = superficie;
+    estilo.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, BORDE);
     estilo.visuals.widgets.hovered.bg_stroke = Stroke::new(1.5_f32, lavanda);
     estilo.visuals.widgets.active.bg_stroke = Stroke::new(2.0_f32, menta);
     estilo.visuals.warn_fg_color = AVISO;
@@ -40,12 +44,23 @@ mod tests {
     }
     #[test]
     fn texto_y_estados_superan_contraste_minimo_en_superficies_d(){
-        for fondo in [[32,36,58],[42,48,72],[74,65,99]]{
+        for fondo in [[32,36,58],[42,48,72],[74,65,99],[22,25,42]]{
             for texto in [[242,244,250],[202,183,239],[197,245,222],[255,158,166],[255,214,128]]{
                 let contraste=(luminancia(texto)+0.05)/(luminancia(fondo)+0.05);
                 assert!(contraste>=4.5,"Contraste {contraste} insuficiente para {texto:?}/{fondo:?}");
             }
         }
     }
+    #[test]
+    fn campos_y_controles_tienen_borde_visible(){
+        let borde=super::BORDE.to_array();let borde=[borde[0],borde[1],borde[2]];
+        for fondo in [[32,36,58],[42,48,72],[22,25,42]]{
+            let (a,b)=(luminancia(borde),luminancia(fondo));
+            let contraste=(a.max(b)+0.05)/(a.min(b)+0.05);
+            assert!(contraste>=3.0,"Borde {contraste} insuficiente sobre {fondo:?}");
+        }
+        assert_ne!(super::CAMPO,eframe::egui::Color32::from_rgb(32,36,58),"El campo no puede confundirse con el panel");
+    }
 }
+
 

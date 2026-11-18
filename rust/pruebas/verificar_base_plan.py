@@ -1,4 +1,5 @@
 """Conserva el veredicto del verificador y compara sus hallazgos con la punta inicial."""
+
 import importlib.util
 import json
 import os
@@ -14,7 +15,13 @@ BASE = "cfc12ee2af5e4fb5623671fd17ccf7feb9e1cc11"
 def medir(root, salida, nombre):
     env = dict(os.environ, PYTHONPATH=str(root / "src"))
     reporte = root / "docs/implementacion/verificacion/FLOW_D.json"
-    proceso = subprocess.run([sys.executable, str(root / "tools/verificar_wp.py"), "--salida", str(reporte)], cwd=root, env=env)
+    comando = [sys.executable, str(root / "tools/verificar_wp.py"), "--salida", str(reporte)]
+    # Las 48 bajas frente a linea_base.json ya están declaradas, con nodeids, en esta lista versionada
+    # (PLAN_IMPLEMENTACION E2). Sin ella el inventario informa como no declaradas bajas que sí lo están.
+    declaradas = root / "docs/implementacion/verificacion/integracion-20261021-eliminadas.txt"
+    if declaradas.is_file():
+        comando += ["--lista-eliminadas", str(declaradas)]
+    proceso = subprocess.run(comando, cwd=root, env=env)
     datos = json.loads(reporte.read_text())
     (salida / f"{nombre}.json").write_text(json.dumps(datos, indent=2), encoding="utf-8")
     spec = importlib.util.spec_from_file_location(f"verificador_{nombre}", root / "tools/verificar_wp.py")
@@ -69,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -1073,7 +1073,7 @@ impl App {
             return;
         };
         let mut cambiar = None;
-        crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {
+        crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {ui.horizontal_wrapped(|ui| {
             egui::ComboBox::from_id_salt("tablas_trabajo")
                 .selected_text(format!("{} ({})",trabajo.nombre(),trabajo.filas.len())).show_ui(ui,|ui|{
                     ui.label(format!("Actual: {} ({})",trabajo.nombre(),trabajo.filas.len()));
@@ -1099,9 +1099,9 @@ impl App {
             ] {
                 ui.selectable_value(&mut self.filtro, f, nombre);
             }
-            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar RIT, nombre, programa…").desired_width(190.0));
+            ui.add(egui::TextEdit::singleline(&mut self.buscar).hint_text("Buscar RIT, nombre, programa…").desired_width(230.0));
             if ui.button("Limpiar filtros").clicked(){self.filtro=Filtro::Todos;self.buscar.clear();}
-        });
+        });});
         if !trabajo.avisos.is_empty(){
             crate::paneles_ui::configuracion(ui,compacto,&format!("Avisos de fuente ({})",trabajo.avisos.len()),|ui|{
                 for aviso in &trabajo.avisos{ui.colored_label(crate::tema::AVISO,format!("⚠ {aviso}"));}
@@ -1689,7 +1689,7 @@ impl App {
                 let ui=&mut columnas[0];
                 ui.heading("Programas");
                 ui.add(egui::TextEdit::singleline(&mut self.buscar_contacto).hint_text("Buscar programa o correo…").desired_width(f32::INFINITY));
-                ui.small(format!("{} contactos",self.contactos.programas.len()));
+                ui.small(match self.contactos.programas.len(){1=>"1 contacto".to_string(),n=>format!("{n} contactos")});
             egui::ScrollArea::vertical().id_salt("lista_contactos").max_height(350.0).show(ui, |ui| {
                 egui::Grid::new("programas").num_columns(4).striped(true).show(ui, |ui| {
                     for (nombre, correo) in &self.contactos.programas {

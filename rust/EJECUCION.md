@@ -665,3 +665,8 @@ guardar el código de conexión, y cualquier escritura en RUS.
   aquí sí (las matrices incluidas no traen encabezados); `valores_de` sigue poniendo la NOMENCLATURA de la regla en
   proyectos que no son NOMENCL (sin efecto: sus matrices no la usan). Prueba adicional: con columna OBSERVACION en
   el origen manda esa columna sobre la propuesta. Suite: 272 pruebas, 0 fallos.
+- 2026-11-18 · Decisión del usuario: unir «Flow Estudio D» con `rust/producto`. Avance rápido a
+  `feat/flow-estudio-d-20261117` (d2935dd: diseño D, revisión de bitácoras, biblioteca, contactos lista/ficha) y
+  fusión de `auditor/estudio-d-20261117` (5 correcciones de auditoría). Conflictos resueltos conservando ambos lados
+  (huella del alcance SITFA + paquete legado sin contradicción). Suite: 318 pruebas, 0 fallos. Desde aquí la versión
+  única es `rust/producto`.

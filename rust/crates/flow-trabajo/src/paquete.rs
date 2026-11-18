@@ -602,7 +602,9 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         if huellas_alcance.get(dato(e,"query_id")).is_some_and(|h| !dato(e,"source_sha256").eq_ignore_ascii_case(h)) {
             d.contradictoria = true;
         }
-        if !dato(e,"text").trim().is_empty() {
+        // Solo una consulta con evidencia V1 tiene contraparte para cotejar; la legada ya
+        // quedó incompleta y no debe presentarse como contradicción.
+        if !dato(e,"text").trim().is_empty() && rangos.contains_key(dato(e,"query_id")) {
             let consulta = dato(e,"query_id");
             if let Some((desde,hasta)) = rangos.get(consulta).copied().flatten() {
                 match dia(dato(e,"event_at")) {
@@ -785,4 +787,5 @@ mod pruebas {
         assert!(!ruta_segura("../x") && !ruta_segura("/x") && !ruta_segura("C:\\x") && !ruta_segura("a//b"));
     }
 }
+
 

@@ -29,7 +29,6 @@ def find_doc(name):
 
 def open_doc(app, name):
     import os
-    import subprocess
     import sys
 
     path = find_doc(name)
@@ -38,7 +37,8 @@ def open_doc(app, name):
     elif sys.platform == 'win32':
         os.startfile(path)  # noqa: S606 - manual local de la entrega
     else:
-        subprocess.Popen(['xdg-open', str(path)])
+        # El Asistente no inicia procesos (restricción absoluta); fuera de Windows se indica la ruta.
+        app.status.set(f'Abre el manual desde: {path}')
 
 
 def commands(app):

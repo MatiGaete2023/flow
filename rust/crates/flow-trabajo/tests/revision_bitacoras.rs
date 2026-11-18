@@ -353,3 +353,18 @@ fn alcance_sitfa_exige_que_cada_fila_venga_de_la_respuesta_declarada() {
         assert_eq!(informe.filas[0].revision.clasificacion, C::NoVerificable, "huella manipulada {sha:?}: {}", informe.filas[0].revision.motivo);
     }
 }
+
+#[test]
+fn paquete_legado_con_bitacoras_explica_falta_de_lectura_y_no_contradiccion() {
+    let mut q = query("b1","201",vec![],true);
+    let mut f: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+    f.as_object_mut().unwrap().remove("revision_bitacoras");
+    q["filters_json"] = json!(f.to_string());
+    let e = json!({"query_id":"b1","event_id":"b1-1","source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+        "identity_status":"VERIFICADA","event_at":"2026-11-10","time_precision":"DIA","text":"Nota ficticia",
+        "origin":"CENTRO","origin_verified":"true","coverage":"COMPLETA"});
+    let report = inspect(&build_tables(vec![("registros",vec![row("r1","201")]),("consultas",vec![q]),("bitacoras",vec![e])]));
+    assert_eq!(report.conteos(),[0,0,1,0]);
+    assert!(!report.filas[0].evidencia.contradictoria, "Un paquete legado no es evidencia contradictoria");
+    assert_eq!(report.filas[0].revision.motivo,"No hay lectura acreditada para este ingreso.");
+}
