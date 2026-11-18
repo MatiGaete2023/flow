@@ -2137,6 +2137,14 @@ mod pruebas_captura {
             if let Some(referencia) = resumen.lecturas.first() {
                 let lectura = flow_captura::recoleccion::leer(&base, referencia).unwrap();
                 assert_eq!(lectura["datos"]["coverage"], "PARCIAL", "contrato tradicional");
+                let evidencia = &lectura["datos"]["revision_bitacoras"];
+                let esperada = match caso {
+                    "vacia" => "VACIA_COMPROBADA",
+                    "con_evento" => "COMPLETA",
+                    _ => "PARCIAL",
+                };
+                assert_eq!(evidencia["coverage"], esperada, "{caso}: alcance capturado");
+                assert_eq!(evidencia["completa"], caso != "paginada", "{caso}: completitud guardada");
             }
             let zip = base.join("paquete.zip");
             flow_trabajo::exportar::exportar(
@@ -2148,7 +2156,9 @@ mod pruebas_captura {
             let hasta = "2026-10-20".parse().unwrap();
             let mut informe = flow_trabajo::paquete::revisar_bitacoras(&datos, desde, hasta, hasta).unwrap();
             let indice = informe.filas.iter().position(|fila| fila.identidad.ingreso == "201").unwrap();
-            assert_eq!(informe.filas[indice].revision.clasificacion, clase, "{caso}");
+            let fila = &informe.filas[indice];
+            assert_eq!(fila.revision.clasificacion, clase, "{caso}: {}. Evidencia: {:?}; lecturas: {:?}",
+                fila.revision.motivo, fila.evidencia, fila.lecturas);
             if caso == "vacia" {
                 assert_eq!(flow_trabajo::paquete::periodo_revision(&datos).unwrap(), Some((desde, hasta)));
                 flow_trabajo::revision_informe::aplicar_motor(&mut informe, "paquete.zip", &datos, &Config::default()).unwrap();
