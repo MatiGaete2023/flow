@@ -270,3 +270,26 @@ def test_python_y_rust_coinciden_en_la_pertenencia_del_historico():
     )
     assert read_historico(html, persona_esperada=['11.111.111-1', 'Persona'])['ownership'] == 'VERIFICADA'
     assert read_historico(html, persona_esperada=['99.999.999-9', 'Otro'])['ownership'] == 'INCIERTA'
+
+
+def test_el_anonimizador_trata_las_tablas_nuevas_sin_filtrar_nombres_y_conserva_las_relaciones(tmp_path):
+    from nurus.personal.anonymize_package import anonymize_capture
+
+    origen = paquete(tmp_path, historico=[('FAE X', *VIG)], escritos=[('D1', 'Inf. Cump FAE/FAS', 'Pendiente')], nombre='orig')
+    # El solicitante del escrito es una persona: no puede salir tal cual.
+    capturas = read_capture(origen)
+    tablas = {t: [dict(f) for f in capturas.rows(t)] for t in capturas.tables}
+    tablas['escritos'][0].update(requester='Juana Pérez Soto', linked_ingreso_id=tablas['registros'][0]['ingreso_id'], linked_projection='2026-08-20')
+    metadata = dict(capturas.manifest)
+    metadata['table_states'] = dict(metadata['table_states'])
+    conn = tmp_path / 'con_persona.zip'
+    write_capture(conn, {k: v for k, v in metadata.items() if k not in ('schema_version', 'files', 'schema_id')}, tablas)
+    destino = tmp_path / 'anonimo.zip'
+    anonymize_capture(conn, destino)
+    anonimo = read_capture(destino)
+    escrito = anonimo.rows('escritos')[0]
+    assert 'Juana' not in json.dumps(escrito) and escrito['escrito_status'] == 'Pendiente' and escrito['escrito_type'] == 'Inf. Cump FAE/FAS'
+    assert escrito['linked_projection'] == '2026-08-20'
+    historico = anonimo.rows('historico_proteccion')[0]
+    assert (historico['egreso_date'], historico['egreso_cause'], historico['ownership']) == ('--', 'SIN INFORMACION', 'VERIFICADA')
+    assert escrito['linked_ingreso_id'] in {r['ingreso_id'] for r in anonimo.rows('registros')}

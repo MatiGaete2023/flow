@@ -15,6 +15,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
   (el contenedor no tiene `tkinter`). Lista exacta: `base_python_fallos.txt`. Criterio: el conjunto no puede crecer.
   **Ojo**: sin `--continue-on-collection-errors` pytest aborta en la recolección y la comparación sale vacía (error mío en
   corridas intermedias; la corrida final con el flag da el mismo conjunto de 55).
+- Verificado además: `cargo build --release --locked -p flow` compila (3 min 45 s).
 - `python tools/verificar_wp.py` → FALLA por «Restricciones absolutas» y «Ruff» (medición no disponible en el contenedor); preexistente.
 - Suite del Descargador: sus pruebas de interfaz necesitan `tkinter` y fallan igual aquí; las de lectura/exportación/paquete pasan
   (se corrieron con un stub de `tkinter` en el scratchpad, solo para importar `descargador.py`).
@@ -86,7 +87,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 4. **Escenario 9 incompleto**: faltan selección oculta, reintento tras cancelación y producto ya editado (cambio de corte y recálculo sí).
 5. Rust: **consignación** (`Contexto.consignaciones` existe, pero ni `Trabajo` la persiste ni la interfaz la marca) y el **botón** en ambas interfaces;
 
-6. Anonimizador (`personal/anonymize_package.py`): decidir cómo tratar `requester`/`program_name`/`doc` de las tablas nuevas.
+6. ~~Anonimizador~~ HECHO: `personal/anonymize_package.py` trata las tablas nuevas (`requester` como persona; `linked_ingreso_id` comparte seudónimo con `ingreso_id`; literales del motor intactos). Prueba: `test_el_anonimizador_trata_las_tablas_nuevas…`.
 7. E3 (revisión por otro agente) exigida por `AGENTS.md`/decisión j: tocan `motor/`, `textos_base.json`, `contracts/` y el contrato. Nada está «aceptado».
 8. CI Windows/SITFA y `cargo build --release --locked -p flow`; `tools/verificar_wp.py` (hoy falla por entorno).
 

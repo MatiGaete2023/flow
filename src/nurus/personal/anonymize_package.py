@@ -39,9 +39,12 @@ TECHNICAL = {
     'SITFA_ARCHIVO': 'original_file',
     'SITFA_HOJA': 'original_sheet',
 }
-FIELDS_ID = {'query_id', 'record_id', 'event_id', 'incident_id', 'calendar_id', 'document_id', 'parent_event_id'}
+FIELDS_ID = {
+    'query_id', 'record_id', 'event_id', 'incident_id', 'calendar_id', 'document_id', 'parent_event_id', 'escrito_id',
+    'historico_id',
+}  # fmt: skip
 REMOTE_ID = {'cause_id', 'ingreso_id', 'person_id', 'program_id'}
-FREE_FIELDS = {'text', 'response', 'description', 'reference', 'message', 'error'}
+FREE_FIELDS = {'text', 'response', 'description', 'reference', 'message', 'error', 'doc', 'program_name'}
 CONTROL_FIELDS = {
     'capture_id',
     'source_system',
@@ -78,6 +81,13 @@ CONTROL_FIELDS = {
     'original_row',
     'download_state',
     'content_read',
+    # Escritos e Histórico de Protección (plan 18-nov-2026): literales institucionales que el motor compara tal cual.
+    'escrito_type',
+    'escrito_status',
+    'linked_projection',
+    'ownership',
+    'egreso_date',
+    'egreso_cause',
 }
 _JSON_LIMIT = 30
 _SENSITIVE_WORDS = re.compile(r'(?i)(rut|run|nombre|apellido|curador|litigante|domicilio|direccion|telefono|correo)')
@@ -144,7 +154,9 @@ class Mapper:
         if label == 'local_file':
             # No hay binarios en un paquete aceptado para anonimización.
             return ''
-        if label == 'author':
+        if label == 'linked_ingreso_id':
+            return self.token('ingreso_id', value)  # el mismo seudónimo que el ingreso al que apunta
+        if label in ('author', 'requester'):
             if normalize(value) in ('desconocido', 'sin identificar'):
                 return value
             self.replacer.add_person(str(value))
