@@ -183,3 +183,39 @@ mod escritos {
         assert!(historia_con("")["escritos"].is_null(), "sin la pestaña no hay clave: fuente no solicitada");
     }
 }
+
+/// Estructura real observada en SITFA (capturas del usuario, 18-nov-2026) con valores ficticios, compartida con Python
+/// (`tests/fixtures_integracion/`): programa = «Nombre Proyecto», banda de título, tabla LRPA vecina y fila de relleno.
+mod historico_real {
+    use flow_captura::lecturas::{leer_escritos_html, leer_historico};
+
+    const HISTORIAL: &str = include_str!("../../../../tests/fixtures_integracion/historial_menores_ficticio.html");
+    const ESCRITOS: &str = include_str!("../../../../tests/fixtures_integracion/escritos_ficticio.html");
+
+    #[test]
+    fn nombre_proyecto_titulo_y_lrpa() {
+        let l = leer_historico(HISTORIAL.as_bytes(), "", "2026-11-18T12:00:00Z", &["11.111.111-1"]).unwrap();
+        assert_eq!(l["ownership"], "VERIFICADA");
+        let filas: Vec<(&str, &str, &str)> = l["filas"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| (f["programa"].as_str().unwrap(), f["fecha_egreso"].as_str().unwrap(), f["causal_egreso"].as_str().unwrap()))
+            .collect();
+        assert_eq!(
+            filas,
+            [("PRM - PROGRAMA FICTICIO UNO", "--", "SIN INFORMACION"), ("DCE - PROGRAMA FICTICIO DOS", "06-02-2026", "EGRESO POR ENVÍO DE INFORME")]
+        );
+        assert_eq!(l["vacio_explicito"], false);
+        let corte = HISTORIAL.find("<table><tr><td colspan=\"19\">").unwrap();
+        let solo_lrpa = format!("{}</body></html>", &HISTORIAL[..corte]);
+        assert_eq!(leer_historico(solo_lrpa.as_bytes(), "", "x", &[]).unwrap_err(), "HISTORICO_NO_VERIFICADA");
+    }
+
+    #[test]
+    fn escritos_en_minuscula_y_doc_solo_con_icono() {
+        let l = leer_escritos_html(ESCRITOS.as_bytes()).unwrap().unwrap();
+        let f = &l["filas"][0];
+        assert_eq!((f["doc"].as_str(), f["tipo"].as_str(), f["estado"].as_str()), (Some(""), Some("inf. cump programa ambulatorio"), Some("pendiente")));
+    }
+}

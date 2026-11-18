@@ -22,4 +22,7 @@ ficticios (nunca reales) en Windows. La aceptación institucional la firma solo 
 2. En **Correos** preparar «Informes pendientes»: el Excel adjunto solo lista las fechas exigibles.
 3. En **Resoluciones** preparar proyectos: un `PC_INFO` por tribunal+causa con solo las filas exigibles; un `NOMENCL` aparte.
 4. Guardar y reabrir la sesión; recalcular tras editar una observación a mano: la edición se conserva.
-5. Python (`Work.consignar`) aún **no tiene botón**: la marca «consignada» se prueba por API (ver `REGISTRO.md`, pendiente 3).
+5. Flow (Rust): en el detalle de Trabajo, la fila con «otro programa» muestra «Marcar «X» como consignada»; al pulsarla la constancia desaparece de
+   la observación y la sesión la recuerda (se conservan tus ediciones). Python: no hay botón; usar `python tools/consignar.py SESION --listar`.
+6. Histórico real: guardar la ventana «Historial Menores» como HTML y correr `flow historico …` (ver `REGISTRO.md`); debe leer la tabla
+   «Ingreso Historico Protección» y **no** la «Ingreso Historico(LRPA)».

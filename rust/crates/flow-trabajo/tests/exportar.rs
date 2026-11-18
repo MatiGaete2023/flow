@@ -164,7 +164,7 @@ fn historico_manual_viaja_al_paquete_con_pertenencia_y_estados() {
         <tr><td>SIN INFORMACION</td><td>PRM Ficticio</td><td>--</td></tr><tr><td>SIN INFORMACION</td><td>FAE Otro Ficticio</td><td>--</td></tr>\
         <tr><td>EGRESO</td><td>PDE Antiguo</td><td>01/05/2026</td></tr></tbody></table></body></html>";
     let carpeta = t.0.join("historico-manual");
-    let persona = Persona { tribunal: "113", tribunal_nombre: "Jgdo. L. y G. de Laja", person_id: "persona-ficticia-1", rut: "11.111.111-1", nombre: "Persona" };
+    let persona = Persona { tribunal: "113", tribunal_nombre: "Jgdo. L. y G. de Laja", person_id: "persona-ficticia-1", rut: "11.111.111-1", nombre: "Persona", url: "" };
     let e = capturar(&carpeta, html.as_bytes(), &persona, "2026-10-20T15:00:00+00:00").unwrap();
     assert_eq!((e["estado"].as_str(), e["ownership"].as_str()), (Some("LEIDA"), Some("VERIFICADA")));
     // Un nombre suelto que aparece en cualquier texto no prueba pertenencia.

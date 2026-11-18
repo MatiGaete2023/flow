@@ -125,3 +125,43 @@ def test_historico_sin_prueba_de_pertenencia_queda_incierto_y_la_fuente_ilegible
     captura = read_capture(paquete(tmp_path, 'mal', historico=tmp_path / 'b'))
     assert captura.manifest['table_states']['historico_proteccion'] == 'FALLIDA'
     assert any(i['code'] == 'HISTORICO_NO_VERIFICADA' for i in captura.rows('incidencias'))
+
+
+def test_la_direccion_de_la_ventana_prueba_o_desmiente_la_pertenencia(tmp_path):
+    from historico_manual import rut_de_url
+
+    url = 'https://ejemplo.invalido/PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante=11111111&RUT_DV=1'
+    assert rut_de_url(url) == '111111111' and rut_de_url('https://x/?a=1') == ''
+    base = {'tribunal': '113', 'person_id': 'p1', 'nombre': '', 'rut': '11.111.111-1'}
+    sin_texto = HISTORICO_HTML.replace('Historial 11.111.111-1', 'Historial')
+    assert capturar(tmp_path / 'a', sin_texto, base)['ownership'] == 'INCIERTA'  # el texto no trae el RUT
+    assert capturar(tmp_path / 'b', sin_texto, base, url=url)['ownership'] == 'VERIFICADA'
+    otra = url.replace('RUT_Litigante=11111111', 'RUT_Litigante=22222222')
+    assert capturar(tmp_path / 'c', HISTORICO_HTML, base, url=otra)['ownership'] == 'INCIERTA'  # pide otro RUT
+    assert 'RUT_Litigante' not in (tmp_path / 'b' / 'historico.json').read_text(encoding='utf-8')  # no se guarda la dirección
+
+
+def test_cli_de_captura_manual(tmp_path, capsys):
+    from historico_manual import main
+
+    html = tmp_path / 'vista.html'
+    html.write_text(HISTORICO_HTML, encoding='utf-8')
+    codigo = main(['--carpeta', str(tmp_path / 'lote'), '--html', str(html), '--tribunal', '113', '--person-id', 'p1', '--rut', '11.111.111-1'])
+    assert codigo == 0 and 'pertenencia VERIFICADA' in capsys.readouterr().out
+
+
+def test_extracto_anonimo_de_escritos_no_emite_valores(tmp_path, capsys):
+    from extraer_estructura_escritos import main
+
+    html = tmp_path / 'e.html'
+    html.write_text(
+        '<html><body><table><tr><th>Doc.</th><th>Tipo Escrito</th><th>Solicitante</th><th>Estado</th></tr>'
+        '<tr><td><a href="/Doc.do?id=123456&clave=QWxhZGRpbjpvcGVuIHNlc2FtZQ%3D%3D" onclick="verDoc(\'987654\',\'x\')"><img src="a.gif"></a></td>'
+        '<td>inf. cump programa ambulatorio</td><td>tercerista</td><td>pendiente</td></tr></table></body></html>',
+        encoding='utf-8',
+    )
+    assert main([str(html)]) == 0
+    salida = capsys.readouterr().out
+    for valor in ('123456', '987654', 'QWxhZGRpbjpvcGVuIHNlc2FtZQ', 'tercerista', 'inf. cump', 'Doc.do'):
+        assert valor not in salida, valor
+    assert '"funcion": "verDoc"' in salida and 'opaco(' in salida and '"nombre": "clave"' in salida

@@ -190,6 +190,8 @@ struct App {
     ayuda: bool,
     sin_guardar: bool,
     confirmar_recalculo: bool,
+    /// Constancia que el funcionario marcó como consignada (id de fila, programa), pendiente de aplicar.
+    consignar_pendiente: Option<(String, String)>,
     panel_trabajo:u8,
     distribucion:u64,
     captura: crate::captura_ui::Captura,
@@ -350,6 +352,7 @@ impl App {
             ayuda: false,
             sin_guardar: false,
             confirmar_recalculo: false,
+            consignar_pendiente: None,
             panel_trabajo:0,
             distribucion:0,
             captura: Default::default(),
@@ -1073,6 +1076,7 @@ impl App {
             return;
         };
         let mut cambiar = None;
+        let mut consignar: Option<(String, String)> = None;
         crate::paneles_ui::configuracion(ui,compacto,"Filtros y etapas de Trabajo",|ui| {
             egui::ComboBox::from_id_salt("tablas_trabajo")
                 .selected_text(format!("{} ({})",trabajo.nombre(),trabajo.filas.len())).show_ui(ui,|ui|{
@@ -1186,6 +1190,15 @@ impl App {
                         ui.label(format!("· {a}"));
                     }
                 }
+                for p in &fila.propuesta.otros_programas {
+                    if ui
+                        .button(format!("Marcar «{}» como consignada", p.programa))
+                        .on_hover_text("Úsalo solo cuando esa constancia ya quedó registrada en RUS: la propuesta dejará de repetirla.")
+                        .clicked()
+                    {
+                        consignar = Some((fila.id.clone(), p.programa.clone()));
+                    }
+                }
                 crate::cronologia_ui::mostrar(ui, fila, &self.motor, trabajo.corte);
                 if !fila.calendario.is_empty() {
                     ui.collapsing("Calendario del ingreso", |ui| {
@@ -1292,6 +1305,32 @@ impl App {
         }
         if let Some(i) = cambiar {
             self.cambiar_etapa(i);
+        }
+        if consignar.is_some() {
+            self.consignar_pendiente = consignar;
+        }
+    }
+
+    /// Marca una constancia como consignada y recalcula la propuesta con las mismas fuentes, conservando las ediciones.
+    fn consignar_y_recalcular(&mut self, id: String, programa: String) {
+        let (Some(ruta), Some(corte)) = (self.archivo.clone(), self.fecha_corte()) else { return };
+        let Some(actual) = self.trabajo.as_mut() else { return };
+        if !actual.consignar(&id, &programa) {
+            return;
+        }
+        let consignaciones = actual.consignaciones.clone();
+        match cli::cargar_con(&ruta, self.etapa, None, corte, &self.motor, &consignaciones) {
+            Ok(trabajos) => {
+                let Some(mut nuevo) = trabajos.into_iter().find(|t| t.etapa == actual.etapa) else {
+                    return self.mal("No se pudo recalcular la propuesta: el archivo ya no trae esa etapa.");
+                };
+                nuevo.conservar_de(actual);
+                self.trabajo = Some(nuevo);
+                self.sin_guardar = true;
+                self.guardar_sesion();
+                self.bien(format!("Constancia de «{programa}» marcada como consignada; la propuesta ya no la repite."));
+            }
+            Err(e) => self.mal(e),
         }
     }
 
@@ -1895,6 +1934,9 @@ impl eframe::App for App {
             Pestana::Meta4 => {egui::ScrollArea::vertical().id_salt("pagina_meta4").show(ui,|ui|self.meta4.mostrar(ui));}
             Pestana::Revision => self.revision.mostrar(ui, ctx, &self.motor),
         });
+        if let Some((id, programa)) = self.consignar_pendiente.take() {
+            self.consignar_y_recalcular(id, programa);
+        }
         if self.confirmar_recalculo {
             egui::Window::new("Recalcular propuestas").collapsible(false).resizable(false).show(ctx, |ui| {
                 ui.label("Se descartarán las ediciones y marcas de revisión recuperadas para este archivo y corte.");

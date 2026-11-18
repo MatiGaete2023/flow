@@ -15,6 +15,8 @@ Uso:
   flow meta4 LOTE [LOTE…] --salida CARPETA_NUEVA [--corte AAAA-MM-DD] [--emision AAAA-MM-DD]
              [--tribunales \"Laja,Tomé\"] [--plantilla PLANTILLA.xlsx]
   flow meta4-regenerar REGISTROS.xlsx --salida CARPETA_NUEVA [--plantilla PLANTILLA.xlsx]
+  flow consignar PAQUETE --fila ID --programa NOMBRE --archivo consignaciones.json [--corte AAAA-MM-DD]
+  flow historico VISTA.html --carpeta LOTE --tribunal COD --persona ID --rut RUT [--nombre N] [--url DIRECCION]
   flow ayuda
 
 producir crea, en una carpeta nueva dentro de --salida: el Excel de observaciones, las nóminas, los borradores
@@ -73,8 +75,34 @@ pub fn cargar_bytes(
     corte: Fecha,
     config: &Config,
 ) -> Result<Vec<Trabajo>, String> {
+    cargar_bytes_con(nombre, datos, etapa, hoja, corte, config, &Default::default())
+}
+
+/// Como `cargar`, sin repetir las constancias que el funcionario ya consignó (solo el paquete usa esas fuentes).
+pub fn cargar_con(
+    ruta: &Path,
+    etapa: Option<Etapa>,
+    hoja: Option<&str>,
+    corte: Fecha,
+    config: &Config,
+    consignaciones: &std::collections::BTreeMap<String, Vec<String>>,
+) -> Result<Vec<Trabajo>, String> {
+    let datos = std::fs::read(ruta).map_err(|e| format!("No se pudo leer {}: {e}", ruta.display()))?;
+    let nombre = ruta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    cargar_bytes_con(&nombre, datos, etapa, hoja, corte, config, consignaciones)
+}
+
+pub fn cargar_bytes_con(
+    nombre: &str,
+    datos: Vec<u8>,
+    etapa: Option<Etapa>,
+    hoja: Option<&str>,
+    corte: Fecha,
+    config: &Config,
+    consignaciones: &std::collections::BTreeMap<String, Vec<String>>,
+) -> Result<Vec<Trabajo>, String> {
     if flow_trabajo::paquete::es_paquete(&datos) {
-        let mut trabajos = flow_trabajo::paquete::importar(nombre, &datos, corte, config)?.trabajos;
+        let mut trabajos = flow_trabajo::paquete::importar_con(nombre, &datos, corte, config, consignaciones)?.trabajos;
         if let Some(e) = etapa {
             trabajos.retain(|t| t.etapa == e);
             if trabajos.is_empty() {
@@ -125,10 +153,11 @@ fn imprimir(trabajo: &Trabajo) {
 }
 
 fn observar(args: &[String]) -> Result<(), (i32, String)> {
-    let o = opciones(args, &["etapa", "hoja", "corte"]).map_err(|e| (2, e))?;
+    let o = opciones(args, &["etapa", "hoja", "corte", "consignaciones"]).map_err(|e| (2, e))?;
     let [archivo] = o.posicionales.as_slice() else { return Err((2, "Indica un archivo.".into())) };
     let (etapa, corte) = comunes(&o)?;
-    let trabajos = cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))?;
+    let consignaciones = o.valor("consignaciones").map(|r| leer_consignaciones(Path::new(r))).transpose()?.unwrap_or_default();
+    let trabajos = cargar_con(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default(), &consignaciones).map_err(|e| (1, e))?;
     if o.bandera("json") {
         println!("{}", serde_json::to_string_pretty(&trabajos).map_err(|e| (1, e.to_string()))?);
         return Ok(());
@@ -287,7 +316,7 @@ fn producir_interno(
 }
 
 fn producir(args: &[String]) -> Result<(), (i32, String)> {
-    let o = opciones(args, &["etapa", "hoja", "corte", "salida", "modalidades", "contactos"]).map_err(|e| (2, e))?;
+    let o = opciones(args, &["etapa", "hoja", "corte", "salida", "modalidades", "contactos", "consignaciones"]).map_err(|e| (2, e))?;
     let [archivo] = o.posicionales.as_slice() else { return Err((2, "Indica un archivo.".into())) };
     let salida = o.valor("salida").ok_or((2, "Indica la carpeta de --salida.".to_string()))?;
     let (etapa, corte) = comunes(&o)?;
@@ -297,7 +326,8 @@ fn producir(args: &[String]) -> Result<(), (i32, String)> {
         .transpose()
         .map_err(|e| (1, e))?
         .unwrap_or_default();
-    for trabajo in cargar(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default()).map_err(|e| (1, e))? {
+    let consignaciones = o.valor("consignaciones").map(|r| leer_consignaciones(Path::new(r))).transpose()?.unwrap_or_default();
+    for trabajo in cargar_con(Path::new(archivo), etapa, o.valor("hoja"), corte, &Config::default(), &consignaciones).map_err(|e| (1, e))? {
         let p = producir_todo(&trabajo, Path::new(salida), o.valor("modalidades").unwrap_or(""), &contactos, o.bandera("outlook"), None)
             .map_err(|e| (1, e))?;
         println!("Carpeta: {}", p.carpeta.display());
@@ -383,6 +413,8 @@ pub fn ejecutar(args: &[String]) -> i32 {
         Some("anonimizar") => anonimizar(&args[1..]),
         Some("meta4") => meta4(&args[1..]),
         Some("meta4-regenerar") => meta4_regenerar(&args[1..]),
+        Some("consignar") => consignar(&args[1..]),
+        Some("historico") => historico(&args[1..]),
         Some(otro) => Err((2, format!("Comando desconocido: {otro}.\n\n{AYUDA}"))),
     };
     match resultado {
@@ -392,6 +424,68 @@ pub fn ejecutar(args: &[String]) -> i32 {
             codigo
         }
     }
+}
+
+/// Lee el archivo de consignaciones (`{"id de fila": ["clave de programa", …]}`); ausente = ninguna.
+fn leer_consignaciones(ruta: &Path) -> Result<std::collections::BTreeMap<String, Vec<String>>, (i32, String)> {
+    match std::fs::read(ruta) {
+        Ok(b) => serde_json::from_slice(&b).map_err(|_| (1, format!("{} no es un archivo de consignaciones legible.", ruta.display()))),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Default::default()),
+        Err(e) => Err((1, format!("No se pudo leer {}: {e}", ruta.display()))),
+    }
+}
+
+/// Marca una constancia como consignada por el funcionario (nunca al generar ni exportar). Idempotente; solo vale si el motor la
+/// propone para esa fila.
+fn consignar(args: &[String]) -> Result<(), (i32, String)> {
+    let o = opciones(args, &["fila", "programa", "archivo", "corte", "etapa"]).map_err(|e| (2, e))?;
+    let [paquete] = o.posicionales.as_slice() else { return Err((2, "Uso: flow consignar PAQUETE --fila ID --programa NOMBRE --archivo consignaciones.json".into())) };
+    let (fila, programa, archivo) = (
+        o.valor("fila").ok_or((2, "Falta --fila ID.".to_string()))?,
+        o.valor("programa").ok_or((2, "Falta --programa NOMBRE.".to_string()))?,
+        Path::new(o.valor("archivo").ok_or((2, "Falta --archivo consignaciones.json.".to_string()))?),
+    );
+    let (etapa, corte) = comunes(&o)?;
+    let mut consignaciones = leer_consignaciones(archivo)?;
+    let trabajos = cargar_con(Path::new(paquete), etapa, None, corte, &Config::default(), &consignaciones).map_err(|e| (1, e))?;
+    let clave = flow_dominio::evidencia::clave_programa(programa);
+    let propuesta = trabajos.iter().flat_map(|t| &t.filas).find(|f| f.id == fila).map(|f| f.propuesta.otros_programas.iter().any(|p| p.clave == clave));
+    match propuesta {
+        None => return Err((1, "Esa fila no existe en el paquete.".into())),
+        Some(false) => return Err((1, "El motor no propone esa constancia para la fila (ya consignada o no vigente).".into())),
+        Some(true) => {}
+    }
+    let lista = consignaciones.entry(fila.to_string()).or_default();
+    if !lista.contains(&clave) {
+        lista.push(clave);
+    }
+    std::fs::write(archivo, serde_json::to_vec_pretty(&consignaciones).map_err(|e| (1, e.to_string()))?).map_err(|e| (1, format!("No se pudo guardar: {e}")))?;
+    println!("Consignada. Vuelve a ejecutar observar/producir con --consignaciones {}.", archivo.display());
+    Ok(())
+}
+
+/// Captura MANUAL del Ingreso Histórico Protección desde un HTML guardado de la ventana «Historial Menores».
+fn historico(args: &[String]) -> Result<(), (i32, String)> {
+    use flow_trabajo::historico_manual::{capturar, Persona};
+    let o = opciones(args, &["carpeta", "tribunal", "persona", "rut", "nombre", "tribunal-nombre", "url"]).map_err(|e| (2, e))?;
+    let [html] = o.posicionales.as_slice() else { return Err((2, "Uso: flow historico VISTA.html --carpeta LOTE --tribunal COD --persona ID --rut RUT [--nombre N] [--url DIRECCION]".into())) };
+    let pedir = |n: &str| o.valor(n).ok_or((2, format!("Falta --{n}.")));
+    let datos = std::fs::read(html).map_err(|e| (1, format!("No se pudo leer {html}: {e}")))?;
+    let ahora = chrono::Local::now().to_rfc3339();
+    let persona = Persona {
+        tribunal: pedir("tribunal")?,
+        tribunal_nombre: o.valor("tribunal-nombre").unwrap_or(""),
+        person_id: pedir("persona")?,
+        rut: o.valor("rut").unwrap_or(""),
+        nombre: o.valor("nombre").unwrap_or(""),
+        url: o.valor("url").unwrap_or(""),
+    };
+    let e = capturar(Path::new(pedir("carpeta")?), &datos, &persona, &ahora).map_err(|e| (1, e))?;
+    println!("{} · pertenencia {} · {} programas", e["estado"].as_str().unwrap_or(""), e["ownership"].as_str().unwrap_or(""), e["filas"].as_array().map_or(0, Vec::len));
+    for f in e["filas"].as_array().into_iter().flatten() {
+        println!("   {} | {} | {}", f["programa"].as_str().unwrap_or(""), f["fecha_egreso"].as_str().unwrap_or(""), f["causal_egreso"].as_str().unwrap_or(""));
+    }
+    if e["estado"] == "FALLIDA" { Err((1, "No se pudo leer la tabla del histórico.".into())) } else { Ok(()) }
 }
 
 fn anonimizar(args: &[String]) -> Result<(), (i32, String)> {
@@ -482,5 +576,65 @@ mod pruebas_producir {
         let r3 = producir_interno(&t, temp.path(), "", &contactos, None, None).unwrap();
         assert!(!r3.creados.iter().any(|s| s.contains(".eml")));
         assert!(r3.pendientes.iter().any(|s| s.contains("al menos una modalidad")));
+    }
+}
+
+#[cfg(test)]
+mod pruebas_integracion {
+    use super::*;
+    use flow_trabajo::historico_manual::rut_de_url;
+
+    fn datos(nombre: &str) -> std::path::PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../flow-trabajo/tests/datos").join(nombre)
+    }
+
+    #[test]
+    fn rut_de_la_direccion_de_la_ventana() {
+        assert_eq!(rut_de_url("https://x.invalido/PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante=11111111&RUT_DV=k"), "11111111K");
+        assert_eq!(rut_de_url("https://x.invalido/?a=1"), "");
+        assert_eq!(rut_de_url("https://x.invalido/?RUT_Litigante=abc&RUT_DV=1"), "");
+    }
+
+    #[test]
+    fn consignar_por_linea_de_comandos_es_idempotente_y_cambia_la_propuesta() {
+        let temp = tempfile::tempdir().unwrap();
+        let paquete = datos("paquete_integracion.zip");
+        let corte = "2026-10-08";
+        let antes = cargar(&paquete, None, None, corte.parse().unwrap(), &Config::default()).unwrap();
+        let fila = antes.iter().flat_map(|t| &t.filas).find(|f| !f.propuesta.otros_programas.is_empty()).unwrap();
+        let (id, programa) = (fila.id.clone(), fila.propuesta.otros_programas[0].programa.clone());
+        let archivo = temp.path().join("consignaciones.json");
+        let args = |extra: &[&str]| -> Vec<String> {
+            ["consignar", paquete.to_str().unwrap(), "--fila", &id, "--programa", &programa, "--archivo", archivo.to_str().unwrap(), "--corte", corte]
+                .iter()
+                .chain(extra)
+                .map(|s| s.to_string())
+                .collect()
+        };
+        assert_eq!(ejecutar(&args(&[])), 0);
+        assert_eq!(ejecutar(&args(&[])), 1, "ya consignada: el motor no la propone y el comando lo dice");
+        let guardado: std::collections::BTreeMap<String, Vec<String>> = serde_json::from_slice(&std::fs::read(&archivo).unwrap()).unwrap();
+        assert_eq!(guardado.len(), 1);
+        let despues = cargar_con(&paquete, None, None, corte.parse().unwrap(), &Config::default(), &guardado).unwrap();
+        let fila = despues.iter().flat_map(|t| &t.filas).find(|f| f.id == id).unwrap();
+        assert!(fila.propuesta.otros_programas.is_empty() && !fila.observacion.contains("cuenta con ingreso efectivo"));
+        let otra = ["consignar", paquete.to_str().unwrap(), "--fila", "no-existe", "--programa", "X", "--archivo", archivo.to_str().unwrap(), "--corte", corte];
+        assert_eq!(ejecutar(&otra.iter().map(|s| s.to_string()).collect::<Vec<_>>()), 1);
+    }
+
+    #[test]
+    fn historico_por_linea_de_comandos_con_la_estructura_real() {
+        let temp = tempfile::tempdir().unwrap();
+        let vista = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../tests/fixtures_integracion/historial_menores_ficticio.html");
+        let carpeta = temp.path().join("lote");
+        let args: Vec<String> = ["historico", vista.to_str().unwrap(), "--carpeta", carpeta.to_str().unwrap(), "--tribunal", "113", "--persona", "p1", "--rut", "11.111.111-1"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert_eq!(ejecutar(&args), 0);
+        let manifiesto: serde_json::Value = serde_json::from_slice(&std::fs::read(carpeta.join("historico.json")).unwrap()).unwrap();
+        let e = &manifiesto["capturas"]["113|p1"];
+        assert_eq!((e["estado"].as_str(), e["ownership"].as_str()), (Some("LEIDA"), Some("VERIFICADA")));
+        assert_eq!(e["filas"][0]["programa"], "PRM - PROGRAMA FICTICIO UNO");
     }
 }

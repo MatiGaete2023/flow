@@ -304,3 +304,63 @@ def test_consignar_no_sobrescribe_la_edicion_humana_ni_los_productos(tmp_path):
     trabajo.consignar(fila.id, 'FAE X')
     assert fila.review['OBSERVACION'] == 'Redacción propia del funcionario.' and fila.word_overrides == {'RIT': 'editado a mano'}
     assert 'FAE X' not in fila.observation  # la propuesta del motor sí se actualiza
+
+
+FIXTURES = Path(__file__).parent / 'fixtures_integracion'
+
+
+def test_historico_con_la_estructura_real_nombre_proyecto_titulo_y_tabla_lrpa():
+    """Estructura observada en SITFA (capturas del usuario, 18-nov-2026), con valores ficticios."""
+    lectura = read_historico((FIXTURES / 'historial_menores_ficticio.html').read_bytes(), persona_esperada=['11.111.111-1'])
+    assert lectura['ownership'] == 'VERIFICADA'
+    assert [(f['Programa'], f['Fecha egreso'], f['Causal egreso']) for f in lectura['filas']] == [
+        ('PRM - PROGRAMA FICTICIO UNO', '--', 'SIN INFORMACION'),
+        ('DCE - PROGRAMA FICTICIO DOS', '06-02-2026', 'EGRESO POR ENVÍO DE INFORME'),
+    ]
+    assert not lectura['vacio_explicito']  # la fila de relleno del pie no es un programa
+
+
+def test_historico_solo_con_la_tabla_lrpa_no_se_lee_como_proteccion():
+    texto = (FIXTURES / 'historial_menores_ficticio.html').read_text(encoding='utf-8')
+    sin_proteccion = texto[: texto.index('<table><tr><td colspan="19">')] + '</body></html>'
+    with pytest.raises(ValueError, match=HISTORICO_NO_VERIFICADA):
+        read_historico(sin_proteccion)
+
+
+def test_escritos_con_valores_en_minuscula_como_los_muestra_sitfa():
+    lectura = read_escritos((FIXTURES / 'escritos_ficticio.html').read_bytes())
+    (fila,) = lectura['filas']
+    assert (fila['Doc.'], fila['Tipo Escrito'], fila['Estado']) == ('', 'inf. cump programa ambulatorio', 'pendiente')
+
+
+def test_el_motor_reconoce_el_escrito_pendiente_aunque_venga_en_minuscula(tmp_path):
+    from historia_fixtures import INFORMES, fila
+    from test_integracion_20261118 import analizar, escritos
+
+    e = escritos(('inf. cump programa ambulatorio', 'pendiente'))
+    [f] = analizar(tmp_path, 'INFORMES', INFORMES, [fila(1, 'PRM Laja') + ['2026-09-20']], escritos={0: e}).rows
+    assert 'Pendiente de resolver, informe de avance.' in f.observation and f.actions == []
+
+
+def test_herramienta_consignar_sobre_una_sesion_guardada(tmp_path, capsys):
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
+    from consignar import main
+
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    sesion = tmp_path / 'sesion'
+    trabajo.save(sesion)
+    fila = trabajo.rows[0]
+    assert main([str(sesion), '--listar']) == 0 and f'{fila.id}\tFAE X' in capsys.readouterr().out
+    assert main([str(sesion), '--fila', fila.id, '--programa', 'fae  x']) == 0
+    cargado = Work_load(sesion)
+    assert 'FAE X' not in cargado.rows[0].observation and cargado.consignaciones == {fila.id: ['fae x']}
+    assert main([str(sesion), '--fila', fila.id, '--programa', 'FAE X']) == 1  # ya consignada
+    assert main([str(sesion), '--fila', 'no-existe', '--programa', 'FAE X']) == 1
+
+
+def Work_load(sesion):
+    from nurus.personal.work import Work
+
+    return Work.load(sesion, defaults())

@@ -26,7 +26,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 | 1 Base y línea base | HECHO | este registro |
 | 2 Dato de captura al motor (contrato aditivo) | HECHO en Python y Rust (lector); productor Python solo Escritos | `src/nurus/capture/contract.py` (1.2.0), `capture/escritos.py`, `rust/crates/flow-trabajo/src/{fuentes_nuevas,paquete}.rs` |
 | 3 Escritos en el detalle de causa | HECHO: lector HTML, Descargador Python y Descargador Rust (misma respuesta de Historia; ver `lecturas.rs::leer_escritos`, `exportar.rs::escritos_de_causa`). La extensión JS no necesita cambios para la muestra actual (la tabla ya viene en la respuesta); **otras versiones que cargan la pestaña al abrirla: PENDIENTE** | `src/nurus/escritos_html.py`, `src/nurus/capture/historias.py`, `descargador/export_csmp_capture.py::_escritos` |
-| 4 Ingreso Histórico Protección | PARCIAL: lector HTML, tabla del contrato, motor y **captura manual sin interfaz** del Descargador Python (`descargador/historico_manual.py::capturar`, `export_capture(historico=carpeta)`); pertenencia solo por RUT o nombre de ≥2 palabras visible. y el equivalente Rust (`flow-captura::leer_historico`, `flow-trabajo::historico_manual`, `exportar::Opciones.historico`; mismo `historico.json`). **Botón/control en la interfaz (Python y Rust): PENDIENTE** | `escritos_html.read_historico`, `descargador/historico_manual.py` |
+| 4 Ingreso Histórico Protección | PARCIAL (lectores ajustados a la estructura real «Nombre Proyecto»/LRPA): lector HTML, tabla del contrato, motor y **captura manual sin interfaz** del Descargador Python (`descargador/historico_manual.py::capturar`, `export_capture(historico=carpeta)`); pertenencia solo por RUT o nombre de ≥2 palabras visible. y el equivalente Rust (`flow-captura::leer_historico`, `flow-trabajo::historico_manual`, `exportar::Opciones.historico`; mismo `historico.json`). **Botón/control en la interfaz (Python y Rust): PENDIENTE** | `escritos_html.read_historico`, `descargador/historico_manual.py` |
 | 5 «Solo una vez» + primer nombre | HECHO (bitácora + marca local idempotente `Work.consignar`); **botón en la interfaz: PENDIENTE** | `motor/evidencia.py`, `Work.consignar` |
 | 6 Conservar cada vencimiento / fuentes | PARCIAL: asociación explícita por fecha proyectada; el agrupador `acumulado` sigue contando todas las fechas (decisión abajo) | `capture/escritos.py::evidencia_informe` |
 | 7 Motor y composición | HECHO Python y Rust (oráculo 929 casos + paquete) | `motor/reglas_*.py`, `flow-motor/src/{hist,reglas,ctx,lib}.rs` |
@@ -77,25 +77,38 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
    por lo que hoy rige solo la rama «único candidato». La asociación explícita está lista en motor/contrato/Rust pero sin productor real.
 7. Histórico: `ownership` VERIFICADA solo si el texto visible contiene RUT/nombre esperado; si no, INCIERTA (se continúa sin afirmar).
 
+## Hallazgos de las capturas de SITFA del usuario (19-nov-2026; solo estructura, valores ficticios en fixtures)
+- **Escritos** (N1): columnas `Doc.`, `Tipo Escrito`, `Solicitante`, `Estado`; valores en **minúscula** («inf. cump programa ambulatorio»,
+  «pendiente») y `Doc.` es solo un icono PDF (sin texto). La comparación ya es insensible a mayúsculas/tildes. **No hay folio, fecha ni
+  período visibles**: el enlace con la proyección no puede salir de la fila; rige «único candidato».
+- **Ingreso Histórico Protección** (N1): ventana «Historial Menores» (`PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante=…&RUT_DV=…`). La
+  columna del programa se llama **«Nombre Proyecto»** (no «Programa»), el encabezado no es la primera fila (hay banda de título),
+  existe otra tabla **«Ingreso Historico(LRPA)»** con casi las mismas columnas y hay una fila de relleno al pie. Vigente = `Fecha Egreso`
+  `--` y `Causal Egreso` `SIN INFORMACION` (confirmado en la fila real). Lectores Python y Rust adaptados (`fixtures_integracion/`).
+- **Pertenencia**: la dirección de la ventana pide el RUT de la persona; `historico_manual.rut_de_url` lo usa como prueba fuerte (y como
+  desmentido si pide otro RUT). No se guarda la dirección.
+- **N2 (riesgo)**: el nombre del programa del histórico («PRM - NOMBRE») debe ser igual, con la normalización de FLOW (guiones y tildes), al de
+  la columna programa de Espera/Cumplimiento; si SITFA los escribe distinto, «otro programa» incluirá al actual. Comprobar con un caso real.
+
 ## Pendientes (en orden de valor) — para quien continúe
-1. **Productor real de la asociación explícita** (N3: no hay muestra poblada de Escritos con `Doc.` ni del calendario por proyección; los HAR
-   traen Escritos con 0 filas). Definir con una muestra anónima `extraer_estructura_*` cómo enlazar `Doc.` con Historia/calendario antes de poblar `linked_*`.
-2. **Histórico de Protección, control de interfaz**: el botón «Capturar histórico de la persona seleccionada» (Python/Tk y Rust/egui) que
-   llame a `historico_manual.capturar` con el HTML de la vista abierta a mano y el `SITFA_PERSONA_RUS` de la fila (sin consultas por RUT);
-   Ojo: el lote ficticio del Descargador no trae `person_id` y la verificación de pertenencia solo vale con RUT/nombre completo visibles en la vista. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
-3. **Interfaz**: botón «marcar constancia como consignada» (`Work.consignar`), visualización de las marcas nuevas, guía visual.
-4. **Escenario 9 incompleto**: faltan selección oculta y reintento tras cancelación (de interfaz/cola; cambio de corte, recálculo y producto editado sí).
-5. Rust: la **consignación** ya tiene núcleo (`Trabajo::consignar`, `Trabajo.consignaciones` persistido y conservado por `almacen::recuperar`,
-   `paquete::importar_con(…, &trabajo.consignaciones)` recalcula sin repetir la constancia; prueba `consignar_no_repite_la_constancia…`). Falta el **botón**
-   en ambas interfaces: tras `consignar`, volver a importar el paquete con `importar_con`. (Solo el flujo por paquete usa las fuentes nuevas.)
-6. ~~Anonimizador~~ HECHO: `personal/anonymize_package.py` trata las tablas nuevas (`requester` como persona; `linked_ingreso_id` comparte seudónimo con `ingreso_id`; literales del motor intactos). Prueba: `test_el_anonimizador_trata_las_tablas_nuevas…`.
-7. E3 (revisión por otro agente) exigida por `AGENTS.md`/decisión j: tocan `motor/`, `textos_base.json`, `contracts/` y el contrato. Nada está «aceptado».
-8. CI Windows/SITFA y `cargo build --release --locked -p flow`; `tools/verificar_wp.py` (hoy falla por entorno).
+1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
+   identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar
+   **solo la salida** (anónima: nombres de atributos, función del onclick y tipo de argumentos, sin valores). Con eso se podrá poblar `linked_*`.
+2. **Histórico — uso hoy**: sin botón de captura en las interfaces. Camino sin interfaz: guardar la ventana como HTML y ejecutar
+   `python descargador/historico_manual.py --carpeta LOTE --html vista.html --tribunal COD --person-id ID --rut RUT [--url DIRECCION]`
+   o `flow historico VISTA.html --carpeta LOTE --tribunal COD --persona ID --rut RUT [--url DIRECCION]`; luego crear el paquete con la carpeta
+   (`export_capture(historico=LOTE)` / `exportar::Opciones.historico`). Falta el control de captura dentro de las ventanas.
+3. **Consignación — uso hoy**: Rust tiene botón en el detalle de Trabajo («Marcar «X» como consignada»), `flow consignar PAQUETE --fila ID
+   --programa P --archivo consignaciones.json` y `--consignaciones` en `observar/producir`. Python: `python tools/consignar.py SESION --listar |
+   --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
+4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
+5. E3 (revisión por otro agente) por tocar `motor/`, `textos_base.json`, `contracts/`. Nada está «aceptado».
+6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 323 pruebas
+cd rust && cargo test --workspace --locked                                       # 328 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

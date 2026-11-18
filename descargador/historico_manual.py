@@ -7,7 +7,10 @@ seleccionada. Si no se prueba la pertenencia, la captura queda INCIERTA y el mot
 fuentes sigue su curso. El manifiesto `historico.json` lo lee `export_csmp_capture._historico`.
 """
 
+import argparse
 import json
+import re
+import sys
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
@@ -29,9 +32,23 @@ def _estado(carpeta):
     return {'version': 1, 'tipo': 'HISTORICO_PROTECCION', 'capturas': {}}
 
 
-def capturar(carpeta, html, persona, *, capturada=None):
+def _rut_limpio(texto):
+    return re.sub(r'[^0-9kK]', '', str(texto or '')).upper()
+
+
+def rut_de_url(url):
+    """RUT (sin puntos ni guion) que la propia dirección de la vista pide (`RUT_Litigante` + `RUT_DV`), o ''. Es la prueba más
+    fuerte de pertenencia: la ventana se abrió para esa persona. No se guarda la dirección (puede traer valores de sesión)."""
+    cuerpo = re.search(r'[?&]RUT_Litigante=(\d{1,9})(?:&|$)', str(url or ''))
+    dv = re.search(r'[?&]RUT_DV=([0-9kK])(?:&|$)', str(url or ''))
+    return (cuerpo.group(1) + dv.group(1).upper()) if cuerpo and dv else ''
+
+
+def capturar(carpeta, html, persona, *, capturada=None, url=''):
     """Guarda una captura manual. `persona`: dict con `tribunal` (código), `tribunal_nombre`, `person_id` (SITFA_PERSONA_RUS de
-    la fila seleccionada), `rut` y `nombre` (solo para comprobar la pertenencia en el texto visible; no se guardan).
+    la fila seleccionada), `rut` y `nombre` (solo para comprobar la pertenencia en el texto visible; no se guardan). `url`: la
+    dirección de la ventana, solo para leer el RUT que pide: si coincide con el de la persona, la pertenencia queda verificada;
+    si pide otro RUT, queda incierta aunque el texto coincida.
     Devuelve la entrada del manifiesto. Vuelve a capturar a la misma persona: reemplaza la anterior (la última manda)."""
     carpeta = Path(carpeta)
     datos = html.encode('utf-8') if isinstance(html, str) else bytes(html)
@@ -57,10 +74,14 @@ def capturar(carpeta, html, persona, *, capturada=None):
     except ValueError as exc:
         entrada.update(estado='FALLIDA', error=str(exc), ownership='INCIERTA', filas=[], advertencias=[mensaje(str(exc))])
     else:
+        del_url, esperado = rut_de_url(url), _rut_limpio(persona.get('rut', ''))
+        propiedad = lectura['ownership']
+        if del_url and esperado:
+            propiedad = 'VERIFICADA' if del_url == esperado else 'INCIERTA'
         entrada.update(
             estado='VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'LEIDA',
             error='',
-            ownership=lectura['ownership'],
+            ownership=propiedad,
             filas=[
                 {'fila': f['fila'], 'programa': f['Programa'], 'fecha_egreso': f['Fecha egreso'], 'causal_egreso': f['Causal egreso']}
                 for f in lectura['filas']
@@ -86,3 +107,29 @@ def cargar(carpeta):
         if not ruta.is_file() or sha256(ruta.read_bytes()).hexdigest() != entrada['sha256']:
             raise ValueError('El respaldo de un histórico no coincide con su huella.')
     return estado, list(estado['capturas'].values())
+
+
+def main(argv=None):
+    """Captura manual desde un HTML guardado de la ventana «Historial Menores» (sin interfaz):
+    python historico_manual.py --carpeta LOTE --html vista.html --tribunal 113 --person-id ID --rut 11.111.111-1
+    [--nombre 'Nombre Apellido'] [--tribunal-nombre ...] [--url 'DIRECCION_DE_LA_VENTANA']"""
+    ap = argparse.ArgumentParser(description=main.__doc__)
+    ap.add_argument('--carpeta', required=True)
+    ap.add_argument('--html', required=True)
+    ap.add_argument('--tribunal', required=True)
+    ap.add_argument('--person-id', required=True)
+    ap.add_argument('--rut', default='')
+    ap.add_argument('--nombre', default='')
+    ap.add_argument('--tribunal-nombre', default='')
+    ap.add_argument('--url', default='')
+    a = ap.parse_args(argv)
+    persona = {'tribunal': a.tribunal, 'tribunal_nombre': a.tribunal_nombre, 'person_id': a.person_id, 'rut': a.rut, 'nombre': a.nombre}
+    entrada = capturar(a.carpeta, Path(a.html).read_bytes(), persona, url=a.url)
+    print(f"{entrada['estado']} · pertenencia {entrada['ownership']} · {len(entrada['filas'])} programas")
+    for f in entrada['filas']:
+        print('  ', f['programa'], '|', f['fecha_egreso'], '|', f['causal_egreso'])
+    return 0 if entrada['estado'] != 'FALLIDA' else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

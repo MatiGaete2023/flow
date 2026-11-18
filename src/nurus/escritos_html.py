@@ -18,7 +18,7 @@ from lxml import html
 from nurus.bitacora_html import decode_snapshot, normalize
 
 ESCRITOS_HEADERS = ('Doc.', 'Tipo Escrito', 'Solicitante', 'Estado')
-HISTORICO_HEADERS = ('Programa', 'Fecha egreso', 'Causal egreso')
+HISTORICO_HEADERS = ('Programa', 'Fecha egreso', 'Causal egreso')  # «Programa» = «Nombre Proyecto» en SITFA
 ESCRITOS_NO_VERIFICADA = 'ESCRITOS_NO_VERIFICADA'
 ESCRITOS_AUSENTE = 'ESCRITOS_AUSENTE'
 HISTORICO_NO_VERIFICADA = 'HISTORICO_NO_VERIFICADA'
@@ -105,16 +105,78 @@ def read_escritos(data, *, source='', captured_at=''):
     }
 
 
+# SITFA (Historial Menores) llama «Nombre Proyecto» a la columna del programa; «Programa» se acepta por compatibilidad.
+HISTORICO_PROGRAMA = ('Nombre Proyecto', 'Programa')
+_TITULO_PROTECCION = 'ingreso historico proteccion'
+
+
+def _filas_directas(tabla):
+    return tabla.xpath('./thead/tr | ./tr | ./tbody/tr')
+
+
+def _tablas_historico(documento):
+    """[(fila de encabezado, columnas por nombre, cabecera original, filas de datos)] de las tablas con las columnas del
+    histórico de protección. La vista trae también «Ingreso Historico(LRPA)» con casi las mismas columnas: se descarta por
+    su título (el más cercano antes del encabezado). El encabezado puede no ser la primera fila (banda de título)."""
+    elementos = list(documento.iter())  # mantiene vivos los proxies: id() de lxml no es estable si se sueltan
+    orden = {el: i for i, el in enumerate(elementos)}
+    titulos = []
+    for el in elementos:
+        if not isinstance(el.tag, str) or el.tag in ('script', 'style', 'table', 'tr', 'tbody', 'thead'):
+            continue
+        texto = normalize(_texto(el))
+        if texto == _TITULO_PROTECCION:
+            titulos.append((orden[el], True))
+        elif texto.startswith('ingreso historico') and 'lrpa' in texto and len(texto) < 40:
+            titulos.append((orden[el], False))
+    egreso = [normalize(h) for h in HISTORICO_HEADERS[1:]]
+    programas = [normalize(h) for h in HISTORICO_PROGRAMA]
+    salida = []
+    for tabla in documento.xpath('//table'):
+        filas = _filas_directas(tabla)
+        for i, fila in enumerate(filas):
+            originales = [_texto(c) for c in fila.xpath('./th | ./td')]
+            cabecera = [normalize(h) for h in originales]
+            if all(e in cabecera for e in egreso) and any(p in cabecera for p in programas):
+                previos = [es_proteccion for idx, es_proteccion in titulos if idx < orden[fila]]
+                if titulos and not (previos and previos[-1]):
+                    break  # tabla de otro historial (LRPA)
+                salida.append((fila, cabecera, originales, filas[i + 1 :]))
+                break
+    return salida
+
+
 def read_historico(data, *, source='', captured_at='', persona_esperada=()):
-    """Tabla visible de Ingreso Histórico Protección. `persona_esperada`: textos (RUT, nombre) de la persona de la fila
-    seleccionada; la vista es de esa persona solo si alguno aparece en el documento. Sin ellos, o sin coincidencia, la
-    pertenencia queda INCIERTA (se puede continuar con las demás fuentes, pero no se afirma otro programa)."""
+    """Tabla visible de Ingreso Histórico Protección (programa = «Nombre Proyecto»). `persona_esperada`: textos (RUT,
+    nombre) de la persona de la fila seleccionada; la vista es de esa persona solo si alguno aparece en el documento. Sin
+    ellos, o sin coincidencia, la pertenencia queda INCIERTA (se puede continuar con las demás fuentes, pero no se afirma
+    otro programa). Las filas devuelven siempre las claves «Programa», «Fecha egreso» y «Causal egreso»."""
     documento, crudo = _documento(data)
-    tablas = _tablas_con(documento, HISTORICO_HEADERS)
+    tablas = _tablas_historico(documento)
     if len(tablas) != 1:
         raise ValueError(HISTORICO_NO_VERIFICADA)
-    posiciones, cabecera, filas = tablas[0]
-    resultado, advertencias = _leer_filas(posiciones, cabecera, filas, HISTORICO_HEADERS, FILA_CORTA)
+    _, cabecera, originales, filas = tablas[0]
+    columna_programa = next(cabecera.index(normalize(h)) for h in HISTORICO_PROGRAMA if normalize(h) in cabecera)
+    posiciones = {
+        'Programa': columna_programa,
+        'Fecha egreso': cabecera.index(normalize('Fecha egreso')),
+        'Causal egreso': cabecera.index(normalize('Causal egreso')),
+    }
+    resultado, advertencias = [], []
+    for numero, fila in enumerate(filas, 1):
+        celdas = fila.xpath('./td | ./th')
+        valores = [_texto(c) for c in celdas]
+        if [normalize(v) for v in valores] == cabecera:
+            continue
+        if not any(valores):
+            continue  # fila de relleno al pie de la tabla
+        if len(celdas) != len(cabecera):
+            advertencias.append({'codigo': FILA_CORTA, 'fila': numero})
+            continue
+        item = {clave: valores[i] for clave, i in posiciones.items()}
+        item['fila'] = numero
+        item['literal'] = dict(zip(originales, valores))
+        resultado.append(item)
     visible = ' ' + normalize(_texto(documento).replace('.', '')) + ' '
     pruebas = []
     for p in persona_esperada:
@@ -125,7 +187,7 @@ def read_historico(data, *, source='', captured_at='', persona_esperada=()):
     verificada = any(p in visible for p in pruebas)
     return {
         'filas': resultado,
-        'vacio_explicito': not filas,
+        'vacio_explicito': not resultado and not advertencias,
         'ownership': 'VERIFICADA' if verificada else 'INCIERTA',
         'advertencias': advertencias,
         'sha256': sha256(crudo).hexdigest(),

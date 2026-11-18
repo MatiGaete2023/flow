@@ -348,50 +348,81 @@ fn leer_escritos(doc: &Html) -> Result<Option<Value>, &'static str> {
     Ok(Some(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"advertencias":advertencias})))
 }
 
-const HISTORICO: [&str; 3] = ["Programa", "Fecha egreso", "Causal egreso"];
+const HISTORICO_EGRESO: [&str; 2] = ["Fecha egreso", "Causal egreso"];
+/// SITFA llama «Nombre Proyecto» a la columna del programa; «Programa» se acepta por compatibilidad.
+const HISTORICO_PROGRAMA: [&str; 2] = ["Nombre Proyecto", "Programa"];
 
 /// Tabla visible de «Ingreso Histórico Protección» de la persona seleccionada (`nurus/escritos_html.py::read_historico`).
-/// Captura manual: no sigue enlaces ni consulta por RUT. La pertenencia a la persona es VERIFICADA solo si el texto visible
-/// contiene su RUT o su nombre completo (≥ 2 palabras); si no, INCIERTA y el motor no afirma otro programa.
+/// Captura manual: no sigue enlaces ni consulta por RUT. La vista trae también «Ingreso Historico(LRPA)» con casi las mismas
+/// columnas: se descarta por su título (el más cercano antes del encabezado, que puede no ser la primera fila). La pertenencia a
+/// la persona es VERIFICADA solo si el texto visible contiene su RUT o su nombre completo (≥ 2 palabras); si no, INCIERTA.
 /// Errores: `HISTORICO_NO_VERIFICADA` (sin tabla única legible) o la respuesta incompleta/de sesión.
 pub fn leer_historico(datos: &[u8], fuente: &str, capturada: &str, persona_esperada: &[&str]) -> Result<Value, String> {
     let doc = documento(datos)?;
-    let pedidos: Vec<String> = HISTORICO.iter().map(|h| normalizar(h)).collect();
+    let orden: std::collections::HashMap<_, usize> = doc.root_element().descendants().enumerate().map(|(i, n)| (n.id(), i)).collect();
+    let mut titulos: Vec<(usize, bool)> = vec![];
+    for e in doc.root_element().descendants().filter_map(ElementRef::wrap) {
+        if matches!(e.value().name(), "script" | "style" | "table" | "tr" | "tbody" | "thead") {
+            continue;
+        }
+        let t = normalizar(&texto(e));
+        if t == "ingreso historico proteccion" {
+            titulos.push((orden[&e.id()], true));
+        } else if t.starts_with("ingreso historico") && t.contains("lrpa") && t.len() < 40 {
+            titulos.push((orden[&e.id()], false));
+        }
+    }
+    let egreso: Vec<String> = HISTORICO_EGRESO.iter().map(|h| normalizar(h)).collect();
+    let programas: Vec<String> = HISTORICO_PROGRAMA.iter().map(|h| normalizar(h)).collect();
     let mut tablas = vec![];
     for tabla in doc.select(&sel("table")) {
         let filas = filas(tabla);
-        let Some(primera) = filas.first() else { continue };
-        let originales: Vec<String> = celdas(*primera).iter().map(|e| texto(*e)).collect();
-        let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
-        if pedidos.iter().all(|p| cabecera.contains(p)) {
-            tablas.push((cabecera, filas));
+        for (i, fila) in filas.iter().enumerate() {
+            let originales: Vec<String> = celdas(*fila).iter().map(|e| texto(*e)).collect();
+            let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
+            if egreso.iter().all(|e| cabecera.contains(e)) && programas.iter().any(|p| cabecera.contains(p)) {
+                let previo = titulos.iter().filter(|(idx, _)| *idx < orden[&fila.id()]).next_back();
+                if !titulos.is_empty() && !previo.is_some_and(|(_, es)| *es) {
+                    break; // tabla de otro historial (LRPA)
+                }
+                tablas.push((cabecera, filas[i + 1..].to_vec()));
+                break;
+            }
         }
     }
     if tablas.len() != 1 {
         return Err("HISTORICO_NO_VERIFICADA".into());
     }
     let (cabecera, filas) = tablas.pop().unwrap();
-    let posicion = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let col_programa = programas.iter().find_map(|p| cabecera.iter().position(|c| c == p)).unwrap();
+    let col = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let (col_fecha, col_causal) = (col("Fecha egreso"), col("Causal egreso"));
     let (mut resultado, mut advertencias) = (vec![], vec![]);
-    for (i, fila) in filas.iter().skip(1).enumerate() {
+    for (i, fila) in filas.iter().enumerate() {
         let c = celdas(*fila);
         let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
-        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) {
-            continue;
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) || valores.iter().all(|v| v.is_empty()) {
+            continue; // encabezado repetido o fila de relleno
         }
         if c.len() != cabecera.len() {
             advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
             continue;
         }
-        resultado.push(json!({"fila":i + 1,"programa":valores[posicion("Programa")],"fecha_egreso":valores[posicion("Fecha egreso")],"causal_egreso":valores[posicion("Causal egreso")]}));
+        resultado.push(json!({"fila":i + 1,"programa":valores[col_programa],"fecha_egreso":valores[col_fecha],"causal_egreso":valores[col_causal]}));
     }
     let visible = format!(" {} ", normalizar(&texto(doc.root_element()).replace('.', "")));
     let verificada = persona_esperada.iter().any(|p| {
         let limpio = normalizar(&p.replace('.', ""));
         (limpio.chars().any(|c| c.is_ascii_digit()) || limpio.split_whitespace().count() >= 2) && visible.contains(&format!(" {limpio} "))
     });
-    Ok(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"ownership":if verificada {"VERIFICADA"} else {"INCIERTA"},
+    Ok(json!({"vacio_explicito":resultado.is_empty() && advertencias.is_empty(),"filas":resultado,"ownership":if verificada {"VERIFICADA"} else {"INCIERTA"},
         "advertencias":advertencias,"sha256":crate::lotes::huella(datos),"source":fuente,"captured_at":capturada}))
+}
+
+/// Solo para pruebas y herramientas: la bandeja de Escritos de un HTML suelto (misma lectura que dentro de la historia).
+pub fn leer_escritos_html(datos: &[u8]) -> Result<Option<Value>, String> {
+    let doc = documento(datos)?;
+    leer_escritos(&doc).map_err(String::from)
 }
 
 pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {

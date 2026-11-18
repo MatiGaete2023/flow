@@ -18,6 +18,29 @@ pub struct Persona<'a> {
     pub person_id: &'a str,
     pub rut: &'a str,
     pub nombre: &'a str,
+    /// Dirección de la ventana, solo para leer el RUT que pide (no se guarda). Vacía si no se conoce.
+    pub url: &'a str,
+}
+
+fn rut_limpio(t: &str) -> String {
+    t.chars().filter(|c| c.is_ascii_digit() || matches!(c, 'k' | 'K')).collect::<String>().to_uppercase()
+}
+
+/// RUT (sin puntos ni guion) que la propia dirección de la vista pide (`RUT_Litigante` + `RUT_DV`), o vacío. Es la prueba más
+/// fuerte de pertenencia: la ventana se abrió para esa persona.
+pub fn rut_de_url(url: &str) -> String {
+    let valor = |clave: &str| -> Option<&str> {
+        let patron = format!("{clave}=");
+        let inicio = url.find(&format!("?{patron}")).or_else(|| url.find(&format!("&{patron}")))? + 1 + patron.len();
+        let fin = url[inicio..].find('&').map(|f| inicio + f).unwrap_or(url.len());
+        Some(&url[inicio..fin])
+    };
+    match (valor("RUT_Litigante"), valor("RUT_DV")) {
+        (Some(c), Some(d)) if (1..=9).contains(&c.len()) && c.bytes().all(|b| b.is_ascii_digit()) && d.len() == 1 && rut_limpio(d) == d.to_uppercase() => {
+            format!("{c}{}", d.to_uppercase())
+        }
+        _ => String::new(),
+    }
 }
 
 fn huella(datos: &[u8]) -> String {
@@ -48,7 +71,12 @@ pub fn capturar(carpeta: &Path, html: &[u8], persona: &Persona, capturada: &str)
         Ok(l) => {
             entrada["estado"] = json!(if l["vacio_explicito"] == true { "VACIA_COMPROBADA" } else { "LEIDA" });
             entrada["error"] = json!("");
-            entrada["ownership"] = l["ownership"].clone();
+            let (de_url, esperado) = (rut_de_url(persona.url), rut_limpio(persona.rut));
+            entrada["ownership"] = if !de_url.is_empty() && !esperado.is_empty() {
+                json!(if de_url == esperado { "VERIFICADA" } else { "INCIERTA" })
+            } else {
+                l["ownership"].clone()
+            };
             entrada["filas"] = l["filas"].clone();
             entrada["advertencias"] = json!(l["advertencias"].as_array().map(|a| a.iter().map(|x| x["codigo"].clone()).collect::<Vec<_>>()).unwrap_or_default());
         }

@@ -95,6 +95,22 @@ pub struct Trabajo {
 }
 
 impl Trabajo {
+    /// Al recalcular una propuesta (p. ej. tras consignar una constancia) se conservan las ediciones del funcionario: la
+    /// observación editada, la marca de revisada, el estado de la sesión y las consignaciones de `anterior`.
+    pub fn conservar_de(&mut self, anterior: &Trabajo) {
+        for (fila, previa) in self.filas.iter_mut().zip(&anterior.filas) {
+            if fila.id != previa.id {
+                continue;
+            }
+            if previa.editada() {
+                fila.observacion = previa.observacion.clone();
+            }
+            fila.revisada = previa.revisada;
+        }
+        self.sesion = anterior.sesion.clone();
+        self.consignaciones = anterior.consignaciones.clone();
+    }
+
     /// Registra que el funcionario consignó la constancia de ingreso efectivo a `programa` para esa fila. Idempotente
     /// (la clave ignora mayúsculas, tildes y espacios). Devuelve `true` si es nueva: la fila debe recalcularse con
     /// `paquete::importar_con(…, &trabajo.consignaciones)` para que la propuesta deje de repetirla.
