@@ -10,13 +10,18 @@ import time
 import zlib
 
 
-def png(ppm):
+def leer_ppm(ppm):
     cabecera, size, limite, pixels = ppm.read_bytes().split(b"\n", 3)
     if cabecera != b"P6" or limite != b"255":
         raise ValueError("Captura PPM no admitida")
     width, height = map(int, size.split())
     if len(pixels) != width * height * 3:
         raise ValueError("Captura incompleta")
+    return width, height, pixels
+
+
+def png(ppm, leida=None):
+    width, height, pixels = leida or leer_ppm(ppm)
     def chunk(tipo, datos):
         return struct.pack(">I", len(datos)) + tipo + datos + struct.pack(">I", zlib.crc32(tipo + datos))
     filas = b"".join(b"\x00" + pixels[y * width * 3:(y + 1) * width * 3] for y in range(height))
@@ -28,9 +33,7 @@ def png(ppm):
     return destino
 
 
-def miniatura(ppm):
-    _, size, _, pixels = ppm.read_bytes().split(b"\n", 3)
-    width, height = map(int, size.split())
+def miniatura(width, height, pixels):
     tw, th = 320, 180
     copia = bytearray(tw * th * 3)
     for y in range(th):
@@ -94,11 +97,11 @@ def main():
                 ppm = destino / f"{nombre}.ppm"
                 if codigo or not ppm.is_file():
                     raise RuntimeError(f"Falló captura {nombre}: código {codigo}: {stderr[-3000:]}")
-                _, _, _, pixeles = ppm.read_bytes().split(b"\n", 3)
-                if pixeles.count(bytes((32, 36, 58))) < ancho * alto // 20:
+                leida = leer_ppm(ppm)
+                if leida[2].count(bytes((32, 36, 58))) < leida[0] * leida[1] // 20:
                     raise RuntimeError(f"{nombre}: no se ve el fondo índigo de Estudio D")
-                vistas.setdefault((ancho, alto, escala), []).append(miniatura(ppm))
-                imagen = png(ppm)
+                vistas.setdefault((ancho, alto, escala), []).append(miniatura(*leida))
+                imagen = png(ppm, leida)
                 datos = json.loads(imagen.with_suffix(".json").read_text())
                 if datos["pixeles"] != [ancho, alto]:
                     raise RuntimeError(f"Tamaño observado distinto del solicitado: {datos}")

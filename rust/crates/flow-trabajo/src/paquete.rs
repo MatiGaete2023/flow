@@ -504,6 +504,8 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
     let mut salida: HashMap<Identidad, EvidenciaIngreso> = HashMap::new();
     let mut consultas: HashMap<String, Identidad> = HashMap::new();
     let mut rangos: HashMap<String, Option<(Fecha, Fecha)>> = HashMap::new();
+    // Huella de la respuesta SITFA que acredita el alcance: cada fila exportada debe venir de ella.
+    let mut huellas_alcance: HashMap<String, String> = HashMap::new();
     let mut ilegible = false;
     for q in c.tablas.get("consultas").into_iter().flatten().filter(|q| dato(q,"screen") == "bitacoras") {
         let Ok(mut filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { ilegible = true; continue; };
@@ -541,6 +543,12 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
                 && alcance_fuente["html_sha256"].as_str().is_some_and(|hash| {
                     hash.len() == 64 && hash.bytes().all(|b| b.is_ascii_hexdigit())
                 });
+            if captura_verificada {
+                let huella = alcance_fuente["html_sha256"].as_str().unwrap_or("").to_ascii_lowercase();
+                if let Some(previa) = huellas_alcance.insert(dato(q,"query_id").to_string(), huella.clone()) {
+                    if previa != huella { d.contradictoria = true; }
+                }
+            }
             let cobertura_declarada = captura_verificada
                 || matches!(dato(q,"coverage"),"COMPLETA"|"VACIA_COMPROBADA");
             if raw["completa"] == true && cobertura_declarada &&
@@ -591,6 +599,9 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         } else {false};
         let d = salida.entry(ident).or_default();
         if !verificada(e) || !consulta_verificada { d.contradictoria = true; }
+        if huellas_alcance.get(dato(e,"query_id")).is_some_and(|h| !dato(e,"source_sha256").eq_ignore_ascii_case(h)) {
+            d.contradictoria = true;
+        }
         if !dato(e,"text").trim().is_empty() {
             let consulta = dato(e,"query_id");
             if let Some((desde,hasta)) = rangos.get(consulta).copied().flatten() {

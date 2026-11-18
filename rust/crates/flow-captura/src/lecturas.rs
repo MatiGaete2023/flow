@@ -276,17 +276,18 @@ pub(crate) fn leer_bitacora_en_captura(
 }
 
 fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
-    let controles = sel("iframe, frame, .pagination, .paginacion, .paginador, .pager, [data-page], [data-total-pages], a[rel='next']");
+    const NOMBRES: [&str; 6] = ["pagina", "nropag", "numpag", "pagenum", "fechadesde", "fechahasta"];
+    const ROTULOS: [&str; 7] = ["siguiente", "anterior", "proxima", "ultima pagina", "mostrar mas", "cargar mas", "ver mas"];
+    let controles = sel("iframe, frame, .pagination, .paginacion, .paginador, .pager, [data-page], [data-total-pages], a[rel='next'], a[rel='prev']");
     let posible_recorte = doc.select(&controles).next().is_some()
-        || doc.select(&sel("input[name], select[name], a, button")).any(|nodo| {
-            let nombre = nodo.value().attr("name").unwrap_or("").to_ascii_lowercase();
-            let rotulo = normalizar(&texto(nodo));
-            nombre.contains("pagina")
-                || nombre.contains("nropag")
-                || nombre.contains("numpag")
-                || nombre.contains("fechadesde")
-                || nombre.contains("fechahasta")
-                || matches!(rotulo.as_str(), "siguiente" | "siguiente pagina" | "mostrar mas" | "cargar mas")
+        || doc.select(&sel("input, select, a, button")).any(|nodo| {
+            let atributo = |k| nodo.value().attr(k).unwrap_or("");
+            let nombre = format!("{} {}", atributo("name"), atributo("id")).to_ascii_lowercase().replace(['_', '-'], "");
+            // El value de un campo oculto puede ser texto de observación; solo cuenta en botones.
+            let boton = nodo.value().name() == "input"
+                && matches!(atributo("type").to_ascii_lowercase().as_str(), "button" | "submit" | "image" | "reset");
+            let rotulo = normalizar(&format!("{} {}", texto(nodo), if boton { atributo("value") } else { "" }));
+            NOMBRES.iter().any(|n| nombre.contains(n)) || ROTULOS.iter().any(|r| rotulo.contains(r))
         });
     if posible_recorte {
         "PARCIAL"
@@ -453,6 +454,37 @@ pub fn leer_calendario(datos: &[u8], args: &[String], fuente: &str, capturada: &
     Ok(
         json!({"tribunal_codigo":tribunal,"causa_id":causa,"ingreso_id":ingreso,"proyecciones":proyecciones,"plazo_remision_meses":plazo("plazo remision"),"plazo_intervencion_meses":plazo("plazo intervencion"),"source":fuente,"captured_at":capturada,"html_sha256":crate::lotes::huella(datos)}),
     )
+}
+
+#[cfg(test)]
+mod pruebas_cobertura_bitacora {
+    use super::{cobertura_bitacora, Html};
+
+    fn cobertura(extra: &str) -> &'static str {
+        let html = format!(
+            "<html><body><form><input type=\"hidden\" name=\"HOBS_Centro_44\" value=\"Ver más antecedentes\">\
+             <table id=\"TablaInforme\"><tr><td>Fecha</td></tr></table>{extra}</form></body></html>"
+        );
+        cobertura_bitacora(&Html::parse_document(&html), false)
+    }
+
+    #[test]
+    fn controles_de_recorte_impiden_acreditar_completitud() {
+        assert_eq!(cobertura(""), "COMPLETA", "el texto de una observación oculta no es un control");
+        for control in [
+            "<button name=\"NUM_Pagina\">Siguiente</button>",
+            "<input type=\"button\" value=\"Siguiente »\" onclick=\"ir(2)\">",
+            "<a href=\"#\">Página siguiente</a>",
+            "<a href=\"#\">&lt;&lt; Anterior</a>",
+            "<a href=\"#\">Ver más</a>",
+            "<input type=\"hidden\" id=\"nro-pagina\" value=\"2\">",
+            "<select name=\"FECHA_Desde\"></select>",
+            "<a rel=\"prev\" href=\"#\">1</a>",
+        ] {
+            assert_eq!(cobertura(control), "PARCIAL", "{control}");
+        }
+        assert_eq!(cobertura_bitacora(&Html::parse_document("<html><body></body></html>"), true), "VACIA_COMPROBADA");
+    }
 }
 
 #[cfg(test)]

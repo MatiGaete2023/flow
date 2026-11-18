@@ -2040,12 +2040,17 @@ mod pruebas_captura {
     static SECUENCIA: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
     fn preparar() -> (PathBuf, flow_captura::lotes::Resumen) {
-        let base = std::env::temp_dir().join(format!(
+        preparar_en(&std::env::temp_dir().join(format!(
             "flow-ui-ficticia-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos(),
             SECUENCIA.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        ));
+        )))
+    }
+
+    /// `base` no debe existir. Recolección trata las carpetas vecinas como lotes hermanos.
+    fn preparar_en(base: &std::path::Path) -> (PathBuf, flow_captura::lotes::Resumen) {
+        let base = base.to_path_buf();
         std::fs::create_dir(&base).unwrap();
         let datos = std::fs::read(format!("{}/../../../docs/evidencia_p0/golden/Origen_ESPERA.xlsx", env!("CARGO_MANIFEST_DIR"))).unwrap();
         let sha256 = flow_captura::lotes::huella(&datos);
@@ -2184,16 +2189,10 @@ mod pruebas_captura {
                 r["params"]=payload["params"].clone();Ok(r)
             }
         }
-        let (preparacion, mut resumen) = preparar();
-        // Recolección reutiliza lecturas de lotes hermanos. Aísla el fixture de
-        // otros casos paralelos con la misma identidad y fecha ficticias.
+        // Recolección reutiliza lecturas de lotes hermanos. Un padre propio aísla el
+        // fixture de otros casos paralelos con la misma identidad y fecha ficticias.
         let temporal = tempfile::tempdir().unwrap();
-        let base = temporal.path().join("lote");
-        std::fs::create_dir(&base).unwrap();
-        for archivo in &resumen.archivos {
-            std::fs::copy(preparacion.join(&archivo.nombre), base.join(&archivo.nombre)).unwrap();
-        }
-        std::fs::remove_dir_all(preparacion).unwrap();
+        let (base, mut resumen) = preparar_en(&temporal.path().join("lote"));
         resumen.lote.lecturas.bitacoras=true;resumen.lote.lecturas.meses=4;
         let paginas:Vec<serde_json::Value>=serde_json::from_str(include_str!("../../flow-captura/tests/datos/vinculos_ficticios.json")).unwrap();
         let mut app=App::con_datos(base.join("datos"),None);app.corte="20/10/2026".into();app.cargar(base.join("consulta-001-p001-de-001.xls"));
@@ -2267,7 +2266,6 @@ mod pruebas_captura {
         let producto=flow_productos::revision::exportar(&informe,None,&salida,&AtomicBool::new(false)).unwrap();
         assert!(!std::fs::read_to_string(producto.json).unwrap().contains("ANTIGUA_NO_PERSISTIR"));
         assert_eq!(std::fs::read(&ruta_original).unwrap(),original);
-        std::fs::remove_dir_all(base).unwrap();
     }
 
     #[test]
