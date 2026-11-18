@@ -54,5 +54,8 @@
  "HISTORIA.R11_ORDEN": "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se decretó orden de búsqueda.",
  "HISTORIA.R11_PIDE_CUENTA": "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda.",
  "HISTORIA.R11_SIN_EFECTO": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda.",
- "HISTORIA.R11_TERMINO": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda."
+ "HISTORIA.R11_TERMINO": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
+ "HISTORIA.OTRO_PROGRAMA": "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}.",
+ "HISTORIA.INFORME_AVANCE_PENDIENTE": "Pendiente de resolver, informe de avance.",
+ "HISTORIA.INFORME_REVISAR_ASOCIACION": "Se hace presente que el informe de {PROGRAMA} registra ingreso a folio {FOLIO} y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada {FECHA_PROYECTADA}."
 }

@@ -2,7 +2,7 @@
 //! (`motor/contexto.py`, `motor/textos.py`, `motor/composicion.py`).
 
 use chrono::NaiveDate;
-use flow_dominio::{Historia, Observacion, Tramite};
+use flow_dominio::{Escritos, EvidenciaInforme, Historia, Historico, Observacion, Tramite};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -140,6 +140,21 @@ pub struct Ctx<'a> {
     pub acumulado: Option<(i64, NaiveDate)>,
     pub emitidos: HashSet<(String, NaiveDate, String)>,
     pub incidencias: Vec<Incidencia>,
+    /// Integración 18-nov-2026.
+    pub escritos: Option<Escritos>,
+    pub historico: Option<Historico>,
+    pub consignados: HashSet<String>,
+    pub evidencia: Option<EvidenciaInforme>,
+    pub bitacora_parcial: bool,
+    /// Otros programas vigentes cuya constancia propuso el motor.
+    pub otros_programas: Vec<OtroPrograma>,
+}
+
+/// Constancia de ingreso efectivo a otro programa que el motor propuso (para que el funcionario la confirme).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OtroPrograma {
+    pub clave: String,
+    pub programa: String,
 }
 
 impl<'a> Ctx<'a> {

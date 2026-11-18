@@ -185,6 +185,7 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
     frags.extend(h::continuidad(ctx));
     frags.extend(h::curador_designaciones(ctx, rus_sin_curador(r)));
     frags.extend(complementarias(ctx, r));
+    frags.extend(h::otro_programa(ctx, &programa, &pn));
     componer(&pfx, &sin_parentesis(frags))
 }
 
@@ -287,7 +288,10 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
     }
     frags.extend(h::prorroga(ctx, hoy, fegr, vencida && vok, c05, egreso_dicho));
     frags.extend(h::solicitud_dce(ctx, &programa, vok));
-    frags.extend(h::escrito_sin_ingreso(ctx, &programa, None));
+    frags.extend(h::escrito_sin_ingreso(ctx, &programa, None, ""));
+    let atribuible_pendiente = !h::varios_registros(ctx) && !h::varios_vencidos(ctx);
+    frags.extend(h::informe_pendiente(ctx, &programa, None, atribuible_pendiente));
+    frags.extend(h::otro_programa(ctx, &programa, &pn));
     frags.extend(h::busqueda_historia(ctx));
     frags.extend(h::continuidad(ctx));
     frags.extend(h::curador_designaciones(ctx, rus_sin_curador(r)));
@@ -372,9 +376,26 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
     // Un trámite de la causa solo retira la gestión si se puede vincular a este informe: causa de un registro y un
     // único informe vencido. Si no, se conservan correo y proyecto y el trámite queda como constancia.
     let atribuible = !h::varios_registros(ctx) && !h::varios_vencidos(ctx);
-    let i1 = h::informe_historia(ctx, fv, vencido, atribuible);
-    let i3 = if atribuible { h::escrito_sin_ingreso(ctx, &programa, vencido.then_some(fv)) } else { Vec::new() };
-    if vencido && !atribuible && !i1.is_empty() {
+    // Asociación explícita de esta proyección con su evidencia (18-nov-2026): atribuye aunque haya varios vencimientos.
+    let folio_res = ctx.evidencia.as_ref().map(|e| e.resolucion_folio.clone()).unwrap_or_default();
+    let folio_esc = ctx.evidencia.as_ref().map(|e| e.escrito_historia_folio.clone()).unwrap_or_default();
+    // Escrito de informe de avance pendiente de resolver, atribuible a este informe: no se pide cuenta de él. Se
+    // evalúa primero: contrasta la bandeja con la historia al mismo corte.
+    let pendiente = if vencido { h::informe_pendiente(ctx, &programa, Some(fv), atribuible) } else { Vec::new() };
+    if !pendiente.is_empty() {
+        ctx.marcar(2, "I01_ESCRITO_PENDIENTE", "Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta");
+        let mut frags = pendiente;
+        frags.extend(h::informes_acumulados(ctx));
+        return componer(&pfx, &frags);
+    }
+    let i1 = h::informe_historia(ctx, fv, vencido, atribuible, &programa, &folio_res);
+    let i3 = if atribuible || !folio_esc.is_empty() {
+        h::escrito_sin_ingreso(ctx, &programa, vencido.then_some(fv), &folio_esc)
+    } else {
+        Vec::new()
+    };
+    let atribuida = atribuible || !folio_res.is_empty() || !folio_esc.is_empty();
+    if vencido && !atribuida && !i1.is_empty() {
         ctx.marcar(
             2,
             "INFORME_SIN_ATRIBUIR",
@@ -389,7 +410,7 @@ pub fn informes(ctx: &mut Ctx, r: &Registro) -> String {
             "Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión",
         );
     }
-    let principal = if vencido && atribuible && contradicho {
+    let principal = if vencido && atribuida && contradicho {
         ctx.marcar(2, "I01_CONTRADICHA", "Informe vencido en RUS contradicho por la historia");
         let texto = if dce { "I01_SIN_ENVIO_DCE" } else { "I01_SIN_ENVIO_GENERAL" };
         ctx.render("HISTORIA", texto, &[("FECHA_VENCIMIENTO", fecha_es(fv))])

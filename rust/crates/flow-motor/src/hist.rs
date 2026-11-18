@@ -1,11 +1,12 @@
 //! Constancias de la historia de la causa (`motor/reglas_historia.py` y `motor/analisis_historia.py`).
 //! Cada función devuelve fragmentos (vacío si no aplica).
 
-use crate::ctx::{Ctx, Duplicidad, Frag};
+use crate::ctx::{Ctx, Duplicidad, Frag, OtroPrograma};
 use chrono::{Datelike, Duration, NaiveDate};
 use flow_dominio::historia::ultimo;
 use flow_dominio::texto::{clave, contiene_token, es_dce, fecha_es, fecha_mayoria, normalizar, titulo_programa};
-use flow_dominio::Tramite;
+use flow_dominio::evidencia::{self, clave_programa, clave_texto, constancia_en_bitacora, mencion_previa, programas_vigentes_otros, ESTADO_PENDIENTE};
+use flow_dominio::{Escrito, Tramite};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -631,13 +632,15 @@ pub fn prorroga(
 }
 
 /// C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior. Con varios registros no se
-/// sabe de quién es el informe y no se propone el proyecto.
-pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDate>) -> Vec<Frag> {
-    if varios_registros(ctx) {
+/// sabe de quién es el informe y no se propone el proyecto. `folio`: asociación explícita con una proyección.
+pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDate>, folio: &str) -> Vec<Frag> {
+    if varios_registros(ctx) && folio.is_empty() {
         return Vec::new();
     }
     let mut candidatos = escrito_de(intervencion(programa)).map(|n| ctx.tramites(&[n])).unwrap_or_default();
-    if let Some(d) = desde {
+    if !folio.is_empty() {
+        candidatos.retain(|t| t.folio_txt == folio);
+    } else if let Some(d) = desde {
         candidatos.retain(|t| t.fecha >= d);
     }
     let Some(escrito) = ultimo(&refs(&candidatos)).cloned() else { return Vec::new() };
@@ -655,19 +658,37 @@ pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDat
 
 /// Informes: «Ingreso informe de cumplimiento X». Vencido: solo cuenta uno del día del vencimiento o posterior. Si
 /// no se puede atribuir a este informe (varios registros o varios vencidos), se cita como trámite de la causa.
-pub fn informe_historia(ctx: &mut Ctx, vencimiento: NaiveDate, vencido: bool, atribuible: bool) -> Vec<Frag> {
+/// Atribuido y con RUS aún vencido (el calendario marca pendiente), se informa lo que consta y se sugiere revisar su
+/// asociación con la fecha proyectada, sin pedir de nuevo el informe. `folio`: asociación explícita con la proyección.
+pub fn informe_historia(ctx: &mut Ctx, vencimiento: NaiveDate, vencido: bool, atribuible: bool, programa: &str, folio: &str) -> Vec<Frag> {
     let mut lista: Vec<Tramite> = ctx.tramites(&[INGRESO_INFORME_X]);
-    if vencido {
+    if !folio.is_empty() {
+        lista.retain(|t| t.folio_txt == folio);
+    } else if vencido {
         lista.retain(|t| t.fecha >= vencimiento);
     }
     lista.retain(|t| !ctx.emitidos.contains(&t.id()));
     let Some(ult) = ultimo(&refs(&lista)).cloned() else { return Vec::new() };
-    if !atribuible {
+    if !atribuible && folio.is_empty() {
         let texto = if novedad(ctx, &ult) { constancia(ctx, vec![ult]) } else { Frag::vacio() };
         ctx.emitidos.extend(lista.iter().map(Tramite::id));
         return if texto.es_vacio() { Vec::new() } else { vec![texto] };
     }
     ctx.emitidos.extend(lista.iter().map(Tramite::id));
+    if vencido {
+        let texto = ctx.render(
+            "HISTORIA",
+            "INFORME_REVISAR_ASOCIACION",
+            &[
+                ("PROGRAMA", titulo_programa(programa)),
+                ("FOLIO", ult.folio_visible().to_string()),
+                ("FECHA_PROYECTADA", fecha_es(vencimiento)),
+            ],
+        );
+        if !texto.es_vacio() {
+            return vec![texto];
+        }
+    }
     let texto = ctx.render("HISTORIA", "INFORME_INGRESADO", &folio_fecha(&ult));
     vec![cita(texto, &ult)]
 }
@@ -750,5 +771,112 @@ mod pruebas {
         assert_eq!(instituciones("(1-9)ANA - Institución: CAJ#(2-7)LUIS - Institución: ODL"), 2);
         assert_eq!(instituciones("(1-9)ANA - Institución: CAJ#(2-7)LUIS - Institución: caj"), 1);
         assert_eq!(instituciones("NO POSEE"), 0);
+    }
+}
+
+// --- Integración 18-nov-2026: otro programa vigente e informe de avance pendiente en Escritos ---------------------
+
+/// Espera y Cumplimiento: constancia única de que el niño cuenta con ingreso efectivo a otro programa vigente
+/// (otra denominación completa en el Ingreso Histórico Protección, egreso `--` y causal `SIN INFORMACION` en la misma
+/// fila). No se repite si la bitácora (de cualquier etapa) ya la tiene o si el funcionario la marcó como consignada.
+pub fn otro_programa(ctx: &mut Ctx, programa: &str, pnombre: &str) -> Vec<Frag> {
+    let Some(h) = ctx.historico.clone() else { return Vec::new() };
+    if h.cobertura == "FALLIDA" {
+        ctx.marcar(3, "HISTORICO_NO_DISPONIBLE", "Ingreso Histórico Protección no se pudo leer: no se verificó si hay otro programa vigente");
+        return Vec::new();
+    }
+    if evidencia::con_filas(&h.cobertura) && h.identidad != "VERIFICADA" {
+        ctx.marcar(2, "HISTORICO_IDENTIDAD", "Ingreso Histórico Protección sin pertenencia verificada a esta persona: no se afirma otro programa");
+        return Vec::new();
+    }
+    let otros = programas_vigentes_otros(Some(&h), programa);
+    if otros.is_empty() {
+        return Vec::new();
+    }
+    if clave_texto(pnombre).is_empty() {
+        ctx.marcar(2, "OTRO_PROGRAMA_SIN_NOMBRE", "Otro programa vigente en el histórico, pero no se pudo determinar el primer nombre: revisar esta fila");
+        return Vec::new();
+    }
+    let mut salida = Vec::new();
+    for nombre in otros {
+        let llave = clave_programa(&nombre);
+        if ctx.consignados.contains(&llave) || constancia_en_bitacora(&ctx.bitacora, pnombre, &nombre).is_some() {
+            continue;
+        }
+        if ctx.bitacora_parcial {
+            ctx.marcar(2, "OTRO_PROGRAMA_BITACORA_PARCIAL", &format!("Bitácora incompleta: no se puede descartar que el ingreso efectivo a «{nombre}» ya se haya consignado"));
+        } else if mencion_previa(&ctx.bitacora, &nombre).is_some() {
+            ctx.marcar(3, "OTRO_PROGRAMA_MENCION_PREVIA", &format!("La bitácora menciona «{nombre}» sin una constancia reconocible: revisar si ya se consignó"));
+        }
+        let texto = ctx.render("HISTORIA", "OTRO_PROGRAMA", &[("PNOMBRE", pnombre.to_string()), ("OTRO_PROGRAMA", nombre.clone())]);
+        if !texto.es_vacio() {
+            salida.push(texto);
+            ctx.otros_programas.push(OtroPrograma { clave: llave, programa: nombre });
+        }
+    }
+    salida
+}
+
+fn es_pendiente(programa: &str, e: &Escrito) -> bool {
+    escrito_de(intervencion(programa)).is_some_and(|n| clave_texto(&e.tipo) == clave_texto(n) && clave_texto(&e.estado) == ESTADO_PENDIENTE)
+}
+
+/// Escritos de la causa con el tipo de la modalidad del programa y estado Pendiente en la misma fila. Una bandeja
+/// vacía comprobada, no solicitada o fallida no contiene nada: no se afirma ausencia.
+pub fn escritos_pendientes(ctx: &Ctx, programa: &str) -> Vec<Escrito> {
+    match &ctx.escritos {
+        Some(e) if e.con_filas() => e.filas.iter().filter(|f| es_pendiente(programa, f)).cloned().collect(),
+        _ => Vec::new(),
+    }
+}
+
+/// Informe de avance pendiente de resolver, atribuible a este informe (asociación explícita con la fecha proyectada o
+/// único candidato en una causa sin otros vencidos). Si la historia acredita algo posterior a la lectura de la bandeja
+/// prevalece la historia; con estados incompatibles sin secuencia fiable, revisión.
+pub fn escrito_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<NaiveDate>, atribuible: bool) -> Option<Escrito> {
+    let candidatos = escritos_pendientes(ctx, programa);
+    if candidatos.is_empty() {
+        return None;
+    }
+    let propio = candidatos.iter().find(|c| c.vinculo == "EXPLICITO" && vencimiento.is_some() && c.fecha_proyectada == vencimiento).cloned();
+    let elegido = propio.clone().or_else(|| {
+        (atribuible && candidatos.len() == 1 && candidatos[0].vinculo != "EXPLICITO").then(|| candidatos[0].clone())
+    });
+    let Some(elegido) = elegido else {
+        ctx.marcar(2, "ESCRITO_PENDIENTE_SIN_ATRIBUIR", "Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones");
+        return None;
+    };
+    if propio.is_some() {
+        ctx.marcar(2, "ESCRITO_PENDIENTE", "Informe de avance pendiente de resolver en la bandeja de Escritos");
+        return Some(elegido);
+    }
+    let mut nombres = vec![INGRESO_INFORME_X];
+    nombres.extend(escrito_de(intervencion(programa)));
+    let en_historia: Vec<Tramite> = ctx.tramites(&nombres).into_iter().filter(|t| vencimiento.is_none_or(|v| t.fecha >= v)).collect();
+    if !en_historia.is_empty() {
+        let lectura = ctx.escritos.as_ref().and_then(|e| e.leido);
+        let hasta = ctx.h().and_then(|h| h.hasta);
+        if let (Some(l), Some(hh)) = (lectura, hasta) {
+            if hh > l {
+                return None; // la incorporación posterior acreditada en Historia prevalece sobre la bandeja
+            }
+        }
+        ctx.marcar(2, "ESCRITO_ESTADOS_INCOMPATIBLES", "Escrito pendiente en la bandeja y escrito ya incorporado en la historia sin secuencia fiable: revisar");
+        return None;
+    }
+    ctx.marcar(2, "ESCRITO_PENDIENTE", "Informe de avance pendiente de resolver en la bandeja de Escritos");
+    Some(elegido)
+}
+
+/// Fragmentos de la regla (una sola frase, una vez). Vacío si no corresponde.
+pub fn informe_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<NaiveDate>, atribuible: bool) -> Vec<Frag> {
+    if escrito_pendiente(ctx, programa, vencimiento, atribuible).is_none() {
+        return Vec::new();
+    }
+    let texto = ctx.render("HISTORIA", "INFORME_AVANCE_PENDIENTE", &[]);
+    if texto.es_vacio() {
+        Vec::new()
+    } else {
+        vec![texto]
     }
 }

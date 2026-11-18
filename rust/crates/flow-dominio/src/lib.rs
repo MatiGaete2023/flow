@@ -2,10 +2,12 @@
 //! Sin E/S. La lógica replica `src/nurus/personal/motor/utilidades.py` y `src/nurus/rus/columns.py`.
 
 pub mod celda;
+pub mod evidencia;
 pub mod historia;
 pub mod texto;
 
 pub use celda::{Celda, Registro};
+pub use evidencia::{Escrito, Escritos, EvidenciaInforme, Historico, ProgramaHistorico};
 pub use chrono::NaiveDate as Fecha;
 pub use historia::{Historia, Observacion, Tramite};
 

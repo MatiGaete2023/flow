@@ -5,12 +5,12 @@ pub mod ctx;
 pub mod hist;
 pub mod reglas;
 
-pub use ctx::{Config, Duplicidad, Incidencia, Marca};
+pub use ctx::{Config, Duplicidad, Incidencia, Marca, OtroPrograma};
 
 use chrono::{Duration, NaiveDate};
 use ctx::Ctx;
 use flow_dominio::texto::{clave, fecha_es, fecha_mayoria, identidad, rut_clave};
-use flow_dominio::{Etapa, Historia, Observacion, Registro, Tribunal};
+use flow_dominio::{Escritos, Etapa, EvidenciaInforme, Historia, Historico, Observacion, Registro, Tribunal};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -33,6 +33,15 @@ pub struct Entrada<'a> {
     pub acumulado: Option<(i64, NaiveDate)>,
     /// Próximo informe según el cruce (hoja 2 o calendario). Solo Cumplimiento.
     pub fecha_hoja2: Option<NaiveDate>,
+    /// Escritos de la causa (bandeja de la causa), Ingreso Histórico Protección de la persona y asociación explícita
+    /// del informe con su evidencia (plan 18-nov-2026). `None` = fuente no aportada.
+    pub escritos: Option<&'a Escritos>,
+    pub historico: Option<&'a Historico>,
+    pub evidencia: Option<&'a EvidenciaInforme>,
+    /// Claves de programa que el funcionario ya consignó para este niño.
+    pub consignados: &'a [String],
+    /// La bitácora puede estar truncada: no acredita ausencia de una constancia previa.
+    pub bitacora_parcial: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -46,6 +55,8 @@ pub struct Resultado {
     pub marcas: Vec<Marca>,
     /// Derivación que el Centro no sigue: no genera acciones.
     pub excluido: bool,
+    /// Otros programas vigentes cuya constancia propuso el motor.
+    pub otros_programas: Vec<OtroPrograma>,
 }
 
 fn sin_repetir<T: Clone + Eq + std::hash::Hash>(lista: &[T]) -> Vec<T> {
@@ -137,6 +148,12 @@ pub fn analizar(e: &Entrada) -> Resultado {
         acumulado: e.acumulado,
         emitidos: HashSet::new(),
         incidencias: Vec::new(),
+        escritos: e.escritos.cloned(),
+        historico: e.historico.cloned(),
+        consignados: e.consignados.iter().cloned().collect(),
+        evidencia: e.evidencia.cloned(),
+        bitacora_parcial: e.bitacora_parcial,
+        otros_programas: Vec::new(),
     };
     let mut avisos = Vec::new();
     if e.etapa == Etapa::Cumplimiento {
@@ -170,6 +187,7 @@ pub fn analizar(e: &Entrada) -> Resultado {
         avisos,
         marcas: sin_repetir(&ctx.marcas),
         excluido,
+        otros_programas: std::mem::take(&mut ctx.otros_programas),
     }
 }
 

@@ -21,6 +21,7 @@ from nurus.personal.contexto_excel import avisos_fila  # noqa: E402
 from nurus.personal.motor import historia as H  # noqa: E402
 from nurus.personal.motor.composicion import Incidencias  # noqa: E402
 from nurus.personal.motor.contexto import current  # noqa: E402
+from nurus.personal.motor.evidencia import Escrito, Escritos, EvidenciaInforme, Historico, ProgramaHistorico  # noqa: E402
 from nurus.personal.motor.reglas_cumplimiento import generar_observacion_cumplimiento  # noqa: E402
 from nurus.personal.motor.reglas_espera import generar_observacion_espera  # noqa: E402
 from nurus.personal.motor.reglas_informes import generar_observacion_informes  # noqa: E402
@@ -277,6 +278,27 @@ def esperado(caso):
         'duplicidad': caso['duplicidad'],
         'acumulado': (acumulado[0], date.fromisoformat(acumulado[1])) if acumulado else None,
     }
+    # Evidencia de la integración 18-nov-2026 (opcional: los casos anteriores no la traen).
+    def dia(texto):
+        return date.fromisoformat(texto) if texto else None
+
+    if caso.get('escritos') is not None:
+        e = caso['escritos']
+        ctx['escritos'] = Escritos(e['cobertura'], dia(e.get('leido')), tuple(
+            Escrito(f['tipo'], f['estado'], f.get('doc', ''), f.get('solicitante', ''), f.get('fila', 0),
+                    f.get('vinculo', ''), dia(f.get('fecha_proyectada')), f.get('periodo', '')) for f in e['filas']))
+    if caso.get('historico') is not None:
+        h = caso['historico']
+        ctx['historico'] = Historico(h['cobertura'], dia(h.get('leido')), h.get('identidad', 'VERIFICADA'), tuple(
+            ProgramaHistorico(f['programa'], f.get('fecha_egreso', ''), f.get('causal_egreso', ''), f.get('fila', 0))
+            for f in h['filas']))
+    if caso.get('evidencia') is not None:
+        v = caso['evidencia']
+        ctx['evidencia_informe'] = EvidenciaInforme(
+            v.get('escrito_historia_folio', ''), v.get('resolucion_folio', ''), dia(v.get('resolucion_fecha')),
+            v.get('calendario', ''), dia(v.get('fecha_proyectada')))
+    ctx['consignados'] = frozenset(caso.get('consignados', ()))
+    ctx['bitacora_parcial'] = bool(caso.get('bitacora_parcial'))
     token = current.set(ctx)
     inc = Incidencias()
     avisos = []
@@ -310,6 +332,7 @@ def esperado(caso):
         'avisos': avisos,
         'marcas': [{'nivel': n, 'codigo': c, 'texto': t} for n, c, t in dict.fromkeys(ctx['marcas'])],
         'excluido': excluido,
+        'otros_programas': list(ctx.get('otros_programas', ())),
     }
 
 
@@ -467,7 +490,9 @@ def main():
         print(f'{etapa}: {len(casos)} casos, {con_texto} con observación, {len(reglas)} reglas distintas')
     todas = {m + '.' + k for m, v in TEXTOS.items() if m != '_meta' for k in v}
     vistas = set()
-    for etapa in ('espera', 'cumplimiento', 'informes'):
+    for etapa in ('espera', 'cumplimiento', 'informes', 'integracion'):
+        if not (destino / f'{etapa}.json').exists():
+            continue  # integracion.json lo genera generar_integracion.py
         for c in json.loads((destino / f'{etapa}.json').read_text(encoding='utf-8')):
             vistas.update(c['esperado']['reglas'])
     # Textos que el motor por fila no emite: la reiteración CT-07 la aplica bitacora_avisos.aplicar_reiteracion (la

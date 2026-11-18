@@ -2,8 +2,8 @@
 //! sobre los casos ficticios de `rust/casos/` (generados por `rust/oraculo/generar_casos.py`).
 
 use chrono::NaiveDate;
-use flow_dominio::{Celda, Etapa, Historia, Observacion, Registro, Tramite};
-use flow_motor::{analizar, Config, Duplicidad, Entrada, Marca, Resultado};
+use flow_dominio::{Celda, Escritos, Etapa, EvidenciaInforme, Historia, Historico, Observacion, Registro, Tramite};
+use flow_motor::{analizar, Config, Duplicidad, Entrada, Marca, OtroPrograma, Resultado};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -33,6 +33,8 @@ struct Esperado {
     avisos: Vec<String>,
     marcas: Vec<Marca>,
     excluido: bool,
+    #[serde(default)]
+    otros_programas: Vec<OtroPrograma>,
 }
 
 #[derive(Deserialize)]
@@ -47,6 +49,17 @@ struct Caso {
     duplicidad: Option<Duplicidad>,
     acumulado: Option<(i64, NaiveDate)>,
     fecha_hoja2: Option<NaiveDate>,
+    /// Integración 18-nov-2026 (los casos anteriores no la traen).
+    #[serde(default)]
+    escritos: Option<Escritos>,
+    #[serde(default)]
+    historico: Option<Historico>,
+    #[serde(default)]
+    evidencia: Option<EvidenciaInforme>,
+    #[serde(default)]
+    consignados: Vec<String>,
+    #[serde(default)]
+    bitacora_parcial: bool,
     esperado: Esperado,
 }
 
@@ -73,6 +86,11 @@ fn comparar(archivo: &str) {
             duplicidad: caso.duplicidad,
             acumulado: caso.acumulado,
             fecha_hoja2: caso.fecha_hoja2,
+            escritos: caso.escritos.as_ref(),
+            historico: caso.historico.as_ref(),
+            evidencia: caso.evidencia.as_ref(),
+            consignados: &caso.consignados,
+            bitacora_parcial: caso.bitacora_parcial,
         });
         let e = &caso.esperado;
         let esperado = Resultado {
@@ -82,6 +100,7 @@ fn comparar(archivo: &str) {
             avisos: e.avisos.clone(),
             marcas: e.marcas.clone(),
             excluido: e.excluido,
+            otros_programas: e.otros_programas.clone(),
         };
         if obtenido != esperado {
             fallas.push(format!("{}\n  esperado: {esperado:?}\n  obtenido: {obtenido:?}", caso.id));
@@ -109,4 +128,9 @@ fn cumplimiento_igual_que_python() {
 #[test]
 fn informes_igual_que_python() {
     comparar("informes.json");
+}
+
+#[test]
+fn integracion_igual_que_python() {
+    comparar("integracion.json");
 }

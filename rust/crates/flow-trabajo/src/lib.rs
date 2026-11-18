@@ -111,6 +111,13 @@ pub struct Contexto {
     pub origenes: HashMap<String, controles::Origen>,
     pub calendarios: HashMap<String, Vec<controles::Proyeccion>>,
     pub avisos: HashMap<String, Vec<String>>,
+    /// Integración 18-nov-2026: Escritos de la causa, Ingreso Histórico Protección de la persona, asociación explícita
+    /// del informe con su evidencia, constancias ya consignadas por el funcionario y bitácoras posiblemente truncadas.
+    pub escritos: HashMap<String, flow_dominio::Escritos>,
+    pub historicos: HashMap<String, flow_dominio::Historico>,
+    pub evidencias: HashMap<String, flow_dominio::EvidenciaInforme>,
+    pub consignaciones: HashMap<String, Vec<String>>,
+    pub bitacoras_parciales: std::collections::HashSet<String>,
 }
 
 /// Analiza toda la tabla: pre-pase por causa y luego fila por fila.
@@ -150,6 +157,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                     avisos: vec!["Tipo de fuente fuera del motor tradicional; no evaluado.".into()],
                     marcas: vec![],
                     excluido: false,
+                    otros_programas: vec![],
                 }
             } else {
                 analizar(&Entrada {
@@ -162,6 +170,11 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
                     duplicidad: duplicidad[i],
                     acumulado: acumulado[i],
                     fecha_hoja2: proximo,
+                    escritos: contexto.escritos.get(&fila.id),
+                    historico: contexto.historicos.get(&fila.id),
+                    evidencia: contexto.evidencias.get(&fila.id),
+                    consignados: contexto.consignaciones.get(&fila.id).map(Vec::as_slice).unwrap_or(&[]),
+                    bitacora_parcial: contexto.bitacoras_parciales.contains(&fila.id),
                 })
             };
             let cronologia = contexto.cronologias.get(&fila.id).cloned();
