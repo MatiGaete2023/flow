@@ -505,7 +505,14 @@ def _historico(carpeta, data, query, incident, cid, captured):
     sin prueba, INCIERTA (el Asistente no afirma otro programa). Una lectura ilegible queda FALLIDA, nunca vacía."""
     from historico_manual import cargar
 
-    _, entradas = cargar(carpeta)
+    try:
+        _, entradas = cargar(carpeta)
+    except ValueError as exc:
+        # Un respaldo dañado no impide el paquete: la fuente queda FALLIDA y visible, nunca vacía.
+        query('historico-respaldo', {'tab': 'HISTORICO'}, 'FALLIDA', captured, screen='historico_proteccion', error='HISTORICO_RESPALDO_INVALIDO')
+        incident('historico-respaldo', 'HISTORICO_RESPALDO_INVALIDO', str(exc))
+        data['historico_proteccion'] = []
+        return
     filas = []
     for n, e in enumerate(entradas, 1):
         qid = f'historico-{n}'

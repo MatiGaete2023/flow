@@ -671,7 +671,7 @@ def escrito_pendiente(programa, vencimiento=None, atribuible=True):
     if not candidatos:
         return None
     propios = [c for c in candidatos if c.vinculo == 'EXPLICITO' and vencimiento is not None and c.fecha_proyectada == _d(vencimiento)]
-    elegido = propios[0] if propios else (candidatos[0] if atribuible and len(candidatos) == 1 and candidatos[0].vinculo != 'EXPLICITO' else None)
+    elegido = propios[0] if propios else (candidatos[0] if atribuible and len(candidatos) == 1 and (vencimiento is None or candidatos[0].vinculo != 'EXPLICITO') else None)
     if elegido is None:
         marcar(2, 'ESCRITO_PENDIENTE_SIN_ATRIBUIR', 'Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones')
         return None

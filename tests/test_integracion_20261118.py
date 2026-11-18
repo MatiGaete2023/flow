@@ -313,3 +313,10 @@ def test_proyectos_word_no_arrastran_fechas_resueltas_de_otro_periodo(tmp_path):
     pendiente, incorporada, exigible = (r.id for r in trabajo.rows)
     por_tipo = {p.kind: p.record_ids for p in proyectos}
     assert not errores and por_tipo == {'NOMENCL': [incorporada], 'PC_INFO': [exigible]}
+
+
+def test_cumplimiento_atribuye_un_unico_escrito_pendiente_vinculado_a_su_ingreso(tmp_path):
+    t = 'Inf. Cump Programa Ambulatorio'
+    vinculado = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 8, 20)),))
+    f = cum(tmp_path, escritos={0: vinculado})
+    assert PENDIENTE in f.observation and 'ESCRITO_PENDIENTE_SIN_ATRIBUIR' not in [a[1] for a in f.avisos]

@@ -1039,7 +1039,30 @@ fn escritos_de_causa(d: &mut Datos, e: &Value, tribunal: &str, nombre: &str, cau
 /// Una consulta por persona capturada a mano y una fila por programa (`export_csmp_capture._historico`). La pertenencia va por
 /// fila; sin prueba, INCIERTA. Una lectura ilegible queda FALLIDA, nunca vacía.
 fn historico_de_personas(d: &mut Datos, carpeta: &Path) -> Result<(), String> {
-    let capturas = crate::historico_manual::cargar(carpeta)?;
+    let capturas = match crate::historico_manual::cargar(carpeta) {
+        Ok(c) => c,
+        Err(motivo) => {
+            // Un respaldo dañado no impide el paquete: la fuente queda FALLIDA y visible, nunca vacía.
+            let captured = d.captured.clone();
+            d.consulta(Consulta {
+                qid: "historico-respaldo".into(),
+                filtros: json!({"tab":"HISTORICO"}),
+                screen: "historico_proteccion",
+                tab: "HISTORICO",
+                court_code: "",
+                court_name: "",
+                modality_code: "",
+                coverage: "FALLIDA",
+                when: &captured,
+                expected: 1,
+                saved: 0,
+                error: "HISTORICO_RESPALDO_INVALIDO",
+            });
+            d.aviso("historico-respaldo", "HISTORICO_RESPALDO_INVALIDO", &motivo);
+            d.historico = Some(Vec::new());
+            return Ok(());
+        }
+    };
     if capturas.is_empty() {
         return Ok(());
     }

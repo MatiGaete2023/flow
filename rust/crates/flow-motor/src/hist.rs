@@ -840,7 +840,7 @@ pub fn escrito_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<Naiv
     }
     let propio = candidatos.iter().find(|c| c.vinculo == "EXPLICITO" && vencimiento.is_some() && c.fecha_proyectada == vencimiento).cloned();
     let elegido = propio.clone().or_else(|| {
-        (atribuible && candidatos.len() == 1 && candidatos[0].vinculo != "EXPLICITO").then(|| candidatos[0].clone())
+        (atribuible && candidatos.len() == 1 && (vencimiento.is_none() || candidatos[0].vinculo != "EXPLICITO")).then(|| candidatos[0].clone())
     });
     let Some(elegido) = elegido else {
         ctx.marcar(2, "ESCRITO_PENDIENTE_SIN_ATRIBUIR", "Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones");
