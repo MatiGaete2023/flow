@@ -151,3 +151,51 @@ fn escritos_de_la_historia_viajan_al_paquete_1_2_0() {
     // El mismo importador Rust lo lee sin cambiar las filas del trabajo.
     assert!(paquete::importar("x.zip", &p.datos, "2026-10-20".parse().unwrap(), &Config::default()).is_ok());
 }
+
+/// Plan 18-nov-2026: captura manual del Ingreso Histórico Protección → tabla `historico_proteccion` (1.2.0). Mismo
+/// `historico.json` que escribe el Descargador Python. `paquete_rust_historico.zip` lo valida el lector Python.
+#[test]
+fn historico_manual_viaja_al_paquete_con_pertenencia_y_estados() {
+    use flow_trabajo::historico_manual::{capturar, Persona};
+    use std::io::Read;
+    let t = Temporal::nueva();
+    let r = lote(&t.0);
+    let html = "<html><body><h4>Historial 11.111.111-1</h4><table><thead><tr><th>Causal egreso</th><th>Programa</th><th>Fecha egreso</th></tr></thead><tbody>\
+        <tr><td>SIN INFORMACION</td><td>PRM Ficticio</td><td>--</td></tr><tr><td>SIN INFORMACION</td><td>FAE Otro Ficticio</td><td>--</td></tr>\
+        <tr><td>EGRESO</td><td>PDE Antiguo</td><td>01/05/2026</td></tr></tbody></table></body></html>";
+    let carpeta = t.0.join("historico-manual");
+    let persona = Persona { tribunal: "113", tribunal_nombre: "Jgdo. L. y G. de Laja", person_id: "persona-ficticia-1", rut: "11.111.111-1", nombre: "Persona" };
+    let e = capturar(&carpeta, html.as_bytes(), &persona, "2026-10-20T15:00:00+00:00").unwrap();
+    assert_eq!((e["estado"].as_str(), e["ownership"].as_str()), (Some("LEIDA"), Some("VERIFICADA")));
+    // Un nombre suelto que aparece en cualquier texto no prueba pertenencia.
+    let otra = Persona { person_id: "persona-ficticia-2", rut: "99.999.999-9", nombre: "Otro", ..persona };
+    assert_eq!(capturar(&carpeta, html.as_bytes(), &otra, "2026-10-20T15:00:00+00:00").unwrap()["ownership"], "INCIERTA");
+    let mala = Persona { person_id: "persona-ficticia-3", ..otra };
+    assert_eq!(capturar(&carpeta, b"<html><body><p>nada</p></body></html>", &mala, "2026-10-20T15:00:00+00:00").unwrap()["estado"], "FALLIDA");
+    assert!(capturar(&carpeta, b"", &mala, "x").is_err());
+
+    // Exportar solo la persona verificada: se parte de una carpeta con esa única captura.
+    let solo = t.0.join("solo-verificada");
+    capturar(&solo, html.as_bytes(), &persona, "2026-10-20T15:00:00+00:00").unwrap();
+    let opciones = exportar::Opciones { historico: Some(solo), ..Default::default() };
+    let p = exportar::construir(&[exportar::Lote { carpeta: &t.0, resumen: &r }], &opciones).unwrap();
+    let referencia = datos().join("paquete_rust_historico.zip");
+    if std::env::var_os("FLOW_REGENERAR").is_some() {
+        std::fs::write(&referencia, &p.datos).unwrap();
+    }
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&p.datos)).unwrap();
+    let mut manifiesto = String::new();
+    zip.by_name("manifest.json").unwrap().read_to_string(&mut manifiesto).unwrap();
+    let m: Value = serde_json::from_str(&manifiesto).unwrap();
+    assert_eq!((m["schema_version"].as_str(), m["table_states"]["historico_proteccion"].as_str()), (Some("1.2.0"), Some("COMPLETA")));
+    let mut tabla = String::new();
+    zip.by_name("data/historico_proteccion.csv").unwrap().read_to_string(&mut tabla).unwrap();
+    let filas = paquete::leer_csv(&tabla);
+    let datos_filas: Vec<_> = filas.iter().map(|f| (f["program_name"].as_str(), f["egreso_date"].as_str(), f["ownership"].as_str())).collect();
+    assert_eq!(datos_filas, [("PRM Ficticio", "--", "VERIFICADA"), ("FAE Otro Ficticio", "--", "VERIFICADA"), ("PDE Antiguo", "01/05/2026", "VERIFICADA")]);
+
+    // Una captura con pertenencia incierta o ilegible queda visible en el paquete, nunca vacía.
+    let opciones = exportar::Opciones { historico: Some(carpeta), ..Default::default() };
+    let p = exportar::construir(&[exportar::Lote { carpeta: &t.0, resumen: &r }], &opciones).unwrap();
+    assert!(p.incompletas.iter().any(|i| i.starts_with("historico_proteccion: ")), "{:?}", p.incompletas);
+}

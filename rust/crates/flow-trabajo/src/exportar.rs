@@ -106,6 +106,7 @@ fn columnas(tabla: &str) -> Vec<&'static str> {
             "document_id",
             "identity_status",
         ],
+        "historico_proteccion" => &["historico_id", "program_name", "egreso_date", "egreso_cause", "ownership", "raw_json"],
         "escritos" => &[
             "escrito_id",
             "scope",
@@ -145,11 +146,13 @@ pub struct Opciones {
     pub avisos: Vec<(String, String)>,
     /// Incluir la historia de la causa leída en el lote (`historia_en_paquete`).
     pub historia: bool,
+    /// Carpeta con las capturas manuales del Ingreso Histórico Protección (`historico_manual`), si las hay.
+    pub historico: Option<PathBuf>,
 }
 
 impl Default for Opciones {
     fn default() -> Self {
-        Self { avisos: Vec::new(), historia: true }
+        Self { avisos: Vec::new(), historia: true, historico: None }
     }
 }
 
@@ -266,6 +269,7 @@ struct Datos {
     historia: Option<Vec<Fila>>,
     /// Escritos de la causa leídos de la misma respuesta de Historia (solo si alguna respuesta trajo la pestaña).
     escritos: Option<Vec<Fila>>,
+    historico: Option<Vec<Fila>>,
     incidencias: Vec<Fila>,
     siguiente: usize,
 }
@@ -1032,6 +1036,74 @@ fn escritos_de_causa(d: &mut Datos, e: &Value, tribunal: &str, nombre: &str, cau
     }
 }
 
+/// Una consulta por persona capturada a mano y una fila por programa (`export_csmp_capture._historico`). La pertenencia va por
+/// fila; sin prueba, INCIERTA. Una lectura ilegible queda FALLIDA, nunca vacía.
+fn historico_de_personas(d: &mut Datos, carpeta: &Path) -> Result<(), String> {
+    let capturas = crate::historico_manual::cargar(carpeta)?;
+    if capturas.is_empty() {
+        return Ok(());
+    }
+    let mut filas = Vec::new();
+    for (n, e) in capturas.iter().enumerate() {
+        let qid = format!("historico-{}", n + 1);
+        let cobertura = match texto(e, "estado") {
+            "LEIDA" => "COMPLETA",
+            "VACIA_COMPROBADA" => "VACIA_COMPROBADA",
+            _ => "FALLIDA",
+        };
+        let leida = texto(e, "leida").to_string();
+        let i = d.consulta(Consulta {
+            qid: qid.clone(),
+            filtros: json!({"tribunal":texto(e,"tribunal"),"tribunal_nombre":texto(e,"tribunal_nombre"),"tab":"HISTORICO",
+                "historico_persona":{"source_system":"RUS","court_code":texto(e,"tribunal"),"person_id":texto(e,"person_id")}}),
+            screen: "historico_proteccion",
+            tab: "HISTORICO",
+            court_code: texto(e, "tribunal"),
+            court_name: texto(e, "tribunal_nombre"),
+            modality_code: "",
+            coverage: cobertura,
+            when: &leida,
+            expected: 1,
+            saved: usize::from(cobertura != "FALLIDA"),
+            error: texto(e, "error"),
+        });
+        if cobertura == "FALLIDA" {
+            let codigo = Some(texto(e, "error")).filter(|c| !c.is_empty()).unwrap_or("HISTORICO_NO_VERIFICADA");
+            d.aviso(&qid, codigo, "El histórico de protección no se pudo leer.");
+            continue;
+        }
+        if texto(e, "ownership") != "VERIFICADA" {
+            d.aviso(&qid, "HISTORICO_PERTENENCIA_INCIERTA", "No se comprobó que la vista sea de la persona seleccionada.");
+        }
+        let q = d.consultas[i].clone();
+        for fila in e["filas"].as_array().into_iter().flatten() {
+            let numero = fila["fila"].as_u64().unwrap_or(1).max(1);
+            let mut f = d.comun(&q);
+            let crudo = json!({"Programa":texto(fila,"programa"),"Fecha egreso":texto(fila,"fecha_egreso"),"Causal egreso":texto(fila,"causal_egreso")});
+            for (k, val) in [
+                ("person_id", texto(e, "person_id").to_string()),
+                ("tab", "HISTORICO".into()),
+                ("captured_at", leida.clone()),
+                ("original_file", format!("respaldo/historico/{}", texto(e, "archivo"))),
+                ("original_row", numero.to_string()),
+                ("source_sha256", texto(e, "sha256").to_string()),
+                ("coverage", "COMPLETA".into()),
+                ("historico_id", format!("{qid}-{numero}")),
+                ("program_name", texto(fila, "programa").into()),
+                ("egreso_date", texto(fila, "fecha_egreso").into()),
+                ("egreso_cause", texto(fila, "causal_egreso").into()),
+                ("ownership", texto(e, "ownership").to_string()),
+                ("raw_json", crudo.to_string()),
+            ] {
+                f.insert(k, val);
+            }
+            filas.push(f);
+        }
+    }
+    d.historico = Some(filas);
+    Ok(())
+}
+
 fn csv(tabla: &str, filas: &[&Fila]) -> Vec<u8> {
     let mut cols = columnas(tabla);
     if tabla == "historia_tramites" {
@@ -1083,6 +1155,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         bitacoras: None,
         historia: None,
         escritos: None,
+        historico: None,
         incidencias: vec![],
         siguiente: 1,
     };
@@ -1101,6 +1174,9 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
     if con_historia {
         historia(&mut d, lotes)?;
     }
+    if let Some(carpeta) = &opciones.historico {
+        historico_de_personas(&mut d, carpeta)?;
+    }
     let pantalla = |q: &Fila| q["screen"].clone();
     let mut estados: BTreeMap<&str, String> = TABLAS.iter().map(|t| (*t, "NO_SOLICITADA".to_string())).collect();
     estados.insert("consultas", agregar(d.consultas.iter().map(|q| q["coverage"].as_str())).into());
@@ -1109,7 +1185,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         agregar(
             d.consultas
                 .iter()
-                .filter(|q| !matches!(q["screen"].as_str(), "bitacoras" | "calendario_ingreso" | "historia_tramites" | "escritos"))
+                .filter(|q| !matches!(q["screen"].as_str(), "bitacoras" | "calendario_ingreso" | "historia_tramites" | "escritos" | "historico_proteccion"))
                 .map(|q| q["coverage"].as_str()),
         )
         .into(),
@@ -1140,10 +1216,17 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "historia_tramites").map(|q| q["coverage"].as_str()));
         estados.insert("historia_tramites", if h.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
     }
+    if d.escritos.is_some() || d.historico.is_some() {
+        estados.insert("escritos", "NO_SOLICITADA".into());
+        estados.insert("historico_proteccion", "NO_SOLICITADA".into());
+    }
     if let Some(e) = &d.escritos {
         let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "escritos").map(|q| q["coverage"].as_str()));
         estados.insert("escritos", if e.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
-        estados.insert("historico_proteccion", "NO_SOLICITADA".into());
+    }
+    if let Some(h) = &d.historico {
+        let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "historico_proteccion").map(|q| q["coverage"].as_str()));
+        estados.insert("historico_proteccion", if h.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
     }
     let calendarios: Option<Vec<&Fila>> = d.calendarios.as_ref().map(|c| c.iter().map(|(f, _)| f).collect());
     let mut tablas: Vec<(&str, Vec<&Fila>)> =
@@ -1159,6 +1242,9 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
     }
     if let Some(e) = &d.escritos {
         tablas.push(("escritos", e.iter().collect()));
+    }
+    if let Some(h) = &d.historico {
+        tablas.push(("historico_proteccion", h.iter().collect()));
     }
     tablas.push(("incidencias", d.incidencias.iter().collect()));
     let mut archivos = Vec::new();
@@ -1184,7 +1270,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         "queries": consultas,
         "required_features": [],
         "schema_id": "CSMP_CAPTURE",
-        "schema_version": if d.escritos.is_some() { VERSION_EXTENDIDA } else { VERSION },
+        "schema_version": if d.escritos.is_some() || d.historico.is_some() { VERSION_EXTENDIDA } else { VERSION },
         "table_states": estados,
     });
     contenido.push(("manifest.json".into(), serde_json::to_vec_pretty(&manifiesto).map_err(|_| "No se pudo preparar el manifiesto.")?));

@@ -249,3 +249,24 @@ def test_paquete_rust_con_escritos_lo_lee_el_lector_python():
         'DOC-1', 'Inf. Cump Programa Ambulatorio', 'Pendiente', 'CAUSA'
     )
     assert captura.manifest['table_states']['historico_proteccion'] == 'NO_SOLICITADA'
+
+
+def test_paquete_rust_con_historico_manual_lo_lee_el_lector_python():
+    ruta = Path(__file__).parents[1] / 'rust/crates/flow-trabajo/tests/datos/paquete_rust_historico.zip'
+    captura = read_capture(ruta)
+    assert captura.manifest['schema_version'] == '1.2.0'
+    assert captura.manifest['table_states']['historico_proteccion'] == 'COMPLETA'
+    assert [(f['program_name'], f['egreso_date'], f['egreso_cause'], f['ownership']) for f in captura.rows('historico_proteccion')] == [
+        ('PRM Ficticio', '--', 'SIN INFORMACION', 'VERIFICADA'),
+        ('FAE Otro Ficticio', '--', 'SIN INFORMACION', 'VERIFICADA'),
+        ('PDE Antiguo', '01/05/2026', 'EGRESO', 'VERIFICADA'),
+    ]
+
+
+def test_python_y_rust_coinciden_en_la_pertenencia_del_historico():
+    """Misma HTML y mismas pruebas: el lector Python da lo mismo que el Rust de `exportar.rs` (RUT con puntos, nombre suelto)."""
+    html = pagina(
+        ['Causal egreso', 'Programa', 'Fecha egreso'], [['SIN INFORMACION', 'FAE Otro Ficticio', '--']], '<h4>Historial 11.111.111-1</h4>'
+    )
+    assert read_historico(html, persona_esperada=['11.111.111-1', 'Persona'])['ownership'] == 'VERIFICADA'
+    assert read_historico(html, persona_esperada=['99.999.999-9', 'Otro'])['ownership'] == 'INCIERTA'

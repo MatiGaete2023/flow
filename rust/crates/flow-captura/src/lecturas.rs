@@ -348,6 +348,52 @@ fn leer_escritos(doc: &Html) -> Result<Option<Value>, &'static str> {
     Ok(Some(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"advertencias":advertencias})))
 }
 
+const HISTORICO: [&str; 3] = ["Programa", "Fecha egreso", "Causal egreso"];
+
+/// Tabla visible de «Ingreso Histórico Protección» de la persona seleccionada (`nurus/escritos_html.py::read_historico`).
+/// Captura manual: no sigue enlaces ni consulta por RUT. La pertenencia a la persona es VERIFICADA solo si el texto visible
+/// contiene su RUT o su nombre completo (≥ 2 palabras); si no, INCIERTA y el motor no afirma otro programa.
+/// Errores: `HISTORICO_NO_VERIFICADA` (sin tabla única legible) o la respuesta incompleta/de sesión.
+pub fn leer_historico(datos: &[u8], fuente: &str, capturada: &str, persona_esperada: &[&str]) -> Result<Value, String> {
+    let doc = documento(datos)?;
+    let pedidos: Vec<String> = HISTORICO.iter().map(|h| normalizar(h)).collect();
+    let mut tablas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        let Some(primera) = filas.first() else { continue };
+        let originales: Vec<String> = celdas(*primera).iter().map(|e| texto(*e)).collect();
+        let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
+        if pedidos.iter().all(|p| cabecera.contains(p)) {
+            tablas.push((cabecera, filas));
+        }
+    }
+    if tablas.len() != 1 {
+        return Err("HISTORICO_NO_VERIFICADA".into());
+    }
+    let (cabecera, filas) = tablas.pop().unwrap();
+    let posicion = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().skip(1).enumerate() {
+        let c = celdas(*fila);
+        let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) {
+            continue;
+        }
+        if c.len() != cabecera.len() {
+            advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
+            continue;
+        }
+        resultado.push(json!({"fila":i + 1,"programa":valores[posicion("Programa")],"fecha_egreso":valores[posicion("Fecha egreso")],"causal_egreso":valores[posicion("Causal egreso")]}));
+    }
+    let visible = format!(" {} ", normalizar(&texto(doc.root_element()).replace('.', "")));
+    let verificada = persona_esperada.iter().any(|p| {
+        let limpio = normalizar(&p.replace('.', ""));
+        (limpio.chars().any(|c| c.is_ascii_digit()) || limpio.split_whitespace().count() >= 2) && visible.contains(&format!(" {limpio} "))
+    });
+    Ok(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"ownership":if verificada {"VERIFICADA"} else {"INCIERTA"},
+        "advertencias":advertencias,"sha256":crate::lotes::huella(datos),"source":fuente,"captured_at":capturada}))
+}
+
 pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {
     let doc = documento(datos)?;
     let mut candidatas = vec![];
