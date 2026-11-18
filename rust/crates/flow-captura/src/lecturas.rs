@@ -280,14 +280,24 @@ fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
     const ROTULOS: [&str; 7] = ["siguiente", "anterior", "proxima", "ultima pagina", "mostrar mas", "cargar mas", "ver mas"];
     let controles = sel("iframe, frame, .pagination, .paginacion, .paginador, .pager, [data-page], [data-total-pages], a[rel='next'], a[rel='prev']");
     let posible_recorte = doc.select(&controles).next().is_some()
-        || doc.select(&sel("input, select, a, button")).any(|nodo| {
+        || doc.select(&sel("input, select, a, button, [onclick]")).any(|nodo| {
             let atributo = |k| nodo.value().attr(k).unwrap_or("");
             let nombre = format!("{} {}", atributo("name"), atributo("id")).to_ascii_lowercase().replace(['_', '-'], "");
+            let accion = format!("{} {}", atributo("href"), atributo("onclick")).to_ascii_lowercase();
             // El value de un campo oculto puede ser texto de observación; solo cuenta en botones.
             let boton = nodo.value().name() == "input"
                 && matches!(atributo("type").to_ascii_lowercase().as_str(), "button" | "submit" | "image" | "reset");
-            let rotulo = normalizar(&format!("{} {}", texto(nodo), if boton { atributo("value") } else { "" }));
-            NOMBRES.iter().any(|n| nombre.contains(n)) || ROTULOS.iter().any(|r| rotulo.contains(r))
+            let crudo = format!("{} {}", texto(nodo), if boton { atributo("value") } else { "" });
+            let rotulo = normalizar(&crudo);
+            // Paginadores sin rótulo: «1 2 3», «[2]», «»», «>>». Solo en elementos que se pueden pulsar.
+            let pulsable = boton || matches!(nodo.value().name(), "a" | "button") || !atributo("onclick").is_empty();
+            let compacto = crudo.chars().filter(|c| !c.is_whitespace() && !"[]()|.,:;-".contains(*c)).collect::<String>();
+            let numero_o_flecha = !compacto.is_empty()
+                && (compacto.chars().all(|c| c.is_ascii_digit()) || compacto.chars().all(|c| "<>«»‹›…".contains(c)));
+            NOMBRES.iter().any(|n| nombre.contains(n))
+                || ROTULOS.iter().any(|r| rotulo.contains(r))
+                || ["pagina", "page"].iter().any(|p| accion.contains(p))
+                || pulsable && numero_o_flecha
         });
     if posible_recorte {
         "PARCIAL"
@@ -480,8 +490,24 @@ mod pruebas_cobertura_bitacora {
             "<input type=\"hidden\" id=\"nro-pagina\" value=\"2\">",
             "<select name=\"FECHA_Desde\"></select>",
             "<a rel=\"prev\" href=\"#\">1</a>",
+            "<a href=\"#\">1</a> <a href=\"#\">2</a> <a href=\"#\">3</a>",
+            "<a href=\"javascript:void(0)\">[2]</a>",
+            "<span onclick=\"ir(3)\">3</span>",
+            "<input type=\"submit\" value=\"2\">",
+            "<a href=\"#\">»</a>",
+            "<button>&gt;&gt;</button>",
+            "<div onclick=\"irPagina(2)\">Ir</div>",
+            "<a href=\"InformesDAction.do?page=2\">Más</a>",
         ] {
             assert_eq!(cobertura(control), "PARCIAL", "{control}");
+        }
+        for neutro in [
+            "<span>2</span>",
+            "<input type=\"hidden\" name=\"HOBS_Tribunal_44\" value=\"2\">",
+            "<a href=\"#\">P-12-2099</a>",
+            "<img id=\"44\" onclick=\"MuestraDiv(this.id,3)\">",
+        ] {
+            assert_eq!(cobertura(neutro), "COMPLETA", "{neutro}: no es paginación");
         }
         assert_eq!(cobertura_bitacora(&Html::parse_document("<html><body></body></html>"), true), "VACIA_COMPROBADA");
     }
