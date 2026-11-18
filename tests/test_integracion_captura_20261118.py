@@ -186,3 +186,18 @@ def test_historico_con_pertenencia_incierta_o_fallido_no_afirma_y_queda_visible(
     assert 'HISTORICO_IDENTIDAD' in [a[1] for a in incierto.rows[0].avisos]
     fallido = importar(tmp_path, historico=[('FAE X', *VIG)], cobertura_hist='FALLIDA', nombre='f') if False else None
     assert fallido is None  # FALLIDA no admite filas en el contrato: se declara sin filas (cubierto en las pruebas del motor)
+
+
+def test_recalcular_tras_una_edicion_conserva_las_fuentes_nuevas(tmp_path):
+    """Escenario 9 (parcial): `recalculate` usa las mismas fuentes del import (Histórico, bitácora, consignaciones)."""
+    from nurus.personal.record_edits import recalculate
+
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    fila = trabajo.rows[0]
+    antes = fila.observation
+    recalculate(trabajo, fila)
+    assert fila.observation == antes and 'FAE X' in fila.observation
+    assert fila.otros_programas == [{'clave': 'fae x', 'programa': 'FAE X'}]
+    trabajo.consignar(fila.id, 'FAE X')
+    recalculate(trabajo, fila)
+    assert 'FAE X' not in fila.observation and fila.otros_programas == []

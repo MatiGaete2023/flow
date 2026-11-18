@@ -8,6 +8,9 @@ Lee, en este orden y nada más salvo que tu paquete lo cite:
 
 Las instrucciones expresas del usuario prevalecen sobre estos documentos.
 
+Trabajo en curso (plan de integración 18-nov-2026: otro programa vigente, informe de avance pendiente, contrato 1.2.0): leer
+`docs/integracion_20261118/REGISTRO.md` (estado, decisiones y pendientes) antes de tocar `motor/`, el contrato o Rust.
+
 ## Reglas que no se negocian
 
 - Sin escritura automática en RUS ni SATURNO. Sin módulo de registro RUS ni SATURNO; si reapareciera, `submit`

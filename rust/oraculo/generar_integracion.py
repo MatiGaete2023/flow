@@ -69,7 +69,6 @@ class Gen2(G.Gen):
                 'fecha_proyectada': vencimiento.isoformat() if vencimiento else None}
 
     def bitacora_extra(self, caso):
-        programa = caso['campos'].get('programa', {}).get('v', '')
         nombre = caso['campos'].get('nombre', {}).get('v', '')
         pn = (nombre.split() or ['Persona'])[0].capitalize() if nombre else 'Persona'
         extra = []

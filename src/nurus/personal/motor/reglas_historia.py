@@ -6,7 +6,7 @@ from datetime import timedelta
 from . import vocabulario as V
 from .analisis_historia import busqueda, duplicidades, instituciones, posterior, primera_observacion  # noqa: F401
 from .contexto import acumulado, bitacora, bitacora_parcial, consignados, current, duplicidad, emitidos, evento
-from .contexto import escritos, evidencia_informe, historia, historico, marcar, parametro
+from .contexto import escritos, historia, historico, marcar, parametro
 from .contexto import datetime as Clock
 from .evidencia import ESTADO_PENDIENTE, clave_programa, clave_texto, constancia_en_bitacora, programas_vigentes_otros
 from .historia import clave, ultimo

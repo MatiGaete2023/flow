@@ -50,7 +50,6 @@ def main():
     for fila, doc in zip(tablas['historia_tramites'], ('D-ESC', 'D-ESC', 'D-OTRO')):
         fila['reference'] = doc
         fila['raw_json'] = json.dumps({'Trámite': 'Escrito' if fila['description'] == AMB else 'Resolución'}, ensure_ascii=False)
-    columnas = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO']
     vencimientos = {2: '2026-08-20', 3: '2026-08-25'}
     for fila in tablas['registros']:
         numero = int(fila['record_id'][1:])
