@@ -115,8 +115,13 @@ def read_historico(data, *, source='', captured_at='', persona_esperada=()):
         raise ValueError(HISTORICO_NO_VERIFICADA)
     posiciones, cabecera, filas = tablas[0]
     resultado, advertencias = _leer_filas(posiciones, cabecera, filas, HISTORICO_HEADERS, FILA_CORTA)
-    visible = normalize(_texto(documento).replace('.', ''))
-    pruebas = [normalize(str(p).replace('.', '')) for p in persona_esperada if normalize(str(p).replace('.', ''))]
+    visible = ' ' + normalize(_texto(documento).replace('.', '')) + ' '
+    pruebas = []
+    for p in persona_esperada:
+        limpio = normalize(str(p).replace('.', ''))
+        # Un RUT identifica; un nombre solo si tiene al menos dos palabras (un nombre suelto aparece en cualquier texto).
+        if limpio and (any(c.isdigit() for c in limpio) or len(limpio.split()) >= 2):
+            pruebas.append(' ' + limpio + ' ')
     verificada = any(p in visible for p in pruebas)
     return {
         'filas': resultado,

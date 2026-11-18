@@ -81,3 +81,47 @@ def test_el_asistente_importa_el_paquete_con_escritos_sin_cambiar_las_reglas_ori
     otro.mkdir()
     con = import_capture(paquete(tmp_path, 'b', historia=historia(otro, con_escritos(ESCRITOS_CON_FILAS))), defaults(), as_of=date(2099, 10, 14))
     assert [(r.observation, r.actions) for r in con.rows] == [(r.observation, r.actions) for r in base.rows]
+
+
+# ------------------------------------------------------------------ Ingreso Histórico Protección (captura manual)
+from historico_manual import capturar  # noqa: E402
+
+HISTORICO_HTML = (
+    '<html><body><h4>Historial 11.111.111-1</h4><table><thead><tr><th>Programa</th><th>Fecha egreso</th><th>Causal egreso</th></tr>'
+    '</thead><tbody><tr><td>PRM Ficticio</td><td>--</td><td>SIN INFORMACION</td></tr>'
+    '<tr><td>FAE Otro Ficticio</td><td>--</td><td>SIN INFORMACION</td></tr>'
+    '<tr><td>PDE Antiguo</td><td>01/05/2026</td><td>EGRESO</td></tr></tbody></table></body></html>'
+)
+
+
+def _persona(tmp_path):
+    base = read_capture(paquete(tmp_path, 'base'))
+    registro = base.rows('registros')[0]
+    return {'tribunal': registro['court_code'], 'tribunal_nombre': registro['court_name'],
+            'person_id': registro['person_id'] or 'persona-ficticia-1', 'rut': '11.111.111-1', 'nombre': 'Persona'}  # fmt: skip
+
+
+def test_historico_manual_llega_al_paquete_con_pertenencia_y_sin_consultas_por_rut(tmp_path):
+    persona = _persona(tmp_path)
+    carpeta = tmp_path / 'hist'
+    capturar(carpeta, HISTORICO_HTML, persona, capturada='2099-10-13T12:00:00+00:00')
+    captura = read_capture(paquete(tmp_path, 'con-hist', historico=carpeta))
+    assert captura.manifest['schema_version'] == '1.2.0'
+    filas = captura.rows('historico_proteccion')
+    assert [(f['program_name'], f['egreso_date'], f['egreso_cause'], f['ownership']) for f in filas] == [
+        ('PRM Ficticio', '--', 'SIN INFORMACION', 'VERIFICADA'),
+        ('FAE Otro Ficticio', '--', 'SIN INFORMACION', 'VERIFICADA'),
+        ('PDE Antiguo', '01/05/2026', 'EGRESO', 'VERIFICADA'),
+    ]
+    assert captura.manifest['table_states']['historico_proteccion'] == 'COMPLETA'
+
+
+def test_historico_sin_prueba_de_pertenencia_queda_incierto_y_la_fuente_ilegible_fallida(tmp_path):
+    persona = _persona(tmp_path)
+    incierta = capturar(tmp_path / 'a', HISTORICO_HTML, {**persona, 'rut': '99.999.999-9', 'nombre': 'Otro'})
+    assert incierta['ownership'] == 'INCIERTA'
+    mala = capturar(tmp_path / 'b', '<html><body><p>nada</p></body></html>', persona)
+    assert mala['estado'] == 'FALLIDA' and mala['filas'] == []
+    captura = read_capture(paquete(tmp_path, 'mal', historico=tmp_path / 'b'))
+    assert captura.manifest['table_states']['historico_proteccion'] == 'FALLIDA'
+    assert any(i['code'] == 'HISTORICO_NO_VERIFICADA' for i in captura.rows('incidencias'))

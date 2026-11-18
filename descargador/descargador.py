@@ -1958,7 +1958,8 @@ class Application:
 
 
 def package_current_lot(
-    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4, avisos=()
+    sheets_folder, diary_manifest, target, consolidated=False, historia=None, extra_folders=(), meses=4, avisos=(),
+    historico=None,
 ):
     """La misma ruta que Resultados › Paquete: identidad verificada de bitácoras (match_diaries) y destino nuevo."""
     from archivo_local import load_sources
@@ -1976,6 +1977,7 @@ def package_current_lot(
         match_diaries=True,
         consolidated=consolidated,
         historia=historia,
+        historico=historico,
         meses=meses,
         avisos=avisos,
     )

@@ -107,6 +107,7 @@ def export_capture(
     consolidated=False,
     _consolidated_data=None,
     historia=None,
+    historico=None,
     meses=4,
     avisos=(),
 ):
@@ -122,6 +123,8 @@ def export_capture(
         fingerprint += 'MATCH' if match_diaries else 'ALL'
     if historia:
         fingerprint += 'HISTORIA' + sha256(Path(historia).read_bytes()).hexdigest()
+    if historico:
+        fingerprint += 'HISTORICO' + sha256((Path(historico) / 'historico.json').read_bytes()).hexdigest()
     cid = 'captura-' + sha256(fingerprint.encode()).hexdigest()[:24]
     data = {'consultas': [], 'registros': [], 'incidencias': []}
     originals = {}
@@ -437,13 +440,15 @@ def export_capture(
     if historia:
         _historia(historia, data, query, incident, cid, captured)
         _escritos(historia, data, query, incident, cid, captured)
+    if historico:
+        _historico(historico, data, query, incident, cid, captured)
     states = {k: 'NO_SOLICITADA' for k in TABLES}
     states.update(
         consultas=aggregate(q['coverage'] for q in data['consultas']),
         registros=aggregate(
             q['coverage']
             for q in data['consultas']
-            if q['screen'] not in ('bitacoras', 'calendario_ingreso', 'historia_tramites', 'escritos')
+            if q['screen'] not in ('bitacoras', 'calendario_ingreso', 'historia_tramites', 'escritos', 'historico_proteccion')
         ),
         incidencias='COMPLETA' if data['incidencias'] else 'VACIA_COMPROBADA',
     )
@@ -460,6 +465,12 @@ def export_capture(
         )
         if not data.get('historia_tramites') and states['historia_tramites'] == 'COMPLETA':
             states['historia_tramites'] = 'VACIA_COMPROBADA'
+    if data.get('historico_proteccion') is not None:
+        states['historico_proteccion'] = aggregate(
+            q['coverage'] for q in data['consultas'] if q['screen'] == 'historico_proteccion'
+        )
+        if not data['historico_proteccion'] and states['historico_proteccion'] == 'COMPLETA':
+            states['historico_proteccion'] = 'VACIA_COMPROBADA'
     if data.get('escritos') is not None:
         states['escritos'] = aggregate(q['coverage'] for q in data['consultas'] if q['screen'] == 'escritos')
         if not data['escritos'] and states['escritos'] == 'COMPLETA':
@@ -487,6 +498,64 @@ HISTORIA_COBERTURA = {
     'PENDIENTE': 'CANCELADA',
     'CANCELADA': 'CANCELADA',
 }
+
+
+def _historico(carpeta, data, query, incident, cid, captured):
+    """Una consulta por persona capturada a mano y una fila por programa del histórico. La pertenencia a la persona va por fila:
+    sin prueba, INCIERTA (el Asistente no afirma otro programa). Una lectura ilegible queda FALLIDA, nunca vacía."""
+    from historico_manual import cargar
+
+    _, entradas = cargar(carpeta)
+    filas = []
+    for n, e in enumerate(entradas, 1):
+        qid = f'historico-{n}'
+        cobertura = {'LEIDA': 'COMPLETA', 'VACIA_COMPROBADA': 'VACIA_COMPROBADA'}.get(e['estado'], 'FALLIDA')
+        selection = {
+            'tribunal': e['tribunal'],
+            'tribunal_nombre': e.get('tribunal_nombre', ''),
+            'tab': 'HISTORICO',
+            'historico_persona': {'source_system': 'RUS', 'court_code': e['tribunal'], 'person_id': e['person_id']},
+        }
+        row = query(qid, selection, cobertura, e['leida'], 1, 0 if cobertura == 'FALLIDA' else 1,
+                    screen='historico_proteccion', error=e.get('error', ''))  # fmt: skip
+        if cobertura == 'FALLIDA':
+            incident(qid, e.get('error') or 'HISTORICO_NO_VERIFICADA', 'El histórico de protección no se pudo leer.')
+            continue
+        if e['ownership'] != 'VERIFICADA':
+            incident(qid, 'HISTORICO_PERTENENCIA_INCIERTA', 'No se comprobó que la vista sea de la persona seleccionada.')
+        for fila in e['filas']:
+            common = {k: '' for k in COMMON}
+            common.update(
+                capture_id=cid,
+                query_id=qid,
+                source_system='RUS',
+                court_code=row['court_code'],
+                court_name=row['court_name'],
+                person_id=e['person_id'],
+                modality_code=row['modality_code'],
+                tab='HISTORICO',
+                captured_at=e['leida'],
+                original_file=f'respaldo/historico/{e["archivo"]}',
+                original_row=str(fila['fila']),
+                source_sha256=e['sha256'],
+                coverage='COMPLETA',
+            )
+            filas.append(
+                {
+                    **common,
+                    'historico_id': f'{qid}-{fila["fila"]}',
+                    'program_name': fila['programa'],
+                    'egreso_date': fila['fecha_egreso'],
+                    'egreso_cause': fila['causal_egreso'],
+                    'ownership': e['ownership'],
+                    'raw_json': json.dumps(
+                        {'Programa': fila['programa'], 'Fecha egreso': fila['fecha_egreso'], 'Causal egreso': fila['causal_egreso']},
+                        ensure_ascii=False,
+                    ),
+                }
+            )
+    if entradas:
+        data['historico_proteccion'] = filas
 
 
 def _escritos(manifest, data, query, incident, cid, captured):

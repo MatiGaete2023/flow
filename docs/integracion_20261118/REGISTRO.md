@@ -25,7 +25,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 | 1 Base y línea base | HECHO | este registro |
 | 2 Dato de captura al motor (contrato aditivo) | HECHO en Python y Rust (lector); productor Python solo Escritos | `src/nurus/capture/contract.py` (1.2.0), `capture/escritos.py`, `rust/crates/flow-trabajo/src/{fuentes_nuevas,paquete}.rs` |
 | 3 Escritos en el detalle de causa | HECHO: lector HTML, Descargador Python y Descargador Rust (misma respuesta de Historia; ver `lecturas.rs::leer_escritos`, `exportar.rs::escritos_de_causa`). La extensión JS no necesita cambios para la muestra actual (la tabla ya viene en la respuesta); **otras versiones que cargan la pestaña al abrirla: PENDIENTE** | `src/nurus/escritos_html.py`, `src/nurus/capture/historias.py`, `descargador/export_csmp_capture.py::_escritos` |
-| 4 Ingreso Histórico Protección | PARCIAL: lector HTML, tabla del contrato, motor. **Control de captura manual en el Descargador: PENDIENTE** | `escritos_html.read_historico`, tabla `historico_proteccion` |
+| 4 Ingreso Histórico Protección | PARCIAL: lector HTML, tabla del contrato, motor y **captura manual sin interfaz** del Descargador Python (`descargador/historico_manual.py::capturar`, `export_capture(historico=carpeta)`); pertenencia solo por RUT o nombre de ≥2 palabras visible. **Botón/control en la interfaz (Python y Rust) y captura Rust: PENDIENTE** | `escritos_html.read_historico`, `descargador/historico_manual.py` |
 | 5 «Solo una vez» + primer nombre | HECHO (bitácora + marca local idempotente `Work.consignar`); **botón en la interfaz: PENDIENTE** | `motor/evidencia.py`, `Work.consignar` |
 | 6 Conservar cada vencimiento / fuentes | PARCIAL: asociación explícita por fecha proyectada; el agrupador `acumulado` sigue contando todas las fechas (decisión abajo) | `capture/escritos.py::evidencia_informe` |
 | 7 Motor y composición | HECHO Python y Rust (oráculo 929 casos + paquete) | `motor/reglas_*.py`, `flow-motor/src/{hist,reglas,ctx,lib}.rs` |
@@ -79,9 +79,9 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Productor real de la asociación explícita** (N3: no hay muestra poblada de Escritos con `Doc.` ni del calendario por proyección; los HAR
    traen Escritos con 0 filas). Definir con una muestra anónima `extraer_estructura_*` cómo enlazar `Doc.` con Historia/calendario antes de poblar `linked_*`.
-2. **Histórico de Protección en el Descargador (Python y Rust)**: control manual de captura de la tabla visible de la persona
-   seleccionada (sin consultas autónomas por RUT) que produzca la tabla `historico_proteccion`; hoy solo el motor, el contrato y los
-   lectores (`read_historico`) existen. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
+2. **Histórico de Protección, control de interfaz**: el botón «Capturar histórico de la persona seleccionada» (Python/Tk y Rust/egui) que
+   llame a `historico_manual.capturar` con el HTML de la vista abierta a mano y el `SITFA_PERSONA_RUS` de la fila (sin consultas por RUT);
+   y el equivalente Rust (lector + exportación de `historico_proteccion`). Ojo: el lote ficticio del Descargador no trae `person_id`. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
 3. **Interfaz**: botón «marcar constancia como consignada» (`Work.consignar`), visualización de las marcas nuevas, guía visual.
 4. **Escenario 9 incompleto**: faltan selección oculta, reintento tras cancelación y producto ya editado (cambio de corte y recálculo sí).
 5. Rust: **consignación** (`Contexto.consignaciones` existe, pero ni `Trabajo` la persiste ni la interfaz la marca) y el **botón** en ambas interfaces;
