@@ -45,3 +45,24 @@ def evento(clave):
 def acumulado():
     ctx = current.get()
     return ctx.get('acumulado') if ctx else None
+
+
+def escritos():
+    ctx = current.get()
+    return ctx.get('escritos') if ctx else None
+
+def historico():
+    ctx = current.get()
+    return ctx.get('historico') if ctx else None
+
+def consignados():
+    ctx = current.get()
+    return ctx.get('consignados', frozenset()) if ctx else frozenset()
+
+def evidencia_informe():
+    ctx = current.get()
+    return ctx.get('evidencia_informe') if ctx else None
+
+def bitacora_parcial():
+    ctx = current.get()
+    return bool(ctx.get('bitacora_parcial')) if ctx else False

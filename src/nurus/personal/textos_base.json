@@ -291,6 +291,21 @@
       "texto": "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda.",
       "confirmado": true,
       "nota": "Ronda 16-oct-2026: orden de búsqueda primero y luego sus trámites; redacción por aprobar; aprobado por el usuario el 16-oct-2026"
+    },
+    "OTRO_PROGRAMA": {
+      "texto": "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}.",
+      "confirmado": true,
+      "nota": "Plan de integración 18-nov-2026: frase exacta aprobada por el usuario (otro programa vigente en el Ingreso Histórico Protección; una sola vez por niño y programa)"
+    },
+    "INFORME_AVANCE_PENDIENTE": {
+      "texto": "Pendiente de resolver, informe de avance.",
+      "confirmado": true,
+      "nota": "Plan de integración 18-nov-2026: frase exacta aprobada por el usuario (Escritos: tipo Inf. Cump + estado Pendiente atribuible al ingreso y al informe)"
+    },
+    "INFORME_REVISAR_ASOCIACION": {
+      "texto": "Se hace presente que el informe de {PROGRAMA} registra ingreso a folio {FOLIO} y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada {FECHA_PROYECTADA}.",
+      "confirmado": true,
+      "nota": "Plan de integración 18-nov-2026: frase exacta aprobada por el usuario (resolución «Ingreso Informe de Cumplimiento X» ya consta y el calendario sigue pendiente)"
     }
   }
 }

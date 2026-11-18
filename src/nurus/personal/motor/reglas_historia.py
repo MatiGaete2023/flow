@@ -5,8 +5,10 @@ from datetime import timedelta
 
 from . import vocabulario as V
 from .analisis_historia import busqueda, duplicidades, instituciones, posterior, primera_observacion  # noqa: F401
-from .contexto import acumulado, bitacora, current, duplicidad, emitidos, evento, historia, marcar, parametro
+from .contexto import acumulado, bitacora, bitacora_parcial, consignados, current, duplicidad, emitidos, evento
+from .contexto import escritos, evidencia_informe, historia, historico, marcar, parametro
 from .contexto import datetime as Clock
+from .evidencia import ESTADO_PENDIENTE, clave_programa, clave_texto, constancia_en_bitacora, programas_vigentes_otros
 from .historia import clave, ultimo
 from .textos import Frag, con_grupo, render
 from .utilidades import contiene_token, es_dce, fecha_es, fecha_mayoria, normalizar, titulo_programa
@@ -467,14 +469,17 @@ def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):
     return [f for f in salida if f]
 
 
-def escrito_sin_ingreso(programa, desde=None):
+def escrito_sin_ingreso(programa, desde=None, folio=''):
     """C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior (por folio). El escrito es
-    de la causa: con varios registros no se sabe de quién es el informe y no se propone el proyecto."""
-    if varios_registros():
+    de la causa: con varios registros no se sabe de quién es el informe y no se propone el proyecto.
+    `folio`: asociación explícita con una proyección (18-nov-2026); elige ese escrito y no otro."""
+    if varios_registros() and not folio:
         return []
     nombre = V.ESCRITOS.get(intervencion(programa))
     candidatos = tramites(nombre) if nombre else []
-    if desde is not None:
+    if folio:
+        candidatos = [t for t in candidatos if t.folio_txt == str(folio)]
+    elif desde is not None:
         candidatos = [t for t in candidatos if t.fecha >= _d(desde)]
     escrito = ultimo(candidatos)
     if escrito is None or _id(escrito) in emitidos():
@@ -486,23 +491,35 @@ def escrito_sin_ingreso(programa, desde=None):
     return [_cita(texto, escrito)]
 
 
-def informe_historia(fecha_vencimiento, vencido, atribuible=True):
+def informe_historia(fecha_vencimiento, vencido, atribuible=True, programa='', folio=''):
     """Informes: «Ingreso Informe de Cumplimiento X» y estado que RUS registra. [] si no aplica.
     Con el informe vencido solo cuenta un ingreso del día del vencimiento o posterior: uno anterior es de otro
     período y no desmiente el vencimiento (decisión u, 14-oct). Si el trámite no se puede atribuir a este informe
-    (varios registros en la causa o varios informes vencidos), se cita como trámite de la causa."""
+    (varios registros en la causa o varios informes vencidos), se cita como trámite de la causa.
+    Atribuido, la resolución ya consta y RUS sigue vencido (el calendario marca pendiente): se informa lo que consta y se
+    sugiere revisar su asociación con la fecha proyectada, sin pedir de nuevo el informe (18-nov-2026).
+    `folio`: asociación explícita con esta proyección; atribuye aunque haya varios vencimientos."""
     lista = tramites(V.INGRESO_INFORME_X)
-    if vencido:
+    if folio:
+        lista = [t for t in lista if t.folio_txt == str(folio)]
+    elif vencido:
         lista = [t for t in lista if t.fecha >= _d(fecha_vencimiento)]
     lista = [t for t in lista if _id(t) not in emitidos()]
     if not lista:
         return []
     ult = ultimo(lista)
-    if not atribuible:
+    if not atribuible and not folio:
         texto = constancia([ult]) if novedad(ult) else ''
         emitidos().update(_id(t) for t in lista)
         return [texto] if texto else []
     emitidos().update(_id(t) for t in lista)
+    if vencido:
+        texto = render(
+            'HISTORIA', 'INFORME_REVISAR_ASOCIACION',
+            PROGRAMA=titulo_programa(programa), FOLIO=_folio(ult), FECHA_PROYECTADA=fecha_es(fecha_vencimiento),
+        )  # fmt: skip
+        if texto:
+            return [texto]
     # El vencimiento lo dice la frase principal del informe: no se repite (decisión x).
     return [_cita(render('HISTORIA', 'INFORME_INGRESADO', FOLIO=_folio(ult), FECHA=fecha_es(ult.fecha)), ult)]
 
@@ -568,3 +585,113 @@ def solo_historia():
     ctx = current.get()
     eventos = [e for e in ctx['events'] if e not in ctx['config']['desactivadas']] if ctx else []
     return bool(eventos) and all(e.startswith('HISTORIA.') for e in eventos)
+
+
+# --- Integración 18-nov-2026: otro programa vigente e informe de avance pendiente en Escritos ------------------------
+
+def _primer_nombre_valido(pnombre):
+    return bool(clave_texto(pnombre))
+
+
+def _mencion_previa(nombre_programa):
+    """Observación de la bitácora que nombra el programa sin ser una constancia reconocible (queda para revisión)."""
+    objetivo = clave_programa(nombre_programa)
+    for obs in bitacora():
+        if re.search(rf'(?<!\w){re.escape(objetivo)}(?!\w)', clave_texto(obs.texto)):
+            return obs
+    return None
+
+
+def otro_programa(programa, pnombre):
+    """Espera y Cumplimiento: constancia única de que el niño cuenta con ingreso efectivo a otro programa vigente.
+
+    «Otro» = otra denominación completa en el Ingreso Histórico Protección de la misma persona, con Fecha egreso `--`
+    y Causal `SIN INFORMACION` en la misma fila. Se consigna una sola vez por niño y programa: no se repite si la
+    bitácora (de cualquier etapa) ya la tiene o si el funcionario la marcó como consignada. Sin esa fuente verificada no
+    se afirma nada; la fuente fallida o de identidad incierta queda visible como marca."""
+    h = historico()
+    if h is None:
+        return []
+    if h.cobertura == 'FALLIDA':
+        marcar(3, 'HISTORICO_NO_DISPONIBLE', 'Ingreso Histórico Protección no se pudo leer: no se verificó si hay otro programa vigente')
+        return []
+    if h.cobertura in CON_FILAS_HIST and h.identidad != 'VERIFICADA':
+        marcar(2, 'HISTORICO_IDENTIDAD', 'Ingreso Histórico Protección sin pertenencia verificada a esta persona: no se afirma otro programa')
+        return []
+    otros = programas_vigentes_otros(h, programa)
+    if not otros:
+        return []
+    if not _primer_nombre_valido(pnombre):
+        marcar(2, 'OTRO_PROGRAMA_SIN_NOMBRE', 'Otro programa vigente en el histórico, pero no se pudo determinar el primer nombre: revisar esta fila')
+        return []
+    salida = []
+    propuestos = current.get().setdefault('otros_programas', [])
+    for nombre in otros:
+        llave = clave_programa(nombre)
+        if llave in consignados() or constancia_en_bitacora(bitacora(), pnombre, nombre) is not None:
+            continue
+        if bitacora_parcial():
+            marcar(2, 'OTRO_PROGRAMA_BITACORA_PARCIAL', f'Bitácora incompleta: no se puede descartar que el ingreso efectivo a «{nombre}» ya se haya consignado')
+        elif _mencion_previa(nombre) is not None:
+            marcar(3, 'OTRO_PROGRAMA_MENCION_PREVIA', f'La bitácora menciona «{nombre}» sin una constancia reconocible: revisar si ya se consignó')
+        texto = render('HISTORIA', 'OTRO_PROGRAMA', PNOMBRE=pnombre, OTRO_PROGRAMA=nombre)
+        if texto:
+            salida.append(texto)
+            propuestos.append({'clave': llave, 'programa': nombre})
+    return salida
+
+
+CON_FILAS_HIST = ('COMPLETA', 'PARCIAL')
+
+
+def _es_pendiente(programa, escrito):
+    nombre = V.ESCRITOS.get(intervencion(programa))
+    return bool(
+        nombre and clave_texto(escrito.tipo) == clave_texto(nombre) and clave_texto(escrito.estado) == ESTADO_PENDIENTE
+    )
+
+
+def escritos_pendientes(programa):
+    """Escritos de la causa con el tipo de la modalidad del programa y estado Pendiente en la misma fila.
+    Una bandeja vacía comprobada, no solicitada o fallida no contiene nada: [] sin afirmar ausencia."""
+    e = escritos()
+    if e is None or not e.con_filas:
+        return []
+    return [f for f in e.filas if _es_pendiente(programa, f)]
+
+
+def escrito_pendiente(programa, vencimiento=None, atribuible=True):
+    """Informe de avance pendiente de resolver, atribuible a este informe. Devuelve el escrito o None.
+
+    Atribución: (a) asociación explícita con la fecha proyectada de este informe; (b) un único candidato pendiente en
+    una causa de un solo registro y sin otros vencidos. Varios candidatos sin vínculo o un vínculo con otra fecha no se
+    atribuyen: queda marca de revisión y se conservan las acciones. Si la historia acredita un escrito posterior a la
+    lectura de la bandeja, prevalece la historia; con estados incompatibles sin secuencia fiable, revisión."""
+    candidatos = escritos_pendientes(programa)
+    if not candidatos:
+        return None
+    propios = [c for c in candidatos if c.vinculo == 'EXPLICITO' and vencimiento is not None and c.fecha_proyectada == _d(vencimiento)]
+    elegido = propios[0] if propios else (candidatos[0] if atribuible and len(candidatos) == 1 and candidatos[0].vinculo != 'EXPLICITO' else None)
+    if elegido is None:
+        marcar(2, 'ESCRITO_PENDIENTE_SIN_ATRIBUIR', 'Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones')
+        return None
+    h = _h()
+    nombre = V.ESCRITOS.get(intervencion(programa))
+    en_historia = [t for t in (h.buscar(nombre) if h else []) if vencimiento is None or t.fecha >= _d(vencimiento)]
+    if en_historia:
+        lectura = escritos().leido
+        hasta = h.hasta
+        if lectura is not None and hasta is not None and hasta > lectura:
+            return None  # la incorporación posterior acreditada en Historia prevalece sobre la bandeja
+        marcar(2, 'ESCRITO_ESTADOS_INCOMPATIBLES', 'Escrito pendiente en la bandeja y escrito ya incorporado en la historia sin secuencia fiable: revisar')
+        return None
+    marcar(2, 'ESCRITO_PENDIENTE', 'Informe de avance pendiente de resolver en la bandeja de Escritos')
+    return elegido
+
+
+def informe_pendiente(programa, vencimiento=None, atribuible=True):
+    """Fragmentos de la regla (una sola frase, una vez). [] si no corresponde."""
+    if escrito_pendiente(programa, vencimiento, atribuible) is None:
+        return []
+    texto = render('HISTORIA', 'INFORME_AVANCE_PENDIENTE')
+    return [texto] if texto else []

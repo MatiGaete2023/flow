@@ -7,7 +7,8 @@ def test_i1_contradice_i01_sin_frase_de_envio_y_marca_nivel2(tmp_path):
     f = inf(tmp_path, fila(1) + ['2026-09-20'], hist(('Ingreso informe de cumplimiento X', '2026-09-25', 58)))
     assert f.observation.split(': ', 1)[1] == (
         'Informe de avance vencido desde el 20 de septiembre de 2026. '
-        'Se hace presente que en resolución de fecha 25 de septiembre de 2026 (folio 58), se ingresa el informe de cumplimiento.'
+        'Se hace presente que el informe de PRM UNO registra ingreso a folio 58 y figura pendiente en el calendario. '
+        'Se sugiere revisar su asociación con la fecha proyectada 20 de septiembre de 2026.'
     )
     assert f.actions == [] and [a[:2] for a in f.avisos] == [(2, 'I01_CONTRADICHA')]
     dce = inf(
@@ -86,7 +87,8 @@ def test_dce_en_el_margen_con_informe_ingresado_despues_del_vencimiento(tmp_path
     )
     assert f.observation.split(': ', 1)[1] == (
         'Informe diagnóstico vencido desde el 9 de octubre de 2026. '
-        'Se hace presente que en resolución de fecha 11 de octubre de 2026 (folio 58), se ingresa el informe de cumplimiento.'
+        'Se hace presente que el informe de DCE UNO registra ingreso a folio 58 y figura pendiente en el calendario. '
+        'Se sugiere revisar su asociación con la fecha proyectada 9 de octubre de 2026.'
     )
     assert f.actions == [] and [a[:2] for a in f.avisos] == [(2, 'I01_CONTRADICHA')]
 

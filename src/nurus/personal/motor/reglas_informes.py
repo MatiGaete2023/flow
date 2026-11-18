@@ -1,6 +1,7 @@
 from .contexto import parametro
 # -*- coding: utf-8 -*-
 from datetime import timedelta
+from .contexto import evidencia_informe
 from .contexto import datetime as Clock
 from .composicion import componer, prefijo, fecha_valida, Incidencias
 from .utilidades import fecha_es, titulo_programa, es_derivacion_sin_seg, es_dce
@@ -39,14 +40,23 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     # Un trámite de la causa solo retira la gestión si se puede vincular a este informe (11-nov-2026): causa de un
     # registro y un único informe vencido. Si no, se conservan correo y proyecto y el trámite queda como constancia.
     atribuible = not H.varios_registros() and not H.varios_vencidos()
-    i1 = H.informe_historia(fv, vencido, atribuible)
-    i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None) if atribuible else []
-    if vencido and not atribuible and i1:
+    # Asociación explícita de esta proyección con su evidencia (18-nov-2026): atribuye aunque haya varios vencimientos.
+    ev = evidencia_informe()
+    folio_res = ev.resolucion_folio if ev else ''
+    folio_esc = ev.escrito_historia_folio if ev else ''
+    i1 = H.informe_historia(fv, vencido, atribuible, programa, folio_res)
+    i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None, folio=folio_esc) if (atribuible or folio_esc) else []
+    if vencido and not (atribuible or folio_res or folio_esc) and i1:
         H.marcar(2, 'INFORME_SIN_ATRIBUIR', 'Ingreso de informe en la causa que no se puede atribuir a este informe: se conservan las acciones')
     if vencido and not (i1 or i3) and H.informe_previo(programa, fv):
         # Un ingreso o escrito anterior al vencimiento no acredita a qué período corresponde: se conservan las acciones.
         H.marcar(2, 'ENTREGA_ANTERIOR', 'Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión')
-    if vencido and atribuible and (i1 or i3):
+    # Escrito de informe de avance pendiente de resolver, atribuible a este informe: no se pide cuenta de él (18-nov-2026).
+    pendiente = H.informe_pendiente(programa, fv, atribuible) if vencido and not (i1 or i3) else []
+    if pendiente:
+        H.marcar(2, 'I01_ESCRITO_PENDIENTE', 'Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta')
+        return componer(pfx, pendiente + H.informes_acumulados())
+    if vencido and (atribuible or folio_res or folio_esc) and (i1 or i3):
         H.marcar(2, 'I01_CONTRADICHA', 'Informe vencido en RUS contradicho por la historia')
         principal = render('HISTORIA', 'I01_SIN_ENVIO_DCE' if es_dce(programa) else 'I01_SIN_ENVIO_GENERAL', FECHA_VENCIMIENTO=fecha_es(fv))
     elif margen:
@@ -54,5 +64,5 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
         principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fv), FECHA_LIMITE=fecha_es(fecha))
     else:
         principal = render('INFORMES', key, PROGRAMA=prog, FECHA_VENCIMIENTO=fecha_es(fecha))
-    fr = [principal] + i1 + i3 + H.informes_acumulados()
+    fr = ([principal] if principal else []) + i1 + i3 + H.informes_acumulados()
     return componer(pfx, fr)
