@@ -88,6 +88,28 @@ pub struct Trabajo {
     /// preparada y preferencias. Este crate no lo interpreta; ver `almacen::PRODUCTOS_SESION`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sesion: Option<serde_json::Value>,
+    /// Constancias que el funcionario ya consignó (plan 18-nov-2026): id de fila → claves de programa. Solo las marca
+    /// `consignar`, nunca al generar ni exportar una propuesta.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub consignaciones: std::collections::BTreeMap<String, Vec<String>>,
+}
+
+impl Trabajo {
+    /// Registra que el funcionario consignó la constancia de ingreso efectivo a `programa` para esa fila. Idempotente
+    /// (la clave ignora mayúsculas, tildes y espacios). Devuelve `true` si es nueva: la fila debe recalcularse con
+    /// `paquete::importar_con(…, &trabajo.consignaciones)` para que la propuesta deje de repetirla.
+    pub fn consignar(&mut self, id_fila: &str, programa: &str) -> bool {
+        let clave = flow_dominio::evidencia::clave_programa(programa);
+        if clave.is_empty() || !self.filas.iter().any(|f| f.id == id_fila) {
+            return false;
+        }
+        let lista = self.consignaciones.entry(id_fila.to_string()).or_default();
+        if lista.contains(&clave) {
+            return false;
+        }
+        lista.push(clave);
+        true
+    }
 }
 
 /// Cambio de reglas que no se refleja en las fuentes del motor ni en sus datos: subir a mano.
@@ -239,6 +261,7 @@ pub fn analizar_filas(archivo: &str, sha256: &str, tabla: &Tabla, corte: Fecha, 
         avisos,
         version_reglas: version_reglas(config),
         sesion: None,
+        consignaciones: Default::default(),
     }
 }
 

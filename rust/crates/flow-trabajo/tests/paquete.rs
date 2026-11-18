@@ -99,3 +99,30 @@ fn paquete_de_estructura_16_vencimientos_10_ingresos_igual_que_python() {
     let con_nomenclatura = esperado.filas.iter().filter(|e| e.acciones.iter().any(|a| a == "NOMENCL")).count();
     assert_eq!((con_pide_cuenta, con_nomenclatura), (13, 1));
 }
+
+/// Plan 18-nov-2026: consignar una constancia es idempotente, se persiste con el trabajo y, al volver a analizar con
+/// `importar_con`, la propuesta deja de repetirla sin tocar las demás filas.
+#[test]
+fn consignar_no_repite_la_constancia_y_se_conserva_en_la_sesion() {
+    let esperado: Esperado = serde_json::from_slice(&datos("paquete_integracion.json")).unwrap();
+    let zip = datos("paquete_integracion.zip");
+    let config = Config::default();
+    let p = paquete::importar("p.zip", &zip, esperado.corte, &config).unwrap();
+    let mut trabajo = p.trabajos.into_iter().find(|t| t.filas.iter().any(|f| !f.propuesta.otros_programas.is_empty())).unwrap();
+    let fila = trabajo.filas.iter().find(|f| !f.propuesta.otros_programas.is_empty()).unwrap();
+    let (id, programa) = (fila.id.clone(), fila.propuesta.otros_programas[0].programa.clone());
+    assert!(fila.propuesta.observacion.contains("cuenta con ingreso efectivo al programa"));
+    assert!(trabajo.consignar(&id, &programa));
+    assert!(!trabajo.consignar(&id, &programa.to_uppercase()), "idempotente");
+    assert!(!trabajo.consignar("no-existe", &programa));
+    let sesion: flow_trabajo::Trabajo = serde_json::from_str(&serde_json::to_string(&trabajo).unwrap()).unwrap();
+    assert_eq!(sesion.consignaciones, trabajo.consignaciones);
+    let otra = paquete::importar_con("p.zip", &zip, esperado.corte, &config, &sesion.consignaciones).unwrap();
+    let todas: Vec<_> = otra.trabajos.iter().flat_map(|t| t.filas.iter()).collect();
+    let f = todas.iter().find(|f| f.id == id).unwrap();
+    assert!(!f.propuesta.observacion.contains("cuenta con ingreso efectivo") && f.propuesta.otros_programas.is_empty());
+    for e in esperado.filas.iter().filter(|e| e.id != id) {
+        assert_eq!(todas.iter().find(|f| f.id == e.id).unwrap().propuesta.observacion, e.observacion);
+    }
+    assert!(otra.trabajos.iter().any(|t| t.consignaciones.contains_key(&id)));
+}

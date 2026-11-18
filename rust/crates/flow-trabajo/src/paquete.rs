@@ -254,6 +254,17 @@ fn etapa_de(tipo: &str) -> Option<Etapa> {
 
 /// Lee, verifica y analiza un paquete. Devuelve un trabajo por etapa.
 pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Result<Paquete, String> {
+    importar_con(nombre, datos, corte, config, &Default::default())
+}
+
+/// Como `importar`, conservando las constancias ya consignadas (`Trabajo::consignaciones`) para no proponerlas otra vez.
+pub fn importar_con(
+    nombre: &str,
+    datos: &[u8],
+    corte: Fecha,
+    config: &Config,
+    consignaciones: &std::collections::BTreeMap<String, Vec<String>>,
+) -> Result<Paquete, String> {
     if datos.len() as u64 > LIMITE {
         return Err("El paquete supera 80 MB.".into());
     }
@@ -333,7 +344,11 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
     }
     let mut avisos = Vec::new();
     let mut por_etapa: BTreeMap<(u8, String), (Etapa, Vec<Fila>)> = BTreeMap::new();
-    let mut contexto = Contexto { proximos: Some(HashMap::new()), ..Contexto::default() };
+    let mut contexto = Contexto {
+        proximos: Some(HashMap::new()),
+        consignaciones: consignaciones.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+        ..Contexto::default()
+    };
     for (n, r) in registros.iter().enumerate() {
         let tipo = dato(r, "record_type");
         let etapa = etapa_de(tipo).unwrap_or(Etapa::Espera);
@@ -459,7 +474,10 @@ pub fn importar(nombre: &str, datos: &[u8], corte: Fecha, config: &Config) -> Re
         }
         let tabla =
             Tabla { etapa, hoja: "Paquete".into(), fila_cabecera: 1, cabeceras, mapeo, filas, cruce: Vec::new(), avisos: avisos.clone() };
-        trabajos.push(analizar_filas(nombre, &huella, &tabla, corte, config, &contexto));
+        let mut trabajo = analizar_filas(nombre, &huella, &tabla, corte, config, &contexto);
+        trabajo.consignaciones =
+            consignaciones.iter().filter(|(id, _)| trabajo.filas.iter().any(|f| &f.id == *id)).map(|(k, v)| (k.clone(), v.clone())).collect();
+        trabajos.push(trabajo);
     }
     crate::controles::paquete(&mut trabajos);
     if trabajos.is_empty() {

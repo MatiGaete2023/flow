@@ -85,8 +85,9 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
    Ojo: el lote ficticio del Descargador no trae `person_id` y la verificación de pertenencia solo vale con RUT/nombre completo visibles en la vista. Escenarios Chromium ficticios (`rust/pruebas/*.cjs`) y `rust.yml` para las fuentes nuevas.
 3. **Interfaz**: botón «marcar constancia como consignada» (`Work.consignar`), visualización de las marcas nuevas, guía visual.
 4. **Escenario 9 incompleto**: faltan selección oculta y reintento tras cancelación (de interfaz/cola; cambio de corte, recálculo y producto editado sí).
-5. Rust: **consignación** (`Contexto.consignaciones` existe, pero ni `Trabajo` la persiste ni la interfaz la marca) y el **botón** en ambas interfaces;
-
+5. Rust: la **consignación** ya tiene núcleo (`Trabajo::consignar`, `Trabajo.consignaciones` persistido y conservado por `almacen::recuperar`,
+   `paquete::importar_con(…, &trabajo.consignaciones)` recalcula sin repetir la constancia; prueba `consignar_no_repite_la_constancia…`). Falta el **botón**
+   en ambas interfaces: tras `consignar`, volver a importar el paquete con `importar_con`. (Solo el flujo por paquete usa las fuentes nuevas.)
 6. ~~Anonimizador~~ HECHO: `personal/anonymize_package.py` trata las tablas nuevas (`requester` como persona; `linked_ingreso_id` comparte seudónimo con `ingreso_id`; literales del motor intactos). Prueba: `test_el_anonimizador_trata_las_tablas_nuevas…`.
 7. E3 (revisión por otro agente) exigida por `AGENTS.md`/decisión j: tocan `motor/`, `textos_base.json`, `contracts/` y el contrato. Nada está «aceptado».
 8. CI Windows/SITFA y `cargo build --release --locked -p flow`; `tools/verificar_wp.py` (hoy falla por entorno).
@@ -94,7 +95,7 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 316 pruebas
+cd rust && cargo test --workspace --locked                                       # 323 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

@@ -73,6 +73,7 @@ pub fn recuperar(datos: &Path, nuevo: &mut Trabajo) -> Result<(bool, Option<Stri
         *nuevo = anterior;
         return Ok((true, None));
     }
+    nuevo.consignaciones = anterior.consignaciones.clone();
     for (fila, previa) in nuevo.filas.iter_mut().zip(&anterior.filas) {
         // Una observación igual a la propuesta anterior era texto del motor: se reemplaza por la nueva.
         if previa.editada() {
