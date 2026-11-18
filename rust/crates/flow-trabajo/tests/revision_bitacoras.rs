@@ -330,3 +330,26 @@ fn miles_de_ingresos_se_indizan_una_vez() {
     assert!(inicio.elapsed() < std::time::Duration::from_secs(20));
 }
 
+
+#[test]
+fn alcance_sitfa_exige_que_cada_fila_venga_de_la_respuesta_declarada() {
+    let huella = "a".repeat(64);
+    let mut q = query("b1","201",vec![event("e1","2026-11-10T10:00:00","centro")],true);
+    q["coverage"] = json!("PARCIAL");
+    let mut f: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+    f["revision_bitacoras"]["alcance_revision_fuente"] = json!({"metodo":flow_captura::lecturas::ALCANCE_BITACORA_SITFA,
+        "coverage":"COMPLETA","html_sha256":huella});
+    q["filters_json"] = json!(f.to_string());
+    let paquete = |sha: &str| {
+        let fila = json!({"query_id":"b1","source_system":"RUS","court_code":"901","cause_id":"100","ingreso_id":"201",
+            "identity_status":"VERIFICADA","event_id":"b1-e1","event_at":"2026-11-10T10:00:00","text":"Nota ficticia",
+            "origin":"CENTRO","origin_verified":"true","coverage":"PARCIAL","source_sha256":sha});
+        build_tables(vec![("registros",vec![row("r1","201")]),("consultas",vec![q.clone()]),("bitacoras",vec![fila])])
+    };
+    assert_eq!(inspect(&paquete(&huella)).filas[0].revision.clasificacion, C::ConObservacion, "fila de la respuesta declarada");
+    assert_eq!(inspect(&paquete(&huella.to_uppercase())).filas[0].revision.clasificacion, C::ConObservacion, "hex sin distinguir mayúsculas");
+    for sha in ["b".repeat(64), String::new()] {
+        let informe = inspect(&paquete(&sha));
+        assert_eq!(informe.filas[0].revision.clasificacion, C::NoVerificable, "huella manipulada {sha:?}: {}", informe.filas[0].revision.motivo);
+    }
+}
