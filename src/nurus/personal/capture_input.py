@@ -118,6 +118,44 @@ def captured_rule_context(work, source):
     )
 
 
+def captured_extra_context(work, source, vencimiento=None):
+    """Escritos, Histórico de Protección, evidencia del informe y límite de la bitácora de un registro (plan 18-nov-2026),
+    para recalcular una fila tras una edición humana con las mismas fuentes del import. {} si no hay identidad."""
+    if not source or source['identity_status'] != 'VERIFICADA':
+        return {}
+    tables = getattr(work, 'capture_rule_sources', None) or {}
+    cached = getattr(work, '_save_extra_source_index', None)
+    if cached is None or cached[0] != work.capture_digest:
+        from nurus.capture.contract import Capture
+        from nurus.capture.coverage import build_index
+        from nurus.capture.escritos import filas_de_escritos, historicos_por_persona
+
+        capture = Capture(work.capture_manifest, tables, work.capture_digest)
+        historia_filas = defaultdict(list)
+        for fila in capture.rows('historia_tramites'):
+            historia_filas[(fila['source_system'], fila['court_code'], fila['cause_id'])].append(fila)
+        cached = (
+            work.capture_digest,
+            filas_de_escritos(capture),
+            historicos_por_persona(capture),
+            build_index(capture.manifest, capture.tables),
+            historia_filas,
+        )
+        work._save_extra_source_index = cached  # índice derivado; Work.save excluye los campos _save_*.
+    from nurus.capture.coverage import ADEQUATE
+    from nurus.capture.escritos import escritos_para, evidencia_informe, historico_para
+
+    _, fuentes, historicos, cobertura, historia_filas = cached
+    estado = cobertura.get(('bitacoras', identity(source)))
+    clave = (source['source_system'], source['court_code'], source['cause_id'])
+    return {
+        'escritos': escritos_para(source, fuentes),
+        'historico': historico_para(source, historicos),
+        'evidencia_informe': evidencia_informe(source, vencimiento, fuentes, historia_filas.get(clave, ())),
+        'bitacora_parcial': estado is not None and estado not in ADEQUATE,
+    }
+
+
 def import_capture(path, config, *, as_of=None, previous=None, resolutions=None):
     from .operations import checkpoint, progress
 
@@ -220,6 +258,26 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     historias = _historias_por_causa(capture)
     historia_by_record = {}
     bitacora_by_record = {}
+    # Plan 18-nov-2026: Escritos de la causa, Ingreso Histórico Protección de la persona y asociación explícita.
+    from nurus.capture.coverage import ADEQUATE, build_index
+    from nurus.capture.escritos import (
+        escritos_para,
+        evidencia_informe,
+        filas_de_escritos,
+        historico_para,
+        historicos_por_persona,
+    )
+
+    fuentes_escritos = filas_de_escritos(capture)
+    historicos = historicos_por_persona(capture)
+    cobertura_ingreso = build_index(capture.manifest, capture.tables)
+    historia_filas = defaultdict(list)
+    for fila in capture.rows('historia_tramites'):
+        historia_filas[(fila['source_system'], fila['court_code'], fila['cause_id'])].append(fila)
+    escritos_by_record = {}
+    historico_by_record = {}
+    evidencia_by_record = {}
+    bitacora_parcial_by_record = {}
     for table in ('bitacoras', 'historia_tramites'):
         for event in capture.rows(table):
             if event.get('identity_status') == 'VERIFICADA' and event.get('scope', 'INGRESO') == 'INGRESO':
@@ -256,6 +314,15 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
                 (record['source_system'], record['court_code'], record['cause_id'])
             )
             bitacora_by_record[record['record_id']] = observaciones(bitacora_index.get(identity(record), ()))
+            escritos = escritos_para(record, fuentes_escritos)
+            if escritos is not None:
+                escritos_by_record[record['record_id']] = escritos
+            historico = historico_para(record, historicos)
+            if historico is not None:
+                historico_by_record[record['record_id']] = historico
+            estado_bitacora = cobertura_ingreso.get(('bitacoras', identity(record)))
+            if estado_bitacora is not None and estado_bitacora not in ADEQUATE:
+                bitacora_parcial_by_record[record['record_id']] = True
         matching = calendars.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
         dates = []
         for cal in matching:
@@ -264,6 +331,16 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             due = as_date(source.get(cm.get('vencimiento', ''), ''))
             if due and as_of < due <= as_of + timedelta(days=VENTANA_INFORMES_DIAS):
                 dates.append(due)
+        if mode == 'INFORMES' and record['identity_status'] == 'VERIFICADA':
+            columna = map_columns(raw, 'INFORMES').get('vencimiento')
+            evidencia = evidencia_informe(
+                record,
+                as_date(raw.get(columna, '')) if columna else None,
+                fuentes_escritos,
+                historia_filas.get((record['source_system'], record['court_code'], record['cause_id']), ()),
+            )
+            if evidencia is not None:
+                evidencia_by_record[record['record_id']] = evidencia
         if len(set(dates)) == 1:
             cross[record['record_id']] = dates[0]
         items = projected.get(identity(record), []) if record['identity_status'] == 'VERIFICADA' else []
@@ -309,6 +386,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     candidate.source_hash = digest
     candidate.sitfa_sources = {}
     candidate.cross_dates = {}
+    candidate.consignaciones = deepcopy(dict(getattr(previous, 'consignaciones', {}) or {}))
     for (mode, _), items in groups.items():
         checkpoint()
         progress('Analizando reglas tradicionales: ' + mode)
@@ -328,7 +406,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             column_mapping=mapping,
             source_bytes=content,
         )
-        analyzed = Work(config).analyze(
+        motor = Work(config)
+        # Constancias que el funcionario ya consignó (por registro): se conservan al reimportar.
+        motor.consignaciones = deepcopy(dict(getattr(previous, 'consignaciones', {}) or {}))
+        analyzed = motor.analyze(
             path,
             mode,
             as_of=as_of,
@@ -336,6 +417,10 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
             cross_by_record=cross,
             historia_by_record=historia_by_record,
             bitacora_by_record=bitacora_by_record,
+            escritos_by_record=escritos_by_record,
+            historico_by_record=historico_by_record,
+            evidencia_by_record=evidencia_by_record,
+            bitacora_parcial_by_record=bitacora_parcial_by_record,
         )
         # Un grupo solo de EGRESADOS/OTRO no pasa por el motor: sus avisos de columnas serían falsos.
         if any(record['record_type'] in ENGINE_TYPES for record, _, _, _ in items):
@@ -366,7 +451,9 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     candidate.capture_id = capture.manifest['capture_id']
     candidate.capture_config_hash = config_hash
     candidate.capture_manifest = capture.manifest
-    candidate.capture_rule_sources = {table: capture.rows(table) for table in ('historia_tramites', 'bitacoras')}
+    candidate.capture_rule_sources = {
+        table: capture.rows(table) for table in ('historia_tramites', 'bitacoras', 'escritos', 'historico_proteccion')
+    }
     candidate.capture_sources = provenance
     candidate.capture_context = contexts
     candidate.capture_modes = row_modes

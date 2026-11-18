@@ -550,6 +550,12 @@ class Work:
         llave = clave_programa(programa)
         if llave and llave not in mapa.setdefault(row_id, []):
             mapa[row_id].append(llave)
+            fila = next((r for r in self.rows if r.id == row_id), None)
+            if fila is not None and getattr(self, 'as_of', ''):
+                from .record_edits import recalculate
+
+                recalculate(self, fila)  # la propuesta deja de repetir la constancia ya consignada
+                self.revision += 1
         return llave
 
     def export(self, destination, *, backend='native', reduced_fidelity=False):

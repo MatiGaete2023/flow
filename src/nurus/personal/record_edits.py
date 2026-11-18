@@ -249,10 +249,12 @@ def _recalculate(work, row):
     values = dict(row.values)
     for key, value in row.overrides.items():
         values[mapping[key]] = value
-    from .capture_input import captured_rule_context
+    from .capture_input import captured_extra_context, captured_rule_context
 
     corte = date.fromisoformat(work.as_of)
     history, diary = captured_rule_context(work, source)
+    due = as_date(values.get(mapping.get('vencimiento', ''))) if mode == 'INFORMES' else None
+    extra = captured_extra_context(work, source, due)
     rows = [row if original.id == row.id else original for original in work.rows]
     duplicity, accumulated = _rows_prepass(work, rows, mode, mapping)
     ctx = dict(
@@ -265,6 +267,8 @@ def _recalculate(work, row):
         bitacora=tuple(o for o in diary if o.fecha <= corte),
         duplicidad=duplicity.get(row.id),
         acumulado=accumulated.get(row.id),
+        consignados=frozenset(getattr(work, 'consignaciones', {}).get(row.id, ())),
+        **extra,
     )
     token = current.set(ctx)
     incidences = Incidencias()
@@ -299,6 +303,7 @@ def _recalculate(work, row):
     corte = _date.fromisoformat(work.as_of) if getattr(work, 'as_of', '') else None
     row.actions = actions_for(row.rules, as_date(getattr(work, 'cross_dates', {}).get(row.id)), corte)
     row.avisos = list(dict.fromkeys(ctx['marcas']))
+    row.otros_programas = list(ctx.get('otros_programas', ()))
     context = getattr(work, 'capture_context', {}).get(row.id)
     if context:
         warnings.append(context['reason'])

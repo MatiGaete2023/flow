@@ -16,6 +16,8 @@ SCREEN_TABLES = {
     'calendario_informes': ('registros', 'calendarios'),
     'bitacoras': ('bitacoras',),
     'historia_tramites': ('historia_tramites',),
+    'escritos': ('escritos',),
+    'historico_proteccion': ('historico_proteccion',),
     'documentos': ('documentos',),
 }
 

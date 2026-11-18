@@ -18,6 +18,9 @@ import zlib
 
 VERSION = '1.0.0'
 VERSION_CONSOLIDATED = '1.1.0'
+# 1.2.0 (aditiva, plan 18-nov-2026): tablas opcionales `escritos` (bandeja de Escritos de la causa) y
+# `historico_proteccion` (Ingreso Histórico Protección de la persona). Un paquete 1.0/1.1 no las declara y se lee igual.
+VERSION_EXTENDED = '1.2.0'
 CONSOLIDATED_PATH = 'consolidado/consolidado.xlsx'
 MAPPING_VERSION = 'baseline-20261008-v1'
 STATES = (
@@ -128,6 +131,29 @@ TABLES = {
         'recoverable',
     ),
 }
+EXTENDED_TABLES = ('escritos', 'historico_proteccion')
+TABLES['escritos'] = COMMON + (
+    'escrito_id',
+    'scope',
+    'doc',
+    'escrito_type',
+    'requester',
+    'escrito_status',
+    'reference',
+    'linked_ingreso_id',
+    'linked_projection',
+    'identity_status',
+    'raw_json',
+)
+TABLES['historico_proteccion'] = COMMON + (
+    'historico_id',
+    'program_name',
+    'egreso_date',
+    'egreso_cause',
+    'ownership',
+    'raw_json',
+)
+BASE_TABLES = tuple(t for t in TABLES if t not in EXTENDED_TABLES)
 # Columnas aditivas al final: solo se escriben si alguna fila las trae; el lector acepta columnas extra al final.
 EXTENSIONS = {'historia_tramites': ('folio', 'stage', 'annex_visible', 'raw_json')}
 # Baseline: 200k filas, respuesta 80 MiB, HTML 8 MiB. Límites agregados conservadores.
@@ -301,7 +327,9 @@ def validate_manifest(m):
     for name in ('files', 'queries'):
         if not isinstance(m.get(name), list):
             fail('Falta lista ' + name)
-    if not isinstance(m.get('table_states'), dict) or set(m['table_states']) != set(TABLES):
+    # 1.2+ puede declarar las tablas extendidas o, si no las usa, solo las base (lectura hacia atrás y hacia adelante).
+    valid_states = (set(BASE_TABLES),) if int(version.split('.')[1]) < 2 else (set(BASE_TABLES), set(TABLES))
+    if not isinstance(m.get('table_states'), dict) or set(m['table_states']) not in valid_states:
         fail('Declarar estados de todas las tablas.')
     if any(s not in STATES for s in m['table_states'].values()):
         fail('Estado de tabla inválido.')
@@ -393,6 +421,7 @@ def _validate_rows(m, tables):
     document_ids = set()
     calendar_ids = set()
     incident_ids = set()
+    extended_ids = {table: set() for table in EXTENDED_TABLES}
     for table, rows in tables.items():
         if table == 'consultas':
             continue
@@ -451,6 +480,20 @@ def _validate_rows(m, tables):
                     fail('Alcance inválido.')
                 if row.get('response_at'):
                     iso_time(row['response_at'], True)
+            elif table == 'escritos':
+                key, seen = 'escrito_id', extended_ids[table]
+                if row['scope'] != 'CAUSA' or row['ingreso_id']:
+                    fail('Los escritos son de la causa: sin ingreso.')
+                if row['linked_projection']:
+                    iso_time(row['linked_projection'], True)
+                if bool(row['linked_projection']) != bool(row['linked_ingreso_id']):
+                    fail('Asociación explícita incompleta: ingreso y fecha proyectada van juntos.')
+            elif table == 'historico_proteccion':
+                key, seen = 'historico_id', extended_ids[table]
+                if row['ownership'] not in ('VERIFICADA', 'INCIERTA'):
+                    fail('Pertenencia del histórico inválida.')
+                if row['ownership'] == 'VERIFICADA' and not row['person_id']:
+                    fail('Histórico verificado sin identidad de persona.')
             elif table == 'documentos':
                 key, seen = 'document_id', document_ids
                 if row['content_read'] != 'false':
@@ -494,7 +537,7 @@ def _validate_rows(m, tables):
         if r['record_id'] and r['record_id'] not in record_ids:
             fail('Incidencia con registro inexistente.')
     for table in TABLES:
-        state = m['table_states'][table]
+        state = m['table_states'].get(table, 'NO_SOLICITADA')
         rows = tables.get(table, ())
         if (
             state in ('NO_SOLICITADA', 'NO_CONSULTADA', 'VACIA_COMPROBADA', 'FALLIDA', 'CANCELADA', 'NO_DISPONIBLE')
@@ -512,8 +555,15 @@ def _validate_rows(m, tables):
             'CANCELADA',
         ):
             fail('Tabla disponible omitida.')
-    from .coverage import validate_coverage
+    from .coverage import ADEQUATE, validate_coverage
 
+    for table in EXTENDED_TABLES:
+        for row in tables.get(table, ()):
+            query = queries[row['query_id']]
+            if row['coverage'] == 'VACIA_COMPROBADA' or query['coverage'] == 'VACIA_COMPROBADA':
+                fail('Fila presente declarada vacía.')
+            if row['coverage'] in ADEQUATE and query['coverage'] not in ADEQUATE:
+                fail('Fila declara mayor cobertura que su consulta.')
     validate_coverage(m, tables, fail)
 
 
@@ -603,7 +653,10 @@ def read_capture(path):
             if not all(t in tables for t in REQUIRED):
                 fail('Falta tabla requerida.')
             _validate_rows(m, tables)
-            return Capture(deepcopy(m), tables, digest, consolidated)
+            manifest = deepcopy(m)
+            for table in EXTENDED_TABLES:  # un paquete 1.0/1.1 no las solicitó
+                manifest['table_states'].setdefault(table, 'NO_SOLICITADA')
+            return Capture(manifest, tables, digest, consolidated)
     except (zipfile.BadZipFile, UnicodeError, csv.Error, KeyError, EOFError, RuntimeError, zlib.error) as exc:
         raise CaptureError('Paquete corrupto o incompatible.') from exc
 
@@ -621,9 +674,17 @@ def write_capture(destination, metadata, tables, *, originals=None, consolidated
     if consolidated is not None:
         check_workbook(consolidated)
     m = deepcopy(metadata)
-    m.update(
-        schema_id='CSMP_CAPTURE', schema_version=VERSION_CONSOLIDATED if consolidated is not None else VERSION, files=[]
-    )
+    extended = any(table in tables for table in EXTENDED_TABLES)
+    version = VERSION_EXTENDED if extended else (VERSION_CONSOLIDATED if consolidated is not None else VERSION)
+    m.update(schema_id='CSMP_CAPTURE', schema_version=version, files=[])
+    states = dict(m.get('table_states') or {})
+    for table in EXTENDED_TABLES:
+        if extended:
+            states.setdefault(table, 'NO_SOLICITADA')
+        else:
+            states.pop(table, None)  # el paquete 1.0/1.1 no declara tablas que no existen en su versión
+    if 'table_states' in m:
+        m['table_states'] = states
     m.setdefault('mapping_version', MAPPING_VERSION)
     m.setdefault('required_features', [])
     payload = {}
