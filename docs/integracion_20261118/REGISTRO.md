@@ -168,7 +168,7 @@ reversión hace caer al menos una prueba Python. Requiere **cuarta revisión E3*
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
 5. **Cuarta revisión E3** sobre la punta actual (tres anteriores NO PASA; ver «Correcciones E3», «E3B» y «E3C»). Nada está
    «aceptado». Idealmente con Rust instalado (la tercera no pudo ejecutar `cargo`). Mulchén: el usuario no conserva versión, botón,
-   mensaje ni nombres de JSON; la próxima vez que ocurra, anotar esos cuatro datos.
+   mensaje ni nombres de JSON; la próxima vez que ocurra, anotar esos cuatro datos. Prompt: `PROMPT_REVISION_E3_4.md`.
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
