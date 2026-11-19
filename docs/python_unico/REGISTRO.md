@@ -11,7 +11,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
 | P3a escritos visibles + diagnóstico | **Hecho; confirmado en uso real** (9 causas con escritos, 8 vacías, 14 pendientes) | ver Historial |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
-| P3c histórico automático | **Falla en uso real** (18/18 ventanas sin la tabla esperada); falta la estructura anónima | ver Historial 19-nov (resultado real) |
+| P3c histórico automático | **Corregido (marco interno); falta probar en uso real** · E3 pendiente (extensión) | ver Historial 19-nov (estructura del usuario) |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | Pendiente | — |
@@ -20,11 +20,10 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-1. **P3c:** pedir al usuario la salida ANÓNIMA de
-   `python descargador/extraer_estructura_escritos.py --ventana "<lote de bitácoras>/historico/historico-XXXX.html"`
-   (o el `historico/estructura_historico.json` que el Descargador deja solo desde esta versión). Con ella, ajustar
-   `nurus/escritos_html.read_historico` o el comando `historico_open` (¿marco/iframe?, ¿POST?, ¿otro tipo_popUp?).
-2. Revisión E3 independiente de P3c (extensión) una vez que funcione.
+1. **Usuario:** descargar de nuevo el ZIP de `flow-python`, **recargar la extensión** en `chrome://extensions`
+   (cambió `pagina.js`), correr un lote chico con «Ingreso Histórico (Mejor Niñez)» y enviar solo
+   `historico.json` → contar `estado`/`ownership` (sin nombres) o, si vuelve a fallar, `historico/estructura_historico.json`.
+2. Revisión E3 independiente de P3c (extensión).
 3. Prueba visual en Windows de P1, P2, P3a, P4; luego P8 y P5.
 
 ## Base de verificación (contenedor Linux sin Tk)
@@ -103,3 +102,8 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   barra de desplazamiento horizontal. Con esa forma visible, en ISO-8859-1, `read_historico` lee bien (prueba
   `test_historico_con_la_forma_visible_de_la_ventana_real_19nov`). N2: el HTML que recibe el Descargador difiere de lo
   renderizado (tabla cargada por script, encabezado y cuerpo en tablas separadas o similar). **Falta** `estructura_historico.json`.
+- 19-nov-2026 · **Estructura anónima del usuario** (`--ventana` sobre un `historico-*.html` real): `PopUpHistorial.jsp` es un
+  envoltorio de 675 bytes, título «Despliegue de Pop Up», sin tablas, con **un iframe a `/SITFAWEB/IrPopUpPublicoAccion.do`**.
+  Causa de las 18 FALLIDA: se leía el envoltorio. Corrección: `historico_open` sigue ese único marco (mismo origen, ruta exacta,
+  sin fragmento; dos marcos o ruta distinta = `HISTORICO_RESPONSE`) y devuelve su contenido; la pertenencia la decide el RUT
+  rotulado visible («Rut : …»), ya no la dirección. Prueba Node ampliada (`test_extension_historico.py`).

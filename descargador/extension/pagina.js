@@ -628,8 +628,29 @@ async function sitfaTask(command, payload) {
     throw new Error("HISTORY_RESPONSE");
   if(command==="historico_open"&&!/^text\/html(?:\s*;|$)/i.test(response.headers.get("content-type")||""))
     throw new Error("HISTORICO_RESPONSE");
-  const bytes=await boundedBytes(response,maxBytes);
+  let bytes=await boundedBytes(response,maxBytes);
   if(response.status!==200||!bytes.length)throw new Error("sesion");
+  if(command==="historico_open") {
+    // PopUpHistorial.jsp es un envoltorio con UN marco interno a IrPopUpPublicoAccion.do (estructura anónima del usuario,
+    // 19-nov-2026): se sigue solo ese marco, del mismo sitio y esa ruta exacta; la tabla viene en su contenido.
+    let shell;
+    try{shell=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}catch(_){shell=new TextDecoder("windows-1252").decode(bytes);}
+    const frames=[...new DOMParser().parseFromString(shell,"text/html").querySelectorAll("iframe,frame")];
+    if(frames.length) {
+      if(frames.length!==1)throw new Error("HISTORICO_RESPONSE");
+      let inner;
+      try{inner=new URL(frames[0].getAttribute("src")||"",url);}catch(_){throw new Error("HISTORICO_RESPONSE");}
+      if(inner.origin!=="https://familia.pjud.cl"||inner.pathname!=="/SITFAWEB/IrPopUpPublicoAccion.do"||inner.hash)
+        throw new Error("HISTORICO_RESPONSE");
+      diaryPhase='RED';
+      const second=await fetch(inner.href,{method:"GET",credentials:"include",cache:"no-store",redirect:"error",
+        signal:AbortSignal.timeout(Math.min(payload.timeout||60000,60000))});
+      diaryPhase='RESPUESTA';
+      if(!/^text\/html(?:\s*;|$)/i.test(second.headers.get("content-type")||""))throw new Error("HISTORICO_RESPONSE");
+      bytes=await boundedBytes(second,maxBytes);
+      if(second.status!==200||!bytes.length)throw new Error("HISTORICO_RESPONSE");
+    }
+  }
   if(command==="history_open") {
     let html;
     try{html=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}

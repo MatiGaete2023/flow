@@ -848,7 +848,8 @@ class DiaryRunner:
             data = ChromeTransport.body(result)
             if len(data) > hm.MAX_BYTES or hashlib.sha256(data).hexdigest() != result.get('digest') or result.get('params') != params:
                 raise m.PocError('HISTORICO_RESPONSE')
-            url = f'PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante={rut[:-1]}&RUT_DV={rut[-1]}'
+            # La pertenencia se prueba con el RUT ROTULADO que muestra la ventana («Rut : 12345678-9»), no con la dirección
+            # pedida: el contenido viene del marco interno de PopUpHistorial.jsp.
             entrada = hm.capturar(
                 session.folder,
                 data,
@@ -856,11 +857,10 @@ class DiaryRunner:
                     'tribunal': record['tribunal_codigo'],
                     'tribunal_nombre': record.get('tribunal_nombre', ''),
                     'person_id': person_id,
-                    'rut': rut,
+                    'rut': f'{rut[:-1]}-{rut[-1]}',
                     'nombre': item.get('nombre', ''),
                 },
                 capturada=result.get('startedAt'),
-                url=url,
             )
             record['historico_lectura'] = {
                 'estado': entrada['estado'],
