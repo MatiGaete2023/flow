@@ -9,9 +9,9 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 |---|---|---|
 | P1 consignar (botón) | **Hecho** | ver Historial 19-nov (P1) |
 | P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
-| P3a escritos visibles + diagnóstico | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P3a/P3b) |
+| P3a escritos visibles + diagnóstico | **Hecho; confirmado en uso real** (9 causas con escritos, 8 vacías, 14 pendientes) | ver Historial |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
-| P3c histórico automático | **Hecho** (sin prueba en SITFA real; E3 pendiente: toca la extensión) | ver Historial 19-nov (P3c) |
+| P3c histórico automático | **Falla en uso real** (18/18 ventanas sin la tabla esperada); falta la estructura anónima | ver Historial 19-nov (resultado real) |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | Pendiente | — |
@@ -20,13 +20,12 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-1. **Revisión E3 independiente de P3c** (toca la extensión: `descargador/extension/pagina.js::historico_open`), decisión j.
-2. **Prueba real del usuario en Windows** de P1, P2, P3 y P4 (no hay Tk en el contenedor): botón de consignación, ventana
-   «Revisión de bitácoras…», columna «Escritos», casilla «Ingreso Histórico (Mejor Niñez)», «Biblioteca de productos…»,
-   plantilla de Meta 4. Si `diagnostico_historia.json` muestra `SIN_TABLA`, pedir `historia/estructura_escritos.json`.
-3. Luego **P8** (diagnóstico del paquete: historial anónimo en `respaldo/proceso.json` y aviso final de bitácoras
-   faltantes por tribunal; ver `rust/crates/flow-trabajo/src/flujo.rs::anotar` y `avisos_de_bitacoras` como referencia)
-   y **P5** (diseño).
+1. **P3c:** pedir al usuario la salida ANÓNIMA de
+   `python descargador/extraer_estructura_escritos.py --ventana "<lote de bitácoras>/historico/historico-XXXX.html"`
+   (o el `historico/estructura_historico.json` que el Descargador deja solo desde esta versión). Con ella, ajustar
+   `nurus/escritos_html.read_historico` o el comando `historico_open` (¿marco/iframe?, ¿POST?, ¿otro tipo_popUp?).
+2. Revisión E3 independiente de P3c (extensión) una vez que funcione.
+3. Prueba visual en Windows de P1, P2, P3a, P4; luego P8 y P5.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -88,3 +87,12 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   (`app_base._import_contacts`) ya equivale a la de Rust; sin cambios. Manuales del Descargador, del Asistente y LEEME de
   Meta 4 actualizados. Pruebas `tests/test_biblioteca_productos.py` y `test_p4_validar_plantilla_*` (Meta 4: mismos 3 fallos
   de entorno que la base, por el lector BIFF).
+- 19-nov-2026 · **Resultado real del usuario** (solo diagnósticos anónimos; los JSON con nombres no se guardan): lote de 4
+  tribunales, Cumplimiento modalidad 1, 18 registros: bitácoras 18/18 LEIDA; historia 17/17 causas; **Escritos funciona**
+  (`CON_FILAS` 9, `VACIA` 8, 14 pendientes; sin `SIN_TABLA`); **Histórico 18/18 FALLIDA `HISTORICO_NO_VERIFICADA`**: la
+  ventana `PopUpHistorial.jsp?tipo_popUp=77` respondió HTML pero sin la tabla «Ingreso Historico Protección» → el supuesto
+  N2 sobre esa ventana no se cumple. Cambios: (1) tope de aperturas por lote 2000 → **5000** (bitácoras, calendarios,
+  históricos e historias; pedido del usuario: «lo máximo razonablemente posible»); (2) **5 históricos seguidos sin la tabla
+  suspenden el histórico** en el resto del lote (aviso; las bitácoras siguen); (3) la primera ventana no reconocida deja
+  `historico/estructura_historico.json` anónimo (`extraer_estructura_escritos.estructura_ventana`; también por consola con
+  `--ventana`). Pruebas `test_p3c_historico_sin_tabla_*`, `test_p3c_estructura_de_ventana_*` (sin datos de personas).

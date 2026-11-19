@@ -222,3 +222,19 @@ def test_p3b_estructura_anonima_de_la_pestana_sin_tabla():
     assert {'funcion': 'verEscritos', 'argumentos': ['numerico(8)']} in [c.get('onclick') for c in salida['controles']]
     texto = json.dumps(salida)
     assert '12345678' not in texto and 'Ficticia' not in texto and '11.111.111' not in texto
+
+
+def test_p3c_estructura_de_ventana_no_incluye_datos_de_personas():
+    from pathlib import Path
+
+    from extraer_estructura_escritos import estructura_ventana
+
+    fixture = (Path(__file__).parents[1] / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes()
+    salida = estructura_ventana(fixture)
+    encabezados = [f for t in salida['tablas'] for f in t['filas_encabezado']]
+    assert ['Ingreso Historico Protección'] in encabezados and any('Nombre Proyecto' in f for f in encabezados)
+    texto = json.dumps(salida, ensure_ascii=False)
+    for dato in ('Persona Ficticia', '11111111', 'PROGRAMA FICTICIO', 'LETRAS Y GARANTIA', 'SIN INFORMACION', '2/10/2026'):
+        assert dato not in texto, dato
+    sin_digitos = b'<html><body><table><tr><td>Ana Luna Sol</td><td>Beto Rio Mar</td></tr></table></body></html>'
+    assert 'Ana' not in json.dumps(estructura_ventana(sin_digitos))

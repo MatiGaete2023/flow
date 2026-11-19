@@ -608,3 +608,43 @@ def test_p3c_historico_automatico_una_vez_por_persona_y_falla_aislada(tmp_path):
     )
     registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
     assert all(r['estado'] == 'LEIDA' and r['historico_lectura']['estado'] in ('FALLIDA', 'REUTILIZADA') for r in registros)
+
+
+def test_p3c_historico_sin_tabla_se_suspende_y_deja_estructura_anonima(tmp_path, monkeypatch):
+    import lectura_bitacoras
+
+    monkeypatch.setattr(lectura_bitacoras, 'MAX_HISTORICOS_FALLIDOS_SEGUIDOS', 2)  # el listado ficticio trae 2 personas
+
+    pagina = b'<html><head><title>Historial Menores</title></head><body><iframe src="/SITFAWEB/x.jsp?RUT=1"></iframe></body></html>'
+    avisos = []
+
+    class SinTabla(Bridge):
+        def __init__(self):
+            super().__init__()
+            self.historicos = 0
+
+        def call(self, command, payload=None, timeout=75):
+            if command == 'historico_open':
+                self.historicos += 1
+                return {
+                    'status': 200,
+                    'type': 'text/html',
+                    'body': base64.b64encode(pagina).decode(),
+                    'digest': hashlib.sha256(pagina).hexdigest(),
+                    'params': payload['params'],
+                    'startedAt': '2026-10-08T12:00:00Z',
+                }
+            return super().call(command, payload, timeout)
+
+    parser()
+    bridge = SinTabla()
+    result = DiaryRunner(
+        bridge, CATALOG, lambda name, value=None: avisos.append((name, value)), threading.Event(), pause=0, historico=True
+    ).run(Batch(tuple(CATALOG['tribunales']), ('1', '2', '3', '4'), ('Cumplimiento',)), tmp_path)
+    registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
+    estados = [r.get('historico_lectura', {}).get('estado') for r in registros]
+    assert bridge.historicos == 2 and 'OMITIDA' in estados
+    assert all(r['estado'] == 'LEIDA' for r in registros)  # las bitácoras siguen
+    assert any(n == 'warning' and 'se suspende el histórico' in str(v) for n, v in avisos)
+    estructura = json.loads((Path(result['manifest']).parent / 'historico' / 'estructura_historico.json').read_text(encoding='utf-8'))
+    assert estructura['titulo'] == 'Historial Menores' and estructura['marcos'] == [{'etiqueta': 'iframe', 'ruta': '/SITFAWEB/x.jsp'}]

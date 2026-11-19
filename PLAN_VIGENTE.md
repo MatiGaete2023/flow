@@ -182,3 +182,6 @@ Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sig
 - w) D-H1: el Descargador abre el Ingreso Histórico Protección («Historial Menores») de cada persona del listado con el RUT
   de su fila (enlace `ShowHistoriaRut`), sin clic por persona; casilla desactivada por defecto. Reemplaza la prohibición de
   consultar por RUT solo para esta ventana. Fuente: «Sí a D-H1» (19-nov-2026).
+- x) Tope de aperturas por lote del Descargador (bitácoras, calendarios, históricos e historias): 2000 → 5000. Fuente:
+  «intenta elevarlo lo máximo razonablemente posible, para poder descargar los registros de varios tribunales a la vez»
+  (19-nov-2026). Cinco bitácoras fallidas seguidas siguen deteniendo el lote.

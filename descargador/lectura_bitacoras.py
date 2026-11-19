@@ -197,7 +197,12 @@ CHECKPOINT_CADA = 25
 # Decisión m (13-oct): 300 → 600. Usuario, 13-nov-2026: «Sube el tope o elimínalo, si no causa problemas»: los
 # paquetes grandes con calendario (dos lecturas por ingreso) no alcanzaban. No se elimina: el paquete ZIP tiene
 # su propio límite (80 MiB, 200.000 filas) y el tope evita una corrida sin fin con la sesión caída.
-MAX_LECTURAS_POR_LOTE = 2000
+# Usuario, 19-nov-2026: «intenta elevarlo lo máximo razonablemente posible» (bitácora + calendario + histórico por persona y
+# varios tribunales a la vez). 5000 aperturas ≈ 1600 personas con las tres lecturas, varias horas de lote; la sesión caída
+# la detiene antes MAX_FALLAS_SEGUIDAS.
+MAX_LECTURAS_POR_LOTE = 5000
+# P3c: tantos históricos seguidos sin la tabla esperada suspenden el histórico en el resto del lote (no las bitácoras).
+MAX_HISTORICOS_FALLIDOS_SEGUIDOS = 5
 REUTILIZAR_HORAS = 12  # EF-04: solo lecturas del mismo día local y de menos de 12 h
 REUTILIZAR_CARPETAS = 10  # D4: hasta 10 sesiones anteriores
 
@@ -490,6 +495,8 @@ class DiaryRunner:
         # P3c (D-H1): Ingreso Histórico Protección de cada persona VERIFICADA del listado, una vez por persona y lote.
         self.historico = bool(historico)
         self._historicos = set()
+        self._historicos_fallidos = 0
+        self.historico_suspendido = None
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
         # Casilla del usuario (19-oct-2026); cada calendario cuenta en MAX_LECTURAS_POR_LOTE.
@@ -812,6 +819,9 @@ class DiaryRunner:
         deja el histórico FALLIDO; nunca invalida la bitácora ya leída. Devuelve True si se abrió una ventana."""
         import historico_manual as hm
 
+        if self.historico_suspendido:
+            record['historico_lectura'] = {'estado': 'OMITIDA', 'error': self.historico_suspendido}
+            return False
         rut = hm._rut_limpio(item.get('rut', '')).lstrip('0')
         if not re.fullmatch(r'\d{6,9}[0-9K]', rut):
             record['historico_lectura'] = {'estado': 'FALLIDA', 'error': 'HISTORICO_RUT'}
@@ -858,9 +868,36 @@ class DiaryRunner:
                 'ownership': entrada['ownership'],
                 'programas': len(entrada['filas']),
             }
+            if entrada['estado'] == 'FALLIDA':
+                self._estructura_historico(session, data)
         except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
             record['historico_lectura'] = {'estado': 'FALLIDA', 'person_id': person_id, 'error': getattr(exc, 'code', '') or str(exc)}
+        if record['historico_lectura']['estado'] == 'FALLIDA':
+            self._historicos_fallidos += 1
+            if self._historicos_fallidos >= MAX_HISTORICOS_FALLIDOS_SEGUIDOS:
+                self.historico_suspendido = 'HISTORICO_SUSPENDIDO'
+                self.emit(
+                    'warning',
+                    f'{MAX_HISTORICOS_FALLIDOS_SEGUIDOS} ventanas seguidas del Ingreso Histórico no trajeron la tabla esperada: '
+                    'se suspende el histórico en el resto del lote (las bitácoras siguen). Comparte '
+                    '«historico/estructura_historico.json» (anónimo) para ajustar la lectura.',
+                )
+        else:
+            self._historicos_fallidos = 0
         return True
+
+    def _estructura_historico(self, session, data):
+        """Primera ventana del histórico sin la tabla esperada: deja `historico/estructura_historico.json` ANÓNIMO."""
+        destino = session.folder / 'historico' / 'estructura_historico.json'
+        if destino.exists():
+            return
+        try:
+            from extraer_estructura_escritos import estructura_ventana
+
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            write(destino, estructura_ventana(data))
+        except (ValueError, OSError):
+            pass
 
     def _leer_calendario(self, session, record, pause):
         """Calendario del ingreso tras su bitácora; una falla aquí no invalida la bitácora ya leída."""
