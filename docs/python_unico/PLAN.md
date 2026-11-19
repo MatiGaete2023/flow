@@ -30,13 +30,13 @@ anonimizador); **V** = basta `tools/verificar_wp.py` + pruebas.
 | **P2** | **Revisión de bitácoras = separar registros sin observación.** (a) Descargador: registrar en cada bitácora la evidencia de alcance (tabla reconocida, vacía comprobada, posible recorte), port de `rust/crates/flow-captura/src/lecturas.rs::cobertura_bitacora` y `REVISION_BITACORAS_ESQUEMA.md`. (b) Asistente: pantalla «Revisión de bitácoras…» que clasifica Con observación / Sin observación / No verificable, filtra, marca Revisada y exporta Excel + JSON; el motor corre sobre todo el paquete antes de separar | Descargador (automático) · Asistente: botón «Revisión de bitácoras…» | V | **Hecho** (ver REGISTRO) |
 | **P3a** | Escritos visibles: columna/indicador «Escritos» en Trabajo (pendientes de la causa y estado de la fuente: leída, vacía, sin tabla, fallida); `diagnostico_historia.json` cuenta por causa si la respuesta traía la tabla Escritos y cuántas filas (anónimo) | Asistente · Trabajo; Descargador · diagnóstico | V | **Hecho** |
 | **P3b** | Escritos en la variante sin tabla: abrir la pestaña Escritos desde la ventana de la causa | Descargador + extensión | **E3** | **Hecho en lo posible** (detección + extracto anónimo automático) |
-| **P3c** | **Histórico automático**: opción «Leer Ingreso Histórico (Mejor Niñez)» en Seguimiento; la extensión abre `PopUpHistorial` tipo 77 con el RUT de la fila verificada; se valida RUT de la ventana = RUT de la fila; lector existente; se incluye en el paquete (`historico_proteccion`) | Descargador · opciones de lectura | **E3** | **Hecho** (E3 pendiente: extensión) |
+| **P3c** | **Histórico automático**: opción «Leer Ingreso Histórico (Mejor Niñez)» en Seguimiento; la extensión abre `PopUpHistorial` tipo 77 con el RUT de la fila verificada; se valida RUT de la ventana = RUT de la fila; lector existente; se incluye en el paquete (`historico_proteccion`) | Descargador · opciones de lectura | **E3** | **Hecho; prueba real pendiente** (el contenido viene del iframe `IrPopUpPublicoAccion.do`) · E3 pendiente |
 | **P8** | Diagnóstico del paquete: historial anónimo en `respaldo/proceso.json` (fases, decisión por lote, error literal, resumen) y aviso final de bitácoras faltantes por tribunal | Descargador | V | Pendiente |
 | **P4** | Resultados con búsqueda y carpetas previas; Meta 4 «Elegir plantilla Excel…» (el código ya acepta plantilla); paridad de importación de contactos | Asistente · Resultados; Meta 4 | V | **Hecho** |
 | **P5** | Diseño útil de Estudio D en Tk: conteos por etapa, confirmación antes de recalcular, lista/ficha en Correos y Resoluciones, ayuda contextual | Asistente | V | Pendiente |
-| **P9** | Notificación y Diligencias: lectura y vista, sin reglas | Descargador · Asistente | V (E3 si se agregan reglas) | Opcional |
-| **P6** | Borradores `.eml` cuando no hay Outlook (CC fijo, sin envío) | Asistente · Correos | **E3** | Decisión del usuario |
-| **P7** | Consola `observar` / `producir` del Asistente | `python -m nurus.personal …` | V | Decisión del usuario |
+| **P9** | Notificación y Diligencias: lectura y vista, sin reglas | Descargador · Asistente | V (E3 si se agregan reglas) | **Postergado por el usuario** (19-nov) |
+| **P6** | Borradores `.eml` cuando no hay Outlook (CC fijo, sin envío) | Asistente · Correos | **E3** | **Postergado por el usuario** (19-nov) |
+| **P7** | Consola `observar` / `producir` del Asistente | `python -m nurus.personal …` | V | **Postergado por el usuario** (19-nov) |
 
 **Excluido:** captura dentro del Asistente (AGENTS.md: «El Asistente no navega SITFA ni inicia el Descargador»).
 
@@ -46,6 +46,16 @@ anonimizador); **V** = basta `tools/verificar_wp.py` + pruebas.
   lote con el RUT de su fila verificada del listado, sin clic por niño; casilla «Leer Ingreso Histórico» desactivada por
   defecto.
 - **P6 y P7:** si se quieren.
+
+## 3b. Cambios al plan durante la ejecución (19-nov-2026)
+
+- **P3a** confirmado en uso real (Escritos llegan en la respuesta de la causa).
+- **P3c** cambió su forma técnica: `PopUpHistorial.jsp` es un envoltorio con un iframe a `/SITFAWEB/IrPopUpPublicoAccion.do`;
+  el contenido se lee de ese marco y la pertenencia se decide por el «Rut :» visible. La prueba real queda **pendiente**
+  (usuario); la revisión E3 de la extensión también.
+- **Tope de aperturas por lote 2000 → 5000** (decisión x) y suspensión del histórico tras 5 fallas seguidas.
+- **P9, P6 y P7 postergados** por el usuario («sigue con los demás pasos pendientes, menos P9, 6 y 7»).
+- Orden vigente: P8 → P5; luego pruebas del usuario (P1–P4, P3c) y E3 de P3c.
 
 ## 4. Criterio de terminado (cada paquete)
 

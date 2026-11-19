@@ -11,20 +11,23 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
 | P3a escritos visibles + diagnóstico | **Hecho; confirmado en uso real** (9 causas con escritos, 8 vacías, 14 pendientes) | ver Historial |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
-| P3c histórico automático | **Corregido (marco interno); falta probar en uso real** · E3 pendiente (extensión) | ver Historial 19-nov (estructura del usuario) |
+| P3c histórico automático | **Corregido (marco interno) · PRUEBA REAL PENDIENTE (usuario)** · E3 pendiente (extensión) | ver Historial 19-nov |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | Pendiente | — |
-| P9 notificación y diligencias | Opcional | — |
-| P6 `.eml`, P7 consola | Decisión del usuario | — |
+| P9 notificación y diligencias | **Postergado por el usuario** | — |
+| P6 `.eml`, P7 consola | **Postergados por el usuario** | — |
+
+## Pendientes del usuario (no bloquean el desarrollo)
+
+- **Prueba real de P3c:** ZIP nuevo de `flow-python`, recargar la extensión en `chrome://extensions`, lote chico con
+  «Ingreso Histórico (Mejor Niñez)»; enviar solo `historico.json` (o `historico/estructura_historico.json` si falla).
+- Prueba visual en Windows de P1, P2, P3a y P4 (el contenedor no tiene Tk).
+- Revisión E3 independiente de P3c (toca la extensión).
 
 ## Siguiente paso exacto
 
-1. **Usuario:** descargar de nuevo el ZIP de `flow-python`, **recargar la extensión** en `chrome://extensions`
-   (cambió `pagina.js`), correr un lote chico con «Ingreso Histórico (Mejor Niñez)» y enviar solo
-   `historico.json` → contar `estado`/`ownership` (sin nombres) o, si vuelve a fallar, `historico/estructura_historico.json`.
-2. Revisión E3 independiente de P3c (extensión).
-3. Prueba visual en Windows de P1, P2, P3a, P4; luego P8 y P5.
+P8 (en curso) y luego P5. Ver Historial.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -107,3 +110,5 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   Causa de las 18 FALLIDA: se leía el envoltorio. Corrección: `historico_open` sigue ese único marco (mismo origen, ruta exacta,
   sin fragmento; dos marcos o ruta distinta = `HISTORICO_RESPONSE`) y devuelve su contenido; la pertenencia la decide el RUT
   rotulado visible («Rut : …»), ya no la dirección. Prueba Node ampliada (`test_extension_historico.py`).
+- 19-nov-2026 · El usuario deja **pendiente la prueba real de P3c** y posterga P9, P6 y P7. Plan actualizado (§3b de
+  `PLAN.md`). Se continúa con P8 y P5.
