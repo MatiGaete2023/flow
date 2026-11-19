@@ -36,6 +36,9 @@ Consecuencias para `history_open` (WP-53 §53.3):
 `ShowHistoriaRut(rut)` y `ShowHistorialFichas(rut)` (columna Nombre) abren
 `/SITFAWEB/jsp/Tramitacion/PopUp/PopUpHistorial.jsp?tipo_popUp=…&RUT_Litigante=…&RUT_DV=…`: historial **por RUT**, no la
 historia de la causa. No se usan (prohibido consultar por RUT).
+**Actualización 19-nov-2026 (decisión D-H1 del usuario):** se autoriza abrir `PopUpHistorial.jsp?tipo_popUp=77` (Ingreso
+Histórico Protección) solo con el RUT que ofrece el enlace `ShowHistoriaRut` de una fila del listado vigente (comando
+`historico_open`, P3c en `docs/python_unico/PLAN.md`). `ShowHistorialFichas` sigue sin usarse.
 
 ## 3. Listado (N1, para `extract_historia`)
 

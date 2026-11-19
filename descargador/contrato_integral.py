@@ -25,6 +25,7 @@ PROTOCOLS = {
     'pdf_copia_fija': 1,
     'calendario_lectura': 1,
     'historia_lectura': 1,
+    'historico_lectura': 1,
 }
 VERSION = '2.9.0'
 

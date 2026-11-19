@@ -53,6 +53,7 @@ class Preferences:
             'reutilizar_bitacoras': True,
             'leer_calendarios': False,
             'leer_historia': False,
+            'leer_historico': False,
             'historia_en_paquete': True,
             'informes_por_vencer': True,
             'meses_atras': 4,

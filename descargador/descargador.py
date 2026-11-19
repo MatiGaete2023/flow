@@ -424,6 +424,7 @@ class Application:
         self.reuse_diaries = tk.BooleanVar(value=self.prefs.data['reutilizar_bitacoras'])
         self.read_calendars = tk.BooleanVar(value=self.prefs.data['leer_calendarios'])
         self.read_history = tk.BooleanVar(value=self.prefs.data['leer_historia'])
+        self.read_historico = tk.BooleanVar(value=self.prefs.data.get('leer_historico', False))
         self.history_in_package = tk.BooleanVar(value=self.prefs.data['historia_en_paquete'])
         self.reports_due = tk.BooleanVar(value=self.prefs.data['informes_por_vencer'])
         self.package_per_sheet = tk.BooleanVar(value=self.prefs.data['paquete_por_hoja'])
@@ -449,6 +450,8 @@ class Application:
         # Historia de la causa (últimos 4 meses): una lectura por causa en la misma pasada de las bitácoras.
         self.history_choice = chip('Historia de la causa (prueba)', self.read_history, 0, 2, self.toggle_history)
         self.history_package_choice = chip('Historia en el paquete', self.history_in_package, 1, 2)
+        # P3c (D-H1): Ingreso Histórico Protección («Historial Menores») de cada persona del listado; desactivado por defecto.
+        self.historico_choice = chip('Ingreso Histórico (Mejor Niñez)', self.read_historico, 2, 2)
         if not self.read_history.get():
             self.history_package_choice.grid_remove()
         # Período a recolectar en bitácoras e historia de la causa (1 a 4 meses hacia atrás).
@@ -818,6 +821,7 @@ class Application:
             reutilizar_bitacoras=self.reuse_diaries.get(),
             leer_calendarios=self.read_calendars.get(),
             leer_historia=self.read_history.get(),
+            leer_historico=self.read_historico.get(),
             historia_en_paquete=self.history_in_package.get(),
             informes_por_vencer=self.reports_due.get(),
             paquete_por_hoja=self.package_per_sheet.get(),
@@ -1367,6 +1371,11 @@ class Application:
                 None,
                 (),
                 self.months(),
+                (),
+                # P3c: el Ingreso Histórico leído con las bitácoras viaja en el paquete.
+                Path(self.last_diary_manifest).parent
+                if self.last_diary_manifest and (Path(self.last_diary_manifest).parent / 'historico.json').is_file()
+                else None,
             ),
         )
 
@@ -1570,6 +1579,7 @@ class Application:
                         reuse=self.prefs.data['reutilizar_bitacoras'],
                         calendars=self.prefs.data.get('leer_calendarios', False),
                         historia=self.prefs.data['leer_historia'],
+                        historico=self.prefs.data.get('leer_historico', False),
                         historia_en_paquete=self.prefs.data['historia_en_paquete'],
                         meses=self.prefs.data.get('meses_atras', 4),
                         informes=self.prefs.data.get('informes_por_vencer', False),
@@ -1602,6 +1612,7 @@ class Application:
                         pause=self.prefs.data['pausa_consultas'],
                         reuse_base=reuse_base,
                         calendars=self.prefs.data.get('leer_calendarios', False),
+                        historico=self.prefs.data.get('leer_historico', False),
                         **({'historia': historia} if historia else {}),
                     ).run(batch, destination, resume)
                 elif command == 'joint':

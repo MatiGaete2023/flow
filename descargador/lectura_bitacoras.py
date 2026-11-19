@@ -462,16 +462,34 @@ class _Lectura:
         return True
 
 
+def persona_por_rut(rut):
+    """Clave de persona cuando la fila no trae `SITFA_PERSONA_RUS` (p. ej. Espera sin calendario): la misma clave la asigna el
+    exportador al registro con ese RUT (P3c). Es una huella, no el RUT."""
+    return 'rut-' + hashlib.sha256(str(rut).encode()).hexdigest()[:20]
+
+
 # WD-1: el calendario de informes proyectados solo existe en las pestañas con ingreso efectivo.
 PESTANAS_CALENDARIO = ('Cumplimiento', 'Informes')
 
 
 class DiaryRunner:
     def __init__(
-        self, bridge, catalog, emit, cancel, pause=PAUSA_SITFA_S, reuse_base=None, calendars=False, historia=None
+        self,
+        bridge,
+        catalog,
+        emit,
+        cancel,
+        pause=PAUSA_SITFA_S,
+        reuse_base=None,
+        calendars=False,
+        historia=None,
+        historico=False,
     ):
         self.bridge, self.catalog, self.emit, self.cancel = bridge, catalog, emit, cancel
         self.historia = historia
+        # P3c (D-H1): Ingreso Histórico Protección de cada persona VERIFICADA del listado, una vez por persona y lote.
+        self.historico = bool(historico)
+        self._historicos = set()
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
         # Casilla del usuario (19-oct-2026); cada calendario cuenta en MAX_LECTURAS_POR_LOTE.
@@ -717,6 +735,8 @@ class DiaryRunner:
                     self._abrir_bitacora(session, record)
                 if self.calendars and selection.tab in PESTANAS_CALENDARIO and record.get('calendario'):
                     calendar_opened = self._leer_calendario(session, record, pause=opened)
+                if self.historico and item.get('rut'):
+                    calendar_opened = self._leer_historico(session, record, item) or calendar_opened
             except LimiteLecturas:
                 if record['estado'] != 'LEIDA':
                     record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
@@ -786,6 +806,61 @@ class DiaryRunner:
             capturada=result['startedAt'],
             entradas=len(snapshot['entries']),
         )
+
+    def _leer_historico(self, session, record, item):
+        """P3c: Ingreso Histórico Protección de la persona de esta fila (`historico_open` de la extensión). Una falla solo
+        deja el histórico FALLIDO; nunca invalida la bitácora ya leída. Devuelve True si se abrió una ventana."""
+        import historico_manual as hm
+
+        rut = hm._rut_limpio(item.get('rut', '')).lstrip('0')
+        if not re.fullmatch(r'\d{6,9}[0-9K]', rut):
+            record['historico_lectura'] = {'estado': 'FALLIDA', 'error': 'HISTORICO_RUT'}
+            return False
+        person_id = str(item.get('persona_id') or '') or persona_por_rut(rut)
+        clave = (record['tribunal_codigo'], person_id)
+        previo = hm._estado(session.folder)['capturas'].get(record['tribunal_codigo'] + '|' + person_id)
+        if clave in self._historicos or (previo and previo.get('estado') != 'FALLIDA'):
+            record['historico_lectura'] = {'estado': 'REUTILIZADA', 'person_id': person_id}
+            return False
+        self._historicos.add(clave)
+        if session.openings >= MAX_LECTURAS_POR_LOTE:
+            record['historico_lectura'] = {'estado': 'PENDIENTE', 'error': 'Pendiente: máximo de lecturas del lote.'}
+            raise LimiteLecturas(
+                f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
+                'Usa «Más › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
+            )
+        if self.cancel.wait(self.pause):
+            session.detener_si_cancelada()
+        session.openings += 1
+        params = {'tribunal': record['tribunal_codigo'], 'rut': rut}
+        try:
+            result = self.bridge.call('historico_open', {'params': params, 'timeout': 60000})
+            data = ChromeTransport.body(result)
+            if len(data) > hm.MAX_BYTES or hashlib.sha256(data).hexdigest() != result.get('digest') or result.get('params') != params:
+                raise m.PocError('HISTORICO_RESPONSE')
+            url = f'PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante={rut[:-1]}&RUT_DV={rut[-1]}'
+            entrada = hm.capturar(
+                session.folder,
+                data,
+                {
+                    'tribunal': record['tribunal_codigo'],
+                    'tribunal_nombre': record.get('tribunal_nombre', ''),
+                    'person_id': person_id,
+                    'rut': rut,
+                    'nombre': item.get('nombre', ''),
+                },
+                capturada=result.get('startedAt'),
+                url=url,
+            )
+            record['historico_lectura'] = {
+                'estado': entrada['estado'],
+                'person_id': person_id,
+                'ownership': entrada['ownership'],
+                'programas': len(entrada['filas']),
+            }
+        except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
+            record['historico_lectura'] = {'estado': 'FALLIDA', 'person_id': person_id, 'error': getattr(exc, 'code', '') or str(exc)}
+        return True
 
     def _leer_calendario(self, session, record, pause):
         """Calendario del ingreso tras su bitácora; una falla aquí no invalida la bitácora ya leída."""

@@ -35,7 +35,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
   if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.9.0',
-    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1},escritura_rus:false};
+    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1,historico_lectura:1},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
   const fields={seguimiento:`COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
@@ -576,6 +576,36 @@ async function sitfaTask(command, payload) {
        [...u.searchParams.keys()].join()!=="TipoPopup,a1,b2,c3,d4,e5,B4,FLG_Encripta")throw new Error("HISTORY_RESPONSE");
     init={method:"GET"};
     diaryParams=p;
+  } else if(command==="historico_open") {
+    // P3c (D-H1, 19-nov-2026): Ingreso Histórico Protección («Historial Menores») de la persona de una fila VERIFICADA del
+    // listado vigente. Solo con el RUT que la propia fila ofrece en su enlace ShowHistoriaRut; nunca un RUT arbitrario.
+    const run=window.__sitfaRun,p=payload.params;
+    if(screen!=="seguimiento"||!run?.diaryDocument||!p||typeof p!=="object")throw new Error("HISTORICO_CONTEXT");
+    diaryPhase='IDENTIDAD';
+    if(Object.keys(p).length!==2||typeof p.tribunal!=="string"||typeof p.rut!=="string"||
+       !/^\d{1,4}$/.test(p.tribunal)||!/^\d{6,9}[0-9K]$/.test(p.rut))throw new Error("HISTORICO_IDENTITY");
+    const selected=new Map(run.diaryPairs);
+    if(p.tribunal!==selected.get("COD_Tribunal_sel"))throw new Error("HISTORICO_IDENTITY");
+    const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
+    const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
+    if(!table)throw new Error("HISTORICO_CONTEXT");
+    const limpio=v=>String(v||"").replace(/[^0-9kK]/g,"").toUpperCase().replace(/^0+/,"");
+    const pedido=limpio(p.rut);
+    let found=0;
+    for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"]) {
+      const text=(el.getAttribute(attr)||"").replace(/^javascript:/i,'');
+      for(const match of realCode(text).matchAll(/(?<![\w$.])ShowHistoriaRut\s*\(/g)) {
+        const tail=text.slice(match.index+match[0].length);
+        const end=tail.indexOf(')');if(end<0)continue;
+        const args=tail.slice(0,end).split(",").map(s=>{const x=/^(?:([0-9.kK-]{1,14})|'([0-9.kK-]{1,14})'|"([0-9.kK-]{1,14})")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
+        if(args.length===1&&args[0]!==null&&(limpio(args[0])===pedido||limpio(args[0])===pedido.slice(0,-1)))found++;
+      }
+    }
+    if(!found)throw new Error("HISTORICO_LINK");
+    const cuerpo=pedido.slice(0,-1),dv=pedido.slice(-1);
+    url="https://familia.pjud.cl/SITFAWEB/jsp/Tramitacion/PopUp/PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante="+cuerpo+"&RUT_DV="+dv;
+    init={method:"GET"};
+    diaryParams=p;
   } else
   if (command === "search") {
     const pairs=payload.pairs;
@@ -593,9 +623,11 @@ async function sitfaTask(command, payload) {
   const response=await fetch(url,{...init,credentials:"include",cache:"no-store",redirect:"error",
     signal:AbortSignal.timeout(Math.min(payload.timeout||60000,60000))});
   diaryPhase='RESPUESTA';
-  const maxBytes=command==="history_open"?8*1024*1024:80*1024*1024;
+  const maxBytes=["history_open","historico_open"].includes(command)?8*1024*1024:80*1024*1024;
   if(command==="history_open"&&!/^text\/html(?:\s*;|$)/i.test(response.headers.get("content-type")||""))
     throw new Error("HISTORY_RESPONSE");
+  if(command==="historico_open"&&!/^text\/html(?:\s*;|$)/i.test(response.headers.get("content-type")||""))
+    throw new Error("HISTORICO_RESPONSE");
   const bytes=await boundedBytes(response,maxBytes);
   if(response.status!==200||!bytes.length)throw new Error("sesion");
   if(command==="history_open") {
@@ -642,6 +674,11 @@ async function sitfaTask(command, payload) {
       const explicit=['HISTORY_CONTEXT','HISTORY_LINK','HISTORY_IDENTITY','HISTORY_RESPONSE','HISTORY_REFLECTED'].includes(error?.message)?error.message:null;
       return {__sitfaError: explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'HISTORY_TIMEOUT':'HISTORY_NETWORK'):
         diaryPhase==='IDENTIDAD'?'HISTORY_IDENTITY':'HISTORY_RESPONSE')};
+    }
+    if(command==='historico_open') {
+      const explicit=['HISTORICO_CONTEXT','HISTORICO_LINK','HISTORICO_IDENTITY','HISTORICO_RESPONSE'].includes(error?.message)?error.message:null;
+      return {__sitfaError: explicit || (diaryPhase==='RED'?(error?.name==='TimeoutError'?'HISTORICO_TIMEOUT':'HISTORICO_NETWORK'):
+        diaryPhase==='IDENTIDAD'?'HISTORICO_IDENTITY':'HISTORICO_RESPONSE')};
     }
     if(command==="evidence_open"||command==="evidence_show") {
       const motivo=["estructura","sesion","cambio","pantalla","tiempo"].includes(error?.message)?error.message:"pagina";

@@ -126,6 +126,15 @@ def export_capture(
     if historico:
         fingerprint += 'HISTORICO' + sha256((Path(historico) / 'historico.json').read_bytes()).hexdigest()
     cid = 'captura-' + sha256(fingerprint.encode()).hexdigest()[:24]
+    # P3c: personas del histórico automático identificadas por huella de RUT (filas sin SITFA_PERSONA_RUS).
+    personas_por_rut = set()
+    if historico:
+        try:
+            from historico_manual import cargar
+
+            personas_por_rut = {(e['tribunal'], e['person_id']) for e in cargar(historico)[1] if e['person_id'].startswith('rut-')}
+        except (ValueError, OSError, KeyError):
+            personas_por_rut = set()
     data = {'consultas': [], 'registros': [], 'incidencias': []}
     originals = {}
     query_index = {}
@@ -228,7 +237,7 @@ def export_capture(
                     rit_original=normalized.get('RIT', ''),
                     cause_id=normalized.get('SITFA_CAUSA_RUS', ''),
                     ingreso_id=normalized.get('SITFA_INGRESO_RUS', ''),
-                    person_id=normalized.get('SITFA_PERSONA_RUS', ''),
+                    person_id=normalized.get('SITFA_PERSONA_RUS', '') or _persona_por_rut(q['court_code'], normalized, personas_por_rut),
                     program_id=normalized.get('SITFA_CENTRO_RUS', ''),
                     modality_code=q['modality_code'],
                     modality_raw=normalized.get('MODALIDAD', ''),
@@ -504,6 +513,18 @@ HISTORIA_COBERTURA = {
     'PENDIENTE': 'CANCELADA',
     'CANCELADA': 'CANCELADA',
 }
+
+
+def _persona_por_rut(tribunal, normalized, personas):
+    """Clave `rut-…` del histórico automático para una fila sin `SITFA_PERSONA_RUS`, solo si ese histórico existe."""
+    if not personas:
+        return ''
+    from historico_manual import _rut_limpio
+    from lectura_bitacoras import persona_por_rut
+
+    rut = _rut_limpio(normalized.get('RUT', '') or normalized.get('RUT (->RCEI)', '')).lstrip('0')
+    clave = persona_por_rut(rut) if rut else ''
+    return clave if (tribunal, clave) in personas else ''
 
 
 def _historico(carpeta, data, query, incident, cid, captured):

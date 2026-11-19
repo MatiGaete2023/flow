@@ -179,3 +179,6 @@ Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sig
 - v) Se deja de desarrollar Flow Rust; solo se mejoran las herramientas Python. Rust queda congelado como referencia en
   `rust/`. Lo que Rust tenga y Python no se porta a Python con botones u opciones. Fuente: «Ya no continuaré el proyecto en
   RUST, mejoraremos solo las herramientas en python». Informe y plan: `docs/python_unico/INFORME_Y_PLAN_20261119.md`.
+- w) D-H1: el Descargador abre el Ingreso Histórico Protección («Historial Menores») de cada persona del listado con el RUT
+  de su fila (enlace `ShowHistoriaRut`), sin clic por persona; casilla desactivada por defecto. Reemplaza la prohibición de
+  consultar por RUT solo para esta ventana. Fuente: «Sí a D-H1» (19-nov-2026).

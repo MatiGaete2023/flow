@@ -557,3 +557,54 @@ def test_disk_failure_on_close_still_unlocks_sitfa(tmp_path, monkeypatch):
     with pytest.raises(OSError):
         run(tmp_path, bridge)
     assert ('unlock', None) in bridge.events
+
+
+def test_p3c_historico_automatico_una_vez_por_persona_y_falla_aislada(tmp_path):
+    """P3c (D-H1): con la casilla activa se abre el Ingreso Histórico de cada persona del listado, una sola vez por persona;
+    una falla del histórico no invalida la bitácora."""
+    fixture = (Path(__file__).parents[1] / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes()
+
+    class ConHistorico(Bridge):
+        def __init__(self, falla=False):
+            super().__init__()
+            self.historicos = []
+            self.falla = falla
+
+        def call(self, command, payload=None, timeout=75):
+            if command == 'historico_open':
+                self.historicos.append(payload['params'])
+                if self.falla:
+                    import motor
+
+                    raise motor.PocError('HISTORICO_LINK')
+                return {
+                    'status': 200,
+                    'type': 'text/html',
+                    'body': base64.b64encode(fixture).decode(),
+                    'digest': hashlib.sha256(fixture).hexdigest(),
+                    'params': payload['params'],
+                    'startedAt': '2026-10-08T12:00:00Z',
+                }
+            return super().call(command, payload, timeout)
+
+    parser()
+    bridge = ConHistorico()
+    result = DiaryRunner(bridge, CATALOG, lambda *a: None, threading.Event(), pause=0, historico=True).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+    )
+    carpeta = Path(result['manifest']).parent
+    registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
+    personas = {r['rut'] for r in registros if r.get('rut')}
+    assert len(bridge.historicos) == len(personas) and all(set(p) == {'tribunal', 'rut'} for p in bridge.historicos)
+    historico = json.loads((carpeta / 'historico.json').read_text(encoding='utf-8'))
+    entradas = list(historico['capturas'].values())
+    assert entradas and all(e['estado'] == 'LEIDA' and e['ownership'] == 'VERIFICADA' for e in entradas)
+    assert all(r['estado'] == 'LEIDA' for r in registros)
+    assert 'RUT_Litigante' not in (carpeta / 'historico.json').read_text(encoding='utf-8')
+    # Falla del histórico: la bitácora sigue LEIDA y el histórico queda FALLIDA.
+    bridge = ConHistorico(falla=True)
+    result = DiaryRunner(bridge, CATALOG, lambda *a: None, threading.Event(), pause=0, historico=True).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path / 'b'
+    )
+    registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
+    assert all(r['estado'] == 'LEIDA' and r['historico_lectura']['estado'] in ('FALLIDA', 'REUTILIZADA') for r in registros)

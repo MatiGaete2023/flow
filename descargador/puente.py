@@ -213,6 +213,7 @@ class Bridge:
             'diary_open',
             'calendar_open',
             'history_open',
+            'historico_open',
         ):
             raise PocError('Accion no permitida.')
         if self.closed or not self.connected:

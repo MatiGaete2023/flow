@@ -213,9 +213,9 @@ def test_p3b_estructura_anonima_de_la_pestana_sin_tabla():
     from extraer_estructura_escritos import estructura_pestana
 
     html = (
-        "<html><body><script>function verEscritos(id){ $.ajax({url:'/SITFAWEB/EscritosAccion.do?crr_causa='+id}); }</script>"
-        "<ul><li><a onclick=\"verEscritos('12345678')\">Escritos</a></li></ul><p>Persona Ficticia 11.111.111-1</p></body></html>"
-    ).encode()
+        b"<html><body><script>function verEscritos(id){ $.ajax({url:'/SITFAWEB/EscritosAccion.do?crr_causa='+id}); }</script>"
+        b"<ul><li><a onclick=\"verEscritos('12345678')\">Escritos</a></li></ul><p>Persona Ficticia 11.111.111-1</p></body></html>"
+    )
     salida = estructura_pestana(html)
     assert salida['funciones_escritos'] == ['verEscritos'] and salida['rutas_en_scripts'] == ['/SITFAWEB/EscritosAccion.do']
     assert salida['nombres_de_parametros'] == ['crr_causa'] and salida['ajax']['jquery'] == 1

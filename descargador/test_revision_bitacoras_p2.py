@@ -80,3 +80,29 @@ def test_p2_exporta_excel_y_json_en_carpeta_nueva(tmp_path):
         assert 'ya existe' in str(exc)
     else:
         raise AssertionError('debía rechazar una carpeta existente')
+
+
+def test_p3c_historico_por_rut_llega_al_registro_sin_id_de_persona(tmp_path):
+    from pathlib import Path
+
+    import historico_manual as hm
+    from lectura_bitacoras import persona_por_rut
+
+    manifest = diaries(tmp_path / 'Bitacoras 2026-10-13', 1)
+    fixture = (Path(__file__).parents[1] / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes()
+    rut = hm._rut_limpio('00111111-1').lstrip('0')  # RUT ficticio de las filas de bound_lot, sin ceros a la izquierda
+    hm.capturar(
+        manifest.parent,
+        fixture,
+        {'tribunal': '113', 'person_id': persona_por_rut(rut), 'rut': rut, 'nombre': 'Persona uno'},
+        capturada='2026-10-08T12:00:00+00:00',
+        url=f'PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante={rut[:-1]}&RUT_DV={rut[-1]}',
+    )
+    lot = bound_lot(tmp_path / 'lote')
+    path = export_capture([lot], tmp_path / 'p.zip', diaries=[manifest], match_diaries=True, historico=manifest.parent)
+    captura = read_capture(path)
+    personas = {r['person_id'] for r in captura.rows('registros')}
+    assert persona_por_rut(rut) in personas
+    assert {h['person_id'] for h in captura.rows('historico_proteccion')} == {persona_por_rut(rut)}
+    work = import_capture(path, defaults(), as_of=date(2026, 10, 13))
+    assert any('PROGRAMA FICTICIO UNO' in (r.observation or '') for r in work.rows)

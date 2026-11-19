@@ -11,7 +11,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
 | P3a escritos visibles + diagnóstico | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P3a/P3b) |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
-| P3c histórico automático | Pendiente; **D-H1 = sí** (casilla desactivada por defecto) | — |
+| P3c histórico automático | **Hecho** (sin prueba en SITFA real; E3 pendiente: toca la extensión) | ver Historial 19-nov (P3c) |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
 | P4 resultados / Meta 4 plantilla | Pendiente | — |
 | P5 diseño | Pendiente | — |
@@ -72,3 +72,15 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   HAR (solo la variante con cuatro tablas); cuando una causa trae la pestaña sin tabla, la Historia deja
   `historia/estructura_escritos.json` ANÓNIMO (`extraer_estructura_escritos.estructura_pestana`) para implementar la carga
   con la forma real. Pruebas `test_p3a_*`, `test_p3b_*`.
+- 19-nov-2026 · **P3c hecho (requiere E3: extensión).** Extensión: comando `historico_open` (`pagina.js`) que solo acepta un
+  RUT presente en un enlace `ShowHistoriaRut` de la tabla del listado vigente y abre
+  `PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante=…&RUT_DV=…` (GET, html, ≤ 8 MiB); protocolo `historico_lectura:1` en la
+  extensión y en `contrato_integral.PROTOCOLS`; permitido en `puente.py`. Descargador: casilla **«Ingreso Histórico (Mejor
+  Niñez)»** (preferencia `leer_historico`, desactivada por defecto); `DiaryRunner(historico=True)` lo lee una vez por persona
+  y lote (`_leer_historico` → `historico_manual.capturar`, pertenencia por el RUT pedido); una falla deja solo el histórico
+  FALLIDO y el paquete PARCIAL. Flujo de paquete y «Crear paquete» pasan `historico=` al exportador. Filas sin
+  `SITFA_PERSONA_RUS` (Espera) reciben la clave `rut-<huella>` (`lectura_bitacoras.persona_por_rut`), igual en el registro y en
+  el histórico. Decisión w en `PLAN_VIGENTE.md`; nota en `contracts/csmp_capture_v1/HISTORIA_VENTANA.md`. Pruebas
+  `test_p3c_*` (puente ficticio y de punta a punta hasta la frase «otro programa vigente»). **Supuesto N2 a confirmar en
+  SITFA real:** que `ShowHistoriaRut` corresponde a `tipo_popUp=77` y que su argumento es el RUT de la fila; si no, la lectura
+  queda FALLIDA (`HISTORICO_LINK` / `HISTORICO_NO_VERIFICADA`), nunca se atribuye otra persona.

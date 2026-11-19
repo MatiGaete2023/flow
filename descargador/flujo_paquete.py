@@ -24,6 +24,7 @@ def run(
     reuse=True,
     calendars=False,
     historia=False,
+    historico=False,
     historia_en_paquete=True,
     meses=4,
     informes=False,
@@ -106,6 +107,8 @@ def run(
         # Cada lectura opcional se pide solo si está activa, como la historia.
         if calendars:
             extra['calendars'] = True
+        if historico:
+            extra['historico'] = True  # P3c (D-H1): Ingreso Histórico Protección por persona del listado
         runner = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra)
         # Al retomar, el mismo lote de bitácoras continúa: lo ya leído (hash comprobado) no se vuelve a abrir.
         diaries = runner.run(batch, backup, previas) if previas else runner.run(batch, backup)
@@ -142,6 +145,14 @@ def run(
             opciones['extra_folders'] = carpetas_informes
         if meses != 4:
             opciones['meses'] = meses
+        historico_fallido = False
+        if historico and (manifest.parent / 'historico.json').is_file():
+            from historico_manual import cargar
+
+            opciones['historico'] = manifest.parent
+            historico_fallido = any(e.get('estado') == 'FALLIDA' for e in cargar(manifest.parent)[1])
+            if historico_fallido:
+                emit('warning', 'Algún Ingreso Histórico Protección no se pudo leer; el paquete queda parcial.')
         try:
             result = package_current_lot(
                 sheets,
@@ -162,7 +173,7 @@ def run(
         # Un calendario por ingreso (WD-1) fallido o pendiente también deja el paquete parcial.
         partial = partial or bool(diaries.get('calendarios_fallidos'))
         # Sin el calendario (o con un mes faltante) el paquete se crea igual, pero queda marcado como parcial.
-        partial = partial or not informes_completos
+        partial = partial or not informes_completos or historico_fallido
         if historia:
             partial = partial or not historia_ok
             result['historia'] = resumen or {'estado': 'INCOMPLETA'}
