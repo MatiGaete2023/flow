@@ -213,18 +213,24 @@ def safe_path(name):
     return name
 
 
+ANIO_MINIMO, ANIO_MAXIMO = 1900, 2199
+
+
 def iso_time(value, date_allowed=False):
     if not isinstance(value, str):
         fail('Fecha debe ser texto.')
     try:
         if date_allowed and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
-            datetime.strptime(value, '%Y-%m-%d')
-            return
-        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?', value):
-            fail('Fecha ISO 8601 inválida.')
-        datetime.fromisoformat(value.replace('Z', '+00:00'))
+            fecha = datetime.strptime(value, '%Y-%m-%d')
+        else:
+            if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?', value):
+                fail('Fecha ISO 8601 inválida.')
+            fecha = datetime.fromisoformat(value.replace('Z', '+00:00'))
     except ValueError as exc:
         raise CaptureError('Fecha ISO 8601 inválida.') from exc
+    # Dominio pactado con Rust (E3C-08): años 1900–2199; así toda marca se puede llevar a UTC en ambos lectores.
+    if not ANIO_MINIMO <= fecha.year <= ANIO_MAXIMO:
+        fail(f'Fecha fuera del rango admitido ({ANIO_MINIMO}–{ANIO_MAXIMO}).')
 
 
 @dataclass(frozen=True)

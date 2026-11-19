@@ -151,14 +151,30 @@ _NO_NOMBRE = frozenset(
 )
 
 
-def _sujeto(prefijo):
-    """Nombres que preceden inmediatamente al verbo («… que Ana María cuenta con…» → [ana, maria]), hasta 4 palabras."""
-    import unicodedata
+_PARTICULAS = frozenset(('de', 'del', 'la', 'las', 'los', 'san'))
 
+
+def _sujeto(prefijo):
+    """Nombres que preceden inmediatamente al verbo («… que Ana María cuenta con…» → [ana, maria]), hasta 6 palabras.
+
+    Las partículas entre nombres forman parte del nombre («Ana María del Río» → [ana, maria, del, rio]); una coma pegada
+    al verbo se ignora («Ana, cuenta con…»). El prefijo llega en NFC (E3C-05)."""
+    tokens = _PALABRA.findall(prefijo)
+    if tokens and tokens[-1] == ',':
+        tokens = tokens[:-1]
     sujeto = []
-    for token in reversed(_PALABRA.findall(unicodedata.normalize('NFC', prefijo))):
+    for i in range(len(tokens) - 1, -1, -1):
+        token = tokens[i]
         llave = clave_texto(token)
-        if not token[0].isalpha() or llave in _NO_NOMBRE or len(sujeto) >= 4:
+        if not token[0].isalpha() or len(sujeto) >= 6:
+            break
+        if llave in _NO_NOMBRE:
+            anterior = tokens[i - 1] if i > 0 else ''
+            clave_anterior = clave_texto(anterior)
+            entre_nombres = anterior[:1].isalpha() and (clave_anterior not in _NO_NOMBRE or clave_anterior in _PARTICULAS)
+            if sujeto and llave in _PARTICULAS and entre_nombres:
+                sujeto.append(llave)
+                continue
             break
         sujeto.append(llave)
     return list(reversed(sujeto))
@@ -170,15 +186,18 @@ def constancia_en_bitacora(observaciones, primer_nombre, programa, nombre_comple
     La coincidencia es del nombre completo del programa (no por subcadena) y exige que el SUJETO de la constancia sea el
     niño: los nombres justo antes de «cuenta con ingreso…»/«ingresó efectivamente…» empiezan por su primer nombre y, si se
     conoce su nombre completo, coinciden con sus primeras palabras («Ana María cuenta…» vale para Ana María Soto y no para
-    Ana Luisa Pérez; «Ana informa que Beto cuenta…» no es constancia de Ana). Una negación o la mera mención no bastan
-    (E3-12, E3B-07)."""
+    Ana Luisa Pérez; «Ana informa que Beto cuenta…» no es constancia de Ana). Un sujeto de varias palabras sin nombre
+    completo conocido no se da por constancia. Una negación o la mera mención no bastan (E3-12, E3B-07, E3C-05)."""
     objetivo = clave_programa(programa)
     nombre = clave_texto(primer_nombre)
     completo = clave_texto(nombre_completo).split()
     if not objetivo or not nombre:
         return None
+    import unicodedata
+
     for obs in observaciones:
-        for oracion in re.split(r'(?<=\.)\s+', _sin_aplanar(obs.texto)):
+        # NFC antes de buscar el verbo: «ingresó» con acento combinante es el mismo verbo (E3C-05).
+        for oracion in re.split(r'(?<=\.)\s+', _sin_aplanar(unicodedata.normalize('NFC', str(obs.texto or '')))):
             for encontrado in _CONSTANCIA.finditer(oracion):
                 if clave_programa(encontrado.group(1)) != objetivo:
                     continue
@@ -188,7 +207,7 @@ def constancia_en_bitacora(observaciones, primer_nombre, programa, nombre_comple
                 sujeto = _sujeto(previo)
                 if not sujeto or sujeto[0] != nombre:
                     continue
-                if completo and len(sujeto) > 1 and sujeto != completo[: len(sujeto)]:
-                    continue
+                if len(sujeto) > 1 and sujeto != completo[: len(sujeto)]:
+                    continue  # sin nombre completo no se distingue «Ana Luisa» de otra Ana: no se da por constancia
                 return obs
     return None

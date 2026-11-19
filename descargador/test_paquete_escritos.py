@@ -3,14 +3,15 @@ con estados diferenciados; sin la pestaña el paquete no cambia (sigue 1.0/1.1) 
 
 import json
 import threading
+from datetime import date
 
 from lectura_historia import LectorHistoria
+from test_lectura_historia import LISTADO, PERFIL, QUERY, SELECCION, VENTANA, FakeBridge
+from test_paquete_historia import paquete, validar
+
 from nurus.capture import read_capture
 from nurus.personal.capture_input import import_capture
 from nurus.personal.config import defaults
-from datetime import date
-from test_lectura_historia import LISTADO, PERFIL, QUERY, SELECCION, VENTANA, FakeBridge
-from test_paquete_historia import paquete, validar
 
 ESCRITOS_VACIO = (
     b'<table><thead><tr><th>Doc.</th><th>Tipo Escrito</th><th>Solicitante</th><th>Estado</th></tr></thead>'
@@ -95,7 +96,7 @@ def test_el_asistente_importa_el_paquete_con_escritos_sin_cambiar_las_reglas_ori
 
 
 # ------------------------------------------------------------------ Ingreso Histórico Protección (captura manual)
-from historico_manual import capturar  # noqa: E402
+from historico_manual import capturar
 
 HISTORICO_HTML = (
     '<html><body><div>Rut : 11.111.111-1</div><table><thead><tr><th>Programa</th><th>Fecha egreso</th><th>Causal egreso</th></tr>'

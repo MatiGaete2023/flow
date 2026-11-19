@@ -169,6 +169,9 @@ pub struct Producto {
     /// E3B-11: ingresos verificados sin ninguna bitácora en el paquete (ni leída ni anotada como pendiente), por
     /// tribunal: «<código>: <n>». Vacío si no se pidieron bitácoras o todas llegaron.
     pub sin_bitacora: Vec<String>,
+    /// E3C-10: bitácoras leídas cuya ventana mostró indicios de recorte (paginador, «ver más», marcos), por tribunal:
+    /// «<código>: <n>». No acreditan el historial completo del ingreso.
+    pub recortadas: Vec<String>,
 }
 
 /// `nurus.capture.coverage.aggregate`.
@@ -617,7 +620,7 @@ fn leer_lecturas(lotes: &[Lote], tipo: &str) -> Result<Vec<Lectura>, String> {
 }
 
 /// Bitácoras y calendarios por ingreso de las identidades verificadas del paquete (`match_diaries=True`).
-fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<Vec<String>, String> {
+fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<(Vec<String>, Vec<String>), String> {
     let identidades: BTreeSet<[String; 3]> = d
         .registros
         .iter()
@@ -626,8 +629,12 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<Vec<String>, String> {
         .collect();
     // Por ingreso (tribunal, causa, ingreso), como `import_lotes`: varias etapas o páginas del mismo ingreso se unen.
     let mut instantaneas: BTreeMap<[String; 3], (Option<Lectura>, String)> = BTreeMap::new();
+    let mut con_recorte: BTreeSet<[String; 3]> = BTreeSet::new();
     for l in leer_lecturas(lotes, "bitacora")? {
         let clave = [l.referencia.tribunal.clone(), l.referencia.causa.clone(), l.referencia.ingreso.clone()];
+        if l.datos["alcance_revision_fuente"]["coverage"] == "PARCIAL" {
+            con_recorte.insert(clave.clone());
+        }
         match instantaneas.get_mut(&clave) {
             Some((Some(previa), _)) => {
                 if previa.datos["revision_bitacoras"] != l.datos["revision_bitacoras"] {
@@ -682,6 +689,11 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<Vec<String>, String> {
         *sin.entry(k[0].clone()).or_default() += 1;
     }
     let sin_bitacora = sin.into_iter().map(|(t, n)| format!("{t}: {n}")).collect();
+    let mut recorte: BTreeMap<String, usize> = BTreeMap::new();
+    for k in instantaneas.iter().filter(|(k, (l, _))| l.is_some() && con_recorte.contains(*k)).map(|(k, _)| k) {
+        *recorte.entry(k[0].clone()).or_default() += 1;
+    }
+    let recortadas = recorte.into_iter().map(|(t, n)| format!("{t}: {n}")).collect();
     calendarios.retain(|k, _| identidades.contains(k));
     let primera = d.consultas.first().map(|q| q["query_id"].clone()).unwrap_or_default();
     d.aviso(
@@ -846,7 +858,7 @@ fn bitacoras(d: &mut Datos, lotes: &[Lote]) -> Result<Vec<String>, String> {
             lista.push((f, None));
         }
     }
-    Ok(sin_bitacora)
+    Ok((sin_bitacora, recortadas))
 }
 
 /// Historia de la causa: una consulta por causa (alcance CAUSA, sin `remote_identity`) y una fila por trámite de la
@@ -1214,7 +1226,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
     let resueltos = asociar_calendarios(&mut d);
     d.incidencias.retain(|i| !(i["code"] == "IDENTIDAD_INCIERTA" && resueltos.contains(&i["record_id"])));
     let pidio_bitacoras = lecturas(|o| o.bitacoras);
-    let sin_bitacora = if con_bitacoras { bitacoras(&mut d, lotes)? } else { Vec::new() };
+    let (sin_bitacora, recortadas) = if con_bitacoras { bitacoras(&mut d, lotes)? } else { Default::default() };
     let sin_bitacora = if pidio_bitacoras { sin_bitacora } else { Vec::new() };
     if con_historia {
         historia(&mut d, lotes)?;
@@ -1342,7 +1354,7 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         .filter(|(_, v)| !matches!(v.as_str(), "COMPLETA" | "VACIA_COMPROBADA" | "NO_SOLICITADA"))
         .map(|(k, v)| format!("{k}: {v}"))
         .collect();
-    Ok(Producto { datos, capture_id: cid, avisos: vec![], bitacoras, incompletas, sin_bitacora })
+    Ok(Producto { datos, capture_id: cid, avisos: vec![], bitacoras, incompletas, sin_bitacora, recortadas })
 }
 
 /// Arma el paquete en memoria. Un fallo de la historia nunca impide el paquete: se crea sin ella y se avisa.

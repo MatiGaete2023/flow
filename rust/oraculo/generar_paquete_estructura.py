@@ -17,12 +17,13 @@ sys.path.insert(0, str(RAIZ / 'src'))
 sys.path.insert(0, str(RAIZ / 'tests'))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from generar_paquete_integracion import AMB, ING, comunes, consulta  # noqa: E402
-from nurus.capture import write_capture  # noqa: E402
-from nurus.capture.contract import TABLES  # noqa: E402
-from nurus.capture.fixtures import fixture  # noqa: E402
-from nurus.personal.capture_input import import_capture  # noqa: E402
-from nurus.personal.config import defaults  # noqa: E402
+from generar_paquete_integracion import AMB, ING, comunes, consulta
+
+from nurus.capture import write_capture
+from nurus.capture.contract import TABLES
+from nurus.capture.fixtures import fixture
+from nurus.personal.capture_input import import_capture
+from nurus.personal.config import defaults
 
 CORTE = date(2026, 10, 8)
 # (ingreso, persona, causa, fechas de vencimiento)
@@ -57,7 +58,6 @@ def historia(base, qid, causa, tramites):
 def main():
     metadata, tablas = fixture(16)
     base = tablas['registros'][0]
-    columnas = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'FECHA VENCIMIENTO']  # noqa: F841
     registros = tablas['registros']
     numero = 0
     mapa = {}

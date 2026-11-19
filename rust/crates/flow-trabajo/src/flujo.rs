@@ -229,9 +229,15 @@ pub fn ejecutar_en(
 /// Texto para el usuario cuando el flujo falla (E3B-13): nombra la carpeta real del intento y dice si se puede retomar.
 pub fn mensaje_fallo(error: &str, raiz: Option<&Path>) -> String {
     match raiz {
-        Some(c) if c.join(RESPALDO).join(PROCESO).is_file() => {
-            format!("{error} El avance quedó en {}: usa «Retomar paquete…» y elige esa carpeta para continuar sin repetir lo ya hecho.", c.display())
-        }
+        // E3C-11: solo se sugiere retomar si el control es legible y retomable; si está dañado o el paquete ya está
+        // completo, se dice eso mismo.
+        Some(c) if c.join(RESPALDO).join(PROCESO).is_file() => match leer(c) {
+            Ok(_) => format!(
+                "{error} El avance quedó en {}: usa «Retomar paquete…» y elige esa carpeta para continuar sin repetir lo ya hecho.",
+                c.display()
+            ),
+            Err(motivo) => format!("{error} La carpeta {} no se puede retomar: {motivo} Crea un paquete nuevo.", c.display()),
+        },
         Some(c) => format!(
             "{error} No se alcanzó a guardar el control (respaldo/{PROCESO}) en {}; ese intento no se puede retomar. Crea un paquete nuevo.",
             c.display()
@@ -259,9 +265,8 @@ pub fn retomar(sitfa: &dyn Sitfa, raiz: &Path, prefs: &Preferencias, hoy: NaiveD
 /// verificados sin lectura). Las usan «Consultar y crear paquete» y «Crear paquete de este lote».
 pub fn avisos_de_bitacoras(resumen: &Resumen, producto: &exportar::Producto) -> Vec<String> {
     let mut avisos = recoleccion::avisos_bitacoras_faltantes(resumen);
-    if !producto.sin_bitacora.is_empty() {
-        let detalle: Vec<String> = producto
-            .sin_bitacora
+    let detalle = |lista: &[String]| -> String {
+        lista
             .iter()
             .map(|t| {
                 let (codigo, n) = t.split_once(": ").unwrap_or((t.as_str(), ""));
@@ -270,15 +275,30 @@ pub fn avisos_de_bitacoras(resumen: &Resumen, producto: &exportar::Producto) -> 
                     None => format!("tribunal {codigo}: {n}"),
                 }
             })
-            .collect();
-        avisos.push(format!("Ingresos verificados sin bitácora en el paquete: {}.", detalle.join("; ")));
+            .collect::<Vec<_>>()
+            .join("; ")
+    };
+    if !producto.sin_bitacora.is_empty() {
+        avisos.push(format!(
+            "Ingresos verificados sin bitácora en el paquete: {}. Ese ingreso no quedó anotado para reintento: crea un paquete nuevo para leerlo.",
+            detalle(&producto.sin_bitacora)
+        ));
+    }
+    if !producto.recortadas.is_empty() {
+        // E3C-10: la ventana se leyó, pero mostró paginador u otro indicio de recorte; no acredita el historial completo.
+        avisos.push(format!(
+            "Bitácoras leídas con posible recorte de la ventana (paginador o carga parcial): {}. Revísalas en SITFA.",
+            detalle(&producto.recortadas)
+        ));
     }
     avisos
 }
 
-/// Fuentes del paquete que fallaron o no se pudieron atribuir (las bitácoras son PARCIALES por diseño y no se listan).
+/// Fuentes del paquete que fallaron, quedaron parciales o no se pudieron atribuir. Las bitácoras (y las consultas que las
+/// agregan) son PARCIALES por diseño y se informan aparte con [`avisos_de_bitacoras`] (E3C-10).
 pub fn aviso_incompletas(producto: &exportar::Producto) -> Option<String> {
-    let lista: Vec<&str> = producto.incompletas.iter().map(String::as_str).filter(|t| !t.ends_with(": PARCIAL")).collect();
+    let por_diseno = ["bitacoras: PARCIAL", "consultas: PARCIAL"];
+    let lista: Vec<&str> = producto.incompletas.iter().map(String::as_str).filter(|t| !por_diseno.contains(t)).collect();
     (!lista.is_empty()).then(|| format!("Fuentes no completas en el paquete: {}.", lista.join("; ")))
 }
 

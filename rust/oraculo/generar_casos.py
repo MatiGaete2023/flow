@@ -16,17 +16,23 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / 'src'))
 
-from nurus.personal.config import UMBRALES  # noqa: E402
-from nurus.personal.contexto_excel import avisos_fila  # noqa: E402
-from nurus.personal.motor import historia as H  # noqa: E402
-from nurus.personal.motor.composicion import Incidencias  # noqa: E402
-from nurus.personal.motor.contexto import current  # noqa: E402
-from nurus.personal.motor.evidencia import Escrito, Escritos, EvidenciaInforme, Historico, ProgramaHistorico  # noqa: E402
-from nurus.personal.motor.reglas_cumplimiento import generar_observacion_cumplimiento  # noqa: E402
-from nurus.personal.motor.reglas_espera import generar_observacion_espera  # noqa: E402
-from nurus.personal.motor.reglas_informes import generar_observacion_informes  # noqa: E402
-from nurus.personal.work import actions_for  # noqa: E402
-from nurus.rus.util import as_date, as_int, tribunal  # noqa: E402
+from nurus.personal.config import UMBRALES
+from nurus.personal.contexto_excel import avisos_fila
+from nurus.personal.motor import historia as H
+from nurus.personal.motor.composicion import Incidencias
+from nurus.personal.motor.contexto import current
+from nurus.personal.motor.evidencia import (
+    Escrito,
+    Escritos,
+    EvidenciaInforme,
+    Historico,
+    ProgramaHistorico,
+)
+from nurus.personal.motor.reglas_cumplimiento import generar_observacion_cumplimiento
+from nurus.personal.motor.reglas_espera import generar_observacion_espera
+from nurus.personal.motor.reglas_informes import generar_observacion_informes
+from nurus.personal.work import actions_for
+from nurus.rus.util import as_date, as_int, tribunal
 
 TEXTOS = json.loads((RAIZ / 'src/nurus/personal/textos_base.json').read_text(encoding='utf-8'))
 CORTE = date(2026, 11, 12)

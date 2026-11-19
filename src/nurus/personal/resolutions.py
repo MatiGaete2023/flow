@@ -118,14 +118,17 @@ def _decidida_por_persona(row):
     return bool(decisions.get('structured')) and decisions.get('resolution', 'auto') != 'auto'
 
 
-def _fuera_del_proyecto(row, kind, con_evidencia, work, claves=None):
+def _fuera_del_proyecto(row, kind, con_evidencia, work, claves=None, fallback_kind='PC_IE'):
     """True si la fila no debe integrar el proyecto `kind` de su caso: (a) en un caso con fechas resueltas por evidencia,
     si no lo pide tras la decisión humana; (b) en cualquier caso, si una decisión humana expresa de ESA fila no lo pide
-    («sin proyecto» u otro tipo, E3B-08). Sin decisión humana y sin evidencia, el proyecto abarca el caso como antes."""
-    if _decidida_por_persona(row) and kind not in _tipos_efectivos(row):
+    («sin proyecto» u otro tipo, E3B-08). Sin decisión humana y sin evidencia, el proyecto abarca el caso como antes.
+    `fallback_kind`: el tipo de respaldo que eligió el operador para RES marcado sin tipo; el MISMO al elegir, filtrar y
+    preparar (E3C-07)."""
+    efectivos = _tipos_efectivos(row, fallback_kind)
+    if _decidida_por_persona(row) and kind not in efectivos:
         return True
     clave = claves[row.id] if claves is not None else _case_key(work, row)
-    return clave in con_evidencia and kind not in _tipos_efectivos(row)
+    return clave in con_evidencia and kind not in efectivos
 
 
 def suggested_resolution(row):
@@ -320,7 +323,8 @@ def automatic_project_selections(work, fallback_kind='PC_IE'):
             for row in work.rows
             if not row.excluded
             for kind in KINDS
-            if (claves[row.id], kind) in cases and not _fuera_del_proyecto(row, kind, con_evidencia, work, claves)
+            if (claves[row.id], kind) in cases
+            and not _fuera_del_proyecto(row, kind, con_evidencia, work, claves, fallback_kind)
         ]
     reviewed = reviewed_resolution_ids(work)
     result = []
@@ -514,7 +518,9 @@ def render_project(project, target):
     return doc
 
 
-def prepare_projects(work, selections, template_dir):
+def prepare_projects(work, selections, template_dir, fallback_kind='PC_IE'):
+    """Agrupa las selecciones por tribunal, RIT y tipo. `fallback_kind`: el mismo tipo de respaldo usado al elegir (E3C-07).
+    Una selección que ya no corresponde a la decisión de sus filas no crea un proyecto vacío: vuelve como error legible."""
     from .sync import require_current_copy
 
     require_current_copy(work)
@@ -530,6 +536,7 @@ def prepare_projects(work, selections, template_dir):
         rit = value(work, row, 'rit').strip()
         case_rows.setdefault((court, normalize(rit)), []).append(row)
     con_evidencia = _casos_con_evidencia(work)
+    rits = {}
     for rid, kind in selections:
         if rid not in by_id or kind not in KINDS:
             continue
@@ -541,10 +548,11 @@ def prepare_projects(work, selections, template_dir):
         court = tribunal(value(work, row, 'tribunal')) or value(work, row, 'tribunal')
         rit = value(work, row, 'rit').strip()
         key = (court, normalize(rit), kind)
+        rits.setdefault(key, rit)
         group = groups.setdefault(key, [])
         existing = {r.id for r in group}
         for candidate in case_rows.get((court, normalize(rit)), []):
-            if _fuera_del_proyecto(candidate, kind, con_evidencia, work):
+            if _fuera_del_proyecto(candidate, kind, con_evidencia, work, fallback_kind=fallback_kind):
                 continue  # fecha ya resuelta por evidencia: no reaparece en el proyecto de otra fecha del caso
             if candidate.id not in existing:
                 group.append(candidate)
@@ -552,7 +560,13 @@ def prepare_projects(work, selections, template_dir):
     projects = []
     errors = []
     with TemporaryDirectory() as directory:
-        for (court, _, kind), rows in groups.items():
+        for (court, rit_normalizado, kind), rows in groups.items():
+            if not rows:
+                errors.append(
+                    f'{rits[(court, rit_normalizado, kind)]}: ninguna fila pide {kind_label(kind)} tras la decisión registrada; '
+                    'revisa RES o la decisión y vuelve a preparar los proyectos.'
+                )
+                continue
             rit = value(work, rows[0], 'rit')
             template = Path(template_dir) / court / (kind + '.docx')
             if not template.is_file():

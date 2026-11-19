@@ -50,10 +50,12 @@ def _instante(texto):
     dia = texto[:10]
     try:
         valor = datetime.fromisoformat(texto)
-    except ValueError:
+        if not 1900 <= valor.year <= 2199:
+            raise ValueError  # fuera del dominio pactado (E3C-08): se compara como texto, igual que en Rust
+        if valor.tzinfo is not None:
+            valor = valor.astimezone(UTC).replace(tzinfo=None)
+    except (ValueError, OverflowError):
         return (dia, texto)
-    if valor.tzinfo is not None:
-        valor = valor.astimezone(UTC).replace(tzinfo=None)
     return (dia, valor.strftime('%Y-%m-%dT%H:%M:%S.%f'))
 
 

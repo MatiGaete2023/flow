@@ -14,7 +14,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import generar_casos as G  # noqa: E402
+import generar_casos as G
 
 CORTE = G.CORTE
 TIPOS_ESCRITO = ['Inf. Cump Programa Ambulatorio', 'Inf. Cump FAE/FAS', 'Inf. Cump Centro Residencial', 'Escrito ficticio']

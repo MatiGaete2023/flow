@@ -47,9 +47,11 @@ fn instante(texto: &str) -> (String, String) {
         .map(|d| d.with_timezone(&chrono::Utc).naive_utc())
         .or_else(|_| chrono::NaiveDateTime::parse_from_str(texto, "%Y-%m-%dT%H:%M:%S%.f"))
         .or_else(|_| NaiveDate::parse_from_str(texto, "%Y-%m-%d").map(|d| d.and_hms_opt(0, 0, 0).unwrap()));
+    // Dominio pactado con Python (E3C-08): años 1900–2199; fuera de él se compara como texto.
+    use chrono::Datelike;
     match utc {
-        Ok(v) => (dia, v.format(formato).to_string()),
-        Err(_) => (dia, texto.to_string()),
+        Ok(v) if (1900..=2199).contains(&v.year()) => (dia, v.format(formato).to_string()),
+        _ => (dia, texto.to_string()),
     }
 }
 
@@ -289,6 +291,16 @@ pub(crate) fn evidencia_informe(
 pub(crate) fn validar_alcance(manifiesto: &Value, tablas: &HashMap<String, Vec<FilaCsv>>) -> Result<(), String> {
     let consultas: HashMap<&str, &Value> =
         manifiesto["queries"].as_array().into_iter().flatten().filter_map(|q| Some((q["query_id"].as_str()?, q))).collect();
+    // Dominio pactado con el contrato Python (E3C-08): una marca legible fuera de 1900–2199 es un error de contrato.
+    for q in consultas.values() {
+        let texto = q["captured_at"].as_str().unwrap_or("");
+        if let Ok(f) = chrono::DateTime::parse_from_rfc3339(texto) {
+            use chrono::Datelike;
+            if !(1900..=2199).contains(&f.year()) {
+                return Err("Fecha fuera del rango admitido (1900–2199).".into());
+            }
+        }
+    }
     for (tabla, pantalla, filtro, campo) in
         [("escritos", "escritos", "escritos_causa", "cause_id"), ("historico_proteccion", "historico_proteccion", "historico_persona", "person_id")]
     {
@@ -376,6 +388,11 @@ mod pruebas {
         assert_eq!(instante("2026-11-20T00:10:00Z").1, "2026-11-20T00:10:00.000000");
         assert_eq!(instante("2026-11-19T10:00:00").1, "2026-11-19T10:00:00.000000");
         assert_eq!(instante("2026-11-19").1, "2026-11-19T00:00:00.000000");
+        // E3C-08: extremos fuera del dominio pactado se comparan como texto, igual que en Python.
+        assert_eq!(instante("0001-01-01T00:00:00+01:00").1, "0001-01-01T00:00:00+01:00");
+        assert_eq!(instante("9999-12-31T23:59:59-01:00").1, "9999-12-31T23:59:59-01:00");
+        let m = json!({"queries":[consulta("q1", "0001-01-01T00:00:00+01:00", "COMPLETA")]});
+        assert!(validar_alcance(&m, &HashMap::new()).unwrap_err().contains("rango admitido"));
         // 21:30 en Santiago es posterior a 00:10 UTC del día siguiente: manda la lectura de Santiago.
         let m = json!({"queries":[consulta("q2", "2026-11-20T00:10:00Z", "COMPLETA"), consulta("q1", "2026-11-19T21:30:00-03:00", "COMPLETA")]});
         let mejor = mejores_consultas(&m, "escritos", "escritos_causa", "cause_id", None, &[], &FIRMA_ESCRITOS);

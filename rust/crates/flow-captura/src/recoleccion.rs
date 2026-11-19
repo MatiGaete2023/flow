@@ -23,7 +23,7 @@ pub const MAX_FALLAS_SEGUIDAS: usize = 5;
 
 static PENDIENTE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
     regex::Regex::new(
-        r"\AConsulta (\d+), página \d+(?:, fila \d+: (?:bitacora|historia|calendario) pendiente|: vínculos del listado pendientes)\.",
+        r"\AConsulta (\d+), página \d+(?:, fila \d+: (?:bitacora|historia|calendario) (?:pendiente\.|sin vínculo comprobado;)|: vínculos del listado pendientes\.)",
     )
     .unwrap()
 });
@@ -150,7 +150,8 @@ pub fn avisos_bitacoras_faltantes(resumen: &Resumen) -> Vec<String> {
     salida
 }
 
-/// Lecturas (o páginas de vínculos) pendientes anotadas en el avance.
+/// Lecturas (o páginas de vínculos) pendientes anotadas en el avance. Una fila «sin vínculo comprobado» también cuenta
+/// (E3C-09): al retomar, su consulta se recorre otra vez en SITFA y el vínculo puede comprobarse.
 pub fn lecturas_pendientes(resumen: &Resumen) -> usize {
     resumen.avisos.iter().filter(|a| PENDIENTE.is_match(a)).count()
 }

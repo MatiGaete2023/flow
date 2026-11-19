@@ -1276,8 +1276,9 @@ class App(ctk.CTk):
         selected = list(selected_ids(self, 'words')) or [
             iid for iid in getattr(self, '_resolution_all_iids', self.words.get_children()) if self.words.exists(iid)
         ]
+        fallback_kind = kind_code(self.manual_word.get()) or 'PC_IE'
         if not selected:
-            selections = automatic_project_selections(work, kind_code(self.manual_word.get()) or 'PC_IE')
+            selections = automatic_project_selections(work, fallback_kind)
             if not selections:
                 raise ValueError(
                     'No hay proyectos indicados. Si la planilla usa RES, solo se generan los marcados allí; para agregar otro caso, selecciónalo en Trabajo y usa Agregar desde Trabajo.'
@@ -1319,7 +1320,7 @@ class App(ctk.CTk):
 
         self._run(
             'Agrupando proyectos por tribunal, RIT y tipo…',
-            lambda: prepare_projects(work, selections, self.template_dir),
+            lambda: prepare_projects(work, selections, self.template_dir, fallback_kind),
             done,
         )
 

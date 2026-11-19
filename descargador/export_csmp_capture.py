@@ -566,7 +566,7 @@ def _historico(carpeta, data, query, incident, cid, captured):
 def _escritos(manifest, data, query, incident, cid, captured):
     """Bandeja de Escritos de cada causa leída (alcance CAUSA): una consulta por causa y una fila por escrito. Solo si la
     respuesta respaldada trae la pestaña; con la pestaña presente pero ilegible la consulta queda FALLIDA, nunca vacía."""
-    estado, causas = cargar_historias(manifest)
+    _estado, causas = cargar_historias(manifest)
     lote = Path(manifest).resolve().parent.parent.name
     filas = []
     consultas = 0

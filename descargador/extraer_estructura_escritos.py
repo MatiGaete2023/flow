@@ -15,7 +15,7 @@ from pathlib import Path
 from lxml import html
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from nurus.bitacora_html import decode_snapshot, normalize  # noqa: E402
+from nurus.bitacora_html import decode_snapshot, normalize
 
 
 def tipo_valor(valor):
@@ -32,7 +32,7 @@ def tipo_valor(valor):
 def forma_enlace(nodo):
     salida = {'etiqueta': nodo.tag, 'atributos': sorted(nodo.attrib)}
     onclick = nodo.get('onclick') or ''
-    funcion = re.match(r'\s*([A-Za-z_][\w.]*)\s*\((.*)\)', onclick, re.S)
+    funcion = re.match(r'\s*([A-Za-z_][\w.]*)\s*\((.*)\)', onclick, re.DOTALL)
     if funcion:
         argumentos = [a.strip().strip('\'"') for a in funcion.group(2).split(',')] if funcion.group(2).strip() else []
         salida['onclick'] = {'funcion': funcion.group(1), 'argumentos': [tipo_valor(a) for a in argumentos]}

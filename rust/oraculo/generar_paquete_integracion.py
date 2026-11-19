@@ -17,11 +17,12 @@ RAIZ = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / 'src'))
 sys.path.insert(0, str(RAIZ / 'tests'))
 
-from historia_fixtures import captura_con_historia  # noqa: E402
-from nurus.capture import write_capture  # noqa: E402
-from nurus.capture.contract import COMMON, TABLES  # noqa: E402
-from nurus.personal.capture_input import import_capture  # noqa: E402
-from nurus.personal.config import defaults  # noqa: E402
+from historia_fixtures import captura_con_historia
+
+from nurus.capture import write_capture
+from nurus.capture.contract import COMMON, TABLES
+from nurus.personal.capture_input import import_capture
+from nurus.personal.config import defaults
 
 CORTE = date(2026, 10, 8)
 AMB = 'Inf. Cump Programa Ambulatorio'

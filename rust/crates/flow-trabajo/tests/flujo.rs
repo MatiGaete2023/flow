@@ -33,6 +33,8 @@ struct Falso {
     sin_vinculo: AtomicBool,
     /// E3B-11: la lectura de bitácora de la segunda persona no llega al lote y no queda aviso.
     perder_bitacora: AtomicBool,
+    /// E3C-10: las ventanas de bitácora muestran indicios de recorte (paginador).
+    recortar: AtomicBool,
 }
 
 fn calendario(carpeta: &Path, lote: &Lote, alterar: bool) -> Resumen {
@@ -81,6 +83,15 @@ impl flujo::Sitfa for Falso {
         }
         if self.perder_bitacora.load(Ordering::SeqCst) {
             r.lecturas.retain(|l| !(l.tipo == "bitacora" && l.ingreso == "202"));
+        }
+        if self.recortar.load(Ordering::SeqCst) {
+            for l in r.lecturas.iter_mut().filter(|l| l.tipo == "bitacora") {
+                let mut v: Value = serde_json::from_slice(&std::fs::read(carpeta.join(&l.archivo)).unwrap()).unwrap();
+                v["datos"]["alcance_revision_fuente"] = json!({"metodo":"ficticio","coverage":"PARCIAL"});
+                let bytes = serde_json::to_vec(&v).unwrap();
+                std::fs::write(carpeta.join(&l.archivo), &bytes).unwrap();
+                l.sha256 = huella(&bytes);
+            }
         }
         if self.cortar.swap(false, Ordering::SeqCst) {
             r.estado = "INCOMPLETA".into();
@@ -360,7 +371,7 @@ fn e3b_11_bitacoras_faltantes_dejan_parcial_por_tribunal() {
     let r = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
     assert!(r.parcial);
     assert!(
-        r.avisos.iter().any(|a| a == "Ingresos verificados sin bitácora en el paquete: Juzgado de Letras Ficticio (901): 1."),
+        r.avisos.iter().any(|a| a.starts_with("Ingresos verificados sin bitácora en el paquete: Juzgado de Letras Ficticio (901): 1.")),
         "{:?}",
         r.avisos
     );
@@ -389,4 +400,62 @@ fn e3b_13_el_error_nombra_la_raiz_del_intento() {
     std::fs::create_dir_all(sin_control.join("respaldo")).unwrap();
     let mensaje = flujo::mensaje_fallo("Fallo ficticio.", Some(&sin_control));
     assert!(mensaje.contains("no se puede retomar") && !mensaje.contains(&antigua.display().to_string()), "{mensaje}");
+}
+
+/// E3C-09: una bitácora «sin vínculo comprobado» deja la consulta reintentable; «Retomar» vuelve a consultar SITFA en vez
+/// de reutilizar el lote validado, y si el listado ya entrega el vínculo el paquete queda completo.
+#[test]
+fn e3c_09_sin_vinculo_se_reintenta_al_retomar() {
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    sitfa.sin_vinculo.store(true, Ordering::SeqCst);
+    let sin_informes = flujo::Preferencias { informes_por_vencer: false, ..prefs() };
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial);
+    let control: Value = serde_json::from_slice(&std::fs::read(r.carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
+    let resumen = Resumen::leer(&r.carpeta.join(control["carpetas"]["consultas"].as_str().unwrap())).unwrap();
+    assert_eq!(recoleccion::lecturas_pendientes(&resumen), 1);
+    assert_eq!(recoleccion::consultas_pendientes(&resumen).into_iter().collect::<Vec<_>>(), [0]);
+    sitfa.sin_vinculo.store(false, Ordering::SeqCst);
+    sitfa.llamadas.lock().unwrap().clear();
+    let r2 = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert_eq!(*sitfa.llamadas.lock().unwrap(), ["seguimiento (retomar)"]);
+    assert!(!r2.parcial, "{:?}", r2.avisos);
+}
+
+/// E3C-10: una bitácora leída cuya ventana mostró paginador no es una ausencia, pero tampoco acredita el historial: el
+/// paquete queda PARCIAL con aviso por tribunal (antes podía anunciarse COMPLETO).
+#[test]
+fn e3c_10_bitacora_con_recorte_deja_parcial() {
+    let sin_informes = flujo::Preferencias { informes_por_vencer: false, ..prefs() };
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    sitfa.recortar.store(true, Ordering::SeqCst);
+    let r = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial);
+    assert!(
+        r.avisos.iter().any(|a| a.starts_with("Bitácoras leídas con posible recorte de la ventana (paginador o carga parcial): Juzgado de Letras Ficticio (901): 2.")),
+        "{:?}",
+        r.avisos
+    );
+}
+
+/// E3C-11: control presente pero dañado o de un paquete ya completo: el mensaje no sugiere «Retomar».
+#[test]
+fn e3c_11_control_danado_o_completo_no_sugiere_retomar() {
+    let destino = Temporal::nueva();
+    let raiz = destino.0.join("Paquete CSMP ficticio");
+    std::fs::create_dir_all(raiz.join("respaldo")).unwrap();
+    let control = raiz.join("respaldo/proceso.json");
+    for (contenido, motivo) in [
+        ("{no es json".to_string(), "no es válido"),
+        (json!({"estado":"COMPLETO","fase":"paquete","carpetas":{},"reintentos":0}).to_string(), "ya está completo"),
+    ] {
+        std::fs::write(&control, contenido).unwrap();
+        let m = flujo::mensaje_fallo("Fallo ficticio.", Some(&raiz));
+        assert!(m.contains(motivo) && m.contains("no se puede retomar") && !m.contains("usa «Retomar paquete…»"), "{m}");
+    }
+    std::fs::write(&control, json!({"estado":"INCOMPLETO","fase":"consultas","carpetas":{},"reintentos":0}).to_string()).unwrap();
+    assert!(flujo::mensaje_fallo("Fallo ficticio.", Some(&raiz)).contains("usa «Retomar paquete…»"));
 }

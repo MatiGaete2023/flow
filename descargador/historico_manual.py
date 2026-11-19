@@ -17,6 +17,7 @@ from pathlib import Path
 
 import motor as m
 from lectura_bitacoras import write
+
 from nurus.escritos_html import mensaje, read_historico
 
 MANIFEST = 'historico.json'

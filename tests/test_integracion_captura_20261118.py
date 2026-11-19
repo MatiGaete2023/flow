@@ -527,6 +527,25 @@ def test_e3b_06_valor_de_catalogo_con_sufijo_libre_no_sobrevive(tmp_path):
         assert causales[0] != 'SIN INFORMACION'  # el sufijo libre impide tratarlo como catálogo
 
 
+def test_e3c_06_literal_de_catalogo_en_nfd_se_conserva_y_sufijo_de_puntuacion_no(tmp_path):
+    import unicodedata
+
+    from nurus.personal.anonymize_package import anonymize_capture
+
+    nfd = unicodedata.normalize('NFD', 'sin información')
+    paquete(tmp_path, historico=[('FAE X', '--', nfd), ('PIE Y', '--', 'SIN INFORMACION $$$'), ('PRM Z', '--', 'Sin  Información')],
+            escritos=[('D1', 'inf. cump programa ambulatorio', 'proveido'), ('D2', 'Inf. Cump FAE/FAS.', 'Pendiente!')],
+            nombre='nfd')  # fmt: skip
+    destino = tmp_path / 'nfd-estricto.zip'
+    anonymize_capture(tmp_path / 'nfd.zip', destino, mode='estricto')
+    anonimo = read_capture(destino)
+    causales = [f['egreso_cause'] for f in anonimo.rows('historico_proteccion')]
+    assert causales[0] == causales[2] == 'SIN INFORMACION' and causales[1] != 'SIN INFORMACION'
+    escritos = [(f['escrito_type'], f['escrito_status']) for f in anonimo.rows('escritos')]
+    assert escritos[0] == ('Inf. Cump Programa Ambulatorio', 'Proveído')
+    assert escritos[1][0] != 'Inf. Cump FAE/FAS' and escritos[1][1] != 'Pendiente'
+
+
 # ------------------------------------------------------------------ E3C: lecturas de Escritos desde el ZIP hasta acciones
 AMB = 'Inf. Cump Programa Ambulatorio'
 EXIGIBLES = ['programa_vencido', 'PC_INFO']
@@ -672,3 +691,15 @@ def test_e3c_12_identidad_incierta_y_referencia_con_dos_duenos_desde_el_zip(tmp_
     ])], 'dos')  # fmt: skip
     ev = evidencia_informe(base, date(2026, 9, 20), filas_de_escritos(captura, CORTE), historia)
     assert ev.escrito_historia_folio == '' and ev.folios_ajenos == ('31',)
+
+
+def test_e3c_08_marcas_fuera_del_dominio_pactado(tmp_path):
+    from nurus.capture.contract import iso_time
+    from nurus.capture.escritos import _instante
+
+    for extremo in ('0001-01-01T00:00:00+01:00', '9999-12-31T23:59:59-01:00', '1899-12-31'):
+        with pytest.raises(CaptureError, match='rango admitido'):
+            iso_time(extremo, True)
+    for extremo in ('0001-01-01T00:00:00+01:00', '9999-12-31T23:59:59-01:00'):
+        assert _instante(extremo) == (extremo[:10], extremo)  # sin OverflowError; igual que Rust
+    iso_time('2026-11-19T21:30:00-03:00')

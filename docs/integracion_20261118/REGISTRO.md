@@ -135,6 +135,25 @@ Las 14 observaciones se corrigieron con prueba propia (`test_e3b_*` en `tests/` 
 **Mulchén (área F)**: N1 sin causa individual confirmada. N2: los dos síntomas calzan con E3B-11 (faltan sin aviso) y E3B-12 (error y no se
 puede retomar). Para confirmar hace falta del usuario: versión del ejecutable, botón usado, mensaje literal y nombres relativos de los JSON.
 
+## Correcciones E3C (19-nov-2026) — tercera revisión, resumen en `E3_INFORME_3_20261119.md`, veredicto NO PASA sobre `c31d5f2`
+Cada hallazgo con prueba propia (`test_e3c_*` en `tests/`; Rust `e3c_*` en `fuentes_nuevas.rs`, `flow-dominio/src/evidencia.rs`,
+`flow-captura/tests/lecturas.rs`, `flow-trabajo/tests/flujo.rs`). Las correcciones de captura se probaron por mutación: cada
+reversión hace caer al menos una prueba Python. Requiere **cuarta revisión E3**.
+| ID | Corrección |
+|---|---|
+| E3C-01 | Lectura de Escritos discordante: sin vínculo explícito (`escritos_para`), folios de TODAS las lecturas empatadas bloqueados (`evidencia_informe`, `_filas_empate`) y `Escritos.discordante` → `escrito_pendiente` devuelve None con marca `ESCRITOS_DISCORDANTES` (se conservan las acciones). Oráculo: INT-INF-D42, INT-CUM-D43. |
+| E3C-02 | Firma de contenido = multiconjunto ordenado con solicitante; el orden de filas no cuenta. |
+| E3C-03/04 | Titular: rótulo completo (`RUN del representante` no vale), valor tras «:», texto siguiente o celda hermana de la misma fila saltando comentarios; nunca una tabla. Python y Rust con los mismos fixtures. |
+| E3C-05 | Constancia: NFC de toda la observación antes del verbo; partículas entre nombres («del Río», «de la Fuente»); coma pegada al verbo; sujeto de varias palabras sin nombre completo → no es constancia (se mantiene la frase). |
+| E3C-06 | Anonimizador: literal de catálogo comparado en NFC, sin tildes ni mayúsculas; cualquier sufijo (también puntuación) se depura. |
+| E3C-07 | Python: el respaldo elegido por el operador (`manual_word`) llega igual a elegir, filtrar y preparar (`prepare_projects(..., fallback_kind)`); grupo vacío → error legible, sin `IndexError`. Rust usa un único respaldo fijo (PC_IE) en ambos pasos. |
+| E3C-08 | Dominio de fechas 1900–2199: el contrato Python rechaza con mensaje propio; Rust `validar_alcance` igual; `instante`/`_instante` comparan como texto fuera del dominio (sin OverflowError). |
+| E3C-09 | «sin vínculo comprobado» cuenta como pendiente reintentable (`recoleccion::PENDIENTE`): Retomar vuelve a consultar SITFA. Un ingreso verificado sin lectura ni aviso dice que requiere paquete nuevo. |
+| E3C-10 | Bitácoras leídas con indicio de recorte (`alcance_revision_fuente.coverage = PARCIAL`) se cuentan por tribunal (`Producto.recortadas`) y dejan PARCIAL; `aviso_incompletas` solo omite `bitacoras`/`consultas` PARCIAL. |
+| E3C-11 | `mensaje_fallo` lee el control: solo sugiere Retomar si es legible y retomable; dañado o COMPLETO → lo dice y pide paquete nuevo. |
+| E3C-12 | Pruebas desde el ZIP hasta acciones para orden UTC, contenido, identidad incierta, dos dueños y discordancia. |
+| Ruff | Los 24 avisos nuevos contra `d2935dd` corregidos (noqa innecesarios, imports, variable sin uso); sin avisos nuevos en el plan. |
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar
@@ -147,14 +166,15 @@ puede retomar). Para confirmar hace falta del usuario: versión del ejecutable, 
    --programa P --archivo consignaciones.json` y `--consignaciones` en `observar/producir`. Python: `python tools/consignar.py SESION --listar |
    --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
-5. **Tercera revisión E3** sobre la punta actual (primera sobre `c83414d` y segunda: NO PASA; ver «Correcciones E3» y «Correcciones E3B»).
-   Prompt: `PROMPT_REVISION_E3_3.md`. Nada está «aceptado». Incluir reproducción Mulchén con datos del usuario (versión, botón, mensaje literal, nombres de JSON).
+5. **Cuarta revisión E3** sobre la punta actual (tres anteriores NO PASA; ver «Correcciones E3», «E3B» y «E3C»). Nada está
+   «aceptado». Idealmente con Rust instalado (la tercera no pudo ejecutar `cargo`). Mulchén: el usuario no conserva versión, botón,
+   mensaje ni nombres de JSON; la próxima vez que ocurra, anotar esos cuatro datos.
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 340 pruebas
+cd rust && cargo test --workspace --locked                                       # 348 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

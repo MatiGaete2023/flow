@@ -444,3 +444,41 @@ def test_e3b_08_sin_proyecto_humano_excluye_la_fila_aun_sin_evidencia(tmp_path):
     assert seleccion == [(segunda.id, 'PC_INFO')]
     proyectos, errores = prepare_projects(trabajo, seleccion, BASE / 'plantillas_word')
     assert not errores and [p.record_ids for p in proyectos] == [[segunda.id]]
+
+
+def test_e3c_07_respaldo_elegido_por_el_operador_se_usa_al_elegir_y_al_preparar(tmp_path):
+    from nurus.personal.config import BASE
+    from nurus.personal.resolutions import automatic_project_selections, prepare_projects
+
+    trabajo = analizar(tmp_path, 'INFORMES', INFORMES, [fila(1, 'PRM Laja') + ['2026-08-20']])
+    [f] = trabajo.rows
+    f.actions = []  # sin acciones propias
+    f.decisions['resolution'] = 'review'
+    f.review['RES'] = 'X'  # marcado sin tipo
+    trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    for tipo in ('PC_IE', 'PC_INFO', 'NOMENCL'):
+        seleccion = automatic_project_selections(trabajo, tipo)
+        assert seleccion == [(f.id, tipo)], tipo
+        proyectos, errores = prepare_projects(trabajo, seleccion, BASE / 'plantillas_word', tipo)
+        assert not errores and [(p.kind, p.record_ids) for p in proyectos] == [(tipo, [f.id])], (tipo, errores)
+    # Selección desactualizada (otro respaldo): error legible, no IndexError.
+    proyectos, errores = prepare_projects(trabajo, [(f.id, 'PC_INFO')], BASE / 'plantillas_word')
+    assert proyectos == [] and len(errores) == 1 and 'ninguna fila pide' in errores[0]
+
+
+def test_e3c_05_sujeto_con_verbo_nfd_particulas_coma_y_nombre_incompleto():
+    def previa(texto, completo=''):
+        return constancia_en_bitacora(bita(('2026-10-01', texto)), 'Ana', 'PRM Luna', completo) is not None
+
+    nfd = 'Ana María ingreso\u0301 efectivamente al programa PRM Luna.'
+    assert previa(nfd, 'Ana María Soto') and previa(nfd.replace('o\u0301', 'ó'), 'Ana María Soto')
+    assert previa('Ana María del Río cuenta con ingreso efectivo al programa PRM Luna.', 'Ana María del Río Soto')
+    assert previa('Ana de la Fuente cuenta con ingreso efectivo al programa PRM Luna.', 'Ana de la Fuente Soto')
+    assert not previa('Ana María del Río cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')
+    assert previa('Ana, cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Soto')
+    assert previa('Ana María, cuenta con ingreso efectivo al programa PRM Luna.', 'Ana María Soto')
+    assert not previa('Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Soto')
+    # Sin nombre completo no se distingue a Ana Luisa de otra Ana: no es constancia.
+    assert not previa('Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.')
+    assert previa('Ana cuenta con ingreso efectivo al programa PRM Luna.')
+    assert not previa('Se informa que la Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.')

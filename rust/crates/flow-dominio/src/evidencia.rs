@@ -185,14 +185,32 @@ const NO_NOMBRE: [&str; 46] = [
     "hoy", "tambien", "asimismo", "programa",
 ];
 
-/// Nombres que preceden inmediatamente al verbo, hasta 4 palabras (`evidencia.py::_sujeto`).
+const PARTICULAS: [&str; 6] = ["de", "del", "la", "las", "los", "san"];
+
+/// Nombres que preceden inmediatamente al verbo, hasta 6 palabras; partículas entre nombres incluidas y una coma pegada al
+/// verbo ignorada. El prefijo llega en NFC (E3C-05; `evidencia.py::_sujeto`).
 fn sujeto(prefijo: &str) -> Vec<String> {
-    use unicode_normalization::UnicodeNormalization;
-    let prefijo: String = prefijo.nfc().collect();
-    let mut salida = Vec::new();
-    for token in PALABRA.find_iter(&prefijo).map(|m| m.as_str()).collect::<Vec<_>>().into_iter().rev() {
+    let mut tokens: Vec<&str> = PALABRA.find_iter(prefijo).map(|m| m.as_str()).collect();
+    if tokens.last() == Some(&",") {
+        tokens.pop();
+    }
+    let alfa = |t: &str| t.chars().next().is_some_and(char::is_alphabetic);
+    let mut salida: Vec<String> = Vec::new();
+    for i in (0..tokens.len()).rev() {
+        let token = tokens[i];
         let llave = clave_texto(token);
-        if !token.chars().next().is_some_and(char::is_alphabetic) || NO_NOMBRE.contains(&llave.as_str()) || salida.len() >= 4 {
+        if !alfa(token) || salida.len() >= 6 {
+            break;
+        }
+        if NO_NOMBRE.contains(&llave.as_str()) {
+            let anterior = if i > 0 { tokens[i - 1] } else { "" };
+            let clave_anterior = clave_texto(anterior);
+            let entre_nombres =
+                alfa(anterior) && (!NO_NOMBRE.contains(&clave_anterior.as_str()) || PARTICULAS.contains(&clave_anterior.as_str()));
+            if !salida.is_empty() && PARTICULAS.contains(&llave.as_str()) && entre_nombres {
+                salida.push(llave);
+                continue;
+            }
             break;
         }
         salida.push(llave);
@@ -216,8 +234,11 @@ pub fn constancia_en_bitacora<'a>(
     if objetivo.is_empty() || nombre.is_empty() {
         return None;
     }
+    use unicode_normalization::UnicodeNormalization;
     for obs in observaciones {
-        for oracion in oraciones_de(&obs.texto) {
+        // NFC antes de buscar el verbo: «ingresó» con acento combinante es el mismo verbo (E3C-05).
+        let texto: String = obs.texto.nfc().collect();
+        for oracion in oraciones_de(&texto) {
             for hallazgo in CONSTANCIA.captures_iter(&oracion) {
                 let completo_match = hallazgo.get(0).unwrap();
                 if clave_programa(&hallazgo[1]) != objetivo {
@@ -231,7 +252,8 @@ pub fn constancia_en_bitacora<'a>(
                 if s.first() != Some(&nombre) {
                     continue;
                 }
-                if !completo.is_empty() && s.len() > 1 && (s.len() > completo.len() || s[..] != completo[..s.len()]) {
+                // Sin nombre completo no se distingue «Ana Luisa» de otra Ana: no se da por constancia.
+                if s.len() > 1 && (s.len() > completo.len() || s[..] != completo[..s.len()]) {
                     continue;
                 }
                 return Some(obs);
@@ -284,5 +306,30 @@ mod pruebas_e3b {
         assert!(previa("Ana cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
         assert!(!previa("Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
         assert!(!previa("La niña Ana no cuenta con ingreso efectivo al programa PRM Luna.", ""));
+    }
+}
+
+#[cfg(test)]
+mod pruebas_e3c {
+    use super::*;
+
+    /// Espejo de `test_e3c_05_sujeto_con_verbo_nfd_particulas_coma_y_nombre_incompleto`.
+    #[test]
+    fn e3c_05_sujeto() {
+        let previa = |texto: &str, completo: &str| {
+            let obs = [Observacion { fecha: "2026-10-01".parse().unwrap(), texto: texto.into() }];
+            constancia_en_bitacora(&obs, "Ana", "PRM Luna", completo).is_some()
+        };
+        let nfd = "Ana María ingreso\u{301} efectivamente al programa PRM Luna.";
+        assert!(previa(nfd, "Ana María Soto") && previa(&nfd.replace("o\u{301}", "ó"), "Ana María Soto"));
+        assert!(previa("Ana María del Río cuenta con ingreso efectivo al programa PRM Luna.", "Ana María del Río Soto"));
+        assert!(previa("Ana de la Fuente cuenta con ingreso efectivo al programa PRM Luna.", "Ana de la Fuente Soto"));
+        assert!(!previa("Ana María del Río cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
+        assert!(previa("Ana, cuenta con ingreso efectivo al programa PRM Luna.", "Ana Soto"));
+        assert!(previa("Ana María, cuenta con ingreso efectivo al programa PRM Luna.", "Ana María Soto"));
+        assert!(!previa("Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.", "Ana Soto"));
+        assert!(!previa("Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.", ""));
+        assert!(previa("Ana cuenta con ingreso efectivo al programa PRM Luna.", ""));
+        assert!(!previa("Se informa que la Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.", ""));
     }
 }

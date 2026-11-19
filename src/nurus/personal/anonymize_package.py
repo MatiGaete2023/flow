@@ -97,6 +97,19 @@ CATALOGO = {
     },
     'escrito_status': {'pendiente': 'Pendiente', 'resuelto': 'Resuelto', 'proveido': 'Proveído'},
 }
+
+
+def _forma(valor):
+    """Forma comparable de un literal: NFC, sin tildes, en minúsculas y con espacios colapsados; la puntuación se conserva."""
+    import unicodedata
+
+    texto = unicodedata.normalize('NFD', unicodedata.normalize('NFC', str(valor)))
+    sin_tildes = ''.join(c for c in texto if not unicodedata.combining(c))
+    return ' '.join(sin_tildes.casefold().split())
+
+
+# Variantes permitidas de cada literal: la forma comparable del literal canónico -> literal canónico.
+_VARIANTES = {campo: {_forma(c): c for c in literales.values()} for campo, literales in CATALOGO.items()}
 _FECHA_EGRESO = re.compile(r'^\s*(?:[-\u2010-\u2014\u2212]{2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\s*$')
 _JSON_LIMIT = 30
 _SENSITIVE_WORDS = re.compile(r'(?i)(rut|run|nombre|apellido|curador|litigante|domicilio|direccion|telefono|correo)')
@@ -173,14 +186,11 @@ class Mapper:
         if label in FREE_FIELDS:
             return self.free(value)
         if label in CATALOGO:
-            # Solo un valor que ES exactamente un literal de catálogo (letras latinas, sin nada más) se conserva, y se emite
-            # su forma canónica; cualquier otro texto se depura como libre.
-            crudo = str(value)
-            limpio = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', normalize(crudo)).split())
-            solo_latino = not re.search(r'[^\x20-\x7e\u00c0-\u00ff]', crudo)
-            if solo_latino and limpio in CATALOGO[label]:
-                return CATALOGO[label][limpio]
-            return self.free(value)
+            # Solo un valor que ES un literal de catálogo se conserva, y se emite su forma canónica; cualquier otro texto
+            # (un sufijo, aunque sea solo puntuación) se depura como libre. Se compara en NFC, sin distinguir mayúsculas,
+            # tildes ni espacios repetidos: el mismo texto en NFD es el mismo literal (E3C-06).
+            canonico = _VARIANTES[label].get(_forma(value))
+            return canonico if canonico is not None else self.free(value)
         if label == 'egreso_date':
             return value if _FECHA_EGRESO.match(str(value)) else self.free(value)
         if label in CONTROL_FIELDS or name in self.protected:

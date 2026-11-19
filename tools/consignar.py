@@ -14,9 +14,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
-from nurus.personal.config import defaults  # noqa: E402
-from nurus.personal.motor.evidencia import clave_programa  # noqa: E402
-from nurus.personal.work import Work  # noqa: E402
+from nurus.personal.config import defaults
+from nurus.personal.motor.evidencia import clave_programa
+from nurus.personal.work import Work
 
 
 def main(argv=None):
