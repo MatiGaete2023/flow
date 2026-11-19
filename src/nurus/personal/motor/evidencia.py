@@ -140,25 +140,51 @@ def _sin_aplanar(texto):
     return ' '.join(str(texto or '').replace(' ', ' ').split())
 
 
-def constancia_en_bitacora(observaciones, primer_nombre, programa):
+_PALABRA = re.compile(r"[^\W\d_]+|\d+|[^\w\s]")
+# Palabras que nunca forman parte del nombre del sujeto: cortan la búsqueda hacia atrás desde el verbo.
+_NO_NOMBRE = frozenset(
+    'que se hace presente informa informo indica indico senala senalo comunica refiere menciona consta da cuenta '
+    'el la los las un una nino nina nna adolescente joven menor y e o de del al a con por para en segun ya actualmente '
+    'hoy tambien asimismo programa'.split()
+)
+
+
+def _sujeto(prefijo):
+    """Nombres que preceden inmediatamente al verbo («… que Ana María cuenta con…» → [ana, maria]), hasta 4 palabras."""
+    sujeto = []
+    for token in reversed(_PALABRA.findall(prefijo)):
+        llave = clave_texto(token)
+        if not token[0].isalpha() or llave in _NO_NOMBRE or len(sujeto) >= 4:
+            break
+        sujeto.append(llave)
+    return list(reversed(sujeto))
+
+
+def constancia_en_bitacora(observaciones, primer_nombre, programa, nombre_completo=''):
     """Observación registrada que ya hizo constar que ese niño cuenta con ingreso efectivo a ese programa.
 
     La coincidencia es del nombre completo del programa (no por subcadena) y exige que el SUJETO de la constancia sea el
-    niño: su primer nombre es la palabra inmediatamente anterior a «cuenta con ingreso…»/«ingresó efectivamente…»
-    («Ana informa que Beto cuenta con…» no es constancia de Ana). Una negación o la mera mención no bastan."""
+    niño: los nombres justo antes de «cuenta con ingreso…»/«ingresó efectivamente…» empiezan por su primer nombre y, si se
+    conoce su nombre completo, coinciden con sus primeras palabras («Ana María cuenta…» vale para Ana María Soto y no para
+    Ana Luisa Pérez; «Ana informa que Beto cuenta…» no es constancia de Ana). Una negación o la mera mención no bastan
+    (E3-12, E3B-07)."""
     objetivo = clave_programa(programa)
     nombre = clave_texto(primer_nombre)
-    if not objetivo:
+    completo = clave_texto(nombre_completo).split()
+    if not objetivo or not nombre:
         return None
     for obs in observaciones:
         for oracion in re.split(r'(?<=\.)\s+', _sin_aplanar(obs.texto)):
             for encontrado in _CONSTANCIA.finditer(oracion):
                 if clave_programa(encontrado.group(1)) != objetivo:
                     continue
-                previo = clave_texto(oracion[: encontrado.start()])
-                if _NEGACION.search(previo):
+                previo = oracion[: encontrado.start()]
+                if _NEGACION.search(clave_texto(previo)):
                     continue
-                if not nombre or previo.split()[-1:] != [nombre]:
+                sujeto = _sujeto(previo)
+                if not sujeto or sujeto[0] != nombre:
+                    continue
+                if completo and len(sujeto) > 1 and sujeto != completo[: len(sujeto)]:
                     continue
                 return obs
     return None

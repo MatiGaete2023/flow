@@ -154,22 +154,36 @@ def _tablas_historico(documento):
     return salida
 
 
-def _texto_titular(documento):
-    """Texto de la vista SIN las tablas de programas (Protección y LRPA): la pertenencia se prueba con los datos del
-    titular (RUT, nombre), nunca con una mención en «Nombre Proyecto» u otra celda de datos (E3-03)."""
-    from copy import deepcopy
+_ROTULO_TITULAR = re.compile(r'(?:rut|run|nombre del nino|nombre nino|nombre del nna|nombre del menor)\b')
 
-    copia = deepcopy(documento)
+
+def _texto_titular(documento):
+    """Texto de los CAMPOS ROTULADOS del titular de la vista («Nombre del niño», «Rut»/«RUN»): el rótulo con su valor en el
+    mismo elemento o en el siguiente. Fuera de las tablas de programas (Protección y LRPA). Una mención en otra parte (un
+    representante, un título, «Nombre Proyecto») no prueba pertenencia (E3-03, E3B-05). Sin rótulos, cadena vacía."""
     egreso = [normalize(h) for h in HISTORICO_HEADERS[1:]]
     programas = [normalize(h) for h in HISTORICO_PROGRAMA]
-    for tabla in list(copia.xpath('//table')):
+    excluidas = []
+    for tabla in documento.xpath('//table'):
         for fila in _filas_directas(tabla):
             cabecera = [normalize(_texto(c)) for c in fila.xpath('./th | ./td')]
             if all(e in cabecera for e in egreso) and any(p in cabecera for p in programas):
-                if tabla.getparent() is not None:
-                    tabla.getparent().remove(tabla)
+                excluidas.append(tabla)
                 break
-    return _texto(copia)
+    piezas = []
+    for el in documento.xpath('//td | //th | //label | //span | //b | //strong | //div | //p | //li'):
+        if any(t is el or el in t.iterdescendants() for t in excluidas):
+            continue
+        texto = _texto(el)
+        rotulo = normalize(texto)
+        if not _ROTULO_TITULAR.match(rotulo) or el.xpath('./td | ./th | ./div | ./p | ./li | ./table'):
+            continue  # solo el elemento que contiene el rótulo, no sus contenedores
+        piezas.append(texto)
+        siguiente = el.getnext()
+        # El valor va en el elemento siguiente solo si este trae únicamente el rótulo («Nombre del niño :» | «Ana …»).
+        if _ROTULO_TITULAR.fullmatch(rotulo) and siguiente is not None and isinstance(siguiente.tag, str):
+            piezas.append(_texto(siguiente))
+    return ' '.join(piezas)
 
 
 def read_historico(data, *, source='', captured_at='', persona_esperada=()):

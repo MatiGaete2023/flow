@@ -235,7 +235,7 @@ mod historico_real {
 
     #[test]
     fn e3_03_el_nombre_en_una_celda_de_programa_no_prueba_pertenencia() {
-        let html = "<html><body><h4>Titular Beto Sol</h4><table><tr><th>Nombre Proyecto</th><th>Fecha Egreso</th><th>Causal Egreso</th></tr>\
+        let html = "<html><body><div>Nombre del niño : Beto Sol</div><p>Representante Ana Luna</p><table><tr><th>Nombre Proyecto</th><th>Fecha Egreso</th><th>Causal Egreso</th></tr>\
             <tr><td>PRM Ana Luna</td><td>--</td><td>SIN INFORMACION</td></tr></table></body></html>";
         assert_eq!(leer_historico(html.as_bytes(), "", "x", &["Ana Luna"]).unwrap()["ownership"], "INCIERTA");
         assert_eq!(leer_historico(html.as_bytes(), "", "x", &["Beto Sol"]).unwrap()["ownership"], "VERIFICADA");

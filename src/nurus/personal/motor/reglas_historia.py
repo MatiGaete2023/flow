@@ -11,7 +11,7 @@ from .contexto import datetime as Clock
 from .evidencia import ESTADO_PENDIENTE, clave_programa, clave_texto, constancia_en_bitacora, programas_vigentes_otros
 from .historia import clave, ultimo
 from .textos import Frag, con_grupo, render
-from .utilidades import contiene_token, es_dce, fecha_es, fecha_mayoria, normalizar, titulo_programa
+from .utilidades import contiene_token, es_dce, fecha_es, fecha_mayoria, limpiar_nombre, normalizar, titulo_programa
 
 # La medida vencida no se reitera (11-nov-2026): su frase es igual de breve y lleva la fecha vigente.
 ORIGINAL = {
@@ -614,7 +614,7 @@ def _mencion_previa(nombre_programa):
     return None
 
 
-def otro_programa(programa, pnombre):
+def otro_programa(programa, pnombre, nombre_nino=''):
     """Espera y Cumplimiento: constancia única de que el niño cuenta con ingreso efectivo a otro programa vigente.
 
     «Otro» = otra denominación completa en el Ingreso Histórico Protección de la misma persona, con Fecha egreso `--`
@@ -640,7 +640,7 @@ def otro_programa(programa, pnombre):
     propuestos = current.get().setdefault('otros_programas', [])
     for nombre in otros:
         llave = clave_programa(nombre)
-        if llave in consignados() or constancia_en_bitacora(bitacora(), pnombre, nombre) is not None:
+        if llave in consignados() or constancia_en_bitacora(bitacora(), pnombre, nombre, limpiar_nombre(nombre_nino)) is not None:
             continue
         if bitacora_parcial():
             marcar(2, 'OTRO_PROGRAMA_BITACORA_PARCIAL', f'Bitácora incompleta: no se puede descartar que el ingreso efectivo a «{nombre}» ya se haya consignado')

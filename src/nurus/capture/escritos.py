@@ -39,18 +39,46 @@ ADECUADAS = ('COMPLETA', 'VACIA_COMPROBADA')
 
 
 def _instante(texto):
-    """(día, instante) comparables de `captured_at`: el mismo criterio en Python y Rust (sin depender del parser)."""
-    texto = str(texto or '')
-    return (texto[:10], texto.replace('Z', '+00:00'))
+    """(día de la lectura tal como se registró, instante comparable en UTC) de `captured_at` (E3B-01).
+
+    El día del corte se compara con la fecha local escrita en la lectura (zona del tribunal, America/Santiago en la
+    práctica). El orden entre lecturas usa el instante convertido a UTC: dos husos distintos se comparan bien. Un valor sin
+    zona se compara tal cual. Mismo criterio en Rust (`fuentes_nuevas.rs::instante`)."""
+    from datetime import datetime, timezone
+
+    texto = str(texto or '').strip()
+    dia = texto[:10]
+    try:
+        valor = datetime.fromisoformat(texto.replace('Z', '+00:00'))
+    except ValueError:
+        return (dia, texto)
+    if valor.tzinfo is not None:
+        valor = valor.astimezone(timezone.utc).replace(tzinfo=None)
+    return (dia, valor.strftime('%Y-%m-%dT%H:%M:%S.%f'))
+
+
+_FIRMA = {
+    'escritos': ('escrito_type', 'escrito_status', 'doc', 'linked_ingreso_id', 'linked_projection'),
+    'historico_proteccion': ('program_name', 'egreso_date', 'egreso_cause', 'ownership', 'person_id'),
+}
+
+
+def _firmas(capture, pantalla):
+    """{query_id: conjunto de filas normalizadas}: para saber si dos lecturas del mismo instante dicen lo mismo."""
+    salida = defaultdict(set)
+    for fila in capture.rows(pantalla):
+        salida[fila['query_id']].add(tuple(clave_texto(fila.get(k, '')) for k in _FIRMA[pantalla]))
+    return salida
 
 
 def _mejores_consultas(capture, pantalla, filtro, corte=None):
     """{clave: consulta} con la ÚLTIMA lectura fiable al corte por clave (E3-07); clave = tupla declarada en
     filters_json[filtro].
 
-    Se descartan las lecturas posteriores al corte. Entre lecturas completas (con filas o vacías comprobadas) manda la más
-    reciente; si dos completas del mismo instante discrepan en cobertura, la elegida queda PARCIAL (no acredita unicidad).
-    Sin lecturas completas, la de mejor cobertura (y la más reciente ante empate)."""
+    Se descartan las lecturas cuyo día es posterior al corte. Entre lecturas completas (con filas o vacías comprobadas) manda la
+    más reciente en UTC. Si varias completas comparten ese instante y discrepan (cobertura o filas), la elegida (la de menor
+    `query_id`, igual en cualquier orden del manifiesto) queda PARCIAL y marcada `_discordante` (E3B-02). Sin completas, la
+    de mejor cobertura, luego la más reciente y, ante empate, la de menor `query_id`."""
     grupos = defaultdict(list)
     for consulta in capture.manifest['queries']:
         if consulta['screen'] != pantalla:
@@ -62,18 +90,25 @@ def _mejores_consultas(capture, pantalla, filtro, corte=None):
             continue
         clave = tuple(alcance.get(k, '') for k in ('source_system', 'court_code', 'cause_id' if filtro == 'escritos_causa' else 'person_id'))
         grupos[clave].append(consulta)
+    firmas = _firmas(capture, pantalla) if grupos else {}
     mejor = {}
     for clave, consultas in grupos.items():
         completas = [q for q in consultas if q['coverage'] in ADECUADAS]
         if completas:
-            ultimo = max(_instante(q['captured_at']) for q in completas)
-            mismas = [q for q in completas if _instante(q['captured_at']) == ultimo]
-            elegida = mismas[-1]
-            if len({q['coverage'] for q in mismas}) > 1:
-                elegida = {**elegida, 'coverage': 'PARCIAL'}  # lecturas discordantes del mismo instante
+            ultimo = max(_instante(q['captured_at'])[1] for q in completas)
+            mismas = sorted((q for q in completas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
+            elegida = mismas[0]
+            discordantes = len({q['coverage'] for q in mismas}) > 1 or len(
+                {frozenset(firmas.get(q['query_id'], ())) for q in mismas}
+            ) > 1
+            if discordantes:
+                elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True}
             mejor[clave] = elegida
         else:
-            mejor[clave] = max(consultas, key=lambda q: (_RANGO.get(q['coverage'], 0), _instante(q['captured_at'])))
+            rango = max(_RANGO.get(q['coverage'], 0) for q in consultas)
+            candidatas = [q for q in consultas if _RANGO.get(q['coverage'], 0) == rango]
+            ultimo = max(_instante(q['captured_at'])[1] for q in candidatas)
+            mejor[clave] = min((q for q in candidatas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
     return mejor
 
 
@@ -132,7 +167,9 @@ def historicos_por_persona(capture, corte=None):
     for clave, consulta in _mejores_consultas(capture, 'historico_proteccion', 'historico_persona', corte).items():
         filas = por_consulta.get(consulta['query_id'], [])
         verificada = bool(filas) and all(f['ownership'] == 'VERIFICADA' for f in filas)
-        incierta = consulta['coverage'] == 'IDENTIDAD_INCIERTA' or (bool(filas) and not verificada)
+        incierta = (
+            consulta['coverage'] == 'IDENTIDAD_INCIERTA' or (bool(filas) and not verificada) or consulta.get('_discordante')
+        )
         salida[clave] = Historico(
             _cobertura(consulta),
             _dia(consulta['captured_at']),
@@ -153,18 +190,22 @@ def evidencia_informe(registro, vencimiento, fuentes, historia_filas):
     """Asociación explícita de un informe (ingreso + fecha proyectada) con sus evidencias, o None si no hay vínculo.
 
     Vínculo: el paquete asocia un escrito de la causa a un ingreso y a una fecha proyectada; las filas de Historia que llevan
-    la misma referencia documental (`Doc.`) se enlazan a ese informe. Los folios enlazados a OTRO informe de la causa se
-    devuelven como `folios_ajenos` para que la vía genérica no los atribuya a este (E3-10). Sin referencia no se enlaza nada."""
+    la misma referencia documental (`Doc.`) se enlazan a ese informe. Sin referencia no se enlaza nada.
+    - Una lectura de Escritos con identidad incierta no asocia nada (E3B-03).
+    - Una referencia con un único dueño se atribuye a ese informe; los folios de un dueño distinto vuelven como
+      `folios_ajenos` para que la vía genérica no los atribuya aquí (E3-10).
+    - Una referencia con VARIOS dueños es ambigua: no se atribuye positivamente a ninguno y sus folios quedan bloqueados
+      para la vía genérica de todos (E3B-04)."""
     if vencimiento is None:
         return None
     hallado = fuentes.get((registro['source_system'], registro['court_code'], registro['cause_id']))
-    if hallado is None:
+    if hallado is None or hallado[0]['coverage'] == 'IDENTIDAD_INCIERTA':
         return None
     propio = (registro['ingreso_id'], vencimiento.isoformat())
-    docs = defaultdict(set)  # (ingreso, proyección) -> referencias documentales
+    docs = defaultdict(set)  # referencia documental -> {(ingreso, proyección)}
     for f in hallado[1]:
         if f['linked_ingreso_id'] and f['linked_projection'] and clave_texto(f['doc']):
-            docs[(f['linked_ingreso_id'], f['linked_projection'][:10])].add(clave_texto(f['doc']))
+            docs[clave_texto(f['doc'])].add((f['linked_ingreso_id'], f['linked_projection'][:10]))
     escritos_informe = {clave_texto(n) for n in ESCRITOS_DE_INFORME}
     folio_escrito = folio_resolucion = ''
     fecha_resolucion = None
@@ -172,12 +213,12 @@ def evidencia_informe(registro, vencimiento, fuentes, historia_filas):
     for fila in historia_filas:
         referencia = clave_texto(fila.get('reference', ''))
         folio = str(fila.get('folio', '')).strip()
-        if not referencia:
+        duenos = docs.get(referencia, set()) if referencia else set()
+        if not duenos:
             continue
-        duenos = [k for k, d in docs.items() if referencia in d]
-        if any(k != propio for k in duenos) and folio:
-            ajenos.add(folio)
-        if propio not in duenos:
+        if duenos != {propio}:
+            if folio:
+                ajenos.add(folio)  # de otro informe, o ambigua (varios dueños)
             continue
         descripcion = clave_texto(fila['description'])
         if descripcion in escritos_informe:
@@ -185,7 +226,7 @@ def evidencia_informe(registro, vencimiento, fuentes, historia_filas):
         elif descripcion == clave_texto(INGRESO_INFORME):
             folio_resolucion = folio or folio_resolucion
             fecha_resolucion = _dia(fila.get('event_at'))
-    ajenos -= {folio_escrito, folio_resolucion}
+    ajenos -= {folio_escrito, folio_resolucion} - {''}
     if not (folio_escrito or folio_resolucion or ajenos):
         return None
     return EvidenciaInforme(folio_escrito, folio_resolucion, fecha_resolucion, '', vencimiento, tuple(sorted(ajenos)))

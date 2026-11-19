@@ -161,7 +161,7 @@ fn historico_manual_viaja_al_paquete_con_pertenencia_y_estados() {
     use std::io::Read;
     let t = Temporal::nueva();
     let r = lote(&t.0);
-    let html = "<html><body><h4>Historial 11.111.111-1</h4><table><thead><tr><th>Causal egreso</th><th>Programa</th><th>Fecha egreso</th></tr></thead><tbody>\
+    let html = "<html><body><div>Rut : 11.111.111-1</div><table><thead><tr><th>Causal egreso</th><th>Programa</th><th>Fecha egreso</th></tr></thead><tbody>\
         <tr><td>SIN INFORMACION</td><td>PRM Ficticio</td><td>--</td></tr><tr><td>SIN INFORMACION</td><td>FAE Otro Ficticio</td><td>--</td></tr>\
         <tr><td>EGRESO</td><td>PDE Antiguo</td><td>01/05/2026</td></tr></tbody></table></body></html>";
     let carpeta = t.0.join("historico-manual");

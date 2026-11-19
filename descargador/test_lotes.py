@@ -510,3 +510,19 @@ class InterfaceTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class FolderEventTests(unittest.TestCase):
+    setUp = fixture.PocTests.setUp
+    tearDown = fixture.PocTests.tearDown
+
+    def test_e3b_14_la_carpeta_anunciada_ya_trae_resumen(self):
+        """Quien recibe el evento «folder» puede abrir la carpeta en ese mismo instante: resumen.json ya existe."""
+        vistos = []
+
+        def emit(name, value):
+            if name == 'folder':
+                vistos.append((Path(value) / 'resumen.json').is_file())
+
+        BatchRunner(FakeBridge(), CATALOG, emit, threading.Event()).run(Batch(('49',), ('1',), ('Cumplimiento',)), self.temp)
+        self.assertEqual(vistos, [True])

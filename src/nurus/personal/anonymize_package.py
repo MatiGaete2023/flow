@@ -87,10 +87,15 @@ CONTROL_FIELDS = {
 }
 # Literales que el motor compara y que se conservan SOLO si son de catálogo conocido; cualquier otro valor es texto libre
 # y se depura (E3-04: un nombre en la causal de egreso no puede sobrevivir a la anonimización).
+# Clave normalizada -> literal canónico que se EMITE (nunca el valor original: un sufijo libre no sobrevive, E3B-06).
 CATALOGO = {
-    'egreso_cause': {'sin informacion'},
-    'escrito_type': {'inf cump programa ambulatorio', 'inf cump fae fas', 'inf cump centro residencial'},
-    'escrito_status': {'pendiente', 'resuelto', 'proveido'},
+    'egreso_cause': {'sin informacion': 'SIN INFORMACION'},
+    'escrito_type': {
+        'inf cump programa ambulatorio': 'Inf. Cump Programa Ambulatorio',
+        'inf cump fae fas': 'Inf. Cump FAE/FAS',
+        'inf cump centro residencial': 'Inf. Cump Centro Residencial',
+    },
+    'escrito_status': {'pendiente': 'Pendiente', 'resuelto': 'Resuelto', 'proveido': 'Proveído'},
 }
 _FECHA_EGRESO = re.compile(r'^\s*(?:[-\u2010-\u2014\u2212]{2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\s*$')
 _JSON_LIMIT = 30
@@ -168,8 +173,14 @@ class Mapper:
         if label in FREE_FIELDS:
             return self.free(value)
         if label in CATALOGO:
-            limpio = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', normalize(value)).split())
-            return value if limpio in CATALOGO[label] else self.free(value)
+            # Solo un valor que ES exactamente un literal de catálogo (letras latinas, sin nada más) se conserva, y se emite
+            # su forma canónica; cualquier otro texto se depura como libre.
+            crudo = str(value)
+            limpio = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', normalize(crudo)).split())
+            solo_latino = not re.search(r'[^\x20-\x7e\u00c0-\u00ff]', crudo)
+            if solo_latino and limpio in CATALOGO[label]:
+                return CATALOGO[label][limpio]
+            return self.free(value)
         if label == 'egreso_date':
             return value if _FECHA_EGRESO.match(str(value)) else self.free(value)
         if label in CONTROL_FIELDS or name in self.protected:

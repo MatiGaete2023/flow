@@ -113,8 +113,17 @@ def _tipos_efectivos(row, fallback_kind='PC_IE'):
     return []
 
 
+def _decidida_por_persona(row):
+    decisions = getattr(row, 'decisions', None) or {}
+    return bool(decisions.get('structured')) and decisions.get('resolution', 'auto') != 'auto'
+
+
 def _fuera_del_proyecto(row, kind, con_evidencia, work, claves=None):
-    """True si, en un caso con fechas resueltas por evidencia, esta fila no pide `kind` tras la decisión humana."""
+    """True si la fila no debe integrar el proyecto `kind` de su caso: (a) en un caso con fechas resueltas por evidencia,
+    si no lo pide tras la decisión humana; (b) en cualquier caso, si una decisión humana expresa de ESA fila no lo pide
+    («sin proyecto» u otro tipo, E3B-08). Sin decisión humana y sin evidencia, el proyecto abarca el caso como antes."""
+    if _decidida_por_persona(row) and kind not in _tipos_efectivos(row):
+        return True
     clave = claves[row.id] if claves is not None else _case_key(work, row)
     return clave in con_evidencia and kind not in _tipos_efectivos(row)
 

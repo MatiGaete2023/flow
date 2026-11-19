@@ -161,5 +161,5 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
     frags += ([] if e04 else H.servicio(programa)) + H.busqueda_historia()
     frags += H.continuidad() + H.curador_designaciones(_rus_sin_curador(row, cols))
     frags += _complementarias(row, cols, incidencias, fila_excel)
-    frags += H.otro_programa(programa, pn)
+    frags += H.otro_programa(programa, pn, nombre)
     return componer(pfx, _sin_parentesis(frags))

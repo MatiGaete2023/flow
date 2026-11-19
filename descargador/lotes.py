@@ -171,8 +171,6 @@ class BatchRunner:
         if folder.exists():
             folder = Path(destination) / m.now().strftime('%Y-%m-%d %H-%M-%S-%f')
         folder.mkdir(parents=True, exist_ok=False)
-        self.emit('folder', str(folder))
-        self.emit('plan', len(plan))
         bases = Counter(file_base(s, self.catalog) for s in plan)
         ordinals = Counter()
         completed = []
@@ -205,6 +203,9 @@ class BatchRunner:
             temp.replace(folder / 'resumen.json')
 
         summary()
+        # La carpeta se anuncia después del primer resumen.json: quien la recibe ya puede abrirla (E3B-14).
+        self.emit('folder', str(folder))
+        self.emit('plan', len(plan))
         locked = False
         try:
             self.bridge.call('lock')

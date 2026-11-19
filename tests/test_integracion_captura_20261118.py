@@ -67,7 +67,7 @@ def test_escritos_sin_cuerpo_legible_no_se_lee_como_vacio(documento, codigo):
 def test_historico_conserva_literales_y_verifica_pertenencia_por_el_texto_visible():
     cabecera = ['Programa', 'Fecha egreso', 'Causal egreso', 'Otra']
     filas = [['FAE X', '--', 'SIN INFORMACION', 'a'], ['PIE Y', '01/05/2026', 'SIN INFORMACION', 'b']]
-    texto = pagina(cabecera, filas, '<h3>Niño 11.111.111-K</h3>')
+    texto = pagina(cabecera, filas, '<div>Rut : 11.111.111-K</div>')
     propio = read_historico(texto, persona_esperada=['11111111-K'])
     assert propio['ownership'] == 'VERIFICADA'
     assert [(f['Programa'], f['Fecha egreso'], f['Causal egreso']) for f in propio['filas']] == [
@@ -224,8 +224,11 @@ def test_estructura_16_vencimientos_10_ingresos_inventario_y_justificacion(tmp_p
         capture_output=True, text=True, check=True, cwd=raiz,
     )  # fmt: skip
     assert {n: (datos / n).read_bytes() for n in antes} == antes  # los versionados no se reescriben
+    # Primero el contenido (informa el tipo de diferencia) y luego los bytes: artefactos deterministas (E3B-10).
     assert json.loads((tmp_path / 'paquete_estructura.json').read_text(encoding='utf-8')) == json.loads(antes['paquete_estructura.json'])
     assert _miembros(tmp_path / 'paquete_estructura.zip') == _miembros(datos / 'paquete_estructura.zip')
+    for nombre, bytes_versionados in antes.items():
+        assert (tmp_path / nombre).read_bytes() == bytes_versionados, nombre
     filas = [linea.split(' ', 2) for linea in resultado.stdout.strip().splitlines()]
     assert len(filas) == 16
     por_ingreso = {}
@@ -280,7 +283,7 @@ def test_paquete_rust_con_historico_manual_lo_lee_el_lector_python():
 def test_python_y_rust_coinciden_en_la_pertenencia_del_historico():
     """Misma HTML y mismas pruebas: el lector Python da lo mismo que el Rust de `exportar.rs` (RUT con puntos, nombre suelto)."""
     html = pagina(
-        ['Causal egreso', 'Programa', 'Fecha egreso'], [['SIN INFORMACION', 'FAE Otro Ficticio', '--']], '<h4>Historial 11.111.111-1</h4>'
+        ['Causal egreso', 'Programa', 'Fecha egreso'], [['SIN INFORMACION', 'FAE Otro Ficticio', '--']], '<div>Rut : 11.111.111-1</div>'
     )
     assert read_historico(html, persona_esperada=['11.111.111-1', 'Persona'])['ownership'] == 'VERIFICADA'
     assert read_historico(html, persona_esperada=['99.999.999-9', 'Otro'])['ownership'] == 'INCIERTA'
@@ -397,7 +400,8 @@ def test_e3_04_anonimizador_estricto_no_deja_texto_libre_en_campos_de_catalogo(t
 
 
 def test_e3_03_el_nombre_en_una_celda_de_programa_no_prueba_pertenencia():
-    html = pagina(['Nombre Proyecto', 'Fecha Egreso', 'Causal Egreso'], [['PRM Ana Luna', '--', 'SIN INFORMACION']], '<h4>Titular Beto Sol</h4>')
+    html = pagina(['Nombre Proyecto', 'Fecha Egreso', 'Causal Egreso'], [['PRM Ana Luna', '--', 'SIN INFORMACION']],
+                  '<div>Nombre del niño : Beto Sol</div><p>Representante Ana Luna</p>')  # fmt: skip
     assert read_historico(html, persona_esperada=['Ana Luna'])['ownership'] == 'INCIERTA'
     assert read_historico(html, persona_esperada=['Beto Sol'])['ownership'] == 'VERIFICADA'
 
@@ -472,3 +476,20 @@ def test_e3_02_el_contrato_rechaza_filas_fuera_del_alcance_de_su_consulta(tmp_pa
     metadata['queries'] = tablas['consultas']
     with pytest.raises(CaptureError, match='alcance'):
         write_capture(tmp_path / 'ajeno.zip', metadata, tablas)
+
+
+def test_e3b_06_valor_de_catalogo_con_sufijo_libre_no_sobrevive(tmp_path):
+    from nurus.personal.anonymize_package import anonymize_capture
+
+    paquete(tmp_path, historico=[('FAE X', '--', 'SIN INFORMACION 李明'), ('PIE Y', '--', 'sin información')],
+            escritos=[('D1', 'Inf. Cump FAE/FAS Zafiria', 'Pendiente')], nombre='suf')  # fmt: skip
+    for modo in ('estricto', 'conservador'):
+        destino = tmp_path / f's-{modo}.zip'
+        anonymize_capture(tmp_path / 'suf.zip', destino, mode=modo)
+        anonimo = read_capture(destino)
+        texto = json.dumps(anonimo.tables, ensure_ascii=False)
+        if modo == 'estricto':  # el conservador depura nombres conocidos; el estricto, todo texto libre
+            assert '李明' not in texto and 'Zafiria' not in texto
+        causales = [f['egreso_cause'] for f in anonimo.rows('historico_proteccion')]
+        assert causales[1] == 'SIN INFORMACION'  # literal de catálogo → forma canónica
+        assert causales[0] != 'SIN INFORMACION'  # el sufijo libre impide tratarlo como catálogo

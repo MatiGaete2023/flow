@@ -46,7 +46,7 @@ def validar(paquete):
         for r in work.rows
     ]
     paquete.with_suffix('.json').write_text(
-        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1) + '\n', encoding='utf-8'
+        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n'
     )
     for f in filas:
         print(f['rit'], '|', f['observacion'][:160], '|', f['reglas'], '|', f['acciones'], '|', f['cronologia'])

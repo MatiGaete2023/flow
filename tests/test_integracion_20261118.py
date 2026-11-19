@@ -415,3 +415,30 @@ def test_e3_12_constancia_exige_que_el_sujeto_sea_el_nino():
 def test_e3_14_guion_unicode_menos_vale_como_sin_fecha():
     h = historico(('FAE Sol', '−−', 'SIN INFORMACION'))
     assert programas_vigentes_otros(h, 'PRM Laja') == ['FAE Sol']
+
+
+def test_e3b_07_sujeto_con_nombre_compuesto_y_dos_ninos_con_igual_primer_nombre():
+    def previa(texto, completo=''):
+        return constancia_en_bitacora(bita(('2026-10-01', texto)), 'Ana', 'PRM Luna', completo) is not None
+
+    assert previa('Ana María cuenta con ingreso efectivo al programa PRM Luna.', 'ANA MARÍA SOTO')
+    assert previa('Se hace presente que ANA MARÍA cuenta con ingreso efectivo al programa PRM Luna.', 'Ana María Soto')
+    assert not previa('Ana María cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')  # otra Ana
+    assert previa('Ana cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')
+    assert not previa('Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')
+    assert not previa('La niña Ana no cuenta con ingreso efectivo al programa PRM Luna.')
+
+
+def test_e3b_08_sin_proyecto_humano_excluye_la_fila_aun_sin_evidencia(tmp_path):
+    from nurus.personal.config import BASE
+    from nurus.personal.resolutions import automatic_project_selections, prepare_projects
+
+    filas = [fila(1, 'PRM Laja') + [f] for f in ('2026-08-20', '2026-10-05')]
+    trabajo = analizar(tmp_path, 'INFORMES', INFORMES, filas)
+    primera, segunda = trabajo.rows
+    primera.decisions['resolution'] = 'none'
+    trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    seleccion = automatic_project_selections(trabajo)
+    assert seleccion == [(segunda.id, 'PC_INFO')]
+    proyectos, errores = prepare_projects(trabajo, seleccion, BASE / 'plantillas_word')
+    assert not errores and [p.record_ids for p in proyectos] == [[segunda.id]]
