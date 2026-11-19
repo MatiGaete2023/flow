@@ -29,7 +29,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 Desarrollo sin bloqueos agotado salvo P5-lista/ficha (requiere Tk real). Lo que sigue depende del usuario: prueba real de P3c,
 prueba visual en Windows de P1, P2, P3a, P4, P5 y P8, y la revisión E3 independiente de P3c. Si el usuario lo pide: prompt de
-esa revisión E3 (`docs/python_unico/PROMPT_REVISION_E3_P3C.md`, por crear) y P5-lista/ficha tras la prueba visual.
+esa revisión E3 (`docs/python_unico/PROMPT_REVISION_E3_P3C.md`, creado) y P5-lista/ficha tras la prueba visual.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -123,3 +123,5 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   el resumen de Trabajo suma editados, con avisos, con escritos pendientes y constancias consignadas; «Procesar archivo»
   pide confirmación si hay ediciones o consignaciones en pantalla. F1 ya abría el manual (sin cambio). **No hecho:** vista
   lista/ficha en Correos y Resoluciones (rediseño visual; necesita Tk real para verificarse). Prueba `test_p5_*`.
+- 19-nov-2026 · Prompt de revisión E3 independiente: `docs/python_unico/PROMPT_REVISION_E3_P3C.md` (A: P3c y extensión;
+  B: cambios riesgosos desde `c31d5f2`, incluida la E3D no independiente; C: regresiones del resto).
