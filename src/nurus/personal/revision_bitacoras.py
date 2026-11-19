@@ -177,3 +177,38 @@ def exportar(work, items, desde, hasta, destino):
         encoding='utf-8',
     )
     return excel, informe
+
+
+def resumen_escritos(escritos):
+    """P3a: resumen guardable de `Escritos` (motor) para la columna de Trabajo: estado de la fuente y pendientes de la causa
+    (sin los vinculados expresamente a OTRO ingreso)."""
+    if escritos is None:
+        return {}
+    from .motor.evidencia import clave_texto
+
+    pendientes = sum(
+        1 for f in escritos.filas if clave_texto(f.estado) == 'pendiente' and getattr(f, 'vinculo', '') != 'AJENO'
+    )
+    return {
+        'cobertura': escritos.cobertura,
+        'filas': len(escritos.filas),
+        'pendientes': pendientes,
+        'discordante': bool(getattr(escritos, 'discordante', False)),
+        'leido': escritos.leido.isoformat() if escritos.leido else '',
+    }
+
+
+def etiqueta_escritos(resumen):
+    """Texto de la columna «Escritos»: vacío si la fuente no vino en el paquete."""
+    if not resumen or resumen.get('cobertura') in ('', 'NO_SOLICITADA'):
+        return ''
+    if resumen.get('discordante'):
+        return 'Lecturas discordantes'
+    cobertura = resumen['cobertura']
+    if cobertura in ('FALLIDA', 'IDENTIDAD_INCIERTA', 'NO_CONSULTADA'):
+        return 'No verificada'
+    if cobertura == 'VACIA_COMPROBADA':
+        return 'Sin escritos'
+    n = resumen.get('pendientes', 0)
+    texto = f'{n} pendiente' + ('s' if n != 1 else '') if n else 'Sin pendientes'
+    return texto + (' · parcial' if cobertura == 'PARCIAL' else '')

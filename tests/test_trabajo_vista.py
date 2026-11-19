@@ -8,7 +8,7 @@ def test_columnas_editor_plegado_tooltip_excluidas_y_atajos(tmp_path):
         tmp_path,
         """
 from nurus.personal.work_view import WORK_COLUMNS
-assert WORK_COLUMNS==('Estado','Observación','RIT','Nombre','Programa','Tribunal','Última obs. centro','Cambio')
+assert WORK_COLUMNS==('Estado','Observación','RIT','Nombre','Programa','Tribunal','Última obs. centro','Escritos','Cambio')
 assert tuple(app.records['columns'])==WORK_COLUMNS
 atajos=('<Control-s>','<Control-o>','<Control-f>','<F5>','<Control-k>')
 assert all(app.bind_all(sequence) for sequence in atajos)

@@ -9,7 +9,7 @@ from .record_view import RecordForm
 
 view_button = partial(ui.Button, role='secondary')
 
-WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro', 'Cambio')
+WORK_COLUMNS = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal', 'Última obs. centro', 'Escritos', 'Cambio')
 # Columnas que existían antes de WP-50: una preferencia sin «columnas_conocidas» se guardó con estas.
 WORK_COLUMNS_BEFORE_WP50 = ('Estado', 'Observación', 'RIT', 'Nombre', 'Programa', 'Tribunal')
 WORK_WIDTHS = {
@@ -20,6 +20,7 @@ WORK_WIDTHS = {
     'Programa': 160,
     'Tribunal': 95,
     'Última obs. centro': 140,
+    'Escritos': 110,
     'Cambio': 80,
 }
 

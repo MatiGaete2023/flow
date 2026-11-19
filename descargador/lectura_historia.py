@@ -43,6 +43,29 @@ CODIGOS_ERROR = frozenset(
 )
 
 
+def estado_escritos(data):
+    """P3a: estado de la tabla Escritos en la MISMA respuesta de la causa (la guía RUS/SITFA documenta dos variantes: con las
+    cuatro tablas y solo con Historia). {'estado': CON_FILAS | VACIA | SIN_TABLA | AUSENTE | ILEGIBLE, 'filas', 'pendientes'}."""
+    from nurus.escritos_html import ESCRITOS_AUSENTE, ESCRITOS_NO_VERIFICADA, read_escritos
+    from nurus.personal.motor.evidencia import clave_texto
+
+    try:
+        lectura = read_escritos(data)
+    except ValueError as exc:
+        codigo = str(exc)
+        estado = 'SIN_TABLA' if codigo == ESCRITOS_NO_VERIFICADA else 'AUSENTE' if codigo == ESCRITOS_AUSENTE else 'ILEGIBLE'
+        return {'estado': estado, 'filas': 0, 'pendientes': 0}
+    filas = lectura['filas']
+    pendientes = sum(clave_texto(f.get('Estado', '')) == 'pendiente' for f in filas)
+    return {'estado': 'CON_FILAS' if filas else 'VACIA', 'filas': len(filas), 'pendientes': pendientes}
+
+
+def resumen_escritos(causas):
+    """Conteo anónimo por estado de la tabla Escritos de las causas leídas, más el total de escritos pendientes."""
+    conteo = Counter((c.get('escritos') or {}).get('estado', 'NO_REGISTRADO') for c in causas if c.get('estado') in LEIDAS)
+    return {**dict(conteo), 'pendientes': sum((c.get('escritos') or {}).get('pendientes', 0) for c in causas)}
+
+
 def codigo_error(exc, fallback='HISTORIA_LECTURA_ERROR'):
     if isinstance(exc, OSError):
         return 'HISTORIA_PERSISTENCIA'
@@ -225,6 +248,9 @@ class LectorHistoria:
             elif ruta.read_bytes() != data:
                 raise m.PocError('El archivo local de historia cambió.')
             dentro, anteriores, posteriores, sin_fecha = separar_ventana(lectura['filas'], leida.date(), self.meses)
+            causa['escritos'] = estado_escritos(data)
+            if causa['escritos']['estado'] == 'SIN_TABLA':
+                self._estructura_escritos(data)
             causa.pop('reutilizada', None)
             causa.update(
                 estado='VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'LEIDA',
@@ -244,6 +270,19 @@ class LectorHistoria:
             causa.update(estado='FALLIDA', error=codigo_error(exc))
         self.emit('history_progress', {'causa': causa['rit'], 'estado': causa['estado']})
         self.cancel.wait(self.pause)
+
+    def _estructura_escritos(self, data):
+        """P3b: la primera respuesta con la pestaña Escritos sin su tabla deja `estructura_escritos.json` ANÓNIMO en la carpeta de
+        la historia, para implementar la carga aparte con la forma real (nunca se guarda el HTML fuera del respaldo)."""
+        destino = self.carpeta / 'estructura_escritos.json'
+        if destino.exists():
+            return
+        try:
+            from extraer_estructura_escritos import estructura_pestana
+
+            write(destino, estructura_pestana(data))
+        except (ValueError, OSError):
+            pass  # el diagnóstico ya cuenta la causa como SIN_TABLA
 
     def cerrar(self, lote_estado='COMPLETA'):
         """Estado final, diagnóstico anónimo y Excel. Nunca lanza: un fallo queda anotado en el manifiesto."""
@@ -279,6 +318,8 @@ class LectorHistoria:
                     ),
                     'errores_listado': len(self.estado['errores_listado']),
                     'tope_alcanzado': bool(self.estado.get('tope_alcanzado')),
+                    # P3a: ¿la respuesta de la causa traía la tabla Escritos? Solo conteos, sin datos de causas.
+                    'escritos': resumen_escritos(self.estado['causas'].values()),
                 },
             )
         except OSError:

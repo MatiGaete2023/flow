@@ -41,6 +41,8 @@ class Row:
     otros_programas: list = field(default_factory=list)
     # Revisión de bitácoras (P2): alcance de la lectura y fechas de observaciones del centro (`revision_bitacoras.py`).
     revision_bitacora: dict = field(default_factory=dict)
+    # Escritos de la causa (P3a): estado de la fuente y escritos pendientes, para la columna «Escritos» de Trabajo.
+    escritos_resumen: dict = field(default_factory=dict)
 
 
 VENTANA_POR_VENCER_DIAS = 60

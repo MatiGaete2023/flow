@@ -9,8 +9,8 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 |---|---|---|
 | P1 consignar (botón) | **Hecho** | ver Historial 19-nov (P1) |
 | P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
-| P3a escritos visibles + diagnóstico | Pendiente | — |
-| P3b escritos variante sin tabla | Bloqueado por P3a | — |
+| P3a escritos visibles + diagnóstico | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P3a/P3b) |
+| P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
 | P3c histórico automático | Pendiente; **D-H1 = sí** (casilla desactivada por defecto) | — |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
 | P4 resultados / Meta 4 plantilla | Pendiente | — |
@@ -64,3 +64,11 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   código anterior). Suite Python = base; Descargador = mismos fallos de entorno; ruff sin avisos nuevos.
   **No probado con Tk real**: verificar la ventana en Windows. Paquetes capturados antes de esta versión quedan «No
   verificable» (sin evidencia de alcance) hasta recapturar.
+- 19-nov-2026 · **P3a hecho.** Descargador: `lectura_historia.estado_escritos` registra por causa si la respuesta traía la
+  tabla Escritos (CON_FILAS / VACIA / SIN_TABLA / AUSENTE / ILEGIBLE, filas, pendientes) y `diagnostico_historia.json` suma
+  `escritos` (solo conteos). Asistente: `Row.escritos_resumen` al importar y columna **«Escritos»** en Trabajo («N
+  pendientes», «Sin pendientes», «Sin escritos», «No verificada», «Lecturas discordantes»; vacía si la fuente no vino).
+  `tests/test_trabajo_vista.py` (Tk) actualizado a la nueva columna. **P3b:** la carga aparte de la pestaña no está en los
+  HAR (solo la variante con cuatro tablas); cuando una causa trae la pestaña sin tabla, la Historia deja
+  `historia/estructura_escritos.json` ANÓNIMO (`extraer_estructura_escritos.estructura_pestana`) para implementar la carga
+  con la forma real. Pruebas `test_p3a_*`, `test_p3b_*`.

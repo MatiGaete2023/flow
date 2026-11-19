@@ -79,6 +79,32 @@ def extraer(ruta, requeridos, etiqueta):
     return resultado
 
 
+def estructura_pestana(data):
+    """P3b: forma ANÓNIMA de la pestaña «Escritos» cuando la respuesta de la causa la muestra sin su tabla (variante que carga
+    la tabla aparte). Solo etiquetas, nombres de atributos, nombre de la función del `onclick`, tipos de argumentos, nombres
+    de funciones de los scripts que mencionan escritos y rutas `.do`/`.jsp` sin valores. Sin RUT, nombres ni folios."""
+    documento = html.fromstring(decode_snapshot(data))
+    controles = [
+        forma_enlace(el)
+        for el in documento.xpath('//a | //li | //button | //span | //td | //th | //input | //div')
+        if normalize(' '.join(el.text_content().split())) == 'escritos' or normalize(el.get('value', '')) == 'escritos'
+    ]
+    codigo = ' '.join(documento.xpath('//script/text()'))
+    funciones = sorted({f for f in re.findall(r'function\s+([A-Za-z_]\w*)', codigo) if 'escrit' in f.lower()})
+    rutas = sorted({r for r in re.findall(r'/[A-Za-z0-9_/]+\.(?:do|jsp)', codigo)})
+    parametros = sorted({p for p in re.findall(r'[?&]([A-Za-z_]\w{0,40})=', codigo)})
+    return {
+        'tipo': 'ESTRUCTURA_PESTANA_ESCRITOS',
+        'version': 1,
+        'controles': controles[:10],
+        'funciones_escritos': funciones[:20],
+        'rutas_en_scripts': rutas[:40],
+        'nombres_de_parametros': parametros[:60],
+        'ajax': {'jquery': codigo.count('$.ajax'), 'xhr': codigo.count('XMLHttpRequest'), 'fetch': codigo.count('fetch(')},
+        'contiene_identificadores_personales': False,
+    }
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:

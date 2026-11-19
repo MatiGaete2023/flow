@@ -189,3 +189,36 @@ def test_e3_08_fila_corta_no_se_declara_vacia_sino_parcial(tmp_path):
     consulta = next(q for q in captura.manifest['queries'] if q['screen'] == 'escritos')
     assert consulta['coverage'] == 'PARCIAL'
     assert any(i['code'] == 'ESCRITOS_FILA_INCOMPLETA' for i in captura.rows('incidencias'))
+
+
+def test_p3a_estado_de_la_tabla_escritos_y_diagnostico_anonimo():
+    from pathlib import Path
+
+    from lectura_historia import estado_escritos, resumen_escritos
+
+    fixture = (Path(__file__).parents[1] / 'tests/fixtures_integracion/escritos_ficticio.html').read_bytes()
+    assert estado_escritos(fixture) == {'estado': 'CON_FILAS', 'filas': 1, 'pendientes': 1}
+    sin_tabla = b'<html><body><ul><li><a>Historia</a></li><li><a>Escritos</a></li></ul></body></html>'
+    assert estado_escritos(sin_tabla)['estado'] == 'SIN_TABLA'
+    assert estado_escritos(b'<html><body><table><tr><th>Folio</th></tr></table></body></html>')['estado'] == 'AUSENTE'
+    causas = [
+        {'estado': 'LEIDA', 'escritos': {'estado': 'CON_FILAS', 'filas': 1, 'pendientes': 1}},
+        {'estado': 'LEIDA', 'escritos': {'estado': 'SIN_TABLA', 'filas': 0, 'pendientes': 0}},
+        {'estado': 'FALLIDA'},
+    ]
+    assert resumen_escritos(causas) == {'CON_FILAS': 1, 'SIN_TABLA': 1, 'pendientes': 1}
+
+
+def test_p3b_estructura_anonima_de_la_pestana_sin_tabla():
+    from extraer_estructura_escritos import estructura_pestana
+
+    html = (
+        "<html><body><script>function verEscritos(id){ $.ajax({url:'/SITFAWEB/EscritosAccion.do?crr_causa='+id}); }</script>"
+        "<ul><li><a onclick=\"verEscritos('12345678')\">Escritos</a></li></ul><p>Persona Ficticia 11.111.111-1</p></body></html>"
+    ).encode()
+    salida = estructura_pestana(html)
+    assert salida['funciones_escritos'] == ['verEscritos'] and salida['rutas_en_scripts'] == ['/SITFAWEB/EscritosAccion.do']
+    assert salida['nombres_de_parametros'] == ['crr_causa'] and salida['ajax']['jquery'] == 1
+    assert {'funcion': 'verEscritos', 'argumentos': ['numerico(8)']} in [c.get('onclick') for c in salida['controles']]
+    texto = json.dumps(salida)
+    assert '12345678' not in texto and 'Ficticia' not in texto and '11.111.111' not in texto

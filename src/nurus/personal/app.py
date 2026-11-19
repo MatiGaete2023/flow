@@ -384,6 +384,8 @@ class App(_BaseApp):
         from .table_update import prune, render_rows
         from .capture_findings import last_center_label
 
+        from .revision_bitacoras import etiqueta_escritos
+
         old_work = list(getattr(self, '_work_all_iids', self.records.get_children()))
         old_words = list(getattr(self, '_resolution_all_iids', self.words.get_children()))
         jobs = []
@@ -430,6 +432,7 @@ class App(_BaseApp):
                 value(self.work, row, 'programa'),
                 value(self.work, row, 'tribunal'),
                 last_center_label(self.work, row),
+                etiqueta_escritos(getattr(row, 'escritos_resumen', None)),
                 capture_changes.label(getattr(self.work, 'capture_changes', None), row.id),
             )
             jobs.append((self.records, row.id, values, tuple(tags)))

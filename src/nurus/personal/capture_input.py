@@ -279,7 +279,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
     evidencia_by_record = {}
     bitacora_parcial_by_record = {}
     # P2: revisión de bitácoras (separar registros sin observación).
-    from .revision_bitacoras import datos_de_registro, evidencia_por_ingreso
+    from .revision_bitacoras import datos_de_registro, evidencia_por_ingreso, resumen_escritos
 
     evidencia_bitacoras = evidencia_por_ingreso(capture)
     revision_by_record = {}
@@ -443,6 +443,7 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
                 row.warnings.append('Tipo de fuente fuera del motor tradicional; no evaluado.')
             row.warnings.append(contexts[row.id]['reason'])
             row.revision_bitacora = revision_by_record.get(row.id, {})
+            row.escritos_resumen = resumen_escritos(escritos_by_record.get(row.id))
             candidate.rows.append(row)
     attach_displays(capture, contexts, provenance, as_of)
     candidate.rows.sort(key=lambda row: row.source_row)

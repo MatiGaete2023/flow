@@ -772,3 +772,18 @@ def test_p1_deshacer_es_transaccional(tmp_path, monkeypatch):
     with pytest.raises(OSError):
         trabajo.desconsignar(fila.id, 'FAE X')
     assert trabajo.consignaciones == {fila.id: ['fae x']}  # la marca se restituye
+
+
+def test_p3a_columna_escritos_resume_la_fuente_de_la_causa(tmp_path):
+    from nurus.personal.revision_bitacoras import etiqueta_escritos
+
+    con = importar(tmp_path, escritos=[('D1', AMB, 'Pendiente'), ('D2', AMB, 'pendiente'), ('D3', AMB, 'Resuelto')], nombre='e')
+    resumen = con.rows[0].escritos_resumen
+    assert resumen['pendientes'] == 2 and resumen['filas'] == 3 and resumen['cobertura'] == 'COMPLETA'
+    assert etiqueta_escritos(resumen) == '2 pendientes'
+    sin = importar(tmp_path, nombre='s')
+    assert sin.rows[0].escritos_resumen == {} and etiqueta_escritos(sin.rows[0].escritos_resumen) == ''
+    assert etiqueta_escritos({'cobertura': 'FALLIDA'}) == 'No verificada'
+    assert etiqueta_escritos({'cobertura': 'VACIA_COMPROBADA'}) == 'Sin escritos'
+    assert etiqueta_escritos({'cobertura': 'PARCIAL', 'pendientes': 1}) == '1 pendiente · parcial'
+    assert etiqueta_escritos({'cobertura': 'PARCIAL', 'pendientes': 0, 'discordante': True}) == 'Lecturas discordantes'
