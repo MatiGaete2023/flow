@@ -93,6 +93,47 @@ def _one_input(form, name):
     return found[0].get('value', '')
 
 
+METODO_ALCANCE = 'SITFA_TABLA_INFORME_INGRESO_V1'
+_NOMBRES_RECORTE = ('pagina', 'nropag', 'numpag', 'pagenum', 'fechadesde', 'fechahasta')
+_ROTULOS_RECORTE = ('siguiente', 'anterior', 'proxima', 'ultima pagina', 'mostrar mas', 'cargar mas', 'ver mas')
+_CONTROLES_RECORTE = (
+    '//iframe | //frame | //*[contains(concat(" ", normalize-space(@class), " "), " pagination ")]'
+    ' | //*[contains(concat(" ", normalize-space(@class), " "), " paginacion ")]'
+    ' | //*[contains(concat(" ", normalize-space(@class), " "), " paginador ")]'
+    ' | //*[contains(concat(" ", normalize-space(@class), " "), " pager ")]'
+    ' | //*[@data-page] | //*[@data-total-pages] | //a[@rel="next"] | //a[@rel="prev"]'
+)
+
+
+def alcance_bitacora(document, vacia):
+    """Alcance de una ventana de bitácora YA validada (P2, port de `lecturas.rs::cobertura_bitacora`):
+    PARCIAL si algún control sugiere recorte (paginador, marcos, «ver más», campos de página o de fechas); si no,
+    VACIA_COMPROBADA (tabla reconocida sin filas) o COMPLETA. El usuario confirmó (18-nov-2026) que la ventana muestra
+    todas las entradas del ingreso en una respuesta, sin paginación ni filtros de fecha."""
+    if document.xpath(_CONTROLES_RECORTE):
+        return 'PARCIAL'
+    for nodo in document.xpath('//input | //select | //a | //button | //*[@onclick]'):
+        attr = {k: nodo.get(k) or '' for k in ('name', 'id', 'href', 'onclick', 'type', 'value')}
+        nombre = (attr['name'] + ' ' + attr['id']).lower().replace('_', '').replace('-', '')
+        accion = (attr['href'] + ' ' + attr['onclick']).lower()
+        boton = nodo.tag == 'input' and attr['type'].lower() in ('button', 'submit', 'image', 'reset')
+        crudo = ' '.join(nodo.text_content().split()) + ' ' + (attr['value'] if boton else '')
+        rotulo = normalize(crudo)
+        pulsable = boton or nodo.tag in ('a', 'button') or bool(attr['onclick'])
+        compacto = ''.join(c for c in crudo if not c.isspace() and c not in '[]()|.,:;-')
+        numero_o_flecha = bool(compacto) and (
+            all(c.isascii() and c.isdigit() for c in compacto) or all(c in '<>«»‹›…' for c in compacto)
+        )
+        if (
+            any(n in nombre for n in _NOMBRES_RECORTE)
+            or any(r in rotulo for r in _ROTULOS_RECORTE)
+            or any(p in accion for p in ('pagina', 'page'))
+            or (pulsable and numero_o_flecha)
+        ):
+            return 'PARCIAL'
+    return 'VACIA_COMPROBADA' if vacia else 'COMPLETA'
+
+
 def read_snapshot(text, params, *, source='', captured_at=''):
     """Vincula cada fila con sus campos ocultos por ID, nunca por posición."""
     raw = text.encode('utf-8') if isinstance(text, str) else text
@@ -222,4 +263,7 @@ def read_snapshot(text, params, *, source='', captured_at=''):
         'html_sha256': sha256(raw).hexdigest(),
         'captures': 1,
         'error': 'Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo.',
+        # P2: alcance de ESTA ventana (no del historial remoto); `coverage` tradicional sigue PARCIAL para el motor.
+        'alcance': alcance_bitacora(document, not entries),
+        'alcance_metodo': METODO_ALCANCE,
     }

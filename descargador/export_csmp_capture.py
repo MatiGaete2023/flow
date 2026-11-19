@@ -330,6 +330,16 @@ def export_capture(
                 },
             }
             when = snapshot.get('captured_at') or captured
+            if snapshot['coverage'] != 'FALLIDA' and snapshot.get('alcance'):
+                # P2 (revisión de bitácoras): alcance de la ventana leída; aditivo, los lectores tradicionales lo ignoran.
+                selection['revision_bitacoras'] = {
+                    'version': 1,
+                    'metodo': snapshot.get('alcance_metodo', ''),
+                    'coverage': snapshot['alcance'],
+                    'completa': snapshot['alcance'] in ('COMPLETA', 'VACIA_COMPROBADA') and not snapshot.get('warnings'),
+                    'captured_at': snapshot.get('captured_at', ''),
+                    'warnings': len(snapshot.get('warnings', [])),
+                }
             q = query(qid, selection, snapshot['coverage'], when, 1, 1, screen='bitacoras')
             if snapshot['coverage'] == 'FALLIDA':
                 incident(qid, 'BITACORA_FALLIDA', snapshot['error'])

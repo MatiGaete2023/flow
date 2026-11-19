@@ -8,7 +8,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | Paquete | Estado | Último commit / nota |
 |---|---|---|
 | P1 consignar (botón) | **Hecho** | ver Historial 19-nov (P1) |
-| P2 revisión de bitácoras | Pendiente | — |
+| P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
 | P3a escritos visibles + diagnóstico | Pendiente | — |
 | P3b escritos variante sin tabla | Bloqueado por P3a | — |
 | P3c histórico automático | Pendiente; **D-H1 = sí** (casilla desactivada por defecto) | — |
@@ -20,18 +20,16 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-P2 (a) — evidencia de alcance de cada bitácora en el Descargador Python:
-1. En `descargador/lectura_bitacoras.py`, donde se valida y guarda una bitácora LEIDA (`leer_bitacora`, ~línea 661), calcular
-   `alcance` = `VACIA_COMPROBADA` (tabla reconocida sin filas), `COMPLETA` (tabla reconocida con filas) o `PARCIAL` (algún
-   control que sugiera recorte). Portar la detección de `rust/crates/flow-captura/src/lecturas.rs::cobertura_bitacora`
-   (nombres `pagina/nropag/numpag/pagenum/fechadesde/fechahasta`, rótulos «siguiente/anterior/proxima/ultima pagina/mostrar
-   mas/cargar mas/ver mas», paginadores numéricos o flechas solo en elementos pulsables, iframes/frames/.pagination).
-2. Guardarlo en el registro de `bitacoras.json` (`alcance`, `metodo: SITFA_TABLA_INFORME_INGRESO_V1`) y llevarlo al paquete en
-   `descargador/export_csmp_capture.py` como `filters_json.revision_bitacoras` de la consulta `diary-*` (ver
-   `rust/REVISION_BITACORAS_ESQUEMA.md`; mismo nombre de clave, aditivo).
-3. Pruebas: ventana ficticia vacía, con evento, paginada y sin tabla (mismos casos que `rust/crates/flow/src/ui.rs`
-   `ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor`).
-Luego P2 (b): pantalla del Asistente.
+P3a — Escritos visibles y diagnóstico:
+1. Descargador (`descargador/lectura_historia.py`): por cada causa leída, contar de forma anónima si la respuesta guardada
+   traía la tabla Escritos (usar `nurus.escritos_html.read_escritos` sobre el HTML ya guardado: tabla con filas, tabla vacía,
+   pestaña sin tabla = `ESCRITOS_NO_VERIFICADA`, sin pestaña = `ESCRITOS_AUSENTE`) y agregar en `diagnostico_historia.json`
+   `escritos: {con_filas, vacia, sin_tabla, ausente, pendientes}` (solo conteos).
+2. Asistente: columna «Escritos» en Trabajo (`work_view.py::WORK_COLUMNS` y su render) con «N pendientes», «sin pendientes»,
+   «no verificada» o vacío si la fuente no vino; el dato sale de la fila (guardar en `Row` un resumen como en P2:
+   `capture_input.py`, `escritos_by_record`).
+3. Pruebas con `tests/fixtures_integracion/escritos_ficticio.html` y una variante sin tabla.
+Luego P3c (Histórico automático, E3) y P8.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -54,3 +52,15 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   `tests/test_integracion_captura_20261118.py::test_p1_*` (consignar, deshacer, persistencia en sesión, transaccional).
   Suite Python = base (55 por falta de Tk); ruff sin avisos nuevos. **No probado con Tk real** (contenedor sin Tk): verificar
   el botón en Windows.
+- 19-nov-2026 · **P2 hecho.** (a) Descargador: `nurus/bitacora_html.alcance_bitacora` (port de Rust `cobertura_bitacora`) se
+  calcula en `read_snapshot` → toda lectura (nueva, retomada, reutilizada o importada de un lote antiguo) trae `alcance`
+  (`COMPLETA`/`VACIA_COMPROBADA`/`PARCIAL`) y `alcance_metodo`; el paquete lo lleva en `filters_json.revision_bitacoras` de cada
+  consulta `diary-*` (`export_csmp_capture.py`). Sin falsos positivos en las ventanas ficticias de estructura real.
+  (b) Asistente: `personal/revision_bitacoras.py` (sin Tk: datos por fila al importar → `Row.revision_bitacora`, clasificación
+  por período, exportación Excel + JSON en carpeta nueva); `personal/revision_view.py` (ventana) abierta desde
+  **Trabajo › Más ▾ › Revisión de bitácoras…**: período (por defecto el mes que termina en el corte, como Meta 4), filtro,
+  «Seleccionar en Trabajo», «Exportar Excel y JSON…». Manual del Asistente actualizado. Pruebas:
+  `tests/test_revision_bitacoras.py` (12) y `descargador/test_revision_bitacoras_p2.py` (2, de punta a punta; fallan con el
+  código anterior). Suite Python = base; Descargador = mismos fallos de entorno; ruff sin avisos nuevos.
+  **No probado con Tk real**: verificar la ventana en Windows. Paquetes capturados antes de esta versión quedan «No
+  verificable» (sin evidencia de alcance) hasta recapturar.

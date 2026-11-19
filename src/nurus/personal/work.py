@@ -39,6 +39,8 @@ class Row:
     avisos: list = field(default_factory=list)
     # Otros programas vigentes cuya constancia propuso el motor (18-nov-2026): [{'clave', 'programa'}].
     otros_programas: list = field(default_factory=list)
+    # Revisión de bitácoras (P2): alcance de la lectura y fechas de observaciones del centro (`revision_bitacoras.py`).
+    revision_bitacora: dict = field(default_factory=dict)
 
 
 VENTANA_POR_VENCER_DIAS = 60

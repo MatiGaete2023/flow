@@ -124,6 +124,15 @@ def build(app):
     more.add_command(label='Importar el último paquete', command=lambda: app._guard(app._import_latest_capture))
     more.add_command(label='Actualizar Excel', command=lambda: app._guard(app._refresh))
     more.add_separator()
+
+    def revision_bitacoras():
+        from .revision_view import abrir
+
+        abrir(app)
+
+    # P2: separar registros con observación, sin observación y no verificables.
+    more.add_command(label='Revisión de bitácoras…', command=lambda: app._guard(revision_bitacoras))
+    more.add_separator()
     more.add_command(label='Archivo y opciones…', command=toggle_file)
     app.work_more_button = view_button(
         bar,

@@ -59,6 +59,22 @@ Protección), el detalle de Trabajo, pestaña **Gestión**, muestra el botón **
 abrir la sesión o importar otro paquete. **«Deshacer consignación…»** la quita y la constancia vuelve a proponerse si
 corresponde. El botón no escribe en RUS: solo guarda la marca en la sesión local.
 
+## Revisión de bitácoras: separar registros sin observación (P2, 19-nov-2026)
+
+En Trabajo, **Más ▾ › Revisión de bitácoras…** abre una ventana que clasifica cada registro del paquete en el período
+elegido (por defecto, el mes que termina en el corte, como Meta 4):
+
+- **Con observación:** hay al menos una observación del centro en el período.
+- **Sin observación:** la bitácora se leyó completa (tabla reconocida, sin paginador ni otro indicio de recorte, sin
+  advertencias de identidad) y se leyó en o después de la fecha «hasta», sin observaciones del centro en el período.
+- **No verificable:** no hay bitácora verificada, la ventana mostró indicios de recorte, se leyó antes del fin del período o
+  el paquete es anterior a esta revisión (vuelve a capturar con el Descargador actualizado).
+
+«Mostrar» filtra la lista. **Seleccionar en Trabajo** marca esos registros en la tabla de Trabajo para editarlos o preparar
+productos. **Exportar Excel y JSON…** crea una carpeta nueva `Revision_bitacoras_<fecha>` con `Revision_bitacoras.xlsx`
+(clasificación, motivo, tribunal, RIT, nombre, programa y propuesta) y `Revision_bitacoras.json` (período y conteos).
+La revisión no cambia ninguna propuesta: el motor ya analizó el paquete completo.
+
 ## Cronología de bitácoras (solo mostrar, WP-50)
 
 Con un paquete del Descargador, Trabajo muestra la columna **Última obs. centro**
