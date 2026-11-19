@@ -314,8 +314,12 @@ fn pestana_escritos(doc: &Html) -> bool {
         || doc.select(&sel("input[value]")).any(|e| normalizar(e.value().attr("value").unwrap_or("")) == "escritos")
 }
 
-/// Texto de la vista SIN las tablas de programas (Protección y LRPA): la pertenencia se prueba con los datos del titular,
-/// nunca con una mención en «Nombre Proyecto» u otra celda de datos (E3-03).
+static ROTULO_TITULAR: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?:rut|run|nombre del nino|nombre nino|nombre del nna|nombre del menor)\b").unwrap());
+
+/// Texto de los CAMPOS ROTULADOS del titular («Nombre del niño», «Rut»/«RUN»): el rótulo con su valor en el mismo elemento
+/// o, si el elemento trae solo el rótulo, en el siguiente. Fuera de las tablas de programas (Protección y LRPA). Una mención
+/// en otra parte no prueba pertenencia (E3-03, E3B-05; `escritos_html.py::_texto_titular`).
 fn texto_titular(doc: &Html, egreso: &[String], programas: &[String]) -> String {
     let mut excluidas = std::collections::HashSet::new();
     for tabla in doc.select(&sel("table")) {
@@ -327,18 +331,26 @@ fn texto_titular(doc: &Html, egreso: &[String], programas: &[String]) -> String 
             }
         }
     }
-    let partes: Vec<&str> = doc
-        .root_element()
-        .descendants()
-        .filter(|n| {
-            !n.ancestors().filter_map(ElementRef::wrap).any(|e| {
-                excluidas.contains(&e.id()) || matches!(e.value().name(), "script" | "style" | "noscript" | "template")
-            })
-        })
-        .filter_map(|n| n.value().as_text())
-        .map(|t| t.as_ref())
-        .collect();
-    partes.join(" ").split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut piezas: Vec<String> = Vec::new();
+    for el in doc.select(&sel("td, th, label, span, b, strong, div, p, li")) {
+        if el.ancestors().any(|a| excluidas.contains(&a.id())) {
+            continue;
+        }
+        let t = texto(el);
+        let rotulo = normalizar(&t);
+        let contenedor = el.children().filter_map(ElementRef::wrap).any(|h| matches!(h.value().name(), "td" | "th" | "div" | "p" | "li" | "table"));
+        let Some(m) = ROTULO_TITULAR.find(&rotulo) else { continue };
+        if contenedor {
+            continue;
+        }
+        piezas.push(t);
+        if m.end() == rotulo.len() {
+            if let Some(siguiente) = el.next_siblings().filter_map(ElementRef::wrap).next() {
+                piezas.push(texto(siguiente));
+            }
+        }
+    }
+    piezas.join(" ")
 }
 
 const ESCRITOS: [&str; 4] = ["Doc.", "Tipo Escrito", "Solicitante", "Estado"];

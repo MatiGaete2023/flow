@@ -452,9 +452,13 @@ pub fn ejecutar(
     lote.validar(catalogo)?;
     comprobar_capacidades(&pedir(conexion, "capabilities", json!({}))?)?;
     let mut resumen = if retomar {
-        let r = Resumen::leer(carpeta)?;
+        let mut r = Resumen::leer(carpeta)?;
         if r.lote != *lote {
             return Err("El plan de consultas cambió; inicia un lote nuevo.".into());
+        }
+        // E3B-12: una lectura desaparecida o alterada ya no bloquea el retomar; su ingreso se vuelve a leer.
+        for aviso in crate::recoleccion::reparar_lecturas(carpeta, &mut r) {
+            progreso(aviso);
         }
         r
     } else {

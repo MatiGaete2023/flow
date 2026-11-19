@@ -10,8 +10,8 @@ MISMA fila, ubicando cada columna por su encabezado (el orden de columnas no imp
 Ningún desvío se convierte en «sin escritos» ni en «sin otros programas».
 """
 
-from hashlib import sha256
 import re
+from hashlib import sha256
 
 from lxml import html
 
@@ -43,7 +43,7 @@ def _documento(data):
     texto = decode_snapshot(data)
     if not texto.strip():
         raise ValueError(ESCRITOS_AUSENTE)
-    if not re.search(r'</html\s*>', texto, re.I):
+    if not re.search(r'</html\s*>', texto, re.IGNORECASE):
         raise ValueError(INCOMPLETA)
     documento = html.fromstring(texto)
     if documento.xpath('//input[translate(@type,"PASSWORD","password")="password"]'):
@@ -240,4 +240,4 @@ def mensaje(codigo):
     return MENSAJES.get(codigo, codigo)
 
 
-__all__ = ('ESCRITOS_AUSENTE', 'ESCRITOS_NO_VERIFICADA', 'ESCRITOS_HEADERS', 'HISTORICO_HEADERS', 'read_escritos', 'read_historico', 'mensaje')
+__all__ = ('ESCRITOS_AUSENTE', 'ESCRITOS_HEADERS', 'ESCRITOS_NO_VERIFICADA', 'HISTORICO_HEADERS', 'mensaje', 'read_escritos', 'read_historico')

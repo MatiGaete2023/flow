@@ -292,3 +292,35 @@ fn word_generado_sin_cursiva_en_ninguna_matriz() {
     assert!(!xml.contains("<w:i/>") && !xml.contains("<w:iCs/>"));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+fn con_acciones<'a>(mut f: Fila<'a>, acciones: &[&str], reglas: &[&str]) -> Fila<'a> {
+    f.acciones = acciones.iter().map(|s| s.to_string()).collect();
+    f.reglas = reglas.iter().map(|s| s.to_string()).collect();
+    f
+}
+
+/// E3B-08: una fila con RES escrito y desmarcado («no») no entra al proyecto del caso aunque no haya evidencia nueva.
+#[test]
+fn e3b_08_res_desmarcado_excluye_la_fila_del_proyecto_del_caso() {
+    let t = libro(&[
+        con_acciones(fila("X-40-2099", "LAJA", "Persona Cuarenta", "40.404.040-4", "Informe vencido.", "no"), &["PC_INFO"], &[]),
+        con_acciones(fila("X-40-2099", "LAJA", "Persona Cuarenta", "40.404.040-4", "Informe vencido.", "PC_INFO"), &["PC_INFO"], &[]),
+    ]);
+    let p = proyectos(&t);
+    assert_eq!(p.len(), 1);
+    assert_eq!(p[0].filas, vec!["f1".to_string()]);
+}
+
+/// E3B-09: en un caso con evidencia, RES marcado sin tipo (ni acción ni tipo en la observación) cae en PC_IE tanto al elegir
+/// como al preparar; la fila no desaparece del proyecto.
+#[test]
+fn e3b_09_res_marcado_sin_tipo_usa_el_mismo_criterio_al_elegir_y_al_preparar() {
+    let t = libro(&[
+        con_acciones(fila("X-41-2099", "LAJA", "Persona Cuarentayuno", "41.414.141-4", "Revisada.", "x"), &[], &[]),
+        con_acciones(fila("X-41-2099", "LAJA", "Persona Cuarentayuno", "41.414.141-4", "Pendiente.", ""), &[], &["HISTORIA.INFORME_AVANCE_PENDIENTE"]),
+    ]);
+    assert_eq!(word::tipos_efectivos(&t, &t.filas[0]), vec!["PC_IE"]);
+    assert!(word::selecciones(&t).iter().any(|(id, tipo)| id == "f0" && tipo == "PC_IE"));
+    let p = proyectos(&t);
+    assert!(p.iter().any(|p| p.tipo == "PC_IE" && p.filas == vec!["f0".to_string()]), "{:?}", p.iter().map(|p| (&p.tipo, &p.filas)).collect::<Vec<_>>());
+}

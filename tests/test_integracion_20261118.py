@@ -81,7 +81,7 @@ def test_otro_programa_vigente_frase_exacta_una_sola_vez_y_sin_acciones_nuevas(t
 
 
 def test_otro_programa_condiciones_de_vigencia_en_la_misma_fila(tmp_path):
-    caso = lambda *f: cum(tmp_path, historicos={0: historico(('PRM Laja', *VIG), *f)}).observation  # noqa: E731
+    caso = lambda *f: cum(tmp_path, historicos={0: historico(('PRM Laja', *VIG), *f)}).observation
     assert 'cuenta con ingreso efectivo' not in caso(('FAE X', '--', 'EGRESO VOLUNTARIO'))  # causal sola
     assert 'cuenta con ingreso efectivo' not in caso(('FAE X', '01/05/2026', 'SIN INFORMACION'))  # fecha sola
     assert 'cuenta con ingreso efectivo' not in caso(('FAE X', '', ''))  # dato ilegible no acredita vigencia
@@ -310,7 +310,7 @@ def test_proyectos_word_no_arrastran_fechas_resueltas_de_otro_periodo(tmp_path):
     )  # fmt: skip
     trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
     proyectos, errores = prepare_projects(trabajo, automatic_project_selections(trabajo), BASE / 'plantillas_word')
-    pendiente, incorporada, exigible = (r.id for r in trabajo.rows)
+    _pendiente, incorporada, exigible = (r.id for r in trabajo.rows)
     por_tipo = {p.kind: p.record_ids for p in proyectos}
     assert not errores and por_tipo == {'NOMENCL': [incorporada], 'PC_INFO': [exigible]}
 
@@ -423,6 +423,8 @@ def test_e3b_07_sujeto_con_nombre_compuesto_y_dos_ninos_con_igual_primer_nombre(
 
     assert previa('Ana María cuenta con ingreso efectivo al programa PRM Luna.', 'ANA MARÍA SOTO')
     assert previa('Se hace presente que ANA MARÍA cuenta con ingreso efectivo al programa PRM Luna.', 'Ana María Soto')
+    # Texto en NFD (acento combinante): mismo sujeto que en NFC.
+    assert previa('Se hace presente que ANA MARI\u0301A cuenta con ingreso efectivo al programa PRM Luna.', 'Ana María Soto')
     assert not previa('Ana María cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')  # otra Ana
     assert previa('Ana cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')
     assert not previa('Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Luisa Pérez')

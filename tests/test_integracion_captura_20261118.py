@@ -3,11 +3,11 @@ por import_capture. Datos ficticios."""
 
 import json
 from datetime import date
+from pathlib import Path
 
 import pytest
 from historia_fixtures import captura_con_historia
 from jsonschema import Draft202012Validator
-from pathlib import Path
 
 from nurus.capture import CaptureError, read_capture, write_capture
 from nurus.capture.contract import COMMON, EXTENDED_TABLES, TABLES

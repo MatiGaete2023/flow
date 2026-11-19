@@ -112,6 +112,29 @@ dirigidos `INT-*-D30…D41` del oráculo y pruebas Rust). Requiere **nueva revis
 | E3-15 | Generadores escriben LF (`newline='\n'`); `write_capture` fija `create_system=3`; la prueba de estructura genera en carpeta temporal y compara sin tocar los versionados. |
 | E3-16 | Consignar es transaccional en Python (revierte la marca si falla el recálculo) y Rust (copia; solo reemplaza si el recálculo resulta). |
 
+## Correcciones E3B (19-nov-2026) — segunda revisión, resumen en `E3_INFORME_2_20261119.md`, veredicto NO PASA
+Las 14 observaciones se corrigieron con prueba propia (`test_e3b_*` en `tests/` y `descargador/test_lotes.py`; Rust `e3b_*` en
+`flow-trabajo/src/fuentes_nuevas.rs`, `flow-dominio/src/evidencia.rs`, `flow-productos/tests/nomenclatura.rs`,
+`flow-trabajo/tests/flujo.rs`). Requiere **tercera revisión E3** sobre la punta actual.
+| ID | Corrección |
+|---|---|
+| E3B-01 | Orden de lecturas por instante UTC; el corte compara el día escrito en la lectura (`escritos.py::_instante`, `fuentes_nuevas.rs::instante`). |
+| E3B-02 | Empate de completas en el mismo instante: discrepancia por cobertura **o contenido** (firma de filas) → PARCIAL `_discordante`, elegida la de menor `query_id` en cualquier orden. Histórico discordante → identidad INCIERTA. |
+| E3B-03 | Escritos con `IDENTIDAD_INCIERTA` no producen `EvidenciaInforme`. |
+| E3B-04 | Referencia `Doc.` con varios dueños: no se atribuye a ninguno y sus folios quedan bloqueados para la vía genérica. |
+| E3B-05 | Titular del histórico solo desde campos rotulados (RUT/RUN/nombre del niño), fuera de las tablas de programas (Python y Rust). |
+| E3B-06 | Anonimizador emite el literal canónico del catálogo; cualquier otro valor se depura. |
+| E3B-07 | Sujeto compuesto: primer nombre + prefijo del nombre completo; texto en NFC antes de tokenizar (Python y Rust). |
+| E3B-08/09 | Proyectos: tipos efectivos tras la decisión humana con el mismo cálculo al elegir y al preparar (`_tipos_efectivos`, `word.rs::tipos_efectivos`). |
+| E3B-10 | Generadores de oráculo escriben LF (incluidas llamadas multilínea). |
+| E3B-11 | Flujo Rust: bitácoras pedidas sin leer (sin vínculo, pendientes, descartadas o ingreso verificado sin bitácora en el paquete) → **PARCIAL** con aviso por tribunal (`recoleccion::avisos_bitacoras_faltantes`, `Producto.sin_bitacora`, `flujo::avisos_de_bitacoras`). Mismo aviso en «Crear paquete de este lote» y al terminar un lote. Fuentes FALLIDA/INCIERTA se listan (las bitácoras son PARCIALES por diseño y no se listan). |
+| E3B-12 | Retomar: una lectura referenciada ausente o alterada ya no bloquea. `lotes::ejecutar(retomar)` la descarta y deja su ingreso pendiente (`recoleccion::reparar_lecturas`); `flujo::fase_lote` no reutiliza un lote VALIDADA con lecturas no íntegras. Sin JSON inventado. Mensajes nombran el archivo. **Causa probable N2 del «no encuentra el .json» de Mulchén**: `Recoleccion::con_fecha` abortaba con «Falta una lectura verificada del lote» en cada intento. |
+| E3B-13 | `flujo::ejecutar_en` devuelve la raíz del intento; `flujo::mensaje_fallo` la nombra o dice que no alcanzó a guardar el control. La UI ya no recomienda otro paquete pendiente. |
+| E3B-14 | Descargador Python emite `folder`/`plan` después del primer `resumen.json`. |
+
+**Mulchén (área F)**: N1 sin causa individual confirmada. N2: los dos síntomas calzan con E3B-11 (faltan sin aviso) y E3B-12 (error y no se
+puede retomar). Para confirmar hace falta del usuario: versión del ejecutable, botón usado, mensaje literal y nombres relativos de los JSON.
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar
@@ -124,13 +147,14 @@ dirigidos `INT-*-D30…D41` del oráculo y pruebas Rust). Requiere **nueva revis
    --programa P --archivo consignaciones.json` y `--consignaciones` en `observar/producir`. Python: `python tools/consignar.py SESION --listar |
    --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
-5. **Segunda revisión E3** sobre la punta actual (la primera, sobre `c83414d`, dio NO PASA; ver «Correcciones E3»). Nada está «aceptado».
+5. **Tercera revisión E3** sobre la punta actual (primera sobre `c83414d` y segunda: NO PASA; ver «Correcciones E3» y «Correcciones E3B»).
+   Nada está «aceptado». Incluir reproducción Mulchén con datos del usuario (versión, botón, mensaje literal, nombres de JSON).
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 330 pruebas
+cd rust && cargo test --workspace --locked                                       # 340 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

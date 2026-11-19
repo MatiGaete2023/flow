@@ -188,15 +188,32 @@ pub fn pendientes(destino: &Path, dias: u64) -> Vec<(PathBuf, String)> {
 
 /// Nueva carpeta «Paquete CSMP <fecha>» en `destino` y el flujo completo.
 pub fn ejecutar(sitfa: &dyn Sitfa, lote: &Lote, destino: &Path, prefs: &Preferencias, hoy: NaiveDate) -> Result<Resultado, String> {
+    ejecutar_en(sitfa, lote, destino, prefs, hoy).1
+}
+
+/// Como [`ejecutar`], con la raíz del intento creada (E3B-13): ante un error, quien llama sabe qué carpeta retomar y
+/// no confunde este intento con otro paquete pendiente del mismo destino. `None` si no alcanzó a crearse.
+pub fn ejecutar_en(
+    sitfa: &dyn Sitfa,
+    lote: &Lote,
+    destino: &Path,
+    prefs: &Preferencias,
+    hoy: NaiveDate,
+) -> (Option<PathBuf>, Result<Resultado, String>) {
     if lote.consultas.iter().any(|s| s.screen != "seguimiento") {
-        return Err("Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en «Descargar».".into());
+        return (None, Err("Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en «Descargar».".into()));
     }
-    std::fs::create_dir_all(destino).map_err(|_| "No se pudo crear la carpeta de destino.")?;
+    if std::fs::create_dir_all(destino).is_err() {
+        return (None, Err("No se pudo crear la carpeta de destino.".into()));
+    }
     let nombre = format!("Paquete CSMP {}", chrono::Local::now().format("%Y-%m-%d %H-%M-%S-%6f"));
     let raiz = destino.join(nombre);
-    std::fs::create_dir(&raiz)
-        .and_then(|_| std::fs::create_dir(raiz.join(RESPALDO)))
-        .map_err(|_| "No se pudo crear la carpeta del paquete.")?;
+    if std::fs::create_dir(&raiz).is_err() {
+        return (None, Err("No se pudo crear la carpeta del paquete.".into()));
+    }
+    if std::fs::create_dir(raiz.join(RESPALDO)).is_err() {
+        return (Some(raiz), Err("No se pudo crear la carpeta de respaldo del paquete.".into()));
+    }
     let proceso = Proceso {
         estado: "EN_CURSO".into(),
         fase: "consultas".into(),
@@ -205,7 +222,22 @@ pub fn ejecutar(sitfa: &dyn Sitfa, lote: &Lote, destino: &Path, prefs: &Preferen
         reintentos: 0,
         paquete: None,
     };
-    correr(sitfa, &raiz, proceso, prefs, hoy)
+    let r = correr(sitfa, &raiz, proceso, prefs, hoy);
+    (Some(raiz), r)
+}
+
+/// Texto para el usuario cuando el flujo falla (E3B-13): nombra la carpeta real del intento y dice si se puede retomar.
+pub fn mensaje_fallo(error: &str, raiz: Option<&Path>) -> String {
+    match raiz {
+        Some(c) if c.join(RESPALDO).join(PROCESO).is_file() => {
+            format!("{error} El avance quedó en {}: usa «Retomar paquete…» y elige esa carpeta para continuar sin repetir lo ya hecho.", c.display())
+        }
+        Some(c) => format!(
+            "{error} No se alcanzó a guardar el control (respaldo/{PROCESO}) en {}; ese intento no se puede retomar. Crea un paquete nuevo.",
+            c.display()
+        ),
+        None => error.to_string(),
+    }
 }
 
 /// Continúa un paquete cortado: no repite consultas validadas ni lecturas ya hechas, y vuelve a crear el ZIP.
@@ -221,6 +253,33 @@ pub fn retomar(sitfa: &dyn Sitfa, raiz: &Path, prefs: &Preferencias, hoy: NaiveD
     proceso.estado = "EN_CURSO".into();
     proceso.reintentos += 1;
     correr(sitfa, raiz, proceso, prefs, hoy)
+}
+
+/// E3B-11: bitácoras pedidas que no llegaron al paquete, por tribunal (sin vínculo, pendientes, descartadas o ingresos
+/// verificados sin lectura). Las usan «Consultar y crear paquete» y «Crear paquete de este lote».
+pub fn avisos_de_bitacoras(resumen: &Resumen, producto: &exportar::Producto) -> Vec<String> {
+    let mut avisos = recoleccion::avisos_bitacoras_faltantes(resumen);
+    if !producto.sin_bitacora.is_empty() {
+        let detalle: Vec<String> = producto
+            .sin_bitacora
+            .iter()
+            .map(|t| {
+                let (codigo, n) = t.split_once(": ").unwrap_or((t.as_str(), ""));
+                match resumen.tribunales.get(codigo) {
+                    Some(nombre) => format!("{nombre} ({codigo}): {n}"),
+                    None => format!("tribunal {codigo}: {n}"),
+                }
+            })
+            .collect();
+        avisos.push(format!("Ingresos verificados sin bitácora en el paquete: {}.", detalle.join("; ")));
+    }
+    avisos
+}
+
+/// Fuentes del paquete que fallaron o no se pudieron atribuir (las bitácoras son PARCIALES por diseño y no se listan).
+pub fn aviso_incompletas(producto: &exportar::Producto) -> Option<String> {
+    let lista: Vec<&str> = producto.incompletas.iter().map(String::as_str).filter(|t| !t.ends_with(": PARCIAL")).collect();
+    (!lista.is_empty()).then(|| format!("Fuentes no completas en el paquete: {}.", lista.join("; ")))
 }
 
 /// Lote validado sin lecturas pendientes: se reutiliza tal cual.
@@ -242,7 +301,10 @@ fn fase_lote(sitfa: &dyn Sitfa, raiz: &Path, proceso: &mut Proceso, fase: &str, 
     };
     if carpeta.join("resumen.json").exists() {
         let r = Resumen::leer(&carpeta)?;
-        if terminado(&r) {
+        // E3B-12: un lote validado se reutiliza solo si todas sus lecturas siguen íntegras; si falta alguna, se retoma
+        // y `lotes::ejecutar` vuelve a leer solo esos ingresos.
+        let integras = r.lecturas.iter().all(|l| recoleccion::leer(&carpeta, l).is_ok());
+        if terminado(&r) && integras {
             if fase == "consultas" {
                 sitfa.avance("Consultas ya validadas en el intento anterior: se reutilizan.".into());
             }
@@ -314,8 +376,15 @@ fn correr(sitfa: &dyn Sitfa, raiz: &Path, mut proceso: Proceso, prefs: &Preferen
             otro => otro?,
         };
         avisos.extend(producto.avisos.iter().cloned());
-        // Lecturas por ingreso pendientes, un calendario incompleto o la historia fuera del paquete lo dejan PARCIAL.
-        let parcial = recoleccion::lecturas_pendientes(&resumen) > 0 || !completos || !producto.avisos.is_empty();
+        // E3B-11: las bitácoras pedidas que no se leyeron (sin vínculo, pendientes o descartadas) y las tablas que no
+        // quedaron completas se informan por tribunal y dejan el paquete PARCIAL.
+        let faltantes = avisos_de_bitacoras(&resumen, &producto);
+        avisos.extend(faltantes.iter().cloned());
+        avisos.extend(aviso_incompletas(&producto));
+        // Lecturas por ingreso pendientes, bitácoras pedidas que faltan, un calendario incompleto o la historia fuera del
+        // paquete lo dejan PARCIAL.
+        let parcial =
+            recoleccion::lecturas_pendientes(&resumen) > 0 || !completos || !producto.avisos.is_empty() || !faltantes.is_empty();
         proceso.estado = if parcial { "PARCIAL" } else { "COMPLETO" }.into();
         proceso.paquete = Some(exportar::NOMBRE.into());
         escribir(raiz, &proceso)?;

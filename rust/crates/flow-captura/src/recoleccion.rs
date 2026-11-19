@@ -52,6 +52,104 @@ pub fn consultas_pendientes(resumen: &Resumen) -> BTreeSet<usize> {
         .collect()
 }
 
+/// E3B-12: al retomar, una lectura referenciada que falta o cambió no detiene el lote ni se reemplaza por un JSON
+/// inventado. Se quita su referencia y cada ingreso que la usaba queda pendiente para leerlo otra vez en SITFA; las
+/// demás lecturas y los Excel verificados se conservan. Devuelve un aviso por copia descartada (vacío si todo está).
+pub fn reparar_lecturas(carpeta: &Path, resumen: &mut Resumen) -> Vec<String> {
+    let mut avisos = Vec::new();
+    let mut quedan = Vec::new();
+    for r in std::mem::take(&mut resumen.lecturas) {
+        let Err(e) = leer(carpeta, &r) else {
+            quedan.push(r);
+            continue;
+        };
+        let mut ubicada = false;
+        for p in &resumen.paginas_lectura {
+            for v in p.vinculos.iter().filter(|v| clave(&r.tipo, v) == r.clave) {
+                let aviso = format!("{}pendiente. {e}", prefijo_lectura(p.consulta, p.numero, v.fila, &r.tipo));
+                if !resumen.avisos.contains(&aviso) {
+                    resumen.avisos.push(aviso);
+                }
+                ubicada = true;
+            }
+        }
+        if ubicada {
+            avisos.push(format!("{e} Se descarta esa copia y se vuelve a leer su ingreso (tribunal {}, causa {}).", r.tribunal, r.causa));
+        } else {
+            // Sin fila en el listado no se puede volver a pedir: queda anotada y el paquete no se da por completo.
+            let aviso = format!("{DESCARTADA}{e} No se ubicó su fila en el listado; inicia un lote nuevo para leer ese ingreso.");
+            if !resumen.avisos.contains(&aviso) {
+                resumen.avisos.push(aviso.clone());
+            }
+            avisos.push(aviso);
+        }
+    }
+    resumen.lecturas = quedan;
+    avisos
+}
+
+/// Prefijo del aviso de una lectura descartada que no se puede volver a pedir desde el mismo lote.
+pub const DESCARTADA: &str = "Lectura descartada: ";
+
+static BITACORA_FALTANTE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+    regex::Regex::new(
+        r"\AConsulta (\d+), página \d+(?:, fila \d+: bitacora (pendiente\.|sin vínculo comprobado;)|: vínculos del listado (pendientes)\.)",
+    )
+    .unwrap()
+});
+
+/// E3B-11: bitácoras pedidas que no quedaron leídas, por tribunal: (código, nombre visible, sin vínculo comprobado,
+/// lecturas pendientes, páginas sin vínculos). Vacío si todas las bitácoras con vínculo se leyeron.
+pub fn bitacoras_faltantes(resumen: &Resumen) -> Vec<(String, String, usize, usize, usize)> {
+    if !resumen.lote.lecturas.bitacoras {
+        return Vec::new();
+    }
+    let mut por_tribunal: BTreeMap<String, (usize, usize, usize)> = BTreeMap::new();
+    for aviso in &resumen.avisos {
+        let Some(c) = BITACORA_FALTANTE.captures(aviso) else { continue };
+        let Some(s) = c[1].parse::<usize>().ok().and_then(|n| n.checked_sub(1)).and_then(|i| resumen.lote.consultas.get(i)) else {
+            continue;
+        };
+        let cuenta = por_tribunal.entry(s.tribunal.clone()).or_default();
+        match (c.get(2).map(|m| m.as_str()), c.get(3)) {
+            (Some("pendiente."), _) => cuenta.1 += 1,
+            (Some(_), _) => cuenta.0 += 1,
+            (None, Some(_)) => cuenta.2 += 1,
+            _ => {}
+        }
+    }
+    por_tribunal
+        .into_iter()
+        .map(|(t, (a, b, c))| {
+            let nombre = resumen.tribunales.get(&t).cloned().unwrap_or_default();
+            (t, nombre, a, b, c)
+        })
+        .collect()
+}
+
+/// Texto de [`bitacoras_faltantes`] y de las lecturas descartadas, para el usuario (un aviso por tribunal).
+pub fn avisos_bitacoras_faltantes(resumen: &Resumen) -> Vec<String> {
+    let mut salida: Vec<String> = bitacoras_faltantes(resumen)
+        .into_iter()
+        .map(|(codigo, nombre, sin_vinculo, pendientes, paginas)| {
+            let mut partes = Vec::new();
+            if sin_vinculo > 0 {
+                partes.push(format!("{sin_vinculo} sin vínculo comprobado con el listado"));
+            }
+            if pendientes > 0 {
+                partes.push(format!("{pendientes} con lectura pendiente"));
+            }
+            if paginas > 0 {
+                partes.push(format!("{paginas} página(s) del listado sin vínculos leídos"));
+            }
+            let tribunal = if nombre.is_empty() { format!("tribunal {codigo}") } else { format!("{nombre} ({codigo})") };
+            format!("Bitácoras no incluidas de {tribunal}: {}.", partes.join(", "))
+        })
+        .collect();
+    salida.extend(resumen.avisos.iter().filter(|a| a.starts_with(DESCARTADA)).cloned());
+    salida
+}
+
 /// Lecturas (o páginas de vínculos) pendientes anotadas en el avance.
 pub fn lecturas_pendientes(resumen: &Resumen) -> usize {
     resumen.avisos.iter().filter(|a| PENDIENTE.is_match(a)).count()
@@ -192,11 +290,13 @@ fn del_dia(capturada: &str, hoy: chrono::NaiveDate) -> bool {
 
 pub fn leer(carpeta: &Path, r: &Referencia) -> Result<Value, String> {
     let ruta = lotes::ruta_archivo(carpeta, &r.archivo)?;
-    let archivo = std::fs::File::open(&ruta).map_err(|_| "Falta una lectura verificada del lote.")?;
+    let archivo = std::fs::File::open(&ruta).map_err(|_| {
+        format!("Falta la lectura verificada «{}» ({}) en la carpeta del lote; retoma el lote para volver a leerla.", r.archivo, r.tipo)
+    })?;
     let mut datos = vec![];
     archivo.take(32 * 1024 * 1024 + 1).read_to_end(&mut datos).map_err(|_| "No se pudo leer un contexto del lote.")?;
     if datos.len() > 32 * 1024 * 1024 || lotes::huella(&datos) != r.sha256 {
-        return Err("Cambió una lectura verificada del lote.".into());
+        return Err(format!("Cambió la lectura verificada «{}» ({}); retoma el lote para volver a leerla.", r.archivo, r.tipo));
     }
     let valor: Value = serde_json::from_slice(&datos).map_err(|_| "No se reconoce una lectura guardada.")?;
     if valor["version"] != 1 || valor["tipo"] != r.tipo || valor["clave"] != r.clave {

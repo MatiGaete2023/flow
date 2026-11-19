@@ -787,7 +787,7 @@ mod pruebas {
 /// Espera y Cumplimiento: constancia única de que el niño cuenta con ingreso efectivo a otro programa vigente
 /// (otra denominación completa en el Ingreso Histórico Protección, egreso `--` y causal `SIN INFORMACION` en la misma
 /// fila). No se repite si la bitácora (de cualquier etapa) ya la tiene o si el funcionario la marcó como consignada.
-pub fn otro_programa(ctx: &mut Ctx, programa: &str, pnombre: &str) -> Vec<Frag> {
+pub fn otro_programa(ctx: &mut Ctx, programa: &str, pnombre: &str, nombre_nino: &str) -> Vec<Frag> {
     let Some(h) = ctx.historico.clone() else { return Vec::new() };
     if h.cobertura == "FALLIDA" {
         ctx.marcar(3, "HISTORICO_NO_DISPONIBLE", "Ingreso Histórico Protección no se pudo leer: no se verificó si hay otro programa vigente");
@@ -808,7 +808,7 @@ pub fn otro_programa(ctx: &mut Ctx, programa: &str, pnombre: &str) -> Vec<Frag> 
     let mut salida = Vec::new();
     for nombre in otros {
         let llave = clave_programa(&nombre);
-        if ctx.consignados.contains(&llave) || constancia_en_bitacora(&ctx.bitacora, pnombre, &nombre).is_some() {
+        if ctx.consignados.contains(&llave) || constancia_en_bitacora(&ctx.bitacora, pnombre, &nombre, &flow_dominio::texto::limpiar_nombre(nombre_nino)).is_some() {
             continue;
         }
         if ctx.bitacora_parcial {

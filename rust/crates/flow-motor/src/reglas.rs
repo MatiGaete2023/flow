@@ -185,7 +185,7 @@ pub fn espera(ctx: &mut Ctx, r: &Registro, tribunal: Tribunal) -> String {
     frags.extend(h::continuidad(ctx));
     frags.extend(h::curador_designaciones(ctx, rus_sin_curador(r)));
     frags.extend(complementarias(ctx, r));
-    frags.extend(h::otro_programa(ctx, &programa, &pn));
+    frags.extend(h::otro_programa(ctx, &programa, &pn, &nombre));
     componer(&pfx, &sin_parentesis(frags))
 }
 
@@ -291,7 +291,7 @@ pub fn cumplimiento(ctx: &mut Ctx, r: &Registro, fecha_hoja2: Option<NaiveDate>)
     frags.extend(h::escrito_sin_ingreso(ctx, &programa, None, ""));
     let atribuible_pendiente = !h::varios_registros(ctx) && !h::varios_vencidos(ctx);
     frags.extend(h::informe_pendiente(ctx, &programa, None, atribuible_pendiente).1);
-    frags.extend(h::otro_programa(ctx, &programa, &pn));
+    frags.extend(h::otro_programa(ctx, &programa, &pn, &nombre));
     frags.extend(h::busqueda_historia(ctx));
     frags.extend(h::continuidad(ctx));
     frags.extend(h::curador_designaciones(ctx, rus_sin_curador(r)));

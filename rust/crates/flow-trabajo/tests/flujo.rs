@@ -4,7 +4,10 @@
 mod comun;
 
 use comun::{datos, lote_con, Temporal};
-use flow_captura::lotes::{huella, Archivo, Lote, Resumen};
+use flow_captura::{
+    lotes::{huella, Archivo, Lote, Resumen},
+    recoleccion,
+};
 use flow_motor::Config;
 use flow_trabajo::{exportar, flujo, paquete};
 use serde_json::{json, Value};
@@ -26,6 +29,10 @@ struct Falso {
     cancelar: AtomicBool,
     /// El Excel del calendario cambia después de verificarse: el paquete no puede incluirlo.
     alterar: AtomicBool,
+    /// E3B-11: la bitácora de la primera persona queda sin vínculo comprobado (como Mulchén en el reporte).
+    sin_vinculo: AtomicBool,
+    /// E3B-11: la lectura de bitácora de la segunda persona no llega al lote y no queda aviso.
+    perder_bitacora: AtomicBool,
 }
 
 fn calendario(carpeta: &Path, lote: &Lote, alterar: bool) -> Resumen {
@@ -67,6 +74,14 @@ impl flujo::Sitfa for Falso {
         assert!(lote.lecturas.bitacoras, "las bitácoras siempre se leen");
         let mut r = lote_con(carpeta, !retomar);
         r.lote = lote.clone();
+        if self.sin_vinculo.load(Ordering::SeqCst) {
+            r.avisos.retain(|a| !a.contains("bitacora pendiente"));
+            let fila = r.paginas_lectura[0].vinculos[0].fila;
+            r.avisos.push(format!("{}sin vínculo comprobado; no evaluable.", recoleccion::prefijo_lectura(0, 1, fila, "bitacora")));
+        }
+        if self.perder_bitacora.load(Ordering::SeqCst) {
+            r.lecturas.retain(|l| !(l.tipo == "bitacora" && l.ingreso == "202"));
+        }
         if self.cortar.swap(false, Ordering::SeqCst) {
             r.estado = "INCOMPLETA".into();
             r.avisos.push("Lote detenido: sesión ficticia vencida.".into());
@@ -278,4 +293,100 @@ fn calendario_real_con_columnas_reducidas_entra_al_paquete() {
     if std::env::var_os("FLOW_REGENERAR").is_some() {
         std::fs::write(datos().join("paquete_calendario.zip"), &p.datos).unwrap();
     }
+}
+
+/// E3B-12: un lote VALIDADA sin avisos pendientes pero con una lectura desaparecida no se reutiliza: se retoma y la
+/// copia faltante se vuelve a leer, en vez de repetir «Falta una lectura verificada del lote» en cada intento.
+#[test]
+fn e3b_12_lectura_ausente_en_lote_validado_se_retoma() {
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    let sin_informes = flujo::Preferencias { informes_por_vencer: false, ..prefs() };
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    let control: Value = serde_json::from_slice(&std::fs::read(r.carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
+    let lote = r.carpeta.join(control["carpetas"]["consultas"].as_str().unwrap());
+    // El lote queda validado, sin pendientes, y una de sus lecturas desaparece.
+    let mut resumen = Resumen::leer(&lote).unwrap();
+    resumen.avisos.clear();
+    let perdida = resumen.lecturas.iter().find(|l| l.tipo == "bitacora").unwrap().clone();
+    std::fs::write(lote.join("resumen.json"), serde_json::to_vec_pretty(&resumen).unwrap()).unwrap();
+    std::fs::remove_file(lote.join(&perdida.archivo)).unwrap();
+    let error = recoleccion::leer(&lote, &perdida).unwrap_err();
+    assert!(error.contains(&perdida.archivo), "el mensaje nombra el archivo: {error}");
+    // La reparación quita solo esa referencia y deja su ingreso pendiente para releerlo.
+    let mut copia = resumen.clone();
+    let avisos = recoleccion::reparar_lecturas(&lote, &mut copia);
+    assert_eq!(avisos.len(), 1, "{avisos:?}");
+    assert_eq!(copia.lecturas.len(), resumen.lecturas.len() - 1);
+    assert_eq!(recoleccion::consultas_pendientes(&copia).into_iter().collect::<Vec<_>>(), [0]);
+    assert!(copia.avisos.iter().any(|a| a.contains("bitacora pendiente.") && a.contains(&perdida.archivo)), "{:?}", copia.avisos);
+    // El flujo no reutiliza el lote: lo retoma y crea el paquete.
+    let mut control = control;
+    control["estado"] = "INCOMPLETO".into();
+    std::fs::write(r.carpeta.join("respaldo/proceso.json"), serde_json::to_vec_pretty(&control).unwrap()).unwrap();
+    sitfa.llamadas.lock().unwrap().clear();
+    let r2 = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert_eq!(*sitfa.llamadas.lock().unwrap(), ["seguimiento (retomar)"]);
+    assert!(r2.paquete.exists());
+}
+
+/// E3B-11: una bitácora sin vínculo comprobado o un ingreso verificado sin bitácora dejan el paquete PARCIAL y lo dicen
+/// por tribunal; antes el flujo podía anunciar COMPLETO.
+#[test]
+fn e3b_11_bitacoras_faltantes_dejan_parcial_por_tribunal() {
+    let sin_informes = flujo::Preferencias { informes_por_vencer: false, ..prefs() };
+    // Sin vínculo comprobado.
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    sitfa.sin_vinculo.store(true, Ordering::SeqCst);
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial);
+    assert!(
+        r.avisos.iter().any(|a| a == "Bitácoras no incluidas de Juzgado de Letras Ficticio (901): 1 sin vínculo comprobado con el listado."),
+        "{:?}",
+        r.avisos
+    );
+    // Lectura perdida sin aviso: el ingreso verificado sin bitácora se informa.
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial, "la primera corrida ficticia trae una bitácora pendiente");
+    let r = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(!r.parcial, "{:?}", r.avisos);
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    sitfa.perder_bitacora.store(true, Ordering::SeqCst);
+    let r = flujo::ejecutar(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap()).unwrap();
+    let r = flujo::retomar(&sitfa, &r.carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    assert!(r.parcial);
+    assert!(
+        r.avisos.iter().any(|a| a == "Ingresos verificados sin bitácora en el paquete: Juzgado de Letras Ficticio (901): 1."),
+        "{:?}",
+        r.avisos
+    );
+}
+
+/// E3B-13: el error de una creación nueva lleva la raíz del intento; el mensaje nunca recomienda otro paquete pendiente
+/// del mismo destino.
+#[test]
+fn e3b_13_el_error_nombra_la_raiz_del_intento() {
+    let destino = Temporal::nueva();
+    let sitfa = Falso::default();
+    sitfa.cortar.store(true, Ordering::SeqCst);
+    let sin_informes = flujo::Preferencias { informes_por_vencer: false, ..prefs() };
+    let (antigua, r) = flujo::ejecutar_en(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap());
+    let antigua = antigua.unwrap();
+    assert!(r.is_err());
+    sitfa.cortar.store(true, Ordering::SeqCst);
+    let (nueva, r) = flujo::ejecutar_en(&sitfa, &plan(), &destino.0, &sin_informes, HOY.parse().unwrap());
+    let nueva = nueva.unwrap();
+    assert_ne!(antigua, nueva);
+    let mensaje = flujo::mensaje_fallo(&r.unwrap_err(), Some(&nueva));
+    assert!(mensaje.contains(&nueva.display().to_string()) && !mensaje.contains(&antigua.display().to_string()), "{mensaje}");
+    assert!(mensaje.contains("Retomar paquete"));
+    // Raíz creada sin control: se dice que no se puede retomar, sin sugerir la antigua.
+    let sin_control = destino.0.join("Paquete CSMP sin control");
+    std::fs::create_dir_all(sin_control.join("respaldo")).unwrap();
+    let mensaje = flujo::mensaje_fallo("Fallo ficticio.", Some(&sin_control));
+    assert!(mensaje.contains("no se puede retomar") && !mensaje.contains(&antigua.display().to_string()), "{mensaje}");
 }

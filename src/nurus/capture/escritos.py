@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import date
+from datetime import UTC, date
 
 from nurus.personal.motor.evidencia import (
     Escrito,
@@ -44,16 +44,16 @@ def _instante(texto):
     El día del corte se compara con la fecha local escrita en la lectura (zona del tribunal, America/Santiago en la
     práctica). El orden entre lecturas usa el instante convertido a UTC: dos husos distintos se comparan bien. Un valor sin
     zona se compara tal cual. Mismo criterio en Rust (`fuentes_nuevas.rs::instante`)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     texto = str(texto or '').strip()
     dia = texto[:10]
     try:
-        valor = datetime.fromisoformat(texto.replace('Z', '+00:00'))
+        valor = datetime.fromisoformat(texto)
     except ValueError:
         return (dia, texto)
     if valor.tzinfo is not None:
-        valor = valor.astimezone(timezone.utc).replace(tzinfo=None)
+        valor = valor.astimezone(UTC).replace(tzinfo=None)
     return (dia, valor.strftime('%Y-%m-%dT%H:%M:%S.%f'))
 
 

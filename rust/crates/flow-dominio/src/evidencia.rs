@@ -173,27 +173,62 @@ fn oraciones_de(texto: &str) -> Vec<String> {
     salida
 }
 
+static PALABRA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\p{L}+|\p{Nd}+|[^\w\s]").unwrap());
+/// Palabras que nunca forman parte del nombre del sujeto (`evidencia.py::_NO_NOMBRE`).
+const NO_NOMBRE: [&str; 46] = [
+    "que", "se", "hace", "presente", "informa", "informo", "indica", "indico", "senala", "senalo", "comunica", "refiere",
+    "menciona", "consta", "da", "cuenta", "el", "la", "los", "las", "un", "una", "nino", "nina", "nna", "adolescente",
+    "joven", "menor", "y", "e", "o", "de", "del", "al", "a", "con", "por", "para", "en", "segun", "ya", "actualmente",
+    "hoy", "tambien", "asimismo", "programa",
+];
+
+/// Nombres que preceden inmediatamente al verbo, hasta 4 palabras (`evidencia.py::_sujeto`).
+fn sujeto(prefijo: &str) -> Vec<String> {
+    use unicode_normalization::UnicodeNormalization;
+    let prefijo: String = prefijo.nfc().collect();
+    let mut salida = Vec::new();
+    for token in PALABRA.find_iter(&prefijo).map(|m| m.as_str()).collect::<Vec<_>>().into_iter().rev() {
+        let llave = clave_texto(token);
+        if !token.chars().next().is_some_and(char::is_alphabetic) || NO_NOMBRE.contains(&llave.as_str()) || salida.len() >= 4 {
+            break;
+        }
+        salida.push(llave);
+    }
+    salida.reverse();
+    salida
+}
+
 /// Observación registrada que ya hizo constar que ese niño cuenta con ingreso efectivo a ese programa: nombre completo
-/// del programa (no por subcadena), primer nombre del niño como sujeto (justo antes del verbo) y sin negación.
-pub fn constancia_en_bitacora<'a>(observaciones: &'a [Observacion], primer_nombre: &str, programa: &str) -> Option<&'a Observacion> {
+/// del programa (no por subcadena) y SUJETO = el niño: los nombres justo antes del verbo empiezan por su primer nombre y, si
+/// se conoce su nombre completo, coinciden con sus primeras palabras (E3-12, E3B-07). Sin negación.
+pub fn constancia_en_bitacora<'a>(
+    observaciones: &'a [Observacion],
+    primer_nombre: &str,
+    programa: &str,
+    nombre_completo: &str,
+) -> Option<&'a Observacion> {
     let objetivo = clave_programa(programa);
     let nombre = clave_texto(primer_nombre);
-    if objetivo.is_empty() {
+    let completo: Vec<String> = clave_texto(nombre_completo).split_whitespace().map(String::from).collect();
+    if objetivo.is_empty() || nombre.is_empty() {
         return None;
     }
     for obs in observaciones {
         for oracion in oraciones_de(&obs.texto) {
             for hallazgo in CONSTANCIA.captures_iter(&oracion) {
-                let completo = hallazgo.get(0).unwrap();
+                let completo_match = hallazgo.get(0).unwrap();
                 if clave_programa(&hallazgo[1]) != objetivo {
                     continue;
                 }
-                let previo = clave_texto(&oracion[..completo.start()]);
-                if NEGACION.is_match(&previo) {
+                let previo = &oracion[..completo_match.start()];
+                if NEGACION.is_match(&clave_texto(previo)) {
                     continue;
                 }
-                // El sujeto de la constancia debe ser el niño: su primer nombre justo antes del verbo (E3-12).
-                if nombre.is_empty() || previo.split(' ').next_back() != Some(nombre.as_str()) {
+                let s = sujeto(previo);
+                if s.first() != Some(&nombre) {
+                    continue;
+                }
+                if !completo.is_empty() && s.len() > 1 && (s.len() > completo.len() || s[..] != completo[..s.len()]) {
                     continue;
                 }
                 return Some(obs);
@@ -227,4 +262,24 @@ pub fn mencion_previa<'a>(observaciones: &'a [Observacion], programa: &str) -> O
         }
         false
     })
+}
+
+#[cfg(test)]
+mod pruebas_e3b {
+    use super::*;
+
+    /// Espejo de `tests/test_integracion_20261118.py::test_e3b_07_sujeto_con_nombre_compuesto_y_dos_ninos_con_igual_primer_nombre`.
+    #[test]
+    fn e3b_07_sujeto_con_nombre_compuesto() {
+        let previa = |texto: &str, completo: &str| {
+            let obs = [Observacion { fecha: "2026-10-01".parse().unwrap(), texto: texto.into() }];
+            constancia_en_bitacora(&obs, "Ana", "PRM Luna", completo).is_some()
+        };
+        assert!(previa("Ana María cuenta con ingreso efectivo al programa PRM Luna.", "ANA MARÍA SOTO"));
+        assert!(previa("Se hace presente que ANA MARI\u{301}A cuenta con ingreso efectivo al programa PRM Luna.", "Ana María Soto"));
+        assert!(!previa("Ana María cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
+        assert!(previa("Ana cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
+        assert!(!previa("Ana, informa que Beto cuenta con ingreso efectivo al programa PRM Luna.", "Ana Luisa Pérez"));
+        assert!(!previa("La niña Ana no cuenta con ingreso efectivo al programa PRM Luna.", ""));
+    }
 }

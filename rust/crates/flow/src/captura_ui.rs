@@ -23,7 +23,7 @@ enum Evento {
     Fin(PathBuf, Box<Result<Resumen, String>>),
     Paquete(Result<String, String>),
     /// «Consultar y crear paquete»: carpeta de destino (o del paquete retomado) y resultado.
-    Flujo(PathBuf, Box<Result<flow_trabajo::flujo::Resultado, String>>),
+    Flujo(Option<PathBuf>, Box<Result<flow_trabajo::flujo::Resultado, String>>),
 }
 
 pub struct Captura {
@@ -132,7 +132,7 @@ fn mensaje_fin(resumen: &Resumen, independiente: bool) -> String {
         } else {
             String::new()
         }
-    )
+    ) + &flow_captura::recoleccion::avisos_bitacoras_faltantes(resumen).iter().map(|a| format!(" {a}")).collect::<String>()
 }
 
 /// Tras un lote detenido, el Descargador puede abrir la carpeta si hay archivos verificados; Trabajo solo recibe el lote
@@ -142,12 +142,23 @@ fn disponible_tras_error(resumen: &Resumen, independiente: bool) -> bool {
         && (independiente || (0..resumen.lote.consultas.len()).all(|i| resumen.terminadas.contains(&i) || resumen.vacias.contains(&i)))
 }
 
-/// Resultado de un paquete creado: ruta y bitácoras incluidas, como `reuse` de `package_current_lot`.
-fn mensaje_paquete(destino: &std::path::Path, p: &flow_trabajo::exportar::Producto) -> String {
-    let mut m = format!("Paquete creado: {}. {} Ábrelo en Flow Asistente con «Abrir Excel o paquete…».", destino.display(), p.bitacoras);
-    for a in &p.avisos {
+/// Resultado de un paquete creado: ruta y bitácoras incluidas, como `reuse` de `package_current_lot`. E3B-11: las
+/// bitácoras pedidas que no llegaron se nombran por tribunal y el paquete se anuncia PARCIAL.
+fn mensaje_paquete(destino: &std::path::Path, resumen: &Resumen, p: &flow_trabajo::exportar::Producto) -> String {
+    let faltantes = flow_trabajo::flujo::avisos_de_bitacoras(resumen, p);
+    let parcial = !faltantes.is_empty() || flow_captura::recoleccion::lecturas_pendientes(resumen) > 0;
+    let mut m = format!(
+        "Paquete {}creado: {}. {} Ábrelo en Flow Asistente con «Abrir Excel o paquete…».",
+        if parcial { "PARCIAL " } else { "" },
+        destino.display(),
+        p.bitacoras
+    );
+    for a in p.avisos.iter().chain(&faltantes).chain(flow_trabajo::flujo::aviso_incompletas(p).iter()) {
         m.push(' ');
         m.push_str(a);
+    }
+    if parcial {
+        m.push_str(" Para reintentar lo que falta usa «Retomar lote…» con la carpeta del lote y crea el paquete otra vez.");
     }
     m
 }
@@ -213,24 +224,12 @@ impl Captura {
                         }
                     }
                 }
-                Evento::Flujo(carpeta, r) => {
+                Evento::Flujo(raiz, r) => {
                     self.receptor = None;
+                    // E3B-13: la raíz es la del intento (nueva o retomada), nunca otro paquete pendiente del destino.
                     self.mensaje = match *r {
                         Ok(r) => mensaje_flujo(&r),
-                        Err(e) => {
-                            let raiz = if carpeta.join("respaldo").join(flow_trabajo::flujo::PROCESO).is_file() {
-                                Some(carpeta)
-                            } else {
-                                flow_trabajo::flujo::pendientes(&carpeta, 7).into_iter().next().map(|(c, _)| c)
-                            };
-                            match raiz {
-                                Some(c) => format!(
-                                    "{e} El avance quedó en {}: usa «Retomar paquete…» para continuar sin repetir lo ya hecho.",
-                                    c.display()
-                                ),
-                                None => e,
-                            }
-                        }
+                        Err(e) => flow_trabajo::flujo::mensaje_fallo(&e, raiz.as_deref()),
                     };
                 }
                 Evento::Paquete(r) => {
@@ -407,7 +406,7 @@ impl Captura {
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             let lotes = [flow_trabajo::exportar::Lote { carpeta: &carpeta, resumen: &resumen }];
-            let r = flow_trabajo::exportar::exportar(&lotes, &destino, &Default::default()).map(|p| mensaje_paquete(&destino, &p));
+            let r = flow_trabajo::exportar::exportar(&lotes, &destino, &Default::default()).map(|p| mensaje_paquete(&destino, &resumen, &p));
             let _ = tx.send(Evento::Paquete(r));
             ctx.request_repaint();
         });
@@ -450,11 +449,11 @@ impl Captura {
                 informes: Default::default(),
             };
             let hoy = chrono::Local::now().date_naive();
-            let r = match &lote {
-                Some(l) => flow_trabajo::flujo::ejecutar(&sitfa, l, &carpeta, &prefs, hoy),
-                None => flow_trabajo::flujo::retomar(&sitfa, &carpeta, &prefs, hoy),
+            let (raiz, r) = match &lote {
+                Some(l) => flow_trabajo::flujo::ejecutar_en(&sitfa, l, &carpeta, &prefs, hoy),
+                None => (Some(carpeta.clone()), flow_trabajo::flujo::retomar(&sitfa, &carpeta, &prefs, hoy)),
             };
-            let _ = tx.send(Evento::Flujo(carpeta, Box::new(r)));
+            let _ = tx.send(Evento::Flujo(raiz, Box::new(r)));
             ctx.request_repaint();
         });
     }

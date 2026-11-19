@@ -774,6 +774,43 @@ fn clave_causa(fila: &FilaTrabajo) -> (String, String) {
     (tribunal, normalizar_columna(&valor(fila, "rit")))
 }
 
+/// RES escrito por la persona en la fila, si la planilla trae esa columna.
+fn res_explicito<'a>(trabajo: &Trabajo, fila: &'a FilaTrabajo) -> Option<&'a Celda> {
+    columna_humana(trabajo, &ALIAS_RES).and_then(|c| fila.celdas.get(c)).filter(|c| explicito(c))
+}
+
+/// Tipos de proyecto que la fila pide tras la decisión humana; el mismo cálculo para elegir y para preparar (E3B-09).
+/// - RES marcado: su tipo; si no nombra uno, el de la observación; si no, sus acciones; y en último caso PC_IE.
+/// - RES escrito pero desmarcado: ninguno.
+/// - Sin RES: el tipo de la observación o, si no nombra ninguno, sus acciones.
+pub fn tipos_efectivos(trabajo: &Trabajo, fila: &FilaTrabajo) -> Vec<&'static str> {
+    let acciones = || -> Vec<&'static str> {
+        fila.proyectos().into_iter().filter_map(|t| TIPOS.iter().find(|(x, _)| *x == t).map(|(x, _)| *x)).collect()
+    };
+    match res_explicito(trabajo, fila) {
+        Some(res) if res_marcado(res) => {
+            let mut tipos = match (tipo_res(res), tipo_por_observacion(&observacion_revisada(trabajo, fila))) {
+                (Some(t), _) | (None, Some(t)) => vec![t],
+                _ => acciones(),
+            };
+            if tipos.is_empty() {
+                tipos.push("PC_IE");
+            }
+            tipos
+        }
+        Some(_) => Vec::new(),
+        None => {
+            if acciones().is_empty() {
+                return Vec::new();
+            }
+            match tipo_por_observacion(&observacion_revisada(trabajo, fila)) {
+                Some(t) => vec![t],
+                None => acciones(),
+            }
+        }
+    }
+}
+
 /// `resolutions.py::automatic_project_selections`.
 ///
 /// - Si el origen trae una columna RES (aunque esté vacía), manda la selección humana: entran las causas con RES
@@ -795,13 +832,7 @@ pub fn selecciones(trabajo: &Trabajo) -> Vec<(String, String)> {
             if !(explicito(&res) && res_marcado(&res)) {
                 continue;
             }
-            let mut tipos = match (tipo_res(&res), tipo_por_observacion(&observacion_revisada(trabajo, fila))) {
-                (Some(t), _) | (None, Some(t)) => vec![t],
-                _ => fila.proyectos().into_iter().filter_map(|t| TIPOS.iter().find(|(x, _)| *x == t).map(|(x, _)| *x)).collect(),
-            };
-            if tipos.is_empty() {
-                tipos.push("PC_IE");
-            }
+            let tipos = tipos_efectivos(trabajo, fila);
             let clave = clave_causa(fila);
             let i = match por_causa.iter().position(|(k, _)| *k == clave) {
                 Some(i) => i,
@@ -825,15 +856,7 @@ pub fn selecciones(trabajo: &Trabajo) -> Vec<(String, String)> {
         return salida;
     }
     for fila in trabajo.filas.iter().filter(|f| !f.propuesta.excluido) {
-        let sugeridos = fila.proyectos();
-        if sugeridos.is_empty() {
-            continue;
-        }
-        let tipos = match tipo_por_observacion(&observacion_revisada(trabajo, fila)) {
-            Some(t) => vec![t],
-            None => sugeridos,
-        };
-        salida.extend(tipos.into_iter().map(|t| (fila.id.clone(), t.to_string())));
+        salida.extend(tipos_efectivos(trabajo, fila).into_iter().map(|t| (fila.id.clone(), t.to_string())));
     }
     salida
 }
@@ -887,18 +910,15 @@ pub fn preparar(
         // Plan 18-nov-2026: en un caso con fechas resueltas por evidencia, el proyecto incluye solo las filas que lo piden
         // por sí mismas; las resueltas (escrito pendiente, ingreso registrado, escrito incorporado) no reaparecen.
         let con_evidencia = todas.iter().any(|f| f.propuesta.reglas.iter().any(|r| RESUELTAS_POR_EVIDENCIA.contains(&r.as_str())));
-        // Tipos que la fila pide DESPUÉS de la decisión humana (E3-09): con RES escrito manda RES (un tipo concreto, o
-        // marcado sin tipo → sus acciones; desmarcado → ninguno); sin RES, sus acciones.
-        let col_res = columna_humana(trabajo, &ALIAS_RES);
-        let pide = |f: &FilaTrabajo| match col_res.and_then(|c| f.celdas.get(c)).filter(|c| explicito(c)) {
-            Some(res) if res_marcado(res) => match tipo_res(res) {
-                Some(t) => t == tipo.as_str(),
-                None => f.proyectos().contains(&tipo.as_str()),
-            },
-            Some(_) => false,
-            None => f.proyectos().contains(&tipo.as_str()),
+        // Tipos que la fila pide DESPUÉS de la decisión humana, con el MISMO cálculo que `selecciones` (E3-09, E3B-09). Una fila
+        // con RES escrito queda fuera de un tipo que no pide aunque el caso no tenga evidencia nueva (E3B-08).
+        let pide = |f: &FilaTrabajo| tipos_efectivos(trabajo, f).contains(&tipo.as_str());
+        let decidida = |f: &FilaTrabajo| res_explicito(trabajo, f).is_some();
+        let propias: Vec<&FilaTrabajo> = if con_evidencia {
+            todas.iter().copied().filter(|f| pide(f)).collect()
+        } else {
+            todas.iter().copied().filter(|f| !decidida(f) || pide(f)).collect()
         };
-        let propias: Vec<&FilaTrabajo> = if con_evidencia { todas.iter().copied().filter(|f| pide(f)).collect() } else { todas.clone() };
         if propias.is_empty() {
             continue;
         }

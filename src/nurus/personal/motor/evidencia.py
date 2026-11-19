@@ -145,14 +145,16 @@ _PALABRA = re.compile(r"[^\W\d_]+|\d+|[^\w\s]")
 _NO_NOMBRE = frozenset(
     'que se hace presente informa informo indica indico senala senalo comunica refiere menciona consta da cuenta '
     'el la los las un una nino nina nna adolescente joven menor y e o de del al a con por para en segun ya actualmente '
-    'hoy tambien asimismo programa'.split()
+    'hoy tambien asimismo programa'.split()  # noqa: SIM905
 )
 
 
 def _sujeto(prefijo):
     """Nombres que preceden inmediatamente al verbo («… que Ana María cuenta con…» → [ana, maria]), hasta 4 palabras."""
+    import unicodedata
+
     sujeto = []
-    for token in reversed(_PALABRA.findall(prefijo)):
+    for token in reversed(_PALABRA.findall(unicodedata.normalize('NFC', prefijo))):
         llave = clave_texto(token)
         if not token[0].isalpha() or llave in _NO_NOMBRE or len(sujeto) >= 4:
             break
