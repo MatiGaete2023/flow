@@ -1,5 +1,14 @@
 # Instrucciones para agentes
 
+## Rama única y continuidad (instrucción del usuario, 19-nov-2026)
+
+- **Trabaja solo en la rama `flow-python`.** No crees ramas nuevas; si tu entorno te asigna otra, haz
+  `git fetch origin flow-python`, trabaja sobre ella y empuja a `origin flow-python`.
+- Antes de empezar lee `docs/python_unico/PLAN.md` y `docs/python_unico/REGISTRO.md` (estado, siguiente paso exacto).
+- **Al terminar cada turno** (antes de quedarte sin tokens) actualiza `docs/python_unico/REGISTRO.md`: qué hiciste, cómo
+  lo verificaste y el siguiente paso exacto; luego commit y push a `flow-python`. Así otro chat continúa desde ahí.
+- Flow Rust está congelado (decisión v de `PLAN_VIGENTE.md`): solo se mejoran las herramientas Python.
+
 Lee, en este orden y nada más salvo que tu paquete lo cite:
 
 1. `PLAN_VIGENTE.md`: esencia, prohibiciones, prioridades y decisiones del usuario.

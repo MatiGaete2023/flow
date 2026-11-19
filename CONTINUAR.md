@@ -1,3 +1,6 @@
+> **Vigente desde el 19-nov-2026:** rama única `flow-python`; plan en `docs/python_unico/PLAN.md` y registro en
+> `docs/python_unico/REGISTRO.md`. Lo que sigue en este archivo es histórico.
+
 # Continuar — consolidado del 13 de octubre de 2026
 
 <!-- estado:inicio (generado por tools/estado.py continuacion; no editar) -->

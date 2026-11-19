@@ -1,5 +1,7 @@
 # Flow Rust → herramientas Python: informe comparativo y plan (19-nov-2026)
 
+> El plan vigente (reformulado con la guía de RUS/SITFA) está en [`PLAN.md`](PLAN.md); la sección 3 de este archivo queda como antecedente.
+
 **Decisión del usuario (19-nov-2026):** «Ya no continuaré el proyecto en RUST, mejoraremos solo las herramientas en python».
 Rust queda **congelado** como referencia (código, pruebas y oráculos se conservan; no se desarrolla más). Todo lo útil que
 Rust tenga y Python no, se porta a Python y se expone con botones u opciones en la herramienta que corresponda.
