@@ -467,6 +467,29 @@ class _Lectura:
         return True
 
 
+def faltantes_por_tribunal(registros):
+    """P8: {código: {'nombre', 'SIN_VINCULO', 'FALLIDA', 'PENDIENTE'}} de las bitácoras que no quedaron LEIDA."""
+    salida = {}
+    for r in registros:
+        if r.get('estado') == 'LEIDA':
+            continue
+        codigo = str(r.get('tribunal_codigo', ''))
+        item = salida.setdefault(codigo, {'nombre': r.get('tribunal_nombre', '')})
+        item[r.get('estado', 'FALLIDA')] = item.get(r.get('estado', 'FALLIDA'), 0) + 1
+    return salida
+
+
+def aviso_faltantes(faltantes):
+    """Un texto por tribunal para el usuario: «Bitácoras no leídas en Laja (113): 2 sin vínculo, 1 fallida.»"""
+    nombres = {'SIN_VINCULO': 'sin vínculo', 'FALLIDA': 'fallidas', 'PENDIENTE': 'pendientes'}
+    avisos = []
+    for codigo, item in sorted(faltantes.items()):
+        partes = [f'{item[k]} {v}' for k, v in nombres.items() if item.get(k)]
+        tribunal = f"{item['nombre']} ({codigo})" if item.get('nombre') else f'tribunal {codigo}'
+        avisos.append(f'Bitácoras no leídas en {tribunal}: ' + ', '.join(partes) + '.')
+    return avisos
+
+
 def persona_por_rut(rut):
     """Clave de persona cuando la fila no trae `SITFA_PERSONA_RUS` (p. ej. Espera sin calendario): la misma clave la asigna el
     exportador al registro con ese RUT (P3c). Es una huella, no el RUT."""
@@ -988,6 +1011,11 @@ class DiaryRunner:
             ),
             'detalle': next(
                 (q.get('error', '') for q in state['consultas'] if q['estado'] == 'FALLIDA'), state.get('error', '')
+            ),
+            # P8: bitácoras no leídas por tribunal (código → nombre y conteo por estado) y estados del histórico.
+            'faltantes_por_tribunal': faltantes_por_tribunal(state['registros']),
+            'historicos': dict(
+                Counter((r.get('historico_lectura') or {}).get('estado') for r in state['registros'] if r.get('historico_lectura'))
             ),
         }
         value['diagnostico_anonimo'] = str(folder / 'diagnostico_bitacoras.json')

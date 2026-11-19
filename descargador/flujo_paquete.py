@@ -2,6 +2,7 @@
 
 from dataclasses import asdict, is_dataclass, replace
 import json
+import re
 from pathlib import Path
 
 import motor as m
@@ -52,6 +53,7 @@ def run(
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
     backup.mkdir(parents=True, exist_ok=bool(resume))
+    anotar(state, f"inicio; reintento {state.get('reintentos', 0)}" if resume else 'inicio')
     write(control, state)
     emit('pipeline_folder', str(root))
     anterior = {fase: root / carpeta for fase, carpeta in state['carpetas'].items()} if resume else {}
@@ -63,6 +65,7 @@ def run(
     def phase(name):
         checkpoint()
         state['fase'] = name
+        anotar(state, 'fase ' + name)
         write(control, state)
         emit('phase', name)
 
@@ -80,6 +83,7 @@ def run(
     try:
         phase('consultas')
         if _consultas_validadas(anterior.get('consultas')):
+            anotar(state, 'consultas reutilizadas del intento anterior')
             emit('status', 'Consultas ya validadas en el intento anterior: se reutilizan.')
         else:
             state['carpetas'].pop('consultas', None)
@@ -112,6 +116,20 @@ def run(
         runner = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra)
         # Al retomar, el mismo lote de bitácoras continúa: lo ya leído (hash comprobado) no se vuelve a abrir.
         diaries = runner.run(batch, backup, previas) if previas else runner.run(batch, backup)
+        anotar(
+            state,
+            f"bitácoras {diaries.get('estado')}; leídas {diaries.get('leidas', '?')}; no leídas {diaries.get('fallidas', 0)}; "
+            f"consultas fallidas {diaries.get('consultas_fallidas', 0)}"
+            + (f"; históricos {diaries.get('historicos')}" if diaries.get('historicos') else ''),
+        )
+        from lectura_bitacoras import aviso_faltantes
+
+        # P8: qué bitácoras faltan, por tribunal, en el historial y como aviso visible al terminar.
+        faltantes = aviso_faltantes(diaries.get('faltantes_por_tribunal') or {})
+        for aviso in faltantes:
+            anotar(state, aviso)
+            emit('warning', aviso)
+        write(control, state)
         carpetas_informes, informes_completos = _informes(
             bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias
         )
@@ -178,14 +196,28 @@ def run(
             partial = partial or not historia_ok
             result['historia'] = resumen or {'estado': 'INCOMPLETA'}
         state.update(estado='PARCIAL' if partial else 'COMPLETO', paquete=Path(result['path']).name)
+        anotar(state, f"fin {state['estado']}" + ('' if informes_completos else '; calendario de informes incompleto'))
         write(control, state)
         result.update(sheets_folder=str(sheets), diary_manifest=str(manifest), partial=partial)
         emit('package_done', result)
         return result
-    except BaseException:
+    except BaseException as exc:
         state['estado'] = 'INCOMPLETO'
+        anotar(state, f"error en fase {state.get('fase', '')}: {exc}")
         write(control, state)
         raise
+
+
+_RUTA = re.compile(r'(?:[A-Za-z]:\\|\\\\|/(?:home|Users|root|tmp|mnt)/).*?(?=\.\s|\.$|["\'«»]|$)')
+
+
+def anotar(state, evento):
+    """P8: historial ANÓNIMO del paquete en `respaldo/proceso.json` (instante, fase, decisión, error literal, resumen).
+    Las rutas de archivos se reemplazan por «<ruta>» (pueden traer el usuario de Windows); se guardan los últimos 200."""
+    texto = _RUTA.sub('<ruta>', ' '.join(str(evento).split()))[:500]
+    historial = state.setdefault('historial', [])
+    historial.append(m.now().astimezone().isoformat(timespec='seconds') + ' ' + texto)
+    del historial[:-200]
 
 
 def _proceso(control):

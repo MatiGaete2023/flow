@@ -47,6 +47,14 @@ Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «
   viaja en el paquete; el Asistente propone la constancia de otro programa vigente. Si una ventana no se puede leer, la
   bitácora se conserva y el paquete queda PARCIAL. Requiere la extensión de esta misma entrega.
 
+## Diagnóstico de un paquete (P8, 19-nov-2026)
+
+`Paquete CSMP …/respaldo/proceso.json` guarda un **historial anónimo**: inicio o reintento, cada fase, si las consultas se
+reutilizaron, el resumen de bitácoras (leídas, no leídas, consultas fallidas, históricos), las bitácoras no leídas por
+tribunal, el error literal si se cortó y el estado final. Las rutas de archivos se reemplazan por «<ruta>». Si un paquete
+falla o queda PARCIAL, basta compartir ese archivo junto con `diagnostico_bitacoras.json` y `diagnostico_historia.json`.
+Al terminar, el Descargador también avisa por tribunal cuántas bitácoras no se leyeron (sin vínculo, fallidas o pendientes).
+
 ## Lotes antiguos (retención de 60 días)
 
 En **Resultados e historial**, **Archivar o borrar lotes antiguos** ofrece los lotes y paquetes («Paquete CSMP …») sin

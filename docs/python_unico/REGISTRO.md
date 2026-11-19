@@ -12,7 +12,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P3a escritos visibles + diagnóstico | **Hecho; confirmado en uso real** (9 causas con escritos, 8 vacías, 14 pendientes) | ver Historial |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
 | P3c histórico automático | **Corregido (marco interno) · PRUEBA REAL PENDIENTE (usuario)** · E3 pendiente (extensión) | ver Historial 19-nov |
-| P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
+| P8 diagnóstico del paquete | **Hecho** | ver Historial 19-nov (P8) |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | Pendiente | — |
 | P9 notificación y diligencias | **Postergado por el usuario** | — |
@@ -27,7 +27,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-P8 (en curso) y luego P5. Ver Historial.
+P5 (diseño, en curso). Ver Historial.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -112,3 +112,8 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   rotulado visible («Rut : …»), ya no la dirección. Prueba Node ampliada (`test_extension_historico.py`).
 - 19-nov-2026 · El usuario deja **pendiente la prueba real de P3c** y posterga P9, P6 y P7. Plan actualizado (§3b de
   `PLAN.md`). Se continúa con P8 y P5.
+- 19-nov-2026 · **P8 hecho.** `flujo_paquete.anotar`: historial anónimo (últimos 200) en `respaldo/proceso.json` con inicio o
+  reintento, fases, consultas reutilizadas, resumen de bitácoras e históricos, bitácoras no leídas por tribunal, error literal
+  y estado final; rutas reemplazadas por «<ruta>». `lectura_bitacoras.faltantes_por_tribunal` / `aviso_faltantes`: el
+  resultado del lote trae los faltantes por tribunal y el flujo los avisa al terminar. Manual del Descargador actualizado.
+  Pruebas `test_p8_*` en `descargador/test_flujo_paquete.py`.

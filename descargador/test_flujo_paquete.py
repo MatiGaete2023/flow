@@ -429,3 +429,41 @@ def test_un_mes_que_falla_conserva_los_otros_y_el_paquete_queda_parcial_con_avis
     assert pantallas == [('10', '2026'), ('11', '2026')] and result['partial']
     codigos = [i['code'] for i in read_capture(result['path']).rows('incidencias')]
     assert 'CALENDARIO_INCOMPLETO' in codigos
+
+
+
+def test_p8_historial_anonimo_y_aviso_de_bitacoras_faltantes_por_tribunal(monkeypatch, tmp_path):
+    cancel = Event()
+    runners(monkeypatch, cancel, partial=True)
+    original = flujo_paquete.DiaryRunner.run
+
+    def con_faltantes(self, batch, destination):
+        resultado = original(self, batch, destination)
+        resultado['faltantes_por_tribunal'] = {'119': {'nombre': 'Juzgado Ficticio', 'SIN_VINCULO': 2, 'FALLIDA': 1}}
+        return resultado
+
+    monkeypatch.setattr(flujo_paquete.DiaryRunner, 'run', con_faltantes)
+    events = []
+    flujo_paquete.run(None, {}, lambda *event: events.append(event), cancel, Scope(), tmp_path, False)
+    aviso = 'Bitácoras no leídas en Juzgado Ficticio (119): 2 sin vínculo, 1 fallidas.'
+    assert ('warning', aviso) in events
+    historial = json.loads(next(tmp_path.rglob('proceso.json')).read_text(encoding='utf-8'))['historial']
+    textos = [h.split(' ', 1)[1] for h in historial]
+    assert textos[0] == 'inicio' and 'fase consultas' in textos and aviso in textos and textos[-1] == 'fin PARCIAL'
+    assert any(t.startswith('bitácoras INCOMPLETA') for t in textos)
+
+
+def test_p8_error_queda_en_el_historial_sin_rutas(monkeypatch, tmp_path):
+    cancel = Event()
+    runners(monkeypatch, cancel)
+
+    def falla(self, batch, destination):
+        raise PocError(r'No se encuentra el control de bitácoras: C:\Users\persona\OneDrive - org\x\bitacoras.json. Recupera.')
+
+    monkeypatch.setattr(flujo_paquete.DiaryRunner, 'run', falla)
+    with pytest.raises(PocError):
+        flujo_paquete.run(None, {}, lambda *event: None, cancel, Scope(), tmp_path)
+    control = json.loads(next(tmp_path.rglob('proceso.json')).read_text(encoding='utf-8'))
+    ultimo = control['historial'][-1]
+    assert control['estado'] == 'INCOMPLETO' and 'error en fase bitacoras' in ultimo
+    assert '<ruta>' in ultimo and 'persona' not in ultimo and 'OneDrive' not in ultimo
