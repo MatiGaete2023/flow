@@ -843,6 +843,11 @@ pub fn escritos_pendientes(ctx: &Ctx, programa: &str) -> Vec<Escrito> {
 /// único candidato en una causa sin otros vencidos). Si la historia acredita algo posterior a la lectura de la bandeja
 /// prevalece la historia; con estados incompatibles sin secuencia fiable, revisión.
 pub fn escrito_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<NaiveDate>, atribuible: bool) -> Option<Escrito> {
+    if ctx.escritos.as_ref().is_some_and(|e| e.discordante) {
+        // Lecturas simultáneas de la bandeja que se contradicen: no acreditan un informe pendiente (E3C-01).
+        ctx.marcar(2, "ESCRITOS_DISCORDANTES", "Dos lecturas simultáneas de la bandeja de Escritos no coinciden: no se atribuye ningún escrito y se conservan las acciones");
+        return None;
+    }
     let candidatos = escritos_pendientes(ctx, programa);
     if candidatos.is_empty() {
         return None;

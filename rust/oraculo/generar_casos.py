@@ -286,7 +286,8 @@ def esperado(caso):
         e = caso['escritos']
         ctx['escritos'] = Escritos(e['cobertura'], dia(e.get('leido')), tuple(
             Escrito(f['tipo'], f['estado'], f.get('doc', ''), f.get('solicitante', ''), f.get('fila', 0),
-                    f.get('vinculo', ''), dia(f.get('fecha_proyectada')), f.get('periodo', '')) for f in e['filas']))
+                    f.get('vinculo', ''), dia(f.get('fecha_proyectada')), f.get('periodo', '')) for f in e['filas']),
+            e.get('discordante', False))
     if caso.get('historico') is not None:
         h = caso['historico']
         ctx['historico'] = Historico(h['cobertura'], dia(h.get('leido')), h.get('identidad', 'VERIFICADA'), tuple(

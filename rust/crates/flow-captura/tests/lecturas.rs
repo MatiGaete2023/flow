@@ -241,6 +241,39 @@ mod historico_real {
         assert_eq!(leer_historico(html.as_bytes(), "", "x", &["Beto Sol"]).unwrap()["ownership"], "VERIFICADA");
     }
 
+    fn dueno(extra: &str, esperada: &str) -> String {
+        let html = format!(
+            "<html><body>{extra}<table><tr><th>Nombre Proyecto</th><th>Fecha Egreso</th><th>Causal Egreso</th></tr>\
+             <tr><td>PRM Ana Luna</td><td>--</td><td>SIN INFORMACION</td></tr></table></body></html>"
+        );
+        leer_historico(html.as_bytes(), "", "x", &[esperada]).unwrap()["ownership"].as_str().unwrap().to_string()
+    }
+
+    /// Espejo de `test_e3c_03_rotulo_del_representante_o_rotulo_vacio_no_verifican`.
+    #[test]
+    fn e3c_03_rotulo_del_representante_o_rotulo_vacio_no_verifican() {
+        assert_eq!(dueno("<p>RUN del representante: 00000000-0</p>", "00000000-0"), "INCIERTA");
+        assert_eq!(dueno("<p><b>RUN del representante:</b> 00000000-0</p>", "00000000-0"), "INCIERTA");
+        assert_eq!(dueno("<span>Nombre del NNA</span>", "Ana Luna"), "INCIERTA");
+        assert_eq!(dueno("<div>Nombre del NNA:</div>", "Ana Luna"), "INCIERTA");
+        assert_eq!(dueno("<p>RUN: 11.111.111-1</p><p>RUN del representante: 00000000-0</p>", "11111111-1"), "VERIFICADA");
+    }
+
+    /// Espejo de `test_e3c_04_rotulo_con_dos_puntos_comentario_o_texto_siguiente_verifican`.
+    #[test]
+    fn e3c_04_rotulo_con_dos_puntos_comentario_o_texto_siguiente_verifican() {
+        for extra in [
+            "<table><tr><td>Nombre del NNA</td><td>Beto Sol</td></tr></table>",
+            "<table><tr><td>Nombre del NNA:</td><td>Beto Sol</td></tr></table>",
+            "<table><tr><td>Nombre del NNA</td><!-- x --><td>Beto Sol</td></tr></table>",
+            "<p><b>Nombre del niño:</b> Beto Sol</p>",
+            "<p><label>Nombre del niño</label><!-- x --><span>Beto Sol</span></p>",
+        ] {
+            assert_eq!(dueno(extra, "Beto Sol"), "VERIFICADA", "{extra}");
+        }
+        assert_eq!(dueno("<table><tr><td>Nombre del NNA</td></tr><tr><td>Beto Sol</td></tr></table>", "Beto Sol"), "INCIERTA");
+    }
+
     #[test]
     fn escritos_en_minuscula_y_doc_solo_con_icono() {
         let l = leer_escritos_html(ESCRITOS.as_bytes()).unwrap().unwrap();

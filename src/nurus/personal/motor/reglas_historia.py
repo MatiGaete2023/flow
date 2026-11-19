@@ -680,6 +680,10 @@ def escrito_pendiente(programa, vencimiento=None, atribuible=True):
     una causa de un solo registro y sin otros vencidos. Varios candidatos sin vínculo o un vínculo con otra fecha no se
     atribuyen: queda marca de revisión y se conservan las acciones. Si la historia acredita un escrito posterior a la
     lectura de la bandeja, prevalece la historia; con estados incompatibles sin secuencia fiable, revisión."""
+    if getattr(escritos(), 'discordante', False):
+        # Lecturas simultáneas de la bandeja que se contradicen: no acreditan un informe pendiente (E3C-01).
+        marcar(2, 'ESCRITOS_DISCORDANTES', 'Dos lecturas simultáneas de la bandeja de Escritos no coinciden: no se atribuye ningún escrito y se conservan las acciones')
+        return None
     candidatos = escritos_pendientes(programa)
     if not candidatos:
         return None

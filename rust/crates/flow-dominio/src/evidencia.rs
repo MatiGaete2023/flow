@@ -57,6 +57,9 @@ pub struct Escritos {
     pub leido: Option<NaiveDate>,
     #[serde(default)]
     pub filas: Vec<Escrito>,
+    /// Dos lecturas del mismo instante se contradicen (E3B-02, E3C-01): no se atribuye nada y se pide revisión.
+    #[serde(default)]
+    pub discordante: bool,
 }
 
 impl Escritos {

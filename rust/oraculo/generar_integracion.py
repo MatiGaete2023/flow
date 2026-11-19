@@ -132,9 +132,10 @@ def dirigidos():
         return {'cobertura': cobertura, 'leido': CORTE.isoformat(), 'identidad': identidad,
                 'filas': [{'programa': p, 'fecha_egreso': e, 'causal_egreso': c, 'fila': i + 1} for i, (p, e, c) in enumerate(filas)]}
 
-    def esc(*filas, cobertura='COMPLETA', leido=0):
-        return {'cobertura': cobertura, 'leido': (CORTE + timedelta(days=leido)).isoformat(),
-                'filas': [{'tipo': a, 'estado': b, 'fila': i + 1, **(x[0] if x else {})} for i, (a, b, *x) in enumerate(filas)]}
+    def esc(*filas, cobertura='COMPLETA', leido=0, discordante=False):
+        salida = {'cobertura': cobertura, 'leido': (CORTE + timedelta(days=leido)).isoformat(),
+                  'filas': [{'tipo': a, 'estado': b, 'fila': i + 1, **(x[0] if x else {})} for i, (a, b, *x) in enumerate(filas)]}
+        return {**salida, 'discordante': True} if discordante else salida
 
     cum = {'ingreso': f(-200), 'egreso_proy': f(100), 'dias_cumpl': n(200), 'dias_egresar': n(100)}
     amb = 'Inf. Cump Programa Ambulatorio'
@@ -202,6 +203,9 @@ def dirigidos():
         base('CUMPLIMIENTO', 40, cum, historico=hist(('FAE X', *vig)),
              bitacora=[{'fecha': (CORTE - timedelta(days=9)).isoformat(), 'texto': 'Sofía informa que Beto cuenta con ingreso efectivo al programa FAE X.'}]),
         base('CUMPLIMIENTO', 41, cum, historico=hist(('FAE X', '\u2212\u2212', 'SIN INFORMACION'))),
+        # E3C-01: lecturas simultáneas discordantes; el vínculo explícito de una de ellas no retira el pide cuenta.
+        base('INFORMES', 42, vencimientos, escritos=esc((amb, 'Pendiente', {'vinculo': 'EXPLICITO', 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()}), cobertura='PARCIAL', discordante=True)),
+        base('CUMPLIMIENTO', 43, cum, escritos=esc((amb, 'Pendiente'), cobertura='PARCIAL', discordante=True)),
     ]
     return casos
 

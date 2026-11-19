@@ -53,11 +53,15 @@ fn instante(texto: &str) -> (String, String) {
     }
 }
 
-/// Filas normalizadas por consulta: para saber si dos lecturas del mismo instante dicen lo mismo (E3B-02).
-fn firmas(tabla: &[FilaCsv], campos: &[&str]) -> HashMap<String, std::collections::BTreeSet<Vec<String>>> {
-    let mut salida: HashMap<String, std::collections::BTreeSet<Vec<String>>> = HashMap::new();
+/// Filas normalizadas y ordenadas por consulta: para saber si dos lecturas del mismo instante dicen lo mismo (E3B-02). Es
+/// un MULTICONJUNTO (E3C-02): dos escritos iguales no valen lo mismo que uno; el orden de las filas no importa.
+fn firmas(tabla: &[FilaCsv], campos: &[&str]) -> HashMap<String, Vec<Vec<String>>> {
+    let mut salida: HashMap<String, Vec<Vec<String>>> = HashMap::new();
     for f in tabla {
-        salida.entry(dato(f, "query_id").to_string()).or_default().insert(campos.iter().map(|k| clave_texto(dato(f, k))).collect());
+        salida.entry(dato(f, "query_id").to_string()).or_default().push(campos.iter().map(|k| clave_texto(dato(f, k))).collect());
+    }
+    for filas in salida.values_mut() {
+        filas.sort();
     }
     salida
 }
@@ -94,7 +98,7 @@ fn mejores_consultas(
         grupos.entry(clave).or_default().push(consulta);
     }
     let firmas = firmas(tabla, campos);
-    let vacio = std::collections::BTreeSet::new();
+    let vacio = Vec::new();
     let qid = |q: &Value| q["query_id"].as_str().unwrap_or("").to_string();
     let cuando = |q: &Value| instante(q["captured_at"].as_str().unwrap_or("")).1;
     let mut mejor = HashMap::new();
@@ -110,6 +114,7 @@ fn mejores_consultas(
             if discordantes {
                 e["coverage"] = Value::from("PARCIAL");
                 e["_discordante"] = Value::from(true);
+                e["_empatadas"] = Value::from(mismas.iter().map(|q| qid(q)).collect::<Vec<_>>());
             }
             e
         } else {
@@ -123,15 +128,22 @@ fn mejores_consultas(
     mejor
 }
 
-const FIRMA_ESCRITOS: [&str; 5] = ["escrito_type", "escrito_status", "doc", "linked_ingreso_id", "linked_projection"];
+const FIRMA_ESCRITOS: [&str; 6] = ["escrito_type", "escrito_status", "doc", "requester", "linked_ingreso_id", "linked_projection"];
 const FIRMA_HISTORICO: [&str; 5] = ["program_name", "egreso_date", "egreso_cause", "ownership", "person_id"];
 
 pub(crate) fn filas_de_escritos(manifiesto: &Value, tabla: &[FilaCsv], corte: Option<NaiveDate>) -> HashMap<[String; 3], FuenteEscritos> {
     mejores_consultas(manifiesto, "escritos", "escritos_causa", "cause_id", corte, tabla, &FIRMA_ESCRITOS)
         .into_iter()
-        .map(|(clave, consulta)| {
+        .map(|(clave, mut consulta)| {
             let id = consulta["query_id"].as_str().unwrap_or("").to_string();
             let filas = tabla.iter().filter(|f| dato(f, "query_id") == id).cloned().collect();
+            if consulta["_discordante"] == true {
+                // Las filas de TODAS las lecturas empatadas: sus referencias quedan bloqueadas (E3C-01).
+                let empatadas: Vec<String> =
+                    consulta["_empatadas"].as_array().into_iter().flatten().filter_map(|q| q.as_str().map(String::from)).collect();
+                let todas: Vec<&FilaCsv> = empatadas.iter().flat_map(|q| tabla.iter().filter(move |f| dato(f, "query_id") == q)).collect();
+                consulta["_filas_empate"] = serde_json::to_value(todas).unwrap_or_default();
+            }
             (clave, (consulta, filas))
         })
         .collect()
@@ -141,11 +153,14 @@ pub(crate) fn filas_de_escritos(manifiesto: &Value, tabla: &[FilaCsv], corte: Op
 pub(crate) fn escritos_para(registro: &FilaCsv, fuentes: &HashMap<[String; 3], FuenteEscritos>) -> Option<Escritos> {
     let clave = ["source_system", "court_code", "cause_id"].map(|k| dato(registro, k).to_string());
     let (consulta, filas) = fuentes.get(&clave)?;
+    // Lecturas simultáneas que se contradicen: ninguna asociación explícita vale (E3C-01); el motor pide revisión.
+    let discordante = consulta["_discordante"] == true;
     let escritos = filas
         .iter()
         .enumerate()
         .map(|(n, f)| {
-            let propio = dato(f, "linked_ingreso_id") == dato(registro, "ingreso_id") && !dato(f, "linked_projection").is_empty();
+            let propio =
+                dato(f, "linked_ingreso_id") == dato(registro, "ingreso_id") && !dato(f, "linked_projection").is_empty() && !discordante;
             let ajeno = !dato(f, "linked_ingreso_id").is_empty() && dato(f, "linked_ingreso_id") != dato(registro, "ingreso_id");
             Escrito {
                 tipo: dato(f, "escrito_type").into(),
@@ -166,7 +181,7 @@ pub(crate) fn escritos_para(registro: &FilaCsv, fuentes: &HashMap<[String; 3], F
         })
         .collect();
     // La identidad incierta de Escritos no se rebaja a «parcial»: no acredita nada (E3-05).
-    Some(Escritos { cobertura: consulta["coverage"].as_str().unwrap_or("").to_string(), leido: dia(consulta["captured_at"].as_str().unwrap_or("")), filas: escritos })
+    Some(Escritos { cobertura: consulta["coverage"].as_str().unwrap_or("").to_string(), leido: dia(consulta["captured_at"].as_str().unwrap_or("")), filas: escritos, discordante })
 }
 
 pub(crate) fn historicos_por_persona(manifiesto: &Value, tabla: &[FilaCsv], corte: Option<NaiveDate>) -> HashMap<[String; 3], Historico> {
@@ -218,9 +233,11 @@ pub(crate) fn evidencia_informe(
         return None; // una lectura de identidad incierta no asocia nada (E3B-03)
     }
     let propio = (dato(registro, "ingreso_id").to_string(), vencimiento.to_string());
+    let discordante = consulta["_discordante"] == true;
+    let empate: Vec<FilaCsv> = serde_json::from_value(consulta["_filas_empate"].clone()).unwrap_or_default();
     // referencia documental -> dueños (ingreso, proyección); varios dueños = referencia ambigua (E3B-04)
     let mut docs: HashMap<String, std::collections::BTreeSet<(String, String)>> = HashMap::new();
-    for f in filas {
+    for f in if discordante { &empate } else { filas } {
         let referencia = clave_texto(dato(f, "doc"));
         if !dato(f, "linked_ingreso_id").is_empty() && !dato(f, "linked_projection").is_empty() && !referencia.is_empty() {
             let dueno = (dato(f, "linked_ingreso_id").to_string(), dato(f, "linked_projection").chars().take(10).collect());
@@ -234,7 +251,7 @@ pub(crate) fn evidencia_informe(
         let referencia = clave_texto(dato(fila, "reference"));
         let folio = dato(fila, "folio").trim().to_string();
         let Some(duenos) = docs.get(&referencia).filter(|_| !referencia.is_empty()) else { continue };
-        if duenos.len() != 1 || !duenos.contains(&propio) {
+        if duenos.len() != 1 || !duenos.contains(&propio) || discordante {
             if !folio.is_empty() && !ajenos.contains(&folio) {
                 ajenos.push(folio); // de otro informe, o ambigua (varios dueños)
             }
@@ -416,5 +433,43 @@ mod pruebas {
         let h = historia("D-1", "31", "Inf. Cump FAE/FAS");
         let e = evidencia_informe(&registro(), Some("2026-10-15".parse().unwrap()), &fuentes, &[&h]).unwrap();
         assert_eq!((e.escrito_historia_folio.as_str(), e.folios_ajenos.clone()), ("", vec!["31".to_string()]));
+    }
+
+    fn fila_es(q: &str, extra: &[(&str, &str)]) -> FilaCsv {
+        let mut f = fila(&[("query_id", q), ("escrito_type", "Inf. Cump FAE/FAS"), ("escrito_status", "Pendiente"), ("requester", "P")]);
+        f.extend(extra.iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        f
+    }
+
+    /// Espejo de `test_e3c_02_uno_frente_a_dos_escritos_iguales_es_discordancia`.
+    #[test]
+    fn e3c_02_multiconjunto() {
+        let m = json!({"queries":[consulta("q1", "2026-11-19T10:00:00-03:00", "COMPLETA"), consulta("q2", "2026-11-19T10:00:00-03:00", "COMPLETA")]});
+        let elegir = |tabla: Vec<FilaCsv>| {
+            mejores_consultas(&m, "escritos", "escritos_causa", "cause_id", None, &tabla, &FIRMA_ESCRITOS).into_values().next().unwrap()["coverage"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+        assert_eq!(elegir(vec![fila_es("q1", &[]), fila_es("q2", &[]), fila_es("q2", &[])]), "PARCIAL");
+        let otra = [("requester", "Q")];
+        assert_eq!(elegir(vec![fila_es("q1", &[]), fila_es("q1", &otra), fila_es("q2", &otra), fila_es("q2", &[])]), "COMPLETA");
+    }
+
+    /// Espejo de `test_e3c_01_folio_de_lecturas_discordantes_queda_bloqueado`.
+    #[test]
+    fn e3c_01_discordancia_no_atribuye_ni_vincula() {
+        let m = json!({"queries":[consulta("q1", "2026-11-19T10:00:00-03:00", "COMPLETA"), consulta("q2", "2026-11-19T10:00:00-03:00", "COMPLETA")]});
+        let propio = [("doc", "D"), ("linked_ingreso_id", "201"), ("linked_projection", "2026-10-15")];
+        let mut resuelto = propio.to_vec();
+        resuelto.push(("escrito_status", "Resuelto"));
+        let tabla = vec![fila_es("q1", &propio), fila_es("q2", &resuelto)];
+        let fuentes = filas_de_escritos(&m, &tabla, None);
+        let h = historia("D", "31", "Inf. Cump FAE/FAS");
+        let e = evidencia_informe(&registro(), Some("2026-10-15".parse().unwrap()), &fuentes, &[&h]).unwrap();
+        assert_eq!((e.escrito_historia_folio.as_str(), e.folios_ajenos.clone()), ("", vec!["31".to_string()]));
+        let esc = escritos_para(&registro(), &fuentes).unwrap();
+        assert!(esc.discordante);
+        assert_eq!(esc.filas.iter().map(|f| f.vinculo.as_str()).collect::<Vec<_>>(), [""]);
     }
 }

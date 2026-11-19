@@ -314,12 +314,56 @@ fn pestana_escritos(doc: &Html) -> bool {
         || doc.select(&sel("input[value]")).any(|e| normalizar(e.value().attr("value").unwrap_or("")) == "escritos")
 }
 
-static ROTULO_TITULAR: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^(?:rut|run|nombre del nino|nombre nino|nombre del nna|nombre del menor)\b").unwrap());
+/// Rótulo COMPLETO del titular, ya normalizado y sin separador final (E3C-03): «RUN del representante» no es del titular.
+static ROTULO_TITULAR: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(?:(?:rut|run)(?: (?:del|de la) (?:nino|nina|nna|menor))?|nombre(?: completo)?(?: (?:del|de la))? (?:nino|nina|nna|menor))$")
+        .unwrap()
+});
 
-/// Texto de los CAMPOS ROTULADOS del titular («Nombre del niño», «Rut»/«RUN»): el rótulo con su valor en el mismo elemento
-/// o, si el elemento trae solo el rótulo, en el siguiente. Fuera de las tablas de programas (Protección y LRPA). Una mención
-/// en otra parte no prueba pertenencia (E3-03, E3B-05; `escritos_html.py::_texto_titular`).
+/// (es rótulo del titular, valor en el mismo texto). «RUT: 1-9» → (true, "1-9"); «Nombre del NNA» → (true, "").
+fn rotulo_titular(t: &str) -> (bool, String) {
+    let (etiqueta, valor) = match t.split_once(':') {
+        Some((e, v)) => (e, v.trim().to_string()),
+        None => (t, String::new()),
+    };
+    if ROTULO_TITULAR.is_match(normalizar(etiqueta).trim()) {
+        (true, valor)
+    } else {
+        (false, String::new())
+    }
+}
+
+/// Valor que sigue al rótulo (E3C-03/04): el texto inmediato, o el siguiente ELEMENTO hermano saltando comentarios. Una
+/// celda solo toma la celda siguiente de su fila. Nunca una tabla ni un elemento que contenga una tabla.
+fn valor_vecino(el: ElementRef<'_>) -> String {
+    let celda = |n: &str| matches!(n, "td" | "th");
+    for nodo in el.next_siblings() {
+        match nodo.value() {
+            scraper::Node::Text(t) => {
+                let limpio = t.split_whitespace().collect::<Vec<_>>().join(" ");
+                if !limpio.is_empty() {
+                    return limpio;
+                }
+            }
+            scraper::Node::Element(_) => {
+                let Some(siguiente) = ElementRef::wrap(nodo) else { return String::new() };
+                let nombre = siguiente.value().name();
+                if nombre == "table" || siguiente.select(&sel("table")).next().is_some() || celda(el.value().name()) != celda(nombre) {
+                    return String::new();
+                }
+                let valor = texto(siguiente);
+                return if rotulo_titular(&valor).0 { String::new() } else { valor };
+            }
+            _ => {}
+        }
+    }
+    String::new()
+}
+
+/// Valores de los CAMPOS ROTULADOS del titular («Nombre del niño», «Rut»/«RUN»), separados por «|»: tras «:» en el mismo
+/// elemento, en el texto que sigue al rótulo o en el elemento hermano siguiente. Fuera de las tablas de programas
+/// (Protección y LRPA). Una mención en otra parte no prueba pertenencia (E3-03, E3B-05, E3C-03/04;
+/// `escritos_html.py::_texto_titular`).
 fn texto_titular(doc: &Html, egreso: &[String], programas: &[String]) -> String {
     let mut excluidas = std::collections::HashSet::new();
     for tabla in doc.select(&sel("table")) {
@@ -331,26 +375,27 @@ fn texto_titular(doc: &Html, egreso: &[String], programas: &[String]) -> String 
             }
         }
     }
-    let mut piezas: Vec<String> = Vec::new();
+    let mut valores: Vec<String> = Vec::new();
     for el in doc.select(&sel("td, th, label, span, b, strong, div, p, li")) {
-        if el.ancestors().any(|a| excluidas.contains(&a.id())) {
+        if excluidas.contains(&el.id()) || el.ancestors().any(|a| excluidas.contains(&a.id())) {
             continue;
         }
-        let t = texto(el);
-        let rotulo = normalizar(&t);
         let contenedor = el.children().filter_map(ElementRef::wrap).any(|h| matches!(h.value().name(), "td" | "th" | "div" | "p" | "li" | "table"));
-        let Some(m) = ROTULO_TITULAR.find(&rotulo) else { continue };
         if contenedor {
             continue;
         }
-        piezas.push(t);
-        if m.end() == rotulo.len() {
-            if let Some(siguiente) = el.next_siblings().filter_map(ElementRef::wrap).next() {
-                piezas.push(texto(siguiente));
-            }
+        let (es_rotulo, mut valor) = rotulo_titular(&texto(el));
+        if !es_rotulo {
+            continue;
+        }
+        if valor.is_empty() {
+            valor = valor_vecino(el);
+        }
+        if !valor.is_empty() {
+            valores.push(valor);
         }
     }
-    piezas.join(" ")
+    valores.join(" | ")
 }
 
 const ESCRITOS: [&str; 4] = ["Doc.", "Tipo Escrito", "Solicitante", "Estado"];

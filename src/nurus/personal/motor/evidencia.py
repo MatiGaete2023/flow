@@ -59,6 +59,8 @@ class Escritos:
     cobertura: str
     leido: date | None
     filas: tuple = ()
+    # Dos lecturas del mismo instante se contradicen (E3B-02, E3C-01): no se atribuye nada y se pide revisión.
+    discordante: bool = False
 
     @property
     def con_filas(self):

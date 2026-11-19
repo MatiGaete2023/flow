@@ -58,17 +58,18 @@ def _instante(texto):
 
 
 _FIRMA = {
-    'escritos': ('escrito_type', 'escrito_status', 'doc', 'linked_ingreso_id', 'linked_projection'),
+    'escritos': ('escrito_type', 'escrito_status', 'doc', 'requester', 'linked_ingreso_id', 'linked_projection'),
     'historico_proteccion': ('program_name', 'egreso_date', 'egreso_cause', 'ownership', 'person_id'),
 }
 
 
 def _firmas(capture, pantalla):
-    """{query_id: conjunto de filas normalizadas}: para saber si dos lecturas del mismo instante dicen lo mismo."""
-    salida = defaultdict(set)
+    """{query_id: filas normalizadas ordenadas}: para saber si dos lecturas del mismo instante dicen lo mismo. Es un
+    MULTICONJUNTO (E3C-02): dos escritos iguales no valen lo mismo que uno; el orden de las filas no importa."""
+    salida = defaultdict(list)
     for fila in capture.rows(pantalla):
-        salida[fila['query_id']].add(tuple(clave_texto(fila.get(k, '')) for k in _FIRMA[pantalla]))
-    return salida
+        salida[fila['query_id']].append(tuple(clave_texto(fila.get(k, '')) for k in _FIRMA[pantalla]))
+    return {q: tuple(sorted(filas)) for q, filas in salida.items()}
 
 
 def _mejores_consultas(capture, pantalla, filtro, corte=None):
@@ -98,11 +99,10 @@ def _mejores_consultas(capture, pantalla, filtro, corte=None):
             ultimo = max(_instante(q['captured_at'])[1] for q in completas)
             mismas = sorted((q for q in completas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
             elegida = mismas[0]
-            discordantes = len({q['coverage'] for q in mismas}) > 1 or len(
-                {frozenset(firmas.get(q['query_id'], ())) for q in mismas}
-            ) > 1
+            discordantes = len({q['coverage'] for q in mismas}) > 1 or len({firmas.get(q['query_id'], ()) for q in mismas}) > 1
             if discordantes:
-                elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True}
+                empatadas = [q['query_id'] for q in mismas]
+                elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True, '_empatadas': empatadas}
             mejor[clave] = elegida
         else:
             rango = max(_RANGO.get(q['coverage'], 0) for q in consultas)
@@ -123,10 +123,13 @@ def filas_de_escritos(capture, corte=None):
     por_consulta = defaultdict(list)
     for fila in capture.rows('escritos'):
         por_consulta[fila['query_id']].append(fila)
-    return {
-        clave: (consulta, por_consulta.get(consulta['query_id'], []))
-        for clave, consulta in _mejores_consultas(capture, 'escritos', 'escritos_causa', corte).items()
-    }
+    salida = {}
+    for clave, consulta in _mejores_consultas(capture, 'escritos', 'escritos_causa', corte).items():
+        if consulta.get('_discordante'):
+            # Las filas de TODAS las lecturas empatadas: sus referencias quedan bloqueadas (E3C-01).
+            consulta = {**consulta, '_filas_empate': [f for q in consulta['_empatadas'] for f in por_consulta.get(q, [])]}
+        salida[clave] = (consulta, por_consulta.get(consulta['query_id'], []))
+    return salida
 
 
 def escritos_para(registro, fuentes):
@@ -138,9 +141,11 @@ def escritos_para(registro, fuentes):
     if hallado is None:
         return None
     consulta, filas = hallado
+    # Lecturas simultáneas que se contradicen: ninguna asociación explícita vale (E3C-01); el motor pide revisión.
+    discordante = bool(consulta.get('_discordante'))
     escritos = []
     for numero, fila in enumerate(filas, 1):
-        propio = fila['linked_ingreso_id'] == registro['ingreso_id'] and fila['linked_projection']
+        propio = fila['linked_ingreso_id'] == registro['ingreso_id'] and fila['linked_projection'] and not discordante
         ajeno = bool(fila['linked_ingreso_id']) and fila['linked_ingreso_id'] != registro['ingreso_id']
         escritos.append(
             Escrito(
@@ -155,7 +160,7 @@ def escritos_para(registro, fuentes):
         )
     leido = _dia(consulta['captured_at'])
     # La identidad incierta de Escritos no se rebaja a «parcial»: no acredita nada (E3-05).
-    return Escritos(consulta['coverage'], leido, tuple(escritos))
+    return Escritos(consulta['coverage'], leido, tuple(escritos), discordante)
 
 
 def historicos_por_persona(capture, corte=None):
@@ -195,15 +200,18 @@ def evidencia_informe(registro, vencimiento, fuentes, historia_filas):
     - Una referencia con un único dueño se atribuye a ese informe; los folios de un dueño distinto vuelven como
       `folios_ajenos` para que la vía genérica no los atribuya aquí (E3-10).
     - Una referencia con VARIOS dueños es ambigua: no se atribuye positivamente a ninguno y sus folios quedan bloqueados
-      para la vía genérica de todos (E3B-04)."""
+      para la vía genérica de todos (E3B-04).
+    - Si la lectura elegida discrepa de otra del mismo instante, nada se atribuye y los folios enlazados en CUALQUIERA de
+      ellas quedan bloqueados (E3C-01)."""
     if vencimiento is None:
         return None
     hallado = fuentes.get((registro['source_system'], registro['court_code'], registro['cause_id']))
     if hallado is None or hallado[0]['coverage'] == 'IDENTIDAD_INCIERTA':
         return None
     propio = (registro['ingreso_id'], vencimiento.isoformat())
+    discordante = bool(hallado[0].get('_discordante'))
     docs = defaultdict(set)  # referencia documental -> {(ingreso, proyección)}
-    for f in hallado[1]:
+    for f in hallado[0].get('_filas_empate', hallado[1]):
         if f['linked_ingreso_id'] and f['linked_projection'] and clave_texto(f['doc']):
             docs[clave_texto(f['doc'])].add((f['linked_ingreso_id'], f['linked_projection'][:10]))
     escritos_informe = {clave_texto(n) for n in ESCRITOS_DE_INFORME}
@@ -216,9 +224,9 @@ def evidencia_informe(registro, vencimiento, fuentes, historia_filas):
         duenos = docs.get(referencia, set()) if referencia else set()
         if not duenos:
             continue
-        if duenos != {propio}:
+        if duenos != {propio} or discordante:
             if folio:
-                ajenos.add(folio)  # de otro informe, o ambigua (varios dueños)
+                ajenos.add(folio)  # de otro informe, ambigua (varios dueños) o de lecturas discordantes (E3C-01)
             continue
         descripcion = clave_texto(fila['description'])
         if descripcion in escritos_informe:

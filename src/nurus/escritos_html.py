@@ -154,13 +154,45 @@ def _tablas_historico(documento):
     return salida
 
 
-_ROTULO_TITULAR = re.compile(r'(?:rut|run|nombre del nino|nombre nino|nombre del nna|nombre del menor)\b')
+# Rótulo COMPLETO del titular, ya normalizado y sin separador final (E3C-03): «RUN del representante» no es del titular.
+_ROTULO_TITULAR = re.compile(
+    r'(?:rut|run)(?: (?:del|de la) (?:nino|nina|nna|menor))?|nombre(?: completo)?(?: (?:del|de la))? (?:nino|nina|nna|menor)'
+)
+_CELDA = ('td', 'th')
+
+
+def _rotulo(texto):
+    """(es rótulo del titular, valor en el mismo texto). «RUT: 1-9» → (True, '1-9'); «Nombre del NNA» → (True, '')."""
+    etiqueta, separador, valor = texto.partition(':')
+    if _ROTULO_TITULAR.fullmatch(normalize(etiqueta).strip()):
+        return True, valor.strip() if separador else ''
+    return False, ''
+
+
+def _valor_vecino(el):
+    """Valor que sigue al rótulo (E3C-03/04): el texto inmediato, o el siguiente ELEMENTO hermano saltando comentarios. Una
+    celda solo toma la celda siguiente de su fila. Nunca una tabla ni un elemento que contenga una tabla."""
+    if (el.tail or '').strip():
+        return el.tail.strip()
+    siguiente = el.getnext()
+    while siguiente is not None and not isinstance(siguiente.tag, str):
+        if (siguiente.tail or '').strip():
+            return siguiente.tail.strip()
+        siguiente = siguiente.getnext()
+    if siguiente is None or siguiente.tag == 'table' or siguiente.xpath('.//table'):
+        return ''
+    if (el.tag in _CELDA) != (siguiente.tag in _CELDA):
+        return ''
+    valor = _texto(siguiente)
+    return '' if _rotulo(valor)[0] else valor
 
 
 def _texto_titular(documento):
-    """Texto de los CAMPOS ROTULADOS del titular de la vista («Nombre del niño», «Rut»/«RUN»): el rótulo con su valor en el
-    mismo elemento o en el siguiente. Fuera de las tablas de programas (Protección y LRPA). Una mención en otra parte (un
-    representante, un título, «Nombre Proyecto») no prueba pertenencia (E3-03, E3B-05). Sin rótulos, cadena vacía."""
+    """Valores de los CAMPOS ROTULADOS del titular de la vista («Nombre del niño», «Rut»/«RUN»), separados por «|». El valor
+    va en el mismo elemento tras «:», en el texto que sigue al rótulo o en el elemento hermano siguiente. Fuera de las
+    tablas de programas (Protección y LRPA). Una mención en otra parte (un representante, un título, «Nombre Proyecto») no
+    prueba pertenencia (E3-03, E3B-05, E3C-03/04). Sin rótulos, cadena vacía. Mismo criterio en Rust
+    (`lecturas.rs::texto_titular`)."""
     egreso = [normalize(h) for h in HISTORICO_HEADERS[1:]]
     programas = [normalize(h) for h in HISTORICO_PROGRAMA]
     excluidas = []
@@ -170,20 +202,19 @@ def _texto_titular(documento):
             if all(e in cabecera for e in egreso) and any(p in cabecera for p in programas):
                 excluidas.append(tabla)
                 break
-    piezas = []
+    valores = []
     for el in documento.xpath('//td | //th | //label | //span | //b | //strong | //div | //p | //li'):
         if any(t is el or el in t.iterdescendants() for t in excluidas):
             continue
-        texto = _texto(el)
-        rotulo = normalize(texto)
-        if not _ROTULO_TITULAR.match(rotulo) or el.xpath('./td | ./th | ./div | ./p | ./li | ./table'):
+        if el.xpath('./td | ./th | ./div | ./p | ./li | ./table'):
             continue  # solo el elemento que contiene el rótulo, no sus contenedores
-        piezas.append(texto)
-        siguiente = el.getnext()
-        # El valor va en el elemento siguiente solo si este trae únicamente el rótulo («Nombre del niño :» | «Ana …»).
-        if _ROTULO_TITULAR.fullmatch(rotulo) and siguiente is not None and isinstance(siguiente.tag, str):
-            piezas.append(_texto(siguiente))
-    return ' '.join(piezas)
+        es_rotulo, valor = _rotulo(_texto(el))
+        if not es_rotulo:
+            continue
+        valor = valor or _valor_vecino(el)
+        if valor:
+            valores.append(valor)
+    return ' | '.join(valores)
 
 
 def read_historico(data, *, source='', captured_at='', persona_esperada=()):

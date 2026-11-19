@@ -406,6 +406,38 @@ def test_e3_03_el_nombre_en_una_celda_de_programa_no_prueba_pertenencia():
     assert read_historico(html, persona_esperada=['Beto Sol'])['ownership'] == 'VERIFICADA'
 
 
+PROG = (['Nombre Proyecto', 'Fecha Egreso', 'Causal Egreso'], [['PRM Ana Luna', '--', 'SIN INFORMACION']])
+
+
+def test_e3c_03_rotulo_del_representante_o_rotulo_vacio_no_verifican():
+    def dueno(extra, esperada):
+        return read_historico(pagina(*PROG, extra), persona_esperada=[esperada])['ownership']
+
+    assert dueno('<p>RUN del representante: 00000000-0</p>', '00000000-0') == 'INCIERTA'
+    assert dueno('<p><b>RUN del representante:</b> 00000000-0</p>', '00000000-0') == 'INCIERTA'
+    # Rótulo sin valor seguido directamente de la tabla de programas: la tabla no es su valor.
+    assert dueno('<span>Nombre del NNA</span>', 'Ana Luna') == 'INCIERTA'
+    assert dueno('<div>Nombre del NNA:</div>', 'Ana Luna') == 'INCIERTA'
+    # El titular rotulado sí verifica, aunque haya un representante en la misma página.
+    assert dueno('<p>RUN: 11.111.111-1</p><p>RUN del representante: 00000000-0</p>', '11111111-1') == 'VERIFICADA'
+
+
+def test_e3c_04_rotulo_con_dos_puntos_comentario_o_texto_siguiente_verifican():
+    def dueno(extra):
+        return read_historico(pagina(*PROG, extra), persona_esperada=['Beto Sol'])['ownership']
+
+    for extra in (
+        '<table><tr><td>Nombre del NNA</td><td>Beto Sol</td></tr></table>',
+        '<table><tr><td>Nombre del NNA:</td><td>Beto Sol</td></tr></table>',
+        '<table><tr><td>Nombre del NNA</td><!-- x --><td>Beto Sol</td></tr></table>',
+        '<p><b>Nombre del niño:</b> Beto Sol</p>',
+        '<p><label>Nombre del niño</label><!-- x --><span>Beto Sol</span></p>',
+    ):
+        assert dueno(extra) == 'VERIFICADA', extra
+    # Una celda rótulo no toma un valor fuera de su fila.
+    assert dueno('<table><tr><td>Nombre del NNA</td></tr><tr><td>Beto Sol</td></tr></table>') == 'INCIERTA'
+
+
 def test_e3_13_pestana_escritos_visible_sin_tabla_es_no_verificada():
     with pytest.raises(ValueError, match=ESCRITOS_NO_VERIFICADA):
         read_escritos('<html><body><ul><li><a>Historia</a></li><li><a>Escritos</a></li></ul></body></html>')
@@ -493,3 +525,150 @@ def test_e3b_06_valor_de_catalogo_con_sufijo_libre_no_sobrevive(tmp_path):
         causales = [f['egreso_cause'] for f in anonimo.rows('historico_proteccion')]
         assert causales[1] == 'SIN INFORMACION'  # literal de catálogo → forma canónica
         assert causales[0] != 'SIN INFORMACION'  # el sufijo libre impide tratarlo como catálogo
+
+
+# ------------------------------------------------------------------ E3C: lecturas de Escritos desde el ZIP hasta acciones
+AMB = 'Inf. Cump Programa Ambulatorio'
+EXIGIBLES = ['programa_vencido', 'PC_INFO']
+
+
+def _lecturas(tmp_path, lecturas, nombre):
+    """ZIP con varias lecturas de la bandeja de Escritos de la misma causa: (query_id, captured_at, cobertura, [filas])."""
+    metadata, tablas = captura_con_historia([], 'VACIA_COMPROBADA')
+    base = tablas['registros'][0]
+    filtro = {'escritos_causa': {'source_system': 'RUS', 'court_code': base['court_code'], 'cause_id': base['cause_id']}}
+    tablas['escritos'] = []
+    for qid, cuando, cobertura, filas in lecturas:
+        q = _consulta(base, qid, 'escritos', filtro, cobertura)
+        q['captured_at'] = cuando
+        tablas['consultas'].append(q)
+        for n, extra in enumerate(filas, 1):
+            if cobertura not in ('COMPLETA', 'VACIA_COMPROBADA'):
+                extra = {'coverage': 'PARCIAL', **extra}
+            tablas['escritos'].append(
+                {**_comunes(base, qid, n), 'ingreso_id': '', 'person_id': '', 'escrito_id': f'{qid}-{n}', 'scope': 'CAUSA',
+                 'doc': '', 'escrito_type': AMB, 'requester': 'P', 'escrito_status': 'Pendiente', 'reference': '',
+                 'linked_ingreso_id': '', 'linked_projection': '', 'identity_status': 'CAUSA', 'raw_json': '{}', **extra}
+            )  # fmt: skip
+    metadata['table_states']['escritos'] = 'PARCIAL'
+    metadata['queries'] = tablas['consultas']
+    captura = read_capture(write_capture(tmp_path / f'{nombre}.zip', metadata, tablas))
+    return captura, base
+
+
+def _acciones(tmp_path, captura, base, nombre):
+    """ZIP → `filas_de_escritos` → `escritos_para` → motor (Informes, PRM, vencimiento 20-sep)."""
+    from historia_fixtures import INFORMES, fila
+    from test_integracion_20261118 import analizar
+
+    from nurus.capture.escritos import escritos_para, filas_de_escritos
+
+    e = escritos_para(base, filas_de_escritos(captura, CORTE))
+    (tmp_path / nombre).mkdir()
+    [f] = analizar(tmp_path / nombre, 'INFORMES', INFORMES, [fila(1, 'PRM Laja') + ['2026-09-20']], escritos={0: e}).rows
+    return f.actions, f
+
+
+def _propio(base, **extra):
+    return {'linked_ingreso_id': base['ingreso_id'], 'linked_projection': '2026-09-20', **extra}
+
+
+def test_e3c_01_lecturas_simultaneas_discordantes_con_vinculo_explicito_no_retiran_el_pide_cuenta(tmp_path):
+    _, base = _lecturas(tmp_path, [], 'b')
+    mismo = '2026-10-01T10:00:00-03:00'
+    sola, _ = _lecturas(tmp_path, [('es-1', mismo, 'COMPLETA', [_propio(base)])], 'sola')
+    acciones, _ = _acciones(tmp_path, sola, base, 'sola')
+    assert acciones == []  # control: una sola lectura con vínculo explícito pendiente sí acredita el informe
+    for orden, nombre in (((1, 2), 'a'), ((2, 1), 'c')):
+        lecturas = {
+            1: ('es-1', mismo, 'COMPLETA', [_propio(base)]),
+            2: ('es-2', mismo, 'COMPLETA', [_propio(base, escrito_status='Resuelto')]),
+        }
+        captura, _ = _lecturas(tmp_path, [lecturas[i] for i in orden], nombre)
+        acciones, f = _acciones(tmp_path, captura, base, nombre)
+        assert acciones == EXIGIBLES, nombre
+        assert 'ESCRITOS_DISCORDANTES' in [a[1] for a in f.avisos], f.avisos
+
+
+def test_e3c_01_folio_de_lecturas_discordantes_queda_bloqueado(tmp_path):
+    from nurus.capture.escritos import evidencia_informe, filas_de_escritos
+
+    _, base = _lecturas(tmp_path, [], 'b')
+    mismo = '2026-10-01T10:00:00-03:00'
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', mismo, 'COMPLETA', [_propio(base, doc='D')]),
+        ('es-2', mismo, 'COMPLETA', [{'doc': 'D', 'linked_ingreso_id': 'otro-ingreso', 'linked_projection': '2026-09-20'}]),
+    ], 'd')  # fmt: skip
+    historia = [{'reference': 'D', 'folio': '31', 'description': AMB, 'event_at': '2026-09-21'}]
+    ev = evidencia_informe(base, date(2026, 9, 20), filas_de_escritos(captura, CORTE), historia)
+    assert ev.escrito_historia_folio == '' and ev.folios_ajenos == ('31',)
+    # Mismo dueño en ambas lecturas, pero discrepan en el estado: tampoco se atribuye el folio.
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', mismo, 'COMPLETA', [_propio(base, doc='D')]),
+        ('es-2', mismo, 'COMPLETA', [_propio(base, doc='D', escrito_status='Resuelto')]),
+    ], 'f')  # fmt: skip
+    fuentes = filas_de_escritos(captura, CORTE)
+    ev = evidencia_informe(base, date(2026, 9, 20), fuentes, historia)
+    assert ev.escrito_historia_folio == '' and ev.folios_ajenos == ('31',)
+    from nurus.capture.escritos import escritos_para
+
+    e = escritos_para(base, fuentes)
+    assert e.discordante and [f.vinculo for f in e.filas] == ['']  # sin asociación explícita
+
+
+def test_e3c_02_uno_frente_a_dos_escritos_iguales_es_discordancia(tmp_path):
+    from nurus.capture.escritos import filas_de_escritos
+
+    _, base = _lecturas(tmp_path, [], 'b')
+    mismo = '2026-10-01T10:00:00-03:00'
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', mismo, 'COMPLETA', [{}]),
+        ('es-2', mismo, 'COMPLETA', [{}, {'requester': 'Q'}]),
+    ], 'a')  # fmt: skip
+    consulta, _ = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
+    assert consulta['coverage'] == 'PARCIAL' and consulta['_discordante']
+    acciones, _ = _acciones(tmp_path, captura, base, 'a')
+    assert acciones == EXIGIBLES
+    # Dos filas idénticas frente a una: el multiconjunto las distingue.
+    captura, _ = _lecturas(tmp_path, [('es-1', mismo, 'COMPLETA', [{}]), ('es-2', mismo, 'COMPLETA', [{}, {}])], 'g')
+    consulta, _ = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
+    assert consulta['coverage'] == 'PARCIAL'
+    # Las mismas filas en distinto orden no son discordancia.
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', mismo, 'COMPLETA', [{}, {'requester': 'Q'}]),
+        ('es-2', mismo, 'COMPLETA', [{'requester': 'Q'}, {}]),
+    ], 'e')  # fmt: skip
+    consulta, _ = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
+    assert consulta['coverage'] == 'COMPLETA'
+
+
+def test_e3c_12_orden_utc_desde_el_zip_hasta_acciones(tmp_path):
+    from nurus.capture.escritos import filas_de_escritos
+
+    _, base = _lecturas(tmp_path, [], 'b')
+    # 21:30 en Santiago (00:30 UTC del 2-oct) es POSTERIOR a 00:10 UTC del 2-oct; por texto ganaría la vacía.
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', '2026-10-01T21:30:00-03:00', 'COMPLETA', [{}]),
+        ('es-2', '2026-10-02T00:10:00Z', 'VACIA_COMPROBADA', []),
+    ], 'a')  # fmt: skip
+    consulta, filas = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
+    assert consulta['query_id'] == 'es-1' and len(filas) == 1
+    acciones, _ = _acciones(tmp_path, captura, base, 'a')
+    assert acciones == []  # el pendiente de la lectura más reciente se atribuye (único candidato)
+
+
+def test_e3c_12_identidad_incierta_y_referencia_con_dos_duenos_desde_el_zip(tmp_path):
+    from nurus.capture.escritos import evidencia_informe, filas_de_escritos
+
+    _, base = _lecturas(tmp_path, [], 'b')
+    historia = [{'reference': 'D', 'folio': '31', 'description': AMB, 'event_at': '2026-09-21'}]
+    cuando = '2026-10-01T10:00:00-03:00'
+    for cobertura, folio in (('IDENTIDAD_INCIERTA', None), ('COMPLETA', '31')):
+        captura, _ = _lecturas(tmp_path, [('es-1', cuando, cobertura, [_propio(base, doc='D')])], cobertura)
+        ev = evidencia_informe(base, date(2026, 9, 20), filas_de_escritos(captura, CORTE), historia)
+        assert (ev.escrito_historia_folio if ev else None) == folio, cobertura
+    captura, _ = _lecturas(tmp_path, [('es-1', cuando, 'COMPLETA', [
+        _propio(base, doc='D'), {'doc': 'D', 'linked_ingreso_id': 'otro-ingreso', 'linked_projection': '2026-09-20'},
+    ])], 'dos')  # fmt: skip
+    ev = evidencia_informe(base, date(2026, 9, 20), filas_de_escritos(captura, CORTE), historia)
+    assert ev.escrito_historia_folio == '' and ev.folios_ajenos == ('31',)
