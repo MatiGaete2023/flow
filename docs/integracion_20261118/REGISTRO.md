@@ -148,7 +148,7 @@ puede retomar). Para confirmar hace falta del usuario: versión del ejecutable, 
    --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
 5. **Tercera revisión E3** sobre la punta actual (primera sobre `c83414d` y segunda: NO PASA; ver «Correcciones E3» y «Correcciones E3B»).
-   Nada está «aceptado». Incluir reproducción Mulchén con datos del usuario (versión, botón, mensaje literal, nombres de JSON).
+   Prompt: `PROMPT_REVISION_E3_3.md`. Nada está «aceptado». Incluir reproducción Mulchén con datos del usuario (versión, botón, mensaje literal, nombres de JSON).
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
