@@ -173,6 +173,10 @@ El revisor externo quedó a medias; a pedido del usuario la terminó la sesión 
 - `historias.json` y `bitacoras.json` del lote traen nombres, RUT e identificadores reales: no se comparten ni versionan; para
   diagnosticar bastan `proceso.json` y los `diagnostico_*.json`.
 
+## Decisión 19-nov-2026: solo Python
+Flow Rust se congela (decisión v de `PLAN_VIGENTE.md`). Informe comparativo y plan de port: `docs/python_unico/INFORME_Y_PLAN_20261119.md`
+(paquetes P1–P8; orden P1 → P2 → P8 → P4 → P3 → P5 → P6/P7). Las tareas Rust de este registro quedan como referencia.
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar

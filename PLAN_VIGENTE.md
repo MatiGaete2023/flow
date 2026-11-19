@@ -174,3 +174,8 @@ Rama revisable: `wp/WP-64-auditoria-fase-b`, sobre candidato `4f572ed`; feat sig
   8. Pendiente del usuario: confirmar las redacciones nuevas (`confirmado:false`: REITERA y sus materias,
      `CURADOR_SIN_DESIGNACION`, `E07_PROYECCION`, `I02_MARGEN_DCE`) y decidir si la prórroga con medida vencida debe
      llevar una sugerencia al tribunal (hoy solo se cita el trámite).
+
+## Decisión del 19 de noviembre de 2026
+- v) Se deja de desarrollar Flow Rust; solo se mejoran las herramientas Python. Rust queda congelado como referencia en
+  `rust/`. Lo que Rust tenga y Python no se porta a Python con botones u opciones. Fuente: «Ya no continuaré el proyecto en
+  RUST, mejoraremos solo las herramientas en python». Informe y plan: `docs/python_unico/INFORME_Y_PLAN_20261119.md`.
