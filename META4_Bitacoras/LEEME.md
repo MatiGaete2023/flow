@@ -40,6 +40,12 @@ Controles de bitácora (columna CONTROL BITÁCORA, filas amarillas):
 - `IDENTIDAD AMBIGUA`, `SIN BITÁCORA ASOCIADA`: varios ingresos compatibles o ninguna bitácora para la fila.
 - Si los lotes de bitácoras declaran sus consultas, el reporte lista las consultas con registros que **ningún lote de bitácoras enumeró**.
 
+## Plantilla Excel propia (19-nov-2026)
+
+Menú › **Elegir plantilla Excel…**: un `.xlsx` con las cuatro hojas `Residencia Espera`, `Residencia Cumplimiento`,
+`FAE Espera` y `FAE Cumplimiento`. Se comprueba antes de generar (si falta una hoja, lo dice y no genera nada) y se usa al
+generar y al regenerar. **Usar diseño estándar** vuelve al diseño incluido.
+
 ## Regenerar después de revisar
 
 Registros.xlsx es la hoja de trabajo. En las hojas ESPERA y CUMPLIMIENTO puedes:

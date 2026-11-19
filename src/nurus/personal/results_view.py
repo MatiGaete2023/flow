@@ -57,6 +57,10 @@ def build(app):
     view_button(actions, text='Abrir carpeta', command=lambda: app._guard(app._open_output_folder)).pack(
         side='left', padx=8
     )
+    # P4: biblioteca con búsqueda de todo lo creado en la carpeta de salida y en corridas anteriores.
+    view_button(actions, text='Biblioteca de productos…', command=lambda: app._guard(lambda: open_library(app))).pack(
+        side='left'
+    )
     advanced = ui.Frame(page)
 
     def more():
@@ -175,3 +179,66 @@ def build(app):
         return result
 
     app.tabs.select = select
+
+
+def open_library(app):
+    """Ventana «Biblioteca de productos» (P4): búsqueda, abrir archivo y abrir su carpeta."""
+    from pathlib import Path
+    from tkinter import ttk
+
+    from .biblioteca import biblioteca, filtrar, tamano
+
+    base = Path(app.folder.get() or '')
+    if not base.is_dir():
+        raise ValueError('La carpeta de salida no existe todavía: procesa o exporta un trabajo primero.')
+    items = biblioteca(base)
+    win = tk.Toplevel(app)
+    win.title('Biblioteca de productos')
+    win.transient(app)
+    win.geometry('900x520')
+    arriba = ttk.Frame(win, padding=10)
+    arriba.pack(fill='x')
+    ttk.Label(arriba, text='Buscar').pack(side='left')
+    texto = tk.StringVar()
+    entrada = ttk.Entry(arriba, textvariable=texto, width=40)
+    entrada.pack(side='left', padx=6)
+    cuenta = tk.StringVar()
+    ttk.Label(arriba, textvariable=cuenta).pack(side='left', padx=8)
+    ttk.Label(win, text=f'Carpeta: {base}', padding=(10, 0)).pack(fill='x')
+    columnas = ('nombre', 'carpeta', 'fecha', 'peso')
+    tabla = ttk.Treeview(win, columns=columnas, show='headings', selectmode='browse')
+    for col, titulo, ancho in zip(columnas, ('Archivo', 'Carpeta', 'Modificado', 'Tamaño'), (360, 240, 150, 80)):
+        tabla.heading(col, text=titulo)
+        tabla.column(col, width=ancho, anchor='w')
+    tabla.pack(fill='both', expand=True, padx=10, pady=6)
+    rutas = {}
+
+    def mostrar(*_):
+        tabla.delete(*tabla.get_children())
+        rutas.clear()
+        visibles = filtrar(items, texto.get())
+        for n, item in enumerate(visibles):
+            iid = str(n)
+            rutas[iid] = item['ruta']
+            tabla.insert('', 'end', iid=iid, values=(
+                item['nombre'], item['carpeta'], item['modificado'].strftime('%d/%m/%Y %H:%M'), tamano(item['bytes'])
+            ))
+        cuenta.set(f'{len(visibles)} de {len(items)} archivos')
+
+    def elegido():
+        seleccion = tabla.selection()
+        if not seleccion:
+            raise ValueError('Selecciona un archivo de la lista.')
+        return rutas[seleccion[0]]
+
+    abajo = ttk.Frame(win, padding=10)
+    abajo.pack(fill='x')
+    ttk.Button(abajo, text='Abrir', command=lambda: app._guard(lambda: app._open(elegido()))).pack(side='left')
+    ttk.Button(abajo, text='Abrir su carpeta', command=lambda: app._guard(lambda: app._open(elegido().parent))).pack(
+        side='left', padx=6
+    )
+    ttk.Button(abajo, text='Cerrar', command=win.destroy).pack(side='right')
+    tabla.bind('<Double-1>', lambda _: app._guard(lambda: app._open(elegido())))
+    texto.trace_add('write', mostrar)
+    mostrar()
+    entrada.focus_set()

@@ -36,6 +36,17 @@ Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «
 - **Errores:** sesión vencida, tabla distinta o falla de red dejan la causa como FALLIDA con su motivo y el paquete como parcial; el paquete se crea igual. Nunca se informa «sin trámites» por un error.
 - **Actualizar:** carga la carpeta `extension` de esta misma entrega en `chrome://extensions`, recárgala (2.8.0) y abre una conexión nueva.
 
+## Escritos e Ingreso Histórico Protección (19-nov-2026)
+
+- **Escritos:** se leen de la misma ventana de la causa que la Historia (activa «Historia de la causa»). El
+  `diagnostico_historia.json` cuenta, sin datos de causas, cuántas respuestas traían la tabla Escritos (`CON_FILAS`, `VACIA`),
+  cuántas mostraban la pestaña sin tabla (`SIN_TABLA`) y cuántos escritos pendientes hubo. Si aparece `SIN_TABLA`, la carpeta
+  `historia` deja `estructura_escritos.json` (anónimo): compártelo para implementar esa variante.
+- **Ingreso Histórico (Mejor Niñez):** casilla en «Incluir», desactivada por defecto. Con ella, por cada persona del listado
+  se abre su «Historial Menores» con el RUT de su fila (una vez por persona y lote) y la tabla «Ingreso Histórico Protección»
+  viaja en el paquete; el Asistente propone la constancia de otro programa vigente. Si una ventana no se puede leer, la
+  bitácora se conserva y el paquete queda PARCIAL. Requiere la extensión de esta misma entrega.
+
 ## Lotes antiguos (retención de 60 días)
 
 En **Resultados e historial**, **Archivar o borrar lotes antiguos** ofrece los lotes y paquetes («Paquete CSMP …») sin

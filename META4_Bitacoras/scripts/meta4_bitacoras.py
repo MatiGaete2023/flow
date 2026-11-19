@@ -959,6 +959,24 @@ def regenerar(registros, destino, corte=None, emission=None, template=None):
     return _en_carpeta_nueva(destino, trabajo)
 
 
+def validar_plantilla(path):
+    """P4: una plantilla Excel propia debe traer las cuatro hojas de Meta 4; se comprueba ANTES de generar, para no dejar
+    productos a medias. Devuelve la ruta resuelta o lanza ValueError con un mensaje legible. None = diseño estándar."""
+    if not path:
+        return None
+    ruta = Path(path).expanduser().resolve()
+    if not ruta.is_file() or ruta.suffix.lower() != '.xlsx':
+        raise ValueError('La plantilla debe ser un archivo .xlsx existente.')
+    try:
+        libro = meta.load_template(ruta)
+    except Exception as exc:  # archivo dañado o protegido
+        raise ValueError('No se pudo abrir la plantilla Excel: ' + str(exc)) from None
+    faltan = [h for h in meta.SHEET_DEFS if h not in libro.sheetnames]
+    if faltan:
+        raise ValueError('A la plantilla le faltan las hojas: ' + ', '.join(faltan) + '.')
+    return ruta
+
+
 def generar(origen, destino, corte, emission=None, template=None, bitacoras=None, tribunales=None):
     """`origen`: una o varias carpetas con lotes de registros del Descargador; todos los lotes
     se combinan en un solo Meta 4. `bitacoras`: una o varias carpetas de lotes de bitácoras;

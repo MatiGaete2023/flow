@@ -75,6 +75,15 @@ productos. **Exportar Excel y JSON…** crea una carpeta nueva `Revision_bitacor
 (clasificación, motivo, tribunal, RIT, nombre, programa y propuesta) y `Revision_bitacoras.json` (período y conteos).
 La revisión no cambia ninguna propuesta: el motor ya analizó el paquete completo.
 
+## Columna «Escritos» y Biblioteca de productos (19-nov-2026)
+
+- **Escritos** (Trabajo): estado de la bandeja de Escritos de la causa en el paquete: «N pendientes», «Sin pendientes»,
+  «Sin escritos», «No verificada» (la respuesta no trajo una tabla legible) o «Lecturas discordantes». Vacía si el paquete no
+  trae Escritos. Los escritos vinculados expresamente a otro ingreso no se cuentan.
+- **Biblioteca de productos…** (Resultados): todos los archivos creados en la carpeta de salida y en sus corridas
+  anteriores, del más reciente al más antiguo, con búsqueda por nombre o carpeta (sin tildes ni mayúsculas); «Abrir» y
+  «Abrir su carpeta». No sigue enlaces simbólicos.
+
 ## Cronología de bitácoras (solo mostrar, WP-50)
 
 Con un paquete del Descargador, Trabajo muestra la columna **Última obs. centro**

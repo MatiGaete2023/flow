@@ -926,3 +926,23 @@ def test_too_long_destination_is_rejected_before_processing(tmp_path):
     report = app.generar(lotes, justo, CORTE, bitacoras=diaries)
     assert report['registros'] == 5
     assert max(len(str(p)) for p in justo.iterdir()) <= app.RUTA_MAXIMA - len(app.EN_CURSO) - 4
+
+
+def test_p4_validar_plantilla_exige_las_cuatro_hojas(tmp_path):
+    import generate_meta4 as gm
+    from meta4_bitacoras import validar_plantilla
+
+    assert validar_plantilla(None) is None
+    buena = tmp_path / 'plantilla.xlsx'
+    gm.build_default_template().save(buena)
+    assert validar_plantilla(buena) == buena.resolve()
+    libro = gm.build_default_template()
+    libro.remove(libro['FAE Espera'])
+    incompleta = tmp_path / 'incompleta.xlsx'
+    libro.save(incompleta)
+    import pytest
+
+    with pytest.raises(ValueError, match='FAE Espera'):
+        validar_plantilla(incompleta)
+    with pytest.raises(ValueError, match='.xlsx'):
+        validar_plantilla(tmp_path / 'no.csv')

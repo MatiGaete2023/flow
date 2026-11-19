@@ -13,23 +13,20 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
 | P3c histórico automático | **Hecho** (sin prueba en SITFA real; E3 pendiente: toca la extensión) | ver Historial 19-nov (P3c) |
 | P8 diagnóstico del paquete | Pendiente | Versión en `diagnostico_bitacoras.json` corregida en `99a2c11` |
-| P4 resultados / Meta 4 plantilla | Pendiente | — |
+| P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | Pendiente | — |
 | P9 notificación y diligencias | Opcional | — |
 | P6 `.eml`, P7 consola | Decisión del usuario | — |
 
 ## Siguiente paso exacto
 
-P3a — Escritos visibles y diagnóstico:
-1. Descargador (`descargador/lectura_historia.py`): por cada causa leída, contar de forma anónima si la respuesta guardada
-   traía la tabla Escritos (usar `nurus.escritos_html.read_escritos` sobre el HTML ya guardado: tabla con filas, tabla vacía,
-   pestaña sin tabla = `ESCRITOS_NO_VERIFICADA`, sin pestaña = `ESCRITOS_AUSENTE`) y agregar en `diagnostico_historia.json`
-   `escritos: {con_filas, vacia, sin_tabla, ausente, pendientes}` (solo conteos).
-2. Asistente: columna «Escritos» en Trabajo (`work_view.py::WORK_COLUMNS` y su render) con «N pendientes», «sin pendientes»,
-   «no verificada» o vacío si la fuente no vino; el dato sale de la fila (guardar en `Row` un resumen como en P2:
-   `capture_input.py`, `escritos_by_record`).
-3. Pruebas con `tests/fixtures_integracion/escritos_ficticio.html` y una variante sin tabla.
-Luego P3c (Histórico automático, E3) y P8.
+1. **Revisión E3 independiente de P3c** (toca la extensión: `descargador/extension/pagina.js::historico_open`), decisión j.
+2. **Prueba real del usuario en Windows** de P1, P2, P3 y P4 (no hay Tk en el contenedor): botón de consignación, ventana
+   «Revisión de bitácoras…», columna «Escritos», casilla «Ingreso Histórico (Mejor Niñez)», «Biblioteca de productos…»,
+   plantilla de Meta 4. Si `diagnostico_historia.json` muestra `SIN_TABLA`, pedir `historia/estructura_escritos.json`.
+3. Luego **P8** (diagnóstico del paquete: historial anónimo en `respaldo/proceso.json` y aviso final de bitácoras
+   faltantes por tribunal; ver `rust/crates/flow-trabajo/src/flujo.rs::anotar` y `avisos_de_bitacoras` como referencia)
+   y **P5** (diseño).
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -84,3 +81,10 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   `test_p3c_*` (puente ficticio y de punta a punta hasta la frase «otro programa vigente»). **Supuesto N2 a confirmar en
   SITFA real:** que `ShowHistoriaRut` corresponde a `tipo_popUp=77` y que su argumento es el RUT de la fila; si no, la lectura
   queda FALLIDA (`HISTORICO_LINK` / `HISTORICO_NO_VERIFICADA`), nunca se atribuye otra persona.
+- 19-nov-2026 · **P4 hecho.** Asistente: `personal/biblioteca.py` (lista sin seguir enlaces, búsqueda sin tildes) y ventana
+  **Resultados › «Biblioteca de productos…»** (`results_view.open_library`: abrir archivo o su carpeta). Meta 4:
+  `meta4_bitacoras.validar_plantilla` (exige las cuatro hojas antes de generar) y menú **«Elegir plantilla Excel…» / «Usar
+  diseño estándar»**, usada al generar y al regenerar. Contactos: la importación con conflictos de Python
+  (`app_base._import_contacts`) ya equivale a la de Rust; sin cambios. Manuales del Descargador, del Asistente y LEEME de
+  Meta 4 actualizados. Pruebas `tests/test_biblioteca_productos.py` y `test_p4_validar_plantilla_*` (Meta 4: mismos 3 fallos
+  de entorno que la base, por el lector BIFF).

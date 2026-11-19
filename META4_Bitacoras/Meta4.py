@@ -15,6 +15,7 @@ from meta4_bitacoras import (  # noqa: E402
     raices,
     regenerar,
     tribunales_disponibles,
+    validar_plantilla,
 )
 from datetime import date, datetime  # noqa: E402
 import json  # noqa: E402
@@ -98,6 +99,10 @@ class App:
         top.add('Vaciar', lambda: self.busy or self.set_sources([]), busy_lock=True)
         top.add('Bitácoras en otra carpeta…', self.pick_diaries, separator=True, busy_lock=True)
         top.add('Destino de resultados…', self.destination, busy_lock=True)
+        # P4: plantilla Excel propia (opcional); sin ella se usa el diseño estándar.
+        self.template = None
+        top.add('Elegir plantilla Excel…', self.pick_template, separator=True, busy_lock=True)
+        top.add('Usar diseño estándar', self.clear_template, busy_lock=True)
         top.add('Regenerar desde Registros revisado…', self.start_regenerate, separator=True, busy_lock=True)
         top.add('Abrir resultados', self.open_output)
         self.window.add_docs(DOCS, anchor=__file__)
@@ -312,7 +317,7 @@ class App:
         output = nueva_salida(folder)
         self.run(
             output,
-            lambda: generar(source, output, cutoff, bitacoras=diaries, tribunales=courts),
+            lambda: generar(source, output, cutoff, template=self.template, bitacoras=diaries, tribunales=courts),
             'Generando Meta 4 y consolidados…',
         )
 
@@ -324,7 +329,23 @@ class App:
         if not path:
             return
         output = nueva_salida(Path(self.folder.get()).expanduser().resolve(), ' regenerado')
-        self.run(output, lambda: regenerar(path, output), 'Regenerando Meta 4 desde Registros revisado…')
+        self.run(output, lambda: regenerar(path, output, template=self.template), 'Regenerando Meta 4 desde Registros revisado…')
+
+    def pick_template(self):
+        """P4: elige y valida una plantilla Excel con las cuatro hojas de Meta 4."""
+        path = filedialog.askopenfilename(title='Plantilla Excel de Meta 4', filetypes=[('Excel', '*.xlsx')])
+        if not path:
+            return
+        try:
+            self.template = validar_plantilla(path)
+        except ValueError as exc:
+            self.fail(str(exc))
+            return
+        self.status.set(f'Plantilla elegida: {self.template.name}. Se usará al generar y al regenerar.')
+
+    def clear_template(self):
+        self.template = None
+        self.status.set('Se usará el diseño estándar de Meta 4.')
 
     def run(self, output, task, message):
         self.busy = True
