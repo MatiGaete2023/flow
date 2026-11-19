@@ -560,7 +560,14 @@ class Work:
             if fila is not None and getattr(self, 'as_of', ''):
                 from .record_edits import recalculate
 
-                recalculate(self, fila)  # la propuesta deja de repetir la constancia ya consignada
+                try:
+                    recalculate(self, fila)  # la propuesta deja de repetir la constancia ya consignada
+                except Exception:
+                    # Transaccional (E3-16): si no se pudo recalcular, la marca no queda y el reintento vuelve a intentarlo.
+                    mapa[row_id].remove(llave)
+                    if not mapa[row_id]:
+                        del mapa[row_id]
+                    raise
                 self.revision += 1
         return llave
 

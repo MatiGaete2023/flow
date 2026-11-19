@@ -557,9 +557,17 @@ def _validate_rows(m, tables):
             fail('Tabla disponible omitida.')
     from .coverage import ADEQUATE, validate_coverage
 
+    pantalla = {'escritos': ('escritos', 'escritos_causa', 'cause_id'), 'historico_proteccion': ('historico_proteccion', 'historico_persona', 'person_id')}
     for table in EXTENDED_TABLES:
         for row in tables.get(table, ()):
             query = queries[row['query_id']]
+            # La fila debe ser del alcance que su consulta declara (E3-02): pantalla, sistema, tribunal y causa/persona.
+            screen, filtro, campo = pantalla[table]
+            alcance = json_object(query['filters_json']).get(filtro)
+            if query['screen'] != screen or not isinstance(alcance, dict):
+                fail('Fila de ' + table + ' sin consulta de su pantalla y alcance.')
+            if any(row[k] != alcance.get(k) for k in ('source_system', 'court_code', campo)):
+                fail('Fila de ' + table + ' fuera del alcance declarado por su consulta.')
             if row['coverage'] == 'VACIA_COMPROBADA' or query['coverage'] == 'VACIA_COMPROBADA':
                 fail('Fila presente declarada vacía.')
             if row['coverage'] in ADEQUATE and query['coverage'] not in ADEQUATE:
@@ -728,6 +736,7 @@ def write_capture(destination, metadata, tables, *, originals=None, consolidated
                 info = zipfile.ZipInfo(name, (2026, 10, 8, 0, 0, 0))
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = (stat.S_IFREG | 0o600) << 16
+                info.create_system = 3  # igual en Windows y Linux: el ZIP es idéntico byte a byte (E3-15)
                 archive.writestr(info, raw)
         read_capture(temp)
         os.link(temp, destination)

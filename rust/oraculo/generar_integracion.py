@@ -19,7 +19,7 @@ import generar_casos as G  # noqa: E402
 CORTE = G.CORTE
 TIPOS_ESCRITO = ['Inf. Cump Programa Ambulatorio', 'Inf. Cump FAE/FAS', 'Inf. Cump Centro Residencial', 'Escrito ficticio']
 ESTADOS = ['Pendiente', 'Pendiente', 'pendiente ', 'Resuelto', 'Proveído']
-EGRESOS = [('--', 'SIN INFORMACION'), ('--', 'SIN INFORMACION'), ('--', 'sin información'), ('01/05/2026', 'SIN INFORMACION'),
+EGRESOS = [('\u2212\u2212', 'SIN INFORMACION'), ('--', 'SIN INFORMACION'), ('--', 'SIN INFORMACION'), ('--', 'sin información'), ('01/05/2026', 'SIN INFORMACION'),
            ('--', 'TERMINO DE LA MEDIDA'), ('', ''), ('-', 'SIN INFORMACION'), ('--', '')]
 PROGRAMAS_H = ['PRM Laja', 'prm  LAJA', 'FAE PRO Biobío', 'FAS Tomé', 'PRM Laja Norte', 'PDE Mulchén', 'PIE 24 Horas', 'RES Residencia Familiar']
 FRASES = [
@@ -29,6 +29,8 @@ FRASES = [
     'Se coordinó con el programa {prog}.',
     'Se hace presente que Otra cuenta con ingreso efectivo al programa {prog}.',
     'Medida revisada, sin observaciones.',
+    '{pn} informa que Beto cuenta con ingreso efectivo al programa {prog}.',
+    'Beto informa que {pn} cuenta con ingreso efectivo al programa {prog}.',
 ]
 
 
@@ -45,19 +47,23 @@ class Gen2(G.Gen):
         for n in range(self.r.randint(0, 5)):
             egreso, causal = self.r.choice(EGRESOS)
             filas.append({'programa': self.r.choice(PROGRAMAS_H), 'fecha_egreso': egreso, 'causal_egreso': causal, 'fila': n + 1})
-        return {'cobertura': cobertura, 'leido': CORTE.isoformat(), 'identidad': identidad, 'filas': filas}
+        leido = CORTE + timedelta(days=self.r.choice([0, 0, 0, -3, 4]))
+        return {'cobertura': cobertura, 'leido': leido.isoformat(), 'identidad': identidad, 'filas': filas}
 
     def escritos(self, vencimiento):
         if self.r.random() < 0.35:
             return None
-        cobertura = self.r.choice(['COMPLETA'] * 4 + ['PARCIAL', 'FALLIDA', 'NO_SOLICITADA', 'VACIA_COMPROBADA'])
+        cobertura = self.r.choice(['COMPLETA'] * 4 + ['PARCIAL', 'FALLIDA', 'NO_SOLICITADA', 'VACIA_COMPROBADA', 'IDENTIDAD_INCIERTA'])
         filas = []
         for n in range(self.r.randint(0, 3)):
             fila = {'tipo': self.r.choice(TIPOS_ESCRITO), 'estado': self.r.choice(ESTADOS), 'doc': f'D{n}', 'fila': n + 1}
-            if vencimiento and self.r.random() < 0.4:
+            x = self.r.random()
+            if vencimiento and x < 0.4:
                 fila.update(vinculo='EXPLICITO', fecha_proyectada=(vencimiento + timedelta(days=self.r.choice([0, 0, 0, 30]))).isoformat())
+            elif x < 0.55:
+                fila.update(vinculo='AJENO')
             filas.append(fila)
-        leido = CORTE + timedelta(days=self.r.choice([-20, -5, 0]))
+        leido = CORTE + timedelta(days=self.r.choice([-20, -5, 0, 0, 7]))
         return {'cobertura': cobertura, 'leido': leido.isoformat(), 'filas': filas}
 
     def evidencia(self, vencimiento):
@@ -66,6 +72,7 @@ class Gen2(G.Gen):
         return {'escrito_historia_folio': self.r.choice(['', '', str(self.r.randint(1, 60))]),
                 'resolucion_folio': self.r.choice(['', '', str(self.r.randint(1, 60))]),
                 'calendario': self.r.choice(['PENDIENTE', '']),
+                'folios_ajenos': self.r.choice([[], [], [str(self.r.randint(1, 60))]]),
                 'fecha_proyectada': vencimiento.isoformat() if vencimiento else None}
 
     def bitacora_extra(self, caso):
@@ -178,6 +185,23 @@ def dirigidos():
              historia=con_historia(('Ingreso informe de cumplimiento X', -10, '41')),
              evidencia={'resolucion_folio': '41', 'calendario': 'PENDIENTE', 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()}),
         base('INFORMES', 29, vencimientos, acumulado=[3, (CORTE - timedelta(days=90)).isoformat()]),
+        # Correcciones E3 (19-nov-2026).
+        base('INFORMES', 30, vencimientos, escritos=esc((amb, 'Pendiente', {'vinculo': 'AJENO'}))),
+        base('CUMPLIMIENTO', 31, cum, escritos=esc((amb, 'Pendiente', {'vinculo': 'AJENO'}))),
+        base('INFORMES', 32, vencimientos, escritos=esc((amb, 'Pendiente'), cobertura='PARCIAL')),
+        base('INFORMES', 33, vencimientos, escritos=esc((amb, 'Pendiente'), cobertura='IDENTIDAD_INCIERTA')),
+        base('INFORMES', 34, vencimientos, escritos=esc((amb, 'Pendiente', {'vinculo': 'EXPLICITO', 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()}), cobertura='PARCIAL')),
+        base('INFORMES', 35, vencimientos, escritos=esc((amb, 'Pendiente'), leido=10)),
+        base('CUMPLIMIENTO', 36, cum, historico={**hist(('FAE X', *vig)), 'leido': (CORTE + timedelta(days=10)).isoformat()}),
+        base('INFORMES', 37, vencimientos, historia=con_historia(('Ingreso informe de cumplimiento X', -10, '41')),
+             evidencia={'folios_ajenos': ['41'], 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()}),
+        base('INFORMES', 38, vencimientos, historia=con_historia((amb, -25, '30'), ('Ingreso informe de cumplimiento X', -10, '41')),
+             escritos=esc((amb, 'Pendiente', {'vinculo': 'EXPLICITO', 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()})),
+             evidencia={'escrito_historia_folio': '30', 'resolucion_folio': '41', 'fecha_proyectada': (CORTE - timedelta(days=30)).isoformat()}),
+        {**base('INFORMES', 39, vencimientos, escritos=esc((amb, 'Pendiente'))), 'desactivadas': ['HISTORIA.INFORME_AVANCE_PENDIENTE']},
+        base('CUMPLIMIENTO', 40, cum, historico=hist(('FAE X', *vig)),
+             bitacora=[{'fecha': (CORTE - timedelta(days=9)).isoformat(), 'texto': 'Sofía informa que Beto cuenta con ingreso efectivo al programa FAE X.'}]),
+        base('CUMPLIMIENTO', 41, cum, historico=hist(('FAE X', '\u2212\u2212', 'SIN INFORMACION'))),
     ]
     return casos
 
@@ -198,7 +222,7 @@ def main():
         caso.setdefault('bitacora_parcial', False)
         caso['esperado'] = G.esperado(caso)
     destino = G.RAIZ / 'rust' / 'casos' / 'integracion.json'
-    destino.write_text(json.dumps(casos, ensure_ascii=False, indent=0, separators=(',', ':')), encoding='utf-8')
+    destino.write_text(json.dumps(casos, ensure_ascii=False, indent=0, separators=(',', ':')), encoding='utf-8', newline='\n')
     nuevas = ('HISTORIA.OTRO_PROGRAMA', 'HISTORIA.INFORME_AVANCE_PENDIENTE', 'HISTORIA.INFORME_REVISAR_ASOCIACION')
     vistas = {r for c in casos for r in c['esperado']['reglas']}
     marcas = sorted({m['codigo'] for c in casos for m in c['esperado']['marcas']})

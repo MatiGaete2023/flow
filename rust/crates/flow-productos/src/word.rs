@@ -887,13 +887,18 @@ pub fn preparar(
         // Plan 18-nov-2026: en un caso con fechas resueltas por evidencia, el proyecto incluye solo las filas que lo piden
         // por sí mismas; las resueltas (escrito pendiente, ingreso registrado, escrito incorporado) no reaparecen.
         let con_evidencia = todas.iter().any(|f| f.propuesta.reglas.iter().any(|r| RESUELTAS_POR_EVIDENCIA.contains(&r.as_str())));
+        // Tipos que la fila pide DESPUÉS de la decisión humana (E3-09): con RES escrito manda RES (un tipo concreto, o
+        // marcado sin tipo → sus acciones; desmarcado → ninguno); sin RES, sus acciones.
         let col_res = columna_humana(trabajo, &ALIAS_RES);
-        let decidida_por_persona = |f: &FilaTrabajo| col_res.is_some_and(|c| f.celdas.get(c).is_some_and(explicito));
-        let propias: Vec<&FilaTrabajo> = if con_evidencia {
-            todas.iter().copied().filter(|f| f.proyectos().contains(&tipo.as_str()) || decidida_por_persona(f)).collect()
-        } else {
-            todas.clone()
+        let pide = |f: &FilaTrabajo| match col_res.and_then(|c| f.celdas.get(c)).filter(|c| explicito(c)) {
+            Some(res) if res_marcado(res) => match tipo_res(res) {
+                Some(t) => t == tipo.as_str(),
+                None => f.proyectos().contains(&tipo.as_str()),
+            },
+            Some(_) => false,
+            None => f.proyectos().contains(&tipo.as_str()),
         };
+        let propias: Vec<&FilaTrabajo> = if con_evidencia { todas.iter().copied().filter(|f| pide(f)).collect() } else { todas.clone() };
         if propias.is_empty() {
             continue;
         }

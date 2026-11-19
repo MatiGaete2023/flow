@@ -83,6 +83,14 @@ def _leer_filas(posiciones, cabecera, filas, requeridos, codigo_fila):
     return resultado, advertencias
 
 
+def _pestana_escritos(documento):
+    """La pestaña «Escritos» está visible como control (enlace, botón, ítem o celda), aunque no traiga su tabla (E3-13)."""
+    return any(
+        normalize(_texto(el)) == 'escritos'
+        for el in documento.xpath('//a | //li | //button | //span | //td | //th | //input[@type="button"]')
+    ) or bool(documento.xpath('//input[translate(@value,"ESCRITOS","escritos")="escritos"]'))
+
+
 def read_escritos(data, *, source='', captured_at=''):
     """Bandeja de Escritos. Devuelve {'filas', 'vacio_explicito', 'advertencias', 'sha256', ...} con Doc., Tipo Escrito,
     Solicitante y Estado tal como se ven. Una celda «Doc.» solo con icono queda vacía: no se infiere la referencia."""
@@ -91,7 +99,7 @@ def read_escritos(data, *, source='', captured_at=''):
     if len(tablas) != 1:
         # Sin ninguna mención de la columna «Tipo Escrito» la respuesta no trae la pestaña (otra versión de SITFA): la
         # fuente no se pidió. Con mención pero sin tabla legible, o con varias tablas, queda sin verificar.
-        presente = 'tipo escrito' in normalize(_texto(documento))
+        presente = 'tipo escrito' in normalize(_texto(documento)) or _pestana_escritos(documento)
         raise ValueError(ESCRITOS_NO_VERIFICADA if presente or tablas else ESCRITOS_AUSENTE)
     posiciones, cabecera, filas = tablas[0]
     resultado, advertencias = _leer_filas(posiciones, cabecera, filas, ESCRITOS_HEADERS, FILA_CORTA)
@@ -146,6 +154,24 @@ def _tablas_historico(documento):
     return salida
 
 
+def _texto_titular(documento):
+    """Texto de la vista SIN las tablas de programas (Protección y LRPA): la pertenencia se prueba con los datos del
+    titular (RUT, nombre), nunca con una mención en «Nombre Proyecto» u otra celda de datos (E3-03)."""
+    from copy import deepcopy
+
+    copia = deepcopy(documento)
+    egreso = [normalize(h) for h in HISTORICO_HEADERS[1:]]
+    programas = [normalize(h) for h in HISTORICO_PROGRAMA]
+    for tabla in list(copia.xpath('//table')):
+        for fila in _filas_directas(tabla):
+            cabecera = [normalize(_texto(c)) for c in fila.xpath('./th | ./td')]
+            if all(e in cabecera for e in egreso) and any(p in cabecera for p in programas):
+                if tabla.getparent() is not None:
+                    tabla.getparent().remove(tabla)
+                break
+    return _texto(copia)
+
+
 def read_historico(data, *, source='', captured_at='', persona_esperada=()):
     """Tabla visible de Ingreso Histórico Protección (programa = «Nombre Proyecto»). `persona_esperada`: textos (RUT,
     nombre) de la persona de la fila seleccionada; la vista es de esa persona solo si alguno aparece en el documento. Sin
@@ -177,7 +203,7 @@ def read_historico(data, *, source='', captured_at='', persona_esperada=()):
         item['fila'] = numero
         item['literal'] = dict(zip(originales, valores))
         resultado.append(item)
-    visible = ' ' + normalize(_texto(documento).replace('.', '')) + ' '
+    visible = ' ' + normalize(_texto_titular(documento).replace('.', '')) + ' '
     pruebas = []
     for p in persona_esperada:
         limpio = normalize(str(p).replace('.', ''))

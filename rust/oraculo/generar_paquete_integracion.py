@@ -74,8 +74,11 @@ def main():
     r2 = next(r for r in tablas['registros'] if r['record_id'] == 'r2')
     r3 = next(r for r in tablas['registros'] if r['record_id'] == 'r3')
     escritos = [
-        # D-ESC: escrito pendiente asociado al ingreso 2 y a su proyección (20-ago): no se pide cuenta de él.
-        ('D-ESC', AMB, 'Pendiente', r2['ingreso_id'], '2026-08-20'),
+        # D-PEND: escrito pendiente asociado al ingreso 2 y a su proyección (20-ago): no se pide cuenta de él.
+        ('D-PEND', AMB, 'Pendiente', r2['ingreso_id'], '2026-08-20'),
+        # D-ESC: escrito y resolución (folios 30 y 31) de OTRA proyección del ingreso 2 (20-jul): sus folios no se atribuyen
+        # ni al 20-ago de r2 ni a r3 por la vía genérica (E3-10).
+        ('D-ESC', AMB, 'Resuelto', r2['ingreso_id'], '2026-07-20'),
         # D-OTRO: escrito ya incorporado a Historia (folio 32), asociado al ingreso 3 (25-ago): proyecto de nomenclatura.
         ('D-OTRO', AMB, 'Resuelto', r3['ingreso_id'], '2026-08-25'),
     ]
@@ -87,7 +90,8 @@ def main():
     metadata['table_states']['historico_proteccion'] = 'COMPLETA'
     metadata['table_states']['escritos'] = 'COMPLETA'
     metadata['queries'] = tablas['consultas']
-    destino = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
+    destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'rust/crates/flow-trabajo/tests/datos'
+    destino.mkdir(parents=True, exist_ok=True)
     paquete = destino / 'paquete_integracion.zip'
     paquete.unlink(missing_ok=True)
     write_capture(paquete, metadata, tablas)
@@ -99,7 +103,7 @@ def main():
         for r in work.rows
     ]
     (destino / 'paquete_integracion.json').write_text(
-        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8')
+        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8', newline='\n')
     for f in filas:
         print(f['id'], '|', f['observacion'][:170], '|', f['acciones'])
 

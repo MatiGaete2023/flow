@@ -640,8 +640,12 @@ pub fn escrito_sin_ingreso(ctx: &mut Ctx, programa: &str, desde: Option<NaiveDat
     let mut candidatos = escrito_de(intervencion(programa)).map(|n| ctx.tramites(&[n])).unwrap_or_default();
     if !folio.is_empty() {
         candidatos.retain(|t| t.folio_txt == folio);
-    } else if let Some(d) = desde {
-        candidatos.retain(|t| t.fecha >= d);
+    } else {
+        let ajenos = folios_ajenos(ctx);
+        candidatos.retain(|t| !ajenos.contains(&t.folio_txt));
+        if let Some(d) = desde {
+            candidatos.retain(|t| t.fecha >= d);
+        }
     }
     let Some(escrito) = ultimo(&refs(&candidatos)).cloned() else { return Vec::new() };
     if ctx.emitidos.contains(&escrito.id()) || ctx.tramites(&[INGRESO_INFORME_X]).iter().any(|i| i.posterior_a(&escrito)) {
@@ -664,8 +668,12 @@ pub fn informe_historia(ctx: &mut Ctx, vencimiento: NaiveDate, vencido: bool, at
     let mut lista: Vec<Tramite> = ctx.tramites(&[INGRESO_INFORME_X]);
     if !folio.is_empty() {
         lista.retain(|t| t.folio_txt == folio);
-    } else if vencido {
-        lista.retain(|t| t.fecha >= vencimiento);
+    } else {
+        let ajenos = folios_ajenos(ctx);
+        lista.retain(|t| !ajenos.contains(&t.folio_txt));
+        if vencido {
+            lista.retain(|t| t.fecha >= vencimiento);
+        }
     }
     lista.retain(|t| !ctx.emitidos.contains(&t.id()));
     let Some(ult) = ultimo(&refs(&lista)).cloned() else { return Vec::new() };
@@ -825,7 +833,8 @@ fn es_pendiente(programa: &str, e: &Escrito) -> bool {
 /// vacía comprobada, no solicitada o fallida no contiene nada: no se afirma ausencia.
 pub fn escritos_pendientes(ctx: &Ctx, programa: &str) -> Vec<Escrito> {
     match &ctx.escritos {
-        Some(e) if e.con_filas() => e.filas.iter().filter(|f| es_pendiente(programa, f)).cloned().collect(),
+        // Un escrito asociado expresamente a otro ingreso nunca es candidato de este (E3-01).
+        Some(e) if e.con_filas() => e.filas.iter().filter(|f| f.vinculo != "AJENO" && es_pendiente(programa, f)).cloned().collect(),
         _ => Vec::new(),
     }
 }
@@ -839,8 +848,11 @@ pub fn escrito_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<Naiv
         return None;
     }
     let propio = candidatos.iter().find(|c| c.vinculo == "EXPLICITO" && vencimiento.is_some() && c.fecha_proyectada == vencimiento).cloned();
+    // «Único candidato» exige una bandeja leída completa: una lectura parcial no acredita que no haya otros (E3-05).
+    let completa = ctx.escritos.as_ref().is_some_and(|e| e.cobertura == "COMPLETA");
     let elegido = propio.clone().or_else(|| {
-        (atribuible && candidatos.len() == 1 && (vencimiento.is_none() || candidatos[0].vinculo != "EXPLICITO")).then(|| candidatos[0].clone())
+        (atribuible && completa && candidatos.len() == 1 && (vencimiento.is_none() || candidatos[0].vinculo != "EXPLICITO"))
+            .then(|| candidatos[0].clone())
     });
     let Some(elegido) = elegido else {
         ctx.marcar(2, "ESCRITO_PENDIENTE_SIN_ATRIBUIR", "Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones");
@@ -868,15 +880,16 @@ pub fn escrito_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<Naiv
     Some(elegido)
 }
 
-/// Fragmentos de la regla (una sola frase, una vez). Vacío si no corresponde.
-pub fn informe_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<NaiveDate>, atribuible: bool) -> Vec<Frag> {
+/// (atribuido, fragmentos). La decisión no depende del texto: con la frase desactivada el informe sigue sin pedirse (E3-11).
+pub fn informe_pendiente(ctx: &mut Ctx, programa: &str, vencimiento: Option<NaiveDate>, atribuible: bool) -> (bool, Vec<Frag>) {
     if escrito_pendiente(ctx, programa, vencimiento, atribuible).is_none() {
-        return Vec::new();
+        return (false, Vec::new());
     }
     let texto = ctx.render("HISTORIA", "INFORME_AVANCE_PENDIENTE", &[]);
-    if texto.es_vacio() {
-        Vec::new()
-    } else {
-        vec![texto]
-    }
+    (true, if texto.es_vacio() { Vec::new() } else { vec![texto] })
+}
+
+/// Folios de Historia asociados expresamente a OTRO informe de la causa (E3-10): la vía genérica no los atribuye aquí.
+fn folios_ajenos(ctx: &Ctx) -> Vec<String> {
+    ctx.evidencia.as_ref().map(|e| e.folios_ajenos.clone()).unwrap_or_default()
 }

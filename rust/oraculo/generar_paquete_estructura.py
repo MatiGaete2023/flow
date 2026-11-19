@@ -3,7 +3,8 @@
 de la misma persona al mismo programa. Datos ficticios. Python importa el ZIP y guarda su resultado; Rust lo compara.
 
 Uso (desde la raíz del repo): python3 rust/oraculo/generar_paquete_estructura.py
-Escribe rust/crates/flow-trabajo/tests/datos/paquete_estructura.{zip,json}.
+Escribe rust/crates/flow-trabajo/tests/datos/paquete_estructura.{zip,json}, o en la carpeta dada como primer argumento
+(las pruebas la usan con una carpeta temporal para no tocar los archivos versionados).
 """
 
 import json
@@ -96,7 +97,8 @@ def main():
         for n, (d, e, f) in enumerate(escritos, 1)]
     metadata['table_states']['escritos'] = 'COMPLETA'
     metadata['queries'] = tablas['consultas']
-    destino = RAIZ / 'rust/crates/flow-trabajo/tests/datos'
+    destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'rust/crates/flow-trabajo/tests/datos'
+    destino.mkdir(parents=True, exist_ok=True)
     paquete = destino / 'paquete_estructura.zip'
     paquete.unlink(missing_ok=True)
     write_capture(paquete, metadata, tablas)
@@ -105,7 +107,7 @@ def main():
               'marcas': [{'nivel': n, 'codigo': c, 'texto': t} for n, c, t in r.avisos],
               'otros_programas': list(r.otros_programas)} for r in trabajo.rows]
     (destino / 'paquete_estructura.json').write_text(
-        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8')
+        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8', newline='\n')
     for (ingreso, fecha), reg in mapa.items():
         f = next(x for x in trabajo.rows if x.id == reg['record_id'] or x.source_row == int(reg['original_row']))
         print(ingreso, fecha, f.actions, [r.split('.')[-1] for r in f.rules])

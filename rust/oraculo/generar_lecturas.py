@@ -27,7 +27,7 @@ def main():
         html='<html><body><form name="InformesPpalForm"><input name="COD_Tribunal" value="49"><input name="CRR_IdCausa" value="100"><input name="ID_Ingreso" value="201"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr>'+filas+'</table></form></body></html>'
         casos.append({'tipo':'calendario','html':html,'args':args,'esperado':read_calendar(html,args,source='ficticio.html',captured_at='2026-11-12T12:00:00Z')})
     salida=RAIZ/'rust/crates/flow-captura/tests/datos/lecturas_ficticias.json'
-    salida.write_text(json.dumps(casos,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    salida.write_text(json.dumps(casos,ensure_ascii=False,indent=2)+'\n',encoding='utf-8', newline='\n')
     print(f'{len(casos)} ventanas ficticias cotejadas con Python.')
 
 

@@ -68,15 +68,26 @@ def test_pestana_presente_pero_ilegible_es_fallida_con_incidencia_y_no_vacia(tmp
     assert len(captura.rows('historia_tramites')) == 3
 
 
+SIN_PESTANA = VENTANA.replace(b'<li><a href="#" onclick="Lengueta(\'Escritos\')">Escritos</a></li>', b'')
+
+
 def test_sin_la_pestana_el_paquete_no_cambia_y_no_hay_consulta_de_escritos(tmp_path):
-    captura = read_capture(paquete(tmp_path, 'ausente', historia=historia(tmp_path, VENTANA)))
+    assert SIN_PESTANA != VENTANA
+    captura = read_capture(paquete(tmp_path, 'ausente', historia=historia(tmp_path, SIN_PESTANA)))
     assert captura.manifest['schema_version'] in ('1.0.0', '1.1.0')
     assert 'escritos' not in captura.manifest['table_states'] or captura.manifest['table_states']['escritos'] == 'NO_SOLICITADA'
     assert all(q['screen'] != 'escritos' for q in captura.manifest['queries'])
 
 
+def test_e3_13_pestana_visible_que_carga_al_abrirla_queda_no_verificada(tmp_path):
+    """La ventana de muestra trae el control «Escritos» (Lengueta) sin su tabla: fuente FALLIDA, nunca vacía ni ausente."""
+    captura = read_capture(paquete(tmp_path, 'lengueta', historia=historia(tmp_path, VENTANA)))
+    assert captura.manifest['table_states']['escritos'] == 'FALLIDA' and not captura.rows('escritos')
+    assert any(i['code'] == 'ESCRITOS_NO_VERIFICADA' for i in captura.rows('incidencias'))
+
+
 def test_el_asistente_importa_el_paquete_con_escritos_sin_cambiar_las_reglas_originales(tmp_path):
-    base = import_capture(paquete(tmp_path, 'a', historia=historia(tmp_path / 'x', VENTANA) if (tmp_path / 'x').mkdir() is None else None), defaults(), as_of=date(2099, 10, 14))
+    base = import_capture(paquete(tmp_path, 'a', historia=historia(tmp_path / 'x', SIN_PESTANA) if (tmp_path / 'x').mkdir() is None else None), defaults(), as_of=date(2099, 10, 14))
     otro = tmp_path / 'y'
     otro.mkdir()
     con = import_capture(paquete(tmp_path, 'b', historia=historia(otro, con_escritos(ESCRITOS_CON_FILAS))), defaults(), as_of=date(2099, 10, 14))
@@ -165,3 +176,15 @@ def test_extracto_anonimo_de_escritos_no_emite_valores(tmp_path, capsys):
     for valor in ('123456', '987654', 'QWxhZGRpbjpvcGVuIHNlc2FtZQ', 'tercerista', 'inf. cump', 'Doc.do'):
         assert valor not in salida, valor
     assert '"funcion": "verDoc"' in salida and 'opaco(' in salida and '"nombre": "clave"' in salida
+
+
+def test_e3_08_fila_corta_no_se_declara_vacia_sino_parcial(tmp_path):
+    corta = (
+        b'<table><thead><tr><th>Doc.</th><th>Tipo Escrito</th><th>Solicitante</th><th>Estado</th></tr></thead>'
+        b'<tbody><tr><td>Pendiente</td></tr></tbody></table>'
+    )
+    captura = read_capture(paquete(tmp_path, 'corta', historia=historia(tmp_path, con_escritos(corta))))
+    assert captura.manifest['table_states']['escritos'] == 'PARCIAL'
+    consulta = next(q for q in captura.manifest['queries'] if q['screen'] == 'escritos')
+    assert consulta['coverage'] == 'PARCIAL'
+    assert any(i['code'] == 'ESCRITOS_FILA_INCOMPLETA' for i in captura.rows('incidencias'))

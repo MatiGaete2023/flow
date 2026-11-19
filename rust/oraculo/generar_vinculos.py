@@ -30,7 +30,7 @@ def main():
         texto='<html><body><form name="InformesPpalForm">'+etree.tostring(tabla,encoding='unicode')+'</form></body></html>'
         casos.append({'nombre':nombre,'html':texto,'bitacoras':esperado,'historias':historias})
     salida=RAIZ/'rust/crates/flow-captura/tests/datos/vinculos_ficticios.json'
-    salida.write_text(json.dumps(casos,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    salida.write_text(json.dumps(casos,ensure_ascii=False,indent=2)+'\n',encoding='utf-8', newline='\n')
     print(f'{len(casos)} listados ficticios cotejados con Python.')
 
 

@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 
 pub const ESTADO_PENDIENTE: &str = "pendiente";
 const CAUSAL_VIGENTE: &str = "sin informacion";
-const GUIONES: [char; 6] = ['-', '\u{2010}', '\u{2011}', '\u{2012}', '\u{2013}', '\u{2014}'];
+const GUIONES: [char; 7] = ['-', '\u{2010}', '\u{2011}', '\u{2012}', '\u{2013}', '\u{2014}', '\u{2212}'];
 
 pub fn con_filas(cobertura: &str) -> bool {
     matches!(cobertura, "COMPLETA" | "PARCIAL")
@@ -40,7 +40,8 @@ pub struct Escrito {
     pub solicitante: String,
     #[serde(default)]
     pub fila: i64,
-    /// «EXPLICITO» si el escrito se asoció a una proyección concreta; vacío si no.
+    /// «EXPLICITO» = asociado a una proyección de este ingreso; «AJENO» = asociado expresamente a OTRO ingreso (nunca es
+    /// candidato aquí); vacío = sin vínculo.
     #[serde(default)]
     pub vinculo: String,
     #[serde(default)]
@@ -125,6 +126,9 @@ pub struct EvidenciaInforme {
     pub calendario: String,
     #[serde(default)]
     pub fecha_proyectada: Option<NaiveDate>,
+    /// Folios de Historia asociados expresamente a OTRO informe de la causa: la vía genérica no los atribuye a este.
+    #[serde(default)]
+    pub folios_ajenos: Vec<String>,
 }
 
 /// Nombres (tal como se muestran) de los otros programas vigentes del mismo niño: sin repetir y sin el actual.
@@ -170,7 +174,7 @@ fn oraciones_de(texto: &str) -> Vec<String> {
 }
 
 /// Observación registrada que ya hizo constar que ese niño cuenta con ingreso efectivo a ese programa: nombre completo
-/// del programa (no por subcadena), primer nombre del niño en la misma oración y sin negación.
+/// del programa (no por subcadena), primer nombre del niño como sujeto (justo antes del verbo) y sin negación.
 pub fn constancia_en_bitacora<'a>(observaciones: &'a [Observacion], primer_nombre: &str, programa: &str) -> Option<&'a Observacion> {
     let objetivo = clave_programa(programa);
     let nombre = clave_texto(primer_nombre);
@@ -184,10 +188,12 @@ pub fn constancia_en_bitacora<'a>(observaciones: &'a [Observacion], primer_nombr
                 if clave_programa(&hallazgo[1]) != objetivo {
                     continue;
                 }
-                if NEGACION.is_match(&clave_texto(&oracion[..completo.start()])) {
+                let previo = clave_texto(&oracion[..completo.start()]);
+                if NEGACION.is_match(&previo) {
                     continue;
                 }
-                if !nombre.is_empty() && !clave_texto(&oracion).split(' ').any(|t| t == nombre) {
+                // El sujeto de la constancia debe ser el niño: su primer nombre justo antes del verbo (E3-12).
+                if nombre.is_empty() || previo.split(' ').next_back() != Some(nombre.as_str()) {
                     continue;
                 }
                 return Some(obs);

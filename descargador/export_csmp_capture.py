@@ -469,12 +469,8 @@ def export_capture(
         states['historico_proteccion'] = aggregate(
             q['coverage'] for q in data['consultas'] if q['screen'] == 'historico_proteccion'
         )
-        if not data['historico_proteccion'] and states['historico_proteccion'] == 'COMPLETA':
-            states['historico_proteccion'] = 'VACIA_COMPROBADA'
     if data.get('escritos') is not None:
         states['escritos'] = aggregate(q['coverage'] for q in data['consultas'] if q['screen'] == 'escritos')
-        if not data['escritos'] and states['escritos'] == 'COMPLETA':
-            states['escritos'] = 'VACIA_COMPROBADA'
     from contrato_integral import capabilities
 
     build = capabilities()
@@ -517,6 +513,8 @@ def _historico(carpeta, data, query, incident, cid, captured):
     for n, e in enumerate(entradas, 1):
         qid = f'historico-{n}'
         cobertura = {'LEIDA': 'COMPLETA', 'VACIA_COMPROBADA': 'VACIA_COMPROBADA'}.get(e['estado'], 'FALLIDA')
+        if cobertura != 'FALLIDA' and e.get('advertencias'):
+            cobertura = 'PARCIAL'  # alguna fila del histórico no se pudo leer (E3-08)
         selection = {
             'tribunal': e['tribunal'],
             'tribunal_nombre': e.get('tribunal_nombre', ''),
@@ -545,7 +543,7 @@ def _historico(carpeta, data, query, incident, cid, captured):
                 original_file=f'respaldo/historico/{e["archivo"]}',
                 original_row=str(fila['fila']),
                 source_sha256=e['sha256'],
-                coverage='COMPLETA',
+                coverage=cobertura,
             )
             filas.append(
                 {
@@ -579,7 +577,13 @@ def _escritos(manifest, data, query, incident, cid, captured):
             continue  # la respuesta no trae la pestaña: fuente no solicitada
         consultas += 1
         qid = f'escritos-{n}'
-        cobertura = 'FALLIDA' if lectura is None else 'VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'COMPLETA'
+        # Una fila que no se pudo leer impide afirmar «completa» o «vacía» (E3-08): la lectura queda parcial.
+        if lectura is None:
+            cobertura = 'FALLIDA'
+        elif lectura['advertencias']:
+            cobertura = 'PARCIAL'
+        else:
+            cobertura = 'VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'COMPLETA'
         selection = {
             'tribunal': causa['tribunal'],
             'tribunal_nombre': causa.get('tribunal_nombre', ''),
@@ -609,7 +613,7 @@ def _escritos(manifest, data, query, incident, cid, captured):
                 original_file=f'respaldo/{lote}/historia/' + causa['archivo'],
                 original_row=str(fila['fila']),
                 source_sha256=causa['sha256'],
-                coverage='COMPLETA',
+                coverage=cobertura,
             )
             filas.append(
                 {

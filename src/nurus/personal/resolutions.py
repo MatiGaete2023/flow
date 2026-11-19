@@ -95,11 +95,28 @@ def _casos_con_evidencia(work):
     }
 
 
-def _fuera_del_proyecto(row, kind, con_evidencia, work):
-    """True si, en un caso con fechas resueltas por evidencia, esta fila no pide `kind` por sí misma."""
-    if _case_key(work, row) not in con_evidencia or kind in getattr(row, 'actions', []):
-        return False
-    return (getattr(row, 'decisions', None) or {}).get('resolution', 'auto') == 'auto'  # la decisión humana manda
+def _tipos_efectivos(row, fallback_kind='PC_IE'):
+    """Tipos de proyecto que la fila pide DESPUÉS de la decisión humana: automática → sus acciones; un tipo → ese tipo;
+    «sin proyecto» → ninguno; revisión → lo que diga RES (E3-09)."""
+    decisions = getattr(row, 'decisions', None) or {}
+    actions = [kind for kind in getattr(row, 'actions', []) if kind in KINDS]
+    if not decisions.get('structured'):
+        return actions
+    mode = decisions.get('resolution', 'auto')
+    if mode == 'auto':
+        return actions
+    if mode in KINDS:
+        return [mode]
+    if mode == 'review':
+        raw = (getattr(row, 'review', None) or {}).get('RES')
+        return [resolution_kind(raw) or next(iter(actions), fallback_kind)] if resolution_marked(raw) else []
+    return []
+
+
+def _fuera_del_proyecto(row, kind, con_evidencia, work, claves=None):
+    """True si, en un caso con fechas resueltas por evidencia, esta fila no pide `kind` tras la decisión humana."""
+    clave = claves[row.id] if claves is not None else _case_key(work, row)
+    return clave in con_evidencia and kind not in _tipos_efectivos(row)
 
 
 def suggested_resolution(row):
@@ -286,15 +303,15 @@ def automatic_project_selections(work, fallback_kind='PC_IE'):
             old = copy(work)
             old.rows = legacy
             selected.extend(automatic_project_selections(old, fallback_kind))
-        by_id = {row.id: row for row in work.rows}
-        cases = {(_case_key(work, by_id[rid]), kind) for rid, kind in selected if rid in by_id}
-        con_evidencia = _casos_con_evidencia(work)
+        claves = {row.id: _case_key(work, row) for row in work.rows}
+        cases = {(claves[rid], kind) for rid, kind in selected if rid in claves}
+        con_evidencia = {claves[row.id] for row in work.rows if RESUELTAS_POR_EVIDENCIA & set(getattr(row, 'rules', []))}
         return [
             (row.id, kind)
             for row in work.rows
             if not row.excluded
             for kind in KINDS
-            if (_case_key(work, row), kind) in cases and not _fuera_del_proyecto(row, kind, con_evidencia, work)
+            if (claves[row.id], kind) in cases and not _fuera_del_proyecto(row, kind, con_evidencia, work, claves)
         ]
     reviewed = reviewed_resolution_ids(work)
     result = []

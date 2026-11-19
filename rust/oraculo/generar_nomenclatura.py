@@ -71,7 +71,7 @@ def main():
         observadas = [observed_nomenclature(r) for r in rows]
         casos.append({'nombre': nombre, 'filas': filas, 'observadas': observadas, 'esperado': project_nomenclature(rows)})
     salida = RAIZ / 'rust/crates/flow-productos/tests/datos/nomenclatura_python.json'
-    salida.write_text(json.dumps(casos, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    salida.write_text(json.dumps(casos, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     print(f'{len(casos)} casos de nomenclatura cotejados con Python.')
 
 

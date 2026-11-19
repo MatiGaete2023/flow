@@ -45,11 +45,18 @@ def generar_observacion_informes(row, tribunal, cols, incidencias=None, fila_exc
     folio_res = ev.resolucion_folio if ev else ''
     folio_esc = ev.escrito_historia_folio if ev else ''
     # Escrito de informe de avance pendiente de resolver, atribuible a este informe: no se pide cuenta de él (18-nov-2026).
-    # Se evalúa primero: contrasta la bandeja con la historia al mismo corte y deja marca si no hay secuencia fiable.
-    pendiente = H.informe_pendiente(programa, fv, atribuible) if vencido else []
+    # Se evalúa primero: contrasta la bandeja con la historia al mismo corte y deja marca si no hay secuencia fiable. Una
+    # evidencia explícita de Historia para ESTE informe (escrito incorporado o resolución) prevalece sobre la bandeja (E3-10).
+    pendiente, frases = (False, [])
+    if vencido and not (folio_res or folio_esc):
+        pendiente, frases = H.informe_pendiente(programa, fv, atribuible)
+    elif vencido and H.escritos_pendientes(programa) and any(
+        c.vinculo == 'EXPLICITO' and c.fecha_proyectada == (fv.date() if hasattr(fv, 'date') else fv) for c in H.escritos_pendientes(programa)
+    ):
+        H.marcar(2, 'ESCRITO_ESTADOS_INCOMPATIBLES', 'Escrito pendiente en la bandeja y escrito o resolución del mismo informe ya en la historia: prevalece la historia; revisar')
     if pendiente:
         H.marcar(2, 'I01_ESCRITO_PENDIENTE', 'Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta')
-        return componer(pfx, pendiente + H.informes_acumulados())
+        return componer(pfx, frases + H.informes_acumulados())
     i1 = H.informe_historia(fv, vencido, atribuible, programa, folio_res)
     i3 = H.escrito_sin_ingreso(programa, desde=fv if vencido else None, folio=folio_esc) if (atribuible or folio_esc) else []
     if vencido and not (atribuible or folio_res or folio_esc) and i1:

@@ -56,9 +56,8 @@
   },
   {
    "id": "r3",
-   "observacion": "Persona PRM: Informe de avance vencido desde el 25 de agosto de 2026. Se hace presente que el informe de PRM LAJA registra ingreso a folio 31 y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada 25 de agosto de 2026. Informe de avance recepcionado en escrito de fecha 20 de septiembre de 2026 (folio 32). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+   "observacion": "Persona PRM: Informe de avance vencido desde el 25 de agosto de 2026. Informe de avance recepcionado en escrito de fecha 20 de septiembre de 2026 (folio 32). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
    "reglas": [
-    "HISTORIA.INFORME_REVISAR_ASOCIACION",
     "HISTORIA.C10_ESCRITO",
     "HISTORIA.I01_SIN_ENVIO_GENERAL"
    ],
@@ -66,11 +65,6 @@
     "NOMENCL"
    ],
    "marcas": [
-    {
-     "nivel": 2,
-     "codigo": "ESCRITO_ESTADOS_INCOMPATIBLES",
-     "texto": "Escrito pendiente en la bandeja y escrito ya incorporado en la historia sin secuencia fiable: revisar"
-    },
     {
      "nivel": 2,
      "codigo": "I01_CONTRADICHA",

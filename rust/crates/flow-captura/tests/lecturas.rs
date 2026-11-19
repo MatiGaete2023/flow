@@ -26,7 +26,14 @@ fn leer(c: &Value, html: &[u8]) -> Result<Value, String> {
 #[test]
 fn ventanas_dan_lo_mismo_que_python() {
     for c in casos() {
-        assert_eq!(leer(&c, c["html"].as_str().unwrap().as_bytes()).unwrap(), c["esperado"], "{}", c["tipo"]);
+        let mut obtenido = leer(&c, c["html"].as_str().unwrap().as_bytes()).unwrap();
+        if c["tipo"] == "historia" {
+            // `read_historia` de Python no lleva Escritos (los lee `read_escritos` aparte). La ventana de muestra trae el
+            // control «Escritos» sin su tabla: no verificada, igual que en Python (E3-13).
+            let escritos = obtenido.as_object_mut().unwrap().remove("escritos").expect("pestaña Escritos visible");
+            assert_eq!(escritos["error"], "ESCRITOS_NO_VERIFICADA");
+        }
+        assert_eq!(obtenido, c["esperado"], "{}", c["tipo"]);
     }
 }
 
@@ -145,8 +152,22 @@ mod escritos {
 
     fn historia_con(bloque: &str) -> Value {
         let c = casos().into_iter().find(|c| c["tipo"] == "historia").unwrap();
-        let html = c["html"].as_str().unwrap().replace("</body>", &format!("{bloque}</body>"));
+        // Sin el control de la pestaña (otra versión de SITFA), salvo que el bloque la traiga.
+        let html = quitar_pestana(c["html"].as_str().unwrap()).replace("</body>", &format!("{bloque}</body>"));
         leer_historia(html.as_bytes(), "ficticio.html", "2026-11-12T12:00:00Z").unwrap()
+    }
+
+    fn quitar_pestana(html: &str) -> String {
+        let inicio = html.find("<li><a href=\"#\" onclick=\"Lengueta('Escritos')\">").expect("control de la pestaña");
+        let fin = inicio + html[inicio..].find("</li>").unwrap() + "</li>".len();
+        format!("{}{}", &html[..inicio], &html[fin..])
+    }
+
+    #[test]
+    fn pestana_visible_sin_tabla_es_no_verificada() {
+        let c = casos().into_iter().find(|c| c["tipo"] == "historia").unwrap();
+        let h = leer_historia(c["html"].as_str().unwrap().as_bytes(), "ficticio.html", "2026-11-12T12:00:00Z").unwrap();
+        assert_eq!(h["escritos"]["error"], "ESCRITOS_NO_VERIFICADA");
     }
 
     #[test]
@@ -210,6 +231,14 @@ mod historico_real {
         let corte = HISTORIAL.find("<table><tr><td colspan=\"19\">").unwrap();
         let solo_lrpa = format!("{}</body></html>", &HISTORIAL[..corte]);
         assert_eq!(leer_historico(solo_lrpa.as_bytes(), "", "x", &[]).unwrap_err(), "HISTORICO_NO_VERIFICADA");
+    }
+
+    #[test]
+    fn e3_03_el_nombre_en_una_celda_de_programa_no_prueba_pertenencia() {
+        let html = "<html><body><h4>Titular Beto Sol</h4><table><tr><th>Nombre Proyecto</th><th>Fecha Egreso</th><th>Causal Egreso</th></tr>\
+            <tr><td>PRM Ana Luna</td><td>--</td><td>SIN INFORMACION</td></tr></table></body></html>";
+        assert_eq!(leer_historico(html.as_bytes(), "", "x", &["Ana Luna"]).unwrap()["ownership"], "INCIERTA");
+        assert_eq!(leer_historico(html.as_bytes(), "", "x", &["Beto Sol"]).unwrap()["ownership"], "VERIFICADA");
     }
 
     #[test]

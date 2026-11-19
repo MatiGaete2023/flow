@@ -90,7 +90,7 @@ def main():
         pairs.append((a,b))
     for a,b in pairs:ratios.append(dict(a=a,b=b,ratio=SequenceMatcher(None,a,b,autojunk=False).ratio()))
     salida=RAIZ/'rust/crates/flow-trabajo/tests/datos/cronologia.json'
-    salida.write_text(json.dumps(dict(casos=cases,similitudes=ratios),ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+    salida.write_text(json.dumps(dict(casos=cases,similitudes=ratios),ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
     print(f'{len(cases)} cronologías y {len(ratios)} comparaciones ficticias cotejadas con Python.')
     metadata, tablas=fixture(1)
     for tabla in tablas.values():
@@ -112,7 +112,7 @@ def main():
     work=import_capture(destino,config,as_of=date(2026,10,8))
     rows=[dict(id=r.id,observacion=r.observation,reglas=r.rules,acciones=r.actions,avisos=r.warnings,
                cronologia=work.capture_context[r.id]['display'],alertas=bitacora_alerts(work,r)) for r in work.rows]
-    (salida.parent/'paquete_cronologia.json').write_text(json.dumps(dict(corte=work.as_of,filas=rows),ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+    (salida.parent/'paquete_cronologia.json').write_text(json.dumps(dict(corte=work.as_of,filas=rows),ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
 
 
 if __name__=='__main__':main()

@@ -61,10 +61,10 @@ def main():
             casos.append(caso)
     salida = RAIZ / 'rust/crates/flow-captura/tests/datos'
     salida.mkdir(parents=True, exist_ok=True)
-    (salida / 'sitfa_ficticio.json').write_text(json.dumps(casos, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (salida / 'sitfa_ficticio.json').write_text(json.dumps(casos, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     selector = (RAIZ / 'descargador_lite/tests/selector_vencimiento_sitfa.js').read_text(encoding='utf-8')
     (salida / 'selector_vencimiento.js').write_text(
-        '\n'.join(linea.expandtabs(4).rstrip() for linea in selector.splitlines()) + '\n', encoding='utf-8')
+        '\n'.join(linea.expandtabs(4).rstrip() for linea in selector.splitlines()) + '\n', encoding='utf-8', newline='\n')
     print(f'{len(casos)} respuestas ficticias comprobadas con el validador Python.')
 
 

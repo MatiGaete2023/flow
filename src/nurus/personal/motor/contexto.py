@@ -47,13 +47,22 @@ def acumulado():
     return ctx.get('acumulado') if ctx else None
 
 
+def _al_corte(fuente, ctx):
+    """Una lectura posterior a la fecha de corte no existía al corte: no decide nada (E3-06)."""
+    if fuente is None:
+        return None
+    leido = getattr(fuente, 'leido', None)
+    corte = ctx.get('date')
+    corte = corte.date() if hasattr(corte, 'date') and callable(corte.date) else corte
+    return None if leido is not None and corte is not None and leido > corte else fuente
+
 def escritos():
     ctx = current.get()
-    return ctx.get('escritos') if ctx else None
+    return _al_corte(ctx.get('escritos'), ctx) if ctx else None
 
 def historico():
     ctx = current.get()
-    return ctx.get('historico') if ctx else None
+    return _al_corte(ctx.get('historico'), ctx) if ctx else None
 
 def consignados():
     ctx = current.get()

@@ -20,5 +20,5 @@ for n in range(450):
     fecha,etapa,control=m.ultima(entradas,corte)
     casos.append(dict(corte=str(corte),desde=str(m.periodo(corte)[0]),entradas=entradas,fecha=str(fecha) if fecha else None,etapa=etapa or None,control=control))
 p=RAIZ/'rust/crates/flow-meta4/tests/datos/calculo_python.json'
-p.write_text(json.dumps(casos,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+p.write_text(json.dumps(casos,ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
 print(f'{len(casos)} cálculos ficticios de Meta 4 generados con Python.')

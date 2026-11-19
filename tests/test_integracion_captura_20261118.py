@@ -203,15 +203,29 @@ def test_recalcular_tras_una_edicion_conserva_las_fuentes_nuevas(tmp_path):
     assert 'FAE X' not in fila.observation and fila.otros_programas == []
 
 
+def _miembros(ruta):
+    import zipfile
+
+    with zipfile.ZipFile(ruta) as z:
+        return {n: z.read(n) for n in z.namelist()}
+
+
 def test_estructura_16_vencimientos_10_ingresos_inventario_y_justificacion(tmp_path):
-    """Escenarios 3, 5 y 10: mismo paquete que compara Rust (`paquete_estructura`)."""
+    """Escenarios 3, 5 y 10: el generador escribe en una carpeta temporal y se compara con los archivos versionados que lee
+    Rust (`paquete_estructura`), sin tocarlos (E3-15)."""
     import subprocess
     import sys
 
     raiz = Path(__file__).parents[1]
+    datos = raiz / 'rust/crates/flow-trabajo/tests/datos'
+    antes = {n: (datos / n).read_bytes() for n in ('paquete_estructura.json', 'paquete_estructura.zip')}
     resultado = subprocess.run(
-        [sys.executable, str(raiz / 'rust/oraculo/generar_paquete_estructura.py')], capture_output=True, text=True, check=True, cwd=raiz
-    )
+        [sys.executable, str(raiz / 'rust/oraculo/generar_paquete_estructura.py'), str(tmp_path)],
+        capture_output=True, text=True, check=True, cwd=raiz,
+    )  # fmt: skip
+    assert {n: (datos / n).read_bytes() for n in antes} == antes  # los versionados no se reescriben
+    assert json.loads((tmp_path / 'paquete_estructura.json').read_text(encoding='utf-8')) == json.loads(antes['paquete_estructura.json'])
+    assert _miembros(tmp_path / 'paquete_estructura.zip') == _miembros(datos / 'paquete_estructura.zip')
     filas = [linea.split(' ', 2) for linea in resultado.stdout.strip().splitlines()]
     assert len(filas) == 16
     por_ingreso = {}
@@ -364,3 +378,97 @@ def Work_load(sesion):
     from nurus.personal.work import Work
 
     return Work.load(sesion, defaults())
+
+
+def test_e3_04_anonimizador_estricto_no_deja_texto_libre_en_campos_de_catalogo(tmp_path):
+    from nurus.personal.anonymize_package import anonymize_capture
+
+    origen = read_capture(paquete(tmp_path, historico=[('FAE X', *VIG), ('PIE Y', '01/05/2026', 'Observación de Zafiria Luminosa')],
+                                  escritos=[('D1', 'Escrito de Zafiria Luminosa', 'Visto por Zafiria Luminosa')], nombre='cat'))
+    for modo in ('estricto', 'conservador'):
+        destino = tmp_path / f'anon-{modo}.zip'
+        anonymize_capture(next(tmp_path.glob('cat.zip')), destino, mode=modo)
+        anonimo = read_capture(destino)
+        assert 'Zafiria' not in json.dumps(anonimo.tables, ensure_ascii=False), modo
+        historico = anonimo.rows('historico_proteccion')
+        assert (historico[0]['egreso_date'], historico[0]['egreso_cause']) == ('--', 'SIN INFORMACION')
+        assert historico[1]['egreso_date'] == '01/05/2026'
+    del origen
+
+
+def test_e3_03_el_nombre_en_una_celda_de_programa_no_prueba_pertenencia():
+    html = pagina(['Nombre Proyecto', 'Fecha Egreso', 'Causal Egreso'], [['PRM Ana Luna', '--', 'SIN INFORMACION']], '<h4>Titular Beto Sol</h4>')
+    assert read_historico(html, persona_esperada=['Ana Luna'])['ownership'] == 'INCIERTA'
+    assert read_historico(html, persona_esperada=['Beto Sol'])['ownership'] == 'VERIFICADA'
+
+
+def test_e3_13_pestana_escritos_visible_sin_tabla_es_no_verificada():
+    with pytest.raises(ValueError, match=ESCRITOS_NO_VERIFICADA):
+        read_escritos('<html><body><ul><li><a>Historia</a></li><li><a>Escritos</a></li></ul></body></html>')
+
+
+def test_e3_16_consignar_con_fallo_al_recalcular_no_deja_la_marca_y_el_reintento_funciona(tmp_path, monkeypatch):
+    import nurus.personal.record_edits as re_
+
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    fila = trabajo.rows[0]
+    original = re_.recalculate
+
+    def falla(*a, **k):
+        raise OSError('fuente inaccesible')
+
+    monkeypatch.setattr(re_, 'recalculate', falla)
+    with pytest.raises(OSError):
+        trabajo.consignar(fila.id, 'FAE X')
+    assert trabajo.consignaciones == {} and 'FAE X' in fila.observation
+    monkeypatch.setattr(re_, 'recalculate', original)
+    trabajo.consignar(fila.id, 'FAE X')
+    assert 'FAE X' not in fila.observation and trabajo.consignaciones == {fila.id: ['fae x']}
+
+
+def _con_dos_lecturas_de_escritos(tmp_path, segunda, cuando2, nombre):
+    metadata, tablas = captura_con_historia([], 'VACIA_COMPROBADA')
+    base = tablas['registros'][0]
+    filtro = {'escritos_causa': {'source_system': 'RUS', 'court_code': base['court_code'], 'cause_id': base['cause_id']}}
+    q1 = _consulta(base, 'es-1', 'escritos', filtro)
+    q1['captured_at'] = '2026-10-01T10:00:00-03:00'
+    q2 = _consulta(base, 'es-2', 'escritos', filtro, segunda)
+    q2['captured_at'] = cuando2
+    q2['saved_pages'] = '1'
+    tablas['consultas'] += [q1, q2]
+    fila = {**_comunes(base, 'es-1', 1), 'ingreso_id': '', 'person_id': '', 'escrito_id': 'es-1', 'scope': 'CAUSA', 'doc': '',
+            'escrito_type': 'Inf. Cump FAE/FAS', 'requester': 'P', 'escrito_status': 'Pendiente', 'reference': '',
+            'linked_ingreso_id': '', 'linked_projection': '', 'identity_status': 'CAUSA', 'raw_json': '{}'}  # fmt: skip
+    tablas['escritos'] = [fila]
+    metadata['table_states']['escritos'] = 'PARCIAL'
+    metadata['queries'] = tablas['consultas']
+    return read_capture(write_capture(tmp_path / f'{nombre}.zip', metadata, tablas)), base
+
+
+def test_e3_07_manda_la_ultima_lectura_fiable_al_corte(tmp_path):
+    from nurus.capture.escritos import filas_de_escritos
+
+    captura, base = _con_dos_lecturas_de_escritos(tmp_path, 'VACIA_COMPROBADA', '2026-10-07T10:00:00-03:00', 'a')
+    clave = ('RUS', base['court_code'], base['cause_id'])
+    consulta, filas = filas_de_escritos(captura, date(2026, 10, 8))[clave]
+    assert consulta['query_id'] == 'es-2' and filas == []  # la bandeja vacía posterior desplaza el pendiente antiguo
+    consulta, filas = filas_de_escritos(captura, date(2026, 10, 3))[clave]
+    assert consulta['query_id'] == 'es-1' and len(filas) == 1  # al corte anterior, la vacía aún no existía
+    captura, base = _con_dos_lecturas_de_escritos(tmp_path, 'VACIA_COMPROBADA', '2026-10-01T10:00:00-03:00', 'b')
+    consulta, _ = filas_de_escritos(captura, date(2026, 10, 8))[clave]
+    assert consulta['coverage'] == 'PARCIAL'  # dos lecturas completas del mismo instante que discrepan
+
+
+def test_e3_02_el_contrato_rechaza_filas_fuera_del_alcance_de_su_consulta(tmp_path):
+    metadata, tablas = captura_con_historia([], 'VACIA_COMPROBADA')
+    base = tablas['registros'][0]
+    q = _consulta(base, 'hp-1', 'historico_proteccion',
+                  {'historico_persona': {'source_system': 'RUS', 'court_code': base['court_code'], 'person_id': base['person_id']}})  # fmt: skip
+    tablas['consultas'].append(q)
+    tablas['historico_proteccion'] = [{**_comunes(base, 'hp-1', 1), 'person_id': 'PERSONA-AJENA', 'historico_id': 'hp-1',
+                                      'program_name': 'FAE Ficticio', 'egreso_date': '--', 'egreso_cause': 'SIN INFORMACION',
+                                      'ownership': 'VERIFICADA', 'raw_json': '{}'}]  # fmt: skip
+    metadata['table_states']['historico_proteccion'] = 'COMPLETA'
+    metadata['queries'] = tablas['consultas']
+    with pytest.raises(CaptureError, match='alcance'):
+        write_capture(tmp_path / 'ajeno.zip', metadata, tablas)

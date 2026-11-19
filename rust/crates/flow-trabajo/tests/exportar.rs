@@ -19,7 +19,8 @@ fn paquete_del_lote_es_reproducible_y_se_importa_igual_que_el_lote() {
     assert!(producto.avisos.is_empty(), "{:?}", producto.avisos);
     assert!(producto.bitacoras.contains("Bitácoras conservadas por tribunal/causa/ingreso: 2; ajenas excluidas: 0."));
     // Bitácoras siempre PARCIAL (la tabla de SITFA no acredita historial completo), como el Descargador Python.
-    assert_eq!(producto.incompletas, ["bitacoras: PARCIAL", "consultas: PARCIAL"]);
+    // La ventana de historia de muestra trae el control «Escritos» sin su tabla: fuente no verificada, nunca vacía (E3-13).
+    assert_eq!(producto.incompletas, ["bitacoras: PARCIAL", "consultas: PARCIAL", "escritos: FALLIDA"]);
     let referencia = datos().join("paquete_desde_lote.zip");
     if std::env::var_os("FLOW_REGENERAR").is_some() {
         std::fs::write(&referencia, &producto.datos).unwrap();

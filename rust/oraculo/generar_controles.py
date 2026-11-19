@@ -43,7 +43,7 @@ def main():
             primera=primera_pendiente(items).isoformat() if primera_pendiente(items) else None,
             proxima=proxima_pendiente(items,corte).isoformat() if proxima_pendiente(items,corte) else None,
             avisos=avisos_cotejo(items,corte,vencimiento_informes=v,fecha_hoja2=h)))
-    (destino/'controles.json').write_text(json.dumps(dict(ordenes=ordenes,calendarios=calendarios),ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+    (destino/'controles.json').write_text(json.dumps(dict(ordenes=ordenes,calendarios=calendarios),ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
     metadata,tablas=fixture(5)
     # Una causa con dos ingresos y vistas simultáneas de estado; una orden de búsqueda sin identidad remota.
     for i,r in enumerate(tablas['registros']):
@@ -64,7 +64,7 @@ def main():
     paquete=destino/'paquete_controles.zip';paquete.unlink(missing_ok=True);write_capture(paquete,metadata,tablas)
     work=import_capture(paquete,defaults(),as_of=corte)
     filas=[dict(id=r.id,observacion=r.observation,reglas=r.rules,acciones=r.actions,avisos=r.warnings,proximo=work.cross_dates.get(r.id).isoformat() if work.cross_dates.get(r.id) else None) for r in work.rows]
-    (destino/'paquete_controles.json').write_text(json.dumps(dict(corte=corte.isoformat(),filas=filas),ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+    (destino/'paquete_controles.json').write_text(json.dumps(dict(corte=corte.isoformat(),filas=filas),ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
     print(f'{len(ordenes)} órdenes, {len(calendarios)} calendarios y un paquete ficticio cotejados con Python.')
 
 

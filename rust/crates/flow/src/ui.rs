@@ -1314,17 +1314,19 @@ impl App {
     /// Marca una constancia como consignada y recalcula la propuesta con las mismas fuentes, conservando las ediciones.
     fn consignar_y_recalcular(&mut self, id: String, programa: String) {
         let (Some(ruta), Some(corte)) = (self.archivo.clone(), self.fecha_corte()) else { return };
-        let Some(actual) = self.trabajo.as_mut() else { return };
-        if !actual.consignar(&id, &programa) {
+        // Transaccional (E3-16): se marca en una copia y solo se reemplaza el trabajo si el recálculo resultó; si la fuente
+        // no se pudo leer, el trabajo queda igual y el reintento vuelve a intentarlo.
+        let Some(mut copia) = self.trabajo.clone() else { return };
+        if !copia.consignar(&id, &programa) {
             return;
         }
-        let consignaciones = actual.consignaciones.clone();
+        let consignaciones = copia.consignaciones.clone();
         match cli::cargar_con(&ruta, self.etapa, None, corte, &self.motor, &consignaciones) {
             Ok(trabajos) => {
-                let Some(mut nuevo) = trabajos.into_iter().find(|t| t.etapa == actual.etapa) else {
+                let Some(mut nuevo) = trabajos.into_iter().find(|t| t.etapa == copia.etapa) else {
                     return self.mal("No se pudo recalcular la propuesta: el archivo ya no trae esa etapa.");
                 };
-                nuevo.conservar_de(actual);
+                nuevo.conservar_de(&copia);
                 self.trabajo = Some(nuevo);
                 self.sin_guardar = true;
                 self.guardar_sesion();

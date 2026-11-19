@@ -52,7 +52,7 @@ def main():
         for r in work.rows
     ]
     (destino / 'paquete_historia.json').write_text(
-        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8')
+        json.dumps({'corte': CORTE.isoformat(), 'filas': filas}, ensure_ascii=False, indent=1), encoding='utf-8', newline='\n')
     for f in filas:
         print(f['id'], '|', f['observacion'][:150], '|', f['acciones'])
 

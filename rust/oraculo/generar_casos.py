@@ -296,7 +296,7 @@ def esperado(caso):
         v = caso['evidencia']
         ctx['evidencia_informe'] = EvidenciaInforme(
             v.get('escrito_historia_folio', ''), v.get('resolucion_folio', ''), dia(v.get('resolucion_fecha')),
-            v.get('calendario', ''), dia(v.get('fecha_proyectada')))
+            v.get('calendario', ''), dia(v.get('fecha_proyectada')), tuple(v.get('folios_ajenos', ())))
     ctx['consignados'] = frozenset(caso.get('consignados', ()))
     ctx['bitacora_parcial'] = bool(caso.get('bitacora_parcial'))
     token = current.set(ctx)
@@ -486,7 +486,7 @@ def main():
         con_texto = sum(1 for c in casos if c['esperado']['observacion'])
         reglas = {r for c in casos for r in c['esperado']['reglas']}
         (destino / f'{etapa.lower()}.json').write_text(
-            json.dumps(casos, ensure_ascii=False, indent=0, separators=(',', ':')), encoding='utf-8')
+            json.dumps(casos, ensure_ascii=False, indent=0, separators=(',', ':')), encoding='utf-8', newline='\n')
         print(f'{etapa}: {len(casos)} casos, {con_texto} con observación, {len(reglas)} reglas distintas')
     todas = {m + '.' + k for m, v in TEXTOS.items() if m != '_meta' for k in v}
     vistas = set()

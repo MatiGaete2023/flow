@@ -37,5 +37,5 @@ for _ in range(400):
         TEXTOS.append(texto)
 casos=[dict(texto=t,tribunal=g.tribunal_name(t)) for t in TEXTOS]
 p=RAIZ/'rust/crates/flow-meta4/tests/datos/tribunales_python.json'
-p.write_text(json.dumps(casos,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')
+p.write_text(json.dumps(casos,ensure_ascii=False,indent=1)+'\n',encoding='utf-8', newline='\n')
 print(f'{len(casos)} textos de tribunal ficticios clasificados con Python.')

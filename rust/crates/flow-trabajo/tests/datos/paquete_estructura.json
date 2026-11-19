@@ -13,11 +13,6 @@
    "marcas": [
     {
      "nivel": 2,
-     "codigo": "ESCRITO_PENDIENTE_SIN_ATRIBUIR",
-     "texto": "Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones"
-    },
-    {
-     "nivel": 2,
      "codigo": "I01_CONTRADICHA",
      "texto": "Informe vencido en RUS contradicho por la historia"
     }
@@ -58,11 +53,6 @@
     "NOMENCL"
    ],
    "marcas": [
-    {
-     "nivel": 2,
-     "codigo": "ESCRITO_PENDIENTE_SIN_ATRIBUIR",
-     "texto": "Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones"
-    },
     {
      "nivel": 2,
      "codigo": "I01_CONTRADICHA",

@@ -22,8 +22,8 @@ def main():
     textos = {f'{grupo}.{clave}': dato['texto'] for grupo, claves in base.items() if grupo != '_meta'
               for clave, dato in claves.items()}
     destino = RAIZ / 'rust' / 'datos'
-    (destino / 'textos.json').write_text(json.dumps(textos, ensure_ascii=False, indent=1), encoding='utf-8')
-    (destino / 'umbrales.json').write_text(json.dumps(dict(UMBRALES), ensure_ascii=False, indent=1), encoding='utf-8')
+    (destino / 'textos.json').write_text(json.dumps(textos, ensure_ascii=False, indent=1), encoding='utf-8', newline='\n')
+    (destino / 'umbrales.json').write_text(json.dumps(dict(UMBRALES), ensure_ascii=False, indent=1), encoding='utf-8', newline='\n')
     print(f'{len(textos)} textos ({base["_meta"]["version"]}) y {len(UMBRALES)} umbrales copiados del Python.')
 
 

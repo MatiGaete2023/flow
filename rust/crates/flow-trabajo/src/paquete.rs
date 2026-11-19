@@ -282,8 +282,9 @@ pub fn importar_con(
     }
     let por_causa = historias(&c);
     // Plan 18-nov-2026: Escritos de la causa, Ingreso Histórico Protección de la persona y asociación explícita.
-    let fuentes_escritos = crate::fuentes_nuevas::filas_de_escritos(&c.manifiesto, tabla("escritos"));
-    let historicos = crate::fuentes_nuevas::historicos_por_persona(&c.manifiesto, tabla("historico_proteccion"));
+    crate::fuentes_nuevas::validar_alcance(&c.manifiesto, &c.tablas)?;
+    let fuentes_escritos = crate::fuentes_nuevas::filas_de_escritos(&c.manifiesto, tabla("escritos"), Some(corte));
+    let historicos = crate::fuentes_nuevas::historicos_por_persona(&c.manifiesto, tabla("historico_proteccion"), Some(corte));
     let mut historia_por_causa: HashMap<[String; 3], Vec<&FilaCsv>> = HashMap::new();
     for fila in tabla("historia_tramites") {
         historia_por_causa.entry(["source_system", "court_code", "cause_id"].map(|k| dato(fila, k).to_string())).or_default().push(fila);

@@ -148,8 +148,9 @@ pub fn analizar(e: &Entrada) -> Resultado {
         acumulado: e.acumulado,
         emitidos: HashSet::new(),
         incidencias: Vec::new(),
-        escritos: e.escritos.cloned(),
-        historico: e.historico.cloned(),
+        // Una lectura posterior al corte no existía al corte: no decide nada (E3-06).
+        escritos: e.escritos.filter(|x| x.leido.is_none_or(|l| l <= e.corte)).cloned(),
+        historico: e.historico.filter(|x| x.leido.is_none_or(|l| l <= e.corte)).cloned(),
         consignados: e.consignados.iter().cloned().collect(),
         evidencia: e.evidencia.cloned(),
         bitacora_parcial: e.bitacora_parcial,

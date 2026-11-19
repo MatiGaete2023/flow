@@ -320,3 +320,98 @@ def test_cumplimiento_atribuye_un_unico_escrito_pendiente_vinculado_a_su_ingreso
     vinculado = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 8, 20)),))
     f = cum(tmp_path, escritos={0: vinculado})
     assert PENDIENTE in f.observation and 'ESCRITO_PENDIENTE_SIN_ATRIBUIR' not in [a[1] for a in f.avisos]
+
+
+def test_e3_09_decision_humana_sin_proyecto_no_reaparece_en_el_word_del_caso(tmp_path):
+    from nurus.personal.config import BASE
+    from nurus.personal.resolutions import automatic_project_selections, prepare_projects
+
+    t = 'Inf. Cump Programa Ambulatorio'
+    bandeja = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 8, 20)),))
+    filas = [fila(1, 'PRM Laja') + [f] for f in ('2026-08-20', '2026-10-05')]
+    trabajo = analizar(tmp_path, 'INFORMES', INFORMES, filas, escritos={0: bandeja, 1: bandeja})
+    pendiente, exigible = trabajo.rows
+    pendiente.decisions['resolution'] = 'none'
+    trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    seleccion = automatic_project_selections(trabajo)
+    assert seleccion == [(exigible.id, 'PC_INFO')]
+    proyectos, errores = prepare_projects(trabajo, seleccion, BASE / 'plantillas_word')
+    assert not errores and [p.record_ids for p in proyectos] == [[exigible.id]]
+
+
+# ---------------------------------------------------------------- correcciones E3 (19-nov-2026)
+def test_e3_01_escrito_vinculado_a_otro_ingreso_no_retira_el_pide_cuenta_de_este(tmp_path):
+    t = 'Inf. Cump Programa Ambulatorio'
+    ajeno = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='AJENO'),))
+    [f] = informes(tmp_path, 'PRM Laja', '2026-08-25', escritos={0: ajeno})
+    assert f.actions == ['programa_vencido', 'PC_INFO'] and PENDIENTE not in f.observation
+    assert 'Pendiente' not in cum(tmp_path, escritos={0: ajeno}).observation
+
+
+def test_e3_05_bandeja_parcial_o_de_identidad_incierta_no_acredita_candidato_unico(tmp_path):
+    t = 'Inf. Cump Programa Ambulatorio'
+    for cobertura in ('PARCIAL', 'IDENTIDAD_INCIERTA'):
+        [f] = informes(tmp_path, 'PRM Laja', '2026-09-20', escritos={0: escritos((t, 'Pendiente'), cobertura=cobertura)})
+        assert f.actions == ['programa_vencido', 'PC_INFO'] and PENDIENTE not in f.observation, cobertura
+    # Un vínculo propio explícito sí vale en una lectura parcial de identidad verificada.
+    propio = Escritos('PARCIAL', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 9, 20)),))
+    [g] = informes(tmp_path, 'PRM Laja', '2026-09-20', escritos={0: propio})
+    assert g.actions == [] and PENDIENTE in g.observation
+
+
+def test_e3_06_lecturas_posteriores_al_corte_no_deciden(tmp_path):
+    t = 'Inf. Cump Programa Ambulatorio'
+    futura = escritos((t, 'Pendiente'), leido=date(2026, 10, 24))  # el corte es 14-oct
+    [f] = informes(tmp_path, 'PRM Laja', '2026-09-20', escritos={0: futura})
+    assert f.actions == ['programa_vencido', 'PC_INFO']
+    h = Historico('COMPLETA', date(2026, 10, 24), 'VERIFICADA', (ProgramaHistorico('FAE X', *VIG),))
+    assert 'cuenta con ingreso efectivo' not in cum(tmp_path, historicos={0: h}).observation
+
+
+def test_e3_10_folio_asociado_a_otro_informe_no_se_atribuye_por_la_via_generica(tmp_path):
+    historia = hist(('Ingreso informe de cumplimiento X', '2026-09-25', 31))
+    ajeno = EvidenciaInforme(fecha_proyectada=date(2026, 9, 20), folios_ajenos=('31',))
+    [f] = informes(tmp_path, 'PRM Laja', '2026-09-20', historias={0: historia}, evidencias={0: ajeno})
+    assert 'folio 31' not in f.observation and f.actions == ['programa_vencido', 'PC_INFO']
+
+
+def test_e3_10_evidencia_explicita_de_historia_prevalece_sobre_el_pendiente_del_mismo_informe(tmp_path):
+    t = 'Inf. Cump Programa Ambulatorio'
+    bandeja = Escritos('COMPLETA', CORTE, (Escrito(t, 'Pendiente', vinculo='EXPLICITO', fecha_proyectada=date(2026, 9, 20)),))
+    historia = hist((t, '2026-09-22', 30), ('Ingreso informe de cumplimiento X', '2026-09-25', 31))
+    ev = EvidenciaInforme('30', '31', date(2026, 9, 25), '', date(2026, 9, 20))
+    [f] = informes(tmp_path, 'PRM Laja', '2026-09-20', historias={0: historia}, escritos={0: bandeja}, evidencias={0: ev})
+    assert 'registra ingreso a folio 31' in f.observation and PENDIENTE not in f.observation and f.actions == []
+    assert 'ESCRITO_ESTADOS_INCOMPATIBLES' in [a[1] for a in f.avisos]
+
+
+def test_e3_11_frase_desactivada_no_reactiva_el_pide_cuenta(tmp_path):
+    from nurus.personal.config import defaults as base
+
+    t = 'Inf. Cump Programa Ambulatorio'
+    config = base()
+    config['desactivadas'] = ['HISTORIA.INFORME_AVANCE_PENDIENTE']
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = 'INFORMES'
+    hoja.append(INFORMES)
+    hoja.append(fila(1, 'PRM Laja') + ['2026-09-20'])
+    ruta = tmp_path / 'des.xlsx'
+    libro.save(ruta)
+    rid = Work(config).analyze(ruta, 'INFORMES', as_of=CORTE).rows[0].id
+    f = Work(config).analyze(ruta, 'INFORMES', as_of=CORTE, escritos_by_record={rid: escritos((t, 'Pendiente'))}).rows[0]
+    assert f.actions == [] and PENDIENTE not in f.observation
+
+
+def test_e3_12_constancia_exige_que_el_sujeto_sea_el_nino():
+    def previa(texto):
+        return constancia_en_bitacora(bita(('2026-10-01', texto)), 'Ana', 'PRM Luna') is not None
+
+    assert not previa('Ana informa que Beto cuenta con ingreso efectivo al programa PRM Luna.')
+    assert previa('Beto informa que Ana cuenta con ingreso efectivo al programa PRM Luna.')
+    assert previa('Se hace presente que Ana cuenta con ingreso efectivo al programa PRM Luna.')
+
+
+def test_e3_14_guion_unicode_menos_vale_como_sin_fecha():
+    h = historico(('FAE Sol', '−−', 'SIN INFORMACION'))
+    assert programas_vigentes_otros(h, 'PRM Laja') == ['FAE Sol']

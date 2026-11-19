@@ -6,7 +6,7 @@ from datetime import timedelta
 from . import vocabulario as V
 from .analisis_historia import busqueda, duplicidades, instituciones, posterior, primera_observacion  # noqa: F401
 from .contexto import acumulado, bitacora, bitacora_parcial, consignados, current, duplicidad, emitidos, evento
-from .contexto import escritos, historia, historico, marcar, parametro
+from .contexto import escritos, evidencia_informe, historia, historico, marcar, parametro
 from .contexto import datetime as Clock
 from .evidencia import ESTADO_PENDIENTE, clave_programa, clave_texto, constancia_en_bitacora, programas_vigentes_otros
 from .historia import clave, ultimo
@@ -469,6 +469,12 @@ def prorroga(corte, egreso_proyectado, vencida, por_vencer, egreso_dicho):
     return [f for f in salida if f]
 
 
+def _folios_ajenos():
+    """Folios de Historia asociados expresamente a OTRO informe de la causa (E3-10): la vía genérica no los atribuye aquí."""
+    ev = evidencia_informe()
+    return frozenset(getattr(ev, 'folios_ajenos', ()) or ())
+
+
 def escrito_sin_ingreso(programa, desde=None, folio=''):
     """C10/I3: último escrito de informe sin «Ingreso informe de cumplimiento X» posterior (por folio). El escrito es
     de la causa: con varios registros no se sabe de quién es el informe y no se propone el proyecto.
@@ -479,8 +485,11 @@ def escrito_sin_ingreso(programa, desde=None, folio=''):
     candidatos = tramites(nombre) if nombre else []
     if folio:
         candidatos = [t for t in candidatos if t.folio_txt == str(folio)]
-    elif desde is not None:
-        candidatos = [t for t in candidatos if t.fecha >= _d(desde)]
+    else:
+        ajenos = _folios_ajenos()
+        candidatos = [t for t in candidatos if t.folio_txt not in ajenos]
+        if desde is not None:
+            candidatos = [t for t in candidatos if t.fecha >= _d(desde)]
     escrito = ultimo(candidatos)
     if escrito is None or _id(escrito) in emitidos():
         return []
@@ -502,8 +511,11 @@ def informe_historia(fecha_vencimiento, vencido, atribuible=True, programa='', f
     lista = tramites(V.INGRESO_INFORME_X)
     if folio:
         lista = [t for t in lista if t.folio_txt == str(folio)]
-    elif vencido:
-        lista = [t for t in lista if t.fecha >= _d(fecha_vencimiento)]
+    else:
+        ajenos = _folios_ajenos()
+        lista = [t for t in lista if t.folio_txt not in ajenos]
+        if vencido:
+            lista = [t for t in lista if t.fecha >= _d(fecha_vencimiento)]
     lista = [t for t in lista if _id(t) not in emitidos()]
     if not lista:
         return []
@@ -657,7 +669,8 @@ def escritos_pendientes(programa):
     e = escritos()
     if e is None or not e.con_filas:
         return []
-    return [f for f in e.filas if _es_pendiente(programa, f)]
+    # Un escrito asociado expresamente a otro ingreso nunca es candidato de este (E3-01).
+    return [f for f in e.filas if f.vinculo != 'AJENO' and _es_pendiente(programa, f)]
 
 
 def escrito_pendiente(programa, vencimiento=None, atribuible=True):
@@ -671,7 +684,12 @@ def escrito_pendiente(programa, vencimiento=None, atribuible=True):
     if not candidatos:
         return None
     propios = [c for c in candidatos if c.vinculo == 'EXPLICITO' and vencimiento is not None and c.fecha_proyectada == _d(vencimiento)]
-    elegido = propios[0] if propios else (candidatos[0] if atribuible and len(candidatos) == 1 and (vencimiento is None or candidatos[0].vinculo != 'EXPLICITO') else None)
+    # «Único candidato» exige una bandeja leída completa: una lectura parcial no acredita que no haya otros (E3-05).
+    completa = escritos().cobertura == 'COMPLETA'
+    unico = (
+        atribuible and completa and len(candidatos) == 1 and (vencimiento is None or candidatos[0].vinculo != 'EXPLICITO')
+    )
+    elegido = propios[0] if propios else (candidatos[0] if unico else None)
     if elegido is None:
         marcar(2, 'ESCRITO_PENDIENTE_SIN_ATRIBUIR', 'Escrito de informe pendiente en la causa que no se puede atribuir a este informe: se conservan las acciones')
         return None
@@ -694,8 +712,9 @@ def escrito_pendiente(programa, vencimiento=None, atribuible=True):
 
 
 def informe_pendiente(programa, vencimiento=None, atribuible=True):
-    """Fragmentos de la regla (una sola frase, una vez). [] si no corresponde."""
+    """(atribuido, fragmentos). La decisión no depende del texto: con la frase desactivada el informe sigue sin pedirse
+    (E3-11). Fragmentos: la frase, una vez, o [] si está desactivada o no corresponde."""
     if escrito_pendiente(programa, vencimiento, atribuible) is None:
-        return []
+        return False, []
     texto = render('HISTORIA', 'INFORME_AVANCE_PENDIENTE')
-    return [texto] if texto else []
+    return True, ([texto] if texto else [])

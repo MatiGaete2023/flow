@@ -90,6 +90,28 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
 - **N2 (riesgo)**: el nombre del programa del histórico («PRM - NOMBRE») debe ser igual, con la normalización de FLOW (guiones y tildes), al de
   la columna programa de Espera/Cumplimiento; si SITFA los escribe distinto, «otro programa» incluirá al actual. Comprobar con un caso real.
 
+## Correcciones E3 (19-nov-2026) — informe en `E3_INFORME_20261119.md`, veredicto NO PASA sobre `c83414d`
+Las 16 observaciones se corrigieron en Python y Rust, cada una con prueba propia (`test_e3_*` en `tests/` y `descargador/`, casos
+dirigidos `INT-*-D30…D41` del oráculo y pruebas Rust). Requiere **nueva revisión E3** sobre la punta actual.
+| ID | Corrección |
+|---|---|
+| E3-01 | Escrito vinculado a otro ingreso = `vinculo='AJENO'`; nunca es candidato (`capture/escritos.py`, `reglas_historia.escritos_pendientes`, `fuentes_nuevas.rs`, `hist.rs`). |
+| E3-02 | Contrato (Python) y lector Rust (`validar_alcance`) rechazan filas de `escritos`/`historico_proteccion` fuera del alcance y pantalla de su consulta. El anonimizador trata `court_code` de los filtros igual que la columna. |
+| E3-03 | Pertenencia del histórico con el texto del titular, excluyendo las tablas de programas (Protección y LRPA). |
+| E3-04 | Anonimizador: `egreso_cause`, `escrito_type`, `escrito_status` se conservan solo si son de catálogo; `egreso_date` solo si es fecha o `--`; lo demás se depura como texto libre. |
+| E3-05 | Escritos con `IDENTIDAD_INCIERTA` conservan ese estado; «único candidato» exige bandeja `COMPLETA`. El vínculo propio explícito vale aunque la lectura sea parcial. |
+| E3-06 | Escritos e histórico con `leido` posterior al corte no deciden (`contexto.escritos/historico`, `flow_motor::analizar`). |
+| E3-07 | Se elige la última lectura fiable (completa o vacía comprobada) al corte; lecturas futuras descartadas; dos completas discordantes del mismo instante → PARCIAL. |
+| E3-08 | Descargador Python y Rust: fila corta → consulta y filas PARCIAL; sin conversión forzada a `VACIA_COMPROBADA`. |
+| E3-09 | Proyectos: tipos efectivos por fila tras la decisión humana (`_tipos_efectivos`; Rust: RES con tipo concreto). |
+| E3-10 | Folios enlazados a otro informe (`EvidenciaInforme.folios_ajenos`) no entran por la vía genérica; la evidencia explícita de Historia del mismo informe prevalece sobre el pendiente (marca `ESCRITO_ESTADOS_INCOMPATIBLES`). Oráculo de integración corregido (D-PEND / D-ESC / D-OTRO). |
+| E3-11 | `informe_pendiente` devuelve la decisión aparte de la frase: con la frase desactivada no vuelven correo ni pide cuenta. |
+| E3-12 | La constancia previa exige que el primer nombre sea el sujeto inmediato del verbo. |
+| E3-13 | Control visible de la pestaña «Escritos» sin tabla → `ESCRITOS_NO_VERIFICADA`. **Efecto**: la ventana de muestra (H0) trae ese control sin tabla, así que hoy cada causa exporta Escritos `FALLIDA` con incidencia (no vacía). Referencias Rust regeneradas con `FLOW_REGENERAR=1`. |
+| E3-14 | Rust acepta U+2212 como guion. |
+| E3-15 | Generadores escriben LF (`newline='\n'`); `write_capture` fija `create_system=3`; la prueba de estructura genera en carpeta temporal y compara sin tocar los versionados. |
+| E3-16 | Consignar es transaccional en Python (revierte la marca si falla el recálculo) y Rust (copia; solo reemplaza si el recálculo resulta). |
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar
@@ -102,13 +124,13 @@ Actualizar al cerrar cada paso. Hechos (N1) separados de inferencias (N2) y espe
    --programa P --archivo consignaciones.json` y `--consignaciones` en `observar/producir`. Python: `python tools/consignar.py SESION --listar |
    --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
-5. E3 (revisión por otro agente) por tocar `motor/`, `textos_base.json`, `contracts/`. Nada está «aceptado».
+5. **Segunda revisión E3** sobre la punta actual (la primera, sobre `c83414d`, dio NO PASA; ver «Correcciones E3»). Nada está «aceptado».
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 328 pruebas
+cd rust && cargo test --workspace --locked                                       # 330 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

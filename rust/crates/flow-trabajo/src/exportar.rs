@@ -983,7 +983,17 @@ fn escritos_de_causa(d: &mut Datos, e: &Value, tribunal: &str, nombre: &str, cau
     let error = texto(e, "error");
     let leida = error.is_empty();
     let vacia = leida && e["vacio_explicito"] == true;
-    let cobertura = if !leida { "FALLIDA" } else if vacia { "VACIA_COMPROBADA" } else { "COMPLETA" };
+    // Una fila que no se pudo leer impide afirmar «completa» o «vacía» (E3-08): la lectura queda parcial.
+    let con_advertencias = e["advertencias"].as_array().is_some_and(|a| !a.is_empty());
+    let cobertura = if !leida {
+        "FALLIDA"
+    } else if con_advertencias {
+        "PARCIAL"
+    } else if vacia {
+        "VACIA_COMPROBADA"
+    } else {
+        "COMPLETA"
+    };
     let qid = format!("escritos-{}", hist["query_id"].trim_start_matches("hist-"));
     let filtros = json!({"tribunal":tribunal,"tribunal_nombre":nombre,"tab":"ESCRITOS",
         "escritos_causa":{"source_system":"RUS","court_code":tribunal,"cause_id":causa}});
@@ -1020,7 +1030,7 @@ fn escritos_de_causa(d: &mut Datos, e: &Value, tribunal: &str, nombre: &str, cau
             ("original_file", archivo.to_string()),
             ("original_row", numero.to_string()),
             ("source_sha256", sha.to_string()),
-            ("coverage", "COMPLETA".into()),
+            ("coverage", cobertura.into()),
             ("escrito_id", format!("{qid}-{numero}")),
             ("scope", "CAUSA".into()),
             ("doc", texto(fila, "doc").into()),
@@ -1069,11 +1079,14 @@ fn historico_de_personas(d: &mut Datos, carpeta: &Path) -> Result<(), String> {
     let mut filas = Vec::new();
     for (n, e) in capturas.iter().enumerate() {
         let qid = format!("historico-{}", n + 1);
-        let cobertura = match texto(e, "estado") {
+        let mut cobertura = match texto(e, "estado") {
             "LEIDA" => "COMPLETA",
             "VACIA_COMPROBADA" => "VACIA_COMPROBADA",
             _ => "FALLIDA",
         };
+        if cobertura != "FALLIDA" && e["advertencias"].as_array().is_some_and(|a| !a.is_empty()) {
+            cobertura = "PARCIAL"; // alguna fila del histórico no se pudo leer (E3-08)
+        }
         let leida = texto(e, "leida").to_string();
         let i = d.consulta(Consulta {
             qid: qid.clone(),
@@ -1110,7 +1123,7 @@ fn historico_de_personas(d: &mut Datos, carpeta: &Path) -> Result<(), String> {
                 ("original_file", format!("respaldo/historico/{}", texto(e, "archivo"))),
                 ("original_row", numero.to_string()),
                 ("source_sha256", texto(e, "sha256").to_string()),
-                ("coverage", "COMPLETA".into()),
+                ("coverage", cobertura.into()),
                 ("historico_id", format!("{qid}-{numero}")),
                 ("program_name", texto(fila, "programa").into()),
                 ("egreso_date", texto(fila, "fecha_egreso").into()),
@@ -1243,13 +1256,13 @@ fn construir_con(lotes: &[Lote], opciones: &Opciones, con_historia: bool) -> Res
         estados.insert("escritos", "NO_SOLICITADA".into());
         estados.insert("historico_proteccion", "NO_SOLICITADA".into());
     }
-    if let Some(e) = &d.escritos {
+    if d.escritos.is_some() {
         let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "escritos").map(|q| q["coverage"].as_str()));
-        estados.insert("escritos", if e.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
+        estados.insert("escritos", estado.into());
     }
-    if let Some(h) = &d.historico {
+    if d.historico.is_some() {
         let estado = agregar(d.consultas.iter().filter(|q| q["screen"] == "historico_proteccion").map(|q| q["coverage"].as_str()));
-        estados.insert("historico_proteccion", if h.is_empty() && estado == "COMPLETA" { "VACIA_COMPROBADA" } else { estado }.into());
+        estados.insert("historico_proteccion", estado.into());
     }
     let calendarios: Option<Vec<&Fila>> = d.calendarios.as_ref().map(|c| c.iter().map(|(f, _)| f).collect());
     let mut tablas: Vec<(&str, Vec<&Fila>)> =

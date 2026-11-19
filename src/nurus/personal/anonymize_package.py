@@ -81,14 +81,18 @@ CONTROL_FIELDS = {
     'original_row',
     'download_state',
     'content_read',
-    # Escritos e Histórico de Protección (plan 18-nov-2026): literales institucionales que el motor compara tal cual.
-    'escrito_type',
-    'escrito_status',
+    # Escritos e Histórico de Protección (plan 18-nov-2026): enumerados que el contrato valida.
     'linked_projection',
     'ownership',
-    'egreso_date',
-    'egreso_cause',
 }
+# Literales que el motor compara y que se conservan SOLO si son de catálogo conocido; cualquier otro valor es texto libre
+# y se depura (E3-04: un nombre en la causal de egreso no puede sobrevivir a la anonimización).
+CATALOGO = {
+    'egreso_cause': {'sin informacion'},
+    'escrito_type': {'inf cump programa ambulatorio', 'inf cump fae fas', 'inf cump centro residencial'},
+    'escrito_status': {'pendiente', 'resuelto', 'proveido'},
+}
+_FECHA_EGRESO = re.compile(r'^\s*(?:[-\u2010-\u2014\u2212]{2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}|\d{4}-\d{2}-\d{2})\s*$')
 _JSON_LIMIT = 30
 _SENSITIVE_WORDS = re.compile(r'(?i)(rut|run|nombre|apellido|curador|litigante|domicilio|direccion|telefono|correo)')
 
@@ -163,6 +167,11 @@ class Mapper:
             return self.replacer.text(str(value))
         if label in FREE_FIELDS:
             return self.free(value)
+        if label in CATALOGO:
+            limpio = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', normalize(value)).split())
+            return value if limpio in CATALOGO[label] else self.free(value)
+        if label == 'egreso_date':
+            return value if _FECHA_EGRESO.match(str(value)) else self.free(value)
         if label in CONTROL_FIELDS or name in self.protected:
             if isinstance(value, str):
                 # Se mantienen términos institucionales y columnas del motor,
@@ -214,6 +223,9 @@ class Mapper:
                 return [visit(child, key, depth + 1) for child in value]
             if isinstance(value, (dict, list)):
                 raise UnsafePackage('Estructura JSON incompatible.')
+            if filters and key == 'court_code':
+                # Mismo tratamiento que la columna court_code: el alcance de la consulta debe seguir coincidiendo con sus filas.
+                return self.value(key, value)
             if filters and key in (
                 'tribunal',
                 'tribunal_nombre',
@@ -221,7 +233,6 @@ class Mapper:
                 'screen',
                 'tab',
                 'source_system',
-                'court_code',
                 'capture_tables',
             ):
                 # Filtros de operación: no son identidad personal.

@@ -136,8 +136,8 @@ def captured_extra_context(work, source, vencimiento=None):
             historia_filas[(fila['source_system'], fila['court_code'], fila['cause_id'])].append(fila)
         cached = (
             work.capture_digest,
-            filas_de_escritos(capture),
-            historicos_por_persona(capture),
+            filas_de_escritos(capture, date.fromisoformat(work.as_of)),
+            historicos_por_persona(capture, date.fromisoformat(work.as_of)),
             build_index(capture.manifest, capture.tables),
             historia_filas,
         )
@@ -268,8 +268,8 @@ def import_capture(path, config, *, as_of=None, previous=None, resolutions=None)
         historicos_por_persona,
     )
 
-    fuentes_escritos = filas_de_escritos(capture)
-    historicos = historicos_por_persona(capture)
+    fuentes_escritos = filas_de_escritos(capture, as_of)
+    historicos = historicos_por_persona(capture, as_of)
     cobertura_ingreso = build_index(capture.manifest, capture.tables)
     historia_filas = defaultdict(list)
     for fila in capture.rows('historia_tramites'):

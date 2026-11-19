@@ -308,6 +308,39 @@ fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
     }
 }
 
+/// La pestaña «Escritos» está visible como control (enlace, botón, ítem o celda), aunque no traiga su tabla (E3-13).
+fn pestana_escritos(doc: &Html) -> bool {
+    doc.select(&sel("a, li, button, span, td, th")).any(|e| normalizar(&texto(e)) == "escritos")
+        || doc.select(&sel("input[value]")).any(|e| normalizar(e.value().attr("value").unwrap_or("")) == "escritos")
+}
+
+/// Texto de la vista SIN las tablas de programas (Protección y LRPA): la pertenencia se prueba con los datos del titular,
+/// nunca con una mención en «Nombre Proyecto» u otra celda de datos (E3-03).
+fn texto_titular(doc: &Html, egreso: &[String], programas: &[String]) -> String {
+    let mut excluidas = std::collections::HashSet::new();
+    for tabla in doc.select(&sel("table")) {
+        for fila in filas(tabla) {
+            let cabecera: Vec<String> = celdas(fila).iter().map(|e| normalizar(&texto(*e))).collect();
+            if egreso.iter().all(|e| cabecera.contains(e)) && programas.iter().any(|p| cabecera.contains(p)) {
+                excluidas.insert(tabla.id());
+                break;
+            }
+        }
+    }
+    let partes: Vec<&str> = doc
+        .root_element()
+        .descendants()
+        .filter(|n| {
+            !n.ancestors().filter_map(ElementRef::wrap).any(|e| {
+                excluidas.contains(&e.id()) || matches!(e.value().name(), "script" | "style" | "noscript" | "template")
+            })
+        })
+        .filter_map(|n| n.value().as_text())
+        .map(|t| t.as_ref())
+        .collect();
+    partes.join(" ").split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 const ESCRITOS: [&str; 4] = ["Doc.", "Tipo Escrito", "Solicitante", "Estado"];
 
 /// Bandeja de Escritos de la causa, en la misma respuesta que la Historia (`nurus/escritos_html.py::read_escritos`).
@@ -326,7 +359,7 @@ fn leer_escritos(doc: &Html) -> Result<Option<Value>, &'static str> {
         }
     }
     if tablas.len() != 1 {
-        let presente = normalizar(&texto(doc.root_element())).contains("tipo escrito");
+        let presente = normalizar(&texto(doc.root_element())).contains("tipo escrito") || pestana_escritos(doc);
         return if presente || !tablas.is_empty() { Err("ESCRITOS_NO_VERIFICADA") } else { Ok(None) };
     }
     let (cabecera, originales, filas) = tablas.pop().unwrap();
@@ -410,7 +443,7 @@ pub fn leer_historico(datos: &[u8], fuente: &str, capturada: &str, persona_esper
         }
         resultado.push(json!({"fila":i + 1,"programa":valores[col_programa],"fecha_egreso":valores[col_fecha],"causal_egreso":valores[col_causal]}));
     }
-    let visible = format!(" {} ", normalizar(&texto(doc.root_element()).replace('.', "")));
+    let visible = format!(" {} ", normalizar(&texto_titular(&doc, &egreso, &programas).replace('.', "")));
     let verificada = persona_esperada.iter().any(|p| {
         let limpio = normalizar(&p.replace('.', ""));
         (limpio.chars().any(|c| c.is_ascii_digit()) || limpio.split_whitespace().count() >= 2) && visible.contains(&format!(" {limpio} "))

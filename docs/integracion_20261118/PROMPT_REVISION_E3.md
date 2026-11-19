@@ -45,7 +45,7 @@ Para el Descargador sin tkinter solo corren las pruebas de lectura/exportación/
 ## CONTROLES MECÁNICOS (repite y reporta números)
 
 1. `python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors` → el conjunto de fallos debe ser **idéntico** a `base_python_fallos.txt` (55). Sin el flag pytest aborta en la recolección y la comparación sale vacía (error ya cometido una vez).
-2. `cd rust && cargo test --workspace --locked` → 328 pruebas, 0 fallos. Verifica además `cargo build --release --locked -p flow`.
+2. `cd rust && cargo test --workspace --locked` → 330 pruebas, 0 fallos. Verifica además `cargo build --release --locked -p flow`.
 3. `ruff check --select E9,F63,F7,F82,F401,F841 src descargador tools tests rust/oraculo` → limpio.
 4. Regeneración de oráculos (Python manda): `python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py && python rust/oraculo/generar_paquete_estructura.py && python rust/oraculo/generar_datos.py` y `git status`: no debe haber diferencias (si las hay, el oráculo comprometido está desactualizado).
 5. Golden: `python tools/flow_baseline_golden.py --output <dir_nuevo> --expected docs/evidencia_p0/golden/semantic.json` y compara con la base. El único cambio funcional esperado en observaciones existentes es `INFORME_INGRESADO` → `INFORME_REVISAR_ASOCIACION` en Informes vencidos con ingreso atribuido (2 pruebas de `test_historia_informes.py` actualizadas). **Cualquier otra diferencia es hallazgo.**
@@ -79,6 +79,9 @@ Para el Descargador sin tkinter solo corren las pruebas de lectura/exportación/
 **E. Pruebas** — `tests/test_integracion_20261118.py`, `tests/test_integracion_captura_20261118.py`, `descargador/test_paquete_escritos.py`, `rust/**/tests`. ¿Prueban comportamiento o solo repiten la implementación? Pruebas que regeneran archivos versionados (`test_estructura_16…` ejecuta un script que reescribe `tests/datos`): ¿ocultan deriva?
 
 ## HALLAZGOS YA CONOCIDOS (no los reportes como nuevos; confirma su estado)
+
+Primera E3 (`E3_INFORME_20261119.md`, sobre `c83414d`): 16 hallazgos E3-01…E3-16, corregidos según la tabla «Correcciones E3» de `REGISTRO.md`. **Verifica cada corrección** con su prueba `test_e3_*` y busca regresiones que hayan introducido.
+
 
 Revisión interna previa: corregidos (a) escrito explícito ignorado en Cumplimiento, (b) respaldo de histórico dañado abortaba el paquete. Aceptados sin cambio: marcas de `consignar` para filas inexistentes (uso legítimo previo al análisis), clave `programa+\x00+ingreso` en `_prepass` (Rust usa tupla), recálculo de `_case_key` por fila, duplicación de la detección de tablas Python/Rust.
 Riesgo N2 abierto: el nombre del programa del histórico («PRM - NOMBRE») debe igualar, normalizado, al de la columna programa de Espera/Cumplimiento.

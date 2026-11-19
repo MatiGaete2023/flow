@@ -47,8 +47,9 @@ class Escrito:
     doc: str = ''
     solicitante: str = ''
     fila: int = 0
-    # Asociación explícita con una proyección concreta (referencia documental o vínculo del calendario).
-    vinculo: str = ''  # 'EXPLICITO' o ''
+    # Asociación explícita con una proyección concreta (referencia documental o vínculo del calendario):
+    # 'EXPLICITO' = de este ingreso; 'AJENO' = asociado expresamente a OTRO ingreso (nunca es candidato aquí); '' = sin vínculo.
+    vinculo: str = ''
     fecha_proyectada: date | None = None
     periodo: str = ''
 
@@ -102,6 +103,8 @@ class EvidenciaInforme:
     resolucion_fecha: date | None = None
     calendario: str = ''  # 'PENDIENTE', 'ENVIADO' o ''
     fecha_proyectada: date | None = None
+    # Folios de Historia asociados expresamente a OTRO informe de la causa: no se atribuyen a este por la vía genérica.
+    folios_ajenos: tuple = ()
 
 
 def clave_programa(nombre):
@@ -140,8 +143,9 @@ def _sin_aplanar(texto):
 def constancia_en_bitacora(observaciones, primer_nombre, programa):
     """Observación registrada que ya hizo constar que ese niño cuenta con ingreso efectivo a ese programa.
 
-    La coincidencia es del nombre completo del programa (no por subcadena) y exige el primer nombre del niño en la
-    misma oración. Una negación o la mera mención del nombre no bastan. Devuelve la observación o None."""
+    La coincidencia es del nombre completo del programa (no por subcadena) y exige que el SUJETO de la constancia sea el
+    niño: su primer nombre es la palabra inmediatamente anterior a «cuenta con ingreso…»/«ingresó efectivamente…»
+    («Ana informa que Beto cuenta con…» no es constancia de Ana). Una negación o la mera mención no bastan."""
     objetivo = clave_programa(programa)
     nombre = clave_texto(primer_nombre)
     if not objetivo:
@@ -151,9 +155,10 @@ def constancia_en_bitacora(observaciones, primer_nombre, programa):
             for encontrado in _CONSTANCIA.finditer(oracion):
                 if clave_programa(encontrado.group(1)) != objetivo:
                     continue
-                if _NEGACION.search(clave_texto(oracion[: encontrado.start()])):
+                previo = clave_texto(oracion[: encontrado.start()])
+                if _NEGACION.search(previo):
                     continue
-                if nombre and nombre not in clave_texto(oracion).split():
+                if not nombre or previo.split()[-1:] != [nombre]:
                     continue
                 return obs
     return None
