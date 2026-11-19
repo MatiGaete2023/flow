@@ -215,6 +215,47 @@ def _automatic_resolution(row):
     return suggested_resolution(row)
 
 
+def resumen_trabajo(work):
+    """P5: conteos del resumen de Trabajo (sin Tk). Editados = edición humana real; consignaciones = marcas de P1."""
+    filas = [r for r in work.rows if not r.excluded]
+    return {
+        'editados': sum(_human_reviewed(r) for r in work.rows),
+        'con_avisos': sum(bool(r.avisos) for r in filas),
+        'escritos_pendientes': sum((getattr(r, 'escritos_resumen', None) or {}).get('pendientes', 0) > 0 for r in filas),
+        'consignaciones': sum(len(v) for v in (getattr(work, 'consignaciones', None) or {}).values()),
+    }
+
+
+def texto_resumen_extra(work):
+    """« · 3 editados · 2 con avisos · 1 con escritos pendientes» (solo lo que no es cero)."""
+    datos = resumen_trabajo(work)
+    rotulos = (
+        ('editados', 'editado', 'editados'),
+        ('con_avisos', 'con avisos', 'con avisos'),
+        ('escritos_pendientes', 'con escritos pendientes', 'con escritos pendientes'),
+        ('consignaciones', 'constancia consignada', 'constancias consignadas'),
+    )
+    return ''.join(f' · {datos[k]} {uno if datos[k] == 1 else varios}' for k, uno, varios in rotulos if datos[k])
+
+
+def confirmacion_reprocesar(work):
+    """P5: texto de confirmación si volver a procesar reemplazaría ediciones o consignaciones en pantalla; '' si no hay."""
+    if work is None:
+        return ''
+    datos = resumen_trabajo(work)
+    if not (datos['editados'] or datos['consignaciones']):
+        return ''
+    partes = []
+    if datos['editados']:
+        partes.append(f"{datos['editados']} registro(s) editados")
+    if datos['consignaciones']:
+        partes.append(f"{datos['consignaciones']} constancia(s) marcadas como consignadas")
+    return (
+        'Volver a procesar reemplaza el trabajo en pantalla, que tiene ' + ' y '.join(partes) + '. '
+        'Si los necesitas, exporta antes una copia. ¿Procesar de todos modos?'
+    )
+
+
 def _human_reviewed(row):
     """Distingue una edición humana real de columnas técnicas reimportadas vacías."""
     review = row.review or {}

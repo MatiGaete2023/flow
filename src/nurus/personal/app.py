@@ -312,6 +312,11 @@ class App(_BaseApp):
         sheet = self.sheet.get() or None
         if not Path(path).is_file():
             raise ValueError('Selecciona un archivo Excel existente.')
+        from .work import confirmacion_reprocesar
+
+        aviso = confirmacion_reprocesar(self.work)
+        if aviso and not messagebox.askyesno('Procesar de nuevo', aviso, parent=self):
+            return
         cfg = self.cfg.data
 
         def done(work):
@@ -489,6 +494,9 @@ class App(_BaseApp):
         self.summary.set(f'{n} registros · {obs} propuestas · {exc} excluidos · {projects} proyectos posibles')
         if invalid_res:
             self.summary.set(self.summary.get() + f' · {invalid_res} RES por corregir')
+        from .work import texto_resumen_extra
+
+        self.summary.set(self.summary.get() + texto_resumen_extra(self.work))
         totals = summarize(self.work)
         if totals['constancias']:
             self.summary.set(

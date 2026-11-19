@@ -819,3 +819,19 @@ def test_historico_con_la_forma_visible_de_la_ventana_real_19nov():
     assert [(f['Programa'], f['Fecha egreso'], f['Causal egreso']) for f in lectura['filas']] == [
         ('PRM - PROGRAMA FICTICIO', '--', 'SIN INFORMACION')
     ]
+
+
+def test_p5_resumen_y_confirmacion_antes_de_reprocesar(tmp_path):
+    from nurus.personal.work import confirmacion_reprocesar, resumen_trabajo, texto_resumen_extra
+
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)], escritos=[('D1', AMB, 'Pendiente')], nombre='r')
+    assert confirmacion_reprocesar(None) == '' and confirmacion_reprocesar(trabajo) == ''
+    con_pendientes = sum((r.escritos_resumen or {}).get('pendientes', 0) > 0 for r in trabajo.rows if not r.excluded)
+    assert con_pendientes >= 1 and resumen_trabajo(trabajo)['escritos_pendientes'] == con_pendientes
+    assert f' · {con_pendientes} con escritos pendientes' in texto_resumen_extra(trabajo)
+    fila = trabajo.rows[0]
+    trabajo.consignar(fila.id, 'FAE X')
+    fila.review['OBSERVACION'] = 'Texto editado por la persona.'
+    aviso = confirmacion_reprocesar(trabajo)
+    assert '1 registro(s) editados' in aviso and '1 constancia(s)' in aviso and aviso.endswith('¿Procesar de todos modos?')
+    assert ' · 1 editado' in texto_resumen_extra(trabajo) and '1 constancia consignada' in texto_resumen_extra(trabajo)

@@ -84,6 +84,13 @@ La revisión no cambia ninguna propuesta: el motor ya analizó el paquete comple
   anteriores, del más reciente al más antiguo, con búsqueda por nombre o carpeta (sin tildes ni mayúsculas); «Abrir» y
   «Abrir su carpeta». No sigue enlaces simbólicos.
 
+## Resumen de Trabajo y confirmación al volver a procesar (P5, 19-nov-2026)
+
+- El resumen bajo la barra de Trabajo suma, cuando no son cero, los registros **editados**, los registros **con avisos**, los
+  que tienen **escritos pendientes** y las **constancias consignadas**.
+- **Procesar archivo** pide confirmación si el trabajo en pantalla tiene registros editados o constancias marcadas como
+  consignadas: volver a procesar lo reemplaza. Exporta una copia antes si la necesitas.
+
 ## Cronología de bitácoras (solo mostrar, WP-50)
 
 Con un paquete del Descargador, Trabajo muestra la columna **Última obs. centro**

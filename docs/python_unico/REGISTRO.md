@@ -14,7 +14,7 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | P3c histórico automático | **Corregido (marco interno) · PRUEBA REAL PENDIENTE (usuario)** · E3 pendiente (extensión) | ver Historial 19-nov |
 | P8 diagnóstico del paquete | **Hecho** | ver Historial 19-nov (P8) |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
-| P5 diseño | Pendiente | — |
+| P5 diseño | **Hecho en parte** (confirmación y conteos); lista/ficha pendiente de Tk real | ver Historial 19-nov (P5) |
 | P9 notificación y diligencias | **Postergado por el usuario** | — |
 | P6 `.eml`, P7 consola | **Postergados por el usuario** | — |
 
@@ -27,7 +27,9 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-P5 (diseño, en curso). Ver Historial.
+Desarrollo sin bloqueos agotado salvo P5-lista/ficha (requiere Tk real). Lo que sigue depende del usuario: prueba real de P3c,
+prueba visual en Windows de P1, P2, P3a, P4, P5 y P8, y la revisión E3 independiente de P3c. Si el usuario lo pide: prompt de
+esa revisión E3 (`docs/python_unico/PROMPT_REVISION_E3_P3C.md`, por crear) y P5-lista/ficha tras la prueba visual.
 
 ## Base de verificación (contenedor Linux sin Tk)
 
@@ -117,3 +119,7 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   y estado final; rutas reemplazadas por «<ruta>». `lectura_bitacoras.faltantes_por_tribunal` / `aviso_faltantes`: el
   resultado del lote trae los faltantes por tribunal y el flujo los avisa al terminar. Manual del Descargador actualizado.
   Pruebas `test_p8_*` en `descargador/test_flujo_paquete.py`.
+- 19-nov-2026 · **P5 hecho en parte.** `work.resumen_trabajo`, `texto_resumen_extra` y `confirmacion_reprocesar` (sin Tk):
+  el resumen de Trabajo suma editados, con avisos, con escritos pendientes y constancias consignadas; «Procesar archivo»
+  pide confirmación si hay ediciones o consignaciones en pantalla. F1 ya abría el manual (sin cambio). **No hecho:** vista
+  lista/ficha en Correos y Resoluciones (rediseño visual; necesita Tk real para verificarse). Prueba `test_p5_*`.
