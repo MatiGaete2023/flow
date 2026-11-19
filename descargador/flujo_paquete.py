@@ -2,7 +2,6 @@
 
 from dataclasses import asdict, is_dataclass, replace
 import json
-import re
 from pathlib import Path
 
 import motor as m
@@ -53,6 +52,9 @@ def run(
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
     backup.mkdir(parents=True, exist_ok=bool(resume))
+    if state.get('historial_version') != 2:
+        state['historial'] = []
+        state['historial_version'] = 2
     anotar(state, f"inicio; reintento {state.get('reintentos', 0)}" if resume else 'inicio')
     write(control, state)
     emit('pipeline_folder', str(root))
@@ -125,10 +127,13 @@ def run(
         from lectura_bitacoras import aviso_faltantes
 
         # P8: qué bitácoras faltan, por tribunal, en el historial y como aviso visible al terminar.
-        faltantes = aviso_faltantes(diaries.get('faltantes_por_tribunal') or {})
-        for aviso in faltantes:
-            anotar(state, aviso)
+        faltantes = diaries.get('faltantes_por_tribunal') or {}
+        for aviso in aviso_faltantes(faltantes):
             emit('warning', aviso)
+        por_codigo = {codigo: {**conteos, 'nombre': ''} for codigo, conteos in faltantes.items()
+                      if codigo.isascii() and codigo.isdigit()}
+        for aviso in aviso_faltantes(por_codigo):
+            anotar(state, aviso)
         write(control, state)
         carpetas_informes, informes_completos = _informes(
             bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias
@@ -163,14 +168,8 @@ def run(
             opciones['extra_folders'] = carpetas_informes
         if meses != 4:
             opciones['meses'] = meses
-        historico_fallido = False
-        if historico and (manifest.parent / 'historico.json').is_file():
-            from historico_manual import cargar
-
+        if historico:
             opciones['historico'] = manifest.parent
-            historico_fallido = any(e.get('estado') == 'FALLIDA' for e in cargar(manifest.parent)[1])
-            if historico_fallido:
-                emit('warning', 'Algún Ingreso Histórico Protección no se pudo leer; el paquete queda parcial.')
         try:
             result = package_current_lot(
                 sheets,
@@ -187,6 +186,9 @@ def run(
             emit('warning', 'La historia no pudo incluirse en el paquete; las bitácoras se conservan.')
             historia_ok = False
             result = package_current_lot(sheets, manifest, target, consolidated, **opciones)
+        historico_fallido = historico and result.get('historico_incompleto', True)
+        if historico_fallido:
+            emit('warning', 'Quedaron lecturas del Ingreso Histórico Protección sin verificar. El paquete queda parcial.')
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])
         # Un calendario por ingreso (WD-1) fallido o pendiente también deja el paquete parcial.
         partial = partial or bool(diaries.get('calendarios_fallidos'))
@@ -203,18 +205,15 @@ def run(
         return result
     except BaseException as exc:
         state['estado'] = 'INCOMPLETO'
-        anotar(state, f"error en fase {state.get('fase', '')}: {exc}")
+        codigo = 'ERROR_ARCHIVO' if isinstance(exc, OSError) else 'ERROR_OPERACION'
+        anotar(state, f"error en fase {state['fase']} ({codigo})")
         write(control, state)
         raise
 
 
-_RUTA = re.compile(r'(?:[A-Za-z]:\\|\\\\|/(?:home|Users|root|tmp|mnt)/).*?(?=\.\s|\.$|["\'«»]|$)')
-
-
 def anotar(state, evento):
-    """P8: historial ANÓNIMO del paquete en `respaldo/proceso.json` (instante, fase, decisión, error literal, resumen).
-    Las rutas de archivos se reemplazan por «<ruta>» (pueden traer el usuario de Windows); se guardan los últimos 200."""
-    texto = _RUTA.sub('<ruta>', ' '.join(str(evento).split()))[:500]
+    """Conserva los últimos 200 eventos de vocabulario controlado."""
+    texto = ' '.join(evento.split())[:500]
     historial = state.setdefault('historial', [])
     historial.append(m.now().astimezone().isoformat(timespec='seconds') + ' ' + texto)
     del historial[:-200]

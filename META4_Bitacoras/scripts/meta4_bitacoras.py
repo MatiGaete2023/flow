@@ -15,6 +15,8 @@ import re
 import secrets
 import shutil
 import sys
+from xml.etree.ElementTree import ParseError
+from zipfile import BadZipFile
 from dataclasses import dataclass, field, replace
 
 BASE = Path(__file__).resolve().parents[1]
@@ -27,6 +29,7 @@ from openpyxl import Workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.utils.exceptions import InvalidFileException
 
 VERSION = '2.6.0'
 ALERTA = 'ALERTA: última observación en Espera; registro en Cumplimiento'
@@ -969,7 +972,7 @@ def validar_plantilla(path):
         raise ValueError('La plantilla debe ser un archivo .xlsx existente.')
     try:
         libro = meta.load_template(ruta)
-    except Exception as exc:  # archivo dañado o protegido
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, BadZipFile, InvalidFileException, ParseError) as exc:
         raise ValueError('No se pudo abrir la plantilla Excel: ' + str(exc)) from None
     faltan = [h for h in meta.SHEET_DEFS if h not in libro.sheetnames]
     if faltan:

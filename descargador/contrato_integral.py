@@ -25,7 +25,7 @@ PROTOCOLS = {
     'pdf_copia_fija': 1,
     'calendario_lectura': 1,
     'historia_lectura': 1,
-    'historico_lectura': 1,
+    'historico_lectura': 2,
 }
 VERSION = '2.9.0'
 
@@ -59,14 +59,18 @@ def verify_extension(bridge):
         raise m.PocError(
             'La extensión no incluye conjuntamente lectura de bitácoras e historia, descarga CSMP y PDF con selección restituida. Actualiza la extensión desde la carpeta de esta entrega y vuelve a conectar.'
         )
-    if result.get('version') != VERSION or result.get('protocolos') != PROTOCOLS:
+    protocolos = result.get('protocolos')
+    if (
+        result.get('version') != VERSION or not isinstance(protocolos, dict) or protocolos != PROTOCOLS
+        or any(type(version) is not int for version in protocolos.values())
+    ):
         # Chrome sigue usando la carpeta que se cargó la primera vez, aunque se descomprima una entrega nueva en otra.
         raise m.PocError(
             'Chrome usa una copia anterior de la extensión (declara '
             + str(result.get('version', 'sin versión'))
             + '; esta herramienta requiere '
             + VERSION
-            + '). En chrome://extensions quita «SITFA · Descargador local integral» y pulsa Cargar extensión sin empaquetar con la carpeta '
+            + ' y los protocolos de la entrega). En chrome://extensions quita «SITFA · Descargador local integral» y pulsa Cargar extensión sin empaquetar con la carpeta '
             + str(extension_dir())
             + '. Luego abre una nueva conexión desde SITFA.'
         )

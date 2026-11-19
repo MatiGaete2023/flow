@@ -238,3 +238,42 @@ def test_p3c_estructura_de_ventana_no_incluye_datos_de_personas():
         assert dato not in texto, dato
     sin_digitos = b'<html><body><table><tr><td>Ana Luna Sol</td><td>Beto Rio Mar</td></tr></table></body></html>'
     assert 'Ana' not in json.dumps(estructura_ventana(sin_digitos))
+
+
+def test_e3f_identidad_automatica_exige_rut_unico_y_visible(tmp_path):
+    persona = {'tribunal': '113', 'person_id': 'p1', 'nombre': 'Ana Luna Sol', 'rut': '11.111.111-1'}
+    encabezado = '<div>Rut : 11.111.111-1</div>'
+    for texto, estado in [
+        ('<div>Nombre del niño: Ana Luna Sol</div><div>Rut: 22.222.222-2</div>', 'INCIERTA'),
+        ('<div>Rut: <span hidden>11.111.111-1</span></div><div>Rut: 22.222.222-2</div>', 'INCIERTA'),
+        (encabezado + '<div>Rut: 22.222.222-2</div>', 'INCIERTA'),
+        ('<div>Rut: 0011111111-1</div>', 'VERIFICADA'),
+    ]:
+        entrada = capturar(tmp_path, HISTORICO_HTML.replace(encabezado, texto), persona, rut_hash='ficticia')
+        assert entrada['ownership'] == estado
+
+
+def test_e3f_extractos_solo_emiten_literales_del_catalogo():
+    from extraer_estructura_escritos import estructura_pestana, estructura_ventana
+
+    html = b'''<html><head><title>Luna Ficticia</title></head><body>
+      <table><tr><th>Programa Laguna</th><th>Rita Ficticia</th></tr></table>
+      <div>Ingreso de Luna Ficticia</div>
+      <iframe src="/LunaFicticia.do"></iframe>
+      <form action="/CausaInexistente.jsp" method="TextoPrivado"><input name="AliasInventado"></form>
+      <script>function verEscritosRita(){ return "/LunaFicticia.do?AliasInventado=demo"; }</script>
+      <a onclick="verEscritosRita()" data-aliasinventado="x">Escritos</a>
+    </body></html>'''
+    salida = json.dumps([estructura_pestana(html), estructura_ventana(html)]).casefold()
+    for literal in ('luna', 'laguna', 'rita', 'causainexistente', 'textoprivado', 'aliasinventado'):
+        assert literal not in salida
+
+
+def test_e3f_historico_con_huella_invalida_exporta_fallo_sin_perder_registros(tmp_path):
+    carpeta = tmp_path / 'historico'
+    captura = capturar(carpeta, HISTORICO_HTML, {'tribunal': '113', 'person_id': 'p1', 'rut': '11.111.111-1'})
+    (carpeta / 'historico' / captura['archivo']).write_text('cambio ficticio', encoding='utf-8')
+    paquete_leido = read_capture(paquete(tmp_path, 'dañado', historico=carpeta))
+    assert paquete_leido.rows('registros')
+    assert not paquete_leido.rows('historico_proteccion')
+    assert any(i['code'] == 'HISTORICO_RESPALDO_INVALIDO' for i in paquete_leido.rows('incidencias'))

@@ -112,17 +112,17 @@ def alcance_bitacora(document, vacia):
     todas las entradas del ingreso en una respuesta, sin paginación ni filtros de fecha."""
     if document.xpath(_CONTROLES_RECORTE):
         return 'PARCIAL'
-    for nodo in document.xpath('//input | //select | //a | //button | //*[@onclick]'):
-        attr = {k: nodo.get(k) or '' for k in ('name', 'id', 'href', 'onclick', 'type', 'value')}
+    for nodo in document.xpath("//input | //select | //a | //button | //*[@onclick or @role='button']"):
+        attr = {k: nodo.get(k) or '' for k in ('name', 'id', 'href', 'onclick', 'type', 'value', 'aria-label', 'title', 'role')}
         nombre = (attr['name'] + ' ' + attr['id']).lower().replace('_', '').replace('-', '')
         accion = (attr['href'] + ' ' + attr['onclick']).lower()
         boton = nodo.tag == 'input' and attr['type'].lower() in ('button', 'submit', 'image', 'reset')
         crudo = ' '.join(nodo.text_content().split()) + ' ' + (attr['value'] if boton else '')
-        rotulo = normalize(crudo)
-        pulsable = boton or nodo.tag in ('a', 'button') or bool(attr['onclick'])
+        pulsable = boton or nodo.tag in ('a', 'button') or bool(attr['onclick']) or attr['role'] == 'button'
+        rotulo = normalize(' '.join((crudo, attr['aria-label'], attr['title'])) if pulsable else crudo)
         compacto = ''.join(c for c in crudo if not c.isspace() and c not in '[]()|.,:;-')
         numero_o_flecha = bool(compacto) and (
-            all(c.isascii() and c.isdigit() for c in compacto) or all(c in '<>«»‹›…' for c in compacto)
+            all(c.isascii() and c.isdigit() for c in compacto) or all(c in '<>«»‹›…←→⇐⇒' for c in compacto)
         )
         if (
             any(n in nombre for n in _NOMBRES_RECORTE)

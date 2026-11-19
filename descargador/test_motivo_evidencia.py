@@ -140,3 +140,23 @@ def test_instalar_extension_avisa_si_falta_la_carpeta(monkeypatch, tmp_path):
         assert errores and 'extension' in errores[0][0] and not chrome
     finally:
         dispose_interface(app, root)
+
+
+@pytest.mark.parametrize('version', [2.0, True, '2', None])
+def test_e3f_protocolo_historico_exige_version_entera(version):
+    class Extension:
+        def call(self, command):
+            protocolos = {**PROTOCOLS, 'historico_lectura': version}
+            if version is None:
+                protocolos.pop('historico_lectura')
+            return {'version': VERSION, 'protocolos': protocolos, 'escritura_rus': False}
+
+    with pytest.raises(m.PocError):
+        verify_extension(Extension())
+
+
+def test_e3f_puente_preserva_codigo_del_historico(bridge):
+    respuesta(bridge, {'ok': False, 'error': 'HISTORICO_LINK'})
+    with pytest.raises(m.PocError) as error:
+        bridge.call('historico_open', {'params': {}}, timeout=5)
+    assert error.value.code == 'HISTORICO_LINK'

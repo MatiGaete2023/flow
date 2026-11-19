@@ -40,7 +40,7 @@ def runners(monkeypatch, cancel, *, partial=False, cancel_after_queries=False, c
                 cancel.set()
 
     class Diaries:
-        def __init__(self, bridge, catalog, emit, gate, pause, reuse_base=None, calendars=False):
+        def __init__(self, bridge, catalog, emit, gate, pause, reuse_base=None, calendars=False, historico=False):
             self.emit = emit
             used.append(('bitacoras', pause, gate is cancel))
             Diaries.reuse_base = reuse_base
@@ -449,7 +449,7 @@ def test_p8_historial_anonimo_y_aviso_de_bitacoras_faltantes_por_tribunal(monkey
     assert ('warning', aviso) in events
     historial = json.loads(next(tmp_path.rglob('proceso.json')).read_text(encoding='utf-8'))['historial']
     textos = [h.split(' ', 1)[1] for h in historial]
-    assert textos[0] == 'inicio' and 'fase consultas' in textos and aviso in textos and textos[-1] == 'fin PARCIAL'
+    assert textos[0] == 'inicio' and 'fase consultas' in textos and 'Bitácoras no leídas en tribunal 119: 2 sin vínculo, 1 fallidas.' in textos and textos[-1] == 'fin PARCIAL'
     assert any(t.startswith('bitácoras INCOMPLETA') for t in textos)
 
 
@@ -466,4 +466,23 @@ def test_p8_error_queda_en_el_historial_sin_rutas(monkeypatch, tmp_path):
     control = json.loads(next(tmp_path.rglob('proceso.json')).read_text(encoding='utf-8'))
     ultimo = control['historial'][-1]
     assert control['estado'] == 'INCOMPLETO' and 'error en fase bitacoras' in ultimo
-    assert '<ruta>' in ultimo and 'persona' not in ultimo and 'OneDrive' not in ultimo
+    assert ultimo.endswith('(ERROR_OPERACION)') and 'persona' not in ultimo and 'OneDrive' not in ultimo
+
+
+@pytest.mark.parametrize('control_historico', [None, '{'])
+def test_e3f_sin_respaldo_historico_entrega_zip_parcial(monkeypatch, tmp_path, control_historico):
+    cancel = Event()
+    runners(monkeypatch, cancel)
+    original = flujo_paquete.DiaryRunner.run
+
+    def sin_historico(self, batch, destination):
+        resultado = original(self, batch, destination)
+        if control_historico is not None:
+            Path(resultado['manifest']).with_name('historico.json').write_text(control_historico, encoding='utf-8')
+        return resultado
+
+    monkeypatch.setattr(flujo_paquete.DiaryRunner, 'run', sin_historico)
+    result = flujo_paquete.run(None, {}, lambda *event: None, cancel, Scope(), tmp_path, False, historico=True)
+    captura = read_capture(result['path'])
+    assert result['partial'] and captura.manifest['table_states']['historico_proteccion'] == 'FALLIDA'
+    assert len(captura.rows('bitacoras')) == 2

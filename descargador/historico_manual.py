@@ -28,8 +28,12 @@ def _estado(carpeta):
     ruta = Path(carpeta) / MANIFEST
     if ruta.is_file():
         datos = json.loads(ruta.read_text(encoding='utf-8'))
-        if datos.get('tipo') == 'HISTORICO_PROTECCION' and datos.get('version') == 1:
-            return datos
+        if (
+            not isinstance(datos, dict) or datos.get('tipo') != 'HISTORICO_PROTECCION'
+            or datos.get('version') != 1 or not isinstance(datos.get('capturas'), dict)
+        ):
+            raise ValueError('Control de histórico inválido.')
+        return datos
     return {'version': 1, 'tipo': 'HISTORICO_PROTECCION', 'capturas': {}}
 
 
@@ -45,7 +49,7 @@ def rut_de_url(url):
     return (cuerpo.group(1) + dv.group(1).upper()) if cuerpo and dv else ''
 
 
-def capturar(carpeta, html, persona, *, capturada=None, url=''):
+def capturar(carpeta, html, persona, *, capturada=None, url='', rut_hash=''):
     """Guarda una captura manual. `persona`: dict con `tribunal` (código), `tribunal_nombre`, `person_id` (SITFA_PERSONA_RUS de
     la fila seleccionada), `rut` y `nombre` (solo para comprobar la pertenencia en el texto visible; no se guardan). `url`: la
     dirección de la ventana, solo para leer el RUT que pide: si coincide con el de la persona, la pertenencia queda verificada;
@@ -66,18 +70,21 @@ def capturar(carpeta, html, persona, *, capturada=None, url=''):
         'person_id': str(persona['person_id']),
         'archivo': 'historico-' + huella[:24] + '.html',
         'sha256': huella,
+        'origen': 'AUTOMATICA' if rut_hash else 'MANUAL',
+        'rut_hash': rut_hash,
         'leida': capturada,
     }
     try:
         lectura = read_historico(
-            datos, captured_at=capturada, persona_esperada=[persona.get('rut', ''), persona.get('nombre', '')]
+            datos, captured_at=capturada, persona_esperada=[persona.get('rut', ''), persona.get('nombre', '')],
+            rut_visible=persona['rut'] if rut_hash else '',
         )
     except ValueError as exc:
         entrada.update(estado='FALLIDA', error=str(exc), ownership='INCIERTA', filas=[], advertencias=[mensaje(str(exc))])
     else:
         del_url, esperado = rut_de_url(url), _rut_limpio(persona.get('rut', ''))
         propiedad = lectura['ownership']
-        if del_url and esperado:
+        if not rut_hash and del_url and esperado:
             propiedad = 'VERIFICADA' if del_url == esperado else 'INCIERTA'
         entrada.update(
             estado='VACIA_COMPROBADA' if lectura['vacio_explicito'] else 'LEIDA',
@@ -93,21 +100,60 @@ def capturar(carpeta, html, persona, *, capturada=None, url=''):
     ruta.parent.mkdir(parents=True, exist_ok=True)
     if not ruta.exists():
         m.save_exclusive(ruta, datos)
-    estado = _estado(carpeta)
-    estado['capturas'][entrada['tribunal'] + '|' + entrada['person_id']] = entrada
-    write(carpeta / MANIFEST, estado)
+    guardar_entrada(carpeta, entrada)
     return entrada
 
 
+def guardar_entrada(carpeta, entrada):
+    estado = _estado(carpeta)
+    clave = entrada['tribunal'] + '|' + entrada['person_id']
+    anterior = estado['capturas'].get(clave)
+    if (
+        isinstance(anterior, dict) and anterior.get('rut_hash') and entrada.get('rut_hash')
+        and (anterior.get('conflicto_rut') or anterior['rut_hash'] != entrada['rut_hash'])
+    ):
+        # Un ID remoto conflictivo solo respalda una incidencia, nunca un programa.
+        entrada.update(estado='FALLIDA', error='HISTORICO_IDENTITY', ownership='INCIERTA', filas=[])
+        entrada['rut_hash'] = anterior['rut_hash']
+        entrada['conflicto_rut'] = True
+    if entrada != anterior:
+        estado['capturas'][clave] = entrada
+        write(Path(carpeta) / MANIFEST, estado)
+
+
 def cargar(carpeta):
-    """(manifiesto, [entradas]) con el HTML respaldado verificado contra su huella; una discrepancia es error, no vacío."""
+    """(manifiesto, [entradas]). Un respaldo discrepante degrada solo su entrada."""
     carpeta = Path(carpeta)
     estado = _estado(carpeta)
+    entradas = []
     for entrada in estado['capturas'].values():
-        ruta = carpeta / 'historico' / entrada['archivo']
-        if not ruta.is_file() or sha256(ruta.read_bytes()).hexdigest() != entrada['sha256']:
-            raise ValueError('El respaldo de un histórico no coincide con su huella.')
-    return estado, list(estado['capturas'].values())
+        if not isinstance(entrada, dict) or not all(
+            isinstance(entrada.get(k), str) and entrada[k] for k in ('tribunal', 'person_id', 'leida', 'estado')
+        ):
+            raise ValueError('Entrada de histórico inválida.')
+        try:
+            if entrada.get('archivo'):
+                name = entrada['archivo']
+                if not re.fullmatch(r'historico-[a-f0-9]{24}\.html', name):
+                    raise ValueError('Nombre de respaldo inválido.')
+                ruta = carpeta / 'historico' / name
+                if ruta.is_symlink() or sha256(ruta.read_bytes()).hexdigest() != entrada['sha256']:
+                    raise ValueError('Huella incorrecta.')
+            elif entrada['estado'] in ('LEIDA', 'VACIA_COMPROBADA'):
+                raise ValueError('Falta el respaldo.')
+            datetime.fromisoformat(entrada['leida'])
+            if not isinstance(entrada.get('filas'), list) or any(
+                not isinstance(fila, dict) or not {'fila', 'programa', 'fecha_egreso', 'causal_egreso'} <= fila.keys()
+                for fila in entrada['filas']
+            ):
+                raise ValueError('Filas de histórico inválidas.')
+        except (ValueError, OSError, TypeError, KeyError):
+            entrada = {**entrada, 'estado': 'FALLIDA', 'error': 'HISTORICO_RESPALDO_INVALIDO',
+                       'ownership': 'INCIERTA', 'filas': [], 'leida': datetime.now().astimezone().isoformat()}
+        if entrada.get('origen') not in ('AUTOMATICA', 'MANUAL') or entrada.get('ownership') != 'VERIFICADA':
+            entrada = {**entrada, 'ownership': 'INCIERTA'}
+        entradas.append(entrada)
+    return estado, entradas
 
 
 def main(argv=None):

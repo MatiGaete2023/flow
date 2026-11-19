@@ -8,10 +8,10 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 | Paquete | Estado | Último commit / nota |
 |---|---|---|
 | P1 consignar (botón) | **Hecho** | ver Historial 19-nov (P1) |
-| P2 revisión de bitácoras | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P2) |
+| P2 revisión de bitácoras | **Corregido tras E3** · pruebas Tk en Linux | ver correcciones E3 |
 | P3a escritos visibles + diagnóstico | **Hecho; confirmado en uso real** (9 causas con escritos, 8 vacías, 14 pendientes) | ver Historial |
 | P3b escritos variante sin tabla | **Hecho en lo posible**: detección + extracto anónimo automático; la carga aparte espera ese extracto | ver Historial |
-| P3c histórico automático | **Corregido (marco interno) · PRUEBA REAL PENDIENTE (usuario)** · E3 pendiente (extensión) | ver Historial 19-nov |
+| P3c histórico automático | **Corregido tras E3** · prueba real y nueva revisión independiente pendientes | ver correcciones E3 |
 | P8 diagnóstico del paquete | **Hecho** | ver Historial 19-nov (P8) |
 | P4 resultados / Meta 4 plantilla | **Hecho** (sin prueba visual Tk) | ver Historial 19-nov (P4) |
 | P5 diseño | **Hecho en parte** (confirmación y conteos); lista/ficha pendiente de Tk real | ver Historial 19-nov (P5) |
@@ -21,15 +21,34 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 ## Pendientes del usuario (no bloquean el desarrollo)
 
 - **Prueba real de P3c:** ZIP nuevo de `flow-python`, recargar la extensión en `chrome://extensions`, lote chico con
-  «Ingreso Histórico (Mejor Niñez)»; enviar solo `historico.json` (o `historico/estructura_historico.json` si falla).
-- Prueba visual en Windows de P1, P2, P3a y P4 (el contenedor no tiene Tk).
+  «Ingreso Histórico (Mejor Niñez)». Si falla, compartir solo `historico/estructura_historico.json` generado por la versión corregida, cuando exista.
+- Prueba visual en Windows de P1, P2, P3a y P4. Se ejecutaron pruebas Tk en Linux virtual.
 - Revisión E3 independiente de P3c (toca la extensión).
 
 ## Siguiente paso exacto
 
-Desarrollo sin bloqueos agotado salvo P5-lista/ficha (requiere Tk real). Lo que sigue depende del usuario: prueba real de P3c,
-prueba visual en Windows de P1, P2, P3a, P4, P5 y P8, y la revisión E3 independiente de P3c. Si el usuario lo pide: prompt de
-esa revisión E3 (`docs/python_unico/PROMPT_REVISION_E3_P3C.md`, creado) y P5-lista/ficha tras la prueba visual.
+Validar las correcciones de la punta de `flow-python` en una nueva revisión independiente (decisión j). Después, probar un lote
+chico en Windows con el Descargador y la extensión de la misma entrega. Si se recaptura un lote anterior, reemplazar el ZIP
+local usado en Trabajo por el nuevo paquete con la evidencia actualizada.
+
+## Correcciones E3 del 19-nov-2026
+
+- E3F-01 a E3F-09. La captura automática acredita un RUT completo y coherente en el listado, un único iframe de la ruta
+  prevista y un solo RUT titular visible en la ventana. Reutiliza una apertura por RUT en el lote con la asociación de cada
+  tribunal. Los fallos, pendientes y respaldos dañados se registran en el ZIP y dejan el proceso parcial. El protocolo
+  `historico_lectura` pasó a 2 y el puente conserva sus códigos de error. Los históricos de manifiestos anteriores sin
+  procedencia quedan inciertos al reexportar.
+- E3F-10 a E3F-14. Se comprueba la concordancia de las parciales del mismo instante, la multiplicidad y los identificadores
+  exactos. La revisión de bitácoras exige método, estado, tipos e intervalo conservado. El filtro de alcance pasó a versión 2.
+  Los ZIP anteriores siguen abriendo y la ausencia requiere reexportar con la nueva evidencia.
+- E3F-15 a E3F-18. Los extractos usan catálogos cerrados. `proceso.json` guarda códigos de error y conteos por tribunal.
+  Se actualizaron las expectativas Tk y se corrigieron los dos avisos Ruff señalados en la E3.
+- Verificación con datos ficticios en Linux y Tk virtual 9.0.4. Asistente 1.404 pasan, 11 omitidas y 5 xfail esperadas.
+  Descargador 417 pasan y 62 subpruebas pasan, más una prueba de puente incorporada y verificada en la corrida dirigida.
+  Meta 4 133 pasan. Los controles Node y de enlaces pasaron. Ruff 751 avisos totales y cero añadidos frente a `3da3c0b`.
+  El golden generado coincide con el de la punta auditada. Ambos difieren del golden versionado en `config`.
+- El [informe de revisión](E3_INFORME_P3C_20261119.md) conserva los hallazgos y las cifras de la punta anterior.
+  Quedan pendientes la verificación en Windows con SITFA y la nueva revisión independiente de la implementación.
 
 ## Base de verificación (contenedor Linux sin Tk)
 

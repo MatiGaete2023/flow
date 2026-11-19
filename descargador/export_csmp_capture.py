@@ -1,19 +1,22 @@
 """Paquete local desde originales verificados, sin llamadas de Chrome ni CSMP."""
 
-from datetime import datetime
-from hashlib import sha256
 import itertools
 import json
+from datetime import datetime
+from hashlib import sha256
 from pathlib import Path
+
 from csmp_shared import parser
 
 parser()
-from nurus.capture.contract import COMMON, TABLES, write_capture
-from nurus.capture.diaries import import_lotes, diary_paths
-from resultados import tables, table_mode, inside, headers_and_rows, parse_day
 import motor as m
+from resultados import headers_and_rows, inside, parse_day, table_mode, tables
+
+from nurus.capture.contract import COMMON, TABLES, write_capture
 from nurus.capture.coverage import aggregate
-from nurus.capture.historias import cargar as cargar_historias, contexto_anterior, literal
+from nurus.capture.diaries import diary_paths, import_lotes
+from nurus.capture.historias import cargar as cargar_historias
+from nurus.capture.historias import contexto_anterior, literal
 
 
 def calendar_date(normalized):
@@ -123,18 +126,23 @@ def export_capture(
         fingerprint += 'MATCH' if match_diaries else 'ALL'
     if historia:
         fingerprint += 'HISTORIA' + sha256(Path(historia).read_bytes()).hexdigest()
+    entradas_historico = None
     if historico:
-        fingerprint += 'HISTORICO' + sha256((Path(historico) / 'historico.json').read_bytes()).hexdigest()
-    cid = 'captura-' + sha256(fingerprint.encode()).hexdigest()[:24]
-    # P3c: personas del histórico automático identificadas por huella de RUT (filas sin SITFA_PERSONA_RUS).
-    personas_por_rut = set()
-    if historico:
-        try:
-            from historico_manual import cargar
+        from historico_manual import MANIFEST as HISTORICO_MANIFEST
+        from historico_manual import cargar
 
-            personas_por_rut = {(e['tribunal'], e['person_id']) for e in cargar(historico)[1] if e['person_id'].startswith('rut-')}
+        try:
+            huella = sha256((Path(historico) / HISTORICO_MANIFEST).read_bytes()).hexdigest()
+            _, entradas_historico = cargar(historico)
+        except FileNotFoundError:
+            huella, entradas_historico = 'AUSENTE', []
         except (ValueError, OSError, KeyError):
-            personas_por_rut = set()
+            huella = 'INVALIDO'
+        fingerprint += 'HISTORICO' + huella
+    cid = 'captura-' + sha256(fingerprint.encode()).hexdigest()[:24]
+    personas_por_rut = {
+        (e['tribunal'], e['person_id']) for e in entradas_historico or () if e['person_id'].startswith('rut-')
+    }
     data = {'consultas': [], 'registros': [], 'incidencias': []}
     originals = {}
     query_index = {}
@@ -342,7 +350,9 @@ def export_capture(
             if snapshot['coverage'] != 'FALLIDA' and snapshot.get('alcance'):
                 # P2 (revisión de bitácoras): alcance de la ventana leída; aditivo, los lectores tradicionales lo ignoran.
                 selection['revision_bitacoras'] = {
-                    'version': 1,
+                    'version': 2,
+                    'desde': primera_fecha if meses < 4 else '1900-01-01',
+                    'hasta': when[:10],
                     'metodo': snapshot.get('alcance_metodo', ''),
                     'coverage': snapshot['alcance'],
                     'completa': snapshot['alcance'] in ('COMPLETA', 'VACIA_COMPROBADA') and not snapshot.get('warnings'),
@@ -460,7 +470,8 @@ def export_capture(
         _historia(historia, data, query, incident, cid, captured)
         _escritos(historia, data, query, incident, cid, captured)
     if historico:
-        _historico(historico, data, query, incident, cid, captured)
+        pendientes = _historico_pendientes(diaries, historico, entradas_historico)
+        _historico(entradas_historico, data, query, incident, cid, captured, pendientes)
     states = {k: 'NO_SOLICITADA' for k in TABLES}
     states.update(
         consultas=aggregate(q['coverage'] for q in data['consultas']),
@@ -519,32 +530,44 @@ def _persona_por_rut(tribunal, normalized, personas):
     """Clave `rut-…` del histórico automático para una fila sin `SITFA_PERSONA_RUS`, solo si ese histórico existe."""
     if not personas:
         return ''
-    from historico_manual import _rut_limpio
     from lectura_bitacoras import persona_por_rut
 
-    rut = _rut_limpio(normalized.get('RUT', '') or normalized.get('RUT (->RCEI)', '')).lstrip('0')
+    from nurus.escritos_html import canonical_rut
+
+    rut = canonical_rut(normalized.get('RUT', '') or normalized.get('RUT (->RCEI)', ''))
     clave = persona_por_rut(rut) if rut else ''
     return clave if (tribunal, clave) in personas else ''
 
 
-def _historico(carpeta, data, query, incident, cid, captured):
-    """Una consulta por persona capturada a mano y una fila por programa del histórico. La pertenencia a la persona va por fila:
-    sin prueba, INCIERTA (el Asistente no afirma otro programa). Una lectura ilegible queda FALLIDA, nunca vacía."""
-    from historico_manual import cargar
+def _historico_pendientes(diaries, historico, entradas):
+    """Detecta intentos que quedaron únicamente en el control de bitácoras."""
+    if not diaries:
+        return False
+    registrados = {(e['tribunal'], e['person_id']) for e in entradas or ()}
+    for path in diary_paths(diaries):
+        if path.parent.resolve() != Path(historico).resolve():
+            continue
+        control = json.loads(path.read_text(encoding='utf-8'))
+        registros = (*control.get('registros', ()), *control.get('anteriores_no_reenumeradas', ()))
+        for registro in registros:
+            intento = registro.get('historico_lectura')
+            if intento and (registro.get('tribunal_codigo'), intento.get('person_id')) not in registrados:
+                return True
+    return False
 
-    try:
-        _, entradas = cargar(carpeta)
-    except ValueError as exc:
-        # Un respaldo dañado no impide el paquete: la fuente queda FALLIDA y visible, nunca vacía.
-        query('historico-respaldo', {'tab': 'HISTORICO'}, 'FALLIDA', captured, screen='historico_proteccion', error='HISTORICO_RESPALDO_INVALIDO')
-        incident('historico-respaldo', 'HISTORICO_RESPALDO_INVALIDO', str(exc))
+
+def _historico(entradas, data, query, incident, cid, captured, pendientes):
+    """Exporta estados del histórico, incluida una incidencia cuando no hay respaldo verificable."""
+    if not entradas or pendientes:
+        codigo = 'HISTORICO_RESPALDO_INVALIDO' if entradas is None else 'HISTORICO_PENDIENTE'
+        query('historico-respaldo', {'tab': 'HISTORICO'}, 'FALLIDA', captured, screen='historico_proteccion', error=codigo)
+        incident('historico-respaldo', codigo, 'Hay lecturas del histórico sin respaldo verificable.')
         data['historico_proteccion'] = []
-        return
     filas = []
-    for n, e in enumerate(entradas, 1):
+    for n, e in enumerate(entradas or (), 1):
         qid = f'historico-{n}'
         cobertura = {'LEIDA': 'COMPLETA', 'VACIA_COMPROBADA': 'VACIA_COMPROBADA'}.get(e['estado'], 'FALLIDA')
-        if cobertura != 'FALLIDA' and e.get('advertencias'):
+        if cobertura != 'FALLIDA' and (e.get('advertencias') or e.get('ownership') != 'VERIFICADA'):
             cobertura = 'PARCIAL'  # alguna fila del histórico no se pudo leer (E3-08)
         selection = {
             'tribunal': e['tribunal'],
@@ -557,7 +580,7 @@ def _historico(carpeta, data, query, incident, cid, captured):
         if cobertura == 'FALLIDA':
             incident(qid, e.get('error') or 'HISTORICO_NO_VERIFICADA', 'El histórico de protección no se pudo leer.')
             continue
-        if e['ownership'] != 'VERIFICADA':
+        if e.get('ownership') != 'VERIFICADA':
             incident(qid, 'HISTORICO_PERTENENCIA_INCIERTA', 'No se comprobó que la vista sea de la persona seleccionada.')
         for fila in e['filas']:
             common = {k: '' for k in COMMON}

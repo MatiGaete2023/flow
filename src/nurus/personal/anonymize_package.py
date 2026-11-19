@@ -226,7 +226,7 @@ class Mapper:
 
         obj = json_object(raw)
 
-        def visit(value, key='', depth=0):
+        def visit(value, key='', depth=0, padre=''):
             if depth > _JSON_LIMIT:
                 raise UnsafePackage('Estructura JSON demasiado profunda.')
             if isinstance(value, dict):
@@ -236,7 +236,7 @@ class Mapper:
                         raise UnsafePackage('Clave JSON incompatible.')
                     if _SENSITIVE_WORDS.search(label) and len(label) > 100:
                         raise UnsafePackage('Clave JSON sospechosa.')
-                    result[label] = visit(child, label, depth + 1)
+                    result[label] = visit(child, label, depth + 1, key)
                 return result
             if isinstance(value, list):
                 if len(value) > 10000:
@@ -244,6 +244,13 @@ class Mapper:
                 return [visit(child, key, depth + 1) for child in value]
             if isinstance(value, (dict, list)):
                 raise UnsafePackage('Estructura JSON incompatible.')
+            if filters and padre == 'revision_bitacoras':
+                from nurus.bitacora_html import METODO_ALCANCE
+
+                if key == 'metodo' and value == METODO_ALCANCE:
+                    return METODO_ALCANCE
+                if key in ('desde', 'hasta') and isinstance(value, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+                    return value
             if filters and key == 'court_code':
                 # Mismo tratamiento que la columna court_code: el alcance de la consulta debe seguir coincidiendo con sus filas.
                 return self.value(key, value)

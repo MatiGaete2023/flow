@@ -588,9 +588,10 @@ def test_p3c_historico_automatico_una_vez_por_persona_y_falla_aislada(tmp_path):
             return super().call(command, payload, timeout)
 
     parser()
+    tribunales = tuple(CATALOG['tribunales'])
     bridge = ConHistorico()
     result = DiaryRunner(bridge, CATALOG, lambda *a: None, threading.Event(), pause=0, historico=True).run(
-        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+        Batch(tribunales, ('2',), ('Cumplimiento',)), tmp_path
     )
     carpeta = Path(result['manifest']).parent
     registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
@@ -598,22 +599,23 @@ def test_p3c_historico_automatico_una_vez_por_persona_y_falla_aislada(tmp_path):
     assert len(bridge.historicos) == len(personas) and all(set(p) == {'tribunal', 'rut'} for p in bridge.historicos)
     historico = json.loads((carpeta / 'historico.json').read_text(encoding='utf-8'))
     entradas = list(historico['capturas'].values())
-    assert entradas and all(e['estado'] == 'LEIDA' and e['ownership'] == 'VERIFICADA' for e in entradas)
+    assert entradas and all(e['estado'] == 'LEIDA' for e in entradas)
+    assert {e['ownership'] for e in entradas} == {'VERIFICADA'}
+    assert {e['tribunal'] for e in entradas} == set(tribunales)
     assert all(r['estado'] == 'LEIDA' for r in registros)
     assert 'RUT_Litigante' not in (carpeta / 'historico.json').read_text(encoding='utf-8')
     # Falla del histórico: la bitácora sigue LEIDA y el histórico queda FALLIDA.
     bridge = ConHistorico(falla=True)
     result = DiaryRunner(bridge, CATALOG, lambda *a: None, threading.Event(), pause=0, historico=True).run(
-        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path / 'b'
+        Batch(tribunales, ('2',), ('Cumplimiento',)), tmp_path / 'b'
     )
     registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
-    assert all(r['estado'] == 'LEIDA' and r['historico_lectura']['estado'] in ('FALLIDA', 'REUTILIZADA') for r in registros)
+    assert len(bridge.historicos) == 1
+    assert all(r['estado'] == 'LEIDA' and r['historico_lectura']['estado'] == 'FALLIDA' for r in registros)
 
 
-def test_p3c_historico_sin_tabla_se_suspende_y_deja_estructura_anonima(tmp_path, monkeypatch):
+def test_p3c_historico_sin_tabla_se_suspende_y_deja_estructura_anonima(tmp_path):
     import lectura_bitacoras
-
-    monkeypatch.setattr(lectura_bitacoras, 'MAX_HISTORICOS_FALLIDOS_SEGUIDOS', 2)  # el listado ficticio trae 2 personas
 
     pagina = b'<html><head><title>Historial Menores</title></head><body><iframe src="/SITFAWEB/x.jsp?RUT=1"></iframe></body></html>'
     avisos = []
@@ -634,7 +636,13 @@ def test_p3c_historico_sin_tabla_se_suspende_y_deja_estructura_anonima(tmp_path,
                     'params': payload['params'],
                     'startedAt': '2026-10-08T12:00:00Z',
                 }
-            return super().call(command, payload, timeout)
+            result = super().call(command, payload, timeout)
+            if command == 'search':
+                valor = f'{10000000 + self.queries}-0'.encode()
+                bruto = base64.b64decode(result['body']).replace(b'11111111-1', valor)
+                bruto = bruto.replace(b"'300'", f"'{300 + self.queries}'".encode())
+                result['body'] = base64.b64encode(bruto).decode()
+            return result
 
     parser()
     bridge = SinTabla()
@@ -643,8 +651,23 @@ def test_p3c_historico_sin_tabla_se_suspende_y_deja_estructura_anonima(tmp_path,
     ).run(Batch(tuple(CATALOG['tribunales']), ('1', '2', '3', '4'), ('Cumplimiento',)), tmp_path)
     registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
     estados = [r.get('historico_lectura', {}).get('estado') for r in registros]
-    assert bridge.historicos == 2 and 'OMITIDA' in estados
+    assert bridge.historicos == lectura_bitacoras.MAX_HISTORICOS_FALLIDOS_SEGUIDOS == 5 and 'OMITIDA' in estados
     assert all(r['estado'] == 'LEIDA' for r in registros)  # las bitácoras siguen
     assert any(n == 'warning' and 'se suspende el histórico' in str(v) for n, v in avisos)
     estructura = json.loads((Path(result['manifest']).parent / 'historico' / 'estructura_historico.json').read_text(encoding='utf-8'))
-    assert estructura['titulo'] == 'Historial Menores' and estructura['marcos'] == [{'etiqueta': 'iframe', 'ruta': '/SITFAWEB/x.jsp'}]
+    assert estructura['titulo'] == 'Historial Menores' and estructura['marcos'] == [{'etiqueta': 'iframe', 'ruta': 'otra'}]
+
+
+def test_e3f_control_historico_corrupto_no_invalida_bitacora(tmp_path):
+    parser()
+
+    def evento(tipo, valor=None):
+        if tipo == 'folder':
+            (Path(valor) / 'historico.json').write_text('{', encoding='utf-8')
+
+    result = DiaryRunner(Bridge(), CATALOG, evento, threading.Event(), pause=0, historico=True).run(
+        Batch(('49',), ('2',), ('Cumplimiento',)), tmp_path
+    )
+    registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
+    assert registros and all(r['estado'] == 'LEIDA' and r['archivo'] for r in registros)
+    assert all(r['historico_lectura']['error'] == 'HISTORICO_RESPALDO_INVALIDO' for r in registros)

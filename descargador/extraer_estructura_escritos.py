@@ -4,19 +4,52 @@ con su informe (plan 18-nov-2026). Ejecutar localmente sobre el HTML real guarda
     python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html] > estructura_escritos.json
     python descargador/extraer_estructura_escritos.py --ventana historico/historico-XXXX.html > estructura_historico.json
 
-No emite valores: solo nombres de columnas, cantidades, etiquetas HTML, NOMBRES de atributos, nombre de la función de un
-`onclick` y el TIPO de cada argumento (vacío, numérico, hex/base64 largo, texto). Sin RUT, nombres, folios, rutas ni parámetros.
+El extracto contiene cantidades, tipos y literales de catálogos cerrados. Los valores desconocidos se resumen sin copiar su texto.
 """
 
 import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from lxml import html
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 from nurus.bitacora_html import decode_snapshot, normalize
+
+_ROTULOS = (
+    'Historial Menores', 'Despliegue de Pop Up', 'Ingreso Historico Protección', 'Ingreso Historico(LRPA)',
+    'Ingreso Histórico', 'Protección', 'Escritos', 'Doc.', 'Tipo Escrito', 'Solicitante', 'Estado',
+    'Nombre Proyecto', 'Programa', 'Fecha Ingreso', 'Fecha Egreso', 'Causal Egreso', 'Causal Ingreso',
+    'Tribunal', 'RUC', 'RIT', 'RUT', 'RUN', 'Sexo', 'Nombre del niño', 'Nombre del menor',
+    'Folio', 'Etapa', 'Trámite', 'Referencia', 'Código', 'Entidad', 'Proyecto', 'Quién Egresa',
+)
+_ROTULO_SEGURO = {normalize(r): r for r in _ROTULOS}
+_FUNCIONES = {'ShowHistoriaRut', 'ShowHistorialFichas', 'verEscritos', 'verDoc'}
+_RUTAS = {
+    '/SITFAWEB/IrPopUpPublicoAccion.do', '/SITFAWEB/EscritosAccion.do',
+    '/SITFAWEB/jsp/Tramitacion/PopUp/PopUpHistorial.jsp',
+}
+_ATRIBUTOS = {'id', 'class', 'name', 'value', 'href', 'onclick', 'src', 'type', 'title', 'style', 'target', 'alt'}
+_PARAMETROS = {'id', 'clave', 'crr_causa', 'tipo_popUp', 'RUT_Litigante', 'RUT_DV'}
+
+
+def _rotulo_seguro(texto):
+    return _ROTULO_SEGURO.get(normalize(texto).strip(': '))
+
+
+def _ruta_segura(valor):
+    try:
+        ruta = urlsplit(valor or '').path
+    except ValueError:
+        return 'otra'
+    return ruta if not ruta or ruta in _RUTAS else 'otra'
+
+
+def _catalogo(valores, permitidos):
+    valores = set(valores)
+    return sorted(valores & permitidos) + (['otro'] if valores - permitidos else [])
 
 
 def tipo_valor(valor):
@@ -31,17 +64,19 @@ def tipo_valor(valor):
 
 
 def forma_enlace(nodo):
-    salida = {'etiqueta': nodo.tag, 'atributos': sorted(nodo.attrib)}
+    salida = {'etiqueta': nodo.tag, 'atributos': _catalogo(nodo.attrib, _ATRIBUTOS)}
     onclick = nodo.get('onclick') or ''
     funcion = re.match(r'\s*([A-Za-z_][\w.]*)\s*\((.*)\)', onclick, re.DOTALL)
     if funcion:
         argumentos = [a.strip().strip('\'"') for a in funcion.group(2).split(',')] if funcion.group(2).strip() else []
-        salida['onclick'] = {'funcion': funcion.group(1), 'argumentos': [tipo_valor(a) for a in argumentos]}
+        salida['onclick'] = {'funcion': funcion.group(1) if funcion.group(1) in _FUNCIONES else 'otra', 'argumentos': [tipo_valor(a) for a in argumentos]}
     href = nodo.get('href')
     if href is not None:
         esquema = href.split(':', 1)[0].lower() if re.match(r'^[A-Za-z]+:', href) else ('ancla' if href.startswith('#') else 'relativo')
+        if esquema not in ('https', 'http', 'javascript', 'data', 'ancla', 'relativo'):
+            esquema = 'otro'
         parametros = re.findall(r'[?&]([^=&#]+)=([^&#]*)', href)
-        salida['href'] = {'esquema': esquema, 'parametros': [{'nombre': n, 'tipo': tipo_valor(v)} for n, v in parametros]}
+        salida['href'] = {'esquema': esquema, 'parametros': [{'nombre': n if n in _PARAMETROS else 'otro', 'tipo': tipo_valor(v)} for n, v in parametros]}
     return salida
 
 
@@ -60,8 +95,8 @@ def tablas(documento, requeridos):
 def extraer(ruta, requeridos, etiqueta):
     documento = html.fromstring(decode_snapshot(Path(ruta).read_bytes()))
     resultado = {'fuente': etiqueta, 'tablas': []}
-    for cabecera, originales, filas in tablas(documento, requeridos):
-        item = {'columnas': [' '.join(o.split()) for o in originales], 'filas_de_datos': len(filas), 'filas': []}
+    for _, originales, filas in tablas(documento, requeridos):
+        item = {'columnas': [_rotulo_seguro(o) or '·' for o in originales], 'filas_de_datos': len(filas), 'filas': []}
         for fila in filas[:5]:
             celdas = fila.xpath('./td | ./th')
             item['filas'].append(
@@ -81,9 +116,7 @@ def extraer(ruta, requeridos, etiqueta):
 
 
 def estructura_pestana(data):
-    """P3b: forma ANÓNIMA de la pestaña «Escritos» cuando la respuesta de la causa la muestra sin su tabla (variante que carga
-    la tabla aparte). Solo etiquetas, nombres de atributos, nombre de la función del `onclick`, tipos de argumentos, nombres
-    de funciones de los scripts que mencionan escritos y rutas `.do`/`.jsp` sin valores. Sin RUT, nombres ni folios."""
+    """Resume la forma de la pestaña Escritos, con tipos y literales de catálogos cerrados."""
     documento = html.fromstring(decode_snapshot(data))
     controles = [
         forma_enlace(el)
@@ -96,46 +129,30 @@ def estructura_pestana(data):
     parametros = sorted({p for p in re.findall(r'[?&]([A-Za-z_]\w{0,40})=', codigo)})
     return {
         'tipo': 'ESTRUCTURA_PESTANA_ESCRITOS',
-        'version': 1,
+        'version': 2,
         'controles': controles[:10],
-        'funciones_escritos': funciones[:20],
-        'rutas_en_scripts': rutas[:40],
-        'nombres_de_parametros': parametros[:60],
+        'funciones_escritos': _catalogo(funciones, _FUNCIONES),
+        'rutas_en_scripts': _catalogo(rutas, _RUTAS),
+        'nombres_de_parametros': _catalogo(parametros, _PARAMETROS),
         'ajax': {'jquery': codigo.count('$.ajax'), 'xhr': codigo.count('XMLHttpRequest'), 'fetch': codigo.count('fetch(')},
         'contiene_identificadores_personales': False,
     }
 
 
-_PALABRAS_ROTULO = (
-    'cod', 'fecha', 'nombre', 'proyecto', 'tribunal', 'ruc', 'rit', 'causal', 'egreso', 'ingreso', 'entidad', 'quien',
-    'programa', 'estado', 'tipo', 'rut', 'sexo', 'historial', 'historic', 'lrpa', 'proteccion', 'menores', 'escrito', 'doc',
-    'solicitante', 'folio', 'tramite', 'etapa', 'referencia',
-)
-
-
-def _rotulo_seguro(texto, largo=60):
-    """Texto de rótulo SOLO si no puede ser un dato de persona: sin dígitos, corto y sin «@»."""
-    texto = ' '.join(str(texto or '').split())
-    return texto if texto and len(texto) <= largo and not re.search(r'[\d@]', texto) else None
-
-
 def estructura_ventana(data):
     """P3c: forma ANÓNIMA de una ventana SITFA (p. ej. «Historial Menores») cuyo lector no encontró la tabla esperada.
-    Incluye título, marcos y formularios (solo rutas y nombres de campos), por tabla filas/columnas y los textos de
-    encabezado sin dígitos, títulos de sección, funciones y rutas de los scripts. Nunca valores de celdas de datos."""
-    from urllib.parse import urlsplit
-
+    Incluye dimensiones de tablas y rasgos estructurales de un catálogo cerrado."""
     documento = html.fromstring(decode_snapshot(data))
     titulo = _rotulo_seguro(' '.join(documento.xpath('//title//text()')))
     marcos = [
-        {'etiqueta': el.tag, 'ruta': urlsplit(el.get('src') or '').path}
+        {'etiqueta': el.tag, 'ruta': _ruta_segura(el.get('src'))}
         for el in documento.xpath('//iframe | //frame')
     ]
     formularios = [
         {
-            'accion': urlsplit(f.get('action') or '').path,
-            'metodo': (f.get('method') or '').lower(),
-            'campos': sorted({c.get('name') for c in f.xpath('.//input | .//select') if c.get('name')})[:60],
+            'accion': _ruta_segura(f.get('action')),
+            'metodo': (f.get('method') or '').lower() if (f.get('method') or '').lower() in ('get', 'post', '') else 'otro',
+            'campos': _catalogo((c.get('name') for c in f.xpath('.//input | .//select') if c.get('name')), _PARAMETROS),
         }
         for f in documento.xpath('//form')
     ]
@@ -145,12 +162,9 @@ def estructura_ventana(data):
         encabezados = []
         for fila in filas[:4]:
             celdas = fila.xpath('./th | ./td')
-            textos = [_rotulo_seguro(c.text_content(), 40) for c in celdas]
-            # Una fila sin <th> solo cuenta como encabezado si CADA celda trae una palabra de rótulo conocida: así un
-            # nombre de persona sin dígitos nunca sale en el extracto.
-            rotulos = celdas and all(t and any(p in normalize(t) for p in _PALABRAS_ROTULO) for t in textos)
-            if fila.xpath('./th') or rotulos:
-                encabezados.append([t if t and any(p in normalize(t) for p in _PALABRAS_ROTULO) else '·' for t in textos])
+            textos = [_rotulo_seguro(c.text_content()) for c in celdas]
+            if fila.xpath('./th') or (celdas and all(textos)):
+                encabezados.append([t or '·' for t in textos])
         tablas.append(
             {
                 'filas': len(filas),
@@ -164,21 +178,20 @@ def estructura_ventana(data):
             t
             for el in documento.xpath('//td | //th | //div | //span | //b | //font | //h1 | //h2 | //h3 | //p | //caption')
             if (t := _rotulo_seguro(el.text_content()))
-            and any(p in normalize(t) for p in ('historic', 'historial', 'ingreso', 'proteccion', 'lrpa', 'egreso'))
         }
     )[:30]
     codigo = ' '.join(documento.xpath('//script/text()'))
     return {
         'tipo': 'ESTRUCTURA_VENTANA_SITFA',
-        'version': 1,
+        'version': 2,
         'bytes': len(data),
         'titulo': titulo,
         'marcos': marcos[:10],
         'formularios': formularios[:10],
         'tablas': tablas[:40],
         'secciones': secciones,
-        'funciones': sorted(set(re.findall(r'function\s+([A-Za-z_]\w*)', codigo)))[:40],
-        'rutas_en_scripts': sorted(set(re.findall(r'/[A-Za-z0-9_/]+\.(?:do|jsp)', codigo)))[:40],
+        'funciones': _catalogo(re.findall(r'function\s+([A-Za-z_]\w*)', codigo), _FUNCIONES),
+        'rutas_en_scripts': _catalogo(re.findall(r'/[A-Za-z0-9_/]+\.(?:do|jsp)', codigo), _RUTAS),
         'ajax': {'jquery': codigo.count('$.ajax'), 'xhr': codigo.count('XMLHttpRequest'), 'fetch': codigo.count('fetch(')},
         'contiene_identificadores_personales': False,
     }

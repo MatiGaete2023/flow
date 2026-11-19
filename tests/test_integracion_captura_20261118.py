@@ -835,3 +835,33 @@ def test_p5_resumen_y_confirmacion_antes_de_reprocesar(tmp_path):
     aviso = confirmacion_reprocesar(trabajo)
     assert '1 registro(s) editados' in aviso and '1 constancia(s)' in aviso and aviso.endswith('¿Procesar de todos modos?')
     assert ' · 1 editado' in texto_resumen_extra(trabajo) and '1 constancia consignada' in texto_resumen_extra(trabajo)
+
+
+def test_e3f_parciales_distintas_aun_con_completa_conservan_pide_cuenta(tmp_path):
+    _, base = _lecturas(tmp_path, [], 'base')
+    instante = '2026-10-01T10:00:00-03:00'
+    pendiente = _propio(base)
+    resuelto = {'doc': 'D2', 'escrito_status': 'Resuelto'}
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', instante, 'COMPLETA', [pendiente, resuelto]),
+        ('es-2', instante, 'PARCIAL', [pendiente]),
+        ('es-3', instante, 'PARCIAL', [resuelto]),
+    ], 'tres')
+    acciones, fila = _acciones(tmp_path, captura, base, 'resultado')
+    assert acciones == EXIGIBLES
+    assert 'ESCRITOS_DISCORDANTES' in [aviso[1] for aviso in fila.avisos]
+
+
+@pytest.mark.parametrize('cambio', ['solicitante', 'id'])
+def test_e3f_identificadores_y_unicode_conservan_distinciones(tmp_path, cambio):
+    _, base = _lecturas(tmp_path, [], 'base')
+    instante = '2026-10-01T10:00:00-03:00'
+    primera = _propio(base, requester='星')
+    segunda = ({**primera, 'requester': '月'} if cambio == 'solicitante'
+               else {**primera, 'linked_ingreso_id': base['ingreso_id'].upper()})
+    captura, _ = _lecturas(tmp_path, [
+        ('es-1', instante, 'COMPLETA', [primera]),
+        ('es-2', instante, 'COMPLETA', [segunda]),
+    ], 'dos')
+    acciones, _ = _acciones(tmp_path, captura, base, 'resultado')
+    assert acciones == EXIGIBLES

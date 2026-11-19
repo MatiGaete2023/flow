@@ -35,7 +35,7 @@ async function sitfaTask(command, payload) {
     form.querySelector('#ExcelMedidasPorVencer1,[name="ExcelMedidasPorVencer1"]')?"calendario_medidas":null;
   if (!screen) return null;
   if(command==='capabilities') return {tipo:'CSMP_RUS_CAPACIDADES',version:'2.9.0',
-    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1,historico_lectura:1},escritura_rus:false};
+    protocolos:{bitacoras_lectura:1,descarga_conjunta:1,pdf_seleccion:1,pdf_copia_fija:1,calendario_lectura:1,historia_lectura:1,historico_lectura:2},escritura_rus:false};
   const actions={seguimiento:"Buscar medida",litigantes:"Consulta Informe",calendario_informes:"Buscar Inf.",calendario_medidas:"Buscar",carga:"Aud.Carga Func.-"};
   const menus={seguimiento:"89",litigantes:"94",calendario_informes:"91",calendario_medidas:"90",carga:"29"};
   const fields={seguimiento:`COD_Centro GLS_TribunalOrigen FLG_Consulta COD_Lengueta
@@ -589,16 +589,27 @@ async function sitfaTask(command, payload) {
     const tableIds={tdEspera:"tablaEspera",tdCumplimiento:"tablaCumplimiento",tdInforme:"tablaInforme",tdEgreso:"tablaEgresados"};
     const table=run.diaryDocument.getElementById(tableIds[selected.get("COD_Lengueta")]);
     if(!table)throw new Error("HISTORICO_CONTEXT");
-    const limpio=v=>String(v||"").replace(/[^0-9kK]/g,"").toUpperCase().replace(/^0+/,"");
-    const pedido=limpio(p.rut);
+    const limpio = valor => valor.replace(/[.-]/g, "").toUpperCase().replace(/^0+/, "");
+    const completo = /^(?:[0-9]{1,9}|[0-9]{1,3}(?:\.[0-9]{3}){1,2})-[0-9kK]$/;
+    const pedido = limpio(p.rut);
     let found=0;
     for(const el of table.querySelectorAll("[onclick],[href]"))for(const attr of ["onclick","href"]) {
       const text=(el.getAttribute(attr)||"").replace(/^javascript:/i,'');
       for(const match of realCode(text).matchAll(/(?<![\w$.])ShowHistoriaRut\s*\(/g)) {
         const tail=text.slice(match.index+match[0].length);
         const end=tail.indexOf(')');if(end<0)continue;
-        const args=tail.slice(0,end).split(",").map(s=>{const x=/^(?:([0-9.kK-]{1,14})|'([0-9.kK-]{1,14})'|"([0-9.kK-]{1,14})")$/.exec(s.trim());return x?(x[1]??x[2]??x[3]):null;});
-        if(args.length===1&&args[0]!==null&&(limpio(args[0])===pedido||limpio(args[0])===pedido.slice(0,-1)))found++;
+        const literal = /^(?:([0-9]{1,10})|'([0-9.kK-]{1,14})'|"([0-9.kK-]{1,14})")$/.exec(tail.slice(0,end).trim());
+        if (!literal) continue;
+        const argumento = literal[1] ?? literal[2] ?? literal[3];
+        if (completo.test(argumento)) {
+          if (limpio(argumento) === pedido) found++;
+          continue;
+        }
+        if (!/^(?:[0-9]{1,10}|[0-9]{1,3}(?:\.[0-9]{3}){1,2}|[0-9]{1,9}[kK])$/.test(argumento)) continue;
+        const fila = el.closest("tr");
+        if (!fila || fila.closest("table") !== table) continue;
+        const ruts = new Set([...fila.cells].map(c => c.textContent.trim()).filter(v => completo.test(v)).map(limpio));
+        if (ruts.size === 1 && ruts.has(pedido) && [pedido, pedido.slice(0,-1)].includes(limpio(argumento))) found++;
       }
     }
     if(!found)throw new Error("HISTORICO_LINK");
@@ -635,21 +646,22 @@ async function sitfaTask(command, payload) {
     // 19-nov-2026): se sigue solo ese marco, del mismo sitio y esa ruta exacta; la tabla viene en su contenido.
     let shell;
     try{shell=new TextDecoder("utf-8",{fatal:true}).decode(bytes);}catch(_){shell=new TextDecoder("windows-1252").decode(bytes);}
-    const frames=[...new DOMParser().parseFromString(shell,"text/html").querySelectorAll("iframe,frame")];
-    if(frames.length) {
-      if(frames.length!==1)throw new Error("HISTORICO_RESPONSE");
-      let inner;
-      try{inner=new URL(frames[0].getAttribute("src")||"",url);}catch(_){throw new Error("HISTORICO_RESPONSE");}
-      if(inner.origin!=="https://familia.pjud.cl"||inner.pathname!=="/SITFAWEB/IrPopUpPublicoAccion.do"||inner.hash)
-        throw new Error("HISTORICO_RESPONSE");
-      diaryPhase='RED';
-      const second=await fetch(inner.href,{method:"GET",credentials:"include",cache:"no-store",redirect:"error",
-        signal:AbortSignal.timeout(Math.min(payload.timeout||60000,60000))});
-      diaryPhase='RESPUESTA';
-      if(!/^text\/html(?:\s*;|$)/i.test(second.headers.get("content-type")||""))throw new Error("HISTORICO_RESPONSE");
-      bytes=await boundedBytes(second,maxBytes);
-      if(second.status!==200||!bytes.length)throw new Error("HISTORICO_RESPONSE");
-    }
+    const envoltorio = document.createElement("template");
+    envoltorio.innerHTML = shell;
+    const frames = envoltorio.content.querySelectorAll("iframe,frame");
+    if (frames.length !== 1 || frames[0].localName !== "iframe") throw new Error("HISTORICO_RESPONSE");
+    let inner;
+    try {inner = new URL(frames[0].getAttribute("src") || "", url);}
+    catch (_) {throw new Error("HISTORICO_RESPONSE");}
+    if (inner.origin !== "https://familia.pjud.cl" || inner.pathname !== "/SITFAWEB/IrPopUpPublicoAccion.do"
+        || inner.hash || inner.username || inner.password) throw new Error("HISTORICO_RESPONSE");
+    diaryPhase = 'RED';
+    const second = await fetch(inner.href, {method:"GET",credentials:"include",cache:"no-store",redirect:"error",
+      signal:AbortSignal.timeout(Math.min(payload.timeout || 60000, 60000))});
+    diaryPhase = 'RESPUESTA';
+    if (!/^text\/html(?:\s*;|$)/i.test(second.headers.get("content-type") || "")) throw new Error("HISTORICO_RESPONSE");
+    bytes = await boundedBytes(second, maxBytes);
+    if (second.status !== 200 || !bytes.length) throw new Error("HISTORICO_RESPONSE");
   }
   if(command==="history_open") {
     let html;

@@ -7,6 +7,7 @@ Plan de integración 18-nov-2026. Solo transforma lo ya capturado; no consulta n
 from __future__ import annotations
 
 import json
+import unicodedata
 from collections import defaultdict
 from datetime import UTC, date
 
@@ -69,8 +70,18 @@ def _firmas(capture, pantalla):
     """{query_id: filas normalizadas ordenadas}: para saber si dos lecturas del mismo instante dicen lo mismo. Es un
     MULTICONJUNTO (E3C-02): dos escritos iguales no valen lo mismo que uno; el orden de las filas no importa."""
     salida = defaultdict(list)
+    exactos = {'linked_ingreso_id', 'linked_projection', 'person_id'}
+    literales = {'requester', 'doc'}
     for fila in capture.rows(pantalla):
-        salida[fila['query_id']].append(tuple(clave_texto(fila.get(k, '')) for k in _FIRMA[pantalla]))
+        firma = []
+        for campo in _FIRMA[pantalla]:
+            valor = fila.get(campo, '')
+            if campo in literales:
+                valor = unicodedata.normalize('NFC', valor)
+            elif campo not in exactos:
+                valor = clave_texto(valor)
+            firma.append(valor)
+        salida[fila['query_id']].append(tuple(firma))
     return {q: tuple(sorted(filas)) for q, filas in salida.items()}
 
 
@@ -124,7 +135,9 @@ def _mejores_consultas(capture, pantalla, filtro, corte=None):
         mismas = sorted(
             (q for q in consultas if q['coverage'] in _RANGO and _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id']
         )
-        if any(not _compatibles(elegida, q, firmas) for q in mismas):
+        parciales = [q for q in mismas if q['coverage'] == 'PARCIAL']
+        discordancia_parcial = any(not _compatibles(parciales[0], q, firmas) for q in parciales[1:])
+        if discordancia_parcial or any(not _compatibles(elegida, q, firmas) for q in mismas):
             empatadas = [q['query_id'] for q in mismas]
             elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True, '_empatadas': empatadas}
         mejor[clave] = elegida

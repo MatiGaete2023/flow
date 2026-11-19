@@ -517,9 +517,9 @@ class DiaryRunner:
         self.historia = historia
         # P3c (D-H1): Ingreso Histórico Protección de cada persona VERIFICADA del listado, una vez por persona y lote.
         self.historico = bool(historico)
-        self._historicos = set()
+        self._historicos = None
         self._historicos_fallidos = 0
-        self.historico_suspendido = None
+        self.historico_suspendido = False
         self.pause = max(0.0, float(pause))
         self.reuse_base = reuse_base
         # Casilla del usuario (19-oct-2026); cada calendario cuenta en MAX_LECTURAS_POR_LOTE.
@@ -529,6 +529,9 @@ class DiaryRunner:
         if batch.screen != 'seguimiento':
             raise m.PocError('Las bitácoras se consultan desde Seguimiento.')
         plan = batch.plan(self.catalog)
+        self._historicos = None
+        self._historicos_fallidos = 0
+        self.historico_suspendido = False
         session = _Lectura(self, batch, destination, resume, self.reuse_base)
         state = session.state
         session.persistir()
@@ -765,9 +768,11 @@ class DiaryRunner:
                     self._abrir_bitacora(session, record)
                 if self.calendars and selection.tab in PESTANAS_CALENDARIO and record.get('calendario'):
                     calendar_opened = self._leer_calendario(session, record, pause=opened)
-                if self.historico and item.get('rut'):
+                if self.historico:
                     calendar_opened = self._leer_historico(session, record, item) or calendar_opened
             except LimiteLecturas:
+                if self.historico and 'historico_lectura' not in record:
+                    record['historico_lectura'] = {'estado': 'PENDIENTE', 'error': 'HISTORICO_TOPE'}
                 if record['estado'] != 'LEIDA':
                     record.update(estado='PENDIENTE', error='Pendiente: se alcanzó el máximo de lecturas del lote.')
                 raise
@@ -780,6 +785,8 @@ class DiaryRunner:
                 )
                 if getattr(exc, 'code', None):
                     record['diagnostico'] = {'codigo_extension': exc.code}
+        if self.historico and 'historico_lectura' not in record:
+            record['historico_lectura'] = {'estado': 'OMITIDA', 'error': 'HISTORICO_SIN_VINCULO'}
         if record['estado'] == 'FALLIDA':
             session.fallas_seguidas += 1
         elif record['estado'] == 'LEIDA':
@@ -842,72 +849,98 @@ class DiaryRunner:
         deja el histórico FALLIDO; nunca invalida la bitácora ya leída. Devuelve True si se abrió una ventana."""
         import historico_manual as hm
 
-        if self.historico_suspendido:
-            record['historico_lectura'] = {'estado': 'OMITIDA', 'error': self.historico_suspendido}
-            return False
-        rut = hm._rut_limpio(item.get('rut', '')).lstrip('0')
-        if not re.fullmatch(r'\d{6,9}[0-9K]', rut):
+        from nurus.escritos_html import canonical_rut
+
+        rut = canonical_rut(item.get('rut'))
+        if not re.fullmatch(r'[0-9]{6,9}[0-9K]', rut):
             record['historico_lectura'] = {'estado': 'FALLIDA', 'error': 'HISTORICO_RUT'}
             return False
-        person_id = str(item.get('persona_id') or '') or persona_por_rut(rut)
-        clave = (record['tribunal_codigo'], person_id)
-        previo = hm._estado(session.folder)['capturas'].get(record['tribunal_codigo'] + '|' + person_id)
-        if clave in self._historicos or (previo and previo.get('estado') != 'FALLIDA'):
-            record['historico_lectura'] = {'estado': 'REUTILIZADA', 'person_id': person_id}
-            return False
-        self._historicos.add(clave)
-        if session.openings >= MAX_LECTURAS_POR_LOTE:
-            record['historico_lectura'] = {'estado': 'PENDIENTE', 'error': 'Pendiente: máximo de lecturas del lote.'}
-            raise LimiteLecturas(
-                f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. '
-                'Usa «Más › Retomar paquete…» (o «Reintentar lecturas fallidas…») para continuar.'
-            )
-        if self.cancel.wait(self.pause):
-            session.detener_si_cancelada()
-        session.openings += 1
-        params = {'tribunal': record['tribunal_codigo'], 'rut': rut}
+
+        huella = persona_por_rut(rut)
+        persona = {
+            'tribunal': record['tribunal_codigo'],
+            'tribunal_nombre': record.get('tribunal_nombre', ''),
+            'person_id': str(item.get('persona_id') or '') or huella,
+            'rut': rut,
+        }
+        campos = {k: persona[k] for k in ('tribunal', 'tribunal_nombre', 'person_id')}
+        base = {
+            **campos, 'origen': 'AUTOMATICA', 'rut_hash': huella,
+            'leida': datetime.now().astimezone().isoformat(), 'ownership': 'INCIERTA', 'filas': [],
+        }
+        abierto = False
         try:
-            result = self.bridge.call('historico_open', {'params': params, 'timeout': 60000})
-            data = ChromeTransport.body(result)
-            if len(data) > hm.MAX_BYTES or hashlib.sha256(data).hexdigest() != result.get('digest') or result.get('params') != params:
-                raise m.PocError('HISTORICO_RESPONSE')
-            # La pertenencia se prueba con el RUT ROTULADO que muestra la ventana («Rut : 12345678-9»), no con la dirección
-            # pedida: el contenido viene del marco interno de PopUpHistorial.jsp.
-            entrada = hm.capturar(
-                session.folder,
-                data,
-                {
-                    'tribunal': record['tribunal_codigo'],
-                    'tribunal_nombre': record.get('tribunal_nombre', ''),
-                    'person_id': person_id,
-                    'rut': f'{rut[:-1]}-{rut[-1]}',
-                    'nombre': item.get('nombre', ''),
-                },
-                capturada=result.get('startedAt'),
-            )
-            record['historico_lectura'] = {
-                'estado': entrada['estado'],
-                'person_id': person_id,
-                'ownership': entrada['ownership'],
-                'programas': len(entrada['filas']),
-            }
-            if entrada['estado'] == 'FALLIDA':
-                self._estructura_historico(session, data)
+            if self._historicos is None:
+                _, previas = hm.cargar(session.folder)
+                self._historicos = {
+                    e['rut_hash']: e for e in previas if e.get('rut_hash') and e.get('ownership') == 'VERIFICADA'
+                    and e['estado'] in ('LEIDA', 'VACIA_COMPROBADA')
+                }
+            previa = self._historicos.get(huella)
+            if previa is not None:
+                entrada = {**previa, **campos}
+            elif self.historico_suspendido:
+                entrada = {**base, 'estado': 'OMITIDA', 'error': 'HISTORICO_SUSPENDIDO'}
+            else:
+                if session.openings >= MAX_LECTURAS_POR_LOTE:
+                    record['historico_lectura'] = {'estado': 'PENDIENTE', 'error': 'HISTORICO_TOPE'}
+                    raise LimiteLecturas(f'Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote.')
+                if self.cancel.wait(self.pause):
+                    session.detener_si_cancelada()
+                session.openings += 1
+                abierto = True
+                entrada = self._capturar_historico(session, persona, huella)
+            if not abierto:
+                hm.guardar_entrada(session.folder, entrada)
+        except LoteDetenido:
+            raise
         except (m.PocError, ValueError, KeyError, OSError, RuntimeError) as exc:
-            record['historico_lectura'] = {'estado': 'FALLIDA', 'person_id': person_id, 'error': getattr(exc, 'code', '') or str(exc)}
-        if record['historico_lectura']['estado'] == 'FALLIDA':
-            self._historicos_fallidos += 1
-            if self._historicos_fallidos >= MAX_HISTORICOS_FALLIDOS_SEGUIDOS:
-                self.historico_suspendido = 'HISTORICO_SUSPENDIDO'
-                self.emit(
-                    'warning',
-                    f'{MAX_HISTORICOS_FALLIDOS_SEGUIDOS} ventanas seguidas del Ingreso Histórico no trajeron la tabla esperada: '
-                    'se suspende el histórico en el resto del lote (las bitácoras siguen). Comparte '
-                    '«historico/estructura_historico.json» (anónimo) para ajustar la lectura.',
-                )
-        else:
-            self._historicos_fallidos = 0
-        return True
+            codigo = getattr(exc, 'code', '') or (str(exc) if str(exc) == 'HISTORICO_RESPONSE' else 'HISTORICO_RESPALDO_INVALIDO')
+            if not re.fullmatch(r'HISTORICO_[A-Z_]+', codigo):
+                codigo = 'HISTORICO_FALLIDO'
+            entrada = {**base, 'estado': 'FALLIDA', 'error': codigo}
+            try:
+                hm.guardar_entrada(session.folder, entrada)
+            except (ValueError, OSError):
+                pass  # La bitácora conserva el fallo aun si el control de histórico está dañado.
+        record['historico_lectura'] = {
+            'estado': entrada['estado'],
+            'person_id': persona['person_id'],
+            'ownership': entrada['ownership'],
+            'error': entrada.get('error', ''),
+            'programas': len(entrada['filas']),
+        }
+        if abierto:
+            if entrada['estado'] == 'FALLIDA' or entrada['ownership'] != 'VERIFICADA':
+                self._historicos_fallidos += 1
+                if self._historicos_fallidos >= MAX_HISTORICOS_FALLIDOS_SEGUIDOS:
+                    self.historico_suspendido = True
+                    self.emit(
+                        'warning',
+                        f'Falló el Ingreso Histórico en {MAX_HISTORICOS_FALLIDOS_SEGUIDOS} ventanas seguidas. '
+                        'Ahora se suspende el histórico. Las bitácoras siguen.',
+                    )
+            else:
+                self._historicos_fallidos = 0
+        if abierto:
+            self._historicos[huella] = entrada
+        return abierto
+
+    def _capturar_historico(self, session, persona, huella):
+        import historico_manual as hm
+
+        params = {'tribunal': persona['tribunal'], 'rut': persona['rut']}
+        result = self.bridge.call('historico_open', {'params': params, 'timeout': 60000})
+        data = ChromeTransport.body(result)
+        if (
+            len(data) > hm.MAX_BYTES or hashlib.sha256(data).hexdigest() != result.get('digest')
+            or result.get('params') != params
+        ):
+            raise ValueError('HISTORICO_RESPONSE')
+        entrada = hm.capturar(session.folder, data, persona, capturada=result.get('startedAt'), rut_hash=huella)
+        if entrada['estado'] == 'FALLIDA':
+            self._estructura_historico(session, data)
+        return entrada
 
     def _estructura_historico(self, session, data):
         """Primera ventana del histórico sin la tabla esperada: deja `historico/estructura_historico.json` ANÓNIMO."""

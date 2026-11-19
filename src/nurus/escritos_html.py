@@ -169,6 +169,31 @@ def _rotulo(texto):
     return False, ''
 
 
+def _visible(el):
+    for nodo in (el, *el.iterancestors()):
+        estilo = re.sub(r'\s+', '', nodo.get('style', '').lower())
+        if (
+            'hidden' in nodo.attrib or nodo.get('aria-hidden', '').lower() == 'true'
+            or re.search(r'(?:^|;)(?:display:none|visibility:hidden)(?:!important)?(?:;|$)', estilo)
+        ):
+            return False
+    return True
+
+
+def _texto_visible(el):
+    textos = el.xpath('.//text()[not(ancestor::script or ancestor::style or ancestor::noscript)]')
+    partes = [str(t) for t in textos if _visible(t.getparent().getparent() if t.is_tail else t.getparent())]
+    return ' '.join(' '.join(partes).split())
+
+
+def canonical_rut(texto):
+    texto = str(texto or '').strip().upper()
+    if not re.fullmatch(r'(?:0*[0-9]{1,9}|[0-9]{1,3}(?:\.[0-9]{3}){1,2})-?[0-9K]', texto):
+        return ''
+    cuerpo, dv = texto[:-1].replace('.', '').rstrip('-').lstrip('0'), texto[-1]
+    return cuerpo + dv if cuerpo else ''
+
+
 def _valor_vecino(el):
     """Valor que sigue al rótulo (E3C-03/04): el texto inmediato, o el siguiente ELEMENTO hermano saltando comentarios. Una
     celda solo toma la celda siguiente de su fila. Nunca una tabla ni un elemento que contenga una tabla."""
@@ -179,15 +204,15 @@ def _valor_vecino(el):
         if (siguiente.tail or '').strip():
             return siguiente.tail.strip()
         siguiente = siguiente.getnext()
-    if siguiente is None or siguiente.tag == 'table' or siguiente.xpath('.//table'):
+    if siguiente is None or not _visible(siguiente) or siguiente.tag == 'table' or siguiente.xpath('.//table'):
         return ''
     if (el.tag in _CELDA) != (siguiente.tag in _CELDA):
         return ''
-    valor = _texto(siguiente)
+    valor = _texto_visible(siguiente)
     return '' if _rotulo(valor)[0] else valor
 
 
-def _texto_titular(documento):
+def _campos_titular(documento):
     """Valores de los CAMPOS ROTULADOS del titular de la vista («Nombre del niño», «Rut»/«RUN»), separados por «|». El valor
     va en el mismo elemento tras «:», en el texto que sigue al rótulo o en el elemento hermano siguiente. Fuera de las
     tablas de programas (Protección y LRPA). Una mención en otra parte (un representante, un título, «Nombre Proyecto») no
@@ -204,24 +229,26 @@ def _texto_titular(documento):
                 break
     valores = []
     for el in documento.xpath('//td | //th | //label | //span | //b | //strong | //div | //p | //li'):
-        if any(t is el or el in t.iterdescendants() for t in excluidas):
+        if not _visible(el) or any(t in excluidas for t in (el, *el.iterancestors())):
             continue
         if el.xpath('./td | ./th | ./div | ./p | ./li | ./table'):
             continue  # solo el elemento que contiene el rótulo, no sus contenedores
-        es_rotulo, valor = _rotulo(_texto(el))
+        texto = _texto_visible(el)
+        es_rotulo, valor = _rotulo(texto)
         if not es_rotulo:
             continue
         valor = valor or _valor_vecino(el)
         if valor:
-            valores.append(valor)
-    return ' | '.join(valores)
+            etiqueta = normalize(texto.partition(':')[0]).split()[0]
+            valores.append((etiqueta, valor))
+    return valores
 
 
-def read_historico(data, *, source='', captured_at='', persona_esperada=()):
+def read_historico(data, *, source='', captured_at='', persona_esperada=(), rut_visible=''):
     """Tabla visible de Ingreso Histórico Protección (programa = «Nombre Proyecto»). `persona_esperada`: textos (RUT,
     nombre) de la persona de la fila seleccionada; la vista es de esa persona solo si alguno aparece en el documento. Sin
     ellos, o sin coincidencia, la pertenencia queda INCIERTA (se puede continuar con las demás fuentes, pero no se afirma
-    otro programa). Las filas devuelven siempre las claves «Programa», «Fecha egreso» y «Causal egreso»."""
+    otro programa). Con `rut_visible`, exige coincidencia exacta del único RUT rotulado del titular. Las filas devuelven siempre las claves «Programa», «Fecha egreso» y «Causal egreso»."""
     documento, crudo = _documento(data)
     tablas = _tablas_historico(documento)
     if len(tablas) != 1:
@@ -248,7 +275,8 @@ def read_historico(data, *, source='', captured_at='', persona_esperada=()):
         item['fila'] = numero
         item['literal'] = dict(zip(originales, valores))
         resultado.append(item)
-    visible = ' ' + normalize(_texto_titular(documento).replace('.', '')) + ' '
+    campos = _campos_titular(documento)
+    visible = ' ' + normalize(' | '.join(v for _, v in campos).replace('.', '')) + ' '
     pruebas = []
     for p in persona_esperada:
         limpio = normalize(str(p).replace('.', ''))
@@ -256,6 +284,10 @@ def read_historico(data, *, source='', captured_at='', persona_esperada=()):
         if limpio and (any(c.isdigit() for c in limpio) or len(limpio.split()) >= 2):
             pruebas.append(' ' + limpio + ' ')
     verificada = any(p in visible for p in pruebas)
+    if rut_visible:
+        esperado = canonical_rut(rut_visible)
+        visibles = {canonical_rut(v) for rotulo, v in campos if rotulo in ('rut', 'run')}
+        verificada = bool(esperado) and visibles == {esperado}
     return {
         'filas': resultado,
         'vacio_explicito': not resultado and not advertencias,

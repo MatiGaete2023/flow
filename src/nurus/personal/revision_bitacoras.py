@@ -11,6 +11,8 @@ from __future__ import annotations
 import json
 from datetime import date
 
+from nurus.bitacora_html import METODO_ALCANCE
+
 CON = 'CON_OBSERVACION'
 SIN = 'SIN_OBSERVACION'
 NO_VERIFICABLE = 'NO_VERIFICABLE'
@@ -34,23 +36,43 @@ def evidencia_por_ingreso(capture):
             filtros = json.loads(consulta.get('filters_json') or '{}')
         except ValueError:
             continue
-        identidad = filtros.get('remote_identity') or {}
+        identidad = filtros.get('remote_identity') if isinstance(filtros, dict) else None
+        if not isinstance(identidad, dict):
+            continue
         clave = tuple(str(identidad.get(k, '')) for k in ('court_code', 'cause_id', 'ingreso_id'))
         if all(clave):
-            salida[clave] = {**(filtros.get('revision_bitacoras') or {}), 'lectura': consulta.get('coverage', '')}
+            alcance = filtros.get('revision_bitacoras')
+            salida[clave] = {
+                **(alcance if isinstance(alcance, dict) else {}),
+                'lectura': consulta.get('coverage', ''),
+                'fecha_consulta': consulta.get('captured_at', ''),
+            }
     return salida
 
 
 def datos_de_registro(record, evidencia, eventos):
     """Lo que la revisión necesita de un registro VERIFICADO, para guardarlo en la fila (sobrevive a la sesión)."""
     clave = tuple(str(record.get(k, '')) for k in ('court_code', 'cause_id', 'ingreso_id'))
-    ev = evidencia.get(clave)
+    ev = evidencia.get(clave) or {}
+    lectura = ev.get('lectura') in ('COMPLETA', 'PARCIAL', 'VACIA_COMPROBADA')
+    fecha = _dia(ev.get('captured_at'))
+    desde, hasta = _dia(ev.get('desde')), _dia(ev.get('hasta'))
+    acredita = (
+        lectura and type(ev.get('version')) is int and ev['version'] == 2
+        and ev.get('metodo') == METODO_ALCANCE and ev.get('completa') is True
+        and type(ev.get('warnings')) is int and ev['warnings'] == 0
+        and ev.get('coverage') in ('COMPLETA', 'VACIA_COMPROBADA')
+        and not (ev['lectura'] == 'VACIA_COMPROBADA' and ev['coverage'] != 'VACIA_COMPROBADA')
+        and desde is not None and hasta is not None and desde <= hasta == fecha == _dia(ev.get('fecha_consulta'))
+        and ev['desde'] == desde.isoformat() and ev['hasta'] == hasta.isoformat()
+    )
     fechas = sorted({d.isoformat() for e in eventos if str(e.get('text', '')).strip() for d in [_dia(e.get('event_at'))] if d})
     return {
-        'leida': bool(ev) and ev.get('lectura') != 'FALLIDA',
-        'alcance': (ev or {}).get('coverage', ''),
-        'completa': bool((ev or {}).get('completa')),
-        'capturada': str((ev or {}).get('captured_at', ''))[:10],
+        'leida': lectura,
+        'alcance': ev.get('coverage', ''),
+        'completa': acredita,
+        'capturada': fecha.isoformat() if fecha else '',
+        'desde': desde.isoformat() if acredita else '',
         'fechas_centro': fechas,
     }
 
@@ -102,11 +124,14 @@ def clasificar(datos, desde, hasta):
             'Lectura sin evidencia de alcance (paquete anterior a esta revisión): vuelve a capturar.'
         )
         return NO_VERIFICABLE, motivo
-    if not datos.get('completa'):
-        return NO_VERIFICABLE, 'La lectura tiene advertencias de identidad visible.'
+    if datos.get('completa') is not True:
+        return NO_VERIFICABLE, 'La lectura tiene advertencias o carece de evidencia válida de cobertura.'
     capturada = _dia(datos.get('capturada'))
     if capturada is None or capturada < hasta:
         return NO_VERIFICABLE, 'La bitácora se leyó antes del fin del período: no acredita ausencia hasta esa fecha.'
+    inicio = _dia(datos.get('desde'))
+    if inicio is None or desde < inicio:
+        return NO_VERIFICABLE, 'El período comienza antes del intervalo conservado en el paquete.'
     return SIN, 'Bitácora leída completa, sin observaciones del centro en el período.'
 
 

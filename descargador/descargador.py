@@ -1997,7 +1997,13 @@ def package_current_lot(
         (i['message'] for i in capture.rows('incidencias') if i['code'] == 'BITACORAS_REUTILIZADAS'),
         'Sin bitácoras añadidas.',
     )
-    return {'path': str(path), 'reuse': summary + note}
+    result = {'path': str(path), 'reuse': summary + note}
+    if historico:
+        result['historico_incompleto'] = any(
+            q['coverage'] not in ('COMPLETA', 'VACIA_COMPROBADA')
+            for q in capture.manifest['queries'] if q['screen'] == 'historico_proteccion'
+        )
+    return result
 
 
 def main(argv=None):

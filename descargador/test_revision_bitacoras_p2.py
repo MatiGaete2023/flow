@@ -106,3 +106,19 @@ def test_p3c_historico_por_rut_llega_al_registro_sin_id_de_persona(tmp_path):
     assert {h['person_id'] for h in captura.rows('historico_proteccion')} == {persona_por_rut(rut)}
     work = import_capture(path, defaults(), as_of=date(2026, 10, 13))
     assert any('PROGRAMA FICTICIO UNO' in (r.observation or '') for r in work.rows)
+
+
+def test_e3f_zip_recortado_y_anonimizado_conserva_el_intervalo(tmp_path):
+    from nurus.personal.anonymize_package import anonymize_capture
+
+    lot = bound_lot(tmp_path / 'lote')
+    manifest = diaries(tmp_path / 'Bitacoras 2026-10-13', 1)
+    ruta = export_capture([lot], tmp_path / 'un_mes.zip', diaries=[manifest], match_diaries=True, meses=1)
+    anonimo = tmp_path / 'anonimo.zip'
+    anonymize_capture(ruta, anonimo, mode='estricto')
+    for archivo in (ruta, anonimo):
+        trabajo = import_capture(archivo, defaults(), as_of=date(2026, 10, 13))
+        datos = next(r.revision_bitacora for r in trabajo.rows if r.revision_bitacora.get('leida'))
+        assert datos['completa'] and datos['desde']
+        assert clasificar(datos, date(2026, 8, 1), date(2026, 8, 31))[0] == NO_VERIFICABLE
+        assert clasificar(datos, date.fromisoformat(datos['desde']), date(2026, 10, 8))[0] == SIN
