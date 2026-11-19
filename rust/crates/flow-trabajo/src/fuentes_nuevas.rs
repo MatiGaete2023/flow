@@ -69,9 +69,9 @@ fn firmas(tabla: &[FilaCsv], campos: &[&str]) -> HashMap<String, Vec<Vec<String>
 }
 
 /// {clave: consulta} con la ÚLTIMA lectura fiable al corte por clave (E3-07, E3B-01, E3B-02; `escritos.py::_mejores_consultas`).
-/// Se descartan las lecturas cuyo día es posterior al corte. Entre completas manda la más reciente en UTC; si varias comparten
-/// ese instante y discrepan (cobertura o filas), la de menor `query_id` queda PARCIAL y marcada `_discordante`. Sin completas,
-/// la de mejor cobertura, luego la más reciente y, ante empate, la de menor `query_id`.
+/// Se descartan las lecturas cuyo día es posterior al corte. Entre completas manda la más reciente en UTC; sin completas, la
+/// de mejor cobertura y luego la más reciente; ante empate, la de menor `query_id`. Si otra lectura útil (completa o parcial)
+/// del MISMO instante contradice a la elegida, esta queda PARCIAL y marcada `_discordante` (E3D-01/02).
 fn mejores_consultas(
     manifiesto: &Value,
     pantalla: &str,
@@ -103,31 +103,52 @@ fn mejores_consultas(
     let vacio = Vec::new();
     let qid = |q: &Value| q["query_id"].as_str().unwrap_or("").to_string();
     let cuando = |q: &Value| instante(q["captured_at"].as_str().unwrap_or("")).1;
+    let adecuada = |q: &Value| matches!(q["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA"));
+    // Dos lecturas del MISMO instante no se contradicen (E3B-02, E3C-01/02, E3D-01/02; `escritos.py::_compatibles`).
+    let compatibles = |a: &Value, b: &Value| {
+        let (fa, fb) = (firmas.get(&qid(a)).unwrap_or(&vacio), firmas.get(&qid(b)).unwrap_or(&vacio));
+        match (adecuada(a), adecuada(b)) {
+            (true, true) => a["coverage"] == b["coverage"] && fa == fb,
+            (true, false) => contenida(fb, fa),
+            (false, true) => contenida(fa, fb),
+            (false, false) => fa == fb,
+        }
+    };
     let mut mejor = HashMap::new();
     for (clave, consultas) in grupos {
-        let completas: Vec<&Value> =
-            consultas.iter().copied().filter(|q| matches!(q["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA"))).collect();
-        let elegida = if let Some(ultimo) = completas.iter().map(|q| cuando(q)).max() {
-            let mut mismas: Vec<&Value> = completas.iter().copied().filter(|q| cuando(q) == ultimo).collect();
-            mismas.sort_by_key(|q| qid(q));
-            let mut e = mismas[0].clone();
-            let discordantes = mismas.iter().any(|q| q["coverage"] != e["coverage"])
-                || mismas.iter().any(|q| firmas.get(&qid(q)).unwrap_or(&vacio) != firmas.get(&qid(mismas[0])).unwrap_or(&vacio));
-            if discordantes {
-                e["coverage"] = Value::from("PARCIAL");
-                e["_discordante"] = Value::from(true);
-                e["_empatadas"] = Value::from(mismas.iter().map(|q| qid(q)).collect::<Vec<_>>());
-            }
-            e
-        } else {
+        let completas: Vec<&Value> = consultas.iter().copied().filter(|q| adecuada(q)).collect();
+        let candidatas: Vec<&Value> = if completas.is_empty() {
             let rango_max = consultas.iter().map(|q| rango(q["coverage"].as_str().unwrap_or(""))).max().unwrap_or(0);
-            let candidatas: Vec<&Value> = consultas.iter().copied().filter(|q| rango(q["coverage"].as_str().unwrap_or("")) == rango_max).collect();
-            let ultimo = candidatas.iter().map(|q| cuando(q)).max().unwrap_or_default();
-            (*candidatas.iter().filter(|q| cuando(q) == ultimo).min_by_key(|q| qid(q)).unwrap()).clone()
+            consultas.iter().copied().filter(|q| rango(q["coverage"].as_str().unwrap_or("")) == rango_max).collect()
+        } else {
+            completas
         };
-        mejor.insert(clave, elegida);
+        let ultimo = candidatas.iter().map(|q| cuando(q)).max().unwrap_or_default();
+        let mut e = (*candidatas.iter().filter(|q| cuando(q) == ultimo).min_by_key(|q| qid(q)).unwrap()).clone();
+        let mut mismas: Vec<&Value> =
+            consultas.iter().copied().filter(|q| rango(q["coverage"].as_str().unwrap_or("")) > 0 && cuando(q) == ultimo).collect();
+        mismas.sort_by_key(|q| qid(q));
+        if mismas.iter().any(|q| !compatibles(&e, q)) {
+            e["coverage"] = Value::from("PARCIAL");
+            e["_discordante"] = Value::from(true);
+            e["_empatadas"] = Value::from(mismas.iter().map(|q| qid(q)).collect::<Vec<_>>());
+        }
+        mejor.insert(clave, e);
     }
     mejor
+}
+
+/// True si el multiconjunto de filas `menor` está contenido en `mayor`.
+fn contenida(menor: &[Vec<String>], mayor: &[Vec<String>]) -> bool {
+    let mut cuenta: HashMap<&Vec<String>, i64> = HashMap::new();
+    for f in mayor {
+        *cuenta.entry(f).or_default() += 1;
+    }
+    menor.iter().all(|f| {
+        let c = cuenta.entry(f).or_default();
+        *c -= 1;
+        *c >= 0
+    })
 }
 
 const FIRMA_ESCRITOS: [&str; 6] = ["escrito_type", "escrito_status", "doc", "requester", "linked_ingreso_id", "linked_projection"];
@@ -488,5 +509,26 @@ mod pruebas {
         let esc = escritos_para(&registro(), &fuentes).unwrap();
         assert!(esc.discordante);
         assert_eq!(esc.filas.iter().map(|f| f.vinculo.as_str()).collect::<Vec<_>>(), [""]);
+    }
+
+    /// Espejo de `test_e3d_01_02_...` y `test_e3d_03_...`: toda lectura útil del mismo instante debe ser compatible.
+    #[test]
+    fn e3d_lecturas_del_mismo_instante() {
+        let mismo = "2026-11-19T10:00:00-03:00";
+        let elegir = |cob1: &str, cob2: &str, tabla: Vec<FilaCsv>| {
+            let m = json!({"queries":[consulta("q1", mismo, cob1), consulta("q2", mismo, cob2)]});
+            let e = mejores_consultas(&m, "escritos", "escritos_causa", "cause_id", None, &tabla, &FIRMA_ESCRITOS).into_values().next().unwrap();
+            (e["coverage"].as_str().unwrap().to_string(), e["_discordante"] == true)
+        };
+        let resuelto = [("escrito_status", "Resuelto")];
+        let contradice = || vec![fila_es("q1", &[]), fila_es("q2", &resuelto)];
+        assert_eq!(elegir("PARCIAL", "PARCIAL", contradice()), ("PARCIAL".into(), true));
+        assert_eq!(elegir("COMPLETA", "PARCIAL", contradice()), ("PARCIAL".into(), true));
+        assert_eq!(elegir("PARCIAL", "COMPLETA", contradice()), ("PARCIAL".into(), true));
+        // Parcial contenida en la completa: sin discordancia.
+        let otra = [("doc", "Z")];
+        assert_eq!(elegir("COMPLETA", "PARCIAL", vec![fila_es("q1", &[]), fila_es("q1", &otra), fila_es("q2", &[])]), ("COMPLETA".into(), false));
+        // Solo cambia el solicitante.
+        assert_eq!(elegir("COMPLETA", "COMPLETA", vec![fila_es("q1", &[]), fila_es("q2", &[("requester", "Q")])]), ("PARCIAL".into(), true));
     }
 }

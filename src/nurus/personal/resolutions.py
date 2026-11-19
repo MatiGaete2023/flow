@@ -518,6 +518,23 @@ def render_project(project, target):
     return doc
 
 
+def preparacion_desde_interfaz(work, seleccionados, respaldo):
+    """(selecciones, preparar) de «Preparar proyectos» en la interfaz: el MISMO tipo de respaldo elegido por el operador va a
+    la selección automática y a `prepare_projects` (E3C-07, E3D-04). `preparar(template_dir)` devuelve (proyectos, errores).
+    `seleccionados`: ítems «id|tipo» marcados en la lista; vacío → selección automática."""
+    fallback_kind = respaldo or 'PC_IE'
+    if seleccionados:
+        selections = [item.split('|') for item in seleccionados]
+    else:
+        selections = automatic_project_selections(work, fallback_kind)
+        if not selections:
+            raise ValueError(
+                'No hay proyectos indicados. Si la planilla usa RES, solo se generan los marcados allí; para agregar otro caso, '
+                'selecciónalo en Trabajo y usa Agregar desde Trabajo.'
+            )
+    return selections, lambda template_dir: prepare_projects(work, selections, template_dir, fallback_kind)
+
+
 def prepare_projects(work, selections, template_dir, fallback_kind='PC_IE'):
     """Agrupa las selecciones por tribunal, RIT y tipo. `fallback_kind`: el mismo tipo de respaldo usado al elegir (E3C-07).
     Una selección que ya no corresponde a la decisión de sus filas no crea un proyecto vacío: vuelve como error legible."""

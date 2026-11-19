@@ -74,14 +74,35 @@ def _firmas(capture, pantalla):
     return {q: tuple(sorted(filas)) for q, filas in salida.items()}
 
 
+def _contenida(menor, mayor):
+    """True si el multiconjunto de filas `menor` está contenido en `mayor`."""
+    from collections import Counter
+
+    return not (Counter(menor) - Counter(mayor))
+
+
+def _compatibles(elegida, otra, firmas):
+    """Dos lecturas del MISMO instante no se contradicen (E3B-02, E3C-01/02, E3D-01/02): dos completas dicen exactamente lo
+    mismo; una parcial está contenida en la completa; dos parciales traen las mismas filas."""
+    a, b = firmas.get(elegida['query_id'], ()), firmas.get(otra['query_id'], ())
+    completa_a, completa_b = elegida['coverage'] in ADECUADAS, otra['coverage'] in ADECUADAS
+    if completa_a and completa_b:
+        return elegida['coverage'] == otra['coverage'] and a == b
+    if completa_a:
+        return _contenida(b, a)
+    if completa_b:
+        return _contenida(a, b)
+    return a == b
+
+
 def _mejores_consultas(capture, pantalla, filtro, corte=None):
     """{clave: consulta} con la ÚLTIMA lectura fiable al corte por clave (E3-07); clave = tupla declarada en
     filters_json[filtro].
 
     Se descartan las lecturas cuyo día es posterior al corte. Entre lecturas completas (con filas o vacías comprobadas) manda la
-    más reciente en UTC. Si varias completas comparten ese instante y discrepan (cobertura o filas), la elegida (la de menor
-    `query_id`, igual en cualquier orden del manifiesto) queda PARCIAL y marcada `_discordante` (E3B-02). Sin completas, la
-    de mejor cobertura, luego la más reciente y, ante empate, la de menor `query_id`."""
+    más reciente en UTC; sin completas, la de mejor cobertura y luego la más reciente; ante empate, la de menor `query_id`
+    (igual en cualquier orden del manifiesto). Si otra lectura útil (completa o parcial) del MISMO instante contradice a la
+    elegida, esta queda PARCIAL y marcada `_discordante` (E3B-02, E3D-01/02)."""
     grupos = defaultdict(list)
     for consulta in capture.manifest['queries']:
         if consulta['screen'] != pantalla:
@@ -97,20 +118,16 @@ def _mejores_consultas(capture, pantalla, filtro, corte=None):
     mejor = {}
     for clave, consultas in grupos.items():
         completas = [q for q in consultas if q['coverage'] in ADECUADAS]
-        if completas:
-            ultimo = max(_instante(q['captured_at'])[1] for q in completas)
-            mismas = sorted((q for q in completas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
-            elegida = mismas[0]
-            discordantes = len({q['coverage'] for q in mismas}) > 1 or len({firmas.get(q['query_id'], ()) for q in mismas}) > 1
-            if discordantes:
-                empatadas = [q['query_id'] for q in mismas]
-                elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True, '_empatadas': empatadas}
-            mejor[clave] = elegida
-        else:
-            rango = max(_RANGO.get(q['coverage'], 0) for q in consultas)
-            candidatas = [q for q in consultas if _RANGO.get(q['coverage'], 0) == rango]
-            ultimo = max(_instante(q['captured_at'])[1] for q in candidatas)
-            mejor[clave] = min((q for q in candidatas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
+        candidatas = completas or [q for q in consultas if _RANGO.get(q['coverage'], 0) == max(_RANGO.get(c['coverage'], 0) for c in consultas)]
+        ultimo = max(_instante(q['captured_at'])[1] for q in candidatas)
+        elegida = min((q for q in candidatas if _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id'])
+        mismas = sorted(
+            (q for q in consultas if q['coverage'] in _RANGO and _instante(q['captured_at'])[1] == ultimo), key=lambda q: q['query_id']
+        )
+        if any(not _compatibles(elegida, q, firmas) for q in mismas):
+            empatadas = [q['query_id'] for q in mismas]
+            elegida = {**elegida, 'coverage': 'PARCIAL', '_discordante': True, '_empatadas': empatadas}
+        mejor[clave] = elegida
     return mejor
 
 

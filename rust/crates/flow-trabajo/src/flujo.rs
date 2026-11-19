@@ -39,6 +39,17 @@ pub struct Proceso {
     pub reintentos: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub paquete: Option<String>,
+    /// Historial anónimo del paquete (E3D-05, Mulchén): instante, fase, decisión sobre cada lote, error literal y resumen
+    /// final. Sin nombres, RUT ni rutas personales; sirve para diagnosticar un corte compartiendo solo este archivo.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub historial: Vec<String>,
+}
+
+/// Agrega un evento al historial (los últimos 200).
+fn anotar(proceso: &mut Proceso, evento: impl AsRef<str>) {
+    proceso.historial.push(format!("{} {}", chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%:z"), evento.as_ref()));
+    let sobra = proceso.historial.len().saturating_sub(200);
+    proceso.historial.drain(..sobra);
 }
 
 /// Preferencias del Descargador que usa el flujo (`descargador/preferencias.py`).
@@ -221,6 +232,7 @@ pub fn ejecutar_en(
         seleccion: Some(lote.clone()),
         reintentos: 0,
         paquete: None,
+        historial: Vec::new(),
     };
     let r = correr(sitfa, &raiz, proceso, prefs, hoy);
     (Some(raiz), r)
@@ -324,6 +336,17 @@ fn fase_lote(sitfa: &dyn Sitfa, raiz: &Path, proceso: &mut Proceso, fase: &str, 
         // E3B-12: un lote validado se reutiliza solo si todas sus lecturas siguen íntegras; si falta alguna, se retoma
         // y `lotes::ejecutar` vuelve a leer solo esos ingresos.
         let integras = r.lecturas.iter().all(|l| recoleccion::leer(&carpeta, l).is_ok());
+        anotar(
+            proceso,
+            format!(
+                "{fase}: lote {} {}; pendientes {}; lecturas {} ({})",
+                carpeta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+                r.estado,
+                recoleccion::lecturas_pendientes(&r),
+                r.lecturas.len(),
+                if integras { "íntegras" } else { "alguna falta o cambió" }
+            ),
+        );
         if terminado(&r) && integras {
             if fase == "consultas" {
                 sitfa.avance("Consultas ya validadas en el intento anterior: se reutilizan.".into());
@@ -347,6 +370,8 @@ fn correr(sitfa: &dyn Sitfa, raiz: &Path, mut proceso: Proceso, prefs: &Preferen
     lote.lecturas.meses = prefs.meses_atras;
     lote.evidencia = prefs.pdf_sin_registros;
     lote.pausa_ms = prefs.pausa_ms;
+    let inicio = format!("inicio; reintento {}", proceso.reintentos);
+    anotar(&mut proceso, inicio);
     escribir(raiz, &proceso)?;
     let resultado = (|| -> Result<Resultado, String> {
         let mut fase = |proceso: &mut Proceso, nombre: &str| -> Result<(), String> {
@@ -354,6 +379,7 @@ fn correr(sitfa: &dyn Sitfa, raiz: &Path, mut proceso: Proceso, prefs: &Preferen
                 return Err("Proceso detenido. Los originales verificados se conservan en respaldo.".into());
             }
             proceso.fase = nombre.into();
+            anotar(proceso, format!("fase {nombre}"));
             escribir(raiz, proceso)
         };
         fase(&mut proceso, "consultas")?;
@@ -407,11 +433,18 @@ fn correr(sitfa: &dyn Sitfa, raiz: &Path, mut proceso: Proceso, prefs: &Preferen
             recoleccion::lecturas_pendientes(&resumen) > 0 || !completos || !producto.avisos.is_empty() || !faltantes.is_empty();
         proceso.estado = if parcial { "PARCIAL" } else { "COMPLETO" }.into();
         proceso.paquete = Some(exportar::NOMBRE.into());
+        let fin = format!("fin {}; {}", proceso.estado, producto.bitacoras);
+        anotar(&mut proceso, fin);
+        for aviso in &faltantes {
+            anotar(&mut proceso, aviso);
+        }
         escribir(raiz, &proceso)?;
         Ok(Resultado { carpeta: raiz.to_path_buf(), paquete: destino, parcial, avisos, bitacoras: producto.bitacoras })
     })();
-    if resultado.is_err() {
+    if let Err(e) = &resultado {
         proceso.estado = "INCOMPLETO".into();
+        let fase = proceso.fase.clone();
+        anotar(&mut proceso, format!("error en fase {fase}: {e}"));
         let _ = escribir(raiz, &proceso);
     }
     resultado

@@ -482,3 +482,26 @@ def test_e3c_05_sujeto_con_verbo_nfd_particulas_coma_y_nombre_incompleto():
     assert not previa('Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.')
     assert previa('Ana cuenta con ingreso efectivo al programa PRM Luna.')
     assert not previa('Se informa que la Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.')
+    # Otro sujeto que contiene el nombre del niño no es constancia.
+    assert not previa('La madre de Ana cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Soto')
+    assert not previa('Beto, hermano de Ana, cuenta con ingreso efectivo al programa PRM Luna.', 'Ana Soto')
+    assert not previa('Ana y Beto cuentan con ingreso efectivo al programa PRM Luna.', 'Ana Soto')
+
+
+def test_e3d_04_la_interfaz_prepara_con_el_respaldo_elegido(tmp_path):
+    """El camino de «Preparar proyectos» de la interfaz (`preparacion_desde_interfaz`, usado por `app_base._prepare_words`)
+    lleva el respaldo de `manual_word` a la selección Y a la preparación del Word."""
+    from nurus.personal.config import BASE
+    from nurus.personal.resolutions import preparacion_desde_interfaz
+
+    trabajo = analizar(tmp_path, 'INFORMES', INFORMES, [fila(1, 'PRM Laja') + ['2026-08-20']])
+    [f] = trabajo.rows
+    f.actions = []
+    f.decisions['resolution'] = 'review'
+    f.review['RES'] = 'X'
+    trabajo.export(tmp_path / 'copia.xlsx', backend='portable', reduced_fidelity=True)
+    for tipo in ('PC_INFO', 'NOMENCL'):
+        for marcados in ([], [f'{f.id}|{tipo}']):
+            _, preparar = preparacion_desde_interfaz(trabajo, marcados, tipo)
+            proyectos, errores = preparar(BASE / 'plantillas_word')
+            assert not errores and [(p.kind, p.record_ids) for p in proyectos] == [(tipo, [f.id])], (tipo, marcados, errores)

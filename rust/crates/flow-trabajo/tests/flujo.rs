@@ -214,7 +214,14 @@ fn corte_en_las_consultas_deja_incompleto_y_retomar_continua() {
     assert!(!carpeta.join("Captura_CSMP.zip").exists());
     let control: Value = serde_json::from_slice(&std::fs::read(carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
     assert_eq!(control["estado"], "INCOMPLETO");
+    // E3D-05: el control guarda un historial anónimo con la fase y el error literal.
+    let historial: Vec<&str> = control["historial"].as_array().unwrap().iter().map(|h| h.as_str().unwrap()).collect();
+    assert!(historial.iter().any(|h| h.ends_with("error en fase consultas: Sesión ficticia vencida.")), "{historial:?}");
     let r = flujo::retomar(&sitfa, carpeta, &sin_informes, HOY.parse().unwrap()).unwrap();
+    let control: Value = serde_json::from_slice(&std::fs::read(carpeta.join("respaldo/proceso.json")).unwrap()).unwrap();
+    let historial: Vec<&str> = control["historial"].as_array().unwrap().iter().map(|h| h.as_str().unwrap()).collect();
+    assert!(historial.iter().any(|h| h.contains("consultas: lote ") && h.contains("INCOMPLETA")), "{historial:?}");
+    assert!(historial.last().unwrap().contains(" fin COMPLETO; "), "{historial:?}");
     assert!(!r.parcial);
     assert!(r.paquete.exists());
     assert_eq!(*sitfa.llamadas.lock().unwrap(), ["seguimiento", "seguimiento (retomar)"]);

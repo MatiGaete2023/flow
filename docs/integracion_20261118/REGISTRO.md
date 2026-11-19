@@ -154,6 +154,15 @@ reversión hace caer al menos una prueba Python. Requiere **cuarta revisión E3*
 | E3C-12 | Pruebas desde el ZIP hasta acciones para orden UTC, contenido, identidad incierta, dos dueños y discordancia. |
 | Ruff | Los 24 avisos nuevos contra `d2935dd` corregidos (noqa innecesarios, imports, variable sin uso); sin avisos nuevos en el plan. |
 
+## Correcciones E3D (19-nov-2026) — cuarta revisión NO independiente, `E3_INFORME_4_20261119.md`
+El revisor externo quedó a medias; a pedido del usuario la terminó la sesión implementadora (no cumple la decisión j).
+| ID | Corrección |
+|---|---|
+| E3D-01/02 | Discordancia entre TODA lectura útil del mismo instante (`_compatibles`): parciales iguales entre sí; parcial contenida en la completa; completas idénticas. Python y Rust. |
+| E3D-03 | Prueba de que solo cambiar el solicitante es discordancia. |
+| E3D-04 | `preparacion_desde_interfaz` (sin Tk) lleva el respaldo a selección y Word; `app_base` la usa. |
+| E3D-05 | `proceso.json` con `historial` anónimo (fases, decisión por lote, error literal, resumen final). |
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar
@@ -166,15 +175,15 @@ reversión hace caer al menos una prueba Python. Requiere **cuarta revisión E3*
    --programa P --archivo consignaciones.json` y `--consignaciones` en `observar/producir`. Python: `python tools/consignar.py SESION --listar |
    --fila ID --programa P`. **Falta el botón en la interfaz Tk** (la interfaz Python no muestra aún las marcas `avisos`).
 4. **Escenario 9 incompleto**: selección oculta y reintento tras cancelación (interfaz/cola).
-5. **Cuarta revisión E3** sobre la punta actual (tres anteriores NO PASA; ver «Correcciones E3», «E3B» y «E3C»). Nada está
-   «aceptado». Idealmente con Rust instalado (la tercera no pudo ejecutar `cargo`). Mulchén: el usuario no conserva versión, botón,
+5. **Revisión E3 independiente** sobre la punta actual (tres NO PASA y una cuarta terminada por la sesión implementadora; ver
+   «Correcciones E3», «E3B», «E3C» y «E3D»). Nada está «aceptado». Idealmente con Rust instalado (la tercera no pudo ejecutar `cargo`). Mulchén: el usuario no conserva versión, botón,
    mensaje ni nombres de JSON; la próxima vez que ocurra, anotar esos cuatro datos. Prompt: `PROMPT_REVISION_E3_4.md`.
 6. CI Windows/SITFA; `tools/verificar_wp.py` (falla por entorno); escenarios Chromium ficticios y `rust.yml` para las fuentes nuevas.
 
 ## Comandos de verificación (desde la raíz)
 ```bash
 python -m pytest -q -p no:cacheprovider tests --continue-on-collection-errors   # 55 fallos preexistentes por tkinter; no deben crecer
-cd rust && cargo test --workspace --locked                                       # 348 pruebas
+cd rust && cargo test --workspace --locked                                       # 349 pruebas
 python rust/oraculo/generar_integracion.py && python rust/oraculo/generar_paquete_integracion.py   # regenerar oráculos (Python manda)
 python rust/oraculo/generar_datos.py                                             # textos/umbrales Python → Rust
 ```

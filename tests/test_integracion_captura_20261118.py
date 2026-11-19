@@ -703,3 +703,34 @@ def test_e3c_08_marcas_fuera_del_dominio_pactado(tmp_path):
     for extremo in ('0001-01-01T00:00:00+01:00', '9999-12-31T23:59:59-01:00'):
         assert _instante(extremo) == (extremo[:10], extremo)  # sin OverflowError; igual que Rust
     iso_time('2026-11-19T21:30:00-03:00')
+
+
+def test_e3d_01_02_lecturas_parciales_o_mixtas_del_mismo_instante_que_se_contradicen(tmp_path):
+    """E3D-01: dos PARCIALES simultáneas que discrepan. E3D-02: una COMPLETA y una PARCIAL simultánea que trae una fila que
+    la completa no tiene. Ambas retiraban el pide cuenta; deben conservarlo con marca de revisión."""
+    _, base = _lecturas(tmp_path, [], 'b')
+    mismo = '2026-10-01T10:00:00-03:00'
+    for cob1, cob2, nombre in (('PARCIAL', 'PARCIAL', 'p'), ('COMPLETA', 'PARCIAL', 'm')):
+        for orden in ((1, 2), (2, 1)):
+            lecturas = {
+                1: ('es-1', mismo, cob1, [_propio(base)]),
+                2: ('es-2', mismo, cob2, [_propio(base, escrito_status='Resuelto')]),
+            }
+            n = f'{nombre}{orden[0]}'
+            captura, _ = _lecturas(tmp_path, [lecturas[i] for i in orden], n)
+            acciones, f = _acciones(tmp_path, captura, base, n)
+            assert acciones == EXIGIBLES and 'ESCRITOS_DISCORDANTES' in [a[1] for a in f.avisos], n
+    # Una parcial simultánea CONTENIDA en la completa no es contradicción: la completa acredita el pendiente.
+    captura, _ = _lecturas(tmp_path, [('es-1', mismo, 'COMPLETA', [_propio(base), {}]), ('es-2', mismo, 'PARCIAL', [_propio(base)])], 'k')
+    acciones, _ = _acciones(tmp_path, captura, base, 'k')
+    assert acciones == []
+
+
+def test_e3d_03_solo_cambia_el_solicitante_es_discordancia(tmp_path):
+    from nurus.capture.escritos import filas_de_escritos
+
+    _, base = _lecturas(tmp_path, [], 'b')
+    mismo = '2026-10-01T10:00:00-03:00'
+    captura, _ = _lecturas(tmp_path, [('es-1', mismo, 'COMPLETA', [{}]), ('es-2', mismo, 'COMPLETA', [{'requester': 'Q'}])], 'a')
+    consulta, _ = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
+    assert consulta['_discordante'] and consulta['coverage'] == 'PARCIAL'

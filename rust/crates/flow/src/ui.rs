@@ -2196,10 +2196,12 @@ mod pruebas_captura {
                 assert_eq!(evidencia["completa"], caso != "paginada", "{caso}: completitud guardada");
             }
             let zip = base.join("paquete.zip");
-            flow_trabajo::exportar::exportar(
+            let producto = flow_trabajo::exportar::exportar(
                 &[flow_trabajo::exportar::Lote { carpeta: &base, resumen: &resumen }],
                 &zip, &Default::default(),
             ).unwrap();
+            // E3C-10: solo la ventana con paginador cuenta como recortada; las normales no dejan el paquete PARCIAL.
+            assert_eq!(producto.recortadas.is_empty(), caso != "paginada", "{caso}: {:?}", producto.recortadas);
             let datos = std::fs::read(zip).unwrap();
             let desde = "2026-06-20".parse().unwrap();
             let hasta = "2026-10-20".parse().unwrap();

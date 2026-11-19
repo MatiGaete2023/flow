@@ -31,7 +31,7 @@ from .work import Work
 from .outputs import contacts_notice, create_draft, import_contacts
 from .mail_controls import NO_WORK, require_mail_action
 from .mail_view import update_mail_actions
-from .resolutions import KINDS, kind_code, kind_label, prepare_projects, generate_projects, automatic_project_selections
+from .resolutions import KINDS, kind_code, kind_label, generate_projects, preparacion_desde_interfaz
 from .importing import SheetChoice
 from nurus.rus.reader import list_workbook_sheets
 from nurus.rus.columns import normalize
@@ -1276,15 +1276,8 @@ class App(ctk.CTk):
         selected = list(selected_ids(self, 'words')) or [
             iid for iid in getattr(self, '_resolution_all_iids', self.words.get_children()) if self.words.exists(iid)
         ]
-        fallback_kind = kind_code(self.manual_word.get()) or 'PC_IE'
-        if not selected:
-            selections = automatic_project_selections(work, fallback_kind)
-            if not selections:
-                raise ValueError(
-                    'No hay proyectos indicados. Si la planilla usa RES, solo se generan los marcados allí; para agregar otro caso, selecciónalo en Trabajo y usa Agregar desde Trabajo.'
-                )
-        else:
-            selections = [item.split('|') for item in selected]
+        # El MISMO respaldo de `manual_word` elige y prepara (E3C-07); la lógica vive fuera de Tk para probarla (E3D-04).
+        _, preparar = preparacion_desde_interfaz(work, selected, kind_code(self.manual_word.get()))
 
         def done(result):
             self.projects, errors = result
@@ -1320,7 +1313,7 @@ class App(ctk.CTk):
 
         self._run(
             'Agrupando proyectos por tribunal, RIT y tipo…',
-            lambda: prepare_projects(work, selections, self.template_dir, fallback_kind),
+            lambda: preparar(self.template_dir),
             done,
         )
 

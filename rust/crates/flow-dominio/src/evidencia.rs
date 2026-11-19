@@ -331,5 +331,8 @@ mod pruebas_e3c {
         assert!(!previa("Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.", ""));
         assert!(previa("Ana cuenta con ingreso efectivo al programa PRM Luna.", ""));
         assert!(!previa("Se informa que la Ana Luisa cuenta con ingreso efectivo al programa PRM Luna.", ""));
+        assert!(!previa("La madre de Ana cuenta con ingreso efectivo al programa PRM Luna.", "Ana Soto"));
+        assert!(!previa("Beto, hermano de Ana, cuenta con ingreso efectivo al programa PRM Luna.", "Ana Soto"));
+        assert!(!previa("Ana y Beto cuentan con ingreso efectivo al programa PRM Luna.", "Ana Soto"));
     }
 }
