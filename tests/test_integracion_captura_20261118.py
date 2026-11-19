@@ -787,3 +787,35 @@ def test_p3a_columna_escritos_resume_la_fuente_de_la_causa(tmp_path):
     assert etiqueta_escritos({'cobertura': 'VACIA_COMPROBADA'}) == 'Sin escritos'
     assert etiqueta_escritos({'cobertura': 'PARCIAL', 'pendientes': 1}) == '1 pendiente · parcial'
     assert etiqueta_escritos({'cobertura': 'PARCIAL', 'pendientes': 0, 'discordante': True}) == 'Lecturas discordantes'
+
+
+def test_historico_con_la_forma_visible_de_la_ventana_real_19nov():
+    """Forma visible de «Historial Menores» (captura del usuario, 19-nov-2026; valores ficticios): bloque de datos del niño
+    con rótulos, tabla LRPA de 25 columnas vacía y tabla Protección de 16 columnas, en ISO-8859-1."""
+    lrpa = ['Cod Ingreso', 'Fecha Ingreso', 'Cod Proyecto', 'Nombre Proyecto', 'Calidad Juridica', 'Cod Tribunal', 'Tribunal',
+            'RUC', 'RIT', 'Cod Delito', 'Delito', 'Cod Delito2', 'Delito2', 'Cod Delito3', 'Delito3', 'Inicio Sanción',
+            'Duración Años', 'Duración Meses', 'Duración Dias', 'Dias Abono', 'Sanción Accesoria', 'Término Sanción Calc.',
+            'Término Sanción', 'Fecha Egreso', 'Causal Egreso']  # fmt: skip
+    proteccion = ['Cod Ingreso', 'Fecha Ingreso', 'Cod Proyecto', 'Nombre Proyecto', 'Tribunal', 'RUC', 'RIT', 'CausalIngreso1',
+                  'EntidadAsigna1', 'CausalIngreso2', 'EntidadAsigna2', 'CausalIngreso3', 'EntidadAsigna3', 'Fecha Egreso',
+                  'Causal Egreso', 'Con Quien Egresa']  # fmt: skip
+    fila = ['1', '5/22/2026', '10', 'PRM - PROGRAMA FICTICIO', 'LETRAS Y GARANTIA FICTICIO', '1-K', 'X-1-2018', 'VÍCTIMA FICTICIA',
+            'E', '--', '--', '--', '--', '--', 'SIN INFORMACION', 'SIN INFORMACION']  # fmt: skip
+
+    def celdas(valores):
+        return ''.join(f'<td>{v}</td>' for v in valores)
+
+    html = (
+        '<html><body><table><tr><td colspan="3">Historial Menores</td></tr><tr><td>RIT Nº :</td></tr>'
+        '<tr><td>Tribunal : Juzgado Ficticio</td></tr><tr><td>Otros RIT :</td></tr>'
+        '<tr><td>Nombre del niño : Persona Ficticia Uno</td><td></td><td>Rut : 11111111-1</td></tr>'
+        '<tr><td>Fecha de nacimiento : 20-01-2013</td><td>Edad : 13</td><td>Sexo : F</td></tr></table>'
+        f'<table><tr><td colspan="25">Ingreso Historico(LRPA)</td></tr><tr>{celdas(lrpa)}</tr><tr>{celdas([""] * 25)}</tr></table>'
+        f'<table><tr><td colspan="16">Ingreso Historico Protección</td></tr><tr>{celdas(proteccion)}</tr><tr>{celdas(fila)}</tr>'
+        '</table></body></html>'
+    )
+    lectura = read_historico(html.encode('cp1252'), persona_esperada=['11111111-1'])
+    assert lectura['ownership'] == 'VERIFICADA'
+    assert [(f['Programa'], f['Fecha egreso'], f['Causal egreso']) for f in lectura['filas']] == [
+        ('PRM - PROGRAMA FICTICIO', '--', 'SIN INFORMACION')
+    ]

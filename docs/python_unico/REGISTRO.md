@@ -96,3 +96,10 @@ Descargador: `cd descargador && python -m pytest -q …` (las pruebas de interfa
   suspenden el histórico** en el resto del lote (aviso; las bitácoras siguen); (3) la primera ventana no reconocida deja
   `historico/estructura_historico.json` anónimo (`extraer_estructura_escritos.estructura_ventana`; también por consola con
   `--ventana`). Pruebas `test_p3c_historico_sin_tabla_*`, `test_p3c_estructura_de_ventana_*` (sin datos de personas).
+- 19-nov-2026 · El usuario envió una **captura de pantalla** de la ventana real (no la salida del extractor; contenía datos de
+  una persona: no se guardó ni se transcribe). Hechos estructurales (N1): la URL `PopUpHistorial.jsp?tipo_popUp=77&RUT_Litigante=<sin
+  puntos>&RUT_DV=<dv>` es la misma que arma `historico_open`; la ventana muestra bloque «Historial Menores» con rótulos, tabla
+  LRPA de 25 columnas y tabla Protección de 16 columnas (`CausalIngreso1..3`, `EntidadAsigna1..3`, `Con Quien Egresa`), con
+  barra de desplazamiento horizontal. Con esa forma visible, en ISO-8859-1, `read_historico` lee bien (prueba
+  `test_historico_con_la_forma_visible_de_la_ventana_real_19nov`). N2: el HTML que recibe el Descargador difiere de lo
+  renderizado (tabla cargada por script, encabezado y cuerpo en tablas separadas o similar). **Falta** `estructura_historico.json`.
