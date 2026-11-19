@@ -51,6 +51,14 @@ Ante error de importación conservar ZIP y sesión. Comunicar SHA, mensaje y eta
 sin datos institucionales. Excel 2010, Outlook 365 y políticas de instalación
 requieren las pruebas reales descritas en aceptación pendiente.
 
+## Otro programa vigente: marcar como consignada (P1, 19-nov-2026)
+
+Cuando la propuesta de un registro dice que el niño cuenta con ingreso efectivo a otro programa (Ingreso Histórico
+Protección), el detalle de Trabajo, pestaña **Gestión**, muestra el botón **«Marcar «<programa>» como consignada»**.
+Úsalo después de registrar esa constancia en RUS: la propuesta deja de repetirla para ese registro, también al volver a
+abrir la sesión o importar otro paquete. **«Deshacer consignación…»** la quita y la constancia vuelve a proponerse si
+corresponde. El botón no escribe en RUS: solo guarda la marca en la sesión local.
+
 ## Cronología de bitácoras (solo mostrar, WP-50)
 
 Con un paquete del Descargador, Trabajo muestra la columna **Última obs. centro**

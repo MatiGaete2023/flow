@@ -734,3 +734,41 @@ def test_e3d_03_solo_cambia_el_solicitante_es_discordancia(tmp_path):
     captura, _ = _lecturas(tmp_path, [('es-1', mismo, 'COMPLETA', [{}]), ('es-2', mismo, 'COMPLETA', [{'requester': 'Q'}])], 'a')
     consulta, _ = filas_de_escritos(captura, CORTE)[('RUS', base['court_code'], base['cause_id'])]
     assert consulta['_discordante'] and consulta['coverage'] == 'PARCIAL'
+
+
+def test_p1_botones_de_consignacion_del_detalle_consignan_deshacen_y_persisten(tmp_path):
+    """P1 (plan flow-python): las acciones que muestra el detalle de Trabajo para «otro programa vigente»."""
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    fila = trabajo.rows[0]
+    acciones = trabajo.acciones_consignacion(fila.id)
+    assert acciones == [{'accion': 'consignar', 'programa': 'FAE X', 'texto': 'Marcar «FAE X» como consignada'}]
+    mensaje = trabajo.aplicar_consignacion(fila.id, 'consignar', 'FAE X')
+    assert 'consignada' in mensaje and 'cuenta con ingreso efectivo' not in fila.observation
+    assert trabajo.acciones_consignacion(fila.id) == [
+        {'accion': 'deshacer', 'programa': 'fae x', 'texto': 'Deshacer consignación de «fae x»'}
+    ]
+    sesion = tmp_path / 'sesion'
+    trabajo.save(sesion)
+    cargado = Work_load(sesion)
+    assert cargado.consignaciones == {fila.id: ['fae x']} and 'cuenta con ingreso efectivo' not in cargado.rows[0].observation
+    cargado.aplicar_consignacion(fila.id, 'deshacer', 'fae x')
+    assert cargado.consignaciones == {} and 'cuenta con ingreso efectivo' in cargado.rows[0].observation
+    assert cargado.acciones_consignacion(fila.id)[0]['accion'] == 'consignar'
+    with pytest.raises(ValueError):
+        cargado.aplicar_consignacion(fila.id, 'otra', 'FAE X')
+
+
+def test_p1_deshacer_es_transaccional(tmp_path, monkeypatch):
+    import nurus.personal.record_edits as re_
+
+    trabajo = importar(tmp_path, historico=[('FAE X', *VIG)])
+    fila = trabajo.rows[0]
+    trabajo.consignar(fila.id, 'FAE X')
+
+    def falla(*a, **k):
+        raise OSError('fuente inaccesible')
+
+    monkeypatch.setattr(re_, 'recalculate', falla)
+    with pytest.raises(OSError):
+        trabajo.desconsignar(fila.id, 'FAE X')
+    assert trabajo.consignaciones == {fila.id: ['fae x']}  # la marca se restituye

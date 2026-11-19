@@ -73,6 +73,11 @@ class RecordForm:
             NamedChoice(line, keyvariable=variable, names=lambda: MAIL_NAMES, state='readonly').pack(
                 side='left', fill='x', expand=True
             )
+        # P1: constancia única «otro programa vigente». El botón solo registra que el funcionario ya la consignó en RUS;
+        # no escribe en RUS. Se reconstruye en cada `load`.
+        ui.Label(frame, text='Otro programa vigente · constancia única').pack(anchor='w', pady=(10, 2))
+        self.consign_frame = ui.Frame(frame)
+        self.consign_frame.pack(fill='x')
         actions = ui.Frame(frame)
         actions.pack(fill='x', pady=10)
         ui.Button(actions, text='Aplicar al registro', command=lambda: app._guard(self.save)).pack(side='left')
@@ -150,12 +155,37 @@ class RecordForm:
             ui.Entry(line, textvariable=variable).pack(side='left', fill='x', expand=True)
             # CTkEntry no muestra placeholder_text con textvariable: el dato original va en una etiqueta.
             ui.Label(line, text=original_hint(row.values.get(column)), text_color=ui.MUTED).pack(side='left', padx=6)
+        self._consignaciones(row)
         automatic = word_values(self.app.work, row)
         for key, variable in self.word.items():
             variable.set(row.word_overrides.get(key, ''))
             self.word_hints[key].configure(text=original_hint(automatic.get(key), 'Automático'))
         self.loading = False
         self.dirty = False
+
+    def _consignaciones(self, row):
+        for child in self.consign_frame.winfo_children():
+            child.destroy()
+        acciones = self.app.work.acciones_consignacion(row.id)
+        if not acciones:
+            ui.Label(self.consign_frame, text='Sin constancia de otro programa en esta propuesta.', text_color=ui.MUTED).pack(
+                anchor='w'
+            )
+        for item in acciones:
+            ui.Button(
+                self.consign_frame,
+                text=item['texto'],
+                command=lambda a=item['accion'], p=item['programa']: self.app._guard(lambda: self.consignar(a, p)),
+            ).pack(anchor='w', pady=2)
+
+    def consignar(self, accion, programa):
+        mensaje = self.app.work.aplicar_consignacion(self.row_id, accion, programa)
+        self.app._save_session()
+        self.app._show_work()
+        if self.row_id and self.app.records.exists(self.row_id):
+            self.app.records.selection_set(self.row_id)
+            self.app._detail()
+        self.app.status.set(mensaje)
 
     def capture(self):
         if not self.row_id or not self.dirty:

@@ -571,6 +571,60 @@ class Work:
                 self.revision += 1
         return llave
 
+    def desconsignar(self, row_id, programa):
+        """Deshace la marca de `consignar` (P1): la frase «otro programa vigente» vuelve a proponerse si corresponde.
+        Transaccional como `consignar`: si no se puede recalcular, la marca se restituye."""
+        from .motor.evidencia import clave_programa
+
+        mapa = self.__dict__.setdefault('consignaciones', {})
+        llave = clave_programa(programa)
+        if not llave or llave not in mapa.get(row_id, []):
+            return ''
+        mapa[row_id].remove(llave)
+        if not mapa[row_id]:
+            del mapa[row_id]
+        fila = next((r for r in self.rows if r.id == row_id), None)
+        if fila is not None and getattr(self, 'as_of', ''):
+            from .record_edits import recalculate
+
+            try:
+                recalculate(self, fila)
+            except Exception:
+                mapa.setdefault(row_id, []).append(llave)
+                raise
+            self.revision += 1
+        return llave
+
+    def acciones_consignacion(self, row_id):
+        """Botones del detalle para la constancia «otro programa vigente» (P1), sin Tk:
+        [{'accion': 'consignar'|'deshacer', 'programa': nombre visible, 'texto': rótulo del botón}].
+        «consignar» para cada programa que la propuesta actual afirma; «deshacer» para cada marca ya registrada."""
+        fila = next((r for r in self.rows if r.id == row_id), None)
+        if fila is None:
+            return []
+        salida = []
+        for item in getattr(fila, 'otros_programas', None) or []:
+            nombre = item.get('programa', '') if isinstance(item, dict) else str(item)
+            if nombre:
+                salida.append(
+                    {'accion': 'consignar', 'programa': nombre, 'texto': f'Marcar «{nombre}» como consignada'}
+                )
+        for llave in getattr(self, 'consignaciones', {}).get(row_id, []):
+            salida.append(
+                {'accion': 'deshacer', 'programa': llave, 'texto': f'Deshacer consignación de «{llave}»'}
+            )
+        return salida
+
+    def aplicar_consignacion(self, row_id, accion, programa):
+        """Ejecuta una acción de `acciones_consignacion`; devuelve el mensaje para la barra de estado."""
+        if accion == 'consignar':
+            self.consignar(row_id, programa)
+            return f'«{programa}» quedó como consignada: la propuesta ya no repite esa constancia.'
+        if accion == 'deshacer':
+            self.desconsignar(row_id, programa)
+            return f'Se deshizo la consignación de «{programa}»: la constancia vuelve a proponerse si corresponde.'
+        raise ValueError('Acción de consignación desconocida.')
+
     def export(self, destination, *, backend='native', reduced_fidelity=False):
         """Exporta la propuesta o las ediciones humanas vigentes de Trabajo.
 

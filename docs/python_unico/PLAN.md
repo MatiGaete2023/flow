@@ -26,11 +26,11 @@ anonimizador); **V** = basta `tools/verificar_wp.py` + pruebas.
 
 | # | Paquete | Herramienta · botón u opción | Clase | Estado |
 |---|---|---|---|---|
-| **P1** | Botón «Marcar como consignada» (frase «otro programa vigente») en el detalle de Trabajo, con deshacer; persiste y el recálculo la respeta (`Work.consignar` ya existe) | Asistente · Trabajo · detalle | V | Pendiente |
+| **P1** | Botón «Marcar como consignada» (frase «otro programa vigente») en el detalle de Trabajo, con deshacer; persiste y el recálculo la respeta (`Work.consignar` ya existe) | Asistente · Trabajo · detalle | V | **Hecho** (ver REGISTRO) |
 | **P2** | **Revisión de bitácoras = separar registros sin observación.** (a) Descargador: registrar en cada bitácora la evidencia de alcance (tabla reconocida, vacía comprobada, posible recorte), port de `rust/crates/flow-captura/src/lecturas.rs::cobertura_bitacora` y `REVISION_BITACORAS_ESQUEMA.md`. (b) Asistente: pantalla «Revisión de bitácoras…» que clasifica Con observación / Sin observación / No verificable, filtra, marca Revisada y exporta Excel + JSON; el motor corre sobre todo el paquete antes de separar | Descargador (automático) · Asistente: botón «Revisión de bitácoras…» | V | Pendiente |
 | **P3a** | Escritos visibles: columna/indicador «Escritos» en Trabajo (pendientes de la causa y estado de la fuente: leída, vacía, sin tabla, fallida); `diagnostico_historia.json` cuenta por causa si la respuesta traía la tabla Escritos y cuántas filas (anónimo) | Asistente · Trabajo; Descargador · diagnóstico | V | Pendiente |
 | **P3b** | Escritos en la variante sin tabla: abrir la pestaña Escritos desde la ventana de la causa | Descargador + extensión | **E3** | Bloqueado por P3a (confirmar si la variante ocurre en uso real) |
-| **P3c** | **Histórico automático**: opción «Leer Ingreso Histórico (Mejor Niñez)» en Seguimiento; la extensión abre `PopUpHistorial` tipo 77 con el RUT de la fila verificada; se valida RUT de la ventana = RUT de la fila; lector existente; se incluye en el paquete (`historico_proteccion`) | Descargador · opciones de lectura | **E3** | Pendiente de D-H1 |
+| **P3c** | **Histórico automático**: opción «Leer Ingreso Histórico (Mejor Niñez)» en Seguimiento; la extensión abre `PopUpHistorial` tipo 77 con el RUT de la fila verificada; se valida RUT de la ventana = RUT de la fila; lector existente; se incluye en el paquete (`historico_proteccion`) | Descargador · opciones de lectura | **E3** | Pendiente (D-H1 = sí) |
 | **P8** | Diagnóstico del paquete: historial anónimo en `respaldo/proceso.json` (fases, decisión por lote, error literal, resumen) y aviso final de bitácoras faltantes por tribunal | Descargador | V | Pendiente |
 | **P4** | Resultados con búsqueda y carpetas previas; Meta 4 «Elegir plantilla Excel…» (el código ya acepta plantilla); paridad de importación de contactos | Asistente · Resultados; Meta 4 | V | Pendiente |
 | **P5** | Diseño útil de Estudio D en Tk: conteos por etapa, confirmación antes de recalcular, lista/ficha en Correos y Resoluciones, ayuda contextual | Asistente | V | Pendiente |
@@ -42,9 +42,9 @@ anonimizador); **V** = basta `tools/verificar_wp.py` + pruebas.
 
 ## 3. Decisiones pendientes del usuario
 
-- **D-H1 (P3c):** abrir el Histórico de cada niño del lote con el RUT de su fila verificada, sin que el usuario haga clic en
-  cada uno. La guía recomendaba no hacer consultas autónomas por RUT; esta forma usa solo los RUT del listado ya consultado.
-  Supuesto de trabajo mientras no responda: **sí**, con casilla desactivada por defecto.
+- **D-H1 (P3c): RESUELTA «Sí» (usuario, 19-nov-2026, «Sí a D-H1»).** El Descargador abre el Histórico de cada niño del
+  lote con el RUT de su fila verificada del listado, sin clic por niño; casilla «Leer Ingreso Histórico» desactivada por
+  defecto.
 - **P6 y P7:** si se quieren.
 
 ## 4. Criterio de terminado (cada paquete)
