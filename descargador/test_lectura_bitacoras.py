@@ -235,7 +235,7 @@ def test_anonymous_diagnostic_has_totals_but_no_personal_data(tmp_path):
     assert data['tipo'] == 'BITACORAS_DIAGNOSTICO_ANONIMO'
     assert data['estados'] == {'SIN_VINCULO': 2}
     assert data['registros'] == 2
-    assert data['descargador_version'] in ('NO_VERIFICADA', VERSION)
+    assert data['descargador_version'] == VERSION  # misma versión que registra la historia
     assert data['extension_version'] == VERSION
     assert data['descargador_commit'] == 'NO_VERIFICADO' or len(data['descargador_commit']) == 40
     assert data['diagnosticos_sin_vinculo']['SIN_ACCION_OBSERVACIONES'] == 2

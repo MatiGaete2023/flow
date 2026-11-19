@@ -163,6 +163,16 @@ El revisor externo quedó a medias; a pedido del usuario la terminó la sesión 
 | E3D-04 | `preparacion_desde_interfaz` (sin Tk) lleva el respaldo a selección y Word; `app_base` la usa. |
 | E3D-05 | `proceso.json` con `historial` anónimo (fases, decisión por lote, error literal, resumen final). |
 
+## Evidencia Mulchén del usuario (19-nov-2026, solo conteos; los archivos con nombres y RUT NO se versionan)
+- N1: corrida del **Descargador Python 2.9.0** (flujo de paquete con `respaldo/proceso.json` en formato Python), 19-nov-2026 14:36,
+  Cumplimiento modalidad 1, tribunales 49, 110, 113 y 119 (Mulchén). Paquete **COMPLETO**. Bitácoras: 18/18 LEIDA; Mulchén 7/7.
+  Historia: 17/17 causas LEIDA; Mulchén 6 causas (7 ingresos: dos hermanos en la misma causa), sin errores ni tope.
+- N2: en esa versión y ese flujo (Python) Mulchén no falla; el incidente reportado era en **Flow Rust**. Sigue sin reproducirse.
+- Hallazgo menor corregido: `diagnostico_bitacoras.json` decía `descargador_version: NO_VERIFICADA` mientras la historia registraba
+  2.9.0 (la bitácora tomaba la versión de `_build_meta` y caía a «desarrollo»). Ahora ambas usan `contrato_integral.capabilities()`.
+- `historias.json` y `bitacoras.json` del lote traen nombres, RUT e identificadores reales: no se comparten ni versionan; para
+  diagnosticar bastan `proceso.json` y los `diagnostico_*.json`.
+
 ## Pendientes (en orden de valor) — para quien continúe
 1. **Asociación explícita informe–escrito**: la fila de Escritos no trae folio/fecha/`Doc.` textual. Para decidir si el icono `Doc.` lleva un
    identificador estable, correr `python descargador/extraer_estructura_escritos.py ESCRITOS.html [HISTORIAL.html]` sobre el HTML real y entregar

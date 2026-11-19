@@ -332,12 +332,12 @@ class _Lectura:
             'consultas': [],
             'registros': [],
         }
-        try:
-            from _build_meta import BUILD_VERSION, BUILD_COMMIT
+        # Misma fuente que la historia (`contrato_integral.capabilities`): sin `_build_meta` la versión es la de la
+        # extensión y no «desarrollo», que el diagnóstico anónimo reportaba como NO_VERIFICADA.
+        from contrato_integral import capabilities
 
-            self.state['origen'] = {'version': BUILD_VERSION, 'commit': BUILD_COMMIT}
-        except ImportError:
-            self.state['origen'] = {'version': 'desarrollo', 'commit': 'sin metadatos'}
+        info = capabilities()
+        self.state['origen'] = {'version': info['version'], 'commit': info['commit']}
         self.manifest = self.folder / MANIFEST
         # EF-04: lecturas de otros lotes del mismo día, solo si el usuario no pidió volver a leer todo.
         self.cross = lecturas_reutilizables(carpetas_previas(reuse_base, self.folder), m.now()) if reuse_base else {}
