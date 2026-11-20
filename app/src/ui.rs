@@ -1069,6 +1069,40 @@ impl App {
                     ui.label(RichText::new(r.eventos.join(" · ")).size(11.5).color(p.muted).monospace());
                 }
             });
+            let contexto = w.paquete.as_ref().and_then(|pq| {
+                let id = headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA").and_then(|c| w.registros[i].values.get(c))?.display();
+                pq.contextos.get(&id).cloned()
+            });
+            if let Some(ctx) = contexto {
+                ui.add_space(8.0);
+                theme::card(p).show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    theme::seccion(ui, p, "Fuentes del paquete");
+                    if let Some(e) = &ctx.escritos {
+                        let estado = match e.cobertura.as_str() {
+                            "VACIA_COMPROBADA" => "sin escritos".to_string(),
+                            "FALLIDA" | "IDENTIDAD_INCIERTA" | "NO_CONSULTADA" => "no verificada".to_string(),
+                            _ if e.pendientes.is_empty() => format!("sin pendientes ({} escritos)", e.filas),
+                            _ => format!("{} pendiente(s) de {} escritos", e.pendientes.len(), e.filas),
+                        };
+                        let parcial = if e.cobertura == "PARCIAL" { " · lectura parcial" } else { "" };
+                        let color = if e.pendientes.is_empty() { p.muted } else { p.amber };
+                        ui.label(RichText::new(format!("Escritos de la causa: {estado}{parcial} · leído {}", e.leido)).color(color));
+                        for pend in &e.pendientes {
+                            ui.label(RichText::new(format!("   • {pend}")).size(12.0));
+                        }
+                    }
+                    if let Some(h) = &ctx.historico {
+                        let identidad = if h.verificada { "" } else { " · identidad no verificada" };
+                        let texto = if h.vigentes.is_empty() {
+                            format!("Ingreso histórico (Mejor Niñez): sin programas vigentes ({} filas){identidad} · leído {}", h.filas, h.leido)
+                        } else {
+                            format!("Ingreso histórico (Mejor Niñez): vigentes {}{identidad} · leído {}", h.vigentes.join("; "), h.leido)
+                        };
+                        ui.label(RichText::new(texto).color(if h.verificada { p.text } else { p.amber }));
+                    }
+                });
+            }
             ui.add_space(8.0);
             theme::card(p).show(ui, |ui| {
                 ui.set_width(ui.available_width());
