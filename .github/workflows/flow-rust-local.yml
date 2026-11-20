@@ -63,6 +63,11 @@ jobs:
           cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe referencia-python-ci
+      - name: Contrastar ZIP V1 con el productor nativo histórico
+        shell: pwsh
+        run: |
+          $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path 'app/target/debug/examples/revisar_bitacoras.exe').Path
+          cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
       - name: Preparar OpenGL en el runner
         shell: pwsh
         run: |

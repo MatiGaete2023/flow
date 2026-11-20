@@ -2202,7 +2202,7 @@ mod pruebas_captura {
             ).unwrap();
             // E3C-10: solo la ventana con paginador cuenta como recortada; las normales no dejan el paquete PARCIAL.
             assert_eq!(producto.recortadas.is_empty(), caso != "paginada", "{caso}: {:?}", producto.recortadas);
-            let datos = std::fs::read(zip).unwrap();
+            let datos = std::fs::read(&zip).unwrap();
             let desde = "2026-06-20".parse().unwrap();
             let hasta = "2026-10-20".parse().unwrap();
             let mut informe = flow_trabajo::paquete::revisar_bitacoras(&datos, desde, hasta, hasta).unwrap();
@@ -2210,6 +2210,26 @@ mod pruebas_captura {
             let fila = &informe.filas[indice];
             assert_eq!(fila.revision.clasificacion, clase, "{caso}: {}. Evidencia: {:?}; lecturas: {:?}",
                 fila.revision.motivo, fila.evidencia, fila.lecturas);
+            if let Some(revisar) = std::env::var_os("FLOW_RUST_REVISAR_V1") {
+                let salida = std::process::Command::new(revisar)
+                    .arg(&zip)
+                    .args([desde.to_string(), hasta.to_string()])
+                    .output()
+                    .unwrap();
+                assert!(salida.status.success(), "{caso}: {}", String::from_utf8_lossy(&salida.stderr));
+                let filas: Vec<serde_json::Value> = serde_json::from_slice(&salida.stdout).unwrap();
+                let registro = &fila.procedencia[0].registro_id;
+                let actual = filas.iter().find(|f| f["record_id"].as_str() == Some(registro.as_str()))
+                    .unwrap_or_else(|| panic!("{caso}: Flow Rust no encontró el registro del productor histórico"));
+                let esperada = match clase {
+                    Clasificacion::ConObservacion => "CON_OBSERVACION",
+                    Clasificacion::SinObservacion => "SIN_OBSERVACION",
+                    Clasificacion::NoVerificable => "NO_VERIFICABLE",
+                    Clasificacion::FueraDeAlcance => unreachable!(),
+                };
+                assert_eq!(actual["resultado"]["clase"], esperada, "{caso}: {actual}");
+                println!("ZIP histórico V1 ({caso}): {esperada}");
+            }
             if caso == "vacia" {
                 assert_eq!(flow_trabajo::paquete::periodo_revision(&datos).unwrap(), Some((desde, hasta)));
                 flow_trabajo::revision_informe::aplicar_motor(&mut informe, "paquete.zip", &datos, &Config::default()).unwrap();

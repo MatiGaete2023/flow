@@ -78,7 +78,11 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - El plan reutiliza la validación de perfiles. En Lite conserva el orden fijo de pestañas de Flow Python. En Integral respeta el orden de selección y permite combinar filtros por pestaña. Litigantes combina estados, los calendarios combinan meses de un año y Carga combina tribunales con un período de hasta 31 días.
 - Las pruebas de Rust cubren el orden de las 16 combinaciones del caso de referencia de Lite, filtros por pestaña, duplicados, tribunales ajenos al catálogo y restricciones de fechas. Las cinco pruebas del Descargador pasaron localmente en el entorno aislado. La compilación completa y la captura de la vista corresponden al flujo Windows de la rama.
 
+## Turno 5 · Contraste con el exportador nativo V1
+
+- El flujo Windows llama al lector vigente desde la prueba del productor histórico. Usa sus ZIP originales, generados a partir de HTML ficticio y sin modificaciones intermedias. Coteja por identificador de registro las ventanas con observación, vacía, paginada y sin tabla. La prueba histórica sigue funcionando por sí sola cuando no se configura `FLOW_RUST_REVISAR_V1`.
+
 ## Siguiente paso exacto
 
-1. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico.
+1. Comprobar en el flujo Windows las cuatro variantes del productor histórico. Corregir cualquier discrepancia del lector vigente antes de cerrar F06.
 2. Integrar la ejecución de `PlanLote` y sus resultados con el sitio ficticio en E2. Usar los componentes de transporte y resultados de Flow Python como referencia y probar el manejo de consultas vacías, cancelación y reintentos. E3 incorpora historia y calendario al motor de Trabajo. E4 aborda la conciliación entre capturas y la copia del consolidado.

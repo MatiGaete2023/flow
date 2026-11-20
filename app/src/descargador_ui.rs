@@ -306,7 +306,7 @@ fn mostrar_lote(
             Err("Completa las dos fechas del período.".into())
         });
     }
-    match plan {
+    match plan.as_ref() {
         Some(Ok(plan)) => {
             ui.label(
                 RichText::new(format!("Consultas preparadas ({})", plan.consultas.len()))
