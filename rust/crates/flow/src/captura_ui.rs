@@ -45,6 +45,7 @@ pub struct Captura {
     hasta: String,
     filtros: bool,
     evidencia: bool,
+    pausa_ms: u64,
     /// Calendario de informes por vencer en el paquete (`informes_por_vencer`, solo con Cumplimiento).
     informes_por_vencer: bool,
     lecturas: flow_captura::recoleccion::Opciones,
@@ -84,6 +85,7 @@ impl Default for Captura {
             hasta: chrono::Local::now().format("%d/%m/%Y").to_string(),
             filtros: false,
             evidencia: true,
+            pausa_ms: 1000,
             informes_por_vencer: true,
             lecturas: Default::default(),
             receptor: None,
@@ -337,7 +339,7 @@ impl Captura {
             fechas: self.fechas.then(|| Fechas { start: self.desde.clone(), end: self.hasta.clone() }),
             conservar_filtros: self.filtros,
             evidencia: self.evidencia,
-            pausa_ms: 1000,
+            pausa_ms: self.pausa_ms,
             lecturas: self.lecturas.clone(),
         };
         lote.validar(catalogo)?;
@@ -419,6 +421,7 @@ impl Captura {
             informes_por_vencer: self.informes_por_vencer,
             meses_atras: self.lecturas.meses,
             pdf_sin_registros: self.evidencia,
+            pausa_ms: self.pausa_ms,
             ..Default::default()
         }
     }
@@ -540,7 +543,8 @@ impl Captura {
                         ui.checkbox(&mut self.lecturas.calendario,"Leer calendario del ingreso");
                     });
                     ui.horizontal(|ui| {ui.label("Período:");ui.add(egui::DragValue::new(&mut self.lecturas.meses).range(1..=4));ui.label("meses naturales");});
-                    ui.label("Reutiliza lecturas verificadas de hoy. Máximo de 2000 bitácoras/calendarios y 2000 historias por corrida; Retomar conserva el avance.");
+                    let tope = flow_captura::recoleccion::TOPE;
+                    ui.label(format!("Reutiliza lecturas verificadas de hoy. Máximo de {tope} bitácoras/calendarios y {tope} historias por corrida. Retomar conserva el avance."));
                     ui.checkbox(
                         &mut self.informes_por_vencer,
                         "Paquete: incluir el calendario de informes por vencer (60 días, con Cumplimiento)",
@@ -588,6 +592,13 @@ impl Captura {
                         ui.checkbox(&mut self.filtros,"Conservar otros filtros del formulario SITFA");
                     }
                     ui.checkbox(&mut self.evidencia,"Guardar PDF cuando una consulta no tiene registros");
+                    ui.horizontal(|ui| {
+                        ui.label("Pausa entre consultas");
+                        ui.add_enabled(
+                            !self.ocupada(),
+                            egui::DragValue::new(&mut self.pausa_ms).range(500..=10_000).speed(100).suffix(" ms"),
+                        );
+                    });
                 });
             });
         });
@@ -697,6 +708,23 @@ mod pruebas {
         let m = medidas(&c);
         assert_eq!(m.iter().map(|(k, _, _)| k.as_str()).collect::<Vec<_>>(), ["0", "5", "6"]);
         assert_eq!(m[0].1, "Todas las medidas");
+    }
+
+    #[test]
+    fn pausa_configurada_se_aplica_a_descarga_y_paquete() {
+        let captura = Captura {
+            catalogo: Some(json!({
+                "pantalla": "seguimiento", "tribunales": {"901": "Tribunal ficticio"},
+                "pestanas": ["Espera"], "modalidades": {"2": "Ambulatorio"}
+            })),
+            tribunales: vec![("901".into(), "Tribunal ficticio".into(), true)],
+            modalidades: vec![("2".into(), "Ambulatorio".into(), true)],
+            pestañas: vec![("Espera".into(), true)],
+            pausa_ms: 750,
+            ..Default::default()
+        };
+        assert_eq!(captura.plan().unwrap().pausa_ms, 750);
+        assert_eq!(captura.preferencias().pausa_ms, 750);
     }
 
     fn resumen(terminadas: Vec<usize>, avisos: Vec<String>) -> Resumen {

@@ -32,3 +32,16 @@ En un entorno con las dependencias del [lock](VERIFICACION.md) instaladas:
 3. Con el camino de importación comprobado, empezar E2 F17 comparando perfiles y consultas del Descargador integral y Lite con `flow-captura/src/sitfa`. Mantener el diálogo de avance en este registro, con el SHA probado y los resultados reales. La interoperabilidad de los ZIP **producidos por Rust** pertenece a E2.
 
 Los comandos, fixtures y salidas de prueba usan solo datos ficticios. La aceptación en el puesto institucional queda a cargo del usuario.
+
+
+## Continuación · verificación y primeras diferencias de captura
+
+Base de código de esta sesión: `42a86b69f12a0e7080983509333beb241fea2450`.
+
+- **E0.** La rama ya dispara el workflow Rust. En la primera ejecución, el paso `cargo test --workspace --locked` terminó correctamente en Linux. Los demás jobs se registran por separado. La comparación de GitHub con `rust/producto` arrojó seis commits exclusivos y once archivos en el delta. Incluye diferencias en la revisión de bitácoras, la pantalla y el verificador. Es un inventario de alcance, no evidencia de que correspondan portarlos.
+- **E1 / F06.** Se agregó `rust/pruebas/revision_python.py`. Reconstruye un lote ficticio con el exportador original, ejecuta el lector y el exportador Rust que usa la ventana y compara las cuatro clasificaciones con los dos productos. Se programó en GitHub Actions con el lock Python y la regresión original P2. El ejemplo Cargo pertenece a pruebas de desarrollo.
+- **E2 / F17–F18.** Seguimiento, Litigantes, Informes por vencer y Medidas por vencer ya tienen perfiles y pantalla. El plan del lote ya valida el catálogo, opciones y fechas. El lote conserva resultados, permite cancelar y retomar, y admite PDF de consulta vacía. Se alineó el tope a 5.000 aperturas compartidas entre bitácoras y calendarios, y 5.000 historias aparte. La prueba del contador cubre 4.999, 5.000 y el rechazo de 5.001. La detención por cinco bitácoras consecutivas fallidas está cubierta por el ensayo de lotes preexistente.
+- **E2 / F18.** Se incorporó la pausa configurable entre consultas en Avanzado, de 500 a 10.000 ms y 1.000 ms al iniciar. Se aplica a los planes de descarga y paquete. El valor queda en los planes de lote y se puede ajustar durante la sesión de la aplicación. La preferencia entre reinicios, los favoritos y la pausa manual siguen pendientes.
+- **E3 / F01–F05.** En Windows se compilaron `flow-dominio` y `flow-motor` completos en un workspace de dos crates con dependencias en caché. Pasaron 6 pruebas de dominio, 5 del motor y las 4 pruebas del oráculo versionado, que reúnen 3.699 casos. Esta corrida reducida verifica el motor y su corpus. Las asociaciones multifila y los flujos de captura y escritorio requieren sus pruebas respectivas.
+
+**Próximo cierre.** Comprobar el workflow de esta revisión, en especial «Paridad con el Descargador Python en lotes ficticios». Si falla, distinguir instalación de una diferencia de clasificación, estructura o salida. Luego continuar E2 por histórico opcional, contador compartido con esa lectura y validación con las estructuras ficticias del productor Python. Después siguen Escritos y el contrato de exportación. E4 a E7 siguen en el orden y con los criterios del plan.

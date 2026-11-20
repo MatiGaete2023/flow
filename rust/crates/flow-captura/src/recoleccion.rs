@@ -15,8 +15,8 @@ use std::{
 };
 
 /// Lecturas por corrida (bitácoras y calendarios comparten el tope; las historias tienen uno igual aparte).
-/// Usuario, 13-nov-2026: subido de 600 a 2000. No se elimina: evita una corrida sin fin si la sesión de SITFA se cae.
-pub const TOPE: usize = 2000;
+/// Límite de la referencia Python del 19-nov-2026: 5000 aperturas, con detención anticipada tras fallas consecutivas.
+pub const TOPE: usize = 5_000;
 /// Como `MAX_FALLAS_SEGUIDAS` de `descargador/lectura_bitacoras.py`: tantas bitácoras fallidas seguidas detienen el lote
 /// (la sesión de SITFA probablemente cayó). Solo cuentan las bitácoras; una leída reinicia la cuenta.
 pub const MAX_FALLAS_SEGUIDAS: usize = 5;
@@ -756,16 +756,22 @@ mod pruebas_limite {
             historias: 0,
             fallas_seguidas: 0,
         };
-        for _ in 0..TOPE / 2 {
+        for _ in 0..2_499 {
             r.reservar("bitacora").unwrap();
             r.reservar("calendario").unwrap();
         }
+        r.reservar("bitacora").unwrap();
+        assert_eq!(r.aperturas, 4_999);
+        r.reservar("calendario").unwrap();
         assert!(r.reservar("bitacora").is_err());
         assert!(r.reservar("calendario").is_err());
-        for _ in 0..TOPE {
+        assert_eq!(r.aperturas, 5_000);
+        for _ in 0..4_999 {
             r.reservar("historia").unwrap();
         }
+        r.reservar("historia").unwrap();
         assert!(r.reservar("historia").is_err());
+        assert_eq!(r.historias, 5_000);
     }
 }
 

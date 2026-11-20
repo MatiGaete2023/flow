@@ -31,6 +31,23 @@ jobs:
         working-directory: .
         run: python3 tools/check_real_ids.py rust && python3 tools/check_contactos.py rust
       - run: cargo test --workspace --locked
+      - uses: actions/setup-python@v7
+        if: github.ref_name == 'estudio/paridad-python-rust-20261119'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/linux-py312.lock
+      - name: Paridad con el Descargador Python en lotes ficticios
+        if: github.ref_name == 'estudio/paridad-python-rust-20261119'
+        working-directory: .
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          sudo apt-get install -y python3-tk
+          python -m pip install --require-hashes -r requirements/linux-py312.lock
+          xvfb-run -a python -m pytest -q descargador/test_revision_bitacoras_p2.py
+          xvfb-run -a python -m pytest -q descargador_lite/tests/test_lite.py
+          xvfb-run -a python rust/pruebas/revision_python.py
       - name: Compilar y capturar la interfaz con datos ficticios
         run: |
           cargo build --locked -p flow
