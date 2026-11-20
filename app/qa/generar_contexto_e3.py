@@ -116,6 +116,10 @@ def generar(referencia, carpeta):
         for f in trabajo.rows
     }
     assert str(fechas["201"]) == "2026-11-01" and fechas["202"] is None
+    primera = next(f for f in trabajo.rows if trabajo.capture_sources[f.id]["ingreso_id"] == "201")
+    cronologia = trabajo.capture_context[primera.id]["display"]
+    assert cronologia["status"] == "ACREDITADA"
+    assert [e["event_at"][:10] for e in cronologia["last_center"]] == ["2026-08-12"]
     generar_discordancia(captura, salida)
     lote_informes = bound_lot(carpeta / "lote-informes", "Informes")
     informe = package_current_lot(

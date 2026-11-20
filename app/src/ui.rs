@@ -962,6 +962,7 @@ impl App {
             });
             return;
         };
+        let mostrar_cronologia = self.screenshot.is_some();
         let mut cambio = false;
         egui::ScrollArea::vertical().id_salt("detalle").show(ui, |ui| {
             let w = self.work.as_mut().unwrap();
@@ -1071,9 +1072,9 @@ impl App {
             });
             let contexto = w.paquete.as_ref().and_then(|pq| {
                 let id = headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA").and_then(|c| w.registros[i].values.get(c))?.display();
-                pq.contextos.get(&id).cloned()
+                pq.contextos.get(&id).map(|contexto| (id, contexto.clone()))
             });
-            if let Some(ctx) = contexto {
+            if let Some((id, ctx)) = contexto {
                 ui.add_space(8.0);
                 theme::card(p).show(ui, |ui| {
                     ui.set_width(ui.available_width());
@@ -1125,6 +1126,43 @@ impl App {
                     }
                     if let Some(primera) = ctx.calendario.as_ref().and_then(|c| c.pendientes.first()) {
                         ui.label(RichText::new(format!("Primera proyección pendiente · {}", primera.format("%d/%m/%Y"))).size(12.0));
+                    }
+                    if let Some(cronologia) = &ctx.cronologia {
+                        egui::CollapsingHeader::new("Cronología de bitácora")
+                            .id_salt(&id)
+                            .default_open(mostrar_cronologia)
+                            .show(ui, |ui| {
+                                ui.label(RichText::new(format!(
+                                    "{} · {} a {}",
+                                    cronologia.estado.etiqueta(),
+                                    cronologia.desde.format("%d/%m/%Y"),
+                                    cronologia.hasta.format("%d/%m/%Y"),
+                                )).color(p.muted));
+                                for (nombre, entradas) in [
+                                    ("Última del centro", &cronologia.ultimas),
+                                    ("Posteriores", &cronologia.posteriores),
+                                    ("Orden incierto", &cronologia.orden_incierto),
+                                    ("Origen del centro sin acreditar", &cronologia.sin_autoria),
+                                ] {
+                                    if entradas.is_empty() {
+                                        continue;
+                                    }
+                                    egui::CollapsingHeader::new(format!("{nombre} ({})", entradas.len()))
+                                        .id_salt(nombre)
+                                        .default_open(nombre == "Última del centro")
+                                        .show(ui, |ui| {
+                                            for evento in entradas {
+                                                ui.label(format!("{} · {}", evento.fecha.format("%d/%m/%Y"), evento.texto));
+                                            }
+                                        });
+                                }
+                                if let Some(fecha) = cronologia.sin_respuesta.last() {
+                                    ui.label(RichText::new(format!(
+                                        "{} observaciones al tribunal sin respuesta registrada · última {}",
+                                        cronologia.sin_respuesta.len(), fecha.format("%d/%m/%Y")
+                                    )).color(p.amber));
+                                }
+                            });
                     }
                 });
             }

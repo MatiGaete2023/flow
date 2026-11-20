@@ -7,7 +7,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F01 | Lectura de hojas | Presente en `lectura.rs`. Comparar selección, tipos, fila física y CSV con comillas. |
 | F02 | Trabajo y cruces | Tres etapas, Hoja 2, calendario 91 y proyección por ingreso. CAL-03 contrasta vencimientos de Cumplimiento e Informes. Pendientes Egresados, OB e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
-| F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, bitácora y calendario al corte. Detecta discordancias simultáneas de escritos e histórico. Pendientes reglas de cronología, prórroga, audiencia, búsqueda y calendario en el motor. |
+| F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. Detecta discordancias de Escritos e Histórico. Pendientes contexto de historia en el motor, prórroga, audiencia y búsqueda. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
 | F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección y Excel/JSON. El informe aplica la misma copia preservada o tabla de respaldo que **Guardar observaciones** y añade clasificación y motivo por ID de registro. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |

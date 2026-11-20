@@ -218,14 +218,18 @@ impl<'a> Lectura<'a> {
         }
     }
 
-    pub(super) fn finalizar(mut self) -> (String, Evidencia) {
+    pub(super) fn finalizar(mut self) -> (String, Evidencia, Vec<String>) {
         if self.esperadas.len() != self.confirmadas.len() {
             self.invalidar();
         }
-        for e in self.esperadas.into_values() {
+        let mut centros = Vec::new();
+        for (id, e) in self.esperadas {
             match e.origen.as_str() {
                 "centro" if !self.advertida => {
                     self.resultado.centro.insert(e.dia);
+                    if let Some(fila) = self.confirmadas.get(&id) {
+                        centros.push(fila.get("event_id").to_owned());
+                    }
                 }
                 "tribunal" | "programa" if !self.advertida => {}
                 _ => {
@@ -233,7 +237,7 @@ impl<'a> Lectura<'a> {
                 }
             }
         }
-        (self.firma, self.resultado)
+        (self.firma, self.resultado, centros)
     }
 }
 

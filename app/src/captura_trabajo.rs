@@ -4,11 +4,14 @@ use crate::lectura::{self, Sheet};
 use crate::motor::{Cols, Mode};
 use crate::util::Cell;
 use chrono::NaiveDate;
-use flow_rust::captura::{self, Captura, Fila};
+use flow_rust::captura::{self, revision::Revision, Captura, Fila};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::Arc;
 use unicode_normalization::UnicodeNormalization;
+
+mod cronologia;
 
 const LIMITE_ANALISIS: usize = 20_000;
 const INGRESO: [&str; 4] = ["source_system", "court_code", "cause_id", "ingreso_id"];
@@ -192,6 +195,7 @@ pub struct ContextoFila {
     pub bitacora: Option<ResumenLectura>,
     pub calendario: Option<ResumenCalendario>,
     pub vencimiento_calendario_91: Option<NaiveDate>,
+    pub cronologia: Option<Arc<cronologia::Cronologia>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -466,7 +470,11 @@ fn calendario_91(fuente: &Captura, corte: NaiveDate) -> HashMap<[String; 4], Opt
 }
 
 fn fecha_evento(f: Fila<'_>) -> Option<NaiveDate> {
-    f.get("event_at").get(..10)?.parse().ok()
+    dia_iso(f.get("event_at"))
+}
+
+fn dia_iso(fecha: &str) -> Option<NaiveDate> {
+    fecha.get(..10)?.parse().ok()
 }
 
 fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila> {
@@ -495,6 +503,17 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
         corte,
     );
     let fechas_calendario_91 = calendario_91(fuente, corte);
+    let revision = Revision::al_corte(fuente, corte);
+    let solicitada = fuente.estado("bitacoras") != "NO_SOLICITADA";
+    let mut eventos_bitacora: HashMap<_, Vec<_>> = HashMap::new();
+    for evento in fuente
+        .filas("bitacoras")
+        .filter(|f| f.get("identity_status") == "VERIFICADA")
+    {
+        let clave = INGRESO.map(|campo| evento.get(campo));
+        eventos_bitacora.entry(clave).or_default().push(evento);
+    }
+    let mut cronologias: HashMap<_, Arc<cronologia::Cronologia>> = HashMap::new();
     let mut salida = HashMap::new();
     for r in fuente.filas("registros") {
         if r.get("identity_status") != "VERIFICADA" {
@@ -590,6 +609,23 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                     .unwrap_or(&[]),
             )
         });
+        if solicitada {
+            let clave = INGRESO.map(|campo| r.get(campo));
+            let cronologia = cronologias.entry(clave).or_insert_with(|| {
+                let filas = eventos_bitacora
+                    .get(&clave)
+                    .map(Vec::as_slice)
+                    .unwrap_or(&[]);
+                let leida = ctx.bitacora.as_ref().is_some_and(|r| {
+                    matches!(
+                        r.cobertura.as_str(),
+                        "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA"
+                    )
+                });
+                Arc::new(cronologia::leer(filas, &revision, corte, leida))
+            });
+            ctx.cronologia = Some(Arc::clone(cronologia));
+        }
         if let Some(q) = calendarios.get(&ingreso) {
             let filas = calendario_por_consulta
                 .get(q.id.as_str())
@@ -667,6 +703,12 @@ mod tests {
         assert!(segunda.historia.is_none());
         assert_eq!(primera.bitacora.as_ref().unwrap().filas, 1);
         assert_eq!(segunda.bitacora.as_ref().unwrap().filas, 1);
+        let cronologia = primera.cronologia.as_ref().unwrap();
+        assert_eq!(cronologia.estado, super::cronologia::Estado::Acreditada);
+        assert_eq!(
+            cronologia.ultimas[0].fecha,
+            "2026-08-12".parse::<NaiveDate>().unwrap()
+        );
         let calendario = primera.calendario.as_ref().unwrap();
         assert_eq!(calendario.lectura.filas, 2);
         assert_eq!(
@@ -686,6 +728,17 @@ mod tests {
         assert!(contexto.historia.is_none());
         assert!(contexto.escritos.is_none());
         assert!(contexto.historico.is_none());
+        paquete.actualizar_contextos("2026-10-07".parse().unwrap());
+        let primera = paquete
+            .fuente
+            .filas("registros")
+            .find(|r| r.get("ingreso_id") == "201")
+            .unwrap();
+        let contexto = &paquete.contextos[primera.get("record_id")];
+        assert_eq!(
+            contexto.cronologia.as_ref().unwrap().estado,
+            super::cronologia::Estado::NoLeida
+        );
 
         let bytes = std::fs::read(ruta.with_file_name("contexto-e3-discordante.zip")).unwrap();
         let (mut discordante, _) = abrir(&bytes).unwrap();

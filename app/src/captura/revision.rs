@@ -49,6 +49,7 @@ struct Evidencia {
 
 pub struct Revision {
     por_ingreso: HashMap<Identidad, Evidencia>,
+    eventos_centro: HashSet<String>,
 }
 
 fn dia(s: &str) -> Option<NaiveDate> {
@@ -65,7 +66,27 @@ fn texto<'a>(obj: &'a Value, clave: &str) -> &'a str {
 
 impl Revision {
     pub fn nueva(captura: &Captura) -> Self {
+        Self::leer(captura, None)
+    }
+
+    pub fn al_corte(captura: &Captura, corte: NaiveDate) -> Self {
+        Self::leer(captura, Some(corte))
+    }
+
+    pub fn acredita_centro(&self, evento: Fila<'_>) -> bool {
+        self.eventos_centro.contains(evento.get("event_id"))
+            && self
+                .por_ingreso
+                .get(&identidad(evento))
+                .is_some_and(|e| !e.contradictoria)
+    }
+
+    fn leer(captura: &Captura, corte: Option<NaiveDate>) -> Self {
+        let disponible = |f: Fila<'_>| {
+            corte.is_none_or(|corte| dia(f.get("captured_at")).is_some_and(|d| d <= corte))
+        };
         let mut por_ingreso: HashMap<Identidad, Evidencia> = HashMap::new();
+        let mut eventos_centro = HashSet::new();
         let mut consultas = HashMap::new();
         let mut nativas = HashMap::new();
         let mut entradas_sin_consulta = HashSet::new();
@@ -76,7 +97,7 @@ impl Revision {
             .collect();
         for q in captura
             .filas("consultas")
-            .filter(|q| q.get("screen") == "bitacoras")
+            .filter(|q| q.get("screen") == "bitacoras" && disponible(*q))
         {
             let Ok(filtros) = json::objeto(q.get("filters_json")) else {
                 continue;
@@ -134,7 +155,7 @@ impl Revision {
                     ..Default::default()
                 });
         }
-        for evento in captura.filas("bitacoras") {
+        for evento in captura.filas("bitacoras").filter(|f| disponible(*f)) {
             if let Some((consultada, lectura)) = nativas.get_mut(evento.get("query_id")) {
                 if consultada == &identidad(evento) {
                     lectura.confirmar(evento);
@@ -165,11 +186,13 @@ impl Revision {
                 e.inciertas.insert(dia);
             } else if evento.get("origin") == "CENTRO" {
                 e.centro.insert(dia);
+                eventos_centro.insert(evento.get("event_id").to_owned());
             }
         }
         let mut pruebas_nativas: HashMap<Identidad, (String, Evidencia)> = HashMap::new();
         for (id, lectura) in nativas.into_values() {
-            let (firma, evidencia) = lectura.finalizar();
+            let (firma, evidencia, centros) = lectura.finalizar();
+            eventos_centro.extend(centros);
             match pruebas_nativas.entry(id) {
                 std::collections::hash_map::Entry::Vacant(v) => {
                     v.insert((firma, evidencia));
@@ -189,7 +212,10 @@ impl Revision {
                 .and_modify(|e| e.contradictoria = true)
                 .or_insert(evidencia);
         }
-        Self { por_ingreso }
+        Self {
+            por_ingreso,
+            eventos_centro,
+        }
     }
 
     pub fn clasificar(

@@ -86,6 +86,7 @@ jobs:
           python app/qa/generar_contexto_e3.py referencia-python-ci $contexto
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
+          "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
           cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python
       - name: Contrastar ZIP V1 con el productor nativo histórico
         shell: pwsh
