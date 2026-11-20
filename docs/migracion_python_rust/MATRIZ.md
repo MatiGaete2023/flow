@@ -10,7 +10,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F04 | Contexto de causa | Pendiente historia, cronología, prórroga, audiencia, búsqueda y calendario desde fuentes acreditadas. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
 | F06 | Revisión de bitácoras | Pendiente. Portar clasificación, filtros, marcas, Excel y JSON. Contrastar V1, V2, legado, contradicción y paginación. |
-| F07 | Importación de paquetes | Comprobación de estructura ZIP y huellas implementada. Pendientes tablas, estados, consolidado, integración y conciliación. |
+| F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
 | F09 | Sesión y vigencia | Estado local por archivo, etapa y corte presente. Pendientes recibos, vigencia, compatibilidad y recuperación. |
 | F10 | Excel preservado | Exportación nueva presente. Completar copia preservada y conciliación con hojas, tipos, fórmulas y estilos. |

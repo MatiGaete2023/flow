@@ -6,11 +6,14 @@ fn main() -> ExitCode {
         eprintln!("Uso: verificar_paquete <captura.zip>");
         return ExitCode::from(2);
     };
-    match flow_rust::captura::verificar_archivo(Path::new(&ruta)) {
-        Ok(m) => {
+    match flow_rust::captura::leer_archivo(Path::new(&ruta))
+        .and_then(|bytes| flow_rust::captura::leer_captura(&bytes))
+    {
+        Ok(captura) => {
             println!(
-                "Estructura ZIP y huellas correctas para CSMP_CAPTURE {}.",
-                m.schema_version
+                "CSMP_CAPTURE {} validado, {} registros.",
+                captura.manifiesto.schema_version,
+                captura.filas("registros").count(),
             );
             ExitCode::SUCCESS
         }

@@ -4,6 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod anon;
+mod captura_trabajo;
 mod config;
 mod demo;
 mod lectura;

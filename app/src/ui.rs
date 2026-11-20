@@ -195,8 +195,9 @@ impl App {
 
     fn abrir_dialogo(&mut self) {
         if let Some(p) = rfd::FileDialog::new()
-            .set_title("Abrir Excel de RUS")
+            .set_title("Abrir Excel de RUS o paquete CSMP")
             .add_filter("Excel de RUS", &["xls", "xlsx", "xlsm", "htm", "html", "xml", "csv"])
+            .add_filter("Paquete CSMP", &["zip"])
             .pick_file()
         {
             self.abrir(p);
@@ -204,26 +205,65 @@ impl App {
     }
 
     fn abrir(&mut self, p: PathBuf) {
-        match std::fs::read(&p) {
-            Ok(bytes) => match Trabajo::abrir(p, bytes, self.pedida, self.corte(), &self.cfg) {
-                Ok(w) => {
-                    let n = w.registros.len();
-                    let ms = w.analisis_ms;
-                    let modo = w.mode().label();
-                    for a in w.avisos.clone() {
-                        self.aviso(a, false);
-                    }
-                    self.work = Some(w);
-                    self.sel = if n > 0 { Some(0) } else { None };
-                    self.borradores.clear();
-                    self.proyectos.clear();
-                    self.vista = Vista::Trabajo;
-                    self.revision += 1;
-                    self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
+        if !self.guardar_pendiente() {
+            return;
+        }
+        match Trabajo::abrir_archivo(p, self.pedida, self.corte(), &self.cfg) {
+            Ok(w) => {
+                self.work = Some(w);
+                self.activar_trabajo();
+            }
+            Err(e) => self.aviso(e, true),
+        }
+    }
+
+    fn activar_trabajo(&mut self) {
+        let w = self.work.as_ref().unwrap();
+        let n = w.registros.len();
+        let ms = w.analisis_ms;
+        let modo = w.mode().label();
+        for aviso in w.avisos.clone() {
+            self.aviso(aviso, false);
+        }
+        self.sel = (n > 0).then_some(0);
+        self.borradores.clear();
+        self.bsel = None;
+        self.proyectos.clear();
+        self.psel = None;
+        self.vista = Vista::Trabajo;
+        self.revision += 1;
+        self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
+    }
+
+    fn guardar_pendiente(&mut self) -> bool {
+        if self.sucio.is_some() && self.screenshot.is_none() {
+            if let Some(w) = &self.work {
+                if let Err(e) = w.guardar_sesion() {
+                    self.aviso(format!("No se pudo guardar la sesión: {e}"), true);
+                    return false;
                 }
-                Err(e) => self.aviso(e, true),
-            },
-            Err(e) => self.aviso(format!("No se pudo leer el archivo: {e}"), true),
+            }
+            self.sucio = None;
+        }
+        true
+    }
+
+    fn elegir_etapa(&mut self, elegida: Option<Mode>) {
+        if let Some(w) = self.work.as_ref().filter(|w| w.paquete.is_some()) {
+            let modo = elegida.unwrap_or(w.modos_posibles[0]);
+            if w.mode() != modo && w.modos_posibles.contains(&modo) {
+                if self.guardar_pendiente() {
+                    let corte = self.corte();
+                    self.work.as_mut().unwrap().cambiar_etapa_paquete(modo, corte, &self.cfg);
+                    self.pedida = elegida;
+                    self.activar_trabajo();
+                }
+                return;
+            }
+        }
+        self.pedida = elegida;
+        if elegida.is_some() {
+            self.reanalizar();
         }
     }
 
@@ -276,7 +316,7 @@ impl App {
         if let Some(w) = &mut self.work {
             w.corte = Some(corte);
             if let Some(m) = self.pedida {
-                if w.modos_posibles.contains(&m) {
+                if w.paquete.is_none() && w.modos_posibles.contains(&m) {
                     w.mode = Some(m);
                 }
             }
@@ -290,7 +330,7 @@ impl App {
 
     fn guardar_excel(&mut self) {
         if self.work.is_none() {
-            self.aviso("Primero abre un Excel de RUS.", true);
+            self.aviso("Primero abre un Excel de RUS o un paquete CSMP.", true);
             return;
         }
         let Some(dir) = self.carpeta_productos() else { return };
@@ -428,7 +468,7 @@ impl App {
             .frame(egui::Frame::new().fill(p.panel).inner_margin(egui::Margin::symmetric(18, 10)).stroke(egui::Stroke::new(1.0_f32, p.border)))
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    if theme::primary(ui, p, "📂  Abrir Excel de RUS…").on_hover_text("Ctrl+O · también puedes arrastrar el archivo a la ventana").clicked() {
+                    if theme::primary(ui, p, "📂  Abrir Excel o ZIP…").on_hover_text("Ctrl+O · Excel de RUS o paquete CSMP · también puedes arrastrar el archivo").clicked() {
                         self.abrir_dialogo();
                     }
                     if ui.button("💾  Guardar observaciones").on_hover_text("Ctrl+S · Excel con la observación de cada fila").clicked() {
@@ -455,10 +495,7 @@ impl App {
                             }
                         });
                     if elegida != actual {
-                        self.pedida = elegida;
-                        if elegida.is_some() {
-                            self.reanalizar();
-                        }
+                        self.elegir_etapa(elegida);
                     }
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if let Some(w) = &self.work {
@@ -553,10 +590,10 @@ impl App {
                 ui.set_max_width(620.0);
                 ui.vertical_centered(|ui| {
                     ui.label(RichText::new("🗂").size(42.0).color(p.accent));
-                    ui.label(RichText::new("Abre el Excel que entrega RUS").size(22.0).strong());
-                    ui.label(RichText::new("Sirven el .xls de SITFA tal cual (también los que son HTML o XML), .xlsx y .xlsm. Flow detecta la etapa por sus columnas y propone la observación de cada fila con las reglas de Laja, Mulchén y Tomé.").color(p.muted));
+                    ui.label(RichText::new("Abre un Excel de RUS o un paquete CSMP").size(22.0).strong());
+                    ui.label(RichText::new("Puedes abrir los .xls de SITFA (también HTML o XML), .xlsx, .xlsm y paquetes ZIP del Descargador. Flow propone observaciones con las reglas de Laja, Mulchén y Tomé.").color(p.muted));
                     ui.add_space(12.0);
-                    if theme::primary(ui, p, "📂  Abrir Excel de RUS…").clicked() {
+                    if theme::primary(ui, p, "📂  Abrir Excel o ZIP…").clicked() {
                         self.abrir_dialogo();
                     }
                     ui.add_space(14.0);
@@ -588,6 +625,12 @@ impl App {
             ui.label(RichText::new(format!("Trabajo · {}", modo.label())).size(22.0).strong());
             ui.label(RichText::new(format!("análisis en {ms} ms{}", cruce.map(|c| format!(" · cruce con «{c}»")).unwrap_or_default())).color(p.muted).size(12.5));
         });
+        if let Some(paquete) = &self.work.as_ref().unwrap().paquete {
+            ui.label(RichText::new(format!(
+                "Paquete CSMP · registros {} · análisis tabular. Historia, calendario y bitácoras pendientes de integrar.",
+                paquete.fuente.estado("registros")
+            )).color(p.muted).size(12.5));
+        }
         ui.add_space(4.0);
         let mut nuevo_filtro: Option<Option<Estado>> = None;
         ui.horizontal(|ui| {
@@ -1891,4 +1934,33 @@ pub fn abrir_en_sistema(p: &std::path::Path) {
     let _ = std::process::Command::new("open").arg(p).spawn();
     #[cfg(all(unix, not(target_os = "macos")))]
     let _ = std::process::Command::new("xdg-open").arg(p).spawn();
+}
+
+#[cfg(test)]
+mod pruebas_paquete {
+    use super::*;
+
+    #[test]
+    fn trabajo_abre_paquete_cambia_etapa_y_conserva_el_activo_ante_error() {
+        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return; };
+        let raiz = PathBuf::from(raiz);
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.corte_txt = "20/11/2026".into();
+        app.abrir(raiz.join("rust/crates/flow-trabajo/tests/datos/paquete_integracion.zip"));
+        let trabajo = app.work.as_mut().expect("paquete de integración");
+        assert_eq!(trabajo.mode(), Mode::Espera);
+        assert_eq!(trabajo.registros.len(), 2);
+        assert!(trabajo.headers.iter().any(|h| h == "ID_REGISTRO_CAPTURA"));
+        trabajo.registros[0].editada = Some("Edición ficticia".into());
+        app.abrir(raiz.join("paquete_ficticio_inexistente.zip"));
+        assert_eq!(app.work.as_ref().unwrap().registros[0].observacion(), "Edición ficticia");
+        app.elegir_etapa(Some(Mode::Informes));
+        let trabajo = app.work.as_ref().unwrap();
+        assert_eq!(trabajo.mode(), Mode::Informes);
+        assert_eq!(trabajo.registros.len(), 2);
+        assert_ne!(trabajo.registros[0].observacion(), "Edición ficticia");
+        app.elegir_etapa(None);
+        assert_eq!(app.work.as_ref().unwrap().mode(), Mode::Espera);
+    }
 }

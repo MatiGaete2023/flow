@@ -257,6 +257,10 @@ pub fn map_columns(headers: &[String], m: Mode) -> Cols {
     map_with(headers, &all)
 }
 
+pub fn columnas_canonicas(m: Mode) -> Vec<(&'static str, &'static str)> {
+    COMMON.iter().copied().chain(mode_columns(m)).map(|(clave, alias)| (clave, alias[0])).collect()
+}
+
 pub fn map_cross(headers: &[String]) -> Cols {
     map_with(
         headers,

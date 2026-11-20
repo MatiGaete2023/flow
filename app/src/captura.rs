@@ -1,11 +1,18 @@
-//! Comprobación local de la estructura ZIP y las huellas de CSMP_CAPTURE.
+//! Lectura local de CSMP_CAPTURE, sin extraer archivos.
 
 use serde::Deserialize;
+use serde_json::Value;
 use sha2::{Digest, Sha256};
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Read};
 use std::path::Path;
 use zip::{CompressionMethod, ZipArchive};
+
+mod contrato;
+mod json;
+mod tablas;
+pub use tablas::Fila;
+use tablas::Tabla;
 
 const MAX_BYTES: u64 = 80 * 1024 * 1024;
 const MAX_MANIFIESTO: u64 = 4 * 1024 * 1024;
@@ -29,6 +36,35 @@ pub struct Manifiesto {
     required_features: Vec<String>,
     originals_authorized: bool,
     files: Vec<Archivo>,
+    #[serde(default)]
+    captured_at: String,
+    #[serde(default)]
+    mapping_version: String,
+    contains_sensitive_data: Option<bool>,
+    #[serde(default)]
+    downloader: Value,
+    queries: Option<Vec<BTreeMap<String, String>>>,
+    #[serde(default)]
+    table_states: BTreeMap<String, String>,
+}
+
+#[derive(Debug)]
+pub struct Captura {
+    pub manifiesto: Manifiesto,
+    tablas: HashMap<String, Tabla>,
+}
+
+impl Captura {
+    pub fn filas(&self, tabla: &str) -> impl Iterator<Item = Fila<'_>> {
+        self.tablas.get(tabla).into_iter().flat_map(Tabla::filas)
+    }
+
+    pub fn estado(&self, tabla: &str) -> &str {
+        self.manifiesto
+            .table_states
+            .get(tabla)
+            .map_or("NO_SOLICITADA", String::as_str)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -88,52 +124,24 @@ fn contar_entradas(mut directorio: &[u8]) -> Result<usize, String> {
 /// Comprueba la integridad del contenedor. La validación de filas, cobertura,
 /// identidad y contenido del consolidado corresponde al importador.
 pub fn verificar_integridad(datos: &[u8]) -> Result<Manifiesto, String> {
+    leer_paquete(datos, false).map(|c| c.manifiesto)
+}
+
+pub fn leer_captura(datos: &[u8]) -> Result<Captura, String> {
+    leer_paquete(datos, true)
+}
+
+fn leer_paquete(datos: &[u8], analizar_tablas: bool) -> Result<Captura, String> {
     if datos.len() as u64 > MAX_BYTES {
         return Err("El paquete supera 80 MiB.".into());
     }
-    let mut zip = ZipArchive::new(Cursor::new(datos)).map_err(|_| "ZIP ilegible.")?;
-    let directorio = datos
-        .get(zip.central_directory_start() as usize..)
-        .ok_or("Directorio ZIP inválido.")?;
-    if contar_entradas(directorio)? != zip.len() {
-        return Err("El ZIP contiene entradas duplicadas.".into());
-    }
-    let mut rutas = HashSet::new();
-    let mut total = 0;
-    for i in 0..zip.len() {
-        let entrada = zip.by_index_raw(i).map_err(|_| "Entrada ZIP ilegible.")?;
-        let ruta = entrada.name();
-        if !ruta_valida(ruta) || !rutas.insert(ruta.to_lowercase()) {
-            return Err("El ZIP contiene rutas inválidas o duplicadas.".into());
-        }
-        let modo = entrada.unix_mode().unwrap_or(0) & 0o170000;
-        if !matches!(modo, 0 | 0o100000)
-            || entrada.encrypted()
-            || !matches!(
-                entrada.compression(),
-                CompressionMethod::Stored | CompressionMethod::Deflated
-            )
-        {
-            return Err("El ZIP contiene una entrada de tipo no admitido.".into());
-        }
-        total = entrada
-            .size()
-            .checked_add(total)
-            .ok_or("Tamaño ZIP inválido.")?;
-        if total > MAX_BYTES
-            || entrada.size() > entrada.compressed_size().max(1).saturating_mul(MAX_RATIO)
-        {
-            return Err("La expansión del ZIP supera el límite permitido.".into());
-        }
-    }
+    let mut zip = abrir_zip(datos, false)?;
 
     let manifiesto_bytes = leer(&mut zip, "manifest.json", MAX_MANIFIESTO)?;
-    let manifiesto: Manifiesto = serde_json::from_slice(
-        manifiesto_bytes
-            .strip_prefix(b"\xef\xbb\xbf")
-            .unwrap_or(&manifiesto_bytes),
-    )
-    .map_err(|_| "Manifiesto de captura ilegible.")?;
+    let texto = std::str::from_utf8(&manifiesto_bytes).map_err(|_| "Manifiesto sin UTF-8.")?;
+    let manifiesto: Manifiesto =
+        serde_json::from_value(json::objeto(texto.trim_start_matches('\u{feff}'))?.into())
+            .map_err(|_| "Manifiesto de captura ilegible.")?;
     let mut partes = manifiesto.schema_version.split('.');
     let (Some("1"), Some(menor), Some(parche), None) =
         (partes.next(), partes.next(), partes.next(), partes.next())
@@ -151,7 +159,8 @@ pub fn verificar_integridad(datos: &[u8]) -> Result<Manifiesto, String> {
         .parse::<u64>()
         .map_err(|_| "Versión de captura incompatible.")?;
     let mut declaradas = HashSet::from(["manifest.json"]);
-    let mut tablas = HashSet::new();
+    let mut nombres_tablas = HashSet::new();
+    let mut tablas = HashMap::new();
     let mut filas = 0;
     for archivo in &manifiesto.files {
         if !declaradas.insert(&archivo.path) || !ruta_valida(&archivo.path) {
@@ -166,7 +175,7 @@ pub fn verificar_integridad(datos: &[u8]) -> Result<Manifiesto, String> {
                 if !conocida || archivo.path != format!("data/{table}.csv") {
                     return Err("Ruta de tabla incompatible.".into());
                 }
-                tablas.insert(tabla);
+                nombres_tablas.insert(tabla);
                 filas = usize::checked_add(filas, *rows).ok_or("Cantidad de filas inválida.")?;
                 if filas > 200_000 {
                     return Err("La captura declara más de 200.000 filas.".into());
@@ -186,14 +195,127 @@ pub fn verificar_integridad(datos: &[u8]) -> Result<Manifiesto, String> {
         {
             return Err("Una entrada tiene un tamaño o huella distinto del declarado.".into());
         }
+        if analizar_tablas {
+            match &archivo.tipo {
+                Tipo::NormalizedTable { table, rows } => {
+                    tablas.insert(table.clone(), Tabla::leer(table, &bytes, *rows)?);
+                }
+                Tipo::ConsolidatedWorkbook => comprobar_consolidado(&bytes)?,
+                Tipo::Original => {}
+            }
+        }
     }
     if zip.len() != declaradas.len() {
         return Err("El ZIP contiene archivos sin declarar.".into());
     }
-    if !TABLAS_REQUERIDAS.iter().all(|tabla| tablas.contains(tabla)) {
+    if !TABLAS_REQUERIDAS
+        .iter()
+        .all(|tabla| nombres_tablas.contains(tabla))
+    {
         return Err("Falta una tabla obligatoria en el paquete.".into());
     }
-    Ok(manifiesto)
+    let captura = Captura { manifiesto, tablas };
+    if analizar_tablas {
+        contrato::validar(&captura, menor)?;
+    }
+    Ok(captura)
+}
+
+fn abrir_zip(
+    datos: &[u8],
+    directorios_permitidos: bool,
+) -> Result<ZipArchive<Cursor<&[u8]>>, String> {
+    let mut zip = ZipArchive::new(Cursor::new(datos)).map_err(|_| "ZIP ilegible.")?;
+    let directorio = datos
+        .get(zip.central_directory_start() as usize..)
+        .ok_or("Directorio ZIP inválido.")?;
+    if contar_entradas(directorio)? != zip.len() {
+        return Err("El ZIP contiene entradas duplicadas.".into());
+    }
+    let mut rutas = HashSet::new();
+    let mut total = 0;
+    for i in 0..zip.len() {
+        let entrada = zip.by_index_raw(i).map_err(|_| "Entrada ZIP ilegible.")?;
+        let directorio = directorios_permitidos && entrada.is_dir();
+        let ruta = if directorio {
+            entrada.name().trim_end_matches('/')
+        } else {
+            entrada.name()
+        };
+        if !ruta_valida(ruta) || !rutas.insert(ruta.to_lowercase()) {
+            return Err("El ZIP contiene rutas inválidas o duplicadas.".into());
+        }
+        let modo = entrada.unix_mode().unwrap_or(0) & 0o170000;
+        let esperado = if directorio { 0o040000 } else { 0o100000 };
+        if (modo != 0 && modo != esperado)
+            || entrada.encrypted()
+            || !matches!(
+                entrada.compression(),
+                CompressionMethod::Stored | CompressionMethod::Deflated
+            )
+        {
+            return Err("El ZIP contiene una entrada de tipo no admitido.".into());
+        }
+        total = entrada
+            .size()
+            .checked_add(total)
+            .ok_or("Tamaño ZIP inválido.")?;
+        if total > MAX_BYTES
+            || entrada.size() > entrada.compressed_size().max(1).saturating_mul(MAX_RATIO)
+        {
+            return Err("La expansión del ZIP supera el límite permitido.".into());
+        }
+    }
+
+    Ok(zip)
+}
+
+fn comprobar_consolidado(bytes: &[u8]) -> Result<(), String> {
+    let mut zip = abrir_zip(bytes, true).map_err(|e| format!("Consolidado: {e}"))?;
+    if zip.index_for_name("xl/workbook.xml").is_none() {
+        return Err("El consolidado no es un libro XLSX.".into());
+    }
+    let tipos = String::from_utf8(leer(&mut zip, "[Content_Types].xml", MAX_BYTES)?)
+        .map_err(|_| "Tipos del consolidado sin UTF-8.")?
+        .to_ascii_lowercase();
+    if ["macroenabled", "vbaproject", "activex"]
+        .iter()
+        .any(|t| tipos.contains(t))
+    {
+        return Err("El consolidado incluye contenido activo.".into());
+    }
+    for i in 0..zip.len() {
+        let mut entrada = zip
+            .by_index(i)
+            .map_err(|_| "Entrada inválida en el consolidado.")?;
+        let ruta = entrada.name().to_ascii_lowercase();
+        if [
+            "xl/embeddings/",
+            "xl/activex/",
+            "xl/externallinks/",
+            "xl/querytables/",
+        ]
+        .iter()
+        .any(|p| ruta.starts_with(p))
+            || [".html", ".htm", ".pdf", ".bin", ".exe", ".dll"]
+                .iter()
+                .any(|e| ruta.ends_with(e))
+            || ruta.contains("vbaproject")
+            || ruta == "xl/connections.xml"
+        {
+            return Err("El consolidado incluye contenido activo o vínculos externos.".into());
+        }
+        let esperado = entrada.size();
+        let real = std::io::copy(
+            &mut entrada.by_ref().take(esperado + 1),
+            &mut std::io::sink(),
+        )
+        .map_err(|_| "Entrada corrupta en el consolidado.")?;
+        if real != esperado {
+            return Err("Tamaño de entrada incorrecto en el consolidado.".into());
+        }
+    }
+    Ok(())
 }
 
 fn leer(zip: &mut ZipArchive<Cursor<&[u8]>>, ruta: &str, limite: u64) -> Result<Vec<u8>, String> {
@@ -216,6 +338,10 @@ fn leer(zip: &mut ZipArchive<Cursor<&[u8]>>, ruta: &str, limite: u64) -> Result<
 }
 
 pub fn verificar_archivo(ruta: &Path) -> Result<Manifiesto, String> {
+    verificar_integridad(&leer_archivo(ruta)?)
+}
+
+pub fn leer_archivo(ruta: &Path) -> Result<Vec<u8>, String> {
     let archivo =
         std::fs::File::open(ruta).map_err(|e| format!("No se pudo abrir el paquete: {e}"))?;
     let mut datos = Vec::new();
@@ -223,7 +349,10 @@ pub fn verificar_archivo(ruta: &Path) -> Result<Manifiesto, String> {
         .take(MAX_BYTES + 1)
         .read_to_end(&mut datos)
         .map_err(|e| format!("No se pudo leer el paquete: {e}"))?;
-    verificar_integridad(&datos)
+    if datos.len() as u64 > MAX_BYTES {
+        return Err("El paquete supera 80 MiB.".into());
+    }
+    Ok(datos)
 }
 
 #[cfg(test)]
@@ -301,5 +430,89 @@ mod tests {
         assert!(verificar_integridad(&datos)
             .unwrap_err()
             .contains("capacidades"));
+    }
+
+    #[test]
+    fn contrasta_el_contrato_y_rechaza_identidad_cambiada_con_huella_correcta() {
+        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else {
+            return;
+        };
+        let raiz = Path::new(&raiz);
+        let fixture = raiz.join("contracts/csmp_capture_v1/fixtures/completa.zip");
+        let bytes = std::fs::read(fixture).unwrap();
+        let captura = leer_captura(&bytes).unwrap();
+        assert_eq!(captura.filas("registros").count(), 4);
+        assert_eq!(captura.estado("bitacoras"), "COMPLETA");
+        let parcial =
+            std::fs::read(raiz.join("contracts/csmp_capture_v1/fixtures/parcial.zip")).unwrap();
+        assert_eq!(
+            leer_captura(&parcial).unwrap().estado("bitacoras"),
+            "NO_CONSULTADA"
+        );
+        let extendido = std::fs::read(
+            raiz.join("rust/crates/flow-trabajo/tests/datos/paquete_integracion.zip"),
+        )
+        .unwrap();
+        assert_eq!(
+            leer_captura(&extendido).unwrap().manifiesto.schema_version,
+            "1.2.0"
+        );
+
+        let mut original = ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let mut manifest: Value =
+            serde_json::from_slice(&leer_cursor(&mut original, "manifest.json")).unwrap();
+        let registros = leer_cursor(&mut original, "data/registros.csv");
+        let mut csv = csv::Reader::from_reader(registros.as_slice());
+        let encabezados = csv.headers().unwrap().clone();
+        let columna = encabezados.iter().position(|c| c == "court_code").unwrap();
+        let mut nuevo = csv::Writer::from_writer(Vec::new());
+        nuevo.write_record(&encabezados).unwrap();
+        for (i, fila) in csv.records().enumerate() {
+            let fila = fila.unwrap();
+            nuevo
+                .write_record(fila.iter().enumerate().map(|(j, v)| {
+                    if i == 0 && j == columna {
+                        "TRIBUNAL_FICTICIO_AJENO"
+                    } else {
+                        v
+                    }
+                }))
+                .unwrap();
+        }
+        let nuevo = nuevo.into_inner().unwrap();
+        let ficha = manifest["files"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|f| f["path"] == "data/registros.csv")
+            .unwrap();
+        ficha["bytes"] = json!(nuevo.len());
+        ficha["sha256"] = json!(format!("{:x}", Sha256::digest(&nuevo)));
+        let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+        for i in 0..original.len() {
+            let mut entrada = original.by_index(i).unwrap();
+            let mut data = Vec::new();
+            match entrada.name() {
+                "manifest.json" => data = serde_json::to_vec(&manifest).unwrap(),
+                "data/registros.csv" => data.extend_from_slice(&nuevo),
+                _ => {
+                    entrada.read_to_end(&mut data).unwrap();
+                }
+            }
+            zip.start_file(entrada.name(), SimpleFileOptions::default())
+                .unwrap();
+            zip.write_all(&data).unwrap();
+        }
+        let mutado = zip.finish().unwrap().into_inner();
+        assert!(verificar_integridad(&mutado).is_ok());
+        assert!(leer_captura(&mutado)
+            .unwrap_err()
+            .contains("Identidad de consulta cruzada"));
+    }
+
+    fn leer_cursor(zip: &mut ZipArchive<Cursor<Vec<u8>>>, ruta: &str) -> Vec<u8> {
+        let mut data = Vec::new();
+        zip.by_name(ruta).unwrap().read_to_end(&mut data).unwrap();
+        data
     }
 }

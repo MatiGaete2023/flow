@@ -1,5 +1,6 @@
 //! Trabajo en curso: el libro abierto, la observación propuesta de cada fila y las decisiones del usuario.
 
+use crate::captura_trabajo::{self, PaqueteTrabajo};
 use crate::config::{self, Config};
 use crate::lectura::{self, Sheet};
 use crate::motor::{self, Cols, Fila, Marca, Mode};
@@ -86,6 +87,7 @@ pub struct Trabajo {
     pub avisos: Vec<String>,
     pub cruce: Option<String>,
     pub analisis_ms: u128,
+    pub paquete: Option<PaqueteTrabajo>,
 }
 
 #[derive(Serialize, Deserialize, Default, Clone)]
@@ -108,25 +110,44 @@ struct Sesion {
 }
 
 impl Trabajo {
+    pub fn abrir_archivo(path: PathBuf, pedida: Option<Mode>, corte: NaiveDate, cfg: &Config) -> Result<Self, String> {
+        let bytes = if captura_trabajo::es_zip(&path) {
+            flow_rust::captura::leer_archivo(&path)?
+        } else {
+            std::fs::read(&path).map_err(|e| format!("No se pudo leer el archivo: {e}"))?
+        };
+        Self::abrir(path, bytes, pedida, corte, cfg)
+    }
+
     pub fn abrir(path: PathBuf, bytes: Vec<u8>, pedida: Option<Mode>, corte: NaiveDate, cfg: &Config) -> Result<Trabajo, String> {
-        let sheets = lectura::read_sheets(&bytes)?;
-        let tablas = lectura::detectar(&sheets);
-        if tablas.is_empty() {
-            return Err("No se identifica una tabla de Espera, Cumplimiento o Informes en el archivo. Revisa sus encabezados (deben estar DERIVACION, TRIBUNAL y T ESPERA, DIAS DE CUMPLIMIENTO/DIAS PARA EGRESAR o FECHA VENCIMIENTO).".into());
-        }
-        let (ti, mode) = lectura::elegir(&sheets, &tablas, pedida).ok_or("La etapa elegida no corresponde a las columnas del archivo.")?;
-        let t = &tablas[ti];
         let hash = hex(&Sha256::digest(&bytes));
+        let (paquete, sheets, sheet, header_row, mode, modos_posibles) = if captura_trabajo::es_zip(&path) {
+            let (paquete, hojas) = captura_trabajo::abrir(&bytes)?;
+            let modos = paquete.modos.clone();
+            let modo = pedida.filter(|m| modos.contains(m)).unwrap_or(modos[0]);
+            let sheet = modos.iter().position(|&m| m == modo).unwrap();
+            (Some(paquete), hojas, sheet, 0, modo, modos)
+        } else {
+            let sheets = lectura::read_sheets(&bytes)?;
+            let tablas = lectura::detectar(&sheets);
+            if tablas.is_empty() {
+                return Err("No se identifica una tabla de Espera, Cumplimiento o Informes en el archivo. Revisa sus encabezados (deben estar DERIVACION, TRIBUNAL y T ESPERA, DIAS DE CUMPLIMIENTO/DIAS PARA EGRESAR o FECHA VENCIMIENTO).".into());
+            }
+            let (ti, mode) = lectura::elegir(&sheets, &tablas, pedida).ok_or("La etapa elegida no corresponde a las columnas del archivo.")?;
+            let t = &tablas[ti];
+            (None, sheets, t.sheet, t.header_row, mode, t.modes.clone())
+        };
         let mut w = Trabajo {
             nombre: path.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default(),
             path,
             hash,
             bytes,
-            sheet: t.sheet,
-            header_row: t.header_row,
+            sheet,
+            header_row,
             mode: Some(mode),
-            modos_posibles: t.modes.clone(),
+            modos_posibles,
             sheets,
+            paquete,
             corte: Some(corte),
             ..Default::default()
         };
@@ -136,6 +157,20 @@ impl Trabajo {
         Ok(w)
     }
 
+    pub fn cambiar_etapa_paquete(&mut self, modo: Mode, corte: NaiveDate, cfg: &Config) {
+        let Some(sheet) = self.paquete.as_ref().and_then(|p| p.modos.iter().position(|&m| m == modo)) else { return; };
+        if sheet == self.sheet {
+            return;
+        }
+        self.sheet = sheet;
+        self.mode = Some(modo);
+        self.corte = Some(corte);
+        self.headers = lectura::headers_of(&self.sheets[sheet].rows[self.header_row]);
+        self.registros.clear();
+        self.analizar(cfg);
+        self.restaurar();
+    }
+
     /// Vuelve a aplicar las reglas a todas las filas. Conserva las decisiones del usuario por fila.
     pub fn analizar(&mut self, cfg: &Config) {
         let t0 = std::time::Instant::now();
@@ -143,7 +178,14 @@ impl Trabajo {
         let corte = self.corte.unwrap_or_else(|| chrono::Local::now().date_naive());
         self.cols = lectura::map_columns(&self.headers, mode);
         self.avisos.clear();
-        if self.modos_posibles.len() > 1 {
+        if let Some(paquete) = &self.paquete {
+            if paquete.fuente.estado("registros") != "COMPLETA" {
+                self.avisos.push(format!("Cobertura de registros del paquete: {}.", paquete.fuente.estado("registros")));
+            }
+            if paquete.omitidos > 0 {
+                self.avisos.push(format!("{} filas de Egresados u Otros están fuera de las etapas de Trabajo.", paquete.omitidos));
+            }
+        } else if self.modos_posibles.len() > 1 {
             self.avisos.push(format!(
                 "El archivo sirve para varias etapas ({}); se analiza como {}. Puedes cambiarla arriba.",
                 self.modos_posibles.iter().map(|m| m.label()).collect::<Vec<_>>().join(", "),
@@ -153,7 +195,7 @@ impl Trabajo {
         // Cruce (hoja 2) para C-10: identidad completa, fecha futura, la última fila gana.
         let mut cruce: HashMap<Vec<String>, NaiveDate> = HashMap::new();
         self.cruce = None;
-        if mode == Mode::Cumplimiento {
+        if mode == Mode::Cumplimiento && self.paquete.is_none() {
             if let Some((si, hr, cc)) = lectura::buscar_cruce(&self.sheets, self.sheet) {
                 for row in self.sheets[si].rows.iter().skip(hr + 1) {
                     let f = Fila { values: row, cols: &cc };
@@ -172,18 +214,22 @@ impl Trabajo {
         let viejos: HashMap<usize, Registro> = std::mem::take(&mut self.registros).into_iter().map(|r| (r.fila_excel, r)).collect();
         let sheet = &self.sheets[self.sheet];
         let mapped: Vec<usize> = self.cols.values().copied().collect();
+        let columnas_por_fila = self.paquete.as_ref().map(|p| &p.columnas_por_fila[self.sheet]);
         let mut filas_idx = Vec::new();
         for (i, row) in sheet.rows.iter().enumerate().skip(self.header_row + 1) {
-            if row.iter().all(|c| c.is_empty()) {
+            if columnas_por_fila.is_none() && row.iter().all(|c| c.is_empty()) {
                 continue;
             }
             // Totales, pies y notas no son registros: solo filas con algún dato de columna reconocida.
-            if !mapped.iter().any(|c| row.get(*c).is_some_and(|v| !v.is_empty())) {
+            if columnas_por_fila.is_none() && !mapped.iter().any(|c| row.get(*c).is_some_and(|v| !v.is_empty())) {
                 continue;
             }
             filas_idx.push(i);
         }
-        let filas: Vec<Fila> = filas_idx.iter().map(|i| Fila { values: &sheet.rows[*i], cols: &self.cols }).collect();
+        let filas: Vec<Fila> = filas_idx.iter().map(|i| Fila {
+            values: &sheet.rows[*i],
+            cols: columnas_por_fila.map_or(&self.cols, |cols| &cols[*i - self.header_row - 1]),
+        }).collect();
         let pre = motor::prepaso(mode, &filas, corte);
         let mut registros = Vec::with_capacity(filas.len());
         for (n, (f, i)) in filas.iter().zip(&filas_idx).enumerate() {

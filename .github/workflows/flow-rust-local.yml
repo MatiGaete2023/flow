@@ -16,6 +16,7 @@ jobs:
     env:
       FLOW_CASOS: ${{ github.workspace }}/rust/casos
       FLOW_FIXTURES: ${{ github.workspace }}/rust/crates/flow-tabular/tests/datos
+      FLOW_REFERENCIA: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
         with:
