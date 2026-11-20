@@ -753,7 +753,8 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         if huellas_alcance.get(dato(e,"query_id")).is_some_and(|h| !dato(e,"source_sha256").eq_ignore_ascii_case(h)) {
             d.contradictoria = true;
         }
-        if !dato(e,"text").trim().is_empty() {
+        // El CSV legado conserva eventos sin una contraparte V1 para cotejar.
+        if !dato(e,"text").trim().is_empty() && rangos.contains_key(dato(e,"query_id")) {
             let consulta = dato(e,"query_id");
             if let Some((desde,hasta)) = rangos.get(consulta).copied().flatten() {
                 match dia(dato(e,"event_at")) {

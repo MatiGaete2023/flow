@@ -109,12 +109,13 @@ impl RevisionUi {
                 let (desde,hasta,corte)=match self.criterio(){Ok(v)=>v,Err(e)=>{self.mensaje=e;return}};
                 let Some(datos)=self.datos.clone() else{return};
                 let anterior=self.informe.clone();
+                let nueva = anterior.as_ref().is_none_or(|i| (i.desde, i.hasta, i.corte) != (desde, hasta, corte));
                 self.mensaje="Clasificando bitácoras por ingreso…".into();
                 std::thread::spawn(move|| {
                     let r=if let Some(mut informe)=anterior {
                         informe.cambiar_periodo(desde,hasta,corte).map(|_|informe)
                     }else{paquete::revisar_bitacoras(&datos,desde,hasta,corte)};
-                    let _=tx.send(Evento::Informe(if cancelar.load(Ordering::Relaxed){Err("Análisis cancelado.".into())}else{r},true));pintar.request_repaint();
+                    let _=tx.send(Evento::Informe(if cancelar.load(Ordering::Relaxed){Err("Análisis cancelado.".into())}else{r},nueva));pintar.request_repaint();
                 });
             }
         }
@@ -428,6 +429,20 @@ mod tests {
             desde:d,hasta:d,corte:d,filas_fuente:0,duplicados_registros:0,filas:vec![],motor_aplicado:false,version_reglas:None});
         ui
     }
+    #[test]
+    fn reanalizar_el_mismo_criterio_conserva_seleccion_y_registro_activo() {
+        let mut revision=RevisionUi::default();
+        revision.demostracion(crate::demo_paquete::crear().unwrap(),&Config::default(),0).unwrap();
+        revision.seleccion.insert(1);revision.activa=Some(1);
+        let ctx=egui::Context::default();
+        revision.ejecutar(Accion::Analizar,&ctx);
+        let limite=std::time::Instant::now()+std::time::Duration::from_secs(5);
+        while revision.receptor.is_some() && std::time::Instant::now()<limite {revision.recibir();std::thread::sleep(std::time::Duration::from_millis(5));}
+        assert!(revision.receptor.is_none());
+        assert_eq!(revision.seleccion,BTreeSet::from([0,1]));assert_eq!(revision.activa,Some(1));
+        assert!(revision.informe.as_ref().unwrap().motor_aplicado,"El mismo criterio no descarta propuestas");
+    }
+
     #[test]
     fn criterio_obsoleto_no_copia_al_portapapeles() {
         let mut revision=RevisionUi::default();
