@@ -55,3 +55,17 @@ Base de código de esta sesión: `42a86b69f12a0e7080983509333beb241fea2450`.
 ## Protecciones revisadas de rust/producto
 
 Cotejo dirigido con la auditoría del 17-nov y las puntas `ca0a317` y `e14b000`. Se incorporaron dos correcciones funcionales con sus regresiones. El cotejo de una fila normalizada con eventos embebidos se limita a consultas V1. Por ello un paquete legado coherente queda como «No verificable» por falta de evidencia, sin diagnosticar una contradicción inexistente. La ruta V2 conserva su comprobación independiente. Repetir el análisis con las mismas fechas mantiene selección, registro activo y propuestas. Los ajustes cosméticos y el verificador Python del delta quedan para el cotejo de E0/E7. Validación de estos dos cambios en la nueva ejecución CI.
+
+## Estado para retomar
+
+La validación del paquete Python y sus salidas Excel/JSON está cerrada por prueba automatizada. En [la ejecución del histórico](https://github.com/MatiGaete2023/flow/actions/runs/44648179157) pasaron 353 pruebas del workspace, incluida la regresión con un respaldo alterado. En [la ejecución de la auditoría](https://github.com/MatiGaete2023/flow/actions/runs/44648737252), sobre `a4a60ff7aa1a0e9772680707be81128cad6e0016`, terminaron correctamente el workspace Rust completo y el contraste con Python, incluidas las pruebas de Lite. El job Windows y las capturas de interfaz se consultan en esta misma ejecución. La aprobación institucional queda pendiente.
+
+| Entrega | Ya comprobado | Trabajo técnico pendiente |
+|---|---|---|
+| E0 | CI con lock en Linux, comparación dirigida del delta de `rust/producto`. | Completar control `verificar_wp.py`, comparación de visualización y verificación Windows. |
+| E1 | ZIP creado por el exportador Python y cuatro clasificaciones iguales en Python, JSON Rust y XLSX Rust. Regresiones V1, V2 y legado. | Revisar la interfaz Windows con datos ficticios y completar aceptación en el puesto. |
+| E2 | Perfiles presentes, 15 pruebas Lite, tope en 5.000, pausa configurable y respaldo Histórico por entrada. | Histórico automático, Escritos divergentes, favoritos, pausa manual, persistencia de preferencias, exportaciones y contrato Rust→Python. |
+| E3 | Corpus versionado de 3.699 casos verdes y suite completa Rust en Linux. | Cotejos fuera del corpus y recorridos multifila de las fuentes nuevas cuando E2 esté listo. |
+| E4–E7 | Regresiones existentes de productos, Outlook simulado, Meta 4, anonimización y arranques dentro de las suites de la base. | Preservación y vuelta Excel; paridad de productos; importación de lotes históricos para Meta 4; integración y entrega. Las pruebas existentes todavía no acreditan esos hitos. |
+
+**Siguiente cambio de código.** Completar la captura opcional del Histórico en E2. Leer `descargador/lectura_bitacoras.py::_leer_historico`, `descargador/extension/pagina.js` para `historico_open` y `descargador/test_extension_historico.py`. Conectar primero la negociación de capacidad y el lector de la tabla con su RUT rotulado. Reutilizar el respaldo ya corregido y probar reuso por persona, pertenencia incierta, quinta falla y recuperación con un lote ficticio. Después comparar Escritos y la salida Rust→Python. La prueba con SITFA real y la recepción institucional se reservan al puesto autorizado.
