@@ -19,10 +19,10 @@ El flujo de GitHub Actions «Flow Rust local · Windows» compila `app/` y gener
 
 El ejemplo `verificar_paquete` valida la estructura, las tablas y la procedencia. `FLOW_REFERENCIA` habilita las pruebas sintéticas del lector, de apertura desde Trabajo y de exportación de bitácoras. En una carpeta local proveniente de ZIP, apunta esa variable a la raíz de la copia de Flow Python.
 
-Para repetir el contraste V2 con el mismo ZIP P2, usar Python 3.12 y el lock Windows de la referencia.
+Para repetir el contraste V2 con el mismo ZIP P2, usar Python 3.12 y un checkout de Flow Python en `afc4d12ae1adabf21049c809c0d0d8f747e2e306`. Sustituir la carpeta de ejemplo por la ruta de esa referencia.
 
 ```powershell
-python -m pip install --require-hashes -r requirements/windows-py312.lock
+python -m pip install --require-hashes -r referencia-python-ci/requirements/windows-py312.lock
 cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
-python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe
+python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe referencia-python-ci
 ```

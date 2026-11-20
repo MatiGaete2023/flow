@@ -9,6 +9,13 @@ import sys
 from tempfile import TemporaryDirectory
 
 
+def clasificacion_rust(ejecutable, paquete, causa, desde, hasta):
+    stdout = subprocess.check_output([str(ejecutable), str(paquete), desde, hasta])
+    filas = [f for f in json.loads(stdout) if f["causa"] == causa]
+    assert len(filas) == 1, (causa, desde, hasta)
+    return filas[0]["resultado"]["clase"]
+
+
 def comprobar_productos(app, carpeta, trabajo, paquete):
     from openpyxl import load_workbook
     from nurus.personal.revision_bitacoras import exportar, revisar
@@ -69,14 +76,24 @@ def main():
             causa = caso["causa_ficticia"]
             desde, hasta = caso["desde"], caso["hasta"]
             python, _ = clasificar(filas_python[causa].revision_bitacora, date.fromisoformat(desde), date.fromisoformat(hasta))
-            stdout = subprocess.check_output([str(ejecutable), str(paquete), desde, hasta])
-            filas_rust = [f for f in json.loads(stdout) if f["causa"] == causa]
-            assert len(filas_rust) == 1, caso
-            rust = filas_rust[0]["resultado"]["clase"]
+            rust = clasificacion_rust(ejecutable, paquete, causa, desde, hasta)
             assert python == rust == caso["esperado"], (caso, python, rust)
             print(f"{desde} a {hasta}, causa ficticia {causa}: {rust}")
         comprobar_productos(app, carpeta, trabajo, paquete)
-    print(f"{len(casos)} casos P2 coinciden entre Python y Flow Rust.")
+
+        carpeta_ajena = carpeta / "identidad-ajena"
+        carpeta_ajena.mkdir()
+        manifiesto = diaries(carpeta_ajena / "Bitacoras 2026-10-13", 1)
+        control = json.loads(manifiesto.read_text(encoding="utf-8"))
+        control["registros"][0]["nombre"] = "Persona Ficticia Distinta"
+        manifiesto.write_text(json.dumps(control), encoding="utf-8")
+        _, filas, paquete = _trabajo(carpeta_ajena, manifiesto)
+        desde, hasta = "2026-08-01", "2026-08-31"
+        python, _ = clasificar(filas["100"].revision_bitacora, date.fromisoformat(desde), date.fromisoformat(hasta))
+        rust = clasificacion_rust(ejecutable, paquete, "100", desde, hasta)
+        assert python == rust == "NO_VERIFICABLE", (python, rust)
+        print("Identidad visible discrepante: NO_VERIFICABLE en ambos programas.")
+    print(f"{len(casos) + 1} casos P2 coinciden entre Python y Flow Rust.")
 
 
 if __name__ == "__main__":
