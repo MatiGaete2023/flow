@@ -196,14 +196,20 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 ## Turno 10 · Cronología acreditada de bitácoras
 
 - **Trabajo → Fuentes del paquete → Cronología de bitácora** muestra los últimos cuatro meses civiles por ingreso. Distingue entradas del centro con autoría acreditada, posteriores, de orden incierto y sin autoría acreditada. Cuando dos horas son comparables, usa el orden UTC dentro del mismo día civil. Muestra también observaciones al tribunal de al menos 30 días sin respuesta registrada.
-- La cronología reutiliza la verificación V1/V2 de `captura::revision` por evento. Incluye solamente las lecturas disponibles al corte. Si no hay lectura acreditada, la vista la distingue de una lectura sin entradas capturadas. Este tramo corresponde a la vista de cronología. La reiteración y las reglas de historia siguen en el siguiente paso.
+- La cronología reutiliza la verificación V1/V2 de `captura::revision` por evento. Incluye solamente las lecturas disponibles al corte. Si no hay lectura acreditada, la vista la distingue de una lectura sin entradas capturadas.
 - Pasaron 16 pruebas locales de captura, cronología y motor con el ZIP ficticio E3 y el corpus de Flow Python. El flujo Windows también captura `trabajo-contexto.png` al abrir ese ZIP.
+
+## Turno 10 · Reiteración de observaciones y R5
+
+- El motor reitera únicamente cuando el texto vigente coincide con la última observación no reiterada del centro, acreditada para ese ingreso y período. Si varias observaciones del mismo día tienen orden incierto y textos distintos, el motor conserva la propuesta completa. El aviso CT-07 registra el texto original.
+- Con la redacción mensual activa se conservan literalmente «Medida revisada, sin observaciones.» y las derivaciones sin seguimiento. Con la redacción mensual desactivada se mantienen las excepciones de Flow Python. La regla se puede desactivar en Ajustes y mantiene las acciones previas.
+- Pasaron dos pruebas con las excepciones, los textos distintos y la autoría u orden inciertos. Flow Python generó `contexto-e3-reiteracion.zip`; ambos motores emitieron la reiteración para el primer ingreso. El segundo conservó su propuesta.
 
 ## Siguiente paso exacto
 
 1. E3 (punto 1), en este orden:
-   1. Portar `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python y llevar los trámites acreditados al motor. La cronología visual ya usa `captura_trabajo/cronologia.rs`. Usar los casos del productor ficticio para contrastar las reglas `HISTORIA.*`, los avisos temporales y `COMUN.REITERA_OBSERVACION`.
-   2. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
+   1. Portar `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python y llevar los trámites acreditados al motor. La cronología y R5 están en `captura_trabajo/cronologia.rs`. Portar los avisos temporales pendientes y contrastar `HISTORIA.*` con los casos del productor ficticio.
+   2. Aplicar R2, R3 y R4 al portar las respectivas reglas de historia, con casos ficticios por regla.
 2. Inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
 3. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
 4. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.

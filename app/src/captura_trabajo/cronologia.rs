@@ -1,5 +1,6 @@
 //! Vista temporal de las lecturas acreditadas del mismo ingreso.
 
+use crate::{config::Config, motor::Resultado, util};
 use chrono::{DateTime, Months, NaiveDate, Utc};
 use flow_rust::captura::{revision::Revision, Fila};
 
@@ -24,6 +25,7 @@ pub struct Cronologia {
     pub sin_autoria: Vec<Entrada>,
     pub sin_respuesta: Vec<NaiveDate>,
     pub estado: Estado,
+    ultima_no_reiterada: Option<(NaiveDate, String)>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -44,6 +46,77 @@ impl Estado {
             Estado::NoLeida => "Bitácora del ingreso sin lectura comprobada",
             Estado::SinEntradasCapturadas => "Sin entradas capturadas en el período",
         }
+    }
+}
+
+const REITERACION: &str = "COMUN.REITERA_OBSERVACION";
+const NO_REITERAR_PYTHON: &[&str] = &[
+    "CUMPLIMIENTO.C09_SIN_OBSERVACIONES",
+    "ESPERA.E05_",
+    "ESPERA.E07_",
+    "INFORMES.I01_",
+    "INFORMES.I02_",
+    "HISTORIA.C10_ESCRITO",
+    "HISTORIA.P_FINALIZADA",
+    "HISTORIA.REITERA",
+    "COMUN.NO_SEGUIMIENTO",
+];
+
+fn prefijo(texto: &str) -> Option<(&str, &str)> {
+    texto
+        .split_once(": ")
+        .filter(|(cabeza, _)| cabeza.chars().count() <= 40)
+}
+
+fn cuerpo(texto: &str) -> String {
+    let normalizado = util::normalizar(texto);
+    prefijo(&normalizado)
+        .map_or(normalizado.as_str(), |(_, cuerpo)| cuerpo)
+        .to_owned()
+}
+
+impl Cronologia {
+    pub fn aplicar_reiteracion(&self, resultado: &mut Resultado, config: &Config) {
+        let Some((fecha, anterior)) = &self.ultima_no_reiterada else {
+            return;
+        };
+        let propuesta = cuerpo(&resultado.observacion);
+        if propuesta.is_empty()
+            || &propuesta != anterior
+            || config.desactivadas.contains(REITERACION)
+            || resultado
+                .eventos
+                .iter()
+                .any(|regla| regla == "COMUN.NO_SEGUIMIENTO")
+        {
+            return;
+        }
+        let excepcion = if config.redaccion_registro {
+            propuesta == cuerpo("Medida revisada, sin observaciones.")
+                || (propuesta.starts_with("la derivacion ")
+                    && propuesta.ends_with(" no se encuentra sujeta a seguimiento por este centro"))
+        } else {
+            resultado
+                .eventos
+                .iter()
+                .any(|regla| NO_REITERAR_PYTHON.iter().any(|p| regla.starts_with(p)))
+        };
+        if excepcion {
+            return;
+        }
+        let texto = config
+            .texto(REITERACION)
+            .replace("{FECHA_OBSERVACION_ANTERIOR}", &util::fecha_es(*fecha));
+        resultado.avisos.push(format!(
+            "CT-07: la observación propuesta repetía la del {}; se consigna la reiteración. Texto propuesto originalmente: {}",
+            fecha.format("%d/%m/%Y"), resultado.observacion
+        ));
+        resultado.observacion = if let Some((nombre, _)) = prefijo(&resultado.observacion) {
+            format!("{nombre}: {texto}")
+        } else {
+            texto
+        };
+        resultado.eventos.push(REITERACION.into());
     }
 }
 
@@ -109,6 +182,7 @@ fn ordenar(
         orden_incierto: Vec::new(),
         sin_autoria: Vec::new(),
         sin_respuesta: Vec::new(),
+        ultima_no_reiterada: ultima_no_reiterada(&entradas),
         estado: if fecha.is_some() {
             Estado::Acreditada
         } else if !entradas.is_empty() {
@@ -148,6 +222,24 @@ fn ordenar(
         }
     }
     salida
+}
+
+fn ultima_no_reiterada(entradas: &[Entrada]) -> Option<(NaiveDate, String)> {
+    let centros = entradas.iter().filter(|e| {
+        e.centro && !util::normalizar(&e.texto).contains("se reitera observacion anterior")
+    });
+    let fecha = centros.clone().map(|e| e.fecha).max()?;
+    let candidatas = centros.filter(|e| e.fecha == fecha);
+    let ultima_hora = if candidatas.clone().all(|e| e.instante.is_some()) {
+        candidatas.clone().filter_map(|e| e.instante).max()
+    } else {
+        None
+    };
+    let mut textos = candidatas
+        .filter(|e| ultima_hora.is_none_or(|hora| e.instante == Some(hora)))
+        .map(|e| cuerpo(&e.texto));
+    let anterior = textos.next()?;
+    textos.all(|t| t == anterior).then_some((fecha, anterior))
 }
 
 #[cfg(test)]
@@ -193,5 +285,59 @@ mod tests {
             ordenar(Vec::new(), desde, corte, false).estado,
             Estado::NoLeida
         );
+    }
+
+    #[test]
+    fn aplica_r5_al_texto_identico_y_respeta_sus_dos_excepciones() {
+        let corte = "2026-10-20".parse().unwrap();
+        let fecha = "2026-09-12T09:00:00-03:00";
+        for (texto, regla, cambia) in [
+            ("La medida del programa vence el 20 de noviembre de 2026.", "ESPERA.E05_SOLO_CORREO", true),
+            ("Medida revisada, sin observaciones.", "CUMPLIMIENTO.C09_SIN_OBSERVACIONES", false),
+            ("La derivación Programa Ficticio no se encuentra sujeta a seguimiento por este Centro.", "COMUN.NO_SEGUIMIENTO", false),
+        ] {
+            let entrada = Entrada { texto: texto.into(), ..evento("centro", fecha, true, true) };
+            let crono = ordenar(vec![entrada], "2026-06-20".parse().unwrap(), corte, true);
+            let propuesta = format!("Persona ficticia: {texto}");
+            let mut resultado = Resultado { observacion: propuesta.clone(), eventos: vec![regla.into()], ..Default::default() };
+            let referencia = Config { redaccion_registro: false, ..Config::default() };
+            crono.aplicar_reiteracion(&mut resultado, &referencia);
+            assert_eq!(resultado.observacion, propuesta);
+            crono.aplicar_reiteracion(&mut resultado, &Config::default());
+            assert_eq!(resultado.eventos.iter().any(|r| r == REITERACION), cambia);
+            let esperado = if cambia { "Persona ficticia: Se reitera observación anterior del 12 de septiembre de 2026." }
+                else { &propuesta };
+            assert_eq!(resultado.observacion, esperado);
+            let mut distinta = Resultado { observacion: format!("{texto} Cambio ficticio."), ..Default::default() };
+            crono.aplicar_reiteracion(&mut distinta, &Config::default());
+            assert!(distinta.eventos.is_empty());
+        }
+    }
+
+    #[test]
+    fn no_reitera_una_lectura_con_orden_ambiguo_o_sin_autoria_acreditada() {
+        let (desde, corte) = ("2026-06-20".parse().unwrap(), "2026-10-20".parse().unwrap());
+        let crono = ordenar(
+            vec![
+                evento("antecedente", "2026-09-12", true, false),
+                evento("texto distinto", "2026-09-12", true, false),
+            ],
+            desde,
+            corte,
+            true,
+        );
+        let mut resultado = Resultado {
+            observacion: "antecedente".into(),
+            ..Default::default()
+        };
+        crono.aplicar_reiteracion(&mut resultado, &Config::default());
+        let sin_autoria = ordenar(
+            vec![evento("antecedente", "2026-09-12", false, false)],
+            desde,
+            corte,
+            true,
+        );
+        sin_autoria.aplicar_reiteracion(&mut resultado, &Config::default());
+        assert!(resultado.eventos.is_empty());
     }
 }

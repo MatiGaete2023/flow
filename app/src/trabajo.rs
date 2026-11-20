@@ -264,6 +264,9 @@ impl Trabajo {
                 let vencimiento_informes = (mode == Mode::Informes).then(|| f.date("vencimiento")).flatten();
                 r.avisos.extend(calendario.avisos_cotejo(corte, vencimiento_informes, fecha_calendario_91));
             }
+            if let Some(cronologia) = contexto.and_then(|ctx| ctx.cronologia.as_ref()) {
+                cronologia.aplicar_reiteracion(&mut r, cfg);
+            }
             let excluido = r.eventos.iter().any(|e| e == "COMUN.NO_SEGUIMIENTO");
             let acciones = if excluido { vec![] } else { motor::acciones(&r.eventos, fecha_hoja2, corte) };
             let mut reg = Registro {
@@ -515,6 +518,26 @@ mod tests {
         assert_eq!(avisos, [
             "CAL-03: la pestaña Informes indica vencimiento el 10 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 1 de noviembre de 2026; revisar en RUS."
         ]);
+    }
+
+    #[test]
+    fn trabajo_reitera_contexto_e3_del_exportador_python_solo_para_el_ingreso() {
+        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let mut cfg = Config::default();
+        let mut w = Trabajo::abrir_archivo(
+            PathBuf::from(ruta).with_file_name("contexto-e3-reiteracion.zip"),
+            Some(Mode::Cumplimiento),
+            "2026-10-19".parse().unwrap(),
+            &cfg,
+        ).unwrap();
+        assert_eq!(w.registros[0].propuesta, "Persona PRM: Se reitera observación anterior del 12 de agosto de 2026.");
+        assert!(w.registros[0].eventos.iter().any(|r| r == "COMUN.REITERA_OBSERVACION"));
+        assert!(w.registros[1].eventos.iter().all(|r| r != "COMUN.REITERA_OBSERVACION"));
+        let acciones = w.registros[0].acciones.clone();
+        cfg.desactivadas.insert("COMUN.REITERA_OBSERVACION".into());
+        w.analizar(&cfg);
+        assert!(w.registros[0].propuesta.ends_with("vence el 1 de noviembre de 2026."));
+        assert_eq!(w.registros[0].acciones, acciones);
     }
 
     #[test]

@@ -135,6 +135,19 @@ def generar(referencia, carpeta):
         "CAL-03: la pestaña Informes indica vencimiento el 10 de octubre de 2026 y el calendario del ingreso "
         "proyecta el informe pendiente el 1 de noviembre de 2026; revisar en RUS."
     )]
+    texto = "Próximo informe de avance de PRM Centro vence el 1 de noviembre de 2026."
+    repetida = _with_calendars(
+        diaries(carpeta / "bitacora-reiteracion", text=texto),
+        {"201": (("01/11/2026", "", "PENDIENTE"),)},
+    )
+    paquete_reiteracion = package_current_lot(
+        lote.folder, repetida, carpeta / "contexto-e3-reiteracion.zip",
+    )["path"]
+    reiteracion = import_capture(paquete_reiteracion, defaults(), as_of=date(2026, 10, 19))
+    primera, segunda = reiteracion.rows
+    assert primera.observation == "Persona PRM: Se reitera observación anterior del 12 de agosto de 2026."
+    assert "COMUN.REITERA_OBSERVACION" in primera.rules
+    assert "COMUN.REITERA_OBSERVACION" not in segunda.rules
     return salida
 
 
