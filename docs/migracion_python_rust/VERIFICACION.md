@@ -14,6 +14,6 @@ python app/qa/capturar_windows.py --exe app/target/debug/flow_rust.exe --salida 
 
 `FLOW_CASOS` y `FLOW_FIXTURES` son necesarios para ejecutar los contrastes. Las pruebas históricas del workspace están en el [commit anterior](https://github.com/MatiGaete2023/flow/blob/ed6a0e43f8efa0856e0294af92ac8e0317c69df7/docs/migracion_python_rust/VERIFICACION.md).
 
-El flujo de GitHub Actions «Flow Rust local · Windows» compila `app/` y genera `Flow_Rust_Local_Capturas_Windows`. Comparar las cinco imágenes con [Diseño](DISENO.md). Mantener fecha y diferencias de escala separadas de cambios en jerarquía y contenido. Registrar el SHA, el entorno y cada vista revisada.
+El flujo de GitHub Actions «Flow Rust local · Windows» compila `app/` y genera `Flow_Rust_Local_Capturas_Windows`. Comparar las cinco imágenes con [Diseño](DISENO.md). El modo captura ajusta la escala si la pantalla virtual es menor que la ventana inicial de 1440 × 900 puntos. Mantener fecha y diferencias de escala separadas de cambios en jerarquía y contenido. Registrar el SHA, el entorno y cada vista revisada.
 
 El ejemplo `verificar_paquete` verifica la estructura del contenedor y la integridad de sus entradas. La compatibilidad funcional se medirá desde Trabajo cuando la aplicación valide filas y procedencia y habilite la importación.

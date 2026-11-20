@@ -16,12 +16,22 @@ mod util;
 
 use std::path::PathBuf;
 
+const TAMANO_INICIAL: [f32; 2] = [1440.0, 900.0];
+
 struct FlowApp {
     app: ui::App,
 }
 
 impl eframe::App for FlowApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if self.app.screenshot.as_ref().is_some_and(|s| s.frames == 0) {
+            // Una pantalla virtual pequeña debe mostrar la composición completa de referencia.
+            let disponible = ctx.screen_rect().size();
+            let escala = (disponible.x / TAMANO_INICIAL[0]).min(disponible.y / TAMANO_INICIAL[1]);
+            if escala > 0.0 && escala < 1.0 {
+                ctx.set_zoom_factor(ctx.zoom_factor() * escala);
+            }
+        }
         self.app.frame(ctx);
         // Modo captura: dibujar ~120 cuadros, pedir la imagen, guardarla y salir.
         let mut salir = false;
@@ -77,7 +87,7 @@ fn main() -> eframe::Result<()> {
 
     let mut viewport = egui::ViewportBuilder::default()
         .with_title("Flow — Asistente CSMP")
-        .with_inner_size([1440.0, 900.0])
+        .with_inner_size(TAMANO_INICIAL)
         .with_min_inner_size([1100.0, 680.0]);
     if screenshot.is_some() {
         viewport = viewport.with_active(false);
