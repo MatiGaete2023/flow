@@ -7,6 +7,7 @@ mod anon;
 mod captura_trabajo;
 mod config;
 mod demo;
+mod descargador_ui;
 mod lectura;
 mod motor;
 mod productos;

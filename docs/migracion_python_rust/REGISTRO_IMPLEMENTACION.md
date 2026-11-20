@@ -65,7 +65,12 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - Excel y JSON usan el mismo subconjunto. Siguiendo Flow Python, el período vuelve a ser el mes hasta el corte al abrir otra vez el diálogo.
 - La prueba V1 con contrato completo incluye dos instantáneas idénticas y dos contradictorias. Las primeras conservan observación y ausencia acreditada. Las segundas quedan no verificables en ambos períodos.
 
+## Turno 4 · Perfiles del Descargador
+
+- Dentro de **Herramientas → Descargador**, se puede abrir o arrastrar un catálogo JSON y validar un perfil. Lite limita el catálogo a Seguimiento, Búsqueda de litigantes, Informes por vencer y Medidas por vencer. Integral añade Carga. La aplicación valida los filtros propios de Informes y Cumplimiento, el estado de litigantes, mes y año, y el máximo de 31 días inclusivos de Carga.
+- Se conservaron el tema y los controles de Flow Rust. La preparación de perfiles funciona con catálogos locales; la conexión del Descargador, la planificación combinada de lotes y sus productos siguen en E2.
+
 ## Siguiente paso exacto
 
 1. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico.
-2. Continuar E2 por perfiles del Descargador integral y Lite. Comparar `descargador/perfiles.py` y `descargador_lite/app/perfiles.py` con `rust/crates/flow-captura/src/sitfa/perfil.rs`. Usar `test_solo_cuatro_consultas_rus` y `test_plan_exige_filtros_de_cada_pestana` como primeras regresiones. Incorporar el flujo a los componentes gráficos de `app/`. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.
+2. Completar E2 con el plan combinado de lotes sobre `app/src/descargador.rs`, usando los perfiles validados de la vista Descargador. Cotejar `Batch.plan` en `descargador_lite/app/lotes.py` y probar la combinación de dos tribunales, cuatro modalidades y dos pestañas de `test_plan_exige_filtros_de_cada_pestana`. Luego integrar la conexión y los resultados del Descargador con el sitio ficticio. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.

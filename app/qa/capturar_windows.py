@@ -13,6 +13,7 @@ VISTAS = (
     ("correos", "correos"),
     ("resoluciones", "resoluciones"),
     ("anonimizador", "anonimizador"),
+    ("descargador", "descargador"),
     ("ajustes-oscuro", "ajustes,oscuro"),
 )
 

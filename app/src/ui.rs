@@ -22,16 +22,18 @@ pub enum Vista {
     Resultados,
     Contactos,
     Anonimizador,
+    Descargador,
     Ajustes,
 }
 
-const VISTAS: [(Vista, &str, &str); 7] = [
+const VISTAS: [(Vista, &str, &str); 8] = [
     (Vista::Trabajo, "🗂", "Trabajo"),
     (Vista::Correos, "✉", "Correos"),
     (Vista::Resoluciones, "⚖", "Resoluciones"),
     (Vista::Resultados, "📊", "Resultados"),
     (Vista::Contactos, "👥", "Contactos"),
     (Vista::Anonimizador, "🛡", "Anonimizador"),
+    (Vista::Descargador, "↓", "Descargador"),
     (Vista::Ajustes, "⚙", "Ajustes"),
 ];
 
@@ -83,6 +85,7 @@ pub struct App {
     anon_out: String,
     anon_opts: anon::Opciones,
     anon_inf: Option<anon::Informe>,
+    descargador: crate::descargador_ui::Descargador,
     // ajustes
     texto_sel: String,
     // estado
@@ -129,6 +132,7 @@ impl App {
             anon_out: String::new(),
             anon_opts: anon::Opciones::default(),
             anon_inf: None,
+            descargador: Default::default(),
             texto_sel: "ESPERA.E05_PROYECTO_Y_CORREO".into(),
             avisos: vec![],
             screenshot: screenshot.map(|path| Screenshot { path, frames: 0, pedido: false }),
@@ -224,6 +228,9 @@ impl App {
         let n = w.registros.len();
         let ms = w.analisis_ms;
         let modo = w.mode().label();
+        if w.registros.iter().all(|r| !r.seleccionada) {
+            self.solo_marcadas = false;
+        }
         for aviso in w.avisos.clone() {
             self.aviso(aviso, false);
         }
@@ -288,6 +295,10 @@ impl App {
             "informes" => self.cargar_ejemplo(Mode::Informes),
             "contactos" => self.vista = Vista::Contactos,
             "anonimizador" => self.vista = Vista::Anonimizador,
+            "descargador" => {
+                self.descargador.ejemplo();
+                self.vista = Vista::Descargador;
+            }
             "ajustes" => self.vista = Vista::Ajustes,
             "oscuro" => self.cfg.tema_oscuro = true,
             _ => {}
@@ -357,9 +368,13 @@ impl App {
         }
         // Atajos
         if ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::O))) {
-            self.abrir_dialogo();
+            if self.vista == Vista::Descargador {
+                self.descargador.abrir_dialogo();
+            } else {
+                self.abrir_dialogo();
+            }
         }
-        if ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::S))) {
+        if self.vista != Vista::Descargador && ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::S))) {
             self.guardar_excel();
         }
         // Archivos arrastrados a la ventana
@@ -367,6 +382,8 @@ impl App {
         if !dropped.is_empty() {
             if self.vista == Vista::Anonimizador {
                 self.anon_files.extend(dropped);
+            } else if self.vista == Vista::Descargador {
+                self.descargador.cargar(&dropped[0]);
             } else {
                 self.abrir(dropped[0].clone());
             }
@@ -386,7 +403,9 @@ impl App {
         }
         let p = self.p();
         self.nav(ctx, &p);
-        self.barra(ctx, &p);
+        if self.vista != Vista::Descargador {
+            self.barra(ctx, &p);
+        }
         self.avisos_panel(ctx, &p);
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(p.bg).inner_margin(egui::Margin::symmetric(18, 12)))
@@ -397,6 +416,7 @@ impl App {
                 Vista::Resultados => self.v_resultados(ui, &p),
                 Vista::Contactos => self.v_contactos(ui, &p),
                 Vista::Anonimizador => self.v_anon(ui, &p),
+                Vista::Descargador => self.descargador.mostrar(ui, &p),
                 Vista::Ajustes => self.v_ajustes(ui, &p),
             });
         if self.confirmar_reinicio {
