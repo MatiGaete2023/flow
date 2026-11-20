@@ -57,6 +57,7 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 
 - El clasificador coteja las entradas nativas con su consulta y tabla normalizada, incluidos identidad, ID del evento, fecha civil y precisión, texto y huella de la lectura. Usa la autoría del respaldo V1 y conserva la incertidumbre del material legado y de las lecturas contradictorias.
 - El contraste Windows usa paquetes sintéticos V1 construidos con el contrato completo. Cubre una observación del centro, ausencia dentro del alcance, lectura anterior al fin, autoría del tribunal, falta de respaldo y huella discrepante. Mantiene los casos V2 de Flow Python.
+- La [verificación Windows](https://github.com/MatiGaete2023/flow/actions/runs/44760028232) pasó sobre `00623a13ca29c599d4f56d5784da1c860a578bee`. Pasaron 17 pruebas, una prueba focal de exportación, los seis casos V1 y legado y los cinco P2 de Flow Python. Coincidieron los datos y el formato de las columnas comunes de ambos Excel. La prueba de rendimiento se mantuvo omitida.
 
 ## Siguiente paso exacto
 
