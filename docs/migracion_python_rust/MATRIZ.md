@@ -32,3 +32,18 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F26 | Distribución y diagnóstico | Existe un binario de escritorio. Pendientes empaquetado, instalación portátil y verificación de herramientas finales. |
 | F27 | Intercambio entre herramientas | Pendiente. Probar solicitud local, devolución, procedencia, cancelación y comparación temporal. |
 | F28 | Utilidades y catálogos | Inventario previo disponible. Registrar equivalencia o reemplazo de cada herramienta de operación y conservar las de desarrollo aplicables. |
+
+## Inventario de Ajustes
+
+Comparación de `src/nurus/personal/app_base.py::_config_page` y `config.py` de Flow Python con `app/src/ui.rs` y `config.rs` de Flow Rust. Indica también las opciones ubicadas en otras vistas de Flow Rust.
+
+| Opción en Flow Python | En Flow Rust | Falta para la paridad |
+|---|---|---|
+| Parámetros y búsqueda de umbrales | Ajustes muestra 14 umbrales, restablecimiento individual y aplicación a la nómina. Comparte sus valores base. | Agregar búsqueda y los parámetros operativos `prorroga_reciente` (90 días) y `ventana_busqueda` (60 días) al portar sus reglas. |
+| Cinco interruptores de avisos y reiteración | Ajustes permite habilitar o deshabilitar la regla desde el selector de textos, incluidos Curador, Oído, Próxima audiencia, Próxima mayoría y Reiteración. | Cotejar persistencia y trazabilidad al cambiar de etapa y reabrir. |
+| Textos de observación y variables | Ajustes permite editar textos, restituir el original y activar la regla. La redacción mensual tiene interruptor propio. | Agregar el selector de variables y validación de campos por regla. |
+| Plantillas de correo, variables, comportamiento y archivo | Correos genera, edita y guarda borradores con las plantillas configuradas. | Incorporar edición persistente, duplicación, archivado, categoría, variables y condiciones de adjuntos. |
+| Contactos, importación, alias y respaldo | Contactos permite editar programas y tribunales, importar el listado de Flow Python y configurar CC adicional y firma. | Agregar edición de alias y cotejar respaldo, borrado y contactos duplicados. |
+| Cuenta Outlook, firma y CC | Correos ofrece borradores Outlook o archivos EML. Contactos conserva firma y CC adicional. | Agregar elección de cuenta Outlook y comprobar el destino en un perfil con varias cuentas. |
+| Matrices Word y paquetes de plantillas | Ajustes abre la carpeta de matrices propias. Resoluciones usa las matrices incluidas o el archivo propio correspondiente. | Integrar editor/importador por tribunal y tipo y la importación de paquetes ZIP. |
+| Datos guardados, exportación de caso anónimo y métricas | Ajustes abre la carpeta de datos locales. Anonimizador tiene su propia vista. | Cotejar gestión de sesiones, exportación anónima para reproducir casos y métricas voluntarias sin información personal. |

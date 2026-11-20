@@ -34,7 +34,7 @@ $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bita
 cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
 ```
 
-El caso de contexto de Trabajo usa dos ZIP sintéticos generados con el productor de Flow Python. Comprueba asociaciones por causa, persona e ingreso, discordancias y el cruce del próximo informe de Cumplimiento.
+Los casos de contexto de Trabajo usan ZIP sintéticos generados con el productor de Flow Python. Comprueban asociaciones por causa, persona e ingreso, discordancias, cronología, el próximo informe de Cumplimiento, CAL-03 y la reiteración.
 
 ```powershell
 $e3 = Join-Path (Resolve-Path app/target).Path ("contexto-e3-" + [guid]::NewGuid())
@@ -42,6 +42,8 @@ python app/qa/generar_contexto_e3.py referencia-python-ci $e3
 $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $e3 "contexto-e3.zip")).Path
 cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python
 ```
+
+Con `FLOW_E3_PAQUETE` configurado, `app/qa/capturar_windows.py` agrega `trabajo-contexto.png`. La captura abre el ZIP ficticio al corte del caso y muestra la cronología en el detalle de Trabajo.
 
 ## Biblioteca en Linux (sin escritorio)
 

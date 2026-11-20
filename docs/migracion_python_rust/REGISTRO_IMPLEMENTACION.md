@@ -204,12 +204,15 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - El motor reitera únicamente cuando el texto vigente coincide con la última observación no reiterada del centro, acreditada para ese ingreso y período. Si varias observaciones del mismo día tienen orden incierto y textos distintos, el motor conserva la propuesta completa. El aviso CT-07 registra el texto original.
 - Con la redacción mensual activa se conservan literalmente «Medida revisada, sin observaciones.» y las derivaciones sin seguimiento. Con la redacción mensual desactivada se mantienen las excepciones de Flow Python. La regla se puede desactivar en Ajustes y mantiene las acciones previas.
 - Pasaron dos pruebas con las excepciones, los textos distintos y la autoría u orden inciertos. Flow Python generó `contexto-e3-reiteracion.zip`; ambos motores emitieron la reiteración para el primer ingreso. El segundo conservó su propuesta.
+- La matriz incorpora el inventario de Ajustes, con las opciones de Flow Python que ya están en Ajustes, Correos, Contactos o Anonimizador de Flow Rust. Los umbrales de prórroga y búsqueda se incorporarán junto a sus reglas.
+- La [verificación Windows final](https://github.com/MatiGaete2023/flow/actions/runs/44805108773) pasó 59 pruebas de la aplicación, cuatro contrastes focalizados de E3 y los contrastes de bitácoras P2, legado y V1. Una prueba de rendimiento siguió omitida. Se revisó `trabajo-contexto.png` con el ZIP abierto al corte del caso, dentro de la vista vigente. Se publicaron el [ejecutable con SHA-256](https://github.com/MatiGaete2023/flow/actions/runs/44805108773/artifacts/14662533335) y las [capturas](https://github.com/MatiGaete2023/flow/actions/runs/44805108773/artifacts/14662228757).
 
 ## Siguiente paso exacto
 
 1. E3 (punto 1), en este orden:
    1. Portar `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python y llevar los trámites acreditados al motor. La cronología y R5 están en `captura_trabajo/cronologia.rs`. Portar los avisos temporales pendientes y contrastar `HISTORIA.*` con los casos del productor ficticio.
    2. Aplicar R2, R3 y R4 al portar las respectivas reglas de historia, con casos ficticios por regla.
-2. Inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
+   3. Primer contraste del contexto sustantivo. Abrir `contexto-e3.zip` al 19/10/2026. Flow Python ya genera `HISTORIA.OTRO_PROGRAMA` para el primer ingreso y menciona los dos programas vigentes ficticios. El motor Rust aún devuelve C-10 sin ese contexto. Para los folios e ingreso ordenado, cotejar `folio_resolucion` y `servicio` de `src/nurus/personal/motor/reglas_historia.py` y los casos de `tests/test_historia_espera.py`.
+2. Usar el inventario de Ajustes de la matriz para completar opciones. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
 3. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
 4. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
