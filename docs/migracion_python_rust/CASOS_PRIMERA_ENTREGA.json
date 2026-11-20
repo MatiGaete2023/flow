@@ -1,0 +1,44 @@
+{
+  "formato": "casos de aceptación de F06, no constituye un manifiesto CSMP",
+  "origen": "descargador/test_revision_bitacoras_p2.py::test_p2_paquete_lleva_el_alcance_y_el_asistente_clasifica",
+  "preparacion": [
+    "Crear el lote ficticio de dos ingresos con diaries(..., 2) y bound_lot.",
+    "Aplicar _paginar al segundo ingreso antes de exportar desde Python.",
+    "Exportar una sola vez con match_diaries=True y conservar el ZIP para ambos lectores."
+  ],
+  "casos": [
+    {
+      "causa_ficticia": "100",
+      "desde": "2026-08-01",
+      "hasta": "2026-08-31",
+      "esperado": "CON_OBSERVACION",
+      "motivo": "Observación acreditada del 12 de agosto."
+    },
+    {
+      "causa_ficticia": "100",
+      "desde": "2026-09-08",
+      "hasta": "2026-10-08",
+      "esperado": "SIN_OBSERVACION",
+      "motivo": "Ventana completa hasta el último día incluido."
+    },
+    {
+      "causa_ficticia": "100",
+      "desde": "2026-09-14",
+      "hasta": "2026-10-13",
+      "esperado": "NO_VERIFICABLE",
+      "motivo": "Lectura del 8 de octubre anterior al término."
+    },
+    {
+      "causa_ficticia": "101",
+      "desde": "2026-09-08",
+      "hasta": "2026-10-08",
+      "esperado": "NO_VERIFICABLE",
+      "motivo": "Paginador en la respuesta del segundo ingreso."
+    }
+  ],
+  "regresiones_adicionales": [
+    "Conservar las pruebas del productor V1 Rust que acreditan respaldo nativo y las que rechazan contradicciones.",
+    "Metadato V2 con completa como cadena, método desconocido, warnings=1 o intervalo truncado: no acreditar ausencia.",
+    "Cerrar y restaurar sesión, repetir exportación; el conteo y la clasificación de cada fila persisten."
+  ]
+}

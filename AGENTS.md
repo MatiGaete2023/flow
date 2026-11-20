@@ -1,3 +1,5 @@
+> **Instrucción específica para la rama de estudio `estudio/paridad-python-rust-20261119`.** El encargo del 19 de noviembre autoriza esta rama y su informe de migración Python → Rust. Empieza en [MIGRACION_RUST.md](MIGRACION_RUST.md). Las indicaciones de rama única y destino de push que siguen corresponden al mantenimiento de Python. La siguiente IA trabaja en esta rama cuando el usuario le encargue la implementación. Siguen vigentes las reglas funcionales y de datos descritas abajo.
+
 # Instrucciones para agentes
 
 ## Rama única y continuidad (instrucción del usuario, 19-nov-2026)

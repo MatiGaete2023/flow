@@ -1,5 +1,7 @@
 # Flow — CSMP Assistant y Descargador SITFA
 
+**Rama de comparación Python → Rust.** Abre el [informe, matriz y plan de implementación](MIGRACION_RUST.md) para continuar la migración con las fuentes de esta rama.
+
 Herramientas de uso personal para el seguimiento de medidas (CSMP): el **Descargador** lee SITFA con la sesión
 del usuario y entrega Excel, bitácoras y un ZIP; el **Asistente** (Windows) lee ese Excel o ZIP, aplica las reglas
 tradicionales de Laja, Mulchén y Tomé y prepara Excel, nóminas, Word y borradores de Outlook.

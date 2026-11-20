@@ -1,0 +1,36 @@
+[package]
+name = "flow_rust"
+version = "1.0.0"
+edition = "2021"
+description = "Flow (Rust): Asistente CSMP y Anonimizador"
+publish = false
+
+[[bin]]
+name = "flow_rust"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "0.31", default-features = false, features = ["default_fonts", "glow", "persistence"] }
+egui = "0.31"
+egui_extras = { version = "0.31", default-features = false }
+calamine = "0.38"
+rust_xlsxwriter = "0.103"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+rfd = "0.15"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+unicode-normalization = "0.1"
+encoding_rs = "0.8"
+image = { version = "0.25", default-features = false, features = ["png"] }
+sha2 = "0.10"
+base64 = "0.22"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+winit = "0.30"
