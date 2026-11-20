@@ -200,3 +200,47 @@ fn historico_manual_viaja_al_paquete_con_pertenencia_y_estados() {
     let p = exportar::construir(&[exportar::Lote { carpeta: &t.0, resumen: &r }], &opciones).unwrap();
     assert!(p.incompletas.iter().any(|i| i.starts_with("historico_proteccion: ")), "{:?}", p.incompletas);
 }
+
+#[test]
+fn respaldo_historico_danado_degrada_solo_su_lectura_y_conserva_el_control() {
+    use flow_trabajo::historico_manual::{capturar, cargar, Persona, MANIFIESTO};
+    use std::io::Read;
+
+    let t = Temporal::nueva();
+    let resumen = lote(&t.0);
+    let carpeta = t.0.join("historico-manual");
+    let html = "<html><body><div>Nombre del niño: Persona Ficticia Uno</div><table><thead><tr><th>Causal egreso</th><th>Programa</th><th>Fecha egreso</th></tr></thead><tbody><tr><td>SIN INFORMACION</td><td>PRM Ficticio</td><td>--</td></tr></tbody></table></body></html>";
+    let persona = Persona {
+        tribunal: "113", tribunal_nombre: "Tribunal ficticio", person_id: "persona-ficticia-1",
+        rut: "", nombre: "Persona Ficticia Uno", url: "",
+    };
+    let fecha = "2026-10-20T15:00:00+00:00";
+    let sana = capturar(&carpeta, html.as_bytes(), &persona, fecha).unwrap();
+    assert_eq!(sana["ownership"], "VERIFICADA");
+    let otra = Persona { person_id: "persona-ficticia-2", nombre: "Persona Ficticia Dos", ..persona };
+    let segundo_html = html.replace("Persona Ficticia Uno", "Persona Ficticia Dos");
+    let segunda = capturar(&carpeta, segundo_html.as_bytes(), &otra, fecha).unwrap();
+    let ruta = carpeta.join("historico").join(segunda["archivo"].as_str().unwrap());
+    std::fs::write(ruta, "respaldo ficticio alterado").unwrap();
+
+    let capturas = cargar(&carpeta).unwrap();
+    let comprobar = |id: &str| capturas.iter().find(|e| e["person_id"] == id).unwrap();
+    assert_eq!(comprobar("persona-ficticia-1")["estado"], "LEIDA");
+    assert_eq!(comprobar("persona-ficticia-2")["error"], "HISTORICO_RESPALDO_INVALIDO");
+
+    let opciones = exportar::Opciones { historico: Some(carpeta.clone()), ..Default::default() };
+    let producto = exportar::construir(&[exportar::Lote { carpeta: &t.0, resumen: &resumen }], &opciones).unwrap();
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&producto.datos)).unwrap();
+    let mut tabla = String::new();
+    zip.by_name("data/historico_proteccion.csv").unwrap().read_to_string(&mut tabla).unwrap();
+    let filas = paquete::leer_csv(&tabla);
+    assert_eq!(filas.len(), 1);
+    assert_eq!(filas[0]["person_id"], "persona-ficticia-1");
+    assert!(producto.incompletas.iter().any(|i| i.starts_with("historico_proteccion: ")));
+
+    let control = carpeta.join(MANIFIESTO);
+    std::fs::write(&control, b"control ficticio cortado").unwrap();
+    assert!(cargar(&carpeta).is_err());
+    assert!(capturar(&carpeta, html.as_bytes(), &otra, fecha).is_err());
+    assert_eq!(std::fs::read(control).unwrap(), b"control ficticio cortado");
+}
