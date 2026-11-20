@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::time::Duration;
 
 mod evidencia;
+pub mod extension;
 pub mod lote;
 mod puente;
 pub mod sitfa;

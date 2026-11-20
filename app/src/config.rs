@@ -287,7 +287,7 @@ pub fn config_path() -> PathBuf {
 
 pub fn load() -> (Config, Option<String>) {
     let path = config_path();
-    match std::fs::read_to_string(&path) {
+    let (mut c, mut aviso) = match std::fs::read_to_string(&path) {
         Ok(t) => match serde_json::from_str::<Config>(&t) {
             Ok(mut c) => {
                 c.completar();
@@ -299,6 +299,67 @@ pub fn load() -> (Config, Option<String>) {
             ),
         },
         Err(_) => (Config::default(), None),
+    };
+    if c.contactos.is_empty() {
+        if let Some(n) = contactos_flow_python().map(|raw| c.importar_contactos_flow_python(&raw)).filter(|n| *n > 0) {
+            aviso = Some(format!("Se importaron {n} contactos de Flow Python. Revísalos en Contactos."));
+        }
+    }
+    (c, aviso)
+}
+
+/// Contactos locales de Flow Python (`%LOCALAPPDATA%\CSMP_Personal\contactos.json`), si existen.
+fn contactos_flow_python() -> Option<String> {
+    let base = std::env::var_os("LOCALAPPDATA").or_else(|| std::env::var_os("HOME"))?;
+    std::fs::read_to_string(PathBuf::from(base).join("CSMP_Personal").join("contactos.json")).ok()
+}
+
+/// `config.emails`: una o más direcciones separadas por «;» o «,», cada una con usuario y dominio.
+fn correos_validos(texto: &str) -> bool {
+    let partes: Vec<&str> = texto.split([';', ',']).map(str::trim).filter(|p| !p.is_empty()).collect();
+    !partes.is_empty()
+        && partes.iter().all(|p| {
+            p.split_once('@').is_some_and(|(u, d)| !u.is_empty() && d.contains('.') && !p.contains(char::is_whitespace))
+        })
+}
+
+impl Config {
+    /// `config.parse_contacts`: lista de {Nombre, Mail} o el formato histórico de objetos separados por comas.
+    /// Un nombre con direcciones distintas se descarta. «Tribunal: LAJA» llena el destinatario del tribunal.
+    pub fn importar_contactos_flow_python(&mut self, raw: &str) -> usize {
+        let raw = raw.trim();
+        let texto = if raw.starts_with('[') { raw.to_string() } else { format!("[{}]", raw.trim_end_matches(',')) };
+        let Ok(registros) = serde_json::from_str::<Vec<serde_json::Value>>(&texto) else { return 0 };
+        let mut contactos: BTreeMap<String, String> = BTreeMap::new();
+        let mut ambiguos = BTreeSet::new();
+        for r in registros {
+            let nombre = r["Nombre"].as_str().unwrap_or("").trim().to_string();
+            let correo = r["Mail"].as_str().unwrap_or("").trim().to_string();
+            if nombre.is_empty() || !correos_validos(&correo) {
+                continue;
+            }
+            match contactos.get(&nombre) {
+                Some(previo) if *previo != correo => {
+                    ambiguos.insert(nombre);
+                }
+                _ => {
+                    contactos.insert(nombre, correo);
+                }
+            }
+        }
+        let mut n = 0;
+        for (nombre, correo) in contactos.into_iter().filter(|(k, _)| !ambiguos.contains(k)) {
+            if let Some(clave) = nombre.strip_prefix("Tribunal: ") {
+                if let Some(t) = self.tribunales.get_mut(&clave.trim().to_uppercase()) {
+                    t.para = correo;
+                    n += 1;
+                }
+            } else {
+                self.contactos.insert(nombre, correo);
+                n += 1;
+            }
+        }
+        n
     }
 }
 
@@ -315,4 +376,23 @@ pub fn atomic_write(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> 
 pub fn save(c: &Config) -> Result<(), String> {
     let data = serde_json::to_vec_pretty(c).map_err(|e| e.to_string())?;
     atomic_write(&config_path(), &data).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod pruebas_contactos {
+    use super::*;
+
+    #[test]
+    fn importa_contactos_de_flow_python_y_descarta_ambiguos_e_invalidos() {
+        let mut c = Config::default();
+        let raw = r#"{"Nombre": "PRM EJEMPLO UNO", "Mail": "prm.uno@example.invalid"},
+            {"Nombre": "PIE EJEMPLO DOS", "Mail": "pie.dos@example.invalid"},
+            {"Nombre": "PIE EJEMPLO DOS", "Mail": "otra@example.invalid"},
+            {"Nombre": "FAE EJEMPLO TRES", "Mail": "sin arroba"},
+            {"Nombre": "Tribunal: laja", "Mail": "laja@example.invalid; copia@example.invalid"},"#;
+        assert_eq!(c.importar_contactos_flow_python(raw), 2);
+        assert_eq!(c.contactos.len(), 1);
+        assert_eq!(c.contactos["PRM EJEMPLO UNO"], "prm.uno@example.invalid");
+        assert_eq!(c.tribunales["LAJA"].para, "laja@example.invalid; copia@example.invalid");
+    }
 }

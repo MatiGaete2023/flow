@@ -28,6 +28,7 @@ pub struct Descargador {
     conexion: Conexion,
     catalogo_remoto: bool,
     ejecucion: Ejecucion,
+    instalacion: Option<Result<String, String>>,
 }
 
 enum Mensaje {
@@ -448,6 +449,24 @@ impl Descargador {
         }
     }
 
+    /// `Descargador.setup` de Flow Python: carpeta propia, ruta al portapapeles, Chrome en chrome://extensions.
+    fn instalar_extension(&self, ctx: &egui::Context) -> Result<String, String> {
+        use flow_rust::descargador::extension;
+        let carpeta = extension::instalar(self.edicion, &extension::carpeta_base())?;
+        ctx.copy_text(carpeta.display().to_string());
+        let chrome = if extension::abrir_extensiones_chrome() {
+            "Se abrió chrome://extensions."
+        } else {
+            "Abre Chrome y escribe chrome://extensions en la barra de dirección."
+        };
+        Ok(format!(
+            "Extensión {} {} lista en {} (ruta copiada al portapapeles). {chrome} Activa «Modo de desarrollador», pulsa «Cargar extensión sin empaquetar» y elige esa carpeta. Después entra a Seguimiento en SITFA, pulsa el icono de la extensión y pega el código de «Conexión con Chrome».",
+            if self.edicion == Edicion::Lite { "Lite" } else { "Integral" },
+            extension::version(self.edicion),
+            carpeta.display()
+        ))
+    }
+
     pub fn cargar(&mut self, ruta: &Path) {
         let catalogo = std::fs::File::open(ruta)
             .map_err(|e| e.to_string())
@@ -540,9 +559,26 @@ impl Descargador {
                 if ui.button("Abrir catálogo JSON…").clicked() {
                     self.abrir_dialogo();
                 }
+                if ui
+                    .button("Instalar extensión…")
+                    .on_hover_text("Copia la extensión de Chrome de esta edición en tu equipo y abre chrome://extensions")
+                    .clicked()
+                {
+                    self.instalacion = Some(self.instalar_extension(ui.ctx()));
+                }
             });
+            match &self.instalacion {
+                Some(Ok(texto)) => {
+                    ui.label(RichText::new(texto).color(p.green));
+                }
+                Some(Err(e)) => {
+                    ui.label(RichText::new(e).color(p.amber));
+                }
+                None => {}
+            }
             if edicion_anterior != self.edicion {
                 self.conexion.cerrar();
+                self.instalacion = None;
                 self.conexion.pantalla = Pantalla::default();
                 if self.catalogo_remoto {
                     self.usar_catalogo(None, false);

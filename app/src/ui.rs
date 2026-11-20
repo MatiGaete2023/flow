@@ -1282,22 +1282,37 @@ impl App {
                         ui.add_space(8.0);
                         theme::card(p).show(ui, |ui| {
                             ui.set_width(ui.available_width());
-                            theme::seccion(ui, p, "Nómina adjunta (desmarca lo que no va)");
-                            egui::Grid::new("nom").striped(true).spacing([10.0, 4.0]).show(ui, |ui| {
-                                ui.label("");
-                                for h in &n.headers {
-                                    ui.label(RichText::new(h).strong().size(12.0).color(p.muted));
-                                }
-                                ui.end_row();
-                                for (k, row) in n.rows.iter().enumerate() {
-                                    ui.checkbox(&mut n.incluir[k], "");
-                                    for v in row {
-                                        let v: String = v.chars().take(70).collect();
-                                        ui.label(RichText::new(v).size(12.5));
+                            theme::seccion(ui, p, "Nómina adjunta (edita, desmarca o agrega filas antes de guardar)");
+                            let mut quitar = None;
+                            egui::ScrollArea::horizontal().id_salt("nomina").show(ui, |ui| {
+                                egui::Grid::new("nom").striped(true).spacing([8.0, 4.0]).show(ui, |ui| {
+                                    ui.label("");
+                                    for h in &n.headers {
+                                        ui.label(RichText::new(h).strong().size(12.0).color(p.muted));
                                     }
+                                    ui.label("");
                                     ui.end_row();
-                                }
+                                    for (k, row) in n.rows.iter_mut().enumerate() {
+                                        ui.checkbox(&mut n.incluir[k], "");
+                                        for v in row.iter_mut() {
+                                            let ancho = (v.chars().count().clamp(6, 40) as f32) * 7.5;
+                                            ui.add(egui::TextEdit::singleline(v).desired_width(ancho).font(egui::TextStyle::Small));
+                                        }
+                                        if ui.small_button("✕").on_hover_text("Quitar fila de la nómina").clicked() {
+                                            quitar = Some(k);
+                                        }
+                                        ui.end_row();
+                                    }
+                                });
                             });
+                            if let Some(k) = quitar {
+                                n.rows.remove(k);
+                                n.incluir.remove(k);
+                            }
+                            if ui.small_button("＋ Agregar fila").clicked() {
+                                n.rows.push(vec![String::new(); n.headers.len()]);
+                                n.incluir.push(true);
+                            }
                         });
                     }
                 });
@@ -1428,6 +1443,12 @@ impl App {
                 }
                 Err(e) => errores.push(e),
             }
+        }
+        let sin_destinatario = (0..self.borradores.len())
+            .filter(|j| self.borradores[*j].guardado.is_some() && self.borradores[*j].para.trim().is_empty())
+            .count();
+        if sin_destinatario > 0 {
+            self.aviso(format!("{sin_destinatario} borrador(es) quedaron sin destinatario: complétalo en Outlook antes de enviar."), false);
         }
         if ok > 0 && outlook {
             self.aviso(format!("{ok} borradores guardados en Borradores de Outlook. Revísalos y envíalos tú."), false);
