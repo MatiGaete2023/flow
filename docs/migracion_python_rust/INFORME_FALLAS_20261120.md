@@ -160,3 +160,17 @@ Cada cambio de redacción se implementa con casos ficticios por regla en la lín
 6. **5**: inventario de opciones y paridad de interfaz.
 
 Cada corrección se registra en `REGISTRO_IMPLEMENTACION.md` con pruebas sintéticas y su corrida de Windows.
+
+## Estado de corrección (20-nov-2026, `864164a`)
+
+| # | Estado | Detalle |
+|---|---|---|
+| 1 | Pendiente | E3: historia, bitácoras, escritos, calendario y Mejor Niñez |
+| 2 | Corregido | Matrices institucionales, fechas en palabras y plural. Un Word por proyecto: diferencia con Python por confirmar |
+| 3 | Corregido parcialmente | Importación de contactos, nómina editable y aviso sin destinatario. No se reprodujo el bloqueo reportado |
+| 4 | Corregido | Checkboxes de tarjetas y marcado masivo en Trabajo |
+| 5 | Pendiente | Inventario de opciones; umbrales de historia con E3 |
+| 6 | Corregido | «Instalar extensión…» con las extensiones incluidas |
+| 7 | Corregido | Mapeo del consolidado, motivo de descarte y orden de columnas del registro |
+| 8 | Parcial | R1 y R6 aplicadas (opción en Ajustes); R2–R5 se aplican al portar E3 |
+

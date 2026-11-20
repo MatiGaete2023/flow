@@ -125,13 +125,41 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 
 - Decisiones del usuario del 20-nov registradas en el [informe](INFORME_FALLAS_20261120.md) y en el [plan](PLAN.md): R1, R2, R3 y R6 aprobadas; R4 quitar; R5 parcial; orden de columnas de NOVIEMBRE confirmado.
 
+## Turno 8 · Correcciones del informe de fallas
+
+Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 falló por una prueba que esperaba un solo archivo Word; se corrigió en `864164a`. Se canceló la corrida de `580660d`, reemplazada por la de `864164a`. En Linux, los crates aislados de `captura`/`descargador` y de los módulos base del Asistente (`anon`, `captura_trabajo`, `config`, `copia_excel`, `demo`, `lectura`, `motor`, `productos`, `trabajo`, `util`) pasan 29 y 15 pruebas; este último incluye el oráculo `FLOW_CASOS`.
+
+- **Punto 7 (Excel final).**
+  - `copia_excel::base_paquete` compara por huella, nombre base del archivo y fila: el paquete guarda los originales en `originales/lN/` y el consolidado no.
+  - Si descarta la base, el aviso indica el motivo (filas sin correspondencia, repetidas o en varias hojas).
+  - Columnas en el orden del registro: `… NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. `NURUS_DECISIONES` va oculta, con el esquema JSON versión 1 de `record_edits.encode`.
+  - Prueba con consolidado sintético.
+- **Punto 4 (marcas).**
+  - Las tarjetas de Correos y Resoluciones registran su clic con `UiBuilder::sense`, debajo del checkbox.
+  - Trabajo agrega «Marcar visibles», «Desmarcar todas» y tramos con Mayús+clic.
+- **Punto 6 (extensión).** `descargador/extension.rs` incluye las extensiones Integral 2.9.0 y Lite 1.1.0, idénticas a `flow-python`. «Instalar extensión…» las escribe en `%LOCALAPPDATA%\FlowRust\extension-<edición>-<versión>`, copia la ruta y abre `chrome://extensions`.
+- **Punto 3 (correos).**
+  - Al primer inicio se importan los contactos de `%LOCALAPPDATA%\CSMP_Personal\contactos.json`, incluidos «Tribunal: X».
+  - La nómina se edita por celda, con filas que se agregan y quitan.
+  - Se avisa cuando un borrador se guarda sin destinatario.
+  - No se encontró en el código un bloqueo por falta de contactos; queda por reproducir con el usuario.
+- **Punto 2 (resoluciones).**
+  - Las matrices `plantillas_word/{LAJA,MULCHEN}` van incluidas en el ejecutable; Tomé usa Mulchén y una plantilla propia del usuario tiene prioridad.
+  - Fechas en palabras (`fecha_en_palabras`), `PERSONAS`, `DETALLE_PERSONAS`, plural, varios programas y fechas, y sin cursivas.
+  - **Un .docx por proyecto** en `Resoluciones_<fecha>/`: Flow Python une todos en un solo archivo con `docxcompose`. Queda por confirmar con el usuario.
+- **Punto 8 (redacción).**
+  - R1 omite la oración C10 con la medida por vencer y conserva el evento para el correo.
+  - R6 aplica `titulo_programa_registro`: siglas, artículo inicial con mayúscula, tipo título y solo las tildes observadas (Tomé, Ayún).
+  - Ambas quedan detrás de `Config::redaccion_registro`, activo por omisión, con interruptor en Ajustes. El oráculo de Python corre con la opción desactivada.
+  - R2, R3, R4 y R5 dependen de reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION` que el motor Rust aún no tiene; se aplican al portar E3.
+
 ## Siguiente paso exacto
 
-Seguir el «Orden propuesto de corrección» del [informe de fallas](INFORME_FALLAS_20261120.md):
-
-1. Punto 7: motivo explícito del descarte del consolidado, mapeo corregido con ZIP sintético de varias hojas, orden de columnas del registro, `NURUS_DECISIONES` y copia del consolidado como respaldo.
-2. Punto 4: checkboxes de tarjetas y marcado masivo en Trabajo.
-3. Puntos 6 y 3: «Instalar extensión…», contactos iniciales, borradores sin destinatario y nómina editable.
-4. Punto 2: plantillas institucionales y fechas en palabras.
-5. Punto 8, según las decisiones del 20-nov (informe y plan): R1, R2, R3, R4 (quitar días), R5 parcial y R6. R7 y R8 sin cambio.
-6. Punto 1 (E3) y punto 5 (inventario de opciones).
+1. Revisar la corrida Windows de `864164a` y descargar `Flow_Rust_Windows_exe` para la prueba del usuario: Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
+2. E3 (punto 1), en este orden:
+   1. Exponer en `captura.rs` las tablas `historia_tramites`, `bitacoras`, `calendario_ingreso`, `escritos` e `historico_proteccion`.
+   2. Construir el índice por identidad en `captura_trabajo.rs`.
+   3. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de `capture_input.py`, y las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION` del motor de Flow Python.
+   4. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
+3. Punto 5: inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
+4. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
