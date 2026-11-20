@@ -1,6 +1,7 @@
 """Compara Python y Flow Rust sobre un mismo ZIP sintético del Descargador."""
 
 from datetime import date
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -74,6 +75,70 @@ def comprobar_productos(app, carpeta, trabajo, paquete):
     print("Excel y JSON conservan las clasificaciones y los datos de la revisión de Flow Python.")
 
 
+def comprobar_evidencia_nativa(ejecutable, carpeta, paquete):
+    from nurus.capture.contract import read_capture, write_capture
+
+    captura = read_capture(paquete)
+    tablas = {nombre: [dict(fila) for fila in filas] for nombre, filas in captura.tables.items()}
+    consulta = next(
+        q for q in tablas["consultas"]
+        if q["screen"] == "bitacoras"
+        and json.loads(q["filters_json"])["remote_identity"]["cause_id"] == "100"
+    )
+    eventos = [e for e in tablas["bitacoras"] if e["query_id"] == consulta["query_id"]]
+    assert len(eventos) == 1
+    evento = eventos[0]
+    filtros = json.loads(consulta["filters_json"])
+    fecha = consulta["captured_at"][:10]
+    consulta.update(captured_at=f"{fecha}T12:00:00-03:00", coverage="PARCIAL")
+    evento.update(
+        event_id=f"{consulta['query_id']}-evento-ficticio",
+        captured_at=consulta["captured_at"],
+        coverage="PARCIAL",
+    )
+    nativa = {
+        "version": 1, "captured_at": consulta["captured_at"], "desde": "2026-06-01", "hasta": fecha,
+        "coverage": "COMPLETA", "completa": True, "warnings": [],
+        "alcance_revision_fuente": {
+            "metodo": "SITFA_TABLA_INFORME_INGRESO_V1", "coverage": "COMPLETA",
+            "html_sha256": evento["source_sha256"],
+        },
+        "entries": [{
+            "entry_id": "evento-ficticio", "fecha": evento["event_at"],
+            "texto": evento["text"], "origen": "centro",
+        }],
+    }
+
+    def escribir(nombre, evidencia):
+        datos = deepcopy(captura.manifest)
+        datos.pop("schema_version")
+        datos["table_states"]["bitacoras"] = "PARCIAL"
+        if evidencia is None:
+            filtros.pop("revision_bitacoras", None)
+        else:
+            filtros["revision_bitacoras"] = evidencia
+        consulta["filters_json"] = json.dumps(filtros)
+        datos["queries"] = tablas["consultas"]
+        return write_capture(carpeta / f"{nombre}.zip", datos, tablas)
+
+    validadas = escribir("v1", nativa)
+    assert clasificacion_rust(ejecutable, validadas, "100", "2026-08-01", "2026-08-31") == "CON_OBSERVACION"
+    assert clasificacion_rust(ejecutable, validadas, "100", "2026-09-08", "2026-10-08") == "SIN_OBSERVACION"
+    assert clasificacion_rust(ejecutable, validadas, "100", "2026-09-08", "2026-10-13") == "NO_VERIFICABLE"
+
+    autor = deepcopy(nativa)
+    autor["entries"][0]["origen"] = "tribunal"
+    otra_autoria = escribir("v1-tribunal", autor)
+    assert clasificacion_rust(ejecutable, otra_autoria, "100", "2026-08-01", "2026-08-31") == "SIN_OBSERVACION"
+    legado = escribir("legado", None)
+    assert clasificacion_rust(ejecutable, legado, "100", "2026-09-08", "2026-10-08") == "NO_VERIFICABLE"
+
+    evento["source_sha256"] = "0" * 64
+    discordante = escribir("v1-huella-ajena", nativa)
+    assert clasificacion_rust(ejecutable, discordante, "100", "2026-08-01", "2026-08-31") == "NO_VERIFICABLE"
+    print("6 casos de evidencia nativa V1 y legado aprobados con el contrato completo.")
+
+
 def main():
     ejecutable = Path(sys.argv[1]).resolve(strict=True)
     referencia = Path(sys.argv[2]).resolve(strict=True) if len(sys.argv) > 2 else Path.cwd()
@@ -97,6 +162,7 @@ def main():
             assert python == rust == caso["esperado"], (caso, python, rust)
             print(f"{desde} a {hasta}, causa ficticia {causa}: {rust}")
         comprobar_productos(app, carpeta, trabajo, paquete)
+        comprobar_evidencia_nativa(ejecutable, carpeta, paquete)
 
         carpeta_ajena = carpeta / "identidad-ajena"
         carpeta_ajena.mkdir()

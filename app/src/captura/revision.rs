@@ -1,10 +1,12 @@
-//! Clasificación por período a partir de evidencia V2 del Descargador Python.
+//! Clasificación por período a partir de evidencia nativa V1 o del Descargador Python V2.
 
 use super::{json, Captura, Fila};
 use chrono::NaiveDate;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::{BTreeSet, HashMap, HashSet};
+
+mod v1;
 
 const METODO: &str = "SITFA_TABLA_INFORME_INGRESO_V1";
 const CAMPOS_ID: [&str; 4] = ["source_system", "court_code", "cause_id", "ingreso_id"];
@@ -34,7 +36,7 @@ pub struct Resultado {
     pub motivo: String,
 }
 
-#[derive(Default)]
+#[derive(Default, PartialEq)]
 struct Evidencia {
     leida: bool,
     recortada: bool,
@@ -42,6 +44,7 @@ struct Evidencia {
     intervalo: Option<(NaiveDate, NaiveDate)>,
     centro: BTreeSet<NaiveDate>,
     inciertas: BTreeSet<NaiveDate>,
+    contradictoria: bool,
 }
 
 pub struct Revision {
@@ -64,6 +67,8 @@ impl Revision {
     pub fn nueva(captura: &Captura) -> Self {
         let mut por_ingreso: HashMap<Identidad, Evidencia> = HashMap::new();
         let mut consultas = HashMap::new();
+        let mut nativas = HashMap::new();
+        let mut entradas_sin_consulta = HashSet::new();
         let advertidas: HashSet<_> = captura
             .filas("incidencias")
             .filter(|i| i.get("code") == "BITACORA_ADVERTENCIA")
@@ -91,6 +96,16 @@ impl Revision {
             }
             let alcance = filtros.get("revision_bitacoras").unwrap_or(&Value::Null);
             let version = alcance["version"].as_u64();
+            if version == Some(1) {
+                nativas.insert(
+                    q.get("query_id"),
+                    (
+                        id,
+                        v1::Lectura::nueva(q, alcance, advertidas.contains(q.get("query_id"))),
+                    ),
+                );
+                continue;
+            }
             let advertencia = advertidas.contains(q.get("query_id"))
                 || alcance
                     .get("warnings")
@@ -120,6 +135,14 @@ impl Revision {
                 });
         }
         for evento in captura.filas("bitacoras") {
+            if let Some((consultada, lectura)) = nativas.get_mut(evento.get("query_id")) {
+                if consultada == &identidad(evento) {
+                    lectura.confirmar(evento);
+                } else {
+                    lectura.invalidar();
+                }
+                continue;
+            }
             let Some(dia) = dia(evento.get("event_at")) else {
                 continue;
             };
@@ -131,6 +154,7 @@ impl Revision {
                 .get(evento.get("query_id"))
                 .is_some_and(|(consultada, fiable)| consultada == &id && *fiable);
             let Some(e) = por_ingreso.get_mut(&id) else {
+                entradas_sin_consulta.insert(id);
                 continue;
             };
             if !verificada
@@ -142,6 +166,28 @@ impl Revision {
             } else if evento.get("origin") == "CENTRO" {
                 e.centro.insert(dia);
             }
+        }
+        let mut pruebas_nativas: HashMap<Identidad, (String, Evidencia)> = HashMap::new();
+        for (id, lectura) in nativas.into_values() {
+            let (firma, evidencia) = lectura.finalizar();
+            match pruebas_nativas.entry(id) {
+                std::collections::hash_map::Entry::Vacant(v) => {
+                    v.insert((firma, evidencia));
+                }
+                std::collections::hash_map::Entry::Occupied(mut o) => {
+                    let (anterior, datos) = o.get_mut();
+                    if anterior != &firma || *datos != evidencia {
+                        datos.contradictoria = true;
+                    }
+                }
+            }
+        }
+        for (id, (_, mut evidencia)) in pruebas_nativas {
+            evidencia.contradictoria |= entradas_sin_consulta.contains(&id);
+            por_ingreso
+                .entry(id)
+                .and_modify(|e| e.contradictoria = true)
+                .or_insert(evidencia);
         }
         Self { por_ingreso }
     }
@@ -167,6 +213,9 @@ impl Revision {
         let Some(e) = disponible else {
             return no("Sin bitácora asociada a una identidad verificada en el paquete.");
         };
+        if e.contradictoria {
+            return no("Las lecturas o las entradas normalizadas se contradicen.");
+        }
         let mut dias = e.centro.range(desde..=hasta);
         if let Some(ultimo) = dias.next_back() {
             let n = dias.count() + 1;
@@ -197,7 +246,7 @@ impl Revision {
                     "La lectura tiene advertencias o carece de evidencia válida de cobertura.",
                 );
             }
-            return no("Lectura sin evidencia de alcance V2.");
+            return no("Lectura sin evidencia de alcance verificable.");
         };
         if hasta > fin {
             return no("La bitácora se leyó antes del fin del período.");

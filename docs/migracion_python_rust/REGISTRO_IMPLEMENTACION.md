@@ -51,9 +51,14 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 
 - `Revision_bitacoras.xlsx` usa la misma construcción de columnas, filas y formato que **Guardar observaciones**. Mantiene el nombre de la hoja por etapa, los datos de origen e identidad, observación con ediciones, estado, reglas, avisos, RES y fila de origen. Añade `CLASIFICACION_BITACORA` y `MOTIVO_BITACORA` al final. El alcance de filas sigue el filtro de la revisión. El identificador `ID_REGISTRO_CAPTURA` permite incorporar las columnas de bitácora por registro en el Excel general del mismo paquete.
 - El contraste P2 genera los dos Excel desde el mismo Trabajo y coteja columnas, valores comunes, formato, anchos, filtros y panel fijado. La regresión del exportador prueba también una fila filtrada con edición, marca de revisión y RES.
+- La [verificación Windows del Excel](https://github.com/MatiGaete2023/flow/actions/runs/44758334314) pasó las comprobaciones de ambos libros, las 16 pruebas y los cinco casos P2 de la referencia Python.
+
+## Turno 3 · Evidencia nativa V1
+
+- El clasificador coteja las entradas nativas con su consulta y tabla normalizada, incluidos identidad, ID del evento, fecha civil y precisión, texto y huella de la lectura. Usa la autoría del respaldo V1 y conserva la incertidumbre del material legado y de las lecturas contradictorias.
+- El contraste Windows usa paquetes sintéticos V1 construidos con el contrato completo. Cubre una observación del centro, ausencia dentro del alcance, lectura anterior al fin, autoría del tribunal, falta de respaldo y huella discrepante. Mantiene los casos V2 de Flow Python.
 
 ## Siguiente paso exacto
 
-1. Portar la evidencia nativa V1 a `app/src/captura/revision.rs` desde `rust/crates/flow-trabajo/src/paquete.rs` y los casos de `rust/crates/flow-trabajo/tests/revision_bitacoras.rs`. Los helpers de esas pruebas crean ZIP reducidos que omiten campos obligatorios. Rehacer el fixture con el exportador y el contrato completo, y luego cotejar entradas con el CSV, huellas de respaldo, procedencia, autoría y contradicciones. Mantener las clasificaciones V2 de P2 y el legado incierto.
-2. Completar selección masiva desde la revisión y persistencia del período si corresponde a la referencia.
-3. Continuar E2 por perfiles del Descargador integral y Lite. Comparar `descargador/perfiles.py` y `descargador_lite/app/perfiles.py` con `rust/crates/flow-captura/src/sitfa/perfil.rs`. Usar `test_solo_cuatro_consultas_rus` y `test_plan_exige_filtros_de_cada_pestana` como primeras regresiones. Incorporar el flujo a los componentes gráficos de `app/`. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.
+1. Completar selección masiva desde la revisión y persistencia del período si corresponde a la referencia. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico y trasladar los casos de combinaciones de instantáneas de `rust/crates/flow-trabajo/tests/revision_bitacoras.rs` al contrato completo.
+2. Continuar E2 por perfiles del Descargador integral y Lite. Comparar `descargador/perfiles.py` y `descargador_lite/app/perfiles.py` con `rust/crates/flow-captura/src/sitfa/perfil.rs`. Usar `test_solo_cuatro_consultas_rus` y `test_plan_exige_filtros_de_cada_pestana` como primeras regresiones. Incorporar el flujo a los componentes gráficos de `app/`. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.
