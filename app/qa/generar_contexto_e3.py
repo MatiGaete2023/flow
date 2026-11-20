@@ -1,9 +1,10 @@
 """Genera un ZIP ficticio con las lecturas de contexto de Flow Python."""
 
+import sys
 from copy import deepcopy
 from datetime import date
 from pathlib import Path
-import sys
+from threading import Event
 from zipfile import ZipFile
 
 
@@ -56,15 +57,19 @@ def generar(referencia, carpeta):
     from lectura_bitacoras import persona_por_rut
     from lectura_historia import LectorHistoria
     from nurus.capture import read_capture
+    from nurus.personal.capture_input import import_capture
+    from nurus.personal.config import defaults
     from perfiles import Selection, selection_profile
     from test_calendario_lectura import _with_calendars
-    from test_lectura_historia import FakeBridge, LISTADO, QUERY
+    from test_lectura_historia import LISTADO, QUERY, FakeBridge
     from test_lotes import CATALOG
     from test_paquete_escritos import (
-        ESCRITOS_CON_FILAS, HISTORICO_HTML, _persona, con_escritos,
+        ESCRITOS_CON_FILAS,
+        HISTORICO_HTML,
+        _persona,
+        con_escritos,
     )
     from test_reutilizacion_local import bound_lot, diaries
-    from threading import Event
 
     carpeta.mkdir(parents=True, exist_ok=True)
     persona = _persona(carpeta)
@@ -105,10 +110,16 @@ def generar(referencia, carpeta):
     assert [(r["ingreso_id"], r["event_at"]) for r in captura.rows("calendarios")] == [
         ("201", "2026-08-01"), ("201", "2026-11-01"),
     ]
+    trabajo = import_capture(salida, defaults(), as_of=date(2026, 10, 19))
+    fechas = {
+        trabajo.capture_sources[f.id]["ingreso_id"]: trabajo.cross_dates.get(f.id)
+        for f in trabajo.rows
+    }
+    assert str(fechas["201"]) == "2026-11-01" and fechas["202"] is None
     generar_discordancia(captura, salida)
     return salida
 
 
 if __name__ == "__main__":
-    referencia, carpeta = map(lambda p: Path(p).resolve(), sys.argv[1:])
+    referencia, carpeta = (Path(ruta).resolve() for ruta in sys.argv[1:])
     print(generar(referencia, carpeta))

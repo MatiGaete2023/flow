@@ -5,7 +5,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | ID | Capacidad | Estado y comprobación en `app/` |
 |---|---|---|
 | F01 | Lectura de hojas | Presente en `lectura.rs`. Comparar selección, tipos, fila física y CSV con comillas. |
-| F02 | Trabajo y cruces | Tres etapas y Hoja 2 presentes. Completar Egresados, OB, calendarios e identidad multifila. |
+| F02 | Trabajo y cruces | Tres etapas, Hoja 2 y proyección verificada por ingreso para el próximo informe en Cumplimiento. Pendientes Egresados, OB, calendario 91, cotejo CAL-03 e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
 | F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, bitácora y calendario al corte. Detecta discordancias simultáneas de escritos e histórico. Pendientes reglas de cronología, prórroga, audiencia, búsqueda y calendario en el motor. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |

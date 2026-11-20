@@ -204,6 +204,12 @@ pub struct ResumenCalendario {
     pub pendientes: Vec<NaiveDate>,
 }
 
+impl ResumenCalendario {
+    pub fn proxima_pendiente(&self, corte: NaiveDate) -> Option<NaiveDate> {
+        self.pendientes.iter().copied().find(|&fecha| fecha > corte)
+    }
+}
+
 #[derive(Clone, Debug)]
 struct Consulta {
     id: String,
@@ -508,6 +514,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 .unwrap_or(&[]);
             let mut pendientes: Vec<_> = filas
                 .iter()
+                .filter(|_| matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL"))
                 .filter(|f| {
                     f.get("association") == "VERIFICADA"
                         && f.get("event_type") == "INFORME_PROYECTADO"

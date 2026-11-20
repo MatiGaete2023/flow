@@ -170,12 +170,13 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - Los índices distinguen sistema y tribunal, causa, persona e ingreso. Se construyen al analizar y se actualizan con el corte. Se usa la fecha civil de la fuente para excluir lecturas posteriores y el instante UTC para ordenar lecturas de igual cobertura.
 - Escritos e Histórico cotejan el contenido y la multiplicidad de las filas de lecturas del mismo instante. Una lectura parcial es compatible con una completa si sus filas están contenidas en ella. Ante discordancia la vista indica cobertura parcial y evita atribuir escritos pendientes o programas vigentes. En un empate entre lecturas equivalentes, se elige el identificador menor.
 - Pasaron 15 pruebas locales de los módulos de Trabajo y captura en un entorno aislado, incluida la apertura de ambos ZIP, el vínculo por causa y persona, la separación de ingresos y el cambio de corte. El productor de pruebas confirma con Flow Python la discordancia entre lecturas completas de Escritos y entre lecturas completa y parcial de Histórico. Pasó también el oráculo del motor con `FLOW_CASOS`.
+- Con un ZIP en Cumplimiento, la regla vigente del próximo informe recibe la primera proyección pendiente y verificada posterior al corte. El caso de paridad usa dos ingresos, una proyección enviada y otra pendiente. Comprueba la regla C-10 y que el cruce desaparezca antes de la lectura y al llegar el vencimiento. El siguiente paso es conciliar la pestaña Informes y el calendario 91.
 
 ## Siguiente paso exacto
 
 1. Prueba del usuario con `Flow_Rust_Windows_exe` de la corrida 27 (`8faa9ac`): Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
 2. E3 (punto 1), en este orden:
-   1. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Usar las proyecciones verificadas del calendario para el cruce de fechas y los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
+   1. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Cotejar el calendario 91 y el vencimiento de Informes con `avisos_cotejo`. Usar los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
    2. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
 3. Punto 5: inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
 4. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.

@@ -231,12 +231,27 @@ impl Trabajo {
             values: &sheet.rows[*i],
             cols: columnas_por_fila.map_or(&self.cols, |cols| &cols[*i - self.header_row - 1]),
         }).collect();
+        let columna_id = self.paquete.as_ref().and_then(|_| {
+            self.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA")
+        });
         let pre = motor::prepaso(mode, &filas, corte);
         let mut registros = Vec::with_capacity(filas.len());
         for (n, (f, i)) in filas.iter().zip(&filas_idx).enumerate() {
             let fecha_hoja2 = if mode == Mode::Cumplimiento {
-                let k: Vec<String> = ["rit", "rut", "nombre", "tribunal", "programa"].iter().map(|k| historical_match(&f.text(k))).collect();
-                cruce.get(&k).copied()
+                if let Some(paquete) = &self.paquete {
+                    let fecha = columna_id
+                        .and_then(|col| f.values.get(col))
+                        .and_then(|id| paquete.contextos.get(&id.display()))
+                        .and_then(|contexto| contexto.calendario.as_ref())
+                        .and_then(|calendario| calendario.proxima_pendiente(corte));
+                    if fecha.is_some() {
+                        self.cruce.get_or_insert_with(|| "Calendario del ingreso".into());
+                    }
+                    fecha
+                } else {
+                    let k: Vec<String> = ["rit", "rut", "nombre", "tribunal", "programa"].iter().map(|k| historical_match(&f.text(k))).collect();
+                    cruce.get(&k).copied()
+                }
             } else {
                 None
             };
@@ -435,6 +450,29 @@ mod tests {
 
     fn hoy() -> NaiveDate {
         NaiveDate::from_ymd_opt(2026, 11, 19).unwrap()
+    }
+
+    #[test]
+    fn cumplimiento_usa_contexto_e3_del_exportador_python_para_el_proximo_informe() {
+        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let cfg = Config::default();
+        let mut trabajo = Trabajo::abrir_archivo(
+            ruta.into(),
+            Some(Mode::Cumplimiento),
+            "2026-10-19".parse().unwrap(),
+            &cfg,
+        ).unwrap();
+        assert_eq!(trabajo.registros.len(), 2);
+        assert_eq!(trabajo.registros[0].fecha_hoja2, "2026-11-01".parse().ok());
+        assert!(trabajo.registros[0].eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2"));
+        assert!(trabajo.registros[1].fecha_hoja2.is_none());
+        assert_eq!(trabajo.cruce.as_deref(), Some("Calendario del ingreso"));
+        for corte in ["2026-10-18", "2026-11-01"] {
+            trabajo.corte = corte.parse().ok();
+            trabajo.analizar(&cfg);
+            assert!(trabajo.registros.iter().all(|r| r.fecha_hoja2.is_none()));
+            assert!(trabajo.cruce.is_none());
+        }
     }
 
     #[test]
