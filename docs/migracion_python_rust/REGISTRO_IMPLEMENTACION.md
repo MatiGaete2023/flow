@@ -107,6 +107,11 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - Verificación: pruebas del plan de columnas y estados (`copia_excel::tests`) y prueba Windows de sintaxis del script con el parser de PowerShell. No se pudo ejecutar Excel: el entorno es Linux y los runners de GitHub no traen Office. **La prueba con Excel real corresponde al usuario.**
 - Diferencias abiertas con Python: no se escribe `NURUS_DECISIONES`; `FECHA_OBS`, `TT` y `CC` no se editan en Rust y se conservan como estén; el mapeo del consolidado no compara además los valores de identidad (`_source_cell_key`).
 
+## Turno 6 · Ejecutable en CI
+
+- Las corridas 17–19 fallaron en el control de datos sintéticos por un RIT de prueba sin año 2099 (`sitfa_ficticio.rs`); se corrigió en `9e428c8`.
+- «Flow Rust local · Windows» compila ahora `flow_rust.exe` en release y lo publica como artefacto `Flow_Rust_Windows_exe` (con `SHA256.txt`, 14 días), sin release ni tag. En la [corrida 21](https://github.com/MatiGaete2023/flow/actions/runs/44777123749) pasaron las pruebas de `app/` (incluida la sintaxis del script de Excel), los ZIP sintéticos, el contraste V2 y la subida del ejecutable.
+
 ## Siguiente paso exacto
 
 1. Usuario: abrir un Excel de RUS en Trabajo, **Guardar observaciones** y comparar con la copia «revisable» de Flow Python (mismas hojas, RIT y columnas NURUS). Repetir con un ZIP del Descargador. Reportar el texto de error si Excel no completa la copia.
