@@ -572,7 +572,7 @@ mod tests {
             fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String> {
                 let mut v = self.0.llamar(comando, payload, plazo)?;
                 if comando == "download" {
-                    let otro = b"<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Z-1-2026</td><td>Otra Persona Ficticia</td></tr></table></html>";
+                    let otro = b"<html><table><tr><td>RIT</td><td>Nombre</td></tr><tr><td>Z-1-2099</td><td>Otra Persona Ficticia</td></tr></table></html>";
                     v["body"] = json!(STANDARD.encode(otro));
                 }
                 Ok(v)
