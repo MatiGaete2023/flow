@@ -177,13 +177,14 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 
 - En Excel de escritorio se reprodujo que una edición cambiaba el encabezado `NURUS_PROPUESTA` a `NURUS_OBSERVACION_FINAL`, en conflicto con el orden acordado para el registro mensual. `NURUS_PROPUESTA` conserva ahora la propuesta del motor en ambas etapas. `OBSERVACION` contiene el texto aprobado. La prueba del plan coteja ambas celdas y el estado revisado.
 - Se abrió y comprobó la copia nativa de un XLSX ficticio y del consolidado del ZIP ficticio E3 con Excel de escritorio. Ambos conservaron RIT, orden de las columnas NURUS, propuesta y edición por separado, RES, hojas de origen y trazabilidad oculta. La hoja auxiliar del XLSX conservó su fórmula.
+- La [verificación Windows final](https://github.com/MatiGaete2023/flow/actions/runs/44798041877) pasó sobre `eeab6af327d9defd53f6efb14f0d639340f4f927`. Pasaron 52 pruebas de Rust, las dos regresiones con ZIP generados por Flow Python y los contrastes V1, legado y V2. Una prueba de rendimiento quedó omitida. La ejecución publicó el [ejecutable de Windows con su SHA-256](https://github.com/MatiGaete2023/flow/actions/runs/44798041877/artifacts/14660500872) y las [capturas del diseño](https://github.com/MatiGaete2023/flow/actions/runs/44798041877/artifacts/14660635669).
 
 ## Siguiente paso exacto
 
-1. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
+1. Completar el Excel de bitácoras donde la revisión general usa una copia preservada. Partir de `revision_ui::exportar` y `copia_excel::base`. Usar el ZIP ficticio `contexto-e3.zip` con consolidado para cotejar RIT, columnas y orden NURUS, decisiones y filas seleccionadas. Mantener la clasificación y el motivo vinculados a `NURUS_ID_REGISTRO`.
 2. E3 (punto 1), en este orden:
    1. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Cotejar el calendario 91 y el vencimiento de Informes con `avisos_cotejo`. Usar los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
    2. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
 3. Punto 5: inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
 4. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
-5. Completar paridad de Excel de bitácoras con la copia preservada: la revisión de bitácoras usa todavía la tabla normalizada. Contrastar columnas NURUS, RIT, filas seleccionadas y clasificación/motivo frente al original o al consolidado de **Guardar observaciones**.
+5. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
