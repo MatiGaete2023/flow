@@ -112,9 +112,24 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - Las corridas 17–19 fallaron en el control de datos sintéticos por un RIT de prueba sin año 2099 (`sitfa_ficticio.rs`); se corrigió en `9e428c8`.
 - «Flow Rust local · Windows» compila ahora `flow_rust.exe` en release y lo publica como artefacto `Flow_Rust_Windows_exe` (con `SHA256.txt`, 14 días), sin release ni tag. En la [corrida 21](https://github.com/MatiGaete2023/flow/actions/runs/44777123749) pasaron las pruebas de `app/` (incluida la sintaxis del script de Excel), los ZIP sintéticos, el contraste V2 y la subida del ejecutable.
 
+## Turno 7 · Prueba del usuario e informe de fallas
+
+- El usuario probó el ejecutable de `9e428c8` y reportó ocho fallas. El informe, la evidencia y las causas están en [INFORME_FALLAS_20261120.md](INFORME_FALLAS_20261120.md).
+- Los libros aportados no se incorporan. Se analizaron solo su estructura anónima y una copia seudonimizada en la sesión (`nurus.personal.anonymize`, modo conservador), fuera del repositorio.
+- Hallazgos que cambian el plan:
+  - Con ZIP, la copia preservada cayó a la tabla reducida.
+  - El orden de columnas NURUS de los productos reales (`FECHA_OBS` antes de `OBSERVACION`) difiere del código de `flow-python` [CONFLICTO_ABIERTO].
+  - Las fechas de las resoluciones van en palabras.
+  - Los checkboxes de las tarjetas quedan tapados por el área clicable.
+  - Cinco patrones de redacción (R1, R2, R3, R5 y R6) explican la mayoría de las diferencias con lo registrado en NOVIEMBRE.
+
 ## Siguiente paso exacto
 
-1. Usuario: abrir un Excel de RUS en Trabajo, **Guardar observaciones** y comparar con la copia «revisable» de Flow Python (mismas hojas, RIT y columnas NURUS). Repetir con un ZIP del Descargador. Reportar el texto de error si Excel no completa la copia.
-2. Revisar el resultado de «Flow Rust local · Windows» para los commits de este turno (no fue posible consultarlo desde la sesión). Si falla `el_script_de_excel_es_powershell_valido`, corregir la sintaxis indicada.
-3. E2: ejecutar lotes Integral (`descargador/lotes.py`): Carga, bitácoras, historia, calendario por ingreso e histórico, con `rust/crates/flow-captura/src/lotes.rs` y `recoleccion.rs` como base. Luego preferencias persistentes y reanudación.
-4. E3: historia y calendario en el motor de Trabajo. E4: conciliación entre capturas.
+Seguir el «Orden propuesto de corrección» del [informe de fallas](INFORME_FALLAS_20261120.md):
+
+1. Punto 7: motivo explícito del descarte del consolidado, mapeo corregido con ZIP sintético de varias hojas, orden de columnas del registro, `NURUS_DECISIONES` y copia del consolidado como respaldo.
+2. Punto 4: checkboxes de tarjetas y marcado masivo en Trabajo.
+3. Puntos 6 y 3: «Instalar extensión…», contactos iniciales, borradores sin destinatario y nómina editable.
+4. Punto 2: plantillas institucionales y fechas en palabras.
+5. Punto 8, tras confirmación del usuario: R1, R2, R3, R5 y R7; R4 y R6 pendientes de respuesta.
+6. Punto 1 (E3) y punto 5 (inventario de opciones).
