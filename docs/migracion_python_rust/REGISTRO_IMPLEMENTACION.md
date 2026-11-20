@@ -160,11 +160,12 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
   - los escritos pendientes de la causa, sin los vinculados a otro ingreso (`resumen_escritos`), con cobertura y fecha de lectura;
   - los programas vigentes del Ingreso Histórico (Mejor Niñez), con fecha de egreso «--» y causal «SIN INFORMACION», y la verificación de identidad.
 - No cambia observaciones, reglas ni estados.
+- Verificación Windows: las [corridas 26 y 27](https://github.com/MatiGaete2023/flow/actions/runs/44787352420) pasaron sobre `864164a` y `8faa9ac`. La 27 publicó `Flow_Rust_Windows_exe` con todas las correcciones del turno.
 - **Sin prueba de punta a punta**: falta un paquete sintético con esas tablas. Se compiló para Windows y no se ejecutó con datos. Primer paso de la próxima sesión: generar el fixture con los ayudantes de `descargador/test_paquete_escritos.py` de `flow-python` (`con_escritos`, `_persona`) en el flujo Windows y agregar la prueba Rust.
 
 ## Siguiente paso exacto
 
-1. Revisar la corrida Windows de `864164a` y descargar `Flow_Rust_Windows_exe` para la prueba del usuario: Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
+1. Prueba del usuario con `Flow_Rust_Windows_exe` de la corrida 27 (`8faa9ac`): Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
 2. E3 (punto 1), en este orden:
    1. Fixture sintético con `escritos` e `historico_proteccion` y prueba de `captura_trabajo::contextos`; luego exponer `historia_tramites`, `bitacoras` y `calendario_ingreso`.
    2. Construir el índice por identidad en `captura_trabajo.rs`.
