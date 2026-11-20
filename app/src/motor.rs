@@ -325,7 +325,7 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     let nombre = f.text("nombre");
     let pfx = prefijo_observacion(&nombre, &programa);
     let pn = primer_nombre(&nombre);
-    let prog = titulo_programa(&programa);
+    let prog = if ctx.cfg.redaccion_registro { titulo_programa_registro(&programa) } else { titulo_programa(&programa) };
     if es_derivacion_sin_seguimiento(&programa) {
         let fr: Vec<Frag> = ctx.render("COMUN.NO_SEGUIMIENTO", &[("PROGRAMA", prog)]).into_iter().collect();
         return componer(&pfx, &fr);
@@ -402,7 +402,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
     let nombre = f.text("nombre");
     let pfx = prefijo_observacion(&nombre, &programa);
     let pn = primer_nombre(&nombre);
-    let prog = titulo_programa(&programa);
+    let prog = if ctx.cfg.redaccion_registro { titulo_programa_registro(&programa) } else { titulo_programa(&programa) };
     let fegr = f.date("egreso_proy");
     let dpe = f.int("dias_egresar");
     let dc = f.int("dias_cumpl");
@@ -488,8 +488,13 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
     let antes_del_egreso = c05 && fecha_hoja2.zip(fegr).is_some_and(|(h, e)| h <= e);
     if let Some(h2) = fecha_hoja2 {
         if (!vencida && !c05) || c03 || antes_del_egreso {
-            frags.extend(ctx.render("CUMPLIMIENTO.C10_HOJA2", &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(h2))]));
-            principal = true;
+            let frag = ctx.render("CUMPLIMIENTO.C10_HOJA2", &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(h2))]);
+            // R1 (20-nov-2026): con la medida por vencer, el registro omite la oración del próximo informe; la regla
+            // sigue activa para preparar el correo al programa.
+            if !(ctx.cfg.redaccion_registro && c05 && c05_key == "CUMPLIMIENTO.C05_POR_VENCER") {
+                frags.extend(frag);
+                principal = true;
+            }
         }
     }
     frags.extend(oido(ctx, f));
@@ -536,7 +541,7 @@ fn informes(ctx: &mut Ctx, f: &Fila) -> String {
     let programa = f.text("programa");
     let nombre = f.text("nombre");
     let pfx = prefijo_observacion(&nombre, &programa);
-    let prog = titulo_programa(&programa);
+    let prog = if ctx.cfg.redaccion_registro { titulo_programa_registro(&programa) } else { titulo_programa(&programa) };
     if es_derivacion_sin_seguimiento(&programa) {
         let fr: Vec<Frag> = ctx.render("COMUN.NO_SEGUIMIENTO", &[("PROGRAMA", prog)]).into_iter().collect();
         return componer(&pfx, &fr);
@@ -755,7 +760,8 @@ mod tests {
                     continue;
                 }
                 total += 1;
-                let mut cfg = Config::default();
+                // El oráculo compara con los textos de Flow Python, sin las decisiones de redacción del registro.
+                let mut cfg = Config { redaccion_registro: false, ..Config::default() };
                 for d in c["desactivadas"].as_array().unwrap() {
                     cfg.desactivadas.insert(d.as_str().unwrap().to_string());
                 }
@@ -818,6 +824,31 @@ mod tests {
 
     fn fila_cols(headers: &[&'static str]) -> Cols {
         headers.iter().enumerate().map(|(i, h)| (*h, i)).collect()
+    }
+
+    #[test]
+    fn r1_con_medida_por_vencer_omite_el_proximo_informe_y_conserva_el_correo() {
+        let cols = fila_cols(&["rit", "tribunal", "nombre", "programa", "egreso_proy", "dias_egresar", "dias_cumpl"]);
+        let hoy = NaiveDate::from_ymd_opt(2026, 11, 19).unwrap();
+        let vals = vec![
+            Cell::Text("X-1-2099".into()),
+            Cell::Text("Juzgado de Letras de Laja".into()),
+            Cell::Text("Persona Ficticia".into()),
+            Cell::Text("AFT el Faro LAJA".into()),
+            Cell::Date(hoy + chrono::Duration::days(20)),
+            Cell::Number(20.0),
+            Cell::Number(200.0),
+        ];
+        let f = Fila { values: &vals, cols: &cols };
+        let hoja2 = Some(hoy + chrono::Duration::days(10));
+        let mut cfg = Config::default();
+        let r = evaluar(&cfg, Mode::Cumplimiento, &f, hoy, &Prepaso::default(), 0, hoja2);
+        assert!(r.observacion.contains("Medida próxima a vencer"), "{}", r.observacion);
+        assert!(!r.observacion.contains("Próximo informe"), "{}", r.observacion);
+        assert!(r.eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2"));
+        cfg.redaccion_registro = false;
+        let python = evaluar(&cfg, Mode::Cumplimiento, &f, hoy, &Prepaso::default(), 0, hoja2);
+        assert!(python.observacion.contains("Próximo informe de avance de AFT el FARO LAJA"), "{}", python.observacion);
     }
 
     #[test]

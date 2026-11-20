@@ -1968,6 +1968,19 @@ impl App {
                 let ui = &mut izq[0];
                 theme::card(p).show(ui, |ui| {
                     ui.set_width(ui.available_width());
+                    theme::seccion(ui, p, "Redacción");
+                    if ui
+                        .checkbox(&mut self.cfg.redaccion_registro, "Redacción del registro mensual")
+                        .on_hover_text("Decisiones del 20-nov-2026: sin el próximo informe cuando la medida está por vencer y nombres de programa como en el registro. Desmarcado: textos de Flow Python.")
+                        .changed()
+                    {
+                        guardar = true;
+                        reanalizar = true;
+                    }
+                });
+                ui.add_space(8.0);
+                theme::card(p).show(ui, |ui| {
+                    ui.set_width(ui.available_width());
                     theme::seccion(ui, p, "Umbrales (días)");
                     egui::Grid::new("umb").num_columns(3).spacing([10.0, 5.0]).striped(true).show(ui, |ui| {
                         for (k, base, label) in UMBRALES {

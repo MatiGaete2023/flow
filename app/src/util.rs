@@ -130,6 +130,40 @@ pub fn titulo_programa(txt: &str) -> String {
     out.join(" ")
 }
 
+/// Siglas que se escriben siempre en mayúscula dentro del nombre de un programa.
+const SIGLAS: [&str; 30] = [
+    "AFT", "PRM", "PIE", "DCE", "FAE", "FAS", "RTT", "RTA", "PDE", "OPD", "PEE", "PPF", "PLA", "PLE", "RLP", "RPM",
+    "REM", "RVA", "CTD", "SAL", "HOS", "LRPA", "ADRA", "NNA", "DAM", "CREAD", "PER", "PRO", "RDG", "RDD",
+];
+/// Tildes que el usuario restituye en sus registros (R6, observadas en NOVIEMBRE). Otras se agregan con evidencia.
+const TILDES: [(&str, &str); 2] = [("tome", "Tomé"), ("ayun", "Ayún")];
+const CONECTORES: [&str; 12] = ["de", "del", "los", "las", "y", "en", "el", "la", "por", "con", "a", "para"];
+
+/// Nombre de programa como lo registra el usuario (R6): siglas en mayúscula, artículo inicial del nombre con
+/// mayúscula, conectores en minúscula, el resto en tipo título y tildes restituidas.
+pub fn titulo_programa_registro(txt: &str) -> String {
+    let palabras: Vec<&str> = txt.split_whitespace().collect();
+    let mut out: Vec<String> = Vec::with_capacity(palabras.len());
+    for (i, t) in palabras.iter().enumerate() {
+        let low = normalizar(t);
+        let mayus = ascii_upper(t);
+        let siguiente = palabras.get(i + 1).map(|s| normalizar(s)).unwrap_or_default();
+        let palabra = if !t.chars().any(char::is_alphabetic) {
+            t.to_string()
+        } else if SIGLAS.contains(&mayus.as_str()) || (i == 0 && t.chars().filter(|c| c.is_alphabetic()).count() <= 4) {
+            t.to_uppercase()
+        } else if let Some((_, con_tilde)) = TILDES.iter().find(|(k, _)| *k == low) {
+            con_tilde.to_string()
+        } else if CONECTORES.contains(&low.as_str()) && !(i == 1 && ["el", "la", "los", "las"].contains(&low.as_str())) && siguiente != "angeles" {
+            t.to_lowercase()
+        } else {
+            capitalize(&t.to_lowercase())
+        };
+        out.push(palabra);
+    }
+    out.join(" ")
+}
+
 /// Prefijo de la observación: «PrimerNombre XXX: ».
 pub fn prefijo_observacion(nombre: &str, programa: &str) -> String {
     let primer = primer_nombre(nombre);
@@ -413,6 +447,12 @@ mod tests {
         assert_eq!(titulo_programa("PRM ÑUBLE de concepcion"), "PRM Ñuble de Concepcion");
         assert_eq!(fecha_es(NaiveDate::from_ymd_opt(2026, 5, 13).unwrap()), "13 de mayo de 2026");
         assert!(es_derivacion_sin_seguimiento("OPD Laja"));
+        assert_eq!(titulo_programa_registro("AFT el Faro LAJA SAN Rosendo"), "AFT El Faro Laja San Rosendo");
+        assert_eq!(titulo_programa_registro("PRM Refugio Ficticio TOMÉ"), "PRM Refugio Ficticio Tomé");
+        assert_eq!(titulo_programa_registro("RTA Residencia de VIDA Familiar PARA Adolescente"), "RTA Residencia de Vida Familiar para Adolescente");
+        assert_eq!(titulo_programa_registro("FAE AYUN 2 los Angeles"), "FAE Ayún 2 Los Angeles");
+        assert_eq!(titulo_programa_registro("FAE ADRA los ANGELES"), "FAE ADRA Los Angeles");
+        assert_eq!(titulo_programa_registro("AFT MULCHEN"), "AFT Mulchen");
         let f = |a, m, d| NaiveDate::from_ymd_opt(a, m, d).unwrap();
         assert_eq!(fecha_en_palabras(f(2026, 9, 14)), "catorce de septiembre de dos mil veintiséis");
         assert_eq!(fecha_en_palabras(f(2031, 1, 1)), "uno de enero de dos mil treinta y uno");
