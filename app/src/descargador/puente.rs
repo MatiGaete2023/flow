@@ -10,7 +10,22 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 use tiny_http::{Header, Method, Request, Response, Server};
 
-const COMANDOS: [&str; 2] = ["catalog", "capabilities"];
+/// Órdenes de lectura que admite la extensión Lite (`puente.Bridge.call` de Flow Python). Ninguna escribe en SITFA.
+const COMANDOS: [&str; 10] = [
+    "catalog",
+    "capabilities",
+    "lock",
+    "unlock",
+    "prepare",
+    "search",
+    "download",
+    "evidence_open",
+    "evidence_capture",
+    "evidence_close",
+];
+const MOTIVOS_EVIDENCIA: [&str; 9] = [
+    "estructura", "sesion", "cambio", "pantalla", "tiempo", "pagina", "acceso", "permiso", "pestaña",
+];
 const CUERPO_MAXIMO: usize = 4 * 1024 * 1024;
 const ESPERA_TAREA: Duration = Duration::from_secs(4);
 const VIGENCIA_CONEXION: Duration = Duration::from_secs(20);
@@ -230,6 +245,29 @@ fn atender(estado: &Estado, mut peticion: Request) {
     }
 }
 
+/// Texto fijo por código de la extensión; el motivo técnico de la evidencia solo se acepta de una lista cerrada.
+fn mensaje_error(comando: &str, datos: &Value) -> String {
+    let codigo = datos["error"].as_str().unwrap_or("");
+    let mut texto = match codigo {
+        "FOLLOWUP_REQUIRED" => "Entra a Seguimiento en la pestaña SITFA y vuelve a cargar las opciones.",
+        "SITE_ACCESS" => "Comprueba que Chrome siga abierto en SITFA y que la extensión pueda acceder a esa pestaña.",
+        "MULTIPLE_FORMS" => "Se encontró más de un formulario de Seguimiento. Abre la conexión desde una pestaña con un solo formulario.",
+        "SCREEN_OPEN" => "No se pudo abrir la pantalla elegida. Revisa la sesión SITFA y vuelve a cargar las opciones.",
+        "EVIDENCE_CAPTURE" => "No se pudo capturar la consulta vacía. Mantén SITFA visible, pulsa el icono de la extensión desde SITFA y vuelve a conectar. Los archivos guardados se conservan.",
+        "EVIDENCE_OPEN" => "No se pudo cargar la vista SITFA para generar el PDF de la consulta vacía. Revisa la sesión y actualiza la extensión. Los archivos guardados se conservan.",
+        _ if comando == "catalog" => "La extensión no pudo cargar el catálogo. Revisa la sesión de SITFA y la pestaña de conexión.",
+        _ => "La extensión no pudo completar la consulta. Revisa su pestaña de conexión y la sesión SITFA.",
+    }
+    .to_string();
+    if let Some(motivo) = datos["motivo"]
+        .as_str()
+        .filter(|m| matches!(codigo, "EVIDENCE_CAPTURE" | "EVIDENCE_OPEN") && MOTIVOS_EVIDENCIA.contains(m))
+    {
+        texto.push_str(&format!(" Motivo técnico: {motivo}."));
+    }
+    texto
+}
+
 impl Puente {
     /// Abre el puente en un puerto libre de 127.0.0.1.
     pub fn abrir() -> Result<Puente, String> {
@@ -321,16 +359,13 @@ impl Puente {
         self.estado.hay_tarea.notify_all();
         let respuesta = recepcion.recv_timeout(plazo);
         self.estado.pendientes.lock().unwrap().remove(&id);
-        let datos = respuesta.map_err(|_| "Chrome no respondió o se cerró la conexión local.")?;
+        let datos = respuesta.map_err(|_| {
+            "Chrome no respondió a tiempo o se cerró la conexión local. Los archivos ya verificados se conservan."
+        })?;
         if datos["ok"].as_bool() == Some(true) {
             return Ok(datos["result"].clone());
         }
-        Err(match datos["error"].as_str() {
-            Some("FOLLOWUP_REQUIRED") => "Entra a Seguimiento en la pestaña SITFA y vuelve a cargar las opciones.",
-            Some("SITE_ACCESS") => "Comprueba que Chrome siga abierto en SITFA y que la extensión pueda acceder a esa pestaña.",
-            Some("MULTIPLE_FORMS") => "Se encontró más de un formulario de Seguimiento. Abre la conexión desde una pestaña con un solo formulario.",
-            _ => "La extensión no pudo cargar el catálogo. Revisa la sesión de SITFA y la pestaña de conexión.",
-        }.into())
+        Err(mensaje_error(comando, &datos))
     }
 
     pub fn cerrar(&self) {
@@ -402,9 +437,12 @@ mod tests {
             200
         );
         assert_eq!(pedir(&puente, "POST", "/connect", &otra, &vacio).0, 403);
-        assert!(puente
-            .llamar("search", vacio.clone(), Duration::ZERO)
-            .is_err());
+        for excluida in ["diary_open", "history_open", "calendar_open", "navigate", "carga"] {
+            assert_eq!(
+                puente.llamar(excluida, vacio.clone(), Duration::ZERO).unwrap_err(),
+                "Acción no permitida."
+            );
+        }
 
         std::thread::scope(|scope| {
             let trabajo = scope.spawn(|| puente.catalogo(Edicion::Lite, Pantalla::Litigantes));

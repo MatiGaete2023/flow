@@ -5,7 +5,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::time::Duration;
 
+mod evidencia;
+pub mod lote;
 mod puente;
+pub mod sitfa;
+mod xls;
+#[cfg(test)]
+mod sitfa_ficticio;
 pub use puente::Puente;
 
 pub const PESTANAS: [&str; 4] = ["Espera", "Cumplimiento", "Informes", "Egresados"];

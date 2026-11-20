@@ -29,6 +29,8 @@ sha2 = "0.10"
 base64 = "0.22"
 getrandom = "0.4"
 tiny_http = "0.12"
+scraper = { version = "0.24", default-features = false }
+flate2 = "1"
 
 [profile.release]
 opt-level = 3
