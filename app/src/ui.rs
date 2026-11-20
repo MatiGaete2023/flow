@@ -1503,7 +1503,7 @@ impl App {
             if let Some(dir) = self.carpeta_productos() {
                 match productos::generar_word(&self.proyectos, &dir, self.corte()) {
                     Ok(pth) => {
-                        self.aviso(format!("Documento generado: {}", pth.display()), false);
+                        self.aviso(format!("Proyectos generados con la matriz de cada tribunal (un Word por proyecto) en {}", pth.display()), false);
                         self.registrar(pth, "Proyectos de resolución (Word)");
                     }
                     Err(e) => self.aviso(e, true),

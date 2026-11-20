@@ -152,6 +152,59 @@ pub fn fecha_es(d: NaiveDate) -> String {
     format!("{} de {} de {}", d.day(), MESES[d.month() as usize], d.year())
 }
 
+/// `outputs.number_in_words` de Flow Python: cardinal para días y años (0 a 9999).
+pub fn numero_en_palabras(n: u32) -> String {
+    const UNIDADES: [&str; 10] = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
+    const ESPECIALES: [&str; 20] = [
+        "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve",
+        "veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro", "veinticinco", "veintiséis", "veintisiete",
+        "veintiocho", "veintinueve",
+    ];
+    const DECENAS: [&str; 10] = ["", "", "", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
+    const CENTENAS: [&str; 10] = [
+        "", "cien", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos",
+        "novecientos",
+    ];
+    match n {
+        0..=9 => UNIDADES[n as usize].into(),
+        10..=29 => ESPECIALES[(n - 10) as usize].into(),
+        30..=99 => {
+            let u = n % 10;
+            let cola = if u > 0 { format!(" y {}", UNIDADES[u as usize]) } else { String::new() };
+            format!("{}{cola}", DECENAS[(n / 10) as usize])
+        }
+        100..=999 => {
+            let resto = n % 100;
+            let cabeza = if n / 100 == 1 && resto > 0 { "ciento" } else { CENTENAS[(n / 100) as usize] };
+            if resto > 0 {
+                format!("{cabeza} {}", numero_en_palabras(resto))
+            } else {
+                cabeza.into()
+            }
+        }
+        _ => {
+            let n = n.min(9999);
+            let (miles, resto) = (n / 1000, n % 1000);
+            let cabeza = if miles == 1 { "mil".to_string() } else { format!("{} mil", numero_en_palabras(miles)) };
+            if resto > 0 {
+                format!("{cabeza} {}", numero_en_palabras(resto))
+            } else {
+                cabeza
+            }
+        }
+    }
+}
+
+/// `outputs.date_in_words`: «catorce de septiembre de dos mil veintiséis».
+pub fn fecha_en_palabras(d: NaiveDate) -> String {
+    format!(
+        "{} de {} de {}",
+        numero_en_palabras(d.day()),
+        MESES[d.month() as usize],
+        numero_en_palabras(d.year().max(0) as u32)
+    )
+}
+
 /// «el A», «el A y el B», «el A, el B y el C».
 pub fn lista_fechas_es(fechas: &[NaiveDate]) -> String {
     let partes: Vec<String> = fechas.iter().map(|f| format!("el {}", fecha_es(*f))).collect();
@@ -360,6 +413,11 @@ mod tests {
         assert_eq!(titulo_programa("PRM ÑUBLE de concepcion"), "PRM Ñuble de Concepcion");
         assert_eq!(fecha_es(NaiveDate::from_ymd_opt(2026, 5, 13).unwrap()), "13 de mayo de 2026");
         assert!(es_derivacion_sin_seguimiento("OPD Laja"));
+        let f = |a, m, d| NaiveDate::from_ymd_opt(a, m, d).unwrap();
+        assert_eq!(fecha_en_palabras(f(2026, 9, 14)), "catorce de septiembre de dos mil veintiséis");
+        assert_eq!(fecha_en_palabras(f(2031, 1, 1)), "uno de enero de dos mil treinta y uno");
+        assert_eq!(numero_en_palabras(121), "ciento veintiuno");
+        assert_eq!(numero_en_palabras(1900), "mil novecientos");
         assert!(!es_derivacion_sin_seguimiento("PRM Laja"));
         assert_eq!(get_int(&Cell::Text("45".into())), Some(45));
         assert_eq!(get_int(&Cell::Text("4.5".into())), None);
