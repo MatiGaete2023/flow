@@ -60,6 +60,7 @@ pub struct App {
     filtro_estado: Option<Estado>,
     filtro_trib: String,
     solo_marcadas: bool,
+    ultima_marca: Option<usize>,
     cache_key: String,
     cache: Vec<usize>,
     revision: u64,
@@ -112,6 +113,7 @@ impl App {
             filtro_estado: None,
             filtro_trib: String::new(),
             solo_marcadas: false,
+            ultima_marca: None,
             cache_key: String::new(),
             cache: vec![],
             revision: 0,
@@ -754,6 +756,7 @@ impl App {
         }
         let tribunales = self.trib_cache.1.clone();
         let mut marcar_visibles = false;
+        let mut marcar_seleccion: Option<bool> = None;
         ui.horizontal(|ui| {
             ui.add(egui::TextEdit::singleline(&mut self.filtro).hint_text("🔍  Buscar RIT, nombre, RUT, programa u observación").desired_width(380.0));
             egui::ComboBox::from_id_salt("ftrib")
@@ -765,6 +768,12 @@ impl App {
                     }
                 });
             ui.checkbox(&mut self.solo_marcadas, "Solo filas marcadas");
+            if ui.button("☑ Marcar visibles").on_hover_text("Marca todas las filas que muestra el filtro actual").clicked() {
+                marcar_seleccion = Some(true);
+            }
+            if ui.button("☐ Desmarcar todas").clicked() {
+                marcar_seleccion = Some(false);
+            }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("↻  Volver a analizar…").on_hover_text("Descarta ediciones y marcas y aplica las reglas desde cero").clicked() {
                     self.confirmar_reinicio = true;
@@ -774,6 +783,22 @@ impl App {
                 }
             });
         });
+        if let Some(marcar) = marcar_seleccion {
+            let visibles = if marcar { self.filtrados() } else { Vec::new() };
+            if let Some(w) = &mut self.work {
+                if marcar {
+                    for i in visibles {
+                        w.registros[i].seleccionada = true;
+                    }
+                } else {
+                    for r in &mut w.registros {
+                        r.seleccionada = false;
+                    }
+                }
+            }
+            self.ultima_marca = None;
+            self.marcar_sucio();
+        }
         if marcar_visibles {
             let ids = self.filtrados();
             if let Some(w) = &mut self.work {
@@ -832,6 +857,9 @@ impl App {
         };
         let mut nueva_sel = None;
         let mut cambio = false;
+        let mayus = ui.input(|i| i.modifiers.shift);
+        let mut ultima = self.ultima_marca;
+        let mut rango: Option<(usize, usize, bool)> = None;
         let sel = self.sel;
         let w = self.work.as_mut().unwrap();
         // Anchos proporcionales al espacio: la tabla nunca se sale de su tarjeta.
@@ -860,6 +888,7 @@ impl App {
             .body(|body| {
                 body.rows(30.0, ids.len(), |mut row| {
                     let i = ids[row.index()];
+                    let pos = row.index();
                     row.set_selected(sel == Some(i));
                     let estado = w.registros[i].estado();
                     let tribunal = w.tribunal_clave(&w.registros[i]);
@@ -872,8 +901,12 @@ impl App {
                     let n_acc = w.registros[i].acciones.len();
                     row.col(|ui| {
                         let mut m = w.registros[i].seleccionada;
-                        if ui.checkbox(&mut m, "").changed() {
+                        if ui.checkbox(&mut m, "").on_hover_text("Mayús+clic marca o desmarca el tramo desde la última casilla").changed() {
                             w.registros[i].seleccionada = m;
+                            if let Some(previa) = ultima.filter(|_| mayus) {
+                                rango = Some((previa.min(pos), previa.max(pos), m));
+                            }
+                            ultima = Some(pos);
                             cambio = true;
                         }
                     });
@@ -909,6 +942,12 @@ impl App {
             });
         if let Some(s) = nueva_sel {
             self.sel = Some(s);
+        }
+        self.ultima_marca = ultima;
+        if let (Some((desde, hasta, marcar)), Some(w)) = (rango, self.work.as_mut()) {
+            for &i in &ids[desde..=hasta.min(ids.len().saturating_sub(1))] {
+                w.registros[i].seleccionada = marcar;
+            }
         }
         if cambio {
             self.marcar_sucio();
@@ -1181,7 +1220,8 @@ impl App {
                         if activo {
                             fr = fr.stroke(egui::Stroke::new(1.5_f32, p.accent));
                         }
-                        let r = fr.show(ui, |ui| {
+                        // El clic de la tarjeta se registra debajo del contenido: el checkbox recibe su propio clic.
+                        let r = ui.scope_builder(egui::UiBuilder::new().sense(egui::Sense::click()), |ui| fr.show(ui, |ui| {
                             ui.set_width(300.0);
                             ui.set_max_width(300.0);
                             ui.horizontal(|ui| {
@@ -1199,8 +1239,8 @@ impl App {
                                     ui.label(RichText::new("✔ guardado").size(12.0).color(p.green));
                                 }
                             });
-                        });
-                        if ui.interact(r.response.rect, egui::Id::new(("b", j)), egui::Sense::click()).clicked() {
+                        }));
+                        if r.response.clicked() {
                             self.bsel = Some(j);
                         }
                         ui.add_space(4.0);
@@ -1463,7 +1503,8 @@ impl App {
                         if activo {
                             fr = fr.stroke(egui::Stroke::new(1.5_f32, p.accent));
                         }
-                        let r = fr.show(ui, |ui| {
+                        // El clic de la tarjeta se registra debajo del contenido: el checkbox recibe su propio clic.
+                        let r = ui.scope_builder(egui::UiBuilder::new().sense(egui::Sense::click()), |ui| fr.show(ui, |ui| {
                             ui.set_width(300.0);
                             ui.set_max_width(300.0);
                             ui.horizontal(|ui| {
@@ -1481,8 +1522,8 @@ impl App {
                             if !faltan.is_empty() {
                                 ui.label(RichText::new(format!("Falta: {}", faltan.join(", "))).size(11.5).color(p.amber));
                             }
-                        });
-                        if ui.interact(r.response.rect, egui::Id::new(("p", j)), egui::Sense::click()).clicked() {
+                        }));
+                        if r.response.clicked() {
                             self.psel = Some(j);
                         }
                         ui.add_space(4.0);

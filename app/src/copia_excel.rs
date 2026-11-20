@@ -32,22 +32,41 @@ fn texto_clave(c: &Cell) -> String {
     t.strip_suffix(".0").unwrap_or(t).to_string()
 }
 
-fn consolidado(zip: &[u8]) -> Option<Vec<u8>> {
-    let mut archivo = zip::ZipArchive::new(std::io::Cursor::new(zip)).ok()?;
-    let entrada = archivo.by_name("consolidado/consolidado.xlsx").ok()?;
+fn consolidado(zip: &[u8]) -> Result<Vec<u8>, String> {
+    let mut archivo = zip::ZipArchive::new(std::io::Cursor::new(zip))
+        .map_err(|_| "No se pudo abrir el paquete para la copia preservada.".to_string())?;
+    let entrada = archivo
+        .by_name("consolidado/consolidado.xlsx")
+        .map_err(|_| "El paquete no trae el libro consolidado.".to_string())?;
     let mut datos = Vec::new();
-    entrada.take(200 * 1024 * 1024).read_to_end(&mut datos).ok()?;
-    Some(datos)
+    entrada
+        .take(200 * 1024 * 1024)
+        .read_to_end(&mut datos)
+        .map_err(|_| "No se pudo leer el libro consolidado del paquete.".to_string())?;
+    Ok(datos)
+}
+
+/// Huella, nombre del archivo SITFA (sin la carpeta `originales/lN/` que agrega el paquete) y fila.
+fn clave_origen(huella: &Cell, archivo: &Cell, fila: &Cell) -> Vec<String> {
+    let nombre = texto_clave(archivo);
+    let nombre = nombre.rsplit(['/', '\\']).next().unwrap_or("").to_string();
+    vec![texto_clave(huella).to_ascii_lowercase(), nombre, texto_clave(fila)]
 }
 
 /// `_map_consolidated`: cada registro aparece una sola vez, por huella, archivo y fila de SITFA, en una misma hoja.
-fn base_paquete(w: &Trabajo) -> Option<Base> {
+/// `Err` explica por qué el consolidado no sirve de base.
+fn base_paquete(w: &Trabajo) -> Result<Base, String> {
     let bytes = consolidado(&w.bytes)?;
-    let hojas = lectura::read_sheets(&bytes).ok()?;
+    let hojas = lectura::read_sheets(&bytes).map_err(|_| "No se pudo leer el libro consolidado del paquete.".to_string())?;
     let posicion = |titulo: &str| w.headers.iter().position(|h| h == titulo);
-    let propias: Vec<usize> = PROCEDENCIA.iter().map(|t| posicion(t)).collect::<Option<_>>()?;
+    let propias: Vec<usize> = PROCEDENCIA
+        .iter()
+        .map(|t| posicion(t))
+        .collect::<Option<_>>()
+        .ok_or("Trabajo no conserva la procedencia SITFA de las filas.")?;
     let mut indice: HashMap<Vec<String>, (String, usize)> = HashMap::new();
     let mut repetidas = HashSet::new();
+    let vacia = Cell::Empty;
     for hoja in hojas.iter().filter(|h| !HOJAS_SERVICIO.contains(&h.name.as_str())) {
         let Some(cabecera) = hoja.rows.first() else { continue };
         let titulos: Vec<String> = cabecera.iter().map(|c| c.display().trim().to_string()).collect();
@@ -63,10 +82,8 @@ fn base_paquete(w: &Trabajo) -> Option<Base> {
             continue;
         }
         for (i, fila) in hoja.rows.iter().enumerate().skip(1) {
-            let clave: Vec<String> = cols
-                .iter()
-                .map(|c| fila.get(*c).map(texto_clave).unwrap_or_default())
-                .collect();
+            let celda = |k: usize| fila.get(cols[k]).unwrap_or(&vacia);
+            let clave = clave_origen(celda(0), celda(1), celda(2));
             if clave.iter().all(String::is_empty) {
                 continue;
             }
@@ -75,27 +92,42 @@ fn base_paquete(w: &Trabajo) -> Option<Base> {
             }
         }
     }
+    if indice.is_empty() {
+        return Err("El consolidado del paquete no tiene hojas con la procedencia SITFA.".into());
+    }
     let mut hojas_usadas = HashSet::new();
     let mut filas = Vec::with_capacity(w.registros.len());
+    let (mut ausentes, mut dobles) = (0usize, 0usize);
     for r in &w.registros {
-        let clave: Vec<String> = propias
-            .iter()
-            .map(|c| r.values.get(*c).map(texto_clave).unwrap_or_default())
-            .collect();
+        let celda = |k: usize| r.values.get(propias[k]).unwrap_or(&vacia);
+        let clave = clave_origen(celda(0), celda(1), celda(2));
         if repetidas.contains(&clave) {
-            return None;
+            dobles += 1;
+            continue;
         }
-        let (hoja, fila) = indice.get(&clave)?;
-        hojas_usadas.insert(hoja.clone());
-        filas.push(*fila);
+        match indice.get(&clave) {
+            Some((hoja, fila)) => {
+                hojas_usadas.insert(hoja.clone());
+                filas.push(*fila);
+            }
+            None => ausentes += 1,
+        }
+    }
+    if ausentes > 0 || dobles > 0 {
+        return Err(format!(
+            "{FIDELIDAD_REDUCIDA} Motivo: {ausentes} fila(s) sin correspondencia y {dobles} repetida(s) en el consolidado."
+        ));
     }
     if hojas_usadas.len() != 1 {
-        return None;
+        return Err(format!(
+            "{FIDELIDAD_REDUCIDA} Motivo: las filas de la etapa están en {} hojas del consolidado.",
+            hojas_usadas.len()
+        ));
     }
-    Some(Base {
+    Ok(Base {
         bytes,
         extension: "xlsx".into(),
-        hoja: hojas_usadas.into_iter().next()?,
+        hoja: hojas_usadas.into_iter().next().unwrap_or_default(),
         encabezado: 1,
         filas,
     })
@@ -104,7 +136,7 @@ fn base_paquete(w: &Trabajo) -> Option<Base> {
 /// Base de la copia. `Err` con el aviso de fidelidad reducida cuando no hay un libro que preservar.
 pub fn base(w: &Trabajo) -> Result<Base, String> {
     if w.paquete.is_some() {
-        return base_paquete(w).ok_or_else(|| FIDELIDAD_REDUCIDA.to_string());
+        return base_paquete(w);
     }
     let extension = w
         .path
@@ -158,6 +190,21 @@ fn identificadores(w: &Trabajo, hoja: &str) -> Vec<String> {
         .collect()
 }
 
+/// `record_edits.encode` (versión 1): decisiones legibles por Flow Python al reimportar la copia.
+fn decisiones(r: &Registro) -> String {
+    let resolucion = if TIPOS_RES.contains(&r.res.as_str()) { r.res.as_str() } else { "auto" };
+    json!({
+        "version": 1,
+        "decisions": {"resolution": resolucion},
+        "overrides": {},
+        "word_overrides": {},
+        "excluded": r.excluido,
+        "resolution_cell": r.res,
+        "proposal": r.propuesta,
+    })
+    .to_string()
+}
+
 /// `_safe_cell`: un texto que Excel leería como fórmula se escribe literal.
 fn literal(s: &str) -> String {
     if s.trim_start().starts_with(['=', '+', '-', '@']) {
@@ -171,11 +218,11 @@ fn literal(s: &str) -> String {
 pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) -> Value {
     let etapa_revisada = w.registros.iter().any(revisada);
     let observacion = if etapa_revisada { "NURUS_OBSERVACION_FINAL" } else { "NURUS_PROPUESTA" };
-    let titulos: Vec<&str> = if etapa_revisada {
-        vec!["NURUS_ID_REGISTRO", "NURUS_REGLAS", observacion, "NURUS_ESTADO_REVISION", "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES"]
-    } else {
-        vec!["NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "OBSERVACION", "FECHA_OBS", "TT", "CC", "RES", "NURUS_ESTADO_REVISION"]
-    };
+    // Orden del registro mensual del usuario (decisión del 20-nov-2026), igual en propuesta y revisión.
+    let titulos: Vec<&str> = vec![
+        "NURUS_ID_REGISTRO", "NURUS_REGLAS", observacion, "FECHA_OBS", "OBSERVACION", "TT", "CC", "RES",
+        "NURUS_ESTADO_REVISION", "NURUS_DECISIONES",
+    ];
     let ids = identificadores(w, &base.hoja);
     let mut celdas: HashMap<&str, Vec<Value>> = HashMap::new();
     let mut res_sugerida = Vec::new();
@@ -210,6 +257,7 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
         };
         poner("NURUS_ID_REGISTRO", id.clone());
         poner("NURUS_REGLAS", reglas.clone());
+        poner("NURUS_DECISIONES", decisiones(r));
         poner(observacion, literal(&obs));
         poner("NURUS_ESTADO_REVISION", estado.into());
         if !etapa_revisada {
@@ -245,7 +293,7 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
     json!({
         "origen": origen, "destino": destino, "hoja": base.hoja, "encabezado": base.encabezado,
         "titulos": titulos, "escrituras": escrituras, "res_sugerida": res_sugerida,
-        "ocultas": ["NURUS_REGLAS"], "excluidas": excluidas, "traza": traza, "tipos_res": TIPOS_RES,
+        "ocultas": ["NURUS_REGLAS", "NURUS_DECISIONES"], "excluidas": excluidas, "traza": traza, "tipos_res": TIPOS_RES,
         "observacion": observacion,
     })
 }
@@ -458,7 +506,15 @@ mod tests {
         assert_eq!((b.extension.as_str(), b.hoja.as_str(), b.encabezado, b.filas.clone()), ("xls", "Hoja1", 3, vec![4, 5]));
         let plan = instrucciones(&w, &b, Path::new("o.xls"), Path::new("d.xls"));
         assert_eq!(plan["titulos"][2], "NURUS_PROPUESTA");
-        assert_eq!(plan["titulos"][8], "NURUS_ESTADO_REVISION");
+        let orden: Vec<&str> = plan["titulos"].as_array().unwrap().iter().map(|t| t.as_str().unwrap()).collect();
+        assert_eq!(
+            orden,
+            ["NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "FECHA_OBS", "OBSERVACION", "TT", "CC", "RES", "NURUS_ESTADO_REVISION", "NURUS_DECISIONES"]
+        );
+        assert_eq!(plan["ocultas"], json!(["NURUS_REGLAS", "NURUS_DECISIONES"]));
+        let dec = plan["escrituras"].as_array().unwrap().iter().find(|e| e["titulo"] == "NURUS_DECISIONES").unwrap();
+        let primera: Value = serde_json::from_str(dec["celdas"][0]["v"].as_str().unwrap()).unwrap();
+        assert_eq!((primera["version"].clone(), primera["decisions"]["resolution"].clone()), (json!(1), json!("PC_IE")));
         let obs = plan["escrituras"].as_array().unwrap().iter().find(|e| e["titulo"] == "OBSERVACION").unwrap();
         assert_eq!(obs["conservar"], true);
         assert_eq!(obs["celdas"][0], json!({"f": 4, "v": "'=propuesta ficticia"}));
@@ -491,6 +547,71 @@ mod tests {
         assert!(out.status.success() && texto.contains("SINTAXIS_OK"), "{texto}");
     }
 
+    fn paquete_con_consolidado(filas: &[(&str, f64)]) -> Vec<u8> {
+        let mut libro = rust_xlsxwriter::Workbook::new();
+        let resumen = libro.add_worksheet();
+        resumen.set_name("Resumen").unwrap();
+        resumen.write_string(0, 0, "ESTADO").unwrap();
+        let hoja = libro.add_worksheet();
+        hoja.set_name("ESPERA").unwrap();
+        for (c, h) in ["RIT", "NOMBRE", "SITFA_ARCHIVO", "SITFA_PAGINA", "SITFA_FILA", "SITFA_SHA256"].iter().enumerate() {
+            hoja.write_string(0, c as u16, *h).unwrap();
+        }
+        for (i, (archivo, fila)) in filas.iter().enumerate() {
+            let r = i as u32 + 1;
+            hoja.write_string(r, 0, "C-1-2099").unwrap();
+            hoja.write_string(r, 1, "Persona Ficticia").unwrap();
+            hoja.write_string(r, 2, *archivo).unwrap();
+            hoja.write_number(r, 3, 1.0).unwrap();
+            hoja.write_number(r, 4, *fila).unwrap();
+            hoja.write_string(r, 5, "ab".repeat(32)).unwrap();
+        }
+        let xlsx = libro.save_to_buffer().unwrap();
+        let mut zip = Vec::new();
+        {
+            let mut escritor = zip::ZipWriter::new(std::io::Cursor::new(&mut zip));
+            escritor.start_file("consolidado/consolidado.xlsx", zip::write::SimpleFileOptions::default()).unwrap();
+            std::io::Write::write_all(&mut escritor, &xlsx).unwrap();
+            escritor.finish().unwrap();
+        }
+        zip
+    }
+
+    fn trabajo_paquete(zip: Vec<u8>) -> Trabajo {
+        let mut w = Trabajo {
+            path: PathBuf::from("paquete.zip"),
+            headers: vec!["RIT".into(), "SITFA_ARCHIVO".into(), "SITFA_FILA".into(), "SITFA_SHA256".into()],
+            mode: Some(Mode::Espera),
+            bytes: zip,
+            ..Default::default()
+        };
+        for fila in ["7", "9"] {
+            w.registros.push(Registro {
+                values: vec![
+                    Cell::Text("C-1-2099".into()),
+                    Cell::Text("originales/l0/Seguimiento ficticio.xls".into()),
+                    Cell::Text(fila.into()),
+                    Cell::Text("AB".repeat(32)),
+                ],
+                ..Default::default()
+            });
+        }
+        w
+    }
+
+    #[test]
+    fn el_consolidado_se_mapea_aunque_el_paquete_guarde_originales_en_carpeta() {
+        let zip = paquete_con_consolidado(&[("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 7.0)]);
+        let base = base_paquete(&trabajo_paquete(zip)).unwrap();
+        assert_eq!((base.hoja.as_str(), base.extension.as_str(), base.encabezado), ("ESPERA", "xlsx", 1));
+        assert_eq!(base.filas, vec![3, 2]);
+        let incompleto = paquete_con_consolidado(&[("Seguimiento ficticio.xls", 9.0)]);
+        let error = base_paquete(&trabajo_paquete(incompleto)).err().unwrap();
+        assert!(error.contains("1 fila(s) sin correspondencia"), "{error}");
+        let doble = paquete_con_consolidado(&[("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 7.0)]);
+        assert!(base_paquete(&trabajo_paquete(doble)).err().unwrap().contains("repetida"));
+    }
+
     #[test]
     fn csv_y_paquete_sin_consolidado_quedan_como_fidelidad_reducida() {
         let mut w = trabajo();
@@ -505,6 +626,6 @@ mod tests {
             escritor.finish().unwrap();
         }
         w.bytes = zip;
-        assert!(base_paquete(&w).is_none());
+        assert!(base_paquete(&w).err().unwrap().contains("consolidado"));
     }
 }
