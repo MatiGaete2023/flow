@@ -105,6 +105,18 @@ impl Puente {
     }
 }
 
+impl Puente {
+    /// `version.verify_extension`: antes de un lote se confirma otra vez la edición y el modo de solo lectura.
+    pub fn verificar(&self, edicion: Edicion) -> Result<(), String> {
+        let version = self.llamar(
+            "capabilities",
+            serde_json::json!({}),
+            Duration::from_secs(15),
+        )?;
+        comprobar_extension(edicion, &version)
+    }
+}
+
 fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<(), String> {
     let (tipo, numero, protocolos) = match edicion {
         Edicion::Integral => (
@@ -133,7 +145,7 @@ fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<
     Err(format!("Carga en Chrome la extensión Flow Python de la edición elegida ({numero}) y vuelve a conectar."))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Catalogo {
     #[serde(default)]
     pub pantalla: Pantalla,
@@ -180,13 +192,13 @@ pub struct SeleccionLote {
     pub fechas: Option<(NaiveDate, NaiveDate)>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct PlanLote {
     pub consultas: Vec<Perfil>,
     pub fechas: Option<(NaiveDate, NaiveDate)>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Perfil {
     pub pantalla: Pantalla,
     pub tribunal: String,
@@ -194,7 +206,7 @@ pub struct Perfil {
     pub etiqueta: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub enum Alcance {
     Seguimiento {
         pestana: String,

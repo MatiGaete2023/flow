@@ -1,12 +1,14 @@
 use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
+use flow_rust::descargador::lote::{self, Evento, Fin, Opciones};
 use flow_rust::descargador::{
     Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente, Seleccion, SeleccionLote, MODALIDADES,
     PESTANAS, TODAS_LAS_MEDIDAS,
 };
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc};
 use std::time::Duration;
 
@@ -25,6 +27,306 @@ pub struct Descargador {
     plan: Option<Result<PlanLote, String>>,
     conexion: Conexion,
     catalogo_remoto: bool,
+    ejecucion: Ejecucion,
+}
+
+enum Mensaje {
+    Evento(Evento),
+    Termino(Result<usize, String>),
+}
+
+#[derive(PartialEq)]
+enum EstadoFila {
+    EnCurso,
+    Lista,
+    Vacia,
+}
+
+struct Fila {
+    etiqueta: String,
+    detalle: String,
+    estado: EstadoFila,
+}
+
+/// Ejecución de un lote Lite en segundo plano (`SitfaLite.worker` y `process_event` de Flow Python).
+struct Ejecucion {
+    destino: String,
+    evidencia: bool,
+    conservar_filtros: bool,
+    pausa: f32,
+    recepcion: Option<mpsc::Receiver<Mensaje>>,
+    cancelar: Option<Arc<AtomicBool>>,
+    filas: Vec<Fila>,
+    estado: String,
+    avisos: Vec<String>,
+    error: Option<String>,
+    fin: Option<Fin>,
+    carpeta: Option<PathBuf>,
+}
+
+impl Default for Ejecucion {
+    fn default() -> Self {
+        let base = std::env::var_os("USERPROFILE")
+            .or_else(|| std::env::var_os("HOME"))
+            .map(PathBuf::from)
+            .unwrap_or_default();
+        Self {
+            destino: base.join("Documents").join("SITFA Lite").display().to_string(),
+            evidencia: true,
+            conservar_filtros: false,
+            pausa: 1.0,
+            recepcion: None,
+            cancelar: None,
+            filas: Vec::new(),
+            estado: String::new(),
+            avisos: Vec::new(),
+            error: None,
+            fin: None,
+            carpeta: None,
+        }
+    }
+}
+
+impl Ejecucion {
+    fn activa(&self) -> bool {
+        self.recepcion.is_some()
+    }
+
+    fn recibir(&mut self) {
+        let Some(recepcion) = &self.recepcion else {
+            return;
+        };
+        let mensajes: Vec<Mensaje> = recepcion.try_iter().collect();
+        let desconectado = matches!(recepcion.try_recv(), Err(mpsc::TryRecvError::Disconnected));
+        for mensaje in mensajes {
+            match mensaje {
+                Mensaje::Evento(evento) => self.aplicar(evento),
+                Mensaje::Termino(resultado) => {
+                    self.recepcion = None;
+                    self.cancelar = None;
+                    self.estado.clear();
+                    if let Err(e) = resultado {
+                        self.error = Some(e);
+                        if let Some(fila) = self.filas.last_mut().filter(|f| f.estado == EstadoFila::EnCurso) {
+                            fila.detalle = "detenida".into();
+                        }
+                    }
+                }
+            }
+        }
+        if desconectado && self.recepcion.is_some() {
+            self.recepcion = None;
+            self.cancelar = None;
+            self.error = Some("Se interrumpió la ejecución del lote.".into());
+        }
+    }
+
+    fn aplicar(&mut self, evento: Evento) {
+        match evento {
+            Evento::Carpeta(carpeta) => self.carpeta = Some(carpeta),
+            Evento::Plan(total) => self.estado = format!("{total} consultas en el lote"),
+            Evento::Consulta { indice, total, etiqueta } => {
+                self.estado = format!("Consultando {indice} de {total}");
+                self.filas.push(Fila { etiqueta, detalle: "consultando".into(), estado: EstadoFila::EnCurso });
+            }
+            Evento::Estado(texto) => self.estado = texto,
+            Evento::Total(paginas) => {
+                if let Some(f) = self.filas.last_mut() {
+                    f.detalle = format!("{paginas} página{}", if paginas == 1 { "" } else { "s" });
+                }
+            }
+            Evento::Pagina { pagina, total, .. } => {
+                if let Some(f) = self.filas.last_mut() {
+                    f.detalle = format!("página {pagina} de {total} verificada");
+                }
+            }
+            Evento::Vacia { .. } => {
+                if let Some(f) = self.filas.last_mut() {
+                    f.detalle = "sin registros · sin PDF".into();
+                }
+            }
+            Evento::Evidencia { .. } => {
+                if let Some(f) = self.filas.last_mut() {
+                    f.detalle = "sin registros · PDF".into();
+                }
+            }
+            Evento::ConsultaLista { estado, .. } => {
+                if let Some(f) = self.filas.last_mut() {
+                    if estado == "SIN_RESULTADOS" {
+                        f.estado = EstadoFila::Vacia;
+                    } else {
+                        f.estado = EstadoFila::Lista;
+                        f.detalle = f.detalle.replace(" verificada", "");
+                    }
+                }
+            }
+            Evento::Aviso(texto) => self.avisos.push(texto),
+            Evento::Fin(fin) => self.fin = Some(fin),
+        }
+    }
+
+    fn iniciar(&mut self, ctx: &egui::Context, puente: Arc<Puente>, catalogo: Catalogo, plan: PlanLote) {
+        let destino = PathBuf::from(self.destino.trim());
+        if self.destino.trim().is_empty() {
+            self.error = Some("Elige la carpeta de destino.".into());
+            return;
+        }
+        let conservar = self.conservar_filtros
+            && matches!(catalogo.pantalla, Pantalla::Seguimiento | Pantalla::Litigantes);
+        let opciones = Opciones {
+            conservar_filtros: conservar,
+            evidencia: self.evidencia,
+            pausa: Duration::from_secs_f32(self.pausa.clamp(0.0, 30.0)),
+        };
+        let cancelar = Arc::new(AtomicBool::new(false));
+        let (envio, recepcion) = mpsc::channel();
+        self.filas.clear();
+        self.avisos.clear();
+        self.error = None;
+        self.fin = None;
+        self.carpeta = None;
+        self.estado = "Comprobando la extensión…".into();
+        self.recepcion = Some(recepcion);
+        self.cancelar = Some(cancelar.clone());
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let mut emitir = |e: Evento| {
+                let _ = envio.send(Mensaje::Evento(e));
+                ctx.request_repaint();
+            };
+            let resultado = puente.verificar(Edicion::Lite).and_then(|()| {
+                lote::ejecutar(
+                    puente.as_ref(),
+                    &catalogo,
+                    Edicion::Lite,
+                    &plan,
+                    &destino,
+                    &opciones,
+                    &cancelar,
+                    &mut emitir,
+                )
+            });
+            let _ = envio.send(Mensaje::Termino(resultado.map(|c| c.len())));
+            ctx.request_repaint();
+        });
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn mostrar(
+        &mut self,
+        ui: &mut Ui,
+        p: &Pal,
+        edicion: Edicion,
+        catalogo: &Catalogo,
+        plan: Option<&PlanLote>,
+        puente: Option<Arc<Puente>>,
+        remoto: bool,
+    ) {
+        ui.add_space(8.0);
+        theme::seccion(ui, p, "Ejecutar lote");
+        let activa = self.activa();
+        ui.add_enabled_ui(!activa, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.label("Carpeta de destino");
+                ui.add(egui::TextEdit::singleline(&mut self.destino).desired_width(320.0));
+                if ui.button("Elegir…").clicked() {
+                    if let Some(carpeta) = rfd::FileDialog::new()
+                        .set_title("Carpeta de destino del lote")
+                        .pick_folder()
+                    {
+                        self.destino = carpeta.display().to_string();
+                    }
+                }
+            });
+            ui.horizontal_wrapped(|ui| {
+                ui.checkbox(&mut self.evidencia, "PDF de las consultas sin registros");
+                if matches!(catalogo.pantalla, Pantalla::Seguimiento | Pantalla::Litigantes) {
+                    ui.checkbox(
+                        &mut self.conservar_filtros,
+                        "Conservar los otros filtros preparados en SITFA",
+                    );
+                }
+                ui.label("Pausa entre consultas (s)");
+                ui.add(egui::DragValue::new(&mut self.pausa).range(0.0..=30.0).speed(0.1));
+            });
+        });
+        let conectado = puente.as_ref().is_some_and(|b| b.conectado());
+        let impedimento = if edicion != Edicion::Lite {
+            Some("La ejecución de lotes Integral sigue pendiente en Flow Rust; usa la edición Lite.")
+        } else if !remoto {
+            Some("Carga las opciones desde Chrome para ejecutar el lote.")
+        } else if !conectado {
+            Some("Conecta la extensión Lite desde la pestaña SITFA.")
+        } else if plan.is_none() {
+            Some("Prepara el lote para revisar sus consultas antes de descargar.")
+        } else {
+            None
+        };
+        ui.add_space(6.0);
+        ui.horizontal_wrapped(|ui| {
+            if activa {
+                let pedido = self.cancelar.as_ref().is_some_and(|c| c.load(Ordering::SeqCst));
+                if ui.add_enabled(!pedido, egui::Button::new("Cancelar")).clicked() {
+                    if let Some(c) = &self.cancelar {
+                        c.store(true, Ordering::SeqCst);
+                    }
+                }
+                ui.spinner();
+                ui.label(&self.estado);
+            } else {
+                let listo = impedimento.is_none();
+                let boton = ui.add_enabled_ui(listo, |ui| theme::primary(ui, p, "Descargar lote")).inner;
+                if boton.clicked() {
+                    if let (Some(puente), Some(plan)) = (puente.clone(), plan) {
+                        self.iniciar(ui.ctx(), puente, catalogo.clone(), plan.clone());
+                    }
+                }
+                if let Some(texto) = impedimento {
+                    ui.label(RichText::new(texto).color(p.muted));
+                }
+            }
+        });
+        if !self.filas.is_empty() {
+            egui::ScrollArea::vertical()
+                .id_salt("avance del lote")
+                .max_height(180.0)
+                .show(ui, |ui| {
+                    for fila in &self.filas {
+                        let color = match fila.estado {
+                            EstadoFila::EnCurso => p.text,
+                            EstadoFila::Lista => p.green,
+                            EstadoFila::Vacia => p.muted,
+                        };
+                        ui.horizontal_wrapped(|ui| {
+                            ui.label(RichText::new(&fila.etiqueta).color(color));
+                            ui.label(RichText::new(format!("· {}", fila.detalle)).color(p.muted));
+                        });
+                    }
+                });
+        }
+        for aviso in &self.avisos {
+            ui.label(RichText::new(aviso).color(p.amber));
+        }
+        if let Some(e) = &self.error {
+            ui.label(RichText::new(e).color(p.amber));
+        }
+        if let Some(fin) = &self.fin {
+            ui.horizontal_wrapped(|ui| {
+                ui.label(
+                    RichText::new(format!(
+                        "Descarga terminada · {} consultas · {} registros · {} XLS · {} PDF · {} sin registros",
+                        fin.consultas, fin.registros, fin.archivos, fin.pdfs, fin.vacias
+                    ))
+                    .color(p.green),
+                );
+            });
+        }
+        if let Some(carpeta) = self.carpeta.clone().filter(|_| !activa) {
+            if ui.button("Abrir carpeta del lote").clicked() {
+                crate::ui::abrir_en_sistema(&carpeta);
+            }
+        }
+    }
 }
 
 #[derive(Default)]
@@ -178,9 +480,11 @@ impl Descargador {
     }
 
     pub fn mostrar(&mut self, ui: &mut Ui, p: &Pal) {
+        self.ejecucion.recibir();
         if let Some(catalogo) = self.conexion.catalogo() {
             self.usar_catalogo(Some(catalogo), true);
         }
+        let ejecutando = self.ejecucion.activa();
         theme::titulo(
             ui,
             p,
@@ -189,6 +493,45 @@ impl Descargador {
         );
         theme::card(p).show(ui, |ui| {
             ui.set_width(ui.available_width());
+            ui.add_enabled_ui(!ejecutando, |ui| self.mostrar_perfiles(ui, p));
+        });
+        if let Some(catalogo) = &self.catalogo {
+            if catalogo.pantalla != Pantalla::Carga || self.edicion == Edicion::Integral {
+                ui.add_space(8.0);
+                theme::card(p).show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    egui::CollapsingHeader::new("Planificar lote")
+                        .default_open(self.plan.is_some())
+                        .show(ui, |ui| {
+                            ui.add_enabled_ui(!ejecutando, |ui| {
+                                mostrar_lote(
+                                    ui,
+                                    p,
+                                    catalogo,
+                                    self.edicion,
+                                    &mut self.lote,
+                                    (&mut self.lote_desde, &mut self.lote_hasta),
+                                    &mut self.plan,
+                                );
+                            });
+                            let plan = self.plan.as_ref().and_then(|r| r.as_ref().ok());
+                            self.ejecucion.mostrar(
+                                ui,
+                                p,
+                                self.edicion,
+                                catalogo,
+                                plan,
+                                self.conexion.puente.clone(),
+                                self.catalogo_remoto,
+                            );
+                        });
+                });
+            }
+        }
+    }
+
+    fn mostrar_perfiles(&mut self, ui: &mut Ui, p: &Pal) {
+        {
             let edicion_anterior = self.edicion;
             ui.horizontal_wrapped(|ui| {
                 ui.selectable_value(&mut self.edicion, Edicion::Integral, "Integral");
@@ -298,27 +641,6 @@ impl Descargador {
             }
             if let Some(e) = &self.error {
                 ui.label(RichText::new(e).color(p.amber));
-            }
-        });
-        if let Some(catalogo) = &self.catalogo {
-            if catalogo.pantalla != Pantalla::Carga || self.edicion == Edicion::Integral {
-                ui.add_space(8.0);
-                theme::card(p).show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    egui::CollapsingHeader::new("Planificar lote")
-                        .default_open(self.plan.is_some())
-                        .show(ui, |ui| {
-                            mostrar_lote(
-                                ui,
-                                p,
-                                catalogo,
-                                self.edicion,
-                                &mut self.lote,
-                                (&mut self.lote_desde, &mut self.lote_hasta),
-                                &mut self.plan,
-                            );
-                        });
-                });
             }
         }
     }
