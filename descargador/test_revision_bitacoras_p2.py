@@ -59,6 +59,18 @@ def test_p2_paquete_lleva_el_alcance_y_el_asistente_clasifica(tmp_path):
     assert [r.revision_bitacora for r in cargado.rows] == [r.revision_bitacora for r in work.rows]
 
 
+def test_revision_no_atribuye_la_observacion_si_la_identidad_visible_discrepa(tmp_path):
+    manifest = diaries(tmp_path / 'Bitacoras 2026-10-13', 1)
+    control = json.loads(manifest.read_text(encoding='utf-8'))
+    control['registros'][0]['nombre'] = 'Persona Ficticia Distinta'
+    manifest.write_text(json.dumps(control), encoding='utf-8')
+
+    _, filas, paquete = _trabajo(tmp_path, manifest)
+    captura = read_capture(paquete)
+    assert any(i['code'] == 'BITACORA_ADVERTENCIA' for i in captura.rows('incidencias'))
+    assert clasificar(filas['100'].revision_bitacora, date(2026, 8, 1), date(2026, 8, 31))[0] == NO_VERIFICABLE
+
+
 def test_p2_exporta_excel_y_json_en_carpeta_nueva(tmp_path):
     work, _, _ = _trabajo(tmp_path, diaries(tmp_path / 'Bitacoras 2026-10-13', 1))
     desde, hasta = date(2026, 9, 8), date(2026, 10, 8)

@@ -64,11 +64,13 @@ corresponde. El botón no escribe en RUS: solo guarda la marca en la sesión loc
 En Trabajo, **Más ▾ › Revisión de bitácoras…** abre una ventana que clasifica cada registro del paquete en el período
 elegido (por defecto, el mes que termina en el corte, como Meta 4):
 
-- **Con observación:** hay al menos una observación del centro en el período.
+- **Con observación:** hay al menos una observación atribuible al centro en el período. El motivo muestra cuántos días
+  tuvieron observaciones y la última fecha.
 - **Sin observación:** la bitácora se leyó completa (tabla reconocida, sin paginador ni otro indicio de recorte, sin
   advertencias de identidad) y se leyó en o después de la fecha «hasta», sin observaciones del centro en el período.
-- **No verificable:** no hay bitácora verificada, la ventana mostró indicios de recorte, se leyó antes del fin del período o
-  el paquete es anterior a esta revisión (vuelve a capturar con el Descargador actualizado).
+- **No verificable:** la cobertura quedó incompleta o hay entradas sin identidad visible u origen del centro comprobados.
+  Si recuperas una sesión anterior y la revisión pide comprobar el origen, reimporta el ZIP original. Si falta evidencia
+  del alcance de la lectura, vuelve a capturar con el Descargador actualizado.
 
 «Mostrar» filtra la lista. **Seleccionar en Trabajo** marca esos registros en la tabla de Trabajo para editarlos o preparar
 productos. **Exportar Excel y JSON…** crea una carpeta nueva `Revision_bitacoras_<fecha>` con `Revision_bitacoras.xlsx`

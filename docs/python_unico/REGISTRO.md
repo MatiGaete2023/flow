@@ -3,7 +3,7 @@
 **Actualizar al terminar CADA turno** (antes de quedarse sin tokens): qué se hizo, verificación, siguiente paso exacto.
 Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
-## Estado al 19-nov-2026
+## Estado al 20-nov-2026
 
 | Paquete | Estado | Último commit / nota |
 |---|---|---|
@@ -27,9 +27,24 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-Validar las correcciones de la punta de `flow-python` en una nueva revisión independiente (decisión j). Después, probar un lote
-chico en Windows con el Descargador y la extensión de la misma entrega. Si se recaptura un lote anterior, reemplazar el ZIP
-local usado en Trabajo por el nuevo paquete con la evidencia actualizada.
+Comprobar la corrida de CI rápida de la rama. Para recuperar el veredicto general del verificador, listar los 38 nodos
+históricos del Asistente y los 10 del Descargador que faltan, documentar sus reemplazos y revisar los textos de Historia del
+golden contra las decisiones aprobadas. La prueba de P3c en Windows con SITFA y la revisión E3 específica de la
+extensión siguen pendientes.
+
+## Revisión de código del 20-nov-2026
+
+- [Informe de hallazgos y pruebas](REVISION_CODIGO_20261120.md) sobre la punta `93a3631`.
+- «Retomar paquete» conserva la configuración original. El ZIP anterior queda disponible durante el reintento y
+  pasa a respaldo después de que la exportación nueva se valida. Los controles antiguos siguen abriendo.
+- La revisión de bitácoras comprueba el origen antes de atribuir observaciones y presenta el número de días con
+  actividad. Los manuales explican cuándo reimportar un paquete.
+- La ayuda usa la apertura local del Asistente. Los RIT ficticios observados ahora usan el año reservado y
+  la CI rápida incluye el push de `flow-python`, con alerta de formato heredado.
+- Linux con Tk virtual: 1.405 pruebas aprobadas del Asistente, 422 y 62 subpruebas del Descargador, 133 de Meta 4,
+  y 128 de Anonimizador y Descargador Lite en conjunto. Controles Node, restricciones, privacidad, estado y enlaces
+  aprobados. El golden regenerado conservó el resultado de `93a3631`. El verificador completo sigue observando
+  el inventario histórico y la referencia golden versionada.
 
 ## Correcciones E3 del 19-nov-2026
 

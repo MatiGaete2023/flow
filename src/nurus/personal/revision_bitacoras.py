@@ -29,6 +29,7 @@ def _dia(texto):
 def evidencia_por_ingreso(capture):
     """{(court_code, cause_id, ingreso_id): revision_bitacoras} desde las consultas de bitácora del paquete."""
     salida = {}
+    advertidas = {i['query_id'] for i in capture.rows('incidencias') if i['code'] == 'BITACORA_ADVERTENCIA'}
     for consulta in capture.manifest.get('queries', ()):
         if consulta.get('screen') != 'bitacoras':
             continue
@@ -42,11 +43,20 @@ def evidencia_por_ingreso(capture):
         clave = tuple(str(identidad.get(k, '')) for k in ('court_code', 'cause_id', 'ingreso_id'))
         if all(clave):
             alcance = filtros.get('revision_bitacoras')
-            salida[clave] = {
-                **(alcance if isinstance(alcance, dict) else {}),
-                'lectura': consulta.get('coverage', ''),
-                'fecha_consulta': consulta.get('captured_at', ''),
-            }
+            alcance = alcance if isinstance(alcance, dict) else {}
+            if alcance.get('warnings', 0) != 0:
+                advertidas.add(consulta['query_id'])
+            if consulta['query_id'] in advertidas:
+                alcance = {**alcance, 'completa': False}
+            if clave in salida:
+                salida[clave]['completa'] = False
+            else:
+                salida[clave] = {
+                    **alcance,
+                    'lectura': consulta.get('coverage', ''),
+                    'fecha_consulta': consulta.get('captured_at', ''),
+                    'consultas_advertidas': advertidas,
+                }
     return salida
 
 
@@ -66,14 +76,27 @@ def datos_de_registro(record, evidencia, eventos):
         and desde is not None and hasta is not None and desde <= hasta == fecha == _dia(ev.get('fecha_consulta'))
         and ev['desde'] == desde.isoformat() and ev['hasta'] == hasta.isoformat()
     )
-    fechas = sorted({d.isoformat() for e in eventos if str(e.get('text', '')).strip() for d in [_dia(e.get('event_at'))] if d})
+    fechas_centro, fechas_inciertas = set(), set()
+    advertidas = ev.get('consultas_advertidas', ())
+    for evento in eventos:
+        dia = _dia(evento.get('event_at'))
+        if not dia or not str(evento.get('text', '')).strip():
+            continue
+        if evento.get('query_id') in advertidas or evento.get('origin_verified') != 'true':
+            fechas_inciertas.add(dia.isoformat())
+        elif evento.get('origin') == 'CENTRO':
+            fechas_centro.add(dia.isoformat())
+        elif evento.get('origin') == 'DESCONOCIDO':
+            fechas_inciertas.add(dia.isoformat())
     return {
         'leida': lectura,
         'alcance': ev.get('coverage', ''),
         'completa': acredita,
         'capturada': fecha.isoformat() if fecha else '',
         'desde': desde.isoformat() if acredita else '',
-        'fechas_centro': fechas,
+        'fechas_centro': sorted(fechas_centro),
+        'fechas_inciertas': sorted(fechas_inciertas),
+        'origen_comprobado': True,
     }
 
 
@@ -116,7 +139,12 @@ def clasificar(datos, desde, hasta):
         return NO_VERIFICABLE, 'Sin bitácora verificada en el paquete (identidad no verificada o paquete sin bitácoras).'
     en_periodo = [f for f in datos.get('fechas_centro', ()) if desde.isoformat() <= f <= hasta.isoformat()]
     if en_periodo:
-        return CON, f'{len(en_periodo)} observación(es) del centro en el período; última {max(en_periodo)}.'
+        if datos.get('origen_comprobado') is not True:
+            return NO_VERIFICABLE, 'La sesión anterior no comprobó el origen de estas observaciones. Reimporta el ZIP.'
+        dias = '1 día' if len(en_periodo) == 1 else f'{len(en_periodo)} días'
+        return CON, f'Observaciones del centro en {dias} del período. Último día {max(en_periodo)}.'
+    if any(desde.isoformat() <= f <= hasta.isoformat() for f in datos.get('fechas_inciertas', ())):
+        return NO_VERIFICABLE, 'Hay entradas en el período sin identidad visible u origen del centro comprobados.'
     if not datos.get('leida'):
         return NO_VERIFICABLE, 'La bitácora no se pudo leer.'
     if datos.get('alcance') not in ('COMPLETA', 'VACIA_COMPROBADA'):

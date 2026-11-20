@@ -799,7 +799,7 @@ def test_historico_con_la_forma_visible_de_la_ventana_real_19nov():
     proteccion = ['Cod Ingreso', 'Fecha Ingreso', 'Cod Proyecto', 'Nombre Proyecto', 'Tribunal', 'RUC', 'RIT', 'CausalIngreso1',
                   'EntidadAsigna1', 'CausalIngreso2', 'EntidadAsigna2', 'CausalIngreso3', 'EntidadAsigna3', 'Fecha Egreso',
                   'Causal Egreso', 'Con Quien Egresa']  # fmt: skip
-    fila = ['1', '5/22/2026', '10', 'PRM - PROGRAMA FICTICIO', 'LETRAS Y GARANTIA FICTICIO', '1-K', 'X-1-2018', 'VÍCTIMA FICTICIA',
+    fila = ['1', '5/22/2026', '10', 'PRM - PROGRAMA FICTICIO', 'LETRAS Y GARANTIA FICTICIO', '1-K', 'X-1-2099', 'VÍCTIMA FICTICIA',
             'E', '--', '--', '--', '--', '--', 'SIN INFORMACION', 'SIN INFORMACION']  # fmt: skip
 
     def celdas(valores):

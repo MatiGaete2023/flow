@@ -30,7 +30,8 @@ La consulta de firmas continúa retirada: no hay campo activo de días ni hoja v
 Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «Consultar y crear paquete» (apagada por defecto; se recuerda).
 
 - **Qué lee:** de cada causa del lote, la tabla de la pestaña *Historia* (Folio, Etapa, Trámite, Desc. Trámite, Referencia, Fecha Tram, anexo sí/no) y el encabezado de la causa. Una lectura por causa, hasta 5000 por lote, con pausa.
-- **Qué no hace:** no abre PDF ni anexos, no lee Notificación, Diligencias ni Escritos, no consulta por RIT ni nombre; solo usa el enlace de historia del listado vigente.
+- **Alcance:** usa el enlace de historia del listado vigente. Si la respuesta incluye la tabla Escritos, también la lee.
+  Notificación, Diligencias, PDF y anexos quedan fuera de esta consulta.
 - **Ventana:** los últimos 4 meses hasta la fecha de lectura; el Excel declara Desde y Hasta. No acredita ausencia de trámites fuera de ese rango.
 - **Productos:** `Historia_SITFA.xlsx` en la carpeta del paquete; con **Incluir historia en el paquete**, la tabla `historia_tramites` del ZIP (de la causa, no de un ingreso). El HTML íntegro queda en `respaldo/…/historia/`, nunca en el ZIP.
 - **Errores:** sesión vencida, tabla distinta o falla de red dejan la causa como FALLIDA con su motivo y el paquete como parcial; el paquete se crea igual. Nunca se informa «sin trámites» por un error.
@@ -51,8 +52,8 @@ Casilla **Leer también la historia de la causa (últimos 4 meses)**, junto a «
 
 `Paquete CSMP …/respaldo/proceso.json` guarda un **historial anónimo**: inicio o reintento, cada fase, si las consultas se
 reutilizaron, el resumen de bitácoras (leídas, no leídas, consultas fallidas, históricos), las bitácoras no leídas por
-tribunal, el error literal si se cortó y el estado final. Las rutas de archivos se reemplazan por «<ruta>». Si un paquete
-falla o queda PARCIAL, basta compartir ese archivo junto con `diagnostico_bitacoras.json` y `diagnostico_historia.json`.
+tribunal, el código de error si se cortó y el estado final. Si un paquete falla o queda PARCIAL, para el diagnóstico
+comparte solo el historial anónimo y los conteos anónimos de `diagnostico_bitacoras.json` y `diagnostico_historia.json`.
 Al terminar, el Descargador también avisa por tribunal cuántas bitácoras no se leyeron (sin vínculo, fallidas o pendientes).
 
 ## Lotes antiguos (retención de 60 días)
@@ -63,6 +64,11 @@ confirmar. Con la casilla de conservar, un lote clásico conserva `Bitacoras_RUS
 y un paquete conserva solo su ZIP (la carpeta `respaldo/` se borra). Para guardar todo, usa **Archivar**.
 
 ## Recuperación, consultas separadas y productos disponibles
+
+**Más opciones › Retomar paquete…** usa el alcance y las opciones guardadas al iniciar el paquete, aunque hayas cambiado
+las preferencias del Descargador. Un paquete antiguo sin opciones guardadas toma las actuales en su primer reintento.
+Si la nueva exportación falla o se cancela antes de validarse, el ZIP anterior sigue disponible en la carpeta principal.
+Cuando el reemplazo se valida, la versión anterior queda en `respaldo/`.
 
 1. Iniciar sesión institucional manualmente y definir tribunales, modalidades,
    pestañas y período autorizado. Enlazar la extensión del mismo paquete.
