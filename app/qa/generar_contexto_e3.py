@@ -117,6 +117,20 @@ def generar(referencia, carpeta):
     }
     assert str(fechas["201"]) == "2026-11-01" and fechas["202"] is None
     generar_discordancia(captura, salida)
+    lote_informes = bound_lot(carpeta / "lote-informes", "Informes")
+    informe = package_current_lot(
+        lote.folder, bitacoras, carpeta / "contexto-e3-informes.zip", extra_folders=[lote_informes.folder],
+    )["path"]
+    trabajo_informes = import_capture(informe, defaults(), as_of=date(2026, 10, 19))
+    avisos = [
+        a for f in trabajo_informes.rows
+        if trabajo_informes.capture_sources[f.id]["record_type"] == "INFORMES"
+        for a in f.warnings if a.startswith("CAL-03")
+    ]
+    assert avisos == [(
+        "CAL-03: la pestaña Informes indica vencimiento el 10 de octubre de 2026 y el calendario del ingreso "
+        "proyecta el informe pendiente el 1 de noviembre de 2026; revisar en RUS."
+    )]
     return salida
 
 

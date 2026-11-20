@@ -11,6 +11,8 @@ use std::path::Path;
 use unicode_normalization::UnicodeNormalization;
 
 const LIMITE_ANALISIS: usize = 20_000;
+const INGRESO: [&str; 4] = ["source_system", "court_code", "cause_id", "ingreso_id"];
+const VENTANA_INFORMES_DIAS: i64 = 60;
 const PROCEDENCIA: [(&str, &str); 5] = [
     ("SITFA_ARCHIVO", "original_file"),
     ("SITFA_HOJA", "original_sheet"),
@@ -189,6 +191,7 @@ pub struct ContextoFila {
     pub historia: Option<ResumenLectura>,
     pub bitacora: Option<ResumenLectura>,
     pub calendario: Option<ResumenCalendario>,
+    pub vencimiento_calendario_91: Option<NaiveDate>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -202,11 +205,47 @@ pub struct ResumenLectura {
 pub struct ResumenCalendario {
     pub lectura: ResumenLectura,
     pub pendientes: Vec<NaiveDate>,
+    proyecciones: usize,
 }
 
 impl ResumenCalendario {
     pub fn proxima_pendiente(&self, corte: NaiveDate) -> Option<NaiveDate> {
         self.pendientes.iter().copied().find(|&fecha| fecha > corte)
+    }
+
+    pub fn avisos_cotejo(
+        &self,
+        corte: NaiveDate,
+        vencimiento_informes: Option<NaiveDate>,
+        fecha_calendario_91: Option<NaiveDate>,
+    ) -> Vec<String> {
+        if self.proyecciones == 0 {
+            return Vec::new();
+        }
+        let mut avisos = Vec::new();
+        let completa = self.lectura.cobertura == "COMPLETA";
+        let primera = self.pendientes.first().copied();
+        let proxima = self.proxima_pendiente(corte);
+        let fecha_es = crate::util::fecha_es;
+        if let Some(informes) =
+            vencimiento_informes.filter(|&f| Some(f) != primera && (primera.is_some() || completa))
+        {
+            let contraste = primera.map_or_else(
+                || "no tiene informes pendientes".into(),
+                |f| format!("proyecta el informe pendiente el {}", fecha_es(f)),
+            );
+            avisos.push(format!("CAL-03: la pestaña Informes indica vencimiento el {} y el calendario del ingreso {contraste}; revisar en RUS.", fecha_es(informes)));
+        }
+        if let Some(hoja2) =
+            fecha_calendario_91.filter(|&f| Some(f) != proxima && (proxima.is_some() || completa))
+        {
+            let contraste = proxima.map_or_else(
+                || "no tiene un próximo informe pendiente".into(),
+                |f| format!("proyecta el próximo informe el {}", fecha_es(f)),
+            );
+            avisos.push(format!("CAL-03: Hoja2 (calendario 91) indica el {} y el calendario del ingreso {contraste}; revisar en RUS.", fecha_es(hoja2)));
+        }
+        avisos
     }
 }
 
@@ -389,10 +428,50 @@ fn filas_por_consulta<'a>(fuente: &'a Captura, tabla: &str) -> HashMap<&'a str, 
     salida
 }
 
+fn calendario_91(fuente: &Captura, corte: NaiveDate) -> HashMap<[String; 4], Option<NaiveDate>> {
+    let consultas: HashSet<_> = fuente
+        .filas("consultas")
+        .filter(|q| q.get("screen") == "calendario_informes")
+        .filter(|q| matches!(q.get("coverage"), "COMPLETA" | "PARCIAL"))
+        .filter(|q| {
+            chrono::DateTime::parse_from_rfc3339(q.get("captured_at"))
+                .is_ok_and(|leida| leida.date_naive() <= corte)
+        })
+        .map(|q| q.get("query_id"))
+        .collect();
+    let mut fechas = HashMap::new();
+    for f in fuente.filas("calendarios") {
+        if !consultas.contains(f.get("query_id"))
+            || f.get("association") != "VERIFICADA"
+            || !matches!(f.get("event_type"), "INFORME" | "INFORMES")
+        {
+            continue;
+        }
+        let Some(fecha) = fecha_evento(f) else {
+            continue;
+        };
+        if !(1..=VENTANA_INFORMES_DIAS).contains(&(fecha - corte).num_days()) {
+            continue;
+        }
+        let clave = INGRESO.map(|campo| f.get(campo).to_string());
+        if clave.iter().any(String::is_empty) {
+            continue;
+        }
+        let guardada = fechas.entry(clave).or_insert(Some(fecha));
+        if *guardada != Some(fecha) {
+            *guardada = None;
+        }
+    }
+    fechas
+}
+
+fn fecha_evento(f: Fila<'_>) -> Option<NaiveDate> {
+    f.get("event_at").get(..10)?.parse().ok()
+}
+
 fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila> {
     const CAUSA: [&str; 3] = ["source_system", "court_code", "cause_id"];
     const PERSONA: [&str; 3] = ["source_system", "court_code", "person_id"];
-    const INGRESO: [&str; 4] = ["source_system", "court_code", "cause_id", "ingreso_id"];
     let escritos_por_consulta = filas_por_consulta(fuente, "escritos");
     let historico_por_consulta = filas_por_consulta(fuente, "historico_proteccion");
     let historia_por_consulta = filas_por_consulta(fuente, "historia_tramites");
@@ -415,6 +494,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
         INGRESO,
         corte,
     );
+    let fechas_calendario_91 = calendario_91(fuente, corte);
     let mut salida = HashMap::new();
     for r in fuente.filas("registros") {
         if r.get("identity_status") != "VERIFICADA" {
@@ -423,7 +503,10 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
         let causa = CAUSA.map(|campo| r.get(campo).to_string());
         let persona = PERSONA.map(|campo| r.get(campo).to_string());
         let ingreso = INGRESO.map(|campo| r.get(campo).to_string());
-        let mut ctx = ContextoFila::default();
+        let mut ctx = ContextoFila {
+            vencimiento_calendario_91: fechas_calendario_91.get(&ingreso).copied().flatten(),
+            ..Default::default()
+        };
         if let Some(q) = escritos.get(&causa) {
             let filas = escritos_por_consulta
                 .get(q.id.as_str())
@@ -512,21 +595,26 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 .get(q.id.as_str())
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
-            let mut pendientes: Vec<_> = filas
+            let proyecciones: Vec<_> = filas
                 .iter()
                 .filter(|_| matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL"))
                 .filter(|f| {
                     f.get("association") == "VERIFICADA"
                         && f.get("event_type") == "INFORME_PROYECTADO"
                 })
-                .filter(|f| f.get("status") == "PENDIENTE")
-                .filter_map(|f| f.get("event_at").parse().ok())
+                .filter_map(|f| fecha_evento(*f).map(|fecha| (fecha, f.get("status"))))
+                .collect();
+            let mut pendientes: Vec<_> = proyecciones
+                .iter()
+                .filter(|(_, estado)| *estado == "PENDIENTE")
+                .map(|(fecha, _)| *fecha)
                 .collect();
             pendientes.sort_unstable();
             pendientes.dedup();
             ctx.calendario = Some(ResumenCalendario {
                 lectura: q.resumen(filas),
                 pendientes,
+                proyecciones: proyecciones.len(),
             });
         }
         if ctx != ContextoFila::default() {

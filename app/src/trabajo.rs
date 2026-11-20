@@ -237,17 +237,21 @@ impl Trabajo {
         let pre = motor::prepaso(mode, &filas, corte);
         let mut registros = Vec::with_capacity(filas.len());
         for (n, (f, i)) in filas.iter().zip(&filas_idx).enumerate() {
+            let contexto = columna_id
+                .and_then(|col| f.values.get(col))
+                .and_then(|id| self.paquete.as_ref()?.contextos.get(&id.display()));
+            let fecha_calendario_91 = contexto.and_then(|ctx| ctx.vencimiento_calendario_91);
+            let calendario = contexto.and_then(|ctx| ctx.calendario.as_ref());
             let fecha_hoja2 = if mode == Mode::Cumplimiento {
-                if let Some(paquete) = &self.paquete {
-                    let fecha = columna_id
-                        .and_then(|col| f.values.get(col))
-                        .and_then(|id| paquete.contextos.get(&id.display()))
-                        .and_then(|contexto| contexto.calendario.as_ref())
-                        .and_then(|calendario| calendario.proxima_pendiente(corte));
-                    if fecha.is_some() {
+                if self.paquete.is_some() {
+                    fecha_calendario_91.map(|fecha| {
+                        self.cruce = Some("Hoja2 (calendario 91)".into());
+                        fecha
+                    }).or_else(|| {
+                        let fecha = calendario?.proxima_pendiente(corte)?;
                         self.cruce.get_or_insert_with(|| "Calendario del ingreso".into());
-                    }
-                    fecha
+                        Some(fecha)
+                    })
                 } else {
                     let k: Vec<String> = ["rit", "rut", "nombre", "tribunal", "programa"].iter().map(|k| historical_match(&f.text(k))).collect();
                     cruce.get(&k).copied()
@@ -255,7 +259,11 @@ impl Trabajo {
             } else {
                 None
             };
-            let r = motor::evaluar(cfg, mode, f, corte, &pre, n, fecha_hoja2);
+            let mut r = motor::evaluar(cfg, mode, f, corte, &pre, n, fecha_hoja2);
+            if let Some(calendario) = calendario.filter(|_| matches!(mode, Mode::Cumplimiento | Mode::Informes)) {
+                let vencimiento_informes = (mode == Mode::Informes).then(|| f.date("vencimiento")).flatten();
+                r.avisos.extend(calendario.avisos_cotejo(corte, vencimiento_informes, fecha_calendario_91));
+            }
             let excluido = r.eventos.iter().any(|e| e == "COMUN.NO_SEGUIMIENTO");
             let acciones = if excluido { vec![] } else { motor::acciones(&r.eventos, fecha_hoja2, corte) };
             let mut reg = Registro {
@@ -473,6 +481,40 @@ mod tests {
             assert!(trabajo.registros.iter().all(|r| r.fecha_hoja2.is_none()));
             assert!(trabajo.cruce.is_none());
         }
+    }
+
+    #[test]
+    fn calendario_91_conserva_precedencia_y_aviso_al_abrir_trabajo() {
+        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
+        let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_flujo.zip");
+        let trabajo = Trabajo::abrir_archivo(
+            ruta,
+            Some(Mode::Cumplimiento),
+            "2026-10-20".parse().unwrap(),
+            &Config::default(),
+        ).unwrap();
+        assert_eq!(trabajo.registros[0].fecha_hoja2, "2026-11-15".parse().ok());
+        assert_eq!(trabajo.cruce.as_deref(), Some("Hoja2 (calendario 91)"));
+        assert_eq!(trabajo.registros[0].avisos.iter().filter(|a| a.starts_with("CAL-03")).map(String::as_str).collect::<Vec<_>>(), [
+            "CAL-03: Hoja2 (calendario 91) indica el 15 de noviembre de 2026 y el calendario del ingreso no tiene un próximo informe pendiente; revisar en RUS."
+        ]);
+        assert!(trabajo.registros[1..].iter().all(|r| r.fecha_hoja2.is_none() && r.avisos.iter().all(|a| !a.starts_with("CAL-03"))));
+    }
+
+    #[test]
+    fn informes_coteja_contexto_e3_del_exportador_python_con_una_sola_fecha() {
+        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let trabajo = Trabajo::abrir_archivo(
+            PathBuf::from(ruta).with_file_name("contexto-e3-informes.zip"),
+            Some(Mode::Informes),
+            "2026-10-19".parse().unwrap(),
+            &Config::default(),
+        ).unwrap();
+        let avisos: Vec<_> = trabajo.registros.iter().flat_map(|r| &r.avisos)
+            .filter(|a| a.starts_with("CAL-03")).map(String::as_str).collect();
+        assert_eq!(avisos, [
+            "CAL-03: la pestaña Informes indica vencimiento el 10 de octubre de 2026 y el calendario del ingreso proyecta el informe pendiente el 1 de noviembre de 2026; revisar en RUS."
+        ]);
     }
 
     #[test]
