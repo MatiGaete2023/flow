@@ -1,3 +1,4 @@
+use crate::copia_excel::{self, FilaBitacora, COLUMNAS_BITACORA};
 use crate::theme::Pal;
 use crate::trabajo::Trabajo;
 use crate::util::{parse_date_text, Cell};
@@ -14,8 +15,6 @@ const CLASES: [Clase; 3] = [
     Clase::SinObservacion,
     Clase::NoVerificable,
 ];
-const COLUMNAS_BITACORA: [&str; 2] = ["CLASIFICACION_BITACORA", "MOTIVO_BITACORA"];
-
 pub enum Accion {
     AbrirFila(usize),
     SeleccionarEnTrabajo(Vec<usize>),
@@ -184,10 +183,13 @@ impl Dialogo {
                             .to_string();
                         let destino = carpeta.join(nombre);
                         match exportar(&destino, w, &elegidas, self.periodo) {
-                            Ok(rutas) => {
+                            Ok((rutas, aviso)) => {
                                 productos = Some(rutas);
-                                self.salida =
-                                    Some(format!("Revisión guardada en {}", destino.display()));
+                                let mensaje = format!("Revisión guardada en {}", destino.display());
+                                self.salida = Some(match aviso {
+                                    Some(aviso) => format!("{mensaje} · {aviso}"),
+                                    None => mensaje,
+                                });
                             }
                             Err(error) => self.salida = Some(error),
                         }
@@ -269,23 +271,28 @@ fn exportar(
     w: &Trabajo,
     filas: &[&(usize, Resultado)],
     periodo: (NaiveDate, NaiveDate),
-) -> Result<[PathBuf; 2], String> {
+) -> Result<([PathBuf; 2], Option<String>), String> {
     let columna = w
         .headers
         .iter()
         .position(|h| h == "ID_REGISTRO_CAPTURA")
         .ok_or("El trabajo carece de identificadores de captura.")?;
-    let (mut encabezados, mut datos) =
-        crate::productos::tabla_observaciones(w, filas.iter().map(|(i, _)| &w.registros[*i]));
-    encabezados.extend(COLUMNAS_BITACORA.map(str::to_owned));
+    let mut lecturas = Vec::with_capacity(filas.len());
     let mut registros = Vec::with_capacity(filas.len());
     let mut totales =
         std::collections::BTreeMap::from(CLASES.map(|clase| (clase.etiqueta(), 0usize)));
-    for (fila, (indice, resultado)) in datos.iter_mut().zip(filas.iter().copied()) {
-        let r = &w.registros[*indice];
+    for &(indice, ref resultado) in filas.iter().copied() {
+        let r = w
+            .registros
+            .get(indice)
+            .ok_or("La selección contiene una fila que ya no está en Trabajo.")?;
         let etiqueta = resultado.clase.etiqueta();
         *totales.get_mut(etiqueta).unwrap() += 1;
-        fila.extend([etiqueta.into(), resultado.motivo.clone()]);
+        lecturas.push(FilaBitacora {
+            indice,
+            clasificacion: etiqueta,
+            motivo: &resultado.motivo,
+        });
         registros.push(json!({
             "id": r.values[columna].display(), "clasificacion": resultado.clase, "motivo": resultado.motivo,
         }));
@@ -300,16 +307,37 @@ fn exportar(
     let informe = directorio.join("Revision_bitacoras.json");
     std::fs::create_dir(directorio)
         .map_err(|e| format!("No se pudo crear la carpeta de la revisión: {e}"))?;
-    let resultado =
-        crate::productos::escribir_xlsx(&[(w.mode().label(), encabezados, datos)], &excel)
-            .and_then(|_| std::fs::write(&informe, json).map_err(|e| e.to_string()));
-    if let Err(error) = resultado {
-        let _ = std::fs::remove_file(&excel);
-        let _ = std::fs::remove_file(&informe);
-        let _ = std::fs::remove_dir(directorio);
-        return Err(format!("No se pudo exportar la revisión: {error}"));
+    let resultado = (|| {
+        let aviso = match copia_excel::base(w) {
+            Ok(base) => {
+                copia_excel::exportar_bitacoras(w, &base, &excel, &lecturas)?;
+                None
+            }
+            Err(aviso) => {
+                let (mut encabezados, mut datos) = crate::productos::tabla_observaciones(
+                    w,
+                    lecturas.iter().map(|r| &w.registros[r.indice]),
+                );
+                encabezados.extend(COLUMNAS_BITACORA.map(str::to_owned));
+                for (fila, lectura) in datos.iter_mut().zip(&lecturas) {
+                    fila.extend([lectura.clasificacion.into(), lectura.motivo.into()]);
+                }
+                crate::productos::escribir_xlsx(&[(w.mode().label(), encabezados, datos)], &excel)?;
+                Some(aviso)
+            }
+        };
+        std::fs::write(&informe, json).map_err(|err| err.to_string())?;
+        Ok::<_, String>(aviso)
+    })();
+    match resultado {
+        Ok(aviso) => Ok(([excel, informe], aviso)),
+        Err(error) => {
+            let _ = std::fs::remove_file(&excel);
+            let _ = std::fs::remove_file(&informe);
+            let _ = std::fs::remove_dir(directorio);
+            Err(format!("No se pudo exportar la revisión: {error}"))
+        }
     }
-    Ok([excel, informe])
 }
 
 #[cfg(test)]
@@ -387,7 +415,8 @@ mod tests {
             "revision_{}",
             chrono::Utc::now().timestamp_millis()
         ));
-        let [xlsx, informe] = exportar(&destino, &w, &filas, dialogo.periodo).unwrap();
+        let ([xlsx, informe], aviso) = exportar(&destino, &w, &filas, dialogo.periodo).unwrap();
+        assert!(aviso.is_some());
         let hojas = crate::lectura::read_sheets(&std::fs::read(&xlsx).unwrap()).unwrap();
         let general = crate::productos::excel_observaciones(&w, &destino).unwrap();
         let general = crate::lectura::read_sheets(&std::fs::read(general).unwrap()).unwrap();

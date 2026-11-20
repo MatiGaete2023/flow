@@ -15,6 +15,13 @@ pub const FIDELIDAD_REDUCIDA: &str = "Copia de fidelidad reducida: el XLSX conso
 const HOJAS_SERVICIO: [&str; 3] = ["Resumen", "SITFA_ARCHIVOS", "Vencimientos"];
 const PROCEDENCIA: [&str; 3] = ["SITFA_SHA256", "SITFA_ARCHIVO", "SITFA_FILA"];
 const TIPOS_RES: [&str; 3] = ["PC_IE", "PC_INFO", "NOMENCL"];
+pub const COLUMNAS_BITACORA: [&str; 2] = ["CLASIFICACION_BITACORA", "MOTIVO_BITACORA"];
+
+pub struct FilaBitacora<'a> {
+    pub indice: usize,
+    pub clasificacion: &'a str,
+    pub motivo: &'a str,
+}
 
 /// Libro de partida y ubicación de cada registro en su hoja.
 pub struct Base {
@@ -216,9 +223,19 @@ fn literal(s: &str) -> String {
 
 /// Instrucciones para Excel: columnas, celdas por columna, filas excluidas y trazabilidad (`_trace_rows`).
 pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) -> Value {
+    plan_excel(w, base, origen, destino, &[])
+}
+
+fn plan_excel(
+    w: &Trabajo,
+    base: &Base,
+    origen: &Path,
+    destino: &Path,
+    bitacoras: &[(usize, &FilaBitacora<'_>)],
+) -> Value {
     let etapa_revisada = w.registros.iter().any(revisada);
     // Orden del registro mensual del usuario (decisión del 20-nov-2026), igual en propuesta y revisión.
-    let titulos: Vec<&str> = vec![
+    let mut titulos: Vec<&str> = vec![
         "NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "FECHA_OBS", "OBSERVACION", "TT", "CC", "RES",
         "NURUS_ESTADO_REVISION", "NURUS_DECISIONES",
     ];
@@ -276,6 +293,14 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
         let decision = if r.excluido { "excluded" } else if aprobada { "approved" } else { "pending" };
         traza.push(json!([base.hoja, fila, decision, r.avisos.join("; "), literal(&obs), reglas, huella]));
     }
+    if !bitacoras.is_empty() {
+        titulos.extend(COLUMNAS_BITACORA);
+        for (fila, lectura) in bitacoras {
+            for (titulo, texto) in COLUMNAS_BITACORA.into_iter().zip([lectura.clasificacion, lectura.motivo]) {
+                celdas.entry(titulo).or_default().push(json!({"f": fila, "v": literal(texto)}));
+            }
+        }
+    }
     let escrituras: Vec<Value> = titulos
         .iter()
         .map(|t| {
@@ -293,7 +318,33 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
         "origen": origen, "destino": destino, "hoja": base.hoja, "encabezado": base.encabezado,
         "titulos": titulos, "escrituras": escrituras, "res_sugerida": res_sugerida,
         "ocultas": ["NURUS_REGLAS", "NURUS_DECISIONES"], "excluidas": excluidas, "traza": traza, "tipos_res": TIPOS_RES,
+        "bitacoras": if bitacoras.is_empty() {
+            Value::Null
+        } else {
+            json!({
+                "columnas": COLUMNAS_BITACORA,
+                "filas": bitacoras.iter().map(|(fila, _)| fila).collect::<Vec<_>>(),
+            })
+        },
     })
+}
+
+fn filas_bitacora<'a>(
+    base: &Base,
+    filas: &'a [FilaBitacora<'a>],
+) -> Result<Vec<(usize, &'a FilaBitacora<'a>)>, String> {
+    if filas.is_empty() {
+        return Err("Selecciona al menos una fila de bitácoras.".into());
+    }
+    let mut elegidas = filas.iter().map(|lectura| {
+        base.filas.get(lectura.indice).copied().map(|fila| (fila, lectura))
+            .ok_or_else(|| "La fila de bitácora no está asociada a la hoja de origen.".to_string())
+    }).collect::<Result<Vec<_>, _>>()?;
+    elegidas.sort_unstable_by_key(|(fila, _)| *fila);
+    if elegidas.windows(2).any(|par| par[0].0 == par[1].0) {
+        return Err("Dos resultados de bitácora apuntan a la misma fila de Excel.".into());
+    }
+    Ok(elegidas)
 }
 
 /// Script de Excel de escritorio. Solo abre la copia temporal y guarda otra copia; nunca toca el original.
@@ -350,6 +401,12 @@ try {
     if (Vacia $ws.Cells.Item($h, $c).Value2) { $ws.Cells.Item($h, $c).Value2 = [string]$t }
   }
   $etapa = 'escribir observaciones y estados'
+  if ($d.bitacoras) {
+    foreach ($t in $d.bitacoras.columnas) {
+      $c = $cols[[string]$t]
+      [void]$ws.Range($ws.Cells.Item($h + 1, $c), $ws.Cells.Item($ultimaFila, $c)).ClearContents()
+    }
+  }
   foreach ($e in $d.escrituras) {
     foreach ($p in @($e.celdas)) { if ([int]$p.f -le $h -or [int]$p.f -gt $ultimaFila) { throw "La fila $($p.f) no existe en la hoja procesada." } }
     if (@($e.celdas).Count -gt 0) { Escribir $ws $cols[[string]$e.titulo] @($e.celdas) ([bool]$e.conservar) }
@@ -379,6 +436,21 @@ try {
   $etapa = 'marcar filas excluidas'
   $color = 255 + 242 * 256 + 204 * 65536
   foreach ($f in @($d.excluidas)) { $ws.Range($ws.Cells.Item([int]$f, 1), $ws.Cells.Item([int]$f, $ultima)).Interior.Color = $color }
+  if ($d.bitacoras) {
+    $etapa = 'aplicar la selección de bitácoras'
+    if ($ws.FilterMode) { $ws.ShowAllData() }
+    # Oculta intervalos del cuerpo sin mover filas ni cambiar referencias de fórmulas.
+    $primera = $h + 1
+    foreach ($f in $d.bitacoras.filas) {
+      $f = [int]$f
+      if ($f -gt $primera) { $ws.Range($ws.Cells.Item($primera, 1), $ws.Cells.Item($f - 1, 1)).EntireRow.Hidden = $true }
+      $ws.Cells.Item($f, 1).EntireRow.Hidden = $false
+      $primera = $f + 1
+    }
+    if ($primera -le $ultimaFila) {
+      $ws.Range($ws.Cells.Item($primera, 1), $ws.Cells.Item($ultimaFila, 1)).EntireRow.Hidden = $true
+    }
+  }
   $etapa = 'crear la trazabilidad'
   $nombres = @{}; for ($i = 1; $i -le $wb.Worksheets.Count; $i++) { $nombres[$wb.Worksheets.Item($i).Name] = $true }
   $nombre = 'NURUS_TRAZABILIDAD'; $n = 2; while ($nombres.ContainsKey($nombre)) { $nombre = "NURUS_TRAZABILIDAD_$n"; $n++ }
@@ -412,15 +484,35 @@ pub fn nombre_salida(w: &Trabajo, base: &Base) -> String {
 
 #[cfg(target_os = "windows")]
 pub fn exportar(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
-    use base64::Engine;
-    use std::os::windows::process::CommandExt;
     let base = base(w)?;
     std::fs::create_dir_all(dir).map_err(|e| format!("No se pudo crear la carpeta de productos: {e}"))?;
     let destino = dir.join(nombre_salida(w, &base));
+    guardar_copia(&base, &destino, |o, d| instrucciones(w, &base, o, d))
+}
+
+pub fn exportar_bitacoras(
+    w: &Trabajo,
+    base: &Base,
+    destino: &Path,
+    filas: &[FilaBitacora<'_>],
+) -> Result<PathBuf, String> {
+    let elegidas = filas_bitacora(base, filas)?;
+    guardar_copia(base, destino, |o, d| plan_excel(w, base, o, d, &elegidas))
+}
+
+#[cfg(target_os = "windows")]
+fn guardar_copia(
+    base: &Base,
+    destino: &Path,
+    instrucciones: impl FnOnce(&Path, &Path) -> Value,
+) -> Result<PathBuf, String> {
+    use base64::Engine;
+    use std::os::windows::process::CommandExt;
+    let dir = destino.parent().ok_or("Falta la carpeta de la copia.")?;
     if destino.exists() {
         return Err("El archivo de destino ya existe; vuelve a guardar.".into());
     }
-    let marca = format!("{}_{}", std::process::id(), chrono::Local::now().timestamp_millis());
+    let marca = format!("{}_{}", std::process::id(), chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default());
     let origen = dir.join(format!("~flow-origen-{marca}.{}", base.extension));
     let temporal = dir.join(format!("~flow-salida-{marca}.{}", base.extension));
     let datos = std::env::temp_dir().join(format!("flow_copia_{marca}.json"));
@@ -430,7 +522,7 @@ pub fn exportar(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
         let _ = std::fs::remove_file(&datos);
     };
     std::fs::write(&origen, &base.bytes).map_err(|e| format!("No se pudo preparar la copia: {e}"))?;
-    let plan = instrucciones(w, &base, &origen, &temporal);
+    let plan = instrucciones(&origen, &temporal);
     if let Err(e) = std::fs::write(&datos, serde_json::to_vec(&plan).unwrap_or_default()) {
         limpiar();
         return Err(format!("No se pudo preparar la copia: {e}"));
@@ -448,17 +540,22 @@ pub fn exportar(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
         let creada = std::fs::metadata(&temporal).map(|m| m.len() > 0).unwrap_or(false);
         if !(out.status.success() && texto.contains("GUARDADO") && creada) {
             let err = String::from_utf8_lossy(&out.stderr);
-            let detalle = err.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
+            let detalle = err.lines().find(|l| l.starts_with("Excel no pudo completar")).unwrap_or("");
             return Err(format!(
                 "La copia preservada requiere Excel de escritorio. {}",
                 if detalle.is_empty() { "Excel no produjo un archivo verificable." } else { detalle }
             ));
         }
-        std::fs::rename(&temporal, &destino).map_err(|e| format!("No se pudo dejar la copia en la carpeta: {e}"))?;
-        Ok(destino.clone())
+        std::fs::rename(&temporal, destino).map_err(|e| format!("No se pudo dejar la copia en la carpeta: {e}"))?;
+        Ok(destino.to_owned())
     })();
     limpiar();
     resultado
+}
+
+#[cfg(not(target_os = "windows"))]
+fn guardar_copia(_: &Base, _: &Path, _: impl FnOnce(&Path, &Path) -> Value) -> Result<PathBuf, String> {
+    Err("La copia preservada requiere Windows y Excel de escritorio.".into())
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -615,6 +712,29 @@ mod tests {
         assert!(error.contains("1 fila(s) sin correspondencia"), "{error}");
         let doble = paquete_con_consolidado(&[("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 7.0)]);
         assert!(base_paquete(&trabajo_paquete(doble)).err().unwrap().contains("repetida"));
+    }
+
+    #[test]
+    fn bitacoras_comparte_la_copia_revisada_y_anota_solo_la_fila_elegida() {
+        let zip = paquete_con_consolidado(&[("Seguimiento ficticio.xls", 9.0), ("Seguimiento ficticio.xls", 7.0)]);
+        let mut w = trabajo_paquete(zip);
+        w.registros[0].editada = Some("Edición ficticia".into());
+        w.registros[0].propuesta = "Propuesta ficticia".into();
+        let b = base_paquete(&w).unwrap();
+        let origen = Path::new("origen.xlsx");
+        let destino = Path::new("revision.xlsx");
+        let general = instrucciones(&w, &b, origen, destino);
+        let seleccion = [FilaBitacora { indice: 0, clasificacion: "Con observación", motivo: "Motivo ficticio" }];
+        let filas = filas_bitacora(&b, &seleccion).unwrap();
+        let revision = plan_excel(&w, &b, origen, destino, &filas);
+        let comunes = general["escrituras"].as_array().unwrap();
+        let todas = revision["escrituras"].as_array().unwrap();
+        assert_eq!(&todas[..comunes.len()], comunes.as_slice());
+        assert_eq!(revision["bitacoras"]["filas"], json!([3]));
+        assert_eq!(todas[comunes.len()]["celdas"], json!([{"f": 3, "v": "Con observación"}]));
+        assert_eq!(todas[comunes.len() + 1]["celdas"], json!([{"f": 3, "v": "Motivo ficticio"}]));
+        let fuera = [FilaBitacora { indice: 2, clasificacion: "Con observación", motivo: "Ficticio" }];
+        assert!(filas_bitacora(&b, &fuera).is_err());
     }
 
     #[test]
