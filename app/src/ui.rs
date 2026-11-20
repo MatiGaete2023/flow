@@ -295,6 +295,12 @@ impl App {
             }
             "cumplimiento" => self.cargar_ejemplo(Mode::Cumplimiento),
             "informes" => self.cargar_ejemplo(Mode::Informes),
+            "trabajo-contexto" if self.screenshot.is_some() => {
+                let ruta = std::env::var_os("FLOW_E3_PAQUETE").expect("paquete ficticio de contexto");
+                self.corte_txt = "19/10/2026".into();
+                self.abrir(PathBuf::from(ruta));
+                assert!(self.work.as_ref().is_some_and(|w| w.paquete.is_some()), "No abrió el ZIP ficticio de contexto.");
+            }
             "contactos" => self.vista = Vista::Contactos,
             "anonimizador" => self.vista = Vista::Anonimizador,
             "descargador" => {

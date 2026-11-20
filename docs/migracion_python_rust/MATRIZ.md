@@ -8,12 +8,12 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F02 | Trabajo y cruces | Tres etapas, Hoja 2, calendario 91 y proyección por ingreso. CAL-03 contrasta vencimientos de Cumplimiento e Informes. Pendientes Egresados, OB e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
 | F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. Detecta discordancias de Escritos e Histórico. Pendientes contexto de historia en el motor, prórroga, audiencia y búsqueda. |
-| F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
+| F05 | Otro programa, reiteración y Escritos | Reiteración acreditada con R5 y vista de Escritos. Pendientes reglas de otro programa, atribución de Escritos, consignar, deshacer y recalcular. |
 | F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección y Excel/JSON. El informe aplica la misma copia preservada o tabla de respaldo que **Guardar observaciones** y añade clasificación y motivo por ID de registro. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
 | F09 | Sesión y vigencia | Estado local por archivo, etapa y corte presente. Pendientes recibos, vigencia, compatibilidad y recuperación. |
-| F10 | Excel preservado | Copia preservada con Excel de escritorio desde el original o el consolidado (huella, archivo base y fila), columnas NURUS en el orden del registro, `NURUS_DECISIONES`, RES con lista, excluidas y trazabilidad. Pendientes prueba con Excel real, reimportación y conciliación. |
+| F10 | Excel preservado | Probado con Excel de escritorio sobre originales y consolidados ficticios. Conserva RIT, columnas NURUS, decisiones, lista RES y trazabilidad. Pendientes reimportación, conciliación y aceptación con archivos del usuario. |
 | F11 | Configuración y contactos | Ajustes, plantillas e importación presentes. Cotejar contactos duplicados, variables y migración de formatos. |
 | F12 | Correos y nómina | Preparación, nómina editable por celda, contactos importados de Flow Python y aviso sin destinatario. Cotejar agrupación, firma y alcance. |
 | F13 | Borradores Outlook | EML y guardado Outlook presentes. Simular fallos antes y después de guardar y validar recibos. |
