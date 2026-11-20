@@ -33,3 +33,14 @@ Para cotejar los ZIP V1 que genera el productor nativo histórico, ejecutar en e
 $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bitacoras.exe).Path
 cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
 ```
+
+## Biblioteca en Linux (sin escritorio)
+
+`app/` usa eframe sin backend X11/Wayland y solo compila el binario para Windows. Para revisar desde Linux:
+
+```bash
+rustup target add x86_64-pc-windows-gnu
+cargo check --manifest-path app/Cargo.toml --locked --target x86_64-pc-windows-gnu --all-targets
+```
+
+Las pruebas de `captura` y `descargador` corren en un crate aislado que enlaza `app/src/lib.rs`, `captura*` y `descargador*` con las dependencias de `app/Cargo.toml` salvo eframe, egui y rfd, y copia `app/Cargo.lock`. Ejecutar `cargo test --lib` y `cargo clippy --lib --tests -- -D warnings` en ese crate.

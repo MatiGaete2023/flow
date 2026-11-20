@@ -349,10 +349,17 @@ impl App {
             return;
         }
         let Some(dir) = self.carpeta_productos() else { return };
-        let r = productos::excel_observaciones(self.work.as_ref().unwrap(), &dir);
+        let w = self.work.as_ref().unwrap();
+        // Como Flow Python: copia del Excel original (o del consolidado del paquete) con las columnas de revisión.
+        // Sin libro que preservar, una tabla nueva de fidelidad reducida, con el aviso visible.
+        let r = match crate::copia_excel::base(w) {
+            Ok(_) => crate::copia_excel::exportar(w, &dir).map(|p| (p, None)),
+            Err(aviso) => productos::excel_observaciones(w, &dir).map(|p| (p, Some(aviso))),
+        };
         match r {
-            Ok(p) => {
-                self.aviso(format!("Excel de observaciones guardado: {}", p.display()), false);
+            Ok((p, aviso)) => {
+                let texto = format!("Excel revisable guardado: {}", p.display());
+                self.aviso(aviso.map_or(texto.clone(), |a| format!("{texto} · {a}")), false);
                 self.registrar(p, "Excel de observaciones");
             }
             Err(e) => self.aviso(e, true),
@@ -495,7 +502,7 @@ impl App {
                     if theme::primary(ui, p, "📂  Abrir Excel o ZIP…").on_hover_text("Ctrl+O · Excel de RUS o paquete CSMP · también puedes arrastrar el archivo").clicked() {
                         self.abrir_dialogo();
                     }
-                    if ui.button("💾  Guardar observaciones").on_hover_text("Ctrl+S · Excel con la observación de cada fila").clicked() {
+                    if ui.button("💾  Guardar observaciones").on_hover_text("Ctrl+S · copia del Excel original con la observación de cada fila (requiere Excel)").clicked() {
                         self.guardar_excel();
                     }
                     ui.separator();

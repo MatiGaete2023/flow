@@ -6,6 +6,7 @@
 mod anon;
 mod captura_trabajo;
 mod config;
+mod copia_excel;
 mod demo;
 mod descargador_ui;
 mod lectura;

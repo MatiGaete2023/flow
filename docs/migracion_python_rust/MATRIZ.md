@@ -13,15 +13,15 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
 | F09 | Sesión y vigencia | Estado local por archivo, etapa y corte presente. Pendientes recibos, vigencia, compatibilidad y recuperación. |
-| F10 | Excel preservado | Exportación nueva presente. Completar copia preservada y conciliación con hojas, tipos, fórmulas y estilos. |
+| F10 | Excel preservado | Copia preservada con Excel de escritorio desde el original o el consolidado del paquete, columnas NURUS, RES con lista, excluidas y trazabilidad. Pendientes prueba con Excel real, `NURUS_DECISIONES`, reimportación y conciliación. |
 | F11 | Configuración y contactos | Ajustes, plantillas e importación presentes. Cotejar contactos duplicados, variables y migración de formatos. |
 | F12 | Correos y nómina | Preparación, edición y nómina presentes. Cotejar agrupación, firma, adjuntos, alcance y selección. |
 | F13 | Borradores Outlook | EML y guardado Outlook presentes. Simular fallos antes y después de guardar y validar recibos. |
 | F14 | Proyectos Word | Vista previa, edición y DOCX presentes. Comparar plantillas completas, tipos, agrupación, campos y formatos. |
 | F15 | Formularios manuales | Cotejar gestión particular en blanco. Completar Word manual y reutilizar los productos existentes. |
 | F16 | Resultados y estadísticas | Vista y reporte presentes. Cotejar búsqueda, historial, diagnóstico, calidad y composición de entrega. |
-| F17 | Descargador integral y Lite | Validación de perfiles y carga de catálogos desde JSON o el puente local de Chrome. Lite admite cuatro pantallas e Integral añade Carga. Pendientes ejecución y prueba del lote completo con sitio ficticio. |
-| F18 | Gestión de lotes | Planificación combinada y vista previa por pantalla. Pendientes ejecución, favoritos, pausas, topes, cancelación, recuperación y PDF de consulta vacía. |
+| F17 | Descargador integral y Lite | Perfiles, catálogos desde JSON o Chrome y ejecución de lotes Lite (cuatro pantallas) contra SITFA ficticio. Pendientes ejecución Integral, Carga y prueba con Chrome real. |
+| F18 | Gestión de lotes | Planificación, ejecución Lite, pausa, cancelación, manifiestos, `resumen.json` y PDF de consulta vacía. Pendientes favoritos, topes, reanudación y preferencias persistentes. |
 | F19 | Bitácora, historia y calendario | Pendiente en el Descargador vigente. Probar identidad, ventanas, procedencia y respaldo alterado. |
 | F20 | Escritos | Pendiente. Diferenciar tabla vacía, ausente, variante con pestaña y lecturas parciales. |
 | F21 | Histórico de Protección | Pendiente. Evaluar titular visible, reutilización, marco compatible, tope y suspensión por fallas. |
