@@ -18,6 +18,7 @@ def clasificacion_rust(ejecutable, paquete, causa, desde, hasta):
 
 def comprobar_productos(app, carpeta, trabajo, paquete):
     from openpyxl import load_workbook
+    from openpyxl.utils.cell import range_boundaries
     from nurus.personal.revision_bitacoras import exportar, revisar
 
     desde, hasta = date(2026, 9, 8), date(2026, 10, 8)
@@ -39,22 +40,38 @@ def comprobar_productos(app, carpeta, trabajo, paquete):
         r["clasificacion"] for r in informe_python["registros"]
     ]
 
-    def filas(ruta):
-        libro = load_workbook(ruta, read_only=True)
-        try:
-            return list(libro.active.iter_rows(values_only=True))
-        finally:
-            libro.close()
+    libro_python = load_workbook(py_excel, read_only=True)
+    libro_rust = load_workbook(salida / "Revision_bitacoras.xlsx")
+    libro_general = load_workbook(next(carpeta.glob("Observaciones_*.xlsx")))
+    try:
+        general, bitacoras = libro_general.active, libro_rust.active
+        comunes = general.max_column
+        filas_generales = list(general.values)
+        filas_bitacoras = list(bitacoras.values)
+        assert bitacoras.title == general.title
+        assert [f[:comunes] for f in filas_bitacoras] == filas_generales
+        assert filas_bitacoras[0][comunes:] == ("CLASIFICACION_BITACORA", "MOTIVO_BITACORA")
+        assert bitacoras.freeze_panes == general.freeze_panes == "A2"
+        assert range_boundaries(bitacoras.auto_filter.ref) == (1, 1, comunes + 2, bitacoras.max_row)
+        for fila in general.iter_rows():
+            for celda in fila:
+                assert bitacoras[celda.coordinate].style_id == celda.style_id, celda.coordinate
+        for columna, dimension in general.column_dimensions.items():
+            assert bitacoras.column_dimensions[columna].width == dimension.width, columna
 
-    python, rust = filas(py_excel), filas(salida / "Revision_bitacoras.xlsx")
-    assert python[0] == rust[0]
-    # Motivo y observación son textos de los motores respectivos. Aquí se cotejan
-    # la clasificación y los datos visibles que identifican cada fila.
-    columnas = (0, 2, 3, 4, 5)
-    assert [tuple(f[i] for i in columnas) for f in rust[1:]] == [
-        tuple(f[i] for i in columnas) for f in python[1:]
-    ]
-    print("Excel y JSON coinciden en período, clasificaciones, conteos y datos de los registros.")
+        indices = [filas_bitacoras[0].index(c) for c in (
+            "CLASIFICACION_BITACORA", "TRIBUNAL", "RIT", "NOMBRE", "DERIVACION",
+        )]
+        python = list(libro_python.active.values)
+        assert [tuple(f[i] for i in indices) for f in filas_bitacoras[1:]] == [
+            tuple(f[i] for i in (0, 2, 3, 4, 5)) for f in python[1:]
+        ]
+    finally:
+        libro_general.close()
+        libro_rust.close()
+        libro_python.close()
+    print("Bitácoras conserva columnas, valores y formato del Excel general de Flow Rust.")
+    print("Excel y JSON conservan las clasificaciones y los datos de la revisión de Flow Python.")
 
 
 def main():

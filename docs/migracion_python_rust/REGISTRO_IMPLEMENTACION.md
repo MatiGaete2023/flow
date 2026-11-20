@@ -47,6 +47,11 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - El [flujo Windows de revisión V2](https://github.com/MatiGaete2023/flow/actions/runs/44753026710) pasó 15 pruebas y el contraste de las cuatro clasificaciones de P2 sobre el mismo ZIP. Se mantuvo omitida la prueba de rendimiento. Se amplió el contraste para cotejar el Excel y JSON producidos por el exportador de Trabajo.
 - La [verificación Windows ampliada](https://github.com/MatiGaete2023/flow/actions/runs/44754662180) pasó sobre Rust `563f0691c615fc9d1a9c67fd08a3d1430cf90d9b` y Flow Python `afc4d12ae1adabf21049c809c0d8f747e2e306`. Pasaron 16 pruebas de la suite, 1 prueba focal de exportación y los cinco casos P2, incluida la identidad visible discrepante. Coincidieron período, corte, clasificaciones, conteos, encabezados y datos visibles de los productos del mismo ZIP. La prueba de rendimiento siguió omitida. Las propuestas del motor y la redacción de motivos se cotejan por separado.
 
+## Turno 3 · Excel de bitácoras compatible con la revisión general
+
+- `Revision_bitacoras.xlsx` usa la misma construcción de columnas, filas y formato que **Guardar observaciones**. Mantiene el nombre de la hoja por etapa, los datos de origen e identidad, observación con ediciones, estado, reglas, avisos, RES y fila de origen. Añade `CLASIFICACION_BITACORA` y `MOTIVO_BITACORA` al final. El alcance de filas sigue el filtro de la revisión. El identificador `ID_REGISTRO_CAPTURA` permite incorporar las columnas de bitácora por registro en el Excel general del mismo paquete.
+- El contraste P2 genera los dos Excel desde el mismo Trabajo y coteja columnas, valores comunes, formato, anchos, filtros y panel fijado. La regresión del exportador prueba también una fila filtrada con edición, marca de revisión y RES.
+
 ## Siguiente paso exacto
 
 1. Portar la evidencia nativa V1 a `app/src/captura/revision.rs` desde `rust/crates/flow-trabajo/src/paquete.rs` y los casos de `rust/crates/flow-trabajo/tests/revision_bitacoras.rs`. Los helpers de esas pruebas crean ZIP reducidos que omiten campos obligatorios. Rehacer el fixture con el exportador y el contrato completo, y luego cotejar entradas con el CSV, huellas de respaldo, procedencia, autoría y contradicciones. Mantener las clasificaciones V2 de P2 y el legado incierto.

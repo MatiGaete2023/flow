@@ -109,8 +109,11 @@ fn estado_export(r: &Registro) -> &'static str {
     }
 }
 
-/// Excel de observaciones: las columnas originales del libro + OBSERVACION, ESTADO, REGLAS, AVISOS y RES.
-pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
+/// Columnas de Trabajo y resultados vigentes del motor para las filas que se exportan.
+pub fn tabla_observaciones<'a>(
+    w: &Trabajo,
+    registros: impl IntoIterator<Item = &'a Registro>,
+) -> (Vec<String>, Vec<Vec<String>>) {
     let mut headers = w.headers.clone();
     let extra = ["OBSERVACION", "ESTADO_REVISION", "REGLAS", "AVISOS", "RES", "FILA_ORIGEN"];
     let pos: Vec<usize> = extra
@@ -124,7 +127,7 @@ pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
         })
         .collect();
     let mut rows = Vec::new();
-    for r in &w.registros {
+    for r in registros {
         let mut row: Vec<String> = r.values.iter().map(|c| c.display()).collect();
         row.resize(headers.len(), String::new());
         let marcas: Vec<String> = r.marcas.iter().map(|m| format!("N{} {}", m.nivel, m.texto)).collect();
@@ -141,6 +144,11 @@ pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
         }
         rows.push(row);
     }
+    (headers, rows)
+}
+
+pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
+    let (headers, rows) = tabla_observaciones(w, &w.registros);
     let fecha = w.corte.map(|c| c.format("%Y-%m-%d").to_string()).unwrap_or_default();
     let path = nueva_ruta(dir, &format!("Observaciones_{}_{}", w.mode().label().to_uppercase(), fecha), "xlsx");
     xlsx_libro(&[(w.mode().label(), headers, rows)], &path)?;

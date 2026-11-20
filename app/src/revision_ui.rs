@@ -14,6 +14,7 @@ const CLASES: [Clase; 3] = [
     Clase::SinObservacion,
     Clase::NoVerificable,
 ];
+const COLUMNAS_BITACORA: [&str; 2] = ["CLASIFICACION_BITACORA", "MOTIVO_BITACORA"];
 
 pub struct Dialogo {
     desde: String,
@@ -211,40 +212,22 @@ fn exportar(
     filas: &[&(usize, Resultado)],
     periodo: (NaiveDate, NaiveDate),
 ) -> Result<[PathBuf; 2], String> {
-    let titulo = "Revisión de bitácoras";
-    let encabezados = [
-        "Clasificación",
-        "Motivo",
-        "Tribunal",
-        "RIT",
-        "Nombre",
-        "Programa",
-        "Observación propuesta",
-    ]
-    .map(str::to_owned)
-    .to_vec();
     let columna = w
         .headers
         .iter()
         .position(|h| h == "ID_REGISTRO_CAPTURA")
         .ok_or("El trabajo carece de identificadores de captura.")?;
-    let mut datos = Vec::with_capacity(filas.len());
+    let (mut encabezados, mut datos) =
+        crate::productos::tabla_observaciones(w, filas.iter().map(|(i, _)| &w.registros[*i]));
+    encabezados.extend(COLUMNAS_BITACORA.map(str::to_owned));
     let mut registros = Vec::with_capacity(filas.len());
     let mut totales =
         std::collections::BTreeMap::from(CLASES.map(|clase| (clase.etiqueta(), 0usize)));
-    for (indice, resultado) in filas.iter().copied() {
+    for (fila, (indice, resultado)) in datos.iter_mut().zip(filas.iter().copied()) {
         let r = &w.registros[*indice];
         let etiqueta = resultado.clase.etiqueta();
         *totales.get_mut(etiqueta).unwrap() += 1;
-        datos.push(vec![
-            etiqueta.into(),
-            resultado.motivo.clone(),
-            w.value(r, "tribunal"),
-            w.value(r, "rit"),
-            w.value(r, "nombre"),
-            w.value(r, "programa"),
-            r.observacion().into(),
-        ]);
+        fila.extend([etiqueta.into(), resultado.motivo.clone()]);
         registros.push(json!({
             "id": r.values[columna].display(), "clasificacion": resultado.clase, "motivo": resultado.motivo,
         }));
@@ -259,8 +242,9 @@ fn exportar(
     let informe = directorio.join("Revision_bitacoras.json");
     std::fs::create_dir(directorio)
         .map_err(|e| format!("No se pudo crear la carpeta de la revisión: {e}"))?;
-    let resultado = crate::productos::escribir_xlsx(&[(titulo, encabezados, datos)], &excel)
-        .and_then(|_| std::fs::write(&informe, json).map_err(|e| e.to_string()));
+    let resultado =
+        crate::productos::escribir_xlsx(&[(w.mode().label(), encabezados, datos)], &excel)
+            .and_then(|_| std::fs::write(&informe, json).map_err(|e| e.to_string()));
     if let Err(error) = resultado {
         let _ = std::fs::remove_file(&excel);
         let _ = std::fs::remove_file(&informe);
@@ -293,6 +277,7 @@ mod tests {
         assert_eq!(dialogo.filas.len(), 2);
         let filas: Vec<_> = dialogo.filas.iter().collect();
         exportar(&destino, &w, &filas, dialogo.periodo).unwrap();
+        crate::productos::excel_observaciones(&w, destino.parent().unwrap()).unwrap();
     }
 
     #[test]
@@ -301,7 +286,7 @@ mod tests {
             return;
         };
         let corte = NaiveDate::from_ymd_opt(2026, 11, 20).unwrap();
-        let w = Trabajo::abrir_archivo(
+        let mut w = Trabajo::abrir_archivo(
             PathBuf::from(raiz).join("contracts/csmp_capture_v1/fixtures/completa.zip"),
             None,
             corte,
@@ -309,8 +294,12 @@ mod tests {
         )
         .unwrap();
         let dialogo = Dialogo::nuevo(&w, corte);
-        let filas: Vec<_> = dialogo.filas.iter().collect();
-        assert!(!filas.is_empty());
+        let fila = dialogo.filas.last().expect("fila de revisión");
+        let registro = &mut w.registros[fila.0];
+        registro.editada = Some("Observación ficticia editada por la persona revisora.".into());
+        registro.revisada = true;
+        registro.res = "PC_IE".into();
+        let filas = [fila];
         let carpeta = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/test_out");
         std::fs::create_dir_all(&carpeta).unwrap();
         let destino = carpeta.join(format!(
@@ -319,8 +308,21 @@ mod tests {
         ));
         let [xlsx, informe] = exportar(&destino, &w, &filas, dialogo.periodo).unwrap();
         let hojas = crate::lectura::read_sheets(&std::fs::read(&xlsx).unwrap()).unwrap();
+        let general = crate::productos::excel_observaciones(&w, &destino).unwrap();
+        let general = crate::lectura::read_sheets(&std::fs::read(general).unwrap()).unwrap();
         assert_eq!(hojas[0].rows.len(), filas.len() + 1);
-        assert_eq!(hojas[0].rows[0][0].display(), "Clasificación");
+        assert_eq!(hojas[0].name, general[0].name);
+        let comunes = general[0].rows[0].len();
+        assert_eq!(&hojas[0].rows[0][..comunes], general[0].rows[0].as_slice());
+        assert_eq!(
+            &hojas[0].rows[1][..comunes],
+            general[0].rows[fila.0 + 1].as_slice()
+        );
+        assert_eq!(
+            crate::lectura::headers_of(&hojas[0].rows[0][comunes..]),
+            COLUMNAS_BITACORA
+        );
+        assert_eq!(hojas[0].rows[1][comunes].display(), "No verificable");
         let bytes = std::fs::read(&informe).unwrap();
         let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(
