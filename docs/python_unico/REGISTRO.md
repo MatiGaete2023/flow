@@ -27,10 +27,8 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 ## Siguiente paso exacto
 
-Comprobar la corrida de CI rápida de la rama. Para recuperar el veredicto general del verificador, listar los 38 nodos
-históricos del Asistente y los 10 del Descargador que faltan, documentar sus reemplazos y revisar los textos de Historia del
-golden contra las decisiones aprobadas. La prueba de P3c en Windows con SITFA y la revisión E3 específica de la
-extensión siguen pendientes.
+Comprobar la corrida de CI rápida de la rama y hacer la prueba de P3c con un lote chico en Windows y SITFA. Sigue
+pendiente la revisión E3 específica de la extensión.
 
 ## Revisión de código del 20-nov-2026
 
@@ -43,8 +41,9 @@ extensión siguen pendientes.
   la CI rápida incluye el push de `flow-python`, con alerta de formato heredado.
 - Linux con Tk virtual: 1.405 pruebas aprobadas del Asistente, 422 y 62 subpruebas del Descargador, 133 de Meta 4,
   y 128 de Anonimizador y Descargador Lite en conjunto. Controles Node, restricciones, privacidad, estado y enlaces
-  aprobados. El golden regenerado conservó el resultado de `93a3631`. El verificador completo sigue observando
-  el inventario histórico y la referencia golden versionada.
+  aprobados. La salida golden regenerada conservó los 17 productos de `93a3631`. La referencia versionada incorpora
+  las tres entradas de configuración aprobadas que faltaban. El verificador se ejecuta con la lista de bajas auditadas
+  de octubre, que contiene exactamente los 48 nodeids históricos ausentes.
 
 ## Correcciones E3 del 19-nov-2026
 

@@ -16,6 +16,7 @@ automáticos. Los casos se ejecutaron con archivos ficticios y Python 3.12.14.
 | Media | El Asistente lanzaba `xdg-open` desde el comando de ayuda. El control del repositorio rechazaba esa importación de `subprocess`. | Manual y video usan la apertura local ya implementada en el Asistente. Windows usa su asociación de archivos. Linux muestra la ruta en el mismo diálogo que para otros productos. | Ejecutar `python tools/verificar_wp.py` y comprobar «Restricciones absolutas»; en Windows, abrir el manual con F1 y el video desde la paleta. [Comandos](../../src/nurus/personal/commands.py). |
 | Media | Dos RIT de datos ficticios usaban años distintos del 2099 y el control de privacidad devolvía dos hallazgos. | Cambiar únicamente esos RIT al año reservado para pruebas. | Ejecutar `python tools/check_contactos.py` y `python tools/check_real_ids.py`. |
 | Media | La CI rápida excluía `flow-python` del filtro de ramas. La base revisada carecía de ejecuciones asociadas. | Activar la CI rápida en los pushes de `flow-python`. El análisis estático y las suites conservan su carácter obligatorio. La comprobación de formato muestra los incumplimientos heredados sin impedir esas pruebas en esta rama. | Verificar la corrida del commit publicado en [GitHub Actions](https://github.com/MatiGaete2023/flow/actions/workflows/ci-rapida.yml) y el [control de configuración](../../tests/test_audit_tools.py). |
+| Media | El golden versionado omitía tres textos de Historia aprobados el 18 de noviembre. El verificador sin argumentos también señalaba 48 bajas históricas que ya estaban auditadas. | Incorporar solo las tres entradas en la referencia semántica e indicar el inventario de octubre en el comando de verificación. Los 17 productos regenerados conservaron su contenido. | Ejecutar el verificador con `--lista-eliminadas` y la [lista existente](../implementacion/verificacion/integracion-20261021-eliminadas.txt). Comparar la actualización con el [registro de integración](../integracion_20261118/REGISTRO.md). |
 
 ## Verificación reproducible
 
@@ -43,18 +44,11 @@ xvfb-run -a python -m pytest -q anonimizador/tests descargador_lite/tests
 node descargador/test_bitacoras_extension.cjs
 node descargador/test_calendario_extension.cjs
 node descargador/test_historia_extension.cjs
-python tools/verificar_wp.py
+python tools/verificar_wp.py --lista-eliminadas docs/implementacion/verificacion/integracion-20261021-eliminadas.txt
 ```
 
 ## Controles que requieren seguimiento
 
-- **Inventario histórico de pruebas.** El verificador ya informaba 38 nodeids ausentes en Asistente y 10 en
-  Descargador sobre `93a3631`. Identificar cada prueba renombrada o reemplazada y declarar solo bajas verificadas,
-  según el mecanismo de `--lista-eliminadas`. Los nuevos cambios conservan las pruebas preexistentes de la rama.
-- **Golden versionado.** Los 17 productos semánticos regenerados dieron el mismo resultado antes y después de esta
-  revisión. Ambos difieren del archivo versionado en `config.textos.HISTORIA`. El verificador general sigue en
-  «FALLA» por estas dos discrepancias de referencia. Para resolver la de configuración, cruzar exactamente los
-  textos distintos con las decisiones del plan antes de actualizar la referencia.
 - **Formato.** Quedan 27 archivos fuera del formato Ruff. La CI de esta rama muestra ese resultado. La activación
   del formato como requisito queda para una regularización de esos archivos.
 - **Prueba institucional pendiente.** Falta verificar en Windows un lote pequeño con la opción Ingreso Histórico y
