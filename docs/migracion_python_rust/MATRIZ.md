@@ -21,7 +21,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F15 | Formularios manuales | Cotejar gestión particular en blanco. Completar Word manual y reutilizar los productos existentes. |
 | F16 | Resultados y estadísticas | Vista y reporte presentes. Cotejar búsqueda, historial, diagnóstico, calidad y composición de entrega. |
 | F17 | Descargador integral y Lite | Vista con catálogo local y validación de perfiles. Lite admite cuatro pantallas e Integral añade Carga. Pendientes conexión y prueba en el sitio ficticio. |
-| F18 | Gestión de lotes | Pendiente. Cotejar favoritos, pausas, topes, cancelación, recuperación y PDF de consulta vacía. |
+| F18 | Gestión de lotes | Planificación combinada y vista previa por pantalla. Pendientes ejecución, favoritos, pausas, topes, cancelación, recuperación y PDF de consulta vacía. |
 | F19 | Bitácora, historia y calendario | Pendiente en el Descargador vigente. Probar identidad, ventanas, procedencia y respaldo alterado. |
 | F20 | Escritos | Pendiente. Diferenciar tabla vacía, ausente, variante con pestaña y lecturas parciales. |
 | F21 | Histórico de Protección | Pendiente. Evaluar titular visible, reutilización, marco compatible, tope y suspensión por fallas. |

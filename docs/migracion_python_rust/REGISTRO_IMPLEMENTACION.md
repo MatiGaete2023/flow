@@ -72,7 +72,13 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - Se conservaron el tema y los controles de Flow Rust. La preparación de perfiles funciona con catálogos locales; la conexión del Descargador, la planificación combinada de lotes y sus productos siguen en E2.
 - La [verificación Windows de perfiles](https://github.com/MatiGaete2023/flow/actions/runs/44766033616) pasó 22 pruebas de Rust, la prueba focal de exportación, 10 casos V1 y legado y cinco casos P2. Se mantuvo omitida la prueba de rendimiento. Se revisaron las [capturas de Trabajo y Descargador](https://github.com/MatiGaete2023/flow/actions/runs/44766033616/artifacts/14645840756) del binario generado en esa ejecución.
 
+## Turno 5 · Preparación de lotes del Descargador
+
+- **Herramientas → Descargador → Planificar lote** permite marcar varios tribunales, pestañas y modalidades. Informes y Cumplimiento admiten sus filtros por separado. El resultado muestra el total y las consultas previstas en la misma vista que valida perfiles individuales.
+- El plan reutiliza la validación de perfiles. En Lite conserva el orden fijo de pestañas de Flow Python. En Integral respeta el orden de selección y permite combinar filtros por pestaña. Litigantes combina estados, los calendarios combinan meses de un año y Carga combina tribunales con un período de hasta 31 días.
+- Las pruebas de Rust cubren el orden de las 16 combinaciones del caso de referencia de Lite, filtros por pestaña, duplicados, tribunales ajenos al catálogo y restricciones de fechas. Las cinco pruebas del Descargador pasaron localmente en el entorno aislado. La compilación completa y la captura de la vista corresponden al flujo Windows de la rama.
+
 ## Siguiente paso exacto
 
 1. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico.
-2. Completar E2 con el plan combinado de lotes sobre `app/src/descargador.rs`, usando los perfiles validados de la vista Descargador. Cotejar `Batch.plan` en `descargador_lite/app/lotes.py` y probar la combinación de dos tribunales, cuatro modalidades y dos pestañas de `test_plan_exige_filtros_de_cada_pestana`. Luego integrar la conexión y los resultados del Descargador con el sitio ficticio. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.
+2. Integrar la ejecución de `PlanLote` y sus resultados con el sitio ficticio en E2. Usar los componentes de transporte y resultados de Flow Python como referencia y probar el manejo de consultas vacías, cancelación y reintentos. E3 incorpora historia y calendario al motor de Trabajo. E4 aborda la conciliación entre capturas y la copia del consolidado.

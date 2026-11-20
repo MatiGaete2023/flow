@@ -1,8 +1,12 @@
 //! Perfiles locales del Descargador, a partir de las opciones anunciadas por cada catálogo.
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
+
+pub const PESTANAS: [&str; 4] = ["Espera", "Cumplimiento", "Informes", "Egresados"];
+pub const MODALIDADES: [&str; 4] = ["1", "2", "3", "4"];
+pub const TODAS_LAS_MEDIDAS: &str = "0";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Edicion {
@@ -90,6 +94,25 @@ pub struct Seleccion {
     pub hasta: Option<NaiveDate>,
 }
 
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct SeleccionLote {
+    pub tribunales: Vec<String>,
+    pub pestanas: Vec<String>,
+    pub modalidades: Vec<String>,
+    pub informes: Vec<String>,
+    pub medidas: Vec<String>,
+    pub estados: Vec<String>,
+    pub meses: Vec<String>,
+    pub anio: String,
+    pub fechas: Option<(NaiveDate, NaiveDate)>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct PlanLote {
+    pub consultas: Vec<Perfil>,
+    pub fechas: Option<(NaiveDate, NaiveDate)>,
+}
+
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct Perfil {
     pub pantalla: Pantalla,
@@ -119,6 +142,150 @@ pub enum Alcance {
 }
 
 impl Catalogo {
+    pub fn planificar(&self, edicion: Edicion, lote: &SeleccionLote) -> Result<PlanLote, String> {
+        if !self.pantalla.disponible(edicion) {
+            return Err(format!(
+                "{} está disponible en Integral.",
+                self.pantalla.etiqueta()
+            ));
+        }
+        if lote.tribunales.is_empty() {
+            return Err("Marca al menos un tribunal.".into());
+        }
+        let dimensiones = [
+            &lote.tribunales,
+            &lote.pestanas,
+            &lote.modalidades,
+            &lote.informes,
+            &lote.medidas,
+            &lote.estados,
+            &lote.meses,
+        ];
+        if dimensiones
+            .iter()
+            .any(|v| v.iter().collect::<HashSet<_>>().len() != v.len())
+        {
+            return Err("El lote tiene opciones repetidas.".into());
+        }
+        let calendario = matches!(
+            self.pantalla,
+            Pantalla::CalendarioInformes | Pantalla::CalendarioMedidas
+        );
+        if let Some((desde, hasta)) = lote.fechas {
+            if calendario {
+                return Err("El calendario usa mes y año en el lote.".into());
+            }
+            if desde > hasta
+                || [desde, hasta]
+                    .iter()
+                    .any(|d| !(1900..=2100).contains(&d.year()))
+            {
+                return Err(
+                    "Usa fechas válidas entre 1900 y 2100, con Desde anterior o igual a Hasta."
+                        .into(),
+                );
+            }
+        }
+        let variantes = match self.pantalla {
+            Pantalla::Seguimiento => Self::seguimiento_lote(edicion, lote)?,
+            Pantalla::Litigantes => {
+                if lote.estados.is_empty() {
+                    return Err("Marca al menos un estado.".into());
+                }
+                lote.estados
+                    .iter()
+                    .map(|estado| Seleccion {
+                        estado: estado.clone(),
+                        ..Default::default()
+                    })
+                    .collect()
+            }
+            Pantalla::CalendarioInformes | Pantalla::CalendarioMedidas => {
+                if lote.meses.is_empty() || lote.anio.is_empty() {
+                    return Err("Marca al menos un mes y elige un año.".into());
+                }
+                lote.meses
+                    .iter()
+                    .map(|mes| Seleccion {
+                        mes: mes.clone(),
+                        anio: lote.anio.clone(),
+                        ..Default::default()
+                    })
+                    .collect()
+            }
+            Pantalla::Carga => {
+                let (desde, hasta) = lote.fechas.ok_or("Carga requiere un rango de fechas.")?;
+                vec![Seleccion {
+                    desde: Some(desde),
+                    hasta: Some(hasta),
+                    ..Default::default()
+                }]
+            }
+        };
+        let mut consultas = Vec::new();
+        for tribunal in &lote.tribunales {
+            for variante in &variantes {
+                let mut seleccion = variante.clone();
+                seleccion.tribunal.clone_from(tribunal);
+                consultas.push(self.preparar(edicion, &seleccion)?);
+            }
+        }
+        Ok(PlanLote {
+            consultas,
+            fechas: lote.fechas,
+        })
+    }
+
+    fn seguimiento_lote(edicion: Edicion, lote: &SeleccionLote) -> Result<Vec<Seleccion>, String> {
+        if lote.modalidades.is_empty() || lote.pestanas.is_empty() {
+            return Err("Marca al menos una modalidad y una pestaña.".into());
+        }
+        if lote
+            .modalidades
+            .iter()
+            .any(|m| !MODALIDADES.contains(&m.as_str()))
+            || lote
+                .pestanas
+                .iter()
+                .any(|p| !PESTANAS.contains(&p.as_str()))
+        {
+            return Err("Modalidad o pestaña fuera de las opciones admitidas.".into());
+        }
+        let pestanas: Vec<&str> = match edicion {
+            Edicion::Integral => lote.pestanas.iter().map(String::as_str).collect(),
+            Edicion::Lite => PESTANAS
+                .into_iter()
+                .filter(|p| lote.pestanas.iter().any(|s| s == p))
+                .collect(),
+        };
+        let sin_filtro = [String::new()];
+        let mut variantes = Vec::new();
+        for pestana in pestanas {
+            let reportes = match pestana {
+                "Informes" if lote.informes.is_empty() => {
+                    return Err("Marca al menos un tipo de informe.".into())
+                }
+                "Cumplimiento" if lote.medidas.is_empty() => {
+                    return Err("Marca al menos un filtro de medidas.".into())
+                }
+                "Informes" => lote.informes.as_slice(),
+                "Cumplimiento" => lote.medidas.as_slice(),
+                _ => &sin_filtro,
+            };
+            for modalidad in &lote.modalidades {
+                for reporte in reportes {
+                    variantes.push(Seleccion {
+                        pestana: pestana.into(),
+                        modalidad: modalidad.clone(),
+                        reporte: reporte.clone(),
+                        ..Default::default()
+                    });
+                }
+            }
+        }
+        Ok(variantes)
+    }
+
     pub fn preparar(&self, edicion: Edicion, s: &Seleccion) -> Result<Perfil, String> {
         if !self.pantalla.disponible(edicion) {
             return Err(format!(
@@ -189,23 +356,20 @@ impl Catalogo {
     }
 
     fn seguimiento(&self, s: &Seleccion) -> Result<(Alcance, String), String> {
-        if !matches!(
-            s.pestana.as_str(),
-            "Espera" | "Cumplimiento" | "Informes" | "Egresados"
-        ) || !self.pestanas.contains(&s.pestana)
-        {
+        if !PESTANAS.contains(&s.pestana.as_str()) || !self.pestanas.contains(&s.pestana) {
             return Err("Selecciona una pestaña disponible.".into());
         }
         let modalidad = self
             .modalidades
             .get(&s.modalidad)
             .ok_or("Selecciona una modalidad disponible.")?;
-        let filtro = match s.pestana.as_str() {
+        let filtro: Option<&str> = match s.pestana.as_str() {
             "Informes" => Some(
                 self.informes
                     .get(&s.reporte)
                     .ok_or("Selecciona un tipo de informe.")?,
             ),
+            "Cumplimiento" if s.reporte == TODAS_LAS_MEDIDAS => Some("Todas las medidas"),
             "Cumplimiento" => Some(
                 self.medidas
                     .get(&s.reporte)
@@ -221,7 +385,9 @@ impl Catalogo {
         let alcance = Alcance::Seguimiento {
             pestana: s.pestana.clone(),
             modalidad: s.modalidad.clone(),
-            reporte: filtro.map(|_| s.reporte.clone()),
+            reporte: filtro
+                .filter(|_| s.pestana != "Cumplimiento" || s.reporte != TODAS_LAS_MEDIDAS)
+                .map(|_| s.reporte.clone()),
         };
         Ok((alcance, detalle))
     }
@@ -313,5 +479,115 @@ mod tests {
         assert!(catalogo(Pantalla::Litigantes)
             .preparar(Edicion::Integral, &s)
             .is_err());
+    }
+
+    #[test]
+    fn lote_lite_ordena_pestanas_y_combina_tribunales_modalidades_y_filtros() {
+        let mut modelo = catalogo(Pantalla::Seguimiento);
+        modelo
+            .tribunales
+            .insert("otro".into(), "Otro tribunal ficticio".into());
+        modelo
+            .modalidades
+            .extend(MODALIDADES.map(|m| (m.into(), format!("Modalidad {m}"))));
+        let mut lote = SeleccionLote {
+            tribunales: vec!["ficticio".into(), "otro".into()],
+            modalidades: MODALIDADES.map(String::from).into(),
+            pestanas: vec!["Egresados".into(), "Espera".into()],
+            ..Default::default()
+        };
+        let plan = modelo.planificar(Edicion::Lite, &lote).unwrap();
+        let orden: Vec<_> = plan
+            .consultas
+            .iter()
+            .map(|p| match &p.alcance {
+                Alcance::Seguimiento {
+                    pestana,
+                    modalidad,
+                    reporte,
+                } => {
+                    assert!(reporte.is_none());
+                    (p.tribunal.as_str(), pestana.as_str(), modalidad.as_str())
+                }
+                _ => panic!("Consulta fuera de Seguimiento"),
+            })
+            .collect();
+        let esperado: Vec<_> = ["ficticio", "otro"]
+            .into_iter()
+            .flat_map(|t| {
+                ["Espera", "Egresados"]
+                    .into_iter()
+                    .flat_map(move |p| MODALIDADES.map(|m| (t, p, m)))
+            })
+            .collect();
+        assert_eq!(orden, esperado);
+
+        lote.pestanas = vec!["Informes".into(), "Cumplimiento".into()];
+        assert!(modelo
+            .planificar(Edicion::Lite, &lote)
+            .unwrap_err()
+            .contains("medidas"));
+        lote.medidas = vec![TODAS_LAS_MEDIDAS.into(), "m".into()];
+        assert!(modelo
+            .planificar(Edicion::Lite, &lote)
+            .unwrap_err()
+            .contains("tipo de informe"));
+        lote.informes = vec!["i".into()];
+        let plan = modelo.planificar(Edicion::Lite, &lote).unwrap();
+        assert_eq!(plan.consultas.len(), 24);
+        assert!(matches!(&plan.consultas[0].alcance,
+            Alcance::Seguimiento { pestana, reporte: None, .. } if pestana == "Cumplimiento"));
+        assert!(matches!(&plan.consultas[1].alcance,
+            Alcance::Seguimiento { reporte: Some(r), .. } if r == "m"));
+        assert!(matches!(&plan.consultas[8].alcance,
+            Alcance::Seguimiento { pestana, reporte: Some(r), .. } if pestana == "Informes" && r == "i"));
+        let integral = modelo.planificar(Edicion::Integral, &lote).unwrap();
+        assert!(matches!(&integral.consultas[0].alcance,
+            Alcance::Seguimiento { pestana, .. } if pestana == "Informes"));
+        lote.medidas.push("m".into());
+        assert!(modelo
+            .planificar(Edicion::Lite, &lote)
+            .unwrap_err()
+            .contains("repetidas"));
+    }
+
+    #[test]
+    fn lote_valida_estado_meses_y_fechas_segun_pantalla() {
+        let mut lote = SeleccionLote {
+            tribunales: vec!["ficticio".into()],
+            estados: vec!["1".into()],
+            meses: vec!["10".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        assert_eq!(
+            catalogo(Pantalla::Litigantes)
+                .planificar(Edicion::Lite, &lote)
+                .unwrap()
+                .consultas
+                .len(),
+            1
+        );
+        let modelo = catalogo(Pantalla::CalendarioInformes);
+        assert_eq!(
+            modelo
+                .planificar(Edicion::Lite, &lote)
+                .unwrap()
+                .consultas
+                .len(),
+            1
+        );
+        assert!(catalogo(Pantalla::Carga)
+            .planificar(Edicion::Integral, &lote)
+            .is_err());
+        lote.fechas = Some(("2026-10-01".parse().unwrap(), "2026-10-31".parse().unwrap()));
+        assert!(modelo.planificar(Edicion::Lite, &lote).is_err());
+        let modelo = catalogo(Pantalla::Carga);
+        assert!(modelo.planificar(Edicion::Lite, &lote).is_err());
+        let plan = modelo.planificar(Edicion::Integral, &lote).unwrap();
+        assert_eq!(plan.fechas, lote.fechas);
+        assert_eq!(plan.consultas.len(), 1);
+        lote.tribunales.push("desconocido".into());
+        assert!(modelo.planificar(Edicion::Integral, &lote).is_err());
     }
 }
