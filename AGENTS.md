@@ -1,26 +1,11 @@
-> **Instrucción específica para la rama de estudio `estudio/paridad-python-rust-20261119`.** El encargo del 19 de noviembre autoriza esta rama y su informe de migración Python → Rust. Empieza en [MIGRACION_RUST.md](MIGRACION_RUST.md). Las indicaciones de rama única y destino de push que siguen corresponden al mantenimiento de Python. La siguiente IA trabaja en esta rama cuando el usuario le encargue la implementación. Siguen vigentes las reglas funcionales y de datos descritas abajo.
+# Migración Python → Flow Rust
 
-# Instrucciones para agentes
-
-## Rama única y continuidad (instrucción del usuario, 19-nov-2026)
-
-- **Trabaja solo en la rama `flow-python`.** No crees ramas nuevas; si tu entorno te asigna otra, haz
-  `git fetch origin flow-python`, trabaja sobre ella y empuja a `origin flow-python`.
-- Antes de empezar lee `docs/python_unico/PLAN.md` y `docs/python_unico/REGISTRO.md` (estado, siguiente paso exacto).
-- **Al terminar cada turno** (antes de quedarte sin tokens) actualiza `docs/python_unico/REGISTRO.md`: qué hiciste, cómo
-  lo verificaste y el siguiente paso exacto; luego commit y push a `flow-python`. Así otro chat continúa desde ahí.
-- Flow Rust está congelado (decisión v de `PLAN_VIGENTE.md`): solo se mejoran las herramientas Python.
-
-Lee, en este orden y nada más salvo que tu paquete lo cite:
-
-1. `PLAN_VIGENTE.md`: esencia, prohibiciones, prioridades y decisiones del usuario.
-2. `docs/implementacion/ESTADO.json`: paquetes de trabajo (WP), estado y decisiones D1–D9.
-3. `docs/implementacion/PLAN_IMPLEMENTACION.md`: «Reglas inviolables», tu rol y la ficha de tu WP.
-
-Las instrucciones expresas del usuario prevalecen sobre estos documentos.
-
-Trabajo en curso (plan de integración 18-nov-2026: otro programa vigente, informe de avance pendiente, contrato 1.2.0): leer
-`docs/integracion_20261118/REGISTRO.md` (estado, decisiones y pendientes) antes de tocar `motor/`, el contrato o Rust.
+- Desarrollar la migración sobre `app/`, tomada de la carpeta local Flow Rust. La rama remota es `estudio/paridad-python-rust-20261119`.
+- Leer [la entrada de migración](MIGRACION_RUST.md), [el diseño](docs/migracion_python_rust/DISENO.md) y [el registro](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md) antes de modificar la aplicación.
+- Conservar `app/src/main.rs`, `app/src/ui.rs` y `app/src/theme.rs` como base de navegación y diseño. Integrar capacidades en las vistas existentes o extenderlas con sus componentes.
+- Usar Flow Python para reglas, contratos, flujos y casos de prueba. El workspace histórico `rust/` aporta lógica y evidencia transferibles.
+- Usar datos sintéticos. El Asistente funciona con entradas locales. El Descargador lee con la sesión del usuario. RUS y SATURNO quedan en solo lectura y Outlook se limita a borradores con el CC obligatorio.
+- Actualizar el registro con código, pruebas, pendientes y siguiente paso antes de cerrar cada sesión. Publicar en la rama indicada, sin fusionar a `main` ni crear releases. El acta de uso real corresponde al usuario.
 
 ## Reglas que no se negocian
 

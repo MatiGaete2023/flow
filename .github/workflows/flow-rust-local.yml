@@ -1,0 +1,73 @@
+name: Flow Rust local · Windows
+
+on:
+  push:
+    branches: [estudio/paridad-python-rust-20261119]
+    paths: [app/**, .github/workflows/flow-rust-local.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      FLOW_CASOS: ${{ github.workspace }}/rust/casos
+      FLOW_FIXTURES: ${{ github.workspace }}/rust/crates/flow-tabular/tests/datos
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Comprobar fuentes y ejemplos
+        shell: pwsh
+        run: |
+          python tools/check_real_ids.py app/src
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/check_contactos.py app/src
+      - name: Probar la aplicación desde app
+        run: cargo test --manifest-path app/Cargo.toml --locked --all-targets
+      - name: Comprobar ZIP sintéticos de Python
+        shell: pwsh
+        run: |
+          foreach ($variante in 'completa', 'parcial') {
+            cargo run --manifest-path app/Cargo.toml --locked --example verificar_paquete -- "contracts/csmp_capture_v1/fixtures/$variante.zip"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Compilar el ejecutable de Flow Rust
+        run: cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
+      - name: Preparar OpenGL en el runner
+        shell: pwsh
+        run: |
+          $mesaRoot = Join-Path $env:RUNNER_TEMP 'mesa-flow-rust'
+          $mesaArchive = "$mesaRoot.7z"
+          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.7/mesa3d-26.2.7-release-mingw.7z' -OutFile $mesaArchive
+          $digest = (Get-FileHash -LiteralPath $mesaArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($digest -ne '19c74aad7b09e682473b8de4c35b47e6498de97b71cae5511a231b8eb02f2b22') { throw 'Huella Mesa inesperada' }
+          & 7z x $mesaArchive "-o$mesaRoot" -y
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo preparar Mesa' }
+          $opengl = @(Get-ChildItem -LiteralPath $mesaRoot -Recurse -File -Filter opengl32.dll |
+            Where-Object { $_.Directory.Name -eq 'x64' })
+          if ($opengl.Count -ne 1) { throw 'No hay un único runtime OpenGL x64' }
+          Get-ChildItem -LiteralPath $opengl[0].DirectoryName -File -Filter '*.dll' |
+            Copy-Item -Destination app/target/debug
+          New-Item -ItemType File -Path app/target/debug/flow_rust.exe.local | Out-Null
+      - name: Capturar el diseño de Flow Rust
+        env:
+          GALLIUM_DRIVER: llvmpipe
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: python app/qa/capturar_windows.py --exe app/target/debug/flow_rust.exe --salida app/target/capturas
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Rust_Local_Capturas_Windows
+          path: app/target/capturas/
+          if-no-files-found: error
+          retention-days: 14

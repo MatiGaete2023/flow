@@ -1,13 +1,21 @@
-# Flow — CSMP Assistant y Descargador SITFA
+# Flow Rust · Asistente CSMP
 
-**Rama de comparación Python → Rust.** Abre el [informe, matriz y plan de implementación](MIGRACION_RUST.md) para continuar la migración con las fuentes de esta rama.
+La aplicación vigente de esta rama es el escritorio de la carpeta local **Flow Rust**. Compila [`app/`](app/) y ejecuta `flow_rust.exe`.
+
+```powershell
+cargo run --manifest-path app/Cargo.toml --locked
+```
+
+[Plan y continuidad](MIGRACION_RUST.md) · [Capturas del diseño local](docs/migracion_python_rust/DISENO.md) · [Verificación Windows](docs/migracion_python_rust/VERIFICACION.md)
+
+## Referencia funcional Python
 
 Herramientas de uso personal para el seguimiento de medidas (CSMP): el **Descargador** lee SITFA con la sesión
 del usuario y entrega Excel, bitácoras y un ZIP; el **Asistente** (Windows) lee ese Excel o ZIP, aplica las reglas
 tradicionales de Laja, Mulchén y Tomé y prepara Excel, nóminas, Word y borradores de Outlook.
 No envía correos, no escribe en RUS/SATURNO y no navega SITFA.
 
-## Instalar
+### Instalar
 
 - **Asistente:** `Instalar_CSMP.bat` (Python 3.12 primero; dependencias fijadas con hash) y luego `Abrir_CSMP.bat`,
   o el instalador `Instalar_CSMP_<versión>_Windows.exe` de la CI.
@@ -16,7 +24,7 @@ No envía correos, no escribe en RUS/SATURNO y no navega SITFA.
 - **Desarrollo (Linux):** `pip install --require-hashes -r requirements/linux-py312.lock` y
   `pip install --no-deps --no-build-isolation -e .`; verificación: `python tools/verificar_wp.py`.
 
-## Flujo
+### Flujo
 
 1. **Descargador:** consulta, lee bitácoras y crea el paquete ZIP para el Asistente.
 2. **Trabajo:** importar el ZIP o el Excel, revisar observaciones (Ctrl+O elige un Excel; Ctrl+K busca acciones).
@@ -26,7 +34,7 @@ No envía correos, no escribe en RUS/SATURNO y no navega SITFA.
 
 Todo se guarda localmente en Windows.
 
-## Documentos
+### Documentos
 
 - [PLAN_VIGENTE.md](PLAN_VIGENTE.md): esencia, prohibiciones, prioridades y decisiones del usuario.
 - [CONTINUAR.md](CONTINUAR.md) y [estado de la implementación](docs/implementacion/ESTADO.json).

@@ -1,4 +1,6 @@
-# Flow (Rust)
+# Flow (Rust) · Estudio D
+
+> Workspace histórico de esta rama. El plan de migración y el escritorio vigente están en [Migración Flow Rust](../MIGRACION_RUST.md).
 
 Un solo programa para Windows, sin instalar Python: lee el Excel de RUS, propone la observación de cada registro y
 prepara el Excel de observaciones, los borradores de correo y los proyectos de resolución en Word.

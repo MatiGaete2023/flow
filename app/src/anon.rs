@@ -466,7 +466,7 @@ mod tests {
         assert_ne!(digito_verificador(n).to_string(), dv);
         let t = s.texto("RUT 12.345.678-0, RIT X-123-2099, correo prueba@example.invalid");
         assert!(!t.contains("12.345.678"), "{t}");
-        assert!(!t.contains("C-123-2025"), "{t}");
+        assert!(!t.contains("X-123-2099"), "{t}");
         assert!(!t.contains("prueba@example.invalid"), "{t}");
     }
 }

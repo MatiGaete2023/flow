@@ -36,11 +36,14 @@ pub fn libro(mode: crate::motor::Mode, hoy: NaiveDate) -> Result<std::path::Path
     for (i, nombre) in nombres.iter().enumerate() {
         let (prog, trib) = programas[i % programas.len()];
         let i64_ = i as i64;
+        let rut = (11_000_000 + i * 111_111).to_string();
+        let candidato = char::from(b'0' + (i % 9) as u8);
+        let dv = if crate::anon::digito_verificador(&rut) == candidato { '9' } else { candidato };
         let mut r = vec![
             format!("{}-{}-2099", if i % 3 == 0 { "P" } else { "X" }, 100 + i / 2),
             trib.to_string(),
             nombre.to_string(),
-            format!("{:08}-{}", 11_000_000 + i * 1_111_11, (i % 9)),
+            format!("{rut}-{dv}"),
             prog.to_string(),
             if i == 4 { nac(18, -20) } else if i == 7 { nac(18, 30) } else { nac(6 + (i as i32 % 10), i64_ * 9) },
             if i % 4 == 0 { "NO POSEE".into() } else if i % 5 == 0 { "(11111111-0)CURADORA FICTICIA - Institución: CAJ#(22222222-0)OTRO FICTICIO - Institución: OPD".into() } else { "(11111111-0)CURADORA FICTICIA".into() },

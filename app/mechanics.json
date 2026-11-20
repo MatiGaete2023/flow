@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "values": [
+    {"name": "espera DCE", "group": "umbrales", "value": 0, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "espera Laja", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "espera Mulchén", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "espera Tomé (correo)", "group": "umbrales", "value": 60, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "proyecto Tomé", "group": "umbrales", "value": 60, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "aviso mayoría de edad", "group": "umbrales", "value": 60, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "oído reciente", "group": "umbrales", "value": 45, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "resolución reciente", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "ingreso reciente", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "medida por vencer", "group": "umbrales", "value": 45, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "informe por vencer", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "ficha individual antigua", "group": "umbrales", "value": 180, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "ficha individual reciente", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "ficha FAE ausente tras ingreso", "group": "umbrales", "value": 120, "unit": "días", "source": "src/nurus/personal/config.py::UMBRALES"},
+    {"name": "margen DCE", "group": "umbrales", "value": 10, "unit": "días", "source": "src/nurus/personal/motor/reglas_informes.py::MARGEN_DCE"},
+    {"name": "ventana correo preventivo", "group": "umbrales", "value": 60, "unit": "días", "source": "src/nurus/personal/work.py::VENTANA_POR_VENCER_DIAS"},
+    {"name": "ventana informe antes de audiencia (N-02)", "group": "umbrales", "value": 30, "unit": "días", "source": "src/nurus/personal/contexto_excel.py::VENTANA_INFORME_AUDIENCIA"},
+    {"name": "mayoría de edad", "group": "reglas", "value": 18, "unit": "años", "source": "src/nurus/personal/motor/utilidades.py::fecha_mayoria"},
+    {"name": "umbral espera tribunal no reconocido", "group": "reglas", "value": 30, "unit": "días", "source": "src/nurus/personal/motor/reglas_espera.py::generar_observacion_espera"},
+    {"name": "CC obligatorio", "group": "correos", "value": "ucc_concepcion@pjud.cl", "source": "src/nurus/personal/correos_base.json"},
+    {"name": "envío de correos", "group": "correos", "value": "solo borradores", "source": "AGENTS.md / PLAN_VIGENTE.md"},
+    {"name": "formato de borrador", "group": "correos", "value": "Borradores de Outlook (Save) o .eml sin enviar", "source": "src/nurus/adapters/outlook.py (solo Save) / rust/LEEME.md (.eml)"},
+    {"name": "retención de sesiones", "group": "datos", "value": 60, "unit": "días", "source": "src/nurus/personal/config.py::RETENCION_DIAS"},
+    {"name": "sesiones anteriores", "group": "datos", "value": 10, "source": "src/nurus/personal/config.py::SESIONES_ANTERIORES"},
+    {"name": "plantillas Word de Tomé", "group": "resoluciones", "value": "formato de Mulchén", "estimated": true},
+    {"name": "unión de varias personas en un proyecto", "group": "resoluciones", "value": "A, B y C", "estimated": true}
+  ]
+}
