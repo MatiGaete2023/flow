@@ -465,7 +465,9 @@ mod tests {
             if m != Mode::Cumplimiento {
                 assert!(!ps.is_empty(), "{m:?}");
                 let d = productos::generar_word(&ps, &dir, hoy()).unwrap();
-                assert!(std::fs::metadata(d).unwrap().len() > 500);
+                let docs: Vec<_> = std::fs::read_dir(&d).unwrap().filter_map(Result::ok).map(|e| e.path()).collect();
+                assert_eq!(docs.len(), ps.iter().filter(|p| p.incluir).count(), "{m:?}");
+                assert!(docs.iter().all(|p| p.extension().is_some_and(|x| x == "docx") && std::fs::metadata(p).unwrap().len() > 500));
             } else {
                 assert!(w.cruce.is_some());
                 assert!(w.registros.iter().any(|r| r.eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2")));
