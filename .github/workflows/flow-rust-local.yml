@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements/windows-py312.lock
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: app
@@ -45,6 +47,14 @@ jobs:
           }
       - name: Compilar el ejecutable de Flow Rust
         run: cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
+      - name: Contrastar bitácoras V2 con el Descargador Python
+        shell: pwsh
+        run: |
+          python -m pip install --require-hashes -r requirements/windows-py312.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe
       - name: Preparar OpenGL en el runner
         shell: pwsh
         run: |

@@ -10,6 +10,7 @@ mod demo;
 mod lectura;
 mod motor;
 mod productos;
+mod revision_ui;
 mod theme;
 mod trabajo;
 mod ui;

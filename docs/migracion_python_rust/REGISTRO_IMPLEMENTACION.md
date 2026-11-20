@@ -25,7 +25,7 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - En Windows local, se comprobó además la integridad de `rust/crates/flow-trabajo/tests/datos/paquete_integracion.zip`, con contrato 1.2.0. El lector de referencia Python validó los tres ZIP y registró cuatro filas de `registros` en cada uno.
 - Pendientes F07 semántica e integración. El verificador incorporado todavía no valida contenido CSV, conciliación entre consultas, identidad, cobertura, ni estructura interna del XLSX. Sigue después F06 revisión y exportación, y E2 para el Descargador integral y Lite. E3–E7 conservan el orden del plan.
 
-## Siguiente paso exacto
+## Punto de partida del turno 2
 
 1. En `app/src/captura.rs`, usar los encabezados de `TABLES` y las comprobaciones de `read_capture` y `_validate_rows` de Python. Añadir casos con bytes y huellas correctos pero columnas, filas, estados o identidad inválidos. Mantener evidencia incompleta como tal para V1, V2 y legado.
 2. Cuando ese lector pase, integrar apertura por botón existente, Ctrl+O y arrastre en `ui.rs`. Preparar el nuevo análisis antes de cambiar `self.work`. Fijar etapa y corte, y preservar decisiones por identidad de origen. Probar P2 completo con el ZIP sintético que genera `descargador/test_revision_bitacoras_p2.py` y [las cuatro clasificaciones](CASOS_PRIMERA_ENTREGA.json) antes de continuar a exportaciones y E2.
@@ -37,4 +37,16 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - Se usa la misma distribución de la aplicación local. El botón anuncia Excel o ZIP y los paquetes muestran el alcance tabular. El análisis del contexto de historia, calendario y bitácoras sigue en F06/E3. Egresados y Otros quedan contabilizados como omitidos de las tres etapas.
 - En Windows local pasaron seis pruebas del lector aislado con `FLOW_REFERENCIA`, incluidos ZIP 1.0 completo y parcial, ZIP 1.2 y rechazo de tribunal cambiado con huella recalculada. Clippy del lector aislado pasó con advertencias tratadas como errores. El workflow Windows activa además la regresión de apertura en Trabajo, cambio de etapa y conservación del trabajo activo ante un error.
 
-**Continuidad vigente.** Completar el contraste de la [revisión P2](CASOS_PRIMERA_ENTREGA.json) desde la fuente `Trabajo::paquete`. Usar `src/nurus/personal/revision_bitacoras.py` y el constructor de `descargador/test_revision_bitacoras_p2.py` para transportar la evidencia V2 y comparar las cuatro clasificaciones. Portar también V1 con sus comprobaciones de respaldo, conservar legado incierto y mostrar el período y la clasificación desde Trabajo. Después completar exportación Excel/JSON y E2.
+- El importador pasó el [flujo Windows](https://github.com/MatiGaete2023/flow/actions/runs/44751835256) en `6a819aabac109bde74cc15fa4fff716ae48670d4`, incluida la regresión de Trabajo.
+
+## Turno 2 · Revisión de bitácoras V2
+
+- Desde Trabajo con un ZIP abierto, **Revisión de bitácoras…** permite elegir fechas, ver conteos y filtrar por clasificación. Se puede abrir la fila en Trabajo y exportar las filas visibles a Excel y JSON en una carpeta nueva. Las salidas aparecen en Resultados.
+- El clasificador V2 usa sistema, tribunal, causa, ingreso y consulta. Solo acredita ausencia con evidencia completa, sin advertencias y dentro del período conservado. Un paginador, una lectura anterior al término, evidencia duplicada o autoría incierta evita certificar ausencia. El formato nativo V1 y el legado siguen apareciendo como no verificables hasta portar su respaldo.
+- `app/qa/contrastar_bitacoras.py` genera con Python un único ZIP ficticio P2 y compara las [cuatro clasificaciones](CASOS_PRIMERA_ENTREGA.json) con el ejemplo Rust. El flujo Windows verifica también la escritura de los dos productos y la conservación de un destino existente.
+
+## Siguiente paso exacto
+
+1. Portar la evidencia nativa V1 a `app/src/captura/revision.rs` desde `rust/crates/flow-trabajo/src/paquete.rs` y los casos de `rust/crates/flow-trabajo/tests/revision_bitacoras.rs`. Cotejar entradas con el CSV, huellas de respaldo, procedencia, autoría y contradicciones. Mantener las clasificaciones V2 de P2 y el legado incierto.
+2. Ampliar el contraste Excel/JSON al mismo lote P2, usando los productos de la interfaz Rust. Completar selección masiva desde la revisión y persistencia del período si corresponde a la referencia.
+3. Continuar E2 por perfiles del Descargador integral y Lite, con el mismo diseño visual de `app/`. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.

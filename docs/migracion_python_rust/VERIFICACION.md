@@ -17,4 +17,12 @@ python app/qa/capturar_windows.py --exe app/target/debug/flow_rust.exe --salida 
 
 El flujo de GitHub Actions «Flow Rust local · Windows» compila `app/` y genera `Flow_Rust_Local_Capturas_Windows`. Comparar las cinco imágenes con [Diseño](DISENO.md). El modo captura ajusta la escala si la pantalla virtual es menor que la ventana inicial de 1440 × 900 puntos. Mantener fecha y diferencias de escala separadas de cambios en jerarquía y contenido. Registrar el SHA, el entorno y cada vista revisada.
 
-El ejemplo `verificar_paquete` valida la estructura, las tablas y la procedencia. `FLOW_REFERENCIA` habilita las pruebas sintéticas de aceptación del lector y de apertura a través de Trabajo. En una carpeta local proveniente de ZIP, apunta esa variable a la raíz de la copia de Flow Python. El análisis con contexto y la revisión por período de bitácoras se verifican por separado.
+El ejemplo `verificar_paquete` valida la estructura, las tablas y la procedencia. `FLOW_REFERENCIA` habilita las pruebas sintéticas del lector, de apertura desde Trabajo y de exportación de bitácoras. En una carpeta local proveniente de ZIP, apunta esa variable a la raíz de la copia de Flow Python.
+
+Para repetir el contraste V2 con el mismo ZIP P2, usar Python 3.12 y el lock Windows de la referencia.
+
+```powershell
+python -m pip install --require-hashes -r requirements/windows-py312.lock
+cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
+python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe
+```

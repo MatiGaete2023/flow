@@ -10,6 +10,7 @@ use zip::{CompressionMethod, ZipArchive};
 
 mod contrato;
 mod json;
+pub mod revision;
 mod tablas;
 pub use tablas::Fila;
 use tablas::Tabla;

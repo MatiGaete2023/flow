@@ -90,6 +90,7 @@ pub struct App {
     pub screenshot: Option<Screenshot>,
     sucio: Option<Instant>,
     confirmar_reinicio: bool,
+    revision_bitacoras: Option<crate::revision_ui::Dialogo>,
     ultimo_tema: Option<bool>,
 }
 
@@ -133,6 +134,7 @@ impl App {
             screenshot: screenshot.map(|path| Screenshot { path, frames: 0, pedido: false }),
             sucio: None,
             confirmar_reinicio: false,
+            revision_bitacoras: None,
             ultimo_tema: None,
         };
         if let Some(e) = err {
@@ -231,6 +233,7 @@ impl App {
         self.proyectos.clear();
         self.psel = None;
         self.vista = Vista::Trabajo;
+        self.revision_bitacoras = None;
         self.revision += 1;
         self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
     }
@@ -313,6 +316,7 @@ impl App {
 
     fn reanalizar(&mut self) {
         let corte = self.corte();
+        self.revision_bitacoras = None;
         if let Some(w) = &mut self.work {
             w.corte = Some(corte);
             if let Some(m) = self.pedida {
@@ -625,11 +629,32 @@ impl App {
             ui.label(RichText::new(format!("Trabajo · {}", modo.label())).size(22.0).strong());
             ui.label(RichText::new(format!("análisis en {ms} ms{}", cruce.map(|c| format!(" · cruce con «{c}»")).unwrap_or_default())).color(p.muted).size(12.5));
         });
-        if let Some(paquete) = &self.work.as_ref().unwrap().paquete {
-            ui.label(RichText::new(format!(
-                "Paquete CSMP · registros {} · análisis tabular. Historia, calendario y bitácoras pendientes de integrar.",
-                paquete.fuente.estado("registros")
-            )).color(p.muted).size(12.5));
+        let estado = self.work.as_ref().unwrap().paquete.as_ref()
+            .map(|p| p.fuente.estado("registros").to_owned());
+        if let Some(estado) = estado {
+            let abrir = ui.horizontal_wrapped(|ui| {
+                ui.label(RichText::new(format!(
+                    "Paquete CSMP · registros {estado} · análisis tabular"
+                )).color(p.muted).size(12.5));
+                ui.button("Revisión de bitácoras…").clicked()
+            }).inner;
+            if abrir {
+                let w = self.work.as_ref().unwrap();
+                self.revision_bitacoras = Some(crate::revision_ui::Dialogo::nuevo(w, self.corte()));
+            }
+        }
+        if let (Some(dialogo), Some(w)) = (&mut self.revision_bitacoras, &self.work) {
+            let (abierto, fila, productos) = dialogo.mostrar(ui.ctx(), p, w);
+            if let Some(i) = fila {
+                self.sel = Some(i);
+            }
+            if !abierto || fila.is_some() {
+                self.revision_bitacoras = None;
+            }
+            if let Some([excel, json]) = productos {
+                self.registrar(excel, "Revisión de bitácoras · Excel");
+                self.registrar(json, "Revisión de bitácoras · JSON");
+            }
         }
         ui.add_space(4.0);
         let mut nuevo_filtro: Option<Option<Estado>> = None;
