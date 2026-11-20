@@ -1,7 +1,52 @@
 """Genera un ZIP ficticio con las lecturas de contexto de Flow Python."""
 
+from copy import deepcopy
+from datetime import date
 from pathlib import Path
 import sys
+from zipfile import ZipFile
+
+
+def generar_discordancia(captura, salida):
+    from nurus.capture import read_capture
+    from nurus.capture.contract import write_capture
+    from nurus.capture.escritos import _mejores_consultas
+
+    metadatos = deepcopy(captura.manifest)
+    metadatos.pop("schema_version")
+    tablas = {tabla: list(filas) for tabla, filas in captura.tables.items()}
+    for pantalla, id_fila, campo, valor, cobertura in (
+        ("escritos", "escrito_id", "doc", "DOC-DISTINTO-FICTICIO", "COMPLETA"),
+        ("historico_proteccion", "historico_id", "program_name", "Otro programa ficticio", "PARCIAL"),
+    ):
+        consulta = next(q for q in tablas["consultas"] if q["screen"] == pantalla)
+        filas = [f for f in tablas[pantalla] if f["query_id"] == consulta["query_id"]]
+        assert filas
+        id_copia = consulta["query_id"] + "-copia"
+        # El mismo instante se expresa en UTC en la copia y con otro huso en Escritos.
+        fecha = "2026-10-13T12:00:00Z"
+        copia = dict(consulta, query_id=id_copia, captured_at=fecha, coverage=cobertura)
+        tablas["consultas"].append(copia)
+        nuevas = filas if cobertura == "COMPLETA" else filas[:1]
+        for i, f in enumerate(nuevas):
+            nuevas_filas = {id_fila: f[id_fila] + "-copia"}
+            if i == 0:
+                nuevas_filas[campo] = valor
+            tablas[pantalla].append(dict(f, **nuevas_filas, query_id=id_copia, captured_at=fecha, coverage=cobertura))
+        if cobertura == "PARCIAL":
+            metadatos["table_states"][pantalla] = "PARCIAL"
+    metadatos["queries"] = tablas["consultas"]
+    with ZipFile(salida) as original:
+        originales = {
+            f["path"]: original.read(f["path"]) for f in metadatos["files"] if f["type"] == "original"
+        }
+    discordante = read_capture(write_capture(
+        salida.with_name("contexto-e3-discordante.zip"), metadatos, tablas,
+        originals=originales, consolidated=captura.consolidated,
+    ))
+    for pantalla, filtro in (("escritos", "escritos_causa"), ("historico_proteccion", "historico_persona")):
+        consultas = _mejores_consultas(discordante, pantalla, filtro, corte=date(2026, 10, 19))
+        assert len(consultas) == 1 and next(iter(consultas.values()))["_discordante"]
 
 
 def generar(referencia, carpeta):
@@ -47,10 +92,10 @@ def generar(referencia, carpeta):
         diaries(carpeta / "bitacoras", 2),
         {"201": (("01/08/2026", "30/07/2026", "ENVIADO"), ("01/11/2026", "", "PENDIENTE"))},
     )
-    salida = package_current_lot(
+    salida = Path(package_current_lot(
         lote.folder, bitacoras, carpeta / "contexto-e3.zip",
         historia=lector.carpeta / "historias.json", historico=carpeta / "historico",
-    )["path"]
+    )["path"])
     captura = read_capture(salida)
     assert captura.manifest["schema_version"] == "1.2.0"
     assert [e["doc"] for e in captura.rows("escritos")] == ["DOC-1", "DOC-2"]
@@ -60,6 +105,7 @@ def generar(referencia, carpeta):
     assert [(r["ingreso_id"], r["event_at"]) for r in captura.rows("calendarios")] == [
         ("201", "2026-08-01"), ("201", "2026-11-01"),
     ]
+    generar_discordancia(captura, salida)
     return salida
 
 

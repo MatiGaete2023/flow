@@ -8,6 +8,7 @@ use flow_rust::captura::{self, Captura, Fila};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use unicode_normalization::UnicodeNormalization;
 
 const LIMITE_ANALISIS: usize = 20_000;
 const PROCEDENCIA: [(&str, &str); 5] = [
@@ -166,6 +167,7 @@ pub struct ResumenEscritos {
     pub filas: usize,
     /// «Tipo · documento» de cada escrito pendiente, sin los vinculados expresamente a otro ingreso.
     pub pendientes: Vec<String>,
+    pub discordante: bool,
 }
 
 /// Ingreso Histórico Protección (Mejor Niñez) de la persona (`escritos.historicos_por_persona`).
@@ -177,6 +179,7 @@ pub struct ResumenHistorico {
     /// Programas vigentes: fecha de egreso «--» y causal «SIN INFORMACION» en la misma fila.
     pub vigentes: Vec<String>,
     pub filas: usize,
+    pub discordante: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -207,6 +210,7 @@ struct Consulta {
     cobertura: String,
     leido: String,
     instante: chrono::NaiveDateTime,
+    discordante: bool,
 }
 
 impl Consulta {
@@ -226,13 +230,13 @@ fn clave_texto(t: &str) -> String {
 fn rango(cobertura: &str) -> u8 {
     match cobertura {
         "COMPLETA" | "VACIA_COMPROBADA" => 3,
-        "PARCIAL" | "IDENTIDAD_INCIERTA" => 2,
+        "PARCIAL" => 2,
         _ => 0,
     }
 }
 
-/// `_mejores_consultas`, simplificada: por clave, la lectura completa (o vacía comprobada) más reciente; sin ellas, la de
-/// mejor cobertura y más reciente; empate, menor `query_id`. Pendiente: lecturas simultáneas discordantes (E3B-02).
+/// Aplica el orden de `_mejores_consultas` y, para Escritos e Histórico, la comparación de
+/// lecturas del mismo instante. Las demás pantallas muestran el origen del resumen.
 fn mejores_consultas<const N: usize>(
     fuente: &Captura,
     pantalla: &str,
@@ -240,7 +244,7 @@ fn mejores_consultas<const N: usize>(
     campos: [&str; N],
     corte: NaiveDate,
 ) -> HashMap<[String; N], Consulta> {
-    let mut grupos = HashMap::<[String; N], Consulta>::new();
+    let mut grupos = HashMap::<[String; N], Vec<Consulta>>::new();
     for q in fuente
         .filas("consultas")
         .filter(|q| q.get("screen") == pantalla)
@@ -262,16 +266,113 @@ fn mejores_consultas<const N: usize>(
             cobertura: q.get("coverage").into(),
             leido: instante.date_naive().to_string(),
             instante: instante.naive_utc(),
+            discordante: false,
         };
-        let anterior = grupos.entry(clave).or_insert_with(|| consulta.clone());
-        let prioridad = |c: &Consulta| (rango(&c.cobertura), c.instante);
-        if prioridad(&consulta) > prioridad(anterior)
-            || (prioridad(&consulta) == prioridad(anterior) && consulta.id < anterior.id)
-        {
-            *anterior = consulta;
-        }
+        grupos.entry(clave).or_default().push(consulta);
     }
+    let firmas = match pantalla {
+        "escritos" => Some(firmas_por_consulta(
+            fuente,
+            pantalla,
+            &[
+                "escrito_type",
+                "escrito_status",
+                "doc",
+                "requester",
+                "linked_ingreso_id",
+                "linked_projection",
+            ],
+        )),
+        "historico_proteccion" => Some(firmas_por_consulta(
+            fuente,
+            pantalla,
+            &[
+                "program_name",
+                "egreso_date",
+                "egreso_cause",
+                "ownership",
+                "person_id",
+            ],
+        )),
+        _ => None,
+    };
     grupos
+        .into_iter()
+        .filter_map(|(clave, mut grupo)| {
+            grupo.sort_unstable_by(|a, b| {
+                rango(&b.cobertura)
+                    .cmp(&rango(&a.cobertura))
+                    .then_with(|| b.instante.cmp(&a.instante))
+                    .then_with(|| a.id.cmp(&b.id))
+            });
+            let mut elegida = grupo.first()?.clone();
+            if let Some(firmas) = &firmas {
+                let simultaneas: Vec<_> = grupo
+                    .iter()
+                    .filter(|q| rango(&q.cobertura) > 0 && q.instante == elegida.instante)
+                    .collect();
+                let primera_parcial = simultaneas.iter().find(|q| q.cobertura == "PARCIAL");
+                let compatibles = |a: &Consulta, b: &Consulta| {
+                    let firma =
+                        |q: &Consulta| firmas.get(q.id.as_str()).map(Vec::as_slice).unwrap_or(&[]);
+                    firmas_compatibles(&a.cobertura, firma(a), &b.cobertura, firma(b))
+                };
+                elegida.discordante = simultaneas.iter().any(|q| {
+                    !compatibles(&elegida, q)
+                        || (q.cobertura == "PARCIAL"
+                            && primera_parcial.is_some_and(|p| !compatibles(p, q)))
+                });
+                if elegida.discordante {
+                    elegida.cobertura = "PARCIAL".into();
+                }
+            }
+            Some((clave, elegida))
+        })
+        .collect()
+}
+
+type Firma = Vec<String>;
+
+fn firmas_por_consulta<'a>(
+    fuente: &'a Captura,
+    tabla: &str,
+    campos: &[&str],
+) -> HashMap<&'a str, Vec<Firma>> {
+    let mut firmas: HashMap<_, Vec<_>> = HashMap::new();
+    for fila in fuente.filas(tabla) {
+        let firma = campos
+            .iter()
+            .map(|campo| {
+                let valor = fila.get(campo);
+                match *campo {
+                    "linked_ingreso_id" | "linked_projection" | "person_id" => valor.to_string(),
+                    "doc" | "requester" => valor.nfc().collect(),
+                    _ => clave_texto(valor),
+                }
+            })
+            .collect();
+        firmas.entry(fila.get("query_id")).or_default().push(firma);
+    }
+    for filas in firmas.values_mut() {
+        filas.sort_unstable();
+    }
+    firmas
+}
+
+fn firmas_compatibles(a: &str, firma_a: &[Firma], b: &str, firma_b: &[Firma]) -> bool {
+    match (rango(a) == 3, rango(b) == 3) {
+        (true, false) => firma_contenida(firma_b, firma_a),
+        (false, true) => firma_contenida(firma_a, firma_b),
+        _ => a == b && firma_a == firma_b,
+    }
+}
+
+/// Cada posición del multiconjunto mayor se consume como máximo una vez.
+fn firma_contenida(menor: &[Firma], mayor: &[Firma]) -> bool {
+    let mut disponibles = mayor.iter();
+    menor
+        .iter()
+        .all(|fila| disponibles.by_ref().any(|otra| fila == otra))
 }
 
 fn filas_por_consulta<'a>(fuente: &'a Captura, tabla: &str) -> HashMap<&'a str, Vec<Fila<'a>>> {
@@ -324,6 +425,9 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 .unwrap_or(&[]);
             let pendientes = filas
                 .iter()
+                .filter(|_| {
+                    !q.discordante && matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL")
+                })
                 .filter(|e| clave_texto(e.get("escrito_status")) == "pendiente")
                 .filter(|e| {
                     e.get("linked_ingreso_id").is_empty()
@@ -336,6 +440,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 leido: q.leido.clone(),
                 filas: filas.len(),
                 pendientes,
+                discordante: q.discordante,
             });
         }
         if let Some(q) = historicos.get(&persona) {
@@ -343,12 +448,14 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 .get(q.id.as_str())
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
-            let verificada = matches!(
-                q.cobertura.as_str(),
-                "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA"
-            ) && filas.iter().all(|f| f.get("ownership") == "VERIFICADA");
+            let verificada = !q.discordante
+                && matches!(
+                    q.cobertura.as_str(),
+                    "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA"
+                )
+                && filas.iter().all(|f| f.get("ownership") == "VERIFICADA");
             let mut vigentes: Vec<String> = Vec::new();
-            for f in filas {
+            for f in filas.iter().filter(|_| verificada) {
                 let sin_fecha = f
                     .get("egreso_date")
                     .trim()
@@ -375,6 +482,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 verificada,
                 vigentes,
                 filas: filas.len(),
+                discordante: q.discordante,
             });
         }
         ctx.historia = historias.get(&causa).map(|q| {
@@ -430,7 +538,8 @@ mod tests {
         let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else {
             return;
         };
-        let bytes = std::fs::read(ruta).unwrap();
+        let ruta = std::path::PathBuf::from(ruta);
+        let bytes = std::fs::read(&ruta).unwrap();
         let (mut paquete, hojas) = abrir(&bytes).unwrap();
         paquete.actualizar_contextos("2026-10-19".parse().unwrap());
         assert_eq!(paquete.modos, [Mode::Cumplimiento]);
@@ -482,5 +591,40 @@ mod tests {
         assert!(contexto.historia.is_none());
         assert!(contexto.escritos.is_none());
         assert!(contexto.historico.is_none());
+
+        let bytes = std::fs::read(ruta.with_file_name("contexto-e3-discordante.zip")).unwrap();
+        let (mut discordante, _) = abrir(&bytes).unwrap();
+        discordante.actualizar_contextos("2026-10-19".parse().unwrap());
+        let registro = discordante
+            .fuente
+            .filas("registros")
+            .find(|r| r.get("ingreso_id") == "201")
+            .unwrap();
+        let contexto = &discordante.contextos[registro.get("record_id")];
+        let escritos = contexto.escritos.as_ref().unwrap();
+        assert!(escritos.discordante);
+        assert_eq!(escritos.cobertura, "PARCIAL");
+        assert!(escritos.pendientes.is_empty());
+        let historico = contexto.historico.as_ref().unwrap();
+        assert!(historico.discordante);
+        assert!(!historico.verificada);
+        assert!(historico.vigentes.is_empty());
+    }
+
+    #[test]
+    fn lecturas_en_el_mismo_instante_comparan_multiplicidad_y_cobertura() {
+        let registro = vec!["ficticio".to_string()];
+        let uno = vec![registro.clone()];
+        let dos = vec![registro.clone(), registro];
+        assert!(firmas_compatibles("COMPLETA", &dos, "PARCIAL", &uno));
+        assert!(!firmas_compatibles("COMPLETA", &uno, "PARCIAL", &dos));
+        assert!(!firmas_compatibles("COMPLETA", &dos, "COMPLETA", &uno));
+        assert!(!firmas_compatibles("PARCIAL", &dos, "PARCIAL", &uno));
+        assert!(!firmas_compatibles(
+            "COMPLETA",
+            &[],
+            "VACIA_COMPROBADA",
+            &[]
+        ));
     }
 }

@@ -1080,13 +1080,14 @@ impl App {
                     theme::seccion(ui, p, "Fuentes del paquete");
                     if let Some(e) = &ctx.escritos {
                         let estado = match e.cobertura.as_str() {
+                            _ if e.discordante => "lecturas simultáneas discordantes".to_string(),
                             "VACIA_COMPROBADA" => "sin escritos".to_string(),
                             "FALLIDA" | "IDENTIDAD_INCIERTA" | "NO_CONSULTADA" => "no verificada".to_string(),
                             _ if e.pendientes.is_empty() => format!("sin pendientes ({} escritos)", e.filas),
                             _ => format!("{} pendiente(s) de {} escritos", e.pendientes.len(), e.filas),
                         };
                         let parcial = if e.cobertura == "PARCIAL" { " · lectura parcial" } else { "" };
-                        let color = if e.pendientes.is_empty() { p.muted } else { p.amber };
+                        let color = if e.pendientes.is_empty() && !e.discordante { p.muted } else { p.amber };
                         ui.label(RichText::new(format!("Escritos de la causa: {estado}{parcial} · leído {}", e.leido)).color(color));
                         for pend in &e.pendientes {
                             ui.label(RichText::new(format!("   • {pend}")).size(12.0));
@@ -1094,7 +1095,9 @@ impl App {
                     }
                     if let Some(h) = &ctx.historico {
                         let identidad = if h.verificada { "" } else { " · identidad no verificada" };
-                        let texto = if !matches!(h.cobertura.as_str(), "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA" | "IDENTIDAD_INCIERTA") {
+                        let texto = if h.discordante {
+                            format!("Ingreso histórico (Mejor Niñez) · lecturas simultáneas discordantes · {}", h.leido)
+                        } else if !matches!(h.cobertura.as_str(), "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA" | "IDENTIDAD_INCIERTA") {
                             format!("Ingreso histórico (Mejor Niñez) · lectura no verificada · {}", h.leido)
                         } else if h.vigentes.is_empty() && h.cobertura != "PARCIAL" && h.verificada {
                             format!("Ingreso histórico (Mejor Niñez): sin programas vigentes ({} filas){identidad} · leído {}", h.filas, h.leido)

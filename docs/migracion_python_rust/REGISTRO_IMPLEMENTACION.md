@@ -167,16 +167,16 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 
 - Se retomó desde `d02867f`. `app/qa/generar_contexto_e3.py` genera con el exportador Flow Python un ZIP 1.2.0 ficticio de Cumplimiento, con escritos, historia, Mejor Niñez, bitácoras y calendario.
 - En Trabajo, la tarjeta **Fuentes del paquete** conserva Escritos y Mejor Niñez y agrega el estado, el volumen y la fecha de las lecturas de historia de la causa y bitácora y calendario por ingreso. Muestra la primera fecha proyectada pendiente cuando tiene asociación verificada.
-- Los índices distinguen sistema y tribunal, causa, persona e ingreso. Se construyen al analizar y se actualizan con el corte. Se usa la fecha civil de la fuente para excluir lecturas posteriores y el instante UTC para ordenar lecturas de igual cobertura. Ante empate se toma el menor ID. El análisis de discordancias en el mismo instante queda pendiente antes de utilizar estas lecturas en las reglas.
-- Pasaron 14 pruebas locales de los módulos de Trabajo y captura en un entorno aislado, incluida la apertura de este ZIP, la separación de los dos ingresos y el cambio de corte. Pasó también el oráculo del motor con `FLOW_CASOS`.
+- Los índices distinguen sistema y tribunal, causa, persona e ingreso. Se construyen al analizar y se actualizan con el corte. Se usa la fecha civil de la fuente para excluir lecturas posteriores y el instante UTC para ordenar lecturas de igual cobertura.
+- Escritos e Histórico cotejan el contenido y la multiplicidad de las filas de lecturas del mismo instante. Una lectura parcial es compatible con una completa si sus filas están contenidas en ella. Ante discordancia la vista indica cobertura parcial y evita atribuir escritos pendientes o programas vigentes. En un empate entre lecturas equivalentes, se elige el identificador menor.
+- Pasaron 15 pruebas locales de los módulos de Trabajo y captura en un entorno aislado, incluida la apertura de ambos ZIP, el vínculo por causa y persona, la separación de ingresos y el cambio de corte. El productor de pruebas confirma con Flow Python la discordancia entre lecturas completas de Escritos y entre lecturas completa y parcial de Histórico. Pasó también el oráculo del motor con `FLOW_CASOS`.
 
 ## Siguiente paso exacto
 
 1. Prueba del usuario con `Flow_Rust_Windows_exe` de la corrida 27 (`8faa9ac`): Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
 2. E3 (punto 1), en este orden:
-   1. Completar la detección de lecturas simultáneas discordantes del selector de `captura_trabajo.rs`. Cotejar la firma como multiconjunto de `src/nurus/capture/escritos.py` y probar el empate entre lecturas completas, parciales y reportadas con husos distintos.
-   2. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Usar las proyecciones verificadas del calendario para el cruce de fechas y los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
-   3. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
+   1. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Usar las proyecciones verificadas del calendario para el cruce de fechas y los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
+   2. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.
 3. Punto 5: inventario de opciones de Flow Python contra `ui.rs` en una tabla de la matriz. Agregar `prorroga_reciente` y `ventana_busqueda` con E3.
 4. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
 5. Completar paridad de Excel de bitácoras con la copia preservada: la revisión de bitácoras usa todavía la tabla normalizada. Contrastar columnas NURUS, RIT, filas seleccionadas y clasificación/motivo frente al original o al consolidado de **Guardar observaciones**.
