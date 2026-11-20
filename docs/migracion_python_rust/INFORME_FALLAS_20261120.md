@@ -165,7 +165,7 @@ Cada corrección se registra en `REGISTRO_IMPLEMENTACION.md` con pruebas sintét
 
 | # | Estado | Detalle |
 |---|---|---|
-| 1 | Pendiente | E3: historia, bitácoras, escritos, calendario y Mejor Niñez |
+| 1 | Parcial | Trabajo lee y muestra escritos pendientes y Mejor Niñez (`8faa9ac`, sin prueba con paquete sintético). Pendiente su uso en reglas, historia, bitácoras y calendario (E3) |
 | 2 | Corregido | Matrices institucionales, fechas en palabras y plural. Un Word por proyecto: diferencia con Python por confirmar |
 | 3 | Corregido parcialmente | Importación de contactos, nómina editable y aviso sin destinatario. No se reprodujo el bloqueo reportado |
 | 4 | Corregido | Checkboxes de tarjetas y marcado masivo en Trabajo |
