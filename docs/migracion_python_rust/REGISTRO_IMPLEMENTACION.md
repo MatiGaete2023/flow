@@ -123,6 +123,8 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
   - Los checkboxes de las tarjetas quedan tapados por el área clicable.
   - Cinco patrones de redacción (R1, R2, R3, R5 y R6) explican la mayoría de las diferencias con lo registrado en NOVIEMBRE.
 
+- Decisiones del usuario del 20-nov registradas en el [informe](INFORME_FALLAS_20261120.md) y en el [plan](PLAN.md): R1, R2, R3 y R6 aprobadas; R4 quitar; R5 parcial; orden de columnas de NOVIEMBRE confirmado.
+
 ## Siguiente paso exacto
 
 Seguir el «Orden propuesto de corrección» del [informe de fallas](INFORME_FALLAS_20261120.md):
@@ -131,5 +133,5 @@ Seguir el «Orden propuesto de corrección» del [informe de fallas](INFORME_FAL
 2. Punto 4: checkboxes de tarjetas y marcado masivo en Trabajo.
 3. Puntos 6 y 3: «Instalar extensión…», contactos iniciales, borradores sin destinatario y nómina editable.
 4. Punto 2: plantillas institucionales y fechas en palabras.
-5. Punto 8, tras confirmación del usuario: R1, R2, R3, R5 y R7; R4 y R6 pendientes de respuesta.
+5. Punto 8, según las decisiones del 20-nov (informe y plan): R1, R2, R3, R4 (quitar días), R5 parcial y R6. R7 y R8 sin cambio.
 6. Punto 1 (E3) y punto 5 (inventario de opciones).

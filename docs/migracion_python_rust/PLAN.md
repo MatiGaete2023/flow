@@ -21,3 +21,19 @@ El destino es el escritorio que ya existe en `app/`. Incorporar las herramientas
 4. Mantener el avance y los criterios por fila en la matriz. Una prueba que pasa en el workspace histórico sirve como caso de contraste. La paridad se acredita ejecutando el destino `app/` desde su entrada normal.
 
 El alcance abarca los flujos disponibles de Asistente, Descargador integral, Lite, Meta 4 y Anonimizador, más las utilidades operativas. Las herramientas de CI, pruebas y generación de material siguen disponibles como utilidades de desarrollo. Las funciones que el registro de Python marca postergadas siguen identificadas para decisión del usuario. Mantener las capacidades ya presentes en Flow Rust, incluido el guardado EML.
+
+## Decisiones del usuario vigentes (20-nov-2026)
+
+Registradas en detalle en el [informe de fallas](INFORME_FALLAS_20261120.md#decisiones-del-usuario--20-nov-2026). Obligan a Flow Rust:
+
+- **Producto Excel.** Copia del consolidado o del original con las columnas NURUS al final, en el orden `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. Debe calzar con el registro mensual del usuario. Prima sobre el orden del código de `flow-python`.
+- **Redacción de observaciones.**
+  - **R1:** con medida por vencer, sin la oración del próximo informe.
+  - **R2:** sin la frase de historia de causa.
+  - **R3:** DCE con un solo encabezado y sin días.
+  - **R4:** sin días de espera cuando el tribunal dispuso el ingreso.
+  - **R5:** texto vigente en lugar de reiterar solo para «Medida revisada, sin observaciones.» y para la derivación sin seguimiento; en lo demás se reitera.
+  - **R6:** nombre del programa en tipo título.
+  - R7 y R8 sin cambio.
+- **Alcance.** Los cambios de redacción se aplican en Flow Rust. Ajustar Flow Python requiere instrucción expresa. Cada regla cambiada lleva casos ficticios en la línea golden de Rust.
+- **Orden de corrección.** Producto Excel y marcas, extensión y contactos, plantillas de resolución, redacción, E3 (Mejor Niñez, escritos e historia) e inventario de opciones.

@@ -90,7 +90,7 @@ Niveles: **N1** hecho observado en archivos o código · **N2** inferencia con s
   - El consolidado del paquete completo, con encabezado en negrita sobre relleno `195F7B`, texto con formato `@` y fechas como texto `dd/mm/aaaa`.
   - Las columnas NURUS al final, en este orden: `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`.
   - Las hojas ocultas `NURUS_LISTAS` y `NURUS_TRAZABILIDAD`, y `RES` validado con la lista `NURUS_RES_TIPOS`.
-- **[CONFLICTO_ABIERTO] Orden de columnas.** `flow-python` en `afc4d12` (`exports.py`, `_portable_preserved` y `_native_preserved`) escribe `OBSERVACION` antes de `FECHA_OBS`. Los tres archivos reales tienen `FECHA_OBS` antes de `OBSERVACION`, y Rust copió el orden del código. Se toma como norma el orden de los archivos, porque el producto debe calzar con NOVIEMBRE. Queda pendiente confirmar con el usuario y revisar la versión de Python que produjo esos archivos.
+- **Orden de columnas (resuelto el 20-nov: orden de NOVIEMBRE).** `flow-python` en `afc4d12` (`exports.py`, `_portable_preserved` y `_native_preserved`) escribe `OBSERVACION` antes de `FECHA_OBS`. Los tres archivos reales tienen `FECHA_OBS` antes de `OBSERVACION`, y Rust copió el orden del código. Se toma como norma el orden de los archivos, porque el producto debe calzar con NOVIEMBRE. Queda pendiente confirmar con el usuario y revisar la versión de Python que produjo esos archivos.
 - **N2.** Causas posibles del fallo del mapeo, por verificar con un ZIP sintético equivalente:
   - `SITFA_FILA` en el consolidado es numérica y en `registros` puede tener otra base.
   - El consolidado puede repetir un registro entre hojas, lo que hace que `repetidas` anule la base.
@@ -118,7 +118,7 @@ Patrones observados (N1, salvo que se indique otra cosa). Las plantillas usan ma
 | R1 | `CUMPLIMIENTO.C05_POR_VENCER` + `C10_HOJA2` | «Medida próxima a vencer en RUS el `<FECHA>`. Próximo informe de avance de `<PROGRAMA>` vence el `<FECHA>`.» | Solo la primera oración | ≈ 125 | Con medida por vencer, omitir la oración C10 |
 | R2 | `HISTORIA.R3_MULTI` | «… La historia es de la causa y no permite atribuirlo a un ingreso determinado.» | Sin esa oración | ≈ 25 | Llevarla a aviso interno y sacarla de la observación |
 | R3 | `HISTORIA.E04_CON_FOLIO` + `ESPERA.E05_SOLO_CORREO` (DCE) | Repite «Medida revisada, a la espera de ingreso efectivo.» y agrega «Al `<FECHA>`, RUS registra `<N>` días de espera.» | Sin la repetición ni los días | ≈ 15 | Unificar el encabezado y omitir los días cuando hay E04 |
-| R4 | `ESPERA.E05_*` + `HISTORIA.SERVICIO_INGRESO` | Incluye «Al `<FECHA>`, RUS registra `<N>` días de espera.» | La quita en ≈ 12 filas y la conserva en ≈ 10 | ≈ 22 | **[CONFLICTO_ABIERTO]**: preguntar el criterio |
+| R4 | `ESPERA.E05_*` + `HISTORIA.SERVICIO_INGRESO` | Incluye «Al `<FECHA>`, RUS registra `<N>` días de espera.» | La quita en ≈ 12 filas y la conserva en ≈ 10 | ≈ 22 | Resuelto: quitar (ver decisiones) |
 | R5 | `COMUN.REITERA_OBSERVACION` | «Se reitera observación anterior del `<FECHA>`.» | El texto vigente («Medida revisada, sin observaciones.», «La derivación … no se encuentra sujeta a seguimiento por este Centro.» o la observación completa) | ≈ 15 | No reiterar cuando la regla base tiene un texto propio |
 | R6 | `INFORMES.I02`, `CUMPLIMIENTO.C10`, `C03` | Nombre del programa con el artículo en minúscula y comunas o palabras en mayúsculas sostenidas | Artículo inicial con mayúscula, comunas en tipo título, conectores en minúscula, tildes restituidas | ≈ 250 | Normalizar el nombre del programa al estilo del usuario (N2: la anonimización oculta parte del nombre; validar con datos ficticios y confirmar) |
 | R7 | `HISTORIA.BASE_TRAMITE` («Prorroga») | «consta el trámite «Prorroga». RUS registra como fecha de egreso proyectado el `<FECHA>`.» | «se prorroga la medida hasta el `<FECHA>`» o «se aplica «Prorroga» por `<N>` meses» | 3 | Redactar la prórroga con su efecto |
@@ -132,12 +132,30 @@ Diferencias que no provienen de las reglas: textos que el usuario agrega con inf
 2. Actualizar la línea golden del motor de Rust con casos ficticios por regla.
 3. Decidir si Flow Python también se ajusta.
 
+## Decisiones del usuario · 20-nov-2026
+
+Decisión expresa del usuario sobre textos de observaciones y estructura del producto (`AGENTS.md`: textos tradicionales solo cambian con decisión expresa y paridad golden).
+
+| Tema | Decisión | Aplicación |
+|---|---|---|
+| R1 | Aprobada | Con `CUMPLIMIENTO.C05_POR_VENCER`, omitir la oración de `C10_HOJA2` («Próximo informe de avance de … vence el …»). |
+| R2 | Aprobada | Omitir de la observación «La historia es de la causa y no permite atribuirlo a un ingreso determinado.» (`HISTORIA.R3_MULTI`); queda como aviso interno. |
+| R3 | Aprobada | Con `HISTORIA.E04_CON_FOLIO` y `ESPERA.E05_SOLO_CORREO`, un solo «Medida revisada, a la espera de ingreso efectivo.» y sin la oración de días de espera. |
+| R4 | **Quitar** | Cuando la observación incluye «Tribunal dispone ingreso a …» (`HISTORIA.SERVICIO_INGRESO`), omitir «Al `<FECHA>`, RUS registra `<N>` días de espera.». |
+| R5 | Parcial | No reiterar (usar el texto vigente) solo cuando el texto vigente es «Medida revisada, sin observaciones.» o «La derivación … no se encuentra sujeta a seguimiento por este Centro.». En los demás casos se mantiene «Se reitera observación anterior del `<FECHA>`.». |
+| R6 | Aprobada | Nombre del programa en tipo título: artículo inicial con mayúscula, comunas y palabras sin mayúsculas sostenidas, conectores en minúscula y tildes restituidas. El usuario escribió «56»; se interpreta como R6. |
+| R7, R8 | Sin decisión | Se mantienen los textos actuales hasta que el usuario decida. |
+| Orden de columnas | Confirmado | Columnas NURUS al final del consolidado: `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. Cierra el conflicto de la sección 7. |
+| Flow Python | Sin decisión | Los cambios de redacción se aplican en Flow Rust. Ajustar Flow Python requiere instrucción aparte. |
+
+Cada cambio de redacción se implementa con casos ficticios por regla en la línea golden de Flow Rust, con la diferencia respecto del texto anterior documentada en el registro.
+
 ## Orden propuesto de corrección
 
 1. **7 y 4**: producto Excel conforme al registro y marcas. Es lo que hoy impide el uso diario y tiene bajo riesgo.
 2. **6 y 3**: instalar la extensión, contactos y nómina editable.
 3. **2**: plantillas institucionales y fechas en palabras.
-4. **8**: R1, R2, R3, R5 y R7 tras confirmación; R4 y R6 tras la respuesta del usuario.
+4. **8**: R1, R2, R3, R4, R5 parcial y R6, según las decisiones del usuario.
 5. **1**: E3, con historia, bitácoras, escritos y Mejor Niñez.
 6. **5**: inventario de opciones y paridad de interfaz.
 
