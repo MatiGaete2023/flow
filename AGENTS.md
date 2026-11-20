@@ -22,7 +22,7 @@
 - No marcar nada como «aceptado» o «institucional»: solo el usuario, en un acta.
 - Sin `--force`, sin fusionar a `main` y sin releases salvo autorización escrita del usuario.
 
-## Verificación
+## Verificación del proyecto Python de referencia
 
 `python tools/verificar_wp.py` decide PASA/FALLA contra `docs/implementacion/linea_base.json`.
 Desde WP-11, el hook y la CI controlan identidades tras la limpieza de WP-10.
