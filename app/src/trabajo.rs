@@ -489,6 +489,27 @@ mod tests {
     }
 
     #[test]
+    fn informes_atribuyen_el_escrito_solo_a_su_fecha_e_ingreso() {
+        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
+        let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_estructura.zip");
+        let mut cfg = Config::default();
+        let mut trabajo = Trabajo::abrir_archivo(ruta, Some(Mode::Informes), "2026-10-08".parse().unwrap(), &cfg).unwrap();
+        assert_eq!(trabajo.registros.len(), 16);
+        let pendientes: Vec<_> = trabajo.registros.iter().filter(|r| {
+            r.eventos.iter().any(|e| e == "HISTORIA.INFORME_AVANCE_PENDIENTE")
+        }).collect();
+        assert_eq!(pendientes.len(), 1);
+        assert!(pendientes[0].propuesta.contains("Pendiente de resolver, informe de avance."));
+        assert!(pendientes[0].acciones.is_empty());
+        assert_eq!(trabajo.registros[3].acciones, ["programa_vencido", "PC_INFO"]);
+        assert_eq!(trabajo.registros[4].acciones, ["programa_vencido", "PC_INFO"]);
+        cfg.desactivadas.insert("HISTORIA.INFORME_AVANCE_PENDIENTE".into());
+        trabajo.analizar(&cfg);
+        assert!(trabajo.registros[1].acciones.is_empty());
+        assert!(!trabajo.registros[1].propuesta.contains("Pendiente de resolver"));
+    }
+
+    #[test]
     fn espera_coteja_folio_y_correo_del_contexto_e3_del_exportador_python() {
         let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
         let trabajo = Trabajo::abrir_archivo(

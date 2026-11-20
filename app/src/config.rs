@@ -28,7 +28,7 @@ pub const UMBRALES: [(&str, i64, &str); 14] = [
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).
-pub const TEXTOS: [(&str, &str); 40] = [
+pub const TEXTOS: [(&str, &str); 41] = [
     ("COMUN.NO_SEGUIMIENTO", "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro."),
     ("COMUN.MAYORIA_EDAD", "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida."),
     ("COMUN.PROXIMA_MAYORIA", "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}."),
@@ -67,6 +67,7 @@ pub const TEXTOS: [(&str, &str); 40] = [
     ("HISTORIA.MEDIDA_REVISADA", "Medida revisada."),
     ("HISTORIA.SERVICIO_INGRESO", "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO})."),
     ("HISTORIA.OTRO_PROGRAMA", "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}."),
+    ("HISTORIA.INFORME_AVANCE_PENDIENTE", "Pendiente de resolver, informe de avance."),
     ("CUMPLIMIENTO.C09_BASE_BREVE", "Medida revisada."),
     ("ESPERA.E07_PROYECCION", "Medida revisada, a la espera de ingreso efectivo. {PROYECCION}"),
 ];

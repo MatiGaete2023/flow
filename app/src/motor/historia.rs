@@ -9,6 +9,9 @@ use std::collections::HashSet;
 use std::sync::OnceLock;
 use unicode_normalization::UnicodeNormalization;
 
+mod escritos;
+pub(super) use escritos::informe_pendiente;
+
 const SERVICIO: &str = "ing serv proteccion especializada y otras redes";
 const INGRESO_EFECTIVO: &str = "ingreso efectivo";
 
@@ -279,6 +282,7 @@ mod tests {
             fecha,
             descripcion: "Ing.Serv. protección especializada y otras redes".into(),
             folio: "42".into(),
+            referencia: String::new(),
             tipo: "resolucion".into(),
         };
         let mut captura = ContextoFila {
@@ -320,6 +324,7 @@ mod tests {
             fecha,
             descripcion: "Ing.Serv. protección especializada y otras redes".into(),
             folio: "42".into(),
+            referencia: String::new(),
             tipo: "resolucion".into(),
         };
         let mut captura = ContextoFila {

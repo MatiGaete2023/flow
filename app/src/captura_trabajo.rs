@@ -173,6 +173,15 @@ pub struct ResumenEscritos {
     /// «Tipo · documento» de cada escrito pendiente, sin los vinculados expresamente a otro ingreso.
     pub pendientes: Vec<String>,
     pub discordante: bool,
+    pub(crate) datos: Arc<[EscritoCausa]>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct EscritoCausa {
+    pub(crate) tipo: String,
+    pub(crate) estado: String,
+    pub(crate) documento: String,
+    pub(crate) vinculo: Option<(String, Option<NaiveDate>)>,
 }
 
 /// Ingreso Histórico Protección (Mejor Niñez) de la persona (`escritos.historicos_por_persona`).
@@ -200,6 +209,8 @@ pub struct ContextoFila {
     pub(crate) varios_ingresos: bool,
     pub(crate) notas_centro: Arc<[NotaCentro]>,
     pub(crate) notas_persona: Arc<[Arc<[NotaCentro]>]>,
+    pub(crate) historia_hasta: Option<NaiveDate>,
+    pub(crate) ingreso_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -207,6 +218,7 @@ pub(crate) struct TramiteCausa {
     pub(crate) fecha: NaiveDate,
     pub(crate) descripcion: String,
     pub(crate) folio: String,
+    pub(crate) referencia: String,
     pub(crate) tipo: String,
 }
 
@@ -372,6 +384,7 @@ fn mejores_consultas<const N: usize>(
                 "event_at",
                 "description",
                 "folio",
+                "reference",
                 "raw_json",
                 "scope",
                 "identity_status",
@@ -544,6 +557,7 @@ fn tramites_causa(
                 fecha,
                 descripcion: descripcion.into(),
                 folio: f.get("folio").trim().into(),
+                referencia: clave_texto(f.get("reference")),
                 tipo,
             })
         })
@@ -644,6 +658,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
         })
         .collect();
     let mut tramites_por_causa = HashMap::new();
+    let mut datos_escritos_por_causa = HashMap::new();
     let mut cronologias: HashMap<_, Arc<cronologia::Cronologia>> = HashMap::new();
     let mut salida = HashMap::new();
     for r in verificados() {
@@ -682,13 +697,36 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 })
                 .map(|e| format!("{} · {}", e.get("escrito_type"), e.get("doc")))
                 .collect();
+            let datos = datos_escritos_por_causa
+                .entry(causa.clone())
+                .or_insert_with(|| {
+                    filas
+                        .iter()
+                        .filter(|f| {
+                            f.get("identity_status") == "CAUSA" && f.get("scope") == "CAUSA"
+                        })
+                        .map(|f| EscritoCausa {
+                            tipo: clave_texto(f.get("escrito_type")),
+                            estado: clave_texto(f.get("escrito_status")),
+                            documento: clave_texto(f.get("doc")),
+                            vinculo: (!f.get("linked_ingreso_id").is_empty()).then(|| {
+                                (
+                                    f.get("linked_ingreso_id").into(),
+                                    dia_iso(f.get("linked_projection")),
+                                )
+                            }),
+                        })
+                        .collect::<Arc<[_]>>()
+                });
             ctx.escritos = Some(ResumenEscritos {
                 cobertura: q.cobertura.clone(),
                 leido: q.leido.clone(),
                 filas: filas.len(),
                 pendientes,
                 discordante: q.discordante,
+                datos: Arc::clone(datos),
             });
+            ctx.ingreso_id = r.get("ingreso_id").into();
         }
         if let Some(q) = historicos.get(&persona) {
             let filas = historico_por_consulta
@@ -736,6 +774,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
             ctx.historia = Some(q.resumen(filas));
+            ctx.historia_hasta = q.hasta.map(|hasta| hasta.min(corte));
             ctx.tramites = Some(Arc::clone(
                 tramites_por_causa
                     .entry(causa.clone())

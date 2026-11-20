@@ -505,6 +505,9 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             }
         }
     }
+    if historia::informe_pendiente(ctx, &programa, None) {
+        frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
+    }
     frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
     frags.extend(oido(ctx, f));
     frags.extend(audiencia(ctx, f));
@@ -537,7 +540,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         return componer(&pfx, &fr);
     }
     if !principal && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA."))
-        && ctx.eventos.iter().any(|e| e == "HISTORIA.OTRO_PROGRAMA")
+        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE"))
     {
         if let Some(base) = ctx.render("HISTORIA.MEDIDA_REVISADA", &[]) {
             frags.insert(0, base);
@@ -570,7 +573,10 @@ fn informes(ctx: &mut Ctx, f: &Fila) -> String {
     let dce = es_dce(&programa);
     let margen = dce && -MARGEN_DCE <= dias && dias < 0;
     let mut frags = Vec::new();
-    if margen {
+    if dias < 0 && historia::informe_pendiente(ctx, &programa, Some(fv)) {
+        ctx.marcar(2, "I01_ESCRITO_PENDIENTE", "Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta");
+        frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
+    } else if margen {
         let limite = fv + Duration::days(MARGEN_DCE);
         frags.extend(ctx.render(
             "INFORMES.I02_MARGEN_DCE",
