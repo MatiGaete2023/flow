@@ -24,7 +24,7 @@ jobs:
       - name: Obtener la referencia Flow Python
         uses: actions/checkout@v4
         with:
-          ref: afc4d12ae1adabf21049c809c0d8f747e2e306
+          ref: refs/heads/flow-python
           path: referencia-python-ci
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
@@ -56,6 +56,8 @@ jobs:
       - name: Contrastar bitácoras V2 con el Descargador Python
         shell: pwsh
         run: |
+          git -C referencia-python-ci rev-parse HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install --require-hashes -r referencia-python-ci/requirements/windows-py312.lock
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
