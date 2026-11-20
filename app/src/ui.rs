@@ -1094,12 +1094,34 @@ impl App {
                     }
                     if let Some(h) = &ctx.historico {
                         let identidad = if h.verificada { "" } else { " · identidad no verificada" };
-                        let texto = if h.vigentes.is_empty() {
+                        let texto = if !matches!(h.cobertura.as_str(), "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA" | "IDENTIDAD_INCIERTA") {
+                            format!("Ingreso histórico (Mejor Niñez) · lectura no verificada · {}", h.leido)
+                        } else if h.vigentes.is_empty() && h.cobertura != "PARCIAL" && h.verificada {
                             format!("Ingreso histórico (Mejor Niñez): sin programas vigentes ({} filas){identidad} · leído {}", h.filas, h.leido)
+                        } else if h.vigentes.is_empty() {
+                            format!("Ingreso histórico (Mejor Niñez) · sin programas vigentes en la lectura disponible{identidad} · leído {}", h.leido)
                         } else {
                             format!("Ingreso histórico (Mejor Niñez): vigentes {}{identidad} · leído {}", h.vigentes.join("; "), h.leido)
                         };
                         ui.label(RichText::new(texto).color(if h.verificada { p.text } else { p.amber }));
+                    }
+                    for (nombre, lectura) in [
+                        ("Historia de la causa", ctx.historia.as_ref()),
+                        ("Bitácora del ingreso", ctx.bitacora.as_ref()),
+                        ("Calendario del ingreso", ctx.calendario.as_ref().map(|c| &c.lectura)),
+                    ] {
+                        if let Some(lectura) = lectura {
+                            let (estado, color) = match lectura.cobertura.as_str() {
+                                "COMPLETA" => (format!("{} registros", lectura.filas), p.text),
+                                "VACIA_COMPROBADA" => ("sin registros".into(), p.muted),
+                                "PARCIAL" => (format!("{} registros en lectura parcial", lectura.filas), p.amber),
+                                _ => ("lectura no verificada".into(), p.amber),
+                            };
+                            ui.label(RichText::new(format!("{nombre} · {estado} · {}", lectura.leido)).color(color));
+                        }
+                    }
+                    if let Some(primera) = ctx.calendario.as_ref().and_then(|c| c.pendientes.first()) {
+                        ui.label(RichText::new(format!("Primera proyección pendiente · {}", primera.format("%d/%m/%Y"))).size(12.0));
                     }
                 });
             }

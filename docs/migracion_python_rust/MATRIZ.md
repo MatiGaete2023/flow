@@ -7,7 +7,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F01 | Lectura de hojas | Presente en `lectura.rs`. Comparar selección, tipos, fila física y CSV con comillas. |
 | F02 | Trabajo y cruces | Tres etapas y Hoja 2 presentes. Completar Egresados, OB, calendarios e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
-| F04 | Contexto de causa | Pendiente historia, cronología, prórroga, audiencia, búsqueda y calendario desde fuentes acreditadas. |
+| F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, bitácora y calendario asociados hasta el corte. Pendientes discordancias y reglas de cronología, prórroga, audiencia, búsqueda y calendario en el motor. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
 | F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección masiva y Excel/JSON. El Excel conserva la tabla del motor y añade clasificación y motivo. Contraste Windows con Flow Python y con cuatro ZIP nativos del productor histórico. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |

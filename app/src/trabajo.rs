@@ -178,7 +178,8 @@ impl Trabajo {
         let corte = self.corte.unwrap_or_else(|| chrono::Local::now().date_naive());
         self.cols = lectura::map_columns(&self.headers, mode);
         self.avisos.clear();
-        if let Some(paquete) = &self.paquete {
+        if let Some(paquete) = &mut self.paquete {
+            paquete.actualizar_contextos(corte);
             if paquete.fuente.estado("registros") != "COMPLETA" {
                 self.avisos.push(format!("Cobertura de registros del paquete: {}.", paquete.fuente.estado("registros")));
             }

@@ -79,6 +79,14 @@ jobs:
           cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe referencia-python-ci
+      - name: Abrir en Trabajo un ZIP de contexto producido por Flow Python
+        shell: pwsh
+        run: |
+          $contexto = Join-Path $env:RUNNER_TEMP 'flow-e3-ficticio'
+          python app/qa/generar_contexto_e3.py referencia-python-ci $contexto
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
+          cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust captura_trabajo::tests::trabajo_abre_contexto_e3_del_exportador_python -- --exact
       - name: Contrastar ZIP V1 con el productor nativo histórico
         shell: pwsh
         run: |
