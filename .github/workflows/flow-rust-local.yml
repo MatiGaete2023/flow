@@ -53,6 +53,22 @@ jobs:
           }
       - name: Compilar el ejecutable de Flow Rust
         run: cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
+      - name: Compilar el ejecutable de entrega
+        shell: pwsh
+        run: |
+          cargo build --manifest-path app/Cargo.toml --locked --release --bin flow_rust
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $salida = New-Item -ItemType Directory -Force -Path app/target/entrega
+          Copy-Item app/target/release/flow_rust.exe $salida
+          $huella = (Get-FileHash -LiteralPath (Join-Path $salida 'flow_rust.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$huella  flow_rust.exe`ncommit $env:GITHUB_SHA" | Set-Content -Encoding utf8 (Join-Path $salida 'SHA256.txt')
+          Get-Content (Join-Path $salida 'SHA256.txt')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Flow_Rust_Windows_exe
+          path: app/target/entrega/
+          if-no-files-found: error
+          retention-days: 14
       - name: Contrastar bitácoras V2 con el Descargador Python
         shell: pwsh
         run: |
