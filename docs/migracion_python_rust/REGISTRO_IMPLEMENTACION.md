@@ -64,11 +64,13 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - **Seleccionar en Trabajo** toma las filas marcadas del filtro activo o todas las visibles si se deja la tabla sin marcas. Reemplaza el conjunto de marcas de Trabajo, enfoca la primera fila y activa **Solo filas marcadas**. Ante un error de guardado se conservan las marcas anteriores. La selección y las ediciones se restauran con la sesión del mismo ZIP, etapa y corte.
 - Excel y JSON usan el mismo subconjunto. Siguiendo Flow Python, el período vuelve a ser el mes hasta el corte al abrir otra vez el diálogo.
 - La prueba V1 con contrato completo incluye dos instantáneas idénticas y dos contradictorias. Las primeras conservan observación y ausencia acreditada. Las segundas quedan no verificables en ambos períodos.
+- La [verificación Windows de selección](https://github.com/MatiGaete2023/flow/actions/runs/44763988257) pasó 19 pruebas de Rust, la prueba focal de exportación, 10 casos V1 y legado y cinco casos P2. Se mantuvo omitida la prueba de rendimiento.
 
 ## Turno 4 · Perfiles del Descargador
 
 - Dentro de **Herramientas → Descargador**, se puede abrir o arrastrar un catálogo JSON y validar un perfil. Lite limita el catálogo a Seguimiento, Búsqueda de litigantes, Informes por vencer y Medidas por vencer. Integral añade Carga. La aplicación valida los filtros propios de Informes y Cumplimiento, el estado de litigantes, mes y año, y el máximo de 31 días inclusivos de Carga.
 - Se conservaron el tema y los controles de Flow Rust. La preparación de perfiles funciona con catálogos locales; la conexión del Descargador, la planificación combinada de lotes y sus productos siguen en E2.
+- La [verificación Windows de perfiles](https://github.com/MatiGaete2023/flow/actions/runs/44766033616) pasó 22 pruebas de Rust, la prueba focal de exportación, 10 casos V1 y legado y cinco casos P2. Se mantuvo omitida la prueba de rendimiento. Se revisaron las [capturas de Trabajo y Descargador](https://github.com/MatiGaete2023/flow/actions/runs/44766033616/artifacts/14645840756) del binario generado en esa ejecución.
 
 ## Siguiente paso exacto
 
