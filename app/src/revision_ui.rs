@@ -6,7 +6,7 @@ use egui::{Context, RichText};
 use egui_extras::{Column, TableBuilder};
 use flow_rust::captura::revision::{Clase, Resultado, Revision};
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 const CLASES: [Clase; 3] = [
@@ -16,6 +16,11 @@ const CLASES: [Clase; 3] = [
 ];
 const COLUMNAS_BITACORA: [&str; 2] = ["CLASIFICACION_BITACORA", "MOTIVO_BITACORA"];
 
+pub enum Accion {
+    AbrirFila(usize),
+    SeleccionarEnTrabajo(Vec<usize>),
+}
+
 pub struct Dialogo {
     desde: String,
     hasta: String,
@@ -23,6 +28,7 @@ pub struct Dialogo {
     error: Option<String>,
     filtro: Option<Clase>,
     filas: Vec<(usize, Resultado)>,
+    seleccion: HashSet<usize>,
     salida: Option<String>,
 }
 
@@ -36,6 +42,7 @@ impl Dialogo {
             error: None,
             filtro: None,
             filas: Vec::new(),
+            seleccion: HashSet::new(),
             salida: None,
         };
         dialogo.calcular(w);
@@ -80,6 +87,7 @@ impl Dialogo {
             })
             .collect();
         self.periodo = (desde, hasta);
+        self.seleccion.clear();
         self.error = None;
         self.salida = None;
     }
@@ -89,9 +97,9 @@ impl Dialogo {
         ctx: &Context,
         p: &Pal,
         w: &Trabajo,
-    ) -> (bool, Option<usize>, Option<[PathBuf; 2]>) {
+    ) -> (bool, Option<Accion>, Option<[PathBuf; 2]>) {
         let mut abierto = true;
-        let mut seleccionada = None;
+        let mut accion = None;
         let mut productos = None;
         egui::Window::new("Revisión de bitácoras")
             .open(&mut abierto)
@@ -119,6 +127,7 @@ impl Dialogo {
                     ))
                     .color(p.muted),
                 );
+                let filtro_anterior = self.filtro;
                 ui.horizontal_wrapped(|ui| {
                     ui.selectable_value(
                         &mut self.filtro,
@@ -134,18 +143,38 @@ impl Dialogo {
                         );
                     }
                 });
+                if self.filtro != filtro_anterior {
+                    self.seleccion.clear();
+                }
                 let visibles: Vec<_> = self
                     .filas
                     .iter()
                     .filter(|(_, r)| self.filtro.is_none_or(|clase| clase == r.clase))
                     .collect();
-                if ui
-                    .add_enabled(
-                        self.error.is_none(),
-                        egui::Button::new("Exportar Excel y JSON…"),
-                    )
-                    .clicked()
-                {
+                let elegidas = subconjunto(&visibles, &self.seleccion);
+                let habilitado = self.error.is_none() && !elegidas.is_empty();
+                let exportar_solicitado = ui
+                    .horizontal_wrapped(|ui| {
+                        if ui
+                            .add_enabled(
+                                habilitado,
+                                egui::Button::new(format!(
+                                    "Seleccionar en Trabajo ({})",
+                                    elegidas.len()
+                                )),
+                            )
+                            .on_hover_text("Reemplaza las marcas de Trabajo con las filas elegidas")
+                            .clicked()
+                        {
+                            accion = Some(Accion::SeleccionarEnTrabajo(
+                                elegidas.iter().map(|(i, _)| *i).collect(),
+                            ));
+                        }
+                        ui.add_enabled(habilitado, egui::Button::new("Exportar Excel y JSON…"))
+                            .clicked()
+                    })
+                    .inner;
+                if exportar_solicitado {
                     if let Some(carpeta) = rfd::FileDialog::new()
                         .set_title("Carpeta donde crear la revisión")
                         .pick_folder()
@@ -154,7 +183,7 @@ impl Dialogo {
                             .format("Revision_bitacoras_%Y-%m-%d_%H%M%S_%3f")
                             .to_string();
                         let destino = carpeta.join(nombre);
-                        match exportar(&destino, w, &visibles, self.periodo) {
+                        match exportar(&destino, w, &elegidas, self.periodo) {
                             Ok(rutas) => {
                                 productos = Some(rutas);
                                 self.salida =
@@ -171,12 +200,13 @@ impl Dialogo {
                     .striped(true)
                     .resizable(true)
                     .max_scroll_height(410.0)
+                    .column(Column::exact(37.0))
                     .column(Column::initial(126.0))
                     .column(Column::initial(105.0))
                     .column(Column::remainder().at_least(185.0))
                     .column(Column::initial(82.0))
                     .header(23.0, |mut encabezado| {
-                        for titulo in ["Clasificación", "RIT", "Motivo", ""] {
+                        for titulo in ["", "Clasificación", "RIT", "Motivo", ""] {
                             encabezado.col(|ui| {
                                 ui.strong(titulo);
                             });
@@ -185,6 +215,20 @@ impl Dialogo {
                     .body(|cuerpo| {
                         cuerpo.rows(42.0, visibles.len(), |mut fila| {
                             let (i, resultado) = visibles[fila.index()];
+                            fila.col(|ui| {
+                                let mut marcada = self.seleccion.contains(i);
+                                if ui
+                                    .checkbox(&mut marcada, "")
+                                    .on_hover_text("Seleccionar esta fila")
+                                    .changed()
+                                {
+                                    if marcada {
+                                        self.seleccion.insert(*i);
+                                    } else {
+                                        self.seleccion.remove(i);
+                                    }
+                                }
+                            });
                             fila.col(|ui| {
                                 ui.label(resultado.clase.etiqueta());
                             });
@@ -196,14 +240,28 @@ impl Dialogo {
                             });
                             fila.col(|ui| {
                                 if ui.button("Abrir fila").clicked() {
-                                    seleccionada = Some(*i);
+                                    accion = Some(Accion::AbrirFila(*i));
                                 }
                             });
                         })
                     });
             });
-        (abierto, seleccionada, productos)
+        (abierto, accion, productos)
     }
+}
+
+fn subconjunto<'a>(
+    visibles: &[&'a (usize, Resultado)],
+    seleccion: &HashSet<usize>,
+) -> Vec<&'a (usize, Resultado)> {
+    if seleccion.is_empty() {
+        return visibles.to_vec();
+    }
+    visibles
+        .iter()
+        .copied()
+        .filter(|(i, _)| seleccion.contains(i))
+        .collect()
 }
 
 fn exportar(
@@ -258,6 +316,29 @@ fn exportar(
 mod tests {
     use super::*;
     use crate::config::Config;
+
+    #[test]
+    fn usa_el_mismo_subconjunto_para_exportar_y_transferir() {
+        let resultado = |clase| Resultado {
+            clase,
+            motivo: "Motivo ficticio".into(),
+        };
+        let filas = [
+            (0, resultado(Clase::SinObservacion)),
+            (1, resultado(Clase::NoVerificable)),
+            (2, resultado(Clase::SinObservacion)),
+        ];
+        let visibles = [&filas[0], &filas[2]];
+        let indices = |s: &HashSet<usize>| {
+            subconjunto(&visibles, s)
+                .iter()
+                .map(|(i, _)| *i)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(indices(&HashSet::new()), [0, 2]);
+        assert_eq!(indices(&HashSet::from([1, 2])), [2]);
+        assert!(indices(&HashSet::from([1])).is_empty());
+    }
 
     #[test]
     fn exporta_mismo_lote_de_python() {

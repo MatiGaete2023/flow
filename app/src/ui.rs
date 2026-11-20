@@ -615,6 +615,31 @@ impl App {
         });
     }
 
+    fn seleccionar_desde_bitacoras(&mut self, filas: &[usize]) -> bool {
+        let Some(w) = &mut self.work else { return false; };
+        let anteriores: Vec<_> = w.registros.iter().map(|r| r.seleccionada).collect();
+        let seleccionadas = w.reemplazar_seleccion(filas);
+        let Some(&primera) = seleccionadas.first() else { return false; };
+        if self.screenshot.is_none() {
+            if let Err(error) = w.guardar_sesion() {
+                for (r, marcada) in w.registros.iter_mut().zip(anteriores) {
+                    r.seleccionada = marcada;
+                }
+                self.aviso(format!("No se pudo guardar la selección: {error}"), true);
+                return false;
+            }
+            self.sucio = None;
+        }
+        self.sel = Some(primera);
+        self.filtro.clear();
+        self.filtro_estado = None;
+        self.filtro_trib.clear();
+        self.solo_marcadas = true;
+        self.revision += 1;
+        self.aviso(format!("{} registros seleccionados en Trabajo.", seleccionadas.len()), false);
+        true
+    }
+
     fn v_trabajo(&mut self, ui: &mut egui::Ui, p: &Pal) {
         if self.work.is_none() {
             self.vacio(ui, p);
@@ -644,11 +669,18 @@ impl App {
             }
         }
         if let (Some(dialogo), Some(w)) = (&mut self.revision_bitacoras, &self.work) {
-            let (abierto, fila, productos) = dialogo.mostrar(ui.ctx(), p, w);
-            if let Some(i) = fila {
-                self.sel = Some(i);
-            }
-            if !abierto || fila.is_some() {
+            let (abierto, accion, productos) = dialogo.mostrar(ui.ctx(), p, w);
+            let accion_aplicada = match accion {
+                Some(crate::revision_ui::Accion::AbrirFila(i)) => {
+                    self.sel = Some(i);
+                    true
+                }
+                Some(crate::revision_ui::Accion::SeleccionarEnTrabajo(filas)) => {
+                    self.seleccionar_desde_bitacoras(&filas)
+                }
+                None => false,
+            };
+            if !abierto || accion_aplicada {
                 self.revision_bitacoras = None;
             }
             if let Some([excel, json]) = productos {

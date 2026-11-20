@@ -59,7 +59,13 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 - El contraste Windows usa paquetes sintéticos V1 construidos con el contrato completo. Cubre una observación del centro, ausencia dentro del alcance, lectura anterior al fin, autoría del tribunal, falta de respaldo y huella discrepante. Mantiene los casos V2 de Flow Python.
 - La [verificación Windows](https://github.com/MatiGaete2023/flow/actions/runs/44760028232) pasó sobre `00623a13ca29c599d4f56d5784da1c860a578bee`. Pasaron 17 pruebas, una prueba focal de exportación, los seis casos V1 y legado y los cinco P2 de Flow Python. Coincidieron los datos y el formato de las columnas comunes de ambos Excel. La prueba de rendimiento se mantuvo omitida.
 
+## Turno 4 · Selección desde bitácoras
+
+- **Seleccionar en Trabajo** toma las filas marcadas del filtro activo o todas las visibles si se deja la tabla sin marcas. Reemplaza el conjunto de marcas de Trabajo, enfoca la primera fila y activa **Solo filas marcadas**. Ante un error de guardado se conservan las marcas anteriores. La selección y las ediciones se restauran con la sesión del mismo ZIP, etapa y corte.
+- Excel y JSON usan el mismo subconjunto. Siguiendo Flow Python, el período vuelve a ser el mes hasta el corte al abrir otra vez el diálogo.
+- La prueba V1 con contrato completo incluye dos instantáneas idénticas y dos contradictorias. Las primeras conservan observación y ausencia acreditada. Las segundas quedan no verificables en ambos períodos.
+
 ## Siguiente paso exacto
 
-1. Completar selección masiva desde la revisión y persistencia del período si corresponde a la referencia. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico y trasladar los casos de combinaciones de instantáneas de `rust/crates/flow-trabajo/tests/revision_bitacoras.rs` al contrato completo.
+1. Ampliar la prueba de V1 contra un ZIP generado por el productor histórico.
 2. Continuar E2 por perfiles del Descargador integral y Lite. Comparar `descargador/perfiles.py` y `descargador_lite/app/perfiles.py` con `rust/crates/flow-captura/src/sitfa/perfil.rs`. Usar `test_solo_cuatro_consultas_rus` y `test_plan_exige_filtros_de_cada_pestana` como primeras regresiones. Incorporar el flujo a los componentes gráficos de `app/`. E3 incorpora historia y calendario al motor de Trabajo; E4 aborda la conciliación entre capturas y la copia del consolidado.

@@ -9,7 +9,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
 | F04 | Contexto de causa | Pendiente historia, cronología, prórroga, audiencia, búsqueda y calendario desde fuentes acreditadas. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
-| F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle de fila y Excel/JSON. El Excel conserva la tabla del motor y añade clasificación y motivo. Pendientes contraste con productor histórico, combinaciones de instantáneas y selección masiva. |
+| F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección masiva y Excel/JSON. El Excel conserva la tabla del motor y añade clasificación y motivo. Pendiente contraste con el productor histórico V1. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
 | F09 | Sesión y vigencia | Estado local por archivo, etapa y corte presente. Pendientes recibos, vigencia, compatibilidad y recuperación. |

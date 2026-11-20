@@ -305,8 +305,27 @@ impl Trabajo {
         config::data_dir().join("sesiones").join(format!("{key}.json"))
     }
 
+    /// Sustituye las marcas por registros elegibles de la etapa actual.
+    pub fn reemplazar_seleccion(&mut self, filas: &[usize]) -> Vec<usize> {
+        let ids: std::collections::BTreeSet<_> = filas.iter().copied()
+            .filter(|&i| self.registros.get(i).is_some_and(|r| !r.excluido))
+            .collect();
+        if !ids.is_empty() {
+            for (i, r) in self.registros.iter_mut().enumerate() {
+                r.seleccionada = ids.contains(&i);
+            }
+        }
+        ids.into_iter().collect()
+    }
+
     /// Guarda las decisiones del usuario (ediciones, revisadas, selección, RES).
     pub fn guardar_sesion(&self) -> Result<(), String> {
+        self.escribir_sesion(&self.sesion_path())?;
+        limpiar_sesiones();
+        Ok(())
+    }
+
+    fn escribir_sesion(&self, ruta: &std::path::Path) -> Result<(), String> {
         let mut s = Sesion {
             archivo: self.nombre.clone(),
             hash: self.hash.clone(),
@@ -324,13 +343,15 @@ impl Trabajo {
             }
         }
         let data = serde_json::to_vec_pretty(&s).map_err(|e| e.to_string())?;
-        config::atomic_write(&self.sesion_path(), &data).map_err(|e| e.to_string())?;
-        limpiar_sesiones();
-        Ok(())
+        config::atomic_write(ruta, &data).map_err(|e| e.to_string())
     }
 
     fn restaurar(&mut self) {
-        let Ok(t) = std::fs::read_to_string(self.sesion_path()) else { return };
+        self.restaurar_desde(&self.sesion_path());
+    }
+
+    fn restaurar_desde(&mut self, ruta: &std::path::Path) {
+        let Ok(t) = std::fs::read_to_string(ruta) else { return };
         let Ok(s) = serde_json::from_str::<Sesion>(&t) else {
             self.avisos.push("La sesión anterior de este archivo no se pudo leer; se conserva sin cambios.".into());
             return;
@@ -386,6 +407,29 @@ pub fn hex(b: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn conserva_el_conjunto_transferido_al_restaurar_una_sesion() {
+        let mut w = Trabajo {
+            registros: vec![
+                Registro { fila_excel: 2, seleccionada: true, editada: Some("Edición ficticia".into()), ..Default::default() },
+                Registro { fila_excel: 3, ..Default::default() },
+                Registro { fila_excel: 4, excluido: true, ..Default::default() },
+            ],
+            ..Default::default()
+        };
+        assert!(w.reemplazar_seleccion(&[2, 30]).is_empty());
+        assert!(w.registros[0].seleccionada);
+        assert_eq!(w.reemplazar_seleccion(&[1, 2, 1, 30]), [1]);
+        let carpeta = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/test_out");
+        let ruta = carpeta.join(format!("seleccion_{}.json", chrono::Utc::now().timestamp_micros()));
+        w.escribir_sesion(&ruta).unwrap();
+        w.registros[0].editada = None;
+        w.registros[1].seleccionada = false;
+        w.restaurar_desde(&ruta);
+        assert_eq!(w.registros.iter().map(|r| r.seleccionada).collect::<Vec<_>>(), [false, true, false]);
+        assert_eq!(w.registros[0].editada.as_deref(), Some("Edición ficticia"));
+    }
     use crate::productos;
 
     fn hoy() -> NaiveDate {

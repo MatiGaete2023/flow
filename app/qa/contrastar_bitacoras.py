@@ -109,7 +109,7 @@ def comprobar_evidencia_nativa(ejecutable, carpeta, paquete):
         }],
     }
 
-    def escribir(nombre, evidencia):
+    def escribir(nombre, evidencia, segunda=None):
         datos = deepcopy(captura.manifest)
         datos.pop("schema_version")
         datos["table_states"]["bitacoras"] = "PARCIAL"
@@ -118,8 +118,14 @@ def comprobar_evidencia_nativa(ejecutable, carpeta, paquete):
         else:
             filtros["revision_bitacoras"] = evidencia
         consulta["filters_json"] = json.dumps(filtros)
-        datos["queries"] = tablas["consultas"]
-        return write_capture(carpeta / f"{nombre}.zip", datos, tablas)
+        salida = {k: list(filas) for k, filas in tablas.items()}
+        if segunda is not None:
+            id_copia = consulta["query_id"] + "-copia"
+            filtros_copia = dict(filtros, revision_bitacoras=segunda)
+            salida["consultas"].append(dict(consulta, query_id=id_copia, filters_json=json.dumps(filtros_copia)))
+            salida["bitacoras"].append(dict(evento, query_id=id_copia, event_id=id_copia + "-evento-ficticio"))
+        datos["queries"] = salida["consultas"]
+        return write_capture(carpeta / f"{nombre}.zip", datos, salida)
 
     validadas = escribir("v1", nativa)
     assert clasificacion_rust(ejecutable, validadas, "100", "2026-08-01", "2026-08-31") == "CON_OBSERVACION"
@@ -130,13 +136,19 @@ def comprobar_evidencia_nativa(ejecutable, carpeta, paquete):
     autor["entries"][0]["origen"] = "tribunal"
     otra_autoria = escribir("v1-tribunal", autor)
     assert clasificacion_rust(ejecutable, otra_autoria, "100", "2026-08-01", "2026-08-31") == "SIN_OBSERVACION"
+    repitidas = escribir("v1-identicas", nativa, nativa)
+    assert clasificacion_rust(ejecutable, repitidas, "100", "2026-08-01", "2026-08-31") == "CON_OBSERVACION"
+    assert clasificacion_rust(ejecutable, repitidas, "100", "2026-09-08", "2026-10-08") == "SIN_OBSERVACION"
+    contradictorias = escribir("v1-contradictorias", nativa, autor)
+    assert clasificacion_rust(ejecutable, contradictorias, "100", "2026-08-01", "2026-08-31") == "NO_VERIFICABLE"
+    assert clasificacion_rust(ejecutable, contradictorias, "100", "2026-09-08", "2026-10-08") == "NO_VERIFICABLE"
     legado = escribir("legado", None)
     assert clasificacion_rust(ejecutable, legado, "100", "2026-09-08", "2026-10-08") == "NO_VERIFICABLE"
 
     evento["source_sha256"] = "0" * 64
     discordante = escribir("v1-huella-ajena", nativa)
     assert clasificacion_rust(ejecutable, discordante, "100", "2026-08-01", "2026-08-31") == "NO_VERIFICABLE"
-    print("6 casos de evidencia nativa V1 y legado aprobados con el contrato completo.")
+    print("10 casos de evidencia nativa V1 y legado aprobados con el contrato completo.")
 
 
 def main():
