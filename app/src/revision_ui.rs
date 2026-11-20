@@ -276,6 +276,26 @@ mod tests {
     use crate::config::Config;
 
     #[test]
+    fn exporta_mismo_lote_de_python() {
+        let Some(paquete) = std::env::var_os("FLOW_P2_PAQUETE") else {
+            return;
+        };
+        let destino =
+            PathBuf::from(std::env::var_os("FLOW_P2_SALIDA").expect("carpeta del contraste P2"));
+        let corte = NaiveDate::from_ymd_opt(2026, 10, 13).unwrap();
+        let w = Trabajo::abrir_archivo(PathBuf::from(paquete), None, corte, &Config::default())
+            .unwrap();
+        let mut dialogo = Dialogo::nuevo(&w, corte);
+        dialogo.desde = "08/09/2026".into();
+        dialogo.hasta = "08/10/2026".into();
+        dialogo.calcular(&w);
+        assert!(dialogo.error.is_none());
+        assert_eq!(dialogo.filas.len(), 2);
+        let filas: Vec<_> = dialogo.filas.iter().collect();
+        exportar(&destino, &w, &filas, dialogo.periodo).unwrap();
+    }
+
+    #[test]
     fn exporta_resultados_y_preserva_el_destino_existente() {
         let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else {
             return;
