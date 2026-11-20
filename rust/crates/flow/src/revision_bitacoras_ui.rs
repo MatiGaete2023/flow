@@ -281,9 +281,18 @@ impl RevisionUi {
                         ui.collapsing(format!("Lectura {} · {}",i+1,l["coverage"].as_str().unwrap_or("Desconocida")),|ui|{
                             ui.label(format!("Capturada: {}",l["captured_at"].as_str().unwrap_or("Sin fecha acreditada")));
                             let evidencia=&l["evidencia"];
-                            if evidencia["version"]!=1 {ui.label("Este paquete no conserva la evidencia original necesaria para acreditar una ausencia.");return}
-                            ui.label(format!("Intervalo de lectura: {} a {}",evidencia["desde"].as_str().unwrap_or("desconocido"),evidencia["hasta"].as_str().unwrap_or("desconocido")));
-                            let entradas=evidencia["entries"].as_array();
+                            let version = evidencia["version"].as_u64();
+                    if !matches!(version, Some(1 | 2)) {
+                        ui.label("Este paquete no conserva evidencia de alcance en una versión reconocida.");
+                        return;
+                    }
+                    ui.label(format!("Intervalo de lectura: {} a {}",evidencia["desde"].as_str().unwrap_or("desconocido"),evidencia["hasta"].as_str().unwrap_or("desconocido")));
+                    if version == Some(2) {
+                        ui.label(format!("Alcance informado por el Descargador Python: {}",
+                            evidencia["coverage"].as_str().unwrap_or("Desconocido")));
+                        return;
+                    }
+                    let entradas=evidencia["entries"].as_array();
                             if entradas.is_some_and(Vec::is_empty){ui.label("Lectura sin entradas capturadas. La clasificación depende de su cobertura verificada.");}
                             for (n,e) in entradas.into_iter().flatten().take(200).enumerate(){
                                 ui.collapsing(format!("Entrada {} · {} · {}",n+1,e["fecha"].as_str().unwrap_or("Fecha ilegible"),e["autor"].as_str().unwrap_or("Autor desconocido")),|ui|{

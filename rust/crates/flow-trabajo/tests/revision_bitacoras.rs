@@ -353,3 +353,112 @@ fn alcance_sitfa_exige_que_cada_fila_venga_de_la_respuesta_declarada() {
         assert_eq!(informe.filas[0].revision.clasificacion, C::NoVerificable, "huella manipulada {sha:?}: {}", informe.filas[0].revision.motivo);
     }
 }
+
+fn consulta_python(id: &str, ingreso: &str, completa: bool) -> Value {
+    let capturada = "2026-10-08T12:00:00Z";
+    json!({
+        "query_id": id, "screen": "bitacoras", "coverage": "PARCIAL", "captured_at": capturada,
+        "filters_json": json!({
+            "remote_identity": {
+                "source_system": "RUS", "court_code": "901", "cause_id": "100", "ingreso_id": ingreso
+            },
+            "revision_bitacoras": {
+                "version": 2, "desde": "1900-01-01", "hasta": "2026-10-08",
+                "captured_at": capturada, "metodo": "SITFA_TABLA_INFORME_INGRESO_V1",
+                "coverage": if completa { "COMPLETA" } else { "PARCIAL" },
+                "completa": completa, "warnings": 0
+            }
+        }).to_string()
+    })
+}
+
+fn evento_python(ingreso: &str) -> Value {
+    json!({
+        "query_id": "diary-0", "source_system": "RUS", "court_code": "901",
+        "cause_id": "100", "ingreso_id": ingreso, "identity_status": "VERIFICADA",
+        "event_id": "diary-0-1", "event_at": "2026-08-12", "time_precision": "DIA",
+        "coverage": "PARCIAL", "captured_at": "2026-10-08T12:00:00Z",
+        "origin": "CENTRO", "origin_verified": "true", "text": "Observación ficticia"
+    })
+}
+
+#[test]
+fn paquete_python_v2_clasifica_los_cuatro_casos_del_plan() {
+    let datos = build_tables(vec![
+        ("registros", vec![row("r1", "201"), row("r2", "202")]),
+        ("consultas", vec![consulta_python("diary-0", "201", true), consulta_python("diary-1", "202", false)]),
+        ("bitacoras", vec![evento_python("201")]),
+    ]);
+    let corte = fecha("2026-10-13");
+    let mut informe = paquete::revisar_bitacoras(&datos, fecha("2026-08-01"), fecha("2026-08-31"), corte).unwrap();
+    assert_eq!(informe.filas[0].revision.clasificacion, C::ConObservacion);
+    assert_eq!(informe.filas[0].revision.ultima_fecha, Some(fecha("2026-08-12")));
+    assert_eq!(paquete::periodo_revision(&datos).unwrap().unwrap().1, fecha("2026-10-08"));
+
+    informe.cambiar_periodo(fecha("2026-09-08"), fecha("2026-10-08"), corte).unwrap();
+    assert_eq!(informe.conteos(), [1, 0, 1, 0]);
+    assert_eq!(informe.filas[0].revision.clasificacion, C::SinObservacion);
+    assert_eq!(informe.filas[1].revision.clasificacion, C::NoVerificable);
+    assert_eq!(informe.filas[0].lecturas[0]["evidencia"]["version"], 2);
+
+    let serializado = serde_json::to_vec(&informe).unwrap();
+    let mut restaurado: revision_informe::Informe = serde_json::from_slice(&serializado).unwrap();
+    assert_eq!(restaurado.conteos(), [1, 0, 1, 0]);
+    restaurado.cambiar_periodo(fecha("2026-09-14"), corte, corte).unwrap();
+    assert_eq!(restaurado.filas[0].revision.clasificacion, C::NoVerificable);
+}
+
+#[test]
+fn paquete_python_v2_cobertura_y_autoria_no_se_suponen() {
+    let clasificar = |consultas, eventos| {
+        let datos = build_tables(vec![
+            ("registros", vec![row("r1", "201")]),
+            ("consultas", consultas),
+            ("bitacoras", eventos),
+        ]);
+        paquete::revisar_bitacoras(&datos, fecha("2026-08-01"), fecha("2026-10-08"), fecha("2026-10-08"))
+            .unwrap().filas[0].revision.clasificacion
+    };
+
+    let consulta = consulta_python("diary-0", "201", true);
+    for (campo, valor) in [
+        ("warnings", json!(1)), ("warnings", json!("0")), ("completa", json!("true")),
+        ("metodo", json!("otro")), ("desde", json!("2026-08-02")),
+        ("hasta", json!("2026-10-07")), ("captured_at", json!("2026-10-08T11:00:00Z")),
+        ("version", json!(3)),
+    ] {
+        let mut q = consulta.clone();
+        let mut filtros: Value = serde_json::from_str(q["filters_json"].as_str().unwrap()).unwrap();
+        filtros["revision_bitacoras"][campo] = valor;
+        q["filters_json"] = json!(filtros.to_string());
+        assert_eq!(clasificar(vec![q], vec![]), C::NoVerificable, "{campo}");
+    }
+
+    assert_eq!(
+        clasificar(vec![consulta_python("diary-0", "201", false)], vec![evento_python("201")]),
+        C::ConObservacion
+    );
+    let mut dudoso = evento_python("201");
+    dudoso["origin_verified"] = json!("false");
+    assert_eq!(clasificar(vec![consulta.clone()], vec![dudoso]), C::NoVerificable);
+    assert_eq!(clasificar(vec![consulta.clone()], vec![evento_python("202")]), C::NoVerificable);
+    assert_eq!(
+        clasificar(vec![consulta.clone(), consulta_python("diary-1", "201", true)], vec![]),
+        C::NoVerificable
+    );
+
+    let mut vacia = consulta.clone();
+    let mut filtros: Value = serde_json::from_str(vacia["filters_json"].as_str().unwrap()).unwrap();
+    filtros["revision_bitacoras"]["coverage"] = json!("VACIA_COMPROBADA");
+    vacia["filters_json"] = json!(filtros.to_string());
+    assert_eq!(clasificar(vec![vacia.clone()], vec![]), C::SinObservacion);
+    assert_eq!(clasificar(vec![vacia], vec![evento_python("201")]), C::NoVerificable);
+
+    let datos = build_tables(vec![("registros", vec![row("r1", "201")]), ("consultas", vec![consulta])]);
+    assert_eq!(
+        paquete::revisar_bitacoras(&datos, fecha("2026-08-01"), fecha("2026-10-08"), fecha("2026-10-08"))
+            .unwrap().filas[0].revision.clasificacion,
+        C::NoVerificable
+    );
+}
+

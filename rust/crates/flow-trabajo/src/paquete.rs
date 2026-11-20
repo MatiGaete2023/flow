@@ -540,6 +540,83 @@ fn alias_revision(d: &mut EvidenciaIngreso, consulta: &str, id: &str) {
     }
 }
 
+fn fecha_limite_revision(valor: &Value) -> Option<Fecha> {
+    let texto = valor.as_str()?;
+    let fecha: Fecha = texto.parse().ok()?;
+    (fecha.to_string() == texto).then_some(fecha)
+}
+
+/// Python V2 describe el alcance en la consulta y publica las observaciones en el CSV.
+fn intervalo_revision_python(q: &FilaCsv, raw: &Value) -> Option<(Fecha, Fecha)> {
+    if !matches!(dato(q, "coverage"), "COMPLETA" | "PARCIAL" | "VACIA_COMPROBADA")
+        || raw["metodo"] != flow_captura::lecturas::ALCANCE_BITACORA_SITFA
+    {
+        return None;
+    }
+    let desde = fecha_limite_revision(&raw["desde"])?;
+    let hasta = fecha_limite_revision(&raw["hasta"])?;
+    let captura = chrono::DateTime::parse_from_rfc3339(dato(q, "captured_at")).ok()?;
+    let captura_raw = chrono::DateTime::parse_from_rfc3339(raw["captured_at"].as_str()?).ok()?;
+    (desde <= hasta && hasta == captura.date_naive() && captura_raw == captura
+        && captura_raw.date_naive() == hasta).then_some((desde, hasta))
+}
+
+fn integrar_evento_revision_python(
+    d: &mut EvidenciaIngreso,
+    q: &FilaCsv,
+    e: &FilaCsv,
+    intervalo: Option<(Fecha, Fecha)>,
+    alcance_vacio: bool,
+) {
+    use crate::revision_bitacoras::{Autor, Evento};
+    let Some((desde, hasta)) = intervalo else { return };
+    if alcance_vacio || dato(q, "coverage") == "VACIA_COMPROBADA"
+        || dato(e, "coverage") != dato(q, "coverage")
+        || dato(e, "captured_at") != dato(q, "captured_at")
+    {
+        d.contradictoria = true;
+        return;
+    }
+
+    let texto = dato(e, "text");
+    if texto.trim().is_empty() {
+        return;
+    }
+    let id = dato(e, "event_id");
+    let instante = dato(e, "event_at");
+    let precision = dato(e, "time_precision");
+    let fecha = dia(instante);
+    if id.trim().is_empty() || !matches!(precision, "DIA" | "SEGUNDO")
+        || momento_revision(instante, precision).is_none()
+    {
+        d.incompleta = true;
+        return;
+    }
+    let Some(fecha) = fecha else {
+        d.incompleta = true;
+        return;
+    };
+    if fecha > hasta {
+        d.incompleta = true;
+        return;
+    }
+    if fecha < desde {
+        return;
+    }
+    let autor = match (dato(e, "origin"), dato(e, "origin_verified")) {
+        ("CENTRO", "true") => Autor::Centro,
+        ("TRIBUNAL" | "PROGRAMA", "true") => Autor::Otro,
+        _ => Autor::Desconocido,
+    };
+    d.eventos.push(Evento {
+        id: id.into(),
+        momento: instante.into(),
+        fecha: Some(fecha),
+        texto: texto.into(),
+        autor,
+    });
+}
+
 /// Indiza cada consulta y evento una vez. La evidencia no depende del filtro temporal de la UI.
 fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
     use crate::revision_bitacoras::{Autor, Evento};
@@ -548,6 +625,7 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
     let mut rangos: HashMap<String, Option<(Fecha, Fecha)>> = HashMap::new();
     // Huella de la respuesta SITFA que acredita el alcance: cada fila exportada debe venir de ella.
     let mut huellas_alcance: HashMap<String, String> = HashMap::new();
+    let mut consultas_python = HashMap::new();
     let mut ilegible = false;
     for q in c.tablas.get("consultas").into_iter().flatten().filter(|q| dato(q,"screen") == "bitacoras") {
         let Ok(mut filtros) = serde_json::from_str::<Value>(dato(q,"filters_json")) else { ilegible = true; continue; };
@@ -561,9 +639,34 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         }
         let raw = filtros["revision_bitacoras"].take();
         let d = salida.entry(ident).or_default();
-        if raw["version"] != 1 || !raw["entries"].is_array() {
+        if raw["version"] == 2 {
+            // El productor Python consolida las copias antes de exportar: una consulta por ingreso.
+            if !d.lecturas.is_empty() || dato(q, "query_id").is_empty() {
+                d.contradictoria = true;
+            }
+            let intervalo = intervalo_revision_python(q, &raw);
+            let alcance = raw["coverage"].as_str();
+            consultas_python.insert(dato(q, "query_id"), (q, intervalo, alcance == Some("VACIA_COMPROBADA")));
+            d.conocida |= intervalo.is_some();
+            let mut completa = intervalo.is_some()
+                && raw["completa"] == true
+                && raw["warnings"].as_u64() == Some(0)
+                && matches!(alcance, Some("COMPLETA" | "VACIA_COMPROBADA"))
+                && c.tablas.contains_key("bitacoras");
+            if dato(q, "coverage") == "VACIA_COMPROBADA" {
+                completa &= alcance == Some("VACIA_COMPROBADA");
+            }
+            if completa {
+                d.cobertura = intervalo;
+            } else {
+                d.incompleta = true;
+            }
+        } else if raw["version"] != 1 || !raw["entries"].is_array() {
             d.incompleta = true;
         } else {
+            if d.lecturas.iter().any(|l| l["evidencia"]["version"] == 2) {
+                d.contradictoria = true;
+            }
             if let Some(previa) = d.lecturas.iter().find(|l| l["evidencia"]["version"] == 1) {
                 if previa["evidencia"] != raw { d.contradictoria = true; }
             }
@@ -641,6 +744,12 @@ fn evidencias_revision(c: &Contenido) -> HashMap<Identidad, EvidenciaIngreso> {
         } else {false};
         let d = salida.entry(ident).or_default();
         if !verificada(e) || !consulta_verificada { d.contradictoria = true; }
+        if let Some(&(q, intervalo, alcance_vacio)) = consultas_python.get(dato(e, "query_id")) {
+            if verificada(e) && consulta_verificada {
+                integrar_evento_revision_python(d, q, e, intervalo, alcance_vacio);
+            }
+            continue;
+        }
         if huellas_alcance.get(dato(e,"query_id")).is_some_and(|h| !dato(e,"source_sha256").eq_ignore_ascii_case(h)) {
             d.contradictoria = true;
         }
@@ -750,10 +859,12 @@ pub fn periodo_revision(datos: &[u8]) -> Result<Option<(Fecha, Fecha)>, String> 
     for q in c.tablas.get("consultas").into_iter().flatten().filter(|q|dato(q,"screen")=="bitacoras") {
         let Ok(f) = serde_json::from_str::<Value>(dato(q,"filters_json")) else {continue};
         let r = &f["revision_bitacoras"];
-        if r["version"] != 1 {continue}
-        let desde = r["desde"].as_str().and_then(|s|s.parse::<Fecha>().ok());
-        let hasta = r["hasta"].as_str().and_then(|s|s.parse::<Fecha>().ok());
-        if let Some((a,b)) = desde.zip(hasta).filter(|(a,b)|a<=b) {
+        let rango = match r["version"].as_u64() {
+            Some(1) => fecha_limite_revision(&r["desde"]).zip(fecha_limite_revision(&r["hasta"])),
+            Some(2) => intervalo_revision_python(q, r),
+            _ => None,
+        };
+        if let Some((a,b)) = rango.filter(|(a,b)|a<=b) {
             intervalo = Some(intervalo.map(|(x,y)|(x.min(a),y.max(b))).unwrap_or((a,b)));
         }
     }
