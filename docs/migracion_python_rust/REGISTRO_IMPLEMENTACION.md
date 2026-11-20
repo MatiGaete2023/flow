@@ -81,8 +81,14 @@ Rama `estudio/paridad-python-rust-20261119`. Inicio de la corrección el 20 de n
 ## Turno 5 · Contraste con el exportador nativo V1
 
 - El flujo Windows llama al lector vigente desde la prueba del productor histórico. Usa sus ZIP originales, generados a partir de HTML ficticio y sin modificaciones intermedias. Coteja por identificador de registro las ventanas con observación, vacía, paginada y sin tabla. La prueba histórica sigue funcionando por sí sola cuando no se configura `FLOW_RUST_REVISAR_V1`.
+- La [verificación Windows](https://github.com/MatiGaete2023/flow/actions/runs/44768386157) pasó las 24 pruebas de la aplicación, la prueba focal del Excel, los 10 casos V1 y legado, los cinco P2 y los cuatro ZIP del productor. Se mantuvo omitida la prueba de rendimiento. Los dos casos de planificación y calendario de Flow Python Lite pasaron en la referencia local.
+
+## Turno 5 · Carga de catálogos desde Chrome
+
+- **Conexión con Chrome** incorpora el puente de escritorio en la vista Descargador. El código local se genera al abrir, se copia bajo demanda y se invalida al cerrar o cambiar de edición. Se puede elegir una pantalla y cargar sus opciones en segundo plano. El selector de perfiles y la vista previa de lotes usan el catálogo resultante. Se mantiene la apertura de un JSON local.
+- El transporte usa el protocolo local comprobado en el workspace histórico y los contratos de las extensiones Flow Python Integral 2.9.0 y Lite 1.1.0. En esta etapa el puente solicita capacidades y catálogos. Una extensión ficticia recorrió la conexión, la consulta de capacidades y la carga de un catálogo Lite sobre HTTP local. El cierre de E2 requiere ejecutar y recuperar lotes.
 
 ## Siguiente paso exacto
 
-1. Comprobar en el flujo Windows las cuatro variantes del productor histórico. Corregir cualquier discrepancia del lector vigente antes de cerrar F06.
-2. Integrar la ejecución de `PlanLote` y sus resultados con el sitio ficticio en E2. Usar los componentes de transporte y resultados de Flow Python como referencia y probar el manejo de consultas vacías, cancelación y reintentos. E3 incorpora historia y calendario al motor de Trabajo. E4 aborda la conciliación entre capturas y la copia del consolidado.
+1. Integrar la ejecución de `PlanLote` sobre el puente `app/src/descargador/puente.rs`. Cotejar `BatchRunner.run` en `descargador_lite/app/lotes.py` y `descargador/lotes.py`. Adaptar los pares de búsqueda y la validación de respuestas de `rust/crates/flow-captura/src/sitfa/` al catálogo y la edición activos. Probar con el sitio ficticio la descarga XLS, el informe de consulta vacía, los resultados parciales, la cancelación y el reintento.
+2. Incorporar historia y calendario al motor de Trabajo en E3. E4 aborda la conciliación entre capturas y la copia del consolidado.

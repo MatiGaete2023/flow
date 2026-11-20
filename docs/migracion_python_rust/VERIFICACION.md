@@ -26,3 +26,10 @@ python -m pip install --require-hashes -r referencia-python-ci/requirements/wind
 cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
 python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe referencia-python-ci
 ```
+
+Para cotejar los ZIP V1 que genera el productor nativo histórico, ejecutar en el checkout completo de la rama:
+
+```powershell
+$env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bitacoras.exe).Path
+cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
+```

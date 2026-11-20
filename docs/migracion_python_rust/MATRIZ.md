@@ -9,7 +9,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
 | F04 | Contexto de causa | Pendiente historia, cronología, prórroga, audiencia, búsqueda y calendario desde fuentes acreditadas. |
 | F05 | Otro programa, reiteración y Escritos | Pendiente. Probar consignar, deshacer, reabrir y recalcular. |
-| F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección masiva y Excel/JSON. El Excel conserva la tabla del motor y añade clasificación y motivo. Pendiente contraste con el productor histórico V1. |
+| F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección masiva y Excel/JSON. El Excel conserva la tabla del motor y añade clasificación y motivo. Contraste Windows con Flow Python y con cuatro ZIP nativos del productor histórico. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
 | F09 | Sesión y vigencia | Estado local por archivo, etapa y corte presente. Pendientes recibos, vigencia, compatibilidad y recuperación. |
@@ -20,7 +20,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F14 | Proyectos Word | Vista previa, edición y DOCX presentes. Comparar plantillas completas, tipos, agrupación, campos y formatos. |
 | F15 | Formularios manuales | Cotejar gestión particular en blanco. Completar Word manual y reutilizar los productos existentes. |
 | F16 | Resultados y estadísticas | Vista y reporte presentes. Cotejar búsqueda, historial, diagnóstico, calidad y composición de entrega. |
-| F17 | Descargador integral y Lite | Vista con catálogo local y validación de perfiles. Lite admite cuatro pantallas e Integral añade Carga. Pendientes conexión y prueba en el sitio ficticio. |
+| F17 | Descargador integral y Lite | Validación de perfiles y carga de catálogos desde JSON o el puente local de Chrome. Lite admite cuatro pantallas e Integral añade Carga. Pendientes ejecución y prueba del lote completo con sitio ficticio. |
 | F18 | Gestión de lotes | Planificación combinada y vista previa por pantalla. Pendientes ejecución, favoritos, pausas, topes, cancelación, recuperación y PDF de consulta vacía. |
 | F19 | Bitácora, historia y calendario | Pendiente en el Descargador vigente. Probar identidad, ventanas, procedencia y respaldo alterado. |
 | F20 | Escritos | Pendiente. Diferenciar tabla vacía, ausente, variante con pestaña y lecturas parciales. |

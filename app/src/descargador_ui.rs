@@ -2,11 +2,13 @@ use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
 use flow_rust::descargador::{
-    Catalogo, Edicion, Pantalla, Perfil, PlanLote, Seleccion, SeleccionLote, MODALIDADES, PESTANAS,
-    TODAS_LAS_MEDIDAS,
+    Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente, Seleccion, SeleccionLote, MODALIDADES,
+    PESTANAS, TODAS_LAS_MEDIDAS,
 };
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::{mpsc, Arc};
+use std::time::Duration;
 
 #[derive(Default)]
 pub struct Descargador {
@@ -21,6 +23,116 @@ pub struct Descargador {
     lote_desde: String,
     lote_hasta: String,
     plan: Option<Result<PlanLote, String>>,
+    conexion: Conexion,
+    catalogo_remoto: bool,
+}
+
+#[derive(Default)]
+struct Conexion {
+    puente: Option<Arc<Puente>>,
+    pantalla: Pantalla,
+    carga: Option<mpsc::Receiver<Result<Catalogo, String>>>,
+    error: Option<String>,
+}
+
+impl Conexion {
+    fn cerrar(&mut self) {
+        self.carga = None;
+        self.error = None;
+        if let Some(puente) = self.puente.take() {
+            puente.cerrar();
+        }
+    }
+
+    fn catalogo(&mut self) -> Option<Catalogo> {
+        match self.carga.as_ref()?.try_recv() {
+            Ok(Ok(catalogo)) => {
+                self.carga = None;
+                Some(catalogo)
+            }
+            Ok(Err(e)) => {
+                self.carga = None;
+                self.error = Some(e);
+                None
+            }
+            Err(mpsc::TryRecvError::Disconnected) => {
+                self.carga = None;
+                self.error = Some("Se interrumpió la carga del catálogo.".into());
+                None
+            }
+            Err(mpsc::TryRecvError::Empty) => None,
+        }
+    }
+
+    fn mostrar(&mut self, ui: &mut Ui, p: &Pal, edicion: Edicion) {
+        egui::CollapsingHeader::new("Conexión con Chrome").show(ui, |ui| {
+            let Some(puente) = self.puente.clone() else {
+                if ui.button("Abrir conexión local").clicked() {
+                    match Puente::abrir() {
+                        Ok(puente) => {
+                            self.puente = Some(Arc::new(puente));
+                            self.error = None;
+                        }
+                        Err(e) => self.error = Some(e),
+                    }
+                }
+                if let Some(e) = &self.error {
+                    ui.label(RichText::new(e).color(p.amber));
+                }
+                return;
+            };
+            let conectado = puente.conectado();
+            ui.ctx().request_repaint_after(Duration::from_millis(500));
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Copiar código").clicked() {
+                    ui.ctx().copy_text(puente.codigo_conexion());
+                }
+                if ui.button("Cerrar conexión").clicked() {
+                    self.cerrar();
+                }
+                if conectado {
+                    ui.label(RichText::new("Chrome conectado").color(p.green));
+                } else {
+                    ui.label("Pega el código en la extensión Integral o Lite de Flow Python.");
+                }
+            });
+            if self.puente.is_none() {
+                return;
+            }
+            ui.add_enabled_ui(conectado && self.carga.is_none(), |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    let pantallas: &[Pantalla] = match edicion {
+                        Edicion::Integral => &Pantalla::INTEGRAL,
+                        Edicion::Lite => &Pantalla::LITE,
+                    };
+                    ComboBox::from_id_salt("pantalla de Chrome")
+                        .selected_text(self.pantalla.etiqueta())
+                        .show_ui(ui, |ui| {
+                            for p in pantallas {
+                                ui.selectable_value(&mut self.pantalla, *p, p.etiqueta());
+                            }
+                        });
+                    if ui.button("Cargar opciones de Chrome").clicked() {
+                        let (envio, recepcion) = mpsc::channel();
+                        let pantalla = self.pantalla;
+                        let ctx = ui.ctx().clone();
+                        std::thread::spawn(move || {
+                            let _ = envio.send(puente.catalogo(edicion, pantalla));
+                            ctx.request_repaint();
+                        });
+                        self.error = None;
+                        self.carga = Some(recepcion);
+                    }
+                });
+            });
+            if self.carga.is_some() {
+                ui.label("Cargando catálogo…");
+            }
+            if let Some(e) = &self.error {
+                ui.label(RichText::new(e).color(p.amber));
+            }
+        });
+    }
 }
 
 impl Descargador {
@@ -42,27 +154,38 @@ impl Descargador {
             });
         match catalogo {
             Ok(catalogo) => {
-                self.catalogo = Some(catalogo);
-                self.seleccion = Seleccion::default();
-                self.desde.clear();
-                self.hasta.clear();
-                self.perfil = None;
-                self.error = None;
-                self.lote = SeleccionLote::default();
-                self.lote_desde.clear();
-                self.lote_hasta.clear();
-                self.plan = None;
+                if self.conexion.carga.is_some() {
+                    self.conexion.cerrar();
+                }
+                self.usar_catalogo(Some(catalogo), false);
             }
             Err(e) => self.error = Some(format!("No se pudo abrir el catálogo: {e}")),
         }
     }
 
+    fn usar_catalogo(&mut self, catalogo: Option<Catalogo>, remoto: bool) {
+        self.catalogo = catalogo;
+        self.catalogo_remoto = remoto;
+        self.seleccion = Seleccion::default();
+        self.desde.clear();
+        self.hasta.clear();
+        self.perfil = None;
+        self.error = None;
+        self.lote = SeleccionLote::default();
+        self.lote_desde.clear();
+        self.lote_hasta.clear();
+        self.plan = None;
+    }
+
     pub fn mostrar(&mut self, ui: &mut Ui, p: &Pal) {
+        if let Some(catalogo) = self.conexion.catalogo() {
+            self.usar_catalogo(Some(catalogo), true);
+        }
         theme::titulo(
             ui,
             p,
             "Descargador",
-            "Perfiles de consulta desde un catálogo local",
+            "Perfiles de consulta desde Chrome o un catálogo JSON",
         );
         theme::card(p).show(ui, |ui| {
             ui.set_width(ui.available_width());
@@ -76,10 +199,16 @@ impl Descargador {
                 }
             });
             if edicion_anterior != self.edicion {
+                self.conexion.cerrar();
+                self.conexion.pantalla = Pantalla::default();
+                if self.catalogo_remoto {
+                    self.usar_catalogo(None, false);
+                }
                 self.perfil = None;
                 self.error = None;
                 self.plan = None;
             }
+            self.conexion.mostrar(ui, p, self.edicion);
             if let Some(catalogo) = &self.catalogo {
                 ui.add_space(10.0);
                 theme::seccion(ui, p, catalogo.pantalla.etiqueta());

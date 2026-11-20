@@ -27,6 +27,8 @@ encoding_rs = "0.8"
 image = { version = "0.25", default-features = false, features = ["png"] }
 sha2 = "0.10"
 base64 = "0.22"
+getrandom = "0.4"
+tiny_http = "0.12"
 
 [profile.release]
 opt-level = 3

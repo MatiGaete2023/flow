@@ -3,6 +3,10 @@
 use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
+use std::time::Duration;
+
+mod puente;
+pub use puente::Puente;
 
 pub const PESTANAS: [&str; 4] = ["Espera", "Cumplimiento", "Informes", "Egresados"];
 pub const MODALIDADES: [&str; 4] = ["1", "2", "3", "4"];
@@ -52,12 +56,74 @@ impl Pantalla {
         }
     }
 
+    fn codigo(self) -> &'static str {
+        match self {
+            Self::Seguimiento => "seguimiento",
+            Self::Litigantes => "litigantes",
+            Self::CalendarioInformes => "calendario_informes",
+            Self::CalendarioMedidas => "calendario_medidas",
+            Self::Carga => "carga",
+        }
+    }
+
     fn disponible(self, edicion: Edicion) -> bool {
         match edicion {
             Edicion::Integral => Self::INTEGRAL.contains(&self),
             Edicion::Lite => Self::LITE.contains(&self),
         }
     }
+}
+
+impl Puente {
+    pub fn catalogo(&self, edicion: Edicion, pantalla: Pantalla) -> Result<Catalogo, String> {
+        if !pantalla.disponible(edicion) {
+            return Err("Carga está disponible en Integral.".into());
+        }
+        let version = self.llamar(
+            "capabilities",
+            serde_json::json!({}),
+            Duration::from_secs(15),
+        )?;
+        comprobar_extension(edicion, &version)?;
+        let datos = self.llamar(
+            "catalog",
+            serde_json::json!({"screen": pantalla.codigo()}),
+            Duration::from_secs(75),
+        )?;
+        if datos["pantalla"].as_str() != Some(pantalla.codigo()) {
+            return Err("Chrome devolvió un catálogo de otra pantalla.".into());
+        }
+        serde_json::from_value::<Catalogo>(datos)
+            .map_err(|_| "Chrome no devolvió un catálogo válido.".into())
+    }
+}
+
+fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<(), String> {
+    let (tipo, numero, protocolos) = match edicion {
+        Edicion::Integral => (
+            "CSMP_RUS_CAPACIDADES",
+            "2.9.0",
+            serde_json::json!({
+                "bitacoras_lectura": 1, "descarga_conjunta": 1, "pdf_seleccion": 1,
+                "pdf_copia_fija": 1, "calendario_lectura": 1, "historia_lectura": 1, "historico_lectura": 2,
+            }),
+        ),
+        Edicion::Lite => (
+            "SITFA_LITE_CAPACIDADES",
+            "1.1.0",
+            serde_json::json!({
+                "descarga_xls": 1, "pdf_sin_registros": 1,
+            }),
+        ),
+    };
+    if version["tipo"] == tipo
+        && version["version"] == numero
+        && version["protocolos"] == protocolos
+        && version["escritura_rus"] == false
+    {
+        return Ok(());
+    }
+    Err(format!("Carga en Chrome la extensión Flow Python de la edición elegida ({numero}) y vuelve a conectar."))
 }
 
 #[derive(Debug, Deserialize)]
@@ -589,5 +655,20 @@ mod tests {
         assert_eq!(plan.consultas.len(), 1);
         lote.tribunales.push("desconocido".into());
         assert!(modelo.planificar(Edicion::Integral, &lote).is_err());
+    }
+
+    #[test]
+    fn extension_integral_exige_protocolos_de_solo_lectura_y_edicion_correcta() {
+        let mut version = serde_json::json!({
+            "tipo": "CSMP_RUS_CAPACIDADES", "version": "2.9.0", "escritura_rus": false,
+            "protocolos": {
+                "bitacoras_lectura": 1, "descarga_conjunta": 1, "pdf_seleccion": 1,
+                "pdf_copia_fija": 1, "calendario_lectura": 1, "historia_lectura": 1, "historico_lectura": 2,
+            },
+        });
+        assert!(comprobar_extension(Edicion::Integral, &version).is_ok());
+        assert!(comprobar_extension(Edicion::Lite, &version).is_err());
+        version["escritura_rus"] = serde_json::json!(true);
+        assert!(comprobar_extension(Edicion::Integral, &version).is_err());
     }
 }
