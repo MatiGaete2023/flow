@@ -28,7 +28,7 @@ pub const UMBRALES: [(&str, i64, &str); 14] = [
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).
-pub const TEXTOS: [(&str, &str); 37] = [
+pub const TEXTOS: [(&str, &str); 40] = [
     ("COMUN.NO_SEGUIMIENTO", "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro."),
     ("COMUN.MAYORIA_EDAD", "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida."),
     ("COMUN.PROXIMA_MAYORIA", "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}."),
@@ -39,6 +39,7 @@ pub const TEXTOS: [(&str, &str); 37] = [
     ("COMUN.PROX_AUDIENCIAS", "Audiencias decretadas para {FECHAS_AUDIENCIA}."),
     ("COMUN.REITERA_OBSERVACION", "Se reitera observación anterior del {FECHA_OBSERVACION_ANTERIOR}."),
     ("ESPERA.E04_RESOLUCION_RECIENTE", "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado el {FECHA_RESOLUCION}. (Observación administrativa; no requiere gestión del Tribunal)."),
+    ("HISTORIA.E04_CON_FOLIO", "Medida revisada, a la espera de ingreso efectivo. Ingreso al programa {PROGRAMA} ordenado en resolución de fecha {FECHA_RESOLUCION} (folio {FOLIO}). (Observación administrativa; no requiere gestión del Tribunal)."),
     ("ESPERA.E05_SOLO_CORREO", "Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso."),
     ("ESPERA.E05_PROYECTO_Y_CORREO", "Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."),
     ("ESPERA.E06_SIN_RESOLUCION", "Medida revisada, a la espera de ingreso efectivo al programa {PROGRAMA}."),
@@ -64,6 +65,8 @@ pub const TEXTOS: [(&str, &str); 37] = [
     ("HISTORIA.T5_INSTITUCIONES", "Atendido que en sistema de seguimiento RUS se visualizan {N} instituciones distintas como curadores ad litem de {PNOMBRE}, se sugiere eliminar aquellas designaciones que no se encuentren vigentes."),
     ("HISTORIA.J2_ACUMULADOS", "Registra {N} informes vencidos en RUS; el más antiguo venció el {FECHA}."),
     ("HISTORIA.MEDIDA_REVISADA", "Medida revisada."),
+    ("HISTORIA.SERVICIO_INGRESO", "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO})."),
+    ("HISTORIA.OTRO_PROGRAMA", "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}."),
     ("CUMPLIMIENTO.C09_BASE_BREVE", "Medida revisada."),
     ("ESPERA.E07_PROYECCION", "Medida revisada, a la espera de ingreso efectivo. {PROYECCION}"),
 ];

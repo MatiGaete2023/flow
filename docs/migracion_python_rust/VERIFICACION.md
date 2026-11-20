@@ -34,7 +34,7 @@ $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bita
 cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
 ```
 
-Los casos de contexto de Trabajo usan ZIP sintéticos generados con el productor de Flow Python. Comprueban asociaciones por causa, persona e ingreso, discordancias, cronología, el próximo informe de Cumplimiento, CAL-03 y la reiteración.
+Los casos de contexto de Trabajo usan ZIP sintéticos generados con el productor de Flow Python. Comprueban asociaciones por causa, persona e ingreso, discordancias, cronología, el próximo informe de Cumplimiento, CAL-03, reiteración, otros programas vigentes y el folio de Espera con correo DCE.
 
 ```powershell
 $e3 = Join-Path (Resolve-Path app/target).Path ("contexto-e3-" + [guid]::NewGuid())

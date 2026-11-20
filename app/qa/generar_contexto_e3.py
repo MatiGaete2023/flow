@@ -1,8 +1,11 @@
 """Genera un ZIP ficticio con las lecturas de contexto de Flow Python."""
 
+import hashlib
+import json
 import sys
 from copy import deepcopy
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 from threading import Event
 from zipfile import ZipFile
@@ -117,6 +120,12 @@ def generar(referencia, carpeta):
     }
     assert str(fechas["201"]) == "2026-11-01" and fechas["202"] is None
     primera = next(f for f in trabajo.rows if trabajo.capture_sources[f.id]["ingreso_id"] == "201")
+    assert primera.observation == (
+        "Persona PRM: Próximo informe de avance de PRM Centro vence el 1 de noviembre de 2026. "
+        "Se hace presente que Persona cuenta con ingreso efectivo al programa PRM Ficticio. "
+        "Asimismo, se hace presente que Persona cuenta con ingreso efectivo al programa FAE Otro Ficticio."
+    )
+    assert "HISTORIA.OTRO_PROGRAMA" in primera.rules
     cronologia = trabajo.capture_context[primera.id]["display"]
     assert cronologia["status"] == "ACREDITADA"
     assert [e["event_at"][:10] for e in cronologia["last_center"]] == ["2026-08-12"]
@@ -148,6 +157,47 @@ def generar(referencia, carpeta):
     assert primera.observation == "Persona PRM: Se reitera observación anterior del 12 de agosto de 2026."
     assert "COMUN.REITERA_OBSERVACION" in primera.rules
     assert "COMUN.REITERA_OBSERVACION" not in segunda.rules
+
+    # El LectorHistoria y el exportador producen el folio; la fecha oficial viene de la nómina de Espera.
+    from openpyxl import load_workbook
+    from resultados import load_lot
+
+    lote_espera = bound_lot(carpeta / "lote-espera", "Espera")
+    verificacion = lote_espera.folder / "verificacion 001.json"
+    manifiesto = json.loads(verificacion.read_text())
+    archivo = manifiesto["archivos"][0]
+    ruta = lote_espera.folder / archivo["archivo"]
+    libro = load_workbook(BytesIO(ruta.read_bytes()))
+    hoja = libro.active
+    hoja["F1"] = "FEC. RESOLUCION"
+    hoja["F2"] = date(2026, 10, 13)
+    hoja["D2"] = "DCE Ficticio"
+    archivo["vinculos_ingreso"][0]["programa"] = "DCE Ficticio"
+    libro.save(ruta)
+    libro.close()
+    datos = ruta.read_bytes()
+    archivo.update(sha256=hashlib.sha256(datos).hexdigest(), bytes=len(datos))
+    verificacion.write_text(json.dumps(manifiesto), encoding="utf-8")
+    lote_espera = load_lot(lote_espera.folder)
+    pantalla = cuerpo.replace(b"Tengase presente canario", "Ing.Serv. protección especializada y otras redes".encode("cp1252"))
+    # La historia se lee por causa, aunque la nómina de Trabajo sea de otra etapa.
+    lector_espera = LectorHistoria(HistoriaFicticia(pantalla), lambda *args: None, Event(), pause=0)
+    carpeta_espera = carpeta / "lectura-espera"
+    carpeta_espera.mkdir()
+    lector_espera.abrir(carpeta_espera)
+    lector_espera.pagina(seleccion, QUERY, 1, listado, selection_profile(seleccion, CATALOG))
+    lector_espera.cerrar()
+    espera = package_current_lot(
+        lote_espera.folder, bitacoras, carpeta / "contexto-e3-espera.zip",
+        historia=lector_espera.carpeta / "historias.json",
+    )["path"]
+    espera = import_capture(espera, defaults(), as_of=date(2026, 10, 19))
+    assert espera.rows[0].observation == (
+        "Persona DCE: Medida revisada, a la espera de ingreso efectivo. "
+        "Ingreso al programa DCE Ficticio ordenado en resolución de fecha 13 de octubre de 2026 (folio 9120). "
+        "Se remite correo al programa consultando fecha estimada de ingreso."
+    )
+    assert espera.rows[0].rules == ["HISTORIA.E04_CON_FOLIO", "ESPERA.E05_SOLO_CORREO"]
     return salida
 
 

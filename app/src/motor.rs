@@ -1,6 +1,7 @@
 //! Motor de observaciones: reglas tradicionales de Espera, Cumplimiento e Informes (Laja, Mulchén y Tomé).
 //! Reescrito desde la hoja de reglas (MECHANICS.md). No escribe en RUS ni envía nada.
 
+use crate::captura_trabajo::ContextoFila;
 use crate::config::Config;
 use crate::util::*;
 use chrono::{Duration, NaiveDate};
@@ -8,6 +9,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
 use std::sync::OnceLock;
+
+mod historia;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Mode {
@@ -128,6 +131,7 @@ struct Ctx<'a> {
     avisos: Vec<String>,
     duplicidad: Option<&'static str>,
     acumulado: Option<(usize, NaiveDate)>,
+    captura: Option<&'a ContextoFila>,
 }
 
 impl<'a> Ctx<'a> {
@@ -346,13 +350,13 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     let mut principal = false;
     marcar_duplicidad(ctx);
     let espera = f.int("espera");
+    historia::advertir_ingreso_efectivo(ctx, espera);
+    let mut resolucion_reciente = false;
     if let Some(fres) = f.date("resolucion") {
         let d = (ctx.hoy - fres).num_days();
         if 0 <= d && d < ctx.p("resolucion_reciente") {
-            frags.extend(ctx.render(
-                "ESPERA.E04_RESOLUCION_RECIENTE",
-                &[("PROGRAMA", prog.clone()), ("FECHA_RESOLUCION", fecha_es(fres))],
-            ));
+            frags.extend(historia::resolucion(ctx, &prog, fres));
+            resolucion_reciente = true;
             principal = true;
         }
     }
@@ -388,9 +392,13 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     if !principal {
         frags.extend(ctx.render("ESPERA.E06_SIN_RESOLUCION", &[("PROGRAMA", prog.clone())]));
     }
+    if !resolucion_reciente {
+        frags.extend(historia::servicio_ingreso(ctx, &prog));
+    }
     frags.extend(oido(ctx, f));
     frags.extend(audiencia(ctx, f));
     frags.extend(curador(ctx, f));
+    frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
     componer(&pfx, &sin_parentesis_admin(frags))
 }
 
@@ -497,6 +505,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             }
         }
     }
+    frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
     frags.extend(oido(ctx, f));
     frags.extend(audiencia(ctx, f));
     frags.extend(curador(ctx, f));
@@ -526,6 +535,13 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
     if !principal && frags.is_empty() {
         let fr: Vec<Frag> = ctx.render("CUMPLIMIENTO.C09_SIN_OBSERVACIONES", &[]).into_iter().collect();
         return componer(&pfx, &fr);
+    }
+    if !principal && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA."))
+        && ctx.eventos.iter().any(|e| e == "HISTORIA.OTRO_PROGRAMA")
+    {
+        if let Some(base) = ctx.render("HISTORIA.MEDIDA_REVISADA", &[]) {
+            frags.insert(0, base);
+        }
     }
     componer(&pfx, &frags)
 }
@@ -613,6 +629,14 @@ fn avisos_fila(ctx: &mut Ctx, f: &Fila, mode: Mode, fecha_hoja2: Option<NaiveDat
 
 /// Evalúa una fila. `idx` identifica la fila en el pre-paso.
 pub fn evaluar(cfg: &Config, mode: Mode, f: &Fila, hoy: NaiveDate, pre: &Prepaso, idx: usize, fecha_hoja2: Option<NaiveDate>) -> Resultado {
+    evaluar_con_captura(cfg, mode, f, hoy, (pre, idx), fecha_hoja2, None)
+}
+
+pub(crate) fn evaluar_con_captura(
+    cfg: &Config, mode: Mode, f: &Fila, hoy: NaiveDate, fila_preparada: (&Prepaso, usize),
+    fecha_hoja2: Option<NaiveDate>, captura: Option<&ContextoFila>,
+) -> Resultado {
+    let (pre, idx) = fila_preparada;
     let mut ctx = Ctx {
         cfg,
         hoy,
@@ -622,6 +646,7 @@ pub fn evaluar(cfg: &Config, mode: Mode, f: &Fila, hoy: NaiveDate, pre: &Prepaso
         avisos: vec![],
         duplicidad: pre.duplicidad.get(&idx).copied(),
         acumulado: pre.acumulado.get(&idx).copied(),
+        captura,
     };
     if mode == Mode::Cumplimiento {
         if let Some(e) = f.date("egreso_proy") {

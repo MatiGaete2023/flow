@@ -259,7 +259,7 @@ impl Trabajo {
             } else {
                 None
             };
-            let mut r = motor::evaluar(cfg, mode, f, corte, &pre, n, fecha_hoja2);
+            let mut r = motor::evaluar_con_captura(cfg, mode, f, corte, (&pre, n), fecha_hoja2, contexto);
             if let Some(calendario) = calendario.filter(|_| matches!(mode, Mode::Cumplimiento | Mode::Informes)) {
                 let vencimiento_informes = (mode == Mode::Informes).then(|| f.date("vencimiento")).flatten();
                 r.avisos.extend(calendario.avisos_cotejo(corte, vencimiento_informes, fecha_calendario_91));
@@ -476,6 +476,8 @@ mod tests {
         assert_eq!(trabajo.registros.len(), 2);
         assert_eq!(trabajo.registros[0].fecha_hoja2, "2026-11-01".parse().ok());
         assert!(trabajo.registros[0].eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2"));
+        assert_eq!(trabajo.registros[0].propuesta, "Persona PRM: Próximo informe de avance de PRM Centro vence el 1 de noviembre de 2026. Se hace presente que Persona cuenta con ingreso efectivo al programa PRM Ficticio. Asimismo, se hace presente que Persona cuenta con ingreso efectivo al programa FAE Otro Ficticio.");
+        assert!(trabajo.registros[0].eventos.iter().any(|e| e == "HISTORIA.OTRO_PROGRAMA"));
         assert!(trabajo.registros[1].fecha_hoja2.is_none());
         assert_eq!(trabajo.cruce.as_deref(), Some("Calendario del ingreso"));
         for corte in ["2026-10-18", "2026-11-01"] {
@@ -484,6 +486,26 @@ mod tests {
             assert!(trabajo.registros.iter().all(|r| r.fecha_hoja2.is_none()));
             assert!(trabajo.cruce.is_none());
         }
+    }
+
+    #[test]
+    fn espera_coteja_folio_y_correo_del_contexto_e3_del_exportador_python() {
+        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let trabajo = Trabajo::abrir_archivo(
+            PathBuf::from(ruta).with_file_name("contexto-e3-espera.zip"),
+            Some(Mode::Espera),
+            "2026-10-19".parse().unwrap(),
+            &Config::default(),
+        ).unwrap();
+        let registro = &trabajo.registros[0];
+        assert_eq!(registro.propuesta, concat!(
+            "Persona DCE: Medida revisada, a la espera de ingreso efectivo. ",
+            "Ingreso al programa DCE Ficticio ordenado en resolución de fecha 13 de octubre de 2026 (folio 9120). ",
+            "Se remite correo al programa consultando fecha estimada de ingreso."
+        ));
+        assert_eq!(registro.eventos, ["HISTORIA.E04_CON_FOLIO", "ESPERA.E05_SOLO_CORREO"]);
+        assert_eq!(registro.acciones, ["programa_espera"]);
+        assert!(!trabajo.registros[1].eventos.iter().any(|e| e.starts_with("HISTORIA.")));
     }
 
     #[test]

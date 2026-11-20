@@ -29,7 +29,7 @@ Registradas en detalle en el [informe de fallas](INFORME_FALLAS_20261120.md#deci
 - **Producto Excel.** Copia del consolidado o del original con las columnas NURUS al final, en el orden `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. Debe calzar con el registro mensual del usuario. Prima sobre el orden del código de `flow-python`.
 - **Redacción de observaciones.**
   - **R1:** con medida por vencer, sin la oración del próximo informe.
-  - **R2:** sin la frase de historia de causa.
+  - **R2:** la imposibilidad de atribuir un trámite de la causa se registra como aviso interno cuando hay varios ingresos.
   - **R3:** DCE con un solo encabezado y sin días.
   - **R4:** sin días de espera cuando el tribunal dispuso el ingreso.
   - **R5:** texto vigente en lugar de reiterar solo para «Medida revisada, sin observaciones.» y para la derivación sin seguimiento; en lo demás se reitera.

@@ -196,6 +196,24 @@ pub struct ContextoFila {
     pub calendario: Option<ResumenCalendario>,
     pub vencimiento_calendario_91: Option<NaiveDate>,
     pub cronologia: Option<Arc<cronologia::Cronologia>>,
+    pub(crate) tramites: Option<Arc<[TramiteCausa]>>,
+    pub(crate) varios_ingresos: bool,
+    pub(crate) notas_centro: Arc<[NotaCentro]>,
+    pub(crate) notas_persona: Arc<[Arc<[NotaCentro]>]>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct TramiteCausa {
+    pub(crate) fecha: NaiveDate,
+    pub(crate) descripcion: String,
+    pub(crate) folio: String,
+    pub(crate) tipo: String,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct NotaCentro {
+    pub(crate) fecha: NaiveDate,
+    pub(crate) texto: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -260,6 +278,8 @@ struct Consulta {
     leido: String,
     instante: chrono::NaiveDateTime,
     discordante: bool,
+    desde: Option<NaiveDate>,
+    hasta: Option<NaiveDate>,
 }
 
 impl Consulta {
@@ -272,7 +292,7 @@ impl Consulta {
     }
 }
 
-fn clave_texto(t: &str) -> String {
+pub(crate) fn clave_texto(t: &str) -> String {
     crate::util::normalizar(&t.replace('\u{a0}', " "))
 }
 
@@ -316,6 +336,8 @@ fn mejores_consultas<const N: usize>(
             leido: instante.date_naive().to_string(),
             instante: instante.naive_utc(),
             discordante: false,
+            desde: filtros["ventana"]["desde"].as_str().and_then(dia_iso),
+            hasta: filtros["ventana"]["hasta"].as_str().and_then(dia_iso),
         };
         grupos.entry(clave).or_default().push(consulta);
     }
@@ -341,6 +363,18 @@ fn mejores_consultas<const N: usize>(
                 "egreso_cause",
                 "ownership",
                 "person_id",
+            ],
+        )),
+        "historia_tramites" => Some(firmas_por_consulta(
+            fuente,
+            pantalla,
+            &[
+                "event_at",
+                "description",
+                "folio",
+                "raw_json",
+                "scope",
+                "identity_status",
             ],
         )),
         _ => None,
@@ -477,6 +511,45 @@ fn dia_iso(fecha: &str) -> Option<NaiveDate> {
     fecha.get(..10)?.parse().ok()
 }
 
+fn tramites_causa(
+    q: &Consulta,
+    filas: &[Fila<'_>],
+    causa: &[String; 3],
+    campos: [&str; 3],
+    corte: NaiveDate,
+) -> Arc<[TramiteCausa]> {
+    if q.discordante || !matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL") {
+        return Arc::default();
+    }
+    filas
+        .iter()
+        .filter_map(|&f| {
+            let fecha = fecha_evento(f)?;
+            let descripcion = f.get("description").trim();
+            if f.get("scope") != "CAUSA"
+                || f.get("identity_status") != "CAUSA"
+                || campos.map(|campo| f.get(campo)) != causa.each_ref().map(String::as_str)
+                || !dia_iso(f.get("captured_at")).is_some_and(|dia| dia <= corte)
+                || q.desde.is_some_and(|desde| fecha < desde)
+                || fecha > q.hasta.unwrap_or(corte).min(corte)
+                || descripcion.is_empty()
+            {
+                return None;
+            }
+            let tipo = serde_json::from_str::<Value>(f.get("raw_json"))
+                .ok()
+                .and_then(|v| v["Trámite"].as_str().map(clave_texto))
+                .unwrap_or_default();
+            Some(TramiteCausa {
+                fecha,
+                descripcion: descripcion.into(),
+                folio: f.get("folio").trim().into(),
+                tipo,
+            })
+        })
+        .collect()
+}
+
 fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila> {
     const CAUSA: [&str; 3] = ["source_system", "court_code", "cause_id"];
     const PERSONA: [&str; 3] = ["source_system", "court_code", "person_id"];
@@ -506,24 +579,90 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
     let revision = Revision::al_corte(fuente, corte);
     let solicitada = fuente.estado("bitacoras") != "NO_SOLICITADA";
     let mut eventos_bitacora: HashMap<_, Vec<_>> = HashMap::new();
-    for evento in fuente
-        .filas("bitacoras")
-        .filter(|f| f.get("identity_status") == "VERIFICADA")
-    {
+    let mut notas_por_ingreso: HashMap<_, Vec<_>> = HashMap::new();
+    for evento in fuente.filas("bitacoras").filter(|f| {
+        f.get("identity_status") == "VERIFICADA" && matches!(f.get("scope"), "" | "INGRESO")
+    }) {
         let clave = INGRESO.map(|campo| evento.get(campo));
         eventos_bitacora.entry(clave).or_default().push(evento);
+        if let Some(fecha) = fecha_evento(evento).filter(|fecha| *fecha <= corte) {
+            if dia_iso(evento.get("captured_at")).is_some_and(|dia| dia <= corte)
+                && revision.acredita_centro(evento)
+            {
+                notas_por_ingreso
+                    .entry(clave)
+                    .or_default()
+                    .push(NotaCentro {
+                        fecha,
+                        texto: evento.get("text").into(),
+                    });
+            }
+        }
     }
+    let notas_por_ingreso: HashMap<_, Arc<[NotaCentro]>> = notas_por_ingreso
+        .into_iter()
+        .map(|(k, v)| (k, v.into()))
+        .collect();
+    let verificados = || {
+        fuente
+            .filas("registros")
+            .filter(|r| r.get("identity_status") == "VERIFICADA")
+    };
+    let mut ingresos_por_causa = HashMap::<_, HashSet<_>>::new();
+    let mut ingresos_por_persona = HashMap::<_, HashSet<_>>::new();
+    let mut personas_por_ingreso = HashMap::<_, HashSet<_>>::new();
+    for r in verificados() {
+        let causa = CAUSA.map(|c| r.get(c));
+        let ingreso = INGRESO.map(|c| r.get(c));
+        let persona = PERSONA.map(|c| r.get(c));
+        if ingreso.iter().all(|s| !s.is_empty()) {
+            ingresos_por_causa
+                .entry(causa)
+                .or_default()
+                .insert(r.get("ingreso_id"));
+            personas_por_ingreso
+                .entry(ingreso)
+                .or_default()
+                .insert(persona);
+            if persona.iter().all(|s| !s.is_empty()) {
+                ingresos_por_persona
+                    .entry(persona)
+                    .or_default()
+                    .insert(ingreso);
+            }
+        }
+    }
+    let notas_por_persona: HashMap<_, Arc<[Arc<[NotaCentro]>]>> = ingresos_por_persona
+        .into_iter()
+        .map(|(persona, ingresos)| {
+            let notas = ingresos
+                .into_iter()
+                .filter(|i| personas_por_ingreso.get(i).is_some_and(|ps| ps.len() == 1))
+                .filter_map(|i| notas_por_ingreso.get(&i).cloned())
+                .collect();
+            (persona, notas)
+        })
+        .collect();
+    let mut tramites_por_causa = HashMap::new();
     let mut cronologias: HashMap<_, Arc<cronologia::Cronologia>> = HashMap::new();
     let mut salida = HashMap::new();
-    for r in fuente.filas("registros") {
-        if r.get("identity_status") != "VERIFICADA" {
-            continue;
-        }
+    for r in verificados() {
         let causa = CAUSA.map(|campo| r.get(campo).to_string());
         let persona = PERSONA.map(|campo| r.get(campo).to_string());
         let ingreso = INGRESO.map(|campo| r.get(campo).to_string());
         let mut ctx = ContextoFila {
             vencimiento_calendario_91: fechas_calendario_91.get(&ingreso).copied().flatten(),
+            varios_ingresos: ingresos_por_causa
+                .get(&causa.each_ref().map(String::as_str))
+                .is_some_and(|ingresos| ingresos.len() > 1),
+            notas_centro: notas_por_ingreso
+                .get(&ingreso.each_ref().map(String::as_str))
+                .cloned()
+                .unwrap_or_default(),
+            notas_persona: notas_por_persona
+                .get(&persona.each_ref().map(String::as_str))
+                .cloned()
+                .unwrap_or_default(),
             ..Default::default()
         };
         if let Some(q) = escritos.get(&causa) {
@@ -564,13 +703,11 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 && filas.iter().all(|f| f.get("ownership") == "VERIFICADA");
             let mut vigentes: Vec<String> = Vec::new();
             for f in filas.iter().filter(|_| verificada) {
-                let sin_fecha = f
-                    .get("egreso_date")
-                    .trim()
-                    .trim_matches(|c: char| {
-                        "-\u{2010}\u{2011}\u{2012}\u{2013}\u{2014}\u{2212}".contains(c)
-                    })
-                    .is_empty();
+                let fecha = f.get("egreso_date").trim();
+                let sin_fecha = fecha.chars().count() == 2
+                    && fecha
+                        .chars()
+                        .all(|c| "-\u{2010}\u{2011}\u{2012}\u{2013}\u{2014}\u{2212}".contains(c));
                 let nombre = f
                     .get("program_name")
                     .split_whitespace()
@@ -593,14 +730,18 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 discordante: q.discordante,
             });
         }
-        ctx.historia = historias.get(&causa).map(|q| {
-            q.resumen(
-                historia_por_consulta
-                    .get(q.id.as_str())
-                    .map(Vec::as_slice)
-                    .unwrap_or(&[]),
-            )
-        });
+        if let Some(q) = historias.get(&causa) {
+            let filas = historia_por_consulta
+                .get(q.id.as_str())
+                .map(Vec::as_slice)
+                .unwrap_or(&[]);
+            ctx.historia = Some(q.resumen(filas));
+            ctx.tramites = Some(Arc::clone(
+                tramites_por_causa
+                    .entry(causa.clone())
+                    .or_insert_with(|| tramites_causa(q, filas, &causa, CAUSA, corte)),
+            ));
+        }
         ctx.bitacora = bitacoras.get(&ingreso).map(|q| {
             q.resumen(
                 bitacora_por_consulta
