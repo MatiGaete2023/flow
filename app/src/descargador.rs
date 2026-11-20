@@ -79,12 +79,6 @@ impl Puente {
         if !pantalla.disponible(edicion) {
             return Err("Carga está disponible en Integral.".into());
         }
-        let version = self.llamar(
-            "capabilities",
-            serde_json::json!({}),
-            Duration::from_secs(15),
-        )?;
-        comprobar_extension(edicion, &version)?;
         let datos = self.llamar(
             "catalog",
             serde_json::json!({"screen": pantalla.codigo()}),
@@ -93,6 +87,13 @@ impl Puente {
         if datos["pantalla"].as_str() != Some(pantalla.codigo()) {
             return Err("Chrome devolvió un catálogo de otra pantalla.".into());
         }
+        // La extensión fija el marco del formulario al cargar el catálogo.
+        let version = self.llamar(
+            "capabilities",
+            serde_json::json!({}),
+            Duration::from_secs(15),
+        )?;
+        comprobar_extension(edicion, &version)?;
         serde_json::from_value::<Catalogo>(datos)
             .map_err(|_| "Chrome no devolvió un catálogo válido.".into())
     }

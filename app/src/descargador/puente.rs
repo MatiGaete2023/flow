@@ -410,17 +410,17 @@ mod tests {
             let trabajo = scope.spawn(|| puente.catalogo(Edicion::Lite, Pantalla::Litigantes));
             for (orden, result) in [
                 (
-                    "capabilities",
-                    json!({
-                        "tipo": "SITFA_LITE_CAPACIDADES", "version": "1.1.0", "escritura_rus": false,
-                        "protocolos": {"descarga_xls": 1, "pdf_sin_registros": 1}
-                    }),
-                ),
-                (
                     "catalog",
                     json!({
                         "pantalla": "litigantes", "tribunales": {"901": "Tribunal ficticio"},
                         "estados": {"1": "Pendientes"}
+                    }),
+                ),
+                (
+                    "capabilities",
+                    json!({
+                        "tipo": "SITFA_LITE_CAPACIDADES", "version": "1.1.0", "escritura_rus": false,
+                        "protocolos": {"descarga_xls": 1, "pdf_sin_registros": 1}
                     }),
                 ),
             ] {
