@@ -23,13 +23,17 @@ struct FlowApp {
 }
 
 impl eframe::App for FlowApp {
+    fn persist_egui_memory(&self) -> bool {
+        self.app.screenshot.is_none()
+    }
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if self.app.screenshot.as_ref().is_some_and(|s| s.frames == 0) {
             // Una pantalla virtual pequeña debe mostrar la composición completa de referencia.
-            let disponible = ctx.screen_rect().size();
-            let escala = (disponible.x / TAMANO_INICIAL[0]).min(disponible.y / TAMANO_INICIAL[1]);
-            if escala > 0.0 && escala < 1.0 {
-                ctx.set_zoom_factor(ctx.zoom_factor() * escala);
+            let disponible = ctx.screen_rect().size() * ctx.zoom_factor();
+            let escala = (disponible.x / TAMANO_INICIAL[0]).min(disponible.y / TAMANO_INICIAL[1]).min(1.0);
+            if escala > 0.0 {
+                ctx.set_zoom_factor(escala);
             }
         }
         self.app.frame(ctx);

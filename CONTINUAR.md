@@ -1,3 +1,11 @@
+# Continuar Flow Rust
+
+La rama de migración es `estudio/paridad-python-rust-20261119`. La aplicación vigente está en `app/`.
+
+Empezar por el [registro de implementación](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md), luego consultar el [diseño](docs/migracion_python_rust/DISENO.md) y el [plan](docs/migracion_python_rust/PLAN.md).
+
+## Referencia del proyecto Python
+
 > **Vigente desde el 19-nov-2026:** rama única `flow-python`; plan en `docs/python_unico/PLAN.md` y registro en
 > `docs/python_unico/REGISTRO.md`. Lo que sigue en este archivo es histórico.
 
