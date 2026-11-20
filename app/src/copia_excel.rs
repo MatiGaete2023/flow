@@ -217,10 +217,9 @@ fn literal(s: &str) -> String {
 /// Instrucciones para Excel: columnas, celdas por columna, filas excluidas y trazabilidad (`_trace_rows`).
 pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) -> Value {
     let etapa_revisada = w.registros.iter().any(revisada);
-    let observacion = if etapa_revisada { "NURUS_OBSERVACION_FINAL" } else { "NURUS_PROPUESTA" };
     // Orden del registro mensual del usuario (decisión del 20-nov-2026), igual en propuesta y revisión.
     let titulos: Vec<&str> = vec![
-        "NURUS_ID_REGISTRO", "NURUS_REGLAS", observacion, "FECHA_OBS", "OBSERVACION", "TT", "CC", "RES",
+        "NURUS_ID_REGISTRO", "NURUS_REGLAS", "NURUS_PROPUESTA", "FECHA_OBS", "OBSERVACION", "TT", "CC", "RES",
         "NURUS_ESTADO_REVISION", "NURUS_DECISIONES",
     ];
     let ids = identificadores(w, &base.hoja);
@@ -258,7 +257,7 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
         poner("NURUS_ID_REGISTRO", id.clone());
         poner("NURUS_REGLAS", reglas.clone());
         poner("NURUS_DECISIONES", decisiones(r));
-        poner(observacion, literal(&obs));
+        poner("NURUS_PROPUESTA", literal(&r.propuesta));
         poner("NURUS_ESTADO_REVISION", estado.into());
         if !etapa_revisada {
             poner("OBSERVACION", literal(&obs));
@@ -294,7 +293,6 @@ pub fn instrucciones(w: &Trabajo, base: &Base, origen: &Path, destino: &Path) ->
         "origen": origen, "destino": destino, "hoja": base.hoja, "encabezado": base.encabezado,
         "titulos": titulos, "escrituras": escrituras, "res_sugerida": res_sugerida,
         "ocultas": ["NURUS_REGLAS", "NURUS_DECISIONES"], "excluidas": excluidas, "traza": traza, "tipos_res": TIPOS_RES,
-        "observacion": observacion,
     })
 }
 
@@ -525,8 +523,15 @@ mod tests {
         assert!(nombre_salida(&w, &b).starts_with("Espera ficticia - revisable "));
         let mut revisado = w;
         revisado.registros[0].revisada = true;
+        revisado.registros[0].editada = Some("Edición ficticia".into());
         let plan = instrucciones(&revisado, &b, Path::new("o.xls"), Path::new("d.xls"));
-        assert_eq!(plan["titulos"][2], "NURUS_OBSERVACION_FINAL");
+        assert_eq!(plan["titulos"][2], "NURUS_PROPUESTA");
+        let escritura = |titulo: &str| {
+            plan["escrituras"].as_array().unwrap().iter()
+                .find(|e| e["titulo"] == titulo).unwrap()
+        };
+        assert_eq!(escritura("NURUS_PROPUESTA")["celdas"][0], json!({"f": 4, "v": "'=propuesta ficticia"}));
+        assert_eq!(escritura("OBSERVACION")["celdas"], json!([{"f": 4, "v": "Edición ficticia"}]));
         let estados = plan["escrituras"].as_array().unwrap().iter().find(|e| e["titulo"] == "NURUS_ESTADO_REVISION").unwrap();
         assert_eq!(estados["celdas"], json!([{"f": 4, "v": "REVISADO"}, {"f": 5, "v": "EXCLUIDO"}]));
     }

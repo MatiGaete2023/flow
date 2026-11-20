@@ -98,7 +98,7 @@ def generar(referencia, carpeta):
         {"201": (("01/08/2026", "30/07/2026", "ENVIADO"), ("01/11/2026", "", "PENDIENTE"))},
     )
     salida = Path(package_current_lot(
-        lote.folder, bitacoras, carpeta / "contexto-e3.zip",
+        lote.folder, bitacoras, carpeta / "contexto-e3.zip", consolidated=True,
         historia=lector.carpeta / "historias.json", historico=carpeta / "historico",
     )["path"])
     captura = read_capture(salida)

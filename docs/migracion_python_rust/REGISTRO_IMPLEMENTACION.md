@@ -171,10 +171,16 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - Escritos e Histórico cotejan el contenido y la multiplicidad de las filas de lecturas del mismo instante. Una lectura parcial es compatible con una completa si sus filas están contenidas en ella. Ante discordancia la vista indica cobertura parcial y evita atribuir escritos pendientes o programas vigentes. En un empate entre lecturas equivalentes, se elige el identificador menor.
 - Pasaron 15 pruebas locales de los módulos de Trabajo y captura en un entorno aislado, incluida la apertura de ambos ZIP, el vínculo por causa y persona, la separación de ingresos y el cambio de corte. El productor de pruebas confirma con Flow Python la discordancia entre lecturas completas de Escritos y entre lecturas completa y parcial de Histórico. Pasó también el oráculo del motor con `FLOW_CASOS`.
 - Con un ZIP en Cumplimiento, la regla vigente del próximo informe recibe la primera proyección pendiente y verificada posterior al corte. El caso de paridad usa dos ingresos, una proyección enviada y otra pendiente. Comprueba la regla C-10 y que el cruce desaparezca antes de la lectura y al llegar el vencimiento. El siguiente paso es conciliar la pestaña Informes y el calendario 91.
+- En la [verificación Windows de E3](https://github.com/MatiGaete2023/flow/actions/runs/44796642468) pasaron 52 pruebas de la aplicación, las dos pruebas dependientes de los ZIP E3, el contraste P2 y los cuatro casos del productor histórico V1. La prueba de rendimiento quedó omitida.
+
+## Turno 9 · Encabezado de la copia revisada
+
+- En Excel de escritorio se reprodujo que una edición cambiaba el encabezado `NURUS_PROPUESTA` a `NURUS_OBSERVACION_FINAL`, en conflicto con el orden acordado para el registro mensual. `NURUS_PROPUESTA` conserva ahora la propuesta del motor en ambas etapas. `OBSERVACION` contiene el texto aprobado. La prueba del plan coteja ambas celdas y el estado revisado.
+- Se abrió y comprobó la copia nativa de un XLSX ficticio y del consolidado del ZIP ficticio E3 con Excel de escritorio. Ambos conservaron RIT, orden de las columnas NURUS, propuesta y edición por separado, RES, hojas de origen y trazabilidad oculta. La hoja auxiliar del XLSX conservó su fórmula.
 
 ## Siguiente paso exacto
 
-1. Prueba del usuario con `Flow_Rust_Windows_exe` de la corrida 27 (`8faa9ac`): Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
+1. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
 2. E3 (punto 1), en este orden:
    1. Portar `chronology`, `captured_rule_context`, `escritos_para` e `historico_para` de Flow Python. Cotejar el calendario 91 y el vencimiento de Informes con `avisos_cotejo`. Usar los casos del productor ficticio para comparar las reglas `HISTORIA.*` y `COMUN.REITERA_OBSERVACION`.
    2. Aplicar entonces R2, R3, R4 (quitar días con tribunal que dispuso el ingreso) y R5 parcial, con casos ficticios por regla.

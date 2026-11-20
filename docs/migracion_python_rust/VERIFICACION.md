@@ -34,6 +34,15 @@ $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bita
 cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
 ```
 
+El caso de contexto de Trabajo usa dos ZIP sintéticos generados con el productor de Flow Python. Comprueba asociaciones por causa, persona e ingreso, discordancias y el cruce del próximo informe de Cumplimiento.
+
+```powershell
+$e3 = Join-Path (Resolve-Path app/target).Path ("contexto-e3-" + [guid]::NewGuid())
+python app/qa/generar_contexto_e3.py referencia-python-ci $e3
+$env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $e3 "contexto-e3.zip")).Path
+cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python
+```
+
 ## Biblioteca en Linux (sin escritorio)
 
 `app/` usa eframe sin backend X11/Wayland y solo compila el binario para Windows. Para revisar desde Linux:
