@@ -6,10 +6,12 @@ use crate::trabajo::{Registro, Trabajo};
 use crate::util::*;
 use base64::Engine;
 use chrono::NaiveDate;
+use regex::Regex;
 use rust_xlsxwriter::{Format, Workbook};
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 pub const MODALIDADES: [(&str, &str); 4] = [
     ("RES", "Cuidado alternativo residencial"),
@@ -523,6 +525,44 @@ pub fn res_tipo(txt: &str) -> Option<&'static str> {
     }
 }
 
+fn nomenclatura(regs: &[&Registro]) -> String {
+    const INFORME: &str = "Ingreso Informe de Cumplimiento X";
+    const EGRESO: &str = "Egreso de servicio protección especializada y otras redes";
+    static ENTRE_COMILLAS: OnceLock<Regex> = OnceLock::new();
+    let entre_comillas = ENTRE_COMILLAS.get_or_init(|| {
+        Regex::new(r#"(?i)nomenclatura\s*[«"“]\s*([^»"”\n]+?)\s*[»"”]"#).unwrap()
+    });
+    let mut ordenadas = regs.to_vec();
+    ordenadas.sort_by_key(|r| {
+        if res_tipo(&r.res) == Some("NOMENCL") {
+            0
+        } else if r.acciones.contains(&"NOMENCL") {
+            1
+        } else {
+            2
+        }
+    });
+    for r in ordenadas {
+        if let Some(texto) = entre_comillas.captures(r.observacion()) {
+            return texto[1].split_whitespace().collect::<Vec<_>>().join(" ");
+        }
+        let texto = normalizar(r.observacion());
+        let egreso = texto.contains("egreso");
+        let informe = ["ingreso informe", "informe de cumplimiento", "informe de avance"]
+            .iter().any(|patron| texto.contains(patron));
+        match (egreso, informe) {
+            (true, true) => continue,
+            (true, false) => return EGRESO.into(),
+            (false, true) => return INFORME.into(),
+            (false, false) if r.eventos.iter().any(|e| e == "HISTORIA.C10_ESCRITO") => {
+                return INFORME.into();
+            }
+            _ => {}
+        }
+    }
+    String::new()
+}
+
 /// Un proyecto por tribunal, RIT y tipo con todas las personas de la causa. Si el Excel trae RES, solo esas causas.
 pub fn preparar_proyectos(w: &Trabajo, cfg: &Config, solo_seleccionadas: bool) -> Vec<Proyecto> {
     let con_res = w.registros.iter().any(|r| res_tipo(&r.res).is_some());
@@ -576,7 +616,8 @@ pub fn preparar_proyectos(w: &Trabajo, cfg: &Config, solo_seleccionadas: bool) -
             }
             vars.insert("FECHA_RESOLUCION".into(), lista_y(&fechas));
             vars.insert("DURACION".into(), junta("duracion"));
-            vars.insert("NOMENCLATURA".into(), String::new());
+            let nombre_nomenclatura = if tipo == "NOMENCL" { nomenclatura(&regs) } else { String::new() };
+            vars.insert("NOMENCLATURA".into(), nombre_nomenclatura);
             // `grouped_values`: personas distintas por nombre y RUT, con sus programas.
             let mut personas: Vec<(String, String, Vec<String>)> = Vec::new();
             for r in &regs {

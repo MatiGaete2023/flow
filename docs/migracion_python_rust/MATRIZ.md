@@ -7,8 +7,8 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F01 | Lectura de hojas | Presente en `lectura.rs`. Comparar selección, tipos, fila física y CSV con comillas. |
 | F02 | Trabajo y cruces | Tres etapas, Hoja 2, calendario 91 y proyección por ingreso. CAL-03 contrasta vencimientos de Cumplimiento e Informes. Pendientes Egresados, OB e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
-| F04 | Contexto de causa | Trabajo muestra escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. Detecta discordancias de Escritos e Histórico. Pendientes contexto de historia en el motor, prórroga, audiencia y búsqueda. |
-| F05 | Otro programa, reiteración y Escritos | Reiteración acreditada con R5 y vista de Escritos. Pendientes reglas de otro programa, atribución de Escritos, consignar, deshacer y recalcular. |
+| F04 | Contexto de causa | Trabajo muestra Escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. El motor incorpora folios de Espera y trámites de Informes. Pendientes prórroga, audiencia y búsqueda. |
+| F05 | Otro programa, reiteración y Escritos | Reiteración con R5, programas vigentes y atribución de Escritos e Historia por ingreso y vencimiento. El contraste de 16 filas verifica textos, reglas, marcas y acciones. Pendientes consignar y deshacer constancias de otro programa. |
 | F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección y Excel/JSON. El informe aplica la misma copia preservada o tabla de respaldo que **Guardar observaciones** y añade clasificación y motivo por ID de registro. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
 | F08 | Edición y revisión | Editor, filtros, selección y marcas presentes. Comparar edición masiva, deshacer y selecciones ocultas. |
@@ -17,7 +17,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F11 | Configuración y contactos | Ajustes, plantillas e importación presentes. Cotejar contactos duplicados, variables y migración de formatos. |
 | F12 | Correos y nómina | Preparación, nómina editable por celda, contactos importados de Flow Python y aviso sin destinatario. Cotejar agrupación, firma y alcance. |
 | F13 | Borradores Outlook | EML y guardado Outlook presentes. Simular fallos antes y después de guardar y validar recibos. |
-| F14 | Proyectos Word | Matrices institucionales de Laja y Mulchén incluidas, fechas en palabras, plural y sin cursivas; un .docx por proyecto. Pendiente confirmar el formato de entrega con el usuario. |
+| F14 | Proyectos Word | Matrices institucionales de Laja y Mulchén incluidas, fechas en palabras, plural y sin cursivas. Los escritos incorporados sin ingreso posterior proponen `NOMENCL` con la nomenclatura correspondiente. Pendiente confirmar la entrega de un .docx por proyecto. |
 | F15 | Formularios manuales | Cotejar gestión particular en blanco. Completar Word manual y reutilizar los productos existentes. |
 | F16 | Resultados y estadísticas | Vista y reporte presentes. Cotejar búsqueda, historial, diagnóstico, calidad y composición de entrega. |
 | F17 | Descargador integral y Lite | Perfiles, catálogos desde JSON o Chrome, instalación de las extensiones incluidas y ejecución de lotes Lite contra SITFA ficticio. Pendientes ejecución Integral, Carga y prueba con Chrome real. |

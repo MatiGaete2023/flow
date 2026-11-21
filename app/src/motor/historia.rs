@@ -10,21 +10,23 @@ use std::sync::OnceLock;
 use unicode_normalization::UnicodeNormalization;
 
 mod escritos;
-pub(super) use escritos::informe_pendiente;
+pub(super) use escritos::{
+    escrito_sin_ingreso, informe_atribuible, informe_historia, informe_pendiente, informe_previo,
+};
 
 const SERVICIO: &str = "ing serv proteccion especializada y otras redes";
 const INGRESO_EFECTIVO: &str = "ingreso efectivo";
 
 fn tramites<'a>(
     captura: &'a ContextoFila,
-    nombre: &'a str,
+    nombre: &'static str,
 ) -> impl Iterator<Item = &'a TramiteCausa> {
     captura
         .tramites
         .as_deref()
         .unwrap_or(&[])
         .iter()
-        .filter(move |t| normalizar(&t.descripcion) == nombre)
+        .filter(move |t| clave_texto(&t.descripcion) == nombre)
 }
 
 pub(super) fn advertir_ingreso_efectivo(ctx: &mut Ctx, espera: Option<i64>) {
@@ -91,7 +93,7 @@ pub(super) fn servicio_ingreso(ctx: &mut Ctx, programa: &str) -> Option<Frag> {
     let t = tramites(captura, SERVICIO)
         .filter(|t| novedad(t, &captura.notas_centro))
         .max_by_key(|t| (t.fecha, t.folio.parse::<u64>().ok()))?;
-    let mut salida = ctx.render(
+    let salida = ctx.render(
         "HISTORIA.SERVICIO_INGRESO",
         &[
             ("PROGRAMA", programa.to_owned()),
@@ -106,15 +108,19 @@ pub(super) fn servicio_ingreso(ctx: &mut Ctx, programa: &str) -> Option<Frag> {
             ("FECHA", fecha_es(t.fecha)),
         ],
     )?;
-    let denominacion = match t.tipo.as_str() {
+    Some(cita(salida, t))
+}
+
+fn cita(mut frag: Frag, tramite: &TramiteCausa) -> Frag {
+    let denominacion = match tramite.tipo.as_str() {
         "escrito" => "en escrito de fecha",
         "actuacion" => "en actuación de fecha",
-        _ => return Some(salida),
+        _ => return frag,
     };
-    for (texto, _) in &mut salida.partes {
+    for (texto, _) in &mut frag.partes {
         *texto = texto.replacen("en resolución de fecha", denominacion, 1);
     }
-    Some(salida)
+    frag
 }
 
 fn sujeto(prefijo: &str) -> Vec<String> {

@@ -14,7 +14,7 @@ from zipfile import ZipFile
 def generar_discordancia(captura, salida):
     from nurus.capture import read_capture
     from nurus.capture.contract import write_capture
-    from nurus.capture.escritos import _mejores_consultas
+    from nurus.capture.escritos import _mejores_consultas, evidencia_informe, filas_de_escritos
 
     metadatos = deepcopy(captura.manifest)
     metadatos.pop("schema_version")
@@ -24,6 +24,14 @@ def generar_discordancia(captura, salida):
         ("historico_proteccion", "historico_id", "program_name", "Otro programa ficticio", "PARCIAL"),
     ):
         consulta = next(q for q in tablas["consultas"] if q["screen"] == pantalla)
+        if pantalla == "escritos":
+            i = next(i for i, f in enumerate(tablas[pantalla]) if f["query_id"] == consulta["query_id"])
+            tablas[pantalla][i] = dict(tablas[pantalla][i], linked_ingreso_id="201", linked_projection="2026-11-01")
+            for i, doc in enumerate(("DOC-1", valor)):
+                tablas["historia_tramites"][i] = dict(
+                    tablas["historia_tramites"][i],
+                    reference=doc, description="Ingreso Informe de Cumplimiento X",
+                )
         filas = [f for f in tablas[pantalla] if f["query_id"] == consulta["query_id"]]
         assert filas
         id_copia = consulta["query_id"] + "-copia"
@@ -51,6 +59,12 @@ def generar_discordancia(captura, salida):
     for pantalla, filtro in (("escritos", "escritos_causa"), ("historico_proteccion", "historico_persona")):
         consultas = _mejores_consultas(discordante, pantalla, filtro, corte=date(2026, 10, 19))
         assert len(consultas) == 1 and next(iter(consultas.values()))["_discordante"]
+    registro = next(r for r in discordante.rows("registros") if r["ingreso_id"] == "201")
+    evidencia = evidencia_informe(
+        registro, date(2026, 11, 1), filas_de_escritos(discordante, corte=date(2026, 10, 19)),
+        discordante.rows("historia_tramites"),
+    )
+    assert evidencia.resolucion_folio == "" and evidencia.folios_ajenos == ("9119", "9120")
 
 
 def generar(referencia, carpeta):

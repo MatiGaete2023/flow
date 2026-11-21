@@ -28,7 +28,7 @@ pub const UMBRALES: [(&str, i64, &str); 14] = [
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).
-pub const TEXTOS: [(&str, &str); 41] = [
+pub const TEXTOS: [(&str, &str); 47] = [
     ("COMUN.NO_SEGUIMIENTO", "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro."),
     ("COMUN.MAYORIA_EDAD", "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida."),
     ("COMUN.PROXIMA_MAYORIA", "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}."),
@@ -68,6 +68,12 @@ pub const TEXTOS: [(&str, &str); 41] = [
     ("HISTORIA.SERVICIO_INGRESO", "Tribunal dispone ingreso a {PROGRAMA}, en resolución de fecha {FECHA} (folio {FOLIO})."),
     ("HISTORIA.OTRO_PROGRAMA", "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}."),
     ("HISTORIA.INFORME_AVANCE_PENDIENTE", "Pendiente de resolver, informe de avance."),
+    ("HISTORIA.BASE_TRAMITE", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta el trámite «{DESC}»."),
+    ("HISTORIA.C10_ESCRITO", "Informe de avance recepcionado en resolución de fecha {FECHA_ESCRITO} (folio {FOLIO_ESCRITO}). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."),
+    ("HISTORIA.I01_SIN_ENVIO_GENERAL", "Informe de avance vencido desde el {FECHA_VENCIMIENTO}."),
+    ("HISTORIA.I01_SIN_ENVIO_DCE", "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}."),
+    ("HISTORIA.INFORME_REVISAR_ASOCIACION", "Se hace presente que el informe de {PROGRAMA} registra ingreso a folio {FOLIO} y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada {FECHA_PROYECTADA}."),
+    ("HISTORIA.INFORME_INGRESADO", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se ingresa el informe de cumplimiento."),
     ("CUMPLIMIENTO.C09_BASE_BREVE", "Medida revisada."),
     ("ESPERA.E07_PROYECCION", "Medida revisada, a la espera de ingreso efectivo. {PROYECCION}"),
 ];

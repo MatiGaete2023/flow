@@ -37,6 +37,20 @@ impl PaqueteTrabajo {
     pub fn actualizar_contextos(&mut self, corte: NaiveDate) {
         self.contextos = contextos(&self.fuente, corte);
     }
+
+    pub(crate) fn identidades_ingresos(&self) -> HashMap<&str, [&str; 4]> {
+        self.fuente
+            .filas("registros")
+            .filter(|r| r.get("identity_status") == "VERIFICADA")
+            .filter_map(|r| {
+                let identidad = INGRESO.map(|campo| r.get(campo));
+                identidad
+                    .iter()
+                    .all(|s| !s.is_empty())
+                    .then_some((r.get("record_id"), identidad))
+            })
+            .collect()
+    }
 }
 
 pub fn es_zip(path: &Path) -> bool {
@@ -174,14 +188,28 @@ pub struct ResumenEscritos {
     pub pendientes: Vec<String>,
     pub discordante: bool,
     pub(crate) datos: Arc<[EscritoCausa]>,
+    pub(crate) documentos: Arc<DocumentosInforme>,
 }
+
+type DocumentosInforme = HashMap<String, HashSet<(String, NaiveDate)>>;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct EscritoCausa {
     pub(crate) tipo: String,
     pub(crate) estado: String,
-    pub(crate) documento: String,
     pub(crate) vinculo: Option<(String, Option<NaiveDate>)>,
+}
+
+pub(crate) const INGRESO_INFORME: &str = "ingreso informe de cumplimiento x";
+pub(crate) const AMBULATORIO: &str = "inf cump programa ambulatorio";
+pub(crate) const FAE: &str = "inf cump fae/fas";
+pub(crate) const RESIDENCIAL: &str = "inf cump centro residencial";
+
+#[derive(Default)]
+pub(crate) struct EvidenciaInforme<'a> {
+    pub(crate) escrito: Option<&'a str>,
+    pub(crate) resolucion: Option<&'a str>,
+    pub(crate) folios_ajenos: HashSet<&'a str>,
 }
 
 /// Ingreso Histórico Protección (Mejor Niñez) de la persona (`escritos.historicos_por_persona`).
@@ -220,6 +248,43 @@ pub(crate) struct TramiteCausa {
     pub(crate) folio: String,
     pub(crate) referencia: String,
     pub(crate) tipo: String,
+}
+
+impl ContextoFila {
+    /// Vincula Historia a una proyección por la referencia documental de Escritos.
+    pub(crate) fn evidencia_informe(&self, vencimiento: NaiveDate) -> EvidenciaInforme<'_> {
+        let mut evidencia = EvidenciaInforme::default();
+        let Some(escritos) = &self.escritos else {
+            return evidencia;
+        };
+        for tramite in self.tramites.as_deref().unwrap_or_default() {
+            let folio = tramite.folio.as_str();
+            let Some(duenos) = escritos.documentos.get(&tramite.referencia) else {
+                continue;
+            };
+            if folio.is_empty() {
+                continue;
+            }
+            let propio = !escritos.discordante
+                && duenos.len() == 1
+                && duenos
+                    .iter()
+                    .any(|(ingreso, fecha)| ingreso == &self.ingreso_id && *fecha == vencimiento);
+            if !propio {
+                evidencia.folios_ajenos.insert(folio);
+                continue;
+            }
+            match clave_texto(&tramite.descripcion).as_str() {
+                INGRESO_INFORME => evidencia.resolucion = Some(folio),
+                AMBULATORIO | FAE | RESIDENCIAL => evidencia.escrito = Some(folio),
+                _ => {}
+            }
+        }
+        for folio in evidencia.escrito.into_iter().chain(evidencia.resolucion) {
+            evidencia.folios_ajenos.remove(folio);
+        }
+        evidencia
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -290,6 +355,7 @@ struct Consulta {
     leido: String,
     instante: chrono::NaiveDateTime,
     discordante: bool,
+    lecturas_discordantes: Vec<String>,
     desde: Option<NaiveDate>,
     hasta: Option<NaiveDate>,
 }
@@ -348,6 +414,7 @@ fn mejores_consultas<const N: usize>(
             leido: instante.date_naive().to_string(),
             instante: instante.naive_utc(),
             discordante: false,
+            lecturas_discordantes: Vec::new(),
             desde: filtros["ventana"]["desde"].as_str().and_then(dia_iso),
             hasta: filtros["ventana"]["hasta"].as_str().and_then(dia_iso),
         };
@@ -419,6 +486,8 @@ fn mejores_consultas<const N: usize>(
                             && primera_parcial.is_some_and(|p| !compatibles(p, q)))
                 });
                 if elegida.discordante {
+                    elegida.lecturas_discordantes =
+                        simultaneas.iter().map(|q| q.id.clone()).collect();
                     elegida.cobertura = "PARCIAL".into();
                 }
             }
@@ -659,6 +728,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
         .collect();
     let mut tramites_por_causa = HashMap::new();
     let mut datos_escritos_por_causa = HashMap::new();
+    let mut documentos_por_causa = HashMap::new();
     let mut cronologias: HashMap<_, Arc<cronologia::Cronologia>> = HashMap::new();
     let mut salida = HashMap::new();
     for r in verificados() {
@@ -708,7 +778,6 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                         .map(|f| EscritoCausa {
                             tipo: clave_texto(f.get("escrito_type")),
                             estado: clave_texto(f.get("escrito_status")),
-                            documento: clave_texto(f.get("doc")),
                             vinculo: (!f.get("linked_ingreso_id").is_empty()).then(|| {
                                 (
                                     f.get("linked_ingreso_id").into(),
@@ -718,6 +787,38 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                         })
                         .collect::<Arc<[_]>>()
                 });
+            let documentos = documentos_por_causa
+                .entry(causa.clone())
+                .or_insert_with(|| {
+                    let consultas = if q.discordante {
+                        q.lecturas_discordantes.as_slice()
+                    } else if matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL") {
+                        std::slice::from_ref(&q.id)
+                    } else {
+                        &[]
+                    };
+                    let mut documentos = DocumentosInforme::new();
+                    for f in consultas
+                        .iter()
+                        .filter_map(|id| escritos_por_consulta.get(id.as_str()))
+                        .flatten()
+                    {
+                        if f.get("identity_status") != "CAUSA" || f.get("scope") != "CAUSA" {
+                            continue;
+                        }
+                        let documento = clave_texto(f.get("doc"));
+                        let ingreso = f.get("linked_ingreso_id");
+                        if let Some(fecha) = dia_iso(f.get("linked_projection"))
+                            .filter(|_| !documento.is_empty() && !ingreso.is_empty())
+                        {
+                            documentos
+                                .entry(documento)
+                                .or_default()
+                                .insert((ingreso.into(), fecha));
+                        }
+                    }
+                    Arc::new(documentos)
+                });
             ctx.escritos = Some(ResumenEscritos {
                 cobertura: q.cobertura.clone(),
                 leido: q.leido.clone(),
@@ -725,6 +826,7 @@ fn contextos(fuente: &Captura, corte: NaiveDate) -> HashMap<String, ContextoFila
                 pendientes,
                 discordante: q.discordante,
                 datos: Arc::clone(datos),
+                documentos: Arc::clone(documentos),
             });
             ctx.ingreso_id = r.get("ingreso_id").into();
         }
@@ -933,6 +1035,9 @@ mod tests {
         assert!(escritos.discordante);
         assert_eq!(escritos.cobertura, "PARCIAL");
         assert!(escritos.pendientes.is_empty());
+        let evidencia = contexto.evidencia_informe("2026-11-01".parse().unwrap());
+        assert_eq!(evidencia.resolucion, None);
+        assert_eq!(evidencia.folios_ajenos, HashSet::from(["9119", "9120"]));
         let historico = contexto.historico.as_ref().unwrap();
         assert!(historico.discordante);
         assert!(!historico.verificada);

@@ -82,7 +82,7 @@ impl Frag {
 fn estructura(key: &str) -> &'static str {
     match key {
         "ESPERA.E05_SOLO_CORREO" | "ESPERA.E05_PROYECTO_Y_CORREO" => "CA",
-        "INFORMES.I01_VENCIDO_DCE" | "INFORMES.I01_VENCIDO_GENERAL" | "INFORMES.I02_MARGEN_DCE" => "CA",
+        "INFORMES.I01_VENCIDO_DCE" | "INFORMES.I01_VENCIDO_GENERAL" | "INFORMES.I02_MARGEN_DCE" | "HISTORIA.C10_ESCRITO" => "CA",
         "INFORMES.I02_POR_VENCER_DCE" | "INFORMES.I02_POR_VENCER_GENERAL" => "A",
         "COMUN.CURADOR" | "CUMPLIMIENTO.C07_SIN_FICHA" | "CUMPLIMIENTO.C07_FICHA_ANTIGUA" | "CUMPLIMIENTO.C08_FICHA_FAE" | "HISTORIA.T5_INSTITUCIONES" => "T",
         "COMUN.MAYORIA_EDAD" => "CT",
@@ -505,7 +505,9 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             }
         }
     }
-    if historia::informe_pendiente(ctx, &programa, None) {
+    let evidencia = Default::default();
+    frags.extend(historia::escrito_sin_ingreso(ctx, &programa, None, &evidencia));
+    if historia::informe_pendiente(ctx, &programa, None, &evidencia) {
         frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
     }
     frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
@@ -540,7 +542,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         return componer(&pfx, &fr);
     }
     if !principal && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA."))
-        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE"))
+        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE" | "HISTORIA.C10_ESCRITO"))
     {
         if let Some(base) = ctx.render("HISTORIA.MEDIDA_REVISADA", &[]) {
             frags.insert(0, base);
@@ -570,26 +572,51 @@ fn informes(ctx: &mut Ctx, f: &Fila) -> String {
         return String::new();
     };
     let dias = (fv - ctx.hoy).num_days();
+    if dias >= 0 && dias > ctx.p("informe") {
+        return String::new();
+    }
     let dce = es_dce(&programa);
-    let margen = dce && -MARGEN_DCE <= dias && dias < 0;
+    let vencido = dias < 0;
+    let margen = dce && -MARGEN_DCE <= dias && vencido;
+    let evidencia = ctx.captura.map(|c| c.evidencia_informe(fv)).unwrap_or_default();
     let mut frags = Vec::new();
-    if dias < 0 && historia::informe_pendiente(ctx, &programa, Some(fv)) {
+    if vencido && historia::informe_pendiente(ctx, &programa, Some(fv), &evidencia) {
         ctx.marcar(2, "I01_ESCRITO_PENDIENTE", "Informe vencido en RUS con escrito de informe pendiente de resolver: no se pide cuenta");
         frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
-    } else if margen {
-        let limite = fv + Duration::days(MARGEN_DCE);
-        frags.extend(ctx.render(
-            "INFORMES.I02_MARGEN_DCE",
-            &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(fv)), ("FECHA_LIMITE", fecha_es(limite))],
-        ));
-    } else if dias < 0 {
-        let k = if dce { "INFORMES.I01_VENCIDO_DCE" } else { "INFORMES.I01_VENCIDO_GENERAL" };
-        frags.extend(ctx.render(k, &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(fv))]));
-    } else if dias <= ctx.p("informe") {
-        let k = if dce { "INFORMES.I02_POR_VENCER_DCE" } else { "INFORMES.I02_POR_VENCER_GENERAL" };
-        frags.extend(ctx.render(k, &[("PROGRAMA", prog.clone()), ("FECHA_VENCIMIENTO", fecha_es(fv))]));
     } else {
-        return String::new();
+        let desde = vencido.then_some(fv);
+        let atribuible = historia::informe_atribuible(ctx);
+        let ingreso = historia::informe_historia(ctx, desde, &prog, &evidencia);
+        let escrito = if atribuible || evidencia.escrito.is_some() {
+            historia::escrito_sin_ingreso(ctx, &programa, desde, &evidencia)
+        } else {
+            None
+        };
+        let con_historia = ingreso.is_some() || escrito.is_some();
+        let atribuida = atribuible || evidencia.resolucion.is_some() || evidencia.escrito.is_some();
+        if vencido && !atribuida && ingreso.is_some() {
+            ctx.marcar(2, "INFORME_SIN_ATRIBUIR", "Ingreso de informe en la causa que no se puede atribuir a este informe: se conservan las acciones");
+        }
+        if vencido && !con_historia && historia::informe_previo(ctx, &programa, fv) {
+            ctx.marcar(2, "ENTREGA_ANTERIOR", "Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión");
+        }
+        let mut vars = vec![("PROGRAMA", prog), ("FECHA_VENCIMIENTO", fecha_es(fv))];
+        let llave = if vencido && atribuida && con_historia {
+            ctx.marcar(2, "I01_CONTRADICHA", "Informe vencido en RUS contradicho por la historia");
+            if dce { "HISTORIA.I01_SIN_ENVIO_DCE" } else { "HISTORIA.I01_SIN_ENVIO_GENERAL" }
+        } else if margen {
+            vars.push(("FECHA_LIMITE", fecha_es(fv + Duration::days(MARGEN_DCE))));
+            "INFORMES.I02_MARGEN_DCE"
+        } else if vencido {
+            if dce { "INFORMES.I01_VENCIDO_DCE" } else { "INFORMES.I01_VENCIDO_GENERAL" }
+        } else if dce {
+            "INFORMES.I02_POR_VENCER_DCE"
+        } else {
+            "INFORMES.I02_POR_VENCER_GENERAL"
+        };
+        frags.extend(ctx.render(llave, &vars));
+        frags.extend(ingreso);
+        frags.extend(escrito);
     }
     if let Some((n, antiguo)) = ctx.acumulado {
         if n >= 2 {
@@ -710,11 +737,19 @@ pub fn acciones(eventos: &[String], vence_hoja2: Option<NaiveDate>, hoy: NaiveDa
     if has("CUMPLIMIENTO.C10_HOJA2") && !a.contains(&"programa_por_vencer") && vence_hoja2.map_or(true, |v| (v - hoy).num_days() <= VENTANA_POR_VENCER_DIAS) {
         a.push("programa_por_vencer");
     }
+    if eventos.iter().any(|e| e == "HISTORIA.C10_ESCRITO") {
+        a.push("NOMENCL");
+    }
     a
 }
 
 /// Pre-paso sobre toda la nómina: duplicidad por causa (Espera/Cumplimiento) e informes vencidos acumulados.
-pub fn prepaso(mode: Mode, filas: &[Fila], hoy: NaiveDate) -> Prepaso {
+pub(crate) fn prepaso<'a>(
+    mode: Mode,
+    filas: &[Fila],
+    hoy: NaiveDate,
+    identidad_ingreso: impl Fn(&Fila) -> Option<[&'a str; 4]>,
+) -> Prepaso {
     let mut pre = Prepaso::default();
     let mut causas: HashMap<(String, String), Vec<(usize, String, String)>> = HashMap::new();
     for (i, f) in filas.iter().enumerate() {
@@ -746,16 +781,26 @@ pub fn prepaso(mode: Mode, filas: &[Fila], hoy: NaiveDate) -> Prepaso {
         }
     }
     if mode == Mode::Informes {
-        let mut grupos: HashMap<Vec<String>, Vec<(usize, NaiveDate)>> = HashMap::new();
+        #[derive(PartialEq, Eq, Hash)]
+        enum ClaveInforme<'a> {
+            Captura([&'a str; 4]),
+            Libro([String; 4]),
+        }
+        let mut grupos: HashMap<ClaveInforme<'_>, Vec<(usize, NaiveDate)>> = HashMap::new();
         for (i, f) in filas.iter().enumerate() {
             let Some(due) = f.date("vencimiento") else { continue };
             if due >= hoy {
                 continue;
             }
-            let ident: Vec<String> = ["tribunal", "rit", "rut", "programa"].iter().map(|k| historical_match(&f.text(k))).collect();
-            if ident[1].is_empty() {
-                continue;
-            }
+            let ident = if let Some(ingreso) = identidad_ingreso(f) {
+                ClaveInforme::Captura(ingreso)
+            } else {
+                let campos = ["tribunal", "rit", "rut", "programa"].map(|k| historical_match(&f.text(k)));
+                if campos[1].is_empty() {
+                    continue;
+                }
+                ClaveInforme::Libro(campos)
+            };
             grupos.entry(ident).or_default().push((i, due));
         }
         for items in grupos.values() {

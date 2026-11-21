@@ -234,7 +234,12 @@ impl Trabajo {
         let columna_id = self.paquete.as_ref().and_then(|_| {
             self.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA")
         });
-        let pre = motor::prepaso(mode, &filas, corte);
+        let ingresos = self.paquete.as_ref().filter(|_| mode == Mode::Informes)
+            .map(PaqueteTrabajo::identidades_ingresos).unwrap_or_default();
+        let pre = motor::prepaso(mode, &filas, corte, |f| {
+            let id = f.values.get(columna_id?)?.display();
+            ingresos.get(id.as_str()).copied()
+        });
         let mut registros = Vec::with_capacity(filas.len());
         for (n, (f, i)) in filas.iter().zip(&filas_idx).enumerate() {
             let contexto = columna_id
@@ -489,20 +494,32 @@ mod tests {
     }
 
     #[test]
-    fn informes_atribuyen_el_escrito_solo_a_su_fecha_e_ingreso() {
+    fn informes_atribuyen_la_historia_y_los_escritos_segun_flow_python() {
         let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_estructura.zip");
-        let mut cfg = Config::default();
-        let mut trabajo = Trabajo::abrir_archivo(ruta, Some(Mode::Informes), "2026-10-08".parse().unwrap(), &cfg).unwrap();
-        assert_eq!(trabajo.registros.len(), 16);
-        let pendientes: Vec<_> = trabajo.registros.iter().filter(|r| {
-            r.eventos.iter().any(|e| e == "HISTORIA.INFORME_AVANCE_PENDIENTE")
-        }).collect();
-        assert_eq!(pendientes.len(), 1);
-        assert!(pendientes[0].propuesta.contains("Pendiente de resolver, informe de avance."));
-        assert!(pendientes[0].acciones.is_empty());
-        assert_eq!(trabajo.registros[3].acciones, ["programa_vencido", "PC_INFO"]);
-        assert_eq!(trabajo.registros[4].acciones, ["programa_vencido", "PC_INFO"]);
+        let esperado: serde_json::Value = serde_json::from_slice(&std::fs::read(ruta.with_extension("json")).unwrap()).unwrap();
+        let corte = esperado["corte"].as_str().unwrap().parse().unwrap();
+        let mut cfg = Config { redaccion_registro: false, ..Config::default() };
+        let mut trabajo = Trabajo::abrir_archivo(ruta, Some(Mode::Informes), corte, &cfg).unwrap();
+        let filas = esperado["filas"].as_array().unwrap();
+        assert_eq!(trabajo.registros.len(), filas.len());
+        for (r, fila) in trabajo.registros.iter().zip(filas) {
+            let id = &fila["id"];
+            assert_eq!(r.propuesta, fila["observacion"].as_str().unwrap(), "{id}");
+            assert_eq!(serde_json::json!(&r.eventos), fila["reglas"], "{id}");
+            assert_eq!(serde_json::json!(&r.acciones), fila["acciones"], "{id}");
+            assert_eq!(serde_json::json!(&r.marcas), fila["marcas"], "{id}");
+        }
+        let proyectos = productos::preparar_proyectos(&trabajo, &cfg, false);
+        let nomencl = proyectos.iter().find(|p| p.tipo == "NOMENCL").unwrap();
+        assert_eq!(nomencl.vars["NOMENCLATURA"], "Ingreso Informe de Cumplimiento X");
+        assert_eq!(nomencl.registros, [2]);
+        assert!(productos::texto_proyecto(nomencl).iter()
+            .any(|p| p.contains("Ingreso Informe de Cumplimiento X")));
+        trabajo.registros[2].editada = Some("Aplicar nomenclatura «Ingreso informe de diagnóstico».".into());
+        let proyectos = productos::preparar_proyectos(&trabajo, &cfg, false);
+        let nomencl = proyectos.iter().find(|p| p.tipo == "NOMENCL").unwrap();
+        assert_eq!(nomencl.vars["NOMENCLATURA"], "Ingreso informe de diagnóstico");
         cfg.desactivadas.insert("HISTORIA.INFORME_AVANCE_PENDIENTE".into());
         trabajo.analizar(&cfg);
         assert!(trabajo.registros[1].acciones.is_empty());
