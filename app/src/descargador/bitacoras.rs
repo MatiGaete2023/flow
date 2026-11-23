@@ -39,6 +39,10 @@ pub struct Opciones {
     pub calendarios: bool,
     /// `historico`: Ingreso Histórico Protección de cada persona del listado, una vez por persona y lote (P3c).
     pub historico: bool,
+    /// `historia`: historia de la causa en la misma pasada (`LectorHistoria`), con su ventana de 1 a 4 meses.
+    pub historia: Option<u32>,
+    /// `LectorHistoria(anterior=…)`: `historias.json` de un lote anterior para reutilizar lo ya leído.
+    pub historia_anterior: Option<PathBuf>,
 }
 
 /// `MAX_HISTORICOS_FALLIDOS_SEGUIDOS`: tras tantas ventanas fallidas seguidas se suspende el histórico.
@@ -137,6 +141,7 @@ struct Sesion<'a> {
     historicos_fallidos: usize,
     historico_suspendido: bool,
     ahora: chrono::DateTime<chrono::FixedOffset>,
+    historia: Option<super::historia::LectorHistoria>,
 }
 
 impl Sesion<'_> {
@@ -290,6 +295,15 @@ pub fn ejecutar(
         historicos_fallidos: 0,
         historico_suspendido: false,
         ahora: inicio,
+        historia: match opciones.historia {
+            Some(meses) => Some(super::historia::LectorHistoria::nuevo(
+                meses,
+                opciones.pausa,
+                opciones.historia_anterior.clone(),
+                *inicio.offset(),
+            )?),
+            None => None,
+        },
     };
     s.persistir(false)?;
     let mut bloqueado = false;
@@ -301,6 +315,13 @@ pub fn ejecutar(
         s.persistir(false)?;
         s.pedir("lock", json!({}))?;
         bloqueado = true;
+        // `_historia('abrir', …)`: la historia es opcional; su falla no afecta las bitácoras.
+        let carpeta_lote = s.carpeta.clone();
+        if let Some(h) = s.historia.as_mut() {
+            if h.abrir(&carpeta_lote).is_err() {
+                h.estado["estado"] = json!("INCOMPLETA");
+            }
+        }
         for perfil in &plan {
             if !enumerar(&mut s, catalogo, perfil)? {
                 break;
@@ -323,6 +344,10 @@ pub fn ejecutar(
             s.estado["estado"] = json!(if cancelada { "CANCELADA" } else { "INCOMPLETA" });
             s.estado["error"] = json!(e);
         }
+    }
+    let estado_lote = s.estado["estado"].as_str().unwrap_or("").to_string();
+    if let Some(h) = s.historia.as_mut() {
+        h.cerrar(&estado_lote, cancelar.load(Ordering::SeqCst));
     }
     // `_cerrar`
     if s.estado["estado"] == "EN_CURSO" {
@@ -448,6 +473,11 @@ fn enumerar(s: &mut Sesion<'_>, catalogo: &Catalogo, perfil: &Perfil) -> Result<
             }
             for v in &filas {
                 leer_fila(s, perfil, pestana, modalidad, q, numero, v, &mut vistos)?;
+            }
+            let (conexion, cancelar) = (s.conexion, s.cancelar);
+            let tribunal_nombre = s.estado["consultas"][q]["tribunal_nombre"].as_str().unwrap_or("").to_string();
+            if let Some(h) = s.historia.as_mut() {
+                h.pagina(conexion, cancelar, &perfil.tribunal, pestana, modalidad, &tribunal_nombre, numero, &cuerpo_html);
             }
             s.estado["consultas"][q]["paginas"] = json!(numero);
             s.persistir(false)?;
@@ -1078,6 +1108,27 @@ mod tests {
         m
     }
 
+    /// `historia/`: manifiesto, diagnóstico y estructura anónima de Escritos, más las huellas de las ventanas.
+    fn historias(carpeta: &Path) -> Value {
+        let mut salida = Map::new();
+        for nombre in ["historias.json", "diagnostico_historia.json", "estructura_escritos.json"] {
+            if let Ok(b) = std::fs::read(carpeta.join("historia").join(nombre)) {
+                salida.insert(nombre.into(), serde_json::from_slice(&b).unwrap());
+            }
+        }
+        let mut ventanas = Map::new();
+        if let Ok(d) = std::fs::read_dir(carpeta.join("historia")) {
+            for e in d.flatten() {
+                let n = e.file_name().to_string_lossy().to_string();
+                if n.starts_with("historia-") && n.ends_with(".html") {
+                    ventanas.insert(n, json!(sha256(&std::fs::read(e.path()).unwrap())));
+                }
+            }
+        }
+        salida.insert("ventanas".into(), Value::Object(ventanas));
+        Value::Object(salida)
+    }
+
     /// `historico.json` (con `leida` declarada en las entradas sin respaldo), estructura anónima y respaldos.
     fn historicos(carpeta: &Path) -> Value {
         let mut salida = Map::new();
@@ -1126,6 +1177,7 @@ mod tests {
                 ahora: Some(chrono::DateTime::parse_from_rfc3339(e["ahora"].as_str().unwrap()).unwrap()),
                 calendarios: e["calendarios"] == true,
                 historico: e["historico"] == true,
+                historia: (e["historia"] == true).then_some(4),
                 ..Default::default()
             };
             if let Some(inicial) = e.get("inicial") {
@@ -1171,6 +1223,12 @@ mod tests {
             if instantaneas(&carpeta) != esperadas {
                 diferencias.push(format!("instantáneas: Rust {:?} / Python {esperadas:?}", instantaneas(&carpeta)));
             }
+            if let Some(esperado) = e.get("historias").filter(|h| !h.is_null()) {
+                let obtenido = historias(&carpeta);
+                if &obtenido != esperado {
+                    diferencias.push(format!("historia:\n    Rust   {obtenido}\n    Python {esperado}"));
+                }
+            }
             if let Some(esperado) = e.get("historicos") {
                 let obtenido = historicos(&carpeta);
                 if &obtenido != esperado {
@@ -1194,7 +1252,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("BITACORAS: {iguales}/{}, fallos {}", escenarios.len(), fallos.len());
-        assert_eq!(escenarios.len(), 13, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(escenarios.len(), 16, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
     }
 }

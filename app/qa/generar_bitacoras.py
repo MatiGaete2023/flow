@@ -104,6 +104,77 @@ class ConHistorico(Bridge):
 
 GrabadorHistorico = grabador(ConHistorico)
 
+import lectura_historia  # noqa: E402
+from lectura_historia import LectorHistoria  # noqa: E402
+
+
+class _FechaSantiago(datetime):
+    """`LectorHistoria` expresa `leida` en la zona local (`astimezone()`); se fija la de Santiago para que el oráculo
+    sea el mismo en cualquier máquina (Linux o Windows)."""
+
+    @classmethod
+    def fromisoformat(cls, texto):
+        d = datetime.fromisoformat(texto)
+        return cls(d.year, d.month, d.day, d.hour, d.minute, d.second, d.microsecond, tzinfo=d.tzinfo)
+
+    def astimezone(self, tz=None):
+        return datetime.astimezone(self, tz or ZoneInfo('America/Santiago'))
+
+
+lectura_historia.datetime = _FechaSantiago
+from test_lectura_historia import BridgeConHistoria  # noqa: E402
+
+
+class HistoriaCorrecta(BridgeConHistoria):
+    """Ventana de historia con el RIT y el tribunal visibles de la causa pedida (según el catálogo del lote)."""
+
+    def call(self, command, payload=None, timeout=75):
+        if command == 'history_open':
+            from test_lectura_historia import FakeBridge, VENTANA
+
+            self.events.append((command, None))
+            p = payload['params']
+            ventana = VENTANA.replace(b'C-99999-2099', p['rit'].encode()).replace(
+                b'Juzgado Canario de Prueba', CATALOG['tribunales'][p['tribunal']].encode('cp1252'))  # la ventana declara windows-1252
+            return FakeBridge(respuesta=ventana).call(command, payload)
+        return super().call(command, payload, timeout)
+
+
+class HistoriaAjena(HistoriaCorrecta):
+    """La ventana muestra otro RIT (`visible='rit'`) u otro tribunal (`visible='tribunal'`) que la causa pedida."""
+
+    def __init__(self, visible):
+        super().__init__()
+        self.visible = visible
+
+    def call(self, command, payload=None, timeout=75):
+        respuesta = super().call(command, payload, timeout)
+        if command == 'history_open':
+            datos = base64.b64decode(respuesta['body'])
+            if self.visible == 'rit':
+                datos = datos.replace(payload['params']['rit'].encode(), b'X-9-2099')
+            else:
+                datos = datos.replace(CATALOG['tribunales'][payload['params']['tribunal']].encode('cp1252'),
+                                      b'Juzgado Ficticio Otro')
+            respuesta = dict(respuesta, body=base64.b64encode(datos).decode(), digest=hashlib.sha256(datos).hexdigest())
+        return respuesta
+
+
+GrabadorConHistoria = grabador(HistoriaCorrecta)
+GrabadorHistoriaAjena = grabador(HistoriaAjena)
+
+
+def historia_json(carpeta):
+    """`historia/`: manifiesto, diagnóstico y estructura anónima de Escritos, más las huellas de las ventanas."""
+    salida = {}
+    for nombre in ('historias.json', 'diagnostico_historia.json', 'estructura_escritos.json'):
+        ruta = carpeta / 'historia' / nombre
+        if ruta.exists():
+            salida[nombre] = json.loads(ruta.read_text(encoding='utf-8'))
+    salida['ventanas'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in sorted((carpeta / 'historia').glob('historia-*.html'))}
+    return salida
+
 
 def historico_json(carpeta):
     """`historico.json`, la estructura anónima y los respaldos; `leida` se declara en las entradas sin respaldo."""
@@ -131,16 +202,21 @@ ESCENARIOS = {
 }
 
 
-def escenario(nombre, opciones, lote, calendarios=False, historico=None):
-    if historico:
+def escenario(nombre, opciones, lote, calendarios=False, historico=None, historia=None):
+    lector = None
+    if historia:
+        puente = GrabadorConHistoria() if historia == 'ok' else GrabadorHistoriaAjena(historia)
+        lector = LectorHistoria(puente, lambda *a: None, threading.Event(), pause=0)
+    elif historico:
         puente = GrabadorHistorico(historico)
     else:
         puente = (GrabadorCalendario if calendarios else Grabador)(**opciones)
     with tempfile.TemporaryDirectory() as tmp:
         corredor = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, calendars=calendarios,
-                               historico=bool(historico))
+                               historico=bool(historico), historia=lector)
         resultado = corredor.run(lote, Path(tmp))
         historicos = historico_json(Path(resultado['folder']))
+        historias = historia_json(Path(resultado['folder'])) if historia else None
         carpeta = Path(resultado['manifest']).parent
         carpeta_nombre = carpeta.name
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
@@ -155,6 +231,8 @@ def escenario(nombre, opciones, lote, calendarios=False, historico=None):
         'calendarios': calendarios,
         'historico': bool(historico),
         'historicos': historicos,
+        'historia': bool(historia),
+        'historias': historias,
         'ahora': AHORA.isoformat(),
         'carpeta': carpeta_nombre,
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
@@ -230,6 +308,9 @@ def main():
     todos = Batch(tuple(CATALOG['tribunales']), ('2',), ('Cumplimiento',))
     escenarios.append(escenario('historico', dict(), todos, historico='ok'))
     escenarios.append(escenario('historico_falla', dict(), todos, historico='falla'))
+    escenarios.append(escenario('historia', dict(), uno, historia='ok'))
+    escenarios.append(escenario('historia_rit_distinto', dict(), uno, historia='rit'))
+    escenarios.append(escenario('historia_tribunal_distinto', dict(), uno, historia='tribunal'))
     escenarios.append(escenario('historico_sin_tabla', dict(), Batch(tuple(CATALOG['tribunales']), ('1', '2', '3', '4'),
                                                                    ('Cumplimiento',)), historico='sin_tabla'))
     datos = {'catalogo': CATALOG, 'ahora': AHORA.isoformat(), 'escenarios': escenarios}
