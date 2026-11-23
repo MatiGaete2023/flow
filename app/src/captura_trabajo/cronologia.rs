@@ -340,4 +340,210 @@ mod tests {
         sin_autoria.aplicar_reiteracion(&mut resultado, &Config::default());
         assert!(resultado.eventos.is_empty());
     }
+
+    const CRONOLOGIA_ORACULO: &str =
+        include_str!("../../../rust/crates/flow-trabajo/tests/datos/cronologia.json");
+
+    /// Entradas del oráculo con el mismo mapeo que `temporal.py`: ventana `period_from..=period_to`, centro desde
+    /// `origin`/`origin_verified`/`coverage` (temporal.py:60-67), instante desde `time_precision`/`time_zone`
+    /// (temporal.py:50-57), `al_tribunal` desde `event_type` (temporal.py:129) y `sin_respuesta` desde `response`
+    /// (temporal.py:130). Los eventos del oráculo no traen `captured_at`, por eso no se usa `leer`.
+    fn entradas_del_caso(caso: &serde_json::Value, desde: NaiveDate, hasta: NaiveDate) -> Vec<Entrada> {
+        caso["eventos"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|evento| {
+                let at = evento["event_at"].as_str().unwrap_or("");
+                let fecha = at.get(..10)?.parse::<NaiveDate>().ok()?;
+                if !(desde..=hasta).contains(&fecha) {
+                    return None;
+                }
+                let instante = if evento["time_precision"].as_str() == Some("SEGUNDO")
+                    && !matches!(evento["time_zone"].as_str().unwrap_or(""), "" | "DESCONOCIDA")
+                {
+                    DateTime::parse_from_rfc3339(at).ok().map(|t| t.to_utc())
+                } else {
+                    None
+                };
+                Some(Entrada {
+                    fecha,
+                    texto: evento["text"].as_str().unwrap_or("").to_string(),
+                    instante,
+                    id: evento["event_id"].as_str().unwrap_or("").to_string(),
+                    centro: evento["origin"].as_str() == Some("CENTRO")
+                        && evento["origin_verified"].as_str() == Some("true")
+                        && matches!(
+                            evento["coverage"].as_str(),
+                            Some("COMPLETA" | "PARCIAL")
+                        ),
+                    al_tribunal: util::normalizar(evento["event_type"].as_str().unwrap_or(""))
+                        == "al tribunal",
+                    sin_respuesta: evento["response"]
+                        .as_str()
+                        .unwrap_or("")
+                        .trim()
+                        .is_empty(),
+                })
+            })
+            .collect()
+    }
+
+    fn config_del_caso(caso: &serde_json::Value) -> Config {
+        let mut config = Config {
+            redaccion_registro: false,
+            ..Config::default()
+        };
+        for regla in caso["desactivadas"].as_array().unwrap() {
+            config
+                .desactivadas
+                .insert(regla.as_str().unwrap().to_string());
+        }
+        config
+    }
+
+    fn resultado_del_caso(caso: &serde_json::Value) -> Resultado {
+        Resultado {
+            observacion: caso["propuesta"].as_str().unwrap().to_string(),
+            eventos: caso["reglas"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|r| r.as_str().unwrap().to_string())
+                .collect(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn oraculo_cronologia_reiteracion() {
+        let raiz: serde_json::Value =
+            serde_json::from_str(CRONOLOGIA_ORACULO).expect("cronologia.json válido");
+        let casos = raiz["casos"].as_array().unwrap();
+        let (mut coinciden, mut reiteradas, mut reiteradas_esperadas) = (0usize, 0usize, 0usize);
+        let (mut desactivada, mut desactivadas_esperadas) = (0usize, 0usize);
+        let (mut excepciones, mut no_reiteradas) = (0usize, 0usize);
+        let mut fallos = Vec::new();
+
+        for (indice, caso) in casos.iter().enumerate() {
+            let display = &caso["display"];
+            let desde: NaiveDate = display["period_from"].as_str().unwrap().parse().unwrap();
+            let hasta: NaiveDate = display["period_to"].as_str().unwrap().parse().unwrap();
+            let leida = caso["leida"].as_bool().unwrap();
+            let cronologia = ordenar(
+                entradas_del_caso(caso, desde, hasta),
+                desde,
+                hasta,
+                leida,
+            );
+            let config = config_del_caso(caso);
+            let mut resultado = resultado_del_caso(caso);
+            cronologia.aplicar_reiteracion(&mut resultado, &config);
+
+            let esperado = &caso["reiteracion"];
+            let esperado_obs = esperado["observacion"].as_str().unwrap();
+            let esperado_reglas: Vec<&str> = esperado["reglas"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|r| r.as_str())
+                .collect();
+            let esperado_avisos: Vec<&str> = esperado["avisos"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|r| r.as_str())
+                .collect();
+            let obtenidas: Vec<&str> = resultado.eventos.iter().map(String::as_str).collect();
+            let obtenidos: Vec<&str> = resultado.avisos.iter().map(String::as_str).collect();
+            let espera_reiteracion = esperado_reglas.contains(&REITERACION);
+            let espera_desactivada = caso["desactivadas"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|d| d.as_str() == Some(REITERACION));
+            if espera_reiteracion {
+                reiteradas_esperadas += 1;
+            }
+            if espera_desactivada {
+                desactivadas_esperadas += 1;
+            }
+
+            let coincide = resultado.observacion == esperado_obs
+                && obtenidas == esperado_reglas
+                && obtenidos == esperado_avisos;
+            if coincide {
+                coinciden += 1;
+                if espera_reiteracion {
+                    reiteradas += 1;
+                }
+                if espera_desactivada {
+                    desactivada += 1;
+                }
+            } else {
+                fallos.push(format!(
+                    "caso {indice}: esperada {esperado_obs:?} / obtenida {:?}; reglas esp {esperado_reglas:?} / obt {obtenidas:?}; avisos esp {esperado_avisos:?} / obt {obtenidos:?}",
+                    resultado.observacion
+                ));
+            }
+
+            // R5 parcial (redaccion_registro: true): las dos excepciones del usuario no se reiteran.
+            let cuerpo_propuesta = cuerpo(caso["propuesta"].as_str().unwrap());
+            let es_excepcion = cuerpo_propuesta == cuerpo("Medida revisada, sin observaciones.")
+                || (cuerpo_propuesta.starts_with("la derivacion ")
+                    && cuerpo_propuesta
+                        .ends_with(" no se encuentra sujeta a seguimiento por este centro"));
+            if es_excepcion {
+                excepciones += 1;
+                let mut parcial = resultado_del_caso(caso);
+                let mut config_parcial = config_del_caso(caso);
+                config_parcial.redaccion_registro = true;
+                cronologia.aplicar_reiteracion(&mut parcial, &config_parcial);
+                if !parcial.eventos.iter().any(|r| r.as_str() == REITERACION)
+                    && parcial.observacion == caso["propuesta"].as_str().unwrap()
+                {
+                    no_reiteradas += 1;
+                }
+            }
+        }
+
+        for fallo in &fallos {
+            println!("FALLA {fallo}");
+        }
+        println!(
+            "CRONOLOGIA: casos {}, coinciden {}, reiteradas {}/{}, desactivada {}/{}, fallos {}",
+            casos.len(),
+            coinciden,
+            reiteradas,
+            reiteradas_esperadas,
+            desactivada,
+            desactivadas_esperadas,
+            fallos.len()
+        );
+        if excepciones == 0 {
+            println!("R5_PARCIAL: SIN_COBERTURA");
+        } else {
+            println!("R5_PARCIAL: excepciones {excepciones}, no reiteradas {no_reiteradas}");
+        }
+        println!(
+            "SIMILITUDES: {} declaradas; no aplica en app/ (la cronología no usa una función de similitud)",
+            raiz["similitudes"].as_array().map_or(0, |v| v.len())
+        );
+
+        assert_eq!(casos.len(), 181, "el oráculo debe traer 181 casos");
+        assert_eq!(coinciden, casos.len(), "hay casos que no coinciden");
+        assert_eq!(reiteradas_esperadas, 18, "el oráculo debe traer 18 reiteraciones");
+        assert_eq!(reiteradas, 18, "no coinciden las 18 reiteraciones");
+        assert_eq!(
+            desactivadas_esperadas, 1,
+            "el oráculo debe traer 1 caso con la regla desactivada"
+        );
+        assert_eq!(desactivada, 1, "no coincide el caso con la regla desactivada");
+        assert!(fallos.is_empty(), "{} casos no coinciden", fallos.len());
+        assert_eq!(no_reiteradas, excepciones, "R5 parcial: alguna excepción se reiteró");
+        assert_eq!(
+            raiz["similitudes"].as_array().map_or(0, |v| v.len()),
+            256
+        );
+    }
 }
