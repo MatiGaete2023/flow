@@ -500,8 +500,25 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - La variante con dos apariciones literales de «Medida revisada, a la espera de ingreso efectivo.» no se agregó porque Python no la permite: `composicion.py` deduplica oraciones idénticas (línea 58) y los tres casos ya llevan los dos fragmentos E04/E05 con una sola aparición en la esperada. No se forzó el esperado.
   - E-K (R5) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) siguen abiertos.
 
+## Auditoría · E-J (23 de noviembre de 2026)
+
+- Commits auditados: `2c97a14` (código) y `7fd7f80` (registro) · Entorno: L (Linux, `--features eframe/x11`).
+- Reproducción (N1), desde `app/`:
+  - `PAQUETE_B: evaluados 2585, identicos 2000, R1 7, R6 526, R6_GUION 51, R1+R6 1, suma 585, R2 2585/2585 (con aviso R3_MULTI 0), R3 3/3, R4 2/2, R5 fuera del motor por fila (emitidas 0), fallos 0`
+  - `PAQUETE_B_COBERTURA: R3 3/3, R4 2/2, fallos 0`
+  - `ORACULO: 174/174 casos coinciden` · `oraculo_historia: 2585 de 2585 casos coinciden (88 con prórroga, 43 causas finalizadas)`
+  - `test result: ok. 46 passed; 0 failed; 1 ignored` (la entrega dice 47 en W por la prueba que solo corre en Windows)
+  - sin `FLOW_CASOS`: `FLOW_CASOS es obligatorio para el paquete B`, `test result: FAILED. 0 passed; 2 failed`
+  - clippy: 0 avisos en `historia.rs`; `check_real_ids` y `check_contactos` limpios.
+- Regeneración (N1): `python rust/oraculo/generar_casos.py` en un venv con `pandas<3` deja `espera.json`, `cumplimiento.json` e `informes.json` idénticos (`cmp`) a los publicados.
+- Casos nuevos `ESP-D22`–`ESP-D24` (N1): traen `HISTORIA.E04_CON_FOLIO` y `ESPERA.E05_SOLO_CORREO`; `espera_dce = 0` y `resolucion_reciente = 30` (`config.py`), y `ESP-D23` prueba el borde de 29 días.
+- Salvedades:
+  - (N1) `composicion.py` deduplica oraciones, por eso el oráculo nunca contiene la doble aparición de R3 y el recorte del comparador no se ejercita.
+  - (N2) Con `LEGACY_UMBRALES_REV3` (`espera_dce = 30`), `ESP-D23` (espera 0) no activaría E05. No afecta al oráculo, que usa los umbrales vigentes.
+- Resultado: E-J `CERRADO POR AUDITORÍA`. Cambios de lógica de producción: ninguno.
+
 ## Siguiente paso exacto
 
-1. E-J: casos de R3 en el oráculo ([prompt](prompts/E-J.md)). Después, E-K y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
+1. E-K: R5 (reiteración) con `cronologia.json` en `app/` ([prompt](prompts/E-K.md)). Después, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
 2. D-1 y D-2 resueltas: sin cambios de código.
 3. Paquete H por el usuario.

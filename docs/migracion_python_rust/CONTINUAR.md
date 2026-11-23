@@ -4,14 +4,14 @@ Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-p
 
 ## Estado (N1, auditado sobre `f6a8f28`)
 
-- Motor de reglas y de historia: paridad con Python en el corpus sintético. Reproducido en Linux: `oraculo_python` 174/174 y `oraculo_historia` 2.582/2.582.
+- Motor de reglas y de historia: paridad con Python en el corpus sintético. Reproducido en Linux: `oraculo_python` 174/174 y `oraculo_historia` 2.585/2.585 (tras E-J).
 - Biblioteca 40/40 y binario aislado 41 pruebas más 1 ignorada, en Linux.
 - Descargador: lote Lite e Integral con Carga sobre SITFA ficticio (turnos 15 y 16). Falta la verificación en Windows.
 - Plan de pruebas: A y G pasan con salvedades, B pasa sus cifras con el criterio incompleto, F está parcial, C y E no se ejecutaron y D no está acreditado. El detalle y los encargos están en [ENCARGOS_IA.md](ENCARGOS_IA.md). El turno 17 del registro decía «A–G aprobados íntegramente»; la auditoría lo corrige.
 
 ## Pendiente (en orden)
 
-1. Siguiente encargo: E-J (casos de R3 en el oráculo, [prompt](prompts/E-J.md)); E-B quedó cerrado por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
+1. Siguiente encargo: E-K (R5 con `cronologia.json`, [prompt](prompts/E-K.md)); E-B y E-J quedaron cerrados por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
 2. Decisiones D-1 (conservar el guion) y D-2 (`keep_filters` igual que Python) resueltas el 23 de noviembre; ver [ENCARGOS_IA.md](ENCARGOS_IA.md).
 3. Paquete H: acta del usuario con su PC autorizado, sesión SITFA y Outlook local ([guía](../aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md)).
 

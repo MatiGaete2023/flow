@@ -67,13 +67,14 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 - Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-B»): las cifras de la entrega se reprodujeron en Linux, pero R2, R3 y R5 se informaron como PASA sin casos que las activen y la línea R5 era texto fijo. La auditoría corrigió la prueba: `R6` y `R6_GUION` se cuentan por separado (526 + 51), la suma se afirma, `evaluados` se fija en 2.582, R5 se cuenta (el motor por fila no la emite) y la falta de casos se informa como `SIN_COBERTURA`. La cobertura de R3 queda en `paquete_b_cobertura_r3`, marcada `#[ignore]` hasta cerrar E-J.
 
-### E-J · Casos de R3 en el oráculo — `ENTREGADO` (entorno L) · [prompt](prompts/E-J.md)
+### E-J · Casos de R3 en el oráculo — `CERRADO POR AUDITORÍA` (23-nov-2026; entrega `2c97a14`/`7fd7f80`) · [prompt](prompts/E-J.md)
 
 - Objetivo: que el corpus `rust/casos` tenga casos sintéticos de Espera con `HISTORIA.E04_CON_FOLIO` y `ESPERA.E05_SOLO_CORREO`, y que `paquete_b_cobertura_r3` pase sin `#[ignore]`.
 - Pasos: casos dirigidos en `rust/oraculo/generar_casos.py::dirigidos`, regeneración determinista, actualización de `CASOS_PAQUETE_B` y clasificación estricta de R3 si Python y Rust difieren.
 - Criterio: `PAQUETE_B_COBERTURA: R3 n/n` con n ≥ 3, `fallos 0`; los casos previos del corpus no cambian; `oraculo_python` y `oraculo_historia` pasan con los nuevos totales.
+- Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-J»): la corrida en Linux reproduce las líneas de la entrega (`R3 3/3`, `fallos 0`, 2.585 evaluados). La regeneración con `pandas<3` da `rust/casos/*.json` idénticos a los publicados. Queda cubierto el pendiente de la entrega sobre el entorno L. Salvedad: Python deduplica oraciones idénticas (`composicion.py`), así que la diferencia R3 no puede aparecer en el oráculo. La prueba acredita que Rust produce la misma observación de una sola aparición; no ejercita el recorte del comparador.
 
-### E-K · R5 (reiteración) en `app/` — `ABIERTO` (entorno L)
+### E-K · R5 (reiteración) en `app/` — `ABIERTO` (entorno L) · [prompt](prompts/E-K.md)
 
 - La reiteración (`COMUN.REITERA_OBSERVACION`) la aplica la cronología, no el motor por fila: `bitacora_avisos.aplicar_reiteracion` en Python y `Cronologia::aplicar_reiteracion` en `app/src/captura_trabajo/cronologia.rs`.
 - Su oráculo es `rust/oraculo/generar_cronologia.py`, que escribe `rust/crates/flow-trabajo/tests/datos/cronologia.json`. Ninguna prueba de `app/` lo consume (N1: `grep -rn cronologia.json app/` sin resultados).
