@@ -277,7 +277,7 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 
 - `xls::grillas_xml_2003` porta la rama SpreadsheetML de `motor.read_excel`. Arma una grilla por `Table` y aplica `ss:Index` en filas y celdas, con los límites de Python: filas hasta 200.000, columnas de 1 a 200 e índice de fila creciente. Concatena el texto de `Data` y su marcado interno, y convierte las fechas `ss:Type="DateTime"` a `AAAA-MM-DD`. `leer` informa el formato `XML-Spreadsheet-2003`; antes detenía la descarga. Se usa `quick-xml` 0.42, que ya estaba en `Cargo.lock` por calamine, sin DTD ni entidades externas.
 - Diferencia acotada: los elementos se reconocen por nombre local (`Table`, `Row`, `Cell`, `Data`) y los atributos por el prefijo `ss:`. Python exige el espacio de nombres. Con los archivos de SITFA el resultado es el mismo (N2: supone que SITFA usa el prefijo `ss` habitual).
-- Solo se verificó la compilación de la biblioteca. Las pruebas están en el paquete A7 del [plan](PLAN_PRUEBAS.md).
+- Se verificó la compilación de la biblioteca y la corrida Windows sobre `aa05c47`, que pasó; también pasó la de `7f9df55`, con favoritos y recuperación. Las pruebas están en el paquete A7 del [plan](PLAN_PRUEBAS.md).
 
 ## Siguiente paso exacto
 
