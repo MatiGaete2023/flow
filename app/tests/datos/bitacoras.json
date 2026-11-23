@@ -37,6 +37,35 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -497,6 +526,39 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "INCOMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 1,
+     "FALLIDA": 1
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {
+     "OTRA_FALLA": 1
+    },
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 1,
+       "FALLIDA": 1
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -956,6 +1018,37 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "INCOMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "SIN_VINCULO": 2
+    },
+    "diagnosticos_sin_vinculo": {
+     "SIN_ACCION_OBSERVACIONES": 2
+    },
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "SIN_VINCULO": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -1288,6 +1381,200 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 32,
+    "estados": {
+     "LEIDA": 32
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "1",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "3",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "4",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "1",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "3",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "4",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "1",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "2",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "3",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "4",
+      "pestana": "Espera",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "1",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "3",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "4",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -6871,6 +7158,35 @@
     }
    },
    "modo": "retomar",
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "cancelada": false,
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "guion": [
@@ -7304,6 +7620,35 @@
     }
    },
    "modo": "reutilizar",
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "cancelada": false,
    "ahora": "2026-10-08T13:30:00.123456-03:00",
    "guion": [
@@ -7714,6 +8059,21 @@
     }
    },
    "modo": "retomar",
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "CANCELADA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 0,
+    "estados": {},
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [],
+    "anteriores_no_reenumeradas": 2,
+    "contiene_identificadores_personales": false
+   },
    "cancelada": true,
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "guion": [
@@ -7921,6 +8281,35 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -8521,6 +8910,35 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -9125,6 +9543,35 @@
     }
    },
    "modo": "retomar",
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "cancelada": false,
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "guion": [
@@ -9678,6 +10125,46 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 4,
+    "estados": {
+     "LEIDA": 4
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -10561,6 +11048,46 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 4,
+    "estados": {
+     "LEIDA": 4
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -11531,6 +12058,35 @@
      "historia-d02df2d912827d1d61764e07-e84507559ce4b0e0.html": "e84507559ce4b0e0be952b49158308a60c31022d206433c2556fe94559abcd3a"
     }
    },
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -12088,6 +12644,35 @@
     },
     "ventanas": {}
    },
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {
@@ -12644,6 +13229,35 @@
      }
     },
     "ventanas": {}
+   },
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
    },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
@@ -13280,6 +13894,112 @@
    },
    "historia": false,
    "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 16,
+    "estados": {
+     "LEIDA": 16
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "1",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "3",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "4",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "1",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "3",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     },
+     {
+      "tribunal_codigo": "113",
+      "modalidad_codigo": "4",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
    "ahora": "2026-10-08T13:00:00.123456-03:00",
    "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
    "lote": {

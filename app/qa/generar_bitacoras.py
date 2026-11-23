@@ -217,6 +217,7 @@ def escenario(nombre, opciones, lote, calendarios=False, historico=None, histori
         resultado = corredor.run(lote, Path(tmp))
         historicos = historico_json(Path(resultado['folder']))
         historias = historia_json(Path(resultado['folder'])) if historia else None
+        diagnostico = json.loads((Path(resultado['folder']) / 'diagnostico_bitacoras.json').read_text(encoding='utf-8'))
         carpeta = Path(resultado['manifest']).parent
         carpeta_nombre = carpeta.name
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
@@ -233,6 +234,7 @@ def escenario(nombre, opciones, lote, calendarios=False, historico=None, histori
         'historicos': historicos,
         'historia': bool(historia),
         'historias': historias,
+        'diagnostico': diagnostico,
         'ahora': AHORA.isoformat(),
         'carpeta': carpeta_nombre,
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
@@ -275,6 +277,7 @@ def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False, calen
                 motor.now = lambda: AHORA
         carpeta = Path(resultado['manifest']).parent
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
+        diagnostico = json.loads((carpeta / 'diagnostico_bitacoras.json').read_text(encoding='utf-8'))
         instantaneas = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('*.html'))}
     manifiesto['fecha'] = '<FECHA>'
     claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal',
@@ -285,6 +288,7 @@ def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False, calen
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
         'inicial': {'carpeta': carpeta_inicial.name, 'archivos': archivos},
         'modo': 'retomar' if retomar else 'reutilizar',
+        'diagnostico': diagnostico,
         'cancelada': cancelada,
         'ahora': (AHORA if retomar else AHORA.replace(minute=30)).isoformat(),
         'guion': puente.guion,

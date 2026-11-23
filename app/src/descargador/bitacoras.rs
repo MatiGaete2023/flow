@@ -356,7 +356,15 @@ pub fn ejecutar(
     if s.estado.get("anteriores_no_reenumeradas").is_none() {
         s.estado["anteriores_no_reenumeradas"] = json!([]);
     }
-    let guardado = s.persistir(false);
+    let guardado = s.persistir(false).and_then(|()| {
+        // Archivo independiente para soporte técnico, sin datos judiciales de NNA.
+        let ruta = s.carpeta.join("diagnostico_bitacoras.json");
+        let temporal = s.carpeta.join("diagnostico_bitacoras.tmp");
+        serde_json::to_vec_pretty(&diagnostico_anonimo(&s.estado))
+            .map_err(|e| e.to_string())
+            .and_then(|b| std::fs::write(&temporal, b).map_err(|e| e.to_string()))
+            .and_then(|()| std::fs::rename(&temporal, &ruta).map_err(|e| e.to_string()))
+    });
     if bloqueado {
         let _ = conexion.llamar("unlock", json!({}), Duration::from_secs(8));
     }
@@ -386,6 +394,7 @@ pub fn ejecutar(
         "detalle": detalle,
         "faltantes_por_tribunal": faltantes_por_tribunal(&registros),
         "historicos": conteo_historicos(&registros),
+        "diagnostico_anonimo": carpeta.join("diagnostico_bitacoras.json").display().to_string(),
     }))
 }
 
@@ -802,6 +811,77 @@ fn conteo_historicos(registros: &[Value]) -> Value {
         *c.entry(r.to_string()).or_default() += 1;
     }
     json!(c)
+}
+
+/// `anonymous_diagnostic`: resumen apto para compartir; nunca reproduce filas, identificadores ni HTML.
+pub fn diagnostico_anonimo(datos: &Value) -> Value {
+    const ESTADOS: [&str; 4] = ["LEIDA", "FALLIDA", "SIN_VINCULO", "PENDIENTE"];
+    const VINCULOS: [&str; 3] =
+        ["SIN_ACCION_OBSERVACIONES", "MULTIPLES_ACCIONES_OBSERVACIONES", "ACCION_OBSERVACIONES_NO_VERIFICADA"];
+    const EXTENSION: [&str; 6] = ["DIARY_CONTEXT", "DIARY_LINK", "DIARY_IDENTITY", "DIARY_NETWORK", "DIARY_TIMEOUT", "DIARY_RESPONSE"];
+    static VERSION: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"^[0-9]{1,3}(?:\.[0-9]{1,3}){2}(?:\.dev[0-9]{1,5})?$").unwrap());
+    static COMMIT: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"^[0-9a-fA-F]{40}$").unwrap());
+    let version = |v: &Value| {
+        let t = v.as_str().unwrap_or("");
+        if VERSION.is_match(t) { t.to_string() } else { "NO_VERIFICADA".into() }
+    };
+    let commit = |v: &Value| {
+        let t = v.as_str().unwrap_or("");
+        if COMMIT.is_match(t) { t.to_lowercase() } else { "NO_VERIFICADO".into() }
+    };
+    let estado = |v: &Value| v.as_str().filter(|e| ESTADOS.contains(e)).unwrap_or("OTRO").to_string();
+    let contar = |it: &mut dyn Iterator<Item = String>| {
+        let mut c: BTreeMap<String, u64> = BTreeMap::new();
+        for k in it {
+            *c.entry(k).or_default() += 1;
+        }
+        json!(c)
+    };
+    let registros = datos["registros"].as_array().cloned().unwrap_or_default();
+    let estados = contar(&mut registros.iter().map(|r| estado(&r["estado"])));
+    let vinculos = contar(&mut registros.iter().filter(|r| r["estado"] == "SIN_VINCULO").map(|r| {
+        r["vinculo_diagnostico"].as_str().filter(|v| VINCULOS.contains(v)).unwrap_or("NO_ESPECIFICADO").to_string()
+    }));
+    let extension = contar(&mut registros.iter().filter(|r| r["estado"] == "FALLIDA").map(|r| {
+        r["diagnostico"]["codigo_extension"].as_str().filter(|c| EXTENSION.contains(c)).unwrap_or("OTRA_FALLA").to_string()
+    }));
+    let consultas: Vec<Value> = datos["consultas"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|q| {
+            let (t, m, p) = (q["tribunal"].as_str().unwrap_or(""), q["modality"].as_str().unwrap_or(""), q["tab"].as_str().unwrap_or(""));
+            let subconjunto: Vec<&Value> = registros
+                .iter()
+                .filter(|r| r["tribunal_codigo"] == t && r["modalidad"] == m && r["pestana"] == p)
+                .collect();
+            let estado_consulta = q["estado"].as_str().unwrap_or("");
+            json!({
+                "tribunal_codigo": if !t.is_empty() && t.chars().all(|c| c.is_ascii_digit()) { t } else { "NO_VERIFICADO" },
+                "modalidad_codigo": if ["1", "2", "3", "4"].contains(&m) { m } else { "NO_VERIFICADA" },
+                "pestana": if ["Espera", "Cumplimiento", "Informes", "Egresados"].contains(&p) { p } else { "NO_VERIFICADA" },
+                "estado_consulta": if ["ENUMERADA", "SIN_REGISTROS", "FALLIDA", "EN_CURSO"].contains(&estado_consulta) {
+                    estado_consulta
+                } else {
+                    "OTRO"
+                },
+                "paginas": q["paginas"].as_u64().unwrap_or(0),
+                "registros": subconjunto.len(),
+                "estados": contar(&mut subconjunto.iter().map(|r| estado(&r["estado"]))),
+            })
+        })
+        .collect();
+    let lote = datos["estado"].as_str().filter(|e| ["COMPLETA", "INCOMPLETA", "CANCELADA", "EN_CURSO"].contains(e));
+    json!({
+        "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO", "version": 1, "estado_lote": lote.unwrap_or("OTRO"),
+        "descargador_version": version(&datos["origen"]["version"]), "descargador_commit": commit(&datos["origen"]["commit"]),
+        "extension_version": version(&datos["extension"]["version"]), "registros": registros.len(), "estados": estados,
+        "diagnosticos_sin_vinculo": vinculos, "errores_extension": extension, "consultas": consultas,
+        "anteriores_no_reenumeradas": datos["anteriores_no_reenumeradas"].as_array().map_or(0, Vec::len),
+        "contiene_identificadores_personales": false,
+    })
 }
 
 /// `persona_por_rut`: clave de persona cuando la fila no trae `SITFA_PERSONA_RUS`. Es una huella, no el RUT.
@@ -1222,6 +1302,11 @@ mod tests {
             let esperadas: BTreeMap<String, String> = serde_json::from_value(e["instantaneas"].clone()).unwrap();
             if instantaneas(&carpeta) != esperadas {
                 diferencias.push(format!("instantáneas: Rust {:?} / Python {esperadas:?}", instantaneas(&carpeta)));
+            }
+            let diagnostico: Value =
+                serde_json::from_slice(&std::fs::read(carpeta.join("diagnostico_bitacoras.json")).unwrap()).unwrap();
+            if diagnostico != e["diagnostico"] {
+                diferencias.push(format!("diagnóstico:\n    Rust   {diagnostico}\n    Python {}", e["diagnostico"]));
             }
             if let Some(esperado) = e.get("historias").filter(|h| !h.is_null()) {
                 let obtenido = historias(&carpeta);
