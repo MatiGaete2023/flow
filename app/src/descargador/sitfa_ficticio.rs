@@ -335,13 +335,24 @@ mod tests {
         opciones: &Opciones,
         destino: &Path,
     ) -> (Vec<Value>, PathBuf, Vec<Evento>) {
+        correr_en(Edicion::Lite, sitfa, pantalla, lote, opciones, destino)
+    }
+
+    fn correr_en(
+        edicion: Edicion,
+        sitfa: &SitfaFicticio,
+        pantalla: &str,
+        lote: &SeleccionLote,
+        opciones: &Opciones,
+        destino: &Path,
+    ) -> (Vec<Value>, PathBuf, Vec<Evento>) {
         let catalogo = catalogo(pantalla);
-        let plan = catalogo.planificar(Edicion::Lite, lote).unwrap();
+        let plan = catalogo.planificar(edicion, lote).unwrap();
         let mut eventos = Vec::new();
         let resultado = ejecutar(
             sitfa,
             &catalogo,
-            Edicion::Lite,
+            edicion,
             &plan,
             destino,
             opciones,
@@ -501,6 +512,103 @@ mod tests {
                 [format!("{titulo} por vencer - Noviembre 2026 - Jdo Familia Ficticio Sur - SIN REGISTROS.pdf")]
             );
         }
+    }
+
+    /// `descargador/lotes.py`: nombres con ordinal « N», `version_contrato` y evidencia `PDF_CAPTURA_SITFA`.
+    #[test]
+    fn integral_nombra_y_resume_como_el_descargador() {
+        let destino = Carpeta::nueva();
+        let sitfa = SitfaFicticio::nuevo("seguimiento", &[("901|Cumplimiento|2|5", 3)]);
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into()],
+            modalidades: vec!["2".into()],
+            pestanas: vec!["Cumplimiento".into(), "Informes".into()],
+            informes: vec!["1".into(), "2".into()],
+            medidas: vec!["0".into(), "5".into()],
+            fechas: fechas("01/10/2026", "30/10/2026"),
+            ..Default::default()
+        };
+        let (resultado, carpeta, eventos) =
+            correr_en(Edicion::Integral, &sitfa, "seguimiento", &lote, &Opciones::default(), &destino.0);
+        assert_eq!(resultado.len(), 4);
+        assert_eq!(
+            nombres(&carpeta, ".xls"),
+            [
+                "CUMP Ambulatorio Jdo Familia Ficticio Norte 1.xls",
+                "CUMP Ambulatorio Jdo Familia Ficticio Norte 2.xls",
+                "CUMP Ambulatorio Jdo Familia Ficticio Norte 3.xls",
+                "CUMP Ambulatorio Jdo Familia Ficticio Norte 4.xls",
+                "Informes Jdo Familia Ficticio Norte 1.xls",
+                "Informes Jdo Familia Ficticio Norte 2.xls",
+            ]
+        );
+        let resumen = json(&carpeta, "resumen.json");
+        assert_eq!(resumen["version_contrato"], 1);
+        assert!(resumen.get("version").is_none());
+        assert_eq!(resumen["filtro_fecha"], json!({"desde": "01/10/2026", "hasta": "30/10/2026"}));
+        assert_eq!(resumen["otros_filtros"], "todos los registros");
+        let plan = &resumen["plan"][1];
+        assert_eq!(plan["modalidad_nombre"], "Ambulatorio");
+        assert_eq!(plan["tribunal_nombre"], "Juzgado de Familia Ficticio Norte");
+        assert!(plan["fecha_descarga"].is_string() && plan["start"].is_null() && plan["end"].is_null());
+        assert!(plan.get("etiquetas").is_none());
+        assert_eq!(resumen["consultas"][1]["consulta"], "Juzgado de Familia Ficticio Norte / Cumplimiento / Ambulatorio / Vencidos");
+        assert!(resumen["consultas"][1].get("archivos").is_none());
+        let manifiesto = json(&carpeta, "verificacion 002.json");
+        assert_eq!(manifiesto["filtro_fecha"], json!({"start": "01/10/2026", "end": "30/10/2026"}));
+        assert_eq!(manifiesto["paginas_verificadas"], 3);
+        assert!(matches!(eventos.iter().position(|e| matches!(e, Evento::Carpeta(_))), Some(0)));
+    }
+
+    #[test]
+    fn integral_sin_registros_guarda_captura_con_contexto_del_descargador() {
+        let destino = Carpeta::nueva();
+        let sitfa = SitfaFicticio::nuevo("seguimiento", &[("902|Espera|1|None", 0)]);
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into(), "902".into()],
+            modalidades: vec!["1".into()],
+            pestanas: vec!["Espera".into()],
+            ..Default::default()
+        };
+        let (resultado, carpeta, _) = correr_en(Edicion::Integral, &sitfa, "seguimiento", &lote, &Opciones::default(), &destino.0);
+        assert_eq!(nombres(&carpeta, ".xls"), ["ESP Residencia Jdo Familia Ficticio Norte.xls"]);
+        assert_eq!(nombres(&carpeta, ".pdf"), ["ESP Residencia Jdo Familia Ficticio Sur.pdf"]);
+        let evidencia = &resultado[1]["evidencia"];
+        assert_eq!(evidencia["tipo"], "PDF_CAPTURA_SITFA");
+        assert_eq!(
+            evidencia["contexto_consulta"],
+            json!([
+                ["Tribunal", "Juzgado de Familia Ficticio Sur (código 902)"],
+                ["Modalidad", "Residencia"],
+                ["Pestaña", "Espera"],
+                ["Consulta", "Juzgado de Familia Ficticio Sur / Espera / Residencia"],
+                ["Fechas", "Sin filtro de fechas"],
+            ])
+        );
+        assert_eq!(json(&carpeta, "verificacion 002.json")["evidencia"], *evidencia);
+    }
+
+    #[test]
+    fn integral_litigantes_y_calendario() {
+        let destino = Carpeta::nueva();
+        let sitfa = SitfaFicticio::nuevo("litigantes", &[("901|2", 2)]);
+        let lote = SeleccionLote { tribunales: vec!["901".into()], estados: vec!["2".into()], ..Default::default() };
+        let (_, carpeta, _) = correr_en(Edicion::Integral, &sitfa, "litigantes", &lote, &Opciones::default(), &destino.0);
+        assert_eq!(
+            nombres(&carpeta, ".xls"),
+            ["Litigantes Cumplidas Jdo Familia Ficticio Norte 1.xls", "Litigantes Cumplidas Jdo Familia Ficticio Norte 2.xls"]
+        );
+        let destino = Carpeta::nueva();
+        let sitfa = SitfaFicticio::nuevo("calendario_medidas", &[("902|11", 0)]);
+        let lote = SeleccionLote {
+            tribunales: vec!["902".into()],
+            meses: vec!["10".into(), "11".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        let (_, carpeta, _) = correr_en(Edicion::Integral, &sitfa, "calendario_medidas", &lote, &Opciones::default(), &destino.0);
+        assert_eq!(nombres(&carpeta, ".xls"), ["Medidas por vencer Jdo Familia Ficticio Sur 1.xls"]);
+        assert_eq!(nombres(&carpeta, ".pdf"), ["Medidas por vencer Jdo Familia Ficticio Sur 2.pdf"]);
     }
 
     #[test]

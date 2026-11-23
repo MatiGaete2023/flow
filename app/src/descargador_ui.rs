@@ -178,7 +178,14 @@ impl Ejecucion {
         }
     }
 
-    fn iniciar(&mut self, ctx: &egui::Context, puente: Arc<Puente>, catalogo: Catalogo, plan: PlanLote) {
+    fn iniciar(
+        &mut self,
+        ctx: &egui::Context,
+        puente: Arc<Puente>,
+        edicion: Edicion,
+        catalogo: Catalogo,
+        plan: PlanLote,
+    ) {
         let destino = PathBuf::from(self.destino.trim());
         if self.destino.trim().is_empty() {
             self.error = Some("Elige la carpeta de destino.".into());
@@ -217,11 +224,11 @@ impl Ejecucion {
                 let _ = envio.send(Mensaje::Evento(e));
                 ctx.request_repaint();
             };
-            let resultado = puente.verificar(Edicion::Lite).and_then(|()| {
+            let resultado = puente.verificar(edicion).and_then(|()| {
                 lote::ejecutar(
                     puente.as_ref(),
                     &catalogo,
-                    Edicion::Lite,
+                    edicion,
                     &plan,
                     &destino,
                     &opciones,
@@ -279,12 +286,16 @@ impl Ejecucion {
             });
         });
         let conectado = puente.as_ref().is_some_and(|b| b.conectado());
-        let impedimento = if edicion != Edicion::Lite {
-            Some("La ejecución de lotes Integral sigue pendiente en Flow Rust; usa la edición Lite.")
+        let impedimento = if catalogo.pantalla == Pantalla::Carga {
+            Some("La descarga de Carga sigue pendiente en Flow Rust.")
         } else if !remoto {
             Some("Carga las opciones desde Chrome para ejecutar el lote.")
         } else if !conectado {
-            Some("Conecta la extensión Lite desde la pestaña SITFA.")
+            Some(if edicion == Edicion::Lite {
+                "Conecta la extensión Lite desde la pestaña SITFA."
+            } else {
+                "Conecta la extensión Integral desde la pestaña SITFA."
+            })
         } else if plan.is_none() {
             Some("Prepara el lote para revisar sus consultas antes de descargar.")
         } else {
@@ -306,7 +317,7 @@ impl Ejecucion {
                 let boton = ui.add_enabled_ui(listo, |ui| theme::primary(ui, p, "Descargar lote")).inner;
                 if boton.clicked() {
                     if let (Some(puente), Some(plan)) = (puente.clone(), plan) {
-                        self.iniciar(ui.ctx(), puente, catalogo.clone(), plan.clone());
+                        self.iniciar(ui.ctx(), puente, edicion, catalogo.clone(), plan.clone());
                     }
                 }
                 if let Some(texto) = impedimento {

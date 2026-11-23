@@ -301,9 +301,22 @@ El protocolo es el mismo (`lock`, `prepare`, `search`, `download`, `evidence_ope
 
 Luego viene la parte propia del Integral: bitácoras, historia, calendario e histórico (`lectura_bitacoras.py`, `lectura_historia.py`, `historico_manual.py`) y el paquete CSMP (`flujo_csmp.py`, `flujo_paquete.py`, `export_csmp_capture.py`), unas 3.000 líneas de Python.
 
+## Turno 15 · Lote Integral sin Carga
+
+- `lote::ejecutar` acepta Integral para Seguimiento, Litigantes y calendarios. Aplica las diferencias 1, 2, 3, 4 y 6 de la especificación del turno 14, comprobadas contra `descargador/lotes.py`:
+  - nombres de `file_base` con ordinal « N» compartido por XLS y PDF;
+  - `resumen.json` con `version_contrato: 1`, plan con `start`/`end`, `tribunal_nombre`, `modalidad_nombre` y `fecha_descarga`, y `filtro_fecha` `desde`/`hasta`;
+  - consultas completadas con la etiqueta del perfil, sin `archivos` y con la evidencia;
+  - contexto del pantallazo Tribunal, Modalidad, Pestaña, Consulta y Fechas, y evidencia `PDF_CAPTURA_SITFA`;
+  - `prepare` con las fechas y `keep_filters` del lote, carpeta anunciada después del primer resumen y alcance completado en las verificaciones al terminar;
+  - avisos de restauración de Integral.
+- Lite conserva su comportamiento. La vista habilita **Descargar lote** en Integral, verifica la extensión de la edición activa y deja Carga deshabilitada con aviso. Carga requiere portar su perfil de consulta, su respuesta web (`carga::registros_resultado`) y el cotejo con `leer_carga` (diferencias 3 y 5).
+- Linux, Rust 1.97.0, crate aislado `.aislado/`. Pasaron 32 pruebas de biblioteca, entre ellas tres nuevas de Integral con SITFA ficticio: nombres y resumen, consulta vacía con contexto y Litigantes con calendario. Clippy de biblioteca y pruebas pasó con `-D warnings`. `cargo check` y `clippy` del binario para `x86_64-pc-windows-gnu` no agregaron advertencias. Las bases de nombre esperadas salen de `descargador/lotes.py::file_base`. Falta la corrida Windows del commit.
+- Se revisaron las guías `modern-web-guidance` (`local-network-access` y `validate-origins`) para el enlace extensión→puente. No se modifica código: la vista es egui y las extensiones se exigen en sus versiones 2.9.0 y 1.1.0. Inferencia sin verificar: Chrome 145+ podría exigir el permiso `loopback-network` al `fetch` hacia `127.0.0.1`. Si una versión futura de las extensiones lo necesita, se debe declarar `targetAddressSpace: 'loopback'` y consultar `navigator.permissions` con `loopback-network`, nunca `local-network-access`. La cabecera PNA del puente es inocua.
+
 ## Siguiente paso exacto
 
 0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
 1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): habilitar el lote Integral y la Carga según la especificación del turno 14. Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+2. Descargador (E2): Carga en `lote::ejecutar` (diferencias 3 y 5 del turno 14). Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
 3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.

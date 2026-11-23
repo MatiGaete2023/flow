@@ -239,6 +239,28 @@ pub fn base_archivo(
         .to_string()
 }
 
+/// `descargador/lotes.file_base` (Integral): «ESP Ambulatorio Jdo Familia X», «Informes Jdo Familia X»…
+pub fn base_integral(perfil: &Perfil, catalogo: &Catalogo) -> String {
+    let tribunal = nombre_tribunal(etiqueta(&catalogo.tribunales, &perfil.tribunal));
+    let base = match (&perfil.alcance, perfil.pantalla) {
+        (_, Pantalla::CalendarioInformes) => format!("Informes {tribunal}"),
+        (_, Pantalla::CalendarioMedidas) => format!("Medidas por vencer {tribunal}"),
+        (Alcance::Litigantes { estado }, _) => format!("Litigantes {} {tribunal}", etiqueta(&catalogo.estados, estado)),
+        (Alcance::Carga { desde, hasta }, _) => format!("Carga {tribunal} {} {}", fecha_sitfa(*desde), fecha_sitfa(*hasta)),
+        (Alcance::Seguimiento { pestana, modalidad, .. }, _) => match pestana.as_str() {
+            "Informes" => format!("Informes {tribunal}"),
+            "Egresados" => format!("Egresados {tribunal}"),
+            p => format!(
+                "{} {} {tribunal}",
+                if p == "Espera" { "ESP" } else { "CUMP" },
+                MODALIDADES_LITE.iter().find(|(c, _)| c == modalidad).map_or("", |(_, n)| n)
+            ),
+        },
+        (Alcance::Calendario { .. }, _) => tribunal,
+    };
+    nombre_seguro(&base)
+}
+
 /// `perfiles.selection_profile`: clave y etiqueta del manifiesto.
 fn caso_y_rotulo(perfil: &Perfil, catalogo: &Catalogo) -> (String, String) {
     let t = &perfil.tribunal;
@@ -264,6 +286,16 @@ fn caso_y_rotulo(perfil: &Perfil, catalogo: &Catalogo) -> (String, String) {
         }
         Alcance::Carga { .. } => (format!("T{t}-Carga"), format!("{nombre} / Carga")),
     }
+}
+
+/// `asdict(Selection)` de Integral: agrega `start` y `end`, vacíos fuera de Carga.
+fn seleccion_edicion(perfil: &Perfil, edicion: Edicion) -> Value {
+    let mut v = seleccion(perfil);
+    if edicion == Edicion::Integral {
+        v["start"] = Value::Null;
+        v["end"] = Value::Null;
+    }
+    v
 }
 
 /// `dataclasses.asdict(Selection)` con los valores por omisión de Flow Python.
@@ -320,6 +352,27 @@ fn contexto(perfil: &Perfil, catalogo: &Catalogo, fechas: Option<(NaiveDate, Nai
     for p in &mut c {
         p[1] = cortar(&p[1], 500);
     }
+    c
+}
+
+/// Contexto del pantallazo en `descargador/lotes.py`: Tribunal, Modalidad y Pestaña, Consulta (etiqueta) y Fechas.
+fn contexto_integral(perfil: &Perfil, catalogo: &Catalogo, fechas: Option<(NaiveDate, NaiveDate)>) -> Vec<[String; 2]> {
+    let par = |a: &str, b: String| [a.to_string(), b];
+    let mut c = vec![par(
+        "Tribunal",
+        format!("{} (código {})", etiqueta(&catalogo.tribunales, &perfil.tribunal), perfil.tribunal),
+    )];
+    if let Alcance::Seguimiento { pestana, modalidad, .. } = &perfil.alcance {
+        c.push(par("Modalidad", etiqueta(&catalogo.modalidades, modalidad).into()));
+        c.push(par("Pestaña", pestana.clone()));
+    }
+    c.push(par("Consulta", caso_y_rotulo(perfil, catalogo).1));
+    c.push(par(
+        "Fechas",
+        fechas
+            .map(|(a, b)| format!("{} – {}", fecha_sitfa(a), fecha_sitfa(b)))
+            .unwrap_or_else(|| "Sin filtro de fechas".into()),
+    ));
     c
 }
 
@@ -438,6 +491,7 @@ fn carpeta_nueva(destino: &Path) -> Result<PathBuf, String> {
 
 struct Lote<'a> {
     conexion: &'a dyn Conexion,
+    edicion: Edicion,
     catalogo: &'a Catalogo,
     opciones: &'a Opciones,
     cancelar: &'a AtomicBool,
@@ -562,7 +616,12 @@ impl Lote<'_> {
         emitir: &mut dyn FnMut(Evento),
     ) -> Result<Value, String> {
         emitir(Evento::Estado("Consulta sin registros: capturando pantallazo…".into()));
-        let contexto = contexto(perfil, self.catalogo, fechas);
+        let integral = self.edicion == Edicion::Integral;
+        let contexto = if integral {
+            contexto_integral(perfil, self.catalogo, fechas)
+        } else {
+            contexto(perfil, self.catalogo, fechas)
+        };
         let rotulo = caso_y_rotulo(perfil, self.catalogo).1;
         let resultado = (|| -> Result<Value, String> {
             let vista = self.pedir("evidence_open", json!({"pairs": pares, "label": rotulo, "context": contexto}))?;
@@ -578,7 +637,11 @@ impl Lote<'_> {
                 consulta,
                 &contexto,
                 textos.as_ref().map(|(a, b)| (a.as_str(), b.as_str())),
-            )?;
+            )
+            .map_err(|e| match (integral, e.ends_with("Recarga la extensión Lite.")) {
+                (true, true) => "La pantalla no identifica el contexto de la consulta solicitada. Recarga la extensión de esta entrega.".into(),
+                _ => e,
+            })?;
             cancelado(self.cancelar, CANCELADO)?;
             let captura = self.pedir("evidence_capture", json!({"digest": digest}))?;
             let pdf = png_a_pdf(&captura, &digest, &rotulo)?;
@@ -591,7 +654,8 @@ impl Lote<'_> {
             }
             Ok(json!({
                 "archivo": nombre, "registros": 0, "sha256": suma,
-                "tipo": "PDF_PANTALLAZO_SIN_REGISTROS", "contexto_consulta": contexto,
+                "tipo": if integral { "PDF_CAPTURA_SITFA" } else { "PDF_PANTALLAZO_SIN_REGISTROS" },
+                "contexto_consulta": contexto,
             }))
         })();
         let _ = self.conexion.llamar("evidence_close", json!({}), PLAZO_CIERRE);
@@ -680,19 +744,27 @@ pub fn ejecutar(
     cancelar: &AtomicBool,
     emitir: &mut dyn FnMut(Evento),
 ) -> Result<Vec<Value>, String> {
-    if edicion != Edicion::Lite {
-        return Err("La ejecución de lotes Integral sigue pendiente en Flow Rust; usa la edición Lite.".into());
+    let integral = edicion == Edicion::Integral;
+    if plan.consultas.iter().any(|p| p.pantalla == Pantalla::Carga) {
+        return Err("La descarga de Carga sigue pendiente en Flow Rust.".into());
     }
     if plan.consultas.is_empty() {
         return Err("El lote no tiene consultas.".into());
     }
     let consultas: Vec<Consulta> = plan.consultas.iter().map(Consulta::desde).collect::<Result<_, _>>()?;
     let carpeta = carpeta_nueva(destino)?;
-    emitir(Evento::Carpeta(carpeta.clone()));
-    emitir(Evento::Plan(plan.consultas.len()));
-    let lote = Lote { conexion, catalogo, opciones, cancelar, carpeta: carpeta.clone() };
+    // Lite anuncia la carpeta antes del primer resumen; Integral, después (E3B-14).
+    if !integral {
+        emitir(Evento::Carpeta(carpeta.clone()));
+        emitir(Evento::Plan(plan.consultas.len()));
+    }
+    let lote = Lote { conexion, edicion, catalogo, opciones, cancelar, carpeta: carpeta.clone() };
     let limite = limite_nombre(&carpeta);
-    let bases: Vec<String> = plan.consultas.iter().map(|p| base_archivo(p, catalogo, plan.fechas, limite)).collect();
+    let bases: Vec<String> = plan
+        .consultas
+        .iter()
+        .map(|p| if integral { base_integral(p, catalogo) } else { base_archivo(p, catalogo, plan.fechas, limite) })
+        .collect();
     let mut repetidas: HashMap<&str, usize> = HashMap::new();
     for b in &bases {
         *repetidas.entry(b.as_str()).or_default() += 1;
@@ -708,19 +780,52 @@ pub fn ejecutar(
         }
         nombre + extension
     };
+    // Integral: ordinal « N» por base en todo el lote, contado por cada XLS y PDF.
+    let ordinal = |base: &str, varias: bool| -> String {
+        let mut usadas = usadas.borrow_mut();
+        let n = usadas.entry(base.to_string()).or_default();
+        *n += 1;
+        if varias || repetidas.get(base).copied().unwrap_or(0) > 1 {
+            format!("{base} {n}")
+        } else {
+            base.to_string()
+        }
+    };
     let planificadas: Vec<Value> = plan
         .consultas
         .iter()
         .map(|p| {
-            let mut s = seleccion(p);
+            let mut s = seleccion_edicion(p, edicion);
             s["tribunal_nombre"] = json!(etiqueta(&catalogo.tribunales, &p.tribunal));
-            s["etiquetas"] = json!(partes_consulta(p, catalogo, plan.fechas));
+            if integral {
+                let modalidad = match &p.alcance {
+                    Alcance::Seguimiento { modalidad, .. } => modalidad.as_str(),
+                    _ => "",
+                };
+                s["modalidad_nombre"] = json!(MODALIDADES_LITE.iter().find(|(c, _)| *c == modalidad).map_or("", |(_, n)| n));
+                s["fecha_descarga"] = json!(ahora());
+            } else {
+                s["etiquetas"] = json!(partes_consulta(p, catalogo, plan.fechas));
+            }
             s
         })
         .collect();
     let mut completadas: Vec<Value> = Vec::new();
     let filtro_fecha = plan.fechas.map(|(a, b)| json!({"start": fecha_sitfa(a), "end": fecha_sitfa(b)}));
     let resumen = |estado: &str, completadas: &[Value]| -> Result<(), String> {
+        if integral {
+            return escribir_json(
+                &carpeta,
+                "resumen.json",
+                &json!({
+                    "version_contrato": 1, "fecha_hora": ahora(), "estado": estado, "plan": planificadas,
+                    "consultas_esperadas": plan.consultas.len(), "consultas_completadas": completadas.len(),
+                    "consultas": completadas,
+                    "filtro_fecha": plan.fechas.map(|(a, b)| json!({"desde": fecha_sitfa(a), "hasta": fecha_sitfa(b)})),
+                    "otros_filtros": if opciones.conservar_filtros { "formulario" } else { "todos los registros" },
+                }),
+            );
+        }
         escribir_json(
             &carpeta,
             "resumen.json",
@@ -734,6 +839,10 @@ pub fn ejecutar(
         )
     };
     resumen("EN_CURSO", &completadas)?;
+    if integral {
+        emitir(Evento::Carpeta(carpeta.clone()));
+        emitir(Evento::Plan(plan.consultas.len()));
+    }
     let mut bloqueado = false;
     let ejecucion = (|| -> Result<(), String> {
         lote.pedir("lock", json!({}))?;
@@ -745,14 +854,17 @@ pub fn ejecutar(
                 pausa(opciones.pausa, cancelar, CANCELADO)?;
             }
             let base = &bases[i];
-            emitir(Evento::Consulta { indice, total: plan.consultas.len(), etiqueta: base.clone() });
-            let fechas = plan.fechas.filter(|_| !calendario(perfil.pantalla));
+            let caso = caso_y_rotulo(perfil, catalogo);
+            // En Integral la consulta se identifica por la etiqueta del perfil; en Lite, por el nombre del archivo.
+            let rotulo = if integral { caso.1.clone() } else { base.clone() };
+            emitir(Evento::Consulta { indice, total: plan.consultas.len(), etiqueta: rotulo.clone() });
+            let fechas = if integral { plan.fechas } else { plan.fechas.filter(|_| !calendario(perfil.pantalla)) };
             let preparado = lote.pedir(
                 "prepare",
                 json!({
-                    "selection": seleccion(perfil),
+                    "selection": seleccion_edicion(perfil, edicion),
                     "dates": fechas.map(|(a, b)| json!({"start": fecha_sitfa(a), "end": fecha_sitfa(b)})),
-                    "keep_filters": opciones.conservar_filtros && !calendario(perfil.pantalla),
+                    "keep_filters": opciones.conservar_filtros && (integral || !calendario(perfil.pantalla)),
                 }),
             )?;
             let pares: Pares = preparado["pairs"]
@@ -783,20 +895,23 @@ pub fn ejecutar(
                 }
             }
             let html = cuerpo(&lote.pedir("search", json!({"pairs": pares, "timeout": ESPERA_SITFA_MS}))?, false)?;
-            let caso = caso_y_rotulo(perfil, catalogo);
             let manifiesto = format!("verificacion {indice:03}.json");
             let mut evidencia = None;
             let resultado = match validar_respuesta(&html, &pares, consulta, None)? {
                 Respuesta::SinRegistros => {
                     cancelado(cancelar, CANCELADO)?;
                     if opciones.evidencia {
-                        let nombre = unico(base, " - SIN REGISTROS.pdf");
+                        let nombre = if integral {
+                            ordinal(base, false) + ".pdf"
+                        } else {
+                            unico(base, " - SIN REGISTROS.pdf")
+                        };
                         evidencia = Some(lote.evidencia(perfil, consulta, &pares, fechas, &nombre, emitir)?);
                     }
                     lote.manifiesto(&manifiesto, &caso, &[], 0, "SIN_RESULTADOS")?;
                     match &evidencia {
                         Some(e) => emitir(Evento::Evidencia { archivo: e["archivo"].as_str().unwrap_or("").into() }),
-                        None => emitir(Evento::Vacia { consulta: base.clone() }),
+                        None => emitir(Evento::Vacia { consulta: rotulo.clone() }),
                     }
                     Vec::new()
                 }
@@ -804,10 +919,13 @@ pub fn ejecutar(
                     emitir(Evento::Total(primera.total));
                     let raiz = std::cell::OnceCell::new();
                     let nombre = |numero: usize, total: usize| {
+                        if integral {
+                            return ordinal(base, total > 1) + ".xls";
+                        }
                         let raiz = raiz.get_or_init(|| unico(base, ""));
                         format!("{raiz}{}.xls", if total > 1 { format!(" - p{numero} de {total}") } else { String::new() })
                     };
-                    lote.paginas(&pares, primera, consulta, &caso, &manifiesto, &nombre, emitir, base)?
+                    lote.paginas(&pares, primera, consulta, &caso, &manifiesto, &nombre, emitir, &rotulo)?
                 }
             };
             let archivos: Vec<Value> = if resultado.is_empty() {
@@ -816,12 +934,20 @@ pub fn ejecutar(
                 resultado.iter().map(|r| r["archivo"].clone()).collect()
             };
             let mut hecha = json!({
-                "consulta": base,
+                "consulta": rotulo,
                 "estado": if resultado.is_empty() { "SIN_RESULTADOS" } else { "VALIDADA" },
                 "paginas": resultado.len(),
                 "registros": resultado.iter().map(|r| r["registros"].as_u64().unwrap_or(0)).sum::<u64>(),
                 "archivos": archivos, "verificacion": manifiesto, "seleccion": planificadas[i],
             });
+            if integral {
+                if let Some(o) = hecha.as_object_mut() {
+                    o.remove("archivos");
+                }
+                if let Some(e) = &evidencia {
+                    hecha["evidencia"] = e.clone();
+                }
+            }
             let ruta = carpeta.join(&manifiesto);
             let mut info: Value = fs::read(&ruta)
                 .ok()
@@ -839,7 +965,7 @@ pub fn ejecutar(
             completadas.push(hecha);
             resumen("EN_CURSO", &completadas)?;
             emitir(Evento::ConsultaLista {
-                consulta: base.clone(),
+                consulta: rotulo.clone(),
                 estado: completadas.last().map(|c| c["estado"].as_str().unwrap_or("").to_string()).unwrap_or_default(),
             });
         }
@@ -860,15 +986,36 @@ pub fn ejecutar(
     if ejecucion.is_err() {
         let _ = resumen("INCOMPLETA", &completadas);
     }
+    if integral {
+        // Como el `finally` de Integral: el alcance queda también en la verificación de la consulta interrumpida.
+        for (i, s) in planificadas.iter().enumerate() {
+            let nombre = format!("verificacion {:03}.json", i + 1);
+            let Ok(datos) = fs::read(carpeta.join(&nombre)) else { continue };
+            match serde_json::from_slice::<Value>(&datos) {
+                Ok(mut info) if info.get("seleccion").is_none() => {
+                    info["seleccion"] = s.clone();
+                    if escribir_json(&carpeta, &nombre, &info).is_err() {
+                        emitir(Evento::Aviso("E_RESUMEN: no se pudo completar el alcance de una verificación.".into()));
+                    }
+                }
+                Ok(_) => {}
+                Err(_) => emitir(Evento::Aviso("E_RESUMEN: no se pudo completar el alcance de una verificación.".into())),
+            }
+        }
+    }
     if bloqueado {
         match conexion.llamar("unlock", json!({}), PLAZO_CIERRE) {
-            Ok(v) if v["restored"] == json!(false) => emitir(Evento::Aviso(
-                "No se restauraron todos los filtros de SITFA. Revisa el formulario.".into(),
-            )),
+            Ok(v) if v["restored"] == json!(false) => emitir(Evento::Aviso(if integral {
+                "No se restauraron todos los filtros de SITFA. Revisa el formulario antes de volver a consultar; los archivos verificados se conservan.".into()
+            } else {
+                "No se restauraron todos los filtros de SITFA. Revisa el formulario.".into()
+            })),
             Ok(_) => {}
-            Err(_) => emitir(Evento::Aviso(
-                "No se pudo confirmar la restauración de los filtros de SITFA.".into(),
-            )),
+            Err(_) => emitir(Evento::Aviso(if integral {
+                "No se pudo confirmar la restauración de los filtros de SITFA. Revisa la pestaña antes de volver a consultar; los archivos verificados se conservan.".into()
+            } else {
+                "No se pudo confirmar la restauración de los filtros de SITFA.".into()
+            })),
         }
     }
     ejecucion.map(|()| completadas)
