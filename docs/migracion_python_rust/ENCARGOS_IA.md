@@ -54,7 +54,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 ## Encargos abiertos (en orden de prioridad)
 
-### E-B · Comparador estricto de la redacción mensual — `ABIERTO` (entorno L) · [prompt](prompts/E-B.md)
+### E-B · Comparador estricto de la redacción mensual — `ENTREGADO` (entorno L) · [prompt](prompts/E-B.md)
 
 - Objetivo: que `motor::historia::tests::paquete_b_redaccion_mensual` clasifique solo lo que acreditan R1 y R6.
 - Pasos:

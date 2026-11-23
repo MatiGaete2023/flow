@@ -1113,40 +1113,105 @@ mod tests {
 
     #[test]
     fn paquete_b_redaccion_mensual() {
-        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
-        let mut total_evaluados = 0;
-        let mut identicos = 0;
-        let mut solo_r1 = 0;
-        let mut solo_r6 = 0;
-        let mut r1_y_r6 = 0;
-        let mut fallos_inesperados = Vec::new();
+        let dir = match std::env::var("FLOW_CASOS") {
+            Ok(d) => d,
+            Err(_) => panic!("FLOW_CASOS es obligatorio para paquete_b_redaccion_mensual"),
+        };
+        let re_c10 = Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap();
 
-        for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {
+        let mut evaluados = 0u64;
+        let mut identicos = 0u64;
+        let mut solo_r1 = 0u64;
+        let mut solo_r6 = 0u64;
+        let mut r1_y_r6 = 0u64;
+        let mut r6_guion = 0u64;
+        let mut fallos: Vec<String> = Vec::new();
+
+        // R2, R3, R4 sobre la observación obtenida (redaccion_registro: true).
+        let mut r2_ok = 0u64;
+        let mut r2_aplica = 0u64;
+        let mut r3_ok = 0u64;
+        let mut r3_aplica = 0u64;
+        let mut r4_ok = 0u64;
+        let mut r4_aplica = 0u64;
+
+        for (archivo, mode) in [
+            ("espera", Mode::Espera),
+            ("cumplimiento", Mode::Cumplimiento),
+            ("informes", Mode::Informes),
+        ] {
             let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
             let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
             for c in &casos {
-                if c["historia"].is_null() && c["bitacora"].as_array().is_none_or(|a| a.is_empty()) {
+                if c["historia"].is_null()
+                    && c["bitacora"].as_array().is_none_or(|a| a.is_empty())
+                {
                     continue;
                 }
-                total_evaluados += 1;
+                evaluados += 1;
                 let (r, _) = caso_corpus_con_redaccion(c, mode, true);
                 let e = &c["esperado"];
-                let reglas: Vec<&str> = e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect();
-                let marcas: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).collect();
+                let reglas: Vec<&str> = e["reglas"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter_map(|r| r.as_str())
+                    .collect();
+                let marcas: Vec<&str> = e["marcas"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter_map(|m| m["codigo"].as_str())
+                    .collect();
                 let obtenidas: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).collect();
 
                 let reglas_iguales = reglas == r.eventos.iter().map(String::as_str).collect::<Vec<_>>();
                 let marcas_iguales = marcas == obtenidas;
                 if !reglas_iguales || !marcas_iguales {
-                    fallos_inesperados.push(format!("{}: reglas o marcas difieren", c["id"]));
+                    fallos.push(format!("{}: reglas o marcas difieren", c["id"]));
                     continue;
                 }
 
                 let esp_obs = e["observacion"].as_str().unwrap_or("");
                 let obt_obs = r.observacion.as_str();
 
-                assert!(!obt_obs.contains("R3_MULTI"));
+                // ---- R2: no contiene la oración de historia de causa ni R3_MULTI ----
+                r2_aplica += 1;
+                if !obt_obs.contains("La historia es de la causa y no permite atribuirlo a un ingreso determinado.")
+                    && !obt_obs.contains("R3_MULTI")
+                {
+                    r2_ok += 1;
+                } else {
+                    fallos.push(format!("{}: R2", c["id"]));
+                }
 
+                // ---- R3: con E04_CON_FOLIO y E05_SOLO_CORREO ----
+                let tiene_e04 = reglas.contains(&"HISTORIA.E04_CON_FOLIO");
+                let tiene_e05 = reglas.contains(&"ESPERA.E05_SOLO_CORREO");
+                if tiene_e04 && tiene_e05 {
+                    r3_aplica += 1;
+                    let cuenta_medida =
+                        obt_obs.match_indices("Medida revisada, a la espera de ingreso efectivo.").count();
+                    let tiene_dias = obt_obs.contains("RUS registra") && obt_obs.contains("días de espera");
+                    if cuenta_medida == 1 && !tiene_dias {
+                        r3_ok += 1;
+                    } else {
+                        fallos.push(format!("{}: R3", c["id"]));
+                    }
+                }
+
+                // ---- R4: si tiene "Tribunal dispone ingreso a", no días de espera ----
+                if obt_obs.contains("Tribunal dispone ingreso a") {
+                    r4_aplica += 1;
+                    let tiene_dias = obt_obs.contains("RUS registra") && obt_obs.contains("días de espera");
+                    if !tiene_dias {
+                        r4_ok += 1;
+                    } else {
+                        fallos.push(format!("{}: R4", c["id"]));
+                    }
+                }
+
+                // ---- R1 y R6: comparación byte a byte de la observación ----
                 if esp_obs == obt_obs {
                     identicos += 1;
                     continue;
@@ -1156,22 +1221,35 @@ mod tests {
                     && r.eventos.iter().any(|ev| ev == "CUMPLIMIENTO.C10_HOJA2");
 
                 let mut base_esp = esp_obs.to_string();
+                let mut c10_quitado = false;
                 if tiene_r1 {
-                    static RE_C10: OnceLock<Regex> = OnceLock::new();
-                    let re_c10 = RE_C10.get_or_init(|| Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap());
+                    assert!(
+                        re_c10.is_match(esp_obs),
+                        "{} C10: la oración C10 no existe en la esperada",
+                        c["id"]
+                    );
+                    assert!(
+                        !re_c10.is_match(obt_obs),
+                        "{} C10: la oración C10 existe en la obtenida",
+                        c["id"]
+                    );
                     base_esp = re_c10.replace(&base_esp, "").to_string();
+                    c10_quitado = true;
                 }
 
-                let norm_esp = base_esp.to_lowercase()
-                    .replace('á', "a").replace('é', "e").replace('í', "i").replace('ó', "o").replace('ú', "u")
-                    .replace('-', " ").split_whitespace().collect::<Vec<_>>().join(" ");
-                let norm_obt = obt_obs.to_lowercase()
-                    .replace('á', "a").replace('é', "e").replace('í', "i").replace('ó', "o").replace('ú', "u")
-                    .replace('-', " ").split_whitespace().collect::<Vec<_>>().join(" ");
+                let nombre = c["campos"]["programa"]["v"].as_str().unwrap_or("");
+                let py = crate::util::titulo_programa(nombre);
+                let rs = crate::util::titulo_programa_registro(nombre);
+                let esp_ajustada = base_esp.replace(&py, &rs);
+                let cambio_r6 = esp_ajustada != base_esp;
 
-                if norm_esp == norm_obt {
-                    let es_r1 = tiene_r1 && base_esp != esp_obs;
-                    let es_r6 = base_esp != obt_obs;
+                if cambio_r6 && rs.contains(" - ") && !py.contains(" - ") {
+                    r6_guion += 1;
+                }
+
+                if esp_ajustada == obt_obs {
+                    let es_r1 = tiene_r1 && c10_quitado;
+                    let es_r6 = cambio_r6;
                     if es_r1 && es_r6 {
                         r1_y_r6 += 1;
                     } else if es_r1 {
@@ -1180,15 +1258,41 @@ mod tests {
                         solo_r6 += 1;
                     }
                 } else {
-                    fallos_inesperados.push(format!("{}: diff inesperado:\n  esp: {}\n  obt: {}", c["id"], esp_obs, obt_obs));
+                    let primera = primera_palabra_distinta(&esp_ajustada, obt_obs);
+                    fallos.push(format!(
+                        "{}: diff inesperado (primera palabra distinta: {})",
+                        c["id"], primera
+                    ));
                 }
             }
         }
-        println!("PAQUETE_B: Evaluados: {total_evaluados}, Idénticos: {identicos}, Solo R1: {solo_r1}, Solo R6: {solo_r6}, R1+R6: {r1_y_r6}, Fallos inesperados: {}", fallos_inesperados.len());
-        for f in fallos_inesperados.iter().take(5) {
+
+        println!(
+            "PAQUETE_B: evaluados {evaluados}, identicos {identicos}, R1 {solo_r1}, R6 {solo_r6} (R6_GUION {r6_guion}), R1+R6 {r1_y_r6}, R2 {r2_ok}/{r2_aplica}, R3 {r3_ok}/{r3_aplica}, R4 {r4_ok}/{r4_aplica}, R5 BLOQUEADO — 0 casos en el corpus, fallos {}",
+            fallos.len()
+        );
+        for f in fallos.iter().take(5) {
             println!("  FALLO: {f}");
         }
-        assert!(fallos_inesperados.is_empty(), "Hubo fallos inesperados en Paquete B");
+        assert!(fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
+    }
+
+    fn primera_palabra_distinta(a: &str, b: &str) -> String {
+        let pa: Vec<&str> = a.split_whitespace().collect();
+        let pb: Vec<&str> = b.split_whitespace().collect();
+        let n = pa.len().min(pb.len());
+        for i in 0..n {
+            if pa[i] != pb[i] {
+                return format!("esp={} obt={}", pa[i], pb[i]);
+            }
+        }
+        if pa.len() != pb.len() {
+            if pa.len() > n {
+                return format!("esp={} obt=<fin>", pa[n]);
+            }
+            return format!("esp=<fin> obt={}", pb[n]);
+        }
+        String::new()
     }
 
     #[test]
