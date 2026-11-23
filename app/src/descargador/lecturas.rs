@@ -712,18 +712,26 @@ pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Valu
     Ok(lectura)
 }
 
-fn fecha_calendario(s: &str, opcional: bool) -> Result<String, String> {
+fn fecha_calendario(s: &str, opcional: bool, columna: &str) -> Result<String, String> {
     let s = s.trim();
     // SITFA escribe la fecha vacía como guiones, a veces separados («- - -»).
     if opcional && s.chars().all(|c| c == '-' || c.is_whitespace()) {
         return Ok(String::new());
     }
-    static FORMA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A\d{2}/\d{2}/\d{4}(?: \d{1,2}:\d{2}(?::\d{2})?)?\z").unwrap());
-    if !FORMA.is_match(s) {
-        return Err("El calendario contiene una fecha ilegible.".into());
-    }
-    let fecha = fecha_hora(s, false)?;
-    Ok(fecha[..10].to_string())
+    static FORMA: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"\A(\d{2}/\d{2}/\d{4})(?: \d{1,2}:\d{2}(?::\d{2})?)?\z").unwrap());
+    // `_forma`: dígitos como 9 y letras como A, sin el contenido, hasta 24 caracteres.
+    let forma = || -> String {
+        s.chars()
+            .map(|c| if c.is_ascii_digit() { '9' } else if c.is_alphabetic() { 'A' } else { c })
+            .take(24)
+            .collect()
+    };
+    FORMA
+        .captures(s)
+        .and_then(|c| chrono::NaiveDate::parse_from_str(&c[1], "%d/%m/%Y").ok())
+        .map(|d| d.format("%Y-%m-%d").to_string())
+        .ok_or_else(|| format!("El calendario contiene una fecha ilegible en «{columna}» (forma «{}»).", forma()))
 }
 
 /// Ventana de meses naturales (1 a 4), sin convertir fechas ilegibles en ausencia de trámites.
@@ -751,11 +759,25 @@ pub fn leer_calendario(datos: &[u8], args: &[String], fuente: &str, capturada: &
     if args.len() != 12 {
         return Err("El enlace del calendario no tiene la estructura esperada.".into());
     }
-    let doc = documento(datos)?;
-    let form = formulario(&doc)?;
-    let (tribunal, causa, ingreso) = (input(form, "COD_Tribunal")?, input(form, "CRR_IdCausa")?, input(form, "ID_Ingreso")?);
-    if (&tribunal, &causa, &ingreso) != (&args[2], &args[0], &args[10]) || ![&tribunal, &causa, &ingreso].into_iter().all(|s| positivo(s)) {
-        return Err("La respuesta del calendario no corresponde al ingreso solicitado.".into());
+    // `calendario_html.read_calendar`: mismos controles y mensajes que Flow Python.
+    let texto_html = decodificar(datos)?;
+    if !CIERRE.is_match(&texto_html) {
+        return Err("La respuesta HTML del calendario está incompleta.".into());
+    }
+    let doc = Html::parse_document(&texto_html);
+    // Más estricto que `read_calendar` (que compara `type="password"` literal): cualquier mayúscula también es acceso.
+    if doc.select(&sel("input")).any(|e| e.value().attr("type").is_some_and(|t| t.eq_ignore_ascii_case("password"))) {
+        return Err("La respuesta parece la página de ingreso de SITFA; revisa la sesión.".into());
+    }
+    let forms = doc.select(&sel("form[name='InformesPpalForm']")).collect::<Vec<_>>();
+    if forms.len() != 1 {
+        return Err("No se encontró el formulario del calendario; comprueba la sesión.".into());
+    }
+    let form = forms[0];
+    let campo = |k: &str| input(form, k).map_err(|_| format!("Campo ausente o repetido en el calendario: {k}"));
+    let (tribunal, causa, ingreso) = (campo("COD_Tribunal")?, campo("CRR_IdCausa")?, campo("ID_Ingreso")?);
+    if (&tribunal, &causa, &ingreso) != (&args[2], &args[0], &args[10]) {
+        return Err("La respuesta no corresponde al ingreso solicitado.".into());
     }
     let mut candidatas = vec![];
     for tabla in doc.select(&sel("table")) {
@@ -776,15 +798,15 @@ pub fn leer_calendario(datos: &[u8], args: &[String], fuente: &str, capturada: &
         if c.len() != 3 {
             return Err("Fila de calendario incompleta.".into());
         }
-        let estado = c[2].to_uppercase();
+        let estado = c[2].trim().to_uppercase();
         if !matches!(estado.as_str(), "ENVIADO" | "PENDIENTE") {
             return Err("Estado de calendario no reconocido.".into());
         }
-        let informe = fecha_calendario(&c[1], true)?;
+        let informe = fecha_calendario(&c[1], true, "Fecha Informe")?;
         if (estado == "ENVIADO") != !informe.is_empty() {
             return Err("Estado y fecha de informe del calendario no concuerdan.".into());
         }
-        proyecciones.push(json!({"fila":i+1,"fecha_proyeccion":fecha_calendario(&c[0],false)?,"fecha_informe":informe,"estado":estado}));
+        proyecciones.push(json!({"fila":i+1,"fecha_proyeccion":fecha_calendario(&c[0],false,"Fecha Proyección")?,"fecha_informe":informe,"estado":estado}));
     }
     let plazo = |etiqueta: &str| -> Option<u32> {
         let patron = Regex::new(r"(\d+)\s*mes").unwrap();
@@ -858,11 +880,11 @@ mod pruebas_fecha_vacia {
     fn guiones_separados_son_fecha_vacia_solo_si_es_opcional() {
         // Prueba del usuario (12-nov-2026): SITFA entrega «- - -» en «Fecha Informe».
         for vacio in ["", "---", "- - -", "-  -", " - "] {
-            assert_eq!(fecha_calendario(vacio, true).unwrap(), "");
-            assert!(fecha_calendario(vacio, false).is_err());
+            assert_eq!(fecha_calendario(vacio, true, "Fecha Informe").unwrap(), "");
+            assert!(fecha_calendario(vacio, false, "Fecha Informe").is_err());
         }
-        assert!(fecha_calendario("- x -", true).is_err());
-        assert_eq!(fecha_calendario("28/05/2026 13:16", true).unwrap(), "2026-05-28");
+        assert!(fecha_calendario("- x -", true, "Fecha Informe").is_err());
+        assert_eq!(fecha_calendario("28/05/2026 13:16", true, "Fecha Informe").unwrap(), "2026-05-28");
     }
 }
 
@@ -938,7 +960,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("LECTURAS: {iguales}/{}, negativas {negativas}/{total_neg}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 21, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(casos.len(), 32, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} lecturas difieren de Flow Python", fallos.len());
     }
 }

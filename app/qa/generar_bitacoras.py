@@ -39,19 +39,29 @@ from test_lectura_bitacoras import Bridge  # noqa: E402
 from test_lotes import CATALOG  # noqa: E402
 
 
-class Grabador(Bridge):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.guion = []
+from test_calendario_lectura import CalendarBridge  # noqa: E402
 
-    def call(self, command, payload=None, timeout=75):
-        try:
-            respuesta = super().call(command, payload, timeout)
-        except Exception as e:  # el error del puente también es parte del guion
-            self.guion.append({'comando': command, 'payload': payload, 'error': str(e)})
-            raise
-        self.guion.append({'comando': command, 'payload': payload, 'respuesta': respuesta})
-        return respuesta
+
+def grabador(base):
+    class Grabador(base):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.guion = []
+
+        def call(self, command, payload=None, timeout=75):
+            try:
+                respuesta = super().call(command, payload, timeout)
+            except Exception as e:  # el error del puente también es parte del guion
+                self.guion.append({'comando': command, 'payload': payload, 'error': str(e)})
+                raise
+            self.guion.append({'comando': command, 'payload': payload, 'respuesta': respuesta})
+            return respuesta
+
+    return Grabador
+
+
+Grabador = grabador(Bridge)
+GrabadorCalendario = grabador(CalendarBridge)
 
 
 ESCENARIOS = {
@@ -62,20 +72,23 @@ ESCENARIOS = {
 }
 
 
-def escenario(nombre, opciones, lote):
-    puente = Grabador(**opciones)
+def escenario(nombre, opciones, lote, calendarios=False):
+    puente = (GrabadorCalendario if calendarios else Grabador)(**opciones)
     with tempfile.TemporaryDirectory() as tmp:
-        resultado = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0).run(lote, Path(tmp))
+        corredor = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, calendars=calendarios)
+        resultado = corredor.run(lote, Path(tmp))
         carpeta = Path(resultado['manifest']).parent
         carpeta_nombre = carpeta.name
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
         instantaneas = {
-            p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('bitacora-*.html'))
+            p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('*.html'))
         }
     manifiesto['fecha'] = '<FECHA>'
-    claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal')
+    claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal',
+              'calendarios_leidos', 'calendarios_fallidos')
     return {
         'escenario': nombre,
+        'calendarios': calendarios,
         'ahora': AHORA.isoformat(),
         'carpeta': carpeta_nombre,
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
@@ -89,22 +102,24 @@ def escenario(nombre, opciones, lote):
 def carpeta_json(carpeta):
     """Archivos de una carpeta de lote (manifiesto e instantáneas) para reconstruirla en la prueba Rust."""
     return {p.name: base64.b64encode(p.read_bytes()).decode()
-            for p in sorted(carpeta.iterdir()) if p.name == 'bitacoras.json' or p.name.startswith('bitacora-')}
+            for p in sorted(carpeta.iterdir()) if p.name == 'bitacoras.json' or p.suffix == '.html'}
 
 
-def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False):
+def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False, calendarios=False):
     """Primera corrida (estado inicial) y segunda grabada: retomando la misma carpeta o reutilizando otro lote."""
+    clase = GrabadorCalendario if calendarios else Grabador
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp)
-        inicial = DiaryRunner(Grabador(**primera), CATALOG, lambda *a: None, threading.Event(), pause=0).run(lote, base)
+        inicial = DiaryRunner(clase(**primera), CATALOG, lambda *a: None, threading.Event(), pause=0,
+                              calendars=calendarios).run(lote, base)
         carpeta_inicial = Path(inicial['folder'])
         archivos = carpeta_json(carpeta_inicial)
-        puente = Grabador(**segunda)
+        puente = clase(**segunda)
         if retomar:
             cancelar = threading.Event()
             if cancelada:
                 cancelar.set()  # se cancela antes de volver a enumerar: lo leído debe quedar en anteriores_no_reenumeradas
-            corredor = DiaryRunner(puente, CATALOG, lambda *a: None, cancelar, pause=0)
+            corredor = DiaryRunner(puente, CATALOG, lambda *a: None, cancelar, pause=0, calendars=calendarios)
             resultado = corredor.run(lote, base, resume=carpeta_inicial)
         else:
             AHORA_SEGUNDA = AHORA.replace(minute=30)
@@ -116,11 +131,13 @@ def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False):
                 motor.now = lambda: AHORA
         carpeta = Path(resultado['manifest']).parent
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
-        instantaneas = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('bitacora-*.html'))}
+        instantaneas = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('*.html'))}
     manifiesto['fecha'] = '<FECHA>'
-    claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal')
+    claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal',
+              'calendarios_leidos', 'calendarios_fallidos')
     return {
         'escenario': nombre,
+        'calendarios': calendarios,
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
         'inicial': {'carpeta': carpeta_inicial.name, 'archivos': archivos},
         'modo': 'retomar' if retomar else 'reutilizar',
@@ -141,6 +158,9 @@ def main():
     escenarios.append(dos_corridas('retomar_tras_falla', dict(wrong=True), dict(), uno, retomar=True))
     escenarios.append(dos_corridas('reutilizar_de_otro_lote', dict(), dict(), uno, retomar=False))
     escenarios.append(dos_corridas('retomar_cancelado', dict(wrong=True), dict(), uno, retomar=True, cancelada=True))
+    escenarios.append(escenario('calendario', dict(), uno, calendarios=True))
+    escenarios.append(escenario('calendario_ajeno', dict(wrong=('202',)), uno, calendarios=True))
+    escenarios.append(dos_corridas('retomar_con_calendario', dict(wrong=('202',)), dict(), uno, retomar=True, calendarios=True))
     datos = {'catalogo': CATALOG, 'ahora': AHORA.isoformat(), 'escenarios': escenarios}
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')

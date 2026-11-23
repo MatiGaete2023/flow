@@ -64,6 +64,27 @@ def casos():
         lista.append({'tipo': 'calendario', 'html': html, 'args': args,
                       'python': salida(read_calendar, html, args, source='ficticio.html', captured_at=CAPTURADA)})
 
+    # Calendario: los controles y mensajes de `read_calendar` sobre variantes de la ventana válida.
+    valido = lista[-1]['html']
+    variantes = {
+        'cal_ingreso_ajeno': valido.replace('name="ID_Ingreso" value="201"', 'name="ID_Ingreso" value="999"'),
+        'cal_incompleta': valido.replace('</html>', ''),
+        'cal_sesion': valido.replace('</form>', '<input type="password"></form>'),
+        'cal_sin_formulario': valido.replace('InformesPpalForm', 'OtroForm'),
+        'cal_sin_campo': valido.replace('name="CRR_IdCausa"', 'name="CRR_Otro"'),
+        'cal_estructura': valido.replace('<th>Estado</th>', '<th>Situación</th>'),
+        'cal_fila_incompleta': valido.replace('<td>PENDIENTE</td>', ''),
+        'cal_estado_desconocido': valido.replace('PENDIENTE', 'ANULADO'),
+        'cal_estado_sin_fecha': valido.replace('<td>01/09/2026</td><td>---</td><td>PENDIENTE</td>',
+                                               '<td>01/09/2026</td><td>---</td><td>ENVIADO</td>'),
+        'cal_fecha_ilegible': valido.replace('<td>01/09/2026</td>', '<td>1 de sept.</td>'),
+        'cal_fecha_imposible': valido.replace('<td>01/09/2026</td>', '<td>31/02/2026</td>'),
+    }
+    for nombre, html in variantes.items():
+        assert html != valido, nombre
+        lista.append({'tipo': 'calendario', 'caso': nombre, 'html': html, 'args': args,
+                      'python': salida(read_calendar, html, args, source='ficticio.html', captured_at=CAPTURADA)})
+
     cabecera = '<thead><tr><th>Estado</th><th>Solicitante</th><th>Doc.</th><th>Tipo Escrito</th></tr></thead>'
     escritos = {
         'con_filas': '<table>' + cabecera + '<tbody><tr><td>Pendiente</td><td>Programa Ficticio</td><td>DOC-1</td>'

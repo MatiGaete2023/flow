@@ -35,7 +35,12 @@ pub struct Opciones {
     pub reutilizar_base: Option<PathBuf>,
     /// Reloj fijo para las pruebas; `None` usa la hora local.
     pub ahora: Option<chrono::DateTime<chrono::FixedOffset>>,
+    /// `calendars`: calendario de informes de cada ingreso de Cumplimiento e Informes (cuenta en el tope de lecturas).
+    pub calendarios: bool,
 }
+
+/// `PESTANAS_CALENDARIO`.
+const PESTANAS_CALENDARIO: [&str; 2] = ["Cumplimiento", "Informes"];
 
 /// `REUTILIZAR_HORAS` y `REUTILIZAR_CARPETAS`.
 const REUTILIZAR_HORAS: i64 = 12;
@@ -120,6 +125,7 @@ struct Sesion<'a> {
     antiguos: BTreeMap<String, Value>,
     /// Lecturas reutilizables de otros lotes: clave → (carpeta, registro).
     cruzadas: BTreeMap<String, (PathBuf, Value)>,
+    calendarios: bool,
 }
 
 impl Sesion<'_> {
@@ -267,6 +273,7 @@ pub fn ejecutar(
         previos,
         antiguos,
         cruzadas,
+        calendarios: opciones.calendarios,
     };
     s.persistir(false)?;
     let mut bloqueado = false;
@@ -330,7 +337,11 @@ pub fn ejecutar(
         "leidas": registros.iter().filter(|r| r["estado"] == "LEIDA").count(),
         "fallidas": registros.iter().filter(|r| r["estado"] != "LEIDA").count(),
         "consultas_fallidas": consultas.iter().filter(|q| q["estado"] == "FALLIDA").count(),
-        "calendarios_leidos": 0, "calendarios_fallidos": 0,
+        "calendarios_leidos": registros.iter().filter(|r| r["calendario_lectura"]["estado"] == "LEIDA").count(),
+        "calendarios_fallidos": registros
+            .iter()
+            .filter(|r| matches!(r["calendario_lectura"]["estado"].as_str(), Some("FALLIDA" | "PENDIENTE")))
+            .count(),
         "detalle": detalle,
         "faltantes_por_tribunal": faltantes_por_tribunal(&registros),
         "historicos": {},
@@ -459,6 +470,7 @@ fn leer_fila(
     s.detener_si_cancelada()?;
     let consulta = &s.estado["consultas"][q];
     let (tribunal_nombre, modalidad_nombre) = (consulta["tribunal_nombre"].clone(), consulta["modalidad_nombre"].clone());
+    let mut calendario_abierto = false;
     let mut r = if v.bitacora_verificada {
         v.bitacora_python()
     } else {
@@ -504,10 +516,19 @@ fn leer_fila(
             Err(e) => Err(e),
         };
         let apertura = match reutilizada {
-            Ok(true) => Ok(()),
-            Ok(false) => abrir(s, i, &params),
+            Ok(true) => Ok(false),
+            Ok(false) => abrir(s, i, &params).map(|()| true),
             Err(e) => Err(e),
-        };
+        }
+        .and_then(|abierta| {
+            let con_calendario = s.calendarios
+                && PESTANAS_CALENDARIO.contains(&pestana)
+                && s.estado["registros"][i]["calendario"].is_array();
+            if con_calendario {
+                calendario_abierto = leer_calendario(s, i, abierta)?;
+            }
+            Ok(())
+        });
         match apertura {
             Ok(()) => {}
             Err(Detencion::Lote(e)) => {
@@ -538,7 +559,8 @@ fn leer_fila(
         )));
     }
     let reutilizada = s.estado["registros"][i]["reutilizada"] == true;
-    let espera = if estado != "SIN_VINCULO" && !reutilizada { s.pausa } else { Duration::from_millis(50) };
+    let espera =
+        if estado != "SIN_VINCULO" && (!reutilizada || calendario_abierto) { s.pausa } else { Duration::from_millis(50) };
     let fin = std::time::Instant::now() + espera;
     while std::time::Instant::now() < fin {
         if s.cancelar.load(Ordering::SeqCst) {
@@ -718,6 +740,97 @@ fn reutilizar_de_otro_lote(s: &mut Sesion<'_>, i: usize, params: &Value) -> Resu
     Ok(true)
 }
 
+/// `reutilizar_calendario`: al retomar, el calendario ya leído del mismo ingreso si su archivo conserva la huella.
+fn reutilizar_calendario(s: &mut Sesion<'_>, i: usize, args: &Value) -> bool {
+    let clave = s.estado["registros"][i]["clave"].as_str().unwrap_or("").to_string();
+    let anterior = s.antiguos.get(&clave).map(|r| r["calendario_lectura"].clone()).unwrap_or(Value::Null);
+    if anterior["estado"] != "LEIDA" || &anterior["args"] != args {
+        return false;
+    }
+    let nombre = anterior["archivo"].as_str().unwrap_or("").to_string();
+    static NOMBRE: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"^calendario-[0-9a-f]{24}-[0-9a-f]{16}\.html$").unwrap());
+    if !NOMBRE.is_match(&nombre) {
+        return false;
+    }
+    let Some(datos) = instantanea(&s.carpeta.join(&nombre), anterior["sha256"].as_str().unwrap_or("")) else {
+        return false;
+    };
+    let Ok(argumentos) = serde_json::from_value::<Vec<String>>(args.clone()) else { return false };
+    let Ok(leido) = lecturas::leer_calendario(&datos, &argumentos, "", "") else { return false };
+    let lectura = &mut s.estado["registros"][i]["calendario_lectura"];
+    lectura["estado"] = json!("LEIDA");
+    lectura["archivo"] = json!(nombre);
+    lectura["sha256"] = anterior["sha256"].clone();
+    lectura["capturada"] = json!(anterior["capturada"].as_str().unwrap_or(""));
+    lectura["proyecciones"] = leido["proyecciones"].clone();
+    lectura["reutilizada"] = json!(true);
+    true
+}
+
+/// `_leer_calendario`: el calendario del ingreso tras su bitácora; una falla aquí no invalida la bitácora leída.
+/// Devuelve si se abrió una ventana.
+fn leer_calendario(s: &mut Sesion<'_>, i: usize, pausar: bool) -> Result<bool, Detencion> {
+    let args = s.estado["registros"][i]["calendario"].clone();
+    s.estado["registros"][i]["calendario_lectura"] = json!({"estado": "PENDIENTE", "args": args});
+    if reutilizar_calendario(s, i, &args) {
+        return Ok(false);
+    }
+    if s.aperturas >= MAX_LECTURAS_POR_LOTE {
+        s.estado["registros"][i]["calendario_lectura"]["error"] = json!("Pendiente: se alcanzó el máximo de lecturas del lote.");
+        return Err(Detencion::Lote(format!(
+            "Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote. Usa «Más › Retomar paquete…» (o \
+             «Reintentar lecturas fallidas…») para continuar."
+        )));
+    }
+    if pausar && !s.pausa.is_zero() {
+        let fin = std::time::Instant::now() + s.pausa;
+        while std::time::Instant::now() < fin && !s.cancelar.load(Ordering::SeqCst) {
+            std::thread::sleep((fin - std::time::Instant::now()).min(Duration::from_millis(20)));
+        }
+        s.detener_si_cancelada()?;
+    }
+    s.aperturas += 1;
+    let clave = s.estado["registros"][i]["clave"].as_str().unwrap_or("").to_string();
+    let lectura = (|| -> Result<Value, String> {
+        let respuesta = s.pedir("calendar_open", json!({"args": args, "timeout": ESPERA_MS}))?;
+        let datos = lote::cuerpo(&respuesta, false)?;
+        let huella = sha256(&datos);
+        if datos.len() > 8 * 1024 * 1024 || respuesta["digest"].as_str() != Some(huella.as_str()) || respuesta["args"] != args {
+            return Err("La respuesta del calendario no coincide con la solicitud.".into());
+        }
+        let capturada = respuesta["startedAt"].as_str().unwrap_or("").to_string();
+        chrono::DateTime::parse_from_rfc3339(&capturada.replace('Z', "+00:00"))
+            .map_err(|_| "La fecha de la lectura del calendario no es válida.".to_string())?;
+        let argumentos: Vec<String> = serde_json::from_value(args.clone()).map_err(|e| e.to_string())?;
+        let leido = lecturas::leer_calendario(&datos, &argumentos, "", "")?;
+        let nombre = format!("calendario-{}-{}.html", &clave[..24], &huella[..16]);
+        let ruta = s.carpeta.join(&nombre);
+        if ruta.exists() {
+            if std::fs::read(&ruta).map_err(|e| e.to_string())? != datos {
+                return Err("El archivo local del calendario cambió.".into());
+            }
+        } else {
+            lote::guardar_exclusivo(&ruta, &datos)?;
+        }
+        Ok(json!({"archivo": nombre, "sha256": huella, "capturada": capturada, "proyecciones": leido["proyecciones"]}))
+    })();
+    let destino = &mut s.estado["registros"][i]["calendario_lectura"];
+    match lectura {
+        Ok(v) => {
+            destino["estado"] = json!("LEIDA");
+            for (k, x) in v.as_object().unwrap() {
+                destino[k] = x.clone();
+            }
+        }
+        Err(e) => {
+            destino["estado"] = json!("FALLIDA");
+            destino["error"] = json!(e);
+        }
+    }
+    Ok(true)
+}
+
 /// `_abrir_bitacora`: `diary_open`, cotejo de huella, parámetros y fecha, lectura e instantánea local exclusiva.
 fn abrir(s: &mut Sesion<'_>, i: usize, params: &Value) -> Result<(), Detencion> {
     if s.aperturas >= MAX_LECTURAS_POR_LOTE {
@@ -800,7 +913,7 @@ mod tests {
         let mut m = BTreeMap::new();
         for e in std::fs::read_dir(carpeta).unwrap().flatten() {
             let nombre = e.file_name().to_string_lossy().to_string();
-            if nombre.starts_with("bitacora-") && nombre.ends_with(".html") {
+            if nombre.ends_with(".html") {
                 m.insert(nombre, sha256(&std::fs::read(e.path()).unwrap()));
             }
         }
@@ -825,6 +938,7 @@ mod tests {
             std::fs::create_dir_all(&destino).unwrap();
             let mut opciones = Opciones {
                 ahora: Some(chrono::DateTime::parse_from_rfc3339(e["ahora"].as_str().unwrap()).unwrap()),
+                calendarios: e["calendarios"] == true,
                 ..Default::default()
             };
             if let Some(inicial) = e.get("inicial") {
@@ -887,7 +1001,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("BITACORAS: {iguales}/{}, fallos {}", escenarios.len(), fallos.len());
-        assert_eq!(escenarios.len(), 7, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(escenarios.len(), 10, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
     }
 }

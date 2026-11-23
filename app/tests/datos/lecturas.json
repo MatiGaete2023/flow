@@ -485,6 +485,248 @@
   }
  },
  {
+  "tipo": "calendario",
+  "caso": "cal_ingreso_ajeno",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"999\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "La respuesta no corresponde al ingreso solicitado."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_incompleta",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "La respuesta HTML del calendario está incompleta."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_sesion",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table><input type=\"password\"></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "La respuesta parece la página de ingreso de SITFA; revisa la sesión."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_sin_formulario",
+  "html": "<html><body><form name=\"OtroForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "No se encontró el formulario del calendario; comprueba la sesión."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_sin_campo",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_Otro\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "Campo ausente o repetido en el calendario: CRR_IdCausa"
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_estructura",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Situación</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "Cambió la estructura del calendario; no se leyó para no perder proyecciones."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_fila_incompleta",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "Fila de calendario incompleta."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_estado_desconocido",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>ANULADO</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "Estado de calendario no reconocido."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_estado_sin_fecha",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>01/09/2026</td><td>---</td><td>ENVIADO</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "Estado y fecha de informe del calendario no concuerdan."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_fecha_ilegible",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>1 de sept.</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "El calendario contiene una fecha ilegible en «Fecha Proyección» (forma «9 AA AAAA.»)."
+  }
+ },
+ {
+  "tipo": "calendario",
+  "caso": "cal_fecha_imposible",
+  "html": "<html><body><form name=\"InformesPpalForm\"><input name=\"COD_Tribunal\" value=\"49\"><input name=\"CRR_IdCausa\" value=\"100\"><input name=\"ID_Ingreso\" value=\"201\"><table><tr><td>Plazo Remisión: 3 Meses</td><td>Plazo Intervención: 6 Meses</td></tr></table><table><tr><th>Fecha Proyección</th><th>Fecha Informe</th><th>Estado</th></tr><tr><td>01/06/2026 00:00</td><td>28/05/2026 13:16:05</td><td>ENVIADO</td></tr><tr><td>31/02/2026</td><td>---</td><td>PENDIENTE</td></tr></table></form></body></html>",
+  "args": [
+   "100",
+   "300",
+   "49",
+   "400",
+   "X-1-2099",
+   "01/03/2026",
+   "PRM Ficticio",
+   "Persona Ficticia",
+   "6 Meses",
+   "3 Meses",
+   "201",
+   "1"
+  ],
+  "python": {
+   "error": "El calendario contiene una fecha ilegible en «Fecha Proyección» (forma «99/99/9999»)."
+  }
+ },
+ {
   "tipo": "escritos",
   "caso": "con_filas",
   "html": "<html><body><table><thead><tr><th>Estado</th><th>Solicitante</th><th>Doc.</th><th>Tipo Escrito</th></tr></thead><tbody><tr><td>Pendiente</td><td>Programa Ficticio</td><td>DOC-1</td><td>Inf. Cump Programa Ambulatorio</td></tr><tr><td>Resuelto</td><td>Programa Ficticio</td><td>DOC-2</td><td>Otro escrito</td></tr></tbody></table></body></html>",
