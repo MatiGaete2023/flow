@@ -1111,29 +1111,36 @@ mod tests {
         assert!(fallos.is_empty(), "{} casos difieren:\n{}", fallos.len(), fallos.iter().take(10).cloned().collect::<Vec<_>>().join("\n"));
     }
 
-    #[test]
-    fn paquete_b_redaccion_mensual() {
+    /// Casos evaluados del corpus `rust/casos` (espera, cumplimiento e informes con historia o bitácora).
+    /// Si se regenera el corpus con `rust/oraculo/generar_casos.py`, actualizar este valor en el mismo commit.
+    const CASOS_PAQUETE_B: u64 = 2582;
+
+    #[derive(Default)]
+    struct PaqueteB {
+        evaluados: u64,
+        identicos: u64,
+        solo_r1: u64,
+        solo_r6: u64,
+        r6_guion: u64,
+        r1_y_r6: u64,
+        r2_ok: u64,
+        r2_aplica: u64,
+        r2_cobertura: u64,
+        r3_ok: u64,
+        r3_aplica: u64,
+        r4_ok: u64,
+        r4_aplica: u64,
+        r5_motor: u64,
+        fallos: Vec<String>,
+    }
+
+    fn evaluar_paquete_b() -> PaqueteB {
         let dir = match std::env::var("FLOW_CASOS") {
             Ok(d) => d,
-            Err(_) => panic!("FLOW_CASOS es obligatorio para paquete_b_redaccion_mensual"),
+            Err(_) => panic!("FLOW_CASOS es obligatorio para el paquete B"),
         };
         let re_c10 = Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap();
-
-        let mut evaluados = 0u64;
-        let mut identicos = 0u64;
-        let mut solo_r1 = 0u64;
-        let mut solo_r6 = 0u64;
-        let mut r1_y_r6 = 0u64;
-        let mut r6_guion = 0u64;
-        let mut fallos: Vec<String> = Vec::new();
-
-        // R2, R3, R4 sobre la observación obtenida (redaccion_registro: true).
-        let mut r2_ok = 0u64;
-        let mut r2_aplica = 0u64;
-        let mut r3_ok = 0u64;
-        let mut r3_aplica = 0u64;
-        let mut r4_ok = 0u64;
-        let mut r4_aplica = 0u64;
+        let mut p = PaqueteB::default();
 
         for (archivo, mode) in [
             ("espera", Mode::Espera),
@@ -1148,7 +1155,7 @@ mod tests {
                 {
                     continue;
                 }
-                evaluados += 1;
+                p.evaluados += 1;
                 let (r, _) = caso_corpus_con_redaccion(c, mode, true);
                 let e = &c["esperado"];
                 let reglas: Vec<&str> = e["reglas"]
@@ -1165,55 +1172,66 @@ mod tests {
                     .collect();
                 let obtenidas: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).collect();
 
+                // R5: la reiteración (COMUN.REITERA_OBSERVACION) la aplica la cronología, no el motor por fila.
+                // Aquí solo se acredita que el motor por fila no la emite; R5 se coteja con la cronología.
+                const REITERA: &str = "COMUN.REITERA_OBSERVACION";
+                if reglas.contains(&REITERA) || r.eventos.iter().any(|ev| ev == REITERA) {
+                    p.r5_motor += 1;
+                    p.fallos.push(format!("{}: R5 emitida por el motor por fila", c["id"]));
+                }
+
                 let reglas_iguales = reglas == r.eventos.iter().map(String::as_str).collect::<Vec<_>>();
                 let marcas_iguales = marcas == obtenidas;
                 if !reglas_iguales || !marcas_iguales {
-                    fallos.push(format!("{}: reglas o marcas difieren", c["id"]));
+                    p.fallos.push(format!("{}: reglas o marcas difieren", c["id"]));
                     continue;
                 }
 
                 let esp_obs = e["observacion"].as_str().unwrap_or("");
                 let obt_obs = r.observacion.as_str();
 
-                // ---- R2: no contiene la oración de historia de causa ni R3_MULTI ----
-                r2_aplica += 1;
+                // ---- R2: sin la oración de historia de causa ni R3_MULTI, en todos los casos ----
+                // HISTORIA.R3_MULTI no es regla del motor Python: en Rust es un aviso interno. La cobertura de R2
+                // son los casos en que Rust emite ese aviso (historia de la causa con varios ingresos).
+                if r.avisos.iter().any(|a| a.starts_with("HISTORIA.R3_MULTI:")) {
+                    p.r2_cobertura += 1;
+                }
+                p.r2_aplica += 1;
                 if !obt_obs.contains("La historia es de la causa y no permite atribuirlo a un ingreso determinado.")
                     && !obt_obs.contains("R3_MULTI")
                 {
-                    r2_ok += 1;
+                    p.r2_ok += 1;
                 } else {
-                    fallos.push(format!("{}: R2", c["id"]));
+                    p.fallos.push(format!("{}: R2", c["id"]));
                 }
 
                 // ---- R3: con E04_CON_FOLIO y E05_SOLO_CORREO ----
-                let tiene_e04 = reglas.contains(&"HISTORIA.E04_CON_FOLIO");
-                let tiene_e05 = reglas.contains(&"ESPERA.E05_SOLO_CORREO");
-                if tiene_e04 && tiene_e05 {
-                    r3_aplica += 1;
+                if reglas.contains(&"HISTORIA.E04_CON_FOLIO") && reglas.contains(&"ESPERA.E05_SOLO_CORREO") {
+                    p.r3_aplica += 1;
                     let cuenta_medida =
                         obt_obs.match_indices("Medida revisada, a la espera de ingreso efectivo.").count();
                     let tiene_dias = obt_obs.contains("RUS registra") && obt_obs.contains("días de espera");
                     if cuenta_medida == 1 && !tiene_dias {
-                        r3_ok += 1;
+                        p.r3_ok += 1;
                     } else {
-                        fallos.push(format!("{}: R3", c["id"]));
+                        p.fallos.push(format!("{}: R3", c["id"]));
                     }
                 }
 
                 // ---- R4: si tiene "Tribunal dispone ingreso a", no días de espera ----
                 if obt_obs.contains("Tribunal dispone ingreso a") {
-                    r4_aplica += 1;
+                    p.r4_aplica += 1;
                     let tiene_dias = obt_obs.contains("RUS registra") && obt_obs.contains("días de espera");
                     if !tiene_dias {
-                        r4_ok += 1;
+                        p.r4_ok += 1;
                     } else {
-                        fallos.push(format!("{}: R4", c["id"]));
+                        p.fallos.push(format!("{}: R4", c["id"]));
                     }
                 }
 
                 // ---- R1 y R6: comparación byte a byte de la observación ----
                 if esp_obs == obt_obs {
-                    identicos += 1;
+                    p.identicos += 1;
                     continue;
                 }
 
@@ -1221,7 +1239,6 @@ mod tests {
                     && r.eventos.iter().any(|ev| ev == "CUMPLIMIENTO.C10_HOJA2");
 
                 let mut base_esp = esp_obs.to_string();
-                let mut c10_quitado = false;
                 if tiene_r1 {
                     assert!(
                         re_c10.is_match(esp_obs),
@@ -1234,47 +1251,86 @@ mod tests {
                         c["id"]
                     );
                     base_esp = re_c10.replace(&base_esp, "").to_string();
-                    c10_quitado = true;
                 }
 
                 let nombre = c["campos"]["programa"]["v"].as_str().unwrap_or("");
                 let py = crate::util::titulo_programa(nombre);
                 let rs = crate::util::titulo_programa_registro(nombre);
                 let esp_ajustada = base_esp.replace(&py, &rs);
-                let cambio_r6 = esp_ajustada != base_esp;
-
-                if cambio_r6 && rs.contains(" - ") && !py.contains(" - ") {
-                    r6_guion += 1;
-                }
+                let es_r6 = esp_ajustada != base_esp;
+                let es_guion = es_r6 && rs.contains(" - ") && !py.contains(" - ");
 
                 if esp_ajustada == obt_obs {
-                    let es_r1 = tiene_r1 && c10_quitado;
-                    let es_r6 = cambio_r6;
-                    if es_r1 && es_r6 {
-                        r1_y_r6 += 1;
-                    } else if es_r1 {
-                        solo_r1 += 1;
-                    } else {
-                        solo_r6 += 1;
+                    match (tiene_r1, es_r6) {
+                        (true, true) => p.r1_y_r6 += 1,
+                        (true, false) => p.solo_r1 += 1,
+                        (false, true) if es_guion => p.r6_guion += 1,
+                        (false, true) => p.solo_r6 += 1,
+                        (false, false) => p.fallos.push(format!("{}: diferencia sin regla", c["id"])),
                     }
                 } else {
                     let primera = primera_palabra_distinta(&esp_ajustada, obt_obs);
-                    fallos.push(format!(
+                    p.fallos.push(format!(
                         "{}: diff inesperado (primera palabra distinta: {})",
                         c["id"], primera
                     ));
                 }
             }
         }
+        p
+    }
 
+    fn cobertura(ok: u64, aplica: u64) -> String {
+        if aplica == 0 {
+            "SIN_COBERTURA 0/0".into()
+        } else {
+            format!("{ok}/{aplica}")
+        }
+    }
+
+    #[test]
+    fn paquete_b_redaccion_mensual() {
+        let p = evaluar_paquete_b();
+        let diferencias = p.solo_r1 + p.solo_r6 + p.r6_guion + p.r1_y_r6;
         println!(
-            "PAQUETE_B: evaluados {evaluados}, identicos {identicos}, R1 {solo_r1}, R6 {solo_r6} (R6_GUION {r6_guion}), R1+R6 {r1_y_r6}, R2 {r2_ok}/{r2_aplica}, R3 {r3_ok}/{r3_aplica}, R4 {r4_ok}/{r4_aplica}, R5 BLOQUEADO — 0 casos en el corpus, fallos {}",
-            fallos.len()
+            "PAQUETE_B: evaluados {}, identicos {}, R1 {}, R6 {}, R6_GUION {}, R1+R6 {}, suma {}, R2 {} (con aviso R3_MULTI {}), R3 {}, R4 {}, R5 fuera del motor por fila (emitidas {}), fallos {}",
+            p.evaluados,
+            p.identicos,
+            p.solo_r1,
+            p.solo_r6,
+            p.r6_guion,
+            p.r1_y_r6,
+            diferencias,
+            cobertura(p.r2_ok, p.r2_aplica),
+            p.r2_cobertura,
+            cobertura(p.r3_ok, p.r3_aplica),
+            cobertura(p.r4_ok, p.r4_aplica),
+            p.r5_motor,
+            p.fallos.len()
         );
-        for f in fallos.iter().take(5) {
+        for f in p.fallos.iter().take(5) {
             println!("  FALLO: {f}");
         }
-        assert!(fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
+        assert_eq!(p.evaluados, CASOS_PAQUETE_B, "cambió la cantidad de casos evaluados del corpus");
+        assert_eq!(diferencias + p.identicos, p.evaluados, "hay casos sin clasificar");
+        assert!(p.fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
+    }
+
+    /// Exige que el corpus tenga casos de R3 (HISTORIA.E04_CON_FOLIO + ESPERA.E05_SOLO_CORREO).
+    /// R2 no se exige aquí: HISTORIA.R3_MULTI no existe en el motor Python (en Rust es un aviso interno) y la cubre
+    /// `espera_con_servicio_y_causa_compartida_aplica_r2_y_r4`. Hoy falla; se activa al cerrar el encargo E-J.
+    #[test]
+    #[ignore = "E-J: el corpus rust/casos no tiene casos de R3 (E04_CON_FOLIO + E05_SOLO_CORREO)"]
+    fn paquete_b_cobertura_r3() {
+        let p = evaluar_paquete_b();
+        println!(
+            "PAQUETE_B_COBERTURA: R3 {}, R4 {}, fallos {}",
+            cobertura(p.r3_ok, p.r3_aplica),
+            cobertura(p.r4_ok, p.r4_aplica),
+            p.fallos.len()
+        );
+        assert!(p.r3_aplica > 0, "R3 sin cobertura: ningún caso con E04_CON_FOLIO y E05_SOLO_CORREO");
+        assert!(p.fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
     }
 
     fn primera_palabra_distinta(a: &str, b: &str) -> String {
