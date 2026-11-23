@@ -10,7 +10,7 @@ pub const RETENCION_DIAS: i64 = 60;
 pub const SESIONES_ANTERIORES: usize = 10;
 
 /// (clave, valor por defecto, etiqueta)
-pub const UMBRALES: [(&str, i64, &str); 14] = [
+pub const UMBRALES: [(&str, i64, &str); 15] = [
     ("espera_dce", 0, "Espera DCE: consultar ingreso desde"),
     ("espera_laja", 30, "Espera Laja: proyecto y correo desde"),
     ("espera_mulchen", 30, "Espera Mulchén: proyecto y correo desde"),
@@ -25,6 +25,7 @@ pub const UMBRALES: [(&str, i64, &str); 14] = [
     ("ficha_antigua", 180, "Ficha individual antigua: más de"),
     ("ficha_reciente", 30, "Ficha individual reciente: hasta"),
     ("ficha_fae", 120, "Ficha FAE ausente: ingreso hace más de"),
+    ("prorroga_reciente", 90, "Prórroga reciente (marcar para revisión): hasta"),
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).

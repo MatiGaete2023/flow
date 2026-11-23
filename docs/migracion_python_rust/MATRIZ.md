@@ -39,7 +39,7 @@ Comparación de `src/nurus/personal/app_base.py::_config_page` y `config.py` de 
 
 | Opción en Flow Python | En Flow Rust | Falta para la paridad |
 |---|---|---|
-| Parámetros y búsqueda de umbrales | Ajustes muestra 14 umbrales, restablecimiento individual y aplicación a la nómina. Comparte sus valores base. | Agregar búsqueda y los parámetros operativos `prorroga_reciente` (90 días) y `ventana_busqueda` (60 días) al portar sus reglas. |
+| Parámetros y búsqueda de umbrales | Ajustes muestra 15 umbrales, incluido `prorroga_reciente` (90 días), con restablecimiento individual y aplicación a la nómina. Comparte sus valores base. | Agregar búsqueda y `ventana_busqueda` (60 días) al portar su regla. |
 | Cinco interruptores de avisos y reiteración | Ajustes permite habilitar o deshabilitar la regla desde el selector de textos, incluidos Curador, Oído, Próxima audiencia, Próxima mayoría y Reiteración. | Cotejar persistencia y trazabilidad al cambiar de etapa y reabrir. |
 | Textos de observación y variables | Ajustes permite editar textos, restituir el original y activar la regla. La redacción mensual tiene interruptor propio. | Agregar el selector de variables y validación de campos por regla. |
 | Plantillas de correo, variables, comportamiento y archivo | Correos genera, edita y guarda borradores con las plantillas configuradas. | Incorporar edición persistente, duplicación, archivado, categoría, variables y condiciones de adjuntos. |

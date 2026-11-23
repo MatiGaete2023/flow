@@ -1,7 +1,7 @@
 //! Contraste de informes entre la bandeja de Escritos, Historia y el vencimiento en RUS.
 
 use super::super::{Ctx, RESIDENCIAS};
-use super::{cita, novedad, tramites};
+use super::{causa_compartida, cita, novedad, tramites};
 use crate::captura_trabajo::{
     clave_texto, ContextoFila, EvidenciaInforme, TramiteCausa, AMBULATORIO, FAE, INGRESO_INFORME,
     RESIDENCIAL,
@@ -21,10 +21,6 @@ fn tipo_escrito(programa: &str) -> Option<&'static str> {
     } else {
         AMBULATORIO
     })
-}
-
-fn causa_compartida(ctx: &Ctx, captura: &ContextoFila) -> bool {
-    captura.varios_ingresos || ctx.duplicidad.is_some()
 }
 
 pub(in crate::motor) fn informe_atribuible(ctx: &Ctx) -> bool {

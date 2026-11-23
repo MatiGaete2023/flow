@@ -16,6 +16,7 @@ pub(super) use escritos::{
 
 const SERVICIO: &str = "ing serv proteccion especializada y otras redes";
 const INGRESO_EFECTIVO: &str = "ingreso efectivo";
+const PRORROGA: &str = "prorroga";
 
 fn tramites<'a>(
     captura: &'a ContextoFila,
@@ -109,6 +110,90 @@ pub(super) fn servicio_ingreso(ctx: &mut Ctx, programa: &str) -> Option<Frag> {
         ],
     )?;
     Some(cita(salida, t))
+}
+
+/// R2: la historia es de la causa; con otro registro o ingreso no se atribuye a esta fila.
+fn causa_compartida(ctx: &Ctx, captura: &ContextoFila) -> bool {
+    captura.varios_ingresos || ctx.duplicidad.is_some()
+}
+
+fn ultimo<'a>(lista: impl Iterator<Item = &'a TramiteCausa>) -> Option<&'a TramiteCausa> {
+    lista.max_by_key(|t| (t.fecha, t.folio.parse::<u64>().ok()))
+}
+
+fn cita_folio(texto: &str, folio: &str) -> bool {
+    static FOLIO: OnceLock<Regex> = OnceLock::new();
+    let re = FOLIO.get_or_init(|| Regex::new(r"\bfolio (?:no? )?(\d+)").unwrap());
+    re.captures_iter(texto).any(|c| &c[1] == folio)
+}
+
+/// `_en_bitacora`: una observación del centro, del día del trámite o posterior, ya habló de la materia y citó su
+/// folio o su fecha completa.
+fn en_bitacora(t: &TramiteCausa, notas: &[NotaCentro], materia: &str) -> bool {
+    let fecha = clave_texto(&fecha_es(t.fecha));
+    notas.iter().filter(|n| n.fecha >= t.fecha).any(|n| {
+        let texto = clave_texto(&n.texto);
+        texto.contains(materia)
+            && (texto.contains(&fecha) || (!t.folio.is_empty() && cita_folio(&texto, &t.folio)))
+    })
+}
+
+/// `constancia([t])`: constancia neutra de un trámite, nombrado según la columna «Trámite».
+fn constancia_tramite(ctx: &mut Ctx, t: &TramiteCausa) -> Option<Frag> {
+    let folio = if t.folio.is_empty() { "s/f".into() } else { t.folio.clone() };
+    let frag = ctx.render(
+        "HISTORIA.BASE_TRAMITE",
+        &[
+            ("DESC", t.descripcion.clone()),
+            ("FECHA", fecha_es(t.fecha)),
+            ("FOLIO", folio),
+        ],
+    )?;
+    Some(cita(frag, t))
+}
+
+/// `reglas_historia.prorroga` (Cumplimiento, 11-nov-2026). La historia acredita el trámite, no su término: se cita
+/// como trámite y el egreso de RUS se dice aparte. Con la medida vencida, por vencer o con el egreso de RUS anterior a
+/// la prórroga, marca para revisión si es reciente (`prorroga_reciente`) y solo se dice en causas de un registro.
+/// Una mención previa en la bitácora suprime frase y marca. R2: también cuenta como causa compartida que la causa
+/// tenga varios ingresos en el paquete.
+pub(super) fn prorroga(
+    ctx: &mut Ctx,
+    egreso: Option<NaiveDate>,
+    vencida: bool,
+    por_vencer: bool,
+    egreso_dicho: bool,
+) -> Vec<Frag> {
+    let (Some(captura), Some(egreso)) = (ctx.captura, egreso) else {
+        return Vec::new();
+    };
+    let Some(ult) = ultimo(tramites(captura, PRORROGA)) else {
+        return Vec::new();
+    };
+    if en_bitacora(ult, &captura.notas_centro, "prorrog") {
+        return Vec::new();
+    }
+    let reciente = (ctx.hoy - ult.fecha).num_days() <= ctx.p("prorroga_reciente");
+    let pendiente = vencida || por_vencer || egreso < ult.fecha;
+    if reciente && pendiente {
+        ctx.marcar(
+            1,
+            "PRORROGA_REVISAR",
+            "Prórroga reciente con medida vencida o por vencer: verificar su registro en RUS",
+        );
+    }
+    let compartida = causa_compartida(ctx, captura);
+    if !novedad(ult, &captura.notas_centro) || (pendiente && (!reciente || compartida)) {
+        return Vec::new();
+    }
+    let mut salida: Vec<Frag> = constancia_tramite(ctx, ult).into_iter().collect();
+    if !pendiente && !egreso_dicho && !compartida {
+        salida.extend(ctx.render(
+            "HISTORIA.EGRESO_PROYECTADO",
+            &[("FECHA_EGRESO_PROYECTADO", fecha_es(egreso))],
+        ));
+    }
+    salida
 }
 
 fn cita(mut frag: Frag, tramite: &TramiteCausa) -> Frag {
@@ -390,5 +475,197 @@ mod tests {
         ] {
             assert!(!constancia(texto, &nombre, programa), "{texto}");
         }
+    }
+
+    fn evaluar_cumplimiento(captura: &ContextoFila, egreso: &str, dpe: f64) -> Resultado {
+        let cols = [
+            ("tribunal", 0),
+            ("programa", 1),
+            ("nombre", 2),
+            ("dias_cumpl", 3),
+            ("dias_egresar", 4),
+            ("ingreso", 5),
+            ("egreso_proy", 6),
+        ]
+        .into();
+        let values = [
+            Cell::Text("Juzgado de Letras de Laja".into()),
+            Cell::Text("PRM Ficticio".into()),
+            Cell::Text("Persona Ficticia".into()),
+            Cell::Number(if dpe >= 0.0 { 100.0 } else { dpe }),
+            Cell::Number(dpe),
+            Cell::Date("2026-06-01".parse().unwrap()),
+            Cell::Date(egreso.parse().unwrap()),
+        ];
+        evaluar_con_captura(
+            &Config::default(),
+            Mode::Cumplimiento,
+            &Fila {
+                values: &values,
+                cols: &cols,
+            },
+            "2026-10-14".parse().unwrap(),
+            (&Prepaso::default(), 0),
+            None,
+            Some(captura),
+        )
+    }
+
+    fn con_prorroga(fecha: &str, notas: Vec<NotaCentro>) -> ContextoFila {
+        ContextoFila {
+            tramites: Some(
+                vec![TramiteCausa {
+                    fecha: fecha.parse().unwrap(),
+                    descripcion: "Prorroga".into(),
+                    folio: "3".into(),
+                    referencia: String::new(),
+                    tipo: String::new(),
+                }]
+                .into(),
+            ),
+            notas_centro: notas.into(),
+            ..Default::default()
+        }
+    }
+
+    fn texto(r: &Resultado) -> &str {
+        r.observacion.split_once(": ").unwrap().1
+    }
+
+    fn marcas(r: &Resultado) -> Vec<&str> {
+        r.marcas.iter().map(|m| m.codigo.as_str()).collect()
+    }
+
+    #[test]
+    fn prorroga_vigente_se_cita_y_el_egreso_de_rus_va_aparte() {
+        let r = evaluar_cumplimiento(&con_prorroga("2026-10-07", vec![]), "2027-03-01", 100.0);
+        assert_eq!(texto(&r), "Medida revisada. Se hace presente que en resolución de fecha 7 de octubre de 2026 (folio 3), consta el trámite «Prorroga». RUS registra como fecha de egreso proyectado el 1 de marzo de 2027.");
+        assert!(r.marcas.is_empty());
+        let mut compartida = con_prorroga("2026-10-07", vec![]);
+        compartida.varios_ingresos = true;
+        let r = evaluar_cumplimiento(&compartida, "2027-03-01", 100.0);
+        assert!(texto(&r).contains("«Prorroga»") && !texto(&r).contains("egreso proyectado"));
+    }
+
+    #[test]
+    fn prorroga_con_medida_por_vencer_o_vencida_marca_segun_umbral() {
+        let r = evaluar_cumplimiento(&con_prorroga("2026-10-07", vec![]), "2026-10-29", 15.0);
+        assert_eq!(texto(&r), "Medida próxima a vencer en RUS el 29 de octubre de 2026. Se hace presente que en resolución de fecha 7 de octubre de 2026 (folio 3), consta el trámite «Prorroga».");
+        assert_eq!(marcas(&r), ["PRORROGA_REVISAR"]);
+        let antigua = evaluar_cumplimiento(&con_prorroga("2026-07-01", vec![]), "2026-10-29", 15.0);
+        assert!(!antigua.observacion.contains("Prorroga") && antigua.marcas.is_empty());
+        let limite = evaluar_cumplimiento(&con_prorroga("2026-07-16", vec![]), "2026-10-29", 15.0);
+        assert_eq!(marcas(&limite), ["PRORROGA_REVISAR"]);
+        let fuera = evaluar_cumplimiento(&con_prorroga("2026-07-15", vec![]), "2026-10-29", 15.0);
+        assert!(fuera.marcas.is_empty());
+        let vencida = evaluar_cumplimiento(&con_prorroga("2026-08-01", vec![]), "2026-10-01", -13.0);
+        assert_eq!(texto(&vencida), "Medida vencida en RUS desde el 1 de octubre de 2026. Se hace presente que en resolución de fecha 1 de agosto de 2026 (folio 3), consta el trámite «Prorroga».");
+        assert_eq!(marcas(&vencida), ["PRORROGA_REVISAR"]);
+        let vieja = evaluar_cumplimiento(&con_prorroga("2026-06-20", vec![]), "2026-10-01", -13.0);
+        assert_eq!(texto(&vieja), "Medida vencida en RUS desde el 1 de octubre de 2026.");
+        assert!(vieja.marcas.is_empty());
+        let sin_reflejar = evaluar_cumplimiento(&con_prorroga("2026-10-07", vec![]), "2026-09-01", 100.0);
+        assert_eq!(marcas(&sin_reflejar), ["PRORROGA_REVISAR"]);
+        assert!(sin_reflejar.observacion.contains("«Prorroga»") && !sin_reflejar.observacion.contains("hasta"));
+        let mut compartida = con_prorroga("2026-10-07", vec![]);
+        compartida.varios_ingresos = true;
+        let r = evaluar_cumplimiento(&compartida, "2026-10-29", 15.0);
+        assert_eq!(texto(&r), "Medida próxima a vencer en RUS el 29 de octubre de 2026.");
+        assert_eq!(marcas(&r), ["PRORROGA_REVISAR"]);
+    }
+
+    #[test]
+    fn prorroga_mencionada_en_la_bitacora_suprime_frase_y_marca() {
+        let nota = |texto: &str| NotaCentro {
+            fecha: "2026-10-08".parse().unwrap(),
+            texto: texto.into(),
+        };
+        let previa = con_prorroga("2026-10-07", vec![nota("Persona X: Se hace presente que a folio 3 se prorroga la medida.")]);
+        let r = evaluar_cumplimiento(&previa, "2026-10-29", 15.0);
+        assert_eq!(texto(&r), "Medida próxima a vencer en RUS el 29 de octubre de 2026.");
+        assert!(r.marcas.is_empty());
+        let otra = con_prorroga("2026-10-07", vec![nota("Persona X: Se hace presente que a folio 99 se prorroga la medida.")]);
+        assert_eq!(marcas(&evaluar_cumplimiento(&otra, "2026-10-29", 15.0)), ["PRORROGA_REVISAR"]);
+    }
+
+    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`): en los casos de Cumplimiento cuya historia
+    /// trae una «Prorroga» en la ventana, coinciden la marca PRORROGA_REVISAR y la constancia del trámite.
+    #[test]
+    fn oraculo_prorroga() {
+        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
+        let txt = std::fs::read_to_string(std::path::Path::new(&dir).join("cumplimiento.json")).unwrap();
+        let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
+        let fecha = |v: &serde_json::Value| v.as_str().and_then(|s| s.parse::<NaiveDate>().ok());
+        let (mut total, mut fallos) = (0, Vec::new());
+        for c in &casos {
+            let h = &c["historia"];
+            if !matches!(h["cobertura"].as_str(), Some("COMPLETA" | "PARCIAL")) {
+                continue;
+            }
+            let corte = fecha(&c["corte"]).unwrap();
+            let desde = fecha(&h["desde"]);
+            let lista: Vec<TramiteCausa> = h["tramites"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|t| {
+                    let f = fecha(&t["fecha"])?;
+                    (f <= corte && desde.is_none_or(|d| f >= d)).then(|| TramiteCausa {
+                        fecha: f,
+                        descripcion: t["desc"].as_str().unwrap_or("").into(),
+                        folio: t["folio_txt"].as_str().unwrap_or("").into(),
+                        referencia: String::new(),
+                        tipo: clave_texto(t["tipo"].as_str().unwrap_or("")),
+                    })
+                })
+                .collect();
+            // `causa_finalizada` todavía no está portada y en Python termina la evaluación antes de la prórroga.
+            let finalizada = c["esperado"]["reglas"].as_array().unwrap().iter().any(|r| r == "HISTORIA.P_FINALIZADA");
+            if finalizada || !lista.iter().any(|t| clave_texto(&t.descripcion) == PRORROGA) {
+                continue;
+            }
+            total += 1;
+            let notas: Vec<NotaCentro> = c["bitacora"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|o| Some(NotaCentro { fecha: fecha(&o["fecha"])?, texto: o["texto"].as_str()?.into() }))
+                        .filter(|n| n.fecha <= corte)
+                        .collect()
+                })
+                .unwrap_or_default();
+            let captura = ContextoFila { tramites: Some(lista.into()), notas_centro: notas.into(), ..Default::default() };
+            let mut cfg = Config { redaccion_registro: false, ..Config::default() };
+            for d in c["desactivadas"].as_array().unwrap() {
+                cfg.desactivadas.insert(d.as_str().unwrap().to_string());
+            }
+            let mut cols = crate::motor::Cols::new();
+            let mut values = Vec::new();
+            for (k, v) in c["campos"].as_object().unwrap() {
+                cols.insert(Box::leak(k.clone().into_boxed_str()), values.len());
+                values.push(match v["t"].as_str().unwrap() {
+                    "fecha" => Cell::Date(fecha(&v["v"]).unwrap()),
+                    "numero" => Cell::Number(v["v"].as_f64().unwrap()),
+                    "vacia" => Cell::Empty,
+                    _ => Cell::Text(v["v"].as_str().unwrap_or("").to_string()),
+                });
+            }
+            let mut pre = Prepaso::default();
+            if let Some(d) = c["duplicidad"].as_str() {
+                pre.duplicidad.insert(0, if d == "MISMO_PROGRAMA" { "MISMO_PROGRAMA" } else { "OTRO_REGISTRO" });
+            }
+            let r = evaluar_con_captura(&cfg, Mode::Cumplimiento, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
+            let e = &c["esperado"];
+            let esperada = e["marcas"].as_array().unwrap().iter().any(|m| m["codigo"] == "PRORROGA_REVISAR");
+            let obtenida = r.marcas.iter().any(|m| m.codigo == "PRORROGA_REVISAR");
+            let frase = |t: &str| t.contains("consta el trámite «Prorroga»") || t.contains("trámites «Prorroga»");
+            let (fe, fo) = (frase(e["observacion"].as_str().unwrap()), frase(&r.observacion));
+            if esperada != obtenida || fe != fo {
+                fallos.push(format!("{}: marca {esperada}/{obtenida} frase {fe}/{fo}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+            }
+        }
+        println!("oraculo_prorroga: {total} casos");
+        assert!(total > 0);
+        assert!(fallos.is_empty(), "{} de {total} casos difieren:\n{}", fallos.len(), fallos.join("\n"));
     }
 }

@@ -505,6 +505,10 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             }
         }
     }
+    // El egreso se dice una sola vez (decisión x): lo dice la frase de la medida o la de ingreso reciente.
+    let egreso_dicho = vencida || c05 || (c03 && fegr.is_some());
+    let vencida_valida = vencida && !ctx.invalidas.contains("CUMPLIMIENTO.C04_VENCIDA");
+    frags.extend(historia::prorroga(ctx, fegr, vencida_valida, c05, egreso_dicho));
     let evidencia = Default::default();
     frags.extend(historia::escrito_sin_ingreso(ctx, &programa, None, &evidencia));
     if historia::informe_pendiente(ctx, &programa, None, &evidencia) {
@@ -542,7 +546,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         return componer(&pfx, &fr);
     }
     if !principal && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA."))
-        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE" | "HISTORIA.C10_ESCRITO"))
+        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE" | "HISTORIA.C10_ESCRITO" | "HISTORIA.BASE_TRAMITE"))
     {
         if let Some(base) = ctx.render("HISTORIA.MEDIDA_REVISADA", &[]) {
             frags.insert(0, base);

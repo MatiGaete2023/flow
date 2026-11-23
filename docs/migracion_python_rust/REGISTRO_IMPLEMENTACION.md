@@ -230,10 +230,19 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - Pasaron 65 pruebas locales con los ZIP sintéticos de Flow Python y el corpus de 174 casos. El contraste de `paquete_estructura.zip` comprobó las 16 filas contra su oráculo de observación, reglas, marcas y acciones con la redacción mensual desactivada. Se comprobó también la compilación cruzada de todos los destinos de la aplicación para Windows.
 - La [corrida Windows](https://github.com/MatiGaete2023/flow/actions/runs/44949821621) pasó 66 pruebas de la aplicación, los contrastes V1 y V2 y los ZIP de contexto. Publicó el [ejecutable de `6718493`](https://github.com/MatiGaete2023/flow/actions/runs/44949821621/artifacts/14724493369) y las [capturas](https://github.com/MatiGaete2023/flow/actions/runs/44949821621/artifacts/14725163598). La huella SHA-256 coincide con el binario descargado. La prueba de rendimiento de 20.000 registros se ejecutó en Linux por separado.
 
+## Turno 13 · Prórroga de Cumplimiento
+
+- Se retomó desde `0246a94`. `historia::prorroga` porta `reglas_historia.prorroga` con `constancia_tramite` (`HISTORIA.BASE_TRAMITE` y la denominación según «Trámite»), `en_bitacora` y `ultimo`. Cumplimiento la llama después de C10, con la medida vencida válida, por vencer y el egreso ya dicho, igual que Flow Python.
+- La historia acredita el trámite y no su término. Con la medida vigente se cita y RUS dice el egreso aparte. Con la medida vencida, por vencer o con el egreso de RUS anterior a la prórroga, la marca `PRORROGA_REVISAR` exige que no hayan pasado más de `prorroga_reciente` días. La frase solo se emite en causas de un registro. Una observación posterior que menciona la prórroga con su folio o fecha suprime frase y marca.
+- R2: `causa_compartida` (varios ingresos del paquete o duplicidad de la nómina) pasó de `escritos.rs` a `historia.rs`. En la prórroga reemplaza `varios_registros()` de Python, que solo mira la nómina. Es la única divergencia intencional.
+- `prorroga_reciente` (90 días) se agregó a los umbrales de Ajustes. `HISTORIA.MEDIDA_REVISADA` antecede también a una constancia `BASE_TRAMITE` sin regla principal.
+- Pruebas: tres casos portados de `tests/test_historia_cumplimiento.py` (vigente, límite de 90/91 días, vencida, egreso sin reflejar, causa compartida, mención en bitácora) y `oraculo_prorroga`. Este último contrasta la marca y la constancia en los 23 casos del corpus de Cumplimiento con «Prorroga» en la ventana. Se excluyeron los casos con `HISTORIA.P_FINALIZADA`, porque `causa_finalizada` todavía no está portada. Las 20 pruebas del motor pasaron en el crate aislado de Linux; `oraculo_python` siguió en 174/174. La compilación de la aplicación y las capturas quedan para la corrida Windows del push.
+
 ## Siguiente paso exacto
 
-1. Continuar E3 con la prórroga de Cumplimiento y el umbral `prorroga_reciente`. Contrastar la evidencia, la vigencia de la medida y los casos de causa compartida de Flow Python. Mantener la precedencia del calendario y CAL-03.
-   - Portar búsqueda, continuidad, finalización y curador. Completar los avisos temporales y aplicar el criterio R2 a cada nueva regla que atribuya información de historia a un ingreso.
+0. Revisar la corrida Windows del push del turno 13 («Flow Rust local · Windows») y anotar su resultado aquí.
+1. Continuar E3 con `causa_finalizada` (`HISTORIA.P_FINALIZADA`; termina la evaluación de Cumplimiento antes de la prórroga). Al portarla, quitar la exclusión de `oraculo_prorroga`. Mantener la precedencia del calendario y CAL-03.
+   - Portar búsqueda, continuidad y curador. Completar los avisos temporales y aplicar el criterio R2 a cada nueva regla que atribuya información de historia a un ingreso.
    - Portar la consignación manual de otro programa al estado de Trabajo. Conservar la identidad de persona y la clave de programa entre recálculo y sesión.
 2. Usar el inventario de Ajustes de la matriz para completar opciones. Agregar `ventana_busqueda` al portar la regla correspondiente.
 3. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
