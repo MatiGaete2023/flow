@@ -703,8 +703,52 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - Repetir en L con `--features eframe/x11`; el host es W.
   - El run de CI no se puede consultar desde este host; `NO VERIFICADO EN CI`.
 
+## Auditoría · lote 1: E-C, E-L y E-F (23 de noviembre de 2026)
+
+- Commits auditados:
+  - E-C: `eabcb99` y `0ca8097`;
+  - E-L: `690db75` y `ce0c69b`;
+  - E-F: `1ee6011` y `af04493`.
+- Entorno: L (Linux, `--features eframe/x11`). Las entregas se ejecutaron en W.
+- Alcance (N1): fuera de `#[cfg(test)]`, solo cambian `lote::conservar_filtros`, la llamada en `descargador_ui.rs::iniciar` (misma condición, movida), `prueba_entorno.rs` y su declaración en `main.rs`/`lib.rs`, y la CI.
+
+### Reproducción (N1), desde `app/`
+
+- Sin variables: `test result: ok. 31 passed; 0 failed; 18 ignored`. En W son 32 por la prueba exclusiva de Windows.
+- Con todas las variables: `test result: ok. 47 passed; 0 failed; 0 ignored; … 2 filtered out`, con `--include-ignored --skip exporta_mismo_lote_de_python --skip velocidad_20000`.
+- `PAQUETE_C: etapas 3, filas 6, identicas 6, R1 0, R6 0, fallos 0`.
+- Biblioteca con `--include-ignored`: `44 passed`, y:
+  - `F2_PAUSA: [518.596611ms, 510.060525ms]`;
+  - `F3_PENDIENTES: 2, HUELLAS: 7 intactas`;
+  - `F4_FAVORITO: ["901"] ["Espera"] ["1"] Some((2026-12-12, 2027-01-10))`;
+  - los 4 `D2_KEEP_FILTERS` de la entrega.
+- `cargo clippy --lib -- -D warnings` limpio.
+
+### Mutaciones de control (revertidas)
+
+- `conservar_filtros` devolviendo `pedido` → D-2 `FAILED`.
+- JSON de Python con el corte movido alterado → antes de la corrección, la prueba del paquete C **pasaba**. Después, falla con `FALLA hist-0 ESPERA 2026-06-12 fila 0: …`.
+
+### Defectos y correcciones de la auditoría
+
+1. **E-C: el corte movido no se comparaba con Python** (N1, por la mutación anterior). Solo contaba reglas `HISTORIA.*` del lado Rust. La corrección mueve la comparación a `comparar_paquete_c`, que se aplica a los dos cortes, y afirma `identicas == filas` en el corte movido. Nueva línea: `PAQUETE_C_CORTE: filas 6, identicas 6, constancias_historia 0, fallos 0`. La corrección enviada durante el lote no se aplicó: la entrega revalidó E-C sin cambios.
+2. **E-C: el RUT del curador ficticio tenía dígito verificador válido** (`11111111-1`). Ahora es `11111111-2` y `PAQUETE_C` sigue en `fallos 0`.
+3. **E-L: el paso nuevo de la CI fallaba** (N1, reproducido con las variables de la CI): `paquete_c_contexto_e3_historia_igual_a_python` exige `FLOW_E3_HISTORIA` y `FLOW_E3_ESPERADO`, que la CI no definía → `46 passed; 1 failed`. La corrección hace que el paso «Abrir en Trabajo…» genere `esperado-historia.json` con `app/qa/esperado_contexto_e3.py` y exporte las dos variables.
+4. **E-L: el paso previo de la CI quedó vacío.** `cargo test … contexto_e3_del_exportador_python` daba `0 passed; 5 ignored` tras E-L. Ahora lleva `-- --include-ignored`: `5 passed`.
+5. Clippy: el aviso nuevo `needless_borrow` de la corrección quedó resuelto. En `trabajo.rs` solo quedan los 2 avisos previos (líneas 267 y 483).
+
+### Salvedades
+
+- (N1) R1 y R6 no se ejercitan en el paquete C (0 y 0).
+- (N1) `exporta_mismo_lote_de_python` sigue fuera de la CI por falta de `FLOW_P2_PAQUETE`.
+- (N2) El run de la CI con estas correcciones no está verificado desde este entorno: el usuario lo ve en Actions.
+
+### Resultado
+
+E-C, E-L y E-F quedan `CERRADO POR AUDITORÍA`.
+
 ## Siguiente paso exacto
 
-1. E-C: paquete C de integración con ZIP sintéticos ([prompt](prompts/E-C.md)). Después, E-L (pruebas condicionadas) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-F, E-A78, E-G, E-D, E-E e E-I.
+1. Lote 2 en W: E-D y E-I ([prompt](prompts/LOTE-2.md)). Requiere una corrida verde de «Flow Rust local · Windows» sobre el commit de esta auditoría. Después, E-E (usuario), E-A78 y E-G.
 2. D-1 y D-2 resueltas: sin cambios de código.
 3. Paquete H por el usuario.

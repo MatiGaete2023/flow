@@ -843,6 +843,58 @@ mod tests {
         }
     }
 
+    /// Compara fila a fila observación, reglas y marcas de Trabajo contra la salida de Python del paquete C.
+    /// `cuenta` = [idénticas, R1, R6]; toda otra diferencia va a `fallos`.
+    fn comparar_paquete_c(
+        trabajo: &Trabajo,
+        esperadas: &[&serde_json::Value],
+        etapa: &str,
+        corte: NaiveDate,
+        cuenta: &mut [usize; 3],
+        fallos: &mut Vec<String>,
+    ) {
+        for (indice, (registro, fila)) in trabajo.registros.iter().zip(esperadas).enumerate() {
+            let esperada = fila["observacion"].as_str().unwrap();
+            let reglas_esperadas: Vec<&str> = fila["reglas"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|r| r.as_str())
+                .collect();
+            let marcas_esperadas = fila["marcas"].clone();
+            let reglas_ok = registro
+                .eventos
+                .iter()
+                .map(String::as_str)
+                .eq(reglas_esperadas.iter().copied());
+            let marcas_ok = serde_json::to_value(&registro.marcas).unwrap() == marcas_esperadas;
+            if !reglas_ok || !marcas_ok {
+                fallos.push(format!(
+                    "{} {etapa} {corte} fila {indice}: reglas/marcas distintas\n  esp reglas {:?} / obt {:?}\n  esp marcas {} / obt {}",
+                    fila["record_id"].as_str().unwrap_or(""),
+                    reglas_esperadas,
+                    registro.eventos,
+                    marcas_esperadas,
+                    serde_json::to_value(&registro.marcas).unwrap()
+                ));
+                continue;
+            }
+            let programa = texto_de(trabajo, registro, "programa");
+            let tiene_r1 = registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C05_POR_VENCER")
+                && registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2");
+            match clasificar_observacion(esperada, &registro.propuesta, &programa, tiene_r1) {
+                Some("identica") => cuenta[0] += 1,
+                Some("R1") => cuenta[1] += 1,
+                Some("R6") => cuenta[2] += 1,
+                _ => fallos.push(format!(
+                    "{} {etapa} {corte} fila {indice}: observación distinta\n  esp: {esperada}\n  obt: {}",
+                    fila["record_id"].as_str().unwrap_or(""),
+                    registro.propuesta
+                )),
+            }
+        }
+    }
+
     /// Paquete C: abre `contexto-e3-historia.zip` en Trabajo en las tres etapas y dos cortes, y compara contra la
     /// salida de `app/qa/esperado_contexto_e3.py`. Sin variables falla; no termina con `return`.
     #[test]
@@ -862,7 +914,7 @@ mod tests {
         let cfg = Config::default();
         let mut etapas = 0usize;
         let (mut filas_total, mut identicas, mut r1, mut r6) = (0usize, 0usize, 0usize, 0usize);
-        let (mut filas_corte, mut constancias) = (0usize, 0usize);
+        let (mut filas_corte, mut identicas_corte, mut constancias) = (0usize, 0usize, 0usize);
         let mut fallos = Vec::new();
 
         for etapa in ["ESPERA", "CUMPLIMIENTO", "INFORMES"] {
@@ -903,46 +955,11 @@ mod tests {
                 esperadas.len(),
                 "{etapa}: filas distintas a las de Python"
             );
-            for (indice, (registro, fila)) in trabajo.registros.iter().zip(&esperadas).enumerate() {
-                let esperada = fila["observacion"].as_str().unwrap();
-                let reglas_esperadas: Vec<&str> = fila["reglas"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .filter_map(|r| r.as_str())
-                    .collect();
-                let marcas_esperadas = fila["marcas"].clone();
-                let reglas_ok = registro
-                    .eventos
-                    .iter()
-                    .map(String::as_str)
-                    .eq(reglas_esperadas.iter().copied());
-                let marcas_ok = serde_json::to_value(&registro.marcas).unwrap() == marcas_esperadas;
-                if !reglas_ok || !marcas_ok {
-                    fallos.push(format!(
-                        "{} {etapa} fila {indice}: reglas/marcas distintas\n  esp reglas {:?} / obt {:?}\n  esp marcas {} / obt {}",
-                        fila["record_id"].as_str().unwrap_or(""),
-                        reglas_esperadas,
-                        registro.eventos,
-                        marcas_esperadas,
-                        serde_json::to_value(&registro.marcas).unwrap()
-                    ));
-                    continue;
-                }
-                let programa = texto_de(&trabajo, registro, "programa");
-                let tiene_r1 = registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C05_POR_VENCER")
-                    && registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2");
-                match clasificar_observacion(esperada, &registro.propuesta, &programa, tiene_r1) {
-                    Some("identica") => identicas += 1,
-                    Some("R1") => r1 += 1,
-                    Some("R6") => r6 += 1,
-                    _ => fallos.push(format!(
-                        "{} {etapa} fila {indice}: observación distinta\n  esp: {esperada}\n  obt: {}",
-                        fila["record_id"].as_str().unwrap_or(""),
-                        registro.propuesta
-                    )),
-                }
-            }
+            let mut cuenta = [0usize; 3];
+            comparar_paquete_c(&trabajo, &esperadas, etapa, corte_fijo, &mut cuenta, &mut fallos);
+            identicas += cuenta[0];
+            r1 += cuenta[1];
+            r6 += cuenta[2];
 
             let movidas: Vec<&serde_json::Value> = filas
                 .iter()
@@ -964,6 +981,9 @@ mod tests {
                 "{etapa}: filas distintas al corte movido"
             );
             filas_corte += movidas.len();
+            let mut cuenta = [0usize; 3];
+            comparar_paquete_c(&trabajo_corte, &movidas, etapa, corte_movido, &mut cuenta, &mut fallos);
+            identicas_corte += cuenta[0];
             constancias += trabajo_corte
                 .registros
                 .iter()
@@ -985,10 +1005,14 @@ mod tests {
             "PAQUETE_C: etapas {etapas}, filas {filas_total}, identicas {identicas}, R1 {r1}, R6 {r6}, fallos {}",
             fallos.len()
         );
-        println!("PAQUETE_C_CORTE: filas {filas_corte}, constancias_historia {constancias}");
+        println!(
+            "PAQUETE_C_CORTE: filas {filas_corte}, identicas {identicas_corte}, constancias_historia {constancias}, fallos {}",
+            fallos.len()
+        );
         assert_eq!(etapas, 3, "el paquete C debe abrir Espera, Cumplimiento e Informes");
         assert_eq!(filas_total, 6, "el paquete C debe traer seis filas en el corte fijo");
         assert_eq!(constancias, 0, "el corte movido no debe tener constancias de historia");
+        assert_eq!(identicas_corte, filas_corte, "el corte movido debe coincidir con Python en todas las filas");
         assert!(fallos.is_empty(), "el paquete C tiene diferencias no admitidas");
     }
 

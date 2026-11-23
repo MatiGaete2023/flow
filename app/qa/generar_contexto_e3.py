@@ -128,7 +128,7 @@ def generar_historia(captura, salida):
                     original_row=str(10 + numero))
         crudo = {"RIT": rit, "TRIBUNAL": "Lgdo. Laja", "NOMBRE": f"Persona Ficticia {numero}",
                  "RUT": f"ID-{numero}", "DERIVACION": "PRM Ficticio",
-                 "CURADOR": "(11111111-1)ANA FICTICIA", "MODALIDAD": base["modality_raw"]}
+                 "CURADOR": "(11111111-2)ANA FICTICIA", "MODALIDAD": base["modality_raw"]}
         crudo.update(campos)
         fila["raw_json"] = fila["normalized_json"] = json.dumps(crudo, ensure_ascii=False)
         registros.append(fila)

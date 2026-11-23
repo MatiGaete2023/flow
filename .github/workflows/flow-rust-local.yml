@@ -87,7 +87,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
           "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
-          cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python
+          $env:FLOW_E3_HISTORIA = (Resolve-Path (Join-Path $contexto 'contexto-e3-historia.zip')).Path
+          $env:FLOW_E3_ESPERADO = Join-Path $contexto 'esperado-historia.json'
+          python app/qa/esperado_contexto_e3.py $env:FLOW_E3_HISTORIA $env:FLOW_E3_ESPERADO
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "FLOW_E3_HISTORIA=$env:FLOW_E3_HISTORIA" | Add-Content -Encoding utf8 $env:GITHUB_ENV
+          "FLOW_E3_ESPERADO=$env:FLOW_E3_ESPERADO" | Add-Content -Encoding utf8 $env:GITHUB_ENV
+          cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python -- --include-ignored
       - name: Probar todas las pruebas con variables
         shell: pwsh
         run: |
