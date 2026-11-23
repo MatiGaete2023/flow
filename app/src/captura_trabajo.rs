@@ -606,7 +606,12 @@ fn tramites_causa(
     campos: [&str; 3],
     corte: NaiveDate,
 ) -> Arc<[TramiteCausa]> {
-    if q.discordante || !matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL") {
+    // `Historia.al_corte`: una lectura cuya ventana empieza después del corte no acredita nada a esa fecha, ni
+    // siquiera con su trámite de contexto.
+    if q.discordante
+        || !matches!(q.cobertura.as_str(), "COMPLETA" | "PARCIAL")
+        || q.desde.is_some_and(|desde| corte < desde)
+    {
         return Arc::default();
     }
     filas

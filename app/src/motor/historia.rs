@@ -19,6 +19,27 @@ const INGRESO_EFECTIVO: &str = "ingreso efectivo";
 const PRORROGA: &str = "prorroga";
 const CIERRES: [&str; 2] = ["conciliacion", "dictacion de sentencia"];
 const EGRESO_SERVICIO: [&str; 1] = ["egreso de servicio proteccion especializada y otras redes"];
+const DESIGNA: [&str; 1] = ["designa abogado"];
+const BAJA_CURADOR: [&str; 1] = ["deja sin efecto designacion c ad litem"];
+const CURADOR: [&str; 2] = [DESIGNA[0], BAJA_CURADOR[0]];
+
+/// Materias de `HISTORIA.REITERA`: regla original, clave de la materia y patrón de la observación previa.
+#[derive(Clone, Copy)]
+pub(super) enum Materia {
+    Curador,
+    SinFicha,
+    SinFae,
+}
+
+impl Materia {
+    fn original(self) -> (&'static str, &'static str, &'static str) {
+        match self {
+            Materia::Curador => ("COMUN.CURADOR", "HISTORIA.MATERIA_CURADOR", "no registra curador ad litem"),
+            Materia::SinFicha => ("CUMPLIMIENTO.C07_SIN_FICHA", "HISTORIA.MATERIA_SIN_FICHA", "no registra ficha individual"),
+            Materia::SinFae => ("CUMPLIMIENTO.C08_FICHA_FAE", "HISTORIA.MATERIA_SIN_FAE", "no registra ficha fae"),
+        }
+    }
+}
 
 fn tramites<'a>(
     captura: &'a ContextoFila,
@@ -165,6 +186,95 @@ fn constancia_tramite(ctx: &mut Ctx, t: &TramiteCausa) -> Option<Frag> {
         ],
     )?;
     Some(cita(frag, t))
+}
+
+/// `analisis_historia.materias`: por oración; una oración que ya reitera no es la observación original.
+fn trata_materia(texto: &str, patron: &str) -> bool {
+    static ORACION: OnceLock<Regex> = OnceLock::new();
+    let oracion = ORACION.get_or_init(|| Regex::new(r"\.\s+").unwrap());
+    oracion
+        .split(texto)
+        .map(clave_texto)
+        .any(|o| !o.contains("se reitera") && o.contains(patron))
+}
+
+/// `reglas_historia.reitera`: la sugerencia de la primera observación del centro sobre la materia, anterior al
+/// corte, se reitera en una frase autosuficiente de gestión del Tribunal. Con la regla original desactivada no se
+/// reitera; tampoco el curador si la causa registra un trámite de curador posterior a esa observación.
+pub(super) fn reitera(ctx: &mut Ctx, materia: Materia) -> Option<Frag> {
+    let (original, clave, patron) = materia.original();
+    let captura = ctx.captura?;
+    if ctx.cfg.desactivadas.contains(original) {
+        return None;
+    }
+    let previa = captura
+        .notas_centro
+        .iter()
+        .filter(|n| n.fecha < ctx.hoy && trata_materia(&n.texto, patron))
+        .min_by_key(|n| n.fecha)?;
+    if matches!(materia, Materia::Curador)
+        && tramites_con_contexto(captura, &CURADOR).any(|t| t.fecha > previa.fecha)
+    {
+        return None;
+    }
+    let materia_txt = ctx.render(clave, &[])?.partes.into_iter().map(|(t, _)| t).collect::<Vec<_>>().join(" ");
+    let mut frag = ctx.render(
+        "HISTORIA.REITERA",
+        &[("MATERIA", materia_txt), ("FECHA_ANTERIOR", fecha_es(previa.fecha))],
+    )?;
+    ctx.eventos.push(original.into());
+    for (_, grupo) in &mut frag.partes {
+        *grupo = 'T';
+    }
+    Some(frag)
+}
+
+/// `analisis_historia.posterior`: por folio si ambos son numéricos; si no, por fecha.
+fn posterior(a: &TramiteCausa, b: &TramiteCausa) -> bool {
+    match (a.folio.parse::<u64>(), b.folio.parse::<u64>()) {
+        (Ok(x), Ok(y)) => x > y,
+        _ => a.fecha > b.fecha,
+    }
+}
+
+/// `_ultimo_curador`: último trámite de curador de la causa, incluido el de contexto, y si es la baja.
+fn ultimo_curador(captura: &ContextoFila) -> Option<(&TramiteCausa, bool)> {
+    let designa = ultimo(tramites_con_contexto(captura, &DESIGNA));
+    let baja = ultimo(tramites_con_contexto(captura, &BAJA_CURADOR));
+    match (designa, baja) {
+        (None, None) => None,
+        (Some(d), None) => Some((d, false)),
+        (None, Some(b)) => Some((b, true)),
+        (Some(d), Some(b)) if posterior(d, b) => Some((d, false)),
+        (_, Some(b)) => Some((b, true)),
+    }
+}
+
+/// `curador_sin_efecto`: RUS sin curador y lo último de la causa es la baja de la designación (causa de un registro).
+pub(super) fn curador_sin_efecto(ctx: &Ctx, rus_sin_curador: bool) -> bool {
+    let Some(captura) = ctx.captura else { return false };
+    rus_sin_curador
+        && !causa_compartida(ctx, captura)
+        && ultimo_curador(captura).is_some_and(|(_, baja)| baja)
+}
+
+/// `curador_designaciones`: con RUS sin curador y causa de un registro, cita el último trámite de curador de la
+/// ventana con su nombre literal; la nomenclatura no acredita que sea curador ni de quién.
+pub(super) fn curador_designaciones(ctx: &mut Ctx, rus_sin_curador: bool) -> Option<Frag> {
+    let captura = ctx.captura?;
+    if !rus_sin_curador || causa_compartida(ctx, captura) {
+        return None;
+    }
+    let (ult, baja) = ultimo_curador(captura)?;
+    if ult.contexto || !novedad(ult, &captura.notas_centro) {
+        return None;
+    }
+    ctx.marcar(
+        2,
+        if baja { "CURADOR_SIN_EFECTO" } else { "CURADOR_DESIGNADO" },
+        "Curador ad litem en la historia y RUS sin curador registrado",
+    );
+    constancia_tramite(ctx, ult)
 }
 
 /// `reglas_historia.causa_finalizada`: causa P con «Conciliacion» o «Dictación de sentencia» sin «Egreso de servicio…»
@@ -621,24 +731,15 @@ mod tests {
         assert_eq!(marcas(&evaluar_cumplimiento(&otra, "2026-10-29", 15.0)), ["PRORROGA_REVISAR"]);
     }
 
-    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`) en Cumplimiento con historia: coinciden
-    /// `HISTORIA.P_FINALIZADA` (observación completa y acción NOMENCL) y, con una «Prorroga» en la ventana, la marca
-    /// PRORROGA_REVISAR y la constancia del trámite.
-    #[test]
-    fn oraculo_historia() {
-        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
-        let txt = std::fs::read_to_string(std::path::Path::new(&dir).join("cumplimiento.json")).unwrap();
-        let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
+    /// Evalúa un caso del corpus de Flow Python con su historia y bitácora como contexto del paquete.
+    fn caso_corpus(c: &serde_json::Value, mode: Mode) -> (Resultado, bool) {
         let fecha = |v: &serde_json::Value| v.as_str().and_then(|s| s.parse::<NaiveDate>().ok());
-        let (mut total, mut finales, mut fallos) = (0, 0, Vec::new());
-        for c in &casos {
-            let h = &c["historia"];
-            if !matches!(h["cobertura"].as_str(), Some("COMPLETA" | "PARCIAL")) {
-                continue;
-            }
-            let corte = fecha(&c["corte"]).unwrap();
-            let desde = fecha(&h["desde"]);
-            let lista: Vec<TramiteCausa> = h["tramites"]
+        let corte = fecha(&c["corte"]).unwrap();
+        let h = &c["historia"];
+        let desde = fecha(&h["desde"]);
+        let vigente = desde.is_none_or(|d| corte >= d);
+        let tramites: Vec<TramiteCausa> = if vigente && matches!(h["cobertura"].as_str(), Some("COMPLETA" | "PARCIAL")) {
+            h["tramites"]
                 .as_array()
                 .unwrap()
                 .iter()
@@ -653,67 +754,102 @@ mod tests {
                         contexto: desde.is_some_and(|d| f < d),
                     })
                 })
-                .collect();
-            let con_prorroga = lista.iter().any(|t| !t.contexto && clave_texto(&t.descripcion) == PRORROGA);
-            let notas: Vec<NotaCentro> = c["bitacora"]
-                .as_array()
-                .map(|a| {
-                    a.iter()
-                        .filter_map(|o| Some(NotaCentro { fecha: fecha(&o["fecha"])?, texto: o["texto"].as_str()?.into() }))
-                        .filter(|n| n.fecha <= corte)
-                        .collect()
-                })
-                .unwrap_or_default();
-            let captura = ContextoFila { tramites: Some(lista.into()), notas_centro: notas.into(), ..Default::default() };
-            let mut cfg = Config { redaccion_registro: false, ..Config::default() };
-            for d in c["desactivadas"].as_array().unwrap() {
-                cfg.desactivadas.insert(d.as_str().unwrap().to_string());
-            }
-            let mut cols = crate::motor::Cols::new();
-            let mut values = Vec::new();
-            for (k, v) in c["campos"].as_object().unwrap() {
-                cols.insert(Box::leak(k.clone().into_boxed_str()), values.len());
-                values.push(match v["t"].as_str().unwrap() {
-                    "fecha" => Cell::Date(fecha(&v["v"]).unwrap()),
-                    "numero" => Cell::Number(v["v"].as_f64().unwrap()),
-                    "vacia" => Cell::Empty,
-                    _ => Cell::Text(v["v"].as_str().unwrap_or("").to_string()),
-                });
-            }
-            let mut pre = Prepaso::default();
-            if let Some(d) = c["duplicidad"].as_str() {
-                pre.duplicidad.insert(0, if d == "MISMO_PROGRAMA" { "MISMO_PROGRAMA" } else { "OTRO_REGISTRO" });
-            }
-            let r = evaluar_con_captura(&cfg, Mode::Cumplimiento, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
-            let e = &c["esperado"];
-            let finalizada = |eventos: Vec<&str>| eventos.contains(&"HISTORIA.P_FINALIZADA");
-            let (pe, po) = (
-                finalizada(e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect()),
-                finalizada(r.eventos.iter().map(String::as_str).collect()),
-            );
-            if pe {
-                finales += 1;
-                if !acciones(&r.eventos, None, corte).contains(&"NOMENCL") {
-                    fallos.push(format!("{}: P_FINALIZADA sin NOMENCL", c["id"]));
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let con_prorroga = tramites.iter().any(|t| !t.contexto && clave_texto(&t.descripcion) == PRORROGA);
+        let notas: Vec<NotaCentro> = c["bitacora"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter_map(|o| Some(NotaCentro { fecha: fecha(&o["fecha"])?, texto: o["texto"].as_str()?.into() }))
+                    .filter(|n| n.fecha <= corte)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let captura = ContextoFila { tramites: Some(tramites.into()), notas_centro: notas.into(), ..Default::default() };
+        let mut cfg = Config { redaccion_registro: false, ..Config::default() };
+        for d in c["desactivadas"].as_array().unwrap() {
+            cfg.desactivadas.insert(d.as_str().unwrap().to_string());
+        }
+        let mut cols = crate::motor::Cols::new();
+        let mut values = Vec::new();
+        for (k, v) in c["campos"].as_object().unwrap() {
+            cols.insert(Box::leak(k.clone().into_boxed_str()), values.len());
+            values.push(match v["t"].as_str().unwrap() {
+                "fecha" => Cell::Date(fecha(&v["v"]).unwrap()),
+                "numero" => Cell::Number(v["v"].as_f64().unwrap()),
+                "vacia" => Cell::Empty,
+                _ => Cell::Text(v["v"].as_str().unwrap_or("").to_string()),
+            });
+        }
+        let mut pre = Prepaso::default();
+        if let Some(d) = c["duplicidad"].as_str() {
+            pre.duplicidad.insert(0, if d == "MISMO_PROGRAMA" { "MISMO_PROGRAMA" } else { "OTRO_REGISTRO" });
+        }
+        let r = evaluar_con_captura(&cfg, mode, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
+        (r, con_prorroga)
+    }
+
+    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`) en Espera y Cumplimiento con historia o
+    /// bitácora. Coinciden: `HISTORIA.P_FINALIZADA` (observación completa y NOMENCL); con una «Prorroga» en la
+    /// ventana, la marca PRORROGA_REVISAR y su constancia; y en todos, los eventos de curador, fichas y
+    /// `HISTORIA.REITERA` en su orden, junto con las marcas de curador.
+    #[test]
+    fn oraculo_historia() {
+        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
+        const FAMILIA: [&str; 7] = ["COMUN.CURADOR", "HISTORIA.REITERA", "HISTORIA.MATERIA_", "CUMPLIMIENTO.C07_SIN_FICHA", "CUMPLIMIENTO.C08_FICHA_FAE", "HISTORIA.BASE_TRAMITE", "HISTORIA.P_FINALIZADA"];
+        let familia = |e: &str| FAMILIA.iter().any(|p| e.starts_with(p));
+        let marca_curador = |m: &str| m.starts_with("CURADOR_");
+        let (mut total, mut finales, mut evaluados, mut fallos) = (0, 0, 0, Vec::new());
+        for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento)] {
+            let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
+            let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
+            for c in &casos {
+                if c["historia"].is_null() && c["bitacora"].as_array().is_none_or(|a| a.is_empty()) {
+                    continue;
+                }
+                evaluados += 1;
+                let (r, con_prorroga) = caso_corpus(c, mode);
+                let e = &c["esperado"];
+                let reglas: Vec<&str> = e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect();
+                let esp: Vec<&str> = reglas.iter().copied().filter(|e| familia(e)).collect();
+                let obt: Vec<&str> = r.eventos.iter().map(String::as_str).filter(|e| familia(e)).collect();
+                let me: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).filter(|m| marca_curador(m)).collect();
+                let mo: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).filter(|m| marca_curador(m)).collect();
+                // BASE_TRAMITE también lo emiten reglas no portadas (búsqueda, continuidad): se compara la constancia
+                // del curador y la de la prórroga por su texto.
+                fn sin_base<'a>(v: &[&'a str]) -> Vec<&'a str> {
+                    v.iter().copied().filter(|e| *e != "HISTORIA.BASE_TRAMITE").collect()
+                }
+                let curador_txt = |t: &str| t.contains("«Designa abogado»") || t.contains("«Deja sin efecto designación");
+                let (ce, co) = (curador_txt(e["observacion"].as_str().unwrap()), curador_txt(&r.observacion));
+                if sin_base(&esp) != sin_base(&obt) || me != mo || ce != co {
+                    fallos.push(format!("{} eventos {esp:?}/{obt:?} marcas {me:?}/{mo:?}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+                }
+                let pe = reglas.contains(&"HISTORIA.P_FINALIZADA");
+                if pe {
+                    finales += 1;
+                    if e["observacion"].as_str() != Some(r.observacion.as_str()) || !acciones(&r.eventos, None, "2026-01-01".parse().unwrap()).contains(&"NOMENCL") {
+                        fallos.push(format!("{}: P_FINALIZADA\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+                    }
+                }
+                if !con_prorroga || mode != Mode::Cumplimiento {
+                    continue;
+                }
+                total += 1;
+                let esperada = e["marcas"].as_array().unwrap().iter().any(|m| m["codigo"] == "PRORROGA_REVISAR");
+                let obtenida = r.marcas.iter().any(|m| m.codigo == "PRORROGA_REVISAR");
+                let frase = |t: &str| t.contains("consta el trámite «Prorroga»") || t.contains("trámites «Prorroga»");
+                let (fe, fo) = (frase(e["observacion"].as_str().unwrap()), frase(&r.observacion));
+                if esperada != obtenida || fe != fo {
+                    fallos.push(format!("{}: prórroga marca {esperada}/{obtenida} frase {fe}/{fo}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
                 }
             }
-            if pe != po || (pe && e["observacion"].as_str() != Some(r.observacion.as_str())) {
-                fallos.push(format!("{}: P_FINALIZADA {pe}/{po}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
-            }
-            if !con_prorroga {
-                continue;
-            }
-            total += 1;
-            let esperada = e["marcas"].as_array().unwrap().iter().any(|m| m["codigo"] == "PRORROGA_REVISAR");
-            let obtenida = r.marcas.iter().any(|m| m.codigo == "PRORROGA_REVISAR");
-            let frase = |t: &str| t.contains("consta el trámite «Prorroga»") || t.contains("trámites «Prorroga»");
-            let (fe, fo) = (frase(e["observacion"].as_str().unwrap()), frase(&r.observacion));
-            if esperada != obtenida || fe != fo {
-                fallos.push(format!("{}: marca {esperada}/{obtenida} frase {fe}/{fo}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
-            }
         }
-        println!("oraculo_historia: {total} casos con prórroga, {finales} causas finalizadas");
+        println!("oraculo_historia: {evaluados} casos, {total} con prórroga, {finales} causas finalizadas");
         assert!(total > 0 && finales > 0);
-        assert!(fallos.is_empty(), "{} de {total} casos difieren:\n{}", fallos.len(), fallos.join("\n"));
+        assert!(fallos.is_empty(), "{} casos difieren:\n{}", fallos.len(), fallos.iter().take(10).cloned().collect::<Vec<_>>().join("\n"));
     }
 }

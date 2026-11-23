@@ -307,6 +307,13 @@ fn curador(ctx: &mut Ctx, f: &Fila) -> Vec<Frag> {
     }
     let celda = f.text("curador");
     if !tiene_curador_real(&celda) {
+        // Designación dejada sin efecto (causa de un registro): no hay a quién asociar; se dice sin sugerencia.
+        if historia::curador_sin_efecto(ctx, true) && !ctx.cfg.desactivadas.contains("COMUN.CURADOR") {
+            return ctx.render("COMUN.CURADOR_SIN_DESIGNACION", &[]).into_iter().collect();
+        }
+        if let Some(frag) = historia::reitera(ctx, historia::Materia::Curador) {
+            return vec![frag];
+        }
         return ctx.render("COMUN.CURADOR", &[]).into_iter().collect();
     }
     let n = instituciones(&celda);
@@ -342,6 +349,11 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
             ctx.marcar(3, "REVISAR_MAYORIA", "Mayoría de edad");
             return componer(&pfx, &frags);
         }
+    }
+    if let Some(finalizada) = historia::causa_finalizada(ctx, &f.text("rit")) {
+        return componer(&pfx, &[finalizada]);
+    }
+    if let Some(fnac) = nac {
         let dm = (fecha_mayoria(fnac) - ctx.hoy).num_days();
         if 1 <= dm && dm <= ctx.p("mayoria") {
             frags.extend(ctx.render("COMUN.PROXIMA_MAYORIA", &[("PNOMBRE", pn.clone()), ("FECHA_MAYORIA", fecha_es(fecha_mayoria(fnac)))]));
@@ -395,6 +407,8 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     if !resolucion_reciente {
         frags.extend(historia::servicio_ingreso(ctx, &prog));
     }
+    let rus_sin_curador = f.has("curador") && !tiene_curador_real(&f.text("curador"));
+    frags.extend(historia::curador_designaciones(ctx, rus_sin_curador));
     frags.extend(oido(ctx, f));
     frags.extend(audiencia(ctx, f));
     frags.extend(curador(ctx, f));
@@ -518,13 +532,18 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
     }
     frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
+    let rus_sin_curador = f.has("curador") && !tiene_curador_real(&f.text("curador"));
+    frags.extend(historia::curador_designaciones(ctx, rus_sin_curador));
     frags.extend(oido(ctx, f));
     frags.extend(audiencia(ctx, f));
     frags.extend(curador(ctx, f));
     let pnrm = normalizar(&programa);
     if RESIDENCIAS.iter().any(|r| pnrm.starts_with(r)) && f.has("ficha_ind") {
         match f.date("ficha_ind") {
-            None => frags.extend(ctx.render("CUMPLIMIENTO.C07_SIN_FICHA", &[])),
+            None => {
+                let reiterada = historia::reitera(ctx, historia::Materia::SinFicha);
+                frags.extend(reiterada.or_else(|| ctx.render("CUMPLIMIENTO.C07_SIN_FICHA", &[])));
+            }
             Some(fi) => {
                 let dd = (hoy - fi).num_days();
                 if dd > ctx.p("ficha_antigua") {
@@ -540,7 +559,8 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             ctx.aviso("ficha FAE no evaluable: sin columna disponible (G-05)");
         } else if let Some(fi) = fing {
             if (hoy - fi).num_days() > ctx.p("ficha_fae") && f.date("ficha_fae").is_none() {
-                frags.extend(ctx.render("CUMPLIMIENTO.C08_FICHA_FAE", &[("PNOMBRE", pn.clone())]));
+                let reiterada = historia::reitera(ctx, historia::Materia::SinFae);
+                frags.extend(reiterada.or_else(|| ctx.render("CUMPLIMIENTO.C08_FICHA_FAE", &[("PNOMBRE", pn.clone())])));
             }
         }
     }
