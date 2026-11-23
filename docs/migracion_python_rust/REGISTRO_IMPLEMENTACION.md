@@ -631,6 +631,41 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - El generador es no determinista en la procedencia (`record_id`, `source_sha256`, `original_file`); la comprobación de los ZIP previos se hizo por contenido de tablas, según el prompt.
   - Si se quiere reutilizar literalmente el clasificador R1/R6 del paquete B, habría que exponerlo desde `motor::historia::tests`; hoy no es posible sin tocar visibilidad.
 
+## Entrega · E-L
+- Commit probado: 690db75e154c9c10f3bd393418f18da92655b400  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6
+- Comandos:
+  - `cargo test --locked --bin flow_rust` (sin variables)
+  - `cargo test --locked --bin flow_rust -- --list --ignored`
+  - `FLOW_CASOS=../rust/casos FLOW_FIXTURES=../rust/crates/flow-tabular/tests/datos FLOW_REFERENCIA=.. FLOW_E3_PAQUETE=<carpeta>/contexto-e3.zip FLOW_E3_HISTORIA=<carpeta>/contexto-e3-historia.zip FLOW_E3_ESPERADO=<carpeta>/esperado-historia.json cargo test --locked --bin flow_rust -- --include-ignored --skip exporta_mismo_lote_de_python --skip velocidad_20000` (comando oficial desde `app/`)
+  - `cargo test --locked --bin flow_rust oraculo_python -- --include-ignored` (sin `FLOW_CASOS`)
+  - `cargo test --locked --lib`
+  - `FLOW_REFERENCIA=.. cargo test --locked --lib -- --include-ignored`
+  - `cargo clippy --locked --bin flow_rust --tests`
+  - `git grep -nE 'var(_os)?\("FLOW_[A-Z0-9_]+"\)[^;]*else *\{ *return' -- app/src`
+  - `python tools/check_real_ids.py app/src` y `python tools/check_contactos.py app/src`
+- Evidencia:
+  - Sin variables: `test result: ok. 32 passed; 0 failed; 18 ignored; 0 measured; 0 filtered out`.
+  - Ignoradas del binario (18): `captura_trabajo::tests::trabajo_abre_contexto_e3_del_exportador_python`, `motor::historia::tests::oraculo_historia`, `motor::historia::tests::paquete_b_cobertura_r3`, `motor::historia::tests::paquete_b_redaccion_mensual`, `motor::tests::oraculo_python`, `revision_ui::tests::exporta_mismo_lote_de_python`, `revision_ui::tests::exporta_resultados_y_preserva_el_destino_existente`, `trabajo::tests::a2_consignacion_p1_y_sesion`, `trabajo::tests::calendario_91_conserva_precedencia_y_aviso_al_abrir_trabajo`, `trabajo::tests::cumplimiento_usa_contexto_e3_del_exportador_python_para_el_proximo_informe`, `trabajo::tests::espera_coteja_folio_y_correo_del_contexto_e3_del_exportador_python`, `trabajo::tests::formatos_sitfa`, `trabajo::tests::informes_atribuyen_la_historia_y_los_escritos_segun_flow_python`, `trabajo::tests::informes_coteja_contexto_e3_del_exportador_python_con_una_sola_fecha`, `trabajo::tests::paquete_c_contexto_e3_historia_igual_a_python`, `trabajo::tests::trabajo_reitera_contexto_e3_del_exportador_python_solo_para_el_ingreso`, `trabajo::tests::velocidad_20000`, `ui::pruebas_paquete::trabajo_abre_paquete_cambia_etapa_y_conserva_el_activo_ante_error`.
+  - Biblioteca sin variables: `test result: ok. 39 passed; 0 failed; 1 ignored` (`captura::tests::contrasta_el_contrato_y_rechaza_identidad_cambiada_con_huella_correcta`). Con `FLOW_REFERENCIA`: `test result: ok. 40 passed; 0 failed; 0 ignored`.
+  - Con variables y el comando oficial: `test result: ok. 48 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out` (48 = 32 + 18 − 2; las 2 filtradas son `velocidad_20000` y `exporta_mismo_lote_de_python`).
+  - Sin `FLOW_CASOS`, `oraculo_python --include-ignored`: `FLOW_CASOS es obligatoria para esta prueba (ver docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md)` y `test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 49 filtered out`.
+  - `git grep -nE 'var(_os)?\("FLOW_[A-Z0-9_]+"\)[^;]*else *\{ *return' -- app/src`: salida vacía, `exit=1`.
+  - Clippy: sin advertencias nuevas en los archivos tocados; se mantienen las advertencias previas de `motor.rs`, `trabajo.rs` y `ui.rs`.
+  - `Sin RUT reales detectados.` · `Sin correos ni RIT nuevos.`
+  - CI: paso «Probar todas las pruebas con variables» agregado después de «Abrir en Trabajo…» con `--include-ignored --skip exporta_mismo_lote_de_python --skip velocidad_20000`; `NO VERIFICADO EN CI` (no se ejecutó el run desde este entorno).
+- Resultado por criterio:
+  - Sin `return` silencioso: PASA — grep vacío, `exit=1`.
+  - Sin variables: PASA — 32 pasan, 18 ignoradas; la biblioteca 39 + 1 ignorada.
+  - Con variables y `--include-ignored`: PASA — 48 pasan, 0 fallan, 2 filtradas.
+  - `oraculo_python` sin `FLOW_CASOS`: PASA — falla con el mensaje del helper.
+  - CI: el paso existe y no cambia otros pasos; `NO VERIFICADO EN CI`.
+  - Sin cambios de lógica de producción: PASA — solo `#[cfg(test)]` (helper, atributos, reemplazo de variables) y la declaración de módulos de prueba; la CI solo agrega un paso.
+- Cambios de código: `.github/workflows/flow-rust-local.yml`, `app/src/prueba_entorno.rs` (nuevo), `app/src/main.rs`, `app/src/lib.rs`, `app/src/motor.rs`, `app/src/motor/historia.rs`, `app/src/captura.rs`, `app/src/captura_trabajo.rs`, `app/src/trabajo.rs`, `app/src/revision_ui.rs`, `app/src/ui.rs` · Cambios de lógica de producción: ninguno
+- Pendientes:
+  - `exporta_mismo_lote_de_python` queda fuera de la corrida CI porque no hay `FLOW_P2_PAQUETE`; no se inventó el paquete.
+  - Verificar el run de CI al publicar; desde este host no se puede consultar.
+  - Repetir en L con `--features eframe/x11`; el host es W.
+
 ## Siguiente paso exacto
 
 1. E-C: paquete C de integración con ZIP sintéticos ([prompt](prompts/E-C.md)). Después, E-L (pruebas condicionadas) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-F, E-A78, E-G, E-D, E-E e E-I.
