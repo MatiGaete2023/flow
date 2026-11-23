@@ -33,11 +33,17 @@ const CANCELADO_PAGINAS: &str = "Descarga cancelada. Las paginas ya verificadas 
 /// Orden local hacia la extensión. `Puente` la implementa; las pruebas usan un SITFA ficticio.
 pub trait Conexion {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String>;
+    /// E-Q3: el puente real solo acepta las lecturas de contexto tras verificar la extensión Integral.
+    fn habilitar_lecturas(&self, _integral: bool) {}
 }
 
 impl Conexion for Puente {
     fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String> {
         Puente::llamar(self, comando, payload, plazo)
+    }
+
+    fn habilitar_lecturas(&self, integral: bool) {
+        Puente::habilitar_lecturas(self, integral)
     }
 }
 
@@ -298,7 +304,7 @@ fn caso_y_rotulo(perfil: &Perfil, catalogo: &Catalogo) -> (String, String) {
 }
 
 /// `asdict(Selection)` de Integral: agrega `start` y `end`, vacíos fuera de Carga.
-fn seleccion_edicion(perfil: &Perfil, edicion: Edicion) -> Value {
+pub(super) fn seleccion_edicion(perfil: &Perfil, edicion: Edicion) -> Value {
     let mut v = seleccion(perfil);
     if edicion == Edicion::Integral && perfil.pantalla != Pantalla::Carga {
         v["start"] = Value::Null;

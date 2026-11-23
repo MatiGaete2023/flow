@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::time::Duration;
 
 mod evidencia;
+pub mod bitacoras;
 pub mod extension;
 pub mod lecturas;
 pub mod vinculos;
@@ -125,7 +126,7 @@ impl Puente {
     }
 }
 
-fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<(), String> {
+pub(crate) fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<(), String> {
     let (tipo, numero, protocolos) = match edicion {
         Edicion::Integral => (
             "CSMP_RUS_CAPACIDADES",

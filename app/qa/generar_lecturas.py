@@ -38,6 +38,15 @@ def casos():
             html = html.replace('<td>---</td>', '<td>13/08/2026 11:00</td>', 1)
         lista.append({'tipo': 'bitacora', 'html': html, 'params': PARAMS,
                       'python': salida(read_snapshot, html, PARAMS, source='ficticio.html', captured_at=CAPTURADA)})
+    # Identidad: campo ausente, ingreso ajeno e identidad no positiva (mensajes de `read_snapshot`).
+    base = popup('Texto completo que la tabla oculta.', '---').replace('P-12-2026', 'P-12-2099')
+    ajeno = dict(PARAMS, ID_Ingreso='999')
+    cero = base.replace(f'name="COD_Tribunal" value="{PARAMS["COD_Tribunal"]}"', 'name="COD_Tribunal" value="0"')
+    sin_campo = base.replace('name="COD_Etapa"', 'name="COD_Etapa_x"')
+    for nombre, html, params in [('ingreso_ajeno', base, ajeno), ('tribunal_cero', cero, dict(PARAMS, COD_Tribunal='0')),
+                                 ('sin_campo', sin_campo, PARAMS)]:
+        lista.append({'tipo': 'bitacora', 'caso': nombre, 'html': html, 'params': params,
+                      'python': salida(read_snapshot, html, params, source='ficticio.html', captured_at=CAPTURADA)})
     html = (RAIZ / 'descargador/fixtures/historia_ficticia/ventana_historia.html').read_text(encoding='utf-8')
     vacia = html[:html.index('<tbody>') + 7] + html[html.index('</tbody>'):]
     for variante in [html, vacia, html.replace('>09/10/2099<', '>ilegible<'),

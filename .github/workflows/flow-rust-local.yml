@@ -89,11 +89,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/inventario_escrituras.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $a78 = Join-Path $env:RUNNER_TEMP 'a78.json'
-          python app/qa/generar_a78.py $a78
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -c "import sys; sys.exit(open(sys.argv[1],'rb').read() != open(sys.argv[2],'rb').read())" $a78 app/tests/datos/a78.json
-          if ($LASTEXITCODE -ne 0) { Write-Error 'app/tests/datos/a78.json no coincide con generar_a78.py'; exit 1 }
+          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras')) {
+            $salida = Join-Path $env:RUNNER_TEMP "$o.json"
+            if ($o -eq 'vinculos') {
+              python app/qa/generar_vinculos.py
+              Copy-Item app/tests/datos/vinculos.json $salida
+              git diff --exit-code -- app/tests/datos/vinculos.json
+              if ($LASTEXITCODE -ne 0) { Write-Error 'app/tests/datos/vinculos.json no coincide con generar_vinculos.py'; exit 1 }
+              continue
+            }
+            python "app/qa/generar_$o.py" $salida
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            python -c "import sys; sys.exit(open(sys.argv[1],'rb').read() != open(sys.argv[2],'rb').read())" $salida "app/tests/datos/$o.json"
+            if ($LASTEXITCODE -ne 0) { Write-Error "app/tests/datos/$o.json no coincide con generar_$o.py"; exit 1 }
+          }
           $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
           "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
           $env:FLOW_E3_HISTORIA = (Resolve-Path (Join-Path $contexto 'contexto-e3-historia.zip')).Path

@@ -108,6 +108,8 @@ pub struct Vinculo {
     pub bitacora_verificada: bool,
     pub historia_verificada: bool,
     pub diagnostico: String,
+    /// `listing_rows`: diagnóstico solo de la bitácora (`vinculo_diagnostico`), sin mezclar la historia.
+    pub diagnostico_bitacora: String,
 }
 
 impl Vinculo {
@@ -166,7 +168,8 @@ fn celdas(fila: ElementRef<'_>) -> Vec<String> {
 
 /// Conserva todas las filas de personas, incluso sin enlace comprobado; nunca desaparecen del control.
 /// Debe llamarse sobre el HTML que ya pasó `validar_respuesta`.
-pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, String> {
+/// Vínculos de cada fila del listado, cada uno juzgado solo con su fila (`lectura_bitacoras.listing_rows`).
+pub fn extraer_filas(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, String> {
     if seleccion.screen != "seguimiento" {
         return Err("La lectura por ingreso solo corresponde a Seguimiento.".into());
     }
@@ -233,6 +236,7 @@ pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, Stri
             bitacora_verificada: false,
             historia_verificada: false,
             diagnostico: "SIN_VINCULO_COMPROBADO".into(),
+            diagnostico_bitacora: "SIN_ACCION_OBSERVACIONES".into(),
         };
         if cols.iter().any(Option::is_none) {
             v.diagnostico = "COLUMNAS_IDENTIDAD_INCOMPLETAS".into();
@@ -283,6 +287,16 @@ pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, Stri
                 v.calendario = Some(cal[0].clone());
             }
         }
+        v.diagnostico_bitacora = if v.bitacora_verificada {
+            "VERIFICADA"
+        } else if obs.is_empty() {
+            "SIN_ACCION_OBSERVACIONES"
+        } else if obs.len() > 1 {
+            "MULTIPLES_ACCIONES_OBSERVACIONES"
+        } else {
+            "ACCION_OBSERVACIONES_NO_VERIFICADA"
+        }
+        .into();
         v.diagnostico = if v.bitacora_verificada || v.historia_verificada {
             "VERIFICADA"
         } else if obs.is_empty() {
@@ -295,6 +309,12 @@ pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, Stri
         .into();
         resultado.push(v);
     }
+    Ok(resultado)
+}
+
+/// Como `extraer`, más el descarte de causas e ingresos ambiguos entre filas hermanas (lote de listados).
+pub fn extraer(datos: &[u8], seleccion: &Seleccion) -> Result<Vec<Vinculo>, String> {
+    let mut resultado = extraer_filas(datos, seleccion)?;
     descartar_ambiguos(&mut resultado);
     Ok(resultado)
 }

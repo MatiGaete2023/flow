@@ -24,6 +24,7 @@ CLASIFICACION = {
     'trabajo.rs': (1, 'perfil', 'limpieza de sesiones antiguas propias en data_dir()/sesiones (RETENCION_DIAS, SESIONES_ANTERIORES)'),
     'descargador/preferencias.rs': (3, 'perfil', 'descargador_preferencias.json en LOCALAPPDATA/FlowRust; temporal + rename'),
     'descargador/extension.rs': (2, 'perfil', 'archivos de la extensión Lite/Integral en LOCALAPPDATA/FlowRust/extension-*'),
+    'descargador/bitacoras.rs': (4, 'usuario', 'lote de bitácoras (E-Q4): subcarpeta nueva «Bitacoras <fecha>» en el destino elegido (create_dir falla si existe); bitacoras.json por temporal + rename; instantáneas con guardar_exclusivo (nunca sobrescribe)'),
     'descargador/lote.rs': (7, 'usuario', 'carpeta de destino del lote y subcarpeta nueva del lote (create_dir falla si existe); guardar_exclusivo nunca sobrescribe; resumen por temporal + rename; solo borra su propio archivo si la verificación falla'),
     'ui.rs': (4, 'usuario/perfil', 'carpeta de productos de Ajustes; contactos.csv por diálogo Guardar; plantillas y datos en data_dir() (solo crear carpeta)'),
     'anon.rs': (3, 'usuario', 'carpeta de salida del anonimizador; nombres nuevos con productos::nueva_ruta'),

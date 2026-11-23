@@ -32,7 +32,7 @@ fn sel(s: &str) -> Selector {
 }
 /// `rus/columns.py::normalize` (como `flow_dominio::texto::normalizar_columna`): NFKD a ASCII, minúsculas, sin guiones,
 /// puntos ni paréntesis y espacios simples; puede dejar un espacio final.
-fn normalizar(s: &str) -> String {
+pub(crate) fn normalizar(s: &str) -> String {
     use unicode_normalization::UnicodeNormalization;
     static GUIONES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[-().]+").unwrap());
     static ESPACIOS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
@@ -172,13 +172,21 @@ fn leer_bitacora_impl(
     if !destino_bitacora(form.value().attr("action").unwrap_or("")) {
         return Err("El formulario de bitácora no tiene el destino esperado.".into());
     }
+    // `bitacora_html.read_snapshot`: tres pasadas, con los mensajes de Python (campo, correspondencia, positividad).
     let mut contexto = BTreeMap::new();
-    for (i, k) in IDENTIDAD.iter().enumerate() {
-        let valor = input(form, k)?;
-        if valor.is_empty() || params.get(*k) != Some(&valor) || i < 4 && !positivo(&valor) {
-            return Err("La respuesta no corresponde al ingreso solicitado.".into());
+    for k in IDENTIDAD {
+        let valor = input(form, k).map_err(|_| format!("Campo ausente o repetido en bitácora: {k}"))?;
+        contexto.insert(k, valor);
+    }
+    for k in IDENTIDAD {
+        if contexto[k].is_empty() || params.get(k) != Some(&contexto[k]) {
+            return Err(format!("La respuesta no corresponde al ingreso solicitado: {k}"));
         }
-        contexto.insert(*k, valor);
+    }
+    for k in &IDENTIDAD[..4] {
+        if !positivo(&contexto[k]) {
+            return Err(format!("Identidad remota inválida: {k}"));
+        }
     }
     let recibido = input(form, "tipo_popUp")?;
     if !recibido.is_empty() && recibido != tipo {
@@ -930,7 +938,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("LECTURAS: {iguales}/{}, negativas {negativas}/{total_neg}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 18, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(casos.len(), 21, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} lecturas difieren de Flow Python", fallos.len());
     }
 }
