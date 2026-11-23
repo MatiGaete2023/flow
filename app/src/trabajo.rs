@@ -786,6 +786,204 @@ mod tests {
         assert!(todo.contains("PRM Ficticio Laja"), "las columnas del motor se conservan");
     }
 
+    /// Texto de una columna lógica del registro analizado (para clasificar R6 por el nombre del programa).
+    fn texto_de(trabajo: &Trabajo, registro: &Registro, clave: &str) -> String {
+        trabajo
+            .cols
+            .get(clave)
+            .and_then(|indice| registro.values.get(*indice))
+            .map(Cell::display)
+            .unwrap_or_default()
+    }
+
+    /// Compara la observación de Python con la de Rust admitiendo solo R1 (C10 omitida) y R6 (nombre de programa).
+    /// Es la misma clasificación del paquete B: `titulo_programa`/`titulo_programa_registro` y la oración C10.
+    fn clasificar_observacion(
+        esperada: &str,
+        obtenida: &str,
+        programa: &str,
+        tiene_r1: bool,
+    ) -> Option<&'static str> {
+        if esperada == obtenida {
+            return Some("identica");
+        }
+        let mut base = esperada.to_string();
+        if tiene_r1 {
+            let re_c10 = regex::Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap();
+            if !re_c10.is_match(&base) || re_c10.is_match(obtenida) {
+                return None;
+            }
+            base = re_c10.replace(&base, "").to_string();
+        }
+        let py = titulo_programa(programa);
+        let rs = titulo_programa_registro(programa);
+        let ajustada = if py.is_empty() || py == rs {
+            base.clone()
+        } else {
+            base.replace(&py, &rs)
+        };
+        let es_r6 = ajustada != base;
+        if ajustada == obtenida {
+            if tiene_r1 {
+                Some("R1")
+            } else if es_r6 {
+                Some("R6")
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Paquete C: abre `contexto-e3-historia.zip` en Trabajo en las tres etapas y dos cortes, y compara contra la
+    /// salida de `app/qa/esperado_contexto_e3.py`. Sin variables falla; no termina con `return`.
+    #[test]
+    fn paquete_c_contexto_e3_historia_igual_a_python() {
+        let (Ok(zip), Ok(esperado_ruta)) = (
+            std::env::var("FLOW_E3_HISTORIA"),
+            std::env::var("FLOW_E3_ESPERADO"),
+        ) else {
+            panic!("FLOW_E3_HISTORIA y FLOW_E3_ESPERADO son obligatorias para el paquete C");
+        };
+        let esperado: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&esperado_ruta).unwrap()).unwrap();
+        let filas = esperado["filas"].as_array().unwrap();
+        let corte_fijo: NaiveDate = esperado["corte_fijo"].as_str().unwrap().parse().unwrap();
+        let corte_movido: NaiveDate = esperado["corte_movido"].as_str().unwrap().parse().unwrap();
+        let cfg = Config::default();
+        let mut etapas = 0usize;
+        let (mut filas_total, mut identicas, mut r1, mut r6) = (0usize, 0usize, 0usize, 0usize);
+        let (mut filas_corte, mut constancias) = (0usize, 0usize);
+        let mut fallos = Vec::new();
+
+        for etapa in ["ESPERA", "CUMPLIMIENTO", "INFORMES"] {
+            let modo = match etapa {
+                "ESPERA" => Mode::Espera,
+                "CUMPLIMIENTO" => Mode::Cumplimiento,
+                _ => Mode::Informes,
+            };
+            let esperadas: Vec<&serde_json::Value> = filas
+                .iter()
+                .filter(|f| f["etapa"] == etapa && f["corte"] == corte_fijo.to_string())
+                .collect();
+            if esperadas.is_empty() {
+                if let Some(no_aplica) = esperado["no_aplica"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|n| n["etapa"] == etapa)
+                {
+                    println!(
+                        "PAQUETE_C_NO_APLICA: etapa {etapa}, {}",
+                        no_aplica["motivo"].as_str().unwrap_or("")
+                    );
+                }
+                continue;
+            }
+            etapas += 1;
+            filas_total += esperadas.len();
+            let trabajo = Trabajo::abrir_archivo(
+                PathBuf::from(&zip),
+                Some(modo),
+                corte_fijo,
+                &cfg,
+            )
+            .unwrap_or_else(|e| panic!("no se pudo abrir el paquete C en {etapa}: {e}"));
+            assert_eq!(
+                trabajo.registros.len(),
+                esperadas.len(),
+                "{etapa}: filas distintas a las de Python"
+            );
+            for (indice, (registro, fila)) in trabajo.registros.iter().zip(&esperadas).enumerate() {
+                let esperada = fila["observacion"].as_str().unwrap();
+                let reglas_esperadas: Vec<&str> = fila["reglas"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter_map(|r| r.as_str())
+                    .collect();
+                let marcas_esperadas = fila["marcas"].clone();
+                let reglas_ok = registro
+                    .eventos
+                    .iter()
+                    .map(String::as_str)
+                    .eq(reglas_esperadas.iter().copied());
+                let marcas_ok = serde_json::to_value(&registro.marcas).unwrap() == marcas_esperadas;
+                if !reglas_ok || !marcas_ok {
+                    fallos.push(format!(
+                        "{} {etapa} fila {indice}: reglas/marcas distintas\n  esp reglas {:?} / obt {:?}\n  esp marcas {} / obt {}",
+                        fila["record_id"].as_str().unwrap_or(""),
+                        reglas_esperadas,
+                        registro.eventos,
+                        marcas_esperadas,
+                        serde_json::to_value(&registro.marcas).unwrap()
+                    ));
+                    continue;
+                }
+                let programa = texto_de(&trabajo, registro, "programa");
+                let tiene_r1 = registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C05_POR_VENCER")
+                    && registro.eventos.iter().any(|e| e == "CUMPLIMIENTO.C10_HOJA2");
+                match clasificar_observacion(esperada, &registro.propuesta, &programa, tiene_r1) {
+                    Some("identica") => identicas += 1,
+                    Some("R1") => r1 += 1,
+                    Some("R6") => r6 += 1,
+                    _ => fallos.push(format!(
+                        "{} {etapa} fila {indice}: observación distinta\n  esp: {esperada}\n  obt: {}",
+                        fila["record_id"].as_str().unwrap_or(""),
+                        registro.propuesta
+                    )),
+                }
+            }
+
+            let movidas: Vec<&serde_json::Value> = filas
+                .iter()
+                .filter(|f| f["etapa"] == etapa && f["corte"] == corte_movido.to_string())
+                .collect();
+            if movidas.is_empty() {
+                continue;
+            }
+            let trabajo_corte = Trabajo::abrir_archivo(
+                PathBuf::from(&zip),
+                Some(modo),
+                corte_movido,
+                &cfg,
+            )
+            .unwrap_or_else(|e| panic!("no se pudo abrir el paquete C en {etapa} al corte movido: {e}"));
+            assert_eq!(
+                trabajo_corte.registros.len(),
+                movidas.len(),
+                "{etapa}: filas distintas al corte movido"
+            );
+            filas_corte += movidas.len();
+            constancias += trabajo_corte
+                .registros
+                .iter()
+                .filter(|r| r.eventos.iter().any(|e| e.starts_with("HISTORIA.")))
+                .count();
+        }
+
+        for no_aplica in esperado["no_aplica"].as_array().unwrap() {
+            println!(
+                "PAQUETE_C_NO_APLICA: etapa {}, {}",
+                no_aplica["etapa"].as_str().unwrap_or(""),
+                no_aplica["motivo"].as_str().unwrap_or("")
+            );
+        }
+        for fallo in &fallos {
+            println!("FALLA {fallo}");
+        }
+        println!(
+            "PAQUETE_C: etapas {etapas}, filas {filas_total}, identicas {identicas}, R1 {r1}, R6 {r6}, fallos {}",
+            fallos.len()
+        );
+        println!("PAQUETE_C_CORTE: filas {filas_corte}, constancias_historia {constancias}");
+        assert_eq!(etapas, 3, "el paquete C debe abrir Espera, Cumplimiento e Informes");
+        assert_eq!(filas_total, 6, "el paquete C debe traer seis filas en el corte fijo");
+        assert_eq!(constancias, 0, "el corte movido no debe tener constancias de historia");
+        assert!(fallos.is_empty(), "el paquete C tiene diferencias no admitidas");
+    }
+
     /// Medición: 20.000 registros (el máximo operativo del original). `cargo test --release -- --ignored --nocapture`.
     #[test]
     #[ignore]

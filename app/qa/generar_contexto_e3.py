@@ -67,6 +67,121 @@ def generar_discordancia(captura, salida):
     assert evidencia.resolucion_folio == "" and evidencia.folios_ajenos == ("9119", "9120")
 
 
+def generar_historia(captura, salida):
+    """Agrega contexto-e3-historia.zip con los seis elementos del paquete C.1, sin tocar los ZIP previos.
+
+    Reutiliza las tablas de contexto-e3.zip (fixtures de descargador) y arma una causa por elemento para que las
+    reglas no se estorben: orden de búsqueda de contexto y su término, continuidad de atención, prórroga reciente con
+    medida por vencer, designación de curador con RUS sin curador, causa P con sentencia y bitácora con proyección de
+    ingreso para un mes futuro. Una fila por cada etapa de Trabajo.
+    """
+    from nurus.capture.contract import TABLES, write_capture
+
+    metadatos = deepcopy(captura.manifest)
+    metadatos.pop("schema_version", None)
+    tablas = {tabla: [deepcopy(fila) for fila in captura.tables[tabla]] for tabla in captura.tables}
+    with ZipFile(salida) as original:
+        originales = {
+            f["path"]: original.read(f["path"]) for f in metadatos["files"] if f["type"] == "original"
+        }
+    base = tablas["registros"][0]
+    fecha = "2026-10-08T15:00:00-03:00"
+
+    def consulta(qid, pantalla, filtros):
+        q = {k: "" for k in TABLES["consultas"]}
+        q.update(query_id=qid, source_system=base["source_system"], screen=pantalla, tab=pantalla.upper(),
+                 court_code=base["court_code"], modality_code=base["modality_code"],
+                 court_name=base["court_name"], coverage="COMPLETA", captured_at=fecha,
+                 filters_json=json.dumps(filtros, ensure_ascii=False), expected_pages="1", saved_pages="1",
+                 time_zone="America/Santiago", history_complete="false", institutional_verified="false")
+        return q
+
+    def tramite(qid, causa, numero, desc, dia, folio, tipo="Resolución"):
+        fila = {k: "" for k in TABLES["historia_tramites"]}
+        fila.update(query_id=qid, source_system=base["source_system"], court_code=base["court_code"],
+                    court_name=base["court_name"], modality_code=base["modality_code"], coverage="COMPLETA",
+                    capture_id=base["capture_id"], original_file=base["original_file"], original_sheet=base["original_sheet"],
+                    source_sha256=base["source_sha256"], captured_at=fecha, original_row=str(numero),
+                    cause_id=causa, ingreso_id="", person_id="", program_id="",
+                    event_id=f"{qid}-{numero}", event_at=dia, time_precision="DIA", time_zone="DESCONOCIDA",
+                    scope="CAUSA", event_type="tramite", description=desc, reference="", status="CAPTURADO",
+                    identity_status="CAUSA", folio=str(folio), stage="Cumplimiento", annex_visible="false",
+                    raw_json=json.dumps({"Trámite": tipo, "Desc. Trámite": desc, "Folio": str(folio)},
+                                        ensure_ascii=False))
+        return fila
+
+    # Una fila por elemento y causa: las etapas quedan repartidas en Espera, Cumplimiento e Informes.
+    planes = [
+        ("ESPERA", "X-0-2099", {"T ESPERA": "10", "FEC. RESOLUCIÓN": "01/01/2026"}),
+        ("CUMPLIMIENTO", "X-1-2099", {"DIAS DE CUMPLIMIENTO": "200", "DIAS PARA EGRESAR": "20",
+                                      "FEC.EGRESO PROYECTADO": "08/11/2026"}),
+        ("ESPERA", "X-2-2099", {"T ESPERA": "10", "FEC. RESOLUCIÓN": "01/01/2026"}),
+        ("ESPERA", "X-3-2099", {"T ESPERA": "10", "FEC. RESOLUCIÓN": "01/01/2026", "CURADOR": ""}),
+        ("INFORMES", "P-4-2099", {"FECHA VENCIMIENTO": "01/11/2026"}),
+        ("ESPERA", "X-5-2099", {"T ESPERA": "10", "FEC. RESOLUCIÓN": "01/01/2026"}),
+    ]
+    registros = []
+    for numero, (tipo, rit, campos) in enumerate(planes):
+        fila = deepcopy(base)
+        fila.update(record_id=f"hist-{numero}", cause_id=f"causa-c{numero}", ingreso_id=f"ingreso-{numero}",
+                    person_id=f"persona-{numero}", rit_original=rit, record_type=tipo, query_id="q0-0",
+                    original_row=str(10 + numero))
+        crudo = {"RIT": rit, "TRIBUNAL": "Lgdo. Laja", "NOMBRE": f"Persona Ficticia {numero}",
+                 "RUT": f"ID-{numero}", "DERIVACION": "PRM Ficticio",
+                 "CURADOR": "(11111111-1)ANA FICTICIA", "MODALIDAD": base["modality_raw"]}
+        crudo.update(campos)
+        fila["raw_json"] = fila["normalized_json"] = json.dumps(crudo, ensure_ascii=False)
+        registros.append(fila)
+    tablas["registros"] = registros
+
+    tablas["consultas"] = [next(q for q in tablas["consultas"] if q["query_id"] == "q0-0")]
+    planes_historia = [
+        [("Orden de búsqueda", "2026-05-01", 1), ("Termino de búsqueda", "2026-09-20", 2)],
+        [("Prorroga", "2026-10-01", 3)],
+        [("Resp. continuidad de atención", "2026-09-25", 4)],
+        [("Designa abogado", "2026-09-30", 5)],
+        [("Dictación de sentencia", "2026-05-10", 6)],
+        [],
+    ]
+    historia = []
+    for numero, tramites in enumerate(planes_historia):
+        qid = f"hist-{numero}"
+        tablas["consultas"].append(consulta(qid, "historia_tramites", {
+            "historia_causa": {"source_system": "RUS", "court_code": base["court_code"],
+                               "cause_id": f"causa-c{numero}"},
+            "ventana": {"criterio": "ventana_4_meses", "desde": "2026-06-13", "hasta": "2026-10-13"}}))
+        for posicion, (desc, dia, folio) in enumerate(tramites, 1):
+            historia.append(tramite(qid, f"causa-c{numero}", posicion, desc, dia, folio,
+                                    "Escrito" if desc == "Designa abogado" else "Resolución"))
+    tablas["historia_tramites"] = historia
+    metadatos["table_states"]["historia_tramites"] = "COMPLETA"
+
+    bitacora = deepcopy(tablas["bitacoras"][0])
+    bitacora.update(query_id="diary-0", cause_id="causa-c5", ingreso_id="ingreso-5", person_id="persona-5",
+                    event_id="diary-0-proy", event_at="2026-09-10T09:00:00",
+                    text="Persona PRM: El programa proyecta ingreso efectivo para el mes de diciembre. Se informa.",
+                    captured_at=fecha, original_row="1", coverage="COMPLETA",
+                    modality_code=base["modality_code"], modality_raw=base["modality_raw"])
+    tablas["bitacoras"] = [bitacora]
+    tablas["consultas"].append(consulta("diary-0", "bitacoras", {
+        "remote_identity": {"source_system": "RUS", "court_code": base["court_code"], "cause_id": "causa-c5",
+                            "ingreso_id": "ingreso-5"},
+        "revision_bitacoras": {"version": 2, "desde": "1900-01-01", "hasta": "2026-10-08",
+                               "metodo": "SITFA_TABLA_INFORME_INGRESO_V1", "coverage": "COMPLETA",
+                               "completa": True, "captured_at": fecha, "warnings": 0}}))
+    metadatos["table_states"]["bitacoras"] = "COMPLETA"
+    for tabla in ("escritos", "historico_proteccion", "documentos", "calendarios"):
+        tablas[tabla] = []
+        metadatos["table_states"][tabla] = "NO_SOLICITADA"
+    tablas["incidencias"] = []
+    metadatos["table_states"]["incidencias"] = "VACIA_COMPROBADA"
+    metadatos["queries"] = tablas["consultas"]
+    destino = salida.with_name("contexto-e3-historia.zip")
+    destino.unlink(missing_ok=True)
+    write_capture(destino, metadatos, tablas, originals=originales, consolidated=captura.consolidated)
+    return destino
+
+
 def generar(referencia, carpeta):
     sys.path[:0] = [str(referencia / "descargador"), str(referencia / "src")]
     from descargador import package_current_lot
@@ -212,6 +327,7 @@ def generar(referencia, carpeta):
         "Se remite correo al programa consultando fecha estimada de ingreso."
     )
     assert espera.rows[0].rules == ["HISTORIA.E04_CON_FOLIO", "ESPERA.E05_SOLO_CORREO"]
+    generar_historia(captura, salida)
     return salida
 
 
