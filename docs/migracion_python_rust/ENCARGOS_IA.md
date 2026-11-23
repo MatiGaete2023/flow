@@ -82,7 +82,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Criterio: `CRONOLOGIA: n/n`, fallos 0, sin cambiar la lógica de producción; si hay diferencias, se informan como hallazgo.
 - Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-K»): las líneas se reproducen en Linux y dos mutaciones de `aplicar_reiteracion` hacen fallar la prueba. Salvedades: la prueba arma las `Entrada` con el mapeo de `temporal.py` y no pasa por `leer` ni por `Revision::acredita_centro`, así que la lectura desde un ZIP queda para E-C. La segunda excepción de R5 parcial («La derivación…») no tiene casos en el oráculo.
 
-### E-C · Paquete C completo — `ABIERTO` (entorno L con `FLOW_REFERENCIA`, o W) · [prompt](prompts/E-C.md)
+### E-C · Paquete C completo — `ENTREGADO` (entorno L con `FLOW_REFERENCIA`, o W) · [prompt](prompts/E-C.md)
 
 - Ejecutar el paquete C de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) tal como está escrito: `contexto-e3-historia.zip` con sus seis elementos, apertura en las tres etapas, contraste con `nurus.personal.work` y corte antes de la ventana.
 - Evidencia: el diff Python↔Rust por fila (vacío, o solo R1/R6) y la línea literal de cada caso con `FLOW_E3_PAQUETE` definido.

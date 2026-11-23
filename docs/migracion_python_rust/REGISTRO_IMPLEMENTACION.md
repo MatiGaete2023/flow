@@ -580,6 +580,57 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
 - Línea base de E-C (N1, L): `python app/qa/generar_contexto_e3.py . <carpeta>` funciona con Python 3.12 del sistema (por `tkinter`) en un venv con `descargador/requirements.txt`, `pandas<3` y `pytest`. Genera seis ZIP. Con `FLOW_REFERENCIA=..` y `FLOW_E3_PAQUETE=<carpeta>/contexto-e3.zip`, la suite da `47 passed; 0 failed; 1 ignored`.
 - Resultado: E-K `CERRADO POR AUDITORÍA`. Cambios de lógica de producción: ninguno.
 
+## Entrega · E-C
+- Commit probado: eabcb9952fdff349e3a9781bed309146147242e0  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6 (pandas 2.3.3)
+- Comandos:
+  - `python app/qa/generar_contexto_e3.py . .tmp_e3_final`
+  - `python app/qa/esperado_contexto_e3.py .tmp_e3_final/contexto-e3-historia.zip .tmp_e3_final/esperado-historia.json`
+  - `FLOW_E3_HISTORIA=... FLOW_E3_ESPERADO=... cargo test --locked --bin flow_rust paquete_c -- --nocapture` (desde `app/`; en W sin `--features eframe/x11`)
+  - `cargo test --locked --bin flow_rust paquete_c_contexto_e3_historia_igual_a_python` (sin variables; debe fallar)
+  - `FLOW_REFERENCIA=.. FLOW_E3_PAQUETE=.../contexto-e3.zip FLOW_CASOS=../rust/casos FLOW_E3_HISTORIA=... FLOW_E3_ESPERADO=... cargo test --locked --bin flow_rust`
+  - `cargo clippy --locked --bin flow_rust --tests`
+  - `python tools/check_real_ids.py app/src app/qa` y `python tools/check_contactos.py app/src app/qa`
+- Evidencia:
+  - `PAQUETE_C: etapas 3, filas 6, identicas 6, R1 0, R6 0, fallos 0`
+  - `PAQUETE_C_CORTE: filas 6, constancias_historia 0`
+  - `test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out` (filtro `paquete_c`: la prueba nueva y la de interfaz)
+  - `test result: ok. 49 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out` (suite completa; la ignorada es `velocidad_20000`)
+  - Sin variables: `FLOW_E3_HISTORIA y FLOW_E3_ESPERADO son obligatorias para el paquete C`; `test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 49 filtered out`
+  - Mutación (copia temporal, no publicada): `FALLA hist-0 ESPERA fila 0: observación distinta`; `esp: Pers0na PRM: …` / `obt: Persona PRM: …`; `PAQUETE_C: etapas 3, filas 6, identicas 5, R1 0, R6 0, fallos 1`; `test result: FAILED`
+  - `Sin RUT reales detectados.` · `Sin correos ni RIT nuevos.`
+- Evidencia de los seis elementos (tabla y fila del ZIP `contexto-e3-historia.zip`):
+  1. Orden de búsqueda de contexto y su término: `historia_tramites` `hist-0-1` (2026-05-01, folio 1) y `hist-0-2` (2026-09-20, folio 2); reglas `HISTORIA.R11_ORDEN` y `HISTORIA.R11_TERMINO` en `hist-0`.
+  2. Continuidad de atención: `historia_tramites` `hist-2-1` (2026-09-25, folio 4); regla `HISTORIA.CONTINUIDAD_ATENCION` en `hist-2`.
+  3. Prórroga reciente con la medida por vencer: `historia_tramites` `hist-1-1` (2026-10-01, folio 3) y `registros` `hist-1` (`FEC.EGRESO PROYECTADO` 08/11/2026, `DIAS PARA EGRESAR` 20); reglas `CUMPLIMIENTO.C05_POR_VENCER` y `HISTORIA.BASE_TRAMITE`, marca `PRORROGA_REVISAR`.
+  4. Designación de curador con RUS sin curador: `historia_tramites` `hist-3-1` (2026-09-30, folio 5, tipo Escrito) y `registros` `hist-3` (`CURADOR` vacío); reglas `HISTORIA.BASE_TRAMITE` y `COMUN.CURADOR`, marca `CURADOR_DESIGNADO`.
+  5. Causa P con sentencia: `historia_tramites` `hist-4-1` (2026-05-10, folio 6) y `registros` `hist-4` (RIT `P-4-2099`); regla `HISTORIA.P_FINALIZADA`.
+  6. Bitácora con proyección de ingreso: `bitacoras` `diary-0-proy` (2026-09-10, «…proyecta ingreso efectivo para el mes de diciembre…») y `registros` `hist-5`; regla `ESPERA.E07_PROYECCION`.
+- ZIP previos (seis: `base.zip`, `contexto-e3.zip`, `-espera`, `-informes`, `-reiteracion`, `-discordante`): el generador **no es determinista** (cambian `record_id`, `source_sha256` y la ruta de `original_file` por corrida). Dos corridas sin el cambio (`.tmp_e3` y `.tmp_e3_b`) dan estas tablas iguales tras excluir solo esos campos de procedencia: `base.zip IGUAL []`, `contexto-e3.zip IGUAL []`, `-espera IGUAL []`, `-informes IGUAL []`, `-reiteracion IGUAL []`, `-discordante IGUAL []`. La misma comparación antes y después del cambio (`.tmp_e3` vs `.tmp_e3_final`) da idéntico resultado: ninguna tabla cambia.
+  - SHA-256 antes → después (difieren por la no determinación ya descrita):
+    - `base.zip` `6d24361214079f7dbdc7daea5561ffc154bbd6f621ed0f5f543eb54359f035b6` → `94087476b11934a723abb62eb7c3f1aa1bd2527f76c612e7f756d0826dadf041`
+    - `contexto-e3.zip` `67ea8c6ebab6a257980460457d25930869e9b3cacbcf1870a1c56c1438569d73` → `bd0c0f8e29a51552edb6978594c84b5f7400199fecccfd04e821c72189393fc9`
+    - `contexto-e3-espera.zip` `59bf247d72ef210b9fa3737654ce8f1eeeed619edbcb1c15eadcac2776855d51` → `c9f8873ce09d35cc30e695e398e4c1ca9d0f52651340846c0a9744374e81c6bb`
+    - `contexto-e3-informes.zip` `5d41e2370d786637a181d58e262a51b78664dfc11b92e6eabafde0610d522bc4` → `b7d8985ba686ec6da6e770078584702e114aa6f729bfcdd5ca1b4463a4c8555c`
+    - `contexto-e3-reiteracion.zip` `e2bd1d6d1478782f83b28b8488a065742d583f69bca2e2b226e932ef63e9873f` → `83eb4f905988faea77f55b4a1ffebf5a93b3639d6aed46eed01eed7a0fc896cd`
+    - `contexto-e3-discordante.zip` `82c5712be787ca741f6142fb44af5c320cb4da9c91868bb53e6038e60f5734b8` → `48f03da404552c2859d925769bc63641e018d0c160b6e88e16500838438efc0a`
+- R1/R6: el módulo `motor::historia::tests` no es reutilizable desde `trabajo.rs` (es privado y `motor::historia` también); se informa. La prueba usa las mismas funciones `titulo_programa`/`titulo_programa_registro` y la misma oración C10 del paquete B, sin normalizar el resto del texto. En este ZIP no aparecen diferencias R1 ni R6 (`R1 0, R6 0`).
+- `acciones`: no se comparan; el paquete C exige observación, reglas y marcas, y el JSON de referencia no incluye acciones. El `Resultado` del motor no tiene ese campo.
+- Resultado por criterio:
+  - Seis elementos: PASA — tabla y fila indicadas arriba.
+  - ZIP previos sin cambios: PASA — comparación por contenido; los SHA difieren por no determinación del generador, no por el cambio.
+  - `PAQUETE_C` con Espera, Cumplimiento e Informes y `fallos 0`: PASA — 3 etapas, 6 filas, 6 idénticas.
+  - `PAQUETE_C_CORTE` con `constancias_historia 0`: PASA — 6 filas, 0 constancias.
+  - Mutación de control: PASA — la prueba falla con `fallos 1`.
+  - Sin variables: PASA — panic y `test result: FAILED`.
+  - Suite completa: PASA — 49 pasan, 1 ignorada por diseño.
+  - Clippy: PASA — sin advertencias nuevas en `trabajo.rs` (los avisos de las líneas 267 y 483 son previos).
+  - Sin cambios de lógica de producción: PASA — `git diff -U0 163f310..eabcb99 -- app/src` solo muestra `@@ -788,0 +789,198 @@ mod tests {`.
+- Cambios de código: `app/qa/generar_contexto_e3.py` (`generar_historia`), `app/qa/esperado_contexto_e3.py` (nuevo) y `app/src/trabajo.rs` (solo `#[cfg(test)]`: `texto_de`, `clasificar_observacion` y `paquete_c_contexto_e3_historia_igual_a_python`) · Cambios de lógica de producción: ninguno
+- Pendientes:
+  - Repetir la corrida en entorno L con `--features eframe/x11`; el host actual es Windows sin WSL y se informa W, como permite el prompt.
+  - El generador es no determinista en la procedencia (`record_id`, `source_sha256`, `original_file`); la comprobación de los ZIP previos se hizo por contenido de tablas, según el prompt.
+  - Si se quiere reutilizar literalmente el clasificador R1/R6 del paquete B, habría que exponerlo desde `motor::historia::tests`; hoy no es posible sin tocar visibilidad.
+
 ## Siguiente paso exacto
 
 1. E-C: paquete C de integración con ZIP sintéticos ([prompt](prompts/E-C.md)). Después, E-L (pruebas condicionadas) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-F, E-A78, E-G, E-D, E-E e E-I.
