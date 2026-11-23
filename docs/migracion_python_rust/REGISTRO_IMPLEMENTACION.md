@@ -265,7 +265,7 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - **Búsqueda de umbrales.** En Ajustes se filtra por etiqueta o clave normalizada, como `_filter_config_parameters`.
 - **Redacción mensual.** R2–R5 ya estaban aplicadas desde los turnos 10 y 11. Se corrigió su estado en el informe de fallas.
 - **Preferencias del Descargador.** `descargador/preferencias.rs` guarda en `%LOCALAPPDATA%\FlowRust\descargador_preferencias.json` el destino, el PDF de consultas sin registros y la pausa. La pausa queda entre 0,5 y 10 s, como `clamp_pause`; antes la interfaz admitía 0 s. Se guarda al iniciar un lote. Un archivo ilegible vuelve a los valores por omisión.
-- Verificación de este turno: solo compilación del motor, Trabajo y la biblioteca en el crate aislado, más la corrida Windows del push. Las pruebas quedan en el [plan de pruebas](PLAN_PRUEBAS.md), según lo pedido por el usuario.
+- Verificación de este turno: compilación del motor, Trabajo y la biblioteca en el crate aislado, y la [corrida Windows](https://github.com/MatiGaete2023/flow/actions/runs/45186412001) sobre `5405870`. Esa corrida compiló la interfaz y pasó las pruebas existentes de la aplicación, incluidos los dos oráculos. Las pruebas quedan en el [plan de pruebas](PLAN_PRUEBAS.md), según lo pedido por el usuario.
 
 ## Siguiente paso exacto
 

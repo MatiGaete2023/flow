@@ -9,5 +9,6 @@ La aplicación Rust vigente de esta rama es [`app/`](app/), el proyecto de escri
 | [Matriz de paridad](docs/migracion_python_rust/MATRIZ.md) | Las 28 capacidades y su situación en `app/` |
 | [Registro y continuidad](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md) | Evidencia transferible y siguiente cambio |
 | [Verificación](docs/migracion_python_rust/VERIFICACION.md) | Pruebas y comandos reproducibles |
+| [Plan de pruebas](docs/migracion_python_rust/PLAN_PRUEBAS.md) | Paquetes de prueba para ejecutar por separado (23-nov-2026) |
 
 El [cierre del estudio anterior](https://github.com/MatiGaete2023/flow/tree/ed6a0e43f8efa0856e0294af92ac8e0317c69df7) conserva las pruebas y los cambios de `rust/crates/`. Se pueden trasladar comportamientos y casos sintéticos que coincidan con Python. Sus resultados y su artefacto visual corresponden a esa implementación.
