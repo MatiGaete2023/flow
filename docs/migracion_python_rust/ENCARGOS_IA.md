@@ -87,7 +87,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Ejecutar el paquete C de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) tal como está escrito: `contexto-e3-historia.zip` con sus seis elementos, apertura en las tres etapas, contraste con `nurus.personal.work` y corte antes de la ventana.
 - Evidencia: el diff Python↔Rust por fila (vacío, o solo R1/R6) y la línea literal de cada caso con `FLOW_E3_PAQUETE` definido.
 
-### E-L · Pruebas condicionadas que pasan sin ejecutarse — `ABIERTO` (entorno L)
+### E-L · Pruebas condicionadas que pasan sin ejecutarse — `ABIERTO` (entorno L o W) · [prompt](prompts/E-L.md)
 
 - Hecho (N1, auditoría del 23-nov-2026): las pruebas de `app/src` que leen `FLOW_REFERENCIA`, `FLOW_E3_PAQUETE` o `FLOW_CASOS` terminan con `return` si la variable falta, y se cuentan como `ok`. Ocurre en `trabajo.rs` (7), `captura.rs`, `captura_trabajo.rs`, `revision_ui.rs` y `ui.rs:2241`, y en `oraculo_python` (`motor.rs`). Es el salto silencioso que prohíbe la regla 4 de entrega.
 - Hacer: marcar esas pruebas con `#[ignore = "requiere FLOW_…"]` y quitar el `return` (que fallen si se piden sin la variable), o agruparlas en una corrida explícita con `--include-ignored`. Documentar el comando en el registro y en la CI de Windows.
