@@ -558,8 +558,30 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - Repetir la corrida en entorno L si se requiere esa evidencia literal; el host actual es Windows sin WSL. El prompt admite W informándolo.
   - La segunda excepción de R5 parcial («La derivación … no se encuentra sujeta a seguimiento por este Centro.») no tiene casos en `cronologia.json`; no se agregaron casos al JSON.
 
+## Auditoría · E-K (23 de noviembre de 2026)
+
+- Commits auditados: `ed5a6df` (prueba) y `02e1555` (registro) · Entorno: L (Linux, `--features eframe/x11`).
+- Alcance (N1): `git diff -U0 3683468 02e1555 -- app/src` da un único bloque `@@ -342,0 +343,206 @@ mod tests {`, así que no hay cambios de producción.
+- Reproducción (N1), desde `app/`:
+  - `CRONOLOGIA: casos 181, coinciden 181, reiteradas 18/18, desactivada 1/1, fallos 0`
+  - `R5_PARCIAL: excepciones 2, no reiteradas 2`
+  - `SIMILITUDES: 256 declaradas; no aplica en app/ (la cronología no usa una función de similitud)`; `grep -rn "similitud\|SequenceMatcher" app/src` solo encuentra la prueba
+  - `test result: ok. 47 passed; 0 failed; 1 ignored` (suite del binario en L; la entrega da 48 en W)
+  - clippy: 0 avisos en `cronologia.rs`
+- Mapeo (N1): `centro` coincide con `temporal.py::center_entries` (origen `CENTRO`, `origin_verified == 'true'` y cobertura `COMPLETA` o `PARCIAL`) e `instante` con `certain_moment`.
+- Poder de detección (N1), con dos mutaciones temporales de `aplicar_reiteracion`, revertidas (`git status` limpio):
+  - ignorar `desactivadas` → `CRONOLOGIA: … coinciden 180, … desactivada 0/1, fallos 1`, `test result: FAILED`;
+  - cambiar una letra del aviso CT-07 → `test result: FAILED`.
+- Salvedades:
+  - (N1) la prueba arma las `Entrada` con un mapeo propio y llama a `ordenar`. No pasa por `leer` (exige `captured_at`) ni por `Revision::acredita_centro`, así que la lectura desde un ZIP real no queda acreditada aquí; corresponde a E-C (`contexto-e3-reiteracion.zip`).
+  - (N1) R5 parcial: de las 2 excepciones, una ya la excluía `C09` en modo Python. Solo un caso discrimina, y «La derivación … no se encuentra sujeta a seguimiento por este Centro.» tiene 0 casos.
+  - (N1) No se compara `acciones`, porque `Resultado` de `app/` no tiene ese campo.
+- Hallazgo nuevo: 12 pruebas condicionadas a variables de entorno terminan con `return` y cuentan como `ok` → encargo E-L.
+- Línea base de E-C (N1, L): `python app/qa/generar_contexto_e3.py . <carpeta>` funciona con Python 3.12 del sistema (por `tkinter`) en un venv con `descargador/requirements.txt`, `pandas<3` y `pytest`. Genera seis ZIP. Con `FLOW_REFERENCIA=..` y `FLOW_E3_PAQUETE=<carpeta>/contexto-e3.zip`, la suite da `47 passed; 0 failed; 1 ignored`.
+- Resultado: E-K `CERRADO POR AUDITORÍA`. Cambios de lógica de producción: ninguno.
+
 ## Siguiente paso exacto
 
-1. E-K: R5 (reiteración) con `cronologia.json` en `app/` ([prompt](prompts/E-K.md)). Después, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
+1. E-C: paquete C de integración con ZIP sintéticos ([prompt](prompts/E-C.md)). Después, E-L (pruebas condicionadas) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-F, E-A78, E-G, E-D, E-E e E-I.
 2. D-1 y D-2 resueltas: sin cambios de código.
 3. Paquete H por el usuario.

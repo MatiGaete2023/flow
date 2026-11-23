@@ -74,17 +74,24 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Criterio: `PAQUETE_B_COBERTURA: R3 n/n` con n ≥ 3, `fallos 0`; los casos previos del corpus no cambian; `oraculo_python` y `oraculo_historia` pasan con los nuevos totales.
 - Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-J»): la corrida en Linux reproduce las líneas de la entrega (`R3 3/3`, `fallos 0`, 2.585 evaluados). La regeneración con `pandas<3` da `rust/casos/*.json` idénticos a los publicados. Queda cubierto el pendiente de la entrega sobre el entorno L. Salvedad: Python deduplica oraciones idénticas (`composicion.py`), así que la diferencia R3 no puede aparecer en el oráculo. La prueba acredita que Rust produce la misma observación de una sola aparición; no ejercita el recorte del comparador.
 
-### E-K · R5 (reiteración) en `app/` — `ENTREGADO` (entorno L) · [prompt](prompts/E-K.md)
+### E-K · R5 (reiteración) en `app/` — `CERRADO POR AUDITORÍA` (23-nov-2026; entrega `ed5a6df`/`02e1555`) · [prompt](prompts/E-K.md)
 
 - La reiteración (`COMUN.REITERA_OBSERVACION`) la aplica la cronología, no el motor por fila: `bitacora_avisos.aplicar_reiteracion` en Python y `Cronologia::aplicar_reiteracion` en `app/src/captura_trabajo/cronologia.rs`.
 - Su oráculo es `rust/oraculo/generar_cronologia.py`, que escribe `rust/crates/flow-trabajo/tests/datos/cronologia.json`. Ninguna prueba de `app/` lo consume (N1: `grep -rn cronologia.json app/` sin resultados).
 - Hacer: una prueba de `app/` que recorra `cronologia.json` y compare observación, reglas y avisos con Python, incluyendo la decisión R5 parcial (no reiterar «Medida revisada, sin observaciones.» ni «La derivación … no se encuentra sujeta a seguimiento por este Centro.»).
 - Criterio: `CRONOLOGIA: n/n`, fallos 0, sin cambiar la lógica de producción; si hay diferencias, se informan como hallazgo.
+- Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-K»): las líneas se reproducen en Linux y dos mutaciones de `aplicar_reiteracion` hacen fallar la prueba. Salvedades: la prueba arma las `Entrada` con el mapeo de `temporal.py` y no pasa por `leer` ni por `Revision::acredita_centro`, así que la lectura desde un ZIP queda para E-C. La segunda excepción de R5 parcial («La derivación…») no tiene casos en el oráculo.
 
-### E-C · Paquete C completo — `ABIERTO` (entorno L con `FLOW_REFERENCIA`, o W)
+### E-C · Paquete C completo — `ABIERTO` (entorno L con `FLOW_REFERENCIA`, o W) · [prompt](prompts/E-C.md)
 
 - Ejecutar el paquete C de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) tal como está escrito: `contexto-e3-historia.zip` con sus seis elementos, apertura en las tres etapas, contraste con `nurus.personal.work` y corte antes de la ventana.
 - Evidencia: el diff Python↔Rust por fila (vacío, o solo R1/R6) y la línea literal de cada caso con `FLOW_E3_PAQUETE` definido.
+
+### E-L · Pruebas condicionadas que pasan sin ejecutarse — `ABIERTO` (entorno L)
+
+- Hecho (N1, auditoría del 23-nov-2026): las pruebas de `app/src` que leen `FLOW_REFERENCIA`, `FLOW_E3_PAQUETE` o `FLOW_CASOS` terminan con `return` si la variable falta, y se cuentan como `ok`. Ocurre en `trabajo.rs` (7), `captura.rs`, `captura_trabajo.rs`, `revision_ui.rs` y `ui.rs:2241`, y en `oraculo_python` (`motor.rs`). Es el salto silencioso que prohíbe la regla 4 de entrega.
+- Hacer: marcar esas pruebas con `#[ignore = "requiere FLOW_…"]` y quitar el `return` (que fallen si se piden sin la variable), o agruparlas en una corrida explícita con `--include-ignored`. Documentar el comando en el registro y en la CI de Windows.
+- Criterio: sin variables, la suite informa esas pruebas como `ignored`, no como `ok`. Con variables y `--include-ignored`, pasan. Sin cambios de lógica de producción.
 
 ### E-F · Descargador: pausa, pendientes y favoritos — `ABIERTO` (entorno L)
 
