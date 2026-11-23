@@ -291,14 +291,16 @@ fn audiencia(ctx: &mut Ctx, f: &Fila) -> Option<Frag> {
     None
 }
 
+/// `_oido(...) or _oido_historia(...)`: sin fecha de oído en RUS se consulta la historia.
 fn oido(ctx: &mut Ctx, f: &Fila) -> Vec<Frag> {
     if let Some(fo) = f.date("oido") {
         let d = (ctx.hoy - fo).num_days();
-        if 0 <= d && d <= ctx.p("oido") {
+        if 0 <= d && d <= ctx.p("oido") && !historia::oido_en_bitacora(ctx, fo) {
             return ctx.render("COMUN.OIDO", &[("FECHA_OIDO", fecha_es(fo))]).into_iter().collect();
         }
+        return vec![];
     }
-    vec![]
+    historia::derecho_oido(ctx).into_iter().collect()
 }
 
 fn curador(ctx: &mut Ctx, f: &Fila) -> Vec<Frag> {
@@ -363,8 +365,19 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     marcar_duplicidad(ctx);
     let espera = f.int("espera");
     historia::advertir_ingreso_efectivo(ctx, espera);
+    historia::marcas_sin_efecto(ctx);
+    // Proyección de ingreso informada por el programa (11-nov-2026): se copia la oración de la última observación
+    // mientras el mes proyectado no llegue; no se repiten correo ni proyecto.
+    let mut proyeccion = false;
+    if let Some(oracion) = historia::proyeccion_ingreso(ctx) {
+        if let Some(frag) = ctx.render("ESPERA.E07_PROYECCION", &[("PROYECCION", oracion)]) {
+            frags.push(frag);
+            principal = true;
+            proyeccion = true;
+        }
+    }
     let mut resolucion_reciente = false;
-    if let Some(fres) = f.date("resolucion") {
+    if let Some(fres) = f.date("resolucion").filter(|_| !proyeccion) {
         let d = (ctx.hoy - fres).num_days();
         if 0 <= d && d < ctx.p("resolucion_reciente") {
             frags.extend(historia::resolucion(ctx, &prog, fres));
@@ -383,7 +396,7 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     } else {
         30
     };
-    if let Some(e) = espera {
+    if let Some(e) = espera.filter(|_| !proyeccion) {
         if e >= umbral {
             let key = if dce {
                 Some("ESPERA.E05_SOLO_CORREO")
@@ -407,6 +420,8 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     if !resolucion_reciente {
         frags.extend(historia::servicio_ingreso(ctx, &prog));
     }
+    frags.extend(historia::busqueda_historia(ctx));
+    frags.extend(historia::continuidad(ctx));
     let rus_sin_curador = f.has("curador") && !tiene_curador_real(&f.text("curador"));
     frags.extend(historia::curador_designaciones(ctx, rus_sin_curador));
     frags.extend(oido(ctx, f));
@@ -461,6 +476,7 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         return componer(&pfx, &[finalizada]);
     }
     marcar_duplicidad(ctx);
+    historia::marcas_sin_efecto(ctx);
     let mut frags: Vec<Frag> = Vec::new();
     let mut principal = false;
     let mut c03 = false;
@@ -526,12 +542,15 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
     let egreso_dicho = vencida || c05 || (c03 && fegr.is_some());
     let vencida_valida = vencida && !ctx.invalidas.contains("CUMPLIMIENTO.C04_VENCIDA");
     frags.extend(historia::prorroga(ctx, fegr, vencida_valida, c05, egreso_dicho));
+    frags.extend(historia::solicitud_dce(ctx, &programa, vencida_valida));
     let evidencia = Default::default();
     frags.extend(historia::escrito_sin_ingreso(ctx, &programa, None, &evidencia));
     if historia::informe_pendiente(ctx, &programa, None, &evidencia) {
         frags.extend(ctx.render("HISTORIA.INFORME_AVANCE_PENDIENTE", &[]));
     }
     frags.extend(historia::otro_programa(ctx, &programa, &pn, &nombre));
+    frags.extend(historia::busqueda_historia(ctx));
+    frags.extend(historia::continuidad(ctx));
     let rus_sin_curador = f.has("curador") && !tiene_curador_real(&f.text("curador"));
     frags.extend(historia::curador_designaciones(ctx, rus_sin_curador));
     frags.extend(oido(ctx, f));
@@ -568,9 +587,8 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
         let fr: Vec<Frag> = ctx.render("CUMPLIMIENTO.C09_SIN_OBSERVACIONES", &[]).into_iter().collect();
         return componer(&pfx, &fr);
     }
-    if !principal && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA."))
-        && ctx.eventos.iter().any(|e| matches!(e.as_str(), "HISTORIA.OTRO_PROGRAMA" | "HISTORIA.INFORME_AVANCE_PENDIENTE" | "HISTORIA.C10_ESCRITO" | "HISTORIA.BASE_TRAMITE"))
-    {
+    // `solo_historia`: todo lo emitido en la fila proviene de reglas de historia.
+    if !principal && !ctx.eventos.is_empty() && ctx.eventos.iter().all(|e| e.starts_with("HISTORIA.")) {
         if let Some(base) = ctx.render("HISTORIA.MEDIDA_REVISADA", &[]) {
             frags.insert(0, base);
         }
@@ -601,6 +619,9 @@ fn informes(ctx: &mut Ctx, f: &Fila) -> String {
     let dias = (fv - ctx.hoy).num_days();
     if dias >= 0 && dias > ctx.p("informe") {
         return String::new();
+    }
+    if let Some(finalizada) = historia::causa_finalizada(ctx, &f.text("rit")) {
+        return componer(&pfx, &[finalizada]);
     }
     let dce = es_dce(&programa);
     let vencido = dias < 0;

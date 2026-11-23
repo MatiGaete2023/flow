@@ -10,7 +10,7 @@ pub const RETENCION_DIAS: i64 = 60;
 pub const SESIONES_ANTERIORES: usize = 10;
 
 /// (clave, valor por defecto, etiqueta)
-pub const UMBRALES: [(&str, i64, &str); 15] = [
+pub const UMBRALES: [(&str, i64, &str); 16] = [
     ("espera_dce", 0, "Espera DCE: consultar ingreso desde"),
     ("espera_laja", 30, "Espera Laja: proyecto y correo desde"),
     ("espera_mulchen", 30, "Espera Mulchén: proyecto y correo desde"),
@@ -26,10 +26,11 @@ pub const UMBRALES: [(&str, i64, &str); 15] = [
     ("ficha_reciente", 30, "Ficha individual reciente: hasta"),
     ("ficha_fae", 120, "Ficha FAE ausente: ingreso hace más de"),
     ("prorroga_reciente", 90, "Prórroga reciente (marcar para revisión): hasta"),
+    ("ventana_busqueda", 60, "Órdenes de búsqueda: solo la historia de los últimos"),
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).
-pub const TEXTOS: [(&str, &str); 52] = [
+pub const TEXTOS: [(&str, &str); 58] = [
     ("COMUN.NO_SEGUIMIENTO", "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro."),
     ("COMUN.MAYORIA_EDAD", "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida."),
     ("COMUN.PROXIMA_MAYORIA", "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}."),
@@ -70,6 +71,12 @@ pub const TEXTOS: [(&str, &str); 52] = [
     ("HISTORIA.OTRO_PROGRAMA", "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}."),
     ("HISTORIA.INFORME_AVANCE_PENDIENTE", "Pendiente de resolver, informe de avance."),
     ("HISTORIA.BASE_TRAMITE", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta el trámite «{DESC}»."),
+    ("HISTORIA.R11_ORDEN", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), se decretó orden de búsqueda."),
+    ("HISTORIA.R11_PIDE_CUENTA", "Posteriormente, en resolución de fecha {FECHA} (folio {FOLIO}), se pidió cuenta de la búsqueda."),
+    ("HISTORIA.R11_SIN_EFECTO", "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dejó sin efecto la búsqueda."),
+    ("HISTORIA.R11_TERMINO", "Luego, en resolución de fecha {FECHA} (folio {FOLIO}), se dispuso el término de la búsqueda."),
+    ("HISTORIA.CONTINUIDAD_ATENCION", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta respuesta sobre la continuidad de atención."),
+    ("HISTORIA.SOLICITUD_DCE", "Informe clínico diagnóstico ordenado en autos, se encuentra en la causa en resolución de fecha {FECHA} (folio {FOLIO}), a la espera de lo que se resuelva en la audiencia respectiva."),
     ("HISTORIA.REITERA", "{MATERIA}; se reitera la sugerencia formulada en la observación del {FECHA_ANTERIOR}."),
     ("HISTORIA.MATERIA_CURADOR", "No registra curador ad litem en RUS"),
     ("HISTORIA.MATERIA_SIN_FICHA", "No registra ficha individual en RUS"),

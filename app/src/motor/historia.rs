@@ -23,6 +23,47 @@ const DESIGNA: [&str; 1] = ["designa abogado"];
 const BAJA_CURADOR: [&str; 1] = ["deja sin efecto designacion c ad litem"];
 const CURADOR: [&str; 2] = [DESIGNA[0], BAJA_CURADOR[0]];
 
+const ORDEN_BUSQUEDA: &str = "orden de busqueda";
+const PIDE_CUENTA_BUSQUEDA: &str = "pide cuenta busqueda";
+const SIN_EFECTO_BUSQUEDA: &str = "deja sin efecto busqueda";
+const TERMINO_BUSQUEDA: &str = "termino de busqueda";
+const CIERRES_BUSQUEDA: [&str; 2] = [TERMINO_BUSQUEDA, SIN_EFECTO_BUSQUEDA];
+const CONTINUIDAD: &str = "resp continuidad de atencion";
+const SOLICITUD_DCE: &str = "spe resp solicitud dce escrito";
+const DERECHO_OIDO: &str = "derecho a ser oido";
+const SIN_EFECTO_DR: &str = "deja sin efecto derivacion d r";
+const SIN_EFECTO_MN: &str = "deja sin efecto medida interconexion m n";
+/// `vocabulario.CONOCIDAS`, con su nombre en SITFA: lo demás deja la marca TRAMITES_SIN_REGLA.
+const CONOCIDAS: [&str; 26] = [
+    "Ingreso efectivo",
+    "Prorroga",
+    "Ingreso Informe de Cumplimiento X",
+    "Orden de búsqueda",
+    "Pide cuenta búsqueda",
+    "Deja sin efecto búsqueda",
+    "Termino de búsqueda",
+    "Deja sin efecto medida interconexión M.N.",
+    "Deja sin efecto derivación D.R.",
+    "Resp. continuidad de atención",
+    "SPE. Resp. Solicitud DCE (escrito)",
+    "Derecho a ser oído",
+    "Ing.Serv. protección especializada y otras redes",
+    "Conciliacion",
+    "Dictación de sentencia",
+    "Egreso de servicio protección especializada y otras redes",
+    "Designa abogado",
+    "Deja sin efecto designación C. Ad-litem",
+    "Inf. Cump Programa Ambulatorio",
+    "Inf. Cump FAE/FAS",
+    "Inf. Cump Centro Residencial",
+    "Resp. Diagnóstico clínico especializado",
+    "Resp. Rectificación DCE (escrito)",
+    "SPE. Resp. Rectificación DCE (escrito)",
+    "Derivación Dirección Reg.",
+    "Pide cuenta Derivación D.R.",
+];
+const CONOCIDAS_EXTRA: [&str; 1] = ["Resp. Derivación dir. regional"];
+
 /// Materias de `HISTORIA.REITERA`: regla original, clave de la materia y patrón de la observación previa.
 #[derive(Clone, Copy)]
 pub(super) enum Materia {
@@ -126,7 +167,7 @@ fn novedad(t: &TramiteCausa, notas: &[NotaCentro]) -> bool {
 }
 
 pub(super) fn servicio_ingreso(ctx: &mut Ctx, programa: &str) -> Option<Frag> {
-    let captura = ctx.captura.filter(|c| !c.varios_ingresos)?;
+    let captura = ctx.captura.filter(|c| !causa_compartida(ctx, c))?;
     let t = tramites(captura, SERVICIO)
         .filter(|t| novedad(t, &captura.notas_centro))
         .max_by_key(|t| (t.fecha, t.folio.parse::<u64>().ok()))?;
@@ -275,6 +316,225 @@ pub(super) fn curador_designaciones(ctx: &mut Ctx, rus_sin_curador: bool) -> Opt
         "Curador ad litem en la historia y RUS sin curador registrado",
     );
     constancia_tramite(ctx, ult)
+}
+
+fn folio_o_sf(t: &TramiteCausa) -> String {
+    if t.folio.is_empty() {
+        "s/f".into()
+    } else {
+        t.folio.clone()
+    }
+}
+
+fn orden_tramite(t: &TramiteCausa) -> (NaiveDate, Option<u64>) {
+    (t.fecha, t.folio.parse::<u64>().ok())
+}
+
+/// `_id`: nombre, fecha y folio.
+fn mismo_tramite(a: &TramiteCausa, b: &TramiteCausa) -> bool {
+    a.fecha == b.fecha && a.folio == b.folio && clave_texto(&a.descripcion) == clave_texto(&b.descripcion)
+}
+
+/// Último trámite nuevo (`_nuevos`) de un nombre, citado con su plantilla.
+fn ultima_constancia(ctx: &mut Ctx, nombre: &'static str, clave: &str) -> Option<Frag> {
+    let captura = ctx.captura?;
+    let ult = ultimo(tramites(captura, nombre).filter(|t| novedad(t, &captura.notas_centro)))?;
+    let frag = ctx.render(clave, &[("FOLIO", folio_o_sf(ult)), ("FECHA", fecha_es(ult.fecha))])?;
+    Some(cita(frag, ult))
+}
+
+/// `continuidad`: respuesta sobre la continuidad de atención (Espera y Cumplimiento).
+pub(super) fn continuidad(ctx: &mut Ctx) -> Option<Frag> {
+    ultima_constancia(ctx, CONTINUIDAD, "HISTORIA.CONTINUIDAD_ATENCION")
+}
+
+/// `solicitud_dce`: Cumplimiento DCE con la medida vencida y causa de un registro.
+pub(super) fn solicitud_dce(ctx: &mut Ctx, programa: &str, vencida: bool) -> Option<Frag> {
+    let captura = ctx.captura?;
+    if !vencida || !crate::util::es_dce(programa) || causa_compartida(ctx, captura) {
+        return None;
+    }
+    ultima_constancia(ctx, SOLICITUD_DCE, "HISTORIA.SOLICITUD_DCE")
+}
+
+/// `marcas_sin_efecto` y `tramites_sin_regla`: solo marcas, nunca texto para RUS.
+pub(super) fn marcas_sin_efecto(ctx: &mut Ctx) {
+    let Some(captura) = ctx.captura else { return };
+    if tramites(captura, SIN_EFECTO_DR).next().is_some() {
+        ctx.marcar(2, "DEJA_SIN_EFECTO_DR", "Deja sin efecto derivación D.R. en la historia");
+    }
+    if tramites(captura, SIN_EFECTO_MN).next().is_some() {
+        ctx.marcar(2, "DEJA_SIN_EFECTO_MN", "Deja sin efecto medida interconexión M.N. en la historia");
+    }
+    let conocidas: HashSet<String> = CONOCIDAS.iter().chain(&CONOCIDAS_EXTRA).map(|n| clave_texto(n)).collect();
+    let mut nombres: Vec<(String, String)> = Vec::new();
+    for t in captura.tramites.as_deref().unwrap_or(&[]) {
+        let clave = clave_texto(&t.descripcion);
+        if t.contexto || conocidas.contains(&clave) || !novedad(t, &captura.notas_centro) {
+            continue;
+        }
+        match nombres.iter_mut().find(|(c, _)| *c == clave) {
+            Some((_, desc)) => *desc = t.descripcion.clone(),
+            None => nombres.push((clave, t.descripcion.clone())),
+        }
+    }
+    if nombres.is_empty() {
+        return;
+    }
+    let mut lista: Vec<String> = nombres.into_iter().map(|(_, d)| d).collect();
+    lista.sort();
+    let mut detalle = lista.iter().take(5).cloned().collect::<Vec<_>>().join(", ");
+    if lista.len() > 5 {
+        detalle.push_str(&format!(" y {} más", lista.len() - 5));
+    }
+    ctx.marcar(3, "TRAMITES_SIN_REGLA", &format!("Trámites sin regla en la historia ({}): {detalle}", lista.len()));
+}
+
+/// `oido_en_bitacora`: una observación previa ya dejó constancia del oído en esa fecha.
+pub(super) fn oido_en_bitacora(ctx: &Ctx, fecha: NaiveDate) -> bool {
+    let Some(captura) = ctx.captura else { return false };
+    let formas = [clave_texto(&fecha_es(fecha)), fecha.format("%d/%m/%Y").to_string()];
+    captura.notas_centro.iter().any(|n| {
+        let texto = clave_texto(&n.texto);
+        texto.contains("oido") && formas.iter().any(|f| texto.contains(f.as_str()))
+    })
+}
+
+/// `derecho_oido`: sin fecha de oído en RUS, la historia acredita la nomenclatura aplicada en la causa y se cita como
+/// trámite.
+pub(super) fn derecho_oido(ctx: &mut Ctx) -> Option<Frag> {
+    let captura = ctx.captura?;
+    let ult = ultimo(tramites(captura, DERECHO_OIDO))?;
+    if oido_en_bitacora(ctx, ult.fecha) || !novedad(ult, &captura.notas_centro) {
+        return None;
+    }
+    constancia_tramite(ctx, ult)
+}
+
+const CONECTORES: [&str; 2] = ["Posteriormente, ", "Luego, "];
+
+/// `_frase_busqueda`: el primer trámite posterior a la orden abre con «Posteriormente» y los siguientes con «Luego».
+fn frase_busqueda(ctx: &mut Ctx, t: &TramiteCausa, posicion: usize) -> Option<Frag> {
+    let clave = match clave_texto(&t.descripcion).as_str() {
+        PIDE_CUENTA_BUSQUEDA => "HISTORIA.R11_PIDE_CUENTA",
+        SIN_EFECTO_BUSQUEDA => "HISTORIA.R11_SIN_EFECTO",
+        _ => "HISTORIA.R11_TERMINO",
+    };
+    let mut frag = ctx.render(clave, &[("FECHA", fecha_es(t.fecha)), ("FOLIO", folio_o_sf(t))])?;
+    let deseado = CONECTORES[usize::from(posicion != 0)];
+    if let Some((texto, grupo)) = frag.partes.first_mut() {
+        if let Some(actual) = CONECTORES.iter().find(|c| texto.starts_with(*c)) {
+            *texto = format!("{deseado}{}", &texto[actual.len()..]);
+            *grupo = 'C';
+        }
+    }
+    Some(frag)
+}
+
+/// `busqueda_historia` (R11): la orden de búsqueda y luego sus trámites (pide cuenta, deja sin efecto, término). Con
+/// bitácora se dice si el último trámite de la cadena es novedad; sin ella, si cae en los últimos `ventana_busqueda`
+/// días. La orden puede ser el trámite de contexto. Una orden sin cierre posterior marca R11_BUSQUEDA_VIGENTE.
+pub(super) fn busqueda_historia(ctx: &mut Ctx) -> Vec<Frag> {
+    let Some(captura) = ctx.captura else { return Vec::new() };
+    if captura.tramites.is_none() {
+        return Vec::new();
+    }
+    // `analisis_historia.busqueda`: cada cierre cierra la orden anterior más cercana.
+    let todas: Vec<&TramiteCausa> = tramites_con_contexto(captura, &[ORDEN_BUSQUEDA]).collect();
+    let cerradas: Vec<&TramiteCausa> = tramites_con_contexto(captura, &CIERRES_BUSQUEDA)
+        .filter_map(|c| todas.iter().copied().filter(|o| posterior(c, o)).max_by_key(|o| orden_tramite(o)))
+        .collect();
+    if todas.iter().any(|o| !cerradas.contains(o)) {
+        ctx.marcar(1, "R11_BUSQUEDA_VIGENTE", "Orden de búsqueda vigente");
+    }
+    let desde = ctx.hoy - chrono::Duration::days(ctx.p("ventana_busqueda"));
+    let notas = &captura.notas_centro;
+    let reciente = |t: &TramiteCausa| {
+        !t.contexto && if notas.is_empty() { t.fecha >= desde } else { novedad(t, notas) }
+    };
+    let mut ordenes: Vec<&TramiteCausa> = Vec::new();
+    for o in todas {
+        if !ordenes.iter().any(|x| mismo_tramite(x, o)) {
+            ordenes.push(o);
+        }
+    }
+    ordenes.sort_by_key(|o| orden_tramite(o));
+    let mut seguimiento: Vec<&TramiteCausa> = [PIDE_CUENTA_BUSQUEDA, SIN_EFECTO_BUSQUEDA, TERMINO_BUSQUEDA]
+        .into_iter()
+        .flat_map(|n| tramites(captura, n))
+        .collect();
+    seguimiento.sort_by_key(|t| orden_tramite(t));
+    let mut cadenas: Vec<Vec<&TramiteCausa>> = ordenes.iter().map(|o| vec![*o]).collect();
+    let mut huerfanos: Vec<&TramiteCausa> = Vec::new();
+    for t in seguimiento {
+        let previa = (0..ordenes.len())
+            .filter(|&i| posterior(t, ordenes[i]))
+            .max_by_key(|&i| orden_tramite(ordenes[i]));
+        match previa {
+            Some(i) => cadenas[i].push(t),
+            None if !huerfanos.iter().any(|x| mismo_tramite(x, t)) => huerfanos.push(t),
+            None => {}
+        }
+    }
+    let mut salida = Vec::new();
+    for cadena in cadenas {
+        let (orden, ult) = (cadena[0], cadena[cadena.len() - 1]);
+        if !reciente(ult) || en_bitacora(ult, notas, "busqueda") {
+            continue;
+        }
+        let Some(frag) = ctx.render(
+            "HISTORIA.R11_ORDEN",
+            &[("FECHA", fecha_es(orden.fecha)), ("FOLIO", folio_o_sf(orden))],
+        ) else {
+            continue;
+        };
+        salida.push(frag);
+        for (n, t) in cadena[1..].iter().enumerate() {
+            salida.extend(frase_busqueda(ctx, t, n));
+        }
+    }
+    for t in huerfanos {
+        if reciente(t) && !en_bitacora(t, notas, "busqueda") {
+            salida.extend(constancia_tramite(ctx, t));
+        }
+    }
+    salida
+}
+
+const MESES: [&str; 12] = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre",
+    "diciembre",
+];
+
+/// `proyeccion_ingreso` (Espera, 11-nov-2026): si la última observación dice «…proyecta ingreso efectivo para el mes
+/// de M», devuelve esa oración tal como está escrita mientras M sea posterior al mes del corte.
+pub(super) fn proyeccion_ingreso(ctx: &Ctx) -> Option<String> {
+    use chrono::Datelike;
+    static PROYECCION: OnceLock<Regex> = OnceLock::new();
+    let re = PROYECCION.get_or_init(|| {
+        Regex::new(&format!(
+            r"(?i)proyecta\s+(?:el\s+)?ingreso(?:\s+efectivo)?\s+para\s+(?:el\s+mes\s+de\s+|el\s+|)({}|setiembre)\b(?:\s+(?:de\s+|del\s+)?(\d{{4}}))?",
+            MESES.join("|")
+        ))
+        .unwrap()
+    });
+    let ultima = ctx.captura?.notas_centro.iter().max_by_key(|n| n.fecha)?;
+    let texto = ultima.texto.split_whitespace().collect::<Vec<_>>().join(" ");
+    let hallazgo = re.captures(&texto)?;
+    let nombre = hallazgo[1].to_lowercase();
+    let mes = if nombre == "setiembre" { 9 } else { MESES.iter().position(|m| *m == nombre)? as u32 + 1 };
+    let anio = match hallazgo.get(2) {
+        Some(a) => a.as_str().parse().ok()?,
+        None => ultima.fecha.year() + i32::from(mes < ultima.fecha.month()),
+    };
+    if (anio, mes) <= (ctx.hoy.year(), ctx.hoy.month()) {
+        return None;
+    }
+    let (inicio, fin) = (hallazgo.get(0)?.start(), hallazgo.get(0)?.end());
+    let previo = [texto[..inicio].rfind(". "), texto[..inicio].rfind(": ")].into_iter().flatten().max();
+    let desde = previo.map_or(0, |p| p + 2);
+    let hasta = texto[fin..].find('.').map_or(texto.len(), |p| fin + p + 1);
+    Some(texto[desde..hasta].trim().to_owned())
 }
 
 /// `reglas_historia.causa_finalizada`: causa P con «Conciliacion» o «Dictación de sentencia» sin «Egreso de servicio…»
@@ -788,22 +1048,21 @@ mod tests {
         if let Some(d) = c["duplicidad"].as_str() {
             pre.duplicidad.insert(0, if d == "MISMO_PROGRAMA" { "MISMO_PROGRAMA" } else { "OTRO_REGISTRO" });
         }
+        if let Some(a) = c["acumulado"].as_array() {
+            pre.acumulado.insert(0, (a[0].as_u64().unwrap() as usize, fecha(&a[1]).unwrap()));
+        }
         let r = evaluar_con_captura(&cfg, mode, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
         (r, con_prorroga)
     }
 
-    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`) en Espera y Cumplimiento con historia o
-    /// bitácora. Coinciden: `HISTORIA.P_FINALIZADA` (observación completa y NOMENCL); con una «Prorroga» en la
-    /// ventana, la marca PRORROGA_REVISAR y su constancia; y en todos, los eventos de curador, fichas y
-    /// `HISTORIA.REITERA` en su orden, junto con las marcas de curador.
+    /// Contraste con el corpus de Flow Python (`FLOW_CASOS`): en Espera, Cumplimiento e Informes, cada caso con
+    /// historia o bitácora coincide en observación, reglas y marcas; `HISTORIA.P_FINALIZADA` activa NOMENCL.
+    /// `FLOW_DIFF=1` imprime cada diferencia completa.
     #[test]
     fn oraculo_historia() {
         let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
-        const FAMILIA: [&str; 7] = ["COMUN.CURADOR", "HISTORIA.REITERA", "HISTORIA.MATERIA_", "CUMPLIMIENTO.C07_SIN_FICHA", "CUMPLIMIENTO.C08_FICHA_FAE", "HISTORIA.BASE_TRAMITE", "HISTORIA.P_FINALIZADA"];
-        let familia = |e: &str| FAMILIA.iter().any(|p| e.starts_with(p));
-        let marca_curador = |m: &str| m.starts_with("CURADOR_");
-        let (mut total, mut finales, mut evaluados, mut fallos) = (0, 0, 0, Vec::new());
-        for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento)] {
+        let (mut evaluados, mut con_prorroga, mut finales, mut fallos) = (0, 0, 0, Vec::new());
+        for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {
             let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
             let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
             for c in &casos {
@@ -811,45 +1070,30 @@ mod tests {
                     continue;
                 }
                 evaluados += 1;
-                let (r, con_prorroga) = caso_corpus(c, mode);
+                let (r, prorroga) = caso_corpus(c, mode);
+                con_prorroga += usize::from(prorroga);
                 let e = &c["esperado"];
                 let reglas: Vec<&str> = e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect();
-                let esp: Vec<&str> = reglas.iter().copied().filter(|e| familia(e)).collect();
-                let obt: Vec<&str> = r.eventos.iter().map(String::as_str).filter(|e| familia(e)).collect();
-                let me: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).filter(|m| marca_curador(m)).collect();
-                let mo: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).filter(|m| marca_curador(m)).collect();
-                // BASE_TRAMITE también lo emiten reglas no portadas (búsqueda, continuidad): se compara la constancia
-                // del curador y la de la prórroga por su texto.
-                fn sin_base<'a>(v: &[&'a str]) -> Vec<&'a str> {
-                    v.iter().copied().filter(|e| *e != "HISTORIA.BASE_TRAMITE").collect()
-                }
-                let curador_txt = |t: &str| t.contains("«Designa abogado»") || t.contains("«Deja sin efecto designación");
-                let (ce, co) = (curador_txt(e["observacion"].as_str().unwrap()), curador_txt(&r.observacion));
-                if sin_base(&esp) != sin_base(&obt) || me != mo || ce != co {
-                    fallos.push(format!("{} eventos {esp:?}/{obt:?} marcas {me:?}/{mo:?}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
-                }
-                let pe = reglas.contains(&"HISTORIA.P_FINALIZADA");
-                if pe {
+                let marcas: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).collect();
+                let obtenidas: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).collect();
+                let mut igual = e["observacion"].as_str() == Some(r.observacion.as_str())
+                    && reglas == r.eventos.iter().map(String::as_str).collect::<Vec<_>>()
+                    && marcas == obtenidas;
+                if reglas.contains(&"HISTORIA.P_FINALIZADA") {
                     finales += 1;
-                    if e["observacion"].as_str() != Some(r.observacion.as_str()) || !acciones(&r.eventos, None, "2026-01-01".parse().unwrap()).contains(&"NOMENCL") {
-                        fallos.push(format!("{}: P_FINALIZADA\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+                    igual &= acciones(&r.eventos, None, "2026-01-01".parse().unwrap()).contains(&"NOMENCL");
+                }
+                if !igual {
+                    let detalle = format!("{}\n  reglas {reglas:?}\n  obten. {:?}\n  marcas {marcas:?} / {obtenidas:?}\n  esp: {}\n  obt: {}", c["id"], r.eventos, e["observacion"], r.observacion);
+                    if std::env::var_os("FLOW_DIFF").is_some() {
+                        println!("DIFF {detalle}");
                     }
-                }
-                if !con_prorroga || mode != Mode::Cumplimiento {
-                    continue;
-                }
-                total += 1;
-                let esperada = e["marcas"].as_array().unwrap().iter().any(|m| m["codigo"] == "PRORROGA_REVISAR");
-                let obtenida = r.marcas.iter().any(|m| m.codigo == "PRORROGA_REVISAR");
-                let frase = |t: &str| t.contains("consta el trámite «Prorroga»") || t.contains("trámites «Prorroga»");
-                let (fe, fo) = (frase(e["observacion"].as_str().unwrap()), frase(&r.observacion));
-                if esperada != obtenida || fe != fo {
-                    fallos.push(format!("{}: prórroga marca {esperada}/{obtenida} frase {fe}/{fo}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+                    fallos.push(detalle);
                 }
             }
         }
-        println!("oraculo_historia: {evaluados} casos, {total} con prórroga, {finales} causas finalizadas");
-        assert!(total > 0 && finales > 0);
+        println!("oraculo_historia: {} de {evaluados} casos coinciden ({con_prorroga} con prórroga, {finales} causas finalizadas)", evaluados - fallos.len());
+        assert!(evaluados > 2500 && con_prorroga > 0 && finales > 0);
         assert!(fallos.is_empty(), "{} casos difieren:\n{}", fallos.len(), fallos.iter().take(10).cloned().collect::<Vec<_>>().join("\n"));
     }
 }
