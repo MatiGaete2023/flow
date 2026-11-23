@@ -11,7 +11,7 @@ Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-p
 
 ## Pendiente (en orden)
 
-1. Siguiente: revisión del usuario (run de la CI Windows, E-E y paquete H) D-3 (opción a) y D-4 (integrar todo) quedaron resueltas: sigue el lote 3, E-Q1 y E-Q2 ([prompt](prompts/LOTE-3.md)). E-A78 y E-G quedaron `ENTREGADO`. E-D e E-I quedaron `ENTREGADO` el 23 de noviembre; E-B, E-J, E-K, E-C, E-L y E-F quedaron cerrados por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
+1. Siguiente: revisión del usuario (run de la CI Windows, E-E y paquete H) D-3 (opción a) y D-4 (integrar todo) quedaron resueltas. E-Q1, E-Q2 y E-Q3 quedaron `ENTREGADO`; sigue E-Q4 (`DiaryRunner`, ver `ENCARGOS_IA.md`). E-A78 y E-G quedaron `ENTREGADO`. E-D e E-I quedaron `ENTREGADO` el 23 de noviembre; E-B, E-J, E-K, E-C, E-L y E-F quedaron cerrados por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
 2. Decisiones D-1 (conservar el guion) y D-2 (`keep_filters` igual que Python) resueltas el 23 de noviembre; ver [ENCARGOS_IA.md](ENCARGOS_IA.md).
 3. Paquete H: acta del usuario con su PC autorizado, sesión SITFA y Outlook local ([guía](../aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md)).
 

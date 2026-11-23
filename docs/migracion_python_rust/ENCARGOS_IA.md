@@ -149,39 +149,47 @@ Restricciones vigentes:
 
 En orden de dependencia:
 
-### E-Q1 · Lectores locales de contexto — `ABIERTO` (L) · [prompt](prompts/LOTE-3.md)
+### E-Q1 · Lectores locales de contexto — `ENTREGADO` (23-nov-2026, `8cfd5b6`, por la auditoría) · [prompt](prompts/LOTE-3.md)
 
 - Portar `flow-captura::lecturas` a `app/src/descargador/lecturas.rs`: `leer_bitacora`, `leer_historia`, `leer_calendario`, `leer_historico`, `leer_escritos_html` y `separar_ventana`.
 - Oráculo: `rust/oraculo/generar_lecturas.py` (`nurus.bitacora_html`, `historia_html` y `calendario_html`). Su fixture se copia o se regenera en `app/tests/datos/`.
 - Criterio: `LECTURAS: n/n, fallos 0`, con todas las ventanas del fixture y sus pruebas negativas; ventana de 1 a 4 meses.
 
-### E-Q2 · Vínculos del listado — `ABIERTO` (L) · [prompt](prompts/LOTE-3.md)
+### E-Q2 · Vínculos del listado — `ENTREGADO` (23-nov-2026, `702ccad`, por la auditoría) · [prompt](prompts/LOTE-3.md)
 
 - Portar `flow-captura::vinculos` (extraer, `descartar_ambiguos` e identidad) con el oráculo `generar_vinculos.py` (`descargador/vinculos.py::extract` y `extract_historia`).
 - Criterio: `VINCULOS: n/n, fallos 0`.
 
-### E-Q3 · Puente y comandos de lectura — `ABIERTO` (L/W), tras E-Q1 y E-Q2
+### E-Q3 · Puente y comandos de lectura — `ENTREGADO` (23-nov-2026, `a161241`, por la auditoría)
 
 - Permitir en el puente `diary_open`, `history_open` y `calendar_open` **solo en Integral**, que ya declara `bitacoras_lectura`, `historia_lectura`, `calendario_lectura` e `historico_lectura`. Lite sigue rechazándolos.
 - `abrir_bitacora`, `abrir_historia` y `abrir_calendario` sobre el SITFA ficticio.
 - La prueba de `puente.rs:440` pasa a exigir el rechazo en Lite y la aceptación en Integral. `navigate` y `carga` siguen rechazados.
 
-### E-Q4 · Recolección dentro del lote — `ABIERTO` (L), tras E-Q3
+### E-Q4 · Lote de bitácoras (`DiaryRunner`) — `ABIERTO` (L), tras E-Q3
 
-- Portar `flow-captura::recoleccion`:
-  - tope de 600 lecturas;
-  - checkpoints y reanudación;
-  - reutilización de las lecturas del día;
-  - `reparar_lecturas`;
-  - bitácoras faltantes.
-- Integrarlo a `lote::ejecutar` como opción del lote Integral.
-- Pruebas sobre el SITFA ficticio, con las huellas del lote original intactas.
+- **Hallazgo (N1, 23-nov-2026):** en Flow Python las lecturas no corren dentro del lote de listados. Son un flujo aparte del Descargador (`start_diary`, `descargador/lectura_bitacoras.py::DiaryRunner`, 1.068 líneas, más `lectura_historia.py`, con 351, y `historico_manual.py`, con 182), con su propio formato en disco:
+  - `bitacoras/bitacoras.json` (manifiesto) y una instantánea por registro;
+  - `historia/historias.json`;
+  - `historico/`;
+  - el calendario;
+  - `diagnostico_bitacoras.json` anónimo;
+  - `Bitacoras_RUS.xlsx`.
+
+  `flow-captura::recoleccion` (777 líneas) tiene otro modelo de `resumen` y no se puede copiar sin más.
+- Hacer: `app/src/descargador/bitacoras.rs` con el comportamiento de `DiaryRunner`:
+  - enumerar el listado y abrir por fila bitácora, historia, calendario e histórico, con los lectores de E-Q1 y el puente de E-Q3;
+  - pausa, tope de lecturas, `MAX_FALLAS_SEGUIDAS` y cancelación;
+  - reanudación;
+  - reutilización de lecturas de las últimas horas (`lecturas_reutilizables`, `carpetas_previas`);
+  - escribir **el mismo formato en disco que Python**.
+- **Oráculo:** ejecutar `DiaryRunner` de Python y el de Rust sobre el mismo SITFA ficticio (`descargador/test_lotes.py::CATALOG`, `test_lectura_historia.FakeBridge` y `bitacora_fixtures`) y comparar los manifiestos, salvo marcas de tiempo declaradas. Además, `package_current_lot` de Python debe aceptar la carpeta producida por Rust.
 
 ### E-Q5 · Paquete CSMP desde el lote — `ABIERTO` (L), tras E-Q4
 
-- Generar el ZIP `CSMP_CAPTURE` (equivalente a `package_current_lot` y `export_csmp_capture.py`) desde la carpeta del lote.
-- Contraste: el mismo lote ficticio empaquetado por Python y por Rust da las mismas tablas, huellas y manifiesto (salvo la procedencia no determinista, declarada). Además, Trabajo abre el ZIP de Rust y el paquete C sigue en `fallos 0`.
-- Oráculos: `generar_paquete*.py` y `validar_paquete_lote.py`.
+- Python: `descargador.py::package_current_lot` → `export_csmp_capture.py::export_capture_with_note` (806 líneas), con `load_sources` y `match_diaries`.
+- Hacer: el mismo ZIP `CSMP_CAPTURE` 1.2.0 desde la carpeta del lote de listados más la de bitácoras.
+- **Oráculo:** sobre las mismas carpetas ficticias, Python y Rust dan las mismas tablas y el mismo manifiesto (salvo la procedencia no determinista, como en E-C). `nurus.capture.read_capture` y `import_capture` de Python abren el ZIP de Rust, y el paquete C de `app/` sigue en `fallos 0` con él.
 
 ### E-Q6 · Interfaz del Descargador para las lecturas y el paquete — `ABIERTO` (W/L), tras E-Q5
 

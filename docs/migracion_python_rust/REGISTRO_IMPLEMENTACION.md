@@ -891,8 +891,42 @@ E-D e E-I quedan `ENTREGADO`. El cierre corresponde a la revisión del usuario y
   - la extensión Integral 2.9.0 incluida en `app/` ya declara `bitacoras_lectura`, `historia_lectura`, `calendario_lectura` e `historico_lectura`. Las lecturas las bloquea el puente de `app/`, no la extensión.
 - **Hallazgo (N1)**: el oráculo `generar_lecturas.py`, ejecutado con el Python vigente, cambia `lecturas_ficticias.json`. La bitácora agrega `alcance` y `alcance_metodo` (V2), y dos pruebas de `flow-captura --test lecturas` fallan. El port no puede confiar en los fixtures históricos y debe regenerarlos (LOTE-3). `generar_vinculos.py` reproduce su fixture.
 
+## Entrega · E-Q1, E-Q2 y E-Q3 (23 de noviembre de 2026, ejecutada por la auditoría)
+
+### E-Q1 · `8cfd5b6`
+
+- `app/src/descargador/lecturas.rs`, portado de `flow-captura::lecturas` y alineado al Python vigente:
+  - bitácora con `alcance` y `alcance_metodo` (`bitacora_html.alcance_bitacora`: `role=button`, `aria-label`, `title` y flechas ←→⇐⇒);
+  - `leer_escritos_ventana` con la forma y los códigos de `read_escritos` (`ESCRITOS_AUSENTE`, `ESCRITOS_RESPUESTA_INCOMPLETA`, `ESCRITOS_SESION`, `ESCRITOS_NO_VERIFICADA`);
+  - `leer_historico` con `rut_visible` (`canonical_rut` y `_campos_titular` con rótulo) y las claves de Python.
+- `app/qa/generar_lecturas.py` (determinista) → `app/tests/datos/lecturas.json`, con 18 ventanas ficticias.
+- `LECTURAS: 18/18, negativas 24/24, fallos 0`. Mutación: sin `alcance` → `16/18`, FAILED.
+
+### E-Q2 · `702ccad`
+
+- `app/src/descargador/vinculos.rs`, con `bitacora_python` e `historia_python` en la forma de `extract` y `extract_historia`.
+- `app/qa/generar_vinculos.py` → `app/tests/datos/vinculos.json` (9 listados, igual al fixture histórico).
+- `VINCULOS: 9/9, fallos 0`. Mutación: `descartar_ambiguos` vacío → FAILED.
+
+### E-Q3 · `a161241`
+
+- El puente acepta `diary_open`, `history_open` y `calendar_open` solo tras `verificar(Integral)`. Lite, un puente recién abierto o una verificación fallida los rechazan; `navigate` y `carga` siguen rechazados.
+- `abrir_bitacora`, `abrir_historia` y `abrir_calendario` comprueban identidad, huella y fecha. Cuatro mutaciones (params, digest, startedAt y HTML ajeno) se rechazan con una sola llamada cada una.
+- Mutación del filtro Integral → la prueba del puente da FAILED.
+- **Límite:** no hay prueba de extremo a extremo de `verificar(Integral)` → `habilitar_lecturas(true)`; la lógica es una línea en `descargador.rs`.
+
+### Comunes
+
+- Biblioteca: `53 passed; 0 failed; 1 ignored`.
+- clippy `--lib -D warnings` limpio; `inventario_escrituras` en PASA.
+- No hay escrituras nuevas: E-Q1 a E-Q3 solo leen.
+
+### Hallazgo para E-Q4 y E-Q5 (N1)
+
+Las lecturas de Python son un flujo aparte (`DiaryRunner`) con su propio formato en disco, no parte del lote de listados. Quedan por trasladar cerca de 3.600 líneas de Python para E-Q4, E-Q5 y E-S1 (`lectura_bitacoras.py`, `lectura_historia.py`, `historico_manual.py`, `export_csmp_capture.py`, `resultados.py` y `flujo_paquete.py`), y cerca de 7.800 para E-R, E-T2, E-T3 y E-T4. `ENCARGOS_IA.md` ya registra los oráculos de E-Q4 y E-Q5.
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
-2. IA ejecutora: lote 3, E-Q1 y E-Q2 ([prompt](prompts/LOTE-3.md)). Después, E-Q3 a E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`.
+2. Siguiente encargo: E-Q4 (`DiaryRunner` en Rust con el formato en disco de Python). Después, E-Q5, E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`. Cada uno, en una sesión nueva.
 3. D-1 y D-2 resueltas: sin cambios de código.
