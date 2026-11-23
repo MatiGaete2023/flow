@@ -1,6 +1,6 @@
 //! Identidad de los enlaces del listado, sin ejecutar JavaScript ni deducir identificadores (E-Q2, desde
 //! `flow-captura::vinculos`). Las aperturas de ventana por el puente (`abrir_bitacora`, `abrir_historia`,
-//! `abrir_calendario`) son de E-Q3.
+//! `abrir_calendario`, E-Q3) solo funcionan con la extensión Integral verificada.
 
 use super::lecturas::texto;
 use regex::Regex;
@@ -325,6 +325,57 @@ pub fn descartar_ambiguos(filas: &mut [Vinculo]) {
     }
 }
 
+/// Lectura de una ventana de contexto por el puente (E-Q3): identidad, huella y fecha de captura comprobadas.
+fn recibir(conexion: &dyn super::lote::Conexion, comando: &str, payload: serde_json::Value) -> Result<(Vec<u8>, String), String> {
+    // La versión de la extensión se comprueba una vez por lote en `lotes::ejecutar`, como el Descargador.
+    let respuesta = conexion.llamar(comando, payload.clone(), super::lote::PLAZO)?;
+    let campo = if comando == "calendar_open" { "args" } else { "params" };
+    if respuesta[campo] != payload[campo] {
+        return Err("La extensión devolvió otra identidad de lectura.".into());
+    }
+    let datos = super::lote::cuerpo(&respuesta, false)?;
+    if respuesta["digest"].as_str() != Some(super::xls::huella(&datos).as_str()) {
+        return Err("La ventana de lectura no coincide con su huella.".into());
+    }
+    let capturada = respuesta["startedAt"]
+        .as_str()
+        .filter(|s| chrono::DateTime::parse_from_rfc3339(s).is_ok())
+        .ok_or("La lectura no tiene una fecha de captura comprobable.")?;
+    Ok((datos, capturada.to_string()))
+}
+
+pub fn abrir_bitacora(conexion: &dyn super::lote::Conexion, v: &Vinculo, modalidad: &str) -> Result<serde_json::Value, String> {
+    let params = v.params_bitacora(modalidad)?;
+    let (datos, capturada) = recibir(conexion, "diary_open", serde_json::json!({"params":params}))?;
+    super::lecturas::leer_bitacora_en_captura(&datos, &params, &capturada)
+}
+
+pub fn abrir_historia(conexion: &dyn super::lote::Conexion, v: &Vinculo, tribunal_nombre: &str) -> Result<serde_json::Value, String> {
+    if !v.historia_verificada {
+        return Err("La historia no tiene un vínculo comprobado con el listado.".into());
+    }
+    let (datos, capturada) =
+        recibir(conexion, "history_open", serde_json::json!({"params":{"tribunal":v.tribunal,"rit":v.rit_enlace,"causa":v.causa}}))?;
+    let historia = super::lecturas::leer_historia(&datos, "", &capturada)?;
+    if historia["encabezado"]["RIT"].as_str().map(normalizar) != Some(normalizar(&v.rit)) {
+        return Err("El RIT visible de la historia no coincide con la causa solicitada.".into());
+    }
+    if tribunal_nombre.trim().is_empty() || historia["encabezado"]["Tribunal"].as_str().map(normalizar) != Some(normalizar(tribunal_nombre))
+    {
+        return Err("El tribunal visible de la historia no coincide con el tribunal solicitado.".into());
+    }
+    Ok(historia)
+}
+
+pub fn abrir_calendario(conexion: &dyn super::lote::Conexion, v: &Vinculo) -> Result<serde_json::Value, String> {
+    if !v.bitacora_verificada {
+        return Err("El ingreso no tiene un vínculo comprobado con el listado.".into());
+    }
+    let args = v.calendario.as_ref().ok_or("No consta un enlace de calendario comprobado para el ingreso.")?;
+    let (datos, capturada) = recibir(conexion, "calendar_open", serde_json::json!({"args":args}))?;
+    super::lecturas::leer_calendario(&datos, args, "", &capturada)
+}
+
 /// Selección de la consulta de la que salió el listado (`flow-captura::sitfa::Seleccion`, solo lo que usa `extraer`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Seleccion {
@@ -444,5 +495,61 @@ mod tests {
         assert!(extraer(html.as_bytes(), &seleccion()).unwrap()[0].bitacora_verificada);
         let html = caso["html"].as_str().unwrap().replace("ShowObservaciones('100'", "ShowObservaciones('\\x3100'");
         assert!(extraer(html.as_bytes(), &seleccion()).unwrap()[0].bitacora_verificada);
+    }
+
+    /// E-Q3: una lectura por el puente exige identidad, huella y fecha antes de aceptar datos, y pide una sola vez.
+    #[test]
+    fn lectura_exige_identidad_huella_y_fecha_antes_de_aceptar_datos() {
+        use super::super::lote::Conexion;
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        use serde_json::json;
+        struct Ficticia {
+            mutacion: &'static str,
+            datos: String,
+            lecturas: std::sync::atomic::AtomicUsize,
+        }
+        impl Conexion for Ficticia {
+            fn llamar(&self, comando: &str, payload: Value, _plazo: std::time::Duration) -> Result<Value, String> {
+                assert_eq!(comando, "diary_open");
+                self.lecturas.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let datos = if self.mutacion == "html_ajeno" {
+                    self.datos.replace("name=\"ID_Ingreso\" value=\"201\"", "name=\"ID_Ingreso\" value=\"999\"")
+                } else {
+                    self.datos.clone()
+                };
+                let mut r = json!({"status":200,"type":"text/html","body":STANDARD.encode(datos.as_bytes()),
+                    "params":payload["params"],"digest":super::super::xls::huella(datos.as_bytes()),"startedAt":"2026-11-12T12:00:00Z"});
+                match self.mutacion {
+                    "params" => r["params"]["ID_Ingreso"] = json!("999"),
+                    "digest" => r["digest"] = json!("alterada"),
+                    "startedAt" => r["startedAt"] = json!("ilegible"),
+                    _ => (),
+                }
+                Ok(r)
+            }
+        }
+        let c = casos().remove(0);
+        let v = extraer(c["html"].as_str().unwrap().as_bytes(), &seleccion()).unwrap().remove(0);
+        let lecturas: Vec<Value> = serde_json::from_str(include_str!("../../tests/datos/lecturas.json")).unwrap();
+        let datos = lecturas[0]["html"].as_str().unwrap()
+            .replace("name=\"COD_Tribunal\" value=\"11\"", "name=\"COD_Tribunal\" value=\"901\"")
+            .replace("name=\"CRR_IdCausa\" value=\"22\"", "name=\"CRR_IdCausa\" value=\"100\"")
+            .replace("name=\"ID_Ingreso\" value=\"33\"", "name=\"ID_Ingreso\" value=\"201\"");
+        let positiva = Ficticia { mutacion: "ninguna", datos: datos.clone(), lecturas: Default::default() };
+        let leida = abrir_bitacora(&positiva, &v, "2").unwrap();
+        assert_eq!(leida["coverage"], "PARCIAL");
+        assert_eq!(leida["alcance"], "COMPLETA");
+        assert!(leida["alcance_revision_fuente"].is_object(), "la lectura por el puente acredita su alcance de revisión");
+        for mutacion in ["params", "digest", "startedAt", "html_ajeno"] {
+            let f = Ficticia { mutacion, datos: datos.clone(), lecturas: Default::default() };
+            assert!(abrir_bitacora(&f, &v, "2").is_err(), "{mutacion}");
+            assert_eq!(f.lecturas.load(std::sync::atomic::Ordering::SeqCst), 1);
+        }
+        let mut sin_historia = v.clone();
+        sin_historia.historia_verificada = false;
+        assert!(abrir_historia(&positiva, &sin_historia, "Juzgado").is_err());
+        let mut sin_calendario = v.clone();
+        sin_calendario.calendario = None;
+        assert!(abrir_calendario(&positiva, &sin_calendario).is_err());
     }
 }

@@ -442,7 +442,7 @@ fn escribir_json(carpeta: &Path, nombre: &str, valor: &Value) -> Result<(), Stri
         .map_err(|e| error_escritura(&e, &carpeta.join(nombre)))
 }
 
-fn cuerpo(respuesta: &Value, excel: bool) -> Result<Vec<u8>, String> {
+pub(super) fn cuerpo(respuesta: &Value, excel: bool) -> Result<Vec<u8>, String> {
     let error = || "Respuesta vacía, vencida o fuera del formato permitido.".to_string();
     let texto = respuesta["body"].as_str().ok_or_else(error)?;
     if texto.len() > 4 * (80 * 1024 * 1024 + 2) / 3 {

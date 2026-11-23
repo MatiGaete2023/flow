@@ -118,7 +118,10 @@ impl Puente {
             serde_json::json!({}),
             Duration::from_secs(15),
         )?;
-        comprobar_extension(edicion, &version)
+        let resultado = comprobar_extension(edicion, &version);
+        // E-Q3: las lecturas de contexto quedan habilitadas solo tras verificar la extensión Integral.
+        self.habilitar_lecturas(resultado.is_ok() && edicion == Edicion::Integral);
+        resultado
     }
 }
 

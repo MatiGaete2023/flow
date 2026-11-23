@@ -277,7 +277,6 @@ pub const ALCANCE_BITACORA_SITFA: &str = "SITFA_TABLA_INFORME_INGRESO_V1";
 
 /// Solo para la respuesta de la conexión verificada de Captura. Un HTML legado
 /// leído fuera de esa conexión conserva su cobertura original.
-#[allow(dead_code)] // la usa el puente de lecturas (E-Q3)
 pub(crate) fn leer_bitacora_en_captura(
     datos: &[u8],
     params: &BTreeMap<String, String>,

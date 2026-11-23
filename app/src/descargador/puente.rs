@@ -23,6 +23,8 @@ const COMANDOS: [&str; 10] = [
     "evidence_capture",
     "evidence_close",
 ];
+/// Lecturas de contexto (E-Q3): solo con la extensión Integral verificada en este puente (`verificar(Integral)`).
+const LECTURAS_INTEGRAL: [&str; 3] = ["diary_open", "history_open", "calendar_open"];
 const MOTIVOS_EVIDENCIA: [&str; 9] = [
     "estructura", "sesion", "cambio", "pantalla", "tiempo", "pagina", "acceso", "permiso", "pestaña",
 ];
@@ -44,6 +46,8 @@ struct Estado {
     pendientes: Mutex<HashMap<String, Sender<Value>>>,
     visto: Mutex<Option<Instant>>,
     cerrado: AtomicBool,
+    /// La última verificación de la extensión fue Integral: habilita `LECTURAS_INTEGRAL`.
+    integral: AtomicBool,
 }
 
 pub struct Puente {
@@ -288,6 +292,7 @@ impl Puente {
             pendientes: Mutex::new(HashMap::new()),
             visto: Mutex::new(None),
             cerrado: AtomicBool::new(false),
+            integral: AtomicBool::new(false),
         });
         for _ in 0..4 {
             let (servidor, estado) = (servidor.clone(), estado.clone());
@@ -306,6 +311,11 @@ impl Puente {
             estado,
             servidor,
         })
+    }
+
+    /// La extensión verificada es Integral (habilita las lecturas de contexto) o no (Lite, o verificación fallida).
+    pub(super) fn habilitar_lecturas(&self, integral: bool) {
+        self.estado.integral.store(integral, Ordering::SeqCst);
     }
 
     #[cfg(test)]
@@ -336,7 +346,8 @@ impl Puente {
         payload: Value,
         plazo: Duration,
     ) -> Result<Value, String> {
-        if !COMANDOS.contains(&comando) {
+        let lectura = LECTURAS_INTEGRAL.contains(&comando);
+        if !COMANDOS.contains(&comando) && !(lectura && self.estado.integral.load(Ordering::SeqCst)) {
             return Err("Acción no permitida.".into());
         }
         if !self.conectado() {
@@ -437,12 +448,26 @@ mod tests {
             200
         );
         assert_eq!(pedir(&puente, "POST", "/connect", &otra, &vacio).0, 403);
+        // E-Q3: sin la verificación Integral (Lite o recién conectado) las lecturas de contexto se rechazan.
         for excluida in ["diary_open", "history_open", "calendar_open", "navigate", "carga"] {
             assert_eq!(
                 puente.llamar(excluida, vacio.clone(), Duration::ZERO).unwrap_err(),
                 "Acción no permitida."
             );
         }
+        puente.habilitar_lecturas(true);
+        for lectura in ["diary_open", "history_open", "calendar_open"] {
+            assert_ne!(
+                puente.llamar(lectura, vacio.clone(), Duration::ZERO).unwrap_err(),
+                "Acción no permitida.",
+                "{lectura} debe pasar el filtro con Integral verificada"
+            );
+        }
+        for excluida in ["navigate", "carga"] {
+            assert_eq!(puente.llamar(excluida, vacio.clone(), Duration::ZERO).unwrap_err(), "Acción no permitida.");
+        }
+        puente.habilitar_lecturas(false);
+        assert_eq!(puente.llamar("diary_open", vacio.clone(), Duration::ZERO).unwrap_err(), "Acción no permitida.");
 
         std::thread::scope(|scope| {
             let trabajo = scope.spawn(|| puente.catalogo(Edicion::Lite, Pantalla::Litigantes));
