@@ -504,4 +504,104 @@ mod tests {
 </Workbook>"#;
         assert!(leer(xml_xxe.as_bytes()).is_err());
     }
+    /// E-A78: el mismo resultado que Flow Python (`motor.read_excel`, `carga.records_in_grid`) sobre los bytes y
+    /// grillas sintéticas de `app/tests/datos/a78.json`, regenerable con `python app/qa/generar_a78.py`.
+    #[test]
+    fn a78_igual_a_python_sobre_bytes_fijos() {
+        use base64::Engine;
+        use serde_json::{json, Value};
+        let fixture: Value = serde_json::from_str(include_str!("../../tests/datos/a78.json")).unwrap();
+        let b64 = |c: &Value| base64::engine::general_purpose::STANDARD.decode(c["bytes_b64"].as_str().unwrap()).unwrap();
+        let mut fallos = Vec::new();
+        let mut pendientes: Vec<String> = Vec::new();
+        let mut cuenta = [0usize; 3];
+
+        for c in fixture["a7"].as_array().unwrap() {
+            let obtenido = match leer(&b64(c)) {
+                Ok(libro) => {
+                    let mut registros: Vec<Value> = libro
+                        .registros
+                        .iter()
+                        .map(|((rit, nombre), n)| json!([rit, nombre, n]))
+                        .collect();
+                    registros.sort_by_key(|v| v.to_string());
+                    json!({"formato": libro.formato, "registros": registros, "grilla": libro.grilla})
+                }
+                Err(e) => json!({"error": e}),
+            };
+            let mut esperado = c["python"].clone();
+            if let Some(r) = esperado.get_mut("registros").and_then(Value::as_array_mut) {
+                r.sort_by_key(|v| v.to_string());
+            }
+            if obtenido == esperado {
+                cuenta[0] += 1;
+            } else if c["caso"] == "entidad_externa"
+                && obtenido == json!({"error": "No se pudo abrir/parsear el archivo Excel; requiere revision local."})
+            {
+                // D-3 (pendiente del usuario): ambos rechazan sin resolver la entidad; Python lo informa como listado
+                // irreconocible y Rust como XML ilegible. Fijada: cualquier otro cambio en este caso es FALLA.
+                pendientes.push(format!("D-3 A7 entidad_externa: Python {:?} / Rust {:?}", esperado["error"], obtenido["error"]));
+            } else {
+                fallos.push(format!("A7 {}: esp {esperado} / obt {obtenido}", c["caso"]));
+            }
+        }
+
+        let filas_json = |filas: &super::super::sitfa::carga::FilasCarga| -> Vec<Value> {
+            let mut v: Vec<Value> = filas
+                .iter()
+                .map(|(fila, n)| {
+                    let mut f: Vec<Value> = fila.iter().map(|s| json!(s)).collect();
+                    f.push(json!(n));
+                    Value::Array(f)
+                })
+                .collect();
+            v.sort_by_key(|x| x.to_string());
+            v
+        };
+        let ordenar = |mut v: Value| {
+            if let Some(f) = v.get_mut("filas").and_then(Value::as_array_mut) {
+                f.sort_by_key(|x| x.to_string());
+            }
+            v
+        };
+        for c in fixture["a8"].as_array().unwrap() {
+            let grilla: Vec<Vec<String>> = serde_json::from_value(c["grilla"].clone()).unwrap();
+            let obtenido = match super::super::sitfa::carga::registros_en_grilla(&grilla) {
+                Ok(filas) => json!({"filas": filas_json(&filas)}),
+                Err(e) => json!({"error": e}),
+            };
+            let esperado = ordenar(c["python"].clone());
+            if obtenido == esperado {
+                cuenta[1] += 1;
+            } else {
+                fallos.push(format!("A8 {}: esp {esperado} / obt {obtenido}", c["caso"]));
+            }
+        }
+        for c in fixture["a8_libro"].as_array().unwrap() {
+            let obtenido = match leer_carga(&b64(c)) {
+                Ok((formato, filas)) => json!({"formato": formato, "filas": filas_json(&filas)}),
+                Err(e) => json!({"error": e}),
+            };
+            let esperado = ordenar(c["python"].clone());
+            if obtenido == esperado {
+                cuenta[2] += 1;
+            } else {
+                fallos.push(format!("A8 libro {}: esp {esperado} / obt {obtenido}", c["caso"]));
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        for p in &pendientes {
+            println!("DIFERENCIA_PENDIENTE {p}");
+        }
+        let total = [fixture["a7"].as_array().unwrap().len(), fixture["a8"].as_array().unwrap().len(), fixture["a8_libro"].as_array().unwrap().len()];
+        println!(
+            "A78: A7 {}/{}, A8 {}/{}, A8_LIBRO {}/{}, pendientes {}, fallos {}",
+            cuenta[0], total[0], cuenta[1], total[1], cuenta[2], total[2], pendientes.len(), fallos.len()
+        );
+        assert_eq!(pendientes.len(), 1, "solo la diferencia D-3 está pendiente");
+        assert_eq!(total, [8, 7, 1], "el fixture cambió de tamaño: regenerar y revisar");
+        assert!(fallos.is_empty(), "{} casos difieren de Flow Python", fallos.len());
+    }
 }

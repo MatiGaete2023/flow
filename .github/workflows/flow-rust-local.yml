@@ -85,6 +85,15 @@ jobs:
           $contexto = Join-Path $env:RUNNER_TEMP 'flow-e3-ficticio'
           python app/qa/generar_contexto_e3.py referencia-python-ci $contexto
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/verificar_textos_umbrales.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/inventario_escrituras.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $a78 = Join-Path $env:RUNNER_TEMP 'a78.json'
+          python app/qa/generar_a78.py $a78
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -c "import sys; sys.exit(open(sys.argv[1],'rb').read() != open(sys.argv[2],'rb').read())" $a78 app/tests/datos/a78.json
+          if ($LASTEXITCODE -ne 0) { Write-Error 'app/tests/datos/a78.json no coincide con generar_a78.py'; exit 1 }
           $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
           "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
           $env:FLOW_E3_HISTORIA = (Resolve-Path (Join-Path $contexto 'contexto-e3-historia.zip')).Path

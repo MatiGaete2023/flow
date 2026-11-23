@@ -1,0 +1,766 @@
+{
+ "generador": "app/qa/generar_a78.py",
+ "a7": [
+  {
+   "caso": "listado_con_indices_font_y_fecha",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxXb3JrYm9vayB4bWxucz0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6c3ByZWFkc2hlZXQiIHhtbG5zOnNzPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6aHRtbD0iaHR0cDovL3d3dy53My5vcmcvVFIvUkVDLWh0bWw0MCI+PFdvcmtzaGVldCBzczpOYW1lPSJIb2phMSI+PFRhYmxlPjxSb3cgc3M6SW5kZXg9IjEiPjxDZWxsIHNzOkluZGV4PSIxIj48RGF0YSBzczpUeXBlPSJTdHJpbmciPlJJVDwvRGF0YT48L0NlbGw+PENlbGwgc3M6SW5kZXg9IjIiPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+Tm9tYnJlPC9EYXRhPjwvQ2VsbD48Q2VsbCBzczpJbmRleD0iNCI+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5GZWNoYTwvRGF0YT48L0NlbGw+PC9Sb3c+PFJvdyBzczpJbmRleD0iMyI+PENlbGwgc3M6SW5kZXg9IjEiPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+WC0xMDAtMjA5OTwvRGF0YT48L0NlbGw+PENlbGwgc3M6SW5kZXg9IjIiPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+PGh0bWw6Rm9udCBodG1sOkNvbG9yPSIjMDAwMDAwIj5QZXJzb25hPC9odG1sOkZvbnQ+IEZpY3RpY2lhPC9EYXRhPjwvQ2VsbD48Q2VsbCBzczpJbmRleD0iNCI+PERhdGEgc3M6VHlwZT0iRGF0ZVRpbWUiPjIwMjYtMTAtMTVUMDA6MDA6MDAuMDAwPC9EYXRhPjwvQ2VsbD48L1Jvdz48Um93PjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+WC0xMDEtMjA5OTwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5PdHJhIFBlcnNvbmEgRmljdGljaWE8L0RhdGE+PC9DZWxsPjwvUm93PjxSb3c+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5YLTEwMC0yMDk5PC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPlBlcnNvbmEgRmljdGljaWE8L0RhdGE+PC9DZWxsPjwvUm93PjwvVGFibGU+PC9Xb3Jrc2hlZXQ+PC9Xb3JrYm9vaz4=",
+   "python": {
+    "formato": "XML-Spreadsheet-2003",
+    "registros": [
+     [
+      "X-100-2099",
+      "PERSONA FICTICIA",
+      2
+     ],
+     [
+      "X-101-2099",
+      "OTRA PERSONA FICTICIA",
+      1
+     ]
+    ],
+    "grilla": [
+     [
+      "RIT",
+      "Nombre",
+      "",
+      "Fecha"
+     ],
+     [],
+     [
+      "X-100-2099",
+      "Persona Ficticia",
+      "",
+      "2026-10-15"
+     ],
+     [
+      "X-101-2099",
+      "Otra Persona Ficticia"
+     ],
+     [
+      "X-100-2099",
+      "Persona Ficticia"
+     ]
+    ]
+   }
+  },
+  {
+   "caso": "fila_no_creciente",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxXb3JrYm9vayB4bWxucz0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6c3ByZWFkc2hlZXQiIHhtbG5zOnNzPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6aHRtbD0iaHR0cDovL3d3dy53My5vcmcvVFIvUkVDLWh0bWw0MCI+PFdvcmtzaGVldCBzczpOYW1lPSJIb2phMSI+PFRhYmxlPjxSb3cgc3M6SW5kZXg9IjUiPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QTwvRGF0YT48L0NlbGw+PC9Sb3c+PFJvdyBzczpJbmRleD0iMyI+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5CPC9EYXRhPjwvQ2VsbD48L1Jvdz48L1RhYmxlPjwvV29ya3NoZWV0PjwvV29ya2Jvb2s+",
+   "python": {
+    "error": "Índice de fila XML inválido."
+   }
+  },
+  {
+   "caso": "columna_201",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxXb3JrYm9vayB4bWxucz0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6c3ByZWFkc2hlZXQiIHhtbG5zOnNzPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6aHRtbD0iaHR0cDovL3d3dy53My5vcmcvVFIvUkVDLWh0bWw0MCI+PFdvcmtzaGVldCBzczpOYW1lPSJIb2phMSI+PFRhYmxlPjxSb3c+PENlbGwgc3M6SW5kZXg9IjIwMSI+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5YPC9EYXRhPjwvQ2VsbD48L1Jvdz48L1RhYmxlPjwvV29ya3NoZWV0PjwvV29ya2Jvb2s+",
+   "python": {
+    "error": "El índice XML excede los límites de columnas."
+   }
+  },
+  {
+   "caso": "mas_de_200_celdas",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxXb3JrYm9vayB4bWxucz0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6c3ByZWFkc2hlZXQiIHhtbG5zOnNzPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6aHRtbD0iaHR0cDovL3d3dy53My5vcmcvVFIvUkVDLWh0bWw0MCI+PFdvcmtzaGVldCBzczpOYW1lPSJIb2phMSI+PFRhYmxlPjxSb3c+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5DPC9EYXRhPjwvQ2VsbD48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPkM8L0RhdGE+PC9DZWxsPjxDZWxsPjxEYXRhIHNzOlR5cGU9IlN0cmluZyI+QzwvRGF0YT48L0NlbGw+PC9Sb3c+PC9UYWJsZT48L1dvcmtzaGVldD48L1dvcmtib29rPg==",
+   "python": {
+    "error": "La fila XML excede los límites de columnas."
+   }
+  },
+  {
+   "caso": "entidad_externa",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjwhRE9DVFlQRSBXb3JrYm9vayBbPCFFTlRJVFkgeHhlIFNZU1RFTSAiaHR0cDovLzEyNy4wLjAuMTo5L3h4ZSI+XT4KPFdvcmtib29rIHhtbG5zPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6c3M9InVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206b2ZmaWNlOnNwcmVhZHNoZWV0IiB4bWxuczpodG1sPSJodHRwOi8vd3d3LnczLm9yZy9UUi9SRUMtaHRtbDQwIj48V29ya3NoZWV0IHNzOk5hbWU9IkhvamExIj48VGFibGU+PFJvdz48Q2VsbD48RGF0YSBzczpUeXBlPSJTdHJpbmciPlJJVDwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5Ob21icmU8L0RhdGE+PC9DZWxsPjwvUm93PjxSb3c+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5YLTEtMjA5OTwvRGF0YT48L0NlbGw+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj4meHhlOzwvRGF0YT48L0NlbGw+PC9Sb3c+PC9UYWJsZT48L1dvcmtzaGVldD48L1dvcmtib29rPg==",
+   "python": {
+    "error": "No se reconoce la estructura RIT/Nombre del listado; descarga detenida."
+   }
+  },
+  {
+   "caso": "sin_listado",
+   "bytes_b64": "PD94bWwgdmVyc2lvbj0iMS4wIj8+CjxXb3JrYm9vayB4bWxucz0idXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6c3ByZWFkc2hlZXQiIHhtbG5zOnNzPSJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzcHJlYWRzaGVldCIgeG1sbnM6aHRtbD0iaHR0cDovL3d3dy53My5vcmcvVFIvUkVDLWh0bWw0MCI+PFdvcmtzaGVldCBzczpOYW1lPSJIb2phMSI+PFRhYmxlPjxSb3c+PENlbGw+PERhdGEgc3M6VHlwZT0iU3RyaW5nIj5TaW4gZGF0b3M8L0RhdGE+PC9DZWxsPjwvUm93PjwvVGFibGU+PC9Xb3Jrc2hlZXQ+PC9Xb3JrYm9vaz4=",
+   "python": {
+    "error": "Se recibio el Excel, pero no se reconoce un unico listado de causas y nombres. No es una consulta sin resultados."
+   }
+  },
+  {
+   "caso": "html_tabular",
+   "bytes_b64": "PGh0bWw+PHRhYmxlPjx0cj48dGQ+UklUPC90ZD48dGQ+Tm9tYnJlPC90ZD48L3RyPjx0cj48dGQ+WC0xLTIwOTk8L3RkPjx0ZD5QZXJzb25hIEZpY3RpY2lhPC90ZD48L3RyPjwvdGFibGU+PC9odG1sPg==",
+   "python": {
+    "formato": "HTML-tabular-con-extension-xls",
+    "registros": [
+     [
+      "X-1-2099",
+      "PERSONA FICTICIA",
+      1
+     ]
+    ],
+    "grilla": [
+     [
+      "RIT",
+      "Nombre"
+     ],
+     [
+      "X-1-2099",
+      "Persona Ficticia"
+     ]
+    ]
+   }
+  },
+  {
+   "caso": "html_activo",
+   "bytes_b64": "PGh0bWw+PGZvcm0+PC9mb3JtPjx0YWJsZT48dHI+PHRkPlJJVDwvdGQ+PC90cj48L3RhYmxlPjwvaHRtbD4=",
+   "python": {
+    "error": "La descarga es una pagina web activa, no un Excel verificable."
+   }
+  }
+ ],
+ "a8": [
+  {
+   "caso": "exacto_con_repetidas",
+   "grilla": [
+    [
+     "Informe de carga ficticio"
+    ],
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ],
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ],
+    [
+     "X-2-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "filas": [
+     [
+      "X-1-2099",
+      "V1",
+      "V2",
+      "V3",
+      "V4",
+      "V5",
+      "V6",
+      "V7",
+      "V8",
+      "V9",
+      "V10",
+      "V11",
+      "V12",
+      "V13",
+      "V14",
+      "V15",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "V21",
+      "V22",
+      2
+     ],
+     [
+      "X-2-2099",
+      "V1",
+      "V2",
+      "V3",
+      "V4",
+      "V5",
+      "V6",
+      "V7",
+      "V8",
+      "V9",
+      "V10",
+      "V11",
+      "V12",
+      "V13",
+      "V14",
+      "V15",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "V21",
+      "V22",
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "caso": "columna_renombrada",
+   "grilla": [
+    [
+     "RIT",
+     "JUZGADO FICTICIO",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "error": "Encabezado de carga inesperado; esperado: ('RIT', 'TRIBUNAL', 'NOMBRE FUNCIONARIO', 'NOMBRE JUEZ', 'TRÁMITE', 'INVALIDADO', 'DOC. RES', 'DOC. ESC', 'DÍAS', 'CARGO', 'PRIMER PREGRABADO FECHA', 'PRIMER PREGRABADO HORA', 'ÚLTIMO PREGRABADO FECHA', 'ÚLTIMO PREGRABADO HORA', 'DESPACHO FECHA', 'DESPACHO HORA', 'DEVOLUCIÓN FECHA', 'DEVOLUCIÓN HORA', 'NUEVO DESPACHO FECHA', 'NUEVO DESPACHO HORA', 'CANTIDAD ESCRITOS RESOLUCIÓN', 'FECHA FIRMA', 'HORA FIRMA'); recibido: ('RIT', 'JUZGADO FICTICIO', 'NOMBRE FUNCIONARIO', 'NOMBRE JUEZ', 'TRÁMITE', 'INVALIDADO', 'DOC. RES', 'DOC. ESC', 'DÍAS', 'CARGO', 'PRIMER PREGRABADO FECHA', 'PRIMER PREGRABADO HORA', 'ÚLTIMO PREGRABADO FECHA', 'ÚLTIMO PREGRABADO HORA', 'DESPACHO FECHA', 'DESPACHO HORA', 'DEVOLUCIÓN FECHA', 'DEVOLUCIÓN HORA', 'NUEVO DESPACHO FECHA', 'NUEVO DESPACHO HORA', 'CANTIDAD ESCRITOS RESOLUCIÓN', 'FECHA FIRMA', 'HORA FIRMA')."
+   }
+  },
+  {
+   "caso": "dos_encabezados",
+   "grilla": [
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "error": "El informe contiene más de un encabezado de carga."
+   }
+  },
+  {
+   "caso": "registro_antes",
+   "grilla": [
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ],
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-2-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "error": "Hay registros antes del encabezado de carga esperado."
+   }
+  },
+  {
+   "caso": "fila_de_22",
+   "grilla": [
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21"
+    ]
+   ],
+   "python": {
+    "error": "Cambió el esquema de carga: se esperaban 23 columnas."
+   }
+  },
+  {
+   "caso": "titulo_concepcion",
+   "grilla": [
+    [
+     "Concepción",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "RIT",
+     "TRIBUNAL",
+     "NOMBRE FUNCIONARIO",
+     "NOMBRE JUEZ",
+     "TRÁMITE",
+     "INVALIDADO",
+     "DOC. RES",
+     "DOC. ESC",
+     "DÍAS",
+     "CARGO",
+     "PRIMER PREGRABADO FECHA",
+     "PRIMER PREGRABADO HORA",
+     "ÚLTIMO PREGRABADO FECHA",
+     "ÚLTIMO PREGRABADO HORA",
+     "DESPACHO FECHA",
+     "DESPACHO HORA",
+     "DEVOLUCIÓN FECHA",
+     "DEVOLUCIÓN HORA",
+     "NUEVO DESPACHO FECHA",
+     "NUEVO DESPACHO HORA",
+     "CANTIDAD ESCRITOS RESOLUCIÓN",
+     "FECHA FIRMA",
+     "HORA FIRMA"
+    ],
+    [
+     "X-3-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "filas": [
+     [
+      "X-3-2099",
+      "V1",
+      "V2",
+      "V3",
+      "V4",
+      "V5",
+      "V6",
+      "V7",
+      "V8",
+      "V9",
+      "V10",
+      "V11",
+      "V12",
+      "V13",
+      "V14",
+      "V15",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "V21",
+      "V22",
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "caso": "sin_encabezado",
+   "grilla": [
+    [
+     "X-1-2099",
+     "V1",
+     "V2",
+     "V3",
+     "V4",
+     "V5",
+     "V6",
+     "V7",
+     "V8",
+     "V9",
+     "V10",
+     "V11",
+     "V12",
+     "V13",
+     "V14",
+     "V15",
+     "V16",
+     "V17",
+     "V18",
+     "V19",
+     "V20",
+     "V21",
+     "V22"
+    ]
+   ],
+   "python": {
+    "error": "No se encontró el encabezado de carga esperado: ('RIT', 'TRIBUNAL', 'NOMBRE FUNCIONARIO', 'NOMBRE JUEZ', 'TRÁMITE', 'INVALIDADO', 'DOC. RES', 'DOC. ESC', 'DÍAS', 'CARGO', 'PRIMER PREGRABADO FECHA', 'PRIMER PREGRABADO HORA', 'ÚLTIMO PREGRABADO FECHA', 'ÚLTIMO PREGRABADO HORA', 'DESPACHO FECHA', 'DESPACHO HORA', 'DEVOLUCIÓN FECHA', 'DEVOLUCIÓN HORA', 'NUEVO DESPACHO FECHA', 'NUEVO DESPACHO HORA', 'CANTIDAD ESCRITOS RESOLUCIÓN', 'FECHA FIRMA', 'HORA FIRMA'); recibido: ('X-1-2099', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22')."
+   }
+  }
+ ],
+ "a8_libro": [
+  {
+   "caso": "xlsx_con_fechas_excel",
+   "bytes_b64": "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",
+   "python": {
+    "formato": "OOXML-con-extension-xls",
+    "filas": [
+     [
+      "X-5-2099",
+      "V1",
+      "V2",
+      "V3",
+      "V4",
+      "V5",
+      "V6",
+      "V7",
+      "V8",
+      "V9",
+      "03/09/2026",
+      "V11",
+      "V12",
+      "V13",
+      "V14",
+      "V15",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "02/10/2026",
+      "V22",
+      2
+     ],
+     [
+      "X-6-2099",
+      "V1",
+      "V2",
+      "V3",
+      "V4",
+      "V5",
+      "V6",
+      "V7",
+      "V8",
+      "V9",
+      "03/09/2026",
+      "V11",
+      "V12",
+      "V13",
+      "V14",
+      "V15",
+      "V16",
+      "V17",
+      "V18",
+      "V19",
+      "V20",
+      "02/10/2026",
+      "V22",
+      1
+     ]
+    ]
+   }
+  }
+ ]
+}

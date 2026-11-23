@@ -1,65 +1,119 @@
+"""E-G · Compara textos y umbrales de Flow Rust (`app/src/config.rs`) con Flow Python, en ambos sentidos.
+
+- TEXTOS: cada clave de `config.rs::TEXTOS` debe existir en `textos_base.json` con el mismo texto, y cada texto de
+  `textos_base.json` debe existir en Rust o estar en EXCLUIDOS_RUST con su motivo.
+- UMBRALES: claves, valores y etiquetas iguales a `nurus.personal.config` en ambos sentidos.
+- Lectura estricta: los literales se leen con escapes de Rust y se cuentan contra el largo declarado del arreglo
+  (`[(&str, &str); N]`). Toda línea del bloque que no se pudo leer se informa.
+- Sale con código 1 ante cualquier discrepancia o entrada no leída; 0 si todo coincide.
+
+Uso (desde la raíz): python tools/verificar_textos_umbrales.py
+"""
+
 import json
 import re
 import sys
+from pathlib import Path
 
-# 1. Textos
-with open('src/nurus/personal/textos_base.json', 'r', encoding='utf-8') as f:
-    textos_py = json.load(f)
+RAIZ = Path(__file__).resolve().parents[1]
+CONFIG_RS = RAIZ / 'app' / 'src' / 'config.rs'
+TEXTOS_PY = RAIZ / 'src' / 'nurus' / 'personal' / 'textos_base.json'
 
-with open('app/src/config.rs', 'r', encoding='utf-8') as f:
-    config_rs = f.read()
+# Textos de Python que Flow Rust no usa a propósito. Cada entrada necesita un motivo verificable.
+EXCLUIDOS_RUST = {
+    'HISTORIA.VARIOS': 'inalcanzable en Python: solo lo emite reglas_historia.constancia() con dos o más trámites, '
+    'y la única función que se los pasa, constancias(), no tiene llamadores (rust/oraculo/generar_casos.py, '
+    'fuera_del_motor)',
+}
 
-textos_rs_matches = re.findall(r'\("([^"]+)",\s*"([^"]+)"\)', config_rs)
-print(f'Total TEXTOS in config.rs: {len(textos_rs_matches)}')
+LIT = r'"((?:[^"\\]|\\.)*)"'
 
-discrepancies = []
-for full_key, val_rs in textos_rs_matches:
-    parts = full_key.split('.', 1)
-    if len(parts) != 2:
-        continue
-    sec, key = parts
-    if sec not in textos_py:
-        discrepancies.append(f'Section {sec} not in textos_base.json')
-        continue
-    if key not in textos_py[sec]:
-        discrepancies.append(f'Key {key} not in textos_base.json[{sec}]')
-        continue
-    entry = textos_py[sec][key]
-    val_py = entry['texto'] if isinstance(entry, dict) and 'texto' in entry else entry
-    if val_rs != val_py:
-        discrepancies.append(f'Mismatch for {full_key}:\n  rs={val_rs!r}\n  py={val_py!r}')
 
-print(f'TEXTOS discrepancies count: {len(discrepancies)}')
-for d in discrepancies:
-    print(' ', d)
+def desescapar(s):
+    def uno(m):
+        e = m.group(1)
+        if e.startswith('u{'):
+            return chr(int(e[2:-1], 16))
+        return {'n': '\n', 't': '\t', 'r': '\r', '0': '\0', '\\': '\\', '"': '"', "'": "'"}[e]
 
-# 2. UMBRALES
-sys.path.insert(0, 'src')
-from nurus.personal.config import UMBRALES as PY_UMBRALES, PARAMETER_LABELS as PY_LABELS
+    return re.sub(r'\\(u\{[0-9a-fA-F]+\}|[ntr0\\"\'])', uno, s)
 
-umbrales_rs_matches = re.findall(r'\("([^"]+)",\s*(-?\d+),\s*"([^"]+)"\)', config_rs)
-print(f'Total UMBRALES in config.rs: {len(umbrales_rs_matches)}')
-print(f'Total UMBRALES in Python: {len(PY_UMBRALES)}')
 
-umbrales_discrepancies = []
-rs_keys = set()
-for key, val_str, label in umbrales_rs_matches:
-    rs_keys.add(key)
-    val = int(val_str)
-    if key not in PY_UMBRALES:
-        umbrales_discrepancies.append(f'Key {key} not in Python UMBRALES')
-        continue
-    if PY_UMBRALES[key] != val:
-        umbrales_discrepancies.append(f'Value mismatch for {key}: rs={val} vs py={PY_UMBRALES[key]}')
-    if key not in PY_LABELS:
-        umbrales_discrepancies.append(f'Key {key} not in Python PARAMETER_LABELS')
-    elif PY_LABELS[key] != label:
-        umbrales_discrepancies.append(f'Label mismatch for {key}:\n  rs={label!r}\n  py={PY_LABELS[key]!r}')
+def bloque(fuente, nombre):
+    m = re.search(rf'pub const {nombre}: \[\(([^\]]+)\); (\d+)\] = \[\n(.*?)\n\];', fuente, re.S)
+    if not m:
+        raise SystemExit(f'No se encontró el arreglo {nombre} en {CONFIG_RS}')
+    return m.group(1), int(m.group(2)), m.group(3)
 
-py_missing = set(PY_UMBRALES.keys()) - rs_keys
-if py_missing:
-    umbrales_discrepancies.append(f'Missing keys from Python: {py_missing}')
 
-print(f'UMBRALES discrepancies count: {len(umbrales_discrepancies)}')
-for d in umbrales_discrepancies:
-    print(' ', d)
+def leer(fuente, nombre, patron):
+    _, declarado, cuerpo = bloque(fuente, nombre)
+    leidas, no_leidas = [], []
+    for n, linea in enumerate(cuerpo.split('\n'), 1):
+        t = linea.strip()
+        if not t or t.startswith('//'):
+            continue
+        m = re.fullmatch(patron, t)
+        if m:
+            leidas.append(m.groups())
+        else:
+            no_leidas.append(f'{nombre} línea {n} del bloque: {t[:120]}')
+    if len(leidas) != declarado:
+        no_leidas.append(f'{nombre}: declarado {declarado}, leídos {len(leidas)}')
+    return leidas, no_leidas
+
+
+def main():
+    fuente = CONFIG_RS.read_text(encoding='utf-8')
+    errores = []
+
+    textos_rs, no_leidas = leer(fuente, 'TEXTOS', rf'\({LIT},\s*{LIT}\),?')
+    errores += no_leidas
+    textos_rs = {desescapar(k): desescapar(v) for k, v in textos_rs}
+    base = json.loads(TEXTOS_PY.read_text(encoding='utf-8'))
+    textos_py = {}
+    for sec, entradas in base.items():
+        if sec.startswith('_') or not isinstance(entradas, dict):
+            continue
+        for clave, entrada in entradas.items():
+            textos_py[f'{sec}.{clave}'] = entrada['texto'] if isinstance(entrada, dict) else entrada
+    for clave, texto in sorted(textos_rs.items()):
+        if clave not in textos_py:
+            errores.append(f'TEXTOS: {clave} está en Rust y no en textos_base.json')
+        elif texto != textos_py[clave]:
+            errores.append(f'TEXTOS: {clave} distinto\n    rs={texto!r}\n    py={textos_py[clave]!r}')
+    for clave in sorted(set(textos_py) - set(textos_rs)):
+        if clave in EXCLUIDOS_RUST:
+            print(f'EXCLUIDO {clave}: {EXCLUIDOS_RUST[clave]}')
+        else:
+            errores.append(f'TEXTOS: {clave} está en textos_base.json y no en Rust (ni en EXCLUIDOS_RUST)')
+    for clave in sorted(set(EXCLUIDOS_RUST) - (set(textos_py) - set(textos_rs))):
+        errores.append(f'EXCLUIDOS_RUST: {clave} ya no corresponde (no existe en Python o ya está en Rust)')
+
+    umbrales_rs, no_leidas = leer(fuente, 'UMBRALES', rf'\({LIT},\s*(-?\d+),\s*{LIT}\),?')
+    errores += no_leidas
+    sys.path.insert(0, str(RAIZ / 'src'))
+    from nurus.personal.config import PARAMETER_LABELS, UMBRALES
+
+    rs = {desescapar(k): (int(v), desescapar(e)) for k, v, e in umbrales_rs}
+    for clave, (valor, etiqueta) in sorted(rs.items()):
+        if clave not in UMBRALES:
+            errores.append(f'UMBRALES: {clave} está en Rust y no en Python')
+            continue
+        if UMBRALES[clave] != valor:
+            errores.append(f'UMBRALES: {clave} valor rs={valor} py={UMBRALES[clave]}')
+        if PARAMETER_LABELS.get(clave) != etiqueta:
+            errores.append(f'UMBRALES: {clave} etiqueta\n    rs={etiqueta!r}\n    py={PARAMETER_LABELS.get(clave)!r}')
+    for clave in sorted(set(UMBRALES) - set(rs)):
+        errores.append(f'UMBRALES: {clave} está en Python y no en Rust')
+
+    print(f'TEXTOS: Rust {len(textos_rs)}, Python {len(textos_py)}, excluidos {len(EXCLUIDOS_RUST)}')
+    print(f'UMBRALES: Rust {len(rs)}, Python {len(UMBRALES)}')
+    for e in errores:
+        print('DISCREPANCIA', e)
+    print(f'RESULTADO: {"FALLA" if errores else "PASA"} ({len(errores)} discrepancias)')
+    return 1 if errores else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
