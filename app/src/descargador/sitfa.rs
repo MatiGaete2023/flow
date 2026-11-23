@@ -18,6 +18,9 @@ pub type Registros = BTreeMap<(String, String), usize>;
 
 pub const DESTINO: &str = "/SITFAWEB/InformesDAction.do";
 pub const DESTINO_ABSOLUTO: &str = "https://familia.pjud.cl/SITFAWEB/InformesDAction.do";
+/// Carga se consulta en otro formulario (`QueryProfile.endpoint` y `form_name`).
+pub const DESTINO_CARGA: &str = "/SITFAWEB/MaoDAction.do";
+pub const DESTINO_CARGA_ABSOLUTO: &str = "https://familia.pjud.cl/SITFAWEB/MaoDAction.do";
 pub const LIMITE_BYTES: usize = 80 * 1024 * 1024;
 /// Pestaña, control, campo de página, campo de total y tabla (`perfiles.TABS`).
 pub const PESTANAS_SITFA: [(&str, &str, &str, &str, &str); 4] = [
@@ -39,6 +42,7 @@ fn selector(s: &str) -> Selector {
 
 static FORMULARIO: LazyLock<Selector> =
     LazyLock::new(|| selector("form[name='InformesPpalForm']"));
+static FORMULARIO_CARGA: LazyLock<Selector> = LazyLock::new(|| selector("form[name='MaoPpalForm']"));
 static SCRIPTS: LazyLock<Selector> = LazyLock::new(|| selector("script"));
 static CONTROLES: LazyLock<Selector> =
     LazyLock::new(|| selector("input[name], select[name], textarea[name]"));
@@ -112,6 +116,18 @@ impl Consulta {
                     ("Buscar", Some("MedPorVencer"))
                 };
             }
+            (Alcance::Carga { desde, hasta }, Pantalla::Carga) => {
+                if !(0..=30).contains(&(*hasta - *desde).num_days()) {
+                    return Err("Carga admite hasta 31 días inclusivos por consulta.".into());
+                }
+                // `QueryProfile.target` de Carga: sin COD_Tribunal_sel.
+                c.objetivo = BTreeMap::from([
+                    ("COD_TribunalDist".into(), perfil.tribunal.clone()),
+                    ("FEC_Desde".into(), desde.format("%d/%m/%Y").to_string()),
+                    ("FEC_Hasta".into(), hasta.format("%d/%m/%Y").to_string()),
+                ]);
+                (c.accion, c.plantilla) = ("Aud.Carga Func.-", Some("antr"));
+            }
             _ => return Err("Esta consulta todavía no se ejecuta desde Flow Rust.".into()),
         }
         Ok(c)
@@ -159,7 +175,11 @@ impl Consulta {
                     .split_whitespace()
                     .any(|k| k == campo)
             }
-            Pantalla::Carga => return false,
+            Pantalla::Carga => {
+                return "GLS_Tribunal COD_Rus COD_TribunalDist FEC_Desde FEC_Hasta irAccion"
+                    .split_whitespace()
+                    .any(|k| k == campo)
+            }
         };
         COMUNES
             .split_whitespace()
@@ -175,6 +195,8 @@ pub struct Pagina {
     pub excel_url: String,
     pub plantilla: String,
     pub registros: Registros,
+    /// Filas completas de la tabla web de Carga (`carga.result_records`); vacío en otras pantallas.
+    pub carga: carga::FilasCarga,
     pub paginacion: BTreeMap<String, String>,
 }
 
@@ -462,7 +484,8 @@ fn texto_scripts(raiz: &Html) -> String {
         .join("\n")
 }
 
-fn formulario_unico<'a>(raiz: &'a Html) -> Result<ElementRef<'a>, String> {
+fn formulario_unico<'a>(raiz: &'a Html, consulta: &Consulta) -> Result<ElementRef<'a>, String> {
+    let es_carga = consulta.pantalla == Pantalla::Carga;
     if raiz.select(&ENTRADAS).any(|e| {
         e.value()
             .attr("type")
@@ -470,12 +493,13 @@ fn formulario_unico<'a>(raiz: &'a Html) -> Result<ElementRef<'a>, String> {
     }) {
         return Err("La sesion expiro. Cierre la sesion y vuelva a ingresar en Chrome.".into());
     }
-    let formularios: Vec<_> = raiz.select(&FORMULARIO).collect();
+    let formularios: Vec<_> = raiz.select(if es_carga { &FORMULARIO_CARGA } else { &FORMULARIO }).collect();
     if formularios.len() != 1 {
         return Err("SITFA no devolvio el formulario esperado.".into());
     }
     let form = formularios[0];
-    if !matches!(form.value().attr("action"), Some(DESTINO | DESTINO_ABSOLUTO))
+    let destinos = if es_carga { [DESTINO_CARGA, DESTINO_CARGA_ABSOLUTO] } else { [DESTINO, DESTINO_ABSOLUTO] };
+    if !form.value().attr("action").is_some_and(|a| destinos.contains(&a))
         || !form
             .value()
             .attr("method")
@@ -499,7 +523,7 @@ pub fn validar_respuesta(
         return Err("Respuesta HTML vacia o ilegible.".into());
     }
     let raiz = Html::parse_document(&decodificar(datos));
-    let form = formulario_unico(&raiz)?;
+    let form = formulario_unico(&raiz, consulta)?;
     let scripts = texto_scripts(&raiz);
     let mut fields = campos(form)?;
     if consulta.pantalla == Pantalla::Seguimiento && consulta.objetivo.contains_key("TIP_Informe") {
@@ -530,12 +554,16 @@ pub fn validar_respuesta(
     }) {
         return Err("Aparecio un campo dinamico no auditado; requiere revision.".into());
     }
-    let registros = if consulta.calendario() {
-        registros_calendario(&raiz, &scripts)?
+    let es_carga = consulta.pantalla == Pantalla::Carga;
+    let (registros, filas_carga) = if consulta.calendario() {
+        (registros_calendario(&raiz, &scripts)?, carga::FilasCarga::new())
+    } else if es_carga {
+        let tablas = form.select(&TABLAS).map(grilla).collect::<Result<Vec<_>, _>>()?;
+        (Registros::new(), carga::registros_resultado(&tablas)?)
     } else {
-        tabla_registros(form, consulta)?
+        (tabla_registros(form, consulta)?, carga::FilasCarga::new())
     };
-    if registros.is_empty() {
+    if registros.is_empty() && filas_carga.is_empty() {
         if esperada.is_some() {
             return Err("No se pudieron identificar todos los registros de la pagina.".into());
         }
@@ -565,7 +593,7 @@ pub fn validar_respuesta(
         }
         return Ok(Respuesta::SinRegistros);
     }
-    let (actual, total) = if consulta.calendario() {
+    let (actual, total) = if consulta.calendario() || es_carga {
         (1, 1)
     } else {
         let numero = |k: &str| {
@@ -605,6 +633,7 @@ pub fn validar_respuesta(
         excel_url: url,
         plantilla,
         registros,
+        carga: filas_carga,
         paginacion: fields
             .into_iter()
             .filter(|(k, _)| es_paginacion(k))
@@ -675,13 +704,16 @@ pub fn validar_pantalla_evidencia(
     {
         return Err("La pantalla no identifica la consulta solicitada. Recarga la extensión Lite.".into());
     }
-    let campos = campos(formulario_unico(&raiz)?)?;
+    let campos = campos(formulario_unico(&raiz, consulta)?)?;
     if consulta.objetivo.iter().any(|(k, v)| campos.get(k) != Some(v)) {
         return Err("Los controles de la pantalla a capturar no corresponden a la selección.".into());
     }
+    // `capture_empty` de Integral: Carga muestra sus fechas en FEC_Desde y FEC_Hasta.
+    let (campo_desde, campo_hasta) =
+        if consulta.pantalla == Pantalla::Carga { ("FEC_Desde", "FEC_Hasta") } else { ("FEC_Inicio", "FEC_Fin") };
     if fechas.is_some_and(|(desde, hasta)| {
-        campos.get("FEC_Inicio").map(String::as_str) != Some(desde)
-            || campos.get("FEC_Fin").map(String::as_str) != Some(hasta)
+        campos.get(campo_desde).map(String::as_str) != Some(desde)
+            || campos.get(campo_hasta).map(String::as_str) != Some(hasta)
     }) {
         return Err("Las fechas de la pantalla a capturar no corresponden al lote.".into());
     }

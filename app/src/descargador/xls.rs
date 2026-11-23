@@ -357,6 +357,18 @@ pub struct Verificador {
 
 impl Verificador {
     pub fn verificar(&self, datos: &[u8], pagina: &Pagina, consulta: &Consulta) -> Result<(Libro, String), String> {
+        if consulta.pantalla == super::Pantalla::Carga {
+            // `verified_download` con `carga.records_in_grid`: las filas completas del XLS deben ser las de la tabla web.
+            let (formato, filas) = leer_carga(datos)?;
+            if filas != pagina.carga {
+                return Err("Los registros XLS no coinciden con la pagina HTML (puede ser un XLS anterior o de toda la consulta).".into());
+            }
+            let digest = huella(datos);
+            if self.huellas.contains(&digest) {
+                return Err("Dos paginas contienen el mismo archivo o los mismos registros; descarga detenida.".into());
+            }
+            return Ok((Libro { formato, registros: Registros::new(), grilla: Grilla::new() }, digest));
+        }
         let libro = leer(datos)?;
         if libro.registros != pagina.registros {
             return Err("Los registros XLS no coinciden con la pagina HTML (puede ser un XLS anterior o de toda la consulta).".into());

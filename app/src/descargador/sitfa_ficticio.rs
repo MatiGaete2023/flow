@@ -49,6 +49,21 @@ pub fn catalogo(pantalla: &str) -> Catalogo {
     serde_json::from_value(catalogo_json(pantalla)).unwrap()
 }
 
+/// Fila ficticia del reporte de Carga: 23 columnas que empiezan con un RIT.
+fn fila_carga(tribunal: &str, i: usize) -> Vec<String> {
+    let mut f = vec![format!("X-{i}-2026"), format!("Tribunal ficticio {tribunal}"), format!("Funcionario ficticio {i}")];
+    f.extend(["Juez ficticio", "Resolución", "NO", "1", "0", "2", "Consejero", "01/10/2026", "09:00"].map(String::from));
+    f.extend(["01/10/2026", "09:10", "02/10/2026", "10:00", "", "", "", "", "1", "02/10/2026", "11:00"].map(String::from));
+    f
+}
+
+fn tabla_carga(filas: &[Vec<String>]) -> String {
+    let fila = |f: &[String]| format!("<tr>{}</tr>", f.iter().map(|v| format!("<td>{}</td>", escapar(v))).collect::<String>());
+    let mut t = fila(&super::sitfa::carga::ENCABEZADOS.map(String::from));
+    t += &filas.iter().map(|f| fila(f)).collect::<String>();
+    format!("<table>{t}</table>")
+}
+
 fn escapar(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;").replace('\'', "&#x27;")
 }
@@ -80,6 +95,7 @@ impl SitfaFicticio {
                 format!("{}|{tab}|{}|{informe}", g("COD_Tribunal_sel"), g("TIP_Consulta"))
             }
             "litigantes" => format!("{}|{}", g("COD_Tribunal_sel"), g("COD_EstBusqueda")),
+            "carga" => g("COD_TribunalDist"),
             _ => format!("{}|{}", g("COD_Tribunal_sel"), g("COD_Mes_sel")),
         }
     }
@@ -109,8 +125,27 @@ impl SitfaFicticio {
         p.get(campo).and_then(|v| v.parse().ok()).unwrap_or(1)
     }
 
+    fn filas_carga(&self, p: &BTreeMap<String, String>) -> Vec<Vec<String>> {
+        let tribunal = self.clave(p);
+        if self.total(p) == 0 {
+            return vec![];
+        }
+        (1..=3).map(|i| fila_carga(&tribunal, i)).collect()
+    }
+
     fn preparar(&self, s: &Value, fechas: &Value) -> Vec<(String, String)> {
         let t = |k: &str| s[k].as_str().unwrap_or("").to_string();
+        if self.pantalla == "carga" {
+            // La extensión toma el período de la selección; `dates` del lote coincide.
+            assert_eq!(s["start"], fechas["start"]);
+            return vec![
+                ("COD_TribunalDist".into(), t("tribunal")),
+                ("GLS_Tribunal".into(), String::new()),
+                ("FEC_Desde".into(), t("start")),
+                ("FEC_Hasta".into(), t("end")),
+                ("irAccion".into(), "Aud.Carga Func.-".into()),
+            ];
+        }
         let mut pares = vec![("COD_Tribunal_sel".to_string(), t("tribunal"))];
         let mut poner = |k: &str, v: String| pares.push((k.to_string(), v));
         match self.pantalla {
@@ -155,6 +190,18 @@ impl SitfaFicticio {
     }
 
     fn html(&self, p: &BTreeMap<String, String>) -> String {
+        if self.pantalla == "carga" {
+            let campos: String = p
+                .iter()
+                .filter(|(k, _)| k.as_str() != "irAccion")
+                .map(|(k, v)| format!(r#"<input name="{k}" value="{}">"#, escapar(v)))
+                .collect();
+            let filas = self.filas_carga(p);
+            let listado = if filas.is_empty() { "<table><tr><td>Sin registros</td></tr></table>".into() } else { tabla_carga(&filas) };
+            return format!(
+                r#"<html><body><form name="MaoPpalForm" method="post" action="/SITFAWEB/MaoDAction.do">{campos}{listado}</form><script>function ShowExcel(){{window.open("https://familia.pjud.cl/sitfa/reportes/u1_antr.xls");}}</script></body></html>"#
+            );
+        }
         let total = self.total(p);
         let pagina = self.pagina(p);
         let filas = if total > 0 { self.filas(p, pagina) } else { vec![] };
@@ -223,6 +270,9 @@ impl SitfaFicticio {
     }
 
     fn excel(&self, p: &BTreeMap<String, String>) -> Vec<u8> {
+        if self.pantalla == "carga" {
+            return format!("<html>{}</html>", tabla_carga(&self.filas_carga(p))).into_bytes();
+        }
         let filas = self.filas(p, self.pagina(p));
         if self.calendario() {
             let mes: u32 = p["COD_Mes_sel"].parse().unwrap();
@@ -609,6 +659,85 @@ mod tests {
         let (_, carpeta, _) = correr_en(Edicion::Integral, &sitfa, "calendario_medidas", &lote, &Opciones::default(), &destino.0);
         assert_eq!(nombres(&carpeta, ".xls"), ["Medidas por vencer Jdo Familia Ficticio Sur 1.xls"]);
         assert_eq!(nombres(&carpeta, ".pdf"), ["Medidas por vencer Jdo Familia Ficticio Sur 2.pdf"]);
+    }
+
+    fn fechas_carga() -> Option<(chrono::NaiveDate, chrono::NaiveDate)> {
+        fechas("03/09/2026", "02/10/2026")
+    }
+
+    /// `test_flujo_csmp.test_carga_specific_request_response_and_full_cells_match`.
+    #[test]
+    fn carga_valida_solicitud_respuesta_y_celdas_completas() {
+        use super::super::sitfa::{validar_respuesta, Consulta, Respuesta};
+        use super::super::xls::Verificador;
+        let modelo = catalogo("carga");
+        let seleccion = super::super::Seleccion {
+            tribunal: "901".into(),
+            desde: fechas_carga().map(|f| f.0),
+            hasta: fechas_carga().map(|f| f.1),
+            ..Default::default()
+        };
+        let perfil = modelo.preparar(Edicion::Integral, &seleccion).unwrap();
+        let consulta = Consulta::desde(&perfil).unwrap();
+        let sitfa = SitfaFicticio::nuevo("carga", &[]);
+        let pares = sitfa.preparar(&lote_seleccion(&perfil), &json!({"start": "03/09/2026", "end": "02/10/2026"}));
+        let p: BTreeMap<String, String> = pares.iter().cloned().collect();
+        let Respuesta::ConRegistros(pagina) = validar_respuesta(sitfa.html(&p).as_bytes(), &pares, &consulta, None).unwrap() else {
+            panic!("Carga con registros")
+        };
+        assert_eq!((pagina.actual, pagina.total, pagina.plantilla.as_str()), (1, 1, "antr"));
+        assert_eq!(pagina.carga.values().sum::<usize>(), 3);
+        let verificador = Verificador::default();
+        assert!(verificador.verificar(&sitfa.excel(&p), &pagina, &consulta).is_ok());
+        let cambiado = String::from_utf8(sitfa.excel(&p)).unwrap().replacen("<td>02/10/2026</td><td>11:00</td>", "<td>01/10/2026</td><td>11:00</td>", 1);
+        assert!(verificador.verificar(cambiado.as_bytes(), &pagina, &consulta).is_err());
+        for (k, v) in [("irAccion", "Grabar"), ("TIP_Cargo", "46"), ("COD_TribunalDist", "888")] {
+            let mut otros: Vec<(String, String)> = pares.iter().filter(|(c, _)| c != k).cloned().collect();
+            otros.push((k.into(), v.into()));
+            assert!(consulta.validar_consulta(&otros).is_err(), "{k}");
+        }
+        let largo = super::super::Seleccion { desde: fechas("01/09/2026", "01/09/2026").map(|f| f.0), ..seleccion };
+        assert!(modelo.preparar(Edicion::Integral, &largo).is_err());
+    }
+
+    fn lote_seleccion(perfil: &super::super::Perfil) -> Value {
+        let super::super::Alcance::Carga { desde, hasta } = &perfil.alcance else { unreachable!() };
+        json!({"tribunal": perfil.tribunal, "screen": "carga", "start": desde.format("%d/%m/%Y").to_string(),
+            "end": hasta.format("%d/%m/%Y").to_string()})
+    }
+
+    #[test]
+    fn carga_integral_descarga_y_acredita_vacia() {
+        let destino = Carpeta::nueva();
+        let sitfa = SitfaFicticio::nuevo("carga", &[("902", 0)]);
+        let lote = SeleccionLote { tribunales: vec!["901".into(), "902".into()], fechas: fechas_carga(), ..Default::default() };
+        let (resultado, carpeta, _) = correr_en(Edicion::Integral, &sitfa, "carga", &lote, &Opciones::default(), &destino.0);
+        assert_eq!(nombres(&carpeta, ".xls"), ["Carga Jdo Familia Ficticio Norte 03 09 2026 02 10 2026.xls"]);
+        assert_eq!(nombres(&carpeta, ".pdf"), ["Carga Jdo Familia Ficticio Sur 03 09 2026 02 10 2026.pdf"]);
+        assert_eq!(resultado[0]["registros"], 3);
+        assert_eq!(resultado[0]["consulta"], "Juzgado de Familia Ficticio Norte / Carga / 03/09/2026–02/10/2026");
+        assert_eq!(resultado[1]["estado"], "SIN_RESULTADOS");
+        assert_eq!(resultado[1]["evidencia"]["tipo"], "PDF_CAPTURA_SITFA");
+        let resumen = json(&carpeta, "resumen.json");
+        assert_eq!(resumen["plan"][0]["start"], "03/09/2026");
+        assert_eq!(resumen["plan"][0]["end"], "02/10/2026");
+        assert_eq!(resumen["filtro_fecha"], json!({"desde": "03/09/2026", "hasta": "02/10/2026"}));
+        let manifiesto = json(&carpeta, "verificacion 001.json");
+        assert_eq!(manifiesto["caso"], "T901-Carga-2026-09-03-2026-10-02");
+        assert_eq!(manifiesto["archivos"][0]["registros"], 3);
+    }
+
+    #[test]
+    fn carga_no_se_ejecuta_en_lite() {
+        let modelo = catalogo("carga");
+        let lote = SeleccionLote { tribunales: vec!["901".into()], fechas: fechas_carga(), ..Default::default() };
+        let plan = modelo.planificar(Edicion::Integral, &lote).unwrap();
+        let sitfa = SitfaFicticio::nuevo("carga", &[]);
+        let destino = Carpeta::nueva();
+        let error = ejecutar(&sitfa, &modelo, Edicion::Lite, &plan, &destino.0, &Opciones::default(), &AtomicBool::new(false), &mut |_| {})
+            .unwrap_err();
+        assert_eq!(error, "Carga está disponible en Integral.");
+        assert!(sitfa.llamadas.borrow().is_empty());
     }
 
     #[test]

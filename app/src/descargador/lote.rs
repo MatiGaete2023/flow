@@ -284,14 +284,17 @@ fn caso_y_rotulo(perfil: &Perfil, catalogo: &Catalogo) -> (String, String) {
             let tipo = if perfil.pantalla == Pantalla::CalendarioInformes { "Informes" } else { "Medidas" };
             (format!("T{t}-{tipo}-{anio}-{mes}"), format!("{nombre} / {tipo} por vencer / {mes}-{anio}"))
         }
-        Alcance::Carga { .. } => (format!("T{t}-Carga"), format!("{nombre} / Carga")),
+        Alcance::Carga { desde, hasta } => (
+            format!("T{t}-Carga-{}-{}", desde.format("%Y-%m-%d"), hasta.format("%Y-%m-%d")),
+            format!("{nombre} / Carga / {}–{}", fecha_sitfa(*desde), fecha_sitfa(*hasta)),
+        ),
     }
 }
 
 /// `asdict(Selection)` de Integral: agrega `start` y `end`, vacíos fuera de Carga.
 fn seleccion_edicion(perfil: &Perfil, edicion: Edicion) -> Value {
     let mut v = seleccion(perfil);
-    if edicion == Edicion::Integral {
+    if edicion == Edicion::Integral && perfil.pantalla != Pantalla::Carga {
         v["start"] = Value::Null;
         v["end"] = Value::Null;
     }
@@ -314,7 +317,11 @@ fn seleccion(perfil: &Perfil) -> Value {
             "tribunal": perfil.tribunal, "tab": "", "modality": "", "report": null,
             "screen": pantalla, "state": "1", "month": mes, "year": anio,
         }),
-        Alcance::Carga { .. } => json!({"tribunal": perfil.tribunal, "screen": pantalla}),
+        Alcance::Carga { desde, hasta } => json!({
+            "tribunal": perfil.tribunal, "tab": "", "modality": "", "report": null,
+            "screen": pantalla, "state": "1", "month": null, "year": null,
+            "start": fecha_sitfa(*desde), "end": fecha_sitfa(*hasta),
+        }),
     }
 }
 
@@ -574,7 +581,11 @@ impl Lote<'_> {
                 resultados.push(json!({
                     "pagina": numero, "total": total, "archivo": archivo, "bytes": guardado.len(),
                     "sha256": digest, "formato": libro.formato,
-                    "registros": libro.registros.values().sum::<usize>(),
+                    "registros": if consulta.pantalla == Pantalla::Carga {
+                        pagina.carga.values().sum::<usize>()
+                    } else {
+                        libro.registros.values().sum::<usize>()
+                    },
                     "coincide_con_html": true, "estado": "OK",
                 }));
                 self.manifiesto(manifiesto, caso, &resultados, total, "EN_CURSO")?;
@@ -745,8 +756,8 @@ pub fn ejecutar(
     emitir: &mut dyn FnMut(Evento),
 ) -> Result<Vec<Value>, String> {
     let integral = edicion == Edicion::Integral;
-    if plan.consultas.iter().any(|p| p.pantalla == Pantalla::Carga) {
-        return Err("La descarga de Carga sigue pendiente en Flow Rust.".into());
+    if !integral && plan.consultas.iter().any(|p| p.pantalla == Pantalla::Carga) {
+        return Err("Carga está disponible en Integral.".into());
     }
     if plan.consultas.is_empty() {
         return Err("El lote no tiene consultas.".into());
@@ -881,7 +892,8 @@ pub fn ejecutar(
                 .ok_or("El formulario no entregó parámetros válidos.")?;
             consulta.validar_consulta(&pares)?;
             let campo = |k: &str| pares.iter().find(|(c, _)| c == k).map(|(_, v)| v.as_str());
-            if !calendario(perfil.pantalla) {
+            // `descargador/lotes.py`: Carga no usa FLG_Consulta ni FEC_Inicio/FEC_Fin; su período va en el objetivo.
+            if !calendario(perfil.pantalla) && perfil.pantalla != Pantalla::Carga {
                 if campo("FLG_Consulta") != Some(if fechas.is_some() { "1" } else { "0" }) {
                     return Err("No se pudo activar correctamente el filtro de fecha.".into());
                 }

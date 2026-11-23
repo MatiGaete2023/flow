@@ -314,9 +314,19 @@ Luego viene la parte propia del Integral: bitácoras, historia, calendario e his
 - Linux, Rust 1.97.0, crate aislado `.aislado/`. Pasaron 32 pruebas de biblioteca, entre ellas tres nuevas de Integral con SITFA ficticio: nombres y resumen, consulta vacía con contexto y Litigantes con calendario. Clippy de biblioteca y pruebas pasó con `-D warnings`. `cargo check` y `clippy` del binario para `x86_64-pc-windows-gnu` no agregaron advertencias. Las bases de nombre esperadas salen de `descargador/lotes.py::file_base`. Falta la corrida Windows del commit.
 - Se revisaron las guías `modern-web-guidance` (`local-network-access` y `validate-origins`) para el enlace extensión→puente. No se modifica código: la vista es egui y las extensiones se exigen en sus versiones 2.9.0 y 1.1.0. Inferencia sin verificar: Chrome 145+ podría exigir el permiso `loopback-network` al `fetch` hacia `127.0.0.1`. Si una versión futura de las extensiones lo necesita, se debe declarar `targetAddressSpace: 'loopback'` y consultar `navigator.permissions` con `loopback-network`, nunca `local-network-access`. La cabecera PNA del puente es inocua.
 
+## Turno 16 · Carga en el lote Integral
+
+- `sitfa::Consulta` agrega el perfil de Carga de `perfiles.selection_profile` y `motor.QueryProfile`. Su objetivo es `COD_TribunalDist`, `FEC_Desde` y `FEC_Hasta`, sin `COD_Tribunal_sel`. La acción es `Aud.Carga Func.-`, la plantilla `antr` y el período tiene como máximo 31 días inclusivos. Solo acepta los campos auditados de `SCREEN_FIELDS['carga']`.
+- La respuesta se lee en `MaoPpalForm` → `/SITFAWEB/MaoDAction.do`, con una sola página. Las filas completas se cuentan con `carga::registros_resultado` sobre todas las tablas del formulario (`Pagina.carga`). El XLS se coteja con `leer_carga`: una celda distinta, por ejemplo la fecha de firma, rechaza la descarga. La evidencia compara `FEC_Desde`/`FEC_Hasta` (diferencias 3 y 5 del turno 14).
+- `lote::ejecutar` no exige `FLG_Consulta` ni `FEC_Inicio`/`FEC_Fin` en Carga. La selección lleva `start`/`end`, y el caso y la etiqueta son los de Python (`T901-Carga-2026-09-03-2026-10-02`, «… / Carga / 03/09/2026–02/10/2026»). En Lite, Carga se rechaza antes de llamar a la extensión. La vista habilita **Descargar lote** para Carga en Integral.
+- Linux, crate `.aislado/`: 35 pruebas de biblioteca. Las tres nuevas son: `carga_valida_solicitud_respuesta_y_celdas_completas`, port de `test_flujo_csmp.test_carga_specific_request_response_and_full_cells_match`; Carga Integral con XLS y consulta vacía con PDF; y rechazo en Lite. Nombre, clave y etiqueta se cotejaron con `descargador/lotes.py::file_base` y `perfiles.selection_profile`. Clippy pasó con `-D warnings`. `cargo check` del binario Windows no agregó advertencias. Falta la corrida Windows del commit.
+- Inferencias pendientes de verificar:
+  - Integral envía `keep_filters` sin restringir y la vista solo lo permite en Seguimiento y Litigantes.
+  - `excel_record_rows` no aplica a Carga porque tiene una sola página. El duplicado se controla por huella.
+
 ## Siguiente paso exacto
 
 0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
 1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): Carga en `lote::ejecutar` (diferencias 3 y 5 del turno 14). Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+2. Descargador (E2): probar el lote Integral y Carga con el ejecutable en la CI Windows. Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
 3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.

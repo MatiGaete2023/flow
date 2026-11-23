@@ -286,8 +286,8 @@ impl Ejecucion {
             });
         });
         let conectado = puente.as_ref().is_some_and(|b| b.conectado());
-        let impedimento = if catalogo.pantalla == Pantalla::Carga {
-            Some("La descarga de Carga sigue pendiente en Flow Rust.")
+        let impedimento = if catalogo.pantalla == Pantalla::Carga && edicion != Edicion::Integral {
+            Some("Carga está disponible en Integral.")
         } else if !remoto {
             Some("Carga las opciones desde Chrome para ejecutar el lote.")
         } else if !conectado {

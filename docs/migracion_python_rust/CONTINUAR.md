@@ -6,14 +6,14 @@ Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-p
 
 - Motor de reglas y de historia: paridad con Python en el corpus sintético (174/174 y 2.582/2.582 en `oraculo_python` y `oraculo_historia`).
 - CI «Flow Rust local · Windows»: verde en cada push; último código `d2297f0`.
-- Descargador: lote Lite e Integral sin Carga, puente local, favoritos, preferencias persistentes, recuperación de pendientes, lector de Excel XML 2003 y contrato de Carga (23 columnas) portados.
+- Descargador: lote Lite e Integral con Carga, puente local, favoritos, preferencias persistentes, recuperación de pendientes, lector de Excel XML 2003 y contrato de Carga (23 columnas) portados.
 - Capturas de la CI sin revisar: el proxy de la sesión bloquea la descarga de artefactos.
 
 ## Pendiente (en orden)
 
 1. Paquetes A–H de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md), cada uno por otra IA; anotar resultados en el [registro](REGISTRO_IMPLEMENTACION.md). El paquete H (acta de aceptación) es solo del usuario.
 2. Revisar las capturas de la CI desde una sesión con acceso a artefactos.
-3. Habilitar la Carga en `app/src/descargador/lote.rs`. El lote Integral sin Carga quedó habilitado en el turno 15. Faltan las diferencias 3 y 5 del turno 14: perfil de Carga, respuesta web y cotejo con `leer_carga`.
+3. Lote Integral con Carga habilitado (turnos 15 y 16). Falta verificarlo en la CI Windows y con Chrome real.
 4. Bloques propios del Integral: bitácoras, historia, calendario, histórico y paquete CSMP (unas 3.000 líneas de Python); resto de `preferencias.py`; exportaciones de lote (F22).
 5. Prueba de aceptación del usuario con el ejecutable vigente y datos locales.
 
