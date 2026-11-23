@@ -427,8 +427,41 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
 - Cambios de código: app/src/motor/historia.rs · Cambios de lógica de producción: ninguno
 - Pendientes: verificar en Linux con el crate .aislado/ (no disponible en este entorno Windows); CI define FLOW_CASOS en flow-rust-local.yml (línea 17)
 
+## Auditoría · E-B (23 de noviembre de 2026)
+
+- Commit auditado: `84cbb43` · Entorno: L (Linux, cargo 1.97) · `app/` se compila en Linux con `--features eframe/x11`; sin esa opción, winit no compila.
+- Reproducción (N1): la línea `PAQUETE_B` de la entrega es idéntica en Linux. La suite del binario da 45 + 1 ignorada; la entrega dice 46 porque hay una prueba que solo corre en Windows.
+- Cobertura real del corpus en los 2.582 casos evaluados (N1):
+  - C05 + C10 (R1): 8 casos;
+  - aviso `HISTORIA.R3_MULTI` (R2): 0. Esa regla no existe en el motor Python, ni en esta rama ni en `flow-python`; en Rust es un aviso interno. R2 la cubre la prueba unitaria `espera_con_servicio_y_causa_compartida_aplica_r2_y_r4`;
+  - `E04_CON_FOLIO` + `E05_SOLO_CORREO` (R3): 0;
+  - `HISTORIA.SERVICIO_INGRESO` (R4): 2;
+  - `COMUN.REITERA_OBSERVACION` (R5): 0 activaciones. Aparece solo en `desactivadas`; la reiteración no es del motor por fila (`generar_casos.py`, `fuera_del_motor`).
+- Defectos de la entrega:
+  - R5 era texto fijo dentro del `println!`;
+  - R2 y R3 se informaron como PASA sin casos que las activen;
+  - `R6_GUION` se contó dentro de R6, aunque el criterio pide un término propio;
+  - no había piso para `evaluados`.
+- Corrección de la auditoría (solo código de prueba, `app/src/motor/historia.rs`):
+  - `evaluar_paquete_b` concentra la evaluación;
+  - `paquete_b_redaccion_mensual` afirma `evaluados == CASOS_PAQUETE_B` (2.582), que la suma de clasificados cubra todas las diferencias y `fallos 0`;
+  - R5 se cuenta y una emisión del motor por fila es FALLA;
+  - las reglas sin casos se informan como `SIN_COBERTURA`;
+  - nueva prueba `paquete_b_cobertura_r3`, `#[ignore]` hasta E-J.
+- Comandos:
+  - `FLOW_CASOS=../rust/casos cargo test --locked --features eframe/x11 --bin flow_rust paquete_b -- --nocapture --include-ignored` (desde `app/`)
+  - `FLOW_CASOS=../rust/casos cargo test --locked --features eframe/x11 --bin flow_rust`
+  - `cargo clippy --locked --features eframe/x11 --bin flow_rust --tests` (sin advertencias en `historia.rs`)
+- Evidencia:
+  - `PAQUETE_B: evaluados 2582, identicos 1997, R1 7, R6 526, R6_GUION 51, R1+R6 1, suma 585, R2 2582/2582 (con aviso R3_MULTI 0), R3 SIN_COBERTURA 0/0, R4 2/2, R5 fuera del motor por fila (emitidas 0), fallos 0`
+  - `PAQUETE_B_COBERTURA: R3 SIN_COBERTURA 0/0, R4 2/2, fallos 0` → `R3 sin cobertura: ningún caso con E04_CON_FOLIO y E05_SOLO_CORREO` (esperado hasta E-J)
+  - `test result: ok. 45 passed; 0 failed; 2 ignored` (suite del binario)
+  - sin `FLOW_CASOS`: `FLOW_CASOS es obligatorio para el paquete B`, `test result: FAILED`
+- Cambios de lógica de producción: ninguno.
+- Pendientes: E-J (casos de R3 en el oráculo) y E-K (R5 con `cronologia.json` en `app/`).
+
 ## Siguiente paso exacto
 
-1. Asignar los encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-B, E-C, E-F, E-A78, E-G, E-D, E-E y E-I. Cada entrega se registra con la plantilla del archivo y queda `ENTREGADO` hasta la auditoría.
-2. D-1 y D-2 resueltas: sin cambios de código; E-B y E-F las verifican.
+1. E-J: casos de R3 en el oráculo ([prompt](prompts/E-J.md)). Después, E-K y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
+2. D-1 y D-2 resueltas: sin cambios de código.
 3. Paquete H por el usuario.
