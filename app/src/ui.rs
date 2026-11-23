@@ -81,6 +81,7 @@ pub struct App {
     nuevo_prog: String,
     nuevo_mail: String,
     filtro_contactos: String,
+    filtro_umbrales: String,
     // anonimizador
     anon_files: Vec<PathBuf>,
     anon_out: String,
@@ -130,6 +131,7 @@ impl App {
             nuevo_prog: String::new(),
             nuevo_mail: String::new(),
             filtro_contactos: String::new(),
+            filtro_umbrales: String::new(),
             anon_files: vec![],
             anon_out: String::new(),
             anon_opts: anon::Opciones::default(),
@@ -970,6 +972,7 @@ impl App {
         };
         let mostrar_cronologia = self.screenshot.is_some();
         let mut cambio = false;
+        let mut consignacion: Option<(String, bool)> = None;
         egui::ScrollArea::vertical().id_salt("detalle").show(ui, |ui| {
             let w = self.work.as_mut().unwrap();
             if i >= w.registros.len() {
@@ -981,6 +984,7 @@ impl App {
             let trib = w.value(&w.registros[i], "tribunal");
             let rut = w.value(&w.registros[i], "rut");
             let headers = w.headers.clone();
+            let consignados = w.consignados(&w.registros[i]);
             theme::card(p).show(ui, |ui| {
                 ui.set_width(ui.available_width());
                 ui.horizontal(|ui| {
@@ -1068,6 +1072,23 @@ impl App {
                     }
                     for m in &r.marcas {
                         ui.label(RichText::new(format!("● Nivel {}: {}", m.nivel, m.texto)).color(if m.nivel >= 3 { p.red } else { p.amber }).size(12.5));
+                    }
+                }
+                if !consignados.is_empty() || !r.otros_programas.is_empty() {
+                    ui.add_space(4.0);
+                    theme::seccion(ui, p, "Otro programa vigente");
+                    for prog in &r.otros_programas {
+                        if ui.button(format!("Marcar «{prog}» como consignada"))
+                            .on_hover_text("Ya consta en la bitácora de RUS: la propuesta deja de repetir esta constancia")
+                            .clicked()
+                        {
+                            consignacion = Some((prog.clone(), true));
+                        }
+                    }
+                    for prog in &consignados {
+                        if ui.button(format!("Deshacer consignación de «{prog}»")).clicked() {
+                            consignacion = Some((prog.clone(), false));
+                        }
                     }
                 }
                 if !r.eventos.is_empty() {
@@ -1189,6 +1210,13 @@ impl App {
                 });
             });
         });
+        if let Some((programa, marcar)) = consignacion {
+            let mensaje = self.work.as_mut().and_then(|w| w.consignar(i, &programa, marcar, &self.cfg));
+            if let Some(m) = mensaje {
+                self.aviso(m, false);
+                cambio = true;
+            }
+        }
         if cambio {
             self.marcar_sucio();
         }
@@ -2085,8 +2113,14 @@ impl App {
                 theme::card(p).show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     theme::seccion(ui, p, "Umbrales (días)");
+                    ui.add(egui::TextEdit::singleline(&mut self.filtro_umbrales).hint_text("Buscar parámetro…").desired_width(f32::INFINITY));
+                    // `_filter_config_parameters`: coincidencia normalizada con la etiqueta o la clave.
+                    let consulta = normalizar(&self.filtro_umbrales);
                     egui::Grid::new("umb").num_columns(3).spacing([10.0, 5.0]).striped(true).show(ui, |ui| {
                         for (k, base, label) in UMBRALES {
+                            if !consulta.is_empty() && !normalizar(&format!("{label} {k}")).contains(&consulta) {
+                                continue;
+                            }
                             let v = self.cfg.umbrales.entry(k.to_string()).or_insert(base);
                             ui.label(label);
                             if ui.add(egui::DragValue::new(v).range(0..=999)).changed() {

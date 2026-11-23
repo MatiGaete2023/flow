@@ -8,6 +8,7 @@ use std::time::Duration;
 mod evidencia;
 pub mod extension;
 pub mod lote;
+pub mod preferencias;
 mod puente;
 pub mod sitfa;
 mod xls;

@@ -27,6 +27,8 @@ pub struct Registro {
     pub revisada: bool,
     pub seleccionada: bool,
     pub res: String,
+    /// Programas que la propuesta afirma como otro programa vigente (botón «Marcar como consignada»).
+    pub otros_programas: Vec<String>,
 }
 
 impl Registro {
@@ -88,6 +90,9 @@ pub struct Trabajo {
     pub cruce: Option<String>,
     pub analisis_ms: u128,
     pub paquete: Option<PaqueteTrabajo>,
+    /// P1: otros programas consignados por el funcionario, por identificador de registro del paquete. Se guardan en
+    /// la sesión y sobreviven al recálculo; la propuesta deja de repetir esa constancia.
+    pub consignaciones: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Default, Clone)]
@@ -107,6 +112,8 @@ struct Sesion {
     corte: String,
     guardada: String,
     decisiones: BTreeMap<usize, Decision>,
+    #[serde(default)]
+    consignaciones: BTreeMap<String, Vec<String>>,
 }
 
 impl Trabajo {
@@ -153,7 +160,7 @@ impl Trabajo {
         };
         w.headers = lectura::headers_of(&w.sheets[w.sheet].rows[w.header_row]);
         w.analizar(cfg);
-        w.restaurar();
+        w.restaurar(cfg);
         Ok(w)
     }
 
@@ -168,7 +175,7 @@ impl Trabajo {
         self.headers = lectura::headers_of(&self.sheets[sheet].rows[self.header_row]);
         self.registros.clear();
         self.analizar(cfg);
-        self.restaurar();
+        self.restaurar(cfg);
     }
 
     /// Vuelve a aplicar las reglas a todas las filas. Conserva las decisiones del usuario por fila.
@@ -236,10 +243,18 @@ impl Trabajo {
         });
         let ingresos = self.paquete.as_ref().filter(|_| mode == Mode::Informes)
             .map(PaqueteTrabajo::identidades_ingresos).unwrap_or_default();
-        let pre = motor::prepaso(mode, &filas, corte, |f| {
+        let mut pre = motor::prepaso(mode, &filas, corte, |f| {
             let id = f.values.get(columna_id?)?.display();
             ingresos.get(id.as_str()).copied()
         });
+        if let Some(col) = columna_id {
+            for (n, f) in filas.iter().enumerate() {
+                let Some(id) = f.values.get(col).map(Cell::display) else { continue };
+                if let Some(programas) = self.consignaciones.get(&id) {
+                    pre.consignados.insert(n, programas.iter().map(|p| captura_trabajo::clave_texto(p)).collect());
+                }
+            }
+        }
         let mut registros = Vec::with_capacity(filas.len());
         for (n, (f, i)) in filas.iter().zip(&filas_idx).enumerate() {
             let contexto = columna_id
@@ -284,6 +299,7 @@ impl Trabajo {
                 avisos: r.avisos,
                 excluido,
                 fecha_hoja2,
+                otros_programas: r.otros_programas,
                 ..Default::default()
             };
             if let Some(res) = self.cols.get("res").and_then(|c| f.values.get(*c)) {
@@ -305,6 +321,7 @@ impl Trabajo {
 
     /// Descarta las ediciones y marcas (por elección del usuario) y vuelve a analizar.
     pub fn reiniciar(&mut self, cfg: &Config) {
+        self.consignaciones.clear();
         for r in &mut self.registros {
             r.editada = None;
             r.revisada = false;
@@ -351,6 +368,42 @@ impl Trabajo {
     }
 
     /// Guarda las decisiones del usuario (ediciones, revisadas, selección, RES).
+    /// Identificador del registro en el paquete (`ID_REGISTRO_CAPTURA`); sin paquete no hay consignación.
+    pub fn id_registro(&self, r: &Registro) -> Option<String> {
+        self.paquete.as_ref()?;
+        let col = self.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA")?;
+        Some(r.values.get(col)?.display()).filter(|id| !id.trim().is_empty())
+    }
+
+    /// Programas consignados de la fila, tal como se mostraron al marcarlos.
+    pub fn consignados(&self, r: &Registro) -> Vec<String> {
+        self.id_registro(r).and_then(|id| self.consignaciones.get(&id).cloned()).unwrap_or_default()
+    }
+
+    /// P1: marca (o deshace) la constancia de otro programa como consignada y recalcula. Idempotente.
+    pub fn consignar(&mut self, fila: usize, programa: &str, consignar: bool, cfg: &Config) -> Option<String> {
+        let id = self.id_registro(self.registros.get(fila)?)?;
+        let clave = captura_trabajo::clave_texto(programa);
+        let lista = self.consignaciones.entry(id.clone()).or_default();
+        let ya = lista.iter().any(|p| captura_trabajo::clave_texto(p) == clave);
+        let mensaje = match (consignar, ya) {
+            (true, false) => {
+                lista.push(programa.to_owned());
+                format!("«{programa}» quedó como consignada: la propuesta ya no repite esa constancia.")
+            }
+            (false, true) => {
+                lista.retain(|p| captura_trabajo::clave_texto(p) != clave);
+                format!("Se deshizo la consignación de «{programa}»: la constancia vuelve a proponerse si corresponde.")
+            }
+            _ => return None,
+        };
+        if lista.is_empty() {
+            self.consignaciones.remove(&id);
+        }
+        self.analizar(cfg);
+        Some(mensaje)
+    }
+
     pub fn guardar_sesion(&self) -> Result<(), String> {
         self.escribir_sesion(&self.sesion_path())?;
         limpiar_sesiones();
@@ -364,6 +417,7 @@ impl Trabajo {
             modo: self.mode().key().into(),
             corte: self.corte.map(|c| c.to_string()).unwrap_or_default(),
             guardada: chrono::Local::now().to_rfc3339(),
+            consignaciones: self.consignaciones.clone(),
             ..Default::default()
         };
         for r in &self.registros {
@@ -378,8 +432,11 @@ impl Trabajo {
         config::atomic_write(ruta, &data).map_err(|e| e.to_string())
     }
 
-    fn restaurar(&mut self) {
+    fn restaurar(&mut self, cfg: &Config) {
         self.restaurar_desde(&self.sesion_path());
+        if !self.consignaciones.is_empty() {
+            self.analizar(cfg);
+        }
     }
 
     fn restaurar_desde(&mut self, ruta: &std::path::Path) {
@@ -388,6 +445,7 @@ impl Trabajo {
             self.avisos.push("La sesión anterior de este archivo no se pudo leer; se conserva sin cambios.".into());
             return;
         };
+        self.consignaciones = s.consignaciones;
         let mut n = 0;
         for r in &mut self.registros {
             if let Some(d) = s.decisiones.get(&r.fila_excel) {

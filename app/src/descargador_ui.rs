@@ -2,6 +2,7 @@ use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
 use flow_rust::descargador::lote::{self, Evento, Fin, Opciones};
+use flow_rust::descargador::preferencias::{self, Preferencias, PAUSA_MAXIMA_S, PAUSA_MINIMA_S};
 use flow_rust::descargador::{
     Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente, Seleccion, SeleccionLote, MODALIDADES,
     PESTANAS, TODAS_LAS_MEDIDAS,
@@ -71,11 +72,18 @@ impl Default for Ejecucion {
             .or_else(|| std::env::var_os("HOME"))
             .map(PathBuf::from)
             .unwrap_or_default();
+        // Preferencias persistentes (`preferencias.py`): destino, PDF sin registros y pausa.
+        let guardadas = Preferencias::cargar(&Preferencias::ruta());
+        let destino = if guardadas.destino.trim().is_empty() {
+            base.join("Documents").join("SITFA Lite").display().to_string()
+        } else {
+            guardadas.destino
+        };
         Self {
-            destino: base.join("Documents").join("SITFA Lite").display().to_string(),
-            evidencia: true,
+            destino,
+            evidencia: guardadas.pdf_sin_registros,
             conservar_filtros: false,
-            pausa: 1.0,
+            pausa: guardadas.pausa_consultas as f32,
             recepcion: None,
             cancelar: None,
             filas: Vec::new(),
@@ -174,15 +182,26 @@ impl Ejecucion {
         }
         let conservar = self.conservar_filtros
             && matches!(catalogo.pantalla, Pantalla::Seguimiento | Pantalla::Litigantes);
+        let pausa = preferencias::limitar_pausa(f64::from(self.pausa));
+        self.pausa = pausa as f32;
         let opciones = Opciones {
             conservar_filtros: conservar,
             evidencia: self.evidencia,
-            pausa: Duration::from_secs_f32(self.pausa.clamp(0.0, 30.0)),
+            pausa: Duration::from_secs_f64(pausa),
         };
+        let guardar = Preferencias {
+            destino: self.destino.trim().to_owned(),
+            pdf_sin_registros: self.evidencia,
+            pausa_consultas: pausa,
+        };
+        let error_preferencias = guardar.guardar(&Preferencias::ruta()).err();
         let cancelar = Arc::new(AtomicBool::new(false));
         let (envio, recepcion) = mpsc::channel();
         self.filas.clear();
         self.avisos.clear();
+        if let Some(e) = error_preferencias {
+            self.avisos.push(format!("No se guardaron las preferencias del Descargador: {e}"));
+        }
         self.error = None;
         self.fin = None;
         self.carpeta = None;
@@ -248,7 +267,12 @@ impl Ejecucion {
                     );
                 }
                 ui.label("Pausa entre consultas (s)");
-                ui.add(egui::DragValue::new(&mut self.pausa).range(0.0..=30.0).speed(0.1));
+                ui.add(
+                    egui::DragValue::new(&mut self.pausa)
+                        .range(PAUSA_MINIMA_S as f32..=PAUSA_MAXIMA_S as f32)
+                        .speed(0.1),
+                )
+                .on_hover_text("Nunca menos de 0,5 s entre consultas a SITFA");
             });
         });
         let conectado = puente.as_ref().is_some_and(|b| b.conectado());

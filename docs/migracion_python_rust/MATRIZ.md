@@ -7,7 +7,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F01 | Lectura de hojas | Presente en `lectura.rs`. Comparar selección, tipos, fila física y CSV con comillas. |
 | F02 | Trabajo y cruces | Tres etapas, Hoja 2, calendario 91 y proyección por ingreso. CAL-03 contrasta vencimientos de Cumplimiento e Informes. Pendientes Egresados, OB e identidad multifila. |
 | F03 | Reglas de Excel | Presente en `motor.rs`. Revalidar el subconjunto sin historia y reproducir fronteras contra Python actual. |
-| F04 | Contexto de causa | Trabajo muestra Escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. El motor incorpora todas las reglas de historia y bitácora de Flow Python. `oraculo_historia` coincide en los 2.582 casos del corpus con historia o bitácora, y `oraculo_python` en los 174 restantes (23-nov-2026). Falta la consignación manual de otro programa. |
+| F04 | Contexto de causa | Trabajo muestra Escritos, Mejor Niñez, historia, calendario y cronología de bitácoras al corte. El motor incorpora todas las reglas de historia y bitácora de Flow Python. `oraculo_historia` coincide en los 2.582 casos del corpus con historia o bitácora, y `oraculo_python` en los 174 restantes (23-nov-2026). La consignación manual de otro programa está en el detalle de Trabajo y se guarda en la sesión. |
 | F05 | Otro programa, reiteración y Escritos | Reiteración con R5, programas vigentes y atribución de Escritos e Historia por ingreso y vencimiento. El contraste de 16 filas verifica textos, reglas, marcas y acciones. Pendientes consignar y deshacer constancias de otro programa. |
 | F06 | Revisión de bitácoras | Evidencia V1 y V2, período, filtros, detalle, selección y Excel/JSON. El informe aplica la misma copia preservada o tabla de respaldo que **Guardar observaciones** y añade clasificación y motivo por ID de registro. |
 | F07 | Importación de paquetes | Validación estructural y semántica, consolidado y apertura tabular integrados en Trabajo. Pendientes conciliación entre capturas, calendario independiente y paridad de contextos. |
@@ -21,7 +21,7 @@ Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente�
 | F15 | Formularios manuales | Cotejar gestión particular en blanco. Completar Word manual y reutilizar los productos existentes. |
 | F16 | Resultados y estadísticas | Vista y reporte presentes. Cotejar búsqueda, historial, diagnóstico, calidad y composición de entrega. |
 | F17 | Descargador integral y Lite | Perfiles, catálogos desde JSON o Chrome, instalación de las extensiones incluidas y ejecución de lotes Lite contra SITFA ficticio. Pendientes ejecución Integral, Carga y prueba con Chrome real. |
-| F18 | Gestión de lotes | Planificación, ejecución Lite, pausa, cancelación, manifiestos, `resumen.json` y PDF de consulta vacía. Pendientes favoritos, topes, reanudación y preferencias persistentes. |
+| F18 | Gestión de lotes | Planificación, ejecución Lite, pausa, cancelación, manifiestos, `resumen.json` y PDF de consulta vacía. Preferencias persistentes de destino, PDF sin registros y pausa, con el mínimo de 0,5 s y el máximo de 10 s de Python. Pendientes favoritos, topes, reanudación y el resto de `preferencias.py`. |
 | F19 | Bitácora, historia y calendario | Pendiente en el Descargador vigente. Probar identidad, ventanas, procedencia y respaldo alterado. |
 | F20 | Escritos | Pendiente. Diferenciar tabla vacía, ausente, variante con pestaña y lecturas parciales. |
 | F21 | Histórico de Protección | Pendiente. Evaluar titular visible, reutilización, marco compatible, tope y suspensión por fallas. |
@@ -39,7 +39,7 @@ Comparación de `src/nurus/personal/app_base.py::_config_page` y `config.py` de 
 
 | Opción en Flow Python | En Flow Rust | Falta para la paridad |
 |---|---|---|
-| Parámetros y búsqueda de umbrales | Ajustes muestra los 16 umbrales de Flow Python, incluidos `prorroga_reciente` (90 días) y `ventana_busqueda` (60 días), con restablecimiento individual y aplicación a la nómina. | Agregar la búsqueda de umbrales. |
+| Parámetros y búsqueda de umbrales | Ajustes muestra los 16 umbrales de Flow Python, incluidos `prorroga_reciente` (90 días) y `ventana_busqueda` (60 días), con restablecimiento individual y aplicación a la nómina. | Búsqueda de umbrales presente, como `_filter_config_parameters`. |
 | Cinco interruptores de avisos y reiteración | Ajustes permite habilitar o deshabilitar la regla desde el selector de textos, incluidos Curador, Oído, Próxima audiencia, Próxima mayoría y Reiteración. | Cotejar persistencia y trazabilidad al cambiar de etapa y reabrir. |
 | Textos de observación y variables | Ajustes permite editar textos, restituir el original y activar la regla. La redacción mensual tiene interruptor propio. | Agregar el selector de variables y validación de campos por regla. |
 | Plantillas de correo, variables, comportamiento y archivo | Correos genera, edita y guarda borradores con las plantillas configuradas. | Incorporar edición persistente, duplicación, archivado, categoría, variables y condiciones de adjuntos. |

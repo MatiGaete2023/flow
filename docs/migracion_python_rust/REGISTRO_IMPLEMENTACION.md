@@ -259,10 +259,17 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - `oraculo_historia` exige la identidad completa (observación, reglas y marcas) en los 2.582 casos de Espera, Cumplimiento e Informes con historia o bitácora, y NOMENCL con causa finalizada. Todos coinciden. `oraculo_python` coincide en los 174 restantes, de modo que el motor reproduce el corpus completo de Flow Python con la redacción mensual desactivada. `FLOW_DIFF=1` lista cada diferencia, si apareciera.
 - La [corrida Windows](https://github.com/MatiGaete2023/flow/actions/runs/45183871460) pasó sobre `dcca7c7` con `FLOW_CASOS` activo: 70 pruebas de la aplicación, incluidos ambos oráculos, y las regresiones con los ZIP E3. Las capturas no se revisaron porque la sesión en la nube no puede descargar artefactos: el proxy bloquea el almacenamiento de GitHub Actions. Deben revisarse desde una sesión con acceso o en Windows.
 
+## Turno 14 · Consignación de otro programa, búsqueda de umbrales y preferencias del Descargador
+
+- **P1 · Consignación manual.** El motor recibe por `Prepaso::consignados` las claves de los programas ya consignados por fila. `otro_programa` los omite, como `consignados()` de Python, y devuelve en `Resultado::otros_programas` los programas que la propuesta afirma. `Trabajo::consignaciones` guarda, por `ID_REGISTRO_CAPTURA`, los nombres consignados. Sobrevive al recálculo y al cambio de corte o de etapa, y se guarda en la sesión con `#[serde(default)]`, compatible con sesiones anteriores. «Volver a analizar» con descarte la limpia. En el detalle, la sección **Otro programa vigente** tiene «Marcar «X» como consignada» y «Deshacer consignación de «X»», con los mensajes de `aplicar_consignacion`. Sin paquete no hay identificador ni botón.
+- **Búsqueda de umbrales.** En Ajustes se filtra por etiqueta o clave normalizada, como `_filter_config_parameters`.
+- **Redacción mensual.** R2–R5 ya estaban aplicadas desde los turnos 10 y 11. Se corrigió su estado en el informe de fallas.
+- **Preferencias del Descargador.** `descargador/preferencias.rs` guarda en `%LOCALAPPDATA%\FlowRust\descargador_preferencias.json` el destino, el PDF de consultas sin registros y la pausa. La pausa queda entre 0,5 y 10 s, como `clamp_pause`; antes la interfaz admitía 0 s. Se guarda al iniciar un lote. Un archivo ilegible vuelve a los valores por omisión.
+- Verificación de este turno: solo compilación del motor, Trabajo y la biblioteca en el crate aislado, más la corrida Windows del push. Las pruebas quedan en el [plan de pruebas](PLAN_PRUEBAS.md), según lo pedido por el usuario.
+
 ## Siguiente paso exacto
 
-0. Revisar las capturas de la última corrida Windows frente a [Diseño](DISENO.md). Ajustes debe mostrar los 16 umbrales sin desbordar la tarjeta.
-1. Cerrar E3 con la consignación manual de otro programa en el estado de Trabajo. Debe conservar la identidad de persona y la clave de programa entre recálculo y sesión. Comprobar en Windows las nuevas frases con un ZIP E3 que traiga búsqueda, continuidad y proyección de ingreso. Revisar también R2–R5 de la redacción mensual sobre las reglas ya portadas. Mantener la precedencia del calendario y CAL-03. Completar los avisos temporales y aplicar el criterio R2 a cada nueva regla que atribuya información de historia a un ingreso.
-2. Usar el inventario de Ajustes de la matriz para completar opciones y agregar la búsqueda de umbrales.
-3. Pendientes del Descargador (E2): lotes Integral, Carga, XML 2003, preferencias y reanudación.
-4. Prueba de aceptación del usuario del ejecutable vigente con sus datos y preferencias locales. Cubrir Excel desde ZIP, marcas, «Instalar extensión…», contactos importados, nómina editable, Word con matriz y redacción R1/R6.
+0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
+1. Corregir lo que fallen esos paquetes, en el orden del plan.
+2. Descargador (E2): ejecución Integral, Carga, XML 2003, favoritos, topes, reanudación (`pending_plan`) y el resto de `preferencias.py`. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.

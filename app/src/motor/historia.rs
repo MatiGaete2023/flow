@@ -706,6 +706,10 @@ pub(super) fn otro_programa(ctx: &mut Ctx, actual: &str, primero: &str, nombre: 
         if clave.is_empty() || clave == actual || !vistos.insert(clave.clone()) {
             continue;
         }
+        // Consignada por el funcionario (P1): la propuesta no repite la constancia.
+        if ctx.consignados.contains(&clave) {
+            continue;
+        }
         if clave_texto(primero).is_empty() {
             ctx.marcar(2, "OTRO_PROGRAMA_SIN_NOMBRE", "Otro programa vigente en el histórico, pero no se pudo determinar el primer nombre: revisar esta fila");
             break;
@@ -722,10 +726,13 @@ pub(super) fn otro_programa(ctx: &mut Ctx, actual: &str, primero: &str, nombre: 
         } else if notas.clone().any(|n| mencion(&n.texto, &clave)) {
             ctx.marcar(3, "OTRO_PROGRAMA_MENCION_PREVIA", &format!("La bitácora menciona «{otro}» sin una constancia reconocible: revisar si ya se consignó"));
         }
-        salida.extend(ctx.render(
+        if let Some(frag) = ctx.render(
             "HISTORIA.OTRO_PROGRAMA",
             &[("PNOMBRE", primero.into()), ("OTRO_PROGRAMA", otro.clone())],
-        ));
+        ) {
+            salida.push(frag);
+            ctx.otros_programas.push(otro.clone());
+        }
     }
     salida
 }

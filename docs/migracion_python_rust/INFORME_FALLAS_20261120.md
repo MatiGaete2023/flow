@@ -172,5 +172,5 @@ Cada corrección se registra en `REGISTRO_IMPLEMENTACION.md` con pruebas sintét
 | 5 | Pendiente | Inventario de opciones; umbrales de historia con E3 |
 | 6 | Corregido | «Instalar extensión…» con las extensiones incluidas |
 | 7 | Corregido | Mapeo del consolidado, motivo de descarte y orden de columnas del registro |
-| 8 | Parcial | R1 y R6 aplicadas (opción en Ajustes); R2–R5 se aplican al portar E3 |
+| 8 | Aplicada | R1 y R6 con opción en Ajustes. R2 (aviso interno R3_MULTI), R3 y R4 (encabezado único y sin días de espera) desde el turno 11 y R5 parcial desde el turno 10 (registro de implementación). |
 

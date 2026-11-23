@@ -53,6 +53,8 @@ pub struct Resultado {
     pub eventos: Vec<String>,
     pub marcas: Vec<Marca>,
     pub avisos: Vec<String>,
+    /// Programas vigentes que la propuesta afirma con `HISTORIA.OTRO_PROGRAMA`, para consignarlos en Trabajo.
+    pub otros_programas: Vec<String>,
 }
 
 /// Datos de toda la nómina que las reglas usan por fila.
@@ -62,6 +64,8 @@ pub struct Prepaso {
     pub duplicidad: HashMap<usize, &'static str>,
     /// Informes vencidos acumulados del mismo ingreso: (cantidad, el más antiguo).
     pub acumulado: HashMap<usize, (usize, NaiveDate)>,
+    /// Claves (`clave_texto`) de los otros programas que el usuario marcó como consignados, por fila (P1).
+    pub consignados: HashMap<usize, Vec<String>>,
 }
 
 #[derive(Clone, Debug)]
@@ -132,6 +136,8 @@ struct Ctx<'a> {
     duplicidad: Option<&'static str>,
     acumulado: Option<(usize, NaiveDate)>,
     captura: Option<&'a ContextoFila>,
+    consignados: &'a [String],
+    otros_programas: Vec<String>,
 }
 
 impl<'a> Ctx<'a> {
@@ -728,6 +734,8 @@ pub(crate) fn evaluar_con_captura(
         duplicidad: pre.duplicidad.get(&idx).copied(),
         acumulado: pre.acumulado.get(&idx).copied(),
         captura,
+        consignados: pre.consignados.get(&idx).map_or(&[], Vec::as_slice),
+        otros_programas: Vec::new(),
     };
     if mode == Mode::Cumplimiento {
         if let Some(e) = f.date("egreso_proy") {
@@ -759,7 +767,7 @@ pub(crate) fn evaluar_con_captura(
             eventos.push(e);
         }
     }
-    Resultado { observacion, eventos, marcas: ctx.marcas, avisos: ctx.avisos }
+    Resultado { observacion, eventos, marcas: ctx.marcas, avisos: ctx.avisos, otros_programas: ctx.otros_programas }
 }
 
 /// Acciones (correos y proyectos) según las reglas aplicadas, nunca por palabras de la observación.
