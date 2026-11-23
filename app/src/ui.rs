@@ -2261,3 +2261,116 @@ mod pruebas_paquete {
         assert_eq!(app.work.as_ref().unwrap().mode(), Mode::Espera);
     }
 }
+
+/// E-D · Paquete D2 automatizado con `egui_kittest`: la interfaz real (`App::frame`) en un perfil aislado.
+#[cfg(test)]
+mod pruebas_interfaz {
+    use super::*;
+    use egui_kittest::kittest::{Key, Queryable};
+    use egui_kittest::Harness;
+
+    fn interfaz(app: App) -> Harness<'static, App> {
+        Harness::builder()
+            .with_size(egui::Vec2::new(1440.0, 900.0))
+            .build_state(|ctx, app: &mut App| app.frame(ctx), app)
+    }
+
+    fn umbrales_visibles(harness: &Harness<'_, App>) -> usize {
+        UMBRALES.iter().map(|(_, _, label)| harness.query_all_by_label(label).count()).sum()
+    }
+
+    /// El buscador de umbrales: egui 0.31 no expone `hint_text` a AccessKit, así que se elige el campo de texto
+    /// inmediatamente bajo el título «UMBRALES (DÍAS)» de su tarjeta (`theme::seccion` lo muestra en mayúsculas).
+    fn buscador_umbrales<'t>(harness: &'t Harness<'_, App>) -> egui_kittest::kittest::Node<'t> {
+        let titulo = harness.get_by_label("UMBRALES (DÍAS)").bounding_box().expect("título con posición").y1;
+        harness
+            .get_all_by_role(egui::accesskit::Role::TextInput)
+            .filter_map(|n| n.bounding_box().map(|b| (b.y0 - titulo, n)))
+            .filter(|(dy, _)| *dy >= 0.0)
+            .min_by(|a, b| a.0.total_cmp(&b.0))
+            .map(|(_, n)| n)
+            .expect("buscador de umbrales")
+    }
+
+    fn esperados(texto: &str) -> usize {
+        let consulta = normalizar(texto);
+        UMBRALES
+            .iter()
+            .filter(|(clave, _, label)| normalizar(&format!("{label} {clave}")).contains(&consulta))
+            .count()
+    }
+
+    #[test]
+    fn ui_ajustes_muestra_16_umbrales_y_filtra() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        assert!(config::data_dir().starts_with(&perfil), "el perfil de la prueba no está aislado");
+        let mut app = App::new(None);
+        app.vista = Vista::Ajustes;
+        let mut harness = interfaz(app);
+        harness.run();
+        assert_eq!(UMBRALES.len(), 16);
+        assert_eq!(umbrales_visibles(&harness), 16, "Ajustes debe listar 16 umbrales");
+        let mut filtrados = Vec::new();
+        // Cifras literales (config::UMBRALES): «prórroga» → prorroga_reciente; «búsqueda» y «ventana_busqueda» →
+        // ventana_busqueda. `esperados` replica el filtro solo como control cruzado.
+        for (texto, literal) in [("prórroga", 1usize), ("búsqueda", 1), ("ventana_busqueda", 1)] {
+            buscador_umbrales(&harness).type_text(texto);
+            harness.run();
+            let visibles = umbrales_visibles(&harness);
+            assert!(visibles > 0 && visibles < 16, "«{texto}» debe filtrar la lista: {visibles}");
+            assert_eq!(visibles, literal, "filtro «{texto}»");
+            assert_eq!(visibles, esperados(texto), "filtro «{texto}» (control cruzado)");
+            filtrados.push(format!("{texto}={visibles}"));
+            for _ in 0..texto.chars().count() {
+                buscador_umbrales(&harness).key_press(Key::Backspace);
+            }
+            harness.run();
+            assert_eq!(umbrales_visibles(&harness), 16, "vaciar el buscador tras «{texto}» devuelve 16");
+        }
+        println!("D2_AJUSTES: umbrales 16, filtros {}, vacio 16", filtrados.join(" "));
+    }
+
+    #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
+    fn ui_trabajo_consigna_otro_programa_y_conserva() {
+        let ruta = PathBuf::from(crate::prueba_entorno::requerida("FLOW_E3_PAQUETE"));
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        assert!(config::data_dir().starts_with(&perfil), "el perfil de la prueba no está aislado");
+        let mut app = App::new(None);
+        app.corte_txt = "19/10/2026".into();
+        app.abrir(ruta.clone());
+        let fila = app
+            .work
+            .as_ref()
+            .expect("abre el ZIP ficticio")
+            .registros
+            .iter()
+            .position(|r| !r.otros_programas.is_empty())
+            .expect("fila con otro programa vigente");
+        let programa = app.work.as_ref().unwrap().registros[fila].otros_programas[0].clone();
+        app.sel = Some(fila);
+        let mut harness = interfaz(app);
+        harness.run();
+        assert!(harness.query_by_label("OTRO PROGRAMA VIGENTE").is_some(), "falta la sección");
+        assert!(harness.state().work.as_ref().unwrap().registros[fila].propuesta.contains(&programa));
+        harness.get_by_label(&format!("Marcar «{programa}» como consignada")).click();
+        harness.run();
+        assert!(!harness.state().work.as_ref().unwrap().registros[fila].propuesta.contains(&programa), "consignar retira la frase");
+        assert!(harness.query_by_label(&format!("Deshacer consignación de «{programa}»")).is_some(), "falta «Deshacer»");
+        // Guardado automático de la interfaz (800 ms después del cambio).
+        std::thread::sleep(std::time::Duration::from_millis(900));
+        harness.run();
+        assert!(harness.state().sucio.is_none(), "la interfaz no guardó la sesión");
+        drop(harness);
+
+        let mut reabierta = App::new(None);
+        reabierta.corte_txt = "19/10/2026".into();
+        reabierta.abrir(ruta);
+        reabierta.sel = Some(fila);
+        let mut harness = interfaz(reabierta);
+        harness.run();
+        assert!(!harness.state().work.as_ref().unwrap().registros[fila].propuesta.contains(&programa), "la consignación no se conservó");
+        assert!(harness.query_by_label(&format!("Deshacer consignación de «{programa}»")).is_some(), "tras reabrir falta «Deshacer»");
+        println!("D2_TRABAJO: fila {fila}, programa «{programa}», consignada, deshacer visible, conservada al reabrir");
+    }
+}

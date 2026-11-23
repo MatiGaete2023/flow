@@ -747,8 +747,93 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
 
 E-C, E-L y E-F quedan `CERRADO POR AUDITORÍA`.
 
+## Entrega · E-D e E-I (23 de noviembre de 2026, ejecutada por la auditoría)
+
+### Origen
+
+- La sesión ejecutora (DeepSeek Harness, W) empezó el lote 2 y se cortó por saldo insuficiente: `Insufficient Balance … ACCOUNT_QUOTA, status 402`, en el turno 5, paso 122.
+- No publicó commits: el remoto seguía en `68c7f63`.
+- Sus cambios locales tocaban producción:
+  - `config.rs::data_dir` y `extension.rs::carpeta_base`, con `thread_local` de perfil de prueba;
+  - `#[cfg(not(test))]` en la importación de contactos;
+  - rutas de preferencias inyectadas en `descargador_ui.rs`.
+
+  No se reutilizaron; el encargo se rehízo aquí sin cambios de producción.
+
+### E-D: código, solo de prueba
+
+- `app/Cargo.toml`: `[dev-dependencies] egui_kittest = { version = "=0.31.1", features = ["eframe"] }`, más `Cargo.lock`. No cambian las versiones existentes; se agregan `egui_kittest`, `kittest` y `accesskit_consumer`.
+- `prueba_entorno::perfil_aislado()`:
+  - apunta `APPDATA` y `LOCALAPPDATA` a `temp/flow-rust-perfil-pruebas-<pid>` antes de leer o escribir el perfil;
+  - lo vacía en cada prueba;
+  - serializa con un candado.
+
+  Cada prueba afirma que `config::data_dir()` y `Preferencias::ruta()` quedan dentro de esa carpeta.
+- `ui::pruebas_interfaz::ui_ajustes_muestra_16_umbrales_y_filtra`, sobre la interfaz real (`App::frame` en `Harness`):
+  - 16 umbrales visibles;
+  - «prórroga», «búsqueda» y «ventana_busqueda» dejan 1 cada uno (literal, con control cruzado);
+  - vaciar el campo devuelve 16.
+
+  egui 0.31 no expone `hint_text` a AccessKit: el buscador se ubica como el campo de texto inmediatamente bajo «UMBRALES (DÍAS)».
+- `ui::pruebas_interfaz::ui_trabajo_consigna_otro_programa_y_conserva` (`#[ignore]`, requiere `FLOW_E3_PAQUETE`):
+  - la sección «OTRO PROGRAMA VIGENTE» aparece;
+  - el clic en «Marcar «PRM Ficticio» como consignada» retira la frase y muestra «Deshacer consignación…»;
+  - el guardado automático de la interfaz (800 ms) guarda la sesión;
+  - al reabrir el ZIP con el mismo corte, la consignación y «Deshacer» siguen ahí.
+- `descargador_ui::pruebas_interfaz::ui_descargador_limita_pausa_y_conserva_preferencias`:
+  - con preferencias guardadas en el perfil aislado, la vista reconstruida (simulación de reinicio) recupera destino, PDF sin registros y pausa;
+  - la pausa queda limitada: 0→0,5, 0,2→0,5, 3→3 y 25→10;
+  - el rango del `DragValue` usa `PAUSA_MINIMA_S`/`PAUSA_MAXIMA_S` = 0,5/10.
+
+### E-D: evidencia (L, `--features eframe/x11`)
+
+- `D2_AJUSTES: umbrales 16, filtros prórroga=1 búsqueda=1 ventana_busqueda=1, vacio 16`
+- `D2_TRABAJO: fila 0, programa «PRM Ficticio», consignada, deshacer visible, conservada al reabrir`
+- `D2_DESCARGADOR: pausas 0->0.5 0.2->0.5 3->3 25->10, destino y PDF conservados`
+- `test result: ok. 3 passed; 0 failed; 0 ignored; … 49 filtered out` (`pruebas_interfaz -- --include-ignored`)
+- Suite sin variables: `33 passed; 0 failed; 19 ignored`.
+- Suite con variables (comando oficial): `50 passed; 0 failed; 0 ignored; … 2 filtered out`.
+- Biblioteca: `44 passed`.
+- clippy `--lib -D warnings` limpio, sin avisos nuevos en los archivos tocados.
+- `check_real_ids` y `check_contactos` limpios.
+
+### E-D: mutaciones de control (revertidas)
+
+- El filtro de umbrales ignora la consulta → `ui_ajustes…` FAILED.
+- Sin guardado automático → `ui_trabajo…` FAILED («la interfaz no guardó la sesión»).
+- La pausa ignora las preferencias → `ui_descargador…` FAILED.
+
+### E-D: límites
+
+- El Descargador no se probó con un lote iniciado desde la interfaz: las opciones solo se muestran con un catálogo cargado desde la extensión, e `iniciar` exige un `Puente`. Se probó la carga de preferencias y el límite de la pausa, no el guardado al iniciar. Ese guardado queda para el paquete H.
+- No hay run de la CI Windows citado (N2: las pruebas nuevas no dependen del sistema operativo). El usuario debe mirar «Flow Rust local · Windows» del commit de esta entrega: pasos en verde, artefacto `Flow_Rust_Windows_exe` y su SHA-256.
+- El ejecutable local no se construyó en W; no hay SHA-256 de W.
+
+### E-I: cobertura en la biblioteca (N1, `sitfa_ficticio.rs`, todo pasa en L)
+
+- Integral con varias páginas y `resumen.json`: `integral_nombra_y_resume_como_el_descargador` (`paginas_verificadas 3`, nombres y `resumen.json` con contrato 1).
+- Consulta vacía con PDF:
+  - `integral_sin_registros_guarda_captura_con_contexto_del_descargador`;
+  - `sin_registros_guarda_pantallazo_pdf`.
+- Carga Integral: `carga_integral_descarga_y_acredita_vacia` (XLS `Carga Jdo Familia Ficticio Norte 03 09 2026 02 10 2026.xls`, vacía con PDF, `filtro_fecha`) y `carga_no_se_ejecuta_en_lite`.
+- Pruebas nuevas: ninguna; los tres casos ya estaban cubiertos.
+
+### E-I: ejecución desde el exe
+
+- No es automatizable: el repositorio no trae un servidor SITFA ficticio para el ejecutable. `descargador_lite/tests/sitfa_ficticio.py` es solo un módulo de prueba de Python.
+- Checklist para el paquete H, con el usuario, Chrome y su sesión:
+  - lote Integral de Seguimiento con dos o más páginas;
+  - lote de Carga (máximo 31 días);
+  - una consulta sin registros con «PDF de las consultas sin registros» marcado.
+- Verificar en la carpeta de destino los nombres con el patrón de las pruebas citadas y `resumen.json` (`version_contrato` 1, `filtro_fecha` y una consulta por fila).
+
+### Estado
+
+E-D e E-I quedan `ENTREGADO`. El cierre corresponde a la revisión del usuario y al run de la CI.
+
 ## Siguiente paso exacto
 
-1. Lote 2 en W: E-D y E-I ([prompt](prompts/LOTE-2.md)). Requiere una corrida verde de «Flow Rust local · Windows» sobre el commit de esta auditoría. Después, E-E (usuario), E-A78 y E-G.
+1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
+2. IA, opcional y de riesgo bajo: E-A78 y E-G.
 2. D-1 y D-2 resueltas: sin cambios de código.
 3. Paquete H por el usuario.

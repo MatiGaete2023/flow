@@ -985,3 +985,36 @@ fn opciones<'a>(
             }
         });
 }
+
+/// E-D · D2 del Descargador: la pausa se limita a 0,5–10 s y destino, PDF sin registros y pausa se recuperan del perfil
+/// al reconstruir la vista (simulación de reinicio), en un perfil aislado.
+#[cfg(test)]
+mod pruebas_interfaz {
+    use super::*;
+
+    #[test]
+    fn ui_descargador_limita_pausa_y_conserva_preferencias() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let ruta = Preferencias::ruta();
+        assert!(ruta.starts_with(&perfil), "las preferencias de la prueba no están aisladas: {}", ruta.display());
+        assert_eq!((PAUSA_MINIMA_S, PAUSA_MAXIMA_S), (0.5, 10.0));
+        let destino = perfil.join("Destino ficticio").display().to_string();
+        let mut resultados = Vec::new();
+        for (pedida, esperada) in [(0.0, 0.5), (0.2, 0.5), (3.0, 3.0), (25.0, 10.0)] {
+            Preferencias {
+                destino: destino.clone(),
+                pdf_sin_registros: true,
+                pausa_consultas: pedida,
+                ..Default::default()
+            }
+            .guardar(&ruta)
+            .unwrap();
+            let vista = Descargador::default();
+            assert_eq!(vista.ejecucion.destino, destino);
+            assert!(vista.ejecucion.evidencia, "PDF sin registros no se conservó");
+            assert_eq!(f64::from(vista.ejecucion.pausa), esperada, "pausa pedida {pedida}");
+            resultados.push(format!("{pedida}->{}", vista.ejecucion.pausa));
+        }
+        println!("D2_DESCARGADOR: pausas {}, destino y PDF conservados", resultados.join(" "));
+    }
+}

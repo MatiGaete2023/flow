@@ -116,7 +116,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
   - fallar con código distinto de 0 ante cualquier discrepancia.
 - G6: listar con `grep` toda escritura a disco de `app/src` (`fs::write`, `File::create`, `OpenOptions`, `rename`) y clasificar cada ruta como perfil local o destino elegido por el usuario.
 
-### E-D · Compilación e interfaz en Windows — `ABIERTO` (entorno W) · [prompt](prompts/LOTE-2.md)
+### E-D · Compilación e interfaz en Windows — `ENTREGADO` (23-nov-2026, por la auditoría en L; falta el run de la CI Windows) · [prompt](prompts/LOTE-2.md)
 
 - Lanzar «Flow Rust local · Windows» sobre el commit vigente y citar el run y su resultado.
 - Ejecutar las comprobaciones manuales D2 con el ejecutable del artefacto y el ejemplo ficticio en un perfil aislado. Evidencia: capturas sintéticas y SHA-256 del ejecutable del artefacto.
@@ -126,7 +126,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 - El paquete E de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) sobre el artefacto de la corrida de E-D.
 
-### E-I · Lote Integral y Carga en Windows — `ABIERTO` (entorno W) · [prompt](prompts/LOTE-2.md)
+### E-I · Lote Integral y Carga en Windows — `ENTREGADO` en la biblioteca (23-nov-2026); ejecución desde el exe → paquete H · [prompt](prompts/LOTE-2.md)
 
 - Con la extensión ficticia sobre HTTP local, ejecutar desde el ejecutable un lote Integral de Seguimiento con dos páginas, otro de Carga y una consulta vacía con PDF. Verificar los nombres y `resumen.json` según el turno 16 del registro.
 - La prueba con Chrome real y sesión SITFA corresponde al usuario (paquete H).
