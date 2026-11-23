@@ -327,6 +327,7 @@ mod tests {
                     folio: "42".into(),
                     referencia: "referencia ficticia".into(),
                     tipo: "resolucion".into(),
+                    contexto: false,
                 }]
                 .into(),
             ),

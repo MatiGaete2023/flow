@@ -443,6 +443,9 @@ fn cumplimiento(ctx: &mut Ctx, f: &Fila, fecha_hoja2: Option<NaiveDate>) -> Stri
             return componer(&pfx, &fr);
         }
     }
+    if let Some(finalizada) = historia::causa_finalizada(ctx, &f.text("rit")) {
+        return componer(&pfx, &[finalizada]);
+    }
     marcar_duplicidad(ctx);
     let mut frags: Vec<Frag> = Vec::new();
     let mut principal = false;
@@ -741,7 +744,8 @@ pub fn acciones(eventos: &[String], vence_hoja2: Option<NaiveDate>, hoy: NaiveDa
     if has("CUMPLIMIENTO.C10_HOJA2") && !a.contains(&"programa_por_vencer") && vence_hoja2.map_or(true, |v| (v - hoy).num_days() <= VENTANA_POR_VENCER_DIAS) {
         a.push("programa_por_vencer");
     }
-    if eventos.iter().any(|e| e == "HISTORIA.C10_ESCRITO") {
+    // Observaciones que remiten un proyecto para aplicar una nomenclatura (informe ingresado, causa finalizada).
+    if eventos.iter().any(|e| e == "HISTORIA.C10_ESCRITO" || e == "HISTORIA.P_FINALIZADA") {
         a.push("NOMENCL");
     }
     a

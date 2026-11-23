@@ -29,7 +29,7 @@ pub const UMBRALES: [(&str, i64, &str); 15] = [
 ];
 
 /// Textos aprobados de las observaciones (clave «MODO.ID» → texto con variables {VAR}).
-pub const TEXTOS: [(&str, &str); 47] = [
+pub const TEXTOS: [(&str, &str); 48] = [
     ("COMUN.NO_SEGUIMIENTO", "La derivación {PROGRAMA} no se encuentra sujeta a seguimiento por este Centro."),
     ("COMUN.MAYORIA_EDAD", "{PNOMBRE} alcanzó la mayoría de edad el {FECHA_MAYORIA}. Se sugiere egresar la medida."),
     ("COMUN.PROXIMA_MAYORIA", "{PNOMBRE} alcanzará la mayoría de edad el {FECHA_MAYORIA}."),
@@ -70,6 +70,7 @@ pub const TEXTOS: [(&str, &str); 47] = [
     ("HISTORIA.OTRO_PROGRAMA", "Se hace presente que {PNOMBRE} cuenta con ingreso efectivo al programa {OTRO_PROGRAMA}."),
     ("HISTORIA.INFORME_AVANCE_PENDIENTE", "Pendiente de resolver, informe de avance."),
     ("HISTORIA.BASE_TRAMITE", "Se hace presente que en resolución de fecha {FECHA} (folio {FOLIO}), consta el trámite «{DESC}»."),
+    ("HISTORIA.P_FINALIZADA", "La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa."),
     ("HISTORIA.C10_ESCRITO", "Informe de avance recepcionado en resolución de fecha {FECHA_ESCRITO} (folio {FOLIO_ESCRITO}). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa."),
     ("HISTORIA.I01_SIN_ENVIO_GENERAL", "Informe de avance vencido desde el {FECHA_VENCIMIENTO}."),
     ("HISTORIA.I01_SIN_ENVIO_DCE", "Informe diagnóstico vencido desde el {FECHA_VENCIMIENTO}."),

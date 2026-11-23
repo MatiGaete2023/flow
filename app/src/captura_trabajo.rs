@@ -248,6 +248,9 @@ pub(crate) struct TramiteCausa {
     pub(crate) folio: String,
     pub(crate) referencia: String,
     pub(crate) tipo: String,
+    /// Último trámite anterior a la ventana, conservado por el paquete como contexto: sirve para saber si una
+    /// situación sigue vigente, nunca para redactar una constancia nueva (`Historia.buscar(contexto=True)`).
+    pub(crate) contexto: bool,
 }
 
 impl ContextoFila {
@@ -258,6 +261,9 @@ impl ContextoFila {
             return evidencia;
         };
         for tramite in self.tramites.as_deref().unwrap_or_default() {
+            if tramite.contexto {
+                continue;
+            }
             let folio = tramite.folio.as_str();
             let Some(duenos) = escritos.documentos.get(&tramite.referencia) else {
                 continue;
@@ -612,7 +618,6 @@ fn tramites_causa(
                 || f.get("identity_status") != "CAUSA"
                 || campos.map(|campo| f.get(campo)) != causa.each_ref().map(String::as_str)
                 || !dia_iso(f.get("captured_at")).is_some_and(|dia| dia <= corte)
-                || q.desde.is_some_and(|desde| fecha < desde)
                 || fecha > q.hasta.unwrap_or(corte).min(corte)
                 || descripcion.is_empty()
             {
@@ -628,6 +633,7 @@ fn tramites_causa(
                 folio: f.get("folio").trim().into(),
                 referencia: clave_texto(f.get("reference")),
                 tipo,
+                contexto: q.desde.is_some_and(|desde| fecha < desde),
             })
         })
         .collect()

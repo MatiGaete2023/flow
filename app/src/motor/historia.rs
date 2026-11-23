@@ -17,6 +17,8 @@ pub(super) use escritos::{
 const SERVICIO: &str = "ing serv proteccion especializada y otras redes";
 const INGRESO_EFECTIVO: &str = "ingreso efectivo";
 const PRORROGA: &str = "prorroga";
+const CIERRES: [&str; 2] = ["conciliacion", "dictacion de sentencia"];
+const EGRESO_SERVICIO: [&str; 1] = ["egreso de servicio proteccion especializada y otras redes"];
 
 fn tramites<'a>(
     captura: &'a ContextoFila,
@@ -27,7 +29,20 @@ fn tramites<'a>(
         .as_deref()
         .unwrap_or(&[])
         .iter()
-        .filter(move |t| clave_texto(&t.descripcion) == nombre)
+        .filter(move |t| !t.contexto && clave_texto(&t.descripcion) == nombre)
+}
+
+/// `Historia.buscar(*nombres, contexto=True)`: incluye el trámite anterior a la ventana.
+fn tramites_con_contexto<'a>(
+    captura: &'a ContextoFila,
+    nombres: &'a [&'static str],
+) -> impl Iterator<Item = &'a TramiteCausa> {
+    captura
+        .tramites
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .filter(move |t| nombres.contains(&clave_texto(&t.descripcion).as_str()))
 }
 
 pub(super) fn advertir_ingreso_efectivo(ctx: &mut Ctx, espera: Option<i64>) {
@@ -150,6 +165,21 @@ fn constancia_tramite(ctx: &mut Ctx, t: &TramiteCausa) -> Option<Frag> {
         ],
     )?;
     Some(cita(frag, t))
+}
+
+/// `reglas_historia.causa_finalizada`: causa P con «Conciliacion» o «Dictación de sentencia» sin «Egreso de servicio…»
+/// en esa fecha o después. El cierre puede ser el trámite de contexto anterior a la ventana: la regla no caduca
+/// cuando la sentencia sale de ella.
+pub(super) fn causa_finalizada(ctx: &mut Ctx, rit: &str) -> Option<Frag> {
+    if !rit.trim().to_uppercase().starts_with('P') {
+        return None;
+    }
+    let captura = ctx.captura?;
+    let cierre = ultimo(tramites_con_contexto(captura, &CIERRES))?;
+    if tramites_con_contexto(captura, &EGRESO_SERVICIO).any(|t| t.fecha >= cierre.fecha) {
+        return None;
+    }
+    ctx.render("HISTORIA.P_FINALIZADA", &[])
 }
 
 /// `reglas_historia.prorroga` (Cumplimiento, 11-nov-2026). La historia acredita el trámite, no su término: se cita
@@ -375,6 +405,7 @@ mod tests {
             folio: "42".into(),
             referencia: String::new(),
             tipo: "resolucion".into(),
+            contexto: false,
         };
         let mut captura = ContextoFila {
             tramites: Some(vec![tramite.clone(), tramite.clone()].into()),
@@ -417,6 +448,7 @@ mod tests {
             folio: "42".into(),
             referencia: String::new(),
             tipo: "resolucion".into(),
+            contexto: false,
         };
         let mut captura = ContextoFila {
             tramites: Some(vec![tramite].into()),
@@ -520,6 +552,7 @@ mod tests {
                     folio: "3".into(),
                     referencia: String::new(),
                     tipo: String::new(),
+                    contexto: false,
                 }]
                 .into(),
             ),
@@ -588,15 +621,16 @@ mod tests {
         assert_eq!(marcas(&evaluar_cumplimiento(&otra, "2026-10-29", 15.0)), ["PRORROGA_REVISAR"]);
     }
 
-    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`): en los casos de Cumplimiento cuya historia
-    /// trae una «Prorroga» en la ventana, coinciden la marca PRORROGA_REVISAR y la constancia del trámite.
+    /// Contraste focalizado con el corpus de Flow Python (`FLOW_CASOS`) en Cumplimiento con historia: coinciden
+    /// `HISTORIA.P_FINALIZADA` (observación completa y acción NOMENCL) y, con una «Prorroga» en la ventana, la marca
+    /// PRORROGA_REVISAR y la constancia del trámite.
     #[test]
-    fn oraculo_prorroga() {
+    fn oraculo_historia() {
         let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
         let txt = std::fs::read_to_string(std::path::Path::new(&dir).join("cumplimiento.json")).unwrap();
         let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
         let fecha = |v: &serde_json::Value| v.as_str().and_then(|s| s.parse::<NaiveDate>().ok());
-        let (mut total, mut fallos) = (0, Vec::new());
+        let (mut total, mut finales, mut fallos) = (0, 0, Vec::new());
         for c in &casos {
             let h = &c["historia"];
             if !matches!(h["cobertura"].as_str(), Some("COMPLETA" | "PARCIAL")) {
@@ -610,21 +644,17 @@ mod tests {
                 .iter()
                 .filter_map(|t| {
                     let f = fecha(&t["fecha"])?;
-                    (f <= corte && desde.is_none_or(|d| f >= d)).then(|| TramiteCausa {
+                    (f <= corte).then(|| TramiteCausa {
                         fecha: f,
                         descripcion: t["desc"].as_str().unwrap_or("").into(),
                         folio: t["folio_txt"].as_str().unwrap_or("").into(),
                         referencia: String::new(),
                         tipo: clave_texto(t["tipo"].as_str().unwrap_or("")),
+                        contexto: desde.is_some_and(|d| f < d),
                     })
                 })
                 .collect();
-            // `causa_finalizada` todavía no está portada y en Python termina la evaluación antes de la prórroga.
-            let finalizada = c["esperado"]["reglas"].as_array().unwrap().iter().any(|r| r == "HISTORIA.P_FINALIZADA");
-            if finalizada || !lista.iter().any(|t| clave_texto(&t.descripcion) == PRORROGA) {
-                continue;
-            }
-            total += 1;
+            let con_prorroga = lista.iter().any(|t| !t.contexto && clave_texto(&t.descripcion) == PRORROGA);
             let notas: Vec<NotaCentro> = c["bitacora"]
                 .as_array()
                 .map(|a| {
@@ -656,6 +686,24 @@ mod tests {
             }
             let r = evaluar_con_captura(&cfg, Mode::Cumplimiento, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
             let e = &c["esperado"];
+            let finalizada = |eventos: Vec<&str>| eventos.contains(&"HISTORIA.P_FINALIZADA");
+            let (pe, po) = (
+                finalizada(e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect()),
+                finalizada(r.eventos.iter().map(String::as_str).collect()),
+            );
+            if pe {
+                finales += 1;
+                if !acciones(&r.eventos, None, corte).contains(&"NOMENCL") {
+                    fallos.push(format!("{}: P_FINALIZADA sin NOMENCL", c["id"]));
+                }
+            }
+            if pe != po || (pe && e["observacion"].as_str() != Some(r.observacion.as_str())) {
+                fallos.push(format!("{}: P_FINALIZADA {pe}/{po}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
+            }
+            if !con_prorroga {
+                continue;
+            }
+            total += 1;
             let esperada = e["marcas"].as_array().unwrap().iter().any(|m| m["codigo"] == "PRORROGA_REVISAR");
             let obtenida = r.marcas.iter().any(|m| m.codigo == "PRORROGA_REVISAR");
             let frase = |t: &str| t.contains("consta el trámite «Prorroga»") || t.contains("trámites «Prorroga»");
@@ -664,8 +712,8 @@ mod tests {
                 fallos.push(format!("{}: marca {esperada}/{obtenida} frase {fe}/{fo}\n  esp: {}\n  obt: {}", c["id"], e["observacion"], r.observacion));
             }
         }
-        println!("oraculo_prorroga: {total} casos");
-        assert!(total > 0);
+        println!("oraculo_historia: {total} casos con prórroga, {finales} causas finalizadas");
+        assert!(total > 0 && finales > 0);
         assert!(fallos.is_empty(), "{} de {total} casos difieren:\n{}", fallos.len(), fallos.join("\n"));
     }
 }
