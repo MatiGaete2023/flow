@@ -63,6 +63,65 @@ def grabador(base):
 Grabador = grabador(Bridge)
 GrabadorCalendario = grabador(CalendarBridge)
 
+HISTORIAL = (RAIZ / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes()
+SIN_TABLA = (b'<html><head><title>Historial Menores</title></head><body>'
+             b'<iframe src="/SITFAWEB/x.jsp?RUT=1"></iframe></body></html>')
+
+
+def rut_invalido(cuerpo):
+    """RUT ficticio con dígito verificador INVÁLIDO a propósito (nunca una identidad real)."""
+    suma, factor = 0, 2
+    for d in reversed(str(cuerpo)):
+        suma += int(d) * factor
+        factor = 2 if factor == 7 else factor + 1
+    valido = {11: '0', 10: 'K'}.get(11 - suma % 11, str(11 - suma % 11))
+    return f'{cuerpo}-' + next(c for c in '0123456789' if c != valido)
+
+
+class ConHistorico(Bridge):
+    """`test_lectura_bitacoras`: histórico ficticio (`historico_open`), con falla del puente o ventana sin tabla."""
+
+    def __init__(self, modo='ok'):
+        super().__init__()
+        self.modo = modo
+
+    def call(self, command, payload=None, timeout=75):
+        if command == 'historico_open':
+            if self.modo == 'falla':
+                raise motor.PocError('HISTORICO_LINK')
+            datos = SIN_TABLA if self.modo == 'sin_tabla' else HISTORIAL
+            return {'status': 200, 'type': 'text/html', 'body': base64.b64encode(datos).decode(),
+                    'digest': hashlib.sha256(datos).hexdigest(), 'params': payload['params'],
+                    'startedAt': '2026-10-08T12:00:00Z'}
+        resultado = super().call(command, payload, timeout)
+        if command == 'search' and self.modo == 'sin_tabla':
+            # Una persona distinta por consulta (RUT y persona_id), como en la prueba de suspensión de Python.
+            bruto = base64.b64decode(resultado['body']).replace(b'11111111-1', rut_invalido(10000000 + self.queries).encode())
+            bruto = bruto.replace(b"'300'", f"'{300 + self.queries}'".encode())
+            resultado['body'] = base64.b64encode(bruto).decode()
+        return resultado
+
+
+GrabadorHistorico = grabador(ConHistorico)
+
+
+def historico_json(carpeta):
+    """`historico.json`, la estructura anónima y los respaldos; `leida` se declara en las entradas sin respaldo."""
+    salida = {}
+    ruta = carpeta / 'historico.json'
+    if ruta.exists():
+        datos = json.loads(ruta.read_text(encoding='utf-8'))
+        for entrada in datos['capturas'].values():
+            if not entrada.get('archivo'):  # rama de excepción: `leida` es datetime.now() (no determinista)
+                entrada['leida'] = '<LEIDA>'
+        salida['historico.json'] = datos
+    estructura = carpeta / 'historico' / 'estructura_historico.json'
+    if estructura.exists():
+        salida['estructura_historico.json'] = json.loads(estructura.read_text(encoding='utf-8'))
+    salida['respaldos'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                           for p in sorted((carpeta / 'historico').glob('historico-*.html'))}
+    return salida
+
 
 ESCENARIOS = {
     'basico': (dict(), Batch(('49',), ('2',), ('Cumplimiento',))),
@@ -72,11 +131,16 @@ ESCENARIOS = {
 }
 
 
-def escenario(nombre, opciones, lote, calendarios=False):
-    puente = (GrabadorCalendario if calendarios else Grabador)(**opciones)
+def escenario(nombre, opciones, lote, calendarios=False, historico=None):
+    if historico:
+        puente = GrabadorHistorico(historico)
+    else:
+        puente = (GrabadorCalendario if calendarios else Grabador)(**opciones)
     with tempfile.TemporaryDirectory() as tmp:
-        corredor = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, calendars=calendarios)
+        corredor = DiaryRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0, calendars=calendarios,
+                               historico=bool(historico))
         resultado = corredor.run(lote, Path(tmp))
+        historicos = historico_json(Path(resultado['folder']))
         carpeta = Path(resultado['manifest']).parent
         carpeta_nombre = carpeta.name
         manifiesto = json.loads(Path(resultado['manifest']).read_text(encoding='utf-8'))
@@ -85,10 +149,12 @@ def escenario(nombre, opciones, lote, calendarios=False):
         }
     manifiesto['fecha'] = '<FECHA>'
     claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal',
-              'calendarios_leidos', 'calendarios_fallidos')
+              'calendarios_leidos', 'calendarios_fallidos', 'historicos')
     return {
         'escenario': nombre,
         'calendarios': calendarios,
+        'historico': bool(historico),
+        'historicos': historicos,
         'ahora': AHORA.isoformat(),
         'carpeta': carpeta_nombre,
         'lote': {'tribunales': list(lote.tribunals), 'modalidades': list(lote.modalities), 'pestanas': list(lote.tabs)},
@@ -161,6 +227,11 @@ def main():
     escenarios.append(escenario('calendario', dict(), uno, calendarios=True))
     escenarios.append(escenario('calendario_ajeno', dict(wrong=('202',)), uno, calendarios=True))
     escenarios.append(dos_corridas('retomar_con_calendario', dict(wrong=('202',)), dict(), uno, retomar=True, calendarios=True))
+    todos = Batch(tuple(CATALOG['tribunales']), ('2',), ('Cumplimiento',))
+    escenarios.append(escenario('historico', dict(), todos, historico='ok'))
+    escenarios.append(escenario('historico_falla', dict(), todos, historico='falla'))
+    escenarios.append(escenario('historico_sin_tabla', dict(), Batch(tuple(CATALOG['tribunales']), ('1', '2', '3', '4'),
+                                                                   ('Cumplimiento',)), historico='sin_tabla'))
     datos = {'catalogo': CATALOG, 'ahora': AHORA.isoformat(), 'escenarios': escenarios}
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')

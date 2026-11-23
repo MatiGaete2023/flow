@@ -428,7 +428,7 @@ fn campos_titular(doc: &Html, egreso: &[String], programas: &[String]) -> Vec<(S
 }
 
 /// `escritos_html.py::canonical_rut`: cuerpo sin puntos ni ceros iniciales y dígito verificador; vacío si no es un RUT.
-fn rut_canonico(texto: &str) -> String {
+pub(crate) fn rut_canonico(texto: &str) -> String {
     static RUT: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^(?:0*[0-9]{1,9}|[0-9]{1,3}(?:\.[0-9]{3}){1,2})-?[0-9K]$").unwrap());
     let t = texto.trim().to_uppercase();

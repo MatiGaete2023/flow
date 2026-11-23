@@ -37,7 +37,12 @@ pub struct Opciones {
     pub ahora: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// `calendars`: calendario de informes de cada ingreso de Cumplimiento e Informes (cuenta en el tope de lecturas).
     pub calendarios: bool,
+    /// `historico`: Ingreso Histórico Protección de cada persona del listado, una vez por persona y lote (P3c).
+    pub historico: bool,
 }
+
+/// `MAX_HISTORICOS_FALLIDOS_SEGUIDOS`: tras tantas ventanas fallidas seguidas se suspende el histórico.
+pub const MAX_HISTORICOS_FALLIDOS_SEGUIDOS: usize = 5;
 
 /// `PESTANAS_CALENDARIO`.
 const PESTANAS_CALENDARIO: [&str; 2] = ["Cumplimiento", "Informes"];
@@ -126,6 +131,12 @@ struct Sesion<'a> {
     /// Lecturas reutilizables de otros lotes: clave → (carpeta, registro).
     cruzadas: BTreeMap<String, (PathBuf, Value)>,
     calendarios: bool,
+    historico: bool,
+    /// Históricos ya resueltos en este lote por huella de persona (`_historicos`), fallas seguidas y suspensión.
+    historicos: Option<BTreeMap<String, Value>>,
+    historicos_fallidos: usize,
+    historico_suspendido: bool,
+    ahora: chrono::DateTime<chrono::FixedOffset>,
 }
 
 impl Sesion<'_> {
@@ -274,6 +285,11 @@ pub fn ejecutar(
         antiguos,
         cruzadas,
         calendarios: opciones.calendarios,
+        historico: opciones.historico,
+        historicos: None,
+        historicos_fallidos: 0,
+        historico_suspendido: false,
+        ahora: inicio,
     };
     s.persistir(false)?;
     let mut bloqueado = false;
@@ -344,7 +360,7 @@ pub fn ejecutar(
             .count(),
         "detalle": detalle,
         "faltantes_por_tribunal": faltantes_por_tribunal(&registros),
-        "historicos": {},
+        "historicos": conteo_historicos(&registros),
     }))
 }
 
@@ -527,11 +543,17 @@ fn leer_fila(
             if con_calendario {
                 calendario_abierto = leer_calendario(s, i, abierta)?;
             }
+            if s.historico {
+                calendario_abierto = leer_historico(s, i)? || calendario_abierto;
+            }
             Ok(())
         });
         match apertura {
             Ok(()) => {}
             Err(Detencion::Lote(e)) => {
+                if s.historico && s.estado["registros"][i].get("historico_lectura").is_none() {
+                    s.estado["registros"][i]["historico_lectura"] = json!({"estado": "PENDIENTE", "error": "HISTORICO_TOPE"});
+                }
                 if s.estado["registros"][i]["estado"] != "LEIDA" {
                     s.estado["registros"][i]["estado"] = json!("PENDIENTE");
                     s.estado["registros"][i]["error"] = json!("Pendiente: se alcanzó el máximo de lecturas del lote.");
@@ -543,6 +565,9 @@ fn leer_fila(
                 s.estado["registros"][i]["error"] = json!(e);
             }
         }
+    }
+    if s.historico && s.estado["registros"][i].get("historico_lectura").is_none() {
+        s.estado["registros"][i]["historico_lectura"] = json!({"estado": "OMITIDA", "error": "HISTORICO_SIN_VINCULO"});
     }
     let estado = s.estado["registros"][i]["estado"].as_str().unwrap_or("").to_string();
     if estado == "FALLIDA" {
@@ -740,6 +765,139 @@ fn reutilizar_de_otro_lote(s: &mut Sesion<'_>, i: usize, params: &Value) -> Resu
     Ok(true)
 }
 
+/// `Counter` de los estados del histórico de los registros que lo tienen.
+fn conteo_historicos(registros: &[Value]) -> Value {
+    let mut c: BTreeMap<String, usize> = BTreeMap::new();
+    for r in registros.iter().filter_map(|r| r["historico_lectura"]["estado"].as_str()) {
+        *c.entry(r.to_string()).or_default() += 1;
+    }
+    json!(c)
+}
+
+/// `persona_por_rut`: clave de persona cuando la fila no trae `SITFA_PERSONA_RUS`. Es una huella, no el RUT.
+pub fn persona_por_rut(rut: &str) -> String {
+    format!("rut-{}", &sha256(rut.as_bytes())[..20])
+}
+
+/// `_leer_historico`: el Ingreso Histórico Protección de la persona de la fila. Una falla solo deja el histórico
+/// FALLIDO; nunca invalida la bitácora ya leída. Devuelve si se abrió una ventana.
+fn leer_historico(s: &mut Sesion<'_>, i: usize) -> Result<bool, Detencion> {
+    static RUT: std::sync::LazyLock<regex::Regex> =
+        std::sync::LazyLock::new(|| regex::Regex::new(r"^[0-9]{6,9}[0-9K]$").unwrap());
+    let r = s.estado["registros"][i].clone();
+    let rut = lecturas::rut_canonico(r["rut"].as_str().unwrap_or(""));
+    if !RUT.is_match(&rut) {
+        s.estado["registros"][i]["historico_lectura"] = json!({"estado": "FALLIDA", "error": "HISTORICO_RUT"});
+        return Ok(false);
+    }
+    let huella = persona_por_rut(&rut);
+    let person_id = r["persona_id"].as_str().filter(|p| !p.is_empty()).map(str::to_string).unwrap_or_else(|| huella.clone());
+    let campos = json!({"tribunal": r["tribunal_codigo"], "tribunal_nombre": r["tribunal_nombre"].as_str().unwrap_or(""),
+        "person_id": person_id});
+    let persona = json!({"tribunal": r["tribunal_codigo"], "tribunal_nombre": r["tribunal_nombre"].as_str().unwrap_or(""),
+        "person_id": person_id, "rut": rut});
+    let ahora = chrono::Local::now().fixed_offset().format("%Y-%m-%dT%H:%M:%S%.6f%:z").to_string();
+    let mut base = campos.clone();
+    for (k, v) in [("origen", json!("AUTOMATICA")), ("rut_hash", json!(huella)), ("leida", json!(ahora)),
+        ("ownership", json!("INCIERTA")), ("filas", json!([]))]
+    {
+        base[k] = v;
+    }
+    let mut abierto = false;
+    let carpeta = s.carpeta.clone();
+    let resultado = (|| -> Result<Value, Detencion> {
+        if s.historicos.is_none() {
+            let previas = super::historico::cargar(&carpeta, &s.ahora.to_rfc3339())?;
+            s.historicos = Some(
+                previas
+                    .into_iter()
+                    .filter(|e| {
+                        e["rut_hash"].as_str().is_some_and(|h| !h.is_empty())
+                            && e["ownership"] == "VERIFICADA"
+                            && matches!(e["estado"].as_str(), Some("LEIDA" | "VACIA_COMPROBADA"))
+                    })
+                    .map(|e| (e["rut_hash"].as_str().unwrap().to_string(), e))
+                    .collect(),
+            );
+        }
+        let previa = s.historicos.as_ref().and_then(|h| h.get(&huella)).cloned();
+        let mut entrada = if let Some(mut p) = previa {
+            for (k, v) in campos.as_object().unwrap() {
+                p[k] = v.clone();
+            }
+            p
+        } else if s.historico_suspendido {
+            let mut e = base.clone();
+            e["estado"] = json!("OMITIDA");
+            e["error"] = json!("HISTORICO_SUSPENDIDO");
+            e
+        } else {
+            if s.aperturas >= MAX_LECTURAS_POR_LOTE {
+                s.estado["registros"][i]["historico_lectura"] = json!({"estado": "PENDIENTE", "error": "HISTORICO_TOPE"});
+                return Err(Detencion::Lote(format!("Se alcanzó el máximo de {MAX_LECTURAS_POR_LOTE} lecturas por lote.")));
+            }
+            if !s.pausa.is_zero() {
+                let fin = std::time::Instant::now() + s.pausa;
+                while std::time::Instant::now() < fin && !s.cancelar.load(Ordering::SeqCst) {
+                    std::thread::sleep((fin - std::time::Instant::now()).min(Duration::from_millis(20)));
+                }
+            }
+            s.detener_si_cancelada()?;
+            s.aperturas += 1;
+            abierto = true;
+            let params = json!({"tribunal": persona["tribunal"], "rut": rut});
+            let respuesta = s.pedir("historico_open", json!({"params": params, "timeout": ESPERA_MS}))?;
+            let datos = lote::cuerpo(&respuesta, false)?;
+            if datos.len() > super::historico::MAX_BYTES
+                || respuesta["digest"].as_str() != Some(sha256(&datos).as_str())
+                || respuesta["params"] != params
+            {
+                return Err(Detencion::Consulta("HISTORICO_RESPONSE".into()));
+            }
+            let capturada = respuesta["startedAt"].as_str().unwrap_or("").to_string();
+            let e = super::historico::capturar(&carpeta, &datos, &persona, &capturada, &huella)?;
+            if e["estado"] == "FALLIDA" {
+                super::historico::guardar_estructura(&carpeta, &datos);
+            }
+            return Ok(e);
+        };
+        super::historico::guardar_entrada(&carpeta, &mut entrada)?;
+        Ok(entrada)
+    })();
+    let entrada = match resultado {
+        Ok(e) => e,
+        Err(Detencion::Lote(e)) => return Err(Detencion::Lote(e)),
+        Err(Detencion::Consulta(e)) => {
+            // El puente de Rust no trae el `code` de la extensión: «HISTORICO_RESPONSE» o respaldo inválido, como Python
+            // con una excepción sin código.
+            let codigo = if e == "HISTORICO_RESPONSE" { e } else { "HISTORICO_RESPALDO_INVALIDO".to_string() };
+            let mut entrada = base.clone();
+            entrada["estado"] = json!("FALLIDA");
+            entrada["error"] = json!(codigo);
+            let _ = super::historico::guardar_entrada(&carpeta, &mut entrada);
+            entrada
+        }
+    };
+    s.estado["registros"][i]["historico_lectura"] = json!({
+        "estado": entrada["estado"], "person_id": person_id, "ownership": entrada["ownership"],
+        "error": entrada["error"].as_str().unwrap_or(""), "programas": entrada["filas"].as_array().map_or(0, Vec::len),
+    });
+    if abierto {
+        if entrada["estado"] == "FALLIDA" || entrada["ownership"] != "VERIFICADA" {
+            s.historicos_fallidos += 1;
+            if s.historicos_fallidos >= MAX_HISTORICOS_FALLIDOS_SEGUIDOS {
+                s.historico_suspendido = true;
+            }
+        } else {
+            s.historicos_fallidos = 0;
+        }
+        if let Some(h) = s.historicos.as_mut() {
+            h.insert(huella, entrada);
+        }
+    }
+    Ok(abierto)
+}
+
 /// `reutilizar_calendario`: al retomar, el calendario ya leído del mismo ingreso si su archivo conserva la huella.
 fn reutilizar_calendario(s: &mut Sesion<'_>, i: usize, args: &Value) -> bool {
     let clave = s.estado["registros"][i]["clave"].as_str().unwrap_or("").to_string();
@@ -920,6 +1078,34 @@ mod tests {
         m
     }
 
+    /// `historico.json` (con `leida` declarada en las entradas sin respaldo), estructura anónima y respaldos.
+    fn historicos(carpeta: &Path) -> Value {
+        let mut salida = Map::new();
+        if let Ok(b) = std::fs::read(carpeta.join("historico.json")) {
+            let mut datos: Value = serde_json::from_slice(&b).unwrap();
+            for e in datos["capturas"].as_object_mut().unwrap().values_mut() {
+                if e["archivo"].as_str().is_none_or(str::is_empty) {
+                    e["leida"] = json!("<LEIDA>");
+                }
+            }
+            salida.insert("historico.json".into(), datos);
+        }
+        if let Ok(b) = std::fs::read(carpeta.join("historico").join("estructura_historico.json")) {
+            salida.insert("estructura_historico.json".into(), serde_json::from_slice(&b).unwrap());
+        }
+        let mut respaldos = Map::new();
+        if let Ok(d) = std::fs::read_dir(carpeta.join("historico")) {
+            for e in d.flatten() {
+                let n = e.file_name().to_string_lossy().to_string();
+                if n.starts_with("historico-") && n.ends_with(".html") {
+                    respaldos.insert(n, json!(sha256(&std::fs::read(e.path()).unwrap())));
+                }
+            }
+        }
+        salida.insert("respaldos".into(), Value::Object(respaldos));
+        Value::Object(salida)
+    }
+
     /// E-Q4a: mismas órdenes al puente, mismo `bitacoras.json`, mismas instantáneas y mismo resultado que
     /// `DiaryRunner` de Flow Python en los escenarios de `app/qa/generar_bitacoras.py` (`fecha` declarada).
     #[test]
@@ -939,6 +1125,7 @@ mod tests {
             let mut opciones = Opciones {
                 ahora: Some(chrono::DateTime::parse_from_rfc3339(e["ahora"].as_str().unwrap()).unwrap()),
                 calendarios: e["calendarios"] == true,
+                historico: e["historico"] == true,
                 ..Default::default()
             };
             if let Some(inicial) = e.get("inicial") {
@@ -984,6 +1171,12 @@ mod tests {
             if instantaneas(&carpeta) != esperadas {
                 diferencias.push(format!("instantáneas: Rust {:?} / Python {esperadas:?}", instantaneas(&carpeta)));
             }
+            if let Some(esperado) = e.get("historicos") {
+                let obtenido = historicos(&carpeta);
+                if &obtenido != esperado {
+                    diferencias.push(format!("histórico:\n    Rust   {obtenido}\n    Python {esperado}"));
+                }
+            }
             for (clave, valor) in e["resultado"].as_object().unwrap() {
                 if &resultado[clave] != valor {
                     diferencias.push(format!("resultado.{clave}: Rust {} / Python {valor}", resultado[clave]));
@@ -1001,7 +1194,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("BITACORAS: {iguales}/{}, fallos {}", escenarios.len(), fallos.len());
-        assert_eq!(escenarios.len(), 10, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(escenarios.len(), 13, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
     }
 }

@@ -24,7 +24,7 @@ const COMANDOS: [&str; 10] = [
     "evidence_close",
 ];
 /// Lecturas de contexto (E-Q3): solo con la extensión Integral verificada en este puente (`verificar(Integral)`).
-const LECTURAS_INTEGRAL: [&str; 3] = ["diary_open", "history_open", "calendar_open"];
+const LECTURAS_INTEGRAL: [&str; 4] = ["diary_open", "history_open", "calendar_open", "historico_open"];
 const MOTIVOS_EVIDENCIA: [&str; 9] = [
     "estructura", "sesion", "cambio", "pantalla", "tiempo", "pagina", "acceso", "permiso", "pestaña",
 ];
