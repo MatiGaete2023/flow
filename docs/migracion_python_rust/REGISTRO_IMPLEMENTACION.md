@@ -666,6 +666,43 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - Verificar el run de CI al publicar; desde este host no se puede consultar.
   - Repetir en L con `--features eframe/x11`; el host es W.
 
+## Entrega · E-F
+- Commit probado: 1ee60111f356de92a8623394b62239fa5a04bf99  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6
+- Comandos:
+  - `cargo test --locked --lib descargador::sitfa_ficticio::tests::f -- --nocapture`
+  - `cargo test --locked --lib d2_keep_filters -- --nocapture`
+  - `cargo test --locked --lib`
+  - `FLOW_REFERENCIA=.. cargo test --locked --lib -- --include-ignored`
+  - `FLOW_CASOS=../rust/casos FLOW_FIXTURES=../rust/crates/flow-tabular/tests/datos FLOW_REFERENCIA=.. FLOW_E3_PAQUETE=<carpeta>/contexto-e3.zip FLOW_E3_HISTORIA=<carpeta>/contexto-e3-historia.zip FLOW_E3_ESPERADO=<carpeta>/esperado-historia.json cargo test --locked --bin flow_rust -- --include-ignored --skip exporta_mismo_lote_de_python --skip velocidad_20000`
+  - `cargo clippy --locked --lib -- -D warnings`
+  - `cargo clippy --locked --lib --tests`
+  - `python tools/check_real_ids.py app/src` y `python tools/check_contactos.py app/src`
+- Evidencia:
+  - F2: `F2_PAUSA: [549.9552ms, 554.2159ms]` (pausa pedida 0 s; `limitar_pausa` la lleva a 0,5 s).
+  - F3: `F3_PENDIENTES: 2, HUELLAS: 7 intactas`; la cancelación tras la primera consulta deja dos pendientes y las 7 huellas del lote original no cambian.
+  - F4: `F4_FAVORITO: ["901"] ["Espera"] ["1"] Some((2026-12-12, 2027-01-10))` tras guardar, recargar con `Preferencias::cargar` y aplicar el favorito.
+  - D-2:
+    - `D2_KEEP_FILTERS: calendario_informes=false, enviados=[false]`
+    - `D2_KEEP_FILTERS: carga=false, enviados=[false]`
+    - `D2_KEEP_FILTERS: litigantes=true, enviados=[true]`
+    - `D2_KEEP_FILTERS: seguimiento=true, enviados=[true]`
+  - Pruebas nuevas: `test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 41 filtered out` (F2, F3, F4) y `test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 43 filtered out` (D-2).
+  - Biblioteca sin variables: `test result: ok. 43 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out`; con `FLOW_REFERENCIA` y `--include-ignored`: `test result: ok. 44 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out`.
+  - Suite oficial del binario (variables de E-L y `--include-ignored`, con los dos `--skip`): `test result: ok. 48 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out`.
+  - `cargo clippy --locked --lib -- -D warnings`: sin advertencias. `cargo clippy --locked --lib --tests`: sin advertencias nuevas en `lote.rs`, `descargador_ui.rs` ni `sitfa_ficticio.rs`; se mantienen las previas del binario.
+  - `Sin RUT reales detectados.` · `Sin correos ni RIT nuevos.`
+- Resultado por criterio:
+  - F2: PASA — tres `search` y dos intervalos ≥ 0,5 s.
+  - F3: PASA — `pendientes` devuelve dos y las huellas del lote original quedan intactas.
+  - F4: PASA — el favorito sobrevive al reinicio y se aplica con alcance y fechas recalculadas.
+  - D-2: PASA — calendario y Carga envían `keep_filters: false`; Litigantes y Seguimiento, `true`.
+  - Biblioteca y clippy `-D warnings`: PASA — `43 + 1 ignored` sin variables, `44` con variables; `--lib -- -D warnings` limpio.
+  - Sin cambios de comportamiento por la extracción: PASA — `iniciar` usa la nueva función `lote::conservar_filtros`, que reproduce la condición anterior (`conservar_filtros && Seguimiento|Litigantes`).
+- Cambios de código: `app/src/descargador/lote.rs` (función `conservar_filtros`), `app/src/descargador_ui.rs` (`iniciar` la usa) y `app/src/descargador/sitfa_ficticio.rs` (pruebas F2, F3, F4 y D-2) · Cambios de lógica de producción: solo la extracción pedida por D-2, sin cambio de comportamiento.
+- Pendientes:
+  - Repetir en L con `--features eframe/x11`; el host es W.
+  - El run de CI no se puede consultar desde este host; `NO VERIFICADO EN CI`.
+
 ## Siguiente paso exacto
 
 1. E-C: paquete C de integración con ZIP sintéticos ([prompt](prompts/E-C.md)). Después, E-L (pruebas condicionadas) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-F, E-A78, E-G, E-D, E-E e E-I.

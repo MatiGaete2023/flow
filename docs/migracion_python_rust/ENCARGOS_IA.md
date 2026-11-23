@@ -93,7 +93,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Hacer: marcar esas pruebas con `#[ignore = "requiere FLOW_…"]` y quitar el `return` (que fallen si se piden sin la variable), o agruparlas en una corrida explícita con `--include-ignored`. Documentar el comando en el registro y en la CI de Windows.
 - Criterio: sin variables, la suite informa esas pruebas como `ignored`, no como `ok`. Con variables y `--include-ignored`, pasan. Sin cambios de lógica de producción.
 
-### E-F · Descargador: pausa, pendientes y favoritos — `ABIERTO` (entorno L)
+### E-F · Descargador: pausa, pendientes y favoritos — `ENTREGADO` (entorno L)
 
 - Agregar en `app/src/descargador/sitfa_ficticio.rs`:
   - F2: registrar el `Instant` de cada `search` de un lote de tres consultas con pausa pedida de 0 s; el intervalo debe ser ≥ 0,5 s;
