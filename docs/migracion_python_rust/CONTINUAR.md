@@ -12,7 +12,7 @@ Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-p
 ## Pendiente (en orden)
 
 1. Encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
-2. Decisiones del usuario D-1 (guion en el nombre del programa) y D-2 (`keep_filters` en Integral).
+2. Decisiones D-1 (conservar el guion) y D-2 (`keep_filters` igual que Python) resueltas el 23 de noviembre; ver [ENCARGOS_IA.md](ENCARGOS_IA.md).
 3. Paquete H: acta del usuario con su PC autorizado, sesión SITFA y Outlook local ([guía](../aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md)).
 
 ## Cómo trabajar

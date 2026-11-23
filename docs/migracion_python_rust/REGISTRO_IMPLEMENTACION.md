@@ -399,8 +399,13 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - no se verifican R2, R4 ni R5.
 - **Estado por paquete y encargos de corrección:** [ENCARGOS_IA.md](ENCARGOS_IA.md). Desde aquí, la ejecución corresponde a IA ejecutoras y esta línea de trabajo planifica y audita.
 
+## Decisiones del usuario · 23 de noviembre de 2026
+
+- **D-1:** conservar el guion del nombre del programa. R6 queda como «tipo título, conservando el guion del nombre de origen», que es la salida vigente de Flow Rust en los 51 casos del corpus («Ciudad del Niño - Mulchén»).
+- **D-2:** `keep_filters` igual que Python. Revisado de punta a punta, `descargador.py::batch` solo lo habilita en Seguimiento y Litigantes, como `descargador_ui.rs`. Es el comportamiento vigente; la prueba queda como parte de E-F.
+
 ## Siguiente paso exacto
 
 1. Asignar los encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-B, E-C, E-F, E-A78, E-G, E-D, E-E y E-I. Cada entrega se registra con la plantilla del archivo y queda `ENTREGADO` hasta la auditoría.
-2. El usuario decide D-1 y D-2.
+2. D-1 y D-2 resueltas: sin cambios de código; E-B y E-F las verifican.
 3. Paquete H por el usuario.

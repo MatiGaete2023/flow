@@ -44,7 +44,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 | Paquete | Estado auditado | Fundamento (N1 salvo indicación) |
 |---|---|---|
 | A | **PASA, con salvedad** | Las 9 pruebas A1–A8 existen. Biblioteca 40/40 y binario aislado 41 + 1 ignorada en Linux. A7 y A8 no se contrastan con `motor.read_excel` ni con `carga.py` sobre los mismos bytes; usan valores esperados escritos a mano. → E-A78 |
-| B | **PASA las cifras, criterio incompleto** | Reproducido: 2.582 casos, 1.997 idénticos, R1 7, R6 577, R1+R6 1 y 0 fallos. El comparador normaliza mayúsculas, tildes y guiones en todo el texto. No verifica R2 ni R4 (solo `R3_MULTI`) ni la conservación de R5. Las 585 diferencias caen dentro del nombre del programa. En 51 de ellas Rust conserva el guion del nombre de origen y Python lo elimina, lo que la R6 aprobada no contempla. → E-B, D-1 |
+| B | **PASA las cifras, criterio incompleto** (D-1 resuelta: el guion se conserva) | Reproducido: 2.582 casos, 1.997 idénticos, R1 7, R6 577, R1+R6 1 y 0 fallos. El comparador normaliza mayúsculas, tildes y guiones en todo el texto. No verifica R2 ni R4 (solo `R3_MULTI`) ni la conservación de R5. Las 585 diferencias caen dentro del nombre del programa. En 51 de ellas Rust conserva el guion del nombre de origen y Python lo elimina, lo que la R6 aprobada no contempla. → E-B, D-1 |
 | C | **NO EJECUTADO** | `app/qa/generar_contexto_e3.py` no cambió: no existe el ZIP de historia que pide el plan, ni contraste con `nurus.personal.work`. Los nombres de prueba del informe no coinciden con los del repositorio. Las cinco pruebas existentes terminan con `return` sin `FLOW_E3_PAQUETE`. → E-C |
 | D | **NO ACREDITADO** | Las pruebas `ui_ajustes_muestra_umbrales`, `ui_descargador_muestra_opciones`, `ui_trabajo_muestra_botones` y `ui_revision_muestra_tabla` no existen en ningún commit. No se cita la corrida Windows del commit ni la evidencia de las comprobaciones manuales D2. El SHA-256 informado corresponde a un binario local que no se puede verificar. → E-D |
 | E | **NO EJECUTADO** | Se revisaron referencias antiguas, no las capturas de la corrida del commit ni `trabajo-contexto.png`. → E-E |
@@ -59,7 +59,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Objetivo: que `motor::historia::tests::paquete_b_redaccion_mensual` clasifique solo lo que acreditan R1 y R6.
 - Pasos:
   1. Clasificar como R6 solo las palabras que difieren dentro del nombre del programa de la fila. Las palabras del nombre salen de la entrada del caso (`programa`, `programa_cruce` o el campo que use `titulo_programa_registro`). Una diferencia fuera de ese tramo es FALLA.
-  2. Contar aparte `R6_GUION`: el nombre conserva « - » en Rust y Python lo omite.
+  2. Contar aparte `R6_GUION`: el nombre conserva « - » en Rust y Python lo omite. Es una variante aceptada de R6 (decisión D-1).
   3. Afirmar que no aparecen `R2`, `R3`, `R3_MULTI` ni `R4` en las observaciones.
   4. Comprobar R5 según `INFORME_FALLAS_20261120.md` (tabla de decisiones).
   5. Si falta `FLOW_CASOS`, la prueba falla. No debe terminar con `return`.
@@ -75,7 +75,8 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Agregar en `app/src/descargador/sitfa_ficticio.rs`:
   - F2: registrar el `Instant` de cada `search` de un lote de tres consultas con pausa pedida de 0 s; el intervalo debe ser ≥ 0,5 s;
   - F3: cancelar después de la primera consulta; `pendientes` devuelve dos. Se ejecutan en una carpeta nueva y las huellas de todos los archivos del lote original quedan iguales;
-  - F4: guardar un favorito, volver a cargarlo con `Preferencias::cargar` desde la misma ruta (simulación de reinicio) y aplicarlo, con alcance y fechas recalculadas.
+  - F4: guardar un favorito, volver a cargarlo con `Preferencias::cargar` desde la misma ruta (simulación de reinicio) y aplicarlo, con alcance y fechas recalculadas;
+  - D-2: con `conservar_filtros` pedido, un lote Integral de calendario o de Carga envía `keep_filters: false` a `prepare` y uno de Litigantes envía `true`. Para eso, extraer de `iniciar` (`descargador_ui.rs`) a una función de la biblioteca la regla «solo Seguimiento y Litigantes» y probarla.
 - Criterio: las tres pruebas existen, pasan, y biblioteca y clippy `-D warnings` siguen limpios.
 
 ### E-A78 · Contraste Python de A7 y A8 — `ABIERTO` (entorno L)
@@ -111,7 +112,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 - Lecturas de bitácora, historia, calendario e histórico (F19), paquete CSMP y exportaciones de lote (F22). La auditoría lo especificará en encargos más chicos antes de asignarlo.
 
-## Decisiones del usuario pendientes
+## Decisiones del usuario
 
-- **D-1 · Guion en el nombre del programa (R6).** En 51 casos del corpus, el nombre de origen «PRM CIUDAD DEL NIÑO - MULCHÉN» queda como «Ciudad del Niño - Mulchén» en Rust (conserva el guion). Python lo deja como «Ciudad del NIÑO Mulchén». La R6 aprobada no se pronuncia sobre el guion. Opciones: conservarlo (el comportamiento actual de Rust) o eliminarlo como Python. Hasta la decisión, E-B lo informa por separado.
-- **D-2 · `keep_filters` en Integral.** Python lo envía en cualquier pantalla y Flow Rust lo permite solo en Seguimiento y Litigantes (turno 16).
+- **D-1 · Guion en el nombre del programa (R6): conservar** (23 de noviembre de 2026). «PRM CIUDAD DEL NIÑO - MULCHÉN» se redacta «Ciudad del Niño - Mulchén», como hace hoy Flow Rust. R6 incluye conservar el guion del nombre de origen. No requiere cambios de código. E-B sigue contando `R6_GUION` por separado, como variante aceptada de R6: no es FALLA.
+- **D-2 · `keep_filters` en Integral: igual que Python** (23 de noviembre de 2026). En Python, `lotes.py::BatchRunner` lo envía sin restringir, pero `descargador.py::batch` (líneas 1117 y 1139) lo fija en `False` fuera de Seguimiento y Litigantes. De punta a punta, Python solo conserva filtros en esas dos pantallas, y Flow Rust hace lo mismo (`descargador_ui.rs`, `iniciar`). No requiere cambios de código. La duda planteada en la auditoría del turno 17 consideraba solo `lotes.py`. Se cubre con el punto agregado a E-F.

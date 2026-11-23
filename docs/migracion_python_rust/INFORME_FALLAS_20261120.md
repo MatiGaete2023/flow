@@ -143,7 +143,7 @@ Decisión expresa del usuario sobre textos de observaciones y estructura del pro
 | R3 | Aprobada | Con `HISTORIA.E04_CON_FOLIO` y `ESPERA.E05_SOLO_CORREO`, un solo «Medida revisada, a la espera de ingreso efectivo.» y sin la oración de días de espera. |
 | R4 | **Quitar** | Cuando la observación incluye «Tribunal dispone ingreso a …» (`HISTORIA.SERVICIO_INGRESO`), omitir «Al `<FECHA>`, RUS registra `<N>` días de espera.». |
 | R5 | Parcial | No reiterar (usar el texto vigente) solo cuando el texto vigente es «Medida revisada, sin observaciones.» o «La derivación … no se encuentra sujeta a seguimiento por este Centro.». En los demás casos se mantiene «Se reitera observación anterior del `<FECHA>`.». |
-| R6 | Aprobada | Nombre del programa en tipo título: artículo inicial con mayúscula, comunas y palabras sin mayúsculas sostenidas, conectores en minúscula y tildes restituidas. El usuario escribió «56»; se interpreta como R6. |
+| R6 | Aprobada | Nombre del programa en tipo título: artículo inicial con mayúscula, comunas y palabras sin mayúsculas sostenidas, conectores en minúscula y tildes restituidas. El usuario escribió «56»; se interpreta como R6. | Ampliada el 23 de noviembre de 2026 (D-1): se conserva el guion del nombre de origen («Ciudad del Niño - Mulchén»).
 | R7, R8 | Sin decisión | Se mantienen los textos actuales hasta que el usuario decida. |
 | Orden de columnas | Confirmado | Columnas NURUS al final del consolidado: `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. Cierra el conflicto de la sección 7. |
 | Flow Python | Sin decisión | Los cambios de redacción se aplican en Flow Rust. Ajustar Flow Python requiere instrucción aparte. |
