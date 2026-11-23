@@ -7,6 +7,7 @@ use std::time::Duration;
 
 mod evidencia;
 pub mod extension;
+pub mod lecturas;
 pub mod lote;
 pub mod preferencias;
 mod puente;

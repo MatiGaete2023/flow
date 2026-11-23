@@ -1,0 +1,937 @@
+//! Lectura local de ventanas de bitácora, historia y calendario. Nunca ejecuta scripts ni sigue enlaces.
+//! La identidad remota se coteja antes de leer. Una estructura desconocida es error, nunca una lista vacía.
+
+use chrono::{NaiveDate, NaiveDateTime};
+use regex::Regex;
+use scraper::{ElementRef, Html, Selector};
+use serde_json::{json, Value};
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
+
+const IDENTIDAD: [&str; 5] = ["COD_Tribunal", "CRR_IdCausa", "ID_Ingreso", "COD_Etapa", "TIP_Consulta"];
+const OCULTOS: [&str; 5] = ["HOBS_Centro_", "HOBS_Tribunal_", "HCOD_Estado_", "HFUN_Tribunal_", "HFLG_Envio_"];
+const BITACORA: [&str; 9] = [
+    "Tipo Observación",
+    "Etapa",
+    "Fecha Centro",
+    "Usuario Centro",
+    "Observación Centro",
+    "Fecha Tribunal",
+    "Usuario Tribunal",
+    "Observación Tribunal",
+    "Acción",
+];
+const HISTORIA: [&str; 9] = ["Folio", "Doc.", "Sel", "Anexo", "Etapa", "Trámite", "Desc. Trámite", "Referencia", "Fecha Tram"];
+const CABECERA: [&str; 10] =
+    ["RIT", "RUC", "Caratulado", "F. Ingreso", "Proc.", "Forma Inicio", "Est. Adm.", "Etapa", "Estado Proc.", "Tribunal"];
+static CHARSET: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?i)<meta\b[^>]*\bcharset\s*=\s*["']?\s*([a-zA-Z0-9_-]+)"#).unwrap());
+static CIERRE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)</html\s*>").unwrap());
+
+fn sel(s: &str) -> Selector {
+    Selector::parse(s).expect("selector constante")
+}
+/// `rus/columns.py::normalize` (como `flow_dominio::texto::normalizar_columna`): NFKD a ASCII, minúsculas, sin guiones,
+/// puntos ni paréntesis y espacios simples; puede dejar un espacio final.
+fn normalizar(s: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    static GUIONES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[-().]+").unwrap());
+    static ESPACIOS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
+    let t: String = s.nfkd().filter(char::is_ascii).collect::<String>().to_lowercase();
+    let t = GUIONES.replace_all(t.trim(), " ");
+    ESPACIOS.replace_all(&t, " ").to_string()
+}
+pub(crate) fn texto(e: ElementRef<'_>) -> String {
+    let partes = e
+        .descendants()
+        .filter(|n| {
+            !n.ancestors().filter_map(ElementRef::wrap).any(|e| matches!(e.value().name(), "script" | "style" | "noscript" | "template"))
+        })
+        .filter_map(|n| n.value().as_text())
+        .map(|t| t.as_ref())
+        .collect::<Vec<_>>()
+        .join(" ");
+    partes.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Respeta la codificación declarada y falla si faltan bytes o hay caracteres no decodificables.
+pub fn decodificar(datos: &[u8]) -> Result<String, String> {
+    if datos.is_empty() || datos.len() > 8 * 1024 * 1024 {
+        return Err("Respuesta HTML vacía o demasiado grande.".into());
+    }
+    let prefijo = String::from_utf8_lossy(&datos[..datos.len().min(8192)]);
+    let charset = CHARSET.captures(&prefijo).map(|c| c[1].to_ascii_lowercase()).unwrap_or_default();
+    if !["", "utf-8", "utf8", "windows-1252", "cp1252", "iso-8859-1", "latin1", "latin-1"].contains(&charset.as_str()) {
+        return Err("Codificación HTML de captura no admitida.".into());
+    }
+    let datos = datos.strip_prefix(&[0xef, 0xbb, 0xbf]).unwrap_or(datos);
+    if charset == "utf-8" || charset == "utf8" {
+        return std::str::from_utf8(datos).map(String::from).map_err(|_| "No se pudo decodificar íntegramente el HTML.".into());
+    }
+    if charset.is_empty() {
+        if let Ok(s) = std::str::from_utf8(datos) {
+            return Ok(s.into());
+        }
+    }
+    encoding_rs::WINDOWS_1252
+        .decode_without_bom_handling_and_without_replacement(datos)
+        .map(|s| s.into_owned())
+        .ok_or("No se pudo decodificar íntegramente el HTML.".into())
+}
+
+fn documento(datos: &[u8]) -> Result<Html, String> {
+    let texto = decodificar(datos)?;
+    if !CIERRE.is_match(&texto) {
+        return Err("La respuesta HTML está incompleta.".into());
+    }
+    let doc = Html::parse_document(&texto);
+    if doc.select(&sel("input")).any(|e| e.value().attr("type").is_some_and(|t| t.eq_ignore_ascii_case("password"))) {
+        return Err("La respuesta es una página de acceso; revisa la sesión de SITFA.".into());
+    }
+    Ok(doc)
+}
+
+fn formulario(doc: &Html) -> Result<ElementRef<'_>, String> {
+    let forms = doc.select(&sel("form[name='InformesPpalForm']")).collect::<Vec<_>>();
+    if forms.len() != 1 {
+        return Err("No se encontró un formulario único de la ventana solicitada.".into());
+    }
+    Ok(forms[0])
+}
+
+fn input(form: ElementRef<'_>, nombre: &str) -> Result<String, String> {
+    let campos = form.select(&sel("input[name]")).filter(|e| e.value().attr("name") == Some(nombre)).collect::<Vec<_>>();
+    if campos.len() != 1 {
+        return Err("Campo ausente o repetido en la ventana solicitada.".into());
+    }
+    Ok(campos[0].value().attr("value").unwrap_or("").into())
+}
+
+fn filas(tabla: ElementRef<'_>) -> Vec<ElementRef<'_>> {
+    tabla
+        .select(&sel("tr"))
+        .filter(|r| r.ancestors().filter_map(ElementRef::wrap).find(|e| e.value().name() == "table").map(|e| e.id()) == Some(tabla.id()))
+        .collect()
+}
+fn celdas(fila: ElementRef<'_>) -> Vec<ElementRef<'_>> {
+    fila.children().filter_map(ElementRef::wrap).filter(|e| matches!(e.value().name(), "td" | "th")).collect()
+}
+fn encabezado(fila: ElementRef<'_>, esperado: &[&str]) -> bool {
+    celdas(fila).iter().map(|e| normalizar(&texto(*e))).eq(esperado.iter().map(|s| normalizar(s)))
+}
+fn positivo(s: &str) -> bool {
+    !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()) && s.bytes().any(|b| b != b'0')
+}
+
+fn fecha_hora(s: &str, opcional: bool) -> Result<String, String> {
+    let s = s.trim();
+    if opcional && matches!(s, "" | "---") {
+        return Ok(String::new());
+    }
+    for formato in ["%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M"] {
+        if let Ok(f) = NaiveDateTime::parse_from_str(s, formato) {
+            return Ok(f.format("%Y-%m-%dT%H:%M:%S").to_string());
+        }
+    }
+    NaiveDate::parse_from_str(s, "%d/%m/%Y")
+        .map(|f| format!("{f}T00:00:00"))
+        .map_err(|_| "La captura contiene una fecha de bitácora ilegible.".into())
+}
+
+/// Como `nurus.bitacora_html`: se comparan la ruta y, si la hay, el origen; la consulta y el fragmento no importan.
+fn destino_bitacora(action: &str) -> bool {
+    let sin_fragmento = action.split('#').next().unwrap_or("");
+    let ruta = sin_fragmento.split('?').next().unwrap_or("");
+    let ruta = match ruta.split_once("://") {
+        Some((esquema, resto)) if esquema.eq_ignore_ascii_case("https") => match resto.split_once('/') {
+            Some(("familia.pjud.cl", _)) => &resto["familia.pjud.cl".len()..],
+            _ => return false,
+        },
+        Some(_) => return false,
+        None => ruta,
+    };
+    ruta == "/SITFAWEB/InformesDAction.do"
+}
+
+pub fn leer_bitacora(datos: &[u8], params: &BTreeMap<String, String>, fuente: &str, capturada: &str) -> Result<Value, String> {
+    leer_bitacora_impl(datos, params, fuente, capturada, false)
+}
+
+fn leer_bitacora_impl(
+    datos: &[u8],
+    params: &BTreeMap<String, String>,
+    fuente: &str,
+    capturada: &str,
+    captura_verificada: bool,
+) -> Result<Value, String> {
+    let tipo = params.get("tipo_popUp").map(String::as_str).unwrap_or("");
+    if !matches!(tipo, "11" | "12" | "13") {
+        return Err("La captura no corresponde a una bitácora RUS.".into());
+    }
+    let doc = documento(datos)?;
+    let form = formulario(&doc)?;
+    if !destino_bitacora(form.value().attr("action").unwrap_or("")) {
+        return Err("El formulario de bitácora no tiene el destino esperado.".into());
+    }
+    let mut contexto = BTreeMap::new();
+    for (i, k) in IDENTIDAD.iter().enumerate() {
+        let valor = input(form, k)?;
+        if valor.is_empty() || params.get(*k) != Some(&valor) || i < 4 && !positivo(&valor) {
+            return Err("La respuesta no corresponde al ingreso solicitado.".into());
+        }
+        contexto.insert(*k, valor);
+    }
+    let recibido = input(form, "tipo_popUp")?;
+    if !recibido.is_empty() && recibido != tipo {
+        return Err("El tipo de ventana no corresponde a bitácora.".into());
+    }
+    let tablas = form.select(&sel("table[id='TablaInforme']")).collect::<Vec<_>>();
+    if tablas.len() != 1 {
+        return Err("La captura no contiene una tabla de bitácora única.".into());
+    }
+    let tabla = tablas[0];
+    let filas = filas(tabla);
+    if filas.is_empty() || !encabezado(filas[0], &BITACORA) {
+        return Err("Cambió la estructura de la tabla de bitácora.".into());
+    }
+    let mut ocultos = BTreeMap::new();
+    for campo in tabla.select(&sel("input")) {
+        let nombre = campo.value().attr("name").unwrap_or("");
+        if !OCULTOS.iter().any(|p| nombre.starts_with(p)) {
+            continue;
+        }
+        if !campo.value().attr("type").is_some_and(|t| t.eq_ignore_ascii_case("hidden"))
+            || ocultos.insert(nombre.to_string(), campo.value().attr("value").unwrap_or("").to_string()).is_some()
+        {
+            return Err("Campo de texto completo inválido o repetido.".into());
+        }
+    }
+    let base = json!({"tribunal_codigo":contexto["COD_Tribunal"],"causa_id":contexto["CRR_IdCausa"],"ingreso_id":contexto["ID_Ingreso"],"rit":input(form,"RIT_Causa")?,"persona":input(form,"GLS_Nombre")?,"centro":input(form,"GLS_Centro")?});
+    let (mut entries, mut metadata, mut advertencias) = (vec![], vec![], vec![]);
+    let (mut ids, mut usados) = (BTreeSet::new(), BTreeSet::new());
+    for (numero, fila) in filas.iter().skip(1).enumerate() {
+        let cells = celdas(*fila);
+        if cells.len() != 9 {
+            return Err("Fila de bitácora incompleta.".into());
+        }
+        let valores = cells.iter().map(|e| texto(*e)).collect::<Vec<_>>();
+        let encontrados = cells[8].select(&sel("img[id]")).map(|e| e.value().attr("id").unwrap().to_string()).collect::<BTreeSet<_>>();
+        if encontrados.len() != 1 {
+            return Err("No se puede vincular la fila con su observación.".into());
+        }
+        let id = encontrados.into_iter().next().unwrap();
+        if !positivo(&id) || !ids.insert(id.clone()) {
+            return Err("La bitácora contiene una identidad de observación inválida o repetida.".into());
+        }
+        let mut valores_ocultos = vec![];
+        for prefijo in OCULTOS {
+            let nombre = format!("{prefijo}{id}");
+            valores_ocultos.push(ocultos.get(&nombre).cloned().ok_or("Falta el texto completo o los metadatos de una observación.")?);
+            usados.insert(nombre);
+        }
+        let respuesta = if valores_ocultos[1].trim() == "---" { "" } else { &valores_ocultos[1] };
+        let fecha_respuesta = fecha_hora(&valores[5], true)?;
+        if !respuesta.trim().is_empty() != !fecha_respuesta.is_empty() {
+            advertencias.push(format!("Entrada {id}: respuesta y fecha del tribunal no concuerdan."));
+        }
+        let mut entrada = base.clone();
+        let objeto = entrada.as_object_mut().unwrap();
+        for (k,v) in json!({"entry_id":id,"fecha":fecha_hora(&valores[2],false)?,"autor":valores[3],"tipo":valores[0],"etapa":valores[1],"texto":valores_ocultos[0],"origen":"centro","respuesta":respuesta,"fecha_respuesta":fecha_respuesta,"respuesta_comprobada":true,"fuente":fuente,"fila_fuente":numero+1}).as_object().unwrap(){objeto.insert(k.clone(),v.clone());}
+        entries.push(entrada);
+        metadata.push(
+            json!({"entry_id":id,"state":valores_ocultos[2],"send_to_tribunal":valores_ocultos[4],"tribunal_user":valores_ocultos[3]}),
+        );
+    }
+    if ocultos.keys().cloned().collect::<BTreeSet<_>>() != usados {
+        return Err("Hay textos ocultos sin una fila correspondiente.".into());
+    }
+    for nodo in doc.select(&sel("input, img")) {
+        if nodo.ancestors().any(|p| p.id() == tabla.id()) {
+            continue;
+        }
+        if nodo.value().attr("name").is_some_and(|n| OCULTOS.iter().any(|p| n.starts_with(p)))
+            || nodo.value().name() == "img" && nodo.value().attr("id").is_some_and(positivo) && nodo.value().attr("onclick").is_some()
+        {
+            return Err("Hay observaciones fuera de la tabla de bitácora; estructura no reconocida.".into());
+        }
+    }
+    let mut resultado = base;
+    let objeto = resultado.as_object_mut().unwrap();
+    for (k,v) in json!({"entries":entries,"coverage":"PARCIAL","captured_at":capturada,"stage_code":contexto["COD_Etapa"],"source":fuente,"row_metadata":metadata,"warnings":advertencias,"html_sha256":super::xls::huella(datos),"captures":1,"error":"Tabla recuperada de una respuesta de bitácora. No acredita historial remoto completo."}).as_object().unwrap(){objeto.insert(k.clone(),v.clone());}
+    let queda_vacia = resultado["entries"].as_array().is_some_and(Vec::is_empty);
+    // P2 (`bitacora_html.read_snapshot`): alcance de ESTA ventana; `coverage` tradicional sigue PARCIAL para el motor.
+    resultado["alcance"] = json!(cobertura_bitacora(&doc, queda_vacia));
+    resultado["alcance_metodo"] = json!(ALCANCE_BITACORA_SITFA);
+    if captura_verificada {
+        resultado["alcance_revision_fuente"] = json!({
+            "metodo": ALCANCE_BITACORA_SITFA,
+            "coverage": cobertura_bitacora(&doc, queda_vacia),
+            "html_sha256": resultado["html_sha256"],
+        });
+    }
+    Ok(resultado)
+}
+
+/// Contrato confirmado por el usuario: la ventana de bitácora de un ingreso
+/// devuelve todas las filas en una sola respuesta, incluso cuando no hay filas.
+pub const ALCANCE_BITACORA_SITFA: &str = "SITFA_TABLA_INFORME_INGRESO_V1";
+
+/// Solo para la respuesta de la conexión verificada de Captura. Un HTML legado
+/// leído fuera de esa conexión conserva su cobertura original.
+#[allow(dead_code)] // la usa el puente de lecturas (E-Q3)
+pub(crate) fn leer_bitacora_en_captura(
+    datos: &[u8],
+    params: &BTreeMap<String, String>,
+    capturada: &str,
+) -> Result<Value, String> {
+    leer_bitacora_impl(datos, params, "", capturada, true)
+}
+
+fn cobertura_bitacora(doc: &Html, queda_vacia: bool) -> &'static str {
+    const NOMBRES: [&str; 6] = ["pagina", "nropag", "numpag", "pagenum", "fechadesde", "fechahasta"];
+    const ROTULOS: [&str; 7] = ["siguiente", "anterior", "proxima", "ultima pagina", "mostrar mas", "cargar mas", "ver mas"];
+    let controles = sel("iframe, frame, .pagination, .paginacion, .paginador, .pager, [data-page], [data-total-pages], a[rel='next'], a[rel='prev']");
+    let posible_recorte = doc.select(&controles).next().is_some()
+        || doc.select(&sel("input, select, a, button, [onclick], [role='button']")).any(|nodo| {
+            let atributo = |k| nodo.value().attr(k).unwrap_or("");
+            let nombre = format!("{} {}", atributo("name"), atributo("id")).to_ascii_lowercase().replace(['_', '-'], "");
+            let accion = format!("{} {}", atributo("href"), atributo("onclick")).to_ascii_lowercase();
+            // El value de un campo oculto puede ser texto de observación; solo cuenta en botones.
+            let boton = nodo.value().name() == "input"
+                && matches!(atributo("type").to_ascii_lowercase().as_str(), "button" | "submit" | "image" | "reset");
+            let crudo = format!("{} {}", texto(nodo), if boton { atributo("value") } else { "" });
+            // Paginadores sin rótulo: «1 2 3», «[2]», «»», «>>». Solo en elementos que se pueden pulsar.
+            let pulsable = boton
+                || matches!(nodo.value().name(), "a" | "button")
+                || !atributo("onclick").is_empty()
+                || atributo("role") == "button";
+            // `alcance_bitacora`: en un elemento pulsable cuentan también `aria-label` y `title`.
+            let rotulo = if pulsable {
+                normalizar(&format!("{} {} {}", crudo, atributo("aria-label"), atributo("title")))
+            } else {
+                normalizar(&crudo)
+            };
+            let compacto = crudo.chars().filter(|c| !c.is_whitespace() && !"[]()|.,:;-".contains(*c)).collect::<String>();
+            let numero_o_flecha = !compacto.is_empty()
+                && (compacto.chars().all(|c| c.is_ascii_digit()) || compacto.chars().all(|c| "<>«»‹›…←→⇐⇒".contains(c)));
+            NOMBRES.iter().any(|n| nombre.contains(n))
+                || ROTULOS.iter().any(|r| rotulo.contains(r))
+                || ["pagina", "page"].iter().any(|p| accion.contains(p))
+                || pulsable && numero_o_flecha
+        });
+    if posible_recorte {
+        "PARCIAL"
+    } else if queda_vacia {
+        "VACIA_COMPROBADA"
+    } else {
+        "COMPLETA"
+    }
+}
+
+/// La pestaña «Escritos» está visible como control (enlace, botón, ítem o celda), aunque no traiga su tabla (E3-13).
+fn pestana_escritos(doc: &Html) -> bool {
+    doc.select(&sel("a, li, button, span, td, th")).any(|e| normalizar(&texto(e)) == "escritos")
+        || doc.select(&sel("input[value]")).any(|e| normalizar(e.value().attr("value").unwrap_or("")) == "escritos")
+}
+
+/// Rótulo COMPLETO del titular, ya normalizado y sin separador final (E3C-03): «RUN del representante» no es del titular.
+static ROTULO_TITULAR: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(?:(?:rut|run)(?: (?:del|de la) (?:nino|nina|nna|menor))?|nombre(?: completo)?(?: (?:del|de la))? (?:nino|nina|nna|menor))$")
+        .unwrap()
+});
+
+/// (es rótulo del titular, valor en el mismo texto). «RUT: 1-9» → (true, "1-9"); «Nombre del NNA» → (true, "").
+fn rotulo_titular(t: &str) -> (bool, String) {
+    let (etiqueta, valor) = match t.split_once(':') {
+        Some((e, v)) => (e, v.trim().to_string()),
+        None => (t, String::new()),
+    };
+    if ROTULO_TITULAR.is_match(normalizar(etiqueta).trim()) {
+        (true, valor)
+    } else {
+        (false, String::new())
+    }
+}
+
+/// Valor que sigue al rótulo (E3C-03/04): el texto inmediato, o el siguiente ELEMENTO hermano saltando comentarios. Una
+/// celda solo toma la celda siguiente de su fila. Nunca una tabla ni un elemento que contenga una tabla.
+fn valor_vecino(el: ElementRef<'_>) -> String {
+    let celda = |n: &str| matches!(n, "td" | "th");
+    for nodo in el.next_siblings() {
+        match nodo.value() {
+            scraper::Node::Text(t) => {
+                let limpio = t.split_whitespace().collect::<Vec<_>>().join(" ");
+                if !limpio.is_empty() {
+                    return limpio;
+                }
+            }
+            scraper::Node::Element(_) => {
+                let Some(siguiente) = ElementRef::wrap(nodo) else { return String::new() };
+                let nombre = siguiente.value().name();
+                if nombre == "table" || siguiente.select(&sel("table")).next().is_some() || celda(el.value().name()) != celda(nombre) {
+                    return String::new();
+                }
+                let valor = texto(siguiente);
+                return if rotulo_titular(&valor).0 { String::new() } else { valor };
+            }
+            _ => {}
+        }
+    }
+    String::new()
+}
+
+/// Valores de los CAMPOS ROTULADOS del titular («Nombre del niño», «Rut»/«RUN»), separados por «|»: tras «:» en el mismo
+/// elemento, en el texto que sigue al rótulo o en el elemento hermano siguiente. Fuera de las tablas de programas
+/// (Protección y LRPA). Una mención en otra parte no prueba pertenencia (E3-03, E3B-05, E3C-03/04;
+/// `escritos_html.py::_texto_titular`).
+fn campos_titular(doc: &Html, egreso: &[String], programas: &[String]) -> Vec<(String, String)> {
+    let mut excluidas = std::collections::HashSet::new();
+    for tabla in doc.select(&sel("table")) {
+        for fila in filas(tabla) {
+            let cabecera: Vec<String> = celdas(fila).iter().map(|e| normalizar(&texto(*e))).collect();
+            if egreso.iter().all(|e| cabecera.contains(e)) && programas.iter().any(|p| cabecera.contains(p)) {
+                excluidas.insert(tabla.id());
+                break;
+            }
+        }
+    }
+    let mut valores: Vec<(String, String)> = Vec::new();
+    for el in doc.select(&sel("td, th, label, span, b, strong, div, p, li")) {
+        if excluidas.contains(&el.id()) || el.ancestors().any(|a| excluidas.contains(&a.id())) {
+            continue;
+        }
+        let contenedor = el.children().filter_map(ElementRef::wrap).any(|h| matches!(h.value().name(), "td" | "th" | "div" | "p" | "li" | "table"));
+        if contenedor {
+            continue;
+        }
+        let t = texto(el);
+        let (es_rotulo, mut valor) = rotulo_titular(&t);
+        if !es_rotulo {
+            continue;
+        }
+        if valor.is_empty() {
+            valor = valor_vecino(el);
+        }
+        if !valor.is_empty() {
+            // `normalize(texto.partition(':')[0]).split()[0]`
+            let etiqueta = normalizar(t.split(':').next().unwrap_or("")).split_whitespace().next().unwrap_or("").to_string();
+            valores.push((etiqueta, valor));
+        }
+    }
+    valores
+}
+
+/// `escritos_html.py::canonical_rut`: cuerpo sin puntos ni ceros iniciales y dígito verificador; vacío si no es un RUT.
+fn rut_canonico(texto: &str) -> String {
+    static RUT: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^(?:0*[0-9]{1,9}|[0-9]{1,3}(?:\.[0-9]{3}){1,2})-?[0-9K]$").unwrap());
+    let t = texto.trim().to_uppercase();
+    if !RUT.is_match(&t) {
+        return String::new();
+    }
+    let (cuerpo, dv) = t.split_at(t.len() - 1);
+    let cuerpo = cuerpo.replace('.', "");
+    let cuerpo = cuerpo.trim_end_matches('-').trim_start_matches('0');
+    if cuerpo.is_empty() { String::new() } else { format!("{cuerpo}{dv}") }
+}
+
+/// `escritos_html.py::_documento`: los mismos códigos de error que Python para Escritos e Histórico.
+fn documento_escritos(datos: &[u8]) -> Result<Html, String> {
+    let texto = decodificar(datos)?;
+    if texto.trim().is_empty() {
+        return Err("ESCRITOS_AUSENTE".into());
+    }
+    if !CIERRE.is_match(&texto) {
+        return Err("ESCRITOS_RESPUESTA_INCOMPLETA".into());
+    }
+    let doc = Html::parse_document(&texto);
+    if doc.select(&sel("input")).any(|e| e.value().attr("type").is_some_and(|t| t.eq_ignore_ascii_case("password"))) {
+        return Err("ESCRITOS_SESION".into());
+    }
+    Ok(doc)
+}
+
+/// `escritos_html.py::read_escritos`: la bandeja de Escritos con la forma de Flow Python. Columnas por encabezado; una
+/// tabla con cabecera y sin filas es `vacio_explicito`. Pestaña presente sin tabla legible → `ESCRITOS_NO_VERIFICADA`;
+/// sin pestaña → `ESCRITOS_AUSENTE`.
+pub fn leer_escritos_ventana(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {
+    let doc = documento_escritos(datos)?;
+    let pedidos: Vec<String> = ESCRITOS.iter().map(|h| normalizar(h)).collect();
+    let mut tablas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        let Some(primera) = filas.first() else { continue };
+        let cabecera: Vec<String> = celdas(*primera).iter().map(|e| normalizar(&texto(*e))).collect();
+        if pedidos.iter().all(|p| cabecera.contains(p)) {
+            tablas.push((cabecera, filas[1..].to_vec()));
+        }
+    }
+    if tablas.len() != 1 {
+        let presente = normalizar(&texto(doc.root_element())).contains("tipo escrito") || pestana_escritos(&doc);
+        return Err(if presente || !tablas.is_empty() { "ESCRITOS_NO_VERIFICADA" } else { "ESCRITOS_AUSENTE" }.into());
+    }
+    let (cabecera, filas) = tablas.pop().unwrap();
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().enumerate() {
+        let c = celdas(*fila);
+        let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) {
+            continue;
+        }
+        if c.len() != cabecera.len() {
+            advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
+            continue;
+        }
+        let mut item = serde_json::Map::new();
+        for h in ESCRITOS {
+            let pos = cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+            item.insert(h.to_string(), json!(valores[pos]));
+        }
+        item.insert("fila".into(), json!(i + 1));
+        let literal: serde_json::Map<String, Value> = cabecera.iter().cloned().zip(valores.iter().map(|v| json!(v))).collect();
+        item.insert("literal".into(), Value::Object(literal));
+        resultado.push(Value::Object(item));
+    }
+    Ok(json!({"filas":resultado,"vacio_explicito":filas.is_empty(),"advertencias":advertencias,
+        "sha256":super::xls::huella(datos),"source":fuente,"captured_at":capturada}))
+}
+
+const ESCRITOS: [&str; 4] = ["Doc.", "Tipo Escrito", "Solicitante", "Estado"];
+
+/// Bandeja de Escritos de la causa, en la misma respuesta que la Historia (`nurus/escritos_html.py::read_escritos`).
+/// Los valores salen de la MISMA fila, ubicando cada columna por su encabezado. Devuelve `Ok(None)` si la respuesta no
+/// trae la pestaña (fuente no solicitada); `Err(código)` si la pestaña está pero no se puede leer (nunca «vacía»).
+fn leer_escritos(doc: &Html) -> Result<Option<Value>, &'static str> {
+    let pedidos: Vec<String> = ESCRITOS.iter().map(|h| normalizar(h)).collect();
+    let mut tablas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        let Some(primera) = filas.first() else { continue };
+        let originales: Vec<String> = celdas(*primera).iter().map(|e| texto(*e)).collect();
+        let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
+        if pedidos.iter().all(|p| cabecera.contains(p)) {
+            tablas.push((cabecera, originales, filas));
+        }
+    }
+    if tablas.len() != 1 {
+        let presente = normalizar(&texto(doc.root_element())).contains("tipo escrito") || pestana_escritos(doc);
+        return if presente || !tablas.is_empty() { Err("ESCRITOS_NO_VERIFICADA") } else { Ok(None) };
+    }
+    let (cabecera, originales, filas) = tablas.pop().unwrap();
+    let posicion = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().skip(1).enumerate() {
+        let c = celdas(*fila);
+        let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) {
+            continue;
+        }
+        if c.len() != cabecera.len() {
+            advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
+            continue;
+        }
+        let literal: BTreeMap<&str, &str> = originales.iter().map(String::as_str).zip(valores.iter().map(String::as_str)).collect();
+        resultado.push(json!({"fila":i + 1,"doc":valores[posicion("Doc.")],"tipo":valores[posicion("Tipo Escrito")],"solicitante":valores[posicion("Solicitante")],"estado":valores[posicion("Estado")],"literal":literal}));
+    }
+    Ok(Some(json!({"filas":resultado,"vacio_explicito":filas.len() == 1,"advertencias":advertencias})))
+}
+
+const HISTORICO_EGRESO: [&str; 2] = ["Fecha egreso", "Causal egreso"];
+/// SITFA llama «Nombre Proyecto» a la columna del programa; «Programa» se acepta por compatibilidad.
+const HISTORICO_PROGRAMA: [&str; 2] = ["Nombre Proyecto", "Programa"];
+
+/// Tabla visible de «Ingreso Histórico Protección» de la persona seleccionada (`nurus/escritos_html.py::read_historico`).
+/// Captura manual: no sigue enlaces ni consulta por RUT. La vista trae también «Ingreso Historico(LRPA)» con casi las mismas
+/// columnas: se descarta por su título (el más cercano antes del encabezado, que puede no ser la primera fila). La pertenencia a
+/// la persona es VERIFICADA solo si el texto visible contiene su RUT o su nombre completo (≥ 2 palabras); si no, INCIERTA.
+/// Errores: `HISTORICO_NO_VERIFICADA` (sin tabla única legible) o la respuesta incompleta/de sesión.
+pub fn leer_historico(
+    datos: &[u8],
+    fuente: &str,
+    capturada: &str,
+    persona_esperada: &[&str],
+    rut_visible: &str,
+) -> Result<Value, String> {
+    let doc = documento_escritos(datos)?;
+    let orden: std::collections::HashMap<_, usize> = doc.root_element().descendants().enumerate().map(|(i, n)| (n.id(), i)).collect();
+    let mut titulos: Vec<(usize, bool)> = vec![];
+    for e in doc.root_element().descendants().filter_map(ElementRef::wrap) {
+        if matches!(e.value().name(), "script" | "style" | "table" | "tr" | "tbody" | "thead") {
+            continue;
+        }
+        let t = normalizar(&texto(e));
+        if t == "ingreso historico proteccion" {
+            titulos.push((orden[&e.id()], true));
+        } else if t.starts_with("ingreso historico") && t.contains("lrpa") && t.len() < 40 {
+            titulos.push((orden[&e.id()], false));
+        }
+    }
+    let egreso: Vec<String> = HISTORICO_EGRESO.iter().map(|h| normalizar(h)).collect();
+    let programas: Vec<String> = HISTORICO_PROGRAMA.iter().map(|h| normalizar(h)).collect();
+    let mut tablas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        for (i, fila) in filas.iter().enumerate() {
+            let originales: Vec<String> = celdas(*fila).iter().map(|e| texto(*e)).collect();
+            let cabecera: Vec<String> = originales.iter().map(|h| normalizar(h)).collect();
+            if egreso.iter().all(|e| cabecera.contains(e)) && programas.iter().any(|p| cabecera.contains(p)) {
+                let previo = titulos.iter().rfind(|(idx, _)| *idx < orden[&fila.id()]);
+                if !titulos.is_empty() && !previo.is_some_and(|(_, es)| *es) {
+                    break; // tabla de otro historial (LRPA)
+                }
+                tablas.push((cabecera, originales, filas[i + 1..].to_vec()));
+                break;
+            }
+        }
+    }
+    if tablas.len() != 1 {
+        return Err("HISTORICO_NO_VERIFICADA".into());
+    }
+    let (cabecera, originales, filas) = tablas.pop().unwrap();
+    let col_programa = programas.iter().find_map(|p| cabecera.iter().position(|c| c == p)).unwrap();
+    let col = |h: &str| cabecera.iter().position(|c| *c == normalizar(h)).unwrap();
+    let (col_fecha, col_causal) = (col("Fecha egreso"), col("Causal egreso"));
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().enumerate() {
+        let c = celdas(*fila);
+        let valores: Vec<String> = c.iter().map(|e| texto(*e)).collect();
+        if valores.iter().map(|v| normalizar(v)).eq(cabecera.iter().cloned()) || valores.iter().all(|v| v.is_empty()) {
+            continue; // encabezado repetido o fila de relleno
+        }
+        if c.len() != cabecera.len() {
+            advertencias.push(json!({"codigo":"ESCRITOS_FILA_INCOMPLETA","fila":i + 1}));
+            continue;
+        }
+        let literal: serde_json::Map<String, Value> = originales.iter().cloned().zip(valores.iter().map(|v| json!(v))).collect();
+        resultado.push(json!({"Programa":valores[col_programa],"Fecha egreso":valores[col_fecha],"Causal egreso":valores[col_causal],
+            "fila":i + 1,"literal":literal}));
+    }
+    let campos = campos_titular(&doc, &egreso, &programas);
+    let unidos = campos.iter().map(|(_, v)| v.as_str()).collect::<Vec<_>>().join(" | ");
+    let visible = format!(" {} ", normalizar(&unidos.replace('.', "")));
+    let mut verificada = persona_esperada.iter().any(|p| {
+        let limpio = normalizar(&p.replace('.', ""));
+        !limpio.is_empty()
+            && (limpio.chars().any(|c| c.is_ascii_digit()) || limpio.split_whitespace().count() >= 2)
+            && visible.contains(&format!(" {limpio} "))
+    });
+    if !rut_visible.is_empty() {
+        // Con `rut_visible`, el único RUT rotulado del titular debe coincidir exactamente (`read_historico`).
+        let esperado = rut_canonico(rut_visible);
+        let visibles: BTreeSet<String> =
+            campos.iter().filter(|(r, _)| r == "rut" || r == "run").map(|(_, v)| rut_canonico(v)).collect();
+        verificada = !esperado.is_empty() && visibles == BTreeSet::from([esperado]);
+    }
+    Ok(json!({"vacio_explicito":resultado.is_empty() && advertencias.is_empty(),"filas":resultado,"ownership":if verificada {"VERIFICADA"} else {"INCIERTA"},
+        "advertencias":advertencias,"sha256":super::xls::huella(datos),"source":fuente,"captured_at":capturada}))
+}
+
+/// Solo para pruebas y herramientas: la bandeja de Escritos de un HTML suelto (misma lectura que dentro de la historia).
+pub fn leer_escritos_html(datos: &[u8]) -> Result<Option<Value>, String> {
+    let doc = documento(datos)?;
+    leer_escritos(&doc).map_err(String::from)
+}
+
+pub fn leer_historia(datos: &[u8], fuente: &str, capturada: &str) -> Result<Value, String> {
+    let doc = documento(datos)?;
+    let mut candidatas = vec![];
+    let mut parecidas = false;
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        if let Some(primera) = filas.first() {
+            if encabezado(*primera, &HISTORIA) {
+                candidatas.push(filas);
+            } else if celdas(*primera).first().is_some_and(|e| normalizar(&texto(*e)) == "folio") {
+                parecidas = true;
+            }
+        }
+    }
+    if candidatas.len() != 1 {
+        return Err(if parecidas && candidatas.is_empty() { "HISTORIA_ENCABEZADO_DISTINTO" } else { "HISTORIA_TABLA_NO_RECONOCIDA" }.into());
+    }
+    let filas = candidatas.pop().unwrap();
+    let (mut resultado, mut advertencias) = (vec![], vec![]);
+    for (i, fila) in filas.iter().skip(1).enumerate() {
+        let c = celdas(*fila);
+        let posicion = i + 1;
+        if encabezado(*fila, &HISTORIA) {
+            advertencias.push(json!({"codigo":"HISTORIA_ENCABEZADO_REPETIDO","fila":posicion,"folio":""}));
+            continue;
+        }
+        if c.len() == 4 && posicion == filas.len() - 1 {
+            advertencias.push(json!({"codigo":"HISTORIA_FILA_INCOMPLETA","fila":posicion,"folio":texto(c[0])}));
+            continue;
+        }
+        if c.len() != 9 {
+            return Err("HISTORIA_ENCABEZADO_DISTINTO".into());
+        }
+        let valores = c.iter().map(|e| texto(*e)).collect::<Vec<_>>();
+        let fecha = NaiveDate::parse_from_str(&valores[8], "%d/%m/%Y").map(|f| f.to_string()).unwrap_or_default();
+        if fecha.is_empty() {
+            advertencias.push(json!({"codigo":"HISTORIA_FECHA_ILEGIBLE","fila":posicion,"folio":valores[0]}));
+        }
+        resultado.push(json!({"fila":posicion,"folio":valores[0],"etapa":valores[4],"tramite":valores[5],"descripcion":valores[6],"referencia":valores[7],"fecha_texto":valores[8],"fecha_iso":fecha,"anexo":c[3].select(&sel("img")).next().is_some()}));
+    }
+    let paginacion = doc.select(&sel(".pagination,.paginacion,.paginador,.pager")).next().is_some()
+        || doc.select(&sel("input[name]")).any(|e| {
+            let n = e.value().attr("name").unwrap();
+            n.contains("pagina") || n.contains("nroPag") || n.contains("numPag")
+        })
+        || doc.select(&sel("a")).any(|e| texto(e).to_lowercase() == "siguiente");
+    if paginacion {
+        advertencias.push(json!({"codigo":"HISTORIA_POSIBLE_PAGINACION","fila":0,"folio":""}));
+    }
+    let mut cabecera = BTreeMap::new();
+    for etiqueta in doc.select(&sel("label")) {
+        let clave = normalizar(texto(etiqueta).trim_end_matches([':', ' ']));
+        if let Some(k) = CABECERA.iter().find(|k| normalizar(k) == clave) {
+            let valor = etiqueta
+                .next_sibling()
+                .and_then(|n| n.value().as_text())
+                .map(|s| s.split_whitespace().collect::<Vec<_>>().join(" "))
+                .unwrap_or_default();
+            cabecera.entry(*k).or_insert(valor);
+        }
+    }
+    let reservada = doc.select(&sel(".panel-heading")).any(|e| normalizar(&texto(e)).contains("reservada"));
+    let mut lectura =
+        json!({"encabezado":cabecera,"reservada":reservada,"filas":resultado,"vacio_explicito":filas.len()==1,"advertencias":advertencias,"sha256":super::xls::huella(datos),"source":fuente,"captured_at":capturada});
+    // Plan 18-nov-2026: la bandeja de Escritos viaja en la misma respuesta. Ausente = no solicitada (sin clave); un fallo
+    // de Escritos nunca invalida la historia.
+    match leer_escritos(&doc) {
+        Ok(Some(e)) => lectura["escritos"] = e,
+        Ok(None) => {}
+        Err(codigo) => lectura["escritos"] = json!({"error": codigo}),
+    }
+    Ok(lectura)
+}
+
+fn fecha_calendario(s: &str, opcional: bool) -> Result<String, String> {
+    let s = s.trim();
+    // SITFA escribe la fecha vacía como guiones, a veces separados («- - -»).
+    if opcional && s.chars().all(|c| c == '-' || c.is_whitespace()) {
+        return Ok(String::new());
+    }
+    static FORMA: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\A\d{2}/\d{2}/\d{4}(?: \d{1,2}:\d{2}(?::\d{2})?)?\z").unwrap());
+    if !FORMA.is_match(s) {
+        return Err("El calendario contiene una fecha ilegible.".into());
+    }
+    let fecha = fecha_hora(s, false)?;
+    Ok(fecha[..10].to_string())
+}
+
+/// Ventana de meses naturales (1 a 4), sin convertir fechas ilegibles en ausencia de trámites.
+/// Devuelve: dentro, anteriores, posteriores y sin fecha.
+pub fn separar_ventana(filas: &[Value], hasta: NaiveDate, meses: u32) -> Result<[Vec<Value>; 4], String> {
+    if !(1..=4).contains(&meses) {
+        return Err("El período a recolectar va de 1 a 4 meses.".into());
+    }
+    let desde = hasta.checked_sub_months(chrono::Months::new(meses)).ok_or("La ventana de historia no es válida.")?;
+    let mut salida: [Vec<Value>; 4] = Default::default();
+    for fila in filas {
+        let fecha = fila["fecha_iso"].as_str().and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
+        let indice = match fecha {
+            None => 3,
+            Some(f) if f < desde => 1,
+            Some(f) if f > hasta => 2,
+            _ => 0,
+        };
+        salida[indice].push(fila.clone());
+    }
+    Ok(salida)
+}
+
+pub fn leer_calendario(datos: &[u8], args: &[String], fuente: &str, capturada: &str) -> Result<Value, String> {
+    if args.len() != 12 {
+        return Err("El enlace del calendario no tiene la estructura esperada.".into());
+    }
+    let doc = documento(datos)?;
+    let form = formulario(&doc)?;
+    let (tribunal, causa, ingreso) = (input(form, "COD_Tribunal")?, input(form, "CRR_IdCausa")?, input(form, "ID_Ingreso")?);
+    if (&tribunal, &causa, &ingreso) != (&args[2], &args[0], &args[10]) || ![&tribunal, &causa, &ingreso].into_iter().all(|s| positivo(s)) {
+        return Err("La respuesta del calendario no corresponde al ingreso solicitado.".into());
+    }
+    let mut candidatas = vec![];
+    for tabla in doc.select(&sel("table")) {
+        let filas = filas(tabla);
+        if filas.first().is_some_and(|f| encabezado(*f, &["Fecha Proyección", "Fecha Informe", "Estado"])) {
+            candidatas.push(filas);
+        }
+    }
+    if candidatas.len() != 1 {
+        return Err("Cambió la estructura del calendario; no se leyó para no perder proyecciones.".into());
+    }
+    let mut proyecciones = vec![];
+    for (i, fila) in candidatas[0].iter().skip(1).enumerate() {
+        let c = celdas(*fila).iter().map(|e| texto(*e)).collect::<Vec<_>>();
+        if c.iter().all(|s| s.is_empty()) {
+            continue;
+        }
+        if c.len() != 3 {
+            return Err("Fila de calendario incompleta.".into());
+        }
+        let estado = c[2].to_uppercase();
+        if !matches!(estado.as_str(), "ENVIADO" | "PENDIENTE") {
+            return Err("Estado de calendario no reconocido.".into());
+        }
+        let informe = fecha_calendario(&c[1], true)?;
+        if (estado == "ENVIADO") != !informe.is_empty() {
+            return Err("Estado y fecha de informe del calendario no concuerdan.".into());
+        }
+        proyecciones.push(json!({"fila":i+1,"fecha_proyeccion":fecha_calendario(&c[0],false)?,"fecha_informe":informe,"estado":estado}));
+    }
+    let plazo = |etiqueta: &str| -> Option<u32> {
+        let patron = Regex::new(r"(\d+)\s*mes").unwrap();
+        for e in doc.select(&sel("td,th,span,label,b,strong")) {
+            let t = normalizar(&texto(e));
+            if t.starts_with(etiqueta) {
+                if let Some(c) = patron.captures(&t) {
+                    return c[1].parse().ok();
+                }
+            }
+        }
+        None
+    };
+    Ok(
+        json!({"tribunal_codigo":tribunal,"causa_id":causa,"ingreso_id":ingreso,"proyecciones":proyecciones,"plazo_remision_meses":plazo("plazo remision"),"plazo_intervencion_meses":plazo("plazo intervencion"),"source":fuente,"captured_at":capturada,"html_sha256":super::xls::huella(datos)}),
+    )
+}
+
+#[cfg(test)]
+mod pruebas_cobertura_bitacora {
+    use super::{cobertura_bitacora, Html};
+
+    fn cobertura(extra: &str) -> &'static str {
+        let html = format!(
+            "<html><body><form><input type=\"hidden\" name=\"HOBS_Centro_44\" value=\"Ver más antecedentes\">\
+             <table id=\"TablaInforme\"><tr><td>Fecha</td></tr></table>{extra}</form></body></html>"
+        );
+        cobertura_bitacora(&Html::parse_document(&html), false)
+    }
+
+    #[test]
+    fn controles_de_recorte_impiden_acreditar_completitud() {
+        assert_eq!(cobertura(""), "COMPLETA", "el texto de una observación oculta no es un control");
+        for control in [
+            "<button name=\"NUM_Pagina\">Siguiente</button>",
+            "<input type=\"button\" value=\"Siguiente »\" onclick=\"ir(2)\">",
+            "<a href=\"#\">Página siguiente</a>",
+            "<a href=\"#\">&lt;&lt; Anterior</a>",
+            "<a href=\"#\">Ver más</a>",
+            "<input type=\"hidden\" id=\"nro-pagina\" value=\"2\">",
+            "<select name=\"FECHA_Desde\"></select>",
+            "<a rel=\"prev\" href=\"#\">1</a>",
+            "<a href=\"#\">1</a> <a href=\"#\">2</a> <a href=\"#\">3</a>",
+            "<a href=\"javascript:void(0)\">[2]</a>",
+            "<span onclick=\"ir(3)\">3</span>",
+            "<input type=\"submit\" value=\"2\">",
+            "<a href=\"#\">»</a>",
+            "<button>&gt;&gt;</button>",
+            "<div onclick=\"irPagina(2)\">Ir</div>",
+            "<a href=\"InformesDAction.do?page=2\">Más</a>",
+        ] {
+            assert_eq!(cobertura(control), "PARCIAL", "{control}");
+        }
+        for neutro in [
+            "<span>2</span>",
+            "<input type=\"hidden\" name=\"HOBS_Tribunal_44\" value=\"2\">",
+            "<a href=\"#\">P-12-2099</a>",
+            "<img id=\"44\" onclick=\"MuestraDiv(this.id,3)\">",
+        ] {
+            assert_eq!(cobertura(neutro), "COMPLETA", "{neutro}: no es paginación");
+        }
+        assert_eq!(cobertura_bitacora(&Html::parse_document("<html><body></body></html>"), true), "VACIA_COMPROBADA");
+    }
+}
+
+#[cfg(test)]
+mod pruebas_fecha_vacia {
+    use super::fecha_calendario;
+
+    #[test]
+    fn guiones_separados_son_fecha_vacia_solo_si_es_opcional() {
+        // Prueba del usuario (12-nov-2026): SITFA entrega «- - -» en «Fecha Informe».
+        for vacio in ["", "---", "- - -", "-  -", " - "] {
+            assert_eq!(fecha_calendario(vacio, true).unwrap(), "");
+            assert!(fecha_calendario(vacio, false).is_err());
+        }
+        assert!(fecha_calendario("- x -", true).is_err());
+        assert_eq!(fecha_calendario("28/05/2026 13:16", true).unwrap(), "2026-05-28");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CAPTURADA: &str = "2026-11-12T12:00:00Z";
+
+    fn casos() -> Vec<Value> {
+        serde_json::from_str(include_str!("../../tests/datos/lecturas.json")).unwrap()
+    }
+
+    fn leer(c: &Value, html: &[u8]) -> Result<Value, String> {
+        let lista = |k: &str| -> Vec<String> { serde_json::from_value(c[k].clone()).unwrap_or_default() };
+        match c["tipo"].as_str().unwrap() {
+            "bitacora" => leer_bitacora(
+                html,
+                &serde_json::from_value::<BTreeMap<String, String>>(c["params"].clone()).unwrap(),
+                "ficticio.html",
+                CAPTURADA,
+            ),
+            "historia" => leer_historia(html, "ficticio.html", CAPTURADA).map(|mut v| {
+                // `read_historia` de Python no trae Escritos: los lee `read_escritos` aparte (E3-13).
+                v.as_object_mut().unwrap().remove("escritos");
+                v
+            }),
+            "calendario" => leer_calendario(html, &lista("args"), "ficticio.html", CAPTURADA),
+            "escritos" => leer_escritos_ventana(html, "ficticio.html", CAPTURADA),
+            "historico" => {
+                let persona = lista("persona");
+                let persona: Vec<&str> = persona.iter().map(String::as_str).collect();
+                leer_historico(html, "ficticio.html", CAPTURADA, &persona, c["rut_visible"].as_str().unwrap_or(""))
+            }
+            otro => panic!("tipo desconocido {otro}"),
+        }
+    }
+
+    /// E-Q1: las mismas salidas que los lectores vigentes de Flow Python (`app/qa/generar_lecturas.py`).
+    #[test]
+    fn lecturas_iguales_a_python() {
+        let (mut iguales, mut fallos) = (0usize, Vec::new());
+        let casos = casos();
+        for c in &casos {
+            let obtenido = match leer(c, c["html"].as_str().unwrap().as_bytes()) {
+                Ok(v) => serde_json::json!({"ok": v}),
+                Err(e) => serde_json::json!({"error": e}),
+            };
+            if obtenido == c["python"] {
+                iguales += 1;
+            } else {
+                fallos.push(format!("{} {}:\n  esp {}\n  obt {}", c["tipo"], c["caso"], c["python"], obtenido));
+            }
+        }
+        // Negativas del crate histórico: respuesta cortada, login o estructura ajena nunca es una lectura válida.
+        let (mut negativas, mut total_neg) = (0usize, 0usize);
+        for c in casos.iter().filter(|c| matches!(c["tipo"].as_str(), Some("bitacora" | "historia" | "calendario"))) {
+            let html = c["html"].as_str().unwrap();
+            for variante in [
+                html.replace("</html>", ""),
+                html.replace("</body>", "<input type='PaSsWoRd'></body>"),
+                html.replace("<table", "<div").replace("</table>", "</div>"),
+            ] {
+                total_neg += 1;
+                if leer(c, variante.as_bytes()).is_err() {
+                    negativas += 1;
+                } else {
+                    fallos.push(format!("negativa aceptada en {}", c["tipo"]));
+                }
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        println!("LECTURAS: {iguales}/{}, negativas {negativas}/{total_neg}, fallos {}", casos.len(), fallos.len());
+        assert_eq!(casos.len(), 18, "el fixture cambió de tamaño: regenerar y revisar");
+        assert!(fallos.is_empty(), "{} lecturas difieren de Flow Python", fallos.len());
+    }
+}
