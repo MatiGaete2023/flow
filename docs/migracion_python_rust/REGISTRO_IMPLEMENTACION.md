@@ -882,8 +882,17 @@ E-D e E-I quedan `ENTREGADO`. El cierre corresponde a la revisión del usuario y
   - El workspace histórico `rust/` tiene lecturas de contexto (EJECUCION 7.4) y `flow-meta4` (29 pruebas en verde), sin integrar en `app/`.
 - Decisión pendiente D-4 (alcance).
 
+## Decisiones D-3 y D-4 (23 de noviembre de 2026, usuario)
+
+- **D-3, opción a**: se conserva el mensaje de Rust ante un XML 2003 con entidad externa. La prueba A78 lo cuenta como `DIFERENCIA_ACEPTADA D-3`: `A78: A7 7/8, A8 7/7, A8_LIBRO 1/1, aceptadas 1, fallos 0`.
+- **D-4: integrar todo**. Encargos E-Q1 a E-Q6 (lecturas de contexto del Descargador y paquete CSMP), E-R1 y E-R2 (Meta 4), E-S1 (exportaciones de lote) y E-T1 a E-T5 (brechas menores), en `ENCARGOS_IA.md`.
+- Base comprobada (N1, L):
+  - pruebas en verde de los crates históricos: `flow-captura` 81, `flow-trabajo` 78, `flow-anonimo` 38, `flow-productos` 60 y `flow-meta4` 29;
+  - la extensión Integral 2.9.0 incluida en `app/` ya declara `bitacoras_lectura`, `historia_lectura`, `calendario_lectura` e `historico_lectura`. Las lecturas las bloquea el puente de `app/`, no la extensión.
+- **Hallazgo (N1)**: el oráculo `generar_lecturas.py`, ejecutado con el Python vigente, cambia `lecturas_ficticias.json`. La bitácora agrega `alcance` y `alcance_metodo` (V2), y dos pruebas de `flow-captura --test lecturas` fallan. El port no puede confiar en los fixtures históricos y debe regenerarlos (LOTE-3). `generar_vinculos.py` reproduce su fixture.
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
-2. Usuario: decidir D-3 (mensaje XML con entidad externa) y D-4 (alcance: integrar las lecturas de contexto, Meta 4 y las exportaciones, o convivir con el Descargador Python).
+2. IA ejecutora: lote 3, E-Q1 y E-Q2 ([prompt](prompts/LOTE-3.md)). Después, E-Q3 a E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`.
 3. D-1 y D-2 resueltas: sin cambios de código.

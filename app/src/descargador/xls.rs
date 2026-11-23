@@ -513,7 +513,7 @@ mod tests {
         let fixture: Value = serde_json::from_str(include_str!("../../tests/datos/a78.json")).unwrap();
         let b64 = |c: &Value| base64::engine::general_purpose::STANDARD.decode(c["bytes_b64"].as_str().unwrap()).unwrap();
         let mut fallos = Vec::new();
-        let mut pendientes: Vec<String> = Vec::new();
+        let mut aceptadas: Vec<String> = Vec::new();
         let mut cuenta = [0usize; 3];
 
         for c in fixture["a7"].as_array().unwrap() {
@@ -538,9 +538,10 @@ mod tests {
             } else if c["caso"] == "entidad_externa"
                 && obtenido == json!({"error": "No se pudo abrir/parsear el archivo Excel; requiere revision local."})
             {
-                // D-3 (pendiente del usuario): ambos rechazan sin resolver la entidad; Python lo informa como listado
-                // irreconocible y Rust como XML ilegible. Fijada: cualquier otro cambio en este caso es FALLA.
-                pendientes.push(format!("D-3 A7 entidad_externa: Python {:?} / Rust {:?}", esperado["error"], obtenido["error"]));
+                // D-3, opción a (usuario, 23-nov-2026): se conserva el mensaje de Rust. Ambos rechazan sin resolver la
+                // entidad; Python lo informa como listado irreconocible y Rust como XML ilegible. Cualquier otro cambio
+                // en este caso es FALLA.
+                aceptadas.push(format!("D-3 A7 entidad_externa: Python {:?} / Rust {:?}", esperado["error"], obtenido["error"]));
             } else {
                 fallos.push(format!("A7 {}: esp {esperado} / obt {obtenido}", c["caso"]));
             }
@@ -592,15 +593,15 @@ mod tests {
         for f in &fallos {
             println!("FALLA {f}");
         }
-        for p in &pendientes {
-            println!("DIFERENCIA_PENDIENTE {p}");
+        for a in &aceptadas {
+            println!("DIFERENCIA_ACEPTADA {a}");
         }
         let total = [fixture["a7"].as_array().unwrap().len(), fixture["a8"].as_array().unwrap().len(), fixture["a8_libro"].as_array().unwrap().len()];
         println!(
-            "A78: A7 {}/{}, A8 {}/{}, A8_LIBRO {}/{}, pendientes {}, fallos {}",
-            cuenta[0], total[0], cuenta[1], total[1], cuenta[2], total[2], pendientes.len(), fallos.len()
+            "A78: A7 {}/{}, A8 {}/{}, A8_LIBRO {}/{}, aceptadas {}, fallos {}",
+            cuenta[0], total[0], cuenta[1], total[1], cuenta[2], total[2], aceptadas.len(), fallos.len()
         );
-        assert_eq!(pendientes.len(), 1, "solo la diferencia D-3 está pendiente");
+        assert_eq!(aceptadas.len(), 1, "solo la diferencia D-3 está aceptada");
         assert_eq!(total, [8, 7, 1], "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} casos difieren de Flow Python", fallos.len());
     }

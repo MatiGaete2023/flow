@@ -135,10 +135,87 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 - Lecturas de bitácora, historia, calendario e histórico (F19), paquete CSMP y exportaciones de lote (F22). La auditoría lo especificará en encargos más chicos antes de asignarlo.
 
+## Integración completa (D-4): encargos E-Q, E-R, E-S y E-T
+
+Base común: portar desde `rust/crates/*`, que tiene pruebas en verde en L (23-nov-2026): `flow-captura` 81, `flow-trabajo` 78, `flow-anonimo` 38, `flow-productos` 60 y `flow-meta4` 29. Se reutilizan sus oráculos de `rust/oraculo/`. Cada encargo:
+- se integra en `app/` (biblioteca o binario), sin cambiar reglas ni textos;
+- trae su prueba golden contra Python sobre datos ficticios y su mutación de control;
+- deja la suite y la CI en verde.
+
+Restricciones vigentes:
+- SITFA solo se lee con la sesión del usuario a través de la extensión;
+- sin escritura en RUS ni SATURNO;
+- el Asistente no inicia el Descargador.
+
+En orden de dependencia:
+
+### E-Q1 · Lectores locales de contexto — `ABIERTO` (L) · [prompt](prompts/LOTE-3.md)
+
+- Portar `flow-captura::lecturas` a `app/src/descargador/lecturas.rs`: `leer_bitacora`, `leer_historia`, `leer_calendario`, `leer_historico`, `leer_escritos_html` y `separar_ventana`.
+- Oráculo: `rust/oraculo/generar_lecturas.py` (`nurus.bitacora_html`, `historia_html` y `calendario_html`). Su fixture se copia o se regenera en `app/tests/datos/`.
+- Criterio: `LECTURAS: n/n, fallos 0`, con todas las ventanas del fixture y sus pruebas negativas; ventana de 1 a 4 meses.
+
+### E-Q2 · Vínculos del listado — `ABIERTO` (L) · [prompt](prompts/LOTE-3.md)
+
+- Portar `flow-captura::vinculos` (extraer, `descartar_ambiguos` e identidad) con el oráculo `generar_vinculos.py` (`descargador/vinculos.py::extract` y `extract_historia`).
+- Criterio: `VINCULOS: n/n, fallos 0`.
+
+### E-Q3 · Puente y comandos de lectura — `ABIERTO` (L/W), tras E-Q1 y E-Q2
+
+- Permitir en el puente `diary_open`, `history_open` y `calendar_open` **solo en Integral**, que ya declara `bitacoras_lectura`, `historia_lectura`, `calendario_lectura` e `historico_lectura`. Lite sigue rechazándolos.
+- `abrir_bitacora`, `abrir_historia` y `abrir_calendario` sobre el SITFA ficticio.
+- La prueba de `puente.rs:440` pasa a exigir el rechazo en Lite y la aceptación en Integral. `navigate` y `carga` siguen rechazados.
+
+### E-Q4 · Recolección dentro del lote — `ABIERTO` (L), tras E-Q3
+
+- Portar `flow-captura::recoleccion`:
+  - tope de 600 lecturas;
+  - checkpoints y reanudación;
+  - reutilización de las lecturas del día;
+  - `reparar_lecturas`;
+  - bitácoras faltantes.
+- Integrarlo a `lote::ejecutar` como opción del lote Integral.
+- Pruebas sobre el SITFA ficticio, con las huellas del lote original intactas.
+
+### E-Q5 · Paquete CSMP desde el lote — `ABIERTO` (L), tras E-Q4
+
+- Generar el ZIP `CSMP_CAPTURE` (equivalente a `package_current_lot` y `export_csmp_capture.py`) desde la carpeta del lote.
+- Contraste: el mismo lote ficticio empaquetado por Python y por Rust da las mismas tablas, huellas y manifiesto (salvo la procedencia no determinista, declarada). Además, Trabajo abre el ZIP de Rust y el paquete C sigue en `fallos 0`.
+- Oráculos: `generar_paquete*.py` y `validar_paquete_lote.py`.
+
+### E-Q6 · Interfaz del Descargador para las lecturas y el paquete — `ABIERTO` (W/L), tras E-Q5
+
+- Opciones de lectura (bitácoras, historia, calendario, histórico y escritos), progreso, tope y reanudación, y botón «Crear paquete».
+- Pruebas `egui_kittest` en un perfil aislado.
+
+### E-R1 · Meta 4: cálculo — `ABIERTO` (L)
+
+- Portar `flow-meta4` (cálculo y tribunales) a `app/`.
+- Oráculos: `generar_calculo_meta4.py` (450 casos de `META4_Bitacoras/scripts/meta4_bitacoras.py`) y `generar_tribunales_meta4.py`.
+- Agregar un adaptador para carpetas de lote producidas por Python (F23).
+
+### E-R2 · Meta 4: plantilla, regeneración y vista — `ABIERTO` (L/W), tras E-R1
+
+- Portar `flow-meta4::{plantilla,regenerar,salida}` y agregar la vista «Meta 4» en la navegación de `ui.rs`.
+- Contrastar los cinco productos con Python sobre un lote ficticio y probar la vista con `egui_kittest`.
+
+### E-S1 · Exportaciones de lote y comparador — `ABIERTO` (L)
+
+- `descargador/resultados.py`: `export_book`, `export_csv`, `export_ics`, `export_zip` y `compare_lots`, con un oráculo nuevo en `app/qa/` sobre lotes ficticios.
+- Base en `flow-trabajo::exportar`.
+
+### E-T · Brechas menores — `ABIERTO`
+
+- **E-T1:** elegir la cuenta Outlook (solo borradores, `mail.Save()`, CC fijo).
+- **E-T2:** formularios manuales (`manual.py`), sin abrir un Excel.
+- **E-T3:** estadísticas y métricas de Resultados (`statistics.py`, `review_metrics.py`).
+- **E-T4:** Anonimizador con ZIP, paquetes de captura y verificación posterior de XLSX (portar `flow-anonimo`, con el oráculo `generar_anonimo.py`).
+- **E-T5:** distribución portátil y autodiagnóstico (`portable/`, `package_check.py`).
+
 ## Decisiones del usuario
 
-- **D-3 · Mensaje ante un XML 2003 con entidad externa — PENDIENTE** (23-nov-2026, E-A78). Ni Python ni Rust resuelven la entidad y ambos rechazan el archivo, pero con mensajes distintos: Python dice «No se reconoce la estructura RIT/Nombre del listado; descarga detenida.» y Rust «No se pudo abrir/parsear el archivo Excel; requiere revision local.». Opciones: (a) dejar el de Rust, que es más preciso; (b) igualarlo al de Python, lo que cambia `xls.rs`. Hoy la prueba la fija como diferencia conocida.
-- **D-4 · Alcance de la migración — PENDIENTE** (23-nov-2026). Ver [INVENTARIO_HERRAMIENTAS_20261123.md](INVENTARIO_HERRAMIENTAS_20261123.md): `app/` no tiene las lecturas de contexto del Descargador, Meta 4, las exportaciones de lote, los formularios manuales ni las estadísticas. Decidir si se integran (desde `rust/crates/flow-captura` y `flow-meta4`) o si Flow Rust convive con el Descargador Python.
+- **D-3 · Mensaje ante un XML 2003 con entidad externa — RESUELTA, opción a** (23-nov-2026, usuario): se conserva el mensaje de Rust. Antecedente (E-A78): Ni Python ni Rust resuelven la entidad y ambos rechazan el archivo, pero con mensajes distintos: Python dice «No se reconoce la estructura RIT/Nombre del listado; descarga detenida.» y Rust «No se pudo abrir/parsear el archivo Excel; requiere revision local.». La prueba `a78_igual_a_python_sobre_bytes_fijos` la cuenta como `DIFERENCIA_ACEPTADA D-3` y falla ante cualquier otra.
+- **D-4 · Alcance de la migración — RESUELTA: integrar todo** (23-nov-2026, usuario). Encargos E-Q, E-R, E-S y E-T. Ver [INVENTARIO_HERRAMIENTAS_20261123.md](INVENTARIO_HERRAMIENTAS_20261123.md): `app/` no tiene las lecturas de contexto del Descargador, Meta 4, las exportaciones de lote, los formularios manuales ni las estadísticas. Decidir si se integran (desde `rust/crates/flow-captura` y `flow-meta4`) o si Flow Rust convive con el Descargador Python.
 
 - **D-1 · Guion en el nombre del programa (R6): conservar** (23 de noviembre de 2026). «PRM CIUDAD DEL NIÑO - MULCHÉN» se redacta «Ciudad del Niño - Mulchén», como hace hoy Flow Rust. R6 incluye conservar el guion del nombre de origen. No requiere cambios de código. E-B sigue contando `R6_GUION` por separado, como variante aceptada de R6: no es FALLA.
 - **D-2 · `keep_filters` en Integral: igual que Python** (23 de noviembre de 2026). En Python, `lotes.py::BatchRunner` lo envía sin restringir, pero `descargador.py::batch` (líneas 1117 y 1139) lo fija en `False` fuera de Seguimiento y Litigantes. De punta a punta, Python solo conserva filtros en esas dos pantallas, y Flow Rust hace lo mismo (`descargador_ui.rs`, `iniciar`). No requiere cambios de código. La duda planteada en la auditoría del turno 17 consideraba solo `lotes.py`. Se cubre con el punto agregado a E-F.

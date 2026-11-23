@@ -62,4 +62,4 @@ Estados:
 3. **F22** exportaciones de lote y comparador.
 4. Brechas menores: cuenta Outlook, formularios manuales, estadísticas, Anonimizador (ZIP, PDF y paquetes) y distribución portátil.
 
-Cada punto es un encargo nuevo y no se abre sin decisión del usuario, porque cambia el alcance de la migración.
+Decisión D-4 del usuario (23-nov-2026): integrar todo. Los encargos E-Q, E-R, E-S y E-T están en `ENCARGOS_IA.md`.
