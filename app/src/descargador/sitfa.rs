@@ -338,7 +338,7 @@ fn exportacion(scripts: &str, consulta: &Consulta) -> Result<(String, String), S
 }
 
 /// Cadena JavaScript literal con los escapes que acepta `ast.literal_eval`; no evalúa expresiones.
-fn cadena_literal(literal: &str) -> Option<String> {
+pub(crate) fn cadena_literal(literal: &str) -> Option<String> {
     let comilla = literal.chars().next().filter(|c| matches!(c, '"' | '\''))?;
     let cuerpo = literal.strip_prefix(comilla)?.strip_suffix(comilla)?;
     let mut salida = String::with_capacity(cuerpo.len());

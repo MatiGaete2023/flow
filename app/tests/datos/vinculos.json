@@ -1,0 +1,380 @@
+[
+  {
+    "nombre": "completa",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      }
+    ],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "sin_historia",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"OtraAccion('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      }
+    ],
+    "historias": []
+  },
+  {
+    "nombre": "sin_bitacora",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"OtraAccion('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "corte_ajena",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('902','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','902','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','902','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [],
+    "historias": []
+  },
+  {
+    "nombre": "duplicada",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','202','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','202','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      },
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "202",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "202",
+          "1"
+        ]
+      }
+    ],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      },
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "202",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "obs_repetida",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    <a onclick=\"ShowObservaciones(100,901,201,12,3,0)\">otra</a></td></tr></table></form></body></html>",
+    "bitacoras": [],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "rut_con_script",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0<script>document.write(\"texto ajeno\")</script></td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      }
+    ],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "identidad": "VERIFICADA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "causa_ambigua",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','100')\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"ShowHistoria('901','X-1-2099','101')\">Causa</a>\n    <a onclick=\"ShowObservaciones('101','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('101','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      },
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "101",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "101",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      }
+    ],
+    "historias": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "identidad": "INCIERTA",
+        "rit_enlace": "X-1-2099"
+      },
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "101",
+        "ingreso_id": "201",
+        "identidad": "INCIERTA",
+        "rit_enlace": "X-1-2099"
+      }
+    ]
+  },
+  {
+    "nombre": "solo_texto",
+    "html": "<html><body><form name=\"InformesPpalForm\"><table id=\"tablaEspera\"><tr><th>RIT</th><th>RUT</th><th>Nombre</th><th>Derivación</th><th>Acciones</th></tr><tr><td>X-1-2099</td><td>11111111-0</td><td>Persona Ficticia</td><td>PRM Centro Ficticio</td><td>\n    <a onclick=\"/* ShowHistoria(901,'X-1-2099',100) */\">Causa</a>\n    <a onclick=\"ShowObservaciones('100','901','201','12','3','0')\">Obs</a>\n    <a onclick=\"ShowInformesProgramados('100','300','901','400','X-1-2099','01/03/2026','PRM Centro Ficticio','Persona Ficticia','6 Meses','3 Meses','201','1')\">Inf</a>\n    </td></tr></table></form></body></html>",
+    "bitacoras": [
+      {
+        "rit": "X-1-2099",
+        "nombre": "Persona Ficticia",
+        "rut": "11111111-0",
+        "programa": "PRM Centro Ficticio",
+        "tribunal_codigo": "901",
+        "causa_id": "100",
+        "ingreso_id": "201",
+        "etapa": "3",
+        "antiguo": "0",
+        "tipo_popup": "12",
+        "persona_id": "300",
+        "centro_id": "400",
+        "calendario": [
+          "100",
+          "300",
+          "901",
+          "400",
+          "X-1-2099",
+          "01/03/2026",
+          "PRM Centro Ficticio",
+          "Persona Ficticia",
+          "6 Meses",
+          "3 Meses",
+          "201",
+          "1"
+        ]
+      }
+    ],
+    "historias": []
+  }
+]
