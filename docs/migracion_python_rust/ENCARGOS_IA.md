@@ -74,7 +74,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Criterio: `PAQUETE_B_COBERTURA: R3 n/n` con n ≥ 3, `fallos 0`; los casos previos del corpus no cambian; `oraculo_python` y `oraculo_historia` pasan con los nuevos totales.
 - Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-J»): la corrida en Linux reproduce las líneas de la entrega (`R3 3/3`, `fallos 0`, 2.585 evaluados). La regeneración con `pandas<3` da `rust/casos/*.json` idénticos a los publicados. Queda cubierto el pendiente de la entrega sobre el entorno L. Salvedad: Python deduplica oraciones idénticas (`composicion.py`), así que la diferencia R3 no puede aparecer en el oráculo. La prueba acredita que Rust produce la misma observación de una sola aparición; no ejercita el recorte del comparador.
 
-### E-K · R5 (reiteración) en `app/` — `ABIERTO` (entorno L) · [prompt](prompts/E-K.md)
+### E-K · R5 (reiteración) en `app/` — `ENTREGADO` (entorno L) · [prompt](prompts/E-K.md)
 
 - La reiteración (`COMUN.REITERA_OBSERVACION`) la aplica la cronología, no el motor por fila: `bitacora_avisos.aplicar_reiteracion` en Python y `Cronologia::aplicar_reiteracion` en `app/src/captura_trabajo/cronologia.rs`.
 - Su oráculo es `rust/oraculo/generar_cronologia.py`, que escribe `rust/crates/flow-trabajo/tests/datos/cronologia.json`. Ninguna prueba de `app/` lo consume (N1: `grep -rn cronologia.json app/` sin resultados).

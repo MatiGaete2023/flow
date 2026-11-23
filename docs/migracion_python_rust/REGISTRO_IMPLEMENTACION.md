@@ -517,6 +517,47 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
   - (N2) Con `LEGACY_UMBRALES_REV3` (`espera_dce = 30`), `ESP-D23` (espera 0) no activaría E05. No afecta al oráculo, que usa los umbrales vigentes.
 - Resultado: E-J `CERRADO POR AUDITORÍA`. Cambios de lógica de producción: ninguno.
 
+## Entrega · E-K
+- Commit probado: ed5a6df67ddfdfe930410bd43d225c9e04aaef32  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6 (pandas 2.3.3)
+- Comandos:
+  - `cargo test --locked --bin flow_rust oraculo_cronologia -- --nocapture` (desde `app/`; en W se omite `--features eframe/x11`)
+  - `FLOW_CASOS=../rust/casos cargo test --locked --bin flow_rust`
+  - `cargo clippy --locked --bin flow_rust --tests`
+  - `python tools/check_real_ids.py app/src` y `python tools/check_contactos.py app/src`
+  - `git diff -U0 3683468..ed5a6df -- app/src`
+- Evidencia:
+  - `CRONOLOGIA: casos 181, coinciden 181, reiteradas 18/18, desactivada 1/1, fallos 0`
+  - `R5_PARCIAL: excepciones 2, no reiteradas 2`
+  - `SIMILITUDES: 256 declaradas; no aplica en app/ (la cronología no usa una función de similitud)`
+  - `test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 48 filtered out` (prueba focal)
+  - `test result: ok. 48 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out` (suite completa del binario; la ignorada es `velocidad_20000`, por diseño)
+  - clippy: sin advertencias en `cronologia.rs`; los 23 avisos restantes son previos de otros archivos.
+  - `Sin RUT reales detectados.` · `Sin correos ni RIT nuevos.`
+  - `git diff -U0 3683468..ed5a6df -- app/src` → solo el hunk `@@ -342,0 +343,206 @@ mod tests {` en `app/src/captura_trabajo/cronologia.rs`; ninguna línea de producción cambia.
+- Mapeo de campos (Python → `Entrada`/`Resultado` de `app/`):
+  - `centro`: `origin == "CENTRO"` y `origin_verified == "true"` y `coverage in {"COMPLETA", "PARCIAL"}`. Respaldo: `src/nurus/capture/temporal.py:60-67` (`center_entries`).
+  - `fecha`: `event_at[:10]`, dentro de `display.period_from..=display.period_to` (la ventana de cuatro meses de `earliest`, `temporal.py:41-47` y `118-123`). Respaldo de la fecha: `temporal.py:75` (`max(e['event_at'][:10] ...)`) y `121` (filtro de `recent`).
+  - `instante`: solo con `time_precision == "SEGUNDO"` y `time_zone not in {"", "DESCONOCIDA"}` y `event_at` RFC3339 con desplazamiento; se normaliza a UTC. Respaldo: `temporal.py:50-57` (`certain_moment`).
+  - `al_tribunal`: `normalizar(event_type) == "al tribunal"`. Respaldo: `temporal.py:129` (`_normal(e.get('event_type')) == 'al tribunal'`).
+  - `sin_respuesta`: `response.strip()` vacío. Respaldo: `temporal.py:130` (`not (e.get('response') or '').strip()`).
+  - `texto` e `id`: `text` y `event_id` del evento.
+  - `desde`, `hasta`, `leida`: `display.period_from`, `display.period_to` y `caso.leida`.
+  - `Resultado.observacion = propuesta`, `Resultado.eventos = reglas`, `config.desactivadas = desactivadas` y `redaccion_registro: false`, como en `bitacora_avisos.aplicar_reiteracion` (`bitacora_avisos.py:117-142`).
+  - Reiteración: Python decide con `identica_anterior` (`bitacora_avisos.py:64-75`: estado `ACREDITADA`, `center_period`/`last_center` sin reiteraciones, máximo por `(event_at, event_id)` y comparación de `_cuerpo`); Rust lo hace en `ordenar`/`ultima_no_reiterada` y `Cronologia::aplicar_reiteracion` (`cronologia.rs:79-120` y `163-243`). `NO_REITERAR` de Python (`bitacora_avisos.py:19-29`) corresponde a `NO_REITERAR_PYTHON` de Rust (`cronologia.rs:53-63`).
+  - R5 parcial: con `redaccion_registro: true`, Rust no reitera «Medida revisada, sin observaciones.» ni «La derivación … no se encuentra sujeta a seguimiento por este Centro.» (`cronologia.rs:94-103`). En el oráculo, ambos casos son la primera excepción; la segunda no tiene casos.
+  - `reiteracion.acciones` no se compara: `Resultado` de `app/` no tiene un campo equivalente a acciones.
+- Resultado por criterio:
+  - CRONOLOGIA: PASA — 181 casos, 181 coincidencias, 18/18 reiteraciones, 1/1 desactivada, 0 fallos, con la prueba en `app/`.
+  - Mapeo de campos: PASA — documentado arriba con las líneas de `temporal.py` y `bitacora_avisos.py`.
+  - R5_PARCIAL: PASA — `excepciones 2, no reiteradas 2`; la segunda excepción («La derivación…») no tiene casos y no se inventaron.
+  - Suite completa: PASA — 49 pruebas, 48 pasan y 1 ignorada por diseño (`velocidad_20000`); el total sube con `oraculo_cronologia_reiteracion`.
+  - Sin cambios de lógica de producción: PASA — solo se agregó código dentro de `#[cfg(test)]` en `cronologia.rs`; el diff de `app/src` no toca producción.
+  - Entorno: W, sin `--features eframe/x11`, como indica el prompt para Windows; no hay Linux ni WSL en el host.
+- Cambios de código: `app/src/captura_trabajo/cronologia.rs` (solo `#[cfg(test)]`: `entradas_del_caso`, `config_del_caso`, `resultado_del_caso` y `oraculo_cronologia_reiteracion`) · Cambios de lógica de producción: ninguno
+- Pendientes:
+  - Repetir la corrida en entorno L si se requiere esa evidencia literal; el host actual es Windows sin WSL. El prompt admite W informándolo.
+  - La segunda excepción de R5 parcial («La derivación … no se encuentra sujeta a seguimiento por este Centro.») no tiene casos en `cronologia.json`; no se agregaron casos al JSON.
+
 ## Siguiente paso exacto
 
 1. E-K: R5 (reiteración) con `cronologia.json` en `app/` ([prompt](prompts/E-K.md)). Después, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
