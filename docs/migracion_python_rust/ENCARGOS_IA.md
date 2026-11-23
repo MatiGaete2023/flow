@@ -67,7 +67,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 - Auditoría (23-nov-2026, entorno L, ver registro «Auditoría · E-B»): las cifras de la entrega se reprodujeron en Linux, pero R2, R3 y R5 se informaron como PASA sin casos que las activen y la línea R5 era texto fijo. La auditoría corrigió la prueba: `R6` y `R6_GUION` se cuentan por separado (526 + 51), la suma se afirma, `evaluados` se fija en 2.582, R5 se cuenta (el motor por fila no la emite) y la falta de casos se informa como `SIN_COBERTURA`. La cobertura de R3 queda en `paquete_b_cobertura_r3`, marcada `#[ignore]` hasta cerrar E-J.
 
-### E-J · Casos de R3 en el oráculo — `ABIERTO` (entorno L) · [prompt](prompts/E-J.md)
+### E-J · Casos de R3 en el oráculo — `ENTREGADO` (entorno L) · [prompt](prompts/E-J.md)
 
 - Objetivo: que el corpus `rust/casos` tenga casos sintéticos de Espera con `HISTORIA.E04_CON_FOLIO` y `ESPERA.E05_SOLO_CORREO`, y que `paquete_b_cobertura_r3` pase sin `#[ignore]`.
 - Pasos: casos dirigidos en `rust/oraculo/generar_casos.py::dirigidos`, regeneración determinista, actualización de `CASOS_PAQUETE_B` y clasificación estricta de R3 si Python y Rust difieren.

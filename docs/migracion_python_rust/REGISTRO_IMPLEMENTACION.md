@@ -460,6 +460,46 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
 - Cambios de lógica de producción: ninguno.
 - Pendientes: E-J (casos de R3 en el oráculo) y E-K (R5 con `cronologia.json` en `app/`).
 
+## Entrega · E-J
+- Commit probado: 2c97a1447f5a260868b8ea73a9708b0fdaee015a  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6 (pandas 2.3.3)
+- Comandos:
+  - `python rust/oraculo/generar_casos.py`
+  - `git diff --ignore-cr-at-eol --numstat -- rust/casos`
+  - `FLOW_CASOS=../rust/casos cargo test --locked --bin flow_rust paquete_b -- --nocapture` (desde `app/`)
+  - `FLOW_CASOS=../rust/casos cargo test --locked --bin flow_rust oraculo -- --nocapture`
+  - `FLOW_CASOS=../rust/casos cargo test --locked --bin flow_rust`
+  - `cargo test --locked --bin flow_rust paquete_b -- --nocapture` (sin `FLOW_CASOS`)
+  - `cargo clippy --locked --bin flow_rust --tests`
+  - `python tools/check_real_ids.py app/src` y `python tools/check_contactos.py app/src`
+- Evidencia:
+  - Comparación por `id` contra el corpus del commit anterior (copia previa a regenerar, verificada byte a byte con `git show 1c6a89f:rust/casos/*.json`):
+    - `espera: antes 921, ahora 924; previos intactos 921; nuevos ['ESP-D22', 'ESP-D23', 'ESP-D24']`
+    - `cumplimiento: antes 924, ahora 924; previos intactos 924; nuevos []`
+    - `informes: antes 911, ahora 911; previos intactos 911; nuevos []`
+  - `git diff --ignore-cr-at-eol --numstat -- rust/casos` → `213	0	rust/casos/espera.json` (solo inserciones; 0 borrados)
+  - Los tres casos nuevos traen `['HISTORIA.E04_CON_FOLIO', 'ESPERA.E05_SOLO_CORREO']`, una sola aparición de «Medida revisada, a la espera de ingreso efectivo.» y ninguna oración de «días de espera». Python y Rust coinciden byte a byte: no hubo diferencia R3 que recortar.
+  - `PAQUETE_B: evaluados 2585, identicos 2000, R1 7, R6 526, R6_GUION 51, R1+R6 1, suma 585, R2 2585/2585 (con aviso R3_MULTI 0), R3 3/3, R4 2/2, R5 fuera del motor por fila (emitidas 0), fallos 0`
+  - `PAQUETE_B_COBERTURA: R3 3/3, R4 2/2, fallos 0`
+  - `test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out` (paquete B focal)
+  - `ORACULO: 174/174 casos coinciden`
+  - `oraculo_historia: 2585 de 2585 casos coinciden (88 con prórroga, 43 causas finalizadas)`
+  - `test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out` (oráculos)
+  - `test result: ok. 47 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out` (suite completa del binario; la ignorada es `velocidad_20000`, por diseño)
+  - Sin `FLOW_CASOS`: `FLOW_CASOS es obligatorio para el paquete B` y `test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 46 filtered out`
+  - `Sin RUT reales detectados.` · `Sin correos ni RIT nuevos.`
+- Resultado por criterio:
+  - PAQUETE_B_COBERTURA: PASA — `R3 3/3, R4 2/2, fallos 0`, n = 3 ≥ 3, sin `#[ignore]`, con `p.r3_aplica >= 3` afirmado.
+  - PAQUETE_B: PASA — `R3 3/3`, `fallos 0`; R1 7, R6 526, R6_GUION 51 y R1+R6 1 no cambian.
+  - Casos previos del corpus: PASA — 921 + 924 + 911 previos intactos por `id`; solo se agregan ESP-D22, ESP-D23 y ESP-D24 (`213` líneas insertadas, `0` borradas).
+  - `oraculo_python` y `oraculo_historia`: PASA — 174/174 y 2585/2585 con los nuevos totales literales.
+  - Sin `FLOW_CASOS` las pruebas del paquete B fallan: PASA.
+  - Entorno L con `--features eframe/x11`: BLOQUEADO — el host de esta entrega es Windows y no tiene Linux ni WSL; la corrida se hizo en W sin `--features eframe/x11`. No hay diferencias de contenido pendientes.
+- Cambios de código: `rust/oraculo/generar_casos.py` (dirigidos ESPERA), `rust/casos/espera.json` (tres casos nuevos) y `app/src/motor/historia.rs` (solo `#[cfg(test)]`: `CASOS_PAQUETE_B`, `#[ignore]` retirado y piso de R3) · Cambios de lógica de producción: ninguno
+- Pendientes:
+  - Repetir la corrida en entorno L con `--features eframe/x11`; el host actual no lo permite.
+  - La variante con dos apariciones literales de «Medida revisada, a la espera de ingreso efectivo.» no se agregó porque Python no la permite: `composicion.py` deduplica oraciones idénticas (línea 58) y los tres casos ya llevan los dos fragmentos E04/E05 con una sola aparición en la esperada. No se forzó el esperado.
+  - E-K (R5) y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) siguen abiertos.
+
 ## Siguiente paso exacto
 
 1. E-J: casos de R3 en el oráculo ([prompt](prompts/E-J.md)). Después, E-K y los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-C, E-F, E-A78, E-G, E-D, E-E e E-I.
