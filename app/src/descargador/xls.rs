@@ -36,7 +36,8 @@ fn fecha_serial(serial: f64) -> Option<NaiveDate> {
         .map(|base| base + chrono::Duration::days(serial.floor() as i64))
 }
 
-fn texto_celda(dato: &Data) -> String {
+/// `carga.canonical`: las fechas de Excel se comparan como `dd/mm/aaaa`.
+fn texto_celda_con(dato: &Data, formato_fecha: &str) -> String {
     match dato {
         Data::Empty | Data::Error(_) => String::new(),
         Data::String(s) => s.clone(),
@@ -45,13 +46,13 @@ fn texto_celda(dato: &Data) -> String {
         Data::Int(i) => i.to_string(),
         Data::Bool(b) => if *b { "True" } else { "False" }.into(),
         Data::DateTime(d) => fecha_serial(d.as_f64())
-            .map(|f| f.format("%Y-%m-%d").to_string())
+            .map(|f| f.format(formato_fecha).to_string())
             .unwrap_or_default(),
         Data::DateTimeIso(s) | Data::DurationIso(s) => s.clone(),
     }
 }
 
-fn grillas_calamine(datos: &[u8]) -> Result<Vec<Grilla>, String> {
+fn grillas_calamine_con(datos: &[u8], formato_fecha: &str) -> Result<Vec<Grilla>, String> {
     let mut libro = calamine::open_workbook_auto_from_rs(Cursor::new(datos.to_vec()))
         .map_err(|_| "No se pudo abrir/parsear el archivo Excel; requiere revision local.")?;
     let mut celdas = 0usize;
@@ -62,7 +63,7 @@ fn grillas_calamine(datos: &[u8]) -> Result<Vec<Grilla>, String> {
         if filas > 200_000 || cols > 200 || celdas > 2_000_000 {
             return Err("Las dimensiones del Excel exceden los límites de lectura.".into());
         }
-        grillas.push(rango.rows().map(|f| f.iter().map(texto_celda).collect()).collect());
+        grillas.push(rango.rows().map(|f| f.iter().map(|d| texto_celda_con(d, formato_fecha)).collect()).collect());
     }
     Ok(grillas)
 }
@@ -212,26 +213,44 @@ fn grillas_xml_2003(datos: &[u8]) -> Result<Vec<Grilla>, String> {
     Ok(grillas)
 }
 
-/// Formato y listado único de causas y nombres. Una descarga sin listado no es una consulta vacía.
-pub fn leer(datos: &[u8]) -> Result<Libro, String> {
+/// Formato y grillas del XLS, con el mismo despacho que `read_excel`.
+fn grillas(datos: &[u8], formato_fecha: &str) -> Result<(&'static str, Vec<Grilla>), String> {
     if datos.is_empty() {
         return Err("El XLS esta vacio.".into());
     }
     if datos.len() > LIMITE_BYTES {
         return Err("El Excel supera 80 MB.".into());
     }
-    let (formato, grillas) = if datos.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
-        ("XLS-BIFF", grillas_calamine(datos)?)
+    Ok(if datos.starts_with(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
+        ("XLS-BIFF", grillas_calamine_con(datos, formato_fecha)?)
     } else if datos.starts_with(b"PK\x03\x04") {
-        ("OOXML-con-extension-xls", grillas_calamine(datos)?)
-    } else if datos[..datos.len().min(4096)]
-        .windows(XML_2003.len())
-        .any(|w| w == XML_2003)
-    {
+        ("OOXML-con-extension-xls", grillas_calamine_con(datos, formato_fecha)?)
+    } else if datos[..datos.len().min(4096)].windows(XML_2003.len()).any(|w| w == XML_2003) {
         ("XML-Spreadsheet-2003", grillas_xml_2003(datos)?)
     } else {
         ("HTML-tabular-con-extension-xls", grillas_html(datos)?)
-    };
+    })
+}
+
+/// `read_excel(data, record_reader=carga.records_in_grid)`: formato y filas del único listado de Carga.
+pub fn leer_carga(datos: &[u8]) -> Result<(&'static str, super::sitfa::carga::FilasCarga), String> {
+    let (formato, grillas) = grillas(datos, "%d/%m/%Y")?;
+    let mut candidatas = Vec::new();
+    for grilla in &grillas {
+        let filas = super::sitfa::carga::registros_en_grilla(grilla)?;
+        if !filas.is_empty() {
+            candidatas.push(filas);
+        }
+    }
+    if candidatas.len() != 1 {
+        return Err("Se recibio el Excel, pero no se reconoce un unico listado de causas y nombres. No es una consulta sin resultados.".into());
+    }
+    Ok((formato, candidatas.pop().unwrap()))
+}
+
+/// Formato y listado único de causas y nombres. Una descarga sin listado no es una consulta vacía.
+pub fn leer(datos: &[u8]) -> Result<Libro, String> {
+    let (formato, grillas) = grillas(datos, "%Y-%m-%d")?;
     let mut candidatas = Vec::new();
     for grilla in grillas {
         let registros = contar(&grilla)?;

@@ -62,6 +62,16 @@ Objetivo: cubrir con pruebas Rust el código de los turnos 13 y 14 que el corpus
    - Comprobar los errores de índice de fila no creciente, columna 201 y más de 200 celdas por fila.
    - Un `<!DOCTYPE>` con entidad externa no debe resolverse.
 
+8. **A8 · Contrato de Carga** (`sitfa::carga` y `leer_carga`).
+   - Con grillas sintéticas de 23 columnas, comparar con `descargador/carga.py`:
+     - encabezado exacto;
+     - una columna renombrada (debe rechazarse con «Encabezado de carga inesperado…»);
+     - dos encabezados;
+     - un registro antes del encabezado;
+     - una fila de 22 columnas;
+     - un título «Concepción» que no debe confundirse con el encabezado.
+   - Comparar también el conteo de filas repetidas, y que una fecha de Excel se lea como `dd/mm/aaaa`.
+
 Criterio: todas las pruebas nuevas pasan, `oraculo_python` sigue en 174/174 y `oraculo_historia` en 2.582/2.582 (`FLOW_CASOS=$PWD/../rust/casos`). Además, `cargo clippy --tests` no agrega advertencias en los archivos tocados.
 
 ## Paquete B · Redacción mensual activa sobre el corpus (entorno L)

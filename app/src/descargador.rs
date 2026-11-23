@@ -12,6 +12,7 @@ pub mod preferencias;
 mod puente;
 pub mod sitfa;
 mod xls;
+pub use xls::leer_carga;
 #[cfg(test)]
 mod sitfa_ficticio;
 pub use puente::Puente;

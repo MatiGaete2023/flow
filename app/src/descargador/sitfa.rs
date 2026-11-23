@@ -1,6 +1,7 @@
 //! Validación local de consultas y respuestas de SITFA (`perfiles.py` y `motor.py` de Flow Python Lite).
 //! No hace peticiones ni ejecuta scripts. Los errores son textos fijos: nunca HTML, URL XLS ni datos de personas.
 
+pub mod carga;
 mod filtro;
 pub(crate) mod registros;
 

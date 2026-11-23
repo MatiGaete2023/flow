@@ -279,9 +279,31 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - Diferencia acotada: los elementos se reconocen por nombre local (`Table`, `Row`, `Cell`, `Data`) y los atributos por el prefijo `ss:`. Python exige el espacio de nombres. Con los archivos de SITFA el resultado es el mismo (N2: supone que SITFA usa el prefijo `ss` habitual).
 - Se verificó la compilación de la biblioteca y la corrida Windows sobre `aa05c47`, que pasó; también pasó la de `7f9df55`, con favoritos y recuperación. Las pruebas están en el paquete A7 del [plan](PLAN_PRUEBAS.md).
 
+## Turno 14 · Contrato de Carga y especificación del lote Integral
+
+- `descargador/sitfa/carga.rs` porta `carga.py`. Valida el encabezado completo y ordenado de 23 columnas, con el umbral de 12 coincidencias para reconocer un encabezado renombrado. Rechaza más de un encabezado, registros antes de él y filas con otra cantidad de columnas. Cuenta filas completas canónicas (`FilasCarga`) con `registros_en_grilla` (XLS) y `registros_resultado` (tablas web). Los mensajes de error son los de Python, incluida la tupla esperada.
+- `descargador::leer_carga` (en `xls.rs`) aplica `read_excel(record_reader=records_in_grid)` con el mismo despacho de formatos. `xls::grillas` centraliza ese despacho, que `leer` también usa. Las fechas de Excel se leen como `dd/mm/aaaa`, como `carga.canonical`; en XML 2003 quedan ISO, como el `date` de Python.
+- Aún no se usa en la ejecución: la Carga es solo Integral.
+
+### Especificación del lote Integral (`descargador/lotes.py::BatchRunner.run` frente a `lote::ejecutar`)
+
+El protocolo es el mismo (`lock`, `prepare`, `search`, `download`, `evidence_open/capture/close`, `unlock`) y el puente ya acepta esos comandos. Para habilitar Integral en `lote::ejecutar`, condicionar por edición solo estas diferencias:
+
+1. **Nombres** (`lotes.file_base` Integral). Calendario de informes: «Informes <tribunal>». Medidas: «Medidas por vencer <tribunal>». Litigantes: «Litigantes <estado> <tribunal>». Carga: «Carga <tribunal> <inicio> <fin>». Pestaña Informes: «Informes <tribunal>». Egresados: «Egresados <tribunal>». En otro caso: «ESP|CUMP <modalidad> <tribunal>». Los repetidos llevan el sufijo « N» (con espacio y sin paréntesis), y los XLS de varias páginas también.
+2. **`resumen.json`**: `version_contrato: 1` en lugar de `version: "lite-1"`. El plan lleva `asdict(selection)`, `tribunal_nombre`, `modalidad_nombre` y `fecha_descarga`. `filtro_fecha` usa `{"desde", "hasta"}` en `dd/mm/aaaa` y `otros_filtros`, «formulario» o «todos los registros». `lote::pendientes` ya acepta ambos formatos.
+3. **Fechas del formulario**: no se exige `FLG_Consulta` en Carga ni en calendarios. Carga usa `FEC_Desde` y `FEC_Hasta` en lugar de `FEC_Inicio` y `FEC_Fin` al cotejar la pantalla de evidencia.
+4. **Evidencia**:
+   - el contexto es Tribunal (con código), Modalidad y Pestaña en seguimiento, Consulta y Fechas («Sin filtro de fechas» si no hay);
+   - se exige un único `#sitfaContextoConsulta` con `data-context` igual al JSON compacto del contexto y el texto «Consulta solicitada · etiqueta: valor · …»;
+   - la evidencia lleva `tipo: PDF_CAPTURA_SITFA` y `contexto_consulta`.
+5. **Carga**: el conteo de registros usa `carga::registros_resultado` (tabla web) y `leer_carga` (XLS) en lugar de `registros::contar`.
+6. **Extensión**: `Puente::verificar(Edicion::Integral)` ya comprueba la 2.9.0 y sus siete protocolos. La lista de motivos de evidencia de Integral agrega «ventana» y «captura» a los nueve de `MOTIVOS_EVIDENCIA`.
+
+Luego viene la parte propia del Integral: bitácoras, historia, calendario e histórico (`lectura_bitacoras.py`, `lectura_historia.py`, `historico_manual.py`) y el paquete CSMP (`flujo_csmp.py`, `flujo_paquete.py`, `export_csmp_capture.py`), unas 3.000 líneas de Python.
+
 ## Siguiente paso exacto
 
 0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
 1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): ejecución Integral y Carga (`contrato_integral.py`, `carga.py`), y el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+2. Descargador (E2): habilitar el lote Integral y la Carga según la especificación del turno 14. Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
 3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.
