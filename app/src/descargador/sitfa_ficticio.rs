@@ -347,6 +347,32 @@ impl Conexion for SitfaFicticio {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::descargador::lote as modulo_lote;
+    use crate::descargador::preferencias::Preferencias;
+
+    struct Espia {
+        inner: SitfaFicticio,
+        busquedas: RefCell<Vec<std::time::Instant>>,
+        keep: RefCell<Vec<bool>>,
+    }
+
+    impl Espia {
+        fn nuevo(pantalla: &'static str, paginas: &[(&str, usize)]) -> Self {
+            Self { inner: SitfaFicticio::nuevo(pantalla, paginas), busquedas: RefCell::new(Vec::new()), keep: RefCell::new(Vec::new()) }
+        }
+    }
+
+    impl Conexion for Espia {
+        fn llamar(&self, comando: &str, payload: Value, plazo: Duration) -> Result<Value, String> {
+            if comando == "search" {
+                self.busquedas.borrow_mut().push(std::time::Instant::now());
+            }
+            if comando == "prepare" {
+                self.keep.borrow_mut().push(payload["keep_filters"].as_bool().unwrap_or(false));
+            }
+            self.inner.llamar(comando, payload, plazo)
+        }
+    }
 
     struct Carpeta(PathBuf);
 
@@ -837,5 +863,135 @@ mod tests {
         assert_eq!(json(&carpeta, "verificacion 001.json")["estado"], "INCOMPLETA");
         assert_eq!(json(&carpeta, "resumen.json")["estado"], "INCOMPLETA");
         let _ = Pantalla::Seguimiento;
+    }
+
+    fn huellas(carpeta: &Path) -> BTreeMap<String, String> {
+        let mut salida = BTreeMap::new();
+        for entrada in std::fs::read_dir(carpeta).unwrap().filter_map(Result::ok) {
+            if entrada.file_type().unwrap().is_file() {
+                let nombre = entrada.file_name().to_string_lossy().into_owned();
+                let bytes = std::fs::read(entrada.path()).unwrap();
+                salida.insert(nombre, format!("{:x}", Sha256::digest(&bytes)));
+            }
+        }
+        salida
+    }
+
+    fn plan_de(pantalla: &str, edicion: Edicion, lote: &SeleccionLote) -> (Catalogo, crate::descargador::PlanLote) {
+        let catalogo = catalogo(pantalla);
+        let plan = catalogo.planificar(edicion, lote).unwrap();
+        (catalogo, plan)
+    }
+
+    #[test]
+    fn f2_pausa_minima_de_medio_segundo_entre_consultas() {
+        let destino = Carpeta::nueva();
+        let espia = Espia::nuevo("calendario_informes", &[]);
+        let seleccion = SeleccionLote {
+            tribunales: vec!["901".into()],
+            meses: vec!["10".into(), "11".into(), "12".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        let (catalogo, plan) = plan_de("calendario_informes", Edicion::Lite, &seleccion);
+        assert_eq!(plan.consultas.len(), 3);
+        let opciones = Opciones {
+            pausa: Duration::from_secs_f64(crate::descargador::preferencias::limitar_pausa(0.0)),
+            ..Default::default()
+        };
+        ejecutar(&espia, &catalogo, Edicion::Lite, &plan, &destino.0, &opciones, &AtomicBool::new(false), &mut |_| {}).unwrap();
+        let instantes = espia.busquedas.borrow();
+        assert_eq!(instantes.len(), 3);
+        let intervalos: Vec<_> = instantes.windows(2).map(|par| par[1].duration_since(par[0])).collect();
+        println!("F2_PAUSA: {intervalos:?}");
+        for intervalo in &intervalos {
+            assert!(
+                *intervalo >= Duration::from_millis(500),
+                "pausa pedida 0 s: intervalo {intervalo:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn f3_cancelar_tras_la_primera_deja_dos_pendientes_y_no_toca_el_lote_original() {
+        let seleccion = SeleccionLote {
+            tribunales: vec!["901".into()],
+            meses: vec!["10".into(), "11".into(), "12".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        let (catalogo, plan) = plan_de("calendario_informes", Edicion::Lite, &seleccion);
+        let destino_original = Carpeta::nueva();
+        let original = SitfaFicticio::nuevo("calendario_informes", &[]);
+        ejecutar(&original, &catalogo, Edicion::Lite, &plan, &destino_original.0, &Opciones::default(), &AtomicBool::new(false), &mut |_| {}).unwrap();
+        let carpeta_original = std::fs::read_dir(&destino_original.0).unwrap().next().unwrap().unwrap().path();
+        let antes = huellas(&carpeta_original);
+
+        let destino_nuevo = Carpeta::nueva();
+        let cancelar = AtomicBool::new(false);
+        let error = ejecutar(&original, &catalogo, Edicion::Lite, &plan, &destino_nuevo.0, &Opciones::default(), &cancelar, &mut |e| {
+            if matches!(e, Evento::ConsultaLista { .. }) {
+                cancelar.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+        })
+        .unwrap_err();
+        assert!(error.contains("cancelado"));
+        let carpeta_nueva = std::fs::read_dir(&destino_nuevo.0).unwrap().next().unwrap().unwrap().path();
+        let pendientes = modulo_lote::pendientes(&carpeta_nueva).unwrap();
+        assert_eq!(pendientes.selecciones.len(), 2);
+        assert_eq!(huellas(&carpeta_original), antes, "el lote original cambió");
+        println!("F3_PENDIENTES: {}, HUELLAS: {} intactas", pendientes.selecciones.len(), antes.len());
+    }
+
+    #[test]
+    fn f4_favorito_sobrevive_al_reinicio_y_recalcula_alcance_y_fechas() {
+        let carpeta = Carpeta::nueva();
+        let ruta = carpeta.0.join("preferencias.json");
+        let hoy = chrono::NaiveDate::from_ymd_opt(2026, 12, 15).unwrap();
+        let luego = chrono::NaiveDate::from_ymd_opt(2027, 1, 10).unwrap();
+        let favorito = SeleccionLote {
+            tribunales: vec!["901".into()],
+            pestanas: vec!["Espera".into()],
+            modalidades: vec!["1".into()],
+            fechas: Some((chrono::NaiveDate::from_ymd_opt(2026, 10, 1).unwrap(), chrono::NaiveDate::from_ymd_opt(2026, 10, 31).unwrap())),
+            ..Default::default()
+        };
+        let mut preferencias = Preferencias::default();
+        preferencias.guardar_favorito("favorito ficticio", Pantalla::Seguimiento, &favorito, false, hoy).unwrap();
+        preferencias.guardar(&ruta).unwrap();
+
+        let recuperadas = Preferencias::cargar(&ruta);
+        let catalogo = catalogo("seguimiento");
+        let (aplicado, retirados) = recuperadas.aplicar_favorito("favorito ficticio", &catalogo, luego).unwrap();
+        assert!(retirados.is_empty());
+        assert_eq!(aplicado.tribunales, ["901"]);
+        assert_eq!(aplicado.pestanas, ["Espera"]);
+        assert_eq!(aplicado.modalidades, ["1"]);
+        let (desde, hasta) = aplicado.fechas.unwrap();
+        assert_eq!(desde, luego - chrono::Duration::days(29));
+        assert_eq!(hasta, luego);
+        println!("F4_FAVORITO: {:?} {:?} {:?} {:?}", aplicado.tribunales, aplicado.pestanas, aplicado.modalidades, aplicado.fechas);
+    }
+
+    #[test]
+    fn d2_keep_filters_solo_en_seguimiento_y_litigantes() {
+        let casos = [
+            ("calendario_informes", SeleccionLote { tribunales: vec!["901".into()], meses: vec!["10".into()], anio: "2026".into(), ..Default::default() }, false),
+            ("carga", SeleccionLote { tribunales: vec!["901".into()], fechas: fechas_carga(), ..Default::default() }, false),
+            ("litigantes", SeleccionLote { tribunales: vec!["901".into()], estados: vec!["2".into()], ..Default::default() }, true),
+            ("seguimiento", SeleccionLote { tribunales: vec!["901".into()], modalidades: vec!["1".into()], pestanas: vec!["Espera".into()], ..Default::default() }, true),
+        ];
+        for (pantalla, seleccion, esperado) in casos {
+            let (catalogo, plan) = plan_de(pantalla, Edicion::Integral, &seleccion);
+            assert_eq!(modulo_lote::conservar_filtros(true, catalogo.pantalla), esperado, "{pantalla}");
+            let espia = Espia::nuevo(pantalla, &[]);
+            let opciones = Opciones { conservar_filtros: modulo_lote::conservar_filtros(true, catalogo.pantalla), ..Default::default() };
+            let destino = Carpeta::nueva();
+            ejecutar(&espia, &catalogo, Edicion::Integral, &plan, &destino.0, &opciones, &AtomicBool::new(false), &mut |_| {}).unwrap();
+            let keep = espia.keep.borrow();
+            assert!(!keep.is_empty(), "{pantalla}");
+            assert!(keep.iter().all(|v| *v == esperado), "{pantalla}: {keep:?}");
+            println!("D2_KEEP_FILTERS: {pantalla}={esperado}, enviados={keep:?}");
+        }
     }
 }

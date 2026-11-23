@@ -191,8 +191,7 @@ impl Ejecucion {
             self.error = Some("Elige la carpeta de destino.".into());
             return;
         }
-        let conservar = self.conservar_filtros
-            && matches!(catalogo.pantalla, Pantalla::Seguimiento | Pantalla::Litigantes);
+        let conservar = lote::conservar_filtros(self.conservar_filtros, catalogo.pantalla);
         let pausa = preferencias::limitar_pausa(f64::from(self.pausa));
         self.pausa = pausa as f32;
         let opciones = Opciones {

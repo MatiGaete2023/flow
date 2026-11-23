@@ -60,6 +60,12 @@ impl Default for Opciones {
     }
 }
 
+/// Regla de `descargador.py::batch`: los filtros privados solo se conservan en Seguimiento y Litigantes.
+/// La usa `iniciar` (interfaz) y la prueba D-2; en calendarios y Carga el valor pedido no se conserva.
+pub fn conservar_filtros(pedido: bool, pantalla: Pantalla) -> bool {
+    pedido && matches!(pantalla, Pantalla::Seguimiento | Pantalla::Litigantes)
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Evento {
     Carpeta(PathBuf),
