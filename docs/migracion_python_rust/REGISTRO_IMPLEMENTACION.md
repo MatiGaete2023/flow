@@ -374,7 +374,33 @@ Luego viene la parte propia del Integral: bitácoras, historia, calendario e his
    - **G4 y G5:** Se ejecutó `python tools/verificar_textos_umbrales.py`: 58/58 textos idénticos carácter por carácter con `src/nurus/personal/textos_base.json`. 16/16 umbrales idénticos en claves, valores y etiquetas con `config.py::UMBRALES` y `PARAMETER_LABELS`. 0 discrepancias.
    - **G6:** Verificado que toda persistencia se efectúa exclusivamente en `%LOCALAPPDATA%\FlowRust` y en las rutas de destino elegidas por el usuario.
 
+## Auditoría del turno 17
+
+Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md), repitiendo las comprobaciones en Linux con el crate `.aislado/` (biblioteca y binario `motor_aislado`, `FLOW_CASOS=rust/casos`).
+
+- **Reproducido (N1):**
+  - biblioteca 40/40 y binario 41 + 1 ignorada;
+  - `ORACULO: 174/174`, `oraculo_historia: 2582 de 2582`;
+  - `PAQUETE_B: 2582, 1997, R1 7, R6 577, R1+R6 1, 0 fallos`;
+  - `verificar_textos_umbrales.py` sin discrepancias (58 textos, 16 umbrales);
+  - `check_real_ids` y `check_contactos` sin hallazgos;
+  - sin `.Send(` y `CC_OBLIGATORIO` fijo.
+- **Afirmaciones no sostenidas (N1):**
+  - las cuatro pruebas «UI headless» del paquete D no existen en el repositorio;
+  - los nombres de prueba del paquete C no coinciden con los existentes, que terminan con `return` sin `FLOW_E3_PAQUETE`;
+  - `generar_contexto_e3.py` no se amplió;
+  - E revisó referencias antiguas;
+  - F2–F4 no se ejecutaron;
+  - el SHA-256 del ejecutable es local y no se puede verificar.
+- **Paquete B:**
+  - el comparador normaliza mayúsculas, tildes y guiones en toda la observación;
+  - instrumentado localmente (sin publicar), las 585 diferencias resultan internas al nombre del programa: LAJA→Laja, TOMÉ→Tomé, SUR→Sur, (SEDE→(sede, los→Los;
+  - en 51 casos Rust conserva el « - » de «PRM CIUDAD DEL NIÑO - MULCHÉN» y Python lo elimina, lo que la R6 aprobada no cubre (decisión D-1);
+  - no se verifican R2, R4 ni R5.
+- **Estado por paquete y encargos de corrección:** [ENCARGOS_IA.md](ENCARGOS_IA.md). Desde aquí, la ejecución corresponde a IA ejecutoras y esta línea de trabajo planifica y audita.
+
 ## Siguiente paso exacto
 
-1. **Paquete H · Aceptación del usuario:** Corresponde al usuario ejecutar la guía en su entorno real con sesión SITFA y Outlook local, completando el acta de uso real según `docs/aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md`.
-2. Publicar los cambios en la rama `estudio/paridad-python-rust-20261119` sin fusionar a `main` ni crear releases.
+1. Asignar los encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-B, E-C, E-F, E-A78, E-G, E-D, E-E y E-I. Cada entrega se registra con la plantilla del archivo y queda `ENTREGADO` hasta la auditoría.
+2. El usuario decide D-1 y D-2.
+3. Paquete H por el usuario.

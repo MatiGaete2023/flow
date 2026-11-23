@@ -1,5 +1,7 @@
 # Plan de pruebas · Flow Rust (23 de noviembre de 2026)
 
+> Estado auditado y encargos de corrección: [ENCARGOS_IA.md](ENCARGOS_IA.md) (auditoría del turno 17). Sus reglas de entrega se suman a las de este plan.
+
 Plan para que otras IA ejecuten, cada una por separado, las pruebas que quedaron fuera de los turnos 13 y 14. Cada paquete es independiente, salvo que indique un requisito previo. Se ejecuta sobre la rama `estudio/paridad-python-rust-20261119`, desde el commit `5405870` o uno posterior.
 
 ## Reglas comunes para todos los paquetes

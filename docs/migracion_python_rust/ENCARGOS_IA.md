@@ -1,0 +1,117 @@
+# Encargos para IA ejecutoras · Flow Rust
+
+Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f28` o un commit posterior de `estudio/paridad-python-rust-20261119`.
+
+## Roles
+
+- **Ejecutora.** Una IA toma **un** encargo, lo implementa o lo prueba y entrega evidencia. No planifica ni redefine criterios. Si un criterio no se puede cumplir, lo informa como `BLOQUEADO`, con el motivo, y no como `PASA`.
+- **Planificación y auditoría.** Prioriza encargos, revisa cada entrega contra su criterio y repite las comprobaciones antes de aceptar un resultado. Solo la auditoría cambia el estado de un encargo en este archivo.
+- **Usuario.** Toma decisiones de redacción y de reglas y firma el acta (paquete H). Ninguna IA marca algo como «aceptado» o «institucional».
+
+## Reglas de entrega (obligatorias)
+
+1. Leer `AGENTS.md`, este archivo, el encargo y las secciones de [VERIFICACION.md](VERIFICACION.md) que cite.
+2. Un `PASA` solo vale con evidencia reproducible:
+   - commit probado;
+   - entorno (L, W o V de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md));
+   - comando exacto;
+   - líneas literales de salida (`test result`, conteos), filtradas con `grep`.
+   Sin esa evidencia, el estado es `NO ACREDITADO`.
+3. No citar pruebas, funciones o archivos que no estén en el commit publicado. Antes de entregar, comprobar cada nombre con `grep -rn "fn <nombre>" app/`.
+4. Una prueba que depende de una variable de entorno (`FLOW_CASOS`, `FLOW_E3_PAQUETE`, `FLOW_REFERENCIA`) y termina con `return` sin ella **no acredita nada**. Indicar la variable usada e incluir en la salida una línea propia del caso, por ejemplo `ORACULO: 174/174`.
+5. Un comparador no puede absorber diferencias más amplias que la regla que acredita. Normalizar todo el texto (mayúsculas, tildes o guiones) para clasificar una diferencia acotada es una FALLA del encargo.
+6. No cambiar reglas, umbrales ni textos tradicionales (`config.rs`, `textos_base.json`). Si una prueba muestra una diferencia de redacción no aprobada, se registra como decisión del usuario.
+7. Datos solo sintéticos. RIT ficticios con año 2099. Antes de publicar, `python tools/check_real_ids.py app/src app/tests` y `python tools/check_contactos.py app/src`.
+8. Al terminar:
+   - agregar al [registro](REGISTRO_IMPLEMENTACION.md) una sección `Entrega · <encargo>` con la plantilla de abajo;
+   - cambiar el estado del encargo a `ENTREGADO`, nunca a `APROBADO`;
+   - publicar en la misma rama, sin `--force`, sin fusionar a `main` y sin releases.
+
+### Plantilla de entrega
+
+```
+## Entrega · <ID>
+- Commit probado: <sha>  · Entorno: <L|W|V> · Herramientas: <rust x.y, python x.y>
+- Comandos: <uno por línea>
+- Evidencia: <líneas literales de salida>
+- Resultado por criterio: <criterio → PASA | FALLA | BLOQUEADO (motivo)>
+- Cambios de código: <archivos> · Cambios de lógica de producción: <ninguno | detalle>
+- Pendientes: <lista>
+```
+
+## Estado de los paquetes de prueba tras la auditoría del turno 17
+
+| Paquete | Estado auditado | Fundamento (N1 salvo indicación) |
+|---|---|---|
+| A | **PASA, con salvedad** | Las 9 pruebas A1–A8 existen. Biblioteca 40/40 y binario aislado 41 + 1 ignorada en Linux. A7 y A8 no se contrastan con `motor.read_excel` ni con `carga.py` sobre los mismos bytes; usan valores esperados escritos a mano. → E-A78 |
+| B | **PASA las cifras, criterio incompleto** | Reproducido: 2.582 casos, 1.997 idénticos, R1 7, R6 577, R1+R6 1 y 0 fallos. El comparador normaliza mayúsculas, tildes y guiones en todo el texto. No verifica R2 ni R4 (solo `R3_MULTI`) ni la conservación de R5. Las 585 diferencias caen dentro del nombre del programa. En 51 de ellas Rust conserva el guion del nombre de origen y Python lo elimina, lo que la R6 aprobada no contempla. → E-B, D-1 |
+| C | **NO EJECUTADO** | `app/qa/generar_contexto_e3.py` no cambió: no existe el ZIP de historia que pide el plan, ni contraste con `nurus.personal.work`. Los nombres de prueba del informe no coinciden con los del repositorio. Las cinco pruebas existentes terminan con `return` sin `FLOW_E3_PAQUETE`. → E-C |
+| D | **NO ACREDITADO** | Las pruebas `ui_ajustes_muestra_umbrales`, `ui_descargador_muestra_opciones`, `ui_trabajo_muestra_botones` y `ui_revision_muestra_tabla` no existen en ningún commit. No se cita la corrida Windows del commit ni la evidencia de las comprobaciones manuales D2. El SHA-256 informado corresponde a un binario local que no se puede verificar. → E-D |
+| E | **NO EJECUTADO** | Se revisaron referencias antiguas, no las capturas de la corrida del commit ni `trabajo-contexto.png`. → E-E |
+| F | **PARCIAL** | F1 PASA (biblioteca 40/40). F2 (pausa efectiva medida), F3 (recuperar pendientes en una carpeta nueva sin tocar el lote original) y F4 (favorito tras reinicio) no se ejecutaron. → E-F |
+| G | **PASA, con salvedad** | G1: sin `.Send(` y `CC_OBLIGATORIO` fijo en `config.rs`. G2 y G3 sin hallazgos. G4/G5: el script da 58/58 y 16/16, pero solo compara de Rust a Python y omite entradas que no calzan con su expresión regular. G6 no tiene evidencia. → E-G |
+| H | Usuario | Sin cambios. |
+
+## Encargos abiertos (en orden de prioridad)
+
+### E-B · Comparador estricto de la redacción mensual — `ABIERTO` (entorno L)
+
+- Objetivo: que `motor::historia::tests::paquete_b_redaccion_mensual` clasifique solo lo que acreditan R1 y R6.
+- Pasos:
+  1. Clasificar como R6 solo las palabras que difieren dentro del nombre del programa de la fila. Las palabras del nombre salen de la entrada del caso (`programa`, `programa_cruce` o el campo que use `titulo_programa_registro`). Una diferencia fuera de ese tramo es FALLA.
+  2. Contar aparte `R6_GUION`: el nombre conserva « - » en Rust y Python lo omite.
+  3. Afirmar que no aparecen `R2`, `R3`, `R3_MULTI` ni `R4` en las observaciones.
+  4. Comprobar R5 según `INFORME_FALLAS_20261120.md` (tabla de decisiones).
+  5. Si falta `FLOW_CASOS`, la prueba falla. No debe terminar con `return`.
+- Criterio: salida `PAQUETE_B: … R1 a, R6 b, R6_GUION c, R1+R6 d, fallos 0`, con a + b + c + d = 585 sobre `f6a8f28`. No cambia la lógica de producción.
+
+### E-C · Paquete C completo — `ABIERTO` (entorno L con `FLOW_REFERENCIA`, o W)
+
+- Ejecutar el paquete C de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) tal como está escrito: `contexto-e3-historia.zip` con sus seis elementos, apertura en las tres etapas, contraste con `nurus.personal.work` y corte antes de la ventana.
+- Evidencia: el diff Python↔Rust por fila (vacío, o solo R1/R6) y la línea literal de cada caso con `FLOW_E3_PAQUETE` definido.
+
+### E-F · Descargador: pausa, pendientes y favoritos — `ABIERTO` (entorno L)
+
+- Agregar en `app/src/descargador/sitfa_ficticio.rs`:
+  - F2: registrar el `Instant` de cada `search` de un lote de tres consultas con pausa pedida de 0 s; el intervalo debe ser ≥ 0,5 s;
+  - F3: cancelar después de la primera consulta; `pendientes` devuelve dos. Se ejecutan en una carpeta nueva y las huellas de todos los archivos del lote original quedan iguales;
+  - F4: guardar un favorito, volver a cargarlo con `Preferencias::cargar` desde la misma ruta (simulación de reinicio) y aplicarlo, con alcance y fechas recalculadas.
+- Criterio: las tres pruebas existen, pasan, y biblioteca y clippy `-D warnings` siguen limpios.
+
+### E-A78 · Contraste Python de A7 y A8 — `ABIERTO` (entorno L)
+
+- Generar con Python, a partir de bytes sintéticos fijos, la salida de `descargador/motor.py::read_excel` (A7) y de `descargador/carga.py` (A8). Guardarla como fixture JSON en `app/tests/datos/` junto a los bytes de entrada.
+- Las pruebas Rust comparan contra ese fixture. Agregar un script en `app/qa/` que lo regenere.
+- Criterio: filas, conteos y mensajes de error iguales a Python.
+
+### E-G · Auditoría de textos y escritura — `ABIERTO` (entorno L)
+
+- `tools/verificar_textos_umbrales.py`:
+  - comparar en ambos sentidos: cada texto de Python que usa Rust debe existir, y viceversa;
+  - informar las entradas de `config.rs` que la expresión regular no leyó;
+  - fallar con código distinto de 0 ante cualquier discrepancia.
+- G6: listar con `grep` toda escritura a disco de `app/src` (`fs::write`, `File::create`, `OpenOptions`, `rename`) y clasificar cada ruta como perfil local o destino elegido por el usuario.
+
+### E-D · Compilación e interfaz en Windows — `ABIERTO` (entorno W)
+
+- Lanzar «Flow Rust local · Windows» sobre el commit vigente y citar el run y su resultado.
+- Ejecutar las comprobaciones manuales D2 con el ejecutable del artefacto y el ejemplo ficticio en un perfil aislado. Evidencia: capturas sintéticas y SHA-256 del ejecutable del artefacto.
+- Pruebas de interfaz automatizadas: solo si se agregan al repositorio (por ejemplo con `egui_kittest`) y corren en la CI.
+
+### E-E · Revisión visual de la corrida — `ABIERTO` (entorno V)
+
+- El paquete E de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md) sobre el artefacto de la corrida de E-D.
+
+### E-I · Lote Integral y Carga en Windows — `ABIERTO` (entorno W)
+
+- Con la extensión ficticia sobre HTTP local, ejecutar desde el ejecutable un lote Integral de Seguimiento con dos páginas, otro de Carga y una consulta vacía con PDF. Verificar los nombres y `resumen.json` según el turno 16 del registro.
+- La prueba con Chrome real y sesión SITFA corresponde al usuario (paquete H).
+
+### E-P · Descargador Integral restante — `EN ESPERA` (tras E-F e E-I)
+
+- Lecturas de bitácora, historia, calendario e histórico (F19), paquete CSMP y exportaciones de lote (F22). La auditoría lo especificará en encargos más chicos antes de asignarlo.
+
+## Decisiones del usuario pendientes
+
+- **D-1 · Guion en el nombre del programa (R6).** En 51 casos del corpus, el nombre de origen «PRM CIUDAD DEL NIÑO - MULCHÉN» queda como «Ciudad del Niño - Mulchén» en Rust (conserva el guion). Python lo deja como «Ciudad del NIÑO Mulchén». La R6 aprobada no se pronuncia sobre el guion. Opciones: conservarlo (el comportamiento actual de Rust) o eliminarlo como Python. Hasta la decisión, E-B lo informa por separado.
+- **D-2 · `keep_filters` en Integral.** Python lo envía en cualquier pantalla y Flow Rust lo permite solo en Seguimiento y Litigantes (turno 16).

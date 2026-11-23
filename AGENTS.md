@@ -7,6 +7,10 @@
 - Usar datos sintéticos. El Asistente funciona con entradas locales. El Descargador lee con la sesión del usuario. RUS y SATURNO quedan en solo lectura y Outlook se limita a borradores con el CC obligatorio.
 - Actualizar el registro con código, pruebas, pendientes y siguiente paso antes de cerrar cada sesión. Publicar en la rama indicada, sin fusionar a `main` ni crear releases. El acta de uso real corresponde al usuario.
 
+## Roles
+
+- Las IA ejecutoras toman un encargo de [ENCARGOS_IA.md](docs/migracion_python_rust/ENCARGOS_IA.md), entregan evidencia con su plantilla y lo dejan `ENTREGADO`. La planificación y la auditoría repiten las comprobaciones y son las únicas que cambian el estado. Un `PASA` sin commit, comando y salida literal no cuenta.
+
 ## Reglas que no se negocian
 
 - Sin escritura automática en RUS ni SATURNO. Sin módulo de registro RUS ni SATURNO; si reapareciera, `submit`
