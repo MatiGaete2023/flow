@@ -925,8 +925,85 @@ E-D e E-I quedan `ENTREGADO`. El cierre corresponde a la revisión del usuario y
 
 Las lecturas de Python son un flujo aparte (`DiaryRunner`) con su propio formato en disco, no parte del lote de listados. Quedan por trasladar cerca de 3.600 líneas de Python para E-Q4, E-Q5 y E-S1 (`lectura_bitacoras.py`, `lectura_historia.py`, `historico_manual.py`, `export_csmp_capture.py`, `resultados.py` y `flujo_paquete.py`), y cerca de 7.800 para E-R, E-T2, E-T3 y E-T4. `ENCARGOS_IA.md` ya registra los oráculos de E-Q4 y E-Q5.
 
+## Entrega · E-Q4 (23 de noviembre de 2026, ejecutada por la auditoría)
+
+### Commits
+
+- `3012cdd` E-Q4a: ruta principal.
+- `b333f98` E-Q4b: retomar y reutilizar.
+- `daaa8dd` E-Q4c: calendario.
+- `edf80bb` E-Q4c: histórico.
+- `e4b32ac` E-Q4c: historia.
+- `c17caa3` E-Q4d: diagnóstico anónimo.
+
+### Código (`app/src/descargador/`)
+
+- `bitacoras.rs`: `lectura_bitacoras.DiaryRunner`. Comprende:
+  - el plan de `Batch`;
+  - `prepare` y `search` por página, con el control de filas de `listing_rows`;
+  - `diary_open` por fila, con identidad, huella, params y fecha;
+  - la instantánea exclusiva y la clave sha256, que replica el `json.dumps` de Python;
+  - fallas seguidas, tope y cancelación;
+  - retomar, incluido `anteriores_no_reenumeradas`;
+  - reutilizar desde otro lote (12 h, mismo día);
+  - calendario e histórico por persona, con suspensión;
+  - el diagnóstico anónimo.
+- `historia.rs`: `lectura_historia.LectorHistoria`, con la estructura anónima de la pestaña Escritos.
+- `historico.rs`: `historico_manual` y la estructura anónima de la ventana del histórico.
+- `lecturas.rs`: mensajes de identidad de `read_snapshot` y de `read_calendar`, alineados.
+- `vinculos.rs`: `extraer_filas` (por fila, como `listing_rows`) y `diagnostico_bitacora`.
+- `puente.rs`: `historico_open` entre las lecturas que solo habilita Integral.
+
+### Oráculo de grabación
+
+`app/qa/generar_bitacoras.py` → `app/tests/datos/bitacoras.json`:
+- 16 escenarios con el puente ficticio de las pruebas Python;
+- reloj fijo y `leida` en Santiago, iguales en cualquier zona horaria (comprobado con `TZ=UTC` y `TZ=Asia/Tokyo`);
+- RUT ficticios con dígito verificador inválido.
+
+La prueba reproduce las respuestas grabadas y compara, en cada escenario:
+- las órdenes al puente y sus payloads;
+- `bitacoras.json`;
+- las instantáneas;
+- `historico.json` y sus respaldos;
+- `historia/` (manifiesto, diagnóstico y estructura);
+- `diagnostico_bitacoras.json`;
+- el resultado.
+
+### Evidencia (L)
+
+- `BITACORAS: 16/16, fallos 0`
+- `LECTURAS: 32/32, negativas 66/66, fallos 0`, con 11 casos nuevos de error del calendario y 3 de identidad de la bitácora.
+- Mutaciones detectadas (todas revertidas):
+  - separador de la clave;
+  - entradas;
+  - diagnóstico del vínculo;
+  - retomada;
+  - ventana de 12 h;
+  - `anteriores_no_reenumeradas`, con el escenario de retomar cancelado;
+  - calendario reutilizado;
+  - suspensión del histórico;
+  - título de la estructura;
+  - histórico por persona;
+  - tribunal visible;
+  - estructura de Escritos;
+  - conteo de anteriores;
+  - `OTRA_FALLA`.
+- Biblioteca: `54 passed; 1 ignored`.
+- clippy `--lib -D warnings` limpio; `inventario_escrituras` en PASA (61 escrituras en 13 archivos); `check_real_ids` y `check_contactos` limpios.
+
+### Diferencias declaradas
+
+- **Más estricto que Python:** la página de acceso se detecta en el calendario sin distinguir mayúsculas.
+- **Pérdida de información:** el puente de Rust no trae el `code` de la extensión. Una falla del histórico sin código queda `HISTORICO_RESPALDO_INVALIDO`, igual que en Python ante una excepción sin código. Las fallas de historia con código de la extensión quedan como `HISTORIA_LECTURA_ERROR`.
+
+### Pendiente
+
+- Los Excel `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` pasan a E-Q5, porque comparten `import_lotes`.
+- La interfaz es E-Q6.
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
-2. Siguiente encargo: E-Q4 (`DiaryRunner` en Rust con el formato en disco de Python). Después, E-Q5, E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`. Cada uno, en una sesión nueva.
+2. Siguiente encargo: E-Q5 (paquete CSMP con `import_lotes`, `export_capture_with_note` y los dos Excel de E-Q4). Después, E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`.
 3. D-1 y D-2 resueltas: sin cambios de código.

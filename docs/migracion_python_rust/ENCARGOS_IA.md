@@ -166,7 +166,7 @@ En orden de dependencia:
 - `abrir_bitacora`, `abrir_historia` y `abrir_calendario` sobre el SITFA ficticio.
 - La prueba de `puente.rs:440` pasa a exigir el rechazo en Lite y la aceptación en Integral. `navigate` y `carga` siguen rechazados.
 
-### E-Q4 · Lote de bitácoras (`DiaryRunner`) — `ABIERTO` (L), tras E-Q3
+### E-Q4 · Lote de bitácoras (`DiaryRunner`) — `ENTREGADO` salvo los Excel (23-nov-2026, `3012cdd` … `c17caa3`, por la auditoría); los Excel pasan a E-Q5
 
 - **Hallazgo (N1, 23-nov-2026):** en Flow Python las lecturas no corren dentro del lote de listados. Son un flujo aparte del Descargador (`start_diary`, `descargador/lectura_bitacoras.py::DiaryRunner`, 1.068 líneas, más `lectura_historia.py`, con 351, y `historico_manual.py`, con 182), con su propio formato en disco:
   - `bitacoras/bitacoras.json` (manifiesto) y una instantánea por registro;
@@ -186,6 +186,8 @@ En orden de dependencia:
 - **Oráculo:** ejecutar `DiaryRunner` de Python y el de Rust sobre el mismo SITFA ficticio (`descargador/test_lotes.py::CATALOG`, `test_lectura_historia.FakeBridge` y `bitacora_fixtures`) y comparar los manifiestos, salvo marcas de tiempo declaradas. Además, `package_current_lot` de Python debe aceptar la carpeta producida por Rust.
 
 ### E-Q5 · Paquete CSMP desde el lote — `ABIERTO` (L), tras E-Q4
+
+- Incluye también los Excel de E-Q4: `Bitacoras_RUS.xlsx` (`nurus.capture.diaries.export_diaries`) e `Historia_SITFA.xlsx` (`nurus.capture.historias.export_historias`). Los dos dependen de `import_lotes`, el mismo análisis que usa el paquete. Se comparan las celdas con openpyxl y calamine.
 
 - Python: `descargador.py::package_current_lot` → `export_csmp_capture.py::export_capture_with_note` (806 líneas), con `load_sources` y `match_diaries`.
 - Hacer: el mismo ZIP `CSMP_CAPTURE` 1.2.0 desde la carpeta del lote de listados más la de bitácoras.
