@@ -1113,7 +1113,7 @@ mod tests {
 
     /// Casos evaluados del corpus `rust/casos` (espera, cumplimiento e informes con historia o bitácora).
     /// Si se regenera el corpus con `rust/oraculo/generar_casos.py`, actualizar este valor en el mismo commit.
-    const CASOS_PAQUETE_B: u64 = 2582;
+    const CASOS_PAQUETE_B: u64 = 2585;
 
     #[derive(Default)]
     struct PaqueteB {
@@ -1316,11 +1316,10 @@ mod tests {
         assert!(p.fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
     }
 
-    /// Exige que el corpus tenga casos de R3 (HISTORIA.E04_CON_FOLIO + ESPERA.E05_SOLO_CORREO).
-    /// R2 no se exige aquí: HISTORIA.R3_MULTI no existe en el motor Python (en Rust es un aviso interno) y la cubre
-    /// `espera_con_servicio_y_causa_compartida_aplica_r2_y_r4`. Hoy falla; se activa al cerrar el encargo E-J.
+    /// Exige que el corpus tenga casos de R3 (HISTORIA.E04_CON_FOLIO + ESPERA.E05_SOLO_CORREO): al menos los tres
+    /// dirigidos ESP-D22–ESP-D24 de `generar_casos.py`. R2 no se exige aquí: HISTORIA.R3_MULTI no existe en el motor
+    /// Python (en Rust es un aviso interno) y la cubre `espera_con_servicio_y_causa_compartida_aplica_r2_y_r4`.
     #[test]
-    #[ignore = "E-J: el corpus rust/casos no tiene casos de R3 (E04_CON_FOLIO + E05_SOLO_CORREO)"]
     fn paquete_b_cobertura_r3() {
         let p = evaluar_paquete_b();
         println!(
@@ -1329,7 +1328,10 @@ mod tests {
             cobertura(p.r4_ok, p.r4_aplica),
             p.fallos.len()
         );
-        assert!(p.r3_aplica > 0, "R3 sin cobertura: ningún caso con E04_CON_FOLIO y E05_SOLO_CORREO");
+        assert!(
+            p.r3_aplica >= 3,
+            "R3 sin cobertura suficiente: se esperaban al menos 3 casos con E04_CON_FOLIO y E05_SOLO_CORREO"
+        );
         assert!(p.fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
     }
 

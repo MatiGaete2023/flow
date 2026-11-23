@@ -379,6 +379,8 @@ def dirigidos(etapa):
         e = {'programa': t('PRM Laja'), 'espera': n(5), 'resolucion': f(-5)}
         larga = {'programa': t('PRM Laja'), 'espera': n(60), 'resolucion': f(-50)}
         sin_curador = {**e, 'curador': t('NO POSEE')}
+        # Caso base de R3: programa DCE ficticio, resolución de hace 5 días y su trámite de ingreso con folio 7.
+        r3 = {'programa': t('DCE Ficticio'), 'espera': n(5), 'resolucion': f(-5)}
         return [
             caso(1, e, [tr(servicio, -5, '7')]),
             caso(2, e, [tr(servicio, -5, '7'), tr(servicio, -5, '8')]),
@@ -411,6 +413,12 @@ def dirigidos(etapa):
             caso(19, larga, desconocidos + [tr(servicio, -45, '9', 'Escrito')], [obs(-35, 'Revisado folio 56.')]),
             caso(20, larga, [tr(servicio, -45, '9', 'Escrito'), tr('Resp. continuidad de atención', -30, '11', 'Actuación')]),
             caso(21, larga, [tr('Derecho a ser oído', -20, '14', 'Actuación')]),
+            # E-J · R3: DCE con resolución reciente y su trámite de ingreso con folio, espera sobre el umbral DCE.
+            # Tres variantes (espera corta, espera 0 en el límite de «resolución reciente» y espera larga) que activan
+            # HISTORIA.E04_CON_FOLIO y ESPERA.E05_SOLO_CORREO. «Componer» no repite la oración común: queda una vez.
+            caso(22, r3, [tr(servicio, -5, '7')]),
+            caso(23, {**r3, 'espera': n(0), 'resolucion': f(-29)}, [tr(servicio, -29, '8')]),
+            caso(24, {**r3, 'espera': n(120), 'resolucion': f(-1)}, [tr(servicio, -1, '9')]),
         ]
     if etapa == 'CUMPLIMIENTO':
         dce = {'programa': t('DCE Los Ángeles'), 'ingreso': f(-50), 'egreso_proy': f(-10),
