@@ -1,5 +1,7 @@
 # Paridad funcional en la aplicación vigente
 
+> Actualización del 23-nov-2026: el inventario de herramientas verificado contra el código está en [INVENTARIO_HERRAMIENTAS_20261123.md](INVENTARIO_HERRAMIENTAS_20261123.md). Prevalece sobre esta tabla donde difieran.
+
 Estado de `app/` al reiniciar el trabajo el 20 de noviembre de 2026. «Presente» significa que existe un flujo local. El cierre exige comparar con Python mediante la prueba indicada. La [matriz del estudio anterior](https://github.com/MatiGaete2023/flow/blob/ed6a0e43f8efa0856e0294af92ac8e0317c69df7/docs/migracion_python_rust/MATRIZ.md) conserva su inventario detallado.
 
 | ID | Capacidad | Estado y comprobación en `app/` |

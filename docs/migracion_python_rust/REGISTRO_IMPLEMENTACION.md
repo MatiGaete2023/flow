@@ -831,9 +831,59 @@ E-C, E-L y E-F quedan `CERRADO POR AUDITORÍA`.
 
 E-D e E-I quedan `ENTREGADO`. El cierre corresponde a la revisión del usuario y al run de la CI.
 
+## Entrega · E-A78 y E-G (23 de noviembre de 2026, ejecutada por la auditoría)
+
+- Commit de código: `49ba74d` · Entorno: L (Linux, `--features eframe/x11`).
+
+### E-A78
+
+- `app/qa/generar_a78.py` (venv con Python 3.12, `descargador/requirements.txt` y `pandas<3`) escribe `app/tests/datos/a78.json`. Contiene 8 libros A7 (SpreadsheetML con `ss:Index`, `html:Font`, `DateTime`, los tres errores de límites, una entidad externa, sin listado, HTML tabular y HTML activo), 7 grillas A8 de 23 columnas y 1 XLSX de Carga con fechas de Excel, todos ficticios. Las salidas son las de `motor.read_excel` y `carga.records_in_grid`.
+- El generador es determinista: fecha fija en el ZIP y en `docProps/core.xml`, y dos corridas dan `cmp` igual. La CI lo regenera y lo compara byte a byte.
+- `descargador::xls::tests::a78_igual_a_python_sobre_bytes_fijos` compara formato, registros, grilla, filas y el texto exacto del error:
+  - `A78: A7 7/8, A8 7/7, A8_LIBRO 1/1, pendientes 1, fallos 0`;
+  - `DIFERENCIA_PENDIENTE D-3 A7 entidad_externa`: ninguno resuelve la entidad, pero los mensajes difieren. Queda como decisión D-3; la prueba exige que sea la única diferencia.
+- Mutación de control: cambiar «Hay registros antes…» en `sitfa/carga.rs` → `test result: FAILED`. Revertida.
+
+### E-G
+
+- `tools/verificar_textos_umbrales.py`, reescrito:
+  - lee los literales con escapes de Rust y los cuenta contra el largo declarado (`[…; 58]`, `[…; 16]`);
+  - compara en ambos sentidos;
+  - informa las líneas no leídas;
+  - sale con 1 ante cualquier discrepancia.
+- Resultado: `TEXTOS: Rust 58, Python 59, excluidos 1` · `UMBRALES: Rust 16, Python 16` · `RESULTADO: PASA`.
+- El script anterior no detectaba que `HISTORIA.VARIOS` falta en Rust. Se excluye con su motivo verificado: solo lo emite `reglas_historia.constancia()` con dos o más trámites, y la única función que se los pasa, `constancias()`, no tiene llamadores (`grep -rnE "\bconstancias?\(" src/nurus`).
+- Mutaciones: un texto alterado → `FALLA (1)`; una entrada ilegible → `declarado 58, leídos 57` → `FALLA (3)`.
+- G6: `tools/inventario_escrituras.py` clasifica las 44 escrituras de producción de `app/src` en 10 archivos:
+  - perfil local (`data_dir()`/`LOCALAPPDATA/FlowRust`);
+  - temporal (`temp_dir()`, que se limpia);
+  - destino elegido por el usuario: carpeta de productos o del lote, o diálogo Guardar.
+
+  Sin sobrescrituras sin aviso: `guardar_exclusivo`, `nueva_ruta` y `create_dir` fallan si el destino existe. Los borrados alcanzan solo archivos propios o temporales. Una escritura nueva sin clasificar hace fallar el script; corre en la CI.
+
+### Suites tras E-A78 y E-G
+
+- Binario sin variables: `33 passed; 19 ignored`.
+- Binario con variables: `50 passed; 0 failed`.
+- Biblioteca: `45 passed`.
+- clippy `--lib -D warnings` limpio; `check_real_ids` y `check_contactos` limpios.
+
+## Inventario de herramientas Python frente a Rust (23 de noviembre de 2026)
+
+- [INVENTARIO_HERRAMIENTAS_20261123.md](INVENTARIO_HERRAMIENTAS_20261123.md).
+- Resultado (N1): ninguna versión de Rust tuvo todas las herramientas de Python.
+  - `app/` no tiene:
+    - las lecturas de contexto del Descargador: el puente rechaza `diary_open`, `history_open` y `calendar_open`;
+    - el paquete CSMP;
+    - Meta 4;
+    - las exportaciones de lote;
+    - los formularios manuales;
+    - las estadísticas.
+  - El workspace histórico `rust/` tiene lecturas de contexto (EJECUCION 7.4) y `flow-meta4` (29 pruebas en verde), sin integrar en `app/`.
+- Decisión pendiente D-4 (alcance).
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
-2. IA, opcional y de riesgo bajo: E-A78 y E-G.
-2. D-1 y D-2 resueltas: sin cambios de código.
-3. Paquete H por el usuario.
+2. Usuario: decidir D-3 (mensaje XML con entidad externa) y D-4 (alcance: integrar las lecturas de contexto, Meta 4 y las exportaciones, o convivir con el Descargador Python).
+3. D-1 y D-2 resueltas: sin cambios de código.

@@ -102,13 +102,13 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
   - D-2: con `conservar_filtros` pedido, un lote Integral de calendario o de Carga envía `keep_filters: false` a `prepare` y uno de Litigantes envía `true`. Para eso, extraer de `iniciar` (`descargador_ui.rs`) a una función de la biblioteca la regla «solo Seguimiento y Litigantes» y probarla.
 - Criterio: las tres pruebas existen, pasan, y biblioteca y clippy `-D warnings` siguen limpios.
 
-### E-A78 · Contraste Python de A7 y A8 — `ABIERTO` (entorno L)
+### E-A78 · Contraste Python de A7 y A8 — `ENTREGADO` (23-nov-2026, ejecutado por la auditoría; D-3 pendiente)
 
 - Generar con Python, a partir de bytes sintéticos fijos, la salida de `descargador/motor.py::read_excel` (A7) y de `descargador/carga.py` (A8). Guardarla como fixture JSON en `app/tests/datos/` junto a los bytes de entrada.
 - Las pruebas Rust comparan contra ese fixture. Agregar un script en `app/qa/` que lo regenere.
 - Criterio: filas, conteos y mensajes de error iguales a Python.
 
-### E-G · Auditoría de textos y escritura — `ABIERTO` (entorno L)
+### E-G · Auditoría de textos y escritura — `ENTREGADO` (23-nov-2026, ejecutado por la auditoría)
 
 - `tools/verificar_textos_umbrales.py`:
   - comparar en ambos sentidos: cada texto de Python que usa Rust debe existir, y viceversa;
@@ -136,6 +136,9 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 - Lecturas de bitácora, historia, calendario e histórico (F19), paquete CSMP y exportaciones de lote (F22). La auditoría lo especificará en encargos más chicos antes de asignarlo.
 
 ## Decisiones del usuario
+
+- **D-3 · Mensaje ante un XML 2003 con entidad externa — PENDIENTE** (23-nov-2026, E-A78). Ni Python ni Rust resuelven la entidad y ambos rechazan el archivo, pero con mensajes distintos: Python dice «No se reconoce la estructura RIT/Nombre del listado; descarga detenida.» y Rust «No se pudo abrir/parsear el archivo Excel; requiere revision local.». Opciones: (a) dejar el de Rust, que es más preciso; (b) igualarlo al de Python, lo que cambia `xls.rs`. Hoy la prueba la fija como diferencia conocida.
+- **D-4 · Alcance de la migración — PENDIENTE** (23-nov-2026). Ver [INVENTARIO_HERRAMIENTAS_20261123.md](INVENTARIO_HERRAMIENTAS_20261123.md): `app/` no tiene las lecturas de contexto del Descargador, Meta 4, las exportaciones de lote, los formularios manuales ni las estadísticas. Decidir si se integran (desde `rust/crates/flow-captura` y `flow-meta4`) o si Flow Rust convive con el Descargador Python.
 
 - **D-1 · Guion en el nombre del programa (R6): conservar** (23 de noviembre de 2026). «PRM CIUDAD DEL NIÑO - MULCHÉN» se redacta «Ciudad del Niño - Mulchén», como hace hoy Flow Rust. R6 incluye conservar el guion del nombre de origen. No requiere cambios de código. E-B sigue contando `R6_GUION` por separado, como variante aceptada de R6: no es FALLA.
 - **D-2 · `keep_filters` en Integral: igual que Python** (23 de noviembre de 2026). En Python, `lotes.py::BatchRunner` lo envía sin restringir, pero `descargador.py::batch` (líneas 1117 y 1139) lo fija en `False` fuera de Seguimiento y Litigantes. De punta a punta, Python solo conserva filtros en esas dos pantallas, y Flow Rust hace lo mismo (`descargador_ui.rs`, `iniciar`). No requiere cambios de código. La duda planteada en la auditoría del turno 17 consideraba solo `lotes.py`. Se cubre con el punto agregado a E-F.
