@@ -404,6 +404,29 @@ Revisión de `f6a8f28` contra los criterios de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md
 - **D-1:** conservar el guion del nombre del programa. R6 queda como «tipo título, conservando el guion del nombre de origen», que es la salida vigente de Flow Rust en los 51 casos del corpus («Ciudad del Niño - Mulchén»).
 - **D-2:** `keep_filters` igual que Python. Revisado de punta a punta, `descargador.py::batch` solo lo habilita en Seguimiento y Litigantes, como `descargador_ui.rs`. Es el comportamiento vigente; la prueba queda como parte de E-F.
 
+## Entrega · E-B
+- Commit probado: 015dd51d154a928a995144991ab7e19f3fe638b4  · Entorno: W · Herramientas: rust 1.100.0, python 3.14.6
+- Comandos:
+  - `FLOW_CASOS=../rust/casos cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust paquete_b_redaccion_mensual -- --nocapture`
+  - `cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust`
+  - `cargo clippy --manifest-path app/Cargo.toml --locked --bin flow_rust --tests -- -D warnings`
+- Evidencia:
+  - `PAQUETE_B: evaluados 2582, identicos 1997, R1 7, R6 577 (R6_GUION 51), R1+R6 1, R2 2582/2582, R3 0/0, R4 2/2, R5 BLOQUEADO — 0 casos en el corpus, fallos 0`
+  - `test result: ok. 1 passed; 0 failed; 0 ignored` (paquete B focal)
+  - `test result: ok. 46 passed; 0 failed; 1 ignored` (suite completa del binario)
+  - `oraculo_python 174/174` y `oraculo_historia 2582 de 2582` sin cambios (registrados en turnos previos, sin modificación de producción)
+- Resultado por criterio:
+  - R6 exacta: PASA — comparación byte a byte sin normalización global; R1+R6+R6 = 585
+  - R6_GUION: PASA — 51 casos con « - » conservado en Rust (variante aceptada D-1)
+  - R1 exacta: PASA — oración C10 quitada solo con C05_POR_VENCER + C10_HOJA2
+  - R2: PASA 2582/2582 — sin «La historia es de la causa…» ni R3_MULTI
+  - R3: PASA 0/0 — 0 casos con E04_CON_FOLIO + E05_SOLO_CORREO en el corpus
+  - R4: PASA 2/2 — sin «RUS registra … días de espera» cuando hay «Tribunal dispone ingreso a»
+  - R5: BLOQUEADO — 0 casos con COMUN.REITERA_OBSERVACION en el corpus; cubre `trabajo_reitera_contexto_e3_del_exportador_python_solo_para_el_ingreso` (app/src/trabajo.rs)
+  - Sin FLOW_CASOS: PASA — `panic!("FLOW_CASOS es obligatorio para paquete_b_redaccion_mensual")`
+- Cambios de código: app/src/motor/historia.rs · Cambios de lógica de producción: ninguno
+- Pendientes: verificar en Linux con el crate .aislado/ (no disponible en este entorno Windows); CI define FLOW_CASOS en flow-rust-local.yml (línea 17)
+
 ## Siguiente paso exacto
 
 1. Asignar los encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md) en su orden: E-B, E-C, E-F, E-A78, E-G, E-D, E-E y E-I. Cada entrega se registra con la plantilla del archivo y queda `ENTREGADO` hasta la auditoría.
