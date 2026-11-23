@@ -56,6 +56,12 @@ Objetivo: cubrir con pruebas Rust el código de los turnos 13 y 14 que el corpus
    - `pendientes` sobre un `resumen.json` sintético con plan de tres consultas y dos completadas devuelve una; con todas completadas devuelve «No hay consultas pendientes.». Sin `plan`, o con `otros_filtros` «formulario SITFA», devuelve el error de Python.
    - `planificar_pendientes` con otra pantalla devuelve el error de Python.
 
+7. **A7 · Excel XML 2003** (`descargador::xls::leer`).
+   - Usar libros SpreadsheetML ficticios generados en la prueba: un listado de causas y nombres con `ss:Index` en filas y celdas, un `Data` con marcado `html:Font` y una fecha `DateTime`.
+   - Comparar las filas y el conteo de registros con `descargador/motor.py::read_excel` sobre los mismos bytes.
+   - Comprobar los errores de índice de fila no creciente, columna 201 y más de 200 celdas por fila.
+   - Un `<!DOCTYPE>` con entidad externa no debe resolverse.
+
 Criterio: todas las pruebas nuevas pasan, `oraculo_python` sigue en 174/174 y `oraculo_historia` en 2.582/2.582 (`FLOW_CASOS=$PWD/../rust/casos`). Además, `cargo clippy --tests` no agrega advertencias en los archivos tocados.
 
 ## Paquete B · Redacción mensual activa sobre el corpus (entorno L)

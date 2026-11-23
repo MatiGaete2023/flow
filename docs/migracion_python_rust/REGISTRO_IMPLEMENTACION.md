@@ -273,9 +273,15 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - `lote::pendientes` porta `pending_plan`. Lee `resumen.json` y devuelve las consultas del plan que no figuran en `consultas[*].seleccion`, comparadas sin `fecha_descarga`. Rechaza los lotes sin plan y los que usaron filtros privados (`otros_filtros` «formulario…»). `Catalogo::planificar_pendientes` las vuelve a preparar contra el catálogo cargado, de la misma pantalla. En Planificar lote, «Recuperar pendientes de un lote…» abre la carpeta y deja el plan listo para descargarse en un lote nuevo desde la página 1.
 - Solo se verificó la compilación de la biblioteca. Las pruebas están en los paquetes A6 y F3 del [plan](PLAN_PRUEBAS.md).
 
+## Turno 14 · Excel XML 2003 en el Descargador
+
+- `xls::grillas_xml_2003` porta la rama SpreadsheetML de `motor.read_excel`. Arma una grilla por `Table` y aplica `ss:Index` en filas y celdas, con los límites de Python: filas hasta 200.000, columnas de 1 a 200 e índice de fila creciente. Concatena el texto de `Data` y su marcado interno, y convierte las fechas `ss:Type="DateTime"` a `AAAA-MM-DD`. `leer` informa el formato `XML-Spreadsheet-2003`; antes detenía la descarga. Se usa `quick-xml` 0.42, que ya estaba en `Cargo.lock` por calamine, sin DTD ni entidades externas.
+- Diferencia acotada: los elementos se reconocen por nombre local (`Table`, `Row`, `Cell`, `Data`) y los atributos por el prefijo `ss:`. Python exige el espacio de nombres. Con los archivos de SITFA el resultado es el mismo (N2: supone que SITFA usa el prefijo `ss` habitual).
+- Solo se verificó la compilación de la biblioteca. Las pruebas están en el paquete A7 del [plan](PLAN_PRUEBAS.md).
+
 ## Siguiente paso exacto
 
 0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
 1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): ejecución Integral, Carga, XML 2003, topes y el resto de `preferencias.py`. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+2. Descargador (E2): ejecución Integral y Carga (`contrato_integral.py`, `carga.py`), y el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
 3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.

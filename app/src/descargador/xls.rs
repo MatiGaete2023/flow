@@ -84,6 +84,134 @@ fn grillas_html(datos: &[u8]) -> Result<Vec<Grilla>, String> {
         .collect()
 }
 
+/// `read_excel` para SpreadsheetML 2003: una grilla por `ss:Table`, con `ss:Index` de filas y celdas, el texto de
+/// `ss:Data` (incluido el de su marcado interno) y las fechas `DateTime` como `AAAA-MM-DD`. Sin DTD ni entidades
+/// externas; los mismos límites de filas y columnas que Flow Python.
+fn grillas_xml_2003(datos: &[u8]) -> Result<Vec<Grilla>, String> {
+    use quick_xml::events::Event;
+    let texto = match std::str::from_utf8(datos) {
+        Ok(t) => std::borrow::Cow::Borrowed(t),
+        Err(_) => std::borrow::Cow::Owned(decodificar(datos)),
+    };
+    let mut lector = quick_xml::Reader::from_str(&texto);
+    let invalido = |_| "No se pudo abrir/parsear el archivo Excel; requiere revision local.".to_string();
+    let indice = |e: &quick_xml::events::BytesStart| -> Result<Option<usize>, String> {
+        for a in e.attributes() {
+            let a = a.map_err(|_| "No se pudo abrir/parsear el archivo Excel; requiere revision local.".to_string())?;
+            if a.key.as_ref() == "ss:Index" {
+                return a.value.trim().parse().map(Some).map_err(|_| "Índice de fila XML inválido.".to_string());
+            }
+        }
+        Ok(None)
+    };
+    let es_fecha = |e: &quick_xml::events::BytesStart| {
+        e.attributes().flatten().any(|a| a.key.as_ref() == "ss:Type" && a.value.as_ref() == "DateTime")
+    };
+    let (mut grillas, mut grilla, mut fila, mut celda): (Vec<Grilla>, Option<Grilla>, Option<Vec<String>>, Option<String>) =
+        (Vec::new(), None, None, None);
+    let mut dentro_dato = 0usize;
+    let mut fecha = false;
+    loop {
+        let evento = lector.read_event().map_err(invalido)?;
+        match &evento {
+            Event::Start(e) | Event::Empty(e) => {
+                let vacio = matches!(evento, Event::Empty(_));
+                match e.local_name().as_ref() {
+                    "Table" if !vacio => grilla = Some(Vec::new()),
+                    "Table" => grillas.push(Vec::new()),
+                    "Row" if grilla.is_some() => {
+                        let g = grilla.as_mut().unwrap();
+                        if let Some(objetivo) = indice(e)? {
+                            if !(g.len() < objetivo && objetivo <= 200_000) {
+                                return Err("Índice de fila XML inválido.".into());
+                            }
+                            g.resize(objetivo - 1, Vec::new());
+                        }
+                        if vacio {
+                            g.push(Vec::new());
+                        } else {
+                            fila = Some(Vec::new());
+                        }
+                    }
+                    "Cell" if fila.is_some() => {
+                        let f = fila.as_mut().unwrap();
+                        if let Some(i) = indice(e)? {
+                            if !(1..=200).contains(&i) {
+                                return Err("El índice XML excede los límites de columnas.".into());
+                            }
+                            if f.len() < i - 1 {
+                                f.resize(i - 1, String::new());
+                            }
+                        }
+                        if vacio {
+                            f.push(String::new());
+                        } else {
+                            celda = Some(String::new());
+                            fecha = false;
+                        }
+                    }
+                    "Data" if celda.is_some() && !vacio => {
+                        dentro_dato += 1;
+                        if dentro_dato == 1 {
+                            fecha = es_fecha(e);
+                        }
+                    }
+                    _ if dentro_dato > 0 && !vacio => dentro_dato += 1,
+                    _ => {}
+                }
+            }
+            Event::Text(t) if dentro_dato > 0 => celda.as_mut().unwrap().push_str(&t.xml10_content()),
+            Event::CData(t) if dentro_dato > 0 => celda.as_mut().unwrap().push_str(&t.xml10_content()),
+            Event::GeneralRef(r) if dentro_dato > 0 => {
+                let c = match r.resolve_char_ref().map_err(|_| "No se pudo abrir/parsear el archivo Excel; requiere revision local.".to_string())? {
+                    Some(c) => c,
+                    None => match &**r {
+                        "amp" => '&',
+                        "lt" => '<',
+                        "gt" => '>',
+                        "quot" => '"',
+                        "apos" => '\'',
+                        _ => return Err("No se pudo abrir/parsear el archivo Excel; requiere revision local.".into()),
+                    },
+                };
+                celda.as_mut().unwrap().push(c);
+            }
+            Event::End(e) => match e.local_name().as_ref() {
+                "Data" if dentro_dato == 1 => dentro_dato = 0,
+                _ if dentro_dato > 1 => dentro_dato -= 1,
+                "Cell" if celda.is_some() => {
+                    let mut valor = celda.take().unwrap();
+                    if fecha {
+                        let iso = valor.trim_end_matches('Z');
+                        if let Some(d) = iso.get(..10).and_then(|d| NaiveDate::parse_from_str(d, "%Y-%m-%d").ok()) {
+                            if iso.len() == 10 || iso.as_bytes().get(10) == Some(&b'T') {
+                                valor = d.format("%Y-%m-%d").to_string();
+                            }
+                        }
+                    }
+                    let f = fila.as_mut().unwrap();
+                    f.push(valor);
+                    if f.len() > 200 {
+                        return Err("La fila XML excede los límites de columnas.".into());
+                    }
+                }
+                "Row" if fila.is_some() => {
+                    let g = grilla.as_mut().unwrap();
+                    g.push(fila.take().unwrap());
+                    if g.len() > 200_000 {
+                        return Err("La tabla XML excede los límites de filas.".into());
+                    }
+                }
+                "Table" if grilla.is_some() => grillas.push(grilla.take().unwrap()),
+                _ => {}
+            },
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    Ok(grillas)
+}
+
 /// Formato y listado único de causas y nombres. Una descarga sin listado no es una consulta vacía.
 pub fn leer(datos: &[u8]) -> Result<Libro, String> {
     if datos.is_empty() {
@@ -100,7 +228,7 @@ pub fn leer(datos: &[u8]) -> Result<Libro, String> {
         .windows(XML_2003.len())
         .any(|w| w == XML_2003)
     {
-        return Err("El Excel XML 2003 todavía no se verifica en Flow Rust; descarga detenida.".into());
+        ("XML-Spreadsheet-2003", grillas_xml_2003(datos)?)
     } else {
         ("HTML-tabular-con-extension-xls", grillas_html(datos)?)
     };
