@@ -8,7 +8,7 @@ use super::sitfa::{
     Pares, Respuesta,
 };
 use super::xls::{huella, Verificador};
-use super::{Alcance, Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente};
+use super::{Alcance, Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente, Seleccion};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use chrono::NaiveDate;
 use regex::Regex;
@@ -607,6 +607,65 @@ fn contar_extension(carpeta: &Path, extension: &str) -> usize {
                 .count()
         })
         .unwrap_or(0)
+}
+
+/// Consultas de un lote incompleto que faltan por descargar (`preferencias.pending_plan`).
+#[derive(Debug, PartialEq, Eq)]
+pub struct Pendientes {
+    pub pantalla: Pantalla,
+    pub selecciones: Vec<Seleccion>,
+    pub fechas: Option<(NaiveDate, NaiveDate)>,
+}
+
+fn sin_fecha_descarga(v: &Value) -> Value {
+    let mut v = v.clone();
+    if let Some(o) = v.as_object_mut() {
+        o.remove("fecha_descarga");
+    }
+    v
+}
+
+/// Lee `resumen.json` de un lote y devuelve las consultas del plan que no figuran como completadas. Los filtros
+/// privados preparados en SITFA no se guardan: un lote que los usó no se recupera. Las pendientes se descargan desde
+/// la página 1 en un lote nuevo.
+pub fn pendientes(carpeta: &Path) -> Result<Pendientes, String> {
+    let texto = fs::read_to_string(carpeta.join("resumen.json"))
+        .map_err(|_| "La carpeta elegida no tiene el resumen.json de un lote.".to_string())?;
+    let resumen: Value = serde_json::from_str(&texto).map_err(|_| "El resumen.json del lote no se pudo leer.".to_string())?;
+    let plan = resumen["plan"].as_array().filter(|p| !p.is_empty()).ok_or("El lote antiguo no tiene plan estructurado.")?;
+    if resumen["otros_filtros"].as_str().is_some_and(|f| f.starts_with("formulario")) {
+        return Err("Prepara otra vez los filtros privados; no se guardan para recuperación.".into());
+    }
+    let hechas: Vec<Value> = resumen["consultas"]
+        .as_array()
+        .map(|c| c.iter().map(|q| sin_fecha_descarga(&q["seleccion"])).collect())
+        .unwrap_or_default();
+    let faltan: Vec<&Value> = plan.iter().filter(|s| !hechas.contains(&sin_fecha_descarga(s))).collect();
+    let primera = faltan.first().ok_or("No hay consultas pendientes.")?;
+    let pantalla: Pantalla = serde_json::from_value(primera["screen"].clone()).map_err(|_| "El plan del lote no indica una pantalla conocida.")?;
+    let fecha = |v: &Value| v.as_str().and_then(|t| NaiveDate::parse_from_str(t, "%d/%m/%Y").ok());
+    let filtro = &resumen["filtro_fecha"];
+    let fechas = fecha(&filtro["start"]).or_else(|| fecha(&filtro["desde"]))
+        .zip(fecha(&filtro["end"]).or_else(|| fecha(&filtro["hasta"])));
+    let texto = |v: &Value| v.as_str().unwrap_or("").to_owned();
+    let mut selecciones = Vec::new();
+    for s in faltan {
+        if serde_json::from_value::<Pantalla>(s["screen"].clone()).ok() != Some(pantalla) {
+            return Err("El plan pendiente mezcla pantallas distintas.".into());
+        }
+        selecciones.push(Seleccion {
+            tribunal: texto(&s["tribunal"]),
+            pestana: texto(&s["tab"]),
+            modalidad: texto(&s["modality"]),
+            reporte: texto(&s["report"]),
+            estado: texto(&s["state"]),
+            mes: texto(&s["month"]),
+            anio: texto(&s["year"]),
+            desde: fechas.map(|f| f.0),
+            hasta: fechas.map(|f| f.1),
+        });
+    }
+    Ok(Pendientes { pantalla, selecciones, fechas })
 }
 
 /// Ejecuta el plan en una carpeta nueva dentro de `destino`. Devuelve las consultas completadas.

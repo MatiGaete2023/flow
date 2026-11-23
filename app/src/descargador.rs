@@ -373,6 +373,15 @@ impl Catalogo {
         Ok(variantes)
     }
 
+    /// `prepare_pending`: vuelve a preparar contra el catálogo cargado las consultas pendientes de un lote.
+    pub fn planificar_pendientes(&self, edicion: Edicion, p: &lote::Pendientes) -> Result<PlanLote, String> {
+        if self.pantalla != p.pantalla {
+            return Err("Selecciona la pantalla del lote y carga sus opciones primero.".into());
+        }
+        let consultas = p.selecciones.iter().map(|s| self.preparar(edicion, s)).collect::<Result<Vec<_>, _>>()?;
+        Ok(PlanLote { consultas, fechas: p.fechas })
+    }
+
     pub fn preparar(&self, edicion: Edicion, s: &Seleccion) -> Result<Perfil, String> {
         if !self.pantalla.disponible(edicion) {
             return Err(format!(

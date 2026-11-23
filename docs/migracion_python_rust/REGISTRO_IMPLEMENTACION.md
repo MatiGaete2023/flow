@@ -267,9 +267,15 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 - **Preferencias del Descargador.** `descargador/preferencias.rs` guarda en `%LOCALAPPDATA%\FlowRust\descargador_preferencias.json` el destino, el PDF de consultas sin registros y la pausa. La pausa queda entre 0,5 y 10 s, como `clamp_pause`; antes la interfaz admitía 0 s. Se guarda al iniciar un lote. Un archivo ilegible vuelve a los valores por omisión.
 - Verificación de este turno: compilación del motor, Trabajo y la biblioteca en el crate aislado, y la [corrida Windows](https://github.com/MatiGaete2023/flow/actions/runs/45186412001) sobre `5405870`. Esa corrida compiló la interfaz y pasó las pruebas existentes de la aplicación, incluidos los dos oráculos. Las pruebas quedan en el [plan de pruebas](PLAN_PRUEBAS.md), según lo pedido por el usuario.
 
+## Turno 14 · Favoritos y recuperación de lotes del Descargador
+
+- `Preferencias::guardar_favorito` y `aplicar_favorito` portan `Preferences.favorite` y `restore`. Se guarda el alcance sin fechas ni filtros privados (`conservar_filtros` lo impide). Las fechas se recalculan a los últimos 30 días cuando el favorito las tenía, o siempre en Carga. Los calendarios guardan un único mes, actual o siguiente, como desplazamiento relativo. Al aplicar se retiran y se informan los tribunales que ya no están en el catálogo, y se rechaza un período que SITFA no ofrece. Las preferencias de ejecución se leen y modifican sin borrar los favoritos.
+- `lote::pendientes` porta `pending_plan`. Lee `resumen.json` y devuelve las consultas del plan que no figuran en `consultas[*].seleccion`, comparadas sin `fecha_descarga`. Rechaza los lotes sin plan y los que usaron filtros privados (`otros_filtros` «formulario…»). `Catalogo::planificar_pendientes` las vuelve a preparar contra el catálogo cargado, de la misma pantalla. En Planificar lote, «Recuperar pendientes de un lote…» abre la carpeta y deja el plan listo para descargarse en un lote nuevo desde la página 1.
+- Solo se verificó la compilación de la biblioteca. Las pruebas están en los paquetes A6 y F3 del [plan](PLAN_PRUEBAS.md).
+
 ## Siguiente paso exacto
 
 0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
 1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): ejecución Integral, Carga, XML 2003, favoritos, topes, reanudación (`pending_plan`) y el resto de `preferencias.py`. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
+2. Descargador (E2): ejecución Integral, Carga, XML 2003, topes y el resto de `preferencias.py`. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
 3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.

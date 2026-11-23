@@ -30,6 +30,10 @@ pub struct Descargador {
     catalogo_remoto: bool,
     ejecucion: Ejecucion,
     instalacion: Option<Result<String, String>>,
+    favorito_nombre: String,
+    favorito_elegido: String,
+    favoritos: Option<Vec<String>>,
+    favorito_mensaje: Option<Result<String, String>>,
 }
 
 enum Mensaje {
@@ -189,11 +193,10 @@ impl Ejecucion {
             evidencia: self.evidencia,
             pausa: Duration::from_secs_f64(pausa),
         };
-        let guardar = Preferencias {
-            destino: self.destino.trim().to_owned(),
-            pdf_sin_registros: self.evidencia,
-            pausa_consultas: pausa,
-        };
+        let mut guardar = Preferencias::cargar(&Preferencias::ruta());
+        guardar.destino = self.destino.trim().to_owned();
+        guardar.pdf_sin_registros = self.evidencia;
+        guardar.pausa_consultas = pausa;
         let error_preferencias = guardar.guardar(&Preferencias::ruta()).err();
         let cancelar = Arc::new(AtomicBool::new(false));
         let (envio, recepcion) = mpsc::channel();
@@ -556,6 +559,71 @@ impl Descargador {
                                     (&mut self.lote_desde, &mut self.lote_hasta),
                                     &mut self.plan,
                                 );
+                                let hoy = chrono::Local::now().date_naive();
+                                let favoritos = self.favoritos.get_or_insert_with(|| {
+                                    Preferencias::cargar(&Preferencias::ruta()).favoritos.into_keys().collect()
+                                });
+                                ui.horizontal_wrapped(|ui| {
+                                    ui.add(egui::TextEdit::singleline(&mut self.favorito_nombre).hint_text("Nombre del favorito").desired_width(180.0));
+                                    if ui.button("Guardar favorito").on_hover_text("Guarda el alcance; las fechas se recalculan al aplicarlo").clicked() {
+                                        let ruta = Preferencias::ruta();
+                                        let mut prefs = Preferencias::cargar(&ruta);
+                                        let resultado = catalogo
+                                            .planificar(self.edicion, &self.lote)
+                                            .and_then(|_| prefs.guardar_favorito(&self.favorito_nombre, catalogo.pantalla, &self.lote, self.ejecucion.conservar_filtros, hoy))
+                                            .and_then(|()| prefs.guardar(&ruta));
+                                        self.favorito_mensaje = Some(resultado.map(|()| "Perfil guardado; recalcula el período al aplicarlo.".into()));
+                                        *favoritos = prefs.favoritos.into_keys().collect();
+                                    }
+                                    if !favoritos.is_empty() {
+                                        ComboBox::from_id_salt("favoritos")
+                                            .selected_text(if self.favorito_elegido.is_empty() { "Elegir favorito" } else { self.favorito_elegido.as_str() })
+                                            .show_ui(ui, |ui| {
+                                                for f in favoritos.iter() {
+                                                    ui.selectable_value(&mut self.favorito_elegido, f.clone(), f);
+                                                }
+                                            });
+                                        if ui.button("Aplicar").clicked() {
+                                            match Preferencias::cargar(&Preferencias::ruta()).aplicar_favorito(&self.favorito_elegido, catalogo, hoy) {
+                                                Ok((lote, retirados)) => {
+                                                    if let Some((a, b)) = lote.fechas {
+                                                        self.lote_desde = a.format("%d/%m/%Y").to_string();
+                                                        self.lote_hasta = b.format("%d/%m/%Y").to_string();
+                                                    } else {
+                                                        self.lote_desde.clear();
+                                                        self.lote_hasta.clear();
+                                                    }
+                                                    self.lote = lote;
+                                                    self.plan = None;
+                                                    let mut texto = String::from("Favorito aplicado; revisa el alcance y las fechas.");
+                                                    if !retirados.is_empty() {
+                                                        texto.push_str(&format!(" Opciones retiradas: {}", retirados.join(", ")));
+                                                    }
+                                                    self.favorito_mensaje = Some(Ok(texto));
+                                                }
+                                                Err(e) => self.favorito_mensaje = Some(Err(e)),
+                                            }
+                                        }
+                                    }
+                                });
+                                match &self.favorito_mensaje {
+                                    Some(Ok(t)) => { ui.label(RichText::new(t).color(p.green)); }
+                                    Some(Err(e)) => { ui.label(RichText::new(e).color(p.amber)); }
+                                    None => {}
+                                }
+                                if ui
+                                    .button("Recuperar pendientes de un lote…")
+                                    .on_hover_text("Elige la carpeta de un lote incompleto: sus consultas faltantes se descargan desde la página 1 en un lote nuevo")
+                                    .clicked()
+                                {
+                                    if let Some(carpeta) = rfd::FileDialog::new().set_title("Carpeta del lote incompleto").pick_folder() {
+                                        let edicion = self.edicion;
+                                        self.plan = Some(
+                                            lote::pendientes(&carpeta)
+                                                .and_then(|p| catalogo.planificar_pendientes(edicion, &p)),
+                                        );
+                                    }
+                                }
                             });
                             let plan = self.plan.as_ref().and_then(|r| r.as_ref().ok());
                             self.ejecucion.mostrar(

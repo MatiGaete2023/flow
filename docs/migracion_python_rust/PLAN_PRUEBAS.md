@@ -48,6 +48,14 @@ Objetivo: cubrir con pruebas Rust el código de los turnos 13 y 14 que el corpus
    - Probar una oración precedida por «Nombre SIGLA: » o por otra oración.
    - Comprobar que con proyección vigente no se emiten E04 ni E05.
 
+6. **A6 · Favoritos y recuperación** (`descargador::preferencias` y `lote::pendientes`).
+   - Un favorito con `conservar_filtros` se rechaza.
+   - En calendarios, dos meses o un mes a más de uno de distancia se rechazan. El mes siguiente guardado en diciembre se aplica como enero del año siguiente.
+   - Un tribunal ausente del catálogo se retira y se informa.
+   - Un favorito con fechas se aplica con los últimos 30 días: hoy menos 29 hasta hoy.
+   - `pendientes` sobre un `resumen.json` sintético con plan de tres consultas y dos completadas devuelve una; con todas completadas devuelve «No hay consultas pendientes.». Sin `plan`, o con `otros_filtros` «formulario SITFA», devuelve el error de Python.
+   - `planificar_pendientes` con otra pantalla devuelve el error de Python.
+
 Criterio: todas las pruebas nuevas pasan, `oraculo_python` sigue en 174/174 y `oraculo_historia` en 2.582/2.582 (`FLOW_CASOS=$PWD/../rust/casos`). Además, `cargo clippy --tests` no agrega advertencias en los archivos tocados.
 
 ## Paquete B · Redacción mensual activa sobre el corpus (entorno L)
@@ -104,7 +112,10 @@ Criterio: sin cambios de jerarquía ni contenido respecto del diseño. Las difer
 1. Ejecutar las pruebas de `descargador` del crate aislado (`cargo test --lib`) y confirmar que no hay regresiones por el módulo `preferencias`.
 2. Con `sitfa_ficticio`, ejecutar un lote Lite con una pausa de 0 s pedida por la interfaz y comprobar que la ejecución usa 0,5 s. El tiempo entre consultas consecutivas debe ser de al menos 0,5 s.
 
-Criterio: las pruebas existentes pasan y la pausa mínima se respeta.
+3. Interrumpir (cancelar) un lote ficticio de tres consultas después de la primera. Con «Recuperar pendientes de un lote…» deben quedar dos consultas, que se descargan en una carpeta nueva. El lote original no se modifica.
+4. Guardar un favorito, reiniciar la aplicación y aplicarlo: se restituyen el alcance y las fechas recalculadas.
+
+Criterio: las pruebas existentes pasan, se respeta la pausa mínima y los puntos 3 y 4 PASA.
 
 ## Paquete G · Invariantes y seguridad (entorno L)
 
