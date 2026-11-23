@@ -283,7 +283,7 @@ Commits `9b0394a` a `864164a`. Las corridas Windows 22 y 23 pasaron. La 24 fall�
 
 - `descargador/sitfa/carga.rs` porta `carga.py`. Valida el encabezado completo y ordenado de 23 columnas, con el umbral de 12 coincidencias para reconocer un encabezado renombrado. Rechaza más de un encabezado, registros antes de él y filas con otra cantidad de columnas. Cuenta filas completas canónicas (`FilasCarga`) con `registros_en_grilla` (XLS) y `registros_resultado` (tablas web). Los mensajes de error son los de Python, incluida la tupla esperada.
 - `descargador::leer_carga` (en `xls.rs`) aplica `read_excel(record_reader=records_in_grid)` con el mismo despacho de formatos. `xls::grillas` centraliza ese despacho, que `leer` también usa. Las fechas de Excel se leen como `dd/mm/aaaa`, como `carga.canonical`; en XML 2003 quedan ISO, como el `date` de Python.
-- Aún no se usa en la ejecución: la Carga es solo Integral.
+- Aún no se usa en la ejecución: la Carga es solo Integral. La compilación pasó en el crate aislado, sin advertencias de clippy en los archivos tocados, y en la corrida Windows de `d2297f0`.
 
 ### Especificación del lote Integral (`descargador/lotes.py::BatchRunner.run` frente a `lote::ejecutar`)
 
