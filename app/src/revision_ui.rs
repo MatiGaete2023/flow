@@ -369,10 +369,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_P2_PAQUETE"]
     fn exporta_mismo_lote_de_python() {
-        let Some(paquete) = std::env::var_os("FLOW_P2_PAQUETE") else {
-            return;
-        };
+        let paquete = crate::prueba_entorno::requerida("FLOW_P2_PAQUETE");
         let destino =
             PathBuf::from(std::env::var_os("FLOW_P2_SALIDA").expect("carpeta del contraste P2"));
         let corte = NaiveDate::from_ymd_opt(2026, 10, 13).unwrap();
@@ -390,10 +389,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_REFERENCIA"]
     fn exporta_resultados_y_preserva_el_destino_existente() {
-        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else {
-            return;
-        };
+        let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let corte = NaiveDate::from_ymd_opt(2026, 11, 20).unwrap();
         let mut w = Trabajo::abrir_archivo(
             PathBuf::from(raiz).join("contracts/csmp_capture_v1/fixtures/completa.zip"),

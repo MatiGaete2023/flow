@@ -18,6 +18,9 @@ mod trabajo;
 mod ui;
 mod util;
 
+#[cfg(test)]
+mod prueba_entorno;
+
 use std::path::PathBuf;
 
 const TAMANO_INICIAL: [f32; 2] = [1440.0, 900.0];

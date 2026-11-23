@@ -527,8 +527,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn cumplimiento_usa_contexto_e3_del_exportador_python_para_el_proximo_informe() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let cfg = Config::default();
         let mut trabajo = Trabajo::abrir_archivo(
             ruta.into(),
@@ -552,11 +553,12 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn a2_consignacion_p1_y_sesion() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let cfg = Config::default();
         let mut trabajo = Trabajo::abrir_archivo(
-            ruta.into(),
+            ruta.clone().into(),
             Some(Mode::Cumplimiento),
             "2026-10-19".parse().unwrap(),
             &cfg,
@@ -602,7 +604,7 @@ mod tests {
         trabajo.escribir_sesion(&temp_sesion).unwrap();
 
         let mut trabajo_restaurado = Trabajo::abrir_archivo(
-            std::env::var_os("FLOW_E3_PAQUETE").unwrap().into(),
+            ruta.into(),
             Some(Mode::Cumplimiento),
             "2026-10-19".parse().unwrap(),
             &cfg,
@@ -633,8 +635,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_REFERENCIA"]
     fn informes_atribuyen_la_historia_y_los_escritos_segun_flow_python() {
-        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
+        let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_estructura.zip");
         let esperado: serde_json::Value = serde_json::from_slice(&std::fs::read(ruta.with_extension("json")).unwrap()).unwrap();
         let corte = esperado["corte"].as_str().unwrap().parse().unwrap();
@@ -666,8 +669,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn espera_coteja_folio_y_correo_del_contexto_e3_del_exportador_python() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let trabajo = Trabajo::abrir_archivo(
             PathBuf::from(ruta).with_file_name("contexto-e3-espera.zip"),
             Some(Mode::Espera),
@@ -686,8 +690,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_REFERENCIA"]
     fn calendario_91_conserva_precedencia_y_aviso_al_abrir_trabajo() {
-        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
+        let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_flujo.zip");
         let trabajo = Trabajo::abrir_archivo(
             ruta,
@@ -704,8 +709,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn informes_coteja_contexto_e3_del_exportador_python_con_una_sola_fecha() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let trabajo = Trabajo::abrir_archivo(
             PathBuf::from(ruta).with_file_name("contexto-e3-informes.zip"),
             Some(Mode::Informes),
@@ -720,8 +726,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn trabajo_reitera_contexto_e3_del_exportador_python_solo_para_el_ingreso() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let mut cfg = Config::default();
         let mut w = Trabajo::abrir_archivo(
             PathBuf::from(ruta).with_file_name("contexto-e3-reiteracion.zip"),
@@ -839,6 +846,7 @@ mod tests {
     /// Paquete C: abre `contexto-e3-historia.zip` en Trabajo en las tres etapas y dos cortes, y compara contra la
     /// salida de `app/qa/esperado_contexto_e3.py`. Sin variables falla; no termina con `return`.
     #[test]
+    #[ignore = "requiere FLOW_E3_HISTORIA y FLOW_E3_ESPERADO"]
     fn paquete_c_contexto_e3_historia_igual_a_python() {
         let (Ok(zip), Ok(esperado_ruta)) = (
             std::env::var("FLOW_E3_HISTORIA"),
@@ -1015,8 +1023,9 @@ mod tests {
 
     /// Formatos reales de SITFA (.xls HTML, XML 2003 y BIFF): FLOW_FIXTURES apunta a una carpeta con ellos.
     #[test]
+    #[ignore = "requiere FLOW_FIXTURES"]
     fn formatos_sitfa() {
-        let Ok(d) = std::env::var("FLOW_FIXTURES") else { return };
+        let d = crate::prueba_entorno::requerida("FLOW_FIXTURES");
         let cfg = Config::default();
         for f in ["espera_html.xls", "espera_xml.xls", "espera_biff.xls"] {
             let p = std::path::Path::new(&d).join(f);

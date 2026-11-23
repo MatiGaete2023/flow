@@ -958,10 +958,9 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "requiere FLOW_E3_PAQUETE"]
     fn trabajo_abre_contexto_e3_del_exportador_python() {
-        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else {
-            return;
-        };
+        let ruta = crate::prueba_entorno::requerida("FLOW_E3_PAQUETE");
         let ruta = std::path::PathBuf::from(ruta);
         let bytes = std::fs::read(&ruta).unwrap();
         let (mut paquete, hojas) = abrir(&bytes).unwrap();

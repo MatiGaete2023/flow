@@ -1073,8 +1073,9 @@ mod tests {
     /// historia o bitácora coincide en observación, reglas y marcas; `HISTORIA.P_FINALIZADA` activa NOMENCL.
     /// `FLOW_DIFF=1` imprime cada diferencia completa.
     #[test]
+    #[ignore = "requiere FLOW_CASOS"]
     fn oraculo_historia() {
-        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
+        let dir = crate::prueba_entorno::requerida("FLOW_CASOS");
         let (mut evaluados, mut con_prorroga, mut finales, mut fallos) = (0, 0, 0, Vec::new());
         for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {
             let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
@@ -1289,6 +1290,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_CASOS"]
     fn paquete_b_redaccion_mensual() {
         let p = evaluar_paquete_b();
         let diferencias = p.solo_r1 + p.solo_r6 + p.r6_guion + p.r1_y_r6;
@@ -1320,6 +1322,7 @@ mod tests {
     /// dirigidos ESP-D22–ESP-D24 de `generar_casos.py`. R2 no se exige aquí: HISTORIA.R3_MULTI no existe en el motor
     /// Python (en Rust es un aviso interno) y la cubre `espera_con_servicio_y_causa_compartida_aplica_r2_y_r4`.
     #[test]
+    #[ignore = "requiere FLOW_CASOS"]
     fn paquete_b_cobertura_r3() {
         let p = evaluar_paquete_b();
         println!(

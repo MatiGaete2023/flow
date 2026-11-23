@@ -880,8 +880,9 @@ mod tests {
     /// Casos de referencia del motor Python original (FLOW_CASOS = carpeta con espera/cumplimiento/informes.json).
     /// Solo los que usan datos del Excel (sin historia ni bitácora): deben coincidir exactamente.
     #[test]
+    #[ignore = "requiere FLOW_CASOS"]
     fn oraculo_python() {
-        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
+        let dir = crate::prueba_entorno::requerida("FLOW_CASOS");
         let (mut total, mut ok) = (0, 0);
         let mut fallos = Vec::new();
         for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {

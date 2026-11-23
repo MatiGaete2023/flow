@@ -434,10 +434,9 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requiere FLOW_REFERENCIA"]
     fn contrasta_el_contrato_y_rechaza_identidad_cambiada_con_huella_correcta() {
-        let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else {
-            return;
-        };
+        let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let raiz = Path::new(&raiz);
         let fixture = raiz.join("contracts/csmp_capture_v1/fixtures/completa.zip");
         let bytes = std::fs::read(fixture).unwrap();
