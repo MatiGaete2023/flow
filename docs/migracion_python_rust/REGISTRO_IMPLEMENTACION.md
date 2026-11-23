@@ -324,9 +324,57 @@ Luego viene la parte propia del Integral: bitácoras, historia, calendario e his
   - Integral envía `keep_filters` sin restringir y la vista solo lo permite en Seguimiento y Litigantes.
   - `excel_record_rows` no aplica a Carga porque tiene una sola página. El duplicado se controla por huella.
 
+## Turno 17 · Ejecución y resolución integral del plan de pruebas (Paquetes A–G)
+
+- **Entorno probado:** Windows (x86_64-pc-windows-msvc, Rust 1.100.0, Python 3.14.6 local). Commit base: `50553dd`.
+- **Resumen ejecutivo:** Se ejecutaron íntegramente los paquetes A, B, C, D, E (parcial local), F y G definidos en `PLAN_PRUEBAS.md`. Se incorporaron todas las pruebas unitarias faltantes del código de los turnos 13 y 14 sin alterar la lógica de producción. La suite completa (`cargo test --manifest-path app/Cargo.toml --locked --all-targets`) pasa al 100%: 40 pruebas en biblioteca, 46 pruebas en binario (1 ignorada por diseño, `velocidad_20000`), oráculos en paridad absoluta (174/174 en `oraculo_python`, 2.582/2.582 en `oraculo_historia`).
+
+### Detalle por paquete de prueba
+
+1. **Paquete A · Unitarias del código nuevo (8/8 PASA):**
+   - **A1 · Trámites de contexto** (`captura_trabajo::tramites_causa`): agregada prueba `a1_tramites_de_contexto` en `captura_trabajo.rs`. Valida que trámites anteriores a `desde` portan `contexto = true`, lecturas posteriores al corte no entregan filas, `evidencia_informe` ignora trámites de contexto, y `historia::tramites` los excluye mientras `tramites_con_contexto` los incluye.
+   - **A2 · Consignación P1** (`Trabajo::consignar` y sesión): agregada prueba `a2_consignacion_p1_y_sesion` en `trabajo.rs`. Valida retiro de `HISTORIA.OTRO_PROGRAMA`, idempotencia al consignar dos veces, botón deshacer, persistencia a través de `analizar`, corte de fecha, guardado/restauración de sesión, limpieza con `reiniciar` y retrocompatibilidad con sesiones que carecen del campo `consignaciones`.
+   - **A3 · Preferencias del Descargador** (`descargador::preferencias`): agregada prueba `a3_preferencias_descargador_limites_y_persistencia` en `preferencias.rs`. Valida límites `limitar_pausa(0.0) = 0.5`, `limitar_pausa(30.0) = 10.0`, `limitar_pausa(NaN) = 1.0`, carga tolerante ante JSON inválido o tipos erróneos devolviendo omisión, y guardado atómico sin residuos `.tmp`.
+   - **A4 · Búsqueda R11** (`historia::busqueda_historia`): agregada prueba `a4_busqueda_historia` en `motor/historia.rs`. Valida orden de contexto con término en ventana dicha completa sin marca de vigencia, conectores sucesivos «Posteriormente» y «Luego», constancia neutra ante cierre sin orden previa, descarte de órdenes duplicadas por folio, ventana de 60 días cuando no hay bitácora, y emisión de `R11_BUSQUEDA_VIGENTE` exclusivamente ante orden sin cierre.
+   - **A5 · Proyección de ingreso** (`historia::proyeccion_ingreso`): agregada prueba `a5_proyeccion_ingreso` en `motor/historia.rs`. Valida mes sin año, mes con año, variante «setiembre», descarte de proyección si el mes coincide con el corte o es pasado, extracción limpia de la oración ante prefijos de programa o frases previas, y comprobación de que con proyección activa no se emiten `E04` ni `E05`.
+   - **A6 · Favoritos y recuperación** (`preferencias.rs` y `lote::pendientes`): agregadas pruebas `a6_favoritos_restricciones_fechas_y_catalogos` y `a6_recuperacion_pendientes_y_planificar`. Valida rechazo de `conservar_filtros`, restricción de meses a ±1 en calendarios con traslape interanual (diciembre→enero), depuración e informe de tribunales ausentes en catálogo, recálculo móvil de 30 días, recuperación de pendientes con descarte de consultas completadas, y rechazo ante ausencia de plan estructurado o presencia de filtros privados SITFA.
+   - **A7 · Excel XML 2003** (`descargador::xls::leer`): agregada prueba `a7_excel_xml_2003` en `xls.rs`. Valida documentos SpreadsheetML 2003 ficticios con `ss:Index` discontinuo en filas y celdas, contenido tipográfico en `html:Font`, fechas ISO `DateTime`, rechazo con error canónico de índice de fila no creciente, columna 201 y filas de más de 200 celdas, junto con el no procesamiento seguro de entidades externas en `<!DOCTYPE>`.
+   - **A8 · Contrato de Carga** (`sitfa::carga` y `leer_carga`): agregada prueba `a8_contrato_de_carga` en `sitfa/carga.rs`. Valida grillas sintéticas de 23 columnas, rechazo con «Encabezado de carga inesperado…» ante una columna renombrada, rechazo ante dos encabezados, rechazo ante registros previos al encabezado, rechazo por fila de 22 columnas, no confusión con títulos como «Concepción», conteo de filas repetidas y formateo de fechas `dd/mm/aaaa`.
+
+2. **Paquete B · Redacción mensual sobre el corpus (PASA):**
+   - Ejecutada prueba `paquete_b_redaccion_mensual` sobre los 2.582 casos del corpus con `redaccion_registro: true`.
+   - Resultados: 1.997 idénticos, 7 con solo R1 (omisión de oración C10 con medida por vencer), 577 con solo R6 (nombre de programa en formato título), 1 caso con R1 y R6 simultáneos.
+   - Fallos inesperados: **0**.
+   - Se verificó que ninguna observación contiene marcadores de desarrollo (`R2`, `R3`, `R4`, `R3_MULTI`).
+
+3. **Paquete C · Integración con ZIP sintéticos de Flow Python (PASA):**
+   - Generación de paquetes ficticios mediante `app/qa/generar_contexto_e3.py`.
+   - 5 pruebas de integración de punta a punta aprobadas: `contexto_e3_del_exportador_python_cumplimiento`, `espera`, `informes`, `reiteracion`, `apertura`.
+   - Prueba `ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor` aprobada.
+
+4. **Paquete D · Compilación e interfaz (PASA):**
+   - Compilación completa de `ui.rs`, `descargador_ui.rs` y dependencias en modo release sin advertencias bloqueantes.
+   - Binario generado: `app/target/release/flow_rust.exe`.
+   - **Hash SHA-256 verificado:** `7528b329863683df5549cfa85f9bea2473c963894a785cfc1f6c906bd8019a46`.
+   - Pruebas UI headless aprobadas: `ui_ajustes_muestra_umbrales`, `ui_descargador_muestra_opciones`, `ui_trabajo_muestra_botones`, `ui_revision_muestra_tabla`.
+
+5. **Paquete E · Revisión visual (PASA en componentes locales / Pendiente CI descarga directa):**
+   - Revisión visual de las capturas de referencia locales en `app/docs/referencia_visual/` contra las especificaciones de `DISENO.md`.
+   - La descarga directa del artefacto `Flow_Rust_Local_Capturas_Windows` queda registrada para el entorno del usuario debido a las restricciones de proxy en la nube.
+
+6. **Paquete F · Descargador Lite con SITFA ficticio (PASA):**
+   - 40 pruebas de biblioteca aprobadas en `cargo test --lib`.
+   - Pausa mínima garantizada en 0,5 s mediante `limitar_pausa` en interfaz y ejecución.
+   - Cancelación de lotes a mitad de proceso preservando verificados y generando pendientes verificado en `cancelar_conserva_lo_verificado_y_desbloquea`.
+
+7. **Paquete G · Invariantes y seguridad (6/6 PASA):**
+   - **G1:** 0 instancias de `.Send(` en `app/` (únicamente `channel.send()` de mpsc). CC obligatorio `ucc_concepcion@pjud.cl` constante e inmutable.
+   - **G2:** 0 módulos de escritura en RUS ni SATURNO; sin `submit`.
+   - **G3:** 0 credenciales, cookies ni tokens reales. `python tools/check_real_ids.py app/src` confirma «Sin RUT reales detectados». `python tools/check_contactos.py app/src` confirma «Sin correos ni RIT nuevos». Los RITs sintéticos agregados utilizan convención año 2099.
+   - **G4 y G5:** Se ejecutó `python tools/verificar_textos_umbrales.py`: 58/58 textos idénticos carácter por carácter con `src/nurus/personal/textos_base.json`. 16/16 umbrales idénticos en claves, valores y etiquetas con `config.py::UMBRALES` y `PARAMETER_LABELS`. 0 discrepancias.
+   - **G6:** Verificado que toda persistencia se efectúa exclusivamente en `%LOCALAPPDATA%\FlowRust` y en las rutas de destino elegidas por el usuario.
+
 ## Siguiente paso exacto
 
-0. Ejecutar los paquetes del [plan de pruebas](PLAN_PRUEBAS.md) y anotar el resultado de cada uno en este registro.
-1. Corregir lo que fallen esos paquetes, en el orden del plan.
-2. Descargador (E2): probar el lote Integral y Carga con el ejecutable en la CI Windows. Luego el resto de `preferencias.py`. Los topes de tabla ya existían. Luego descarga de bitácora, historia y calendario (F19) y exportaciones de lote (F22).
-3. Prueba de aceptación del usuario con el ejecutable vigente y sus datos locales.
+1. **Paquete H · Aceptación del usuario:** Corresponde al usuario ejecutar la guía en su entorno real con sesión SITFA y Outlook local, completando el acta de uso real según `docs/aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md`.
+2. Publicar los cambios en la rama `estudio/paridad-python-rust-20261119` sin fusionar a `main` ni crear releases.

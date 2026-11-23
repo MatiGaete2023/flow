@@ -168,3 +168,191 @@ impl Preferencias {
         std::fs::rename(&temporal, ruta).map_err(|e| e.to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::descargador::{lote, Edicion};
+
+    #[test]
+    fn a3_preferencias_descargador_limites_y_persistencia() {
+        // limitar_pausa(0.0) = 0.5, limitar_pausa(30.0) = 10.0 y limitar_pausa(NaN) = 1.0
+        assert_eq!(limitar_pausa(0.0), 0.5);
+        assert_eq!(limitar_pausa(30.0), 10.0);
+        assert_eq!(limitar_pausa(f64::NAN), 1.0);
+
+        let temp_dir = std::env::temp_dir().join(format!("flow_a3_test_{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let ruta_invalida = temp_dir.join("invalido.json");
+
+        // Cargar de un JSON inválido devuelve valores por omisión
+        std::fs::write(&ruta_invalida, b"not a valid json").unwrap();
+        let cargado = Preferencias::cargar(&ruta_invalida);
+        assert_eq!(cargado, Preferencias::default());
+
+        // Cargar con tipos erróneos devuelve valores por omisión
+        std::fs::write(&ruta_invalida, br#"{"pausa_consultas": "diez", "pdf_sin_registros": "no"}"#).unwrap();
+        let cargado2 = Preferencias::cargar(&ruta_invalida);
+        assert_eq!(cargado2, Preferencias::default());
+
+        // Guardar seguido de cargar devuelve los mismos valores, sin archivos .tmp
+        let ruta_valida = temp_dir.join("preferencias_guardadas.json");
+        let mut prefs = Preferencias {
+            destino: "C:\\Descargas".into(),
+            pdf_sin_registros: false,
+            pausa_consultas: 3.5,
+            favoritos: BTreeMap::new(),
+        };
+        prefs.favoritos.insert("fav1".into(), Favorito {
+            pantalla: Pantalla::Seguimiento,
+            tribunales: vec!["113".into()],
+            ..Default::default()
+        });
+
+        prefs.guardar(&ruta_valida).unwrap();
+        assert!(!ruta_valida.with_extension("tmp").exists(), "No deben quedar archivos .tmp");
+
+        let recuperadas = Preferencias::cargar(&ruta_valida);
+        assert_eq!(recuperadas, prefs);
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn a6_favoritos_restricciones_fechas_y_catalogos() {
+        let mut prefs = Preferencias::default();
+        let hoy = NaiveDate::from_ymd_opt(2026, 12, 15).unwrap();
+
+        let lote = SeleccionLote {
+            tribunales: vec!["113".into(), "999".into()],
+            meses: vec!["1".into()],
+            anio: "2027".into(),
+            ..Default::default()
+        };
+
+        // Un favorito con conservar_filtros se rechaza
+        let err = prefs.guardar_favorito("con_filtros", Pantalla::Seguimiento, &lote, true, hoy);
+        assert_eq!(err, Err("Los favoritos no guardan filtros privados preparados en SITFA.".into()));
+
+        // En calendarios: dos meses se rechazan
+        let lote_dos_meses = SeleccionLote {
+            meses: vec!["12".into(), "1".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        let err_dos = prefs.guardar_favorito("dos_meses", Pantalla::CalendarioInformes, &lote_dos_meses, false, hoy);
+        assert!(err_dos.is_err());
+
+        // En calendarios: mes a más de 1 de distancia se rechaza (febrero 2027 desde dic 2026 -> +2)
+        let lote_lejos = SeleccionLote {
+            meses: vec!["2".into()],
+            anio: "2027".into(),
+            ..Default::default()
+        };
+        let err_lejos = prefs.guardar_favorito("lejos", Pantalla::CalendarioInformes, &lote_lejos, false, hoy);
+        assert!(err_lejos.is_err());
+
+        // El mes siguiente guardado en diciembre (enero 2027, desplazamiento +1) se guarda y aplica
+        let lote_siguiente = SeleccionLote {
+            tribunales: vec!["113".into(), "999".into()],
+            meses: vec!["1".into()],
+            anio: "2027".into(),
+            ..Default::default()
+        };
+        assert!(prefs.guardar_favorito("siguiente_mes", Pantalla::CalendarioInformes, &lote_siguiente, false, hoy).is_ok());
+
+        let mut catalogo = Catalogo {
+            pantalla: Pantalla::CalendarioInformes,
+            ..Default::default()
+        };
+        catalogo.tribunales.insert("113".into(), "Tribunal Ficticio".into());
+        catalogo.meses.insert("1".into(), "Enero".into());
+        catalogo.anios.insert("2027".into(), "2027".into());
+
+        // Tribunal ausente del catálogo se retira y se informa
+        let (lote_aplicado, retirados) = prefs.aplicar_favorito("siguiente_mes", &catalogo, hoy).unwrap();
+        assert_eq!(lote_aplicado.tribunales, vec!["113"]);
+        assert_eq!(retirados, vec!["999"]);
+        assert_eq!(lote_aplicado.meses, vec!["1"]);
+        assert_eq!(lote_aplicado.anio, "2027");
+
+        // Un favorito con fechas se aplica con los últimos 30 días: hoy menos 29 hasta hoy
+        let lote_con_fechas = SeleccionLote {
+            tribunales: vec!["113".into()],
+            fechas: Some((hoy - chrono::Duration::days(10), hoy)),
+            ..Default::default()
+        };
+        prefs.guardar_favorito("con_fechas", Pantalla::Seguimiento, &lote_con_fechas, false, hoy).unwrap();
+        let mut cat_seg = Catalogo {
+            pantalla: Pantalla::Seguimiento,
+            ..Default::default()
+        };
+        cat_seg.tribunales.insert("113".into(), "Tribunal Ficticio".into());
+        let (lote_fechas_aplicado, _) = prefs.aplicar_favorito("con_fechas", &cat_seg, hoy).unwrap();
+        let (desde, hasta) = lote_fechas_aplicado.fechas.unwrap();
+        assert_eq!(desde, hoy - chrono::Duration::days(29));
+        assert_eq!(hasta, hoy);
+    }
+
+    #[test]
+    fn a6_recuperacion_pendientes_y_planificar() {
+        let temp_dir = std::env::temp_dir().join(format!("flow_a6_lote_{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&temp_dir);
+
+        let s1 = serde_json::json!({"screen": "seguimiento", "tribunal": "113", "tab": "Seguimiento", "modality": "Total"});
+        let s2 = serde_json::json!({"screen": "seguimiento", "tribunal": "114", "tab": "Seguimiento", "modality": "Total"});
+        let s3 = serde_json::json!({"screen": "seguimiento", "tribunal": "115", "tab": "Seguimiento", "modality": "Total"});
+
+        // 1. Tres consultas en plan y dos completadas: devuelve una
+        let resumen_1 = serde_json::json!({
+            "plan": [&s1, &s2, &s3],
+            "consultas": [
+                {"seleccion": &s1},
+                {"seleccion": &s2}
+            ],
+            "filtro_fecha": {"desde": "01/10/2026", "hasta": "30/10/2026"}
+        });
+        std::fs::write(temp_dir.join("resumen.json"), resumen_1.to_string()).unwrap();
+        let p1 = lote::pendientes(&temp_dir).unwrap();
+        assert_eq!(p1.selecciones.len(), 1);
+        assert_eq!(p1.selecciones[0].tribunal, "115");
+
+        // 2. Todas completadas devuelve "No hay consultas pendientes."
+        let resumen_todas = serde_json::json!({
+            "plan": [&s1, &s2],
+            "consultas": [
+                {"seleccion": &s1},
+                {"seleccion": &s2}
+            ]
+        });
+        std::fs::write(temp_dir.join("resumen.json"), resumen_todas.to_string()).unwrap();
+        assert_eq!(lote::pendientes(&temp_dir), Err("No hay consultas pendientes.".into()));
+
+        // 3. Sin plan devuelve "El lote antiguo no tiene plan estructurado."
+        let resumen_sin_plan = serde_json::json!({
+            "consultas": []
+        });
+        std::fs::write(temp_dir.join("resumen.json"), resumen_sin_plan.to_string()).unwrap();
+        assert_eq!(lote::pendientes(&temp_dir), Err("El lote antiguo no tiene plan estructurado.".into()));
+
+        // 4. Con otros_filtros "formulario SITFA" devuelve el error de Python
+        let resumen_privado = serde_json::json!({
+            "plan": [&s1],
+            "consultas": [],
+            "otros_filtros": "formulario SITFA"
+        });
+        std::fs::write(temp_dir.join("resumen.json"), resumen_privado.to_string()).unwrap();
+        assert_eq!(lote::pendientes(&temp_dir), Err("Prepara otra vez los filtros privados; no se guardan para recuperación.".into()));
+
+        // 5. planificar_pendientes con otra pantalla devuelve error de Python
+        let mut catalogo_litigantes = Catalogo {
+            pantalla: Pantalla::Litigantes,
+            ..Default::default()
+        };
+        catalogo_litigantes.tribunales.insert("115".into(), "Tribunal 115".into());
+        let err_pantalla = catalogo_litigantes.planificar_pendientes(Edicion::Lite, &p1);
+        assert_eq!(err_pantalla, Err("Selecciona la pantalla del lote y carga sus opciones primero.".into()));
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+}

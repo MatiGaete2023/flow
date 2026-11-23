@@ -1071,4 +1071,92 @@ mod tests {
             &[]
         ));
     }
+
+    #[test]
+    fn a1_tramites_de_contexto() {
+        let causa = ["SITFA".to_string(), "113".to_string(), "100".to_string()];
+        let campos = ["source_system", "court_code", "cause_id"];
+
+        let consulta = Consulta {
+            id: "q1".into(),
+            cobertura: "COMPLETA".into(),
+            leido: "2026-10-15".into(),
+            instante: "2026-10-15T10:00:00".parse().unwrap(),
+            discordante: false,
+            lecturas_discordantes: Vec::new(),
+            desde: Some("2026-10-01".parse().unwrap()),
+            hasta: Some("2026-10-31".parse().unwrap()),
+        };
+
+        let t1_json = serde_json::json!({"Trámite": "Resolución"}).to_string();
+        let mut cols = HashMap::new();
+        for (i, c) in [
+            "source_system", "court_code", "cause_id", "scope", "identity_status",
+            "captured_at", "event_at", "description", "folio", "reference", "raw_json",
+        ].iter().enumerate() {
+            cols.insert(c.to_string(), i);
+        }
+
+        let r1 = csv::StringRecord::from(vec![
+            "SITFA", "113", "100", "CAUSA", "CAUSA",
+            "2026-10-08T10:00:00Z", "2026-09-15T00:00:00Z",
+            "Ingreso Informe de Cumplimiento X", "1", "DOC-1", &t1_json,
+        ]);
+        let r2 = csv::StringRecord::from(vec![
+            "SITFA", "113", "100", "CAUSA", "CAUSA",
+            "2026-10-08T10:00:00Z", "2026-10-05T00:00:00Z",
+            "Ingreso Informe de Cumplimiento X", "2", "DOC-2", &t1_json,
+        ]);
+
+        let f1 = Fila::nueva(&cols, &r1);
+        let f2 = Fila::nueva(&cols, &r2);
+        let filas = [f1, f2];
+
+        // 1. Un trámite anterior a desde llega con contexto = true, y en ventana con contexto = false
+        let corte = "2026-10-10".parse::<NaiveDate>().unwrap();
+        let res = tramites_causa(&consulta, &filas, &causa, campos, corte);
+        assert_eq!(res.len(), 2);
+        assert!(res[0].contexto, "Trámite anterior a desde debe tener contexto = true");
+        assert!(!res[1].contexto, "Trámite dentro de la ventana debe tener contexto = false");
+
+        // 2. Una lectura con desde posterior al corte no entrega trámites
+        let consulta_futura = Consulta {
+            id: "q2".into(),
+            cobertura: "COMPLETA".into(),
+            leido: "2026-10-25".into(),
+            instante: "2026-10-25T10:00:00".parse().unwrap(),
+            discordante: false,
+            lecturas_discordantes: Vec::new(),
+            desde: Some("2026-10-20".parse().unwrap()),
+            hasta: Some("2026-10-31".parse().unwrap()),
+        };
+        let res_vacia = tramites_causa(&consulta_futura, &filas, &causa, campos, corte);
+        assert!(res_vacia.is_empty(), "Lectura con desde > corte no debe entregar trámites");
+
+        // 3. evidencia_informe ignora los trámites de contexto
+        let mut documentos = DocumentosInforme::new();
+        let vencimiento = "2026-11-01".parse::<NaiveDate>().unwrap();
+        documentos.insert(clave_texto("DOC-1"), HashSet::from([("ing1".into(), vencimiento)]));
+        documentos.insert(clave_texto("DOC-2"), HashSet::from([("ing1".into(), vencimiento)]));
+
+        let escritos = ResumenEscritos {
+            cobertura: "COMPLETA".into(),
+            leido: "2026-10-15".into(),
+            filas: 2,
+            pendientes: Vec::new(),
+            discordante: false,
+            datos: Arc::from([]),
+            documentos: Arc::new(documentos),
+        };
+
+        let contexto_fila = ContextoFila {
+            tramites: Some(res),
+            escritos: Some(escritos),
+            ingreso_id: "ing1".into(),
+            ..Default::default()
+        };
+        let ev = contexto_fila.evidencia_informe(vencimiento);
+        // DOC-1 (trámite con contexto = true, folio 1) se ignora; solo se toma DOC-2 (folio 2)
+        assert_eq!(ev.resolucion, Some("2"));
+    }
 }

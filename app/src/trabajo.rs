@@ -552,6 +552,87 @@ mod tests {
     }
 
     #[test]
+    fn a2_consignacion_p1_y_sesion() {
+        let Some(ruta) = std::env::var_os("FLOW_E3_PAQUETE") else { return };
+        let cfg = Config::default();
+        let mut trabajo = Trabajo::abrir_archivo(
+            ruta.into(),
+            Some(Mode::Cumplimiento),
+            "2026-10-19".parse().unwrap(),
+            &cfg,
+        ).unwrap();
+
+        assert!(trabajo.registros[0].eventos.iter().any(|e| e == "HISTORIA.OTRO_PROGRAMA"));
+        assert_eq!(trabajo.registros[0].otros_programas.len(), 2);
+
+        // 1. Consignar retira la frase y luego deja otros_programas vacio
+        let msg = trabajo.consignar(0, "PRM Ficticio", true, &cfg);
+        assert!(msg.is_some());
+        assert!(!trabajo.registros[0].propuesta.contains("PRM Ficticio"));
+        assert!(trabajo.registros[0].propuesta.contains("FAE Otro Ficticio"));
+        assert_eq!(trabajo.registros[0].otros_programas, ["FAE Otro Ficticio"]);
+
+        let msg2 = trabajo.consignar(0, "FAE Otro Ficticio", true, &cfg);
+        assert!(msg2.is_some());
+        assert!(!trabajo.registros[0].eventos.iter().any(|e| e == "HISTORIA.OTRO_PROGRAMA"));
+        assert!(trabajo.registros[0].otros_programas.is_empty());
+
+        // Consignar dos veces no cambia nada (idempotencia)
+        let msg_repetido = trabajo.consignar(0, "PRM Ficticio", true, &cfg);
+        assert!(msg_repetido.is_none());
+
+        // Deshacer restituye la frase
+        let msg_deshacer = trabajo.consignar(0, "PRM Ficticio", false, &cfg);
+        assert!(msg_deshacer.is_some());
+        assert!(trabajo.registros[0].propuesta.contains("PRM Ficticio"));
+        assert_eq!(trabajo.registros[0].otros_programas, ["PRM Ficticio"]);
+
+        // La consignación sobrevive a analizar
+        trabajo.analizar(&cfg);
+        assert!(trabajo.registros[0].propuesta.contains("PRM Ficticio"));
+        assert!(!trabajo.registros[0].propuesta.contains("FAE Otro Ficticio"));
+
+        // La consignación sobrevive al cambio de corte
+        trabajo.corte = Some("2026-10-20".parse().unwrap());
+        trabajo.analizar(&cfg);
+        assert!(!trabajo.registros[0].propuesta.contains("FAE Otro Ficticio"));
+
+        // La consignación sobrevive a guardar y restaurar sesión
+        let temp_sesion = std::env::temp_dir().join("test_sesion_consignacion.json");
+        trabajo.escribir_sesion(&temp_sesion).unwrap();
+
+        let mut trabajo_restaurado = Trabajo::abrir_archivo(
+            std::env::var_os("FLOW_E3_PAQUETE").unwrap().into(),
+            Some(Mode::Cumplimiento),
+            "2026-10-19".parse().unwrap(),
+            &cfg,
+        ).unwrap();
+        trabajo_restaurado.restaurar_desde(&temp_sesion);
+        trabajo_restaurado.analizar(&cfg);
+        assert_eq!(trabajo_restaurado.consignaciones, trabajo.consignaciones);
+        assert!(!trabajo_restaurado.registros[0].propuesta.contains("FAE Otro Ficticio"));
+        let _ = std::fs::remove_file(&temp_sesion);
+
+        // reiniciar la borra
+        trabajo.reiniciar(&cfg);
+        assert!(trabajo.consignaciones.is_empty());
+        assert!(trabajo.registros[0].propuesta.contains("FAE Otro Ficticio"));
+
+        // Una sesión antigua sin el campo consignaciones se lee sin error
+        let sesion_antigua = serde_json::json!({
+            "archivo": "contexto-e3.zip",
+            "hash": "abc",
+            "modo": "cumplimiento",
+            "corte": "2026-10-19",
+            "guardada": "2026-10-19T10:00:00",
+            "decisiones": {}
+        }).to_string();
+        let sesion_parsed = serde_json::from_str::<Sesion>(&sesion_antigua);
+        assert!(sesion_parsed.is_ok());
+        assert!(sesion_parsed.unwrap().consignaciones.is_empty());
+    }
+
+    #[test]
     fn informes_atribuyen_la_historia_y_los_escritos_segun_flow_python() {
         let Some(raiz) = std::env::var_os("FLOW_REFERENCIA") else { return };
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_estructura.zip");

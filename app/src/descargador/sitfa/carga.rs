@@ -133,3 +133,72 @@ pub fn registros_resultado(tablas: &[Vec<Vec<String>>]) -> Result<FilasCarga, St
         _ => Err("Más de un listado de carga; revisar la estructura.".into()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a8_contrato_de_carga() {
+        let exacto: Vec<String> = ENCABEZADOS.iter().map(|s| s.to_string()).collect();
+        let fila_base = |rit: &str| {
+            let mut f = vec![rit.to_string()];
+            for i in 1..23 {
+                f.push(format!("VAL_{}", i));
+            }
+            f
+        };
+
+        // 1. Encabezado exacto con registros y conteo de filas repetidas
+        let grilla_ok = vec![
+            exacto.clone(),
+            fila_base("X-1-2099"),
+            fila_base("X-1-2099"),
+            fila_base("X-2-2099"),
+        ];
+        let res = registros_en_grilla(&grilla_ok).unwrap();
+        assert_eq!(res.len(), 2);
+        assert_eq!(res[&fila_base("X-1-2099")], 2);
+        assert_eq!(res[&fila_base("X-2-2099")], 1);
+
+        // 2. Columna renombrada: rechazo con «Encabezado de carga inesperado…»
+        let mut renombrado = exacto.clone();
+        renombrado[1] = "JUZGADO_ERRONEO".into();
+        let grilla_renombrada = vec![renombrado, fila_base("X-1-2099")];
+        let err_renom = registros_en_grilla(&grilla_renombrada).unwrap_err();
+        assert!(err_renom.starts_with("Encabezado de carga inesperado; esperado: "));
+
+        // 3. Dos encabezados
+        let grilla_dos = vec![exacto.clone(), exacto.clone(), fila_base("X-1-2099")];
+        assert_eq!(
+            registros_en_grilla(&grilla_dos),
+            Err("El informe contiene más de un encabezado de carga.".into())
+        );
+
+        // 4. Registro antes del encabezado
+        let grilla_antes = vec![fila_base("X-1-2099"), exacto.clone(), fila_base("X-2-2099")];
+        assert_eq!(
+            registros_en_grilla(&grilla_antes),
+            Err("Hay registros antes del encabezado de carga esperado.".into())
+        );
+
+        // 5. Fila de 22 columnas
+        let mut corta = fila_base("X-1-2099");
+        corta.pop(); // 22 columnas
+        let grilla_corta = vec![exacto.clone(), corta];
+        assert_eq!(
+            registros_en_grilla(&grilla_corta),
+            Err("Cambió el esquema de carga: se esperaban 23 columnas.".into())
+        );
+
+        // 6. Título «Concepción» que no debe confundirse con el encabezado
+        let grilla_titulo = vec![
+            vec!["Concepción".to_string()],
+            exacto.clone(),
+            fila_base("X-1-2099"),
+        ];
+        let res_titulo = registros_en_grilla(&grilla_titulo).unwrap();
+        assert_eq!(res_titulo.len(), 1);
+        assert_eq!(res_titulo[&fila_base("X-1-2099")], 1);
+    }
+}

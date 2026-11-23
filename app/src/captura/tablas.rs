@@ -18,6 +18,10 @@ pub struct Fila<'a> {
 }
 
 impl<'a> Fila<'a> {
+    pub fn nueva(columnas: &'a HashMap<String, usize>, valores: &'a StringRecord) -> Self {
+        Self { columnas, valores }
+    }
+
     pub fn get(self, campo: &str) -> &'a str {
         self.campo(campo).unwrap_or("")
     }

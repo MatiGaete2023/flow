@@ -19,6 +19,7 @@ static TABLAS: LazyLock<Selector> = LazyLock::new(|| Selector::parse("table").un
 static ACTIVOS: LazyLock<Selector> = LazyLock::new(|| Selector::parse("form, script").unwrap());
 static ACCESO: LazyLock<Selector> = LazyLock::new(|| Selector::parse("input").unwrap());
 
+#[derive(Debug)]
 pub struct Libro {
     pub formato: &'static str,
     pub registros: Registros,
@@ -404,5 +405,103 @@ mod tests {
         assert!(leer(b"<html><table><tr><td>Sin datos</td></tr></table></html>").is_err());
         assert_eq!(fecha_texto("5/10/2026"), NaiveDate::from_ymd_opt(2026, 10, 5));
         assert_eq!(fecha_serial(46300.0), NaiveDate::from_ymd_opt(2026, 10, 5));
+    }
+
+    #[test]
+    fn a7_excel_xml_2003() {
+        // 1. Libro SpreadsheetML ficticio con ss:Index, html:Font y DateTime
+        let xml_valido = r##"<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Worksheet ss:Name="Hoja1">
+  <Table>
+   <Row ss:Index="1">
+    <Cell ss:Index="1"><Data ss:Type="String">RIT</Data></Cell>
+    <Cell ss:Index="2"><Data ss:Type="String">Nombre</Data></Cell>
+    <Cell ss:Index="4"><Data ss:Type="String">Fecha</Data></Cell>
+   </Row>
+   <Row ss:Index="3">
+    <Cell ss:Index="1"><Data ss:Type="String">X-100-2099</Data></Cell>
+    <Cell ss:Index="2"><Data ss:Type="String"><Font html:Color="#000000">Persona Ficticia</Font></Data></Cell>
+    <Cell ss:Index="4"><Data ss:Type="DateTime">2026-10-15T00:00:00.000</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>"##;
+
+        let libro = leer(xml_valido.as_bytes()).unwrap();
+        assert_eq!(libro.formato, "XML-Spreadsheet-2003");
+        assert_eq!(libro.registros.len(), 1);
+        assert_eq!(libro.registros[&("X-100-2099".into(), "PERSONA FICTICIA".into())], 1);
+        assert_eq!(libro.grilla.len(), 3);
+        assert_eq!(libro.grilla[2][0], "X-100-2099");
+        assert_eq!(libro.grilla[2][1], "Persona Ficticia");
+        assert_eq!(libro.grilla[2][3], "2026-10-15");
+
+        // 2. Error de índice de fila no creciente
+        let xml_no_creciente = r#"<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Hoja1">
+  <Table>
+   <Row ss:Index="5"><Cell><Data ss:Type="String">A</Data></Cell></Row>
+   <Row ss:Index="3"><Cell><Data ss:Type="String">B</Data></Cell></Row>
+  </Table>
+ </Worksheet>
+</Workbook>"#;
+        assert_eq!(
+            leer(xml_no_creciente.as_bytes()).unwrap_err(),
+            "Índice de fila XML inválido."
+        );
+
+        // 3. Error de columna 201
+        let xml_col_201 = r#"<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Hoja1">
+  <Table>
+   <Row><Cell ss:Index="201"><Data ss:Type="String">X</Data></Cell></Row>
+  </Table>
+ </Worksheet>
+</Workbook>"#;
+        assert_eq!(
+            leer(xml_col_201.as_bytes()).unwrap_err(),
+            "El índice XML excede los límites de columnas."
+        );
+
+        // 4. Error de más de 200 celdas por fila
+        let mut celdas = String::new();
+        for _ in 0..201 {
+            celdas.push_str("<Cell><Data ss:Type=\"String\">C</Data></Cell>");
+        }
+        let xml_201_celdas = format!(
+            r#"<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Hoja1">
+  <Table>
+   <Row>{}</Row>
+  </Table>
+ </Worksheet>
+</Workbook>"#,
+            celdas
+        );
+        assert_eq!(
+            leer(xml_201_celdas.as_bytes()).unwrap_err(),
+            "La fila XML excede los límites de columnas."
+        );
+
+        // 5. <!DOCTYPE> con entidad externa no debe resolverse
+        let xml_xxe = r#"<?xml version="1.0"?>
+<!DOCTYPE test [
+<!ENTITY xxe SYSTEM "http://127.0.0.1:9999/xxe">
+]>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Hoja1">
+  <Table>
+   <Row><Cell><Data ss:Type="String">&xxe;</Data></Cell></Row>
+  </Table>
+ </Worksheet>
+</Workbook>"#;
+        assert!(leer(xml_xxe.as_bytes()).is_err());
     }
 }

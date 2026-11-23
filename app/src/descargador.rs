@@ -148,7 +148,7 @@ fn comprobar_extension(edicion: Edicion, version: &serde_json::Value) -> Result<
     Err(format!("Carga en Chrome la extensión Flow Python de la edición elegida ({numero}) y vuelve a conectar."))
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct Catalogo {
     #[serde(default)]
     pub pantalla: Pantalla,

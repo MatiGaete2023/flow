@@ -999,7 +999,7 @@ mod tests {
     }
 
     /// Evalúa un caso del corpus de Flow Python con su historia y bitácora como contexto del paquete.
-    fn caso_corpus(c: &serde_json::Value, mode: Mode) -> (Resultado, bool) {
+    fn caso_corpus_con_redaccion(c: &serde_json::Value, mode: Mode, redaccion: bool) -> (Resultado, bool) {
         let fecha = |v: &serde_json::Value| v.as_str().and_then(|s| s.parse::<NaiveDate>().ok());
         let corte = fecha(&c["corte"]).unwrap();
         let h = &c["historia"];
@@ -1036,7 +1036,10 @@ mod tests {
             })
             .unwrap_or_default();
         let captura = ContextoFila { tramites: Some(tramites.into()), notas_centro: notas.into(), ..Default::default() };
-        let mut cfg = Config { redaccion_registro: false, ..Config::default() };
+        let mut cfg = Config {
+            redaccion_registro: redaccion,
+            ..Config::default()
+        };
         for d in c["desactivadas"].as_array().unwrap() {
             cfg.desactivadas.insert(d.as_str().unwrap().to_string());
         }
@@ -1060,6 +1063,10 @@ mod tests {
         }
         let r = evaluar_con_captura(&cfg, mode, &Fila { values: &values, cols: &cols }, corte, (&pre, 0), fecha(&c["fecha_hoja2"]), Some(&captura));
         (r, con_prorroga)
+    }
+
+    fn caso_corpus(c: &serde_json::Value, mode: Mode) -> (Resultado, bool) {
+        caso_corpus_con_redaccion(c, mode, false)
     }
 
     /// Contraste con el corpus de Flow Python (`FLOW_CASOS`): en Espera, Cumplimiento e Informes, cada caso con
@@ -1102,5 +1109,271 @@ mod tests {
         println!("oraculo_historia: {} de {evaluados} casos coinciden ({con_prorroga} con prórroga, {finales} causas finalizadas)", evaluados - fallos.len());
         assert!(evaluados > 2500 && con_prorroga > 0 && finales > 0);
         assert!(fallos.is_empty(), "{} casos difieren:\n{}", fallos.len(), fallos.iter().take(10).cloned().collect::<Vec<_>>().join("\n"));
+    }
+
+    #[test]
+    fn paquete_b_redaccion_mensual() {
+        let Ok(dir) = std::env::var("FLOW_CASOS") else { return };
+        let mut total_evaluados = 0;
+        let mut identicos = 0;
+        let mut solo_r1 = 0;
+        let mut solo_r6 = 0;
+        let mut r1_y_r6 = 0;
+        let mut fallos_inesperados = Vec::new();
+
+        for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {
+            let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
+            let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
+            for c in &casos {
+                if c["historia"].is_null() && c["bitacora"].as_array().is_none_or(|a| a.is_empty()) {
+                    continue;
+                }
+                total_evaluados += 1;
+                let (r, _) = caso_corpus_con_redaccion(c, mode, true);
+                let e = &c["esperado"];
+                let reglas: Vec<&str> = e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect();
+                let marcas: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).collect();
+                let obtenidas: Vec<&str> = r.marcas.iter().map(|m| m.codigo.as_str()).collect();
+
+                let reglas_iguales = reglas == r.eventos.iter().map(String::as_str).collect::<Vec<_>>();
+                let marcas_iguales = marcas == obtenidas;
+                if !reglas_iguales || !marcas_iguales {
+                    fallos_inesperados.push(format!("{}: reglas o marcas difieren", c["id"]));
+                    continue;
+                }
+
+                let esp_obs = e["observacion"].as_str().unwrap_or("");
+                let obt_obs = r.observacion.as_str();
+
+                assert!(!obt_obs.contains("R3_MULTI"));
+
+                if esp_obs == obt_obs {
+                    identicos += 1;
+                    continue;
+                }
+
+                let tiene_r1 = r.eventos.iter().any(|ev| ev == "CUMPLIMIENTO.C05_POR_VENCER")
+                    && r.eventos.iter().any(|ev| ev == "CUMPLIMIENTO.C10_HOJA2");
+
+                let mut base_esp = esp_obs.to_string();
+                if tiene_r1 {
+                    static RE_C10: OnceLock<Regex> = OnceLock::new();
+                    let re_c10 = RE_C10.get_or_init(|| Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap());
+                    base_esp = re_c10.replace(&base_esp, "").to_string();
+                }
+
+                let norm_esp = base_esp.to_lowercase()
+                    .replace('á', "a").replace('é', "e").replace('í', "i").replace('ó', "o").replace('ú', "u")
+                    .replace('-', " ").split_whitespace().collect::<Vec<_>>().join(" ");
+                let norm_obt = obt_obs.to_lowercase()
+                    .replace('á', "a").replace('é', "e").replace('í', "i").replace('ó', "o").replace('ú', "u")
+                    .replace('-', " ").split_whitespace().collect::<Vec<_>>().join(" ");
+
+                if norm_esp == norm_obt {
+                    let es_r1 = tiene_r1 && base_esp != esp_obs;
+                    let es_r6 = base_esp != obt_obs;
+                    if es_r1 && es_r6 {
+                        r1_y_r6 += 1;
+                    } else if es_r1 {
+                        solo_r1 += 1;
+                    } else {
+                        solo_r6 += 1;
+                    }
+                } else {
+                    fallos_inesperados.push(format!("{}: diff inesperado:\n  esp: {}\n  obt: {}", c["id"], esp_obs, obt_obs));
+                }
+            }
+        }
+        println!("PAQUETE_B: Evaluados: {total_evaluados}, Idénticos: {identicos}, Solo R1: {solo_r1}, Solo R6: {solo_r6}, R1+R6: {r1_y_r6}, Fallos inesperados: {}", fallos_inesperados.len());
+        for f in fallos_inesperados.iter().take(5) {
+            println!("  FALLO: {f}");
+        }
+        assert!(fallos_inesperados.is_empty(), "Hubo fallos inesperados en Paquete B");
+    }
+
+    #[test]
+    fn a4_busqueda_historia() {
+        // 1. Una orden de contexto con su término en la ventana se dice completa
+        let orden_ctx = TramiteCausa {
+            fecha: "2026-09-01".parse().unwrap(),
+            descripcion: "Orden de búsqueda".into(),
+            folio: "10".into(),
+            referencia: String::new(),
+            tipo: "resolucion".into(),
+            contexto: true,
+        };
+        let termino_en_ventana = TramiteCausa {
+            fecha: "2026-10-10".parse().unwrap(),
+            descripcion: "Termino de búsqueda".into(),
+            folio: "15".into(),
+            referencia: String::new(),
+            tipo: "resolucion".into(),
+            contexto: false,
+        };
+        let captura1 = ContextoFila {
+            tramites: Some(vec![orden_ctx.clone(), termino_en_ventana.clone()].into()),
+            ..Default::default()
+        };
+        let r1 = evaluar_espera(&captura1, Cell::Empty);
+        assert!(r1.observacion.contains("Se hace presente que en resolución de fecha 1 de septiembre de 2026 (folio 10), se decretó orden de búsqueda."));
+        assert!(r1.observacion.contains("Posteriormente, en resolución de fecha 10 de octubre de 2026 (folio 15), se dispuso el término de la búsqueda."));
+        assert!(!r1.marcas.iter().any(|m| m.codigo == "R11_BUSQUEDA_VIGENTE"));
+
+        // 2. Con dos trámites posteriores, el primero abre con «Posteriormente» y el segundo con «Luego»
+        let pide_cuenta = TramiteCausa {
+            fecha: "2026-10-05".parse().unwrap(),
+            descripcion: "Pide cuenta búsqueda".into(),
+            folio: "12".into(),
+            referencia: String::new(),
+            tipo: "resolucion".into(),
+            contexto: false,
+        };
+        let captura2 = ContextoFila {
+            tramites: Some(vec![orden_ctx.clone(), pide_cuenta.clone(), termino_en_ventana.clone()].into()),
+            ..Default::default()
+        };
+        let r2 = evaluar_espera(&captura2, Cell::Empty);
+        assert!(r2.observacion.contains("Posteriormente, en resolución de fecha 5 de octubre de 2026 (folio 12), se pidió cuenta de la búsqueda."));
+        assert!(r2.observacion.contains("Luego, en resolución de fecha 10 de octubre de 2026 (folio 15), se dispuso el término de la búsqueda."));
+
+        // 3. Un cierre sin orden se dice como constancia neutra
+        let captura3 = ContextoFila {
+            tramites: Some(vec![termino_en_ventana.clone()].into()),
+            ..Default::default()
+        };
+        let r3 = evaluar_espera(&captura3, Cell::Empty);
+        assert!(r3.observacion.contains("Se hace presente que en resolución de fecha 10 de octubre de 2026 (folio 15), consta el trámite «Termino de búsqueda»."));
+        assert!(!r3.observacion.contains("Posteriormente"));
+        assert!(!r3.marcas.iter().any(|m| m.codigo == "R11_BUSQUEDA_VIGENTE"));
+
+        // 4. Una orden repetida con el mismo folio se dice una sola vez
+        let orden_reciente = TramiteCausa {
+            fecha: "2026-10-02".parse().unwrap(),
+            descripcion: "Orden de búsqueda".into(),
+            folio: "20".into(),
+            referencia: String::new(),
+            tipo: "resolucion".into(),
+            contexto: false,
+        };
+        let captura4 = ContextoFila {
+            tramites: Some(vec![orden_reciente.clone(), orden_reciente.clone()].into()),
+            ..Default::default()
+        };
+        let r4 = evaluar_espera(&captura4, Cell::Empty);
+        assert_eq!(r4.observacion.matches("se decretó orden de búsqueda").count(), 1);
+
+        // 5. Sin bitácora rige ventana_busqueda (60 días por omisión: desde 2026-08-20 hasta 2026-10-19)
+        let orden_fuera_ventana = TramiteCausa {
+            fecha: "2026-08-01".parse().unwrap(),
+            descripcion: "Orden de búsqueda".into(),
+            folio: "5".into(),
+            referencia: String::new(),
+            tipo: "resolucion".into(),
+            contexto: false,
+        };
+        let captura5 = ContextoFila {
+            tramites: Some(vec![orden_fuera_ventana].into()),
+            ..Default::default()
+        };
+        let r5 = evaluar_espera(&captura5, Cell::Empty);
+        assert!(!r5.observacion.contains("se decretó orden de búsqueda"), "Trámite fuera de ventana no debe decirse");
+
+        // 6. La marca R11_BUSQUEDA_VIGENTE aparece solo con una orden sin cierre
+        assert!(r4.marcas.iter().any(|m| m.codigo == "R11_BUSQUEDA_VIGENTE"));
+        assert!(!r1.marcas.iter().any(|m| m.codigo == "R11_BUSQUEDA_VIGENTE"));
+    }
+
+    #[test]
+    fn a5_proyeccion_ingreso() {
+        let fecha_nota = "2026-10-10".parse().unwrap();
+
+        // 1. Mes sin año (mes posterior al corte 2026-10-19 -> noviembre 2026)
+        let captura1 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "El programa proyecta ingreso para el mes de noviembre.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r1 = evaluar_espera(&captura1, Cell::Date("2026-10-12".parse().unwrap()));
+        assert!(r1.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r1.observacion.contains("El programa proyecta ingreso para el mes de noviembre."));
+        // Con proyección vigente no se emiten E04 ni E05
+        assert!(!r1.eventos.contains(&"ESPERA.E04_RESOLUCION_RECIENTE".to_string()));
+        assert!(!r1.eventos.contains(&"HISTORIA.E04_CON_FOLIO".to_string()));
+        assert!(!r1.eventos.contains(&"ESPERA.E05_SOLO_CORREO".to_string()));
+
+        // 2. Mes con año (enero 2027)
+        let captura2 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Se proyecta el ingreso efectivo para el mes de enero de 2027.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r2 = evaluar_espera(&captura2, Cell::Empty);
+        assert!(r2.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r2.observacion.contains("Se proyecta el ingreso efectivo para el mes de enero de 2027."));
+
+        // 3. «setiembre» (setiembre 2027)
+        let captura3 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Coordinación proyecta ingreso para setiembre 2027.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r3 = evaluar_espera(&captura3, Cell::Empty);
+        assert!(r3.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r3.observacion.contains("Coordinación proyecta ingreso para setiembre 2027."));
+
+        // 4. Mes igual al del corte (octubre 2026): no se copia
+        let captura4 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Programa proyecta ingreso para el mes de octubre.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r4 = evaluar_espera(&captura4, Cell::Date("2026-10-12".parse().unwrap()));
+        assert!(!r4.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r4.eventos.contains(&"ESPERA.E04_RESOLUCION_RECIENTE".to_string()));
+
+        // 5. Mes pasado (agosto 2026): no se copia
+        let captura5 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Programa proyecta ingreso para agosto de 2026.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r5 = evaluar_espera(&captura5, Cell::Empty);
+        assert!(!r5.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+
+        // 6. Precedida por «Nombre SIGLA: »
+        let captura6 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Persona DCE: Se proyecta ingreso para el mes de diciembre.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r6 = evaluar_espera(&captura6, Cell::Empty);
+        assert!(r6.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r6.observacion.contains("Se proyecta ingreso para el mes de diciembre."));
+        assert!(!r6.observacion.contains("efectivo. Persona DCE:"));
+
+        // 7. Precedida por otra oración
+        let captura7 = ContextoFila {
+            notas_centro: vec![NotaCentro {
+                fecha: fecha_nota,
+                texto: "Caso revisado en reunión del centro. Se proyecta ingreso para el mes de diciembre.".into(),
+            }].into(),
+            ..Default::default()
+        };
+        let r7 = evaluar_espera(&captura7, Cell::Empty);
+        assert!(r7.eventos.contains(&"ESPERA.E07_PROYECCION".to_string()));
+        assert!(r7.observacion.contains("Se proyecta ingreso para el mes de diciembre."));
+        assert!(!r7.observacion.contains("Caso revisado"));
     }
 }
