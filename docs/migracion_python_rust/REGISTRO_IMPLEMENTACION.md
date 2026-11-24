@@ -179,3 +179,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Motivo: el diagnóstico del lote del 24-nov (114 bitácoras, 92 historias, 114 históricos, todo LEIDA) no mostraba calendarios, y de ahí o del calendario de informes por mes salen las lecturas parciales que reporta el usuario.
 - Acredita: `diagnostico_cuenta_calendarios_e_historicos_sin_texto_libre`.
 - Pendiente: un diagnóstico nuevo del usuario con este archivo; luego E-R1.
+- CI: los runs 45461517036 (verificador de la referencia congelada) y 45462587676 fallaron; este último por el detector de oráculos, que comparó contra el push anterior (donde `descargador/` había cambiado y se restauró) y regeneró «todos», incluido `a78`, que no es idéntico byte a byte desde antes. Sin cambios de código en la corrección.
