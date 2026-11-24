@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from registrador_rus.app.journal import SimulationJournal, JournalError
 from registrador_rus.app.journal_protection import StorageProtectionError
+from registrador_rus.app.private_demo_directory import create_private_demo_directory, validate_private_demo
 from registrador_rus.app.simulation import FakeClock, FakeRus, demo_operations
 
 PRIOR='Texto previo ficticio SECRET_FIXTURE_038292'
@@ -38,7 +39,8 @@ class NativeProtectedJournalTests(unittest.TestCase):
     def setUp(self):
         self.tmp=TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.path=Path(self.tmp.name)/'demo.protected.sqlite'
+        self.folder=create_private_demo_directory(Path(self.tmp.name)/'private-demo')
+        self.path=self.folder/'demo.protected.sqlite'
         self.clock=FakeClock()
         self.ops=demo_operations(2)
         self.op=self.ops[0]
@@ -56,7 +58,7 @@ class NativeProtectedJournalTests(unittest.TestCase):
             stage='Etapa ficticia',stage_code='1',server_day=self.clock().date()),'SIN_PREVIA')
 
     def scan(self,require_wal=False):
-        files=list(Path(self.tmp.name).glob('demo.protected.sqlite*'))
+        files=list(self.folder.glob('demo.protected.sqlite*'))
         if require_wal:
             self.assertTrue(Path(str(self.path)+'-wal').is_file())
             self.assertTrue(Path(str(self.path)+'-shm').is_file())
@@ -128,6 +130,46 @@ class NativeProtectedJournalTests(unittest.TestCase):
         self.j=SimulationJournal(self.path,protected_demo=True,clock=self.clock)
         with self.assertRaisesRegex(StorageProtectionError,'SOLO_DIARIO_FICTICIO_GENERADO'):
             self.j.freeze(replace(self.op,approval_version=2))
+
+    def test_acl_folder_and_auxiliaries(self):
+        self.ready(self.op)
+        validate_private_demo(self.path)
+        for suffix in ('','-wal','-shm'):
+            self.assertTrue(Path(str(self.path)+suffix).is_file())
+        # Un enlace duro conserva permisos, pero crea otro nombre: prohibido.
+        other=self.folder/'another-name.sqlite'
+        os.link(self.path,other)
+        try:
+            with self.assertRaisesRegex(StorageProtectionError,'ARCHIVO_DIARIO_INSEGURO'):
+                self.j.reserve_simulated_attempt(self.op)
+            self.assertEqual(self.j.attempt_count(),0)
+        finally:other.unlink()
+        self.assertEqual(self.j.reserve_simulated_attempt(self.op),'ENVIANDO')
+
+    def test_existing_folder_and_broad_dacl_block(self):
+        import win32security as s
+        existing=Path(self.tmp.name)/'existing'
+        existing.mkdir()
+        with self.assertRaises(StorageProtectionError):create_private_demo_directory(existing)
+        self.assertTrue(existing.is_dir())
+        new=existing/'other.protected.sqlite'
+        with self.assertRaises(StorageProtectionError):SimulationJournal(new,protected_demo=True)
+        self.assertFalse(new.exists())
+        self.ready(self.op)
+        sd=s.GetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION)
+        dacl=sd.GetSecurityDescriptorDacl()
+        expanded=s.ACL()
+        for i in range(dacl.GetAceCount()):
+            (_,flags),mask,sid=dacl.GetAce(i)
+            expanded.AddAccessAllowedAceEx(2,flags,mask,sid)
+        expanded.AddAccessAllowedAceEx(2,0,0x120089,s.ConvertStringSidToSid('S-1-1-0'))
+        try:
+            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|0x80000000,None,None,expanded,None)
+            with self.assertRaisesRegex(StorageProtectionError,'DACL_DIARIO_INSEGURA'):
+                self.j.reserve_simulated_attempt(self.op)
+            self.assertEqual(self.j.attempt_count(),0)
+        finally:
+            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|0x80000000,None,None,dacl,None)
 
     def test_damaged_key_blocks_reopen(self):
         self.ready(self.op)

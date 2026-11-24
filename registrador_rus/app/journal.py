@@ -12,6 +12,7 @@ from .scheduler import ScheduleStore
 from .readback import ReadbackError
 from .readback_store import ReadbackStore, UNRESOLVED, operations_sql
 from .journal_protection import check_path, initialize_storage
+from .private_demo_directory import validate_private_demo
 
 
 class JournalError(RuntimeError):
@@ -51,6 +52,7 @@ class SimulationJournal:
 
     def __init__(self, path, *, clock=None, protected_demo=False):
         crypt = check_path(path, protected_demo)
+        self._private_path = Path(path) if protected_demo else None
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.db = sqlite3.connect(Path(path), timeout=5, isolation_level=None)
         self.db.row_factory = sqlite3.Row
@@ -65,6 +67,8 @@ class SimulationJournal:
             self.db.executescript(SCHEMA)
             self.schedule = ScheduleStore(self.db)
             self.readback = ReadbackStore(self.db, storage=self.storage)
+            if self._private_path is not None:
+                validate_private_demo(self._private_path)
         except BaseException:
             self.db.close()
             raise
@@ -80,9 +84,13 @@ class SimulationJournal:
 
     @contextmanager
     def _tx(self):
+        if self._private_path is not None:
+            validate_private_demo(self._private_path)
         self.db.execute('BEGIN IMMEDIATE')
         try:
             yield
+            if self._private_path is not None:
+                validate_private_demo(self._private_path)
             self.db.execute('COMMIT')
         except BaseException:
             if self.db.in_transaction:

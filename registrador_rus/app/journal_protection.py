@@ -131,6 +131,8 @@ def check_path(path, protected):
             if (not stat.S_ISREG(info.st_mode) or
                     getattr(info,'st_file_attributes',0)&getattr(stat,'FILE_ATTRIBUTE_REPARSE_POINT',0x400)):
                 raise StorageProtectionError('RUTA_DIARIO_INVALIDA')
+        from .private_demo_directory import validate_private_demo
+        validate_private_demo(path)
         return crypt
     return None
 
