@@ -177,7 +177,7 @@ jobs:
             }
             python "app/qa/generar_$o.py" $salida
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            python -c "import sys; a=open(sys.argv[1],'rb').read().split(b'\n'); b=open(sys.argv[2],'rb').read().split(b'\n'); d=[i for i in range(max(len(a),len(b))) if (a[i] if i<len(a) else None)!=(b[i] if i<len(b) else None)]; [print('línea',i+1,'| generado:',(a[i] if i<len(a) else b'-')[:160],'| versionado:',(b[i] if i<len(b) else b'-')[:160]) for i in d[:5]]; sys.exit(1 if d else 0)" $salida "app/tests/datos/$o.json"
+            python -c "import sys; a=open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n').split(b'\n'); b=open(sys.argv[2],'rb').read().replace(b'\r\n',b'\n').split(b'\n'); d=[i for i in range(max(len(a),len(b))) if (a[i] if i<len(a) else None)!=(b[i] if i<len(b) else None)]; [print('línea',i+1,'| generado:',(a[i] if i<len(a) else b'-')[:160],'| versionado:',(b[i] if i<len(b) else b'-')[:160]) for i in d[:5]]; sys.exit(1 if d else 0)" $salida "app/tests/datos/$o.json"
             if ($LASTEXITCODE -ne 0) { Write-Error "app/tests/datos/$o.json no coincide con generar_$o.py"; exit 1 }
           }
       - name: Probar todas las pruebas con variables
