@@ -32,12 +32,12 @@ class PilotController:
         self._current()
         self.mailbox.submit('prepare');self.phase='PREPARANDO'
 
-    def authorize_and_verify(self,*,author,stage,server_day,confirmed):
-        if self.phase!='PREPARADA' or confirmed is not True or type(server_day) is not date or any(
+    def authorize_and_verify(self,*,author,stage,server_day,confirmed,require_excel=False):
+        if self.phase!='PREPARADA' or confirmed is not True or type(require_excel) is not bool or type(server_day) is not date or any(
                 type(x) is not str or not x.strip() for x in (author,stage)):
             raise JournalError('CONFIRMACION_EXACTA_REQUERIDA')
         self._current()
-        self.confirmation=(author,stage,server_day)
+        self.confirmation=(author,stage,server_day,require_excel)
         self.mailbox.submit('verify');self.phase='VERIFICANDO'
 
     def request_readback(self,*,confirmed):
@@ -67,10 +67,10 @@ class PilotController:
             current=self._current()
             if result['context']!=self.context or result['report']!=self.report:
                 self.phase='BLOQUEADA';raise JournalError('FORMULARIO_CAMBIADO')
-            author,stage,day=self.confirmation;self.confirmation=None
+            author,stage,day,require_excel=self.confirmation;self.confirmation=None
             self.journal.approve_preparation(self.op,current=current,prepared=self.report,author=author,confirmed=True)
             ticket=self.journal.reserve_creation(self.op,current=self._current(),prepared=self.report,raw=result['raw'],
-                author=author,stage=stage,stage_code=self.context['COD_Etapa'],server_day=day,confirmed=True)
+                author=author,stage=stage,stage_code=self.context['COD_Etapa'],server_day=day,confirmed=True,require_excel=require_excel)
             self.phase='ENVIANDO'
             try:self.mailbox.submit('create_once',reservation=ticket)
             except Exception:

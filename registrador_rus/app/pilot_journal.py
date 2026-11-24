@@ -116,7 +116,7 @@ class PilotJournal(_JournalCore):
         self.mark_ready(op)
         self._authorize(op,human_actor=author,confirmed=True)
 
-    def reserve_creation(self,op,*,current,prepared,raw,author,stage,stage_code,server_day,confirmed):
+    def reserve_creation(self,op,*,current,prepared,raw,author,stage,stage_code,server_day,confirmed,require_excel=False):
         _require_accepted()
         op.require_same_approval(current)
         self._review_valid(op)
@@ -126,7 +126,7 @@ class PilotJournal(_JournalCore):
         auth=self.db.execute('SELECT human_actor FROM authorizations WHERE operation_id=?',(op.operation_id,)).fetchone()
         if auth is None or self.storage.unseal('actor',op.operation_id,auth['human_actor'])!=author:
             raise JournalError('AUTOR_NO_COINCIDE')
-        result=self.bind_baseline(op,raw,author=author,stage=stage,stage_code=stage_code,server_day=server_day,require_excel=False)
+        result=self.bind_baseline(op,raw,author=author,stage=stage,stage_code=stage_code,server_day=server_day,require_excel=require_excel)
         if result!='SIN_PREVIA':
             raise JournalError('LECTURA_PREVIA_NO_ELEGIBLE')
         # Vincular el baseline que se acaba de examinar con la reserva transaccional.

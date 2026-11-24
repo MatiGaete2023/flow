@@ -1,4 +1,4 @@
-"""P6c: devolución de recibos ficticios a una copia XLSX simple, sin RUS."""
+"""P6c: devolución de recibos del ámbito correspondiente a una copia XLSX simple, sin RUS."""
 from dataclasses import dataclass
 from datetime import date, datetime
 from hashlib import sha256
@@ -131,10 +131,8 @@ def _fingerprint(book, ignored):
     return result
 
 
-def reconcile_simulated(journal, requests, source, destination):
-    """Solo recibos simulados. Todas las devoluciones se verifican antes de confirmar."""
-    if not isinstance(journal, SimulationJournal):
-        raise ExcelConflict('DIARIO_SIMULADO_REQUERIDO')
+def _reconcile(journal, requests, source, destination, *, simulated):
+    """Todas las devoluciones se verifican antes de confirmar."""
     requests = tuple(requests)
     if not requests or any(not isinstance(r, ExcelRequest) for r in requests):
         raise ExcelConflict('SOLICITUD_EXCEL_INVALIDA')
@@ -144,19 +142,26 @@ def reconcile_simulated(journal, requests, source, destination):
     if (source.suffix.lower() != '.xlsx' or destination.suffix.lower() != '.xlsx' or source.is_symlink() or
             source.resolve() == destination.resolve() or not source.is_file() or destination.exists() or destination.is_symlink()):
         raise ExcelConflict('RUTA_XLSX_INVALIDA_O_EXISTENTE')
+    if not simulated:
+        from .private_demo_directory import validate_private_demo
+        if destination.parent != journal.policy.directory or len(requests)!=1:
+            raise ExcelConflict('COPIA_PILOTO_REQUIERE_CARPETA_PRIVADA')
+        validate_private_demo(destination)
     original = source.read_bytes()
     original_hash = _hash(original)
     book = _load(original)
     with journal._tx():
-        journal.db.execute('''CREATE TABLE IF NOT EXISTS excel_reconciliations(
+        ddl='''CREATE TABLE IF NOT EXISTS excel_reconciliations(
             operation_id TEXT PRIMARY KEY REFERENCES readback_receipts(operation_id),
-            source_sha256 TEXT NOT NULL, output_sha256 TEXT NOT NULL, simulated INTEGER NOT NULL CHECK(simulated=1))''')
+            source_sha256 TEXT NOT NULL, output_sha256 TEXT NOT NULL, simulated INTEGER NOT NULL CHECK(simulated=1))'''
+        journal.db.execute(ddl if simulated else ddl.replace('CHECK(simulated=1)','CHECK(simulated=0)'))
         targets = {}
         for req in requests:
             op = req.current
             row = journal._require_current(op.operation_id, op)
-            receipt = journal.db.execute('SELECT * FROM readback_receipts WHERE operation_id=? AND simulated=1',
-                                         (op.operation_id,)).fetchone()
+            if not simulated:journal._review_valid(op)
+            receipt = journal.db.execute('SELECT * FROM readback_receipts WHERE operation_id=? AND simulated=?',
+                                         (op.operation_id,simulated)).fetchone()
             if (row['state'] != 'PENDIENTE_EXCEL' or receipt is None or receipt['approval_digest'] != row['digest'] or
                     receipt['destination'] != op.destination or receipt['identity_key'] != row['identity_key']):
                 raise ExcelConflict('RECIBO_NO_ELEGIBLE')
@@ -200,9 +205,23 @@ def reconcile_simulated(journal, requests, source, destination):
                 tmp.unlink(missing_ok=True)
         if _hash(destination.read_bytes()) != output_hash or _hash(source.read_bytes()) != original_hash:
             raise ExcelConflict('ARCHIVO_CAMBIO_TRAS_PUBLICACION')
+        if not simulated:validate_private_demo(destination)
         for req in requests:
             op_id = req.current.operation_id
-            journal.db.execute('INSERT INTO excel_reconciliations VALUES(?,?,?,1)', (op_id, original_hash, output_hash))
+            journal.db.execute('INSERT INTO excel_reconciliations VALUES(?,?,?,?)', (op_id, original_hash, output_hash,simulated))
             journal.db.execute("UPDATE operations SET state='COMPROBADA' WHERE operation_id=?", (op_id,))
-            journal._audit(op_id, 'EXCEL_SIMULADO_VERIFICADO')
+            journal._audit(op_id, 'EXCEL_SIMULADO_VERIFICADO' if simulated else 'EXCEL_PILOTO_VERIFICADO')
     return output_hash
+
+
+def reconcile_simulated(journal, requests, source, destination):
+    if type(journal) is not SimulationJournal:
+        raise ExcelConflict('DIARIO_SIMULADO_REQUERIDO')
+    return _reconcile(journal,requests,source,destination,simulated=1)
+
+
+def reconcile_pilot(journal, request, source, destination):
+    from .pilot_journal import PilotJournal
+    if type(journal) is not PilotJournal:
+        raise ExcelConflict('DIARIO_PILOTO_REQUERIDO')
+    return _reconcile(journal,(request,),source,destination,simulated=0)
