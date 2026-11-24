@@ -15,6 +15,7 @@ mod motor;
 mod producto_excel;
 mod productos;
 mod revision_ui;
+mod sincronizar;
 mod theme;
 mod trabajo;
 mod ui;

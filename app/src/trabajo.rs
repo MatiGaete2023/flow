@@ -29,6 +29,13 @@ pub struct Registro {
     pub res: String,
     /// Programas que la propuesta afirma como otro programa vigente (botón «Marcar como consignada»).
     pub otros_programas: Vec<String>,
+    /// Campos de revisión que solo viven en Excel (`FECHA_OBS`, `TT`, `CC`).
+    pub campos: BTreeMap<String, String>,
+    /// Identificador de la fila en la última copia de Excel que se guardó (`NURUS_ID_REGISTRO`).
+    pub id_excel: String,
+    /// Revisión que tenía la copia de Excel al guardarla o al importarla, y la local en ese momento (`sync_base`, `sync_local`).
+    pub sync_base: Option<BTreeMap<String, String>>,
+    pub sync_local: Option<BTreeMap<String, String>>,
 }
 
 impl Registro {
@@ -90,6 +97,8 @@ pub struct Trabajo {
     pub cruce: Option<String>,
     pub analisis_ms: u128,
     pub paquete: Option<PaqueteTrabajo>,
+    /// Última copia de Excel que se guardó desde este trabajo (para «Actualizar desde Excel»).
+    pub copia: Option<PathBuf>,
     /// P1: otros programas consignados por el funcionario, por identificador de registro del paquete. Se guardan en
     /// la sesión y sobreviven al recálculo; la propuesta deja de repetir esa constancia.
     pub consignaciones: BTreeMap<String, Vec<String>>,
@@ -102,6 +111,14 @@ struct Decision {
     seleccionada: bool,
     res: String,
     propuesta: String,
+    #[serde(default)]
+    campos: BTreeMap<String, String>,
+    #[serde(default)]
+    id_excel: String,
+    #[serde(default)]
+    sync_base: Option<BTreeMap<String, String>>,
+    #[serde(default)]
+    sync_local: Option<BTreeMap<String, String>>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -421,10 +438,13 @@ impl Trabajo {
             ..Default::default()
         };
         for r in &self.registros {
-            if r.editada.is_some() || r.revisada || r.seleccionada || !r.res.is_empty() {
+            if r.editada.is_some() || r.revisada || r.seleccionada || !r.res.is_empty() || !r.campos.is_empty() || r.sync_base.is_some() {
                 s.decisiones.insert(
                     r.fila_excel,
-                    Decision { editada: r.editada.clone(), revisada: r.revisada, seleccionada: r.seleccionada, res: r.res.clone(), propuesta: r.propuesta.clone() },
+                    Decision {
+                        editada: r.editada.clone(), revisada: r.revisada, seleccionada: r.seleccionada, res: r.res.clone(), propuesta: r.propuesta.clone(),
+                        campos: r.campos.clone(), id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
+                    },
                 );
             }
         }
@@ -452,6 +472,10 @@ impl Trabajo {
                 r.editada = d.editada.clone();
                 r.revisada = d.revisada;
                 r.seleccionada = d.seleccionada;
+                r.campos = d.campos.clone();
+                r.id_excel = d.id_excel.clone();
+                r.sync_base = d.sync_base.clone();
+                r.sync_local = d.sync_local.clone();
                 if !d.res.is_empty() {
                     r.res = d.res.clone();
                 }

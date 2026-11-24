@@ -277,6 +277,11 @@ pub fn filas(w: &Trabajo) -> Vec<Vec<Cell>> {
             if let Some(k) = clave_ingreso(&w.headers, &r.values) {
                 poner(CLAVE_INGRESO, k);
             }
+            for campo in ["FECHA_OBS", "TT", "CC"] {
+                if let Some(v) = r.campos.get(campo) {
+                    poner(campo, v.clone());
+                }
+            }
             fila
         })
         .collect()

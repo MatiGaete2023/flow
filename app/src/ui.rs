@@ -49,6 +49,14 @@ pub struct Screenshot {
     pub pedido: bool,
 }
 
+/// Conflictos de «Actualizar desde Excel» a la espera de la decisión de la persona.
+struct DialogoSincronia {
+    conflictos: Vec<crate::sincronizar::Conflicto>,
+    usar_excel: Vec<bool>,
+    headers: Vec<String>,
+    filas: Vec<Vec<Cell>>,
+}
+
 pub struct App {
     cfg: Config,
     vista: Vista,
@@ -96,6 +104,7 @@ pub struct App {
     sucio: Option<Instant>,
     confirmar_reinicio: bool,
     revision_bitacoras: Option<crate::revision_ui::Dialogo>,
+    sincronia: Option<DialogoSincronia>,
     ultimo_tema: Option<bool>,
 }
 
@@ -143,6 +152,7 @@ impl App {
             sucio: None,
             confirmar_reinicio: false,
             revision_bitacoras: None,
+            sincronia: None,
             ultimo_tema: None,
         };
         if let Some(e) = err {
@@ -362,6 +372,7 @@ impl App {
         let w = self.work.as_ref().unwrap();
         // Como Flow Python: copia del Excel original (o del consolidado del paquete) con las columnas de revisión.
         // Sin libro que preservar, una tabla nueva de fidelidad reducida, con el aviso visible.
+        let hoja = crate::copia_excel::base(w).map(|b| b.hoja).unwrap_or_else(|_| w.mode().label().to_uppercase());
         let r = match crate::copia_excel::base(w) {
             Ok(_) => crate::copia_excel::exportar(w, &dir).map(|p| (p, None)),
             Err(aviso) => crate::producto_excel::exportar(w, &dir, Some(&aviso)).map(|p| (p, Some(aviso))),
@@ -370,9 +381,96 @@ impl App {
             Ok((p, aviso)) => {
                 let texto = format!("Excel revisable guardado: {}", p.display());
                 self.aviso(aviso.map_or(texto.clone(), |a| format!("{texto} · {a}")), false);
+                if let Some(w) = self.work.as_mut() {
+                    crate::sincronizar::recordar_exportacion(w, &hoja);
+                    w.copia = Some(p.clone());
+                }
                 self.registrar(p, "Excel de observaciones");
             }
             Err(e) => self.aviso(e, true),
+        }
+    }
+
+    /// «Actualizar desde Excel»: trae a Trabajo la revisión hecha en la última copia guardada.
+    fn actualizar_desde_excel(&mut self, previo: Option<(Vec<String>, Vec<Vec<Cell>>)>, resoluciones: crate::sincronizar::Resoluciones) {
+        let Some(w) = self.work.as_mut() else { return };
+        let (headers, filas) = match previo {
+            Some(datos) => datos,
+            None => {
+                let ruta = match w.copia.clone().filter(|r| r.is_file()) {
+                    Some(r) => r,
+                    None => match rfd::FileDialog::new().set_title("Copia de Excel de este trabajo").add_filter("Excel", &["xlsx", "xlsm"]).pick_file() {
+                        Some(r) => r,
+                        None => return,
+                    },
+                };
+                let leida = std::fs::read(&ruta).map_err(|e| format!("No se pudo leer la copia: {e}")).and_then(|b| crate::sincronizar::leer_copia(w, &b));
+                match leida {
+                    Ok(datos) => {
+                        w.copia = Some(ruta);
+                        datos
+                    }
+                    Err(e) => {
+                        self.aviso(e, true);
+                        return;
+                    }
+                }
+            }
+        };
+        match crate::sincronizar::actualizar(w, &headers, &filas, &resoluciones) {
+            Ok(resumen) => {
+                let mut texto = format!("Copia de Excel incorporada: {} filas cambiaron.", resumen.filas_cambiadas);
+                for a in &resumen.avisos {
+                    texto.push_str(&format!(" {a}"));
+                }
+                self.sincronia = None;
+                self.revision += 1;
+                self.sucio = Some(Instant::now());
+                self.aviso(texto, false);
+            }
+            Err(crate::sincronizar::Error::Conflictos(conflictos)) => {
+                let usar_excel = vec![false; conflictos.len()];
+                self.sincronia = Some(DialogoSincronia { conflictos, usar_excel, headers, filas });
+            }
+            Err(e) => self.aviso(e.mensaje(), true),
+        }
+    }
+
+    fn dialogo_sincronia(&mut self, ctx: &egui::Context, p: &Pal) {
+        let Some(d) = self.sincronia.as_mut() else { return };
+        let mut abierto = true;
+        let (mut aplicar, mut cancelar) = (false, false);
+        egui::Window::new("Cambios en Trabajo y en Excel").open(&mut abierto).default_width(640.0).show(ctx, |ui| {
+            ui.label(format!("{} campos se editaron aquí y en Excel. Elige cuál conservar; no se aplicó nada todavía.", d.conflictos.len()));
+            egui::ScrollArea::vertical().max_height(360.0).show(ui, |ui| {
+                for (c, usar) in d.conflictos.iter().zip(&mut d.usar_excel) {
+                    ui.separator();
+                    ui.label(RichText::new(format!("Fila {} · {}", c.fila + 1, c.campo)).strong());
+                    ui.horizontal_wrapped(|ui| {
+                        ui.radio_value(usar, false, format!("Aquí: {}", c.local));
+                    });
+                    ui.horizontal_wrapped(|ui| {
+                        ui.radio_value(usar, true, format!("Excel: {}", c.entrante));
+                    });
+                    ui.label(RichText::new(format!("Antes: {}", c.base)).color(p.muted).size(12.0));
+                }
+            });
+            ui.horizontal(|ui| {
+                aplicar = theme::primary(ui, p, "Aplicar elecciones").clicked();
+                cancelar = ui.button("Cancelar").clicked();
+            });
+        });
+        if cancelar || !abierto {
+            self.sincronia = None;
+        } else if aplicar {
+            let d = self.sincronia.take().unwrap();
+            let resoluciones = d
+                .conflictos
+                .iter()
+                .zip(&d.usar_excel)
+                .map(|(c, usar)| ((c.fila, c.campo.clone()), if *usar { c.entrante.clone() } else { c.local.clone() }))
+                .collect();
+            self.actualizar_desde_excel(Some((d.headers, d.filas)), resoluciones);
         }
     }
 
@@ -424,6 +522,7 @@ impl App {
             self.barra(ctx, &p);
         }
         self.avisos_panel(ctx, &p);
+        self.dialogo_sincronia(ctx, &p);
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(p.bg).inner_margin(egui::Margin::symmetric(18, 12)))
             .show(ctx, |ui| match self.vista {
@@ -704,6 +803,9 @@ impl App {
                 let w = self.work.as_ref().unwrap();
                 self.revision_bitacoras = Some(crate::revision_ui::Dialogo::nuevo(w, self.corte()));
             }
+        }
+        if self.work.as_ref().is_some_and(|w| w.copia.is_some()) && ui.button("Actualizar desde Excel").on_hover_text("Trae a Trabajo la revisión hecha en la última copia de Excel guardada: observación, FECHA_OBS, TT, CC y RES").clicked() {
+            self.actualizar_desde_excel(None, Default::default());
         }
         let avisos = self.work.as_ref().and_then(|w| w.paquete.as_ref()).map(|p| p.avisos_agrupados()).unwrap_or_default();
         if !avisos.is_empty() {
@@ -2379,6 +2481,68 @@ mod pruebas_producto {
         let mut w2 = sin.work.take().unwrap();
         w2.headers.retain(|h| h != "SITFA_INGRESO_RUS");
         assert!(crate::producto_excel::encabezados(&w2).iter().all(|h| h != "NURUS_CLAVE_INGRESO"));
+        let _ = std::fs::remove_dir_all(&base);
+    }
+}
+
+/// E-A1: el flujo guardar la copia, revisarla en Excel y traerla de vuelta con «Actualizar desde Excel».
+#[cfg(test)]
+mod pruebas_sincronia {
+    use super::*;
+    use base64::Engine;
+    use flow_rust::descargador::paquete::{self, Opciones};
+    use serde_json::Value;
+
+    #[test]
+    fn guardar_la_copia_y_actualizar_desde_excel_trae_la_revision() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let oraculo: Value = serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap();
+        let e = oraculo["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "listados_dos_pestanas").unwrap();
+        let base = perfil.join("sincronia");
+        let _ = std::fs::remove_dir_all(&base);
+        let lote = base.join("lote").join(e["lote"]["carpeta"].as_str().unwrap());
+        for (ruta, b64) in e["lote"]["archivos"].as_object().unwrap() {
+            let ruta = lote.join(ruta);
+            std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+            std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let zip = base.join("Captura.zip");
+        paquete::exportar_con(&[lote], &zip, &Opciones::default()).unwrap();
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.cfg.carpeta_productos = base.join("productos").display().to_string();
+        app.corte_txt = "20/11/2026".into();
+        app.abrir(zip);
+        app.guardar_excel();
+        let copia = app.work.as_ref().unwrap().copia.clone().expect("copia guardada");
+        assert!(copia.is_file());
+        assert!(app.work.as_ref().unwrap().registros.iter().all(|r| !r.id_excel.is_empty() && r.sync_base.is_some()));
+        // La persona completa FECHA_OBS, TT y CC en Excel (aquí: se guarda otra copia con esos campos y se la señala).
+        let w = app.work.as_mut().unwrap();
+        w.registros[0].campos.insert("FECHA_OBS".into(), "2026-11-24".into());
+        w.registros[0].campos.insert("TT".into(), "1".into());
+        w.registros[0].campos.insert("CC".into(), "0".into());
+        let revisada = crate::producto_excel::exportar(w, &base.join("revisada"), None).unwrap();
+        w.registros[0].campos.clear();
+        w.copia = Some(revisada);
+        app.actualizar_desde_excel(None, Default::default());
+        let w = app.work.as_ref().unwrap();
+        assert!(app.sincronia.is_none());
+        assert_eq!(w.registros[0].campos.get("FECHA_OBS").map(String::as_str), Some("2026-11-24"));
+        assert_eq!((w.registros[0].campos.get("TT").map(String::as_str), w.registros[0].campos.get("CC").map(String::as_str)), (Some("1"), Some("0")));
+        assert!(w.registros[1].campos.is_empty());
+        // Una copia que no es de este trabajo se rechaza sin aplicar nada.
+        let mut otro = App::new(None);
+        otro.cfg = Config::default();
+        otro.corte_txt = "20/11/2026".into();
+        otro.abrir(base.join("Captura.zip"));
+        let w2 = otro.work.as_mut().unwrap();
+        w2.registros.truncate(1);
+        let truncada = crate::producto_excel::exportar(w2, &base.join("truncada"), None).unwrap();
+        let w = app.work.as_mut().unwrap();
+        w.copia = Some(truncada);
+        app.actualizar_desde_excel(None, Default::default());
+        assert!(app.avisos.iter().any(|(t, error, _)| *error && t.contains("Faltan registros en la copia")), "{:?}", app.avisos);
         let _ = std::fs::remove_dir_all(&base);
     }
 }
