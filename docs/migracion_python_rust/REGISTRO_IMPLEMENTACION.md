@@ -21,7 +21,7 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `sincronizar.rs` (nuevo), `Registro` (`campos`, `id_excel`, `sync_base`, `sync_local`, guardados en la sesión), `producto_excel.rs` (escribe `FECHA_OBS`, `TT` y `CC`), `ui.rs` (botón, diálogo de conflictos y memoria de la última copia) y el oráculo `app/qa/generar_sync.py` → `app/tests/datos/sync.json`.
 - Acredita: `SYNC: 12/12` contra `nurus.personal.sync.refresh` (remota, local, conflicto y sus resoluciones, misma edición, RES, sin columna técnica, identidad cambiada, faltan registros); `oraculo_de_sync_detecta_alteraciones`; `la_copia_guardada_se_importa_sin_cambios`; flujo `guardar_la_copia_y_actualizar_desde_excel_trae_la_revision`; `tools/probar_app.sh todo`: 64 y 51 pruebas, 0 fallos.
 - Diferencias declaradas: las de [PLAN.md](PLAN.md) (observación vaciada, origen editado, `NURUS_DECISIONES`).
-- Pendiente: CI de Windows; copia preservada de Excel de escritorio sin prueba con Excel real.
+- CI de Windows en verde (run 45429755148), con el oráculo regenerado en Windows. La CI regenera solo los oráculos que cambian (a78 no coincide byte a byte en Windows desde antes). Pendiente: copia preservada de Excel de escritorio sin prueba con Excel real.
 
 ## 2026-11-24 · E-W1: producto de Trabajo sin consolidado
 

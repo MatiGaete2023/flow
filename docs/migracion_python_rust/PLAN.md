@@ -65,7 +65,7 @@ Qué se compara con Python:
 
 En este orden, salvo que el usuario indique otro:
 
-- **E-A1 · Reimportación y conciliación desde el Excel revisado (F10) — `HECHO` en Linux; falta su CI de Windows.** `sync.py`. `sincronizar.rs` y el botón «Actualizar desde Excel» de Trabajo; oráculo `app/qa/generar_sync.py` (12 casos). Diferencias: una observación vaciada en Excel no se importa; las columnas de origen editadas en Excel solo se avisan, no se recalculan; `NURUS_DECISIONES` no se combina.
+- **E-A1 · Reimportación y conciliación desde el Excel revisado (F10) — `HECHO` (CI de Windows en verde, run 45429755148).** `sync.py`. `sincronizar.rs` y el botón «Actualizar desde Excel» de Trabajo; oráculo `app/qa/generar_sync.py` (12 casos). Diferencias: una observación vaciada en Excel no se importa; las columnas de origen editadas en Excel solo se avisan, no se recalculan; `NURUS_DECISIONES` no se combina.
 - **E-A2 · Conciliación entre capturas (F07).** `capture_reconciliation.py`.
 - **E-A3 · Recibos, vigencia y recuperación de sesiones (F09).** `product_state.py` y `session.py`.
 - **E-A4 · Ajustes (F11).** Alias de contactos, selector de variables y validación por regla, plantillas de correo persistentes, e importador de matrices y de paquetes (`template_package.py`).
