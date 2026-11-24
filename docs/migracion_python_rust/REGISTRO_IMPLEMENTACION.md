@@ -192,3 +192,10 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
   - R11 cierra la orden por cercanía y no aplica R2 (`motor/historia.rs:442`);
   - C10 se suprime con cualquier nomenclatura posterior (`escritos.rs:120`).
 - Propuestas: decisiones D-10 a D-12, más E-X1 (guardia de solo lectura) y E-X2 (diagnóstico de Notificación y Diligencias).
+
+## 2026-11-24 · E-R1 y E-R2 · Meta 4 desde los lotes del Descargador
+
+- Cambió: `app/src/descargador/meta4.rs` (lector del formato del Descargador: `calcular`, `fecha_lectura`, `tribunales_disponibles`), `app/src/meta4_ui.rs` y la vista «Meta 4» en `ui.rs`, `ayuda.rs` y `main.rs`; `paquete.rs` expone `leer_registro`, `Clave` y `Fuente::original`; `flow-dominio` por ruta en `app/Cargo.toml`.
+- Acredita: `meta4::tests` (lote y bitácoras de Flow Python pasados a Residencia: registros, identidad visible, lecturas, inventario, publicación de los cinco productos, rechazo de lote duplicado, tribunal ajeno, lote incompleto y bitácoras ausentes) y `meta4_ui::pruebas` (genera y regenera). `tools/probar_app.sh todo`: 68 y 84 pruebas, 0 fallos; clippy de la biblioteca limpio.
+- Diferencias declaradas: no lee `bitacoras_meta4.json` ni carpetas de reportes Excel sueltos; sin `PERIODO_INCOMPLETO` (Python no lo tiene).
+- Pendiente: oráculo R1b (`meta4_bitacoras.generar` sobre un lote del Descargador, fila a fila) y CI de Windows.

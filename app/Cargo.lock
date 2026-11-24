@@ -1519,6 +1519,7 @@ dependencies = [
  "encoding_rs",
  "flate2",
  "flow-anonimo",
+ "flow-dominio",
  "flow-meta4",
  "getrandom 0.4.3",
  "image",

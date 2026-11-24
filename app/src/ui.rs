@@ -23,10 +23,11 @@ pub enum Vista {
     Contactos,
     Anonimizador,
     Descargador,
+    Meta4,
     Ajustes,
 }
 
-pub(crate) const VISTAS: [(Vista, &str, &str); 8] = [
+pub(crate) const VISTAS: [(Vista, &str, &str); 9] = [
     (Vista::Trabajo, "🗂", "Trabajo"),
     (Vista::Correos, "✉", "Correos"),
     (Vista::Resoluciones, "⚖", "Resoluciones"),
@@ -34,6 +35,7 @@ pub(crate) const VISTAS: [(Vista, &str, &str); 8] = [
     (Vista::Contactos, "👥", "Contactos"),
     (Vista::Anonimizador, "🛡", "Anonimizador"),
     (Vista::Descargador, "↓", "Descargador"),
+    (Vista::Meta4, "📅", "Meta 4"),
     (Vista::Ajustes, "⚙", "Ajustes"),
 ];
 
@@ -123,6 +125,7 @@ pub struct App {
     anon_inf: Option<anon::Informe>,
     autodiagnostico: Option<crate::autodiagnostico::Informe>,
     descargador: crate::descargador_ui::Descargador,
+    meta4: crate::meta4_ui::Meta4Vista,
     // ajustes
     texto_sel: String,
     // estado
@@ -188,6 +191,7 @@ impl App {
             autodiagnostico: None,
             anon_inf: None,
             descargador: Default::default(),
+            meta4: Default::default(),
             texto_sel: "ESPERA.E05_PROYECTO_Y_CORREO".into(),
             avisos: vec![],
             screenshot: screenshot.map(|path| Screenshot { path, frames: 0, pedido: false }),
@@ -494,6 +498,7 @@ impl App {
                 self.descargador.ejemplo();
                 self.vista = Vista::Descargador;
             }
+            "meta4" => self.vista = Vista::Meta4,
             "ajustes" => self.vista = Vista::Ajustes,
             "oscuro" => self.cfg.tema_oscuro = true,
             _ => {}
@@ -666,7 +671,7 @@ impl App {
                 self.abrir_dialogo();
             }
         }
-        if self.vista != Vista::Descargador && ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::S))) {
+        if !matches!(self.vista, Vista::Descargador | Vista::Meta4) && ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::S))) {
             self.guardar_excel();
         }
         // Archivos arrastrados a la ventana
@@ -693,7 +698,7 @@ impl App {
         }
         let p = self.p();
         self.nav(ctx, &p);
-        if self.vista != Vista::Descargador {
+        if !matches!(self.vista, Vista::Descargador | Vista::Meta4) {
             self.barra(ctx, &p);
         }
         self.avisos_panel(ctx, &p);
@@ -709,6 +714,7 @@ impl App {
                 Vista::Contactos => self.v_contactos(ui, &p),
                 Vista::Anonimizador => self.v_anon(ui, &p),
                 Vista::Descargador => self.descargador.mostrar(ui, &p),
+                Vista::Meta4 => self.meta4.mostrar(ui, &p),
                 Vista::Ajustes => self.v_ajustes(ui, &p),
             });
         if let Some(paquete) = self.descargador.paquete_para_trabajo() {

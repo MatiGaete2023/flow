@@ -502,6 +502,12 @@ pub(super) struct Fuente {
 }
 
 impl Fuente {
+    /// Cabecera del Excel tal como llegó (sin las columnas añadidas) y la fila original con sus tipos.
+    pub(super) fn original(&self, numero: usize) -> Option<(&[String], Vec<xls::Celda>)> {
+        let valores = self.filas_originales.get(&numero)?;
+        Some((&self.cabecera_original, self.fila_tipada(numero, valores)))
+    }
+
     /// La fila de `tables(lot)` con los valores crudos de Python: lo que la grilla trae como número, fecha o vacío
     /// conserva su tipo; el texto y las columnas añadidas quedan como texto procesado.
     pub(super) fn fila_tipada(&self, numero: usize, valores: &[String]) -> Vec<xls::Celda> {
@@ -656,7 +662,7 @@ fn fila(pares: &[(&str, String)]) -> Map<String, Value> {
 }
 
 type Fila = Map<String, Value>;
-type Clave = [String; 3];
+pub(super) type Clave = [String; 3];
 type PorIngreso = Vec<(Clave, Value)>;
 
 /// `{k: '' for k in COMMON}` con los valores dados.
@@ -786,7 +792,7 @@ const LOTE_MAX: u64 = 32 * 1024 * 1024;
 const COPIA_MAX: u64 = 8 * 1024 * 1024;
 const COPIA_NO_VERIFICABLE: &str = "No se pudo abrir una copia verificable.";
 
-fn clave_de(v: &Value) -> Clave {
+pub(super) fn clave_de(v: &Value) -> Clave {
     IDENTIDAD_BITACORA.map(|k| texto(&v[k]))
 }
 
@@ -830,7 +836,7 @@ fn cadena<'a>(v: &'a Value, k: &str) -> Result<&'a str, Option<String>> {
 }
 
 /// La bitácora LEIDA de un registro, releída de su HTML con hash e identidad comprobadas.
-fn leer_registro(carpeta: &Path, r: &Value, id: &Clave) -> Result<Value, Option<String>> {
+pub(super) fn leer_registro(carpeta: &Path, r: &Value, id: &Clave) -> Result<Value, Option<String>> {
     let nombre = cadena(r, "archivo")?;
     let datos = copia_local(carpeta, nombre, "Archivo de bitácora fuera de alcance.")?;
     if json!(sha256(&datos)) != *r.get("sha256").ok_or(None)? {

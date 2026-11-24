@@ -35,6 +35,7 @@ quick-xml = "0.42"
 # E-R0: Meta 4 y el Anonimizador del workspace histórico, reutilizados por ruta.
 flow-meta4 = { path = "../rust/crates/flow-meta4" }
 flow-anonimo = { path = "../rust/crates/flow-anonimo" }
+flow-dominio = { path = "../rust/crates/flow-dominio" }
 
 # Linux: eframe no trae backend de ventana por omisión; las pruebas y el contraste V2 compilan sin `--features` (E-V2).
 [target.'cfg(target_os = "linux")'.dependencies]
