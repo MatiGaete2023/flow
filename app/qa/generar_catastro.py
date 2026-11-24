@@ -35,6 +35,8 @@ def xlsx_fijo(libro):
     with zipfile.ZipFile(origen) as entrada, zipfile.ZipFile(salida, 'w', zipfile.ZIP_STORED) as destino:
         for nombre in sorted(entrada.namelist()):
             info = zipfile.ZipInfo(nombre, (1980, 1, 1, 0, 0, 0))
+            info.create_system = 3  # por omisión es 0 en Windows y 3 en Linux: cambiaría la cabecera
+            info.external_attr = 0o600 << 16
             datos = entrada.read(nombre)
             if nombre == 'docProps/core.xml':  # `save` pone la hora actual en «modificado»
                 datos = re.sub(rb'(<dcterms:modified[^>]*>)[^<]*', rb'\g<1>2026-01-01T00:00:00Z', datos)
