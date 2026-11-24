@@ -186,6 +186,9 @@ pub struct Borrador {
     /// Huella de lo que el borrador lee (`product_state.fingerprint`); vacía si aún no se selló.
     #[serde(default)]
     pub dependencia: String,
+    /// Archivos adjuntos (ruta y huella de lo que se revisó), además de la nómina.
+    #[serde(default)]
+    pub adjuntos: Vec<(String, String)>,
 }
 
 fn render_vars(t: &str, vars: &BTreeMap<&str, String>) -> String {
@@ -297,6 +300,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
                 guardado: None,
                 incluir: true,
                 dependencia: String::new(),
+                adjuntos: Vec::new(),
             });
         }
     }
@@ -331,6 +335,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
                 guardado: None,
                 incluir: true,
                 dependencia: String::new(),
+                adjuntos: Vec::new(),
             });
         }
     }
@@ -375,6 +380,7 @@ pub fn borrador_plantilla(w: Option<&Trabajo>, cfg: &Config, kind: &str, filas: 
         guardado: None,
         incluir: true,
         dependencia: String::new(),
+        adjuntos: Vec::new(),
     })
 }
 
@@ -428,6 +434,17 @@ pub fn guardar_eml(b: &Borrador, dir: &Path) -> Result<PathBuf, String> {
             out.push_str(&b64_lines(&data));
             out.push_str("\r\n");
         }
+    }
+    crate::manual::verificar_adjuntos(b)?;
+    for (ruta, _) in &b.adjuntos {
+        let nombre = std::path::Path::new(ruta).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+        let datos = std::fs::read(ruta).map_err(|e| format!("No se pudo leer el adjunto {ruta}: {e}"))?;
+        out.push_str(&format!(
+            "--{boundary}\r\nContent-Type: application/octet-stream; name=\"{0}\"\r\nContent-Disposition: attachment; filename=\"{0}\"\r\nContent-Transfer-Encoding: base64\r\n\r\n",
+            enc_word(&nombre)
+        ));
+        out.push_str(&b64_lines(&datos));
+        out.push_str("\r\n");
     }
     out.push_str(&format!("--{boundary}--\r\n"));
     let path = nueva_ruta(dir, &b.asunto, "eml");

@@ -16,12 +16,19 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-T2: formularios manuales
+
+- Cambió: `manual.rs` (nuevo), `productos.rs` y `outlook.rs` (adjuntos libres verificados por huella), `preparados.rs` (huella con adjuntos), `ui.rs` («Correo manual» y «Word manual»); el oráculo `generar_personalizacion.py` suma 11 Word y 8 bloques.
+- Acredita: `MANUAL: 19/19` contra `generate_word`, `block_variables` y `render_block`; `oraculo_del_word_manual_detecta_alteraciones`; `un_correo_manual_exige_destinatario_y_conserva_la_huella_del_adjunto`, `lo_que_se_escribe_y_los_favoritos_se_recuperan` y el flujo `un_correo_manual_se_guarda_sin_excel_con_su_adjunto_y_el_cc_fijo`; `tools/probar_app.sh todo`: 64 y 68 pruebas, 0 fallos; `inventario_escrituras` PASA (76 en 20).
+- Diferencias declaradas: las de [PLAN.md](PLAN.md).
+- Pendiente: CI de Windows.
+
 ## 2026-11-24 · E-T1: cuenta de Outlook y fallos al guardar
 
 - Cambió: `outlook.rs` (nuevo; sale de `productos.rs`), `config.rs` (`cuenta_outlook`), `preparados.rs` (recibo «incierto») y `ui.rs` (cuenta en Ajustes, bloqueo de reintento y «Ya lo revisé en Outlook»).
 - Acredita: `el_script_solo_guarda_y_nunca_envia`, `el_cc_fijo_y_la_cuenta_viajan_al_script`, `un_fallo_antes_de_guardar_se_distingue_de_uno_despues` (cuenta inexistente, fallo previo, fallo tras `PREPARADO`, identidad incompleta) y `un_guardado_incierto_de_outlook_bloquea_el_reintento_hasta_conciliarlo`; `tools/probar_app.sh todo`: 64 y 63 pruebas, 0 fallos; `inventario_escrituras` PASA.
 - Diferencias declaradas: sin prueba con Outlook real; la firma y el cuerpo HTML de Python no se portan.
-- Pendiente: CI de Windows; prueba del usuario con su Outlook.
+- CI de Windows en verde (run 45443830208). Pendiente: prueba del usuario con su Outlook.
 
 ## 2026-11-24 · E-A4: ajustes
 

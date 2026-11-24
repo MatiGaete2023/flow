@@ -17,8 +17,15 @@ sys.stdout.reconfigure(encoding='utf-8')
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RAIZ / 'src')]
 
+from unittest.mock import MagicMock  # noqa: E402
+
+# `manual.py` importa tkinter al cargarse; el oráculo solo usa sus funciones puras.
+for _m in ('tkinter', 'tkinter.ttk', 'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.simpledialog'):
+    sys.modules.setdefault(_m, MagicMock())
+
 from docx import Document  # noqa: E402
 from nurus.personal.config import VARIABLES, defaults  # noqa: E402
+from nurus.personal.manual import block_variables, generate_word, render_block  # noqa: E402
 from nurus.personal.personalization import archive_template, duplicate_template, restore_template, save_contact  # noqa: E402
 from nurus.personal.template_package import import_templates  # noqa: E402
 from nurus.personal.template_validation import variables  # noqa: E402
@@ -109,6 +116,41 @@ def matrices(nombres, invalido=()):
     return caso
 
 
+def word_manual(titulo, cuerpo, matriz=None, valores=None):
+    """Un Word manual (libre o con matriz); `matriz` es una lista de párrafos y cada párrafo una lista de runs."""
+    caso = {'titulo': titulo, 'cuerpo': cuerpo, 'matriz': matriz, 'valores': valores or {}}
+    with tempfile.TemporaryDirectory() as t:
+        t = Path(t)
+        ruta_matriz = ''
+        if matriz is not None:
+            doc = Document()
+            for runs in matriz:
+                parrafo = doc.add_paragraph()
+                for texto in runs:
+                    parrafo.add_run(texto)
+            ruta_matriz = str(t / 'matriz.docx')
+            doc.save(ruta_matriz)
+        destino = t / 'salida.docx'
+        try:
+            generate_word(destino, titulo, cuerpo, ruta_matriz, caso['valores'])
+            caso['parrafos'] = [p.text for p in Document(destino).paragraphs]
+        except ValueError as e:
+            caso['error'] = str(e)
+            caso['creo_archivo'] = destino.exists()
+    return caso
+
+
+def bloque(texto, valores=None):
+    caso = {'texto': texto, 'valores': valores}
+    try:
+        caso['variables'] = sorted(block_variables(texto))
+        if valores is not None:
+            caso['render'] = render_block(texto, valores)
+    except ValueError as e:
+        caso['error'] = str(e)
+    return caso
+
+
 def main():
     destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'personalizacion.json'
     c = lambda **kw: kw  # noqa: E731
@@ -157,10 +199,33 @@ def main():
         matrices(['LAJA_MULCHEN_PC_IE.docx']),
         matrices(['TOME_NOMENCL.docx', 'TOME_PC_IE.docx']),
     ]
+    palabras = [
+        word_manual('Título', 'Párrafo uno\nPárrafo dos'),
+        word_manual('', 'Solo cuerpo'),
+        word_manual('Título', '  \n '),
+        word_manual('Título', 'Hola {{NOMBRE}}'),
+        word_manual('Título', 'Texto [COMPLETAR dato]'),
+        word_manual('', '', [['{{NOMBRE}}']], {}),
+        word_manual('', '', [['{{NOMBRE}}']], {'NOMBRE': 'Persona'}),
+        word_manual('', '', [['Estimado {{NO', 'MBRE}}, rit ', '{{RIT}}']], {'NOMBRE': 'Ana', 'RIT': 'X-1-2099'}),
+        word_manual('', '', [['{{RIT}} {{NOMBRE}}']], {'RIT': 'A'}),
+        word_manual('', '', [['{{NOMBRE}}']], {'NOMBRE': '  '}),
+        word_manual('', '', [['Hola {{NOMBRE}}'], ['Sin campos'], ['Adiós {{NOMBRE}}']], {'NOMBRE': 'Ana'}),
+    ]
+    bloques = [
+        bloque('Hola {NOMBRE}, causa {RIT}', {'NOMBRE': 'Ana', 'RIT': 'X-1-2099'}),
+        bloque('Hola {NOMBRE}', {'NOMBRE': ' '}),
+        bloque('Hola {NOMBRE}', {}),
+        bloque('Sin variables', {}),
+        bloque('{DESCONOCIDA}'),
+        bloque('{NOMBRE!r}'),
+        bloque('{{NOMBRE}} y {FECHA}', {'FECHA': '01/01/2026'}),
+        bloque('{NOMBRE'),
+    ]
     _ = (c, deepcopy)
-    destino.write_bytes((json.dumps({'contactos': contactos, 'plantillas': plantillas, 'gramatica': gram, 'matrices': mat},
+    destino.write_bytes((json.dumps({'contactos': contactos, 'plantillas': plantillas, 'gramatica': gram, 'matrices': mat, 'palabras': palabras, 'bloques': bloques},
                                     ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
-    print(f'{len(contactos)} contactos, {len(plantillas)} plantillas, {len(gram)} textos, {len(mat)} paquetes en {destino}')
+    print(f'{len(contactos)} contactos, {len(plantillas)} plantillas, {len(gram)} textos, {len(mat)} paquetes, {len(palabras)} Word y {len(bloques)} bloques en {destino}')
 
 
 if __name__ == '__main__':

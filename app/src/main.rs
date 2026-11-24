@@ -12,6 +12,7 @@ mod demo;
 mod descargador_resultados_ui;
 mod descargador_ui;
 mod lectura;
+mod manual;
 mod motor;
 mod producto_excel;
 mod outlook;

@@ -98,6 +98,12 @@ pub struct App {
     nuevo_prog: String,
     nuevo_mail: String,
     nuevo_alias: String,
+    /// Formularios manuales (correo libre y Word libre o con matriz), recuperados al abrir.
+    manual: crate::manual::Actual,
+    manual_estado: Option<Result<String, String>>,
+    nombre_favorito: String,
+    favorito_elegido: String,
+    valores_favorito: std::collections::BTreeMap<String, String>,
     /// Lo que se está editando en cada fila de contactos (correos y alias) antes de guardarlo.
     contacto_buf: std::collections::BTreeMap<String, (String, String)>,
     /// Plantilla de correo elegida en Ajustes y su copia en edición.
@@ -159,6 +165,11 @@ impl App {
             productos: vec![],
             nuevo_prog: String::new(),
             nuevo_alias: String::new(),
+            manual: crate::manual::Actual::cargar(),
+            manual_estado: None,
+            nombre_favorito: String::new(),
+            favorito_elegido: String::new(),
+            valores_favorito: std::collections::BTreeMap::new(),
             contacto_buf: std::collections::BTreeMap::new(),
             plantilla_sel: "espera".into(),
             plantilla_edicion: None,
@@ -1548,6 +1559,7 @@ impl App {
         self.actualizar_obsoletos();
         let obsoletos_b = self.obsoletos.1.clone();
         theme::titulo(ui, p, "Correos", "Borradores listos para revisar: en Borradores de Outlook o como .eml sin enviar. Nunca se envían. Todos llevan CC a ucc_concepcion@pjud.cl.");
+        self.correo_manual(ui, p);
         let mut accion: Option<&'static str> = None;
         let mut guardar_destino = false;
         let mut particular = false;
@@ -1970,6 +1982,7 @@ impl App {
         self.actualizar_obsoletos();
         let obsoletos_p = self.obsoletos.2.clone();
         theme::titulo(ui, p, "Resoluciones", "Un proyecto por tribunal, RIT y tipo con todas las personas de la causa. Lo que falte queda como [COMPLETAR …] en el documento.");
+        self.word_manual(ui, p);
         let mut preparar = false;
         let mut generar = false;
         theme::card(p).show(ui, |ui| {
@@ -2322,6 +2335,174 @@ impl App {
         if guardar {
             self.guardar_cfg();
         }
+    }
+
+    fn guardar_manual(&mut self) {
+        if let Err(e) = self.manual.guardar() {
+            self.manual_estado = Some(Err(format!("No se pudo guardar lo que escribiste: {e}")));
+        }
+    }
+
+    /// Bloques favoritos: guardar el texto actual o insertar uno completando sus variables.
+    fn favoritos_manual(&mut self, ui: &mut egui::Ui, p: &Pal, cuerpo_word: bool) {
+        let favoritos = crate::manual::favoritos();
+        ui.horizontal_wrapped(|ui| {
+            ui.add(egui::TextEdit::singleline(&mut self.nombre_favorito).hint_text("Nombre del bloque").desired_width(160.0));
+            if ui.button("Guardar texto como favorito").clicked() {
+                let texto = if cuerpo_word { self.manual.cuerpo_word.clone() } else { self.manual.cuerpo.clone() };
+                self.manual_estado = Some(crate::manual::guardar_favorito(&self.nombre_favorito, &texto).map(|()| "Bloque favorito guardado.".to_string()));
+            }
+            if !favoritos.is_empty() {
+                egui::ComboBox::from_id_salt(("favorito", cuerpo_word)).selected_text(if self.favorito_elegido.is_empty() { "Insertar favorito…" } else { self.favorito_elegido.as_str() }).show_ui(ui, |ui| {
+                    for k in favoritos.keys() {
+                        ui.selectable_value(&mut self.favorito_elegido, k.clone(), k);
+                    }
+                });
+            }
+        });
+        if let Some(bloque) = favoritos.get(&self.favorito_elegido) {
+            let variables = crate::manual::variables_bloque(bloque).unwrap_or_default();
+            ui.horizontal_wrapped(|ui| {
+                for v in &variables {
+                    ui.label(RichText::new(v).color(p.muted));
+                    ui.add(egui::TextEdit::singleline(self.valores_favorito.entry(v.clone()).or_default()).desired_width(120.0));
+                }
+                if ui.button("Insertar").clicked() {
+                    match crate::manual::render_bloque(bloque, &self.valores_favorito) {
+                        Ok(t) => {
+                            let destino = if cuerpo_word { &mut self.manual.cuerpo_word } else { &mut self.manual.cuerpo };
+                            destino.push_str(&t);
+                            self.guardar_manual();
+                        }
+                        Err(e) => self.manual_estado = Some(Err(e)),
+                    }
+                }
+            });
+        }
+    }
+
+    fn estado_manual(&self, ui: &mut egui::Ui, p: &Pal) {
+        match &self.manual_estado {
+            Some(Ok(t)) => {
+                ui.label(RichText::new(t).color(p.green));
+            }
+            Some(Err(e)) => {
+                ui.label(RichText::new(e).color(p.amber));
+            }
+            None => {}
+        }
+    }
+
+    /// Correo libre sin Excel: destinatarios, texto y adjuntos; pasa por el mismo camino de guardado que los demás borradores.
+    fn correo_manual(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        egui::CollapsingHeader::new("Correo manual (no necesita un Excel)").id_salt("correo manual").show(ui, |ui| {
+            let mut cambio = false;
+            egui::Grid::new("correo manual grid").num_columns(2).spacing([10.0, 4.0]).show(ui, |ui| {
+                for (etiqueta, campo) in [("Para", &mut self.manual.para), ("CC", &mut self.manual.cc), ("Asunto", &mut self.manual.asunto)] {
+                    ui.label(etiqueta);
+                    cambio |= ui.add(egui::TextEdit::singleline(campo).desired_width(f32::INFINITY)).changed();
+                    ui.end_row();
+                }
+            });
+            cambio |= ui.add(egui::TextEdit::multiline(&mut self.manual.cuerpo).desired_rows(6).desired_width(f32::INFINITY)).changed();
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Adjuntar…").clicked() {
+                    if let Some(archivos) = rfd::FileDialog::new().pick_files() {
+                        for a in archivos {
+                            let a = a.display().to_string();
+                            if !self.manual.adjuntos.contains(&a) {
+                                self.manual.adjuntos.push(a);
+                                cambio = true;
+                            }
+                        }
+                    }
+                }
+                if !self.manual.adjuntos.is_empty() && ui.button("Quitar adjuntos").clicked() {
+                    self.manual.adjuntos.clear();
+                    cambio = true;
+                }
+                for a in &self.manual.adjuntos {
+                    ui.label(RichText::new(std::path::Path::new(a).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default()).color(p.muted).size(12.0));
+                }
+            });
+            self.favoritos_manual(ui, p, false);
+            if theme::primary(ui, p, "Preparar borrador").on_hover_text("Agrega el correo a la lista de borradores; se guarda con «Guardar borradores» (CC fijo, sin enviar)").clicked() {
+                match crate::manual::borrador_manual(&self.manual) {
+                    Ok(b) => {
+                        self.borradores.push(b);
+                        self.bsel = Some(self.borradores.len() - 1);
+                        self.manual_estado = Some(Ok("Borrador preparado: revísalo abajo y guárdalo.".into()));
+                    }
+                    Err(e) => self.manual_estado = Some(Err(e)),
+                }
+            }
+            self.estado_manual(ui, p);
+            if cambio {
+                self.guardar_manual();
+            }
+        });
+    }
+
+    /// Word libre o con una matriz `{{CAMPO}}`, sin Excel.
+    fn word_manual(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        egui::CollapsingHeader::new("Word manual · libre o con matriz").id_salt("word manual").show(ui, |ui| {
+            let mut cambio = false;
+            let matriz = self.manual.matriz.clone();
+            let campos: Vec<String> = if matriz.is_empty() {
+                Vec::new()
+            } else {
+                std::fs::read(&matriz).map_err(|e| e.to_string()).and_then(|b| crate::manual::variables_matriz(&b)).map(|v| v.into_iter().collect()).unwrap_or_default()
+            };
+            ui.horizontal(|ui| {
+                ui.label("Título");
+                cambio |= ui.add(egui::TextEdit::singleline(&mut self.manual.titulo_word).desired_width(f32::INFINITY)).changed();
+            });
+            ui.add_enabled_ui(matriz.is_empty(), |ui| {
+                cambio |= ui.add(egui::TextEdit::multiline(&mut self.manual.cuerpo_word).desired_rows(6).desired_width(f32::INFINITY)).changed();
+            });
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Elegir matriz…").clicked() {
+                    if let Some(m) = rfd::FileDialog::new().add_filter("Matriz Word", &["docx"]).pick_file() {
+                        self.manual.matriz = m.display().to_string();
+                        cambio = true;
+                    }
+                }
+                if !matriz.is_empty() && ui.button("Usar texto libre").clicked() {
+                    self.manual.matriz.clear();
+                    self.manual.valores.clear();
+                    cambio = true;
+                }
+                if !matriz.is_empty() {
+                    ui.label(RichText::new(format!("Matriz: {} · {} campos. El texto libre solo se usa sin matriz.", std::path::Path::new(&matriz).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(), campos.len())).color(p.muted).size(12.0));
+                }
+            });
+            for k in &campos {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(k).monospace());
+                    cambio |= ui.add(egui::TextEdit::singleline(self.manual.valores.entry(k.clone()).or_default()).desired_width(320.0)).changed();
+                });
+            }
+            if matriz.is_empty() {
+                self.favoritos_manual(ui, p, true);
+            }
+            if theme::primary(ui, p, "Generar Word").clicked() {
+                if let Some(dir) = self.carpeta_productos() {
+                    let destino = crate::manual::ruta_word(&dir);
+                    let m = (!matriz.is_empty()).then(|| std::path::PathBuf::from(&matriz));
+                    match crate::manual::generar_word(&destino, &self.manual.titulo_word, &self.manual.cuerpo_word, m.as_deref(), &self.manual.valores) {
+                        Ok(r) => {
+                            self.manual_estado = Some(Ok(format!("Word generado: {}", r.display())));
+                            self.registrar(r, "Word manual");
+                        }
+                        Err(e) => self.manual_estado = Some(Err(e)),
+                    }
+                }
+            }
+            self.estado_manual(ui, p);
+            if cambio {
+                self.guardar_manual();
+            }
+        });
     }
 
     /// Plantillas de correo: elegir, editar con el selector de variables, duplicar, archivar y restaurar.
@@ -3178,6 +3359,49 @@ mod pruebas_vigencia {
         assert!(reabierta.borradores[0].guardado.is_some());
         assert_eq!(reabierta.work.as_ref().unwrap().preparados.recibos.len(), 2);
         assert!(!crate::preparados::borrador_obsoleto(reabierta.work.as_ref().unwrap(), &reabierta.cfg, &reabierta.borradores[0]));
+        let _ = std::fs::remove_dir_all(&base);
+    }
+}
+
+/// E-T2: un correo manual sin Excel se guarda como cualquier borrador, con su adjunto y el CC fijo.
+#[cfg(test)]
+mod pruebas_manual {
+    use super::*;
+
+    #[test]
+    fn un_correo_manual_se_guarda_sin_excel_con_su_adjunto_y_el_cc_fijo() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let base = perfil.join("manual-ui");
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(&base).unwrap();
+        let adjunto = base.join("Informe ficticio.txt");
+        std::fs::write(&adjunto, b"contenido del informe").unwrap();
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.cfg.carpeta_productos = base.join("productos").display().to_string();
+        assert!(app.work.is_none(), "el correo manual no necesita un Excel");
+        app.manual = crate::manual::Actual {
+            para: "destino@ejemplo.invalid".into(),
+            asunto: "Asunto manual".into(),
+            cuerpo: "Cuerpo manual".into(),
+            adjuntos: vec![adjunto.display().to_string()],
+            ..Default::default()
+        };
+        app.guardar_manual();
+        assert_eq!(crate::manual::Actual::cargar().asunto, "Asunto manual", "lo escrito se recupera");
+        let borrador = crate::manual::borrador_manual(&app.manual).unwrap();
+        app.borradores.push(borrador);
+        app.guardar_borradores(None);
+        let eml = std::fs::read_dir(base.join("productos")).unwrap().flatten().flat_map(|d| std::fs::read_dir(d.path()).unwrap().flatten()).find(|f| f.path().extension().is_some_and(|e| e == "eml")).expect(".eml guardado");
+        let texto = std::fs::read_to_string(eml.path()).unwrap();
+        assert!(texto.starts_with("X-Unsent: 1"), "es un borrador, no un envío");
+        assert!(texto.contains("Cc: ucc_concepcion@pjud.cl"), "{texto}");
+        assert!(texto.contains("Informe ficticio.txt"), "el adjunto viaja en el .eml");
+        // Un adjunto que cambió después de revisarlo no se guarda.
+        std::fs::write(&adjunto, b"otro contenido").unwrap();
+        app.borradores[0].guardado = None;
+        app.guardar_borradores(None);
+        assert!(app.avisos.iter().any(|(t, error, _)| *error && t.contains("El adjunto cambió")), "{:?}", app.avisos);
         let _ = std::fs::remove_dir_all(&base);
     }
 }

@@ -53,6 +53,7 @@ pub fn huella_borrador(b: &Borrador) -> String {
         "cuerpo": b.cuerpo,
         "adjunto": adjunto,
         "obligatorio": b.adjunto_obligatorio,
+        "archivos": b.adjuntos.iter().map(|(r, h)| (std::path::Path::new(r).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(), h.clone())).collect::<std::collections::BTreeSet<_>>(),
     }))
 }
 

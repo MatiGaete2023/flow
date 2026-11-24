@@ -470,5 +470,210 @@
    ],
    "sin_clasificar": []
   }
+ ],
+ "palabras": [
+  {
+   "titulo": "Título",
+   "cuerpo": "Párrafo uno\nPárrafo dos",
+   "matriz": null,
+   "valores": {},
+   "parrafos": [
+    "Título",
+    "Párrafo uno",
+    "Párrafo dos"
+   ]
+  },
+  {
+   "titulo": "",
+   "cuerpo": "Solo cuerpo",
+   "matriz": null,
+   "valores": {},
+   "parrafos": [
+    "Solo cuerpo"
+   ]
+  },
+  {
+   "titulo": "Título",
+   "cuerpo": "  \n ",
+   "matriz": null,
+   "valores": {},
+   "error": "Escribe el contenido del documento.",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "Título",
+   "cuerpo": "Hola {{NOMBRE}}",
+   "matriz": null,
+   "valores": {},
+   "error": "Completa los campos Word pendientes: {{NOMBRE}}",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "Título",
+   "cuerpo": "Texto [COMPLETAR dato]",
+   "matriz": null,
+   "valores": {},
+   "error": "Completa los campos Word pendientes: [COMPLETAR dato]",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "{{NOMBRE}}"
+    ]
+   ],
+   "valores": {},
+   "error": "Completa los campos de la matriz: NOMBRE",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "{{NOMBRE}}"
+    ]
+   ],
+   "valores": {
+    "NOMBRE": "Persona"
+   },
+   "parrafos": [
+    "Persona"
+   ]
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "Estimado {{NO",
+     "MBRE}}, rit ",
+     "{{RIT}}"
+    ]
+   ],
+   "valores": {
+    "NOMBRE": "Ana",
+    "RIT": "X-1-2099"
+   },
+   "parrafos": [
+    "Estimado Ana, rit X-1-2099"
+   ]
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "{{RIT}} {{NOMBRE}}"
+    ]
+   ],
+   "valores": {
+    "RIT": "A"
+   },
+   "error": "Completa los campos de la matriz: NOMBRE",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "{{NOMBRE}}"
+    ]
+   ],
+   "valores": {
+    "NOMBRE": "  "
+   },
+   "error": "Completa los campos de la matriz: NOMBRE",
+   "creo_archivo": false
+  },
+  {
+   "titulo": "",
+   "cuerpo": "",
+   "matriz": [
+    [
+     "Hola {{NOMBRE}}"
+    ],
+    [
+     "Sin campos"
+    ],
+    [
+     "Adiós {{NOMBRE}}"
+    ]
+   ],
+   "valores": {
+    "NOMBRE": "Ana"
+   },
+   "parrafos": [
+    "Hola Ana",
+    "Sin campos",
+    "Adiós Ana"
+   ]
+  }
+ ],
+ "bloques": [
+  {
+   "texto": "Hola {NOMBRE}, causa {RIT}",
+   "valores": {
+    "NOMBRE": "Ana",
+    "RIT": "X-1-2099"
+   },
+   "variables": [
+    "NOMBRE",
+    "RIT"
+   ],
+   "render": "Hola Ana, causa X-1-2099"
+  },
+  {
+   "texto": "Hola {NOMBRE}",
+   "valores": {
+    "NOMBRE": " "
+   },
+   "variables": [
+    "NOMBRE"
+   ],
+   "error": "Completa todas las variables del bloque favorito."
+  },
+  {
+   "texto": "Hola {NOMBRE}",
+   "valores": {},
+   "variables": [
+    "NOMBRE"
+   ],
+   "error": "Completa todas las variables del bloque favorito."
+  },
+  {
+   "texto": "Sin variables",
+   "valores": {},
+   "variables": [],
+   "render": "Sin variables"
+  },
+  {
+   "texto": "{DESCONOCIDA}",
+   "valores": null,
+   "error": "Variable de plantilla inválida: {DESCONOCIDA}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{NOMBRE!r}",
+   "valores": null,
+   "error": "Variable de plantilla inválida: {NOMBRE}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{{NOMBRE}} y {FECHA}",
+   "valores": {
+    "FECHA": "01/01/2026"
+   },
+   "variables": [
+    "FECHA"
+   ],
+   "render": "{NOMBRE} y 01/01/2026"
+  },
+  {
+   "texto": "{NOMBRE",
+   "valores": null,
+   "error": "Plantilla con llaves incompletas: expected '}' before end of string"
+  }
  ]
 }

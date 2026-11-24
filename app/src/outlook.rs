@@ -3,7 +3,10 @@
 //! nada; si falla después de intentar guardar, el borrador pudo existir y no se reintenta hasta que la persona lo revise.
 
 use crate::config::CC_OBLIGATORIO;
-use crate::productos::{nueva_ruta_temporal, xlsx_libro, Borrador};
+use crate::productos::Borrador;
+#[cfg(target_os = "windows")]
+use crate::productos::{nueva_ruta_temporal, xlsx_libro};
+#[cfg(target_os = "windows")]
 use crate::util::safe_filename;
 use serde_json::json;
 
@@ -118,6 +121,15 @@ pub fn guardar_outlook(b: &Borrador, cuenta: &str) -> Result<ReciboOutlook, Erro
                 xlsx_libro(&[("Nómina", n.headers.clone(), filas)], &p).map_err(no)?;
                 adjuntos.push(p.display().to_string());
             }
+        }
+        // Outlook recibe copias de los mismos bytes que se revisaron.
+        crate::manual::verificar_adjuntos(b).map_err(no)?;
+        for (i, (ruta, _)) in b.adjuntos.iter().enumerate() {
+            let origen = std::path::Path::new(ruta);
+            let copia = tmp.join(format!("adjunto{i}")).join(origen.file_name().unwrap_or_default());
+            std::fs::create_dir_all(copia.parent().unwrap()).map_err(|e| no(e.to_string()))?;
+            std::fs::copy(origen, &copia).map_err(|e| no(format!("No se pudo copiar el adjunto {ruta}: {e}")))?;
+            adjuntos.push(copia.display().to_string());
         }
         let json = tmp.join("borrador.json");
         std::fs::write(&json, serde_json::to_vec(&datos(b, cuenta, &adjuntos)).unwrap_or_default()).map_err(|e| no(e.to_string()))?;
