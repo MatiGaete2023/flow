@@ -12,7 +12,7 @@ La versión anterior, con los comandos de PowerShell paso a paso y el crate `.ai
 
 - El script fija `FLOW_CASOS`, `FLOW_FIXTURES` y `FLOW_REFERENCIA` con los datos del repositorio, agrega `--features eframe/x11` en Linux y muestra solo las líneas de resultado y los fallos.
 - `todo` agrega `--include-ignored`: corre los oráculos (`oraculo_python`, `oraculo_historia`, paquete B, cronología) y las pruebas con datos versionados.
-- Resultado de referencia en Linux (24-nov-2026): biblioteca `58 passed`, binario `43 passed; 10 filtered out`, en unos 5 s con la compilación en caché.
+- Resultado de referencia en Linux (24-nov-2026): biblioteca `61 passed`, binario `43 passed; 10 filtered out`, en unos 5 s con la compilación en caché.
 - Sin el script, en Linux: `cargo test --manifest-path app/Cargo.toml --locked --features eframe/x11`. Sin esa característica la compilación falla con `not supported by winit`.
 
 ## Pruebas que necesitan un ZIP generado por Flow Python
@@ -32,7 +32,7 @@ Requiere Python 3.12 con `requirements/linux-py312.lock` o `windows-py312.lock`.
 
 ## Oráculos grabados
 
-- Datos: `app/tests/datos/{a78,lecturas,vinculos,bitacoras,lote,paquete}.json`. Generadores: `app/qa/generar_<nombre>.py`.
+- Datos: `app/tests/datos/{a78,lecturas,vinculos,bitacoras,lote,paquete,excel}.json`. Generadores: `app/qa/generar_<nombre>.py`.
 - Regenerar solo si cambian el generador o la referencia Python: `python app/qa/generar_<nombre>.py` y revisar `git diff -- app/tests/datos`.
 - Corpus del motor: `rust/casos/*.json`, generado por `rust/oraculo/generar_casos.py`.
 

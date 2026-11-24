@@ -38,9 +38,9 @@ Qué se compara con Python:
 
 ## Tramo 1 · Descargador
 
-- **E-Q5d · Excel del lote y XLSX consolidado — `ABIERTO`.**
-  - `Bitacoras_RUS.xlsx` (`nurus.capture.diaries.export_diaries`), `Historia_SITFA.xlsx` (`nurus.capture.historias.export_historias`) y el XLSX consolidado del paquete (`consolidated_workbook`, `resultados.export_book(csmp=True)`). Incluye `include_originals`.
-  - Oráculo: celdas comparadas sobre el escenario «contexto» de `app/tests/datos/paquete.json`.
+- **E-Q5d · Excel del lote y XLSX consolidado — `HECHO` en Linux (`c734f84`); falta ver su CI de Windows.**
+  - `descargador/excel.rs` y `descargador/resultados.rs`, con el oráculo `app/qa/generar_excel.py`.
+  - Por revisar: si `include_originals` quedó cubierto.
 - **E-Q7 · Avance por fila de la lectura — `ABIERTO`.** Hoy la interfaz muestra un indicador de actividad y un resumen al terminar.
 - **E-U1 · Intercambio entre herramientas (F27) — `ABIERTO`, por especificar.**
   - Python: `download_link.py`, `download_transfer.py` y `capture/temporal.py`.
@@ -49,8 +49,8 @@ Qué se compara con Python:
 
 ## Tramo 2 · Exportaciones de lote
 
-- **E-S1 · Exportaciones y comparador — `ABIERTO`.**
-  - `descargador/resultados.py`: `export_book`, `export_csv`, `export_ics`, `export_zip` y `compare_lots`. Base en `rust/crates/flow-trabajo/src/exportar.rs`.
+- **E-S1 · Exportaciones y comparador — `ABIERTO`; `export_book` ya está (`c734f84`).**
+  - Faltan de `descargador/resultados.py`: `export_csv`, `export_ics`, `export_zip` y `compare_lots`. Base en `rust/crates/flow-trabajo/src/exportar.rs`.
   - Oráculo nuevo en `app/qa/` sobre lotes ficticios.
 
 ## Tramo 3 · Asistente

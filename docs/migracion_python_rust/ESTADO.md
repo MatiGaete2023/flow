@@ -1,17 +1,17 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, sobre `751634b`. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
 - Estados: **Sí** (existe y tiene contraste con Python), **Parcial** (falta lo que se indica), **No** (ausente). Ninguno significa «aceptado»: eso solo lo declara el usuario en un acta.
-- Origen: registro y encargos hasta el 24 de noviembre. En esta fecha solo se repitió la suite en Linux (`tools/probar_app.sh todo`: 58 y 43 pruebas, 0 fallos).
+- Origen: registro y encargos hasta el 24 de noviembre. En esta fecha solo se repitió la suite en Linux (`tools/probar_app.sh todo`: 61 y 43 pruebas, 0 fallos).
 
 ## Siguiente paso
 
 1. **Referencia Python (E-V1 de [PLAN.md](PLAN.md)).** Los oráculos usan el Python de esta rama, que difiere de `flow-python` en dos módulos de producción. Hacerlo antes de portar más.
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
-3. **E-Q5d**, y luego el resto del tramo 1 de [PLAN.md](PLAN.md).
+3. **E-Q7 y E-U1**, y luego **E-S1** (lo que resta) de [PLAN.md](PLAN.md).
 
 ## Pendiente del usuario
 
@@ -47,7 +47,7 @@ Actualizado: 24 de noviembre de 2026, sobre `751634b`. Es la única fuente del e
 - **F19 Bitácora, historia y calendario — Sí** sobre SITFA ficticio (E-Q1 a E-Q4, 16 escenarios). Falta el avance por fila en la interfaz.
 - **F20 Escritos — Sí** dentro de la lectura de historia.
 - **F21 Histórico de Protección — Sí**, con suspensión por fallas.
-- **F22 Exportaciones de lote — Parcial.** Paquete `CSMP_CAPTURE` 1.2.0 desde el lote (5 escenarios). Faltan los Excel de bitácoras e historia, el XLSX consolidado, `include_originals`, CSV, ICS, ZIP y el comparador de lotes.
+- **F22 Exportaciones de lote — Parcial.** Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), y libro consolidado y «Para CSMP» (`LIBROS` 14/14), desde `c734f84`. Faltan CSV, ICS, ZIP y el comparador de lotes. Sin confirmar en ese commit: `include_originals`.
 - **F27 Intercambio entre herramientas — No.** Sigue en el alcance (D-6).
 
 ### Otras herramientas
