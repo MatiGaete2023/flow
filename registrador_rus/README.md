@@ -17,3 +17,5 @@ Para comprobar también el esquema (solo desarrollo, requiere jsonschema de los 
     python -m unittest discover -s registrador_rus/tests -p test_schema.py -v
 
 P2: detector pasivo y fixture ficticio, no extensión instalable. Para ejecutar la prueba DOM se necesita Playwright y Chromium **solo en desarrollo**, no en el PC institucional. Usar `python registrador_rus/tests/run_dom_detection.py` con Chromium de Playwright instalado, o definir REGISTRADOR_CHROMIUM con la ruta de un Chromium local. No requiere sitio RUS; la prueba bloquea solicitudes de red. Resultado esperado: PASS 14. Selectores de producción aún no verificados.
+
+P3: preparación y localización en DOM exclusivamente ficticio. Ejecutar desde raíz `python -m registrador_rus.tests.run_preparation` (mismas dependencias de desarrollo de P2); resultado esperado PASS 35. Falta adaptador real de las vistas y apertura de bitácora; no contiene guardado.
