@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 
 from .readback import Snapshot, ReadbackError, compare, review_previous, _utc, METHOD
+from .journal_protection import PlainStorage
 
 STATES = ('PREPARADA', 'LISTA', 'ENVIANDO', 'INCIERTA', 'NO_HALLADA', 'AMBIGUA',
           'REVISAR_PREVIAS', 'PENDIENTE_EXCEL', 'COMPROBADA', 'OMITIDA')
@@ -77,8 +78,9 @@ def _snapshot_data(snap):
 
 
 class ReadbackStore:
-    def __init__(self, db):
+    def __init__(self, db, *, storage=None):
         self.db = db
+        self.storage = storage if storage is not None else PlainStorage()
         migrate_operations(db)
         db.executescript(SCHEMA)
 
@@ -99,16 +101,20 @@ class ReadbackStore:
             self.db.execute('''INSERT INTO readback_baselines VALUES(?,?,?,?)
                 ON CONFLICT(operation_id) DO UPDATE SET approval_digest=excluded.approval_digest,
                 evidence=excluded.evidence,evidence_digest=excluded.evidence_digest''',
-                (op.operation_id, digest, evidence, _digest(evidence)))
+                (op.operation_id,digest,self.storage.seal('baseline',op.operation_id,evidence),
+                 self.storage.digest('baseline',evidence)))
         else:
             self.db.execute('DELETE FROM readback_baselines WHERE operation_id=?', (op.operation_id,))
         return result
 
     def baseline(self, operation_id, digest):
         row = self.db.execute('SELECT * FROM readback_baselines WHERE operation_id=?', (operation_id,)).fetchone()
-        if row is None or row['approval_digest'] != digest or _digest(row['evidence']) != row['evidence_digest']:
+        if row is None or row['approval_digest'] != digest:
             raise ReadbackError('BASELINE_REQUERIDA_O_INVALIDA')
-        evidence = json.loads(row['evidence'])
+        plain=self.storage.unseal('baseline',operation_id,row['evidence'])
+        if self.storage.digest('baseline',plain)!=row['evidence_digest']:
+            raise ReadbackError('BASELINE_REQUERIDA_O_INVALIDA')
+        evidence=json.loads(plain)
         snap = Snapshot.from_reader(evidence['snapshot'])
         context = evidence['context']
         context['server_day'] = date.fromisoformat(context['server_day'])
@@ -134,10 +140,11 @@ class ReadbackStore:
         if result.state != 'COINCIDENCIA_UNICA':
             return result.state, result.reason
         entry = result.entry
+        entry_key=self.storage.entry_key(row['identity_key'],entry.entry_id)
         if self.db.execute('SELECT 1 FROM readback_receipts WHERE identity_key=? AND entry_id=?',
-                           (row['identity_key'], entry.entry_id)).fetchone():
+                           (row['identity_key'], entry_key)).fetchone():
             return 'AMBIGUA', 'ENTRADA_YA_ATRIBUIDA'
         self.db.execute('INSERT INTO readback_receipts VALUES(?,?,?,?,?,?,?,1)',
-                        (op.operation_id, row['identity_key'], entry.entry_id, entry.server_timestamp,
+                        (op.operation_id, row['identity_key'], entry_key, entry.server_timestamp,
                          op.destination, row['digest'], after.captured_at.isoformat()))
         return ('PENDIENTE_EXCEL' if require_excel else 'COMPROBADA'), result.reason

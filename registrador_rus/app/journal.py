@@ -11,6 +11,7 @@ from .contracts import RegistroFlowV1
 from .scheduler import ScheduleStore
 from .readback import ReadbackError
 from .readback_store import ReadbackStore, UNRESOLVED, operations_sql
+from .journal_protection import check_path, initialize_storage
 
 
 class JournalError(RuntimeError):
@@ -48,18 +49,22 @@ CREATE TABLE IF NOT EXISTS audit(
 class SimulationJournal:
     """Cada reserva es ficticia; el registro de actor no autentica al funcionario."""
 
-    def __init__(self, path, *, clock=None):
+    def __init__(self, path, *, clock=None, protected_demo=False):
+        crypt = check_path(path, protected_demo)
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.db = sqlite3.connect(Path(path), timeout=5, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         try:
+            self.storage = initialize_storage(self.db, protected_demo, crypt)
             self.db.execute('PRAGMA foreign_keys=ON')
+            if self.storage.protected:
+                self.db.execute('PRAGMA temp_store=MEMORY')
             if self.db.execute('PRAGMA journal_mode=WAL').fetchone()[0] != 'wal':
                 raise JournalError('WAL_NO_DISPONIBLE')
             self.db.execute('PRAGMA synchronous=FULL')
             self.db.executescript(SCHEMA)
             self.schedule = ScheduleStore(self.db)
-            self.readback = ReadbackStore(self.db)
+            self.readback = ReadbackStore(self.db, storage=self.storage)
         except BaseException:
             self.db.close()
             raise
@@ -95,26 +100,30 @@ class SimulationJournal:
 
     def _require_current(self, op_id, current):
         row = self._row(op_id)
-        if row['payload'] != _payload(current) or row['digest'] != _digest(row['payload']):
+        self.storage.require_demo(current)
+        stored = self.storage.unseal('payload',op_id,row['payload'])
+        if stored != _payload(current) or row['digest'] != self.storage.digest('approval',stored):
             raise JournalError('APROBACION_CAMBIADA')
         return row
 
     def freeze(self, op):
         payload = _payload(op)
+        self.storage.require_demo(op)
         ident = json.dumps(asdict(op.remote_identity), sort_keys=True, separators=(',', ':'))
         # Conservador hasta P6: una intención equivalente exige revisión, no reenvío automático.
-        intent = _digest(json.dumps([ident, op.approved_text_sha256.lower(), op.destination, op.observation_state],
+        intent = self.storage.digest('intent',json.dumps([ident, op.approved_text_sha256.lower(), op.destination, op.observation_state],
                                     ensure_ascii=False, separators=(',', ':')))
         with self._tx():
             row = self.db.execute('SELECT * FROM operations WHERE operation_id=?', (op.operation_id,)).fetchone()
             if row:
-                if row['payload'] != payload or row['digest'] != _digest(payload):
+                if self.storage.unseal('payload',op.operation_id,row['payload']) != payload or row['digest'] != self.storage.digest('approval',payload):
                     raise JournalError('ID_REUTILIZADO_CON_CAMBIOS')
                 return row['state']
             if self.db.execute('SELECT 1 FROM operations WHERE intent_key=? AND state != ? LIMIT 1', (intent, 'OMITIDA')).fetchone():
                 raise JournalError('INTENCION_EQUIVALENTE_REVISAR')
             self.db.execute('INSERT INTO operations VALUES(?,?,?,?,?,?)',
-                            (op.operation_id, payload, _digest(payload), _digest(ident), intent, 'PREPARADA'))
+                            (op.operation_id, self.storage.seal('payload',op.operation_id,payload),
+                             self.storage.digest('approval',payload),self.storage.digest('identity',ident),intent,'PREPARADA'))
             self._audit(op.operation_id, 'CONGELADA')
             return 'PREPARADA'
 
@@ -137,7 +146,7 @@ class SimulationJournal:
             if self.db.execute('SELECT 1 FROM authorizations WHERE operation_id=?', (current.operation_id,)).fetchone():
                 raise JournalError('AUTORIZACION_YA_REGISTRADA')
             self.db.execute('INSERT INTO authorizations VALUES(?,?,?,?,0)',
-                            (current.operation_id, row['digest'], human_actor, self._now()))
+                            (current.operation_id,row['digest'],self.storage.seal('actor',current.operation_id,human_actor),self._now()))
             self._audit(current.operation_id, 'AUTORIZACION_SIMULADA')
 
     def reserve_simulated_attempt(self, current):
@@ -153,6 +162,8 @@ class SimulationJournal:
             auth = self.db.execute('SELECT * FROM authorizations WHERE operation_id=?', (current.operation_id,)).fetchone()
             if auth is None or auth['consumed'] or auth['digest'] != row['digest']:
                 raise JournalError('AUTORIZACION_REQUERIDA')
+            if self.storage.protected and not self.storage.unseal('actor',current.operation_id,auth['human_actor']).strip():
+                raise JournalError('AUTORIZACION_INVALIDA')
             now = self._now()
             eligibility = self.schedule.eligibility(now)
             if not eligibility.allowed:

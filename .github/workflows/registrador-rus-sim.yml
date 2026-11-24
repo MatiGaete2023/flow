@@ -57,5 +57,7 @@ jobs:
         run: python -m unittest discover -s registrador_rus/tests -p 'test_demo_transfer.py' -v
       - name: Transferencia protegida DPAPI nativa (solo demo)
         run: python -m unittest discover -s registrador_rus/tests -p 'test_protected_demo_transfer.py' -v
+      - name: Diario protegido DPAPI y WAL/SHM (solo demo)
+        run: python -m unittest discover -s registrador_rus/tests -p 'test_protected_journal.py' -v
       - name: Reconciliacion de copia Excel ficticia
         run: python -m unittest discover -s registrador_rus/tests -p 'test_reconcile_excel.py' -v
