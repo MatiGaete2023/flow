@@ -57,12 +57,18 @@ jobs:
             git cat-file -e "$antes^{commit}" 2>$null
             if ($LASTEXITCODE -ne 0) { $todo = $true }
           }
+          # `lista`: los oráculos a regenerar; «todos» si cambió la referencia Python o no hay commit anterior.
+          $lista = 'todos'
           if ($todo) { $oraculos = 'true' } else {
             $archivos = git diff --name-only $antes $env:GITHUB_SHA
             $oraculos = if ($archivos | Where-Object { $_ -match '^(app/qa/|app/tests/datos/|descargador/|src/|tests/)' }) { 'true' } else { 'false' }
+            if (-not ($archivos | Where-Object { $_ -match '^(descargador/|src/|tests/)' })) {
+              $lista = (($archivos | ForEach-Object { if ($_ -match '^app/qa/generar_(\w+)\.py$' -or $_ -match '^app/tests/datos/(\w+)\.json$') { $Matches[1] } }) | Sort-Object -Unique) -join ','
+            }
           }
           "oraculos=$oraculos" | Add-Content -Encoding utf8 $env:GITHUB_OUTPUT
-          "Regenerar oráculos: $oraculos"
+          "lista=$lista" | Add-Content -Encoding utf8 $env:GITHUB_OUTPUT
+          "Regenerar oráculos: $oraculos ($lista)"
       - name: Obtener la referencia Flow Python
         uses: actions/checkout@v4
         with:
@@ -158,7 +164,9 @@ jobs:
         env:
           PYTHONUTF8: '1'
         run: |
+          $lista = '${{ steps.cambios.outputs.lista }}'
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync')) {
+            if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"
             if ($o -eq 'vinculos') {
               python app/qa/generar_vinculos.py
