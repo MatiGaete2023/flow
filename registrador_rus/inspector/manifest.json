@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Registrador Flow — Inspector pasivo",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Solo inspección estructural del formulario abierto, sin registrar ni transmitir información.",
   "permissions": [
     "activeTab",
@@ -12,5 +12,8 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'"
-  }
+  },
+  "optional_host_permissions": [
+    "https://familia.pjud.cl/*"
+  ]
 }

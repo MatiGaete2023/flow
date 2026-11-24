@@ -81,6 +81,7 @@ function inspectIntegralTree(root, origin) {
 }
 function inspectIntegral(){
   if(location.origin!=='https://familia.pjud.cl')return {schema:'IntegralEvidenceV1',status:'BLOCKED',reason:'ORIGEN_NO_PERMITIDO',write_enabled:false};
+  if(!['/SITFAWEB/IrPopUpInformesAccion.do','/SITFAWEB/InformesDAction.do'].includes(location.pathname))return {schema:'IntegralEvidenceV1',status:'BLOCKED',reason:'RUTA_NO_BITACORA',write_enabled:false};
   return inspectIntegralTree(document,'https://familia.pjud.cl');
 }
 inspectIntegral();

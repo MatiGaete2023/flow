@@ -17,13 +17,54 @@ const tableMarker=obj({tag:one('TABLE','DIV','TBODY','TR','TD','SPAN','FORM','OT
 const detail=obj({forms_total:num,tables_total:num,table_id_nodes:num,table_name_nodes:num,table_id_visible:num,visible_frames:num,modal_visible:num,form_candidates:array(form,8),tables:array(table,12),table_markers:array(tableMarker,12),context:array(context,6),controls:array(control,48),visible_controls:num,hidden_controls:num,history_buttons_omitted:num,pagination:obj({next:num,prev:num,buttons:num})});
 const documentEntry=obj({path:array(num,4),access:one('OK','INACCESIBLE','CARGANDO','ERROR'),detail:x=>x===null||detail(x)});
 const validEvidence=x=>obj({schema:one('IntegralEvidenceV1'),status:one('DIAGNOSTIC'),write_enabled:one(false),truncated:bool,documents:array(documentEntry,12)})(x)&&x.documents.length>0&&x.documents[0].path.length===0&&x.documents.every(d=>(d.access==='OK')===(d.detail!==null));
+// Selección explícita por URL técnica; no guardar ni devolver URL, título o ID de pestaña.
+const SITE='https://familia.pjud.cl';
+const OPEN='/SITFAWEB/IrPopUpInformesAccion.do', POST='/SITFAWEB/InformesDAction.do';
+const access={origins:[SITE+'/*']};
+function route(tab){
+  try{const u=new URL(tab.url);return u.origin===SITE&&[OPEN,POST].includes(u.pathname)?u.pathname:null;}catch(_){return null;}
+}
+function isBitacora(report){
+  return report.documents.some(d=>d.detail&&(
+    d.detail.table_id_nodes>0||d.detail.table_name_nodes>0||
+    d.detail.controls.some(c=>c.kind==='select'&&(c.name==='COD_Estado_Detalle_Nuevo'||c.id==='COD_Estado_Detalle_Nuevo'))||
+    ['CRR_IdCausa','ID_Ingreso'].every(k=>d.detail.context.some(c=>c.key===k&&c.total>0))));
+}
 button.addEventListener('click',async()=>{
   button.disabled=true;output.value='';
+  const status=document.getElementById('permission-status');status.textContent='';
+  let granted=false;
   try{
-    const tabs=await chrome.tabs.query({active:true,currentWindow:true});
-    if(tabs.length!==1||typeof tabs[0].id!=='number'||new URL(tabs[0].url).origin!=='https://familia.pjud.cl'){output.value='ORIGEN_NO_PERMITIDO';return;}
-    const r=await chrome.scripting.executeScript({target:{tabId:tabs[0].id},files:['integral.js'],world:'ISOLATED'});
+    // Solicitar directamente desde el clic, sin esperar otra operación asíncrona.
+    granted=await chrome.permissions.request(access);
+    if(!granted){output.value='PERMISO_OPCIONAL_DENEGADO';return;}
+    const tabs=await chrome.tabs.query({url:[SITE+OPEN+'*',SITE+POST+'*']});
+    const candidates=[];
+    for(const tab of tabs){
+      const path=route(tab);
+      if(!Number.isInteger(tab.id)||!path)continue;
+      // El destino POST también se utiliza en Seguimiento: admitirlo solo en ventana emergente.
+      if(path===POST){
+        const w=await chrome.windows.get(tab.windowId);
+        if(w.type!=='popup')continue;
+      }
+      candidates.push(tab);
+    }
+    if(!candidates.length){output.value='BITACORA_NO_ENCONTRADA';return;}
+    if(candidates.length!==1){output.value='BITACORAS_MULTIPLES: '+candidates.length;return;}
+    const target=candidates[0];
+    if(target.status==='loading'){output.value='BITACORA_CARGANDO';return;}
+    const current=await chrome.tabs.get(target.id);
+    if(route(current)!==route(target)||current.windowId!==target.windowId){output.value='BITACORA_CAMBIADA';return;}
+    const r=await chrome.scripting.executeScript({target:{tabId:target.id},files:['integral.js'],world:'ISOLATED'});
     if(r.length!==1||!validEvidence(r[0].result)){output.value='INSPECCION_NO_CONCLUYENTE';return;}
+    if(route(target)===POST&&!isBitacora(r[0].result)){output.value='VENTANA_POST_NO_BITACORA';return;}
     output.value=JSON.stringify(r[0].result,null,2);
-  }catch(_){output.value='INSPECCION_NO_DISPONIBLE';}finally{button.disabled=false;}
+  }catch(_){output.value='INSPECCION_NO_DISPONIBLE';}finally{
+    if(granted){
+      try{await chrome.permissions.remove(access);status.textContent=await chrome.permissions.contains(access)?'Acceso opcional sigue activo; puedes retirarlo en chrome://extensions/.':'Acceso opcional retirado.';}
+      catch(_){status.textContent='No se pudo confirmar retiro del acceso opcional; revisa chrome://extensions/.';}
+    }
+    button.disabled=false;
+  }
 });
