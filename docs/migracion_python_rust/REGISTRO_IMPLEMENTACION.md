@@ -1010,7 +1010,7 @@ La prueba reproduce las respuestas grabadas y compara, en cada escenario:
 - `8814173` E-Q5a: paquete desde lotes de listados.
 - `8655610` E-Q5c: bitácoras, calendario por ingreso, historia, Escritos e histórico (`package_current_lot`).
 - `44ebe91` E-Q5b: calendario de informes con su asociación y Carga.
-- El commit de esta entrega: E-Q6, interfaz del Descargador.
+- `09448d4` E-Q6: interfaz del Descargador.
 
 ### Código
 
