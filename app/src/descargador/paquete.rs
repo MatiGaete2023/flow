@@ -14,6 +14,8 @@ use std::path::{Path, PathBuf};
 
 pub const VERSION: &str = "1.0.0";
 pub const VERSION_EXTENDIDA: &str = "1.2.0";
+pub const VERSION_CONSOLIDADA: &str = "1.1.0";
+pub const RUTA_CONSOLIDADO: &str = "consolidado/consolidado.xlsx";
 pub const MAPPING_VERSION: &str = "baseline-20261008-v1";
 const MAX_FILAS: usize = 200_000;
 
@@ -140,13 +142,29 @@ pub fn csv_bytes(tabla: &str, filas: &[Map<String, Value>]) -> Result<Vec<u8>, S
 
 /// `write_capture`: publicación nueva (nunca sobrescribe), manifiesto con la huella de cada CSV y el ZIP validado con el
 /// lector del Asistente antes de dejarlo en su destino.
-pub fn escribir_captura(destino: &Path, mut metadatos: Value, tablas: &[(String, Vec<Map<String, Value>>)]) -> Result<PathBuf, String> {
+pub fn escribir_captura(destino: &Path, metadatos: Value, tablas: &[(String, Vec<Map<String, Value>>)]) -> Result<PathBuf, String> {
+    escribir_captura_con(destino, metadatos, tablas, None)
+}
+
+/// `write_capture(..., consolidated=bytes)`: con el libro «Para CSMP» en `consolidado/consolidado.xlsx` (1.1.0).
+pub fn escribir_captura_con(
+    destino: &Path,
+    mut metadatos: Value,
+    tablas: &[(String, Vec<Map<String, Value>>)],
+    consolidado: Option<&[u8]>,
+) -> Result<PathBuf, String> {
     if destino.exists() {
         return Err("El paquete de destino ya existe.".into());
     }
     let extendida = tablas.iter().any(|(t, _)| EXTENDIDAS.contains(&t.as_str()));
     metadatos["schema_id"] = json!("CSMP_CAPTURE");
-    metadatos["schema_version"] = json!(if extendida { VERSION_EXTENDIDA } else { VERSION });
+    metadatos["schema_version"] = json!(if extendida {
+        VERSION_EXTENDIDA
+    } else if consolidado.is_some() {
+        VERSION_CONSOLIDADA
+    } else {
+        VERSION
+    });
     metadatos["files"] = json!([]);
     if let Some(estados) = metadatos.get_mut("table_states").and_then(Value::as_object_mut) {
         for t in EXTENDIDAS {
@@ -171,6 +189,11 @@ pub fn escribir_captura(destino: &Path, mut metadatos: Value, tablas: &[(String,
             "rows": filas.len(), "bytes": bruto.len(), "sha256": sha256(&bruto)}));
         contenido.push((nombre, bruto));
     }
+    if let Some(libro) = consolidado {
+        metadatos["files"].as_array_mut().unwrap().push(json!({"path": RUTA_CONSOLIDADO, "type": "consolidated_workbook",
+            "bytes": libro.len(), "sha256": sha256(libro)}));
+        contenido.push((RUTA_CONSOLIDADO.into(), libro.to_vec()));
+    }
     contenido.push(("manifest.json".into(), json_manifiesto(&metadatos).into_bytes()));
     let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
     let fecha = zip::DateTime::from_date_and_time(2026, 10, 8, 0, 0, 0).map_err(|_| "Fecha ZIP inválida.".to_string())?;
@@ -193,13 +216,13 @@ pub fn escribir_captura(destino: &Path, mut metadatos: Value, tablas: &[(String,
 
 // ---------------------------------------------------------------- lote (`resultados.load_lot`)
 
-fn leer_json(ruta: &Path) -> Result<Value, String> {
+pub(super) fn leer_json(ruta: &Path) -> Result<Value, String> {
     let datos = std::fs::read(ruta).map_err(|_| format!("Falta {}.", ruta.file_name().and_then(|n| n.to_str()).unwrap_or("")))?;
     serde_json::from_slice(&datos).map_err(|_| "Un JSON del lote no se pudo leer.".to_string())
 }
 
 /// `inside`: un nombre del manifiesto solo puede ser un archivo de la carpeta del lote.
-fn dentro(carpeta: &Path, nombre: &str) -> Result<PathBuf, String> {
+pub(super) fn dentro(carpeta: &Path, nombre: &str) -> Result<PathBuf, String> {
     if nombre.is_empty() || Path::new(nombre).file_name().and_then(|n| n.to_str()) != Some(nombre) || nombre.contains('\\') {
         return Err("El manifiesto contiene una ruta fuera del lote.".into());
     }
@@ -207,7 +230,7 @@ fn dentro(carpeta: &Path, nombre: &str) -> Result<PathBuf, String> {
 }
 
 /// `check_file`: el archivo verificado sigue íntegro (tamaño y huella).
-fn comprobar(carpeta: &Path, item: &Value) -> Result<Vec<u8>, String> {
+pub(super) fn comprobar(carpeta: &Path, item: &Value) -> Result<Vec<u8>, String> {
     let ruta = dentro(carpeta, item["archivo"].as_str().unwrap_or(""))?;
     let datos = std::fs::read(&ruta).map_err(|_| "Falta un archivo o supera el límite de lectura.".to_string())?;
     if datos.len() > 80 * 1024 * 1024 {
@@ -226,13 +249,21 @@ pub struct Lote {
     pub carpeta: PathBuf,
     pub resumen: Value,
     pub consultas: Vec<(Value, Value)>,
+    /// `Lot.partial`: el lote no terminó y se abrió a sabiendas (`load_lot(..., partial=True)`).
+    pub parcial: bool,
 }
 
 /// `load_lot(folder, partial=False)`: un lote VALIDADA completo, con sus manifiestos y archivos íntegros.
 pub fn cargar_lote(carpeta: &Path) -> Result<Lote, String> {
+    cargar_lote_con(carpeta, false)
+}
+
+/// `load_lot(folder, partial)`: con `parcial`, un lote incompleto se abre con sus consultas INCOMPLETA.
+pub fn cargar_lote_con(carpeta: &Path, parcial: bool) -> Result<Lote, String> {
     let carpeta = carpeta.canonicalize().map_err(|e| format!("No se pudo abrir el lote: {e}"))?;
     let resumen = leer_json(&carpeta.join("resumen.json"))?;
-    if resumen["estado"] != "VALIDADA" {
+    let incompleto = resumen["estado"] != "VALIDADA";
+    if incompleto && !parcial {
         return Err("El lote es incompleto. Selecciona explícitamente una exportación parcial.".into());
     }
     let mut consultas = Vec::new();
@@ -251,7 +282,29 @@ pub fn cargar_lote(carpeta: &Path) -> Result<Lote, String> {
         }
         consultas.push((q.clone(), manifiesto));
     }
-    if Some(consultas.len() as u64) != resumen["consultas_esperadas"].as_u64() {
+    if incompleto {
+        // La consulta interrumpida puede no figurar aún en las completadas.
+        let mut nombres: Vec<PathBuf> = std::fs::read_dir(&carpeta).map_err(|e| e.to_string())?
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with("verificacion ") && n.ends_with(".json")))
+            .collect();
+        nombres.sort();
+        for ruta in nombres {
+            if vistas.contains(&ruta) {
+                continue;
+            }
+            let manifiesto = leer_json(&ruta)?;
+            if manifiesto["estado"] == "INCOMPLETA" {
+                let q = json!({
+                    "consulta": manifiesto.get("consulta").cloned().unwrap_or(json!("Consulta incompleta")),
+                    "estado": "INCOMPLETA",
+                    "seleccion": manifiesto.get("seleccion").cloned().unwrap_or(json!({})),
+                    "verificacion": ruta.file_name().unwrap().to_string_lossy(),
+                });
+                consultas.push((q, manifiesto));
+            }
+        }
+    } else if Some(consultas.len() as u64) != resumen["consultas_esperadas"].as_u64() {
         return Err("El lote no contiene todas sus consultas.".into());
     }
     let mut nombres = BTreeSet::new();
@@ -273,19 +326,19 @@ pub fn cargar_lote(carpeta: &Path) -> Result<Lote, String> {
             comprobar(&carpeta, &m["evidencia"])?;
         }
     }
-    Ok(Lote { carpeta, resumen, consultas })
+    Ok(Lote { carpeta, resumen, consultas, parcial: incompleto })
 }
 
 // ---------------------------------------------------------------- tablas (`resultados.tables`)
 
 type Filas = Vec<(usize, Vec<String>)>;
 
-fn normalizado(s: &str) -> String {
+pub(super) fn normalizado(s: &str) -> String {
     super::sitfa::registros::normalizar(s)
 }
 
 /// `resultados.ALIASES` / `mapping`.
-fn mapeo(cabecera: &[String]) -> Result<BTreeMap<&'static str, usize>, String> {
+pub(super) fn mapeo(cabecera: &[String]) -> Result<BTreeMap<&'static str, usize>, String> {
     const ALIAS: [(&str, &[&str]); 10] = [
         ("rit", &["RIT"]),
         ("nombre", &["NOMBRE", "NOMBRE MENOR", "NOMBRE COMPLETO"]),
@@ -360,7 +413,7 @@ fn cabecera_y_filas(libro: &xls::Libro) -> Result<(Vec<String>, Filas), String> 
 }
 
 /// `sin_parentesis`.
-fn sin_parentesis(texto: &str) -> String {
+pub(super) fn sin_parentesis(texto: &str) -> String {
     static GRUPO: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| regex::Regex::new(r"\([^()]*\)").unwrap());
     let limpio = GRUPO.replace_all(texto, " ").replace(['(', ')'], " ");
     limpio.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -434,14 +487,35 @@ fn vincular(cabecera: &mut Vec<String>, filas: &mut Filas, vinculos: &[Value], t
 }
 
 /// Una fuente del lote ya tabulada: consulta del resumen, selección, archivo, cabecera y filas.
-struct Fuente {
-    verificacion: String,
-    seleccion: Value,
-    item: Value,
-    cabecera: Vec<String>,
-    filas: Filas,
+pub(super) struct Fuente {
+    pub(super) verificacion: String,
+    pub(super) seleccion: Value,
+    pub(super) item: Value,
+    pub(super) cabecera: Vec<String>,
+    pub(super) filas: Filas,
     cabecera_original: Vec<String>,
     filas_originales: BTreeMap<usize, Vec<String>>,
+    /// Fila cruda de la grilla (`ExcelInfo.grid`) por número de fila, con sus tipos.
+    tipadas: BTreeMap<usize, Vec<xls::Celda>>,
+    /// Columnas de la fila que vienen de la grilla (Carga conserva la fila completa).
+    ancho_original: usize,
+}
+
+impl Fuente {
+    /// La fila de `tables(lot)` con los valores crudos de Python: lo que la grilla trae como número, fecha o vacío
+    /// conserva su tipo; el texto y las columnas añadidas quedan como texto procesado.
+    pub(super) fn fila_tipada(&self, numero: usize, valores: &[String]) -> Vec<xls::Celda> {
+        let cruda = self.tipadas.get(&numero).map(Vec::as_slice).unwrap_or(&[]);
+        let ancho = self.ancho_original.min(cruda.len());
+        valores
+            .iter()
+            .enumerate()
+            .map(|(i, v)| match cruda.get(i) {
+                Some(c) if i < ancho && !c.es_texto() => c.clone(),
+                _ => xls::Celda::Texto(v.clone()),
+            })
+            .collect()
+    }
 }
 
 /// `carga.HEADERS`.
@@ -455,7 +529,7 @@ const ENCABEZADOS_CARGA: [&str; 23] = [
 static RIT_CARGA: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| regex::Regex::new(r"^[A-Z]+-\d+-\d{4}$").unwrap());
 
 /// `resultados.tables(lot)` para Seguimiento, calendarios y Carga.
-fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
+pub(super) fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
     let mut salida = Vec::new();
     let mut cuenta = 0usize;
     for (q, m) in &lote.consultas {
@@ -473,6 +547,10 @@ fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
             } else {
                 cabecera_y_filas(&xls::leer(&datos)?)?
             };
+            let grilla = xls::grilla_tipada(&datos, carga)?;
+            let tipadas: BTreeMap<usize, Vec<xls::Celda>> =
+                filas_originales.iter().filter_map(|(n, _)| grilla.get(n - 1).map(|f| (*n, f.clone()))).collect();
+            let ancho_original = if carga { usize::MAX } else { cabecera_original.len() };
             let (mut cabecera, mut filas) = (cabecera_original.clone(), filas_originales.clone());
             if Some(filas.len() as u64) != item["registros"].as_u64() {
                 return Err("El recuento no coincide con la verificación.".into());
@@ -530,6 +608,8 @@ fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
                 filas,
                 cabecera_original,
                 filas_originales: filas_originales.into_iter().collect(),
+                tipadas,
+                ancho_original,
             });
         }
     }
@@ -560,6 +640,15 @@ fn texto(v: &Value) -> String {
         Value::String(s) => s.clone(),
         otro => otro.to_string(),
     }
+}
+
+/// `str(valor)` de un valor del control (texto tal cual; `null` → vacío).
+pub(super) fn texto_de(v: &Value) -> String {
+    texto(v)
+}
+
+pub(super) fn sha256_hex(datos: &[u8]) -> String {
+    sha256(datos)
 }
 
 fn fila(pares: &[(&str, String)]) -> Map<String, Value> {
@@ -600,11 +689,14 @@ pub struct Opciones {
     pub historico: Option<PathBuf>,
     pub meses: u32,
     pub avisos: Vec<(String, String)>,
+    /// `consolidated`: el libro «Para CSMP» dentro del paquete; si el lote no es apto, el paquete sale sin él y la
+    /// nota lo explica (`export_capture_with_note`).
+    pub consolidado: bool,
 }
 
 impl Default for Opciones {
     fn default() -> Self {
-        Self { bitacoras: Vec::new(), emparejar: false, historia: None, historico: None, meses: 4, avisos: Vec::new() }
+        Self { bitacoras: Vec::new(), emparejar: false, historia: None, historico: None, meses: 4, avisos: Vec::new(), consolidado: false }
     }
 }
 
@@ -613,6 +705,8 @@ impl Default for Opciones {
 #[derive(Clone, Debug)]
 pub struct Exportado {
     pub ruta: PathBuf,
+    /// La nota de `export_capture_with_note` («Incluye el XLSX consolidado.» o por qué no).
+    pub nota: String,
     pub reutilizacion: Option<String>,
     pub historico_incompleto: bool,
 }
@@ -842,8 +936,23 @@ fn fusionar(viejo: Option<Value>, nuevo: Value) -> Result<Value, String> {
     }
 }
 
+/// Hoja adicional de `import_lote` (`extra_sheets`): título, encabezados y filas con los valores del control.
+pub(super) type HojaExtra = (String, Vec<&'static str>, Vec<Vec<Value>>);
+
+/// `import_lote` completo: bitácoras y calendarios por ingreso, la fuente y las hojas de control del Excel.
+pub(super) struct LoteImportado {
+    consultas: PorIngreso,
+    calendarios: PorIngreso,
+    pub(super) fuente: Value,
+    pub(super) extras: Vec<HojaExtra>,
+}
+
+fn valor_o_vacio(v: &Value, k: &str) -> Value {
+    v.get(k).cloned().unwrap_or(json!(""))
+}
+
 /// `import_lote`: bitácoras y calendarios por ingreso de un control `bitacoras.json`, releídos de sus HTML.
-fn importar_lote(manifiesto: &Path) -> Result<(PorIngreso, PorIngreso), String> {
+pub(super) fn importar_lote_completo(manifiesto: &Path) -> Result<LoteImportado, String> {
     let ausente = || format!("No se encuentra el control de bitácoras: {}. Recupera bitacoras.json con sus HTML originales o \
                               excluye esa referencia del paquete.", manifiesto.display());
     let meta = std::fs::metadata(manifiesto).map_err(|_| ausente())?;
@@ -861,6 +970,7 @@ fn importar_lote(manifiesto: &Path) -> Result<(PorIngreso, PorIngreso), String> 
     };
     let carpeta = manifiesto.parent().ok_or("Control de bitácoras sin carpeta.")?;
     let (mut consultas, mut calendarios) = (Vec::new(), Vec::new());
+    let mut libro: Vec<Vec<Value>> = Vec::new();
     for r in registros {
         if !r.is_object() || r.get("params").is_some_and(|p| !p.is_object()) {
             return Err("El control de lecturas tiene un registro mal formado.".into());
@@ -871,13 +981,28 @@ fn importar_lote(manifiesto: &Path) -> Result<(PorIngreso, PorIngreso), String> 
             poner(&mut calendarios, id.clone(), calendario_ingreso(carpeta, r, &id));
         }
         let mut error = texto(&r["error"]);
+        let mut estado = r.get("estado").cloned().unwrap_or(json!("FALLIDA"));
         let mut consulta = None;
-        if r.get("estado").map(texto).unwrap_or_else(|| "FALLIDA".into()) == "LEIDA" {
+        if estado == "LEIDA" {
             match leer_registro(carpeta, r, &id) {
-                Ok(q) => consulta = Some(q),
-                Err(e) => error = e.unwrap_or_else(|| COPIA_NO_VERIFICABLE.into()),
+                Ok(q) => {
+                    let visibles = super::bitacoras::advertencias(&q, &texto(&r["rit"]), &texto(&r["nombre"]));
+                    if !visibles.is_empty() {
+                        error = visibles.join(" ");
+                    }
+                    consulta = Some(q)
+                }
+                Err(e) => {
+                    estado = json!("FALLIDA");
+                    error = e.unwrap_or_else(|| COPIA_NO_VERIFICABLE.into());
+                }
             }
         }
+        let mut fila: Vec<Value> = ["tribunal_nombre", "modalidad_nombre", "pestana", "pagina", "fila", "rit", "nombre", "programa", "causa_id", "ingreso_id"]
+            .iter().map(|k| valor_o_vacio(r, k)).collect();
+        fila.extend([estado.clone(), json!(error), valor_o_vacio(r, "archivo"), valor_o_vacio(r, "sha256"), valor_o_vacio(r, "capturada"),
+            r["diagnostico"].get("codigo_extension").cloned().unwrap_or(json!(""))]);
+        libro.push(fila);
         if completa {
             let q = consulta.unwrap_or_else(|| json!({
                 "tribunal_codigo": id[0], "causa_id": id[1], "ingreso_id": id[2], "rit": texto(&r["rit"]),
@@ -890,27 +1015,88 @@ fn importar_lote(manifiesto: &Path) -> Result<(PorIngreso, PorIngreso), String> 
             poner(&mut consultas, id, fusionar(viejo, q)?);
         }
     }
-    Ok((consultas, calendarios))
+    let alcances = datos["consultas"].as_array().cloned().unwrap_or_default();
+    let mut filas_consultas: Vec<Vec<Value>> = alcances.iter()
+        .map(|s| ["tribunal_nombre", "modalidad_nombre", "tab", "estado", "paginas", "registros", "error"].iter().map(|k| valor_o_vacio(s, k)).collect())
+        .collect();
+    let esperado = datos.get("seleccion").cloned().unwrap_or(json!({}));
+    let lista = |k: &str| esperado[k].as_array().cloned().unwrap_or_default();
+    let mut planificadas = BTreeSet::new();
+    for t in lista("tribunals") {
+        for m in lista("modalities") {
+            for p in lista("tabs") {
+                planificadas.insert((texto(&t), texto(&m), texto(&p)));
+            }
+        }
+    }
+    let intentadas: BTreeSet<(String, String, String)> = alcances.iter()
+        .map(|s| (texto(&s["tribunal"]), texto(&s["modality"]), texto(&s["tab"]))).collect();
+    for (t, m, p) in planificadas.difference(&intentadas) {
+        filas_consultas.push(vec![json!(t), json!(m), json!(p), json!("NO_CONSULTADA"), json!(0), json!(0),
+            json!("La ejecución terminó antes de esta consulta.")]);
+    }
+    let unir = |k: &str, defecto: Value| json_python(&datos.get(k).cloned().unwrap_or(defecto), false);
+    let mut extras: Vec<HojaExtra> = vec![
+        ("Lecturas".into(), vec!["Tribunal", "Modalidad", "Pestaña", "Página", "Fila", "RIT", "Persona", "Centro", "Causa RUS",
+            "Ingreso RUS", "Estado lectura", "Detalle", "Archivo", "SHA-256", "Fecha captura", "Código extensión"], libro.clone()),
+        ("Consultas".into(), vec!["Tribunal", "Modalidad", "Pestaña", "Estado", "Páginas recorridas", "Registros enumerados", "Detalle"],
+            filas_consultas),
+        ("Lote".into(), vec!["Dato", "Valor"], vec![
+            vec![json!("Estado del recorrido"), datos.get("estado").cloned().unwrap_or(json!("INCOMPLETA"))],
+            vec![json!("Fecha"), valor_o_vacio(&datos, "fecha")],
+            vec![json!("Error del recorrido"), valor_o_vacio(&datos, "error")],
+            vec![json!("Descargador"), json!(unir("origen", json!({})))],
+            vec![json!("Extensión"), json!(unir("extension", json!({})))],
+            vec![json!("Selección"), json!(json_python(&esperado, false))],
+            vec![json!("Historial"), json!("Copia de la tabla capturada; no acredita historial remoto completo.")],
+        ]),
+    ];
+    if let Some(anteriores) = datos["anteriores_no_reenumeradas"].as_array().filter(|a| !a.is_empty()) {
+        let filas = anteriores.iter().map(|r| {
+            let mut f: Vec<Value> = ["tribunal_nombre", "modalidad_nombre", "pestana", "rit", "nombre", "causa_id", "ingreso_id", "estado", "archivo", "sha256"]
+                .iter().map(|k| valor_o_vacio(r, k)).collect();
+            f.push(json!("No se reenumeró en esta ejecución; no se acredita desaparición del registro."));
+            f
+        }).collect();
+        extras.push(("Lecturas anteriores".into(), vec!["Tribunal", "Modalidad", "Pestaña", "RIT", "Persona", "Causa RUS", "Ingreso RUS",
+            "Estado previo", "Archivo previo", "SHA-256 previo", "Alcance"], filas));
+    }
+    let fuente = json!({
+        "file": manifiesto.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+        "sha256": sha256(&bruto), "requests": registros.len(),
+        "openings": libro.iter().filter(|f| f[10] == "LEIDA").count(), "detail": valor_o_vacio(&datos, "estado"),
+    });
+    Ok(LoteImportado { consultas, calendarios, fuente, extras })
 }
 
-struct Importacion {
-    consultas: Vec<Value>,
+pub(super) struct Importacion {
+    pub(super) consultas: Vec<Value>,
     calendarios: Vec<Value>,
     emparejadas: usize,
     excluidas: usize,
+    pub(super) fuentes: Vec<Value>,
+    pub(super) extras: Vec<HojaExtra>,
 }
 
 /// `import_lotes`: reutiliza originales comprobados; con `identidades`, solo los ingresos verificados del paquete
 /// (nunca por RIT o nombre).
-fn importar_lotes(rutas: &[PathBuf], identidades: Option<&BTreeSet<Clave>>) -> Result<Importacion, String> {
+pub(super) fn importar_lotes(rutas: &[PathBuf], identidades: Option<&BTreeSet<Clave>>) -> Result<Importacion, String> {
     let rutas = rutas_bitacoras(rutas);
     if rutas.is_empty() {
         return Err("Añade un control bitacoras.json con sus HTML originales.".into());
     }
     let (mut consultas, mut calendarios): (PorIngreso, PorIngreso) = (Vec::new(), Vec::new());
     let mut excluidas = 0;
+    let (mut fuentes, mut extras): (Vec<Value>, Vec<HojaExtra>) = (Vec::new(), Vec::new());
     for ruta in &rutas {
-        let (lote_consultas, lote_calendarios) = importar_lote(ruta)?;
+        let LoteImportado { consultas: lote_consultas, calendarios: lote_calendarios, fuente, extras: hojas } = importar_lote_completo(ruta)?;
+        fuentes.push(fuente);
+        for (titulo, cabecera, filas) in hojas {
+            match extras.iter_mut().find(|(t, _, _)| *t == titulo) {
+                Some(h) => h.2.extend(filas),
+                None => extras.push((titulo, cabecera, filas)),
+            }
+        }
         for (k, cal) in lote_calendarios {
             if identidades.is_some_and(|i| !i.contains(&k)) {
                 continue;
@@ -939,6 +1125,8 @@ fn importar_lotes(rutas: &[PathBuf], identidades: Option<&BTreeSet<Clave>>) -> R
         consultas: consultas.into_iter().map(|(_, v)| v).collect(),
         calendarios: calendarios.into_iter().map(|(_, v)| v).collect(),
         excluidas,
+        fuentes,
+        extras,
     })
 }
 
@@ -964,17 +1152,18 @@ const CONTEXTO: [&str; 9] = [
 ];
 const HISTORIA_MAX: u64 = 8 * 1024 * 1024;
 
-struct Causa {
-    clave: String,
-    causa: Value,
-    ventana: Vec<Value>,
+pub(super) struct Causa {
+    pub(super) clave: String,
+    pub(super) causa: Value,
+    pub(super) lectura: Option<Value>,
+    pub(super) ventana: Vec<Value>,
     anteriores: Vec<Value>,
     escritos: Option<Value>,
     escritos_error: String,
 }
 
 /// `historias.cargar`: (estado, causas). Cada causa leída se relee del HTML respaldado y se verifica su SHA-256.
-fn cargar_historias(manifiesto: &Path) -> Result<(Value, Vec<Causa>), String> {
+pub(super) fn cargar_historias(manifiesto: &Path) -> Result<(Value, Vec<Causa>), String> {
     let estado: Value = std::fs::read(manifiesto).ok().and_then(|b| serde_json::from_slice(&b).ok())
         .ok_or("No se pudo leer historias.json.")?;
     if estado["version"] != 1 || estado["tipo"] != "HISTORIA_LECTURA" {
@@ -984,8 +1173,8 @@ fn cargar_historias(manifiesto: &Path) -> Result<(Value, Vec<Causa>), String> {
     let meses = estado["meses"].as_u64().unwrap_or(4) as u32;
     let mut causas = Vec::new();
     for (clave, causa) in estado["causas"].as_object().ok_or("historias.json sin causas.")? {
-        let mut item = Causa { clave: clave.clone(), causa: causa.clone(), ventana: vec![], anteriores: vec![], escritos: None,
-            escritos_error: String::new() };
+        let mut item = Causa { clave: clave.clone(), causa: causa.clone(), lectura: None, ventana: vec![], anteriores: vec![],
+            escritos: None, escritos_error: String::new() };
         if matches!(causa["estado"].as_str(), Some("LEIDA" | "VACIA_COMPROBADA")) {
             let ruta = carpeta.join(causa["archivo"].as_str().ok_or("Falta el respaldo de una historia leída.")?);
             let meta = std::fs::metadata(&ruta).ok().filter(|m| m.is_file() && m.len() <= HISTORIA_MAX);
@@ -1017,6 +1206,7 @@ fn cargar_historias(manifiesto: &Path) -> Result<(Value, Vec<Causa>), String> {
             ventana.sort_by_key(|f| f["fila"].as_u64().unwrap_or(0));
             item.ventana = ventana;
             item.anteriores = anteriores;
+            item.lectura = Some(lectura);
         }
         causas.push(item);
     }
@@ -1419,6 +1609,7 @@ pub fn exportar(carpetas: &[PathBuf], destino: &Path) -> Result<PathBuf, String>
 
 /// `package_current_lot`: la ruta de Resultados › Paquete. Bitácoras emparejadas por identidad verificada
 /// (`match_diaries`), historia e histórico del lote de bitácoras y destino nuevo. Devuelve `{path, reuse[, historico_incompleto]}`.
+#[allow(clippy::too_many_arguments)]
 pub fn empaquetar_lote(
     carpeta: &Path,
     bitacoras: &Path,
@@ -1427,6 +1618,7 @@ pub fn empaquetar_lote(
     historico: Option<&Path>,
     meses: u32,
     avisos: &[(String, String)],
+    consolidado: bool,
 ) -> Result<Value, String> {
     if destino.exists() {
         return Err("El destino ya existe; elige un nombre nuevo.".into());
@@ -1438,9 +1630,11 @@ pub fn empaquetar_lote(
         historico: historico.map(Path::to_path_buf),
         meses,
         avisos: avisos.to_vec(),
+        consolidado,
     };
     let e = exportar_con(&[carpeta.to_path_buf()], destino, &opciones)?;
-    let mut r = json!({"path": e.ruta.to_string_lossy(), "reuse": e.reutilizacion.unwrap_or_else(|| "Sin bitácoras añadidas.".into())});
+    let resumen = e.reutilizacion.unwrap_or_else(|| "Sin bitácoras añadidas.".into());
+    let mut r = json!({"path": e.ruta.to_string_lossy(), "reuse": resumen + &e.nota});
     if historico.is_some() {
         r["historico_incompleto"] = json!(e.historico_incompleto);
     }
@@ -1454,7 +1648,16 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     if lotes.is_empty() {
         return Err("Selecciona un lote verificado.".into());
     }
-    let ahora = chrono::Local::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, false);
+    let reloj = chrono::Local::now().fixed_offset();
+    let ahora = reloj.to_rfc3339_opts(chrono::SecondsFormat::Micros, false);
+    let (consolidado, nota) = if op.consolidado {
+        match super::resultados::libro_consolidado(&lotes, &reloj) {
+            Ok(b) => (Some(b), " Incluye el XLSX consolidado.".to_string()),
+            Err(e) => (None, format!(" Sin XLSX consolidado: {e}")),
+        }
+    } else {
+        (None, String::new())
+    };
     let capturada = lotes[0].resumen["fecha_hora"].as_str().map(str::to_string).filter(|s| !s.is_empty()).unwrap_or_else(|| ahora.clone());
     let mut huella = json_python(&Value::Array(lotes.iter().map(|l| l.resumen.clone()).collect()), true);
     if !op.bitacoras.is_empty() {
@@ -1738,8 +1941,8 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
         "downloader": {"version": super::extension::version(super::Edicion::Integral), "commit": "desarrollo"},
         "contains_sensitive_data": true, "originals_authorized": false, "queries": d.filas("consultas"), "table_states": estados,
     });
-    let ruta = escribir_captura(destino, metadatos, &d.tablas)?;
-    Ok(Exportado { ruta, reutilizacion, historico_incompleto })
+    let ruta = escribir_captura_con(destino, metadatos, &d.tablas, consolidado.as_deref())?;
+    Ok(Exportado { ruta, nota, reutilizacion, historico_incompleto })
 }
 
 #[cfg(test)]
@@ -1761,9 +1964,12 @@ mod tests {
         let mut salida = BTreeMap::new();
         for i in 0..z.len() {
             let mut f = z.by_index(i).unwrap();
+            let nombre = f.name().to_string();
+            if nombre != "manifest.json" && !nombre.starts_with("data/") {
+                continue;
+            }
             let mut texto = String::new();
             f.read_to_string(&mut texto).unwrap();
-            let nombre = f.name().to_string();
             if nombre == "manifest.json" {
                 salida.insert(nombre, serde_json::from_str(&texto).unwrap());
             } else if nombre.starts_with("data/") {
@@ -1771,6 +1977,55 @@ mod tests {
             }
         }
         salida
+    }
+
+    /// E-Q5d: con `consolidado`, el paquete de lotes aptos para CSMP lleva `consolidado/consolidado.xlsx` (1.1.0); las
+    /// tablas son las mismas que sin él (oráculo de Python) y el libro es el «Para CSMP» de `exportar_libro`.
+    #[test]
+    fn paquete_con_consolidado() {
+        let datos: Value = serde_json::from_str(include_str!("../../tests/datos/paquete.json")).unwrap();
+        let e = datos["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "calendario_informes").unwrap();
+        let base = std::env::temp_dir().join(format!("flow-eq5d-consolidado-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let mut carpetas = Vec::new();
+        for l in std::iter::once(&e["lote"]).chain(e["otros_lotes"].as_array().unwrap()) {
+            let c = base.join("lotes").join(l["carpeta"].as_str().unwrap());
+            reconstruir(&c, &l["archivos"]);
+            carpetas.push(c);
+        }
+        let destino = base.join("paquete.zip");
+        let r = exportar_con(&carpetas, &destino, &Opciones { consolidado: true, ..Default::default() }).unwrap();
+        assert_eq!(r.nota, " Incluye el XLSX consolidado.");
+        if let Some(salida) = std::env::var_os("FLOW_PAQUETE_SALIDA") {
+            std::fs::create_dir_all(&salida).unwrap();
+            std::fs::copy(&destino, PathBuf::from(salida).join("consolidado.zip")).unwrap();
+        }
+        let obtenido = contenido(&destino);
+        let manifiesto = &obtenido["manifest.json"];
+        assert_eq!(manifiesto["schema_version"], VERSION_CONSOLIDADA);
+        let libro = manifiesto["files"].as_array().unwrap().iter().find(|f| f["type"] == "consolidated_workbook").unwrap();
+        assert_eq!(libro["path"], RUTA_CONSOLIDADO);
+        for (k, v) in e["paquete"].as_object().unwrap() {
+            if k.starts_with("data/") {
+                assert_eq!(&obtenido[k], v, "{k} cambia con el consolidado");
+            }
+        }
+        let mut z = zip::ZipArchive::new(std::fs::File::open(&destino).unwrap()).unwrap();
+        let mut bytes = Vec::new();
+        z.by_name(RUTA_CONSOLIDADO).unwrap().read_to_end(&mut bytes).unwrap();
+        assert_eq!(libro["sha256"], json!(sha256(&bytes)));
+        let hojas = crate::descargador::excel::volcado::volcar(&bytes, "");
+        let titulos: Vec<&str> = hojas["hojas"].as_array().unwrap().iter().map(|h| h["titulo"].as_str().unwrap()).collect();
+        assert_eq!(titulos, ["Resumen", "SITFA_ARCHIVOS", "CUMPLIMIENTO", "ESPERA", "INFORMES", "Vencimientos"]);
+        // Lote no apto: el paquete sale sin libro y la nota da el motivo.
+        let listados = datos["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "listados").unwrap();
+        let no_apto = base.join("no-apto").join(listados["lote"]["carpeta"].as_str().unwrap());
+        reconstruir(&no_apto, &listados["lote"]["archivos"]);
+        let otro = base.join("sin-libro.zip");
+        let r = exportar_con(&[no_apto], &otro, &Opciones { consolidado: true, ..Default::default() }).unwrap();
+        assert_eq!(contenido(&otro)["manifest.json"]["schema_version"], VERSION);
+        assert!(r.nota.starts_with(" Sin XLSX consolidado: "), "{}", r.nota);
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     /// E-Q5: el paquete de Rust desde las carpetas que armó Flow Python trae el mismo `manifest.json` y los mismos
@@ -1794,7 +2049,7 @@ mod tests {
                 let bitacoras = base.join("bitacoras").join(e["bitacoras"]["carpeta"].as_str().unwrap());
                 reconstruir(&bitacoras, &e["bitacoras"]["archivos"]);
                 empaquetar_lote(&carpeta, &bitacoras.join("bitacoras.json"), &destino, Some(&bitacoras.join("historia").join("historias.json")),
-                    Some(&bitacoras), 4, &[])
+                    Some(&bitacoras), 4, &[], false)
                     .map(|mut r| {
                         r.as_object_mut().unwrap().remove("path");
                         if r != e["resultado"] {

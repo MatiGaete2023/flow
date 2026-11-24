@@ -44,6 +44,13 @@ fn fecha_serial(serial: f64) -> Option<NaiveDate> {
         .map(|base| base + chrono::Duration::days(serial.floor() as i64))
 }
 
+/// Fecha y hora de un serial de Excel (sistema 1900), redondeada al segundo como openpyxl.
+fn fecha_hora_serial(serial: f64) -> Option<chrono::NaiveDateTime> {
+    let dia = fecha_serial(serial)?;
+    let segundos = ((serial - serial.floor()) * 86_400.0).round() as i64;
+    dia.and_hms_opt(0, 0, 0).map(|d| d + chrono::Duration::seconds(segundos))
+}
+
 /// `carga.canonical`: las fechas de Excel se comparan como `dd/mm/aaaa`.
 fn texto_celda_con(dato: &Data, formato_fecha: &str) -> String {
     match dato {
@@ -254,6 +261,79 @@ pub fn leer_carga(datos: &[u8]) -> Result<(&'static str, super::sitfa::carga::Fi
         return Err("Se recibio el Excel, pero no se reconoce un unico listado de causas y nombres. No es una consulta sin resultados.".into());
     }
     Ok((formato, candidatas.pop().unwrap()))
+}
+
+/// Valor crudo de una celda de `read_excel` (`ExcelInfo.grid`): `None`, `int`, `float`, `datetime`, `bool` o texto.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Celda {
+    Vacia,
+    Texto(String),
+    Entero(i64),
+    Real(f64),
+    Fecha(chrono::NaiveDateTime),
+    Logico(bool),
+}
+
+impl Celda {
+    /// `str(valor)` de Python (`None` → vacío, como `str(v or '')`).
+    pub fn texto_python(&self) -> String {
+        match self {
+            Celda::Vacia => String::new(),
+            Celda::Texto(s) => s.clone(),
+            Celda::Entero(i) => i.to_string(),
+            Celda::Real(f) if f.is_finite() && f.fract() == 0.0 && f.abs() < 1e16 => format!("{f:.1}"),
+            Celda::Real(f) => f.to_string(),
+            Celda::Fecha(d) => d.format("%Y-%m-%d %H:%M:%S").to_string(),
+            Celda::Logico(b) => if *b { "True" } else { "False" }.into(),
+        }
+    }
+
+    pub fn es_texto(&self) -> bool {
+        matches!(self, Celda::Texto(_))
+    }
+}
+
+/// La grilla tipada del listado único (`carga`: el de Carga): openpyxl entrega enteros, reales, fechas y texto;
+/// xlrd (XLS BIFF) entrega todo número como real. HTML y SpreadsheetML 2003 entregan texto.
+pub fn grilla_tipada(datos: &[u8], carga: bool) -> Result<Vec<Vec<Celda>>, String> {
+    let (formato, texto) = grillas(datos, if carga { "%d/%m/%Y" } else { "%Y-%m-%d" })?;
+    let mut elegidas = Vec::new();
+    for (i, g) in texto.iter().enumerate() {
+        let hay = if carga { !super::sitfa::carga::registros_en_grilla(g)?.is_empty() } else { !contar(g)?.is_empty() };
+        if hay {
+            elegidas.push(i);
+        }
+    }
+    let [i] = elegidas[..] else {
+        return Err("Se recibio el Excel, pero no se reconoce un unico listado de causas y nombres. No es una consulta sin resultados.".into());
+    };
+    if !matches!(formato, "XLS-BIFF" | "OOXML-con-extension-xls") {
+        return Ok(texto[i].iter().map(|f| f.iter().map(|v| Celda::Texto(v.clone())).collect()).collect());
+    }
+    let biff = formato == "XLS-BIFF";
+    let mut libro = calamine::open_workbook_auto_from_rs(Cursor::new(datos.to_vec()))
+        .map_err(|_| "No se pudo abrir/parsear el archivo Excel; requiere revision local.")?;
+    let (_, rango) = libro.worksheets().into_iter().nth(i).ok_or("Hoja del listado ausente.")?;
+    Ok(rango
+        .rows()
+        .map(|f| {
+            f.iter()
+                .map(|d| match d {
+                    Data::Empty | Data::Error(_) => Celda::Vacia,
+                    Data::String(s) => Celda::Texto(s.clone()),
+                    Data::Float(x) if !biff && x.fract() == 0.0 && x.abs() < 9.0e15 => Celda::Entero(*x as i64),
+                    Data::Float(x) => Celda::Real(*x),
+                    Data::Int(n) if biff => Celda::Real(*n as f64),
+                    Data::Int(n) => Celda::Entero(*n),
+                    Data::Bool(b) => Celda::Logico(*b),
+                    Data::DateTime(t) => fecha_hora_serial(t.as_f64()).map(Celda::Fecha).unwrap_or(Celda::Vacia),
+                    Data::DateTimeIso(s) | Data::DurationIso(s) => chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
+                        .map(Celda::Fecha)
+                        .unwrap_or_else(|_| Celda::Texto(s.clone())),
+                })
+                .collect()
+        })
+        .collect())
 }
 
 /// `read_excel(data, carga.records_in_grid).grid` para el paquete CSMP: la grilla del único listado de Carga dos veces,

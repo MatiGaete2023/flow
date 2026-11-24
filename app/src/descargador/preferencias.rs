@@ -53,6 +53,8 @@ pub struct Preferencias {
     pub leer_historico: bool,
     pub historia_en_paquete: bool,
     pub meses_atras: u32,
+    /// `paquete_consolidado`: el paquete lleva el XLSX «Para CSMP» (D6).
+    pub paquete_consolidado: bool,
 }
 
 impl Default for Preferencias {
@@ -68,6 +70,7 @@ impl Default for Preferencias {
             leer_historico: false,
             historia_en_paquete: true,
             meses_atras: 4,
+            paquete_consolidado: true,
         }
     }
 }
@@ -380,8 +383,9 @@ mod tests {
     fn eq6_preferencias_de_lecturas() {
         let d = Preferencias::default();
         assert_eq!(
-            (d.reutilizar_bitacoras, d.leer_calendarios, d.leer_historia, d.leer_historico, d.historia_en_paquete, d.meses_atras),
-            (true, false, false, false, true, 4)
+            (d.reutilizar_bitacoras, d.leer_calendarios, d.leer_historia, d.leer_historico, d.historia_en_paquete, d.meses_atras,
+             d.paquete_consolidado),
+            (true, false, false, false, true, 4, true)
         );
         let carpeta = std::env::temp_dir().join(format!("flow-eq6-prefs-{}", std::process::id()));
         std::fs::create_dir_all(&carpeta).unwrap();

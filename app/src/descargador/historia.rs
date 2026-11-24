@@ -206,6 +206,8 @@ pub struct LectorHistoria {
     causas_por_rit: BTreeMap<(String, String), BTreeSet<String>>,
     rits_por_causa: BTreeMap<String, BTreeSet<String>>,
     fallo_persistencia: bool,
+    /// `resultado['excel']`: el `Historia_SITFA.xlsx` generado al cerrar.
+    pub excel: Option<PathBuf>,
     /// Desfase de la hora local con que Python expresa `leida` (`astimezone()`).
     desfase: chrono::FixedOffset,
 }
@@ -225,6 +227,7 @@ impl LectorHistoria {
             causas_por_rit: BTreeMap::new(),
             rits_por_causa: BTreeMap::new(),
             fallo_persistencia: false,
+            excel: None,
             desfase,
         })
     }
@@ -504,6 +507,17 @@ impl LectorHistoria {
         if escrito.is_err() {
             self.estado["diagnostico_error"] = json!("HISTORIA_PERSISTENCIA");
             self.estado["estado"] = json!("INCOMPLETA");
+        }
+        // `export_historias` en la carpeta del lote de bitácoras: `Historia_SITFA.xlsx` o, si existe, con sufijo.
+        if let Some(lote) = self.carpeta.parent() {
+            let destino = super::excel::nombre_libre(lote, "Historia_SITFA");
+            match super::excel::exportar_historias(&self.carpeta.join(MANIFIESTO), &destino) {
+                Ok(r) => self.excel = Some(r),
+                Err(_) => {
+                    self.estado["excel_error"] = json!("HISTORIA_EXCEL_ERROR");
+                    self.estado["estado"] = json!("INCOMPLETA");
+                }
+            }
         }
         self.persistir();
     }

@@ -44,6 +44,10 @@ FILAS_CONTEXTO = ''.join(
         ('8003', 'Otro tr&aacute;mite ficticio', '01/03/2026'),
         ('8004', 'Designa abogado', '15/05/2026'),
         ('8005', 'Resoluci&oacute;n ficticia', '01/09/2026'),
+        # Texto sobre 30.000 unidades UTF-16 (emoji = 2): Historia_SITFA.xlsx lo parte en columnas de continuación.
+        # Folio menor con fecha más nueva: el orden por fecha de Historia_SITFA.xlsx no coincide con el de folio.
+        ('8007', 'Resoluci&oacute;n tard&iacute;a ficticia', '01/12/2099'),
+        ('8006', 'Resoluci&oacute;n extensa ficticia ' + '&ntilde;&#128512;abc ' * 4500, '02/09/2026'),
     )
 ).encode()
 

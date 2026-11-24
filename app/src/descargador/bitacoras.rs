@@ -393,7 +393,7 @@ pub fn ejecutar(
         .find(|q| q["estado"] == "FALLIDA")
         .map(|q| q["error"].as_str().unwrap_or("").to_string())
         .unwrap_or_else(|| s.estado["error"].as_str().unwrap_or("").to_string());
-    Ok(json!({
+    let mut resultado = json!({
         "folder": carpeta.display().to_string(),
         "manifest": manifiesto.display().to_string(),
         "sha256": sha256(&std::fs::read(&manifiesto).map_err(|e| e.to_string())?),
@@ -410,7 +410,14 @@ pub fn ejecutar(
         "faltantes_por_tribunal": faltantes_por_tribunal(&registros),
         "historicos": conteo_historicos(&registros),
         "diagnostico_anonimo": carpeta.join("diagnostico_bitacoras.json").display().to_string(),
-    }))
+    });
+    // `export_diaries`: copia íntegra en `Bitacoras_RUS.xlsx` (o con sufijo si existe); un fallo no anula la lectura.
+    let destino = super::excel::nombre_libre(&carpeta, "Bitacoras_RUS");
+    match super::excel::exportar_bitacoras(&[manifiesto], &destino) {
+        Ok(r) => resultado["excel"] = json!(r.display().to_string()),
+        Err(e) => resultado["excel_error"] = json!(e),
+    }
+    Ok(resultado)
 }
 
 /// `enumerar_listado`: formulario, páginas del listado y lectura de cada fila. `Ok(false)` detiene el lote.
