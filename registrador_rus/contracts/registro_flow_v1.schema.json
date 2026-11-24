@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegistroFlowV1",
+  "description": "Contrato local. El validador Python comprueba SHA-256, Unicode, calendario y vigencia; el esquema estructural no autentica la aprobación.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation_id",
+    "source",
+    "remote_identity",
+    "origin",
+    "destination",
+    "observation_state",
+    "approved_text",
+    "approved_text_sha256",
+    "approved_by",
+    "approved_at_utc",
+    "approval_version"
+  ],
+  "properties": {
+    "schema": {
+      "const": "RegistroFlowV1"
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "work_id",
+        "row_ref"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        },
+        "work_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        },
+        "row_ref": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        }
+      }
+    },
+    "remote_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "tribunal_id",
+        "causa_id",
+        "ingreso_id"
+      ],
+      "properties": {
+        "system": {
+          "const": "SITFA"
+        },
+        "tribunal_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        },
+        "causa_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        },
+        "ingreso_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "not": {
+            "pattern": "\\u0000"
+          }
+        }
+      }
+    },
+    "origin": {
+      "enum": [
+        "ESPERA",
+        "CUMPLIMIENTO",
+        "INFORMES_POR_VENCER",
+        "INFORMES_VENCIDOS"
+      ]
+    },
+    "destination": {
+      "enum": [
+        "ADMINISTRATIVA",
+        "AL_TRIBUNAL"
+      ]
+    },
+    "observation_state": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "approved_text": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "approved_text_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "approved_by": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+      "not": {
+        "pattern": "\\u0000"
+      }
+    },
+    "approved_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "approval_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

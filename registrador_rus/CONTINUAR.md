@@ -31,3 +31,10 @@ ADMINISTRATIVA = casilla desmarcada; AL_TRIBUNAL = marcada. Estado es independie
 ## Siguiente paso
 
 P1 — implementar contrato y esquema local aislado, pruebas focalizadas. Mantener pendiente P0 (arranque real de la base y fixtures originales en ambiente autorizado). No volver a analizar grabaciones completas salvo necesidad concreta.
+
+## P1 — Contrato local (avance 24 de noviembre de 2026)
+
+- Base del paquete: `6a144c4d691e8f9f31908390455a3230763e8bd5`. Archivos nuevos: app/contracts.py, contracts/registro_flow_v1.schema.json, tests/test_contracts.py, README.md (todo bajo registrador_rus/).
+- Decisiones: modelo inmutable, identidad SITFA completa y exacta; no coerción de identificadores; destino explícito separado de Estado; conserva Unicode y espacios del texto, SHA-256 sobre UTF-8; fecha UTC con Z y versión positiva. require_same_approval compara todo el contrato contra la aprobación vigente obtenida por el consumidor local; no acredita identidad del aprobador. El límite de longitud real se verifica en P2/P3, sin truncar.
+- Prueba local: 5 métodos unittest, todos OK, incluyendo ocho combinaciones origen/destino y casos inválidos; Python 3.13.5 Linux. No se ejecutó suite global ni pruebas sobre RUS. Blobs esperados del código y pruebas: 0ff9bdb10936c71794f1353bdd6ef9ff3a93a6d4 y 6ce4a210903394d2e265c10c804a2c5dfd7e1454. El esquema estructural se incorpora, falta prueba específica de concordancia JSON Schema. Python 3.12/Windows pendiente.
+- Siguiente: cerrar comprobación de esquema P1 y desarrollar P2 con fixture ficticio y detección inequívoca; no inventar selectores reales. P0 arranque/importación de Flow pendiente por entorno sin DNS. P8/P9 productivos bloqueados.
