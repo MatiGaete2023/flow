@@ -2707,45 +2707,24 @@ impl App {
     }
 
     fn importar_contactos(&mut self) {
-        let Some(pth) = rfd::FileDialog::new().add_filter("Contactos", &["csv", "txt", "xlsx", "xls", "json"]).pick_file() else { return };
-        let Ok(bytes) = std::fs::read(&pth) else { return };
-        let mut n = 0;
-        if pth.extension().is_some_and(|e| e == "json") {
-            if let Ok(v) = serde_json::from_slice::<Vec<std::collections::BTreeMap<String, String>>>(&bytes) {
-                for m in v {
-                    if let (Some(a), Some(b)) = (m.get("Nombre"), m.get("Mail")) {
-                        self.cfg.contactos.insert(a.clone(), b.clone());
-                        n += 1;
-                    }
+        let Some(pth) = rfd::FileDialog::new().add_filter("Contactos", &["xlsx", "xls", "csv", "txt", "json"]).pick_file() else { return };
+        let bytes = match std::fs::read(&pth) {
+            Ok(b) => b,
+            Err(e) => return self.aviso(format!("No se pudo leer el archivo: {e}"), true),
+        };
+        let extension = pth.extension().map(|e| e.to_string_lossy().into_owned()).unwrap_or_default();
+        match crate::personalizar::importar_contactos_archivo(&self.cfg, &extension, &bytes) {
+            Err(e) => self.aviso(e, true),
+            Ok(r) => {
+                self.cfg = r.cfg;
+                self.guardar_cfg();
+                let mut mensaje = format!("Catastro incorporado: {} contactos disponibles.", self.cfg.contactos.len());
+                if !r.conflictos.is_empty() {
+                    mensaje += &format!(" No se sustituyeron coincidencias conflictivas: {}.", r.conflictos.join(", "));
                 }
-            }
-        } else if let Ok(sheets) = crate::lectura::read_sheets(&bytes) {
-            for s in sheets {
-                let Some(h) = s.rows.first() else { continue };
-                let hs = crate::lectura::headers_of(h);
-                let ni = hs.iter().position(|x| ["nombre", "programa", "derivacion"].contains(&normalizar(x).as_str()));
-                let mi = hs.iter().position(|x| ["mail", "correo", "email", "e mail"].contains(&normalizar(x).as_str()));
-                if let (Some(ni), Some(mi)) = (ni, mi) {
-                    for r in s.rows.iter().skip(1) {
-                        let a = r.get(ni).map(|c| c.display()).unwrap_or_default();
-                        let b = r.get(mi).map(|c| c.display()).unwrap_or_default();
-                        if a.trim().is_empty() {
-                            continue;
-                        }
-                        if let Some(t) = a.trim().strip_prefix("Tribunal: ") {
-                            if let Some(tt) = self.cfg.tribunales.get_mut(&t.trim().to_uppercase()) {
-                                tt.para = b.trim().to_string();
-                            }
-                        } else {
-                            self.cfg.contactos.insert(a.trim().to_string(), b.trim().to_string());
-                        }
-                        n += 1;
-                    }
-                }
+                self.aviso(mensaje, !r.conflictos.is_empty());
             }
         }
-        self.guardar_cfg();
-        self.aviso(format!("{n} contactos importados."), n == 0);
     }
 
     fn exportar_contactos(&mut self) {

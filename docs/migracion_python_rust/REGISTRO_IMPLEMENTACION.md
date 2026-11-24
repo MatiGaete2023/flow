@@ -215,3 +215,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Diferencias: 9 hojas auxiliares de los productos del crate (fijadas en `HOJAS_DECLARADAS`); `requieren_revision` suma alertas.
 - CI: run 45487699648 verde (`linux` y `validar`, `meta4.json` regenerado en Windows). Pendiente: decisión D-13.
 
+## 2026-11-24 · E-A6 · Importación de contactos
+
+- Cambió: `personalizar.rs` (`importar_catastro`, `parse_contactos`, `importar_contactos_archivo`), `ui.rs` (botón «Importar» de Contactos), `app/qa/generar_catastro.py` y `catastro.json` (en el workflow).
+- Acredita: `importacion_de_contactos_igual_a_python` (36 casos, 5 errores, 4 conflictos), `oraculo_de_catastro_detecta_alteraciones` y dos pruebas de comportamiento (JSON con tribunales y conflictos; CSV releído). `probar_app.sh todo`: 72 y 88 pruebas, 0 fallos; clippy de la biblioteca limpio.
+- Corrige: la importación anterior pisaba contactos, aceptaba direcciones inválidas y no informaba conflictos.
+- Diferencias: filas «Tribunal: X» de CSV/HTML actualizan el tribunal (extensión de Rust).
+- Pendiente: CI de Windows verde.
+

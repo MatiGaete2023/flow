@@ -7,7 +7,7 @@ use crate::config::{plantillas_base, Config, PlantillaCorreo};
 use crate::util::normalizar;
 use regex::Regex;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -81,6 +81,127 @@ pub fn guardar_contacto(cfg: &Config, nombre: &str, direccion: &str, alias: &[St
         r.aliases.insert(a, nombre.to_string());
     }
     Ok(r)
+}
+
+/// Resultado de importar un catastro: los contactos que quedan y los nombres que no se sustituyeron.
+#[derive(Debug, PartialEq)]
+pub struct Catastro {
+    pub contactos: BTreeMap<String, String>,
+    pub conflictos: Vec<String>,
+}
+
+/// `outputs.import_contacts`: filas de un catastro (la primera es el encabezado) con columnas Nombre/Programa y
+/// Mail/Correo. Un nombre que ya existe con otro correo no se sustituye y queda como conflicto; una dirección inválida
+/// detiene toda la importación. Como en Python, un nombre que solo cambia de mayúsculas se agrega como clave aparte.
+pub fn importar_catastro(previos: &BTreeMap<String, String>, filas: &[Vec<String>]) -> Result<Catastro, String> {
+    const FALTAN_COLUMNAS: &str = "El catastro necesita columnas Nombre/Programa y Mail/Correo.";
+    let cabecera = filas.first().ok_or(FALTAN_COLUMNAS)?;
+    let columna = |claves: &[&str]| claves.iter().find_map(|k| cabecera.iter().position(|c| normalizar(c) == *k));
+    let nombre = columna(&["nombre", "programa", "nombre programa"]).ok_or(FALTAN_COLUMNAS)?;
+    let correo = columna(&["mail", "correo", "email", "correo electronico"]).ok_or(FALTAN_COLUMNAS)?;
+    let mut contactos = previos.clone();
+    let mut conflictos = Vec::new();
+    for fila in &filas[1..] {
+        let celda = |i: usize| fila.get(i).map(String::as_str).unwrap_or("");
+        let n = celda(nombre).trim();
+        let m = correos(celda(correo))?.join("; ");
+        if n.is_empty() {
+            continue;
+        }
+        let clave = normalizar(n);
+        let anteriores: BTreeSet<&String> = contactos.iter().filter(|(k, _)| normalizar(k) == clave).map(|(_, v)| v).collect();
+        if !anteriores.is_empty() && anteriores != BTreeSet::from([&m]) {
+            conflictos.push(n.to_string());
+            continue;
+        }
+        contactos.insert(n.to_string(), m);
+    }
+    Ok(Catastro { contactos, conflictos })
+}
+
+fn texto_python(v: Option<&serde_json::Value>) -> String {
+    match v {
+        None => String::new(),
+        Some(serde_json::Value::String(s)) => s.clone(),
+        Some(serde_json::Value::Null) => "None".into(),
+        Some(otro) => otro.to_string(),
+    }
+}
+
+/// `config.parse_contacts`: una lista JSON de `{Nombre, Mail}` o el formato histórico de objetos separados por comas.
+/// Salta los nombres vacíos y las direcciones inválidas, y descarta los nombres con dos direcciones distintas.
+pub fn parse_contactos(raw: &str) -> Result<Vec<(String, String)>, String> {
+    let raw = raw.trim();
+    let lista = if raw.starts_with('[') { raw.to_string() } else { format!("[{}]", raw.trim_end_matches(',')) };
+    let registros: Vec<serde_json::Value> = serde_json::from_str(&lista).map_err(|e| format!("El archivo de contactos no es un JSON válido: {e}"))?;
+    let mut contactos: Vec<(String, String)> = Vec::new();
+    let mut ambiguos: BTreeSet<String> = BTreeSet::new();
+    for r in &registros {
+        let nombre = texto_python(r.get("Nombre")).trim().to_string();
+        let direccion = texto_python(r.get("Mail")).trim().to_string();
+        if nombre.is_empty() || correos(&direccion).is_err() {
+            continue;
+        }
+        match contactos.iter_mut().find(|(k, _)| *k == nombre) {
+            Some((_, previa)) if *previa != direccion => {
+                ambiguos.insert(nombre);
+            }
+            Some((_, previa)) => *previa = direccion,
+            None => contactos.push((nombre, direccion)),
+        }
+    }
+    contactos.retain(|(k, _)| !ambiguos.contains(k));
+    Ok(contactos)
+}
+
+/// Contactos importados con la configuración que resulta (la original no cambia si hay un error).
+#[derive(Debug)]
+pub struct ImportacionContactos {
+    pub cfg: Config,
+    pub conflictos: Vec<String>,
+}
+
+/// `_import_contacts` de Flow Python. Un `.json` entrega contactos con la regla de `parse_contacts` (las entradas
+/// «Tribunal: X» de un tribunal conocido actualizan sus destinatarios); un catastro (Excel u otra tabla) pasa por
+/// `importar_catastro`. Extensión de Rust: en tablas que no son Excel (CSV, HTML), una fila «Tribunal: X» también
+/// actualiza los destinatarios del tribunal, para releer lo que exporta Contactos.
+pub fn importar_contactos_archivo(cfg: &Config, extension: &str, bytes: &[u8]) -> Result<ImportacionContactos, String> {
+    let mut r = cfg.clone();
+    let mut conflictos = Vec::new();
+    let extension = extension.trim_start_matches('.').to_lowercase();
+    if extension == "json" {
+        let texto = std::str::from_utf8(bytes).map_err(|_| "El archivo de contactos no está en UTF-8.".to_string())?;
+        for (nombre, direccion) in parse_contactos(texto)? {
+            if let Some(t) = nombre.strip_prefix("Tribunal: ").map(str::to_uppercase).and_then(|k| r.tribunales.get_mut(&k)) {
+                t.para = correos(&direccion)?.join("; ");
+                continue;
+            }
+            if r.contactos.get(&nombre).is_some_and(|previa| *previa != direccion) {
+                conflictos.push(nombre);
+                continue;
+            }
+            r.contactos.insert(nombre, direccion);
+        }
+        return Ok(ImportacionContactos { cfg: r, conflictos });
+    }
+    let hojas = crate::lectura::read_sheets(bytes)?;
+    let hoja = hojas.first().ok_or("El archivo no tiene hojas.")?;
+    let filas: Vec<Vec<String>> = hoja.rows.iter().map(|f| f.iter().map(|c| c.display()).collect()).collect();
+    let mut catastro = importar_catastro(&r.contactos, &filas)?;
+    if !["xlsx", "xls"].contains(&extension.as_str()) {
+        let tribunales: Vec<String> = catastro.contactos.keys().filter_map(|k| k.strip_prefix("Tribunal: ")).map(str::to_uppercase).collect();
+        let conocidos: Vec<String> = tribunales.into_iter().filter(|k| r.tribunales.contains_key(k)).collect();
+        for clave in conocidos {
+            let nombre = catastro.contactos.keys().find(|k| k.strip_prefix("Tribunal: ").is_some_and(|x| x.to_uppercase() == clave)).cloned().unwrap();
+            let direccion = catastro.contactos.remove(&nombre).unwrap_or_default();
+            if let Some(t) = r.tribunales.get_mut(&clave) {
+                t.para = direccion;
+            }
+        }
+    }
+    r.contactos = catastro.contactos;
+    conflictos.extend(catastro.conflictos);
+    Ok(ImportacionContactos { cfg: r, conflictos })
 }
 
 /// Alias de un contacto, en orden alfabético.
@@ -289,6 +410,7 @@ pub fn importar_matrices(zip_ruta: &Path, directorio: &Path) -> Result<Importaci
 mod pruebas {
     use super::*;
     use serde_json::Value;
+    use std::collections::BTreeMap;
     use std::io::Write;
 
     fn cfg_base(contactos: &Value, aliases: &Value) -> Config {
@@ -479,5 +601,99 @@ mod pruebas {
         assert_eq!(cfg.contacto_programa("Programa Dos"), "dos@ejemplo.cl");
         assert_eq!(cfg.contacto_programa("Otro"), "");
         assert_eq!(alias_de(&cfg, "Programa Dos"), ["PD"]);
+    }
+
+    // ---- E-A6: importación de contactos
+    fn catastro_de_python(caso: &Value) -> Vec<String> {
+        use base64::Engine;
+        let previos: BTreeMap<String, String> =
+            caso["contactos"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+        let cfg = Config { contactos: previos, ..Config::default() };
+        let bytes = base64::engine::general_purpose::STANDARD.decode(caso["xlsx"].as_str().unwrap()).unwrap();
+        match (importar_contactos_archivo(&cfg, "xlsx", &bytes), caso.get("error"), caso.get("resultado")) {
+            (Err(e), Some(esperado), _) if e == texto(esperado) => vec![],
+            (Ok(r), None, Some(esperado)) => {
+                let obtenido = serde_json::json!({"contactos": r.cfg.contactos, "conflictos": r.conflictos});
+                if obtenido == *esperado { vec![] } else { vec![format!("Rust {obtenido} · Python {esperado}")] }
+            }
+            (otro, e, r) => vec![format!("Rust {otro:?} · Python error {e:?} resultado {r:?}")],
+        }
+    }
+
+    fn texto_de_python(caso: &Value) -> Vec<String> {
+        let obtenido: BTreeMap<String, String> = parse_contactos(caso["texto"].as_str().unwrap()).unwrap().into_iter().collect();
+        let esperado: BTreeMap<String, String> = caso["contactos"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+        if obtenido == esperado { vec![] } else { vec![format!("Rust {obtenido:?} · Python {esperado:?}")] }
+    }
+
+    /// E-A6: el catastro Excel (`import_contacts`) y `parse_contacts` de Rust contra Flow Python
+    /// (`app/qa/generar_catastro.py`).
+    #[test]
+    fn importacion_de_contactos_igual_a_python() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/catastro.json")).unwrap();
+        let (mut total, mut fallos) = (0, Vec::new());
+        for (i, c) in datos["catastros"].as_array().unwrap().iter().enumerate() {
+            total += 1;
+            let d = catastro_de_python(c);
+            if !d.is_empty() {
+                fallos.push(format!("catastro {i}: {}", d.join(" ")));
+            }
+        }
+        for (i, c) in datos["textos"].as_array().unwrap().iter().enumerate() {
+            total += 1;
+            let d = texto_de_python(c);
+            if !d.is_empty() {
+                fallos.push(format!("texto {i}: {}", d.join(" ")));
+            }
+        }
+        let errores = datos["catastros"].as_array().unwrap().iter().filter(|c| c.get("error").is_some()).count();
+        let conflictos: usize = datos["catastros"].as_array().unwrap().iter().filter_map(|c| c["resultado"]["conflictos"].as_array()).map(Vec::len).sum();
+        println!("CATASTRO: {}/{total}, fallos {}", total - fallos.len(), fallos.len());
+        assert!(fallos.is_empty(), "{}", fallos.join("\n"));
+        assert_eq!((total, errores, conflictos), (36, 5, 4), "conteos del oráculo");
+    }
+
+    /// Prueba permanente del oráculo: un resultado esperado alterado debe detectarse.
+    #[test]
+    fn oraculo_de_catastro_detecta_alteraciones() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/catastro.json")).unwrap();
+        let mut caso = datos["catastros"][7].clone();
+        assert!(catastro_de_python(&caso).is_empty());
+        caso["resultado"]["conflictos"] = serde_json::json!([]);
+        assert!(!catastro_de_python(&caso).is_empty(), "un conflicto esperado alterado no se detecta");
+        let mut t = datos["textos"][0].clone();
+        assert!(texto_de_python(&t).is_empty());
+        t["contactos"]["Programa Uno"] = Value::String("otro@ejemplo.cl".into());
+        assert!(!texto_de_python(&t).is_empty(), "un texto esperado alterado no se detecta");
+    }
+
+    #[test]
+    fn importar_json_respeta_tribunales_conflictos_y_no_toca_la_configuracion_original() {
+        let mut cfg = Config::default();
+        cfg.tribunales.insert("LAJA".into(), crate::config::Tribunal { nombre: "Laja".into(), para: String::new() });
+        cfg.contactos.insert("Programa Uno".into(), "uno@ejemplo.cl".into());
+        let json = r#"[{"Nombre":"Tribunal: LAJA","Mail":"laja@ejemplo.cl, laja2@ejemplo.cl"},{"Nombre":"Tribunal: OTRO","Mail":"x@ejemplo.cl"},
+            {"Nombre":"Programa Uno","Mail":"distinto@ejemplo.cl"},{"Nombre":"Programa Dos","Mail":"dos@ejemplo.cl"}]"#;
+        let r = importar_contactos_archivo(&cfg, "json", json.as_bytes()).unwrap();
+        assert_eq!(r.cfg.tribunales["LAJA"].para, "laja@ejemplo.cl; laja2@ejemplo.cl");
+        assert_eq!(r.conflictos, ["Programa Uno"]);
+        assert_eq!(r.cfg.contactos["Programa Uno"], "uno@ejemplo.cl");
+        assert_eq!(r.cfg.contactos["Programa Dos"], "dos@ejemplo.cl");
+        assert_eq!(r.cfg.contactos["Tribunal: OTRO"], "x@ejemplo.cl", "un tribunal desconocido es un contacto más, como en Python");
+        assert!(cfg.tribunales["LAJA"].para.is_empty() && !cfg.contactos.contains_key("Programa Dos"), "la original no cambia");
+        assert!(importar_contactos_archivo(&cfg, "json", b"[{").is_err());
+    }
+
+    #[test]
+    fn importar_tabla_csv_relee_lo_que_exporta_contactos() {
+        let mut cfg = Config::default();
+        cfg.tribunales.insert("LAJA".into(), crate::config::Tribunal { nombre: "Laja".into(), para: String::new() });
+        let csv = "Nombre;Mail\nTribunal: LAJA;laja@ejemplo.cl\nPrograma Uno;uno@ejemplo.cl\n";
+        let r = importar_contactos_archivo(&cfg, "csv", csv.as_bytes()).unwrap();
+        assert_eq!(r.cfg.tribunales["LAJA"].para, "laja@ejemplo.cl");
+        assert_eq!(r.cfg.contactos.keys().collect::<Vec<_>>(), ["Programa Uno"]);
+        let malo = "Nombre;Mail\nPrograma Uno;uno@ejemplo.cl\nPrograma Dos;no es correo\n";
+        let e = importar_contactos_archivo(&cfg, "csv", malo.as_bytes()).unwrap_err();
+        assert_eq!(e, "Dirección inválida: no es correo");
     }
 }
