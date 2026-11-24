@@ -30,11 +30,13 @@ pub struct Hoja {
     pub presentacion: Option<Vec<String>>,
     pub congelar: bool,
     pub filtro: Filtro,
+    /// `append_text` sin `configure_sheet` (todas las filas con el formato de cuerpo), como `compare_lots`.
+    pub solo_formato: bool,
 }
 
 impl Hoja {
     pub fn simple(nombre: &str, filas: Vec<Vec<Celda>>) -> Self {
-        Self { nombre: nombre.into(), filas, presentacion: None, congelar: true, filtro: Filtro::Dimensiones }
+        Self { nombre: nombre.into(), filas, presentacion: None, congelar: true, filtro: Filtro::Dimensiones, solo_formato: false }
     }
 }
 
@@ -161,7 +163,8 @@ pub fn libro(hojas: &[Hoja]) -> Result<Vec<u8>, String> {
             let r = r as u32;
             for (c, v) in fila.iter().enumerate() {
                 let c = c as u16;
-                match (&hoja.presentacion, v) {
+                let estilo = if hoja.solo_formato { Some(()) } else { hoja.presentacion.as_ref().map(|_| ()) };
+                match (estilo, v) {
                     (None, Celda::Vacia) => {}
                     (None, Celda::Texto(s)) if s.is_empty() => {}
                     (None, Celda::Texto(s)) => {
@@ -179,8 +182,8 @@ pub fn libro(hojas: &[Hoja]) -> Result<Vec<u8>, String> {
                     (None, Celda::Fecha(d)) => {
                         ws.write_datetime_with_format(r, c, fecha_excel(d)?, &fecha_simple).map_err(e)?;
                     }
-                    (Some(_), v) => {
-                        let es_encabezado = r == 0;
+                    (Some(()), v) => {
+                        let es_encabezado = r == 0 && hoja.presentacion.is_some();
                         let formato = if es_encabezado { &encabezado } else { &base };
                         match v {
                             Celda::Vacia => {

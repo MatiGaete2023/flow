@@ -1,0 +1,406 @@
+{
+ "csv": [
+  {
+   "escenario": "listados_dos_pestanas",
+   "lote": 0,
+   "archivo": "Tabla ESPERA 1 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO1JVVDtOb21icmU7RGVyaXZhY2nDs247QWNjaW9uZXM7VFJJQlVOQUw7TU9EQUxJREFEO1NJVEZBX1RSSUJVTkFMX0NPRElHTztTSVRGQV9DQVVTQV9SVVM7U0lURkFfSU5HUkVTT19SVVM7U0lURkFfRVRBUEFfUlVTO1NJVEZBX1BFUlNPTkFfUlVTO1NJVEZBX0NFTlRST19SVVM7U0lURkFfQU5USUdVT19SVVM7U0lURkFfVklOQ1VMT19FU1RBRE87U0lURkFfTE9URTtTSVRGQV9DT05TVUxUQTtTSVRGQV9BUkNISVZPO1NJVEZBX1BBR0lOQTtTSVRGQV9GSUxBO1NJVEZBX1NIQTI1NjtTSVRGQV9GRUNIQV9ERVNDQVJHQQ0KWC0xLTIwOTk7MTExMTExMTEtMDtQZXJzb25hIEZpY3RpY2lhIDE7UFJNIENlbnRybyBGaWN0aWNpbzs7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpO1JFUzs0OTsxMDE7MjAxOzM7MzAwOzQwMDswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gRXNwZXJhIC8gUmVzaWRlbmNpYTtFU1AgUmVzaWRlbmNpYSBKZG8gRmFtaWxpYSBUb21lIDEueGxzOzE7MjsxNjg3NmZhNzdmOTYzMjNjZTdlMTM1MGVkODI2NjdiYWIwYzUxNzk0NjFkMzJmZDM2MmRjNDVmM2EyMDM4MzAyOzIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwDQpYLTItMjA5OTsxMTExMTExMi0wO1BlcnNvbmEgRmljdGljaWEgMjtQUk0gQ2VudHJvIEZpY3RpY2lvOztKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6k7UkVTOzQ5OzEwMjsyMDI7MzszMDA7NDAwOzA7VmluY3VsYWRvIGRlc2RlIHJlc3B1ZXN0YSBhY3R1YWw7MjAyNi0xMC0wOCAxMy0wMC0wMDtKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kgLyBFc3BlcmEgLyBSZXNpZGVuY2lhO0VTUCBSZXNpZGVuY2lhIEpkbyBGYW1pbGlhIFRvbWUgMi54bHM7MjsyOzZlMWQyMzliYzBiZjdhZTNhZjQxN2ViMzllNzUwNmFiYzU4NTQxMzYzMmZiNzUyM2VhNTAyM2VmNDBjZThjZWI7MjAyNi0xMC0wOFQxMzowMDowMC4xMjM0NTYtMDM6MDANClgtMS0yMDk5OzExMTExMTExLTA7UGVyc29uYSBGaWN0aWNpYSAxO1BSTSBDZW50cm8gRmljdGljaW87O0p1emdhZG8gZGUgRmFtaWxpYSBUb23DqTtBTUI7NDk7MTAxOzIwMTszOzMwMDs0MDA7MDtWaW5jdWxhZG8gZGVzZGUgcmVzcHVlc3RhIGFjdHVhbDsyMDI2LTEwLTA4IDEzLTAwLTAwO0p1emdhZG8gZGUgRmFtaWxpYSBUb23DqSAvIEVzcGVyYSAvIEFtYnVsYXRvcmlvO0VTUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDEueGxzOzE7MjsxNjg3NmZhNzdmOTYzMjNjZTdlMTM1MGVkODI2NjdiYWIwYzUxNzk0NjFkMzJmZDM2MmRjNDVmM2EyMDM4MzAyOzIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwDQpYLTItMjA5OTsxMTExMTExMi0wO1BlcnNvbmEgRmljdGljaWEgMjtQUk0gQ2VudHJvIEZpY3RpY2lvOztKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6k7QU1COzQ5OzEwMjsyMDI7MzszMDA7NDAwOzA7VmluY3VsYWRvIGRlc2RlIHJlc3B1ZXN0YSBhY3R1YWw7MjAyNi0xMC0wOCAxMy0wMC0wMDtKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kgLyBFc3BlcmEgLyBBbWJ1bGF0b3JpbztFU1AgQW1idWxhdG9yaW8gSmRvIEZhbWlsaWEgVG9tZSAyLnhsczsyOzI7NmUxZDIzOWJjMGJmN2FlM2FmNDE3ZWIzOWU3NTA2YWJjNTg1NDEzNjMyZmI3NTIzZWE1MDIzZWY0MGNlOGNlYjsyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMA0K"
+  },
+  {
+   "escenario": "listados_dos_pestanas",
+   "lote": 0,
+   "archivo": "Tabla CUMPLIMIENTO 2 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO1JVVDtOb21icmU7RGVyaXZhY2nDs247QWNjaW9uZXM7VFJJQlVOQUw7TU9EQUxJREFEO1NJVEZBX1RSSUJVTkFMX0NPRElHTztTSVRGQV9DQVVTQV9SVVM7U0lURkFfSU5HUkVTT19SVVM7U0lURkFfRVRBUEFfUlVTO1NJVEZBX1BFUlNPTkFfUlVTO1NJVEZBX0NFTlRST19SVVM7U0lURkFfQU5USUdVT19SVVM7U0lURkFfVklOQ1VMT19FU1RBRE87U0lURkFfTE9URTtTSVRGQV9DT05TVUxUQTtTSVRGQV9BUkNISVZPO1NJVEZBX1BBR0lOQTtTSVRGQV9GSUxBO1NJVEZBX1NIQTI1NjtTSVRGQV9GRUNIQV9ERVNDQVJHQQ0KWC0xLTIwOTk7MTExMTExMTEtMDtQZXJzb25hIEZpY3RpY2lhIDE7UFJNIENlbnRybyBGaWN0aWNpbzs7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpO1JFUzs0OTsxMDE7MjAxOzM7MzAwOzQwMDswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gUmVzaWRlbmNpYTtDVU1QIFJlc2lkZW5jaWEgSmRvIEZhbWlsaWEgVG9tZSAxLnhsczsxOzI7MTY4NzZmYTc3Zjk2MzIzY2U3ZTEzNTBlZDgyNjY3YmFiMGM1MTc5NDYxZDMyZmQzNjJkYzQ1ZjNhMjAzODMwMjsyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMA0KWC0yLTIwOTk7MTExMTExMTItMDtQZXJzb25hIEZpY3RpY2lhIDI7UFJNIENlbnRybyBGaWN0aWNpbzs7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpO1JFUzs0OTsxMDI7MjAyOzM7MzAwOzQwMDswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gUmVzaWRlbmNpYTtDVU1QIFJlc2lkZW5jaWEgSmRvIEZhbWlsaWEgVG9tZSAyLnhsczsyOzI7NmUxZDIzOWJjMGJmN2FlM2FmNDE3ZWIzOWU3NTA2YWJjNTg1NDEzNjMyZmI3NTIzZWE1MDIzZWY0MGNlOGNlYjsyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMA0KWC0xLTIwOTk7MTExMTExMTEtMDtQZXJzb25hIEZpY3RpY2lhIDE7UFJNIENlbnRybyBGaWN0aWNpbzs7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpO0FNQjs0OTsxMDE7MjAxOzM7MzAwOzQwMDswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW87Q1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDEueGxzOzE7MjsxNjg3NmZhNzdmOTYzMjNjZTdlMTM1MGVkODI2NjdiYWIwYzUxNzk0NjFkMzJmZDM2MmRjNDVmM2EyMDM4MzAyOzIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwDQpYLTItMjA5OTsxMTExMTExMi0wO1BlcnNvbmEgRmljdGljaWEgMjtQUk0gQ2VudHJvIEZpY3RpY2lvOztKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6k7QU1COzQ5OzEwMjsyMDI7MzszMDA7NDAwOzA7VmluY3VsYWRvIGRlc2RlIHJlc3B1ZXN0YSBhY3R1YWw7MjAyNi0xMC0wOCAxMy0wMC0wMDtKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kgLyBDdW1wbGltaWVudG8gLyBBbWJ1bGF0b3JpbztDVU1QIEFtYnVsYXRvcmlvIEpkbyBGYW1pbGlhIFRvbWUgMi54bHM7MjsyOzZlMWQyMzliYzBiZjdhZTNhZjQxN2ViMzllNzUwNmFiYzU4NTQxMzYzMmZiNzUyM2VhNTAyM2VmNDBjZThjZWI7MjAyNi0xMC0wOFQxMzowMDowMC4xMjM0NTYtMDM6MDANCg=="
+  },
+  {
+   "escenario": "calendario_informes",
+   "lote": 0,
+   "archivo": "Tabla CUMPLIMIENTO 1 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO05PTUJSRTtSVVQ7Tk9NQlJFIENFTlRSTztESUFTIERFIENVTVBMSU1JRU5UTztESUFTIFBBUkEgRUdSRVNBUjtGRUMuRUdSRVNPIFBST1lFQ1RBRE87VFJJQlVOQUw7TU9EQUxJREFEO1NJVEZBX1RSSUJVTkFMX0NPRElHTztTSVRGQV9DQVVTQV9SVVM7U0lURkFfSU5HUkVTT19SVVM7U0lURkFfRVRBUEFfUlVTO1NJVEZBX1BFUlNPTkFfUlVTO1NJVEZBX0NFTlRST19SVVM7U0lURkFfQU5USUdVT19SVVM7U0lURkFfVklOQ1VMT19FU1RBRE87U0lURkFfTE9URTtTSVRGQV9DT05TVUxUQTtTSVRGQV9BUkNISVZPO1NJVEZBX1BBR0lOQTtTSVRGQV9GSUxBO1NJVEZBX1NIQTI1NjtTSVRGQV9GRUNIQV9ERVNDQVJHQQ0KWC0xLTIwMjY7UGVyc29uYSB1bm87MDAxMTExMTEtMTtQUk0gQ2VudHJvOzUwOzkwOzMwLzEyLzIwMjY7Smdkby4gTC4geSBHLiBkZSBMYWphO0FNQjsxMTM7MTAwOzIwMTszOzs7MDtWaW5jdWxhZG8gZGVzZGUgcmVzcHVlc3RhIGFjdHVhbDtwcmluY2lwYWw7Q29uc3VsdGEgZmljdGljaWE7cGFnaW5hLnhsczsxOzI7ZDQ0ODA4YjVjMmJjYjBkM2Q5YzdmM2I1NWE2NzUyODU0MGIyMzI0NjBhZTc2NmI0MDRmN2ZmNjAyZWY0ZDIyYzsyMDI2LTEwLTAxVDA5OjAwOjAwDQpYLTEtMjAyNjtQZXJzb25hIGRvczswMDExMTExMS0xO1BSTSBDZW50cm87NTA7OTA7MzAvMTIvMjAyNjtKZ2RvLiBMLiB5IEcuIGRlIExhamE7QU1COzExMzsxMDE7MjAyOzM7OzswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsO3ByaW5jaXBhbDtDb25zdWx0YSBmaWN0aWNpYTtwYWdpbmEueGxzOzE7MztkNDQ4MDhiNWMyYmNiMGQzZDljN2YzYjU1YTY3NTI4NTQwYjIzMjQ2MGFlNzY2YjQwNGY3ZmY2MDJlZjRkMjJjOzIwMjYtMTAtMDFUMDk6MDA6MDANCg=="
+  },
+  {
+   "escenario": "calendario_informes",
+   "lote": 2,
+   "archivo": "Tabla INFORMES 1 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO05PTUJSRTtSVVQ7Tk9NQlJFIENFTlRSTztGRUNIQSBWRU5DSU1JRU5UTztUUklCVU5BTDtTSVRGQV9UUklCVU5BTF9DT0RJR087U0lURkFfTE9URTtTSVRGQV9DT05TVUxUQTtTSVRGQV9BUkNISVZPO1NJVEZBX1BBR0lOQTtTSVRGQV9GSUxBO1NJVEZBX1NIQTI1NjtTSVRGQV9GRUNIQV9ERVNDQVJHQQ0KWC0xLTIwMjY7UGVyc29uYSB1bm87MDAxMTExMTEtMTtQUk0gQ2VudHJvOzEwLzEwLzIwMjY7Smdkby4gTC4geSBHLiBkZSBMYWphOzExMztjYWxlbmRhcmlvO0NvbnN1bHRhIGZpY3RpY2lhO3BhZ2luYS54bHM7MTsyOzliYjljZGYwMzM5NzcxYmZiNjE0ODliOGFhZWI3OGIwYTQ5Yzc4ZDNlZmY0Y2MzZDNlZTE5ZmFiZGVhOWQyMzI7MjAyNi0xMC0wMVQwOTowMDowMA0KWC0xLTIwMjY7UGVyc29uYSB0cmVzOzAwMTExMTExLTE7UFJNIENlbnRybzsxMC8xMC8yMDI2O0pnZG8uIEwuIHkgRy4gZGUgTGFqYTsxMTM7Y2FsZW5kYXJpbztDb25zdWx0YSBmaWN0aWNpYTtwYWdpbmEueGxzOzE7Mzs5YmI5Y2RmMDMzOTc3MWJmYjYxNDg5YjhhYWViNzhiMGE0OWM3OGQzZWZmNGNjM2QzZWUxOWZhYmRlYTlkMjMyOzIwMjYtMTAtMDFUMDk6MDA6MDANClgtMS0yMDI2O1BlcnNvbmEgZG9zOzAwMTExMTExLTE7UFJNIENlbnRybzsxMC8xMC8yMDI2O0pnZG8uIEwuIHkgRy4gZGUgTGFqYTsxMTM7Y2FsZW5kYXJpbztDb25zdWx0YSBmaWN0aWNpYTtwYWdpbmEueGxzOzE7NDs5YmI5Y2RmMDMzOTc3MWJmYjYxNDg5YjhhYWViNzhiMGE0OWM3OGQzZWZmNGNjM2QzZWUxOWZhYmRlYTlkMjMyOzIwMjYtMTAtMDFUMDk6MDA6MDANCg=="
+  },
+  {
+   "escenario": "carga",
+   "lote": 1,
+   "archivo": "Tabla carga 1 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO1RSSUJVTkFMO05PTUJSRSBGVU5DSU9OQVJJTztOT01CUkUgSlVFWjtUUsOBTUlURTtJTlZBTElEQURPO0RPQy4gUkVTO0RPQy4gRVNDO0TDjUFTO0NBUkdPO1BSSU1FUiBQUkVHUkFCQURPIEZFQ0hBO1BSSU1FUiBQUkVHUkFCQURPIEhPUkE7w5pMVElNTyBQUkVHUkFCQURPIEZFQ0hBO8OaTFRJTU8gUFJFR1JBQkFETyBIT1JBO0RFU1BBQ0hPIEZFQ0hBO0RFU1BBQ0hPIEhPUkE7REVWT0xVQ0nDk04gRkVDSEE7REVWT0xVQ0nDk04gSE9SQTtOVUVWTyBERVNQQUNITyBGRUNIQTtOVUVWTyBERVNQQUNITyBIT1JBO0NBTlRJREFEIEVTQ1JJVE9TIFJFU09MVUNJw5NOO0ZFQ0hBIEZJUk1BO0hPUkEgRklSTUE7U0lURkFfVFJJQlVOQUxfQ09ESUdPO1NJVEZBX0xPVEU7U0lURkFfQ09OU1VMVEE7U0lURkFfQVJDSElWTztTSVRGQV9QQUdJTkE7U0lURkFfRklMQTtTSVRGQV9TSEEyNTY7U0lURkFfRkVDSEFfREVTQ0FSR0ENClgtMS0yMDI2O0pnZG8uIEwuIHkgRy4gZGUgTGFqYTtGdW5jaW9uYXJpbyBGaWN0aWNpbztKdWV6IEZpY3RpY2lvO1Jlc29sdWNpw7NuIGZpY3RpY2lhO05PO0RvY3VtZW50byBmaWN0aWNpbzs7MztDYXJnbyBmaWN0aWNpbzs7Ozs7Ozs7Ozs7OzIwMjYtMTAtMDIgMDA6MDA6MDA7MDk6MzA7MTEzO2NhcmdhLXhsc3g7Q2FyZ2EgZmljdGljaWE7cGFnaW5hLnhsczsxOzI7MDljOGE2MzFmOWNiYmFlOWZmNTgzODIzZGVkYjA2YjAxMjlhZGRiZTEzYTMzZTg3NjYxNmM4NzhjZmU2MTgwNDsyMDI2LTEwLTMxVDE4OjAwOjAwDQpYLTEtMjAyNjtKZ2RvLiBMLiB5IEcuIGRlIExhamE7RnVuY2lvbmFyaW8gRmljdGljaW87SnVleiBGaWN0aWNpbztEZWNyZXRvIGZpY3RpY2lvO05PO0RvY3VtZW50byBmaWN0aWNpbzs7MTI7Q2FyZ28gZmljdGljaW87Ozs7Ozs7Ozs7OzsyMDI2LTEwLTA5IDAwOjAwOjAwOzA5OjMwOzExMztjYXJnYS14bHN4O0NhcmdhIGZpY3RpY2lhO3BhZ2luYS54bHM7MTszOzA5YzhhNjMxZjljYmJhZTlmZjU4MzgyM2RlZGIwNmIwMTI5YWRkYmUxM2EzM2U4NzY2MTZjODc4Y2ZlNjE4MDQ7MjAyNi0xMC0zMVQxODowMDowMA0KWS0yLTIwMjY7Smdkby4gTC4geSBHLiBkZSBMYWphO0Z1bmNpb25hcmlvIEZpY3RpY2lvO0p1ZXogRmljdGljaW87QWN0YSBmaWN0aWNpYSwgY29uIGNvbWE7Tk87RG9jdW1lbnRvIGZpY3RpY2lvOzswO0NhcmdvIGZpY3RpY2lvOzs7Ozs7Ozs7Ozs7MjAyNi0xMC0xNSAwMDowMDowMDswOTozMDsxMTM7Y2FyZ2EteGxzeDtDYXJnYSBmaWN0aWNpYTtwYWdpbmEueGxzOzE7NDswOWM4YTYzMWY5Y2JiYWU5ZmY1ODM4MjNkZWRiMDZiMDEyOWFkZGJlMTNhMzNlODc2NjE2Yzg3OGNmZTYxODA0OzIwMjYtMTAtMzFUMTg6MDA6MDANCg=="
+  },
+  {
+   "escenario": "modificado",
+   "lote": 0,
+   "archivo": "Tabla CUMPLIMIENTO 1 20261008_130000_123456.csv",
+   "contenido": "77u/UklUO1JVVDtOb21icmU7RGVyaXZhY2nDs247QWNjaW9uZXM7VFJJQlVOQUw7TU9EQUxJREFEO1NJVEZBX1RSSUJVTkFMX0NPRElHTztTSVRGQV9DQVVTQV9SVVM7U0lURkFfSU5HUkVTT19SVVM7U0lURkFfRVRBUEFfUlVTO1NJVEZBX1BFUlNPTkFfUlVTO1NJVEZBX0NFTlRST19SVVM7U0lURkFfQU5USUdVT19SVVM7U0lURkFfVklOQ1VMT19FU1RBRE87U0lURkFfTE9URTtTSVRGQV9DT05TVUxUQTtTSVRGQV9BUkNISVZPO1NJVEZBX1BBR0lOQTtTSVRGQV9GSUxBO1NJVEZBX1NIQTI1NjtTSVRGQV9GRUNIQV9ERVNDQVJHQQ0KWC0xLTIwOTk7MTExMTExMTEtMDtQZXJzb25hIEZpY3RpY2lhIDE7UFJNIENlbnRybyBGaWN0aWNpbzs7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpO0FNQjs0OTsxMDE7MjAxOzM7MzAwOzQwMDswO1ZpbmN1bGFkbyBkZXNkZSByZXNwdWVzdGEgYWN0dWFsOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW87Q1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDEueGxzOzE7MjsxNjg3NmZhNzdmOTYzMjNjZTdlMTM1MGVkODI2NjdiYWIwYzUxNzk0NjFkMzJmZDM2MmRjNDVmM2EyMDM4MzAyOzIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwDQpYLTItMjA5OTsxMTExMTExMi0wOyc9UGVyc29uYSBOdWV2YTtQUk0gQ2VudHJvIEZpY3RpY2lvOztKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6k7QU1COzQ5Ozs7Ozs7O1NpbiB2w61uY3VsbyBjb21wcm9iYWRvOzIwMjYtMTAtMDggMTMtMDAtMDA7SnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW87Q1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDIueGxzOzI7MjswMWRmNGQ3NDE3YTkzMTcyYjFmNzkzMTNlZjZkOTU4NGIwOTM2ODk1MjljNGIzYTExNWFjMTFiYTNhNDI3YTQ1OzIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwDQo="
+  }
+ ],
+ "ics": [
+  {
+   "escenario": "calendario_informes",
+   "lote": 0,
+   "archivo": "Vencimientos 20261008_130000_123456.ics",
+   "contenido": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//SITFA local//Vencimientos//ES\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nUID:c5e1bb15078fbc12c0630183e3ded9700af1cdccd5404ac347aa5e1fbd3a5b80@sitf\r\n a-local\r\nDTSTAMP:20261008T160000Z\r\nDTSTART;VALUE=DATE:20261230\r\nSUMMARY:Egreso proyectado SITFA · X-1-2026 · Jgdo. L. y G. de Laja\r\nDESCRIPTION:Fuente: pagina.xls\\, fila 2. Columna: FEC.EGRESO PROYECTADO. \r\n Fecha proyectada de la fuente\\; no acredita un egreso efectivo. Cobertur\r\n a del lote: VALIDADO.\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:1bc39dcf91ad20a2b58bcce490855f54edf50b4aeb918964501ab48abca850db@sitf\r\n a-local\r\nDTSTAMP:20261008T160000Z\r\nDTSTART;VALUE=DATE:20261230\r\nSUMMARY:Egreso proyectado SITFA · X-1-2026 · Jgdo. L. y G. de Laja\r\nDESCRIPTION:Fuente: pagina.xls\\, fila 3. Columna: FEC.EGRESO PROYECTADO. \r\n Fecha proyectada de la fuente\\; no acredita un egreso efectivo. Cobertur\r\n a del lote: VALIDADO.\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+  },
+  {
+   "escenario": "calendario_informes",
+   "lote": 2,
+   "archivo": "Vencimientos 20261008_130000_123456.ics",
+   "contenido": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//SITFA local//Vencimientos//ES\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nUID:017078e7b6b0319118e9af9c42c2039b63fc705fc1416f252b60404f05a87f23@sitf\r\n a-local\r\nDTSTAMP:20261008T160000Z\r\nDTSTART;VALUE=DATE:20261010\r\nSUMMARY:Vencimiento de informe SITFA · X-1-2026 · Jgdo. L. y G. de Laja\r\nDESCRIPTION:Fuente: pagina.xls\\, fila 2. Columna: FECHA VENCIMIENTO. Veri\r\n ficar vencimiento en el original\\; no acredita entrega del informe. Cobe\r\n rtura del lote: VALIDADO.\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:cf39bfdd5dfee00eb40561713c8d817343cb3b642d3bdf368edbcb849d37d189@sitf\r\n a-local\r\nDTSTAMP:20261008T160000Z\r\nDTSTART;VALUE=DATE:20261010\r\nSUMMARY:Vencimiento de informe SITFA · X-1-2026 · Jgdo. L. y G. de Laja\r\nDESCRIPTION:Fuente: pagina.xls\\, fila 3. Columna: FECHA VENCIMIENTO. Veri\r\n ficar vencimiento en el original\\; no acredita entrega del informe. Cobe\r\n rtura del lote: VALIDADO.\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:e5c0130d65e61461b7187537949791e4bc346df3d5838db6f5d18f1bf86fd860@sitf\r\n a-local\r\nDTSTAMP:20261008T160000Z\r\nDTSTART;VALUE=DATE:20261010\r\nSUMMARY:Vencimiento de informe SITFA · X-1-2026 · Jgdo. L. y G. de Laja\r\nDESCRIPTION:Fuente: pagina.xls\\, fila 4. Columna: FECHA VENCIMIENTO. Veri\r\n ficar vencimiento en el original\\; no acredita entrega del informe. Cobe\r\n rtura del lote: VALIDADO.\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+  },
+  {
+   "escenario": "listados",
+   "lote": 0,
+   "error": "No hay fechas verificables para exportar al calendario."
+  }
+ ],
+ "zip": [
+  {
+   "escenario": "listados_dos_pestanas",
+   "lote": 0,
+   "archivo": "Entrega 20261008_130000_123456.zip",
+   "orden": [
+    "INDICE.txt",
+    "MANIFIESTO.json",
+    "CUMP Ambulatorio Jdo Familia Tome 1.xls",
+    "CUMP Ambulatorio Jdo Familia Tome 2.xls",
+    "CUMP Residencia Jdo Familia Tome 1.xls",
+    "CUMP Residencia Jdo Familia Tome 2.xls",
+    "ESP Ambulatorio Jdo Familia Tome 1.xls",
+    "ESP Ambulatorio Jdo Familia Tome 2.xls",
+    "ESP Residencia Jdo Familia Tome 1.xls",
+    "ESP Residencia Jdo Familia Tome 2.xls",
+    "resumen.json",
+    "verificacion 001.json",
+    "verificacion 002.json",
+    "verificacion 003.json",
+    "verificacion 004.json"
+   ],
+   "entradas": {
+    "INDICE.txt": "VERIFICADO\nArchivos del lote actual. Consultar MANIFIESTO.json para comprobar integridad.\nCUMP Ambulatorio Jdo Familia Tome 1.xls\nCUMP Ambulatorio Jdo Familia Tome 2.xls\nCUMP Residencia Jdo Familia Tome 1.xls\nCUMP Residencia Jdo Familia Tome 2.xls\nESP Ambulatorio Jdo Familia Tome 1.xls\nESP Ambulatorio Jdo Familia Tome 2.xls\nESP Residencia Jdo Familia Tome 1.xls\nESP Residencia Jdo Familia Tome 2.xls\nresumen.json\nverificacion 001.json\nverificacion 002.json\nverificacion 003.json\nverificacion 004.json",
+    "MANIFIESTO.json": "{\n  \"version\": 1,\n  \"estado\": \"VERIFICADO\",\n  \"archivos\": [\n    {\n      \"archivo\": \"CUMP Ambulatorio Jdo Familia Tome 1.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302\"\n    },\n    {\n      \"archivo\": \"CUMP Ambulatorio Jdo Familia Tome 2.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb\"\n    },\n    {\n      \"archivo\": \"CUMP Residencia Jdo Familia Tome 1.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302\"\n    },\n    {\n      \"archivo\": \"CUMP Residencia Jdo Familia Tome 2.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb\"\n    },\n    {\n      \"archivo\": \"ESP Ambulatorio Jdo Familia Tome 1.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302\"\n    },\n    {\n      \"archivo\": \"ESP Ambulatorio Jdo Familia Tome 2.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb\"\n    },\n    {\n      \"archivo\": \"ESP Residencia Jdo Familia Tome 1.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302\"\n    },\n    {\n      \"archivo\": \"ESP Residencia Jdo Familia Tome 2.xls\",\n      \"bytes\": 251,\n      \"sha256\": \"6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb\"\n    },\n    {\n      \"archivo\": \"resumen.json\",\n      \"bytes\": 4378,\n      \"sha256\": \"cd5da49eeb0ba417b327517abed4df8c3f94127ac95cd686b505bd2fa13bb982\"\n    },\n    {\n      \"archivo\": \"verificacion 001.json\",\n      \"bytes\": 2823,\n      \"sha256\": \"edc3ac8272ee8dac05b8ba3e205ff3a437160b2087cc69f26d4f4f874ebcbe20\"\n    },\n    {\n      \"archivo\": \"verificacion 002.json\",\n      \"bytes\": 2827,\n      \"sha256\": \"b58b8848cc1f1257115422a5bf054836c44d2f825d847ed3252dd063f6190358\"\n    },\n    {\n      \"archivo\": \"verificacion 003.json\",\n      \"bytes\": 2843,\n      \"sha256\": \"f1679b84165de18aa52d42ac222d8e9fa0d74d722065aa7afc3ccef296e5e4bd\"\n    },\n    {\n      \"archivo\": \"verificacion 004.json\",\n      \"bytes\": 2847,\n      \"sha256\": \"a6c9b58242f52fd102c718c80237352ea1bcbbad4f8f885a8d63bd848f8b8cf9\"\n    }\n  ]\n}",
+    "CUMP Ambulatorio Jdo Familia Tome 1.xls": "16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302",
+    "CUMP Ambulatorio Jdo Familia Tome 2.xls": "6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb",
+    "CUMP Residencia Jdo Familia Tome 1.xls": "16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302",
+    "CUMP Residencia Jdo Familia Tome 2.xls": "6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb",
+    "ESP Ambulatorio Jdo Familia Tome 1.xls": "16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302",
+    "ESP Ambulatorio Jdo Familia Tome 2.xls": "6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb",
+    "ESP Residencia Jdo Familia Tome 1.xls": "16876fa77f96323ce7e1350ed82667bab0c5179461d32fd362dc45f3a2038302",
+    "ESP Residencia Jdo Familia Tome 2.xls": "6e1d239bc0bf7ae3af417eb39e7506abc585413632fb7523ea5023ef40ce8ceb",
+    "resumen.json": "cd5da49eeb0ba417b327517abed4df8c3f94127ac95cd686b505bd2fa13bb982",
+    "verificacion 001.json": "edc3ac8272ee8dac05b8ba3e205ff3a437160b2087cc69f26d4f4f874ebcbe20",
+    "verificacion 002.json": "b58b8848cc1f1257115422a5bf054836c44d2f825d847ed3252dd063f6190358",
+    "verificacion 003.json": "f1679b84165de18aa52d42ac222d8e9fa0d74d722065aa7afc3ccef296e5e4bd",
+    "verificacion 004.json": "a6c9b58242f52fd102c718c80237352ea1bcbbad4f8f885a8d63bd848f8b8cf9"
+   }
+  },
+  {
+   "escenario": "carga",
+   "lote": 0,
+   "archivo": "Entrega 20261008_130000_123456.zip",
+   "orden": [
+    "INDICE.txt",
+    "MANIFIESTO.json",
+    "pagina.xls",
+    "resumen.json",
+    "verificacion 001.json"
+   ],
+   "entradas": {
+    "INDICE.txt": "VERIFICADO\nArchivos del lote actual. Consultar MANIFIESTO.json para comprobar integridad.\npagina.xls\nresumen.json\nverificacion 001.json",
+    "MANIFIESTO.json": "{\n  \"version\": 1,\n  \"estado\": \"VERIFICADO\",\n  \"archivos\": [\n    {\n      \"archivo\": \"pagina.xls\",\n      \"bytes\": 1664,\n      \"sha256\": \"bc6cedd744f389950d71d4326d832f5898a775e4153b30037e44cffc1fa1f802\"\n    },\n    {\n      \"archivo\": \"resumen.json\",\n      \"bytes\": 843,\n      \"sha256\": \"c3fab59ce028aef7c2fbfca41cda60cd28ab94262c283c58b1d65bb2b18e17b4\"\n    },\n    {\n      \"archivo\": \"verificacion 001.json\",\n      \"bytes\": 550,\n      \"sha256\": \"0734acc34dbf6eafe37c930884f0ce8a0e883980b54afaa73750afb51065fa04\"\n    }\n  ]\n}",
+    "pagina.xls": "bc6cedd744f389950d71d4326d832f5898a775e4153b30037e44cffc1fa1f802",
+    "resumen.json": "c3fab59ce028aef7c2fbfca41cda60cd28ab94262c283c58b1d65bb2b18e17b4",
+    "verificacion 001.json": "0734acc34dbf6eafe37c930884f0ce8a0e883980b54afaa73750afb51065fa04"
+   }
+  }
+ ],
+ "comparacion": [
+  {
+   "escenario": "modificado",
+   "archivo": "Comparacion 20261008_130000_123456.xlsx",
+   "libro": {
+    "hojas": [
+     {
+      "titulo": "Nuevas",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Consulta"
+        ],
+        [
+         "s",
+         "Columnas"
+        ],
+        [
+         "s",
+         "Valores de fila"
+        ],
+        [
+         "s",
+         "Cantidad"
+        ]
+       ],
+       [
+        [
+         "s",
+         "{\"end\": null, \"modality\": \"2\", \"month\": null, \"report\": null, \"screen\": \"seguimiento\", \"start\": null, \"state\": \"1\", \"tab\": \"Cumplimiento\", \"tribunal\": \"49\", \"year\": null}"
+        ],
+        [
+         "s",
+         "[\"RIT\", \"RUT\", \"Nombre\", \"Derivación\", \"Acciones\", \"TRIBUNAL\", \"MODALIDAD\", \"SITFA_TRIBUNAL_CODIGO\", \"SITFA_CAUSA_RUS\", \"SITFA_INGRESO_RUS\", \"SITFA_ETAPA_RUS\", \"SITFA_PERSONA_RUS\", \"SITFA_CENTRO_RUS\", \"SITFA_ANTIGUO_RUS\", \"SITFA_VINCULO_ESTADO\"]"
+        ],
+        [
+         "s",
+         "[\"X-2-2099\", \"11111112-0\", \"=Persona Nueva\", \"PRM Centro Ficticio\", \"\", \"Juzgado de Familia Tomé\", \"AMB\", \"49\", \"\", \"\", \"\", \"\", \"\", \"\", \"Sin vínculo comprobado\"]"
+        ],
+        [
+         "n",
+         1
+        ]
+       ]
+      ]
+     },
+     {
+      "titulo": "Ausentes",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Consulta"
+        ],
+        [
+         "s",
+         "Columnas"
+        ],
+        [
+         "s",
+         "Valores de fila"
+        ],
+        [
+         "s",
+         "Cantidad"
+        ]
+       ],
+       [
+        [
+         "s",
+         "{\"end\": null, \"modality\": \"2\", \"month\": null, \"report\": null, \"screen\": \"seguimiento\", \"start\": null, \"state\": \"1\", \"tab\": \"Cumplimiento\", \"tribunal\": \"49\", \"year\": null}"
+        ],
+        [
+         "s",
+         "[\"RIT\", \"RUT\", \"Nombre\", \"Derivación\", \"Acciones\", \"TRIBUNAL\", \"MODALIDAD\", \"SITFA_TRIBUNAL_CODIGO\", \"SITFA_CAUSA_RUS\", \"SITFA_INGRESO_RUS\", \"SITFA_ETAPA_RUS\", \"SITFA_PERSONA_RUS\", \"SITFA_CENTRO_RUS\", \"SITFA_ANTIGUO_RUS\", \"SITFA_VINCULO_ESTADO\"]"
+        ],
+        [
+         "s",
+         "[\"X-2-2099\", \"11111112-0\", \"Persona Ficticia 2\", \"PRM Centro Ficticio\", \"\", \"Juzgado de Familia Tomé\", \"AMB\", \"49\", \"102\", \"202\", \"3\", \"300\", \"400\", \"0\", \"Vinculado desde respuesta actual\"]"
+        ],
+        [
+         "n",
+         1
+        ]
+       ]
+      ]
+     },
+     {
+      "titulo": "Resumen",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Lote anterior"
+        ],
+        [
+         "s",
+         "<BASE>/listados/lotes/2026-10-08 13-00-00"
+        ]
+       ],
+       [
+        [
+         "s",
+         "Lote nuevo"
+        ],
+        [
+         "s",
+         "<BASE>/modificado/lotes/2026-10-08 13-00-00"
+        ]
+       ],
+       [
+        [
+         "s",
+         "Nuevas"
+        ],
+        [
+         "n",
+         1
+        ]
+       ],
+       [
+        [
+         "s",
+         "Ausentes"
+        ],
+        [
+         "n",
+         1
+        ]
+       ],
+       [
+        [
+         "s",
+         "Interpretación"
+        ],
+        [
+         "s",
+         "Ausente no implica egreso ni eliminación; se comparan filas completas y multiplicidad."
+        ]
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "escenario": "mismo",
+   "archivo": "Comparacion 20261008_130000_123456.xlsx",
+   "libro": {
+    "hojas": [
+     {
+      "titulo": "Nuevas",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Consulta"
+        ],
+        [
+         "s",
+         "Columnas"
+        ],
+        [
+         "s",
+         "Valores de fila"
+        ],
+        [
+         "s",
+         "Cantidad"
+        ]
+       ]
+      ]
+     },
+     {
+      "titulo": "Ausentes",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Consulta"
+        ],
+        [
+         "s",
+         "Columnas"
+        ],
+        [
+         "s",
+         "Valores de fila"
+        ],
+        [
+         "s",
+         "Cantidad"
+        ]
+       ]
+      ]
+     },
+     {
+      "titulo": "Resumen",
+      "congelar": null,
+      "filtro": null,
+      "anchos": {},
+      "celdas": [
+       [
+        [
+         "s",
+         "Lote anterior"
+        ],
+        [
+         "s",
+         "<BASE>/listados/lotes/2026-10-08 13-00-00"
+        ]
+       ],
+       [
+        [
+         "s",
+         "Lote nuevo"
+        ],
+        [
+         "s",
+         "<BASE>/listados/lotes/2026-10-08 13-00-00"
+        ]
+       ],
+       [
+        [
+         "s",
+         "Nuevas"
+        ],
+        [
+         "n",
+         0
+        ]
+       ],
+       [
+        [
+         "s",
+         "Ausentes"
+        ],
+        [
+         "n",
+         0
+        ]
+       ],
+       [
+        [
+         "s",
+         "Interpretación"
+        ],
+        [
+         "s",
+         "Ausente no implica egreso ni eliminación; se comparan filas completas y multiplicidad."
+        ]
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "escenario": "alcances_distintos",
+   "error": "Los lotes tienen alcances diferentes."
+  }
+ ],
+ "modificado": {
+  "carpeta": "2026-10-08 13-00-00",
+  "archivos": {
+   "CUMP Ambulatorio Jdo Familia Tome 1.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48L3RyPjx0cj48dGQ+WC0xLTIwOTk8L3RkPjx0ZD4xMTExMTExMS0wPC90ZD48dGQ+UGVyc29uYSBGaWN0aWNpYSAxPC90ZD48dGQ+UFJNIENlbnRybyBGaWN0aWNpbzwvdGQ+PHRkPjwvdGQ+PC90cj48L3RhYmxlPjwvaHRtbD4=",
+   "CUMP Ambulatorio Jdo Familia Tome 2.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48L3RyPjx0cj48dGQ+WC0yLTIwOTk8L3RkPjx0ZD4xMTExMTExMi0wPC90ZD48dGQ+PVBlcnNvbmEgTnVldmE8L3RkPjx0ZD5QUk0gQ2VudHJvIEZpY3RpY2lvPC90ZD48dGQ+PC90ZD48L3RyPjwvdGFibGU+PC9odG1sPg==",
+   "resumen.json": "ewogICJ2ZXJzaW9uX2NvbnRyYXRvIjogMSwKICAiZmVjaGFfaG9yYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIsCiAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgInBsYW4iOiBbCiAgICB7CiAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICJ0YWIiOiAiQ3VtcGxpbWllbnRvIiwKICAgICAgIm1vZGFsaXR5IjogIjIiLAogICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgInNjcmVlbiI6ICJzZWd1aW1pZW50byIsCiAgICAgICJzdGF0ZSI6ICIxIiwKICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgInllYXIiOiBudWxsLAogICAgICAic3RhcnQiOiBudWxsLAogICAgICAiZW5kIjogbnVsbCwKICAgICAgInRyaWJ1bmFsX25vbWJyZSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kiLAogICAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgIH0KICBdLAogICJjb25zdWx0YXNfZXNwZXJhZGFzIjogMSwKICAiY29uc3VsdGFzX2NvbXBsZXRhZGFzIjogMSwKICAiY29uc3VsdGFzIjogWwogICAgewogICAgICAiY29uc3VsdGEiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLAogICAgICAiZXN0YWRvIjogIlZBTElEQURBIiwKICAgICAgInBhZ2luYXMiOiAyLAogICAgICAicmVnaXN0cm9zIjogMiwKICAgICAgInZlcmlmaWNhY2lvbiI6ICJ2ZXJpZmljYWNpb24gMDAxLmpzb24iLAogICAgICAic2VsZWNjaW9uIjogewogICAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICAgInRhYiI6ICJDdW1wbGltaWVudG8iLAogICAgICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICAgICAic3RhdGUiOiAiMSIsCiAgICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgICAieWVhciI6IG51bGwsCiAgICAgICAgInN0YXJ0IjogbnVsbCwKICAgICAgICAiZW5kIjogbnVsbCwKICAgICAgICAidHJpYnVuYWxfbm9tYnJlIjogIkp1emdhZG8gZGUgRmFtaWxpYSBUb23DqSIsCiAgICAgICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgICAgfQogICAgfQogIF0sCiAgImZpbHRyb19mZWNoYSI6IG51bGwsCiAgIm90cm9zX2ZpbHRyb3MiOiAidG9kb3MgbG9zIHJlZ2lzdHJvcyIKfQ==",
+   "verificacion 001.json": "eyJmZWNoYV9ob3JhIjogIjIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwIiwgImNhc28iOiAiVDQ5LUN1bXBsaW1pZW50by1NMiIsICJjb25zdWx0YSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgVG9tXHUwMGU5IC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLCAiZXN0YWRvIjogIlZBTElEQURBIiwgInBhZ2luYXNfZXNwZXJhZGFzIjogMiwgInBhZ2luYXNfdmVyaWZpY2FkYXMiOiAyLCAiYXJjaGl2b3MiOiBbeyJwYWdpbmEiOiAxLCAidG90YWwiOiAyLCAiYXJjaGl2byI6ICJDVU1QIEFtYnVsYXRvcmlvIEpkbyBGYW1pbGlhIFRvbWUgMS54bHMiLCAiYnl0ZXMiOiAyNTEsICJzaGEyNTYiOiAiMTY4NzZmYTc3Zjk2MzIzY2U3ZTEzNTBlZDgyNjY3YmFiMGM1MTc5NDYxZDMyZmQzNjJkYzQ1ZjNhMjAzODMwMiIsICJmb3JtYXRvIjogIkhUTUwtdGFidWxhci1jb24tZXh0ZW5zaW9uLXhscyIsICJyZWdpc3Ryb3MiOiAxLCAiY29pbmNpZGVfY29uX2h0bWwiOiB0cnVlLCAiZXN0YWRvIjogIk9LIiwgInZpbmN1bG9zX2luZ3Jlc28iOiBbeyJyaXQiOiAiWC0xLTIwOTkiLCAibm9tYnJlIjogIlBlcnNvbmEgRmljdGljaWEgMSIsICJydXQiOiAiMTExMTExMTEtMCIsICJwcm9ncmFtYSI6ICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwgInRyaWJ1bmFsX2NvZGlnbyI6ICI0OSIsICJjYXVzYV9pZCI6ICIxMDEiLCAiaW5ncmVzb19pZCI6ICIyMDEiLCAiZXRhcGEiOiAiMyIsICJhbnRpZ3VvIjogIjAiLCAidGlwb19wb3B1cCI6ICIxMiIsICJwZXJzb25hX2lkIjogIjMwMCIsICJjZW50cm9faWQiOiAiNDAwIiwgImNhbGVuZGFyaW8iOiBbIjEwMSIsICIzMDAiLCAiNDkiLCAiNDAwIiwgIlgtMS0yMDk5IiwgIjAxLzAzLzIwMjYiLCAiUFJNIENlbnRybyBGaWN0aWNpbyIsICJQZXJzb25hIEZpY3RpY2lhIDEiLCAiNiBNZXNlcyIsICIzIE1lc2VzIiwgIjIwMSIsICIxIl19XX0sIHsicGFnaW5hIjogMiwgInRvdGFsIjogMiwgImFyY2hpdm8iOiAiQ1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDIueGxzIiwgImJ5dGVzIjogMjQ3LCAic2hhMjU2IjogIjAxZGY0ZDc0MTdhOTMxNzJiMWY3OTMxM2VmNmQ5NTg0YjA5MzY4OTUyOWM0YjNhMTE1YWMxMWJhM2E0MjdhNDUiLCAiZm9ybWF0byI6ICJIVE1MLXRhYnVsYXItY29uLWV4dGVuc2lvbi14bHMiLCAicmVnaXN0cm9zIjogMSwgImNvaW5jaWRlX2Nvbl9odG1sIjogdHJ1ZSwgImVzdGFkbyI6ICJPSyIsICJ2aW5jdWxvc19pbmdyZXNvIjogW3sicml0IjogIlgtMi0yMDk5IiwgIm5vbWJyZSI6ICJQZXJzb25hIEZpY3RpY2lhIDIiLCAicnV0IjogIjExMTExMTEyLTAiLCAicHJvZ3JhbWEiOiAiUFJNIENlbnRybyBGaWN0aWNpbyIsICJ0cmlidW5hbF9jb2RpZ28iOiAiNDkiLCAiY2F1c2FfaWQiOiAiMTAyIiwgImluZ3Jlc29faWQiOiAiMjAyIiwgImV0YXBhIjogIjMiLCAiYW50aWd1byI6ICIwIiwgInRpcG9fcG9wdXAiOiAiMTIiLCAicGVyc29uYV9pZCI6ICIzMDAiLCAiY2VudHJvX2lkIjogIjQwMCIsICJjYWxlbmRhcmlvIjogWyIxMDIiLCAiMzAwIiwgIjQ5IiwgIjQwMCIsICJYLTItMjA5OSIsICIwMS8wMy8yMDI2IiwgIlBSTSBDZW50cm8gRmljdGljaW8iLCAiUGVyc29uYSBGaWN0aWNpYSAyIiwgIjYgTWVzZXMiLCAiMyBNZXNlcyIsICIyMDIiLCAiMSJdfV19XSwgInNlbGVjY2lvbiI6IHsidHJpYnVuYWwiOiAiNDkiLCAidGFiIjogIkN1bXBsaW1pZW50byIsICJtb2RhbGl0eSI6ICIyIiwgInJlcG9ydCI6IG51bGwsICJzY3JlZW4iOiAic2VndWltaWVudG8iLCAic3RhdGUiOiAiMSIsICJtb250aCI6IG51bGwsICJ5ZWFyIjogbnVsbCwgInN0YXJ0IjogbnVsbCwgImVuZCI6IG51bGwsICJ0cmlidW5hbF9ub21icmUiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbVx1MDBlOSIsICJtb2RhbGlkYWRfbm9tYnJlIjogIkFtYnVsYXRvcmlvIiwgImZlY2hhX2Rlc2NhcmdhIjogIjIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwIn0sICJmaWx0cm9fZmVjaGEiOiBudWxsfQ=="
+  }
+ }
+}
