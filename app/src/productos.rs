@@ -56,6 +56,11 @@ pub fn alcance_modalidades(keys: &[&str]) -> String {
     }
 }
 
+/// Carpeta temporal propia de una operación (se borra al terminar).
+pub(crate) fn nueva_ruta_temporal(prefijo: &str) -> PathBuf {
+    std::env::temp_dir().join(format!("{prefijo}_{}_{}", std::process::id(), chrono::Local::now().timestamp_millis()))
+}
+
 /// Ruta nueva: añade « (2)», « (3)»… si el nombre ya existe.
 pub fn nueva_ruta(dir: &Path, nombre: &str, ext: &str) -> PathBuf {
     let base = safe_filename(nombre);
@@ -68,7 +73,7 @@ pub fn nueva_ruta(dir: &Path, nombre: &str, ext: &str) -> PathBuf {
     p
 }
 
-fn xlsx_libro(hojas: &[(&str, Vec<String>, Vec<Vec<String>>)], path: &Path) -> Result<(), String> {
+pub(crate) fn xlsx_libro(hojas: &[(&str, Vec<String>, Vec<Vec<String>>)], path: &Path) -> Result<(), String> {
     let mut wb = Workbook::new();
     let head = Format::new().set_bold().set_background_color(rust_xlsxwriter::Color::RGB(0xDDE7F5)).set_border_bottom(rust_xlsxwriter::FormatBorder::Thin);
     let wrap = Format::new().set_text_wrap().set_align(rust_xlsxwriter::FormatAlign::Top);
@@ -428,62 +433,6 @@ pub fn guardar_eml(b: &Borrador, dir: &Path) -> Result<PathBuf, String> {
     let path = nueva_ruta(dir, &b.asunto, "eml");
     std::fs::write(&path, out).map_err(|e| e.to_string())?;
     Ok(path)
-}
-
-/// Guarda el borrador en la carpeta Borradores de Outlook (Windows, Outlook clásico) mediante su interfaz COM.
-/// Solo llama a Save(): nunca envía. El CC obligatorio siempre va.
-#[cfg(target_os = "windows")]
-pub fn guardar_outlook(b: &Borrador) -> Result<(), String> {
-    use std::os::windows::process::CommandExt;
-    if b.adjunto_obligatorio && b.nomina.as_ref().map_or(true, |n| !n.incluir.iter().any(|x| *x)) {
-        return Err(format!("«{}» necesita una nómina con al menos una fila.", b.titulo));
-    }
-    let tmp = std::env::temp_dir().join(format!("flow_outlook_{}_{}", std::process::id(), chrono::Local::now().timestamp_millis()));
-    std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
-    let mut adjuntos = Vec::new();
-    if let Some(n) = &b.nomina {
-        let rows: Vec<Vec<String>> = n.rows.iter().zip(&n.incluir).filter(|(_, i)| **i).map(|(r, _)| r.clone()).collect();
-        if !rows.is_empty() {
-            let p = tmp.join(format!("{}.xlsx", safe_filename(if b.programa.is_empty() { &b.titulo } else { &b.programa })));
-            xlsx_libro(&[("Nómina", n.headers.clone(), rows)], &p)?;
-            adjuntos.push(p.display().to_string());
-        }
-    }
-    let mut cc = b.cc.clone();
-    if !cc.to_lowercase().contains(config::CC_OBLIGATORIO) {
-        cc = if cc.trim().is_empty() { config::CC_OBLIGATORIO.into() } else { format!("{}; {cc}", config::CC_OBLIGATORIO) };
-    }
-    let datos = serde_json::json!({"to": b.para, "cc": cc, "subject": b.asunto, "body": b.cuerpo, "attachments": adjuntos});
-    let json = tmp.join("borrador.json");
-    std::fs::write(&json, serde_json::to_vec(&datos).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    let script = "$ErrorActionPreference='Stop'\n\
-        $d = Get-Content -Raw -Encoding UTF8 -LiteralPath $env:FLOW_BORRADOR | ConvertFrom-Json\n\
-        $o = New-Object -ComObject Outlook.Application\n\
-        $m = $o.CreateItem(0)\n\
-        $m.To = [string]$d.to\n$m.CC = [string]$d.cc\n$m.Subject = [string]$d.subject\n$m.Body = [string]$d.body\n\
-        foreach ($a in $d.attachments) { [void]$m.Attachments.Add([string]$a) }\n\
-        $m.Save()\nWrite-Output 'GUARDADO'";
-    let utf16: Vec<u8> = script.encode_utf16().flat_map(|u| u.to_le_bytes()).collect();
-    let enc = base64::engine::general_purpose::STANDARD.encode(utf16);
-    let out = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-EncodedCommand", &enc])
-        .env("FLOW_BORRADOR", &json)
-        .creation_flags(0x0800_0000)
-        .output()
-        .map_err(|e| format!("No se pudo iniciar PowerShell: {e}"))?;
-    let _ = std::fs::remove_file(&json);
-    let salida = String::from_utf8_lossy(&out.stdout);
-    if out.status.success() && salida.contains("GUARDADO") {
-        Ok(())
-    } else {
-        let err = String::from_utf8_lossy(&out.stderr);
-        Err(format!("Outlook no confirmó el guardado de «{}»; revisa Borradores antes de repetir. {}", b.titulo, err.lines().next().unwrap_or("")))
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn guardar_outlook(_b: &Borrador) -> Result<(), String> {
-    Err("Guardar en Outlook solo está disponible en Windows; usa archivos .eml.".into())
 }
 
 /// Guarda solo la nómina como Excel (para revisarla o enviarla por otra vía).

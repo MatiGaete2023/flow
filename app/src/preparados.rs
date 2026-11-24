@@ -121,6 +121,18 @@ impl Preparados {
         self.recibos.values().find(|r| r.tipo == "borrador" && r.estado == "creado" && r.huella == huella)
     }
 
+    /// Recibo incierto de un borrador con esta huella: Outlook pudo haberlo guardado sin confirmarlo.
+    pub fn incierto(&self, huella: &str) -> bool {
+        self.recibos.values().any(|r| r.tipo == "borrador" && r.estado == "incierto" && r.huella == huella)
+    }
+
+    /// La persona revisó Borradores de Outlook: el borrador incierto deja de bloquear un nuevo guardado.
+    pub fn conciliar_incierto(&mut self, huella: &str) -> usize {
+        let antes = self.recibos.len();
+        self.recibos.retain(|_, r| !(r.tipo == "borrador" && r.estado == "incierto" && r.huella == huella));
+        antes - self.recibos.len()
+    }
+
     pub fn anotar(&mut self, tipo: &str, estado: &str, registros: Vec<String>, huella: &str, ruta: &str) {
         let clave = format!("{:x}", Sha256::digest(format!("{tipo}|{huella}|{ruta}|{}", self.recibos.len()).as_bytes()));
         self.recibos.insert(

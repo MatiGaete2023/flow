@@ -225,6 +225,8 @@ pub struct Config {
     pub periodo: String,
     /// true: guardar en Borradores de Outlook; false: archivos .eml.
     pub destino_outlook: bool,
+    /// Cuenta de Outlook (dirección SMTP o nombre visible exactos) donde se guardan los borradores; vacío: la predeterminada.
+    pub cuenta_outlook: String,
     /// Redacción del registro mensual del usuario (decisiones R1–R6 del 20-nov-2026). false: textos de Flow Python.
     pub redaccion_registro: bool,
 }
@@ -250,6 +252,7 @@ impl Default for Config {
             tema_oscuro: false,
             periodo: "el período revisado".into(),
             destino_outlook: false,
+            cuenta_outlook: String::new(),
             redaccion_registro: true,
         }
     }

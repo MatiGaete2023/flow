@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3 y E-A4. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4 y E-T1. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -34,7 +34,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 - **F10 Excel preservado — Parcial.** «Actualizar desde Excel» (E-A1) trae la revisión de la copia (observación, `FECHA_OBS`, `TT`, `CC`, `RES`) con asociación por identidad y conflictos que se resuelven en pantalla, contrastado con Python en 12 casos. Falta recalcular cuando se editan columnas de origen en Excel y combinar `NURUS_DECISIONES`. Sin libro base (paquete sin consolidado), el producto sale como libro nuevo con la estructura de `FAE_RES` (hojas de servicio, todas las columnas del registro, las 10 columnas de revisión en el orden del usuario y `NURUS_CLAVE_INGRESO`); la copia preservada sigue exigiendo Windows y Excel de escritorio.
 - **F11 Configuración y contactos — Parcial.** 16 umbrales y textos con verificador. Alias de contactos con las mismas colisiones que Python, editor de plantillas de correo con selector de variables, duplicar, archivar y restaurar, e importación de matrices Word desde un ZIP (E-A4), contrastados con Python en 44 casos. Falta el importador de matrices de contactos y paquetes de plantillas con revisión empaquetada (`install_bundled_templates`, no aplica a Rust). Una copia de plantilla sirve para «Gestión particular»; el correo automático por programa sigue usando las plantillas base.
 - **F12 Correos y nómina — Parcial.** Sin cotejo de agrupación, firma y alcance.
-- **F13 Borradores Outlook — Parcial.** EML y Outlook. Falta elegir la cuenta y simular fallos. Sin prueba con Outlook real.
+- **F13 Borradores Outlook — Parcial.** EML y Outlook con cuenta elegible (E-T1): solo `Save()`, CC fijo, y un fallo antes de guardar se distingue de uno posterior (queda «incierto» y no se reintenta hasta revisar Borradores). Contrastado por pruebas de la salida de PowerShell; sin prueba con Outlook real.
 - **F14 Proyectos Word — Sí.** Matrices de Laja y Mulchén. Por confirmar con el usuario: un `.docx` por proyecto.
 - **F15 Formularios manuales — No.**
 - **F16 Resultados y estadísticas — Parcial.** Vista y reporte; sin estadísticas ni métricas.

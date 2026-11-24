@@ -1656,6 +1656,7 @@ impl App {
         let alto = ui.available_height();
         let mut guardar_uno = None;
         let mut guardar_nomina = None;
+        let mut conciliar_incierto: Option<String> = None;
         ui.horizontal_top(|ui| {
             ui.allocate_ui_with_layout(egui::vec2(330.0, alto), egui::Layout::top_down(egui::Align::Min), |ui| {
                 egui::ScrollArea::vertical().id_salt("blist").show(ui, |ui| {
@@ -1699,6 +1700,7 @@ impl App {
             let Some(j) = self.bsel.filter(|j| *j < self.borradores.len()) else { return };
             ui.allocate_ui_with_layout(egui::vec2(ui.available_width(), alto), egui::Layout::top_down(egui::Align::Min), |ui| {
                 egui::ScrollArea::vertical().id_salt("bedit").show(ui, |ui| {
+                    let incierto = self.work.as_ref().is_some_and(|w| w.preparados.incierto(&crate::preparados::huella_borrador(&self.borradores[j])));
                     let b = &mut self.borradores[j];
                     theme::card(p).show(ui, |ui| {
                         ui.set_width(ui.available_width());
@@ -1723,6 +1725,9 @@ impl App {
                             }
                             if b.nomina.is_some() && ui.button("📎 Guardar solo la nómina").clicked() {
                                 guardar_nomina = Some(j);
+                            }
+                            if incierto && ui.button("Ya lo revisé en Outlook").on_hover_text("Outlook no confirmó el guardado: revisa Borradores y, si no está, permite guardarlo de nuevo").clicked() {
+                                conciliar_incierto = Some(crate::preparados::huella_borrador(b));
                             }
                         });
                     });
@@ -1766,6 +1771,13 @@ impl App {
                 });
             });
         });
+        if let Some(huella) = conciliar_incierto {
+            if let Some(w) = self.work.as_mut() {
+                let n = w.preparados.conciliar_incierto(&huella);
+                self.aviso(if n > 0 { "Listo: este borrador se puede guardar de nuevo." } else { "No había nada por conciliar." }, false);
+            }
+            self.marcar_sucio();
+        }
         if let Some(j) = guardar_uno {
             self.guardar_borradores(Some(j));
         }
@@ -1880,6 +1892,10 @@ impl App {
                     continue;
                 }
                 // Un borrador con el mismo contenido que otro ya guardado no se crea dos veces.
+                if w.preparados.incierto(&huella) {
+                    errores.push(format!("«{}»: Outlook pudo haber guardado este borrador sin confirmarlo. Revisa Borradores de Outlook y marca «Ya lo revisé en Outlook» antes de repetir.", self.borradores[j].titulo));
+                    continue;
+                }
                 if let Some(r) = w.preparados.guardado(&huella) {
                     self.borradores[j].guardado = Some(PathBuf::from(&r.ruta));
                     duplicados += 1;
@@ -1888,14 +1904,24 @@ impl App {
             }
             let mut guardado: Option<(String, bool)> = None;
             if outlook {
-                match productos::guardar_outlook(&self.borradores[j]) {
-                    Ok(()) => {
+                match crate::outlook::guardar_outlook(&self.borradores[j], &self.cfg.cuenta_outlook) {
+                    Ok(_) => {
                         self.borradores[j].guardado = Some(PathBuf::from("Outlook: Borradores"));
                         guardado = Some(("Outlook: Borradores".into(), true));
                         ok += 1;
                     }
-                    // Si Outlook falla, queda una copia .eml de respaldo y se sigue con los demás.
-                    Err(e) => errores.push(e),
+                    // Falló antes de guardar: queda una copia .eml de respaldo y se sigue con los demás.
+                    Err(crate::outlook::ErrorOutlook::NoGuardado(e)) => errores.push(e),
+                    // Pudo haberse guardado: no hay respaldo ni reintento hasta que la persona lo revise.
+                    Err(crate::outlook::ErrorOutlook::Incierto(e)) => {
+                        errores.push(e);
+                        if let Some(w) = self.work.as_mut() {
+                            let ids = crate::preparados::ids_registros(w, &self.borradores[j].registros);
+                            w.preparados.anotar("borrador", "incierto", ids, &huella, "Outlook: Borradores");
+                        }
+                        self.marcar_sucio();
+                        continue;
+                    }
                 }
             }
             match productos::guardar_eml(&self.borradores[j], &dir) {
@@ -2663,6 +2689,12 @@ impl App {
                         ui.label("Período (reporte de proyectos)");
                         guardar |= ui.add(egui::TextEdit::singleline(&mut self.cfg.periodo).desired_width(220.0)).lost_focus();
                     });
+                    ui.horizontal(|ui| {
+                        ui.label("Cuenta de Outlook");
+                        guardar |= ui
+                            .add(egui::TextEdit::singleline(&mut self.cfg.cuenta_outlook).hint_text("dirección o nombre exactos; vacío: la predeterminada").desired_width(340.0))
+                            .lost_focus();
+                    });
                     ui.add_space(6.0);
                     self.editor_plantillas(ui, p);
                     ui.add_space(10.0);
@@ -3034,6 +3066,40 @@ mod pruebas_vigencia {
             .flat_map(|d| std::fs::read_dir(d.path()).into_iter().flatten().flatten())
             .filter(|f| f.path().extension().is_some_and(|e| e == "eml"))
             .count()
+    }
+
+    #[test]
+    fn un_guardado_incierto_de_outlook_bloquea_el_reintento_hasta_conciliarlo() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let base = perfil.join("incierto");
+        let _ = std::fs::remove_dir_all(&base);
+        let mut app = abrir_listados(&base);
+        app.work.as_mut().unwrap().registros.iter_mut().for_each(|r| r.seleccionada = true);
+        app.preparar_tipo("cumplimiento");
+        let huella = crate::preparados::huella_borrador(&app.borradores[0]);
+        // Outlook no confirmó un guardado anterior de este mismo borrador.
+        let w = app.work.as_mut().unwrap();
+        let ids = crate::preparados::ids_registros(w, &app.borradores[0].registros);
+        w.preparados.anotar("borrador", "incierto", ids, &huella, "Outlook: Borradores");
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 0, "con un guardado incierto no se vuelve a guardar");
+        assert!(app.avisos.iter().any(|(t, error, _)| *error && t.contains("pudo haber guardado")), "{:?}", app.avisos);
+        // Tras revisar Borradores de Outlook, la persona lo libera.
+        assert_eq!(app.work.as_mut().unwrap().preparados.conciliar_incierto(&huella), 1);
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 1);
+        // Sin Outlook (Linux) el guardado en Outlook falla antes de guardar y queda la copia .eml de respaldo.
+        #[cfg(not(target_os = "windows"))]
+        {
+            app.cfg.destino_outlook = true;
+            app.borradores.clear();
+            app.preparar_tipo("cumplimiento");
+            app.borradores[0].cuerpo.push_str("\nOtro texto.");
+            app.guardar_borradores(None);
+            assert_eq!(emls(&base), 2, "falló antes de guardar: queda el respaldo");
+            assert!(!app.work.as_ref().unwrap().preparados.incierto(&crate::preparados::huella_borrador(&app.borradores[0])));
+        }
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     #[test]
