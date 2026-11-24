@@ -315,3 +315,7 @@ Base 820ad6ea7ef0f20b6fccb4fede03814daa8944ec, CI 45459077137: Linux job 1386763
 ### Documentación vigente
 
 Se corrigen instrucciones obsoletas de selección manual de Estado y estado de integración Flow/Windows; el manual conserva historia de las versiones del inspector, no es una solicitud de repetirlas. La prueba conjunta del commit c79afbb976104cb9fde998f9b91ddb9f755bf3d7 está en CI 45460844644. Sin nueva CI por este commit exclusivamente documental. No usar la demo con información real; no se ha creado escritor productivo.
+
+### Cierre verificado del recorrido conjunto
+
+CI 45460844644 sobre c79afbb976104cb9fde998f9b91ddb9f755bf3d7, Linux job 138682665426: 83 Python en 6,685s; 38 popup +12 ventana; 22 detector +23 preparación +9 DOM-diario-parser, todos OK. Windows job 138682665115: completed/success al cierre. Esta prueba confirma solo el circuito ficticio; no existe guardado ni lectura posterior real. Próxima acción: estudiar la transferencia local protegida de aprobación desde Flow y el diseño de puerta de uso real con custodia/retención y autorización institucional, manteniendo todos los permisos de registro desactivados; no repetir exploraciones de controles ya identificados. No habilitar piloto sin operador y autorización.
