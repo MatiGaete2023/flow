@@ -1,4 +1,5 @@
-"""Interfaz de demostración: solo datos generados, no importación ni RUS real."""
+"""Interfaz de demostración: solo datos generados, importación ficticia y sin RUS real."""
+import argparse
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import tkinter as tk
@@ -8,19 +9,21 @@ from tkinter import ttk, messagebox
 from .bridge import LocalBridge
 from .batch_store import SimulationBatchStore
 from .batch_dialog import BatchReviewDialog
+from .demo_transfer import import_demo, require_demo_batch
 from .journal import SimulationJournal, JournalError
 from .scheduler import ScheduleConfig, ScheduleError
 from .simulation import demo_operations, FakeClock, FakeRus, SimulationController, FAULTS
 
 
 class DemoApp:
-    def __init__(self, root):
+    def __init__(self, root, *, demo_batch=None):
+        operations = demo_operations() if demo_batch is None else require_demo_batch(demo_batch).operations
         self.root = root
         root.title('Registrador Flow — SIMULACIÓN EXCLUSIVAMENTE FICTICIA')
         root.minsize(850, 580)
         self.temp = TemporaryDirectory(prefix='registrador-demo-')
         self.clock = FakeClock()
-        self.ops = {op.operation_id: op for op in demo_operations()}
+        self.ops = {op.operation_id: op for op in operations}
         self.fake = FakeRus(self.clock, self.ops.values())
         self.journal = SimulationJournal(Path(self.temp.name) / 'demo.sqlite', clock=self.clock)
         self.controller = SimulationController(self.journal, self.fake)
@@ -31,7 +34,7 @@ class DemoApp:
         self.closed = False
         self.status = tk.StringVar(value='Sin selección. No se conecta a RUS.')
         self.browser_status = tk.StringVar(value='Puente de demostración desconectado')
-        self.batch_status = tk.StringVar(value='Lote ficticio sin revisión registrada')
+        self.batch_status = tk.StringVar(value=f'{len(operations)} operaciones ficticias sin revisión registrada')
         self.fault = tk.StringVar(value='OK')
         self.limit = tk.StringVar(value='')
         self.mode = tk.StringVar(value='none')
@@ -42,10 +45,14 @@ class DemoApp:
         body = ttk.Frame(root, padding=12); body.pack(fill='both', expand=True)
         ttk.Label(body, text='Solo expedientes ficticios · sin escritura real · diario temporal', font=('TkDefaultFont', 12, 'bold')).pack(anchor='w')
         cols = ('origen', 'ingreso', 'destino', 'estado')
-        self.table = ttk.Treeview(body, columns=cols, show='headings', selectmode='browse', height=8)
+        table_panel = ttk.Frame(body); table_panel.pack(fill='x', pady=6)
+        self.table = ttk.Treeview(table_panel, columns=cols, show='headings', selectmode='browse', height=8)
+        scroll = ttk.Scrollbar(table_panel, orient='vertical', command=self.table.yview)
+        self.table.configure(yscrollcommand=scroll.set)
+        scroll.pack(side='right', fill='y')
         for key, label, width in zip(cols, ('Origen', 'Ingreso ficticio', 'Destino', 'Estado simulado'), (220, 140, 140, 180)):
             self.table.heading(key, text=label); self.table.column(key, width=width)
-        self.table.pack(fill='x', pady=6)
+        self.table.pack(side='left', fill='x', expand=True)
         self.table.bind('<<TreeviewSelect>>', lambda _: self.preview())
         self.detail = tk.Text(body, height=5, wrap='word', state='disabled'); self.detail.pack(fill='x')
         controls = ttk.Frame(body); controls.pack(fill='x', pady=6)
@@ -164,7 +171,14 @@ class DemoApp:
 
 
 def main():
-    root = tk.Tk(); DemoApp(root); root.mainloop()
+    parser = argparse.ArgumentParser(description='Registrador exclusivamente ficticio')
+    parser.add_argument('--demo-batch', help='Archivo .flow-demo.json generado por el productor de demostración')
+    args = parser.parse_args()
+    try:
+        batch = import_demo(args.demo_batch) if args.demo_batch else None
+    except (OSError, ValueError) as exc:
+        parser.exit(2, 'Lote ficticio rechazado: ' + type(exc).__name__ + '\n')
+    root = tk.Tk(); DemoApp(root, demo_batch=batch); root.mainloop()
 
 
 if __name__ == '__main__': main()

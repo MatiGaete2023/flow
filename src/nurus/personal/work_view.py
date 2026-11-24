@@ -144,6 +144,17 @@ def build(app):
         open_work_preview(app)
 
     more.add_command(label='Vista previa de lote RUS…', command=lambda: app._guard(preview_registrador))
+
+    def export_demo_registrador():
+        try:
+            from registrador_rus.app.demo_transfer import export_demo_dialog
+        except ModuleNotFoundError as exc:
+            if exc.name == 'registrador_rus':
+                raise ValueError('Generador ficticio disponible solo en el código fuente de esta rama.') from None
+            raise
+        export_demo_dialog(app)
+
+    more.add_command(label='Generar lote ficticio para registrador…', command=lambda: app._guard(export_demo_registrador))
     more.add_separator()
     more.add_command(label='Archivo y opciones…', command=toggle_file)
     app.work_more_button = view_button(
