@@ -1,7 +1,7 @@
 from types import SimpleNamespace as NS
 import unittest
 from registrador_rus.app.contracts import ContractError
-from registrador_rus.app.flow_export import candidate, approve_candidate
+from registrador_rus.app.flow_export import candidate, approve_candidate, TEMPORAL_NOTICE
 
 
 def work():
@@ -73,3 +73,18 @@ class FlowExportTests(unittest.TestCase):
                 if wrong != code:
                     with self.assertRaises(ContractError):
                         candidate(w,'demo-1',work_id='demo',origin=origin,destination='ADMINISTRATIVA',observation_state=wrong)
+
+    def test_only_accredited_temporal_notice_in_preview(self):
+        w=work(); row=w.rows[0]
+        row.warnings=[TEMPORAL_NOTICE]
+        with self.assertRaisesRegex(ContractError,'AVISO_TEMPORAL_NO_ACREDITADO'): review(w)
+        w.capture_context={row.id:dict(reason=TEMPORAL_NOTICE,**{'class':'NO_EVALUABLE'},identity=['RUS','90','91','92'])}
+        c=review(w)
+        self.assertEqual(c.notices,(TEMPORAL_NOTICE,))
+        self.assertEqual(approve(w,c).observation_state,'4')
+        row.warnings=[]
+        with self.assertRaisesRegex(ContractError,'TRABAJO_CAMBIADO_REVISAR'): approve(w,c)
+        row.warnings=[TEMPORAL_NOTICE,'Q-03: contradicción ficticia']
+        with self.assertRaises(ContractError): review(w)
+        row.warnings=[TEMPORAL_NOTICE,TEMPORAL_NOTICE]
+        with self.assertRaises(ContractError): review(w)

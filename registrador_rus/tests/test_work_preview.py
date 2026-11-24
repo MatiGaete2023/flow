@@ -116,3 +116,58 @@ finally:
         env=dict(os.environ,PYTHONPATH=os.pathsep.join([str(Path.cwd()/'src'),str(Path.cwd())]))
         result=subprocess.run([sys.executable,'-c',script,self.temp.name],env=env,capture_output=True,text=True,timeout=45)
         self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
+
+    def test_real_import_to_preview(self):
+        """Recorrido GUI real; nunca se limpia artificialmente row.warnings."""
+        import os
+        import subprocess
+        import sys
+        script = """
+from datetime import date
+from pathlib import Path
+from unittest.mock import patch
+from nurus.capture import write_capture
+from nurus.capture.fixtures import fixture
+from nurus.personal.config import Configuration
+from nurus.personal.app import App
+from registrador_rus.app.work_preview import open_work_preview
+from registrador_rus.app.flow_export import TEMPORAL_NOTICE
+import sys,time
+root=Path(sys.argv[1])/'import'
+root.mkdir()
+m,t=fixture(1,partial=True)
+for q in t['consultas']:q['court_code']='900000'
+for rec in t['registros']:rec.update(court_code='900000',cause_id='900001',ingreso_id='900002')
+path=write_capture(root/'fixture.zip',m,t)
+app=App(Configuration(root/'config'))
+try:
+    app._run=lambda label,action,done=None:done(action()) if done else action()
+    with patch.object(app,'_ask_cut_date',return_value=date(2026,10,8)):
+        app._import_capture(str(path))
+    deadline=time.monotonic()+10
+    while getattr(app,'rendering',False) and time.monotonic()<deadline:app.update()
+    app.update()
+    assert not getattr(app,'rendering',False)
+    assert len(app.work.rows)==1
+    row=app.work.rows[0]
+    assert row.warnings==[TEMPORAL_NOTICE],row.warnings
+    assert app.work.output and Path(app.work.output).is_file()
+    app.records.selection_set(row.id);app._detail()
+    app.observation_editor.delete('1.0','end');app.observation_editor.insert('1.0','Constancia ficticia revisada.')
+    d=open_work_preview(app)
+    d.origin.set('ESPERA');d.destination.set('ADMINISTRATIVA')
+    d.prepare()
+    assert TEMPORAL_NOTICE in d.text.get('1.0','end')
+    assert 'Gestión Previa (4)' in d.text.get('1.0','end')
+    assert 'Constancia ficticia revisada.' in d.text.get('1.0','end')
+    d.accepted.set(True);packet=d.confirm()
+    assert len(packet.operations)==1 and packet.operations[0].approved_text=='Constancia ficticia revisada.'
+    assert packet.operations[0].observation_state=='4' and packet.operations[0].cc==0
+    assert row.warnings==[TEMPORAL_NOTICE]
+    d.window.destroy()
+finally:
+    app.destroy()
+"""
+        env=dict(os.environ,PYTHONPATH=os.pathsep.join([str(Path.cwd()/'src'),str(Path.cwd())]))
+        result=subprocess.run([sys.executable,'-c',script,self.temp.name],env=env,capture_output=True,text=True,timeout=45)
+        self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)

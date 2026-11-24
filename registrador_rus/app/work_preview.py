@@ -107,7 +107,10 @@ class WorkPreviewDialog:
         for c in frozen.candidates:
             i=c.identity
             self.text.insert('end',f'{c.row_ref} | {c.origin} | Tribunal {i.tribunal_id} / Causa {i.causa_id} / Ingreso {i.ingreso_id}\n'
-                             f'Destino: {c.destination} | Estado: {required_state(c.origin)[1]} ({c.observation_state})\n{c.text}\n\n')
+                             f'Destino: {c.destination} | Estado: {required_state(c.origin)[1]} ({c.observation_state})\n{c.text}\n')
+            for notice in c.notices:
+                self.text.insert('end', f'Aviso: {notice}\n')
+            self.text.insert('end','\n')
         self.text.configure(state='disabled')
         self.frozen=frozen
         self.status.set('Revisa cada operación. Estado obligatorio calculado; disponibilidad en bitácora requiere comprobación.')

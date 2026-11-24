@@ -9,6 +9,7 @@ from .state_policy import required_state, require_state
 ORIGIN_TYPE = {'ESPERA': 'ESPERA', 'CUMPLIMIENTO': 'CUMPLIMIENTO',
                'INFORMES_POR_VENCER': 'INFORMES', 'INFORMES_VENCIDOS': 'INFORMES'}
 COLUMNS = ('SITFA_TRIBUNAL_CODIGO', 'SITFA_CAUSA_RUS', 'SITFA_INGRESO_RUS')
+TEMPORAL_NOTICE = 'Interpretación temporal no aceptada institucionalmente; no acredita ausencia de actuaciones.'
 
 
 def _fail(code):
@@ -30,6 +31,7 @@ class ReviewCandidate:
     destination: str
     observation_state: str
     source_digest: str
+    notices: tuple[str, ...] = ()
 
     @property
     def digest(self):
@@ -59,7 +61,10 @@ def candidate(work, row_ref, *, work_id, origin, destination, observation_state=
     if len(rows) != 1 or row_ref.startswith('calendar:'):
         _fail('FILA_NO_UNICA_O_FUERA_DE_ALCANCE')
     row = rows[0]
-    if row.excluded or row.warnings:
+    if row.excluded:
+        _fail('FILA_REQUIERE_REVISION')
+    notices = tuple(row.warnings)
+    if notices and notices != (TEMPORAL_NOTICE,):
         _fail('FILA_REQUIERE_REVISION')
     # sync_state es NURUS_DECISIONES serializado, no un indicador de conflicto.
     if getattr(row, 'sync_state', ''):
@@ -75,10 +80,17 @@ def candidate(work, row_ref, *, work_id, origin, destination, observation_state=
     source_values = tuple(provenance.get(k) for k in ('court_code', 'cause_id', 'ingreso_id'))
     if values != source_values or any(not isinstance(v, str) or not re.fullmatch('[0-9]{1,20}', v) or int(v) == 0 for v in values):
         _fail('IDENTIDAD_NO_COINCIDE')
+    if notices:
+        context = getattr(work, 'capture_context', {}).get(row_ref, {})
+        if (context.get('reason') != TEMPORAL_NOTICE or context.get('class') != 'NO_EVALUABLE' or
+                context.get('identity') != ['RUS', *values]):
+            _fail('AVISO_TEMPORAL_NO_ACREDITADO')
+        # Solo previsualización: el aviso permanece íntegro y se congela en la huella.
+        # No acredita historial completo ni habilita registro remoto.
     text = row.review.get('OBSERVACION', row.observation)
     if not isinstance(text, str) or not text.strip():
         _fail('TEXTO_NO_DISPONIBLE')
-    return ReviewCandidate(work_id, revision, row_ref, RemoteIdentity('SITFA', *values), origin, text, destination, observation_state, capture_digest)
+    return ReviewCandidate(work_id, revision, row_ref, RemoteIdentity('SITFA', *values), origin, text, destination, observation_state, capture_digest, notices)
 
 
 def approve_candidate(work, frozen, *, displayed_digest, destination, observation_state=None, actor, stamp, version, operation_id, confirmed):
