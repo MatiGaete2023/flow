@@ -50,6 +50,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -542,6 +547,11 @@
     "errores_extension": {
      "OTRA_FALLA": 1
     },
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -1033,6 +1043,9 @@
      "SIN_ACCION_OBSERVACIONES": 2
     },
     "errores_extension": {},
+    "calendarios": {},
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -1394,6 +1407,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 32
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -7171,6 +7189,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -7633,6 +7656,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -8070,6 +8098,9 @@
     "estados": {},
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {},
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [],
     "anteriores_no_reenumeradas": 2,
     "contiene_identificadores_personales": false
@@ -8294,6 +8325,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "LEIDA": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -8923,6 +8959,14 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "LEIDA": 1,
+     "FALLIDA": 1
+    },
+    "errores_calendario": {
+     "CAL_OTRO_INGRESO": 1
+    },
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -9556,6 +9600,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "LEIDA": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -10138,6 +10187,13 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 4
+    },
+    "errores_calendario": {},
+    "historicos": {
+     "LEIDA": 4
+    },
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -11061,6 +11117,13 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 4
+    },
+    "errores_calendario": {},
+    "historicos": {
+     "FALLIDA": 4
+    },
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -12071,6 +12134,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -12657,6 +12725,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -13243,6 +13316,11 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 2
+    },
+    "errores_calendario": {},
+    "historicos": {},
     "consultas": [
      {
       "tribunal_codigo": "49",
@@ -13907,6 +13985,14 @@
     },
     "diagnosticos_sin_vinculo": {},
     "errores_extension": {},
+    "calendarios": {
+     "NO_INTENTADO": 16
+    },
+    "errores_calendario": {},
+    "historicos": {
+     "FALLIDA": 10,
+     "OTRO": 6
+    },
     "consultas": [
      {
       "tribunal_codigo": "49",
