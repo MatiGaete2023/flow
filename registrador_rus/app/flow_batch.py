@@ -18,7 +18,7 @@ class ReviewRequest:
     row_ref: str
     origin: str
     destination: str
-    observation_state: str
+    observation_state: str | None = None
 
 
 @dataclass(frozen=True)

@@ -37,7 +37,7 @@ class FlowBatchTests(TestCase):
             self.work.rows.append(Row(ref,int(rec['original_row']),
                 dict(SITFA_TRIBUNAL_CODIGO=rec['court_code'],SITFA_CAUSA_RUS=rec['cause_id'],SITFA_INGRESO_RUS=rec['ingreso_id']),
                 'Constancia ficticia.',[],[],[]))
-            self.requests.append(ReviewRequest(ref,'ESPERA','ADMINISTRATIVA','demo'))
+            self.requests.append(ReviewRequest(ref,'ESPERA','ADMINISTRATIVA'))
         self.requests=tuple(self.requests)
 
     def confirm(self,frozen,requests=None,**changes):
@@ -54,6 +54,7 @@ class FlowBatchTests(TestCase):
         packet=PreviewBatch(operations,self.work.capture_digest,self.work.revision)
         self.assertEqual(PreviewBatch.decode(packet.encode()),packet)
         self.assertEqual(len(operations),400)
+        self.assertTrue(all(o.observation_state=='4' for o in operations))
         self.assertEqual(self.confirm(frozen),operations)
 
     def test_selection_and_source_changes_block(self):
@@ -72,12 +73,13 @@ class FlowBatchTests(TestCase):
         operations=self.confirm(frozen,self.requests[:2])
         packet=PreviewBatch(operations,self.work.capture_digest,self.work.revision)
         original=json.loads(packet.encode())
-        for change in ('text','permission','extra','count'):
+        for change in ('text','permission','extra','count','state'):
             data=json.loads(packet.encode())
             if change=='text': data['body']['operations'][0]['approved_text']='Otro'
             if change=='permission': data['body']['preview_only']=False
             if change=='extra': data['body']['write_one']=True
             if change=='count': data['body']['operations']=[]
+            if change=='state': data['body']['operations'][0]['observation_state']='6'
             if change!='text':
                 data['sha256']=sha256(json.dumps(data['body'],ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
             with self.assertRaises(ContractError): PreviewBatch.decode(json.dumps(data).encode())

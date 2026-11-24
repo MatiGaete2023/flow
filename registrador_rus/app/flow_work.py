@@ -73,7 +73,7 @@ def _guard(work, row_ref, origin, report_catalog):
     verify_record(work, load_verified_capture(work), row_ref, origin, report_catalog)
 
 
-def candidate_from_work(work, row_ref, *, work_id, origin, destination, observation_state, report_catalog=None):
+def candidate_from_work(work, row_ref, *, work_id, origin, destination, observation_state=None, report_catalog=None):
     _guard(work, row_ref, origin, report_catalog)
     return candidate(work, row_ref, work_id=work_id, origin=origin, destination=destination,
                      observation_state=observation_state)

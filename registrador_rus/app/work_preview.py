@@ -7,6 +7,7 @@ from .contracts import ContractError, ORIGINS, DESTINATIONS
 from .flow_batch import ReviewRequest, build_review, confirm_review
 from .flow_work import REPOSITORY_REPORT_CATALOG
 from .transfer import PreviewBatch
+from .state_policy import REQUIRED_STATE, required_state
 
 
 def visible_selection(app):
@@ -34,12 +35,12 @@ class WorkPreviewDialog:
         self.window.minsize(740, 490)
         self.origin = tk.StringVar(master=self.window)
         self.destination = tk.StringVar(master=self.window)
-        self.state = tk.StringVar(master=self.window)
+        self.state_label = tk.StringVar(master=self.window,value='Selecciona el origen')
         self.accepted = tk.BooleanVar(master=self.window,value=False)
         self.status = tk.StringVar(master=self.window,value='No se guarda ningún archivo ni se autoriza escritura.')
         body = ttk.Frame(self.window,padding=12)
         body.pack(fill='both',expand=True)
-        ttk.Label(body,text=f'{len(self.ids)} filas visibles seleccionadas. Un origen, destino y Estado por grupo.').pack(anchor='w')
+        ttk.Label(body,text=f'{len(self.ids)} filas visibles seleccionadas. Un origen y destino por grupo. Estado automático.').pack(anchor='w')
         controls = ttk.Frame(body)
         controls.pack(fill='x',pady=6)
         for label, var, values in (
@@ -48,8 +49,8 @@ class WorkPreviewDialog:
             ttk.Combobox(controls,textvariable=var,values=values,state='readonly',width=23).pack(side='left')
         state_row=ttk.Frame(body)
         state_row.pack(fill='x',pady=4)
-        ttk.Label(state_row,text='Código de Estado (no validado en RUS)').pack(side='left')
-        ttk.Entry(state_row,textvariable=self.state,width=16).pack(side='left',padx=6)
+        ttk.Label(state_row,text='Estado obligatorio:').pack(side='left')
+        ttk.Label(state_row,textvariable=self.state_label).pack(side='left',padx=6)
         ttk.Button(state_row,text='Preparar revisión',command=lambda:self.run(self.prepare)).pack(side='left')
         panel=ttk.Frame(body)
         panel.pack(fill='both',expand=True,pady=6)
@@ -66,7 +67,7 @@ class WorkPreviewDialog:
         self.confirm_button.pack(side='right')
         ttk.Button(row,text='Cerrar',command=self.window.destroy).pack(side='right',padx=4)
         ttk.Label(body,textvariable=self.status,wraplength=700).pack(anchor='w')
-        for var in (self.origin,self.destination,self.state):
+        for var in (self.origin,self.destination):
             var.trace_add('write',self.invalidate)
         self.window.grab_set()
 
@@ -78,6 +79,8 @@ class WorkPreviewDialog:
             messagebox.showwarning('Vista previa bloqueada',str(exc),parent=self.window)
 
     def invalidate(self,*_):
+        state = REQUIRED_STATE.get(self.origin.get())
+        self.state_label.set(f'{state[1]} ({state[0]})' if state else 'Selecciona el origen')
         self.frozen=None
         self.preview=None
         self.accepted.set(False)
@@ -95,7 +98,7 @@ class WorkPreviewDialog:
         ids=visible_selection(self.app)
         if work is not self.work or ids != self.ids:
             raise ContractError('TRABAJO_O_SELECCION_CAMBIADA_CERRAR')
-        return tuple(ReviewRequest(r,self.origin.get(),self.destination.get(),self.state.get()) for r in ids)
+        return tuple(ReviewRequest(r,self.origin.get(),self.destination.get()) for r in ids)
 
     def prepare(self):
         self.invalidate()
@@ -104,10 +107,10 @@ class WorkPreviewDialog:
         for c in frozen.candidates:
             i=c.identity
             self.text.insert('end',f'{c.row_ref} | {c.origin} | Tribunal {i.tribunal_id} / Causa {i.causa_id} / Ingreso {i.ingreso_id}\n'
-                             f'Destino: {c.destination} | Estado: {c.observation_state}\n{c.text}\n\n')
+                             f'Destino: {c.destination} | Estado: {required_state(c.origin)[1]} ({c.observation_state})\n{c.text}\n\n')
         self.text.configure(state='disabled')
         self.frozen=frozen
-        self.status.set('Revisa cada operación. El Estado y el catálogo vivo todavía requieren comprobación.')
+        self.status.set('Revisa cada operación. Estado obligatorio calculado; disponibilidad en bitácora requiere comprobación.')
 
     def confirm(self):
         if self.frozen is None or not self.accepted.get():

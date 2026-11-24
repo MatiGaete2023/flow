@@ -4,6 +4,7 @@ from hashlib import sha256
 import json
 import re
 from .contracts import RegistroFlowV1, RemoteIdentity, Source, ContractError
+from .state_policy import required_state, require_state
 
 ORIGIN_TYPE = {'ESPERA': 'ESPERA', 'CUMPLIMIENTO': 'CUMPLIMIENTO',
                'INFORMES_POR_VENCER': 'INFORMES', 'INFORMES_VENCIDOS': 'INFORMES'}
@@ -35,7 +36,7 @@ class ReviewCandidate:
         return _digest(asdict(self))
 
 
-def candidate(work, row_ref, *, work_id, origin, destination, observation_state):
+def candidate(work, row_ref, *, work_id, origin, destination, observation_state=None):
     """Lee una fila del Asistente derivada de paquete, no una planilla sin procedencia.
 
     El filtro específico de Informes es declarado por el revisor y debe validarse
@@ -43,8 +44,11 @@ def candidate(work, row_ref, *, work_id, origin, destination, observation_state)
     """
     if origin not in ORIGIN_TYPE or not isinstance(row_ref, str) or not row_ref:
         _fail('ORIGEN_O_FILA_INVALIDA')
-    if destination not in ('ADMINISTRATIVA', 'AL_TRIBUNAL') or not isinstance(observation_state, str) or not observation_state.strip() or observation_state != observation_state.strip():
-        _fail('DESTINO_O_ESTADO_INVALIDO')
+    if destination not in ('ADMINISTRATIVA', 'AL_TRIBUNAL'):
+        _fail('DESTINO_INVALIDO')
+    if observation_state is None:
+        observation_state = required_state(origin)[0]
+    require_state(origin, observation_state)
     revision = getattr(work, 'revision', None)
     capture_digest = getattr(work, 'capture_digest', '')
     if type(revision) is not int or revision < 0 or not isinstance(capture_digest, str) or not re.fullmatch('[0-9a-f]{64}', capture_digest):
@@ -77,7 +81,7 @@ def candidate(work, row_ref, *, work_id, origin, destination, observation_state)
     return ReviewCandidate(work_id, revision, row_ref, RemoteIdentity('SITFA', *values), origin, text, destination, observation_state, capture_digest)
 
 
-def approve_candidate(work, frozen, *, displayed_digest, destination, observation_state, actor, stamp, version, operation_id, confirmed):
+def approve_candidate(work, frozen, *, displayed_digest, destination, observation_state=None, actor, stamp, version, operation_id, confirmed):
     """Se exige reconfirmación del contenido actual; actor declarado, no autenticado.
 
     La UI futura debe mostrar identidad, texto, destino y Estado exactos antes de llamar.
@@ -88,5 +92,5 @@ def approve_candidate(work, frozen, *, displayed_digest, destination, observatio
     if current != frozen:
         _fail('TRABAJO_CAMBIADO_REVISAR')
     return RegistroFlowV1('RegistroFlowV1', operation_id, Source('FLOW', frozen.work_id, frozen.row_ref), frozen.identity,
-                          frozen.origin, destination, observation_state, frozen.text, sha256(frozen.text.encode('utf-8')).hexdigest(),
+                          frozen.origin, destination, current.observation_state, frozen.text, sha256(frozen.text.encode('utf-8')).hexdigest(),
                           actor, stamp, version)

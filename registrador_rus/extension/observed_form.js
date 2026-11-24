@@ -1,4 +1,4 @@
-/* Contrato de estructura basado en una inspección de Espera, 24-11-2026.
+/* Contrato de estructura basado en cuatro inspecciones, 24-11-2026.
  * Exclusivamente lectura de DOM. No rellena, registra, navega ni autoriza.
  * Solo se usa en pruebas ficticias; no se carga en extensiones operativas.
  */
@@ -16,9 +16,11 @@
     return true;
   };
   const one=(nodes,reason)=>{if(nodes.length!==1)fail(reason);return nodes[0];};
-  const catalog=Object.freeze({'3':'Ingreso Efectivo','4':'Gestión Previa'});
+  const required=Object.freeze({ESPERA:Object.freeze(['4','Gestión Previa']),CUMPLIMIENTO:Object.freeze(['6','Realizada']),INFORMES_POR_VENCER:Object.freeze(['9','Realizada']),INFORMES_VENCIDOS:Object.freeze(['9','Realizada'])});
   const headers=['tipo observación','etapa','fecha centro','usuario centro','observación centro','fecha tribunal','usuario tribunal','observación tribunal','acción'];
-  function inspect(doc){
+  function inspect(doc,origin){
+    if(typeof origin!=='string'||!Object.hasOwn(required,origin))fail('ORIGEN_INVALIDO');
+    const [code,label]=required[origin];
     const form=one([...doc.forms].filter(f=>f.getAttribute('name')==='InformesPpalForm'),'FORMULARIO_NO_UNICO');
     if(doc.forms.length!==1||[...doc.querySelectorAll(modal)].some(visible))fail('CONTEXTO_AMBIGUO');
     const action=new URL(form.action);
@@ -59,16 +61,13 @@
       [...(checkbox.parentElement?.childNodes||[])].some(n=>n.nodeType===3&&norm(n.nodeValue)===expected)||
       [checkbox.closest('td,th')?.previousElementSibling,checkbox.closest('td,th')?.nextElementSibling].some(n=>n&&norm(n.textContent)===expected);
     if(!labels.some(n=>n.control===checkbox)&&!nearby&&norm(checkbox.getAttribute('aria-label'))!==expected)fail('ETIQUETA_NO_CONFIRMADA');
-    const available=Object.keys(catalog).filter(code=>{
-      const options=[...state.options].filter(o=>o.value===code);
-      return options.length===1&&!options[0].disabled&&!options[0].closest('optgroup[disabled]')&&norm(options[0].textContent)===norm(catalog[code]);
-    });
-    if(!available.length)fail('CATALOGO_NO_CONFIRMADO');
+    const options=[...state.options].filter(o=>o.value===code);
+    if(options.length!==1||options[0].disabled||options[0].closest('optgroup[disabled]')||norm(options[0].textContent)!==norm(label))fail('ESTADO_OBLIGATORIO_NO_DISPONIBLE');
     // Otros controles de entrada visibles deben revisarse, no se ignoran.
     const entry=all.filter(n=>usable(n)&&['INPUT','SELECT','TEXTAREA','BUTTON'].includes(n.tagName)&&n.type!=='hidden'&&!table.contains(n));
     if(entry.length!==6||[state,checkbox,editor,counter,create,back].some(n=>!entry.includes(n)))fail('FIRMA_DISTINTA');
-    return Object.freeze({schema:'ObservedFormBindingV1',evidence:'MUESTRA_ESPERA_VALIDADA_ESTRUCTURALMENTE',
-      states:Object.freeze(available),context_fields:6,visible_entry_controls:6,table_headers:9,
+    return Object.freeze({schema:'ObservedFormBindingV1',evidence:'CUATRO_VISTAS_OBSERVADAS_PRUEBA_FICTICIA',
+      origin,states:Object.freeze([code]),context_fields:6,visible_entry_controls:6,table_headers:9,
       editor_maxlength:editor.maxLength>=0?editor.maxLength:null,write_enabled:false});
   }
   globalThis.RegistradorObservedForm=Object.freeze({inspect});

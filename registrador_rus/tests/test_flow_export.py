@@ -12,11 +12,11 @@ def work():
 
 
 def review(w, origin='ESPERA', destination='ADMINISTRATIVA'):
-    return candidate(w, 'demo-1', work_id='demo', origin=origin, destination=destination, observation_state='demo')
+    return candidate(w, 'demo-1', work_id='demo', origin=origin, destination=destination)
 
 
 def approve(w, c, **kwargs):
-    options = dict(displayed_digest=c.digest, destination='ADMINISTRATIVA', observation_state='demo', actor='operador ficticio',
+    options = dict(displayed_digest=c.digest, destination='ADMINISTRATIVA', actor='operador ficticio',
                    stamp='2026-11-24T12:00:00Z', version=1, operation_id='demo-op', confirmed=True)
     return approve_candidate(w, c, **(options | kwargs))
 
@@ -27,6 +27,7 @@ class FlowExportTests(unittest.TestCase):
         self.assertEqual(op.approved_text, '  Constancia ficticia.  ')
         self.assertEqual(op.remote_identity.ingreso_id, '92')
         self.assertEqual(op.cc, 0)
+        self.assertEqual(op.observation_state,'4')
         self.assertEqual(approve(w, review(w, destination='AL_TRIBUNAL'), destination='AL_TRIBUNAL').cc, 1)
         for changes in (dict(confirmed=False), dict(displayed_digest='wrong'), dict(destination=''), dict(destination='AL_TRIBUNAL'), dict(observation_state='otro'), dict(observation_state='')):
             with self.assertRaises(ContractError): approve(w, c, **changes)
@@ -61,3 +62,14 @@ class FlowExportTests(unittest.TestCase):
             if change=='integer': w.rows[0].values['SITFA_INGRESO_RUS']=92
             if change=='mismatch': w.capture_sources['demo-1']['ingreso_id']='93'
             with self.subTest(change=change), self.assertRaises(ContractError): review(w)
+
+    def test_required_state_by_origin(self):
+        for origin, record_type, code in (('ESPERA','ESPERA','4'),('CUMPLIMIENTO','CUMPLIMIENTO','6'),('INFORMES_POR_VENCER','INFORMES','9'),('INFORMES_VENCIDOS','INFORMES','9')):
+            w=work(); w.capture_sources['demo-1']['record_type']=record_type
+            c=review(w,origin)
+            self.assertEqual(c.observation_state,code)
+            self.assertEqual(approve(w,c).observation_state,code)
+            for wrong in ('3','5','8','10','demo',int(code)):
+                if wrong != code:
+                    with self.assertRaises(ContractError):
+                        candidate(w,'demo-1',work_id='demo',origin=origin,destination='ADMINISTRATIVA',observation_state=wrong)

@@ -47,11 +47,11 @@ class WorkIntegrationTests(unittest.TestCase):
 
     def candidate(self):
         return candidate_from_work(self.work, self.row.id, work_id='demo-work', origin='ESPERA',
-                                   destination='ADMINISTRATIVA', observation_state='demo')
+                                   destination='ADMINISTRATIVA')
 
     def approve(self, c):
         return approve_from_work(self.work,c,displayed_digest=c.digest,destination='ADMINISTRATIVA',
-                                 observation_state='demo',actor='ficticio',stamp='2026-11-24T12:00:00Z',
+                                 actor='ficticio',stamp='2026-11-24T12:00:00Z',
                                  version=1,operation_id='demo-op',confirmed=True)
 
     def test_work_and_copy(self):

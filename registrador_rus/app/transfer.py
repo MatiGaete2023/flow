@@ -6,6 +6,7 @@ import re
 
 from .contracts import ContractError, RegistroFlowV1
 from .batch_store import selection_digest
+from .state_policy import require_state
 
 MAX_BYTES = 8 * 1024 * 1024
 
@@ -35,6 +36,9 @@ class PreviewBatch:
 
     def __post_init__(self):
         selection_digest(self.operations)
+        for op in self.operations:
+            if op.source.tool == 'FLOW':
+                require_state(op.origin, op.observation_state)
         if (not isinstance(self.source_digest,str) or not re.fullmatch('[0-9a-f]{64}',self.source_digest)
                 or type(self.revision) is not int or self.revision < 0):
             raise ContractError('FUENTE_INVALIDA')

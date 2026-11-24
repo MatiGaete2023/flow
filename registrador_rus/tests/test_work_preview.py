@@ -48,13 +48,14 @@ class WorkPreviewTests(TestCase):
         d=open_work_preview(self.root)
         d.origin.set('ESPERA')
         d.destination.set('ADMINISTRATIVA')
-        d.state.set('demo')
         d.prepare()
         return d
 
     def test_preview_and_invalidation(self):
         d=self.dialog()
         self.assertIn('Texto ficticio',d.text.get('1.0','end'))
+        self.assertIn('Gestión Previa (4)',d.text.get('1.0','end'))
+        self.assertEqual(d.state_label.get(),'Gestión Previa (4)')
         with self.assertRaises(ContractError): d.confirm()
         d.destination.set('AL_TRIBUNAL')
         self.assertIsNone(d.frozen)
@@ -62,7 +63,7 @@ class WorkPreviewTests(TestCase):
         d.accepted.set(True)
         packet=d.confirm()
         self.assertEqual(len(packet.operations),2)
-        self.assertTrue(all(o.cc==1 for o in packet.operations))
+        self.assertTrue(all(o.cc==1 and o.observation_state=='4' for o in packet.operations))
         self.assertEqual(self.work.revision,0)
         self.assertEqual([r.review for r in self.work.rows],[{},{}])
         self.assertEqual(len(list(Path(self.temp.name).iterdir())),1)
