@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Registrador Flow — Inspector pasivo",
+  "version": "0.1.0",
+  "description": "Solo inspección estructural del formulario abierto, sin registrar ni transmitir información.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'"
+  }
+}

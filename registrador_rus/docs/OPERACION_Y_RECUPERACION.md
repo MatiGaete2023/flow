@@ -43,3 +43,12 @@ En un paquete ficticio del Descargador importado al Asistente con copia vigente,
 ## Transferencia de un lote de demostración entre procesos
 
 En el Asistente desde fuente, Trabajo > Más > Generar lote ficticio para registrador…; elige cantidad (1–400) y un nombre nuevo terminado en .flow-demo.json. No toma registros del trabajo. Alternativa desde la carpeta raíz: `python -m registrador_rus.app.demo_transfer lote.flow-demo.json --count 400`. Cierra el registrador anterior solo cuando hayas terminado su simulación y abre una sesión nueva con `python -m registrador_rus.app.main --demo-batch lote.flow-demo.json`. Revisa el conjunto, selecciona una fila, prepara y autoriza explícitamente antes de simular. La importación no crea autorizaciones ni intentos. No se admiten archivos de la vista previa de Work ni datos reales. El destino no se sobrescribe. Compatible solo con sistemas de archivos que soporten enlaces duros; Windows de esta revisión pendiente.
+
+## Inspección focalizada opcional — solo con autorización institucional
+
+1. Carga descomprimida en Chrome la carpeta registrador_rus/inspector, como extensión distinta de la demo. Si la política no lo permite, detente; no cambies restricciones.
+2. En RUS abre manualmente una bitácora desde Espera, sin editar ni registrar nada. Usa el inspector con la ventana/pestaña de bitácora activa. Si Chrome no permite acceder al icono en esa ventana, detente; no fuerces la ejecución.
+3. Pulsa Inspeccionar formulario abierto. CANDIDATE significa coincidencia estructural candidata, no confirmación de operación. Si aparece BLOCKED u otro error, informa únicamente ese código.
+4. Si devuelve atributos y catálogo, verifica personalmente que no haya RIT, RUT, nombres, identificadores de expediente/ingreso, textos judiciales ni otros datos reservados. Comparte exclusivamente nombres de atributos técnicos, maxlength, códigos/rótulos generales de Estado y los booleanos de asociación de etiqueta/botón. No compartas capturas del expediente, HTML, tokens ni datos de sesión. No pulsar Nueva obs ni Grabar.
+
+El núcleo pasó 9 pruebas con DOM ficticio; la extensión nativa todavía no fue validada. Un solo formulario es el objetivo inicial, no una nueva exploración general. No es un registrador ni usa la extensión de demo como escritor.

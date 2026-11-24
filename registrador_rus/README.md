@@ -59,3 +59,5 @@ CI de revisión masiva: [71/71](https://github.com/MatiGaete2023/flow/actions/ru
 Resultado CI final de esta etapa: [76/76](https://github.com/MatiGaete2023/flow/actions/runs/45431222606); menú del Asistente desde fuente y bloqueo sin paquete verificados. No hay transferencia de archivos ni uso real.
 
 Transferencia ficticia entre procesos: `python -m registrador_rus.app.demo_transfer lote.flow-demo.json --count 400` y `python -m registrador_rus.app.main --demo-batch lote.flow-demo.json`. También menú del Asistente para generar datos inventados. Sin importación judicial ni permisos de envío.
+
+Transferencia ficticia: CI 80/80 aprobada. Inspector separado en registrador_rus/inspector: solo lectura focalizada, 9 pruebas de núcleo, instalación y RUS vivo pendientes; ver manual.
