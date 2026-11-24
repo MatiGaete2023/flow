@@ -286,13 +286,28 @@ mod pruebas {
     use super::*;
     use crate::config::Config;
     use crate::motor::Mode;
-    use base64::Engine;
     use chrono::NaiveDate;
     use serde_json::Value;
     use std::path::PathBuf;
 
+    /// El libro de origen que armó Python (título, fila vacía, encabezado y tres filas), escrito aquí con los mismos datos.
     fn trabajo(datos: &Value) -> Trabajo {
-        let bytes = base64::engine::general_purpose::STANDARD.decode(datos["origen"].as_str().unwrap()).unwrap();
+        let mut libro = rust_xlsxwriter::Workbook::new();
+        let hoja = libro.add_worksheet();
+        hoja.set_name("informe_1").unwrap();
+        hoja.write_string(0, 0, "Reporte RUS").unwrap();
+        for (c, h) in datos["encabezados"].as_array().unwrap().iter().enumerate() {
+            hoja.write_string(2, c as u16, h.as_str().unwrap()).unwrap();
+        }
+        for (i, fila) in datos["filas"].as_array().unwrap().iter().enumerate() {
+            for (c, v) in fila.as_array().unwrap().iter().enumerate() {
+                match v.as_f64() {
+                    Some(n) => hoja.write_number(3 + i as u32, c as u16, n).unwrap(),
+                    None => hoja.write_string(3 + i as u32, c as u16, v.as_str().unwrap()).unwrap(),
+                };
+            }
+        }
+        let bytes = libro.save_to_buffer().unwrap();
         let corte = NaiveDate::parse_from_str(datos["corte"].as_str().unwrap(), "%Y-%m-%d").unwrap();
         Trabajo::abrir(PathBuf::from("origen.xlsx"), bytes, Some(Mode::Espera), corte, &Config::default()).unwrap()
     }

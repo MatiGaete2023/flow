@@ -7,14 +7,10 @@ rechazos con su mensaje. La prueba Rust repite las mismas ediciones sobre su pro
 Uso (desde la raíz; la CI lo regenera en Windows y exige el mismo resultado): python app/qa/generar_sync.py [salida.json]   (por omisión app/tests/datos/sync.json)
 """
 
-import base64
-import io
 import json
-import re
 import sys
 import tempfile
-import zipfile
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -46,25 +42,9 @@ def origen(carpeta):
     hoja.append(['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA'])
     for fila in FILAS:
         hoja.append(list(fila))
-    libro.properties.created = libro.properties.modified = datetime(2026, 1, 1)
     ruta = carpeta / 'origen.xlsx'
     libro.save(ruta)
-    ruta.write_bytes(fijar_fechas(ruta.read_bytes()))
     return ruta
-
-
-def fijar_fechas(contenido):
-    """Mismo libro con las fechas del ZIP fijas: el oráculo se regenera byte a byte."""
-    salida = io.BytesIO()
-    with zipfile.ZipFile(io.BytesIO(contenido)) as origen_zip, zipfile.ZipFile(salida, 'w', zipfile.ZIP_DEFLATED) as destino:
-        for info in origen_zip.infolist():
-            nueva = zipfile.ZipInfo(info.filename, date_time=(2026, 1, 1, 0, 0, 0))
-            nueva.compress_type = zipfile.ZIP_DEFLATED
-            datos = origen_zip.read(info.filename)
-            if info.filename == 'docProps/core.xml':
-                datos = re.sub(rb'(<dcterms:(?:created|modified)[^>]*>)[^<]*', rb'\g<1>2026-01-01T00:00:00Z', datos)
-            destino.writestr(nueva, datos)
-    return salida.getvalue()
 
 
 def texto(valor):
@@ -128,8 +108,6 @@ def caso(nombre, locales=(), remotas=(), resoluciones=None, **excel):
 
 def main():
     destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'sync.json'
-    with tempfile.TemporaryDirectory() as t:
-        fuente = origen(Path(t)).read_bytes()
     casos = [
         caso('sin_cambios'),
         caso('remota', remotas=[(0, 'OBSERVACION', 'Constancia editada en Excel'), (0, 'CC', 1), (1, 'TT', 1),
@@ -149,10 +127,12 @@ def main():
         caso('identidad_cambiada', cambiar_identidad=0, remotas=[(0, 'CC', 1)]),
         caso('faltan_registros', quitar_filas=1),
     ]
-    destino.write_text(json.dumps({
-        'corte': CORTE.isoformat(), 'campos': list(CAMPOS), 'filas': [list(f) for f in FILAS],
-        'origen': base64.b64encode(fuente).decode(), 'casos': casos,
-    }, ensure_ascii=False, indent=1), encoding='utf-8')
+    # Bytes y no texto: en Windows `write_text` cambiaría los saltos de línea y la CI compara byte a byte.
+    destino.write_bytes(json.dumps({
+        'corte': CORTE.isoformat(), 'campos': list(CAMPOS),
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA'],
+        'filas': [list(f) for f in FILAS], 'casos': casos,
+    }, ensure_ascii=False, indent=1).encode('utf-8'))
     print(f'{len(casos)} casos en {destino}')
 
 
