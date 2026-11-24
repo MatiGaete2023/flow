@@ -222,5 +222,5 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Corrige: la importación anterior pisaba contactos, aceptaba direcciones inválidas y no informaba conflictos.
 - Diferencias: filas «Tribunal: X» de CSV/HTML actualizan el tribunal (extensión de Rust).
 - CI: el run 45502222110 pasó las pruebas y falló al regenerar `catastro.json`: `ZipInfo.create_system` vale 0 en Windows y 3 en Linux, y cambiaba los bytes del `.xlsx`. Fijado a 3 en el generador.
-- Pendiente: CI de Windows verde del commit de corrección.
+- CI: run 45503587810 verde (`linux` y `validar`, `catastro.json` regenerado igual en Windows).
 
