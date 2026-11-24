@@ -192,7 +192,8 @@ fn consulta_de(q: &Value) -> (String, String, String) {
 }
 
 fn leer_bitacoras(raices: &[PathBuf], corte: NaiveDate) -> Result<LecturaBitacoras, String> {
-    let manifiestos = buscar_manifiestos(raices);
+    // Rutas canónicas, como `diary_paths`: `copia_local` compara la carpeta con la de la copia ya resuelta.
+    let manifiestos = buscar_manifiestos(&paquete::rutas_bitacoras(raices));
     if manifiestos.is_empty() {
         return Err("Faltan bitácoras. Selecciona la carpeta de bitácoras del Descargador (bitacoras.json y sus HTML).".into());
     }
@@ -336,6 +337,18 @@ struct ConsultaMeta4 {
 
 /// Lee los lotes de registros y las bitácoras, y calcula Meta 4. No escribe nada.
 ///
+/// `cargar_lote` (el `load_lot` del Descargador) rechaza lo mismo que `_lote` de Meta 4, con otras palabras: se usan las
+/// de Meta 4, que es lo que ve el usuario en Python.
+fn mensaje_de_lote(error: &str) -> String {
+    match error {
+        "Un archivo cambió después de la descarga. No se exportó el lote." => "Un Excel del descargador cambió después de su verificación",
+        "Faltan páginas en una consulta validada." => "Faltan páginas del descargador",
+        "El estado de una consulta no coincide con el resumen." => "Una consulta del descargador no está validada",
+        otro => otro,
+    }
+    .to_string()
+}
+
 /// `bitacoras` vacío busca los `bitacoras.json` dentro de las carpetas de registros.
 pub fn calcular(
     carpetas: &[PathBuf],
@@ -376,7 +389,7 @@ pub fn calcular(
         if resumen["estado"] != "VALIDADA" {
             return Err(format!("La descarga de registros está incompleta ({nombre}). Completa el lote antes de generar Meta 4."));
         }
-        let lote = paquete::cargar_lote(&carpeta).map_err(|e| format!("{e} ({nombre})"))?;
+        let lote = paquete::cargar_lote(&carpeta).map_err(|e| format!("{} ({nombre}){}", mensaje_de_lote(&e), if mensaje_de_lote(&e) == e { "" } else { "." }))?;
         m.lotes.push(nombre.clone());
         if let Some(rango) = resumen["filtro_fecha"].as_object().filter(|r| !r.is_empty()) {
             let dato = |k: &str| rango.get(k).and_then(Value::as_str).unwrap_or("?").to_string();
@@ -607,7 +620,7 @@ pub fn calcular(
     if let Some(elegidos) = &m.tribunales {
         let con_candidatos = m.registros.iter().filter_map(|r| r.tribunal).chain(consultas.iter().filter(|c| c.evidencia.is_some()).filter_map(|c| c.tribunal));
         if !con_candidatos.into_iter().any(|t| elegidos.contains(&t)) {
-            return Err("Los lotes no contienen registros de los tribunales elegidos.".into());
+            return Err("El lote no contiene registros de los tribunales elegidos.".into());
         }
         m.registros.retain(|r| r.tribunal.is_some_and(|t| elegidos.contains(&t)));
         m.observaciones.retain(|o| elegidos.iter().any(|t| *t == o.tribunal));
@@ -708,6 +721,20 @@ mod tests {
         let _ = std::fs::remove_dir_all(&base);
     }
 
+    /// Una carpeta de bitácoras elegida por un enlace o por su nombre corto de Windows (`RUNNER~1`) no es la ruta
+    /// canónica: la lectura debe seguir verificando sus HTML (falló en la CI de Windows con `NO_VERIFICABLE`).
+    #[cfg(unix)]
+    #[test]
+    fn meta4_lee_bitacoras_elegidas_por_una_ruta_no_canonica() {
+        let (base, lote, bitacoras) = lote_residencia("enlace");
+        let enlace = base.join("enlace");
+        std::os::unix::fs::symlink(&bitacoras, &enlace).unwrap();
+        let corte = NaiveDate::from_ymd_opt(2026, 10, 8).unwrap();
+        let m = calcular(&[lote], &[enlace], corte, corte, &[]).unwrap();
+        assert!(m.registros.iter().all(|r| r.control == IDENTIDAD_VISIBLE), "{:?}", m.registros.iter().map(|r| &r.control).collect::<Vec<_>>());
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
     #[test]
     fn meta4_rechaza_lote_duplicado_filtrado_ajeno_o_incompleto() {
         let (base, lote, bitacoras) = lote_residencia("rechaza");
@@ -741,5 +768,241 @@ mod tests {
         let corte = NaiveDate::from_ymd_opt(2026, 10, 16).unwrap();
         let (dia, etapa, _) = ultima(&[(f(10, 9), "Cumplimiento".into()), (f(12, 9), "Espera".into()), (f(14, 9), "Informes".into())], corte);
         assert_eq!((dia, etapa), (NaiveDate::from_ymd_opt(2026, 10, 12), "Espera"));
+    }
+}
+
+/// E-R1b · Oráculo contra `meta4_bitacoras.generar` (Flow Python): los lotes sintéticos de `app/qa/generar_meta4.py`
+/// se leen con `calcular` y se comparan fila a fila, junto con lecturas, filtros, avisos de lectura y errores.
+#[cfg(test)]
+mod pruebas_oraculo {
+    use super::*;
+    use base64::Engine;
+
+    fn reconstruir(destino: &Path, archivos: &Value) {
+        for (ruta, b64) in archivos.as_object().unwrap() {
+            let ruta = destino.join(ruta);
+            std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+            std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+    }
+
+    fn texto_de(v: &Value) -> String {
+        v.as_str().unwrap_or_default().to_string()
+    }
+
+    /// Lo que entrega Rust con la forma del oráculo de Python.
+    fn resultado(caso: &Value, base: &Path) -> Result<Value, String> {
+        let lotes: Vec<PathBuf> = caso["lotes"]
+            .as_object()
+            .unwrap()
+            .iter()
+            .map(|(nombre, archivos)| {
+                reconstruir(&base.join(nombre), archivos);
+                base.join(nombre)
+            })
+            .collect();
+        let bitacoras: Vec<PathBuf> = if caso["bitacoras"].is_null() {
+            Vec::new()
+        } else {
+            reconstruir(&base.join("bitacoras"), &caso["bitacoras"]);
+            vec![base.join("bitacoras")]
+        };
+        let corte: NaiveDate = caso["corte"].as_str().unwrap().parse().unwrap();
+        let tribunales: Vec<String> = caso["tribunales"].as_array().unwrap().iter().map(texto_de).collect();
+        let m = calcular(&lotes, &bitacoras, corte, corte, &tribunales)?;
+        let filas: Vec<Value> = m
+            .registros
+            .iter()
+            .map(|r| {
+                serde_json::json!({
+                    "lista": r.lista, "categoria": r.categoria, "tribunal": r.tribunal,
+                    "rit": r.texto("RIT"), "rut": r.texto("RUT"), "nombre": r.texto("NOMBRE"), "derivacion": r.texto("DERIVACIÓN"),
+                    "fecha_obs": r.fecha_obs.map(|f| f.to_string()), "etapa": r.etapa_ultima, "control": r.control, "alerta": r.alerta,
+                })
+            })
+            .collect();
+        let lecturas: Vec<Value> = m
+            .lecturas
+            .iter()
+            .map(|l| serde_json::json!({"rit": l.rit, "ingreso": l.ingreso, "lectura": l.lectura, "control": l.control}))
+            .collect();
+        Ok(serde_json::json!({
+            "filas": filas, "lecturas": lecturas, "filtros": m.filtros, "lotes": m.lotes,
+            "sin_bitacoras": m.sin_bitacoras.iter().map(|(a, b)| [a, b]).collect::<Vec<_>>(),
+            "avisos": m.avisos,
+        }))
+    }
+
+    /// Diferencias entre Rust y Python para un caso (vacío si coinciden).
+    fn comparar(caso: &Value, base: &Path, distintas: &mut BTreeSet<String>) -> Vec<String> {
+        let nombre = caso["caso"].as_str().unwrap();
+        let python = &caso["python"];
+        let rust = match resultado(caso, base) {
+            Err(e) => {
+                return match python["error"].as_str() {
+                    Some(p) if p == e => Vec::new(),
+                    Some(p) => vec![format!("{nombre}: error distinto · Rust «{e}» · Python «{p}»")],
+                    None => vec![format!("{nombre}: Rust falló («{e}») y Python no")],
+                };
+            }
+            Ok(r) => r,
+        };
+        if let Some(p) = python["error"].as_str() {
+            return vec![format!("{nombre}: Python falló («{p}») y Rust no")];
+        }
+        let mut dif = Vec::new();
+        let ordenadas = |v: &Value, clave: &[&str]| {
+            let mut filas = v.as_array().cloned().unwrap_or_default();
+            filas.sort_by_key(|f| clave.iter().map(|k| f[*k].to_string()).collect::<Vec<_>>());
+            filas
+        };
+        for (campo, clave) in [("filas", &["lista", "rit", "rut"][..]), ("lecturas", &["rit", "ingreso"][..])] {
+            let (a, b) = (ordenadas(&rust[campo], clave), ordenadas(&python[campo], clave));
+            if a.len() != b.len() {
+                dif.push(format!("{nombre}.{campo}: {} filas en Rust y {} en Python", a.len(), b.len()));
+            }
+            for (i, (x, y)) in a.iter().zip(&b).enumerate() {
+                if x != y {
+                    dif.push(format!("{nombre}.{campo}[{i}]: Rust {x} · Python {y}"));
+                }
+            }
+        }
+        for campo in ["filtros", "lotes", "sin_bitacoras"] {
+            if rust[campo] != python[campo] {
+                dif.push(format!("{nombre}.{campo}: Rust {} · Python {}", rust[campo], python[campo]));
+            }
+        }
+        for aviso in python["avisos_de_lectura"].as_array().unwrap() {
+            if !rust["avisos"].as_array().unwrap().contains(aviso) {
+                dif.push(format!("{nombre}: falta el aviso de lectura {aviso}"));
+            }
+        }
+        if python.get("productos").is_some() {
+            dif.extend(comparar_productos(caso, base, distintas));
+        }
+        dif
+    }
+
+    /// Hojas de los productos de `flow_meta4::salida` cuyos valores difieren de los de `generar` de Python, ya identificadas
+    /// (`archivo | hoja`). La prueba falla si aparece otra o si una de estas deja de diferir: se revisan, no se acumulan.
+    const HOJAS_DECLARADAS: [&str; 9] = [
+        "Bitacoras_del_mes.xlsx | Control de lecturas",
+        "Bitacoras_del_mes.xlsx | Observaciones del mes",
+        "META 4 - actualizado 2026-08 - parcial.xlsx | Control bitácoras",
+        "META 4 - actualizado 2026-08.xlsx | Control bitácoras",
+        "Registros consolidados.xlsx | Alertas y revisión",
+        "Registros consolidados.xlsx | Cumplimiento",
+        "Registros.xlsx | CUMPLIMIENTO",
+        "Registros.xlsx | ERRORES_Y_ADVERTENCIAS",
+        "Registros.xlsx | INVENTARIO_ARCHIVOS",
+    ];
+
+    /// Los libros y el reporte de `flow_meta4::salida::publicar` contra los de `generar` de Python: devuelve las diferencias
+    /// nuevas (hojas con valores distintos que no están declaradas) y las hojas distintas encontradas. El diseño (anchos,
+    /// filtros y paneles) es de cada producto y no se compara.
+    fn comparar_productos(caso: &Value, base: &Path, distintas: &mut BTreeSet<String>) -> Vec<String> {
+        use super::super::excel::volcado::{diferencias, volcar};
+        let nombre = caso["caso"].as_str().unwrap();
+        let python = &caso["python"]["productos"];
+        let lotes: Vec<PathBuf> = caso["lotes"].as_object().unwrap().keys().map(|n| base.join(n)).collect();
+        let corte: NaiveDate = caso["corte"].as_str().unwrap().parse().unwrap();
+        let tribunales: Vec<String> = caso["tribunales"].as_array().unwrap().iter().map(texto_de).collect();
+        let m = calcular(&lotes, &[base.join("bitacoras")], corte, corte, &tribunales).unwrap();
+        let salida = base.join("Productos META4");
+        let archivos = match flow_meta4::salida::publicar(&m, &salida) {
+            Ok(a) => a,
+            Err(e) => return vec![format!("{nombre}: Rust no publicó: {e}")],
+        };
+        let mut dif = Vec::new();
+        let rust: BTreeMap<String, PathBuf> =
+            archivos.into_iter().filter_map(|a| Some((a.file_name()?.to_string_lossy().into_owned(), a))).collect();
+        let esperados: Vec<&String> = python["libros"].as_object().unwrap().keys().collect();
+        let obtenidos: Vec<&String> = rust.keys().filter(|n| n.ends_with(".xlsx")).collect();
+        if esperados != obtenidos {
+            dif.push(format!("{nombre}: libros Rust {obtenidos:?} · Python {esperados:?}"));
+        }
+        for (archivo, volcado_python) in python["libros"].as_object().unwrap() {
+            let Some(ruta) = rust.get(archivo) else { continue };
+            let volcado_rust = volcar(&std::fs::read(ruta).unwrap(), "<BASE>");
+            let titulos = |v: &Value| v["hojas"].as_array().unwrap().iter().map(|h| h["titulo"].clone()).collect::<Vec<_>>();
+            if titulos(&volcado_rust) != titulos(volcado_python) {
+                dif.push(format!("{nombre} · {archivo}: hojas Rust {:?} · Python {:?}", titulos(&volcado_rust), titulos(volcado_python)));
+                continue;
+            }
+            for (r, p) in volcado_rust["hojas"].as_array().unwrap().iter().zip(volcado_python["hojas"].as_array().unwrap()) {
+                let hoja = format!("{archivo} | {}", p["titulo"].as_str().unwrap());
+                let valores = |h: &Value| {
+                    let mut h = h.clone();
+                    for k in ["congelar", "filtro", "anchos"] {
+                        h[k] = Value::Null;
+                    }
+                    serde_json::json!({"hojas": [h]})
+                };
+                let d = diferencias(&valores(r), &valores(p));
+                if !d.is_empty() {
+                    distintas.insert(hoja.clone());
+                    if !HOJAS_DECLARADAS.contains(&hoja.as_str()) {
+                        dif.push(format!("{nombre} · {hoja}: {}", d.join("\n")));
+                    }
+                }
+            }
+        }
+        // `Reporte META4.json`: las cifras de control del crate (otros nombres de campo) coinciden con las de Python. Fuera de
+        // la comparación: `requieren_revision` (el crate suma las alertas; `revision_bitacora` de Python no).
+        let reporte: Value = serde_json::from_slice(&std::fs::read(salida.join("Reporte META4.json")).unwrap()).unwrap();
+        for (rust_campo, python_campo) in [
+            ("/periodo/desde", "desde"), ("/periodo/hasta", "hasta"), ("/registros", "registros"), ("/alertas", "alertas"),
+            ("/conteo_por_control", "controles_bitacora"),
+            ("/fuera_de_meta4", "excluidos_meta4"), ("/consultas_sin_bitacoras", "consultas_sin_bitacoras"),
+            ("/lotes", "lotes_registros"), ("/filtros_registros", "filtros_registros"),
+        ] {
+            let propio = reporte.pointer(rust_campo).cloned().unwrap_or(Value::Null);
+            if propio != python["reporte"][python_campo] {
+                dif.push(format!("{nombre} · Reporte META4.json · {rust_campo}: Rust {propio} · Python {}", python["reporte"][python_campo]));
+            }
+        }
+        dif
+    }
+
+    fn casos() -> Vec<Value> {
+        let datos: Value = serde_json::from_str(include_str!("../../tests/datos/meta4.json")).unwrap();
+        datos["casos"].as_array().unwrap().clone()
+    }
+
+    fn carpeta(nombre: &str) -> PathBuf {
+        let base = std::env::temp_dir().join(format!("flow-meta4-oraculo-{}-{nombre}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        base
+    }
+
+    #[test]
+    fn meta4_del_descargador_igual_a_python() {
+        let casos = casos();
+        let (mut filas, mut errores, mut diferencias, mut distintas) = (0usize, 0usize, Vec::new(), BTreeSet::new());
+        for caso in &casos {
+            let base = carpeta(caso["caso"].as_str().unwrap());
+            diferencias.extend(comparar(caso, &base, &mut distintas));
+            let _ = std::fs::remove_dir_all(&base);
+            match caso["python"]["error"].as_str() {
+                Some(_) => errores += 1,
+                None => filas += caso["python"]["filas"].as_array().unwrap().len(),
+            }
+        }
+        assert!(diferencias.is_empty(), "{}", diferencias.join("\n"));
+        let declaradas: BTreeSet<String> = HOJAS_DECLARADAS.iter().map(|h| h.to_string()).collect();
+        assert_eq!(distintas, declaradas, "hojas con valores distintos de Python (Rust ⊃ declaradas = nuevas; Rust ⊂ = ya no difieren)");
+        assert_eq!((casos.len(), errores, filas), (22, 7, 30), "conteos del oráculo");
+        println!("oraculo meta4: {} casos, {errores} errores de Python reproducidos, {filas} filas", casos.len());
+    }
+
+    #[test]
+    fn oraculo_de_meta4_detecta_alteraciones() {
+        let casos = casos();
+        let mut caso = casos.iter().find(|c| c["caso"] == "observacion_en_el_mes").unwrap().clone();
+        caso["python"]["filas"][0]["fecha_obs"] = Value::from("2026-08-13");
+        let base = carpeta("alterado");
+        let dif = comparar(&caso, &base, &mut BTreeSet::new());
+        let _ = std::fs::remove_dir_all(&base);
+        assert!(dif.iter().any(|d| d.contains("filas[")), "{dif:?}");
     }
 }

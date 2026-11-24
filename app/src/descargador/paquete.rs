@@ -804,7 +804,7 @@ fn poner(v: &mut PorIngreso, k: Clave, valor: Value) {
 }
 
 /// `diary_paths`: rutas resueltas sin repetir, en orden.
-fn rutas_bitacoras(rutas: &[PathBuf]) -> Vec<PathBuf> {
+pub(super) fn rutas_bitacoras(rutas: &[PathBuf]) -> Vec<PathBuf> {
     let mut salida: Vec<PathBuf> = Vec::new();
     for r in rutas {
         let r = r.canonicalize().unwrap_or_else(|_| std::path::absolute(r).unwrap_or_else(|_| r.clone()));

@@ -206,3 +206,12 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `--autoprueba` (cada control prohibido y `.Send(` se detectan; los módulos de prueba se ignoran), `pruebas_pestanas` (tablas, filas y encabezados sin valores; vacía frente a ausente) y los oráculos de bitácoras e historia sin cambios. `probar_app.sh todo`: 69 y 84 pruebas, 0 fallos; clippy limpio.
 - Origen: análisis del informe técnico RUS/SITFA del usuario.
 - Pendiente: el usuario envía `estructura_pestanas.json` de un lote real; de ahí sale la decisión sobre un lector de Notificación y Diligencias.
+
+## 2026-11-24 · E-R1b · Oráculo de Meta 4 y corrección de Windows
+
+- Causa del rojo de los runs 45470928947 y 45471386495: `meta4::tests` devolvía «BITÁCORA NO VERIFICABLE» en Windows; `copia_local` compara la carpeta con la ruta canónica y `leer_bitacoras` no la canonicalizaba (nombre corto de 8.3). Corrección: `paquete::rutas_bitacoras` y su prueba con un enlace simbólico (falla sin la corrección).
+- Cambió: `app/qa/generar_meta4.py` (22 casos, `meta4.json`, entrada nueva en el workflow), `meta4.rs` (mensajes de lote y de tribunales como `_lote`, `pruebas_oraculo`).
+- Acredita: `meta4_del_descargador_igual_a_python` (22 casos, 7 errores iguales, 30 filas, 5 casos con libros y reporte) y `oraculo_de_meta4_detecta_alteraciones`. `probar_app.sh todo`: 72 y 84 pruebas, 0 fallos; clippy limpio.
+- Diferencias: 9 hojas auxiliares de los productos del crate (fijadas en `HOJAS_DECLARADAS`); `requieren_revision` suma alertas.
+- Pendiente: CI de Windows verde de este commit; decisión D-13.
+
