@@ -21,7 +21,7 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `producto_excel.rs` (nuevo), `captura_trabajo.rs` (columnas completas y avisos agrupados), `copia_excel.rs` (motivo sin consolidado), `descargador/paquete.rs` (`CONSOLIDADO_OMITIDO`), `revision_ui.rs` (filtros de atención) y `ui.rs` (avisos del paquete).
 - Acredita: `paquete_sin_consolidado_exporta_la_estructura_de_flow_python` (columnas SITFA, orden de revisión, clave de ingreso, hojas y trazabilidad), la extensión de `paquete_con_consolidado` y `la_revision_destaca_las_filas_sin_bitacora_y_con_advertencia`; `tools/probar_app.sh todo`: 64 y 47 pruebas, 0 fallos; `inventario_escrituras` PASA.
 - Diferencias declaradas: libro nuevo en lugar de copia preservada; `FECHA_OBS`, `TT` y `CC` salen vacías hasta que Trabajo las modele; avisos agrupados solo en pantalla.
-- Pendiente: CI de Windows; revisión del usuario con su paquete.
+- CI de Windows en verde (run 45420239558). Pendiente: revisión del usuario con su paquete.
 
 ## 2026-11-24 · E-S1: vista de Resultados del Descargador
 
