@@ -21,6 +21,8 @@ def _load_dpapi():
 
 SUFFIX = '.protected.sqlite'
 PROFILE = 'DPAPI_DEMO_V1'
+PILOT_PROFILE = 'DPAPI_PILOTO_V1'
+PILOT_SUFFIX = '.pilot.protected.sqlite'
 KEY_DESCRIPTION = 'Flow journal demo key v1'
 FIELD_DESCRIPTION = 'Flow journal demo field v1'
 KEY_ENTROPY = b'Flow.Journal.Demo.Key.V1'
@@ -46,7 +48,7 @@ class PlainStorage:
     def entry_key(self, identity_key, entry_id):
         return entry_id
 
-    def require_demo(self, op):
+    def require_operation(self, op):
         pass
 
 
@@ -59,11 +61,13 @@ def _demo_operations():
 class ProtectedStorage:
     protected = True
 
-    def __init__(self, crypt, key):
+    def __init__(self, crypt, key, *, pilot=False):
         if type(key) is not bytes or len(key) != 32:
             raise StorageProtectionError('CLAVE_DIARIO_INVALIDA')
         self._crypt = crypt
         self._key = key
+        self._pilot = pilot
+        self._description = 'Flow journal pilot field v1' if pilot else FIELD_DESCRIPTION
 
     def digest(self, scope, text):
         data = scope.encode('ascii') + b'\0' + text.encode('utf-8')
@@ -77,7 +81,7 @@ class ProtectedStorage:
             data = text.encode('utf-8')
             if len(data)>MAX_FIELD:
                 raise StorageProtectionError('CAMPO_DIARIO_EXCEDE_LIMITE')
-            blob = self._crypt.CryptProtectData(data,FIELD_DESCRIPTION,self._entropy(scope,operation_id),
+            blob = self._crypt.CryptProtectData(data,self._description,self._entropy(scope,operation_id),
                                                 None,None,UI_FORBIDDEN)
             if type(blob) is not bytes or not 0<len(blob)<=MAX_FIELD+65536:
                 raise StorageProtectionError('CIFRADO_DIARIO_INVALIDO')
@@ -93,7 +97,7 @@ class ProtectedStorage:
         try:
             description,data = self._crypt.CryptUnprotectData(value,self._entropy(scope,operation_id),
                                                              None,None,UI_FORBIDDEN)
-            if description!=FIELD_DESCRIPTION or type(data) is not bytes or len(data)>MAX_FIELD:
+            if description!=self._description or type(data) is not bytes or len(data)>MAX_FIELD:
                 raise StorageProtectionError('CAMPO_DIARIO_INVALIDO')
             return data.decode('utf-8',errors='strict')
         except StorageProtectionError:
@@ -105,18 +109,25 @@ class ProtectedStorage:
         # Mismo ingreso + misma entrada => misma huella; conserva la restricción UNIQUE.
         return self.digest('receipt-entry',identity_key+'\0'+entry_id)
 
-    def require_demo(self, op):
-        # Igualdad completa, no prefijos ni una mera etiqueta DEMO.
-        if op not in _demo_operations():
+    def require_operation(self, op):
+        if self._pilot:
+            import re
+            from .contracts import RegistroFlowV1
+            from .state_policy import require_state
+            if type(op) is not RegistroFlowV1 or op.source.tool!='FLOW' or not re.fullmatch(r'[0-9a-f]{64}',op.operation_id):
+                raise StorageProtectionError('OPERACION_FLOW_REQUERIDA')
+            require_state(op.origin,op.observation_state)
+        elif op not in _demo_operations():
+            # Igualdad completa, no prefijos ni una mera etiqueta DEMO.
             raise StorageProtectionError('SOLO_DIARIO_FICTICIO_GENERADO')
 
 
-def check_path(path, protected):
+def check_path(path, protected, *, pilot=False):
     """No abrir rutas de modo incompatible. No certifica ACL ni ruta institucional."""
     if type(protected) is not bool:
         raise StorageProtectionError('PERFIL_DIARIO_INVALIDO')
     path = Path(path)
-    if path.name.endswith(SUFFIX) != protected:
+    if path.name.endswith(PILOT_SUFFIX)!=pilot or path.name.endswith(SUFFIX) != protected or (pilot and not protected):
         raise StorageProtectionError('EXTENSION_DIARIO_INCOMPATIBLE')
     if protected:
         # Antes de crear archivos, comprobar que DPAPI existe.
@@ -137,12 +148,17 @@ def check_path(path, protected):
     return None
 
 
-def initialize_storage(db, protected, crypt):
+def initialize_storage(db, protected, crypt, *, pilot=False):
     """Inicialización transaccional antes de crear tablas de operaciones.
 
     Un diario existente sin perfil no se migra. Si se renombra uno protegido,
     el marcador de base de datos también bloquea el modo anterior.
     """
+    if pilot and not protected:
+        raise StorageProtectionError('PILOTO_REQUIERE_CIFRADO')
+    profile=PILOT_PROFILE if pilot else PROFILE
+    key_description='Flow journal pilot key v1' if pilot else KEY_DESCRIPTION
+    key_entropy=b'Flow.Journal.Pilot.Key.V1' if pilot else KEY_ENTROPY
     db.execute('BEGIN IMMEDIATE')
     try:
         names={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
@@ -155,25 +171,25 @@ def initialize_storage(db, protected, crypt):
                 raise StorageProtectionError('MIGRACION_DIARIO_NO_PERMITIDA')
             key=os.urandom(32)
             try:
-                blob=crypt.CryptProtectData(key,KEY_DESCRIPTION,KEY_ENTROPY,None,None,UI_FORBIDDEN)
+                blob=crypt.CryptProtectData(key,key_description,key_entropy,None,None,UI_FORBIDDEN)
             except Exception:
                 raise StorageProtectionError('CLAVE_DIARIO_NO_PROTEGIDA') from None
             if type(blob) is not bytes or not blob:
                 raise StorageProtectionError('CLAVE_DIARIO_NO_PROTEGIDA')
             db.execute('CREATE TABLE journal_storage(profile TEXT PRIMARY KEY, wrapped_key BLOB NOT NULL)')
-            db.execute('INSERT INTO journal_storage VALUES(?,?)',(PROFILE,blob))
-            result=ProtectedStorage(crypt,key)
+            db.execute('INSERT INTO journal_storage VALUES(?,?)',(profile,blob))
+            result=ProtectedStorage(crypt,key,pilot=pilot)
         else:
             rows=db.execute('SELECT profile,wrapped_key FROM journal_storage').fetchall()
-            if len(rows)!=1 or rows[0][0]!=PROFILE or type(rows[0][1]) is not bytes:
+            if len(rows)!=1 or rows[0][0]!=profile or type(rows[0][1]) is not bytes:
                 raise StorageProtectionError('PERFIL_DIARIO_INVALIDO')
             try:
-                description,key=crypt.CryptUnprotectData(rows[0][1],KEY_ENTROPY,None,None,UI_FORBIDDEN)
+                description,key=crypt.CryptUnprotectData(rows[0][1],key_entropy,None,None,UI_FORBIDDEN)
             except Exception:
                 raise StorageProtectionError('CLAVE_DIARIO_NO_DISPONIBLE') from None
-            if description!=KEY_DESCRIPTION:
+            if description!=key_description:
                 raise StorageProtectionError('CLAVE_DIARIO_INVALIDA')
-            result=ProtectedStorage(crypt,key)
+            result=ProtectedStorage(crypt,key,pilot=pilot)
         db.execute('COMMIT')
         return result
     except BaseException:

@@ -47,26 +47,28 @@ CREATE TABLE IF NOT EXISTS audit(
 '''
 
 
-class SimulationJournal:
-    """Cada reserva es ficticia; el registro de actor no autentica al funcionario."""
+class _JournalCore:
+    """Núcleo transaccional compartido; ámbito fijado por las subclases."""
+    _simulated = 1
 
     def __init__(self, path, *, clock=None, protected_demo=False):
-        crypt = check_path(path, protected_demo)
+        pilot = self._simulated == 0
+        crypt = check_path(path, protected_demo, pilot=pilot)
         self._private_path = Path(path) if protected_demo else None
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.db = sqlite3.connect(Path(path), timeout=5, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         try:
-            self.storage = initialize_storage(self.db, protected_demo, crypt)
+            self.storage = initialize_storage(self.db, protected_demo, crypt, pilot=pilot)
             self.db.execute('PRAGMA foreign_keys=ON')
             if self.storage.protected:
                 self.db.execute('PRAGMA temp_store=MEMORY')
             if self.db.execute('PRAGMA journal_mode=WAL').fetchone()[0] != 'wal':
                 raise JournalError('WAL_NO_DISPONIBLE')
             self.db.execute('PRAGMA synchronous=FULL')
-            self.db.executescript(SCHEMA)
+            self.db.executescript(SCHEMA if self._simulated else SCHEMA.replace('CHECK(simulated=1)','CHECK(simulated=0)'))
             self.schedule = ScheduleStore(self.db)
-            self.readback = ReadbackStore(self.db, storage=self.storage)
+            self.readback = ReadbackStore(self.db, storage=self.storage, simulated=self._simulated)
             if self._private_path is not None:
                 validate_private_demo(self._private_path)
         except BaseException:
@@ -108,7 +110,7 @@ class SimulationJournal:
 
     def _require_current(self, op_id, current):
         row = self._row(op_id)
-        self.storage.require_demo(current)
+        self.storage.require_operation(current)
         stored = self.storage.unseal('payload',op_id,row['payload'])
         if stored != _payload(current) or row['digest'] != self.storage.digest('approval',stored):
             raise JournalError('APROBACION_CAMBIADA')
@@ -116,7 +118,7 @@ class SimulationJournal:
 
     def freeze(self, op):
         payload = _payload(op)
-        self.storage.require_demo(op)
+        self.storage.require_operation(op)
         ident = json.dumps(asdict(op.remote_identity), sort_keys=True, separators=(',', ':'))
         # Conservador hasta P6: una intención equivalente exige revisión, no reenvío automático.
         intent = self.storage.digest('intent',json.dumps([ident, op.approved_text_sha256.lower(), op.destination, op.observation_state],
@@ -142,9 +144,9 @@ class SimulationJournal:
             if row['state'] != 'PREPARADA':
                 raise JournalError('ESTADO_NO_PREPARADO')
             self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', ('LISTA', current.operation_id))
-            self._audit(current.operation_id, 'LISTA_SIMULADA')
+            self._audit(current.operation_id, 'LISTA_SIMULADA' if self._simulated else 'LISTA_PILOTO')
 
-    def authorize_simulation(self, current, *, human_actor, confirmed):
+    def _authorize(self, current, *, human_actor, confirmed):
         if confirmed is not True or not isinstance(human_actor, str) or not human_actor.strip():
             raise JournalError('CONFIRMACION_HUMANA_REQUERIDA')
         with self._tx():
@@ -155,9 +157,9 @@ class SimulationJournal:
                 raise JournalError('AUTORIZACION_YA_REGISTRADA')
             self.db.execute('INSERT INTO authorizations VALUES(?,?,?,?,0)',
                             (current.operation_id,row['digest'],self.storage.seal('actor',current.operation_id,human_actor),self._now()))
-            self._audit(current.operation_id, 'AUTORIZACION_SIMULADA')
+            self._audit(current.operation_id, 'AUTORIZACION_SIMULADA' if self._simulated else 'AUTORIZACION_PILOTO')
 
-    def reserve_simulated_attempt(self, current):
+    def _reserve_attempt(self, current, *, expected_evidence_digest=None):
         """Una sola reserva global sin resolver; persiste antes de devolver control."""
         with self._tx():
             row = self._require_current(current.operation_id, current)
@@ -178,12 +180,16 @@ class SimulationJournal:
                 raise JournalError(eligibility.reason)
             try:
                 self.readback.require_recent(current.operation_id, row['digest'], now)
+                if expected_evidence_digest is not None:
+                    evidence=self.db.execute('SELECT evidence_digest FROM readback_baselines WHERE operation_id=?',(current.operation_id,)).fetchone()
+                    if evidence is None or evidence[0]!=expected_evidence_digest:
+                        raise ReadbackError('LECTURA_PREVIA_CAMBIADA')
             except ReadbackError as exc:
                 raise JournalError(str(exc)) from None
-            self.db.execute('INSERT INTO write_attempts VALUES(?,?,1)', (current.operation_id, now))
+            self.db.execute('INSERT INTO write_attempts VALUES(?,?,?)', (current.operation_id, now,self._simulated))
             self.db.execute('UPDATE authorizations SET consumed=1 WHERE operation_id=?', (current.operation_id,))
             self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', ('ENVIANDO', current.operation_id))
-            self._audit(current.operation_id, 'RESERVA_SIMULADA')
+            self._audit(current.operation_id, 'RESERVA_SIMULADA' if self._simulated else 'RESERVA_PILOTO')
         return 'ENVIANDO'
 
     def bind_baseline(self, current, raw, **context):
@@ -202,7 +208,7 @@ class SimulationJournal:
             self._audit(current.operation_id, result.reason)
             return result.state
 
-    def resolve_simulated(self, current, raw):
+    def _resolve(self, current, raw):
         with self._tx():
             row = self._require_current(current.operation_id, current)
             if row['state'] == 'AMBIGUA':
@@ -256,3 +262,15 @@ class SimulationJournal:
 
     def attempt_count(self):
         return self.db.execute('SELECT COUNT(*) FROM write_attempts').fetchone()[0]
+
+
+class SimulationJournal(_JournalCore):
+    """Cada reserva es ficticia; el registro de actor no autentica al funcionario."""
+    def authorize_simulation(self,current,*,human_actor,confirmed):
+        return self._authorize(current,human_actor=human_actor,confirmed=confirmed)
+
+    def reserve_simulated_attempt(self,current):
+        return self._reserve_attempt(current)
+
+    def resolve_simulated(self,current,raw):
+        return self._resolve(current,raw)

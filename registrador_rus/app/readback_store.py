@@ -78,11 +78,14 @@ def _snapshot_data(snap):
 
 
 class ReadbackStore:
-    def __init__(self, db, *, storage=None):
+    def __init__(self, db, *, storage=None, simulated=1):
+        if type(simulated) is not int or simulated not in (0,1):
+            raise ReadbackError('AMBITO_DIARIO_INVALIDO')
+        self.simulated=simulated
         self.db = db
         self.storage = storage if storage is not None else PlainStorage()
         migrate_operations(db)
-        db.executescript(SCHEMA)
+        db.executescript(SCHEMA if simulated else SCHEMA.replace('CHECK(simulated=1)','CHECK(simulated=0)'))
 
     def bind(self, op, digest, raw, *, now, author, stage, stage_code, server_day, require_excel=False):
         if not self.db.in_transaction:
@@ -129,8 +132,8 @@ class ReadbackStore:
         if not self.db.in_transaction:
             raise ReadbackError('TRANSACCION_REQUERIDA')
         before, context, require_excel = self.baseline(op.operation_id, row['digest'])
-        attempt = self.db.execute('SELECT started_at FROM write_attempts WHERE operation_id=? AND simulated=1',
-                                  (op.operation_id,)).fetchone()
+        attempt = self.db.execute('SELECT started_at FROM write_attempts WHERE operation_id=? AND simulated=?',
+                                  (op.operation_id,self.simulated)).fetchone()
         if attempt is None:
             raise ReadbackError('INTENTO_NO_EXISTE')
         after = Snapshot.from_reader(raw)
@@ -144,7 +147,7 @@ class ReadbackStore:
         if self.db.execute('SELECT 1 FROM readback_receipts WHERE identity_key=? AND entry_id=?',
                            (row['identity_key'], entry_key)).fetchone():
             return 'AMBIGUA', 'ENTRADA_YA_ATRIBUIDA'
-        self.db.execute('INSERT INTO readback_receipts VALUES(?,?,?,?,?,?,?,1)',
+        self.db.execute('INSERT INTO readback_receipts VALUES(?,?,?,?,?,?,?,?)',
                         (op.operation_id, row['identity_key'], entry_key, entry.server_timestamp,
-                         op.destination, row['digest'], after.captured_at.isoformat()))
+                         op.destination, row['digest'], after.captured_at.isoformat(),self.simulated))
         return ('PENDIENTE_EXCEL' if require_excel else 'COMPROBADA'), result.reason
