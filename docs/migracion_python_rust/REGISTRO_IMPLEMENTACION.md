@@ -1074,6 +1074,16 @@ La prueba reproduce las respuestas grabadas y compara, en cada escenario:
 - E-Q5d: `Bitacoras_RUS.xlsx`, `Historia_SITFA.xlsx` y el XLSX consolidado.
 - E-Q6: avance por fila de la lectura y prueba con la extensión real en Windows (W, usuario).
 
+## Revisión del plan y de la documentación (24 de noviembre de 2026)
+
+- Documento: [REVISION_20261124.md](REVISION_20261124.md). Revisado sobre `d03fd71`, entorno L. Sin cambios de código ni de estados de encargos.
+- Hallazgos principales (N1):
+  - los oráculos de `app/qa` usan el Python de esta rama, que difiere de `flow-python` (`afc4d12`) en `descargador/flujo_paquete.py` y `src/nurus/personal/revision_bitacoras.py`;
+  - la matriz declara pendientes F07, F09, F10, F11 y otros que ningún encargo abierto cubre;
+  - `MATRIZ.md`, el inventario de herramientas, `CONTINUAR.md` y `VERIFICACION.md` están desactualizados respecto de E-Q1 a E-Q6.
+- Evidencia: `cargo test --manifest-path app/Cargo.toml --locked --features eframe/x11` pasa en Linux sin `.aislado` (`57 passed; 1 ignored` y `34 passed; 0 failed; 19 ignored`); sin esa característica falla con `not supported by winit`.
+- Pendiente: decisiones D-5 a D-8 del usuario (sección 6 del documento). La consolidación documental propuesta no se aplicó.
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
