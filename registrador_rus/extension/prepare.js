@@ -14,13 +14,14 @@
   const arg = `(?:(${decimal})|'(${decimal})'|"(${decimal})")`;
   const call = new RegExp('^\\s*(?:javascript:\\s*)?ShowObservaciones\\s*\\(\\s*' +
     Array(6).fill(arg).join('\\s*,\\s*') + '\\s*\\)\\s*;?\\s*$');
-  function parseLink(source) {
+  function parseLinkContext(source) {
     const match = call.exec(source || '');
     if (!match) return null;
     const args = Array.from({length: 6}, (_, i) => match[1 + i * 3] ?? match[2 + i * 3] ?? match[3 + i * 3]);
     if (!['11', '12', '13'].includes(args[3])) return null;
-    return Object.freeze({system: 'SITFA', tribunal_id: args[1], causa_id: args[0], ingreso_id: args[2]});
+    return Object.freeze({identity:Object.freeze({system: 'SITFA', tribunal_id: args[1], causa_id: args[0], ingreso_id: args[2]}), tipo_popUp:args[3], COD_Etapa:args[4], antiguo:args[5]});
   }
+  function parseLink(source) { return parseLinkContext(source)?.identity ?? null; }
   function locate(doc, op) {
     fixture(doc);
     if (!origins.has(op.origin) || doc.body.dataset.menu !== '89' || doc.body.dataset.origin !== op.origin) fail('ORIGEN_INCORRECTO');
@@ -87,5 +88,5 @@
     return Object.freeze({schema: 'PreparationResultV1', operation_id: op.operation_id, destination: op.destination,
       checked: desired, evidence_state: 'SINTETICO_NO_VALIDADO_EN_RUS', saved: false});
   }
-  globalThis.RegistradorPreparation = Object.freeze({parseLink, locate, prepare});
+  globalThis.RegistradorPreparation = Object.freeze({parseLink, parseLinkContext, locate, prepare});
 })();

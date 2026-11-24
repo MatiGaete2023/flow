@@ -32,6 +32,12 @@ jobs:
         run: node registrador_rus/tests/test_inspector_popup.cjs
       - name: Seleccion de ventana y permiso opcional (API Chrome simulada)
         run: node registrador_rus/tests/test_integral_window.cjs
+      - name: Detector y preparacion de dos documentos ficticios (Chrome preinstalado)
+        run: |
+          export REGISTRADOR_CHROMIUM="$(command -v google-chrome || command -v chromium)"
+          test -n "$REGISTRADOR_CHROMIUM"
+          python registrador_rus/tests/run_observed_form.py
+          python registrador_rus/tests/run_observed_prepare.py
   windows-transfer:
     runs-on: windows-latest
     timeout-minutes: 12

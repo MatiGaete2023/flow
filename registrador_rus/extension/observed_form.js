@@ -18,7 +18,7 @@
   const one=(nodes,reason)=>{if(nodes.length!==1)fail(reason);return nodes[0];};
   const required=Object.freeze({ESPERA:Object.freeze(['4','Gestión Previa']),CUMPLIMIENTO:Object.freeze(['6','Realizada']),INFORMES_POR_VENCER:Object.freeze(['9','Realizada']),INFORMES_VENCIDOS:Object.freeze(['9','Realizada'])});
   const headers=['tipo observación','etapa','fecha centro','usuario centro','observación centro','fecha tribunal','usuario tribunal','observación tribunal','acción'];
-  function inspect(doc,origin){
+  function binding(doc,origin){
     if(typeof origin!=='string'||!Object.hasOwn(required,origin))fail('ORIGEN_INVALIDO');
     const [code,label]=required[origin];
     const form=one([...doc.forms].filter(f=>f.getAttribute('name')==='InformesPpalForm'),'FORMULARIO_NO_UNICO');
@@ -66,9 +66,15 @@
     // Otros controles de entrada visibles deben revisarse, no se ignoran.
     const entry=all.filter(n=>usable(n)&&['INPUT','SELECT','TEXTAREA','BUTTON'].includes(n.tagName)&&n.type!=='hidden'&&!table.contains(n));
     if(entry.length!==6||[state,checkbox,editor,counter,create,back].some(n=>!entry.includes(n)))fail('FIRMA_DISTINTA');
-    return Object.freeze({schema:'ObservedFormBindingV1',evidence:'CUATRO_VISTAS_OBSERVADAS_PRUEBA_FICTICIA',
+    const report=Object.freeze({schema:'ObservedFormBindingV1',evidence:'CUATRO_VISTAS_OBSERVADAS_PRUEBA_FICTICIA',
       origin,states:Object.freeze([code]),context_fields:6,visible_entry_controls:6,table_headers:9,
       editor_maxlength:editor.maxLength>=0?editor.maxLength:null,write_enabled:false});
+    return Object.freeze({report,form,table,state,checkbox,editor,counter,create,back});
   }
-  globalThis.RegistradorObservedForm=Object.freeze({inspect});
+  function inspect(doc,origin){return binding(doc,origin).report;}
+  function bindFixture(doc,origin){
+    if(doc.location.href!=='about:blank'||doc.documentElement.dataset.fixture!=='OBSERVED_PREPARATION')fail('ENTORNO_NO_SINTETICO');
+    return binding(doc,origin);
+  }
+  globalThis.RegistradorObservedForm=Object.freeze({inspect,bindFixture});
 })();
