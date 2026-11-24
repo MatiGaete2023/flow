@@ -15,3 +15,5 @@ Continuidad y límites: [CONTINUAR.md](CONTINUAR.md).
 Para comprobar también el esquema (solo desarrollo, requiere jsonschema de los extras dev de Flow):
 
     python -m unittest discover -s registrador_rus/tests -p test_schema.py -v
+
+P2: detector pasivo y fixture ficticio, no extensión instalable. Para ejecutar la prueba DOM se necesita Playwright y Chromium **solo en desarrollo**, no en el PC institucional. Usar `python registrador_rus/tests/run_dom_detection.py` con Chromium de Playwright instalado, o definir REGISTRADOR_CHROMIUM con la ruta de un Chromium local. No requiere sitio RUS; la prueba bloquea solicitudes de red. Resultado esperado: PASS 14. Selectores de producción aún no verificados.

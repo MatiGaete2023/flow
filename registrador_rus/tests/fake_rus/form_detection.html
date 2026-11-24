@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Formulario ficticio P2</title>
+<body>
+<form name="InformesPpalForm" id="demo-form">
+  <input type="hidden" name="GLS_Observacion" value="texto ficticio histórico">
+  <textarea hidden>histórico ficticio</textarea>
+  <select name="COD_Estado_Detalle_Nuevo"><option value="estado-demo">Estado ficticio</option></select>
+  <label for="demo-destino">Enviar observación al tribunal</label>
+  <input type="checkbox" id="demo-destino" checked>
+  <textarea id="demo-editor"></textarea>
+  <button type="submit">Nueva obs</button>
+</form>
+<dialog id="demo-edit"><form name="InformesPpalForm"><textarea>edición ficticia</textarea>
+  <label><input type="checkbox">Enviar observación al tribunal</label><button>Grabar</button>
+</form></dialog>
+<output id="test-result">PENDIENTE</output>
+<script src="../../extension/observer.js"></script>
+<script>
+'use strict';
+const out = document.getElementById('test-result');
+const form = document.getElementById('demo-form');
+const edit = document.getElementById('demo-edit');
+const checkbox = document.getElementById('demo-destino');
+const editor = document.getElementById('demo-editor');
+const inspect = () => RegistradorFormDetector.inspect(document);
+let count = 0;
+function assert(value) { if (!value) throw new Error('ASERCION'); count++; }
+function rejects(code) {
+  let actual;
+  try { inspect(); } catch (error) { actual = error.message; }
+  assert(actual === code);
+}
+try {
+  let submitted = 0;
+  document.addEventListener('submit', event => { event.preventDefault(); submitted++; });
+  let binding = inspect();
+  assert(binding.editor === editor && binding.checkbox === checkbox && binding.create.textContent === 'Nueva obs');
+  assert(binding.state.value === 'estado-demo' && binding.checkbox.checked);
+  checkbox.checked = false;
+  assert(inspect().checkbox.checked === false);
+  assert(binding.evidence_state === 'SINTETICO_NO_VALIDADO_EN_RUS');
+  const extra = document.createElement('textarea'); form.append(extra);
+  rejects('EDITOR_NO_UNICO'); extra.remove();
+  const label = document.createElement('label'); label.htmlFor = checkbox.id;
+  label.textContent = 'Enviar observación al tribunal'; form.append(label);
+  rejects('ETIQUETA_DESTINO_NO_UNICA'); label.remove();
+  const duplicate = checkbox.cloneNode(); form.append(duplicate);
+  rejects('CASILLA_NO_VINCULADA'); duplicate.remove();
+  checkbox.disabled = true; rejects('CASILLA_NO_VINCULADA'); checkbox.disabled = false;
+  const select = binding.state.cloneNode(true); form.append(select);
+  rejects('ESTADO_NO_UNICO'); select.remove();
+  const button = binding.create.cloneNode(true); form.append(button);
+  rejects('CREAR_NO_UNICO'); button.remove();
+  binding.create.textContent = 'Grabar'; rejects('CREAR_NO_UNICO'); binding.create.textContent = 'Nueva obs';
+  edit.showModal(); rejects('MODAL_VISIBLE'); edit.close();
+  const wrapper = document.createElement('label'); wrapper.textContent = 'Enviar observación al tribunal';
+  form.querySelector('label').remove(); wrapper.prepend(checkbox); form.append(wrapper);
+  assert(inspect().checkbox === checkbox);
+  assert(submitted === 0 && editor.value === '' && !checkbox.checked);
+  out.textContent = 'PASS ' + count;
+} catch (error) { out.textContent = 'FAIL ' + error.message; }
+</script></body></html>
