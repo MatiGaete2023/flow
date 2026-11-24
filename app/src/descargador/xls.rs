@@ -256,6 +256,25 @@ pub fn leer_carga(datos: &[u8]) -> Result<(&'static str, super::sitfa::carga::Fi
     Ok((formato, candidatas.pop().unwrap()))
 }
 
+/// `read_excel(data, carga.records_in_grid).grid` para el paquete CSMP: la grilla del único listado de Carga dos veces,
+/// con las fechas de Excel como `dd/mm/aaaa` (lo que compara `carga.canonical`) y como `datetime.isoformat()` (lo que
+/// escribe `literal`).
+pub fn grilla_carga(datos: &[u8]) -> Result<(Grilla, Grilla), String> {
+    let (_, canonicas) = grillas(datos, "%d/%m/%Y")?;
+    let mut elegidas = Vec::new();
+    for (i, grilla) in canonicas.iter().enumerate() {
+        if !super::sitfa::carga::registros_en_grilla(grilla)?.is_empty() {
+            elegidas.push(i);
+        }
+    }
+    if elegidas.len() != 1 {
+        return Err("Se recibio el Excel, pero no se reconoce un unico listado de causas y nombres. No es una consulta sin resultados.".into());
+    }
+    let (_, mut literales) = grillas(datos, "%Y-%m-%dT00:00:00")?;
+    let i = elegidas[0];
+    Ok((canonicas.into_iter().nth(i).unwrap(), literales.swap_remove(i)))
+}
+
 /// Formato y listado único de causas y nombres. Una descarga sin listado no es una consulta vacía.
 pub fn leer(datos: &[u8]) -> Result<Libro, String> {
     let (formato, grillas) = grillas(datos, "%Y-%m-%d")?;

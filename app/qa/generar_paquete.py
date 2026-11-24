@@ -145,10 +145,151 @@ def escenario_contexto(nombre, lote):
         }
 
 
+def xlsx_fijo(datos):
+    """openpyxl fija `created`/`modified` y la fecha de cada entrada al guardar: se fijan para un fixture reproducible."""
+    import io
+    import re
+
+    entrada = zipfile.ZipFile(io.BytesIO(datos))
+    final = io.BytesIO()
+    with zipfile.ZipFile(final, 'w', zipfile.ZIP_DEFLATED) as z:
+        for info in entrada.infolist():
+            contenido = entrada.read(info.filename)
+            if info.filename == 'docProps/core.xml':
+                contenido = re.sub(rb'(<dcterms:(?:created|modified)[^>]*>)[^<]*', rb'\g<1>2026-10-08T00:00:00Z', contenido)
+            nuevo = zipfile.ZipInfo(info.filename, date_time=(2026, 10, 8, 0, 0, 0))
+            nuevo.compress_type = zipfile.ZIP_DEFLATED
+            z.writestr(nuevo, contenido)
+    return final.getvalue()
+
+
+def lote_fijo(carpeta, **seleccion):
+    """Normaliza los XLS de un lote de `test_resultados.fixture` (huella en su verificación) y ajusta la selección."""
+    import hashlib
+
+    v = carpeta / 'verificacion 001.json'
+    datos = json.loads(v.read_text(encoding='utf-8'))
+    for item in datos['archivos']:
+        contenido = xlsx_fijo((carpeta / item['archivo']).read_bytes())
+        (carpeta / item['archivo']).write_bytes(contenido)
+        item.update(sha256=hashlib.sha256(contenido).hexdigest(), bytes=len(contenido))
+    datos['seleccion'].update(seleccion)
+    v.write_text(json.dumps(datos), encoding='utf-8')
+    r = carpeta / 'resumen.json'
+    resumen = json.loads(r.read_text(encoding='utf-8'))
+    for s in (*resumen['plan'], *(q['seleccion'] for q in resumen['consultas'])):
+        s.update(seleccion)
+    r.write_text(json.dumps(resumen), encoding='utf-8')
+    return carpeta
+
+
+def escenario_informes(nombre):
+    """Seguimiento con vínculos + calendario de informes sin ids remotos: «Persona uno» se asocia a su único ingreso
+    (tribunal, RIT, nombre y programa); «Persona tres» no tiene ingreso, «Persona dos» empata entre dos ingresos:
+    ambas quedan NO_ASOCIADO."""
+    from test_resultados import fixture
+
+    # Como `test_reutilizacion_local.bound_lot`; «Persona dos» tiene además otro ingreso en un lote de Espera (empate).
+    def vinculado(carpeta, modo, nombres, primero):
+        carpeta = fixture(carpeta, mode=modo, names=nombres, program='PRM Centro')
+        v = carpeta / 'verificacion 001.json'
+        datos = json.loads(v.read_text())
+        datos['archivos'][0]['vinculos_ingreso'] = [
+            {'tribunal_codigo': '113', 'rit': 'X-1-2026', 'rut': '00111111-1', 'nombre': n, 'programa': 'PRM Centro',
+             'causa_id': str(primero - 101 + i), 'ingreso_id': str(primero + i), 'etapa': '3', 'antiguo': '0'}
+            for i, n in enumerate(nombres)
+        ]
+        v.write_text(json.dumps(datos), encoding='utf-8')
+        return lote_fijo(carpeta)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        principal = vinculado(base / 'principal', 'Cumplimiento', ('Persona uno', 'Persona dos'), 201)
+        espera = vinculado(base / 'espera', 'Espera', ('Persona dos',), 299)
+        calendario = lote_fijo(fixture(base / 'calendario', mode='Informes', names=('Persona uno', 'Persona tres', 'Persona dos'),
+                                       program='PRM Centro'),
+                               screen='calendario_informes', tab='', report=None, month='10', year='2026')
+        destino = base / 'paquete.zip'
+        _, nota = export_capture_with_note(load_sources([principal, espera, calendario]), destino)
+        return {
+            'escenario': nombre,
+            'lote': {'carpeta': principal.name, 'archivos': carpeta_json(principal)},
+            'otros_lotes': [{'carpeta': c.name, 'archivos': carpeta_json(c)} for c in (espera, calendario)],
+            'nota': nota,
+            'paquete': paquete_json(destino),
+        }
+
+
+def lote_carga(carpeta, formato):
+    """Lote de Carga ficticio (tribunal 113, octubre 2026): HTML tabular como lo entrega SITFA (con el título fijo
+    «Concepción») o XLSX con celdas de fecha y número. Dos filas del mismo RIT: Carga trae una fila por trámite."""
+    import hashlib
+    from carga import HEADERS
+    from openpyxl import Workbook
+
+    carpeta.mkdir(parents=True)
+    filas = []
+    for rit, tramite, dias, firma in (('X-1-2026', 'Resolución ficticia', 3, (2026, 10, 2)),
+                                      ('X-1-2026', 'Decreto ficticio', 12, (2026, 10, 9)),
+                                      ('Y-2-2026', 'Acta ficticia, con coma', 0, (2026, 10, 15))):
+        fila = [''] * 23
+        fila[0], fila[1], fila[2], fila[3], fila[4], fila[5] = rit, 'Jgdo. L. y G. de Laja', 'Funcionario Ficticio', 'Juez Ficticio', tramite, 'NO'
+        fila[6], fila[8], fila[9], fila[21], fila[22] = 'Documento ficticio', dias, 'Cargo ficticio', firma, '09:30'
+        filas.append(fila)
+    if formato == 'html':
+        celda = lambda v: '%02d/%02d/%04d' % (v[2], v[1], v[0]) if isinstance(v, tuple) else str(v)
+        cuerpo = ''.join('<tr>' + ''.join(f'<td>{celda(v)}</td>' for v in f) + '</tr>' for f in filas)
+        contenido = ('<html><meta charset="utf-8"><table><tr><td>Concepción</td></tr>'
+                     '<tr>' + ''.join(f'<td>{h}</td>' for h in HEADERS) + '</tr>' + cuerpo + '</table></html>').encode()
+    else:
+        from datetime import datetime
+        libro = Workbook()
+        hoja = libro.active
+        hoja.append(list(HEADERS))
+        for f in filas:
+            hoja.append([datetime(*v) if isinstance(v, tuple) else v for v in f])
+        import io
+        salida = io.BytesIO()
+        libro.save(salida)
+        contenido = xlsx_fijo(salida.getvalue())
+    (carpeta / 'pagina.xls').write_bytes(contenido)
+    seleccion = {'screen': 'carga', 'tribunal': '113', 'tribunal_nombre': 'Jgdo. L. y G. de Laja', 'modality': '', 'tab': '',
+                 'report': None, 'state': None, 'month': None, 'year': None, 'start': '01/10/2026', 'end': '31/10/2026',
+                 'fecha_descarga': '2026-10-31T18:00:00'}
+    item = {'archivo': 'pagina.xls', 'pagina': 1, 'registros': len(filas), 'sha256': hashlib.sha256(contenido).hexdigest(),
+            'bytes': len(contenido), 'estado': 'OK'}
+    (carpeta / 'verificacion 001.json').write_text(json.dumps(
+        {'estado': 'VALIDADA', 'consulta': 'Carga ficticia', 'seleccion': seleccion, 'archivos': [item],
+         'paginas_esperadas': 1, 'paginas_verificadas': 1}), encoding='utf-8')
+    consulta = {'consulta': 'Carga ficticia', 'estado': 'VALIDADA', 'seleccion': seleccion, 'verificacion': 'verificacion 001.json'}
+    (carpeta / 'resumen.json').write_text(json.dumps(
+        {'estado': 'VALIDADA', 'version_contrato': 1, 'consultas_esperadas': 1, 'consultas_completadas': 1,
+         'consultas': [consulta], 'plan': [seleccion], 'otros_filtros': 'todos los registros', 'filtro_fecha': None,
+         'fecha_hora': seleccion['fecha_descarga']}), encoding='utf-8')
+    return carpeta
+
+
+def escenario_carga(nombre):
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        html, xlsx = lote_carga(base / 'carga-html', 'html'), lote_carga(base / 'carga-xlsx', 'xlsx')
+        destino = base / 'paquete.zip'
+        _, nota = export_capture_with_note(load_sources([html, xlsx]), destino)
+        return {
+            'escenario': nombre,
+            'lote': {'carpeta': html.name, 'archivos': carpeta_json(html)},
+            'otros_lotes': [{'carpeta': xlsx.name, 'archivos': carpeta_json(xlsx)}],
+            'nota': nota,
+            'paquete': paquete_json(destino),
+        }
+
+
 def main():
     destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'paquete.json'
     escenarios = [escenario(n, b) for n, b in ESCENARIOS.items()]
     escenarios.append(escenario_contexto('contexto', Batch(('49',), ('2',), ('Cumplimiento',))))
+    escenarios.append(escenario_informes('calendario_informes'))
+    escenarios.append(escenario_carga('carga'))
     datos = {'catalogo': CATALOG, 'escenarios': escenarios}
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')

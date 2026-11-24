@@ -2,8 +2,8 @@
 //! `nurus.capture.contract.write_capture`, `resultados.load_lot/tables` y `export_csmp_capture.export_capture`.
 //! Lo abre el Asistente (Trabajo) igual que un paquete de Python.
 //!
-//! E-Q5a: lotes de listados de Seguimiento (consultas, registros e incidencias). Pendiente en las partes siguientes:
-//! Carga, calendario de informes y su asociación, bitácoras, calendario por ingreso, historia, Escritos e histórico.
+//! E-Q5a: lotes de listados de Seguimiento (consultas, registros e incidencias). E-Q5b: Carga y calendario de informes
+//! con su asociación. E-Q5c: bitácoras, calendario por ingreso, historia, Escritos e histórico (`package_current_lot`).
 
 use super::xls;
 use serde_json::{json, Map, Value};
@@ -444,7 +444,17 @@ struct Fuente {
     filas_originales: BTreeMap<usize, Vec<String>>,
 }
 
-/// `resultados.tables(lot)` para Seguimiento y calendarios (Carga es de E-Q5b).
+/// `carga.HEADERS`.
+const ENCABEZADOS_CARGA: [&str; 23] = [
+    "RIT", "TRIBUNAL", "NOMBRE FUNCIONARIO", "NOMBRE JUEZ", "TRÁMITE", "INVALIDADO", "DOC. RES", "DOC. ESC", "DÍAS", "CARGO",
+    "PRIMER PREGRABADO FECHA", "PRIMER PREGRABADO HORA", "ÚLTIMO PREGRABADO FECHA", "ÚLTIMO PREGRABADO HORA", "DESPACHO FECHA",
+    "DESPACHO HORA", "DEVOLUCIÓN FECHA", "DEVOLUCIÓN HORA", "NUEVO DESPACHO FECHA", "NUEVO DESPACHO HORA",
+    "CANTIDAD ESCRITOS RESOLUCIÓN", "FECHA FIRMA", "HORA FIRMA",
+];
+/// `carga.RIT_RE.fullmatch`.
+static RIT_CARGA: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| regex::Regex::new(r"^[A-Z]+-\d+-\d{4}$").unwrap());
+
+/// `resultados.tables(lot)` para Seguimiento, calendarios y Carga.
 fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
     let mut salida = Vec::new();
     let mut cuenta = 0usize;
@@ -452,11 +462,17 @@ fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
         for item in m["archivos"].as_array().into_iter().flatten().filter(|i| i["estado"] == "OK") {
             let datos = comprobar(&lote.carpeta, item)?;
             let seleccion = if q.get("seleccion").is_some_and(|s| !s.is_null()) { q["seleccion"].clone() } else { m["seleccion"].clone() };
-            if seleccion["screen"] == "carga" {
-                return Err("E-Q5: el paquete desde lotes de Carga todavía no está disponible en Flow Rust.".into());
-            }
-            let libro = xls::leer(&datos)?;
-            let (cabecera_original, filas_originales) = cabecera_y_filas(&libro)?;
+            let carga = seleccion["screen"] == "carga";
+            let (cabecera_original, filas_originales) = if carga {
+                // `carga.HEADERS` y las filas de la grilla cuyo primer valor canónico es un RIT (fila completa).
+                let (canonica, literal) = xls::grilla_carga(&datos)?;
+                let filas: Filas = canonica.iter().zip(literal).enumerate()
+                    .filter(|(_, (c, _))| !c.is_empty() && RIT_CARGA.is_match(&normalizado(&c[0])))
+                    .map(|(i, (_, l))| (i + 1, l)).collect();
+                (ENCABEZADOS_CARGA.iter().map(|h| h.to_string()).collect::<Vec<_>>(), filas)
+            } else {
+                cabecera_y_filas(&xls::leer(&datos)?)?
+            };
             let (mut cabecera, mut filas) = (cabecera_original.clone(), filas_originales.clone());
             if Some(filas.len() as u64) != item["registros"].as_u64() {
                 return Err("El recuento no coincide con la verificación.".into());
@@ -503,6 +519,9 @@ fn tablas_lote(lote: &Lote) -> Result<Vec<Fuente>, String> {
             if let Some(&c) = mapeo(&cabecera)?.get("nombre") {
                 filas.iter_mut().for_each(|(_, f)| f[c] = sin_parentesis(&f[c]));
             }
+            // En Carga, `export_capture` toma como «originales» la cabecera y las filas ya procesadas.
+            let (cabecera_original, filas_originales) =
+                if carga { (cabecera.clone(), filas.clone()) } else { (cabecera_original, filas_originales) };
             salida.push(Fuente {
                 verificacion: q["verificacion"].as_str().unwrap_or("").to_string(),
                 seleccion,
@@ -1266,6 +1285,133 @@ fn persona_por_rut(tribunal: &str, normalizado: &Fila, personas: &BTreeSet<(Stri
     if personas.contains(&(tribunal.to_string(), clave.clone())) { clave } else { String::new() }
 }
 
+/// `nurus.rus.columns.COMMON` y `MODE_COLUMNS` (Python, autoridad): alias por clave lógica.
+const RUS_COMUNES: [(&str, &[&str]); 10] = [
+    ("programa", &["DERIVACION", "DERIVACIÓN", "PROGRAMA", "NOMBRE CENTRO"]),
+    ("tribunal", &["TRIBUNAL"]),
+    ("nombre", &["NOMBRE", "NOMBRE COMPLETO", "NOMBRE MENOR"]),
+    ("nacimiento", &["FEC. NACIMIENTO", "FEC.NACIMIENTO", "FECHA NACIMIENTO", "FEC NACIMIENTO"]),
+    ("curador", &["CURADOR", "CURADOR AD LITEM", "CURADOR AD-LITEM", "CURADOR AD LITEM.", "CUR. AD LITEM", "CURADOR/A AD LITEM",
+                  "CURADOR/A AD-LITEM"]),
+    ("oido", &["FEC. OIDO", "FEC.OIDO", "FEC OIDO", "FECHAOIDO", "FEC. OÍDO", "FEC.OÍDO"]),
+    ("resolucion", &["FEC. RESOLUCIÓN", "FEC.RESOLUCIÓN", "FEC. RESOLUCION", "FEC.RESOLUCION", "FECHA RESOLUCION", "FEC RESOLUCION"]),
+    ("prox_aud", &["PROXS. AUDS.", "PROXS AUDS", "PROX AUD", "PROXIMA AUDIENCIA", "PRÓXIMA AUDIENCIA", "PROX. AUD.", "PROX. AUDS."]),
+    ("rit", &["RIT"]),
+    ("rut", &["RUT", "RUT MENOR", "RUT NNA", "RUT LITIGANTE"]),
+];
+const RUS_INGRESO: &[&str] = &["FEC.INGRESO EFECTIVO", "FEC. INGRESO EFECTIVO", "FEC INGRESO EFECTIVO"];
+
+fn rus_modo(modo: &str) -> Option<Vec<(&'static str, &'static [&'static str])>> {
+    Some(match modo {
+        "ESPERA" => vec![("espera", &["T ESPERA", "T_ESPERA", "DIAS_ESPERA", "TESPERA", "DÍAS DE ESPERA", "DIAS DE ESPERA"][..])],
+        "CUMPLIMIENTO" => vec![
+            ("dias_cumpl", &["DIAS DE CUMPLIMIENTO", "DÍAS DE CUMPLIMIENTO", "DIAS CUMPLIMIENTO"][..]),
+            ("dias_egresar", &["DIAS PARA EGRESAR", "DÍAS PARA EGRESAR", "DIAS EGRESAR"][..]),
+            ("ingreso", RUS_INGRESO),
+            ("egreso_proy", &["FEC.EGRESO PROYECTADO", "FEC. EGRESO PROYECTADO", "FEC EGRESO PROYECTADO"][..]),
+            ("ficha_fae", &["FEC.ACT.F.FAE", "FEC. ACT. F. FAE", "FEC ACT F FAE", "FEC.ACT.F.FAE/FAS", "FEC. ACT. F. FAE/FAS"][..]),
+            ("ficha_ind", &["FEC.ACT.F.INDIVIDUAL", "FEC. ACT. F. INDIVIDUAL", "FEC ACT F INDIVIDUAL"][..]),
+        ],
+        "INFORMES" => vec![
+            ("vencimiento", &["FECHA VENCIMIENTO", "FEC.VENCIMIENTO", "FEC. VENCIMIENTO", "F. VENCIMIENTO", "F.VENCIMIENTO",
+                              "FVENCIMIENTO", "FECHA DE VENCIMIENTO"][..]),
+            ("ingreso", RUS_INGRESO),
+        ],
+        _ => return None,
+    })
+}
+
+/// `columns.map_columns(headers, mode)`: cabecera elegida por clave; `None` si el modo no existe o si dos cabeceras
+/// distintas compiten por la misma clave (`ColumnMappingError`).
+fn columnas_rus(cabeceras: &[String], modo: &str) -> Option<BTreeMap<&'static str, String>> {
+    let mut salida = BTreeMap::new();
+    for (clave, alias) in RUS_COMUNES.into_iter().chain(rus_modo(modo)?) {
+        let alias: Vec<String> = alias.iter().map(|a| super::lecturas::normalizar(a)).collect();
+        let mut candidatos: Vec<&str> = Vec::new();
+        for h in cabeceras.iter().map(|h| h.trim()) {
+            if alias.contains(&super::lecturas::normalizar(h)) && !candidatos.contains(&h) {
+                candidatos.push(h);
+            }
+        }
+        match candidatos.as_slice() {
+            [] => {}
+            [h] => {
+                salida.insert(clave, h.to_string());
+            }
+            _ => return None,
+        }
+    }
+    Some(salida)
+}
+
+/// `resultados.parse_day`: día de una celda de texto en los formatos de SITFA.
+fn dia(valor: &str) -> Option<chrono::NaiveDate> {
+    let v = valor.trim();
+    ["%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"].iter().find_map(|f| chrono::NaiveDate::parse_from_str(v, f).ok())
+}
+
+/// `calendar_date`: vencimiento ISO de una fila de calendario de informes; vacío si no se reconoce.
+fn fecha_calendario(normalizado: &Fila) -> Result<String, String> {
+    let cabeceras: Vec<String> = normalizado.keys().cloned().collect();
+    let columnas = columnas_rus(&cabeceras, "INFORMES").ok_or("El calendario de informes tiene columnas ambiguas.")?;
+    Ok(columnas.get("vencimiento").and_then(|c| normalizado.get(c)).and_then(Value::as_str).and_then(dia)
+        .map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_default())
+}
+
+/// `asociar_calendarios`: un calendario de informes sin ids remotos se asocia a un ingreso verificado solo si
+/// tribunal, RIT, nombre y programa coinciden con exactamente un ingreso de las demás tablas (nunca por RIT solo ni
+/// con empate). Devuelve los `record_id` resueltos.
+fn asociar_calendarios(d: &mut Datos) -> Vec<String> {
+    const IDS: [&str; 4] = ["cause_id", "ingreso_id", "person_id", "program_id"];
+    let clave = |tribunal: &str, normalizado_json: &Value, modo: &str| -> Option<[String; 4]> {
+        let fila: Fila = serde_json::from_str(normalizado_json.as_str()?).ok()?;
+        let cabeceras: Vec<String> = fila.keys().cloned().collect();
+        let columnas = columnas_rus(&cabeceras, modo)?;
+        let partes = ["rit", "nombre", "programa"].map(|k| {
+            columnas.get(k).and_then(|c| fila.get(c)).map(|v| normalizado(&texto(v))).unwrap_or_default()
+        });
+        partes.iter().all(|p| !p.is_empty()).then(|| [tribunal.to_string(), partes[0].clone(), partes[1].clone(), partes[2].clone()])
+    };
+    let mut ingresos: BTreeMap<[String; 4], BTreeSet<[String; 4]>> = BTreeMap::new();
+    for r in d.filas("registros") {
+        let modo = texto(&r["record_type"]);
+        if r["identity_status"] != "VERIFICADA" || matches!(modo.as_str(), "INFORMES" | "OTRO" | "EGRESADOS") {
+            continue;
+        }
+        if let Some(k) = clave(&texto(&r["court_code"]), &r["normalized_json"], &modo) {
+            ingresos.entry(k).or_default().insert(IDS.map(|c| texto(&r[c])));
+        }
+    }
+    let fisica = |r: &Fila| ["query_id", "source_sha256", "original_row"].map(|k| texto(&r[k]));
+    let mut cambios: Vec<(usize, Option<usize>, [String; 4])> = Vec::new();
+    for (ci, c) in d.filas("calendarios").iter().enumerate() {
+        if c["association"] == "VERIFICADA" {
+            continue;
+        }
+        let Some(k) = clave(&texto(&c["court_code"]), &c["normalized_json"], "INFORMES") else { continue };
+        let Some(candidatos) = ingresos.get(&k).filter(|s| s.len() == 1) else { continue };
+        let registro = d.filas("registros").iter().position(|r| r["record_type"] == "INFORMES" && fisica(r) == fisica(c));
+        cambios.push((ci, registro, candidatos.iter().next().unwrap().clone()));
+    }
+    let mut resueltos = Vec::new();
+    for (ci, ri, ids) in cambios {
+        let c = &mut d.tabla("calendarios")[ci];
+        for (k, v) in IDS.iter().zip(&ids) {
+            c.insert(k.to_string(), json!(v));
+        }
+        c.insert("association".into(), json!("VERIFICADA"));
+        if let Some(ri) = ri {
+            let r = &mut d.tabla("registros")[ri];
+            for (k, v) in IDS.iter().zip(&ids) {
+                r.insert(k.to_string(), json!(v));
+            }
+            r.insert("identity_status".into(), json!("VERIFICADA"));
+            resueltos.push(texto(&r["record_id"]));
+        }
+    }
+    resueltos
+}
+
 /// `export_capture(lots, destination)` para lotes de listados (E-Q5a). Devuelve la ruta del paquete.
 pub fn exportar(carpetas: &[PathBuf], destino: &Path) -> Result<PathBuf, String> {
     exportar_con(carpetas, destino, &Opciones::default()).map(|e| e.ruta)
@@ -1302,7 +1448,7 @@ pub fn empaquetar_lote(
 }
 
 /// `export_capture`: lotes de listados (E-Q5a) más bitácoras, calendario por ingreso, historia, Escritos e
-/// histórico (E-Q5c). Carga y calendario de informes quedan para E-Q5b (error explícito).
+/// histórico (E-Q5c), calendario de informes con su asociación y Carga (E-Q5b).
 pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Result<Exportado, String> {
     let lotes: Vec<Lote> = carpetas.iter().map(|c| cargar_lote(c)).collect::<Result<_, _>>()?;
     if lotes.is_empty() {
@@ -1402,7 +1548,7 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
                 ]);
                 let rid = sha256(format!("{}|{huella_fuente}|{numero}", qv("query_id")).as_bytes())[..24].to_string();
                 let verificada = ["court_code", "cause_id", "ingreso_id"].iter().all(|k| comun[*k].as_str().is_some_and(|s| !s.is_empty()));
-                let r = con(comun, &[
+                let r = con(comun.clone(), &[
                     ("record_id", rid.clone()), ("record_type", modo.into()),
                     ("identity_status", if verificada { "VERIFICADA" } else { "INCIERTA" }.into()),
                     ("raw_json", json_python(&Value::Object(bruto.clone()), false)),
@@ -1414,7 +1560,14 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
                         "No hay ingreso remoto verificable; no se relacionan eventos por RIT/nombre.", &rid, "ADVERTENCIA");
                 }
                 if f.seleccion["screen"] == "calendario_informes" {
-                    return Err("E-Q5: el paquete con calendario de informes todavía no está disponible en Flow Rust.".into());
+                    let crudo = json_python(&Value::Object(bruto.clone()), false);
+                    let r = con(comun, &[
+                        ("calendar_id", format!("cal-{rid}")), ("event_at", fecha_calendario(&normalizado)?),
+                        ("event_type", "INFORME".into()), ("status", "SEGUN_FUENTE".into()),
+                        ("association", if verificada { "VERIFICADA" } else { "NO_ASOCIADO" }.into()),
+                        ("raw_json", crudo), ("normalized_json", json_python(&Value::Object(normalizado.clone()), false)),
+                    ]);
+                    d.tabla("calendarios").push(r);
                 }
             }
         }
@@ -1422,6 +1575,10 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     for (codigo, mensaje) in &op.avisos {
         let qid = d.filas("consultas").first().map(|q| texto(&q["query_id"])).unwrap_or_default();
         d.aviso(&qid, codigo, mensaje);
+    }
+    let resueltos = asociar_calendarios(&mut d);
+    if !resueltos.is_empty() {
+        d.tabla("incidencias").retain(|i| !(i["code"] == "IDENTIDAD_INCIERTA" && resueltos.contains(&texto(&i["record_id"]))));
     }
     let mut reutilizacion = None;
     if !op.bitacoras.is_empty() {
@@ -1645,7 +1802,13 @@ mod tests {
                         }
                     })
             } else {
-                exportar(std::slice::from_ref(&carpeta), &destino).map(|_| ())
+                let mut carpetas = vec![carpeta.clone()];
+                for otro in e["otros_lotes"].as_array().into_iter().flatten() {
+                    let c = base.join("lotes").join(otro["carpeta"].as_str().unwrap());
+                    reconstruir(&c, &otro["archivos"]);
+                    carpetas.push(c);
+                }
+                exportar(&carpetas, &destino).map(|_| ())
             };
             match salida {
                 Err(err) => diferencias.push(format!("exportar: {err}")),
