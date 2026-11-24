@@ -10,6 +10,7 @@ from .bridge import LocalBridge
 from .batch_store import SimulationBatchStore
 from .batch_dialog import BatchReviewDialog
 from .demo_transfer import import_demo, require_demo_batch
+from .protected_demo_transfer import import_protected_demo
 from .journal import SimulationJournal, JournalError
 from .scheduler import ScheduleConfig, ScheduleError
 from .simulation import demo_operations, FakeClock, FakeRus, SimulationController, FAULTS
@@ -172,10 +173,13 @@ class DemoApp:
 
 def main():
     parser = argparse.ArgumentParser(description='Registrador exclusivamente ficticio')
-    parser.add_argument('--demo-batch', help='Archivo .flow-demo.json generado por el productor de demostración')
+    inputs = parser.add_mutually_exclusive_group()
+    inputs.add_argument('--demo-batch', help='Archivo .flow-demo.json generado por el productor de demostración')
+    inputs.add_argument('--protected-demo-batch', help='Archivo .flow-demo.dpapi cifrado por usuario Windows; solo demo')
     args = parser.parse_args()
     try:
-        batch = import_demo(args.demo_batch) if args.demo_batch else None
+        batch = (import_protected_demo(args.protected_demo_batch) if args.protected_demo_batch else
+                 import_demo(args.demo_batch) if args.demo_batch else None)
     except (OSError, ValueError) as exc:
         parser.exit(2, 'Lote ficticio rechazado: ' + type(exc).__name__ + '\n')
     root = tk.Tk(); DemoApp(root, demo_batch=batch); root.mainloop()

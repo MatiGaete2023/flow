@@ -63,6 +63,11 @@ class WorkPreviewTests(TestCase):
         d.accepted.set(True)
         packet=d.confirm()
         self.assertEqual(len(packet.operations),2)
+        self.assertEqual(d.revalidate_confirmed(),packet)
+        self.work.rows[0].review['OBSERVACION']='Cambio posterior ficticio'
+        with self.assertRaisesRegex(ContractError,'LOTE_CAMBIADO_REVISAR'): d.revalidate_confirmed()
+        self.assertIsNone(d.confirmed_preview)
+        self.work.rows[0].review.clear()
         self.assertTrue(all(o.cc==1 and o.observation_state=='4' for o in packet.operations))
         self.assertEqual(self.work.revision,0)
         self.assertEqual([r.review for r in self.work.rows],[{},{}])

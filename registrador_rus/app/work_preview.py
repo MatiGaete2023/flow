@@ -8,6 +8,7 @@ from .flow_batch import ReviewRequest, build_review, confirm_review
 from .flow_work import REPOSITORY_REPORT_CATALOG
 from .transfer import PreviewBatch
 from .state_policy import REQUIRED_STATE, required_state
+from .confirmed_preview import ConfirmedPreview
 
 
 def visible_selection(app):
@@ -29,6 +30,7 @@ class WorkPreviewDialog:
         self.work_id = getattr(self.work,'capture_id','') or self.work.capture_digest
         self.frozen = None
         self.preview = None
+        self.confirmed_preview = None
         self.window = tk.Toplevel(app)
         self.window.title('Vista previa local de lote — sin envío')
         self.window.transient(app)
@@ -83,6 +85,7 @@ class WorkPreviewDialog:
         self.state_label.set(f'{state[1]} ({state[0]})' if state else 'Selecciona el origen')
         self.frozen=None
         self.preview=None
+        self.confirmed_preview=None
         self.accepted.set(False)
         self.toggle()
         self.text.configure(state='normal')
@@ -115,6 +118,16 @@ class WorkPreviewDialog:
         self.frozen=frozen
         self.status.set('Revisa cada operación. Estado obligatorio calculado; disponibilidad en bitácora requiere comprobación.')
 
+    def revalidate_confirmed(self):
+        """Puerta para una futura transferencia local, nunca una autorización RUS."""
+        if self.confirmed_preview is None:
+            raise ContractError('CONFIRMACION_EXACTA_REQUERIDA')
+        try:
+            return self.confirmed_preview.revalidate(self.work,self.current_requests(),report_catalog=REPOSITORY_REPORT_CATALOG)
+        except (ValueError,RuntimeError):
+            self.invalidate()
+            raise
+
     def confirm(self):
         if self.frozen is None or not self.accepted.get():
             raise ContractError('CONFIRMACION_EXACTA_REQUERIDA')
@@ -124,6 +137,7 @@ class WorkPreviewDialog:
                            version=frozen.candidates[0].revision+1,report_catalog=REPOSITORY_REPORT_CATALOG)
         packet=PreviewBatch(ops,frozen.candidates[0].source_digest,frozen.candidates[0].revision)
         self.preview=PreviewBatch.decode(packet.encode())
+        self.confirmed_preview=ConfirmedPreview(frozen,self.preview)
         self.frozen=None
         self.accepted.set(False)
         self.toggle()

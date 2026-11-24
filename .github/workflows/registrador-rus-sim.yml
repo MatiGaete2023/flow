@@ -55,5 +55,7 @@ jobs:
         run: python -m pip install --require-hashes -r requirements/windows-py312.lock
       - name: Transferencia ficticia y arranque del registrador
         run: python -m unittest discover -s registrador_rus/tests -p 'test_demo_transfer.py' -v
+      - name: Transferencia protegida DPAPI nativa (solo demo)
+        run: python -m unittest discover -s registrador_rus/tests -p 'test_protected_demo_transfer.py' -v
       - name: Reconciliacion de copia Excel ficticia
         run: python -m unittest discover -s registrador_rus/tests -p 'test_reconcile_excel.py' -v

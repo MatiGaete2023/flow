@@ -84,3 +84,12 @@ El operador dispone que siempre se seleccione Gestión Previa en Espera y Realiz
 ## Verificación integrada exclusivamente ficticia
 
 Desde raíz, con PYTHONPATH=src (en Windows PowerShell: $env:PYTHONPATH='src'), Playwright y Chrome/Chromium de desarrollo disponibles: python registrador_rus/tests/run_observed_journal.py. El ensayo reconstruye dos documentos about:blank, prepara y revalida la sesión, usa diario SQLite temporal y parser existente sobre HTML inventado; no pulsa Nueva obs ni Grabar. No requiere abrir RUS. La CI usa Chrome preinstalado; no instalar herramientas de desarrollo en el equipo institucional para esta prueba. Ninguna transición o recibo de simulación equivale a registro real.
+
+## Transferencia cifrada de demostración (Windows, solo datos inventados)
+
+Desde la raíz del repositorio con Python 3.12 y PyWin32 de las dependencias Windows de Flow, no requiere administrador si ya está instalado:
+
+    python -m registrador_rus.app.protected_demo_transfer lote.flow-demo.dpapi --count 400
+    python -m registrador_rus.app.main --protected-demo-batch lote.flow-demo.dpapi
+
+No introducir paquetes reales. Cifra el archivo con DPAPI de usuario de Windows; no hay opción de máquina ni alternativa en claro. No sobrescribe; descifra y comprueba el lote ficticio exacto antes de abrir la UI. La demostración exige autorización individual simulada igual que antes. No copiar a nube, no trasladar a otra cuenta/equipo; DPAPI normalmente depende de credenciales y equipo, con excepciones de dominio. El archivo cifrado no es firma de aprobación y no cifra el diario temporal. El usuario puede borrar el archivo ficticio cuando termina; no hay purga automática ni política de datos judiciales aprobada. En Linux o si falta PyWin32, bloquea. CI nativa pendiente al añadir esta sección.
