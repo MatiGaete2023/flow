@@ -25,3 +25,5 @@ P4: SimulationJournal, diario local WAL de intentos ficticios. Prueba: `python -
 P5: programador local integrado con el diario ficticio. Límite móvil opcional (apagado), intervalos y pausa persistentes. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_scheduler.py -v`. El cierre de intervalos tras recibo se integrará en P6. No controla ni certifica límites de RUS.
 
 P6a: comparación pura de instantáneas con formato del lector existente, sin red. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_readback.py -v`. COINCIDENCIA_UNICA no es todavía un recibo persistido ni acredita un registro real.
+
+P6b: el diario ficticio requiere lectura previa completa y reciente antes de reservar, y persiste recibos solo ante evidencia nueva única. `python -m unittest discover -s registrador_rus/tests -p test_readback_store.py -v`. Todos los recibos son simulados; COMPROBADA no acredita registro institucional. Conciliación Excel pendiente.

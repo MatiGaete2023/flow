@@ -7,6 +7,7 @@ from registrador_rus.app.contracts import RegistroFlowV1
 from registrador_rus.app.journal import JournalError, SimulationJournal
 from registrador_rus.app.scheduler import ScheduleConfig, ScheduleError, evaluate
 from test_contracts import sample
+from readback_fixture import bind
 
 NOW = datetime(2026, 11, 24, 14, tzinfo=timezone.utc)
 
@@ -58,6 +59,7 @@ class SchedulerTests(unittest.TestCase):
             try:
                 j.configure_schedule(ScheduleConfig(True,1,mode='fixed',fixed_seconds=7))
                 j.freeze(op);j.mark_ready(op);j.authorize_simulation(op,human_actor='demo',confirmed=True)
+                bind(j,op,NOW)
                 j.control_schedule('PAUSE')
                 with self.assertRaisesRegex(JournalError,'PAUSED'):
                     j.reserve_simulated_attempt(op)

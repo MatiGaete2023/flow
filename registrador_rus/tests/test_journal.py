@@ -7,6 +7,7 @@ import unittest
 from registrador_rus.app.contracts import RegistroFlowV1
 from registrador_rus.app.journal import JournalError, SimulationJournal
 from test_contracts import sample
+from readback_fixture import bind
 
 
 class JournalTests(unittest.TestCase):
@@ -24,6 +25,7 @@ class JournalTests(unittest.TestCase):
         self.j.freeze(op)
         self.j.mark_ready(op)
         self.j.authorize_simulation(op, human_actor='demo', confirmed=True)
+        bind(self.j, op)
 
     def test_frozen_intent_and_approval(self):
         self.assertEqual(self.j.freeze(self.op), 'PREPARADA')
@@ -43,6 +45,7 @@ class JournalTests(unittest.TestCase):
         with self.assertRaisesRegex(JournalError, 'CONFIRMACION_HUMANA'):
             self.j.authorize_simulation(self.op, human_actor='demo', confirmed=False)
         self.j.authorize_simulation(self.op, human_actor='demo', confirmed=True)
+        bind(self.j, self.op)
         self.assertEqual(self.j.reserve_simulated_attempt(self.op), 'ENVIANDO')
         with self.assertRaisesRegex(JournalError, 'INTENTO_PREVIO'):
             self.j.reserve_simulated_attempt(self.op)

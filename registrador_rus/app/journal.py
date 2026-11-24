@@ -9,6 +9,8 @@ import sqlite3
 
 from .contracts import RegistroFlowV1
 from .scheduler import ScheduleStore
+from .readback import ReadbackError
+from .readback_store import ReadbackStore, UNRESOLVED, operations_sql
 
 
 class JournalError(RuntimeError):
@@ -25,12 +27,7 @@ def _digest(payload):
     return sha256(payload.encode('utf-8')).hexdigest()
 
 
-SCHEMA = '''
-CREATE TABLE IF NOT EXISTS operations(
-    operation_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL,
-    identity_key TEXT NOT NULL, intent_key TEXT NOT NULL,
-    state TEXT NOT NULL CHECK(state IN ('PREPARADA','LISTA','ENVIANDO','INCIERTA','OMITIDA'))
-);
+SCHEMA = operations_sql() + '''
 CREATE INDEX IF NOT EXISTS intent_index ON operations(intent_key);
 CREATE TABLE IF NOT EXISTS authorizations(
     operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
@@ -62,6 +59,7 @@ class SimulationJournal:
             self.db.execute('PRAGMA synchronous=FULL')
             self.db.executescript(SCHEMA)
             self.schedule = ScheduleStore(self.db)
+            self.readback = ReadbackStore(self.db)
         except BaseException:
             self.db.close()
             raise
@@ -150,7 +148,7 @@ class SimulationJournal:
                 raise JournalError('INTENTO_PREVIO_SOLO_LECTURA')
             if row['state'] != 'LISTA':
                 raise JournalError('ESTADO_NO_LISTO')
-            if self.db.execute("SELECT 1 FROM operations WHERE state IN ('ENVIANDO','INCIERTA') LIMIT 1").fetchone():
+            if self.db.execute(f"SELECT 1 FROM operations WHERE state IN {UNRESOLVED} LIMIT 1").fetchone():
                 raise JournalError('INTENTO_SIN_RESOLVER')
             auth = self.db.execute('SELECT * FROM authorizations WHERE operation_id=?', (current.operation_id,)).fetchone()
             if auth is None or auth['consumed'] or auth['digest'] != row['digest']:
@@ -159,11 +157,49 @@ class SimulationJournal:
             eligibility = self.schedule.eligibility(now)
             if not eligibility.allowed:
                 raise JournalError(eligibility.reason)
+            try:
+                self.readback.require_recent(current.operation_id, row['digest'], now)
+            except ReadbackError as exc:
+                raise JournalError(str(exc)) from None
             self.db.execute('INSERT INTO write_attempts VALUES(?,?,1)', (current.operation_id, now))
             self.db.execute('UPDATE authorizations SET consumed=1 WHERE operation_id=?', (current.operation_id,))
             self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', ('ENVIANDO', current.operation_id))
             self._audit(current.operation_id, 'RESERVA_SIMULADA')
         return 'ENVIANDO'
+
+    def bind_baseline(self, current, raw, **context):
+        with self._tx():
+            row = self._require_current(current.operation_id, current)
+            if row['state'] != 'LISTA':
+                raise JournalError('ESTADO_NO_LISTO')
+            try:
+                result = self.readback.bind(current, row['digest'], raw, now=self._now(), **context)
+            except ReadbackError:
+                self.db.execute('DELETE FROM readback_baselines WHERE operation_id=?', (current.operation_id,))
+                self._audit(current.operation_id, 'BASELINE_INVALIDADA')
+                return 'INCIERTA'
+            if result.state in ('REUTILIZABLE', 'REVISAR_PREVIAS'):
+                self.db.execute("UPDATE operations SET state='REVISAR_PREVIAS' WHERE operation_id=?", (current.operation_id,))
+            self._audit(current.operation_id, result.reason)
+            return result.state
+
+    def resolve_simulated(self, current, raw):
+        with self._tx():
+            row = self._require_current(current.operation_id, current)
+            if row['state'] == 'AMBIGUA':
+                raise JournalError('AMBIGUEDAD_REQUIERE_REVISION_HUMANA')
+            if row['state'] not in ('ENVIANDO', 'INCIERTA', 'NO_HALLADA'):
+                raise JournalError('ESTADO_NO_RECUPERABLE')
+            now = self._now()
+            try:
+                state, reason = self.readback.resolve(current, row, raw, now=now)
+            except ReadbackError:
+                state, reason = 'INCIERTA', 'EVIDENCIA_INSUFICIENTE'
+            self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', (state, current.operation_id))
+            self._audit(current.operation_id, reason)
+            if state in ('COMPROBADA', 'PENDIENTE_EXCEL'):
+                self.schedule.note_closed(now)
+            return state
 
     def configure_schedule(self, config):
         with self._tx():
@@ -179,7 +215,7 @@ class SimulationJournal:
 
     def recover_unresolved(self):
         """Solo lista trabajos que requieren lectura; no modifica estado ni llama a adaptadores."""
-        rows = self.db.execute("SELECT operation_id FROM operations WHERE state IN ('ENVIANDO','INCIERTA') ORDER BY operation_id")
+        rows = self.db.execute(f"SELECT operation_id FROM operations WHERE state IN {UNRESOLVED} ORDER BY operation_id")
         return tuple(row[0] for row in rows)
 
     def mark_uncertain(self, op_id):
