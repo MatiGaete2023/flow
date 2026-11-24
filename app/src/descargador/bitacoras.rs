@@ -157,7 +157,12 @@ struct Sesion<'a> {
     historico_suspendido: bool,
     ahora: chrono::DateTime<chrono::FixedOffset>,
     historia: Option<super::historia::LectorHistoria>,
+    /// `emit` de `DiaryRunner`: `query`, `diary_progress` y `warning` para la interfaz (E-Q7).
+    avance: Avance<'a>,
 }
+
+/// Canal de avance del lote de bitácoras: nombre del evento de Python y su valor.
+pub type Avance<'a> = &'a dyn Fn(&str, Value);
 
 impl Sesion<'_> {
     /// `_Lectura.persistir`: escritura atómica (`bitacoras.tmp` y reemplazo); con `perezosa`, cada `CHECKPOINT_CADA`.
@@ -259,6 +264,20 @@ pub fn ejecutar(
     opciones: &Opciones,
     cancelar: &AtomicBool,
 ) -> Result<Value, String> {
+    ejecutar_con_avance(conexion, catalogo, lote_bitacoras, destino, opciones, cancelar, &|_, _| {})
+}
+
+/// `DiaryRunner.run` con su `emit`: una consulta por perfil (`query`), una fila por registro (`diary_progress`) y los
+/// avisos (`warning`).
+pub fn ejecutar_con_avance(
+    conexion: &dyn Conexion,
+    catalogo: &Catalogo,
+    lote_bitacoras: &LoteBitacoras,
+    destino: &Path,
+    opciones: &Opciones,
+    cancelar: &AtomicBool,
+    avance: Avance<'_>,
+) -> Result<Value, String> {
     let plan = lote_bitacoras.plan(catalogo)?;
     let inicio = opciones.ahora.unwrap_or_else(|| ahora_local().fixed_offset());
     let (mut previos, mut antiguos) = (Vec::new(), BTreeMap::new());
@@ -319,6 +338,7 @@ pub fn ejecutar(
             )?),
             None => None,
         },
+        avance,
     };
     s.persistir(false)?;
     let mut bloqueado = false;
@@ -337,7 +357,8 @@ pub fn ejecutar(
                 h.estado["estado"] = json!("INCOMPLETA");
             }
         }
-        for perfil in &plan {
+        for (indice, perfil) in plan.iter().enumerate() {
+            (s.avance)("query", json!({"index": indice + 1, "total": plan.len(), "label": perfil.etiqueta}));
             if !enumerar(&mut s, catalogo, perfil)? {
                 break;
             }
@@ -637,6 +658,9 @@ fn leer_fila(
         s.fallas_seguidas = 0;
     }
     s.persistir(true)?;
+    let r = &s.estado["registros"][i];
+    let archivo = r["archivo"].as_str().filter(|a| !a.is_empty()).map(str::to_string).unwrap_or_else(|| estado.clone());
+    (s.avance)("diary_progress", json!({"pagina": r["pagina"], "registros": 1, "archivo": archivo, "rit": r["rit"], "estado": estado}));
     if s.fallas_seguidas >= MAX_FALLAS_SEGUIDAS {
         return Err(Detencion::Lote(format!(
             "{MAX_FALLAS_SEGUIDAS} bitácoras seguidas fallaron ({}). Se detuvo el lote para no esperar en cada causa. \
@@ -1019,6 +1043,8 @@ fn leer_historico(s: &mut Sesion<'_>, i: usize) -> Result<bool, Detencion> {
             s.historicos_fallidos += 1;
             if s.historicos_fallidos >= MAX_HISTORICOS_FALLIDOS_SEGUIDOS {
                 s.historico_suspendido = true;
+                (s.avance)("warning", json!(format!("Falló el Ingreso Histórico en {MAX_HISTORICOS_FALLIDOS_SEGUIDOS} ventanas seguidas. \
+                    Ahora se suspende el histórico. Las bitácoras siguen.")));
             }
         } else {
             s.historicos_fallidos = 0;
@@ -1266,6 +1292,7 @@ mod tests {
         let datos: Value = serde_json::from_str(include_str!("../../tests/datos/bitacoras.json")).unwrap();
         let catalogo: Catalogo = serde_json::from_value(datos["catalogo"].clone()).unwrap();
         let (mut iguales, mut fallos) = (0usize, Vec::new());
+        let mut avances: Vec<(String, usize, usize, usize)> = Vec::new();
         let escenarios = datos["escenarios"].as_array().unwrap();
         for e in escenarios {
             let nombre = e["escenario"].as_str().unwrap();
@@ -1298,7 +1325,15 @@ mod tests {
                 }
             }
             let cancelar = AtomicBool::new(e["cancelada"] == true);
-            let resultado = ejecutar(&guion, &catalogo, &lote, &destino, &opciones, &cancelar).unwrap();
+            let eventos = std::cell::RefCell::new(Vec::<(String, Value)>::new());
+            let resultado = ejecutar_con_avance(&guion, &catalogo, &lote, &destino, &opciones, &cancelar,
+                &|n, v| eventos.borrow_mut().push((n.to_string(), v))).unwrap();
+            // E-Q7: una fila de avance por registro enumerado en esta corrida y una consulta por perfil iniciado.
+            let eventos = eventos.into_inner();
+            let filas = eventos.iter().filter(|(n, _)| n == "diary_progress").count();
+            let registros_corrida = serde_json::from_slice::<Value>(&std::fs::read(
+                PathBuf::from(resultado["manifest"].as_str().unwrap())).unwrap()).unwrap()["registros"].as_array().map_or(0, Vec::len);
+            avances.push((nombre.to_string(), filas, registros_corrida, eventos.iter().filter(|(n, _)| n == "query").count()));
             let carpeta = PathBuf::from(resultado["folder"].as_str().unwrap());
             if carpeta.file_name().and_then(|n| n.to_str()) != e["carpeta"].as_str() {
                 fallos.push(format!("{nombre}: carpeta Rust {carpeta:?} / Python {}", e["carpeta"]));
@@ -1359,6 +1394,10 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("BITACORAS: {iguales}/{}, fallos {}", escenarios.len(), fallos.len());
+        let distintos: Vec<_> = avances.iter().filter(|(_, filas, registros, _)| filas != registros).collect();
+        println!("AVANCE: {} escenarios con una fila de avance por registro; distintos {distintos:?}", avances.len() - distintos.len());
+        assert!(distintos.is_empty(), "el avance por fila no cubre cada registro");
+        assert!(avances.iter().all(|(_, _, _, consultas)| *consultas > 0), "falta el evento de consulta");
         assert_eq!(escenarios.len(), 16, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
     }

@@ -41,7 +41,7 @@ Qué se compara con Python:
 - **E-Q5d · Excel del lote y XLSX consolidado — `HECHO` en Linux (`c734f84`); falta ver su CI de Windows.**
   - `descargador/excel.rs` y `descargador/resultados.rs`, con el oráculo `app/qa/generar_excel.py`.
   - `include_originals` no se porta: ninguna ruta de Python lo activa.
-- **E-Q7 · Avance por fila de la lectura — `ABIERTO`.** Hoy la interfaz muestra un indicador de actividad y un resumen al terminar.
+- **E-Q7 · Avance por fila de la lectura — `HECHO` en Linux.** `bitacoras::ejecutar_con_avance` emite `query`, `diary_progress` y `warning` como `DiaryRunner`; la sección «Bitácoras y paquete» muestra las filas revisadas, el estado y los avisos.
 - **E-U1 · Intercambio entre herramientas (F27) — `ABIERTO`, por especificar.**
   - Python: `download_link.py`, `download_transfer.py` y `capture/temporal.py`.
   - Restricción vigente: el Asistente no navega SITFA ni inicia el Descargador. Antes de implementar, proponer al usuario cómo se expresa en un solo ejecutable (devolución del paquete a Trabajo, procedencia, cancelación y comparación temporal).

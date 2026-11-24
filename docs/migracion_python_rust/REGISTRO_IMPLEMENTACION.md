@@ -16,6 +16,12 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-Q7
+
+- Cambió: `descargador/bitacoras.rs` (`ejecutar_con_avance`, eventos `query`, `diary_progress` y `warning`) y `descargador_ui.rs` (filas revisadas, estado y avisos).
+- Acredita: `lote_de_bitacoras_igual_a_python` afirma una fila de avance por registro en los 16 escenarios (`AVANCE`); `ui_descargador_bitacoras_y_paquete` comprueba las etiquetas.
+- Pendiente: ver la lectura real con la extensión (usuario).
+
 ## 2026-11-24 · E-V3
 
 - Cambió: `.github/workflows/flow-rust-local.yml` (trabajo Linux, detección de cambios, entrega a pedido) y `motor/historia.rs` (el paquete B usa `prueba_entorno::requerida`).

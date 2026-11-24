@@ -105,6 +105,10 @@ impl Default for Ejecucion {
     }
 }
 
+fn texto_valor(v: &Value) -> String {
+    v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())
+}
+
 fn guardadas_contexto() -> Preferencias {
     Preferencias::cargar(&Preferencias::ruta())
 }
@@ -112,6 +116,8 @@ fn guardadas_contexto() -> Preferencias {
 enum Trabajo {
     Bitacoras(Result<Value, String>),
     Paquete(Result<Value, String>),
+    /// E-Q7 · `query`, `diary_progress` o `warning` del lote de bitácoras.
+    Avance(String, Value),
 }
 
 /// E-Q6 · Lecturas de contexto del lote (Integral, Seguimiento) y paquete del Asistente: `start_diary` y
@@ -130,6 +136,9 @@ struct Contexto {
     bitacoras: Option<Value>,
     paquete: Option<Value>,
     error: Option<String>,
+    /// Filas revisadas (`diary_progress`: página, registros, «RIT · estado») y avisos del lote en curso.
+    filas: Vec<(String, String)>,
+    avisos: Vec<String>,
 }
 
 impl Contexto {
@@ -148,6 +157,8 @@ impl Contexto {
             bitacoras: None,
             paquete: None,
             error: None,
+            filas: Vec::new(),
+            avisos: Vec::new(),
         }
     }
 
@@ -173,6 +184,10 @@ impl Contexto {
         let mensajes: Vec<Trabajo> = recepcion.try_iter().collect();
         let desconectado = matches!(recepcion.try_recv(), Err(mpsc::TryRecvError::Disconnected));
         for m in mensajes {
+            if let Trabajo::Avance(nombre, v) = m {
+                self.aplicar_avance(&nombre, &v);
+                continue;
+            }
             self.recepcion = None;
             self.cancelar = None;
             self.estado.clear();
@@ -180,12 +195,31 @@ impl Contexto {
                 Trabajo::Bitacoras(Ok(v)) => self.bitacoras = Some(v),
                 Trabajo::Paquete(Ok(v)) => self.paquete = Some(v),
                 Trabajo::Bitacoras(Err(e)) | Trabajo::Paquete(Err(e)) => self.error = Some(e),
+                Trabajo::Avance(..) => {}
             }
         }
         if desconectado && self.recepcion.is_some() {
             self.recepcion = None;
             self.cancelar = None;
             self.error = Some("Se interrumpió la operación.".into());
+        }
+    }
+
+    /// `process_event` de Python para el lote de bitácoras: una fila por registro revisado y el estado de la consulta.
+    fn aplicar_avance(&mut self, nombre: &str, v: &Value) {
+        let texto = |k: &str| match &v[k] {
+            Value::String(s) => s.clone(),
+            Value::Null => String::new(),
+            otro => otro.to_string(),
+        };
+        match nombre {
+            "query" => self.estado = format!("Consulta {} de {} · {}", texto("index"), texto("total"), texto("label")),
+            "diary_progress" => {
+                self.filas.push((texto("pagina"), format!("{} · {}", texto("rit"), texto("estado"))));
+                self.estado = format!("Bitácora {} · {}", texto("rit"), texto("estado"));
+            }
+            "warning" => self.avisos.push(texto_valor(v)),
+            _ => {}
         }
     }
 
@@ -207,6 +241,8 @@ impl Contexto {
         self.error = self.guardar_preferencias().map(|e| format!("No se guardaron las preferencias del Descargador: {e}"));
         self.bitacoras = None;
         self.paquete = None;
+        self.filas.clear();
+        self.avisos.clear();
         let historia_anterior = retomar.as_ref().map(|r| r.join("historia").join("historias.json")).filter(|h| self.historia && h.is_file());
         let opciones = bitacoras::Opciones {
             pausa: Duration::from_secs_f64(pausa),
@@ -225,9 +261,13 @@ impl Contexto {
         self.estado = "Leyendo y copiando bitácoras. Las fallas quedan en el control del lote.".into();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
-            let resultado = puente
-                .verificar(Edicion::Integral)
-                .and_then(|()| bitacoras::ejecutar(puente.as_ref(), &catalogo, &alcance, &destino, &opciones, &cancelar));
+            let avisar = |nombre: &str, v: Value| {
+                let _ = envio.send(Trabajo::Avance(nombre.to_string(), v));
+                ctx.request_repaint();
+            };
+            let resultado = puente.verificar(Edicion::Integral).and_then(|()| {
+                bitacoras::ejecutar_con_avance(puente.as_ref(), &catalogo, &alcance, &destino, &opciones, &cancelar, &avisar)
+            });
             let _ = envio.send(Trabajo::Bitacoras(resultado));
             ctx.request_repaint();
         });
@@ -372,6 +412,17 @@ impl Contexto {
                 ui.label(RichText::new("Descarga el lote para crear su paquete.").color(p.muted));
             }
         });
+        if !self.filas.is_empty() {
+            ui.label(RichText::new(format!("{} filas revisadas en el lote", self.filas.len())).color(p.muted));
+            egui::ScrollArea::vertical().id_salt("avance de bitácoras").max_height(160.0).stick_to_bottom(true).show(ui, |ui| {
+                for (pagina, detalle) in &self.filas {
+                    ui.label(RichText::new(format!("Página {pagina} · {detalle}")).color(p.text));
+                }
+            });
+        }
+        for aviso in &self.avisos {
+            ui.label(RichText::new(aviso).color(p.amber));
+        }
         if let Some(b) = &self.bitacoras {
             let n = |k: &str| b[k].as_u64().unwrap_or(0);
             let mut texto = format!("Bitácoras: {} leídas · {} fallidas", n("leidas"), n("fallidas"));
@@ -1407,6 +1458,19 @@ mod pruebas_interfaz {
         assert_eq!((guardado.tribunales, guardado.modalidades, guardado.pestanas),
                    (vec!["49".to_string()], vec!["2".to_string()], vec!["Cumplimiento".to_string()]));
         assert!(LoteBitacoras::guardado(&listados).is_err(), "una carpeta de listados no es un lote de bitácoras");
+        // E-Q7: los eventos del lote se ven como filas revisadas, estado y avisos.
+        {
+            let c = &mut h.state_mut().contexto;
+            c.aplicar_avance("query", &serde_json::json!({"index": 1, "total": 2, "label": "Tribunal ficticio · Cumplimiento"}));
+            c.aplicar_avance("diary_progress", &serde_json::json!({"pagina": 1, "registros": 1, "archivo": "b.html", "rit": "X-1-2099", "estado": "LEIDA"}));
+            c.aplicar_avance("diary_progress", &serde_json::json!({"pagina": 2, "registros": 1, "archivo": "FALLIDA", "rit": "X-2-2099", "estado": "FALLIDA"}));
+            c.aplicar_avance("warning", &serde_json::json!("Aviso ficticio del lote"));
+        }
+        h.run();
+        for etiqueta in ["2 filas revisadas en el lote", "Página 1 · X-1-2099 · LEIDA", "Página 2 · X-2-2099 · FALLIDA", "Aviso ficticio del lote"] {
+            assert!(h.query_by_label(etiqueta).is_some(), "falta «{etiqueta}»");
+        }
+        assert_eq!(h.state().contexto.estado, "Bitácora X-2-2099 · FALLIDA");
         // Preferencias: se guardan con las claves de Python y se recuperan al reconstruir la vista.
         h.state_mut().contexto.historico = true;
         h.state_mut().contexto.meses = 2;
