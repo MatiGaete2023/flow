@@ -4,7 +4,7 @@ Arma con Python un trabajo sintético de tres filas (Espera), lo exporta, aplica
 copia de Excel, y graba el resultado de `Work.refresh`: los cinco campos de revisión por fila, los conflictos y los
 rechazos con su mensaje. La prueba Rust repite las mismas ediciones sobre su propio Trabajo y compara.
 
-Uso (desde la raíz): python app/qa/generar_sync.py [salida.json]   (por omisión app/tests/datos/sync.json)
+Uso (desde la raíz; la CI lo regenera en Windows y exige el mismo resultado): python app/qa/generar_sync.py [salida.json]   (por omisión app/tests/datos/sync.json)
 """
 
 import base64
