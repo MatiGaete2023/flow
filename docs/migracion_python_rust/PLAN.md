@@ -51,7 +51,7 @@ Qué se compara con Python:
 
 - **E-S1 · Exportaciones y comparador — `HECHO` en Linux; falta su CI de Windows.**
   - `descargador/resultados.rs`: `export_book`, `export_csv`, `export_ics`, `export_zip` y `compare_lots`, con el oráculo `app/qa/generar_resultados.py`.
-  - Pendiente: ofrecerlos en la vista de Resultados del Descargador.
+  - Vista: sección «Resultados del lote» (`descargador_resultados_ui.rs`) en el Descargador; se abre sola con el lote recién descargado. Pruebas `ui_resultados_abre_un_lote_y_crea_sus_productos` y `resultados_cruza_compara_y_rechaza_como_python`.
 
 ## Tramo 3 · Asistente
 

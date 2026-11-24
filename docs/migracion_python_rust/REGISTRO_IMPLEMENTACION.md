@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-S1: vista de Resultados del Descargador
+
+- Cambió: `app/src/descargador_resultados_ui.rs` (nuevo) y su sección en `descargador_ui.rs`, equivalente a `ventana_resultados.py`: carpeta del lote, «Permitir resultados INCOMPLETOS», tabla de consultas con su compatibilidad CSMP, y los botones Consolidar XLSX, Libro CSMP, Añadir informes al cruce, Comparar con otro lote, CSV, Calendario ICS, ZIP y Abrir carpeta. Cada producto recarga y verifica el lote en un hilo.
+- Acredita: `ui_resultados_abre_un_lote_y_crea_sus_productos` (CSV de la vista igual al de Python, rechazos de Libro CSMP e ICS, lote alterado rechazado) y `resultados_cruza_compara_y_rechaza_como_python`; `tools/probar_app.sh todo` en Linux: 64 y 45 pruebas, 0 fallos; `clippy --lib -D warnings` limpio.
+- Diferencias declaradas: sin doble clic para abrir el primer archivo ni «Preparar pendientes» (lo cubre «Recuperar pendientes de un lote…»); «Libro CSMP» no lanza CSMP aparte.
+- Pendiente: CI de Windows; revisión visual del usuario.
+
 ## 2026-11-24 · E-R0
 
 - Cambió: `app/Cargo.toml` y `app/Cargo.lock` (dependencias por ruta `flow-meta4` y `flow-anonimo`); la CI de Windows corre sus pruebas.

@@ -1,3 +1,4 @@
+use crate::descargador_resultados_ui::Resultados;
 use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
@@ -37,6 +38,7 @@ pub struct Descargador {
     favorito_elegido: String,
     favoritos: Option<Vec<String>>,
     favorito_mensaje: Option<Result<String, String>>,
+    resultados: Resultados,
 }
 
 enum Mensaje {
@@ -458,6 +460,11 @@ impl Contexto {
 impl Ejecucion {
     fn activa(&self) -> bool {
         self.recepcion.is_some()
+    }
+
+    /// La carpeta del lote cuya descarga terminó, lista para abrirla en Resultados.
+    fn terminada(&self) -> Option<PathBuf> {
+        self.carpeta.clone().filter(|_| !self.activa() && self.fin.is_some())
     }
 
     fn recibir(&mut self) {
@@ -1012,6 +1019,13 @@ impl Descargador {
                 });
             }
         }
+        let terminada = self.ejecucion.terminada();
+        self.resultados.ofrecer(ui.ctx(), terminada);
+        ui.add_space(8.0);
+        theme::card(p).show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            self.resultados.mostrar(ui, p);
+        });
     }
 
     fn mostrar_perfiles(&mut self, ui: &mut Ui, p: &Pal) {

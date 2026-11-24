@@ -8,6 +8,7 @@ mod captura_trabajo;
 mod config;
 mod copia_excel;
 mod demo;
+mod descargador_resultados_ui;
 mod descargador_ui;
 mod lectura;
 mod motor;

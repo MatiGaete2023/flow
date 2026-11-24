@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1, E-V1 a E-V3 y E-Q7. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3 y E-Q7. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -46,7 +46,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1, E-V1 a E-V3 y E-Q7. Es la únic
 - **F19 Bitácora, historia y calendario — Sí** sobre SITFA ficticio (E-Q1 a E-Q4, 16 escenarios). Avance por fila en la interfaz (E-Q7).
 - **F20 Escritos — Sí** dentro de la lectura de historia.
 - **F21 Histórico de Protección — Sí**, con suspensión por fallas.
-- **F22 Exportaciones de lote — Sí** en Linux. Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), libro consolidado y «Para CSMP» (`LIBROS` 14/14), y CSV, ICS, ZIP de entrega y comparador (`PRODUCTOS` 13/13). Falta la CI de Windows y la opción en la vista de Resultados.
+- **F22 Exportaciones de lote — Sí** en Linux. Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), libro consolidado y «Para CSMP» (`LIBROS` 14/14), y CSV, ICS, ZIP de entrega y comparador (`PRODUCTOS` 13/13). Sección «Resultados del lote» en el Descargador con consolidado, Libro CSMP, cruce, comparación, CSV, ICS y ZIP (sin el doble clic para abrir el primer archivo ni «Preparar pendientes», que ya cubre «Recuperar pendientes de un lote…»). Falta la CI de Windows.
 - **F27 Intercambio entre herramientas — No.** Sigue en el alcance (D-6).
 
 ### Otras herramientas
