@@ -798,7 +798,29 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("PRODUCTOS: {iguales}/{total}, fallos {}", fallos.len());
+        assert_eq!(total, 13, "el oráculo debe traer 13 productos");
         assert!(fallos.is_empty());
+    }
+
+    /// Prueba permanente del oráculo de productos: un CSV esperado con un byte cambiado ya no coincide con el de Rust.
+    #[test]
+    fn oraculo_de_productos_detecta_alteraciones() {
+        let paquete: Value = serde_json::from_str(include_str!("../../tests/datos/paquete.json")).unwrap();
+        let datos: Value = serde_json::from_str(include_str!("../../tests/datos/resultados.json")).unwrap();
+        let e = paquete["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "carga").unwrap();
+        let caso = datos["csv"].as_array().unwrap().iter().find(|c| c["escenario"] == "carga").unwrap();
+        let raiz = std::env::temp_dir().join(format!("flow-es1-mutacion-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&raiz);
+        let carpeta = raiz.join(e["otros_lotes"][0]["carpeta"].as_str().unwrap());
+        reconstruir(&carpeta, &e["otros_lotes"][0]["archivos"]);
+        let rutas = exportar_csv(&paquete::cargar_lote(&carpeta).unwrap(), &ahora()).unwrap();
+        let rust = std::fs::read(&rutas[0]).unwrap();
+        let mut python = base64::engine::general_purpose::STANDARD.decode(caso["contenido"].as_str().unwrap()).unwrap();
+        assert_eq!(rust, python);
+        let ultimo = python.len() - 3;
+        python[ultimo] ^= 1;
+        assert_ne!(rust, python, "un byte alterado del CSV esperado no se detecta");
+        let _ = std::fs::remove_dir_all(&raiz);
     }
 
     /// E-S1: `export_book` de Rust (consolidado y Para CSMP) contra Flow Python (`app/qa/generar_excel.py`): nombre,
@@ -866,6 +888,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("LIBROS: {iguales}/{}, fallos {}", casos.len(), fallos.len());
+        assert_eq!(casos.len(), 14, "el oráculo debe traer 14 libros");
         assert!(fallos.is_empty());
     }
 }

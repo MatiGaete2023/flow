@@ -741,6 +741,27 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("EXCEL_BITACORAS: {iguales}/3, fallos {}", fallos.len());
+        assert_eq!(iguales, 3, "el oráculo debe traer 3 libros");
         assert!(fallos.is_empty());
+    }
+
+    /// Prueba permanente del comparador: el volcado esperado alterado en una celda, en el panel o en un título debe
+    /// dar diferencias (si no, `excel_de_bitacoras_igual_a_python` no acreditaría nada).
+    #[test]
+    fn comparador_de_excel_detecta_alteraciones() {
+        let excel: Value = serde_json::from_str(include_str!("../../tests/datos/excel.json")).unwrap();
+        let esperado = &excel["historias"][0]["excel"];
+        assert!(volcado::diferencias(esperado, esperado).is_empty());
+        let mut celda = esperado.clone();
+        celda["hojas"][0]["celdas"][1][2] = json!(["s", "9999"]);
+        let mut panel = esperado.clone();
+        panel["hojas"][1]["congelar"] = Value::Null;
+        let mut titulo = esperado.clone();
+        titulo["hojas"][3]["titulo"] = json!("Otro");
+        let mut tipo = esperado.clone();
+        tipo["hojas"][3]["celdas"][10][1] = json!(["s", "2"]);
+        for alterado in [celda, panel, titulo, tipo] {
+            assert!(!volcado::diferencias(&alterado, esperado).is_empty(), "alteración no detectada");
+        }
     }
 }

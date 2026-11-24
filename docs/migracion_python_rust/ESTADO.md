@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (CSV, ICS, ZIP y comparador). Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -11,7 +11,7 @@ Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuent
 
 1. **Referencia Python (E-V1 de [PLAN.md](PLAN.md)).** Los oráculos usan el Python de esta rama, que difiere de `flow-python` en dos módulos de producción. Hacerlo antes de portar más.
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
-3. **E-Q7 y E-U1**, y luego **E-S1** (lo que resta) de [PLAN.md](PLAN.md).
+3. **E-Q7 y E-U1** de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
 
 ## Pendiente del usuario
 
@@ -46,7 +46,7 @@ Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuent
 - **F19 Bitácora, historia y calendario — Sí** sobre SITFA ficticio (E-Q1 a E-Q4, 16 escenarios). Falta el avance por fila en la interfaz.
 - **F20 Escritos — Sí** dentro de la lectura de historia.
 - **F21 Histórico de Protección — Sí**, con suspensión por fallas.
-- **F22 Exportaciones de lote — Parcial.** Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), y libro consolidado y «Para CSMP» (`LIBROS` 14/14), desde `c734f84`. Faltan CSV, ICS, ZIP y el comparador de lotes. Sin confirmar en ese commit: `include_originals`.
+- **F22 Exportaciones de lote — Sí** en Linux. Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), libro consolidado y «Para CSMP» (`LIBROS` 14/14), y CSV, ICS, ZIP de entrega y comparador (`PRODUCTOS` 13/13). Falta la CI de Windows y la opción en la vista de Resultados.
 - **F27 Intercambio entre herramientas — No.** Sigue en el alcance (D-6).
 
 ### Otras herramientas
@@ -63,6 +63,7 @@ Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuent
 - Carga en XLS BIFF: Python escribe `5.0` y Rust `5`. En HTML y XLSX coinciden.
 - Historia: Rust la lee siempre que se elige «Historia de la causa»; Python solo al retomar.
 - Lecturas: el puente de Rust no trae el `code` de la extensión, y las fallas quedan con el código genérico.
+- Paquete: sin `include_originals` (ninguna ruta de Python lo activa).
 
 ## Documentos
 

@@ -40,7 +40,7 @@ Qué se compara con Python:
 
 - **E-Q5d · Excel del lote y XLSX consolidado — `HECHO` en Linux (`c734f84`); falta ver su CI de Windows.**
   - `descargador/excel.rs` y `descargador/resultados.rs`, con el oráculo `app/qa/generar_excel.py`.
-  - Por revisar: si `include_originals` quedó cubierto.
+  - `include_originals` no se porta: ninguna ruta de Python lo activa.
 - **E-Q7 · Avance por fila de la lectura — `ABIERTO`.** Hoy la interfaz muestra un indicador de actividad y un resumen al terminar.
 - **E-U1 · Intercambio entre herramientas (F27) — `ABIERTO`, por especificar.**
   - Python: `download_link.py`, `download_transfer.py` y `capture/temporal.py`.
@@ -49,9 +49,9 @@ Qué se compara con Python:
 
 ## Tramo 2 · Exportaciones de lote
 
-- **E-S1 · Exportaciones y comparador — `ABIERTO`; `export_book` ya está (`c734f84`).**
-  - Faltan de `descargador/resultados.py`: `export_csv`, `export_ics`, `export_zip` y `compare_lots`. Base en `rust/crates/flow-trabajo/src/exportar.rs`.
-  - Oráculo nuevo en `app/qa/` sobre lotes ficticios.
+- **E-S1 · Exportaciones y comparador — `HECHO` en Linux; falta su CI de Windows.**
+  - `descargador/resultados.rs`: `export_book`, `export_csv`, `export_ics`, `export_zip` y `compare_lots`, con el oráculo `app/qa/generar_resultados.py`.
+  - Pendiente: ofrecerlos en la vista de Resultados del Descargador.
 
 ## Tramo 3 · Asistente
 
