@@ -400,6 +400,14 @@ pub fn ejecutar_con_avance(
             .map_err(|e| e.to_string())
             .and_then(|b| std::fs::write(&temporal, b).map_err(|e| e.to_string()))
             .and_then(|()| std::fs::rename(&temporal, &ruta).map_err(|e| e.to_string()))
+            .and_then(|()| {
+                let ruta = s.carpeta.join("diagnostico_calendarios.json");
+                let temporal = s.carpeta.join("diagnostico_calendarios.tmp");
+                serde_json::to_vec_pretty(&diagnostico_calendarios(&s.estado))
+                    .map_err(|e| e.to_string())
+                    .and_then(|b| std::fs::write(&temporal, b).map_err(|e| e.to_string()))
+                    .and_then(|()| std::fs::rename(&temporal, &ruta).map_err(|e| e.to_string()))
+            })
     });
     if bloqueado {
         let _ = conexion.llamar("unlock", json!({}), Duration::from_secs(8));
@@ -919,6 +927,28 @@ pub fn diagnostico_anonimo(datos: &Value) -> Value {
             })
         })
         .collect();
+    let lote = datos["estado"].as_str().filter(|e| ["COMPLETA", "INCOMPLETA", "CANCELADA", "EN_CURSO"].contains(e));
+    json!({
+        "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO", "version": 1, "estado_lote": lote.unwrap_or("OTRO"),
+        "descargador_version": version(&datos["origen"]["version"]), "descargador_commit": commit(&datos["origen"]["commit"]),
+        "extension_version": version(&datos["extension"]["version"]), "registros": registros.len(), "estados": estados,
+        "diagnosticos_sin_vinculo": vinculos, "errores_extension": extension, "consultas": consultas,
+        "anteriores_no_reenumeradas": datos["anteriores_no_reenumeradas"].as_array().map_or(0, Vec::len),
+        "contiene_identificadores_personales": false,
+    })
+}
+
+/// Extensión de Flow Rust (no existe en Flow Python): estados de calendario e histórico por ingreso y códigos fijos de
+/// error, para diagnosticar lecturas parciales sin compartir filas, identificadores ni texto libre.
+pub fn diagnostico_calendarios(datos: &Value) -> Value {
+    let registros = datos["registros"].as_array().cloned().unwrap_or_default();
+    let contar = |it: &mut dyn Iterator<Item = String>| {
+        let mut c: BTreeMap<String, u64> = BTreeMap::new();
+        for k in it {
+            *c.entry(k).or_default() += 1;
+        }
+        json!(c)
+    };
     // Calendario e histórico por ingreso: solo estados y códigos fijos, nunca el texto del error.
     const CODIGOS_CALENDARIO: [(&str, &str); 10] = [
         ("fecha ilegible", "CAL_FECHA_ILEGIBLE"),
@@ -941,15 +971,9 @@ pub fn diagnostico_anonimo(datos: &Value) -> Value {
         CODIGOS_CALENDARIO.iter().find(|(c, _)| texto.contains(c)).map_or("CAL_OTRA", |(_, k)| *k).to_string()
     }));
     let historicos = contar(&mut registros.iter().filter(|r| r["historico_lectura"].is_object()).map(|r| estado_lectura(&r["historico_lectura"]["estado"])));
-    let lote = datos["estado"].as_str().filter(|e| ["COMPLETA", "INCOMPLETA", "CANCELADA", "EN_CURSO"].contains(e));
     json!({
-        "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO", "version": 1, "estado_lote": lote.unwrap_or("OTRO"),
-        "descargador_version": version(&datos["origen"]["version"]), "descargador_commit": commit(&datos["origen"]["commit"]),
-        "extension_version": version(&datos["extension"]["version"]), "registros": registros.len(), "estados": estados,
-        "diagnosticos_sin_vinculo": vinculos, "errores_extension": extension, "calendarios": calendarios, "errores_calendario": errores_calendario,
-        "historicos": historicos, "consultas": consultas,
-        "anteriores_no_reenumeradas": datos["anteriores_no_reenumeradas"].as_array().map_or(0, Vec::len),
-        "contiene_identificadores_personales": false,
+        "tipo": "CALENDARIOS_DIAGNOSTICO_ANONIMO", "version": 1, "registros": registros.len(), "calendarios": calendarios,
+        "errores_calendario": errores_calendario, "historicos": historicos, "contiene_identificadores_personales": false,
     })
 }
 
@@ -1218,7 +1242,7 @@ mod tests {
     use super::*;
     use std::cell::RefCell;
 
-    /// Mismo caso que `test_diagnostico_cuenta_calendarios_e_historicos` de Flow Python: estados y códigos, sin texto.
+    /// Extensión de Flow Rust: estados y códigos de calendario e histórico, sin texto libre.
     #[test]
     fn diagnostico_cuenta_calendarios_e_historicos_sin_texto_libre() {
         let datos = json!({"estado": "COMPLETA", "consultas": [], "registros": [
@@ -1228,7 +1252,7 @@ mod tests {
             {"estado": "LEIDA", "calendario": [1], "calendario_lectura": {"estado": "PENDIENTE", "error": "Pendiente: se alcanzó el máximo de lecturas del lote."}},
             {"estado": "LEIDA", "calendario": [1]},
             {"estado": "LEIDA"}]});
-        let d = diagnostico_anonimo(&datos);
+        let d = diagnostico_calendarios(&datos);
         assert_eq!(d["calendarios"], json!({"FALLIDA": 1, "LEIDA": 1, "NO_INTENTADO": 1, "PENDIENTE": 1}));
         assert_eq!(d["errores_calendario"], json!({"CAL_FECHA_ILEGIBLE": 1, "CAL_TOPE": 1}));
         assert_eq!(d["historicos"], json!({"LEIDA": 1}));

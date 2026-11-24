@@ -155,41 +155,6 @@ def anonymous_diagnostic(data):
         for r in records
         if r.get('estado') == 'FALLIDA'
     )
-    calendar_codes = (
-        ('fecha ilegible', 'CAL_FECHA_ILEGIBLE'),
-        ('no concuerdan', 'CAL_ESTADO_FECHA'),
-        ('Estado de calendario no reconocido', 'CAL_ESTADO'),
-        ('estructura del calendario', 'CAL_ESTRUCTURA'),
-        ('Fila de calendario incompleta', 'CAL_FILA'),
-        ('máximo de lecturas', 'CAL_TOPE'),
-        ('no corresponde al ingreso', 'CAL_OTRO_INGRESO'),
-        ('incompleta', 'CAL_INCOMPLETA'),
-        ('ingreso de SITFA', 'CAL_SESION'),
-        ('no coincide con la solicitud', 'CAL_RESPUESTA'),
-    )
-
-    def calendar_code(reading):
-        text = str(reading.get('error') or '')
-        return next((code for needle, code in calendar_codes if needle in text), 'CAL_OTRA')
-
-    allowed_calendar = ('LEIDA', 'FALLIDA', 'PENDIENTE')
-    calendar_states = Counter(
-        (r['calendario_lectura'].get('estado') if r['calendario_lectura'].get('estado') in allowed_calendar else 'OTRO')
-        if isinstance(r.get('calendario_lectura'), dict)
-        else 'NO_INTENTADO'
-        for r in records
-        if isinstance(r.get('calendario'), list)
-    )
-    calendar_errors = Counter(
-        calendar_code(r['calendario_lectura'])
-        for r in records
-        if isinstance(r.get('calendario_lectura'), dict) and r['calendario_lectura'].get('estado') in ('FALLIDA', 'PENDIENTE')
-    )
-    history_states = Counter(
-        (r['historico_lectura'].get('estado') if r['historico_lectura'].get('estado') in allowed_calendar else 'OTRO')
-        for r in records
-        if isinstance(r.get('historico_lectura'), dict)
-    )
     scopes = []
     for q in data.get('consultas', []):
         key = (q.get('tribunal'), q.get('modality'), q.get('tab'))
@@ -221,9 +186,6 @@ def anonymous_diagnostic(data):
         'estados': dict(global_states),
         'diagnosticos_sin_vinculo': dict(global_links),
         'errores_extension': dict(global_extension),
-        'calendarios': dict(calendar_states),
-        'errores_calendario': dict(calendar_errors),
-        'historicos': dict(history_states),
         'consultas': scopes,
         'anteriores_no_reenumeradas': len(data.get('anteriores_no_reenumeradas', [])),
         'contiene_identificadores_personales': False,
