@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlite3
 
 from .contracts import RegistroFlowV1
+from .scheduler import ScheduleStore
 
 
 class JournalError(RuntimeError):
@@ -60,6 +61,7 @@ class SimulationJournal:
                 raise JournalError('WAL_NO_DISPONIBLE')
             self.db.execute('PRAGMA synchronous=FULL')
             self.db.executescript(SCHEMA)
+            self.schedule = ScheduleStore(self.db)
         except BaseException:
             self.db.close()
             raise
@@ -153,11 +155,27 @@ class SimulationJournal:
             auth = self.db.execute('SELECT * FROM authorizations WHERE operation_id=?', (current.operation_id,)).fetchone()
             if auth is None or auth['consumed'] or auth['digest'] != row['digest']:
                 raise JournalError('AUTORIZACION_REQUERIDA')
-            self.db.execute('INSERT INTO write_attempts VALUES(?,?,1)', (current.operation_id, self._now()))
+            now = self._now()
+            eligibility = self.schedule.eligibility(now)
+            if not eligibility.allowed:
+                raise JournalError(eligibility.reason)
+            self.db.execute('INSERT INTO write_attempts VALUES(?,?,1)', (current.operation_id, now))
             self.db.execute('UPDATE authorizations SET consumed=1 WHERE operation_id=?', (current.operation_id,))
             self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', ('ENVIANDO', current.operation_id))
             self._audit(current.operation_id, 'RESERVA_SIMULADA')
         return 'ENVIANDO'
+
+    def configure_schedule(self, config):
+        with self._tx():
+            self.schedule.configure(config, self._now())
+
+    def control_schedule(self, action):
+        with self._tx():
+            self.schedule.control(action, self._now())
+
+    def schedule_eligibility(self):
+        with self._tx():
+            return self.schedule.eligibility(self._now(), unresolved=bool(self.recover_unresolved()))
 
     def recover_unresolved(self):
         """Solo lista trabajos que requieren lectura; no modifica estado ni llama a adaptadores."""

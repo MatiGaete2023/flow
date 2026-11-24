@@ -21,3 +21,5 @@ P2: detector pasivo y fixture ficticio, no extensión instalable. Para ejecutar 
 P3: preparación y localización en DOM exclusivamente ficticio. Ejecutar desde raíz `python -m registrador_rus.tests.run_preparation` (mismas dependencias de desarrollo de P2); resultado esperado PASS 35. Falta adaptador real de las vistas y apertura de bitácora; no contiene guardado.
 
 P4: SimulationJournal, diario local WAL de intentos ficticios. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_journal.py -v` (6 métodos). Solo usar datos ficticios hasta resolver protección y retención local, recibos y UI de autorización; la clase no escribe en RUS.
+
+P5: programador local integrado con el diario ficticio. Límite móvil opcional (apagado), intervalos y pausa persistentes. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_scheduler.py -v`. El cierre de intervalos tras recibo se integrará en P6. No controla ni certifica límites de RUS.
