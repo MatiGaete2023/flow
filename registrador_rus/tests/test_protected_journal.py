@@ -20,10 +20,14 @@ class ProtectedJournalTests(unittest.TestCase):
     def test_platform_and_mode_gate(self):
         with TemporaryDirectory() as tmp:
             path=Path(tmp)/'demo.protected.sqlite'
-            with patch('registrador_rus.app.protected_demo_transfer.os.name','posix'):
+            with patch('registrador_rus.app.journal_protection._load_dpapi',side_effect=ValueError('sin DPAPI')):
                 with self.assertRaisesRegex(StorageProtectionError,'DPAPI_DIARIO_NO_DISPONIBLE'):
                     SimulationJournal(path,protected_demo=True)
             self.assertFalse(path.exists())
+            if os.name!='nt':
+                with self.assertRaisesRegex(StorageProtectionError,'DPAPI_DIARIO_NO_DISPONIBLE'):
+                    SimulationJournal(path,protected_demo=True)
+                self.assertFalse(path.exists())
             with self.assertRaisesRegex(StorageProtectionError,'EXTENSION_DIARIO_INCOMPATIBLE'):
                 SimulationJournal(path)
             self.assertFalse(path.exists())

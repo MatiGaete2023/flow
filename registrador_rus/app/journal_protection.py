@@ -10,7 +10,13 @@ import os
 from pathlib import Path
 import stat
 
-from .protected_demo_transfer import _dpapi, UI_FORBIDDEN
+UI_FORBIDDEN = 1  # CRYPTPROTECT_UI_FORBIDDEN; nunca LOCAL_MACHINE.
+
+
+def _load_dpapi():
+    # Importación tardía: demo_transfer importa simulation, que importa journal.
+    from .protected_demo_transfer import _dpapi
+    return _dpapi()
 
 
 SUFFIX = '.protected.sqlite'
@@ -115,7 +121,7 @@ def check_path(path, protected):
     if protected:
         # Antes de crear archivos, comprobar que DPAPI existe.
         try:
-            crypt = _dpapi()
+            crypt = _load_dpapi()
         except ValueError:
             raise StorageProtectionError('DPAPI_DIARIO_NO_DISPONIBLE') from None
         # Rechazar archivo/enlaces de redirección existentes, también WAL/SHM.
