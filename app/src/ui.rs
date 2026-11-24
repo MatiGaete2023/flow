@@ -385,6 +385,10 @@ impl App {
         self.revision_bitacoras = None;
         self.revision += 1;
         self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
+        if let Some(w) = self.work.as_ref().filter(|w| w.paquete.is_some()) {
+            let filas: Vec<(String, bool)> = w.registros.iter().map(|r| (w.id_registro(r).unwrap_or_default(), crate::conciliar::editada(r))).collect();
+            crate::estadisticas::registrar_importacion(&crate::estadisticas::directorio_metricas(), self.cfg.metricas_locales, &filas, w.cambios.as_ref());
+        }
     }
 
     /// Guarda la sesión con los productos preparados de ahora (correos y proyectos).
@@ -545,6 +549,7 @@ impl App {
                     crate::sincronizar::recordar_exportacion(w, &hoja);
                     w.copia = Some(p.clone());
                 }
+                crate::estadisticas::registrar_exportacion(&crate::estadisticas::directorio_metricas(), self.cfg.metricas_locales);
                 self.registrar(p, "Excel de observaciones");
             }
             Err(e) => self.aviso(e, true),
@@ -1961,6 +1966,9 @@ impl App {
         if sin_destinatario > 0 {
             self.aviso(format!("{sin_destinatario} borrador(es) quedaron sin destinatario: complétalo en Outlook antes de enviar."), false);
         }
+        if ok > 0 {
+            crate::estadisticas::registrar_borrador(&crate::estadisticas::directorio_metricas(), self.cfg.metricas_locales);
+        }
         if duplicados > 0 {
             self.aviso(format!("{duplicados} borrador(es) ya estaban guardados con el mismo contenido y no se crearon de nuevo."), false);
         }
@@ -2152,6 +2160,40 @@ impl App {
             }
         }
         ui.add_space(8.0);
+        let mut exportar_resumen = false;
+        if let Some(w) = &self.work {
+            let filas = crate::estadisticas::filas_de(w);
+            let r = crate::estadisticas::resumir(&filas, &w.preparados.recibos.values().cloned().collect::<Vec<_>>());
+            theme::card(p).show(ui, |ui| {
+                ui.set_width(ui.available_width());
+                theme::seccion(ui, p, "Estadísticas de constancias");
+                ui.label(format!(
+                    "• {} constancias completas ({} con carga y {} sin carga) · {} filas con datos incompletos · {} propuestas ({} excluidas).",
+                    r["constancias"], r["con_carga"], r["sin_carga"], r["datos_incompletos"], r["propuestas"], r["excluidos"]
+                ));
+                ui.label(format!("• {} correos guardados · {} proyectos Word en {} archivos.", r["borradores_creados"], r["proyectos_generados"], r["word_generados"]));
+                ui.label(RichText::new("Una propuesta o un borrador no es una gestión: solo cuenta la fila con fecha, TT = 1 y CC 0 o 1.").size(12.0).color(p.muted));
+                if ui.button("Exportar resumen (Excel)").clicked() {
+                    exportar_resumen = true;
+                }
+            });
+            ui.add_space(8.0);
+        }
+        if exportar_resumen {
+            if let Some(dir) = self.carpeta_productos() {
+                let (filas, recibos) = match self.work.as_ref() {
+                    Some(w) => (crate::estadisticas::filas_de(w), w.preparados.recibos.values().cloned().collect::<Vec<_>>()),
+                    None => (Vec::new(), Vec::new()),
+                };
+                match crate::estadisticas::exportar_resumen(&filas, &recibos, &crate::estadisticas::ruta_resumen(&dir)) {
+                    Ok(p) => {
+                        self.aviso(format!("Resumen guardado: {}", p.display()), false);
+                        self.registrar(p, "Resumen de constancias");
+                    }
+                    Err(e) => self.aviso(e, true),
+                }
+            }
+        }
         if let Some(w) = &self.work {
             let revisadas = w.registros.iter().filter(|r| r.revisada).count();
             let pend = w.registros.iter().filter(|r| !r.revisada && !r.excluido).count();
@@ -2870,6 +2912,7 @@ impl App {
                         ui.label("Período (reporte de proyectos)");
                         guardar |= ui.add(egui::TextEdit::singleline(&mut self.cfg.periodo).desired_width(220.0)).lost_focus();
                     });
+                    guardar |= ui.checkbox(&mut self.cfg.metricas_locales, "Guardar métricas locales (solo conteos y fechas de cada ciclo, nunca datos de casos)").changed();
                     ui.horizontal(|ui| {
                         ui.label("Cuenta de Outlook");
                         guardar |= ui

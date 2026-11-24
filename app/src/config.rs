@@ -227,6 +227,8 @@ pub struct Config {
     pub destino_outlook: bool,
     /// Cuenta de Outlook (dirección SMTP o nombre visible exactos) donde se guardan los borradores; vacío: la predeterminada.
     pub cuenta_outlook: String,
+    /// Guarda en este equipo solo conteos y marcas de tiempo de cada ciclo (nunca datos de casos).
+    pub metricas_locales: bool,
     /// Redacción del registro mensual del usuario (decisiones R1–R6 del 20-nov-2026). false: textos de Flow Python.
     pub redaccion_registro: bool,
 }
@@ -253,6 +255,7 @@ impl Default for Config {
             periodo: "el período revisado".into(),
             destino_outlook: false,
             cuenta_outlook: String::new(),
+            metricas_locales: false,
             redaccion_registro: true,
         }
     }

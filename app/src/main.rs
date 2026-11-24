@@ -7,6 +7,7 @@ mod anon;
 mod captura_trabajo;
 mod conciliar;
 mod config;
+mod estadisticas;
 mod copia_excel;
 mod demo;
 mod descargador_resultados_ui;

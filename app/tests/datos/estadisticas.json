@@ -1,0 +1,3908 @@
+{
+ "estadisticas": [
+  {
+   "nombre": "vacio",
+   "filas": [],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 0,
+    "excluidos": 0,
+    "constancias": 0,
+    "con_carga": 0,
+    "sin_carga": 0,
+    "datos_incompletos": 0,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     0
+    ],
+    [
+     "excluidos",
+     0
+    ],
+    [
+     "constancias",
+     0
+    ],
+    [
+     "con carga",
+     0
+    ],
+    [
+     "sin carga",
+     0
+    ],
+    [
+     "datos incompletos",
+     0
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ]
+   ],
+   "constancias_numeros": []
+  },
+  {
+   "nombre": "sin_revision",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": []
+    },
+    {
+     "excluido": true,
+     "review": {},
+     "acciones": []
+    }
+   ],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 2,
+    "excluidos": 1,
+    "constancias": 0,
+    "con_carga": 0,
+    "sin_carga": 0,
+    "datos_incompletos": 0,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     2
+    ],
+    [
+     "excluidos",
+     1
+    ],
+    [
+     "constancias",
+     0
+    ],
+    [
+     "con carga",
+     0
+    ],
+    [
+     "sin carga",
+     0
+    ],
+    [
+     "datos incompletos",
+     0
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ]
+   ],
+   "constancias_numeros": []
+  },
+  {
+   "nombre": "constancia_con_carga",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    }
+   ],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 1,
+    "excluidos": 0,
+    "constancias": 1,
+    "con_carga": 1,
+    "sin_carga": 0,
+    "datos_incompletos": 0,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     1
+    ],
+    [
+     "excluidos",
+     0
+    ],
+    [
+     "constancias",
+     1
+    ],
+    [
+     "con carga",
+     1
+    ],
+    [
+     "sin carga",
+     0
+    ],
+    [
+     "datos incompletos",
+     0
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ],
+    [
+     "Tribunal 1",
+     "X-1-2099",
+     "2026-11-14",
+     "1",
+     "1",
+     "0",
+     ""
+    ]
+   ],
+   "constancias_numeros": [
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ]
+   ]
+  },
+  {
+   "nombre": "constancia_sin_carga",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "14/11/2026",
+      "TT": "1",
+      "CC": "0"
+     },
+     "acciones": []
+    }
+   ],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 1,
+    "excluidos": 0,
+    "constancias": 1,
+    "con_carga": 0,
+    "sin_carga": 1,
+    "datos_incompletos": 0,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     1
+    ],
+    [
+     "excluidos",
+     0
+    ],
+    [
+     "constancias",
+     1
+    ],
+    [
+     "con carga",
+     0
+    ],
+    [
+     "sin carga",
+     1
+    ],
+    [
+     "datos incompletos",
+     0
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ],
+    [
+     "Tribunal 1",
+     "X-1-2099",
+     "14/11/2026",
+     "1",
+     "0",
+     "1",
+     ""
+    ]
+   ],
+   "constancias_numeros": [
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ]
+   ]
+  },
+  {
+   "nombre": "mezcla",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-15",
+      "TT": "1",
+      "CC": "0"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-16",
+      "TT": "2",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "FECHA_OBS": "2026-11-16",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "no es fecha",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-16",
+      "TT": "1",
+      "CC": "3"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": true,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "RES": "NOMENCL"
+     },
+     "acciones": [
+      "PC_IE"
+     ]
+    },
+    {
+     "excluido": false,
+     "review": {
+      "RES": "PC_IE"
+     },
+     "acciones": [
+      "PC_IE"
+     ]
+    },
+    {
+     "excluido": false,
+     "review": {
+      "RES": "pc info"
+     },
+     "acciones": [
+      "PC_IE"
+     ]
+    },
+    {
+     "excluido": false,
+     "review": {
+      "CC": "1"
+     },
+     "acciones": []
+    }
+   ],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 11,
+    "excluidos": 1,
+    "constancias": 2,
+    "con_carga": 1,
+    "sin_carga": 1,
+    "datos_incompletos": 7,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     11
+    ],
+    [
+     "excluidos",
+     1
+    ],
+    [
+     "constancias",
+     2
+    ],
+    [
+     "con carga",
+     1
+    ],
+    [
+     "sin carga",
+     1
+    ],
+    [
+     "datos incompletos",
+     7
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ],
+    [
+     "Tribunal 1",
+     "X-1-2099",
+     "2026-11-14",
+     "1",
+     "1",
+     "0",
+     ""
+    ],
+    [
+     "Tribunal 0",
+     "X-2-2099",
+     "2026-11-15",
+     "1",
+     "0",
+     "1",
+     ""
+    ]
+   ],
+   "constancias_numeros": [
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ],
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ]
+   ]
+  },
+  {
+   "nombre": "valores_numericos_y_vacios",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "1.0",
+      "CC": "0,0"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "  2026-11-14 ",
+      "TT": " 1 ",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "---",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    },
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "-",
+      "CC": "1"
+     },
+     "acciones": []
+    }
+   ],
+   "recibos": [],
+   "resumen": {
+    "propuestas": 4,
+    "excluidos": 0,
+    "constancias": 2,
+    "con_carga": 1,
+    "sin_carga": 1,
+    "datos_incompletos": 2,
+    "word_generados": 0,
+    "proyectos_generados": 0,
+    "borradores_creados": 0
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     4
+    ],
+    [
+     "excluidos",
+     0
+    ],
+    [
+     "constancias",
+     2
+    ],
+    [
+     "con carga",
+     1
+    ],
+    [
+     "sin carga",
+     1
+    ],
+    [
+     "datos incompletos",
+     2
+    ],
+    [
+     "word generados",
+     0
+    ],
+    [
+     "proyectos generados",
+     0
+    ],
+    [
+     "borradores creados",
+     0
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ],
+    [
+     "Tribunal 1",
+     "X-1-2099",
+     "2026-11-14",
+     "1",
+     "0",
+     "1",
+     ""
+    ],
+    [
+     "Tribunal 0",
+     "X-2-2099",
+     "  2026-11-14 ",
+     "1",
+     "1",
+     "0",
+     ""
+    ]
+   ],
+   "constancias_numeros": [
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ],
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ]
+   ]
+  },
+  {
+   "nombre": "recibos",
+   "filas": [
+    {
+     "excluido": false,
+     "review": {
+      "OBSERVACION": "Obs",
+      "FECHA_OBS": "2026-11-14",
+      "TT": "1",
+      "CC": "1"
+     },
+     "acciones": []
+    }
+   ],
+   "recibos": [
+    {
+     "kind": "word",
+     "state": "created",
+     "path": "a.docx"
+    },
+    {
+     "kind": "word",
+     "state": "created",
+     "path": "a.docx"
+    },
+    {
+     "kind": "word",
+     "state": "created",
+     "path": "b.docx"
+    },
+    {
+     "kind": "draft",
+     "state": "created"
+    },
+    {
+     "kind": "draft",
+     "state": "uncertain"
+    },
+    {
+     "kind": "excel",
+     "state": "generated",
+     "path": "x.xlsx"
+    }
+   ],
+   "resumen": {
+    "propuestas": 1,
+    "excluidos": 0,
+    "constancias": 1,
+    "con_carga": 1,
+    "sin_carga": 0,
+    "datos_incompletos": 0,
+    "word_generados": 2,
+    "proyectos_generados": 3,
+    "borradores_creados": 1
+   },
+   "hojas": [
+    "Resumen",
+    "Constancias"
+   ],
+   "resumen_filas": [
+    [
+     "Categoría",
+     "Cantidad"
+    ],
+    [
+     "propuestas",
+     1
+    ],
+    [
+     "excluidos",
+     0
+    ],
+    [
+     "constancias",
+     1
+    ],
+    [
+     "con carga",
+     1
+    ],
+    [
+     "sin carga",
+     0
+    ],
+    [
+     "datos incompletos",
+     0
+    ],
+    [
+     "word generados",
+     2
+    ],
+    [
+     "proyectos generados",
+     3
+    ],
+    [
+     "borradores creados",
+     1
+    ]
+   ],
+   "constancias": [
+    [
+     "Tribunal",
+     "RIT",
+     "Fecha",
+     "TT",
+     "CC",
+     "Sin carga",
+     "RES"
+    ],
+    [
+     "Tribunal 1",
+     "X-1-2099",
+     "2026-11-14",
+     "1",
+     "1",
+     "0",
+     ""
+    ]
+   ],
+   "constancias_numeros": [
+    [
+     "str",
+     "str",
+     "str",
+     "int",
+     "int",
+     "int",
+     "NoneType"
+    ]
+   ]
+  }
+ ],
+ "metricas": [
+  {
+   "nombre": "desactivada",
+   "pasos": [
+    "importar",
+    "exportar",
+    "borrador"
+   ],
+   "activa": false,
+   "cambios": {
+    "version": 1,
+    "base_digest": "x",
+    "filas": {
+     "r1": {
+      "tipo": "SIN_CAMBIO"
+     },
+     "r2": {
+      "tipo": "NUEVO"
+     },
+     "r3": {
+      "tipo": "CAMBIO_FUENTE"
+     },
+     "r4": {
+      "tipo": "CAMBIO_REGLAS"
+     }
+    },
+    "egresados": [
+     {
+      "id_anterior": "a"
+     },
+     {
+      "id_anterior": "b"
+     }
+    ]
+   },
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": null,
+   "archivo": null,
+   "resumen": null
+  },
+  {
+   "nombre": "importar_con_cambios",
+   "pasos": [
+    "importar"
+   ],
+   "activa": true,
+   "cambios": {
+    "version": 1,
+    "base_digest": "x",
+    "filas": {
+     "r1": {
+      "tipo": "SIN_CAMBIO"
+     },
+     "r2": {
+      "tipo": "NUEVO"
+     },
+     "r3": {
+      "tipo": "CAMBIO_FUENTE"
+     },
+     "r4": {
+      "tipo": "CAMBIO_REGLAS"
+     }
+    },
+    "egresados": [
+     {
+      "id_anterior": "a"
+     },
+     {
+      "id_anterior": "b"
+     }
+    ]
+   },
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": null,
+   "archivo": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ],
+   "resumen": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ]
+  },
+  {
+   "nombre": "importar_sin_comparacion",
+   "pasos": [
+    "importar"
+   ],
+   "activa": true,
+   "cambios": null,
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": null,
+   "archivo": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    }
+   ],
+   "resumen": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    }
+   ]
+  },
+  {
+   "nombre": "ciclo_completo",
+   "pasos": [
+    "importar",
+    "exportar",
+    "borrador",
+    "borrador"
+   ],
+   "activa": true,
+   "cambios": {
+    "version": 1,
+    "base_digest": "x",
+    "filas": {
+     "r1": {
+      "tipo": "SIN_CAMBIO"
+     },
+     "r2": {
+      "tipo": "NUEVO"
+     },
+     "r3": {
+      "tipo": "CAMBIO_FUENTE"
+     },
+     "r4": {
+      "tipo": "CAMBIO_REGLAS"
+     }
+    },
+    "egresados": [
+     {
+      "id_anterior": "a"
+     },
+     {
+      "id_anterior": "b"
+     }
+    ]
+   },
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": null,
+   "archivo": [
+    {
+     "importado": true,
+     "exportado": true,
+     "primer_borrador": true,
+     "ultimo_borrador": true,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ],
+   "resumen": [
+    {
+     "importado": true,
+     "exportado": true,
+     "primer_borrador": true,
+     "ultimo_borrador": true,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ]
+  },
+  {
+   "nombre": "exportar_sin_importar",
+   "pasos": [
+    "exportar",
+    "borrador"
+   ],
+   "activa": true,
+   "cambios": null,
+   "filas": [],
+   "previo": null,
+   "archivo": null,
+   "resumen": null
+  },
+  {
+   "nombre": "limite_de_60_ciclos",
+   "pasos": [
+    "importar"
+   ],
+   "activa": true,
+   "cambios": {
+    "version": 1,
+    "base_digest": "x",
+    "filas": {
+     "r1": {
+      "tipo": "SIN_CAMBIO"
+     },
+     "r2": {
+      "tipo": "NUEVO"
+     },
+     "r3": {
+      "tipo": "CAMBIO_FUENTE"
+     },
+     "r4": {
+      "tipo": "CAMBIO_REGLAS"
+     }
+    },
+    "egresados": [
+     {
+      "id_anterior": "a"
+     },
+     {
+      "id_anterior": "b"
+     }
+    ]
+   },
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": {
+    "version": 1,
+    "ciclos": [
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     },
+     {
+      "importado": "2026-01-01",
+      "exportado": "",
+      "primer_borrador": "",
+      "ultimo_borrador": "",
+      "filas": 1,
+      "nuevas": 0,
+      "cambio_fuente": 0,
+      "cambio_reglas": 0,
+      "egresadas": 0,
+      "revisadas": 0,
+      "revisadas_sin_cambio": 0,
+      "ediciones_despues_de_exportar": 0
+     }
+    ]
+   },
+   "archivo": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ],
+   "resumen": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 1,
+     "nuevas": 0,
+     "cambio_fuente": 0,
+     "cambio_reglas": 0,
+     "egresadas": 0,
+     "revisadas": 0,
+     "revisadas_sin_cambio": 0,
+     "ediciones_despues_de_exportar": 0
+    },
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ]
+  },
+  {
+   "nombre": "archivo_danado",
+   "pasos": [
+    "importar"
+   ],
+   "activa": true,
+   "cambios": {
+    "version": 1,
+    "base_digest": "x",
+    "filas": {
+     "r1": {
+      "tipo": "SIN_CAMBIO"
+     },
+     "r2": {
+      "tipo": "NUEVO"
+     },
+     "r3": {
+      "tipo": "CAMBIO_FUENTE"
+     },
+     "r4": {
+      "tipo": "CAMBIO_REGLAS"
+     }
+    },
+    "egresados": [
+     {
+      "id_anterior": "a"
+     },
+     {
+      "id_anterior": "b"
+     }
+    ]
+   },
+   "filas": [
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r1"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r2"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": false,
+     "id": "r3"
+    },
+    {
+     "excluido": false,
+     "review": {},
+     "acciones": [],
+     "editada": true,
+     "id": "r4"
+    }
+   ],
+   "previo": "{no es json",
+   "archivo": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ],
+   "resumen": [
+    {
+     "importado": true,
+     "exportado": false,
+     "primer_borrador": false,
+     "ultimo_borrador": false,
+     "filas": 4,
+     "nuevas": 1,
+     "cambio_fuente": 1,
+     "cambio_reglas": 1,
+     "egresadas": 2,
+     "revisadas": 3,
+     "revisadas_sin_cambio": 1,
+     "ediciones_despues_de_exportar": 0
+    }
+   ]
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1 y E-T2. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2 y E-T3. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -37,7 +37,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 - **F13 Borradores Outlook — Parcial.** EML y Outlook con cuenta elegible (E-T1): solo `Save()`, CC fijo, y un fallo antes de guardar se distingue de uno posterior (queda «incierto» y no se reintenta hasta revisar Borradores). Contrastado por pruebas de la salida de PowerShell; sin prueba con Outlook real.
 - **F14 Proyectos Word — Sí.** Matrices de Laja y Mulchén. Por confirmar con el usuario: un `.docx` por proyecto.
 - **F15 Formularios manuales — Sí.** Correo manual con adjuntos (huella de lo revisado, CC fijo, sin Excel) y Word libre o con matriz `{{CAMPO}}`, bloques favoritos con variables y recuperación de lo escrito (E-T2); 19 casos contrastados con Python. Sin la mejora de paginación de Python.
-- **F16 Resultados y estadísticas — Parcial.** Vista y reporte; sin estadísticas ni métricas.
+- **F16 Resultados y estadísticas — Sí.** Vista y reporte; estadísticas de constancias (propuestas, constancias con y sin carga, datos incompletos, borradores y proyectos creados) con su Excel, y métricas locales opcionales de cada ciclo (E-T3), contrastadas con Python en 14 casos. Las métricas no guardan datos de casos.
 
 ### Descargador
 

@@ -128,7 +128,7 @@ fn clave(f: &Fila<'_>) -> Vec<String> {
 }
 
 /// `_edited`: la persona tomó alguna decisión sobre la fila.
-fn editada(r: &Registro) -> bool {
+pub(crate) fn editada(r: &Registro) -> bool {
     r.editada.is_some() || r.revisada || !r.res.is_empty() || !r.campos.is_empty()
 }
 

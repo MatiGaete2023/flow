@@ -36,6 +36,7 @@ CLASIFICACION = {
     'copia_excel.rs': (7, 'usuario/temporal', 'copia del Excel en la carpeta de productos; ~flow-* y temp_dir() se limpian; rechaza destino existente'),
     'personalizar.rs': (4, 'perfil', 'matrices Word importadas a data_dir()/plantillas (el original se respalda como .bak.docx; escritura por archivo temporal)'),
     'producto_excel.rs': (1, 'usuario', 'carpeta de productos de Ajustes; el libro se guarda en una ruta nueva (nueva_ruta nunca reemplaza un archivo)'),
+    'estadisticas.rs': (2, 'usuario/perfil', 'resumen de constancias en la carpeta de productos con nombre nuevo; metricas.json solo con la opción activada, vía config::atomic_write'),
     'manual.rs': (3, 'usuario', 'Word manual en la carpeta de productos con un nombre nuevo (no reemplaza; archivo temporal y renombrado); los favoritos y lo escrito van por config::atomic_write'),
     'outlook.rs': (5, 'temporal', 'borrador.json y la nómina en una carpeta temporal propia que se borra al terminar; Outlook solo recibe Save()'),
     'productos.rs': (6, 'usuario/temporal', 'EML/XLSX/resoluciones en la carpeta de productos (nombres nuevos, carpeta Resoluciones_* nueva); borrador Outlook vía temp_dir() que se limpia'),
