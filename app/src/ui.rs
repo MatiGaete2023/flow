@@ -2847,15 +2847,12 @@ impl App {
                     for a in &inf.advertencias {
                         ui.label(RichText::new(format!("⚠ {a}")).color(p.amber));
                     }
-                    if !inf.reemplazos.is_empty() {
-                        ui.label(RichText::new(inf.reemplazos.iter().map(|(k, v)| format!("{k}: {v}")).collect::<Vec<_>>().join(" · ")).color(p.muted).size(12.5));
-                    }
                 });
             }
         });
         if agregar {
             if let Some(f) = rfd::FileDialog::new()
-                .add_filter("Admitidos", &["xlsx", "xlsm", "xls", "csv", "tsv", "html", "htm", "xml", "txt", "md", "log", "json", "jsonl", "ics"])
+                .add_filter("Admitidos", &["xlsx", "xlsm", "xls", "csv", "tsv", "html", "htm", "xml", "txt", "md", "log", "json", "jsonl", "ics", "docx", "zip"])
                 .pick_files()
             {
                 self.anon_files.extend(f);

@@ -77,7 +77,7 @@ En este orden, salvo que el usuario indique otro:
 - **E-R0 · Prueba de reutilización — `HECHO` en Linux; Windows en la CI.** `flow-meta4` y `flow-anonimo` son dependencias por ruta de `app/`; `app/` compila y pasa su suite, y sus 29 y 38 pruebas pasan con `preserve_order` de serde_json (la característica que `app/` unifica). Duplica `rust_xlsxwriter` (0.102/0.103) y `quick-xml` (0.41/0.42). Resultado: E-R1, E-R2 y E-T4 se reducen al adaptador y a la vista. Agregar `flow-meta4` y `flow-anonimo` a `app/` como dependencias por ruta, compilar para Windows y correr sus 29 y 38 pruebas. Si funciona, E-R1, E-R2 y E-T4 se reducen al adaptador y a la vista; si no, se portan.
 - **E-R1 · Meta 4: cálculo (F23).** Oráculos `rust/oraculo/generar_calculo_meta4.py` (450 casos) y `generar_tribunales_meta4.py`. Adaptador para carpetas de lote con el formato de Python.
 - **E-R2 · Meta 4: plantilla, regeneración y vista (F24).** Cinco productos contrastados con Python y la vista en la navegación de `ui.rs`.
-- **E-T4 · Anonimizador (F25).** ZIP, paquetes de captura y verificación posterior de XLSX. Oráculo `generar_anonimo.py`.
+- **E-T4 · Anonimizador (F25) — `HECHO` en Linux; Windows en la CI.** `anon::ejecutar` usa `flow_anonimo::lote::ejecutar`. Sin oráculo propio: la paridad con Python vive en `rust/crates/flow-anonimo/tests/paridad.rs`; `app/` prueba texto, ZIP y paquete sin identidades, original intacto y captura alterada sin copias.
 - **E-T5 · Distribución, ayuda y autodiagnóstico (F26, F28).** `portable/` y `package_check.py`.
 - **Paquete H:** acta del usuario.
 

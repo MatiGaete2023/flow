@@ -52,7 +52,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 ### Otras herramientas
 
 - **F23 y F24 Meta 4 — No** en `app/`. Existe en `rust/crates/flow-meta4` con 29 pruebas.
-- **F25 Anonimizador — Parcial.** Tablas, texto, JSON e ICS. Faltan ZIP, paquetes y verificación de XLSX; `rust/crates/flow-anonimo` los tiene, con 38 pruebas.
+- **F25 Anonimizador — Implementado (E-T4, pendiente CI).** `app/src/anon.rs` delega en `flow-anonimo`: tablas, texto, JSON, ICS, Word, ZIP y paquetes de captura (contrato, huellas y referencias se reconstruyen), con verificación de cada copia antes de publicarla y carpeta `Anonimizados_*` nueva. Paridad con Python en las 38 pruebas del crate (`tests/paridad.rs`); en `app/`, tres pruebas (`anon::tests`). Diferencia: el informe ya no cuenta reemplazos por tipo; entrega avisos y la nota de revisión manual.
 - **F26 Distribución — Parcial.** Solo el `.exe` de la CI.
 - **F28 Utilidades y ayuda — Parcial.** Verificadores propios; sin ayuda ni manuales.
 

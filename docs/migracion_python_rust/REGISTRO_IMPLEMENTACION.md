@@ -158,3 +158,10 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `PAQUETE: 5/5` contra `export_capture` y `package_current_lot`; `ui_descargador_bitacoras_y_paquete`.
 - Diferencias declaradas: las de [ESTADO.md](ESTADO.md).
 - Pendiente: E-Q5d y E-Q7.
+
+## 2026-11-24 · E-T4 · Anonimizador con `flow-anonimo`
+
+- Cambió: `app/src/anon.rs` (motor propio reemplazado por `flow_anonimo::lote::ejecutar`), filtro de archivos en `ui.rs`, `tools/inventario_escrituras.py`.
+- Acredita: `anon::tests` (texto, ZIP y paquete de captura sin identidades y con el original intacto; captura alterada sin copias) y las 38 pruebas del crate.
+- Diferencia declarada: el informe no cuenta reemplazos por tipo.
+- Pendiente: CI de Windows; E-R1 y E-R2 (adaptador de lotes); E-T5.
