@@ -182,3 +182,13 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - CI: los runs 45461517036 (verificador de la referencia congelada) y 45462587676 fallaron; este último por el detector de oráculos, que comparó contra el push anterior (donde `descargador/` había cambiado y se restauró) y regeneró «todos», incluido `a78`, que no es idéntico byte a byte desde antes. Sin cambios de código en la corrección.
 - CI: con «todos» ya no se regenera `a78` (ZIP en base64 no reproducible entre ejecutores); se contrasta cuando cambian su generador o sus datos.
 - CI Windows verde (run 45463811153, commit `8cd013b`).
+
+## 2026-11-24 · Análisis del informe técnico RUS/SITFA del usuario
+
+- Documento: `ANALISIS_INFORME_RUS_SITFA_20261124.md`, sobre `a47b1e3`. Sin cambios de código.
+- Conflictos: el informe parte de otra rama (`9707e72`, ausente en el clon), da a Rust por congelado (lo contradicen D-4 y D-5) y propone un registrador que `AGENTS.md` prohíbe.
+- Riesgos heredados de Python, con paridad exacta:
+  - `conciliar.rs:344` rotula «egresadas» a las filas ausentes sin mirar la cobertura (`comparar_lotes` sí la mira);
+  - R11 cierra la orden por cercanía y no aplica R2 (`motor/historia.rs:442`);
+  - C10 se suprime con cualquier nomenclatura posterior (`escritos.rs:120`).
+- Propuestas: decisiones D-10 a D-12, más E-X1 (guardia de solo lectura) y E-X2 (diagnóstico de Notificación y Diligencias).

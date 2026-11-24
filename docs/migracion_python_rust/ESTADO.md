@@ -12,6 +12,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 1. **Ver el primer run** de «Flow Rust local · Windows» con los trabajos `linux` y `validar` (E-V1 a E-V3 de [PLAN.md](PLAN.md)).
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
 3. **E-U1** (por especificar con el usuario) de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
+4. **Usuario:** decidir D-10, D-11 y D-12 del [análisis del informe RUS/SITFA](ANALISIS_INFORME_RUS_SITFA_20261124.md). E-X1 (guardia de solo lectura) y E-X2 (diagnóstico de Notificación y Diligencias) no requieren decisión.
 
 ## Pendiente del usuario
 
@@ -69,6 +70,6 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 ## Documentos
 
 - Lectura al iniciar: `AGENTS.md`, este archivo y [PLAN.md](PLAN.md).
-- Según necesidad: [VERIFICACION.md](VERIFICACION.md), [DISENO.md](DISENO.md), [REGISTRO_IMPLEMENTACION.md](REGISTRO_IMPLEMENTACION.md) y [REVISION_20261124.md](REVISION_20261124.md).
+- Según necesidad: [VERIFICACION.md](VERIFICACION.md), [DISENO.md](DISENO.md), [REGISTRO_IMPLEMENTACION.md](REGISTRO_IMPLEMENTACION.md), [REVISION_20261124.md](REVISION_20261124.md) y [ANALISIS_INFORME_RUS_SITFA_20261124.md](ANALISIS_INFORME_RUS_SITFA_20261124.md).
 - La documentación del proyecto Python se retiró de esta rama (D-8) y sigue en `flow-python`. Quedan `docs/aceptacion/`, `docs/evidencia_p0/golden/` y dos archivos de `docs/implementacion/` que usa `rust/`.
 - [historico/](historico/) guarda el registro, los encargos, la matriz y los informes anteriores al 24 de noviembre. No se lee al iniciar.
