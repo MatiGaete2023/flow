@@ -33,6 +33,10 @@ scraper = { version = "0.24", default-features = false }
 flate2 = "1"
 quick-xml = "0.42"
 
+# Linux: eframe no trae backend de ventana por omisión; las pruebas y el contraste V2 compilan sin `--features` (E-V2).
+[target.'cfg(target_os = "linux")'.dependencies]
+eframe = { version = "0.31", default-features = false, features = ["x11"] }
+
 [dev-dependencies]
 egui_kittest = { version = "=0.31.1", features = ["eframe"] }
 

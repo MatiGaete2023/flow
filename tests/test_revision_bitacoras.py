@@ -77,3 +77,24 @@ def test_e3f_metadatos_incoherentes_o_version_anterior_no_prueban_ausencia():
     for cambio in ({}, {'completa': 'false'}, {'metodo': 'otro'}, {'warnings': 1}, {'version': 1}, {'desde': '2026-09-21'}):
         datos = datos_de_registro(record, {('49', '100', '200'): {**base, **cambio}}, [])
         assert clasificar(datos, date(2026, 9, 20), date(2026, 10, 20))[0] == (SIN if not cambio else NO_VERIFICABLE)
+
+
+def test_revision_distingue_origen_y_no_confunde_dias_con_cantidad_de_entradas():
+    from nurus.personal.revision_bitacoras import CON, datos_de_registro
+
+    registro = {'court_code': '49', 'cause_id': '100', 'ingreso_id': '200'}
+    lectura = {'version': 2, 'completa': True, 'lectura': 'COMPLETA', 'coverage': 'COMPLETA',
+               'metodo': METODO_ALCANCE, 'warnings': 0, 'captured_at': '2026-10-20',
+               'fecha_consulta': '2026-10-20', 'desde': '2026-09-20', 'hasta': '2026-10-20'}
+    evidencia = {('49', '100', '200'): lectura}
+    desde, hasta = date(2026, 9, 20), date(2026, 10, 20)
+    entrada = {'event_at': '2026-10-01', 'text': 'Observación ficticia', 'origin_verified': 'true'}
+    otro = datos_de_registro(registro, evidencia, [{**entrada, 'origin': 'OTRO'}])
+    incierto = datos_de_registro(registro, evidencia, [{**entrada, 'origin': 'CENTRO', 'origin_verified': 'false'}])
+    centro = datos_de_registro(registro, evidencia, [{**entrada, 'origin': 'CENTRO'}] * 2)
+    assert clasificar(otro, desde, hasta)[0] == SIN
+    assert clasificar(incierto, desde, hasta)[0] == NO_VERIFICABLE
+    clase, motivo = clasificar(centro, desde, hasta)
+    assert clase == CON and '1 día' in motivo
+    del centro['origen_comprobado']
+    assert clasificar(centro, desde, hasta)[0] == NO_VERIFICABLE

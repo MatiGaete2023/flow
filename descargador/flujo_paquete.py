@@ -1,8 +1,11 @@
 """Orquesta runners existentes; conserva fuentes y entrega un ZIP sin pasos manuales."""
 
 from dataclasses import asdict, is_dataclass, replace
+from datetime import date
 import json
 from pathlib import Path
+from shutil import copy2
+from tempfile import TemporaryDirectory
 
 import motor as m
 from lotes import BatchRunner
@@ -51,6 +54,21 @@ def run(
     if batch.screen != 'seguimiento':
         raise m.PocError('Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.')
     batch.plan(catalog)
+    config = state.setdefault(
+        'opciones',
+        {
+            'consolidado': consolidated,
+            'calendarios': calendars,
+            'historia': historia,
+            'historico': historico,
+            'historia_en_paquete': historia_en_paquete,
+            'meses': meses,
+            'informes': informes,
+            'fecha_informes': (today or m.now().date()).isoformat(),
+            'pdf_vacias': pdf_vacias,
+        },
+    )
+    _validar_opciones(config)
     backup.mkdir(parents=True, exist_ok=bool(resume))
     if state.get('historial_version') != 2:
         state['historial'] = []
@@ -89,7 +107,7 @@ def run(
             emit('status', 'Consultas ya validadas en el intento anterior: se reutilizan.')
         else:
             state['carpetas'].pop('consultas', None)
-            BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=pdf_vacias).run(batch, backup)
+            BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=config['pdf_vacias']).run(batch, backup)
         if 'consultas' not in state['carpetas']:
             raise m.PocError('La consulta no identificó sus originales; no se creó el paquete.')
         phase('bitacoras')
@@ -97,7 +115,7 @@ def run(
         previas = previas if previas and (previas / MANIFEST).is_file() else None
         reuse_base = Path(destination) if reuse and not resume else None
         lector = None
-        if historia:
+        if config['historia']:
             from lectura_historia import LectorHistoria
 
             historia_previa = previas / 'historia' / 'historias.json' if previas else None
@@ -106,14 +124,14 @@ def run(
                 relay,
                 cancel,
                 pause=pause,
-                meses=meses,
+                meses=config['meses'],
                 **({'anterior': historia_previa} if historia_previa and historia_previa.is_file() else {}),
             )
         extra = {'historia': lector} if lector else {}
         # Cada lectura opcional se pide solo si está activa, como la historia.
-        if calendars:
+        if config['calendarios']:
             extra['calendars'] = True
-        if historico:
+        if config['historico']:
             extra['historico'] = True  # P3c (D-H1): Ingreso Histórico Protección por persona del listado
         runner = DiaryRunner(bridge, catalog, relay, cancel, pause=pause, reuse_base=reuse_base, **extra)
         # Al retomar, el mismo lote de bitácoras continúa: lo ya leído (hash comprobado) no se vuelve a abrir.
@@ -136,7 +154,8 @@ def run(
             anotar(state, aviso)
         write(control, state)
         carpetas_informes, informes_completos = _informes(
-            bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias
+            bridge, relay, emit, cancel, batch, backup, state, phase, pause, config['informes'],
+            date.fromisoformat(config['fecha_informes']), config['pdf_vacias'],
         )
         phase('paquete')
         from descargador import package_current_lot
@@ -148,14 +167,11 @@ def run(
         resumen = lector.resultado if lector else None
         historia_ok = bool(lector and resumen and resumen['estado'] == 'COMPLETA')
         ruta_historia = None
-        if lector and historia_en_paquete and lector.carpeta:
+        if lector and config['historia_en_paquete'] and lector.carpeta:
             candidata = lector.carpeta / 'historias.json'
             if candidata.is_file() and candidata.resolve().is_relative_to(backup.resolve()):
                 ruta_historia = candidata
         target = root / 'Captura_CSMP.zip'
-        if target.exists():
-            # El ZIP parcial del intento anterior se guarda en respaldo; el nuevo ocupa su lugar.
-            target.replace(backup / ('Captura_CSMP anterior ' + m.now().strftime('%Y-%m-%d %H-%M-%S-%f') + '.zip'))
         opciones = {}
         if not informes_completos:
             opciones['avisos'] = [
@@ -166,27 +182,36 @@ def run(
             ]
         if carpetas_informes:
             opciones['extra_folders'] = carpetas_informes
-        if meses != 4:
-            opciones['meses'] = meses
-        if historico:
+        if config['meses'] != 4:
+            opciones['meses'] = config['meses']
+        if config['historico']:
             opciones['historico'] = manifest.parent
-        try:
-            result = package_current_lot(
-                sheets,
-                manifest,
-                target,
-                consolidated,
-                **opciones,
-                **({'historia': ruta_historia} if ruta_historia else {}),
-            )
-        except (m.PocError, ValueError, OSError):
-            if not ruta_historia:
-                raise
-            # Un fallo de la historia nunca impide el paquete de siempre.
-            emit('warning', 'La historia no pudo incluirse en el paquete; las bitácoras se conservan.')
-            historia_ok = False
-            result = package_current_lot(sheets, manifest, target, consolidated, **opciones)
-        historico_fallido = historico and result.get('historico_incompleto', True)
+        with TemporaryDirectory(prefix='.captura-', dir=backup) as temporal:
+            nuevo = Path(temporal) / target.name
+            try:
+                result = package_current_lot(
+                    sheets,
+                    manifest,
+                    nuevo,
+                    config['consolidado'],
+                    **opciones,
+                    **({'historia': ruta_historia} if ruta_historia else {}),
+                )
+            except (m.PocError, ValueError, OSError):
+                if not ruta_historia:
+                    raise
+                emit('warning', 'La historia no pudo incluirse en el paquete; las bitácoras se conservan.')
+                historia_ok = False
+                nuevo.unlink(missing_ok=True)
+                result = package_current_lot(sheets, manifest, nuevo, config['consolidado'], **opciones)
+            checkpoint()
+            if target.exists():
+                copia = Path(temporal) / 'anterior.zip'
+                copy2(target, copia)
+                copia.replace(backup / ('Captura_CSMP anterior ' + m.now().strftime('%Y-%m-%d %H-%M-%S-%f') + '.zip'))
+            nuevo.replace(target)
+            result['path'] = str(target)
+        historico_fallido = config['historico'] and result.get('historico_incompleto', True)
         if historico_fallido:
             emit('warning', 'Quedaron lecturas del Ingreso Histórico Protección sin verificar. El paquete queda parcial.')
         partial = diaries['estado'] != 'COMPLETA' or bool(diaries['fallidas'] or diaries['consultas_fallidas'])
@@ -194,7 +219,7 @@ def run(
         partial = partial or bool(diaries.get('calendarios_fallidos'))
         # Sin el calendario (o con un mes faltante) el paquete se crea igual, pero queda marcado como parcial.
         partial = partial or not informes_completos or historico_fallido
-        if historia:
+        if config['historia']:
             partial = partial or not historia_ok
             result['historia'] = resumen or {'estado': 'INCOMPLETA'}
         state.update(estado='PARCIAL' if partial else 'COMPLETO', paquete=Path(result['path']).name)
@@ -209,6 +234,18 @@ def run(
         anotar(state, f"error en fase {state['fase']} ({codigo})")
         write(control, state)
         raise
+
+
+def _validar_opciones(config):
+    booleanas = ('consolidado', 'calendarios', 'historia', 'historico', 'historia_en_paquete', 'informes', 'pdf_vacias')
+    try:
+        if not isinstance(config, dict) or any(type(config.get(k)) is not bool for k in booleanas):
+            raise ValueError
+        if type(config.get('meses')) is not int or not 1 <= config['meses'] <= 4:
+            raise ValueError
+        date.fromisoformat(config.get('fecha_informes'))
+    except (TypeError, ValueError):
+        raise m.PocError('Las opciones guardadas del paquete no son válidas.') from None
 
 
 def anotar(state, evento):

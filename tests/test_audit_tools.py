@@ -430,6 +430,8 @@ def test_ci_budget_has_no_automatic_windows_build_or_duplicate_exe():
     assert 'path: dist/integral/SITFA_Descargador/' in assistant
     assert 'retention-days: 90' not in assistant
     linux = (root / '.github/workflows/ci-rapida.yml').read_text()
+    push = linux.split('  push:', 1)[1].split('  pull_request:', 1)[0]
+    assert "'flow-python'" in push
     assert 'requirements/linux-py312.lock' in linux
     assert linux.index('python tools/check_real_ids.py') < linux.index('python -m pip install')
     assert 'python tools/estado.py validar' in linux
@@ -437,3 +439,4 @@ def test_ci_budget_has_no_automatic_windows_build_or_duplicate_exe():
     assert 'git diff --name-only "$BASE_SHA" HEAD' in linux
     assert 'xvfb-run -a python -m pytest -q tests' in linux
     assert 'xvfb-run -a python -m pytest -q descargador' in linux
+    assert "continue-on-error: ${{ github.ref_name == 'flow-python' }}" in linux

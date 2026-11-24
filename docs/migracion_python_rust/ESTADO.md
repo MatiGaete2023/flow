@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (CSV, ICS, ZIP y comparador). Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1, E-V1 y E-V2. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -9,7 +9,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (CSV, ICS, ZIP y comparador). Es
 
 ## Siguiente paso
 
-1. **Referencia Python (E-V1 de [PLAN.md](PLAN.md)).** Los oráculos usan el Python de esta rama, que difiere de `flow-python` en dos módulos de producción. Hacerlo antes de portar más.
+1. **E-V3** (CI por niveles) de [PLAN.md](PLAN.md). La referencia Python quedó fijada en `afc4d12` (E-V1) y las pruebas corren sin variables de entorno (E-V2).
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
 3. **E-Q7 y E-U1** de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
 

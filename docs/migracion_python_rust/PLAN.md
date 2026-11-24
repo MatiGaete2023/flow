@@ -25,11 +25,11 @@ Qué se compara con Python:
 
 ## Tramo 0 · Base de verificación
 
-- **E-V1 · Referencia Python única — `ABIERTO`.**
+- **E-V1 · Referencia Python única — `HECHO` en Linux; falta su CI de Windows.** Los árboles `descargador/`, `src/` y `tests/` de esta rama son los de `afc4d12`; `app/qa/REFERENCIA_PYTHON.json` fija el SHA, la CI hace checkout de ese commit y `tools/verificar_referencia_python.py` lo comprueba. Al regenerar cambiaron solo `bitacoras.json` y `paquete.json` (RIT ficticio del histórico); el contraste V2 pasa contra la referencia.
   - Revisar el diff de `descargador/flujo_paquete.py` y `src/nurus/personal/revision_bitacoras.py` entre esta rama y `flow-python` (`afc4d12`).
   - Fijar el SHA de referencia en `app/qa/REFERENCIA_PYTHON.txt`; generadores y CI usan ese checkout.
   - Regenerar `app/tests/datos/paquete.json` y el contraste V2. Criterio: los oráculos pasan contra la referencia fijada, o cada diferencia queda declarada en [ESTADO.md](ESTADO.md).
-- **E-V2 · Pruebas sin variables de entorno — `ABIERTO`.**
+- **E-V2 · Pruebas sin variables de entorno — `HECHO` en Linux.** `prueba_entorno::requerida` da rutas por omisión del repositorio; `x11` de eframe declarado para Linux en `app/Cargo.toml`; diez pruebas dejaron de estar ignoradas.
   - Rutas por omisión relativas a `CARGO_MANIFEST_DIR` para `FLOW_CASOS`, `FLOW_FIXTURES` y `FLOW_REFERENCIA`. Quedan `#[ignore]` solo las pruebas que necesitan un ZIP generado por Python.
   - Declarar en `app/Cargo.toml` la característica `x11` de eframe para Linux. Criterio: `cargo test --manifest-path app/Cargo.toml --locked` corre los oráculos en Linux sin preparación.
 - **E-V3 · CI por niveles — `ABIERTO`.**

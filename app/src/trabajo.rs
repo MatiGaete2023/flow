@@ -635,7 +635,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requiere FLOW_REFERENCIA"]
     fn informes_atribuyen_la_historia_y_los_escritos_segun_flow_python() {
         let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_estructura.zip");
@@ -690,7 +689,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requiere FLOW_REFERENCIA"]
     fn calendario_91_conserva_precedencia_y_aviso_al_abrir_trabajo() {
         let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let ruta = PathBuf::from(raiz).join("rust/crates/flow-trabajo/tests/datos/paquete_flujo.zip");
@@ -1047,7 +1045,6 @@ mod tests {
 
     /// Formatos reales de SITFA (.xls HTML, XML 2003 y BIFF): FLOW_FIXTURES apunta a una carpeta con ellos.
     #[test]
-    #[ignore = "requiere FLOW_FIXTURES"]
     fn formatos_sitfa() {
         let d = crate::prueba_entorno::requerida("FLOW_FIXTURES");
         let cfg = Config::default();

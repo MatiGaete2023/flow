@@ -28,7 +28,7 @@ def comprobar_productos(app, carpeta, trabajo, paquete):
     subprocess.run(
         [
             "cargo", "test", "--manifest-path", str(app / "Cargo.toml"), "--locked",
-            "--bin", "flow_rust", "revision_ui::tests::exporta_mismo_lote_de_python", "--", "--exact",
+            "--bin", "flow_rust", "revision_ui::tests::exporta_mismo_lote_de_python", "--", "--exact", "--include-ignored",
         ],
         check=True,
         env=dict(os.environ, FLOW_P2_PAQUETE=str(paquete), FLOW_P2_SALIDA=str(salida)),

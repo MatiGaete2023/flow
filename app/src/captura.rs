@@ -434,7 +434,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requiere FLOW_REFERENCIA"]
     fn contrasta_el_contrato_y_rechaza_identidad_cambiada_con_huella_correcta() {
         let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let raiz = Path::new(&raiz);

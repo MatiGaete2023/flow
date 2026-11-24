@@ -24,7 +24,7 @@ jobs:
       - name: Obtener la referencia Flow Python
         uses: actions/checkout@v4
         with:
-          ref: refs/heads/flow-python
+          ref: afc4d12ae1adabf21049c809c0d0d8f747e2e306
           path: referencia-python-ci
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
@@ -88,6 +88,8 @@ jobs:
           python tools/verificar_textos_umbrales.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/inventario_escrituras.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/verificar_referencia_python.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados')) {
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"

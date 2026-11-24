@@ -4,9 +4,17 @@
 
 use std::ffi::OsString;
 
-/// Devuelve la variable o falla con el mensaje único de las pruebas condicionadas.
+/// Devuelve la variable o falla con el mensaje único de las pruebas condicionadas. `FLOW_CASOS`, `FLOW_FIXTURES` y
+/// `FLOW_REFERENCIA` tienen ruta por omisión en el repositorio (E-V2): la variable solo la reemplaza.
 pub(crate) fn requerida(nombre: &str) -> OsString {
-    std::env::var_os(nombre).unwrap_or_else(|| {
+    let raiz = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let defecto = match nombre {
+        "FLOW_CASOS" => Some(raiz.join("../rust/casos")),
+        "FLOW_FIXTURES" => Some(raiz.join("../rust/crates/flow-tabular/tests/datos")),
+        "FLOW_REFERENCIA" => Some(raiz.join("..")),
+        _ => None,
+    };
+    std::env::var_os(nombre).or_else(|| defecto.map(OsString::from)).unwrap_or_else(|| {
         panic!("{nombre} es obligatoria para esta prueba (ver docs/migracion_python_rust/VERIFICACION.md)")
     })
 }

@@ -389,7 +389,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requiere FLOW_REFERENCIA"]
     fn exporta_resultados_y_preserva_el_destino_existente() {
         let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let corte = NaiveDate::from_ymd_opt(2026, 11, 20).unwrap();

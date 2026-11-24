@@ -28,17 +28,11 @@ def find_doc(name):
 
 
 def open_doc(app, name):
-    import os
-    import subprocess
-    import sys
-
     path = find_doc(name)
     if path is None:
         app.status.set(f'No se encontró {name} junto al programa: búscalo en la carpeta de manuales de la entrega.')
-    elif sys.platform == 'win32':
-        os.startfile(path)  # noqa: S606 - manual local de la entrega
     else:
-        subprocess.Popen(['xdg-open', str(path)])
+        app._open(path)
 
 
 def commands(app):

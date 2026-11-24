@@ -2237,7 +2237,6 @@ mod pruebas_paquete {
     use super::*;
 
     #[test]
-    #[ignore = "requiere FLOW_REFERENCIA"]
     fn trabajo_abre_paquete_cambia_etapa_y_conserva_el_activo_ante_error() {
         let raiz = crate::prueba_entorno::requerida("FLOW_REFERENCIA");
         let raiz = PathBuf::from(raiz);
