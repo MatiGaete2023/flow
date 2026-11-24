@@ -30,6 +30,13 @@ with sync_playwright() as p:
     assert all(type(v) is int and 0<=v<=255 for v in diagnostic.values())
     expected['diagnostic']=diagnostic
     result['diagnostic']=diagnostic
+   if 'structure' in result:
+    expected['structure']=result['structure']
+    assert all(type(v) is int and 0<=v<=255 for v in result['structure'].values())
+   if 'control_evidence' in result:
+    expected['control_evidence']=result['control_evidence']
+    assert result['structure']['control_checks_ok']==1
+   assert 'NO_EXPORTAR' not in json.dumps(result) and '98765432' not in json.dumps(result)
    assert result==expected,result
   else:
    assert result['status']=='CANDIDATE',result

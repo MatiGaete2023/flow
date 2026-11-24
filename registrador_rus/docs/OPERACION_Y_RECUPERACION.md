@@ -60,3 +60,7 @@ Actualizar el inspector a 0.1.1: descomprimir el ZIP nuevo en una carpeta separa
 ### Inspector 0.1.2 — formulario dentro de un marco
 
 Si el diagnóstico anterior devuelve todos los conteos de formulario en cero y visible_frames=1, instalar la versión 0.1.2 y repetir la inspección en la bitácora abierta. Sigue solo un marco visible por nivel si es accesible del mismo origen y no hay marcadores del formulario en el contenedor. No cambia permisos. frame_depth indica niveles recorridos; si MARCO_NO_ACCESIBLE, MARCOS_AMBIGUOS, MARCO_CARGANDO o PROFUNDIDAD_MARCOS_EXCEDIDA, no forzar acceso: informar solo resultado técnico. No guardar.
+
+### Inspector 0.1.3 — diagnóstico simultáneo
+
+Si se obtiene TABLA_NO_UNICA en el marco, instalar 0.1.3. El resultado BLOCKED puede incluir structure (conteos de tabla/contexto/controles) y control_evidence (atributos técnicos si los controles superan sus comprobaciones independientes). Se mantienen las condiciones de bloqueo. Antes de compartir, revisar que solo contenga datos técnicos generales y no valores judiciales. No editar ni guardar; no repetir exploraciones de otras vistas.

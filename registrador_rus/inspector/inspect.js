@@ -35,30 +35,52 @@ function inspectFocusDocument(doc) {
     }
     const form=forms[0], action=new URL(form.action);
     if(form.method.toLowerCase()!=='post'||action.origin!=='https://familia.pjud.cl'||action.pathname!=='/SITFAWEB/InformesDAction.do') return blocked('ACCION_INESPERADA');
-    const tables=[...doc.querySelectorAll('[id="TablaInforme"]')];
-    if(tables.length!==1||tables[0].tagName!=='TABLE'||!form.contains(tables[0])||!visible(tables[0])) return blocked('TABLA_NO_UNICA');
-    for(const key of ['COD_Tribunal','CRR_IdCausa','ID_Ingreso','COD_Etapa','TIP_Consulta']) {
+    const matches=[...doc.querySelectorAll('[id="TablaInforme"]')];
+    const tables=matches.filter(n=>n.tagName==='TABLE');
+    const inside=tables.filter(n=>form.contains(n));
+    const tableOk=matches.length===1&&inside.length===1&&visible(inside[0]);
+    const contextKeys=['COD_Tribunal','CRR_IdCausa','ID_Ingreso','COD_Etapa','TIP_Consulta'];
+    const contextOk=contextKeys.filter(key=>{
       const fields=[...form.querySelectorAll('input')].filter(n=>n.name===key);
-      if(fields.length!==1||fields[0].type!=='hidden'||fields[0].form!==form) return blocked('CONTEXTO_ESTRUCTURAL_INCOMPLETO');
-    }
+      return fields.length===1&&fields[0].type==='hidden'&&fields[0].form===form;
+    }).length;
     const controls=[...form.querySelectorAll('input,select,textarea,button')].filter(visible);
     const signature=['select','checkbox','textarea','text','button','button'];
-    if(controls.length!==signature.length||controls.some((n,i)=>kind(n)!==signature[i]||n.form!==form||n.matches(':disabled')||n.closest(modal)||/^HOBS_/.test(n.name))) return blocked('FIRMA_DISTINTA');
-    const [state,checkbox,editor,,create,other]=controls;
-    if(state.name!=='COD_Estado_Detalle_Nuevo'||state.multiple||state.options.length!==3||editor.readOnly||checkbox.indeterminate||create.name!=='irAccion'||other.name==='irAccion') return blocked('CONTROLES_AMBIGUOS');
-    const expected='enviar observación al tribunal';
-    const labels=[...doc.querySelectorAll('label')].filter(n=>visible(n)&&norm(n.textContent).toLowerCase()===expected);
-    if(labels.length>1||(labels.length===1&&labels[0].control&&labels[0].control!==checkbox)) return blocked('ETIQUETA_CONTRADICTORIA');
-    const labelOf=n=>norm(n.tagName==='INPUT'?n.value:n.textContent).toLowerCase();
-    if(labelOf(create)==='grabar'||labelOf(other)==='nueva obs') return blocked('ACCION_CONTRADICTORIA');
-    // Solo opciones del selector técnico de Estado, no la opción actualmente seleccionada.
-    const options=[...state.options].map(o=>({code:/^[0-9]{1,3}$/.test(o.value)?o.value:'OMITIDO',
-      label:/^[\p{L}\p{M} ()/.,-]{1,60}$/u.test(norm(o.textContent))?norm(o.textContent):'OMITIDO'}));
-    return {schema:'FocusedEvidenceV1',status:'CANDIDATE',write_enabled:false,
-      checkbox:{...attributes(checkbox),label_associated:labels.length===1&&labels[0].control===checkbox},
-      editor:{...attributes(editor),maxlength:editor.maxLength>=0?editor.maxLength:null},
-      state:{...attributes(state),options},create:{...attributes(create),label_matches:labelOf(create)==='nueva obs'},
-      context_fields_present:true};
+    const signatureOk=controls.length===signature.length&&controls.every((n,i)=>kind(n)===signature[i]&&n.form===form&&!n.matches(':disabled')&&!n.closest(modal)&&!/^HOBS_/.test(n.name));
+    const count=items=>Math.min(items.length,255);
+    const diagnostic={table_id_matches:count(matches),table_tags:count(tables),table_inside_form:count(inside),
+      table_visible:count(tables.filter(visible)),table_inside_visible:count(inside.filter(visible)),
+      context_fields_ok:contextOk,visible_controls:count(controls),
+      selects:count(controls.filter(n=>kind(n)==='select')),checkboxes:count(controls.filter(n=>kind(n)==='checkbox')),
+      editors:count(controls.filter(n=>kind(n)==='textarea')),texts:count(controls.filter(n=>kind(n)==='text')),
+      buttons:count(controls.filter(n=>kind(n)==='button')),signature_ok:Number(signatureOk),
+      state_options:0,control_checks_ok:0};
+    let controlReason='FIRMA_DISTINTA', evidence=null;
+    if(signatureOk) {
+      const [state,checkbox,editor,,create,other]=controls;
+      diagnostic.state_options=count([...state.options]);
+      controlReason='CONTROLES_AMBIGUOS';
+      if(state.name==='COD_Estado_Detalle_Nuevo'&&!state.multiple&&state.options.length===3&&!editor.readOnly&&!checkbox.indeterminate&&create.name==='irAccion'&&other.name!=='irAccion') {
+        const expected='enviar observación al tribunal';
+        const labels=[...doc.querySelectorAll('label')].filter(n=>visible(n)&&norm(n.textContent).toLowerCase()===expected);
+        const labelOf=n=>norm(n.tagName==='INPUT'?n.value:n.textContent).toLowerCase();
+        if(labels.length>1||(labels.length===1&&labels[0].control&&labels[0].control!==checkbox)) controlReason='ETIQUETA_CONTRADICTORIA';
+        else if(labelOf(create)==='grabar'||labelOf(other)==='nueva obs') controlReason='ACCION_CONTRADICTORIA';
+        else {
+          controlReason=null;
+          diagnostic.control_checks_ok=1;
+          const options=[...state.options].map(o=>({code:/^[0-9]{1,3}$/.test(o.value)?o.value:'OMITIDO',
+            label:/^[\p{L}\p{M} ()/.,-]{1,60}$/u.test(norm(o.textContent))?norm(o.textContent):'OMITIDO'}));
+          evidence={checkbox:{...attributes(checkbox),label_associated:labels.length===1&&labels[0].control===checkbox},
+            editor:{...attributes(editor),maxlength:editor.maxLength>=0?editor.maxLength:null},
+            state:{...attributes(state),options},create:{...attributes(create),label_matches:labelOf(create)==='nueva obs'}};
+        }
+      }
+    }
+    // Mantener el mismo orden y rigor de bloqueo; recoger evidencia independiente en una sola inspección.
+    const reason=!tableOk?'TABLA_NO_UNICA':contextOk!==5?'CONTEXTO_ESTRUCTURAL_INCOMPLETO':controlReason;
+    if(reason) return {...blocked(reason),structure:diagnostic,...(evidence?{control_evidence:evidence}:{})};
+    return {schema:'FocusedEvidenceV1',status:'CANDIDATE',write_enabled:false,...evidence,context_fields_present:true};
   } catch (_) {return blocked('INSPECCION_NO_CONCLUYENTE');}
 }
 

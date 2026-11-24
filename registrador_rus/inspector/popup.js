@@ -20,6 +20,18 @@ function validEvidence(value) {
     return validEvidence(body);
   }
   if (value.status === 'BLOCKED') {
+    if (Object.hasOwn(value,'structure')) {
+      const allowed=['TABLA_NO_UNICA','CONTEXTO_ESTRUCTURAL_INCOMPLETO','FIRMA_DISTINTA','CONTROLES_AMBIGUOS','ETIQUETA_CONTRADICTORIA','ACCION_CONTRADICTORIA'];
+      const has=Object.hasOwn(value,'control_evidence');
+      const d=value.structure;
+      if (!allowed.includes(value.reason)||!exact(value,'schema status reason write_enabled structure'+(has?' control_evidence':''))||
+          !exact(d,'table_id_matches table_tags table_inside_form table_visible table_inside_visible context_fields_ok visible_controls selects checkboxes editors texts buttons signature_ok state_options control_checks_ok')||
+          !Object.values(d).every(n=>Number.isInteger(n)&&n>=0&&n<=255)||d.context_fields_ok>5||d.signature_ok>1||d.control_checks_ok>1||
+          has!==(d.control_checks_ok===1)) return false;
+      if (!has) return true;
+      const e=value.control_evidence;
+      return exact(e,'checkbox editor state create') && validEvidence({schema:'FocusedEvidenceV1',status:'CANDIDATE',write_enabled:false,context_fields_present:true,...e});
+    }
     if (value.reason === 'FORMULARIO_NO_UNICO' && Object.hasOwn(value,'diagnostic')) {
       return exact(value,'schema status reason write_enabled diagnostic') &&
         exact(value.diagnostic,'forms named by_id named_box named_controls action_matches tables states visible_frames') &&

@@ -70,5 +70,20 @@ async function exercise({tabs=[{id:7,url:'https://familia.pjud.cl/'}],results=[{
   for(const frame_depth of [0,5,-1,'1',1.5]){
     r=await exercise({results:[{result:{...valid,frame_depth}}]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
   }
-  console.log('PASS 30 popup contract cases');
+  const structure={table_id_matches:0,table_tags:0,table_inside_form:0,table_visible:0,table_inside_visible:0,context_fields_ok:5,visible_controls:6,selects:1,checkboxes:1,editors:1,texts:1,buttons:2,signature_ok:1,state_options:3,control_checks_ok:1};
+  const control_evidence={checkbox:valid.checkbox,editor:valid.editor,state:valid.state,create:valid.create};
+  const partial={...blocked,reason:'TABLA_NO_UNICA',frame_depth:1,structure,control_evidence};
+  r=await exercise({results:[{result:partial}]});assert.deepEqual(JSON.parse(r.output),partial);
+  for(const wrong of [
+    {...partial,structure:{...structure,text:'NO_EXPORTAR'}},
+    {...partial,structure:{...structure,context_fields_ok:6}},
+    {...partial,structure:{...structure,signature_ok:2}},
+    {...partial,structure:{...structure,table_tags:-1}},
+    {...partial,control_evidence:{...control_evidence,editor:{...valid.editor,text:'NO_EXPORTAR'}}},
+    {...partial,reason:'FORMULARIO_NO_UNICO'},
+    {...partial,structure:{...structure,control_checks_ok:0}}
+  ]){
+    r=await exercise({results:[{result:wrong}]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
+  }
+  console.log('PASS 38 popup contract cases');
 })().catch(error=>{console.error(error);process.exitCode=1;});
