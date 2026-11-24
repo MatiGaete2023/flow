@@ -21,7 +21,7 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `descargador_ui.rs` (botón «Abrir en Trabajo» bajo el paquete creado y `paquete_para_trabajo`) y `ui.rs` (abre el paquete y pasa a Trabajo).
 - Acredita: la extensión de `ui_descargador_bitacoras_y_paquete` (el clic deja la ruta del paquete, que se recoge una sola vez); `tools/probar_app.sh todo`: 64 y 51 pruebas, 0 fallos.
 - Diferencias declaradas: sin solicitudes, respuestas ni recuperación como Python (decisión del usuario, opción B).
-- Pendiente: CI de Windows.
+- CI de Windows en verde (run 45432865102).
 
 ## 2026-11-24 · E-A1: Actualizar desde Excel
 

@@ -42,7 +42,7 @@ Qué se compara con Python:
   - `descargador/excel.rs` y `descargador/resultados.rs`, con el oráculo `app/qa/generar_excel.py`.
   - `include_originals` no se porta: ninguna ruta de Python lo activa.
 - **E-Q7 · Avance por fila de la lectura — `HECHO` en Linux.** `bitacoras::ejecutar_con_avance` emite `query`, `diary_progress` y `warning` como `DiaryRunner`; la sección «Bitácoras y paquete» muestra las filas revisadas, el estado y los avisos.
-- **E-U1 · Intercambio entre herramientas (F27) — `HECHO` con la opción B (D-9); falta su CI de Windows.** «Abrir en Trabajo» junto al paquete recién creado en el Descargador abre el ZIP en Trabajo (guarda antes la sesión pendiente). No hay archivos de solicitud ni de respuesta: el contrato es el paquete (D-5), y el Asistente sigue sin navegar SITFA ni iniciar el Descargador. `capture/temporal.py` no era parte de F27: su cronología ya está portada.
+- **E-U1 · Intercambio entre herramientas (F27) — `HECHO` con la opción B (D-9), CI de Windows en verde (run 45432865102).** «Abrir en Trabajo» junto al paquete recién creado en el Descargador abre el ZIP en Trabajo (guarda antes la sesión pendiente). No hay archivos de solicitud ni de respuesta: el contrato es el paquete (D-5), y el Asistente sigue sin navegar SITFA ni iniciar el Descargador. `capture/temporal.py` no era parte de F27: su cronología ya está portada.
 - **Prueba del usuario:** la de [ESTADO.md](ESTADO.md).
 
 ## Tramo 2 · Exportaciones de lote
