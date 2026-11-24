@@ -545,6 +545,8 @@ impl Lote<'_> {
         nombre: &dyn Fn(usize, usize) -> String,
         emitir: &mut dyn FnMut(Evento),
         etiqueta_consulta: &str,
+        html_primera: &[u8],
+        listado: Option<&super::vinculos::Seleccion>,
     ) -> Result<Vec<Value>, String> {
         let total = primera.total;
         let mut resultados: Vec<Value> = Vec::new();
@@ -553,6 +555,7 @@ impl Lote<'_> {
             let mut verificador = Verificador::default();
             let mut actuales = pares.clone();
             let mut pagina = primera.clone();
+            let mut html_actual = html_primera.to_vec();
             for numero in 1..=total {
                 cancelado(self.cancelar, CANCELADO_PAGINAS)?;
                 if numero > 1 {
@@ -562,6 +565,7 @@ impl Lote<'_> {
                         &self.pedir("search", json!({"pairs": actuales, "timeout": ESPERA_SITFA_MS}))?,
                         false,
                     )?;
+                    html_actual = html.clone();
                     pagina = match validar_respuesta(&html, &actuales, consulta, Some((numero, &primera)))? {
                         Respuesta::ConRegistros(p) => p,
                         Respuesta::SinRegistros => {
@@ -600,6 +604,16 @@ impl Lote<'_> {
                     },
                     "coincide_con_html": true, "estado": "OK",
                 }));
+                // `motor.run_sequence`: en Seguimiento cada página conserva los vínculos de ingreso comprobados del
+                // listado (`search_page.bindings` → `vinculos_ingreso`), que el paquete usa para la identidad remota.
+                if let Some(seleccion) = listado {
+                    let vinculos: Vec<Value> = super::vinculos::extraer(&html_actual, seleccion)
+                        .map(|v| v.iter().filter(|v| v.bitacora_verificada).map(super::vinculos::Vinculo::bitacora_python).collect())
+                        .unwrap_or_default();
+                    if !vinculos.is_empty() {
+                        resultados.last_mut().unwrap()["vinculos_ingreso"] = json!(vinculos);
+                    }
+                }
                 self.manifiesto(manifiesto, caso, &resultados, total, "EN_CURSO")?;
                 emitir(Evento::Pagina {
                     consulta: etiqueta_consulta.into(),
@@ -949,7 +963,15 @@ pub fn ejecutar(
                         let raiz = raiz.get_or_init(|| unico(base, ""));
                         format!("{raiz}{}.xls", if total > 1 { format!(" - p{numero} de {total}") } else { String::new() })
                     };
-                    lote.paginas(&pares, primera, consulta, &caso, &manifiesto, &nombre, emitir, &rotulo)?
+                    let listado = match &perfil.alcance {
+                        Alcance::Seguimiento { pestana, .. } => Some(super::vinculos::Seleccion {
+                            tribunal: perfil.tribunal.clone(),
+                            screen: "seguimiento".into(),
+                            tab: pestana.clone(),
+                        }),
+                        _ => None,
+                    };
+                    lote.paginas(&pares, primera, consulta, &caso, &manifiesto, &nombre, emitir, &rotulo, &html, listado.as_ref())?
                 }
             };
             let archivos: Vec<Value> = if resultado.is_empty() {
@@ -1043,4 +1065,126 @@ pub fn ejecutar(
         }
     }
     ejecucion.map(|()| completadas)
+}
+
+#[cfg(test)]
+mod pruebas_lote_python {
+    use super::*;
+    use crate::descargador::{SeleccionLote, Catalogo};
+    use std::cell::RefCell;
+
+    /// Reproduce las respuestas que el `BatchRunner` de Flow Python recibió del puente ficticio, en el mismo orden.
+    struct Guion {
+        pasos: Vec<Value>,
+        pedidos: RefCell<Vec<Value>>,
+    }
+
+    impl Conexion for Guion {
+        fn llamar(&self, comando: &str, payload: Value, _plazo: Duration) -> Result<Value, String> {
+            let n = self.pedidos.borrow().len();
+            self.pedidos.borrow_mut().push(json!({"comando": comando, "payload": payload}));
+            let paso = self.pasos.get(n).ok_or_else(|| format!("orden {n} ({comando}) fuera del guion de Python"))?;
+            if paso["comando"] != comando {
+                return Err(format!("orden {n}: Rust pide {comando}, Python pidió {}", paso["comando"]));
+            }
+            paso.get("respuesta").cloned().ok_or_else(|| paso["error"].as_str().unwrap_or("error").to_string())
+        }
+    }
+
+    fn sin_vacio(v: &Value) -> Value {
+        if v.is_null() || v.as_object().is_some_and(serde_json::Map::is_empty) { Value::Null } else { v.clone() }
+    }
+
+    fn sin_horas(v: &Value) -> Value {
+        match v {
+            Value::Object(m) => Value::Object(
+                m.iter()
+                    .map(|(k, x)| {
+                        let x = if k == "fecha_hora" || k == "fecha_descarga" { json!("<HORA>") } else { sin_horas(x) };
+                        (k.clone(), x)
+                    })
+                    .collect(),
+            ),
+            Value::Array(a) => Value::Array(a.iter().map(sin_horas).collect()),
+            otro => otro.clone(),
+        }
+    }
+
+    /// E-Q5: el lote de listados Integral de Rust da las mismas órdenes, el mismo `resumen.json`, los mismos
+    /// manifiestos (con `vinculos_ingreso` de cada página de Seguimiento) y los mismos XLS que `lotes.BatchRunner`.
+    #[test]
+    fn lote_de_listados_igual_a_python() {
+        let datos: Value = serde_json::from_str(include_str!("../../tests/datos/lote.json")).unwrap();
+        let catalogo: Catalogo = serde_json::from_value(datos["catalogo"].clone()).unwrap();
+        let escenarios = datos["escenarios"].as_array().unwrap();
+        let (mut iguales, mut fallos) = (0usize, Vec::new());
+        for e in escenarios {
+            let nombre = e["escenario"].as_str().unwrap();
+            let lista = |k: &str| -> Vec<String> { serde_json::from_value(e["lote"][k].clone()).unwrap() };
+            let seleccion = SeleccionLote {
+                tribunales: lista("tribunales"),
+                modalidades: lista("modalidades"),
+                pestanas: lista("pestanas"),
+                informes: vec!["1".into()],
+                // Cumplimiento sin filtro de medidas (`report` nulo en Python): «Todas las medidas».
+                medidas: vec![crate::descargador::TODAS_LAS_MEDIDAS.into()],
+                ..Default::default()
+            };
+            let plan = catalogo.planificar(Edicion::Integral, &seleccion).unwrap();
+            let guion = Guion { pasos: e["guion"].as_array().unwrap().clone(), pedidos: RefCell::default() };
+            let destino = std::env::temp_dir().join(format!("flow-eq5-lote-{}-{nombre}", std::process::id()));
+            let _ = fs::remove_dir_all(&destino);
+            let mut carpeta = PathBuf::new();
+            let resultado = ejecutar(&guion, &catalogo, Edicion::Integral, &plan, &destino, &Opciones::default(),
+                &AtomicBool::new(false), &mut |ev| if let Evento::Carpeta(c) = ev { carpeta = c });
+            let mut diferencias = Vec::new();
+            if let Err(err) = &resultado {
+                diferencias.push(format!("ejecutar: {err}"));
+            }
+            let pedidos = guion.pedidos.borrow();
+            let esperados = e["guion"].as_array().unwrap();
+            if pedidos.len() != esperados.len() {
+                diferencias.push(format!("órdenes: Rust {} / Python {}", pedidos.len(), esperados.len()));
+            }
+            for (k, (p, x)) in pedidos.iter().zip(esperados).enumerate() {
+                if p["comando"] != x["comando"] || sin_vacio(&p["payload"]) != sin_vacio(&x["payload"]) {
+                    diferencias.push(format!("orden {k}: Rust {p} / Python {}", json!({"comando": x["comando"], "payload": x["payload"]})));
+                }
+            }
+            for (archivo, esperado) in e["jsons"].as_object().unwrap() {
+                match fs::read(carpeta.join(archivo)) {
+                    Ok(b) => {
+                        let obtenido = sin_horas(&serde_json::from_slice::<Value>(&b).unwrap());
+                        if &obtenido != esperado {
+                            diferencias.push(format!("{archivo}:\n    Rust   {obtenido}\n    Python {esperado}"));
+                        }
+                    }
+                    Err(_) => diferencias.push(format!("{archivo}: falta en Rust")),
+                }
+            }
+            for (archivo, huella) in e["huellas"].as_object().unwrap() {
+                let obtenida = fs::read(carpeta.join(archivo)).map(|b| huella_archivo(&b)).unwrap_or_default();
+                if obtenida != huella.as_str().unwrap() {
+                    diferencias.push(format!("{archivo}: huella distinta o ausente"));
+                }
+            }
+            let _ = fs::remove_dir_all(&destino);
+            if diferencias.is_empty() {
+                iguales += 1;
+            } else {
+                fallos.push(format!("{nombre}:\n  {}", diferencias.join("\n  ")));
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        println!("LOTE: {iguales}/{}, fallos {}", escenarios.len(), fallos.len());
+        assert_eq!(escenarios.len(), 2, "el fixture cambió de tamaño: regenerar y revisar");
+        assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
+    }
+
+    fn huella_archivo(b: &[u8]) -> String {
+        use sha2::{Digest, Sha256};
+        format!("{:x}", Sha256::digest(b))
+    }
 }
