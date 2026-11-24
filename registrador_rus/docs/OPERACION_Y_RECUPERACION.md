@@ -56,3 +56,7 @@ El núcleo pasó 9 pruebas con DOM ficticio; la extensión nativa todavía no fu
 ### Si el inspector devuelve FORMULARIO_NO_UNICO
 
 Actualizar el inspector a 0.1.1: descomprimir el ZIP nuevo en una carpeta separada, quitar solo la extensión del inspector anterior e instalar la carpeta inspector nueva, si la política permite. Repetir una sola inspección con la ventana de bitácora activa. Si BLOCKED incluye diagnostic, compartir el JSON de conteos únicamente; no incluye identidad ni contenido. Los conteos distinguen nombre, ID, caja, controles visibles, acción esperada, tabla, selector y marcos visibles (sin entrar en ellos). CANDIDATE: revisar manualmente antes de compartir únicamente atributos técnicos. No editar ni guardar.
+
+### Inspector 0.1.2 — formulario dentro de un marco
+
+Si el diagnóstico anterior devuelve todos los conteos de formulario en cero y visible_frames=1, instalar la versión 0.1.2 y repetir la inspección en la bitácora abierta. Sigue solo un marco visible por nivel si es accesible del mismo origen y no hay marcadores del formulario en el contenedor. No cambia permisos. frame_depth indica niveles recorridos; si MARCO_NO_ACCESIBLE, MARCOS_AMBIGUOS, MARCO_CARGANDO o PROFUNDIDAD_MARCOS_EXCEDIDA, no forzar acceso: informar solo resultado técnico. No guardar.

@@ -10,9 +10,15 @@ const boolean = value => typeof value === 'boolean';
 const attrs = value => technical(value.id) && technical(value.name);
 const reasons = new Set(['ORIGEN_NO_PERMITIDO','MODAL_VISIBLE','FORMULARIO_NO_UNICO',
   'ACCION_INESPERADA','TABLA_NO_UNICA','CONTEXTO_ESTRUCTURAL_INCOMPLETO','FIRMA_DISTINTA',
-  'CONTROLES_AMBIGUOS','ETIQUETA_CONTRADICTORIA','ACCION_CONTRADICTORIA','INSPECCION_NO_CONCLUYENTE']);
+  'CONTROLES_AMBIGUOS','ETIQUETA_CONTRADICTORIA','ACCION_CONTRADICTORIA','INSPECCION_NO_CONCLUYENTE',
+  'MARCOS_AMBIGUOS','PROFUNDIDAD_MARCOS_EXCEDIDA','MARCO_NO_ACCESIBLE','MARCO_CARGANDO']);
 function validEvidence(value) {
   if (!value || value.schema !== 'FocusedEvidenceV1' || value.write_enabled !== false) return false;
+  if (Object.hasOwn(value,'frame_depth')) {
+    if (!Number.isInteger(value.frame_depth)||value.frame_depth<1||value.frame_depth>4) return false;
+    const {frame_depth,...body}=value;
+    return validEvidence(body);
+  }
   if (value.status === 'BLOCKED') {
     if (value.reason === 'FORMULARIO_NO_UNICO' && Object.hasOwn(value,'diagnostic')) {
       return exact(value,'schema status reason write_enabled diagnostic') &&

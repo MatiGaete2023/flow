@@ -62,9 +62,44 @@ function inspectFocusDocument(doc) {
   } catch (_) {return blocked('INSPECCION_NO_CONCLUYENTE');}
 }
 
+// Seguir solo una cadena inequívoca de marcos visibles del mismo origen.
+// No navega, no abre marcos, no amplía permisos ni lee atributos de sus URLs.
+function inspectFocusTree(root, allowedOrigin) {
+  'use strict';
+  const blocked = reason => ({schema:'FocusedEvidenceV1',status:'BLOCKED',reason,write_enabled:false});
+  let doc=root, depth=0;
+  const annotate = result => depth===0?result:{...result,frame_depth:depth};
+  function frameVisible(frame) {
+    if (!frame.isConnected || !frame.getClientRects().length) return false;
+    for (let n=frame;n;n=n.parentElement) {
+      const css=doc.defaultView.getComputedStyle(n);
+      if (n.hidden || n.inert || n.getAttribute('aria-hidden')==='true' || css.display==='none' || css.visibility!=='visible' || css.opacity==='0') return false;
+    }
+    return true;
+  }
+  try {
+    while (true) {
+      const result=inspectFocusDocument(doc);
+      const d=result.diagnostic;
+      // Solo descender si el documento es un contenedor sin ningún marcador del formulario.
+      if (result.reason!=='FORMULARIO_NO_UNICO'||!d||d.forms||d.named||d.by_id||d.tables||d.states||!d.visible_frames) return annotate(result);
+      const frames=[...doc.querySelectorAll('frame,iframe')].filter(frameVisible);
+      if (frames.length!==1) return annotate(blocked('MARCOS_AMBIGUOS'));
+      if (depth>=4) return annotate(blocked('PROFUNDIDAD_MARCOS_EXCEDIDA'));
+      let next;
+      try {
+        next=frames[0].contentDocument;
+        if (!next||!next.defaultView||next.defaultView.location.origin!==allowedOrigin) return annotate(blocked('MARCO_NO_ACCESIBLE'));
+      } catch (_) {return annotate(blocked('MARCO_NO_ACCESIBLE'));}
+      if (next.readyState==='loading') return annotate(blocked('MARCO_CARGANDO'));
+      doc=next;depth++;
+    }
+  } catch (_) {return annotate(blocked('INSPECCION_NO_CONCLUYENTE'));}
+}
+
 function inspectFocus() {
   if (location.origin !== 'https://familia.pjud.cl')
     return {schema:'FocusedEvidenceV1',status:'BLOCKED',reason:'ORIGEN_NO_PERMITIDO',write_enabled:false};
-  return inspectFocusDocument(document);
+  return inspectFocusTree(document,'https://familia.pjud.cl');
 }
 inspectFocus();

@@ -61,5 +61,14 @@ async function exercise({tabs=[{id:7,url:'https://familia.pjud.cl/'}],results=[{
   for(const d of [{...diagnostic.diagnostic,text:'NO_EXPORTAR'}, {...diagnostic.diagnostic,named:-1}, {...diagnostic.diagnostic,forms:256}, {...diagnostic.diagnostic,states:'1'}]){
     r=await exercise({results:[{result:{...diagnostic,diagnostic:d}}]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
   }
-  console.log('PASS 19 popup contract cases');
+  r=await exercise({results:[{result:{...valid,frame_depth:1}}]});assert.deepEqual(JSON.parse(r.output),{...valid,frame_depth:1});
+  r=await exercise({results:[{result:{...diagnostic,frame_depth:2}}]});assert.deepEqual(JSON.parse(r.output),{...diagnostic,frame_depth:2});
+  for(const reason of ['MARCOS_AMBIGUOS','PROFUNDIDAD_MARCOS_EXCEDIDA','MARCO_NO_ACCESIBLE','MARCO_CARGANDO']){
+    const result={...blocked,reason,frame_depth:1};
+    r=await exercise({results:[{result}]});assert.deepEqual(JSON.parse(r.output),result);
+  }
+  for(const frame_depth of [0,5,-1,'1',1.5]){
+    r=await exercise({results:[{result:{...valid,frame_depth}}]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
+  }
+  console.log('PASS 30 popup contract cases');
 })().catch(error=>{console.error(error);process.exitCode=1;});
