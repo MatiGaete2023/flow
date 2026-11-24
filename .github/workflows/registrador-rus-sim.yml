@@ -27,3 +27,24 @@ jobs:
         run: python -m pip install --require-hashes -r requirements/linux-py312.lock
       - name: Suite del registrador exclusivamente ficticia
         run: xvfb-run -a python -m unittest discover -s registrador_rus/tests -p 'test_*.py' -v
+
+      - name: Contrato de salida del inspector (API Chrome simulada)
+        run: node registrador_rus/tests/test_inspector_popup.cjs
+  windows-transfer:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Dependencias bloqueadas Windows
+        run: python -m pip install --require-hashes -r requirements/windows-py312.lock
+      - name: Transferencia ficticia y arranque del registrador
+        run: python -m unittest discover -s registrador_rus/tests -p 'test_demo_transfer.py' -v
+      - name: Reconciliacion de copia Excel ficticia
+        run: python -m unittest discover -s registrador_rus/tests -p 'test_reconcile_excel.py' -v
