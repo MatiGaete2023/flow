@@ -93,6 +93,6 @@ En este orden, salvo que el usuario indique otro:
 - **D-5 (24-nov):** «El Descargador recolecta toda la información que Flow necesita para analizar. Descargador recolecta info, Flow la procesa.» Interpretación aplicada en este plan, por confirmar: el contrato es el paquete, y los archivos internos del lote no necesitan ser idénticos a los de Python.
 - **D-6 (24-nov):** F27 se mantiene en el alcance.
 - **D-7 (24-nov):** orden Descargador, exportaciones de lote, Asistente.
-- **D-8:** pendiente.
+- **D-8 (24-nov):** se retira de esta rama la documentación del proyecto Python; sigue en `flow-python`. El árbol de código Python se conserva hasta cerrar E-V1.
 
 El detalle de las decisiones del 20 de noviembre está en el [informe de fallas](historico/INFORME_FALLAS_20261120.md#decisiones-del-usuario--20-nov-2026).

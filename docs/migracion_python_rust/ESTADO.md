@@ -15,7 +15,6 @@ Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuent
 
 ## Pendiente del usuario
 
-- **D-8:** decidir si se retiran de esta rama la documentación y el árbol Python duplicados, que siguen en `flow-python`.
 - **Prueba corta del tramo 1** con el `.exe` del último run de «Flow Rust local · Windows»: un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. Anotar lo que falle; no hace falta acta.
 - Revisión visual de las capturas del run (antes E-E) y paquete H: acta de uso real.
 
@@ -69,4 +68,5 @@ Actualizado: 24 de noviembre de 2026, tras `c734f84` (E-Q5d). Es la única fuent
 
 - Lectura al iniciar: `AGENTS.md`, este archivo y [PLAN.md](PLAN.md).
 - Según necesidad: [VERIFICACION.md](VERIFICACION.md), [DISENO.md](DISENO.md), [REGISTRO_IMPLEMENTACION.md](REGISTRO_IMPLEMENTACION.md) y [REVISION_20261124.md](REVISION_20261124.md).
+- La documentación del proyecto Python se retiró de esta rama (D-8) y sigue en `flow-python`. Quedan `docs/aceptacion/`, `docs/evidencia_p0/golden/` y dos archivos de `docs/implementacion/` que usa `rust/`.
 - [historico/](historico/) guarda el registro, los encargos, la matriz y los informes anteriores al 24 de noviembre. No se lee al iniciar.
