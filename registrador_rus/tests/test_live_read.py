@@ -41,6 +41,18 @@ class LiveReadTests(TestCase):
             self.box.ack(self.ack)
         self.assertEqual(self.box.take_result(),dict(status='LECTURA_COMPLETA',entries=0,operation_id=self.op.operation_id,write_enabled=False))
         self.assertIsNone(self.box.take_result())
+    def test_prepare_mode_requires_exact_report(self):
+        from registrador_rus.app.pilot_bridge import expected_report
+        from registrador_rus.app.readback import Snapshot
+        from datetime import datetime,timezone
+        box=LiveReadMailbox(self.op,prepare_only=True)
+        command=box.poll(dict(schema='BridgePollV1',session_id=box.session_id))['command']
+        self.assertEqual(command['command'],'validate_prepare_only')
+        body=dict(self.ack,session_id=box.session_id,command_id=box.command_id,report=expected_report(self.op))
+        with patch('nurus.bitacora_html.read_snapshot',return_value={}),patch('registrador_rus.app.live_read.Snapshot.from_reader',return_value=Snapshot(self.op.remote_identity,datetime.now(timezone.utc),'1',(),True)):
+            box.ack(body)
+        self.assertTrue(box.take_result()['prepared'])
+
     def test_build_exclusive(self):
         with TemporaryDirectory() as d:
             path=build(Path(d)/'extension')

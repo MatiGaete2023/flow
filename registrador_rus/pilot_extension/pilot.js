@@ -41,16 +41,23 @@ async function invoke(p,docId,func,args){
 }
 async function execute(cmd){
   lease(cmd);
+  if(cmd.command==='readback'){
+    // La fila puede haber desaparecido del listado después de guardar.
+    // Se exige popup única y los seis campos de la reserva durable, no posición.
+    const candidates=[];
+    for(const tab of await chrome.tabs.query({url:['https://familia.pjud.cl/*']})){
+      if(tab.status!=='complete'||!Number.isInteger(tab.id))continue;
+      const w=await chrome.windows.get(tab.windowId);
+      if(w.type==='popup'&&['/SITFAWEB/IrPopUpInformesAccion.do','/SITFAWEB/InformesDAction.do'].includes(FlowLiveBrowser.route(tab)))candidates.push(tab);
+    }
+    if(candidates.length!==1)fail('BITACORA_NO_UNICA');
+    const p=candidates[0],snap=await capture(p,cmd.operation,cmd.context);
+    await ensurePopup(p,snap.documentId);
+    return {context:cmd.context,html:snap.html};
+  }
   const {l,p}=await selectPair();
   const listed=await locate(l,cmd.operation);
   lease(cmd);
-  if(cmd.command==='readback'){
-    const snap=await capture(p,cmd.operation,listed.context);
-    const again=await locate(l,cmd.operation);
-    if(again.documentId!==listed.documentId||!same(again.context,listed.context))fail('LISTADO_CAMBIADO');
-    await ensurePopup(p,snap.documentId);
-    return {context:listed.context,html:snap.html};
-  }
   if(cmd.command==='prepare'){
     if(prepared||creationConsumed)fail('SESION_YA_PREPARADA');
     const r=await chrome.scripting.executeScript({target:{tabId:p.id},files:['prepare.js','observed_form.js','live_adapter.js'],world:'ISOLATED'});

@@ -19,7 +19,9 @@ MAX_HTML=8*1024*1024
 
 
 class LiveReadMailbox:
-    def __init__(self, op):
+    def __init__(self, op, *, prepare_only=False):
+        if type(prepare_only) is not bool:raise BridgeError('MODO_VALIDACION_INVALIDO')
+        self.prepare_only=prepare_only
         if type(op) is not RegistroFlowV1 or op.source.tool!='FLOW' or not re.fullmatch(r'[a-f0-9]{64}',op.operation_id):
             raise BridgeError('OPERACION_FLOW_REQUERIDA')
         require_state(op.origin,op.observation_state)
@@ -40,7 +42,7 @@ class LiveReadMailbox:
                 return {'command':None}
             self._delivered=True
             return {'command':dict(schema='LiveReadCommandV1',session_id=self.session_id,command_id=self.command_id,
-                                   command='validate_read_only',operation=asdict(self.op),write_enabled=False)}
+                                   command='validate_prepare_only' if self.prepare_only else 'validate_read_only',operation=asdict(self.op),write_enabled=False)}
 
     def _parse(self,body):
         from nurus.bitacora_html import read_snapshot
@@ -60,14 +62,20 @@ class LiveReadMailbox:
         if snap.identity!=identity or snap.stage_code!=context['COD_Etapa']:
             raise BridgeError('IDENTIDAD_DISTINTA')
         # No persistir raw, HTML, autores, textos ni identificadores de entradas.
-        return dict(status='LECTURA_COMPLETA' if snap.complete else 'LECTURA_PARCIAL',
+        result=dict(status='LECTURA_COMPLETA' if snap.complete else 'LECTURA_PARCIAL',
                     entries=len(snap.entries),operation_id=self.op.operation_id,write_enabled=False)
+        if self.prepare_only:
+            from .pilot_bridge import expected_report
+            if type(body['report']) is not dict or body['report']!=expected_report(self.op):
+                raise BridgeError('PREPARACION_NO_ACREDITADA')
+            result.update(prepared=True,saved=False)
+        return result
 
     def ack(self,body):
         if type(body) is not dict or body.get('schema')!='LiveReadAckV1' or body.get('session_id')!=self.session_id or body.get('command_id')!=self.command_id:
             raise BridgeError('RESPUESTA_INVALIDA')
         if body.get('status')=='OK':
-            _fields(body,'schema session_id command_id status context html')
+            _fields(body,'schema session_id command_id status context html'+(' report' if self.prepare_only else ''))
         elif body.get('status')=='BLOCKED':
             _fields(body,'schema session_id command_id status')
         else:
@@ -90,5 +98,5 @@ class LiveReadMailbox:
             return value
 
 
-def open_live_read_bridge(origin,op):
-    return LocalBridge(origin,LiveReadMailbox(op),max_body=16*1024*1024)
+def open_live_read_bridge(origin,op,*,prepare_only=False):
+    return LocalBridge(origin,LiveReadMailbox(op,prepare_only=prepare_only),max_body=16*1024*1024)

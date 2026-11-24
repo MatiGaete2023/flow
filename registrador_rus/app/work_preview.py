@@ -69,6 +69,8 @@ class WorkPreviewDialog:
         self.confirm_button.pack(side='right')
         self.live_button=ttk.Button(row,text='Validar ingreso abierto (solo lectura)',state='disabled',command=lambda:self.run(self.open_live_read))
         self.live_button.pack(side='left')
+        self.prepare_live_button=ttk.Button(row,text='Preparar sin guardar',state='disabled',command=lambda:self.run(self.open_live_prepare))
+        self.prepare_live_button.pack(side='left',padx=3)
         self.pilot_button=ttk.Button(row,text='Piloto real (bloqueado)' if not CAPABILITIES['write_one'] else 'Piloto real unitario',state='disabled',command=lambda:self.run(self.open_pilot))
         self.pilot_button.pack(side='left',padx=4)
         ttk.Button(row,text='Cerrar',command=self.window.destroy).pack(side='right',padx=4)
@@ -100,11 +102,18 @@ class WorkPreviewDialog:
     def toggle(self):
         self.confirm_button.configure(state='normal' if self.frozen is not None and self.accepted.get() else 'disabled')
         self.live_button.configure(state='normal' if self.confirmed_preview is not None and len(self.ids)==1 else 'disabled')
+        self.prepare_live_button.configure(state='normal' if self.confirmed_preview is not None and len(self.ids)==1 else 'disabled')
         self.pilot_button.configure(state='normal' if CAPABILITIES['write_one'] and self.confirmed_preview is not None and len(self.ids)==1 else 'disabled')
 
     def open_pilot(self):
         from .pilot_dialog import PilotDialog
         return PilotDialog(self.window,self)
+
+    def open_live_prepare(self):
+        from .live_read_dialog import LiveReadDialog
+        if messagebox.askyesno('Validación de preparación real sin guardado',
+            '¿Tienes autorización para esta prueba local y deseas colocar exactamente los valores revisados en la bitácora abierta, sin eventos ni guardar? Cierra la ventana RUS sin guardar al terminar.',parent=self.window):
+            return LiveReadDialog(self,prepare_only=True)
 
     def open_live_read(self):
         from .live_read_dialog import LiveReadDialog

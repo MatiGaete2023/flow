@@ -39,13 +39,14 @@ with sync_playwright() as p:
                     return {html:html.includes('TablaInforme'),saved:false};
                 }
                 const s=await A.fixture.session(P,op,hit.context);
-                const r=s.prepare(current);s.verify(current);
+                const r=s.prepare(current,{emitEvents:phase!=='passive'});s.verify(current);
                 try{s.createOnce(current,{operation_id:op.operation_id});return {reason:'WRITE_ESCAPED'};}
                 catch(e){if(e.message!=='ESCRITURA_REAL_NO_HABILITADA')throw e;}
                 return r;
             }catch(e){return {reason:e.message};}
         }""",phase)
         assert page.evaluate('events.submit===0&&events.click===0')
+        if phase=='passive':assert page.evaluate('events.input===0&&events.change===0')
         if reason:assert result==dict(reason=reason),result
         elif phase=='capture':assert result==dict(html=True,saved=False),result
         else:
@@ -56,6 +57,7 @@ with sync_playwright() as p:
     for o in TABS:
         for d in ('ADMINISTRATIVA','AL_TRIBUNAL'):check(o,d)
     check(phase='capture')
+    check(phase='passive')
     check(phase='real',reason='RUTA_NO_LISTADO')
     check(change="L.querySelector('input').value='tdEgreso'",reason='PESTANA_DISTINTA')
     check(change="L.querySelector('select[name=COD_Tribunal_sel]').innerHTML='<option value=999>Otro</option>'",reason='TRIBUNAL_DISTINTO')

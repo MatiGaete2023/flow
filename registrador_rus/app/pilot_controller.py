@@ -18,6 +18,8 @@ class PilotController:
         if recovery:
             if journal.load_unresolved()!=op:raise JournalError('RECUPERACION_DISTINTA')
             if journal.state(op.operation_id)=='ENVIANDO':journal.mark_uncertain(op.operation_id)
+            if journal.state(op.operation_id)=='PENDIENTE_EXCEL':self.phase='PENDIENTE_EXCEL'
+            if journal.state(op.operation_id)=='AMBIGUA':self.phase='AMBIGUA'
         elif not callable(revalidate) or journal.state(op.operation_id)!='PREPARADA':
             raise JournalError('PILOTO_NO_PREPARADO')
 
@@ -43,7 +45,7 @@ class PilotController:
     def request_readback(self,*,confirmed):
         if self.phase not in ('INCIERTA','RECUPERACION','NO_HALLADA') or confirmed is not True:
             raise JournalError('RELECTURA_NO_ELEGIBLE')
-        self.mailbox.submit('readback');self.phase='RELEYENDO'
+        self.mailbox.submit('readback',context=self.journal.reservation_context(self.op));self.phase='RELEYENDO'
 
     def poll(self):
         result=self.mailbox.take_result()
@@ -70,7 +72,7 @@ class PilotController:
             author,stage,day,require_excel=self.confirmation;self.confirmation=None
             self.journal.approve_preparation(self.op,current=current,prepared=self.report,author=author,confirmed=True)
             ticket=self.journal.reserve_creation(self.op,current=self._current(),prepared=self.report,raw=result['raw'],
-                author=author,stage=stage,stage_code=self.context['COD_Etapa'],server_day=day,confirmed=True,require_excel=require_excel)
+                author=author,stage=stage,stage_code=self.context['COD_Etapa'],server_day=day,confirmed=True,require_excel=require_excel,context=self.context)
             self.phase='ENVIANDO'
             try:self.mailbox.submit('create_once',reservation=ticket)
             except Exception:

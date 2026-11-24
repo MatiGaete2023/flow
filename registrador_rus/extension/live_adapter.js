@@ -152,7 +152,8 @@
         fail('VALORES_NO_COINCIDEN');
       return Object.freeze({operation_id:op.operation_id,origin:op.origin,state:op.observation_state,cc:Number(desired),saved:false});
     }
-    function prepare(latest){
+    function prepare(latest,{emitEvents=true}={}){
+      if(typeof emitEvents!=='boolean')fail('MODO_PREPARACION_INVALIDO');
       if(prepared||used)fail('SESION_YA_PREPARADA');
       check(latest);
       if(editor.value&&editor.value!==op.approved_text)fail('BORRADOR_EXISTENTE');
@@ -162,7 +163,8 @@
         if(el[key]===value)continue;
         el[key]=value;
         changes.push([el,key,value]);
-        for(const event of ['input','change']){
+        check(latest);
+        for(const event of (emitEvents?['input','change']:[])){
           el.dispatchEvent(new doc.defaultView.Event(event,{bubbles:true}));
           check(latest);
           if(changes.some(([n,k,v])=>n[k]!==v))fail('VALORES_NO_COINCIDEN');

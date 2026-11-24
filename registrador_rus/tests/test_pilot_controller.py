@@ -20,6 +20,7 @@ class ControllerTests(TestCase):
         self.ticket=dict(operation_id=self.op.operation_id,approved_text_sha256=self.op.approved_text_sha256,
                          approval_version=self.op.approval_version,state='ENVIANDO',reservation_id='a'*64)
         self.j=Mock();self.j.state.return_value='PREPARADA';self.j.reserve_creation.return_value=self.ticket
+        self.j.reservation_context.return_value=self.ctx
         self.mb=Mock();self.mb.op=self.op
         self.current=Mock(return_value=self.op)
         self.c=PilotController(self.j,self.mb,self.op,revalidate=self.current)

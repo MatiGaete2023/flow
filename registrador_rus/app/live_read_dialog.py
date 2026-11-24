@@ -5,8 +5,9 @@ from .bridge import BridgeError
 from .live_read import open_live_read_bridge
 
 class LiveReadDialog:
-    def __init__(self,preview):
+    def __init__(self,preview,*,prepare_only=False):
         self.preview=preview
+        self.prepare_only=prepare_only
         batch=preview.revalidate_confirmed()
         if len(batch.operations)!=1:
             raise BridgeError('VALIDACION_REQUIERE_UN_INGRESO')
@@ -14,13 +15,13 @@ class LiveReadDialog:
         self.bridge=None
         self.closed=False
         self.window=tk.Toplevel(preview.window)
-        self.window.title('Validar ingreso en RUS — solo lectura')
+        self.window.title('Preparar en RUS sin guardar' if prepare_only else 'Validar ingreso en RUS — solo lectura')
         self.window.transient(preview.window)
         self.window.protocol('WM_DELETE_WINDOW',self.close)
         self.window.bind('<Destroy>',self._destroyed,add='+')
         self.window.grab_set()
         body=ttk.Frame(self.window,padding=12);body.pack(fill='both',expand=True)
-        ttk.Label(body,text='Abre listado y bitácora del ingreso confirmado. No se guardará nada.',wraplength=550).pack(anchor='w')
+        ttk.Label(body,text='Abre listado y bitácora. La prueba coloca valores sin disparar eventos ni pulsar Nueva obs. Cierra sin guardar.' if prepare_only else 'Abre listado y bitácora del ingreso confirmado. No se guardará nada.',wraplength=550).pack(anchor='w')
         self.origin=tk.StringVar(master=self.window)
         self.credentials=tk.StringVar(master=self.window)
         self.status=tk.StringVar(master=self.window,value='Sin conexión.')
@@ -37,7 +38,7 @@ class LiveReadDialog:
             if self.bridge is not None:raise BridgeError('PUENTE_YA_ABIERTO')
             if self.preview.revalidate_confirmed().operations!=(self.op,):
                 raise BridgeError('APROBACION_CAMBIADA')
-            self.bridge=open_live_read_bridge(self.origin.get().strip(),self.op)
+            self.bridge=open_live_read_bridge(self.origin.get().strip(),self.op,prepare_only=self.prepare_only)
             self.credentials.set(f'{self.bridge.server.server_port} | {self.bridge.mailbox.session_id} | {self.bridge.token}')
             self.start_button.configure(state='disabled')
             self.status.set('Puente local abierto. Pulsa Validar en la extensión.')
@@ -52,7 +53,7 @@ class LiveReadDialog:
         self.bridge.close();self.bridge=None;self.credentials.set('')
         try:
             if self.preview.revalidate_confirmed().operations!=(self.op,):raise BridgeError('APROBACION_CAMBIADA')
-            self.status.set(result['status']+(f" | Entradas: {result['entries']}" if 'entries' in result else '')+' | Sin registro.')
+            self.status.set(result['status']+(f" | Entradas: {result['entries']}" if 'entries' in result else '')+(' | Valores preparados; cierra sin guardar.' if result.get('prepared') else ' | Sin registro.'))
         except (ValueError,RuntimeError):
             self.status.set('La revisión cambió; lectura no utilizable.')
     def _destroyed(self,event):

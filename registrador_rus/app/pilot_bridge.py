@@ -69,7 +69,7 @@ class PilotMailbox:
         self._creation_issued=False
         self._closed=False
 
-    def submit(self,command,*,reservation=None):
+    def submit(self,command,*,reservation=None,context=None):
         _enabled()
         if command not in COMMANDS:
             raise BridgeError('COMANDO_PROHIBIDO')
@@ -84,6 +84,8 @@ class PilotMailbox:
             envelope['reservation']=dict(reservation)
         elif reservation is not None:
             raise BridgeError('RESERVA_FUERA_DE_COMANDO')
+        if command=='readback':envelope['context']=parse_context(self.op,context)
+        elif context is not None:raise BridgeError('CONTEXTO_FUERA_DE_COMANDO')
         with self._lock:
             if self._closed:raise BridgeError('SESION_CERRADA')
             if self._active is not None or self._result is not None:
@@ -145,7 +147,10 @@ class PilotMailbox:
             if self._active is None or not self._delivered or body.get('command_id')!=self._active['command_id']:
                 raise BridgeError('COMANDO_NO_CORRESPONDE')
             command=self._active['command']
-            try:self._result=self._response(body,command)
+            try:
+                self._result=self._response(body,command)
+                if command=='readback' and self._result['status']=='OK' and self._result['context']!=self._active['context']:
+                    raise BridgeError('CONTEXTO_RESERVA_INVALIDO')
             except (ValueError,RuntimeError,TypeError,KeyError,UnicodeError):
                 self._result=dict(command=command,status='BLOCKED')
             self._active=None

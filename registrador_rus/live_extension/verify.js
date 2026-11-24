@@ -17,15 +17,24 @@ button.addEventListener('click',async()=>{
     if(!granted)fail('PERMISO_DENEGADO');
     const response=await rpc(port,token,'poll',{schema:'BridgePollV1',session_id:session});
     cmd=response.command;
-    if(!cmd||cmd.schema!=='LiveReadCommandV1'||cmd.session_id!==session||cmd.command!=='validate_read_only'||cmd.write_enabled!==false)fail('ORDEN_LOCAL_INVALIDA');
+    if(!cmd||cmd.schema!=='LiveReadCommandV1'||cmd.session_id!==session||!['validate_read_only','validate_prepare_only'].includes(cmd.command)||cmd.write_enabled!==false)fail('ORDEN_LOCAL_INVALIDA');
     const {l,p}=await selectPair();
     const before=await locate(l,cmd.operation);
     const snap=await capture(p,cmd.operation,before.context);
     const again=await locate(l,cmd.operation);
     if(again.documentId!==before.documentId||JSON.stringify(again.context)!==JSON.stringify(before.context))fail('LISTADO_CAMBIADO');
     await ensurePopup(p,snap.documentId);
-    await rpc(port,token,'ack',{schema:'LiveReadAckV1',session_id:session,command_id:cmd.command_id,status:'OK',context:before.context,html:snap.html});
-    cmd=null;status.textContent='Lectura entregada al Asistente. Consulta allí el resultado del parser. No se ha registrado nada.';
+    let extra={};
+    if(cmd.command==='validate_prepare_only'){
+      if(!window.confirm('¿Preparar los valores aprobados desde Flow, sin guardar y sin disparar eventos? Debes cerrar la bitácora sin pulsar Nueva obs.'))fail('PREPARACION_CANCELADA');
+      const prepared=await chrome.scripting.executeScript({target:{tabId:p.id,documentIds:[snap.documentId]},world:'ISOLATED',args:[cmd.operation,before.context],
+        func:async(op,ctx)=>{try{const s=await RegistradorLiveAdapter.session(document,op,ctx);return s.prepare(op,{emitEvents:false});}catch(_){return null;}}});
+      if(prepared.length!==1||!prepared[0].result)fail('PREPARACION_BLOQUEADA');
+      extra={report:prepared[0].result};
+    }
+    await rpc(port,token,'ack',{schema:'LiveReadAckV1',session_id:session,command_id:cmd.command_id,status:'OK',context:before.context,html:snap.html,...extra});
+    const wasPrepare=cmd.command==='validate_prepare_only';cmd=null;
+    status.textContent=wasPrepare?'Valores preparados sin eventos ni guardado. Revisa la bitácora y ciérrala sin guardar.':'Lectura entregada al Asistente. Consulta allí el resultado del parser. No se ha registrado nada.';
   }catch(e){
     // No mostrar errores del navegador, URL ni contenido de expedientes.
     const known=['CREDENCIALES_LOCALES_INVALIDAS','PERMISO_DENEGADO','PUENTE_LOCAL_RECHAZADO','ORDEN_LOCAL_INVALIDA','ABRIR_UN_LISTADO_Y_UNA_BITACORA',

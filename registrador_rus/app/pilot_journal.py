@@ -58,7 +58,7 @@ class PilotJournal(_JournalCore):
                 evidence BLOB NOT NULL, digest TEXT NOT NULL)''')
             self.db.execute('''CREATE TABLE IF NOT EXISTS pilot_reservations(
                 operation_id TEXT PRIMARY KEY REFERENCES write_attempts(operation_id),
-                reservation_digest TEXT NOT NULL, created_at TEXT NOT NULL)''')
+                reservation_digest TEXT NOT NULL, created_at TEXT NOT NULL, context BLOB NOT NULL, context_digest TEXT NOT NULL)''')
             value=json.dumps(dict(directory=str(policy.directory),retention_days=policy.retention_days,
                                   acceptance_reference=policy.acceptance_reference,authority_confirmed=True),
                              ensure_ascii=False,sort_keys=True,separators=(',',':'))
@@ -116,7 +116,7 @@ class PilotJournal(_JournalCore):
         self.mark_ready(op)
         self._authorize(op,human_actor=author,confirmed=True)
 
-    def reserve_creation(self,op,*,current,prepared,raw,author,stage,stage_code,server_day,confirmed,require_excel=False):
+    def reserve_creation(self,op,*,current,prepared,raw,author,stage,stage_code,server_day,confirmed,require_excel=False,context=None):
         _require_accepted()
         op.require_same_approval(current)
         self._review_valid(op)
@@ -126,6 +126,9 @@ class PilotJournal(_JournalCore):
         auth=self.db.execute('SELECT human_actor FROM authorizations WHERE operation_id=?',(op.operation_id,)).fetchone()
         if auth is None or self.storage.unseal('actor',op.operation_id,auth['human_actor'])!=author:
             raise JournalError('AUTOR_NO_COINCIDE')
+        from .pilot_bridge import parse_context
+        context=parse_context(op,context)
+        if context['COD_Etapa']!=stage_code:raise JournalError('CONTEXTO_NO_COINCIDE')
         result=self.bind_baseline(op,raw,author=author,stage=stage,stage_code=stage_code,server_day=server_day,require_excel=require_excel)
         if result!='SIN_PREVIA':
             raise JournalError('LECTURA_PREVIA_NO_ELEGIBLE')
@@ -133,16 +136,27 @@ class PilotJournal(_JournalCore):
         row=self.db.execute('SELECT evidence_digest FROM readback_baselines WHERE operation_id=?',(op.operation_id,)).fetchone()
         if row is None:raise JournalError('BASELINE_REQUERIDA')
         reservation=secrets.token_hex(32)
+        context_json=json.dumps(context,sort_keys=True,separators=(',',':'))
         def record(current_row,now):
-            self.db.execute('INSERT INTO pilot_reservations VALUES(?,?,?)',
-                (op.operation_id,self.storage.digest('reservation',reservation),now))
+            self.db.execute('INSERT INTO pilot_reservations VALUES(?,?,?,?,?)',
+                (op.operation_id,self.storage.digest('reservation',reservation),now,
+                 self.storage.seal('reservation-context',op.operation_id,context_json),self.storage.digest('reservation-context',context_json)))
         self._reserve_attempt(op,expected_evidence_digest=row[0],record_reservation=record)
         # Solo se devuelve tras COMMIT; no existe función para reemitirlo.
         return dict(operation_id=op.operation_id,approved_text_sha256=op.approved_text_sha256,
                     approval_version=op.approval_version,state='ENVIANDO',reservation_id=reservation)
 
+    def reservation_context(self,op):
+        from .pilot_bridge import parse_context
+        self._require_current(op.operation_id,op)
+        row=self.db.execute('SELECT context,context_digest FROM pilot_reservations WHERE operation_id=?',(op.operation_id,)).fetchone()
+        if row is None:raise JournalError('RESERVA_NO_ACREDITADA')
+        value=self.storage.unseal('reservation-context',op.operation_id,row['context'])
+        if self.storage.digest('reservation-context',value)!=row['context_digest']:raise JournalError('CONTEXTO_RESERVA_INVALIDO')
+        return parse_context(op,json.loads(value))
+
     def load_unresolved(self):
-        ids=self.recover_unresolved()
+        ids=tuple(row[0] for row in self.db.execute("SELECT operation_id FROM operations WHERE state IN ('ENVIANDO','INCIERTA','NO_HALLADA','AMBIGUA','PENDIENTE_EXCEL') ORDER BY operation_id"))
         if len(ids)!=1:raise JournalError('RECUPERACION_REQUIERE_INTENTO_UNICO')
         row=self._row(ids[0])
         payload=self.storage.unseal('payload',ids[0],row['payload'])
