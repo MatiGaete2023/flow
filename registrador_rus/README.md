@@ -48,4 +48,4 @@ Revisión persistente del lote: app/batch_store.py (SQLite, ficticia, aún no co
 
 La demo incluye botón Revisar lote ficticio; el diálogo y su registro SQLite pasaron pruebas independientes (test_batch_dialog.py, requiere pantalla Tk). La conexión con la aplicación completa aún requiere una prueba integrada. La revisión no equivale a autorización individual y la sesión demo se elimina al cerrar.
 
-Puerta Work real (app/flow_work.py) y pruebas de procedencia/lector/diálogo: pendientes de ejecución integrada. No se ha conectado a la UI del Asistente ni a RUS.
+Puerta Work real (app/flow_work.py) y pruebas de procedencia/lector/diálogo: verificadas en [CI 45426816043](https://github.com/MatiGaete2023/flow/actions/runs/45426816043), 68/68 pruebas Python. No se ha conectado a la UI del Asistente ni a RUS.
