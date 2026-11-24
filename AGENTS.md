@@ -1,5 +1,14 @@
 # Instrucciones para agentes
 
+## Excepción exclusiva de la rama feat/registrador-observaciones-rus-v3 (24 de noviembre de 2026)
+
+Decisión expresa del usuario: «esta rama tendra una excepcion, donde se permite escribir en RUS, pero siempre con autorizacion humana». Se resuelve el conflicto de alcance de desarrollo del registrador V3.0 únicamente en esta rama; no se cambia la decisión D3 sobre el módulo anterior ni la política de las ramas productivas. No fusionar esta excepción.
+
+Alcance: nuevo módulo autónomo, escritura mediante la interfaz normal de creación de observaciones, nunca edición/borrado ni POST directo. El escritor se desarrollará en P8, desactivado por defecto. Cada escritura deberá pertenecer a una intención aprobada por un funcionario humano, con identidad, texto, estado y destino congelados, y confirmación explícita del conjunto exacto de operaciones autorizadas antes de ejecutar; no se admiten aprobaciones tácitas, generadas por IA ni autorización general que sobreviva cambios de contenido. P8/P9 deben mantener un solo intento activo, diario persistente antes de cualquier guardado, lectura posterior y bloqueo sin reenvío ante incertidumbre. El permiso para desarrollar no acredita por sí solo permisos institucionales o del operador para ejecutar un piloto en RUS real; esos requisitos y selectores reales deben comprobarse antes de habilitar uso productivo. Las pruebas de desarrollo son ficticias y sin acceso institucional.
+
+Esta excepción prevalece en esta rama solo sobre las prohibiciones de implementar el nuevo registrador y la orden anterior de rama única. El resto de restricciones, incluida privacidad, aislamiento del Descargador y prohibición de eludir controles, sigue vigente.
+
+
 ## Rama única y continuidad (instrucción del usuario, 19-nov-2026)
 
 - **Trabaja solo en la rama `flow-python`.** No crees ramas nuevas; si tu entorno te asigna otra, haz
