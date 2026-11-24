@@ -13,8 +13,14 @@ const reasons = new Set(['ORIGEN_NO_PERMITIDO','MODAL_VISIBLE','FORMULARIO_NO_UN
   'CONTROLES_AMBIGUOS','ETIQUETA_CONTRADICTORIA','ACCION_CONTRADICTORIA','INSPECCION_NO_CONCLUYENTE']);
 function validEvidence(value) {
   if (!value || value.schema !== 'FocusedEvidenceV1' || value.write_enabled !== false) return false;
-  if (value.status === 'BLOCKED')
+  if (value.status === 'BLOCKED') {
+    if (value.reason === 'FORMULARIO_NO_UNICO' && Object.hasOwn(value,'diagnostic')) {
+      return exact(value,'schema status reason write_enabled diagnostic') &&
+        exact(value.diagnostic,'forms named by_id named_box named_controls action_matches tables states visible_frames') &&
+        Object.values(value.diagnostic).every(n=>Number.isInteger(n)&&n>=0&&n<=255);
+    }
     return exact(value,'schema status reason write_enabled') && reasons.has(value.reason);
+  }
   if (value.status !== 'CANDIDATE' ||
       !exact(value,'schema status write_enabled checkbox editor state create context_fields_present') ||
       value.context_fields_present !== true) return false;

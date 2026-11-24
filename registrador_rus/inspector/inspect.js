@@ -19,8 +19,20 @@ function inspectFocusDocument(doc) {
   try {
     const modal='dialog, [role="dialog"], [aria-modal="true"]';
     if ([...doc.querySelectorAll(modal)].some(visible)) return blocked('MODAL_VISIBLE');
-    const forms=[...doc.forms].filter(f=>f.name==='InformesPpalForm'&&visible(f));
-    if(forms.length!==1) return blocked('FORMULARIO_NO_UNICO');
+    const allForms=[...doc.forms];
+    const named=allForms.filter(f=>f.getAttribute('name')==='InformesPpalForm');
+    const ownedVisible=f=>[...f.querySelectorAll('input,select,textarea,button')].some(n=>n.form===f&&visible(n));
+    const forms=named.filter(f=>visible(f)||ownedVisible(f));
+    if(named.length!==1||forms.length!==1) {
+      const count=items=>Math.min(items.length,255);
+      const actionMatches=f=>{try {const u=new URL(f.getAttribute('action')||'',doc.baseURI);return u.origin==='https://familia.pjud.cl'&&u.pathname==='/SITFAWEB/InformesDAction.do';}catch(_){return false;}};
+      return {...blocked('FORMULARIO_NO_UNICO'),diagnostic:{
+        forms:count(allForms),named:count(named),by_id:count(allForms.filter(f=>f.id==='InformesPpalForm')),
+        named_box:count(named.filter(visible)),named_controls:count(named.filter(ownedVisible)),
+        action_matches:count(allForms.filter(actionMatches)),tables:count([...doc.querySelectorAll('[id="TablaInforme"]')]),
+        states:count([...doc.querySelectorAll('select[name="COD_Estado_Detalle_Nuevo"]')]),
+        visible_frames:count([...doc.querySelectorAll('frame,iframe')].filter(visible))}};
+    }
     const form=forms[0], action=new URL(form.action);
     if(form.method.toLowerCase()!=='post'||action.origin!=='https://familia.pjud.cl'||action.pathname!=='/SITFAWEB/InformesDAction.do') return blocked('ACCION_INESPERADA');
     const tables=[...doc.querySelectorAll('[id="TablaInforme"]')];

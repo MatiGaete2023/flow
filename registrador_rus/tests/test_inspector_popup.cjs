@@ -54,5 +54,12 @@ async function exercise({tabs=[{id:7,url:'https://familia.pjud.cl/'}],results=[{
   }
   r=await exercise({results:[]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
   r=await exercise({throws:true});assert.equal(r.output,'INSPECCION_NO_DISPONIBLE');
-  console.log('PASS 14 popup contract cases');
+
+  const diagnostic={...blocked,reason:'FORMULARIO_NO_UNICO',diagnostic:{
+    forms:1,named:0,by_id:1,named_box:0,named_controls:0,action_matches:1,tables:1,states:1,visible_frames:0}};
+  r=await exercise({results:[{result:diagnostic}]});assert.deepEqual(JSON.parse(r.output),diagnostic);
+  for(const d of [{...diagnostic.diagnostic,text:'NO_EXPORTAR'}, {...diagnostic.diagnostic,named:-1}, {...diagnostic.diagnostic,forms:256}, {...diagnostic.diagnostic,states:'1'}]){
+    r=await exercise({results:[{result:{...diagnostic,diagnostic:d}}]});assert.equal(r.output,'INSPECCION_NO_CONCLUYENTE');
+  }
+  console.log('PASS 19 popup contract cases');
 })().catch(error=>{console.error(error);process.exitCode=1;});

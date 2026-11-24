@@ -22,7 +22,15 @@ with sync_playwright() as p:
   result=page.evaluate('inspectFocus()' if wrapper else 'inspectFocusDocument(document)')
   assert page.evaluate('window.events')==0
   assert result['write_enabled'] is False
-  if reason: assert result==dict(schema='FocusedEvidenceV1',status='BLOCKED',reason=reason,write_enabled=False),result
+  if reason:
+   expected=dict(schema='FocusedEvidenceV1',status='BLOCKED',reason=reason,write_enabled=False)
+   if reason=='FORMULARIO_NO_UNICO':
+    diagnostic=result.pop('diagnostic')
+    assert set(diagnostic)=={'forms','named','by_id','named_box','named_controls','action_matches','tables','states','visible_frames'}
+    assert all(type(v) is int and 0<=v<=255 for v in diagnostic.values())
+    expected['diagnostic']=diagnostic
+    result['diagnostic']=diagnostic
+   assert result==expected,result
   else:
    assert result['status']=='CANDIDATE',result
    data=json.dumps(result,ensure_ascii=False)
@@ -37,4 +45,10 @@ with sync_playwright() as p:
  check("document.querySelector('form').append(document.createElement('textarea'))",'FIRMA_DISTINTA')
  check("document.querySelector('input[name=ID_Ingreso]').remove()",'CONTEXTO_ESTRUCTURAL_INCOMPLETO')
  check(wrapper=True,reason='ORIGEN_NO_PERMITIDO')
- b.close();print('PASS 9 focused inspection checks')
+ check("document.forms[0].style.display='contents'")
+ r=check("document.forms[0].hidden=true",'FORMULARIO_NO_UNICO');assert r['diagnostic']['named']==1 and r['diagnostic']['named_controls']==0
+ r=check("document.forms[0].removeAttribute('name');document.forms[0].id='InformesPpalForm'",'FORMULARIO_NO_UNICO');assert r['diagnostic']['by_id']==1 and r['diagnostic']['named']==0
+ r=check("document.body.append(document.forms[0].cloneNode(true))",'FORMULARIO_NO_UNICO');assert r['diagnostic']['named']==2
+ r=check("document.body.innerHTML='<iframe></iframe>'",'FORMULARIO_NO_UNICO');assert r['diagnostic']['forms']==0 and r['diagnostic']['visible_frames']==1
+ r=check("document.body.innerHTML=''",'FORMULARIO_NO_UNICO');assert r['diagnostic']['forms']==0 and r['diagnostic']['visible_frames']==0
+ b.close();print('PASS 15 focused inspection checks')

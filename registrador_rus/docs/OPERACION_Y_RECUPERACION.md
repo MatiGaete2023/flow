@@ -52,3 +52,7 @@ En el Asistente desde fuente, Trabajo > Más > Generar lote ficticio para regist
 4. Si devuelve atributos y catálogo, verifica personalmente que no haya RIT, RUT, nombres, identificadores de expediente/ingreso, textos judiciales ni otros datos reservados. Comparte exclusivamente nombres de atributos técnicos, maxlength, códigos/rótulos generales de Estado y los booleanos de asociación de etiqueta/botón. No compartas capturas del expediente, HTML, tokens ni datos de sesión. No pulsar Nueva obs ni Grabar.
 
 El núcleo pasó 9 pruebas con DOM ficticio; la extensión nativa todavía no fue validada. Un solo formulario es el objetivo inicial, no una nueva exploración general. No es un registrador ni usa la extensión de demo como escritor.
+
+### Si el inspector devuelve FORMULARIO_NO_UNICO
+
+Actualizar el inspector a 0.1.1: descomprimir el ZIP nuevo en una carpeta separada, quitar solo la extensión del inspector anterior e instalar la carpeta inspector nueva, si la política permite. Repetir una sola inspección con la ventana de bitácora activa. Si BLOCKED incluye diagnostic, compartir el JSON de conteos únicamente; no incluye identidad ni contenido. Los conteos distinguen nombre, ID, caja, controles visibles, acción esperada, tabla, selector y marcos visibles (sin entrar en ellos). CANDIDATE: revisar manualmente antes de compartir únicamente atributos técnicos. No editar ni guardar.
