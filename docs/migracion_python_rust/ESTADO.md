@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1, E-V1 y E-V2. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 y E-V1 a E-V3. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -9,13 +9,13 @@ Actualizado: 24 de noviembre de 2026, tras E-S1, E-V1 y E-V2. Es la única fuent
 
 ## Siguiente paso
 
-1. **E-V3** (CI por niveles) de [PLAN.md](PLAN.md). La referencia Python quedó fijada en `afc4d12` (E-V1) y las pruebas corren sin variables de entorno (E-V2).
+1. **Ver el primer run** de «Flow Rust local · Windows» con los trabajos `linux` y `validar` (E-V1 a E-V3 de [PLAN.md](PLAN.md)).
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
 3. **E-Q7 y E-U1** de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
 
 ## Pendiente del usuario
 
-- **Prueba corta del tramo 1** con el `.exe` del último run de «Flow Rust local · Windows»: un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. Anotar lo que falle; no hace falta acta.
+- **Prueba corta del tramo 1** con el `.exe` de un run de «Flow Rust local · Windows» lanzado a mano con `entrega` (Actions › Run workflow): un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. Anotar lo que falle; no hace falta acta.
 - Revisión visual de las capturas del run (antes E-E) y paquete H: acta de uso real.
 
 ## Capacidades

@@ -32,7 +32,7 @@ Qué se compara con Python:
 - **E-V2 · Pruebas sin variables de entorno — `HECHO` en Linux.** `prueba_entorno::requerida` da rutas por omisión del repositorio; `x11` de eframe declarado para Linux en `app/Cargo.toml`; diez pruebas dejaron de estar ignoradas.
   - Rutas por omisión relativas a `CARGO_MANIFEST_DIR` para `FLOW_CASOS`, `FLOW_FIXTURES` y `FLOW_REFERENCIA`. Quedan `#[ignore]` solo las pruebas que necesitan un ZIP generado por Python.
   - Declarar en `app/Cargo.toml` la característica `x11` de eframe para Linux. Criterio: `cargo test --manifest-path app/Cargo.toml --locked` corre los oráculos en Linux sin preparación.
-- **E-V3 · CI por niveles — `ABIERTO`.**
+- **E-V3 · CI por niveles — `HECHO`; falta ver su primer run.** `flow-rust-local.yml`: trabajo `linux` con todas las pruebas y los verificadores en cada push; `validar` (Windows) compila, prueba, contrasta V2 y E3, y regenera los oráculos solo si cambian `app/qa/**`, `app/tests/datos/**` o el árbol Python; con `workflow_dispatch` y `entrega`, el `.exe --release`, las capturas y el contraste V1. Sin `entrega`, el artefacto `Flow_Rust_Windows_exe` lleva el `.exe` de depuración.
   - Trabajo en Linux con las pruebas en cada push.
   - Windows: compilar el `.exe`. Oráculos regenerados solo si cambian `app/qa/**`, `app/tests/datos/**` o la referencia. Ejecutable de entrega, capturas y contraste V1 con `rust/`, a pedido.
 

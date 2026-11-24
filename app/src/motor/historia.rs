@@ -1135,10 +1135,7 @@ mod tests {
     }
 
     fn evaluar_paquete_b() -> PaqueteB {
-        let dir = match std::env::var("FLOW_CASOS") {
-            Ok(d) => d,
-            Err(_) => panic!("FLOW_CASOS es obligatorio para el paquete B"),
-        };
+        let dir = crate::prueba_entorno::requerida("FLOW_CASOS").to_string_lossy().into_owned();
         let re_c10 = Regex::new(r"\s*Próximo informe de avance de [^.]* vence el [^.]*\.").unwrap();
         let mut p = PaqueteB::default();
 

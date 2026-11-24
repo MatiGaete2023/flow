@@ -3,24 +3,66 @@ name: Flow Rust local · Windows
 on:
   push:
     branches: [estudio/paridad-python-rust-20261119]
-    paths: [app/**, .github/workflows/flow-rust-local.yml]
+    paths: [app/**, tools/**, descargador/**, src/**, tests/**, .github/workflows/flow-rust-local.yml]
   workflow_dispatch:
+    inputs:
+      entrega:
+        description: 'Ejecutable de entrega (--release), capturas y contraste V1 con rust/'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+# E-V3 · CI por niveles: Linux prueba todo en cada push; Windows compila y prueba, regenera los oráculos solo si
+# cambian app/qa/**, app/tests/datos/** o la referencia Python, y deja la entrega, las capturas y el contraste V1 a
+# pedido.
 jobs:
-  validar:
-    runs-on: windows-latest
-    timeout-minutes: 35
-    env:
-      FLOW_CASOS: ${{ github.workspace }}/rust/casos
-      FLOW_FIXTURES: ${{ github.workspace }}/rust/crates/flow-tabular/tests/datos
-      FLOW_REFERENCIA: ${{ github.workspace }}
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Probar la aplicación (oráculos con datos versionados incluidos)
+        run: cargo test --manifest-path app/Cargo.toml --locked --all-targets
+      - name: Verificadores estáticos
+        run: |
+          python3 tools/check_real_ids.py app/src
+          python3 tools/check_contactos.py app/src
+          python3 tools/verificar_textos_umbrales.py
+          python3 tools/inventario_escrituras.py
+          python3 tools/verificar_referencia_python.py
+
+  validar:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Detectar cambios de oráculos o de la referencia
+        id: cambios
+        shell: pwsh
+        run: |
+          $antes = '${{ github.event.before }}'
+          $todo = '${{ github.event_name }}' -ne 'push' -or -not $antes -or $antes -match '^0+$'
+          if (-not $todo) {
+            git cat-file -e "$antes^{commit}" 2>$null
+            if ($LASTEXITCODE -ne 0) { $todo = $true }
+          }
+          if ($todo) { $oraculos = 'true' } else {
+            $archivos = git diff --name-only $antes $env:GITHUB_SHA
+            $oraculos = if ($archivos | Where-Object { $_ -match '^(app/qa/|app/tests/datos/|descargador/|src/|tests/)' }) { 'true' } else { 'false' }
+          }
+          "oraculos=$oraculos" | Add-Content -Encoding utf8 $env:GITHUB_OUTPUT
+          "Regenerar oráculos: $oraculos"
       - name: Obtener la referencia Flow Python
         uses: actions/checkout@v4
         with:
@@ -54,6 +96,7 @@ jobs:
       - name: Compilar el ejecutable de Flow Rust
         run: cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
       - name: Compilar el ejecutable de entrega
+        if: inputs.entrega
         shell: pwsh
         run: |
           cargo build --manifest-path app/Cargo.toml --locked --release --bin flow_rust
@@ -63,6 +106,14 @@ jobs:
           $huella = (Get-FileHash -LiteralPath (Join-Path $salida 'flow_rust.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
           "$huella  flow_rust.exe`ncommit $env:GITHUB_SHA" | Set-Content -Encoding utf8 (Join-Path $salida 'SHA256.txt')
           Get-Content (Join-Path $salida 'SHA256.txt')
+      - name: Ejecutable de prueba (debug) para la prueba corta del usuario
+        if: ${{ !inputs.entrega }}
+        shell: pwsh
+        run: |
+          $salida = New-Item -ItemType Directory -Force -Path app/target/entrega
+          Copy-Item app/target/debug/flow_rust.exe $salida
+          $huella = (Get-FileHash -LiteralPath (Join-Path $salida 'flow_rust.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$huella  flow_rust.exe (debug)`ncommit $env:GITHUB_SHA" | Set-Content -Encoding utf8 (Join-Path $salida 'SHA256.txt')
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Rust_Windows_exe
@@ -85,12 +136,19 @@ jobs:
           $contexto = Join-Path $env:RUNNER_TEMP 'flow-e3-ficticio'
           python app/qa/generar_contexto_e3.py referencia-python-ci $contexto
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python tools/verificar_textos_umbrales.py
+          $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
+          "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
+          $env:FLOW_E3_HISTORIA = (Resolve-Path (Join-Path $contexto 'contexto-e3-historia.zip')).Path
+          $env:FLOW_E3_ESPERADO = Join-Path $contexto 'esperado-historia.json'
+          python app/qa/esperado_contexto_e3.py $env:FLOW_E3_HISTORIA $env:FLOW_E3_ESPERADO
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python tools/inventario_escrituras.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python tools/verificar_referencia_python.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "FLOW_E3_HISTORIA=$env:FLOW_E3_HISTORIA" | Add-Content -Encoding utf8 $env:GITHUB_ENV
+          "FLOW_E3_ESPERADO=$env:FLOW_E3_ESPERADO" | Add-Content -Encoding utf8 $env:GITHUB_ENV
+          cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python -- --include-ignored
+      - name: Regenerar los oráculos con la referencia Python
+        if: steps.cambios.outputs.oraculos == 'true'
+        shell: pwsh
+        run: |
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados')) {
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"
             if ($o -eq 'vinculos') {
@@ -105,25 +163,18 @@ jobs:
             python -c "import sys; sys.exit(open(sys.argv[1],'rb').read() != open(sys.argv[2],'rb').read())" $salida "app/tests/datos/$o.json"
             if ($LASTEXITCODE -ne 0) { Write-Error "app/tests/datos/$o.json no coincide con generar_$o.py"; exit 1 }
           }
-          $env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $contexto 'contexto-e3.zip')).Path
-          "FLOW_E3_PAQUETE=$env:FLOW_E3_PAQUETE" | Add-Content -Encoding utf8 $env:GITHUB_ENV
-          $env:FLOW_E3_HISTORIA = (Resolve-Path (Join-Path $contexto 'contexto-e3-historia.zip')).Path
-          $env:FLOW_E3_ESPERADO = Join-Path $contexto 'esperado-historia.json'
-          python app/qa/esperado_contexto_e3.py $env:FLOW_E3_HISTORIA $env:FLOW_E3_ESPERADO
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "FLOW_E3_HISTORIA=$env:FLOW_E3_HISTORIA" | Add-Content -Encoding utf8 $env:GITHUB_ENV
-          "FLOW_E3_ESPERADO=$env:FLOW_E3_ESPERADO" | Add-Content -Encoding utf8 $env:GITHUB_ENV
-          cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python -- --include-ignored
       - name: Probar todas las pruebas con variables
         shell: pwsh
         run: |
           cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust -- --include-ignored --skip exporta_mismo_lote_de_python --skip velocidad_20000
       - name: Contrastar ZIP V1 con el productor nativo histórico
+        if: inputs.entrega
         shell: pwsh
         run: |
           $env:FLOW_RUST_REVISAR_V1 = (Resolve-Path 'app/target/debug/examples/revisar_bitacoras.exe').Path
           cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
       - name: Preparar OpenGL en el runner
+        if: inputs.entrega
         shell: pwsh
         run: |
           $mesaRoot = Join-Path $env:RUNNER_TEMP 'mesa-flow-rust'
@@ -140,11 +191,13 @@ jobs:
             Copy-Item -Destination app/target/debug
           New-Item -ItemType File -Path app/target/debug/flow_rust.exe.local | Out-Null
       - name: Capturar el diseño de Flow Rust
+        if: inputs.entrega
         env:
           GALLIUM_DRIVER: llvmpipe
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: python app/qa/capturar_windows.py --exe app/target/debug/flow_rust.exe --salida app/target/capturas
       - uses: actions/upload-artifact@v4
+        if: inputs.entrega
         with:
           name: Flow_Rust_Local_Capturas_Windows
           path: app/target/capturas/
