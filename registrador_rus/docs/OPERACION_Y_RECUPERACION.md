@@ -64,3 +64,7 @@ Si el diagnóstico anterior devuelve todos los conteos de formulario en cero y v
 ### Inspector 0.1.3 — diagnóstico simultáneo
 
 Si se obtiene TABLA_NO_UNICA en el marco, instalar 0.1.3. El resultado BLOCKED puede incluir structure (conteos de tabla/contexto/controles) y control_evidence (atributos técnicos si los controles superan sus comprobaciones independientes). Se mantienen las condiciones de bloqueo. Antes de compartir, revisar que solo contenga datos técnicos generales y no valores judiciales. No editar ni guardar; no repetir exploraciones de otras vistas.
+
+### Inspector 0.2.0 — levantamiento integral
+
+Sustituye el inspector previo por 0.2.0. Con la bitácora de Espera ya abierta y solo si está autorizado, pulsa Inspeccionar estructura completa. El nuevo JSON IntegralEvidenceV1 no se detiene ante una tabla o firma divergente; contiene evidencia independiente agrupada por documento y ruta ordinal de marcos. DIAGNOSTIC no significa aptitud para escribir. Revisa los nombres técnicos y opciones generales; omite cualquier información reservada inesperada antes de compartir. Si truncated=true, informa ese indicador. owner=-1 indica ausencia de propietario de formulario encontrado; headers.order usa posiciones 0–8 de los encabezados de bitacora_html.py, -1 desconocido. hidden_prefix_counts sigue el orden HOBS_Centro_, HOBS_Tribunal_, HCOD_Estado_, HFUN_Tribunal_, HFLG_Envio_. No editar ni guardar, no copiar HTML ni tráfico. No se requieren las otras tres vistas para esta etapa.
