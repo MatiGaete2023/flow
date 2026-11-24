@@ -17,6 +17,7 @@ class LiveReadDialog:
         self.window.title('Validar ingreso en RUS — solo lectura')
         self.window.transient(preview.window)
         self.window.protocol('WM_DELETE_WINDOW',self.close)
+        self.window.bind('<Destroy>',self._destroyed,add='+')
         self.window.grab_set()
         body=ttk.Frame(self.window,padding=12);body.pack(fill='both',expand=True)
         ttk.Label(body,text='Abre listado y bitácora del ingreso confirmado. No se guardará nada.',wraplength=550).pack(anchor='w')
@@ -54,6 +55,10 @@ class LiveReadDialog:
             self.status.set(result['status']+(f" | Entradas: {result['entries']}" if 'entries' in result else '')+' | Sin registro.')
         except (ValueError,RuntimeError):
             self.status.set('La revisión cambió; lectura no utilizable.')
+    def _destroyed(self,event):
+        if event.widget is self.window and not self.closed:
+            self.closed=True
+            if self.bridge:self.bridge.close();self.bridge=None
     def close(self):
         if self.closed:return
         self.closed=True

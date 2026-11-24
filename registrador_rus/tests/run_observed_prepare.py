@@ -32,8 +32,8 @@ def fixture(origin,destination):
         approved_by='fixture',approved_at_utc='2026-11-24T00:00:00Z',approval_version=1)
     return dict(listed=listed,popup=popup,op=op)
 
-def load_fixture(page,origin,destination):
-    page.goto('about:blank');page.set_content('<iframe></iframe><iframe></iframe>')
+def load_fixture(page,origin,destination,*,host='about:blank'):
+    page.goto(host);page.set_content('<iframe></iframe><iframe></iframe>')
     for js in SCRIPTS:page.add_script_tag(content=js)
     page.evaluate("""data=>{
         window.L=document.querySelectorAll('iframe')[0].contentDocument;

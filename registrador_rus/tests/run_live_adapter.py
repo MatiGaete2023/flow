@@ -10,12 +10,15 @@ TABS={'ESPERA':('tablaEspera','tdEspera'),'CUMPLIMIENTO':('tablaCumplimiento','t
       'INFORMES_POR_VENCER':('tablaInforme','tdInforme'),'INFORMES_VENCIDOS':('tablaInforme','tdInforme')}
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,**({'executable_path':os.environ['REGISTRADOR_CHROMIUM']} if os.getenv('REGISTRADOR_CHROMIUM') else {}))
-    context=browser.new_context();context.route('**/*',lambda r:r.abort())
+    context=browser.new_context()
+    # HTTPS real usa Web Crypto; localhost es contexto seguro sin contactar RUS.
+    context.route('**/*',lambda r:r.fulfill(status=200,content_type='text/html',body='<html></html>') if r.request.url=='http://127.0.0.1:8765/' else r.abort())
     page=context.new_page()
     count=0
     def check(origin='ESPERA',dest='ADMINISTRATIVA',change='',reason=None,phase='locate'):
         global count
-        load_fixture(page,origin,dest);page.add_script_tag(content=JS)
+        load_fixture(page,origin,dest,host='http://127.0.0.1:8765/');page.add_script_tag(content=JS)
+        assert page.evaluate('isSecureContext&&!!crypto.subtle')
         page.evaluate("""({tab,id,opid})=>{
             L.documentElement.dataset.fixture='LIVE_ADAPTER_TEST';
             const t=L.querySelector('table'); t.id=id;
@@ -46,6 +49,7 @@ with sync_playwright() as p:
         if reason:assert result==dict(reason=reason),result
         elif phase=='capture':assert result==dict(html=True,saved=False),result
         else:
+            assert 'cc' in result,result
             assert result['cc']==int(dest=='AL_TRIBUNAL') and result['state']==CATALOGS[origin][0],result
             assert page.evaluate("P.querySelector('#GLS_ObsCentro_Nueva').value")==TEXT
         count+=1

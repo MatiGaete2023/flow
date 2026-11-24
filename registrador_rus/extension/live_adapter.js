@@ -45,6 +45,7 @@
       op.origin,op.destination,op.observation_state,op.approved_text,op.approved_text_sha256,op.approved_by,op.approved_at_utc,op.approval_version]);
   }
   async function verifyText(op){
+    if(!globalThis.crypto?.subtle)fail('WEB_CRYPTO_NO_DISPONIBLE');
     const bytes=new TextEncoder().encode(op.approved_text);
     const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
     if(digest!==op.approved_text_sha256)fail('HUELLA_TEXTO_DISTINTA');
