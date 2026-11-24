@@ -16,10 +16,19 @@ class SchemaTests(unittest.TestCase):
         validator = Draft202012Validator(schema, format_checker=FormatChecker())
         self.assertTrue(validator.is_valid(sample()))
         for value in (sample() | {'destination': 'ESTADO-DEMO'}, sample() | {'write_one': True},
-                      sample() | {'approval_version': False}, sample() | {'approved_text_sha256': 'marcador'},
-                      sample() | {'approved_at_utc': '2026-02-30T14:00:00Z'}):
+                      sample() | {'approval_version': False}, sample() | {'approved_text_sha256': 'marcador'}):
             self.assertFalse(validator.is_valid(value))
             with self.assertRaises(ContractError): RegistroFlowV1.from_mapping(value)
+        # date-time es anotación estructural salvo que exista comprobador opcional.
+        # La validez de calendario se exige siempre en el contrato Python.
+        impossible = sample() | {'approved_at_utc': '2026-02-30T14:00:00Z'}
+        structural = Draft202012Validator(schema, format_checker=FormatChecker(formats=()))
+        self.assertTrue(structural.is_valid(impossible))
+        if 'date-time' in validator.format_checker.checkers:
+            self.assertFalse(validator.is_valid(impossible))
+        else:
+            self.assertTrue(validator.is_valid(impossible))
+        with self.assertRaises(ContractError): RegistroFlowV1.from_mapping(impossible)
         data = sample(); del data['remote_identity']['ingreso_id']
         self.assertFalse(validator.is_valid(data))
         with self.assertRaises(ContractError): RegistroFlowV1.from_mapping(data)
