@@ -40,7 +40,8 @@ def verify_origin(source, queries, origin, *, report_catalog=None):
             raise ContractError('FILTRO_INFORMES_NO_ACREDITADO') from None
 
 
-def _guard(work, row_ref, origin, report_catalog):
+def load_verified_capture(work):
+    """Una lectura validada por fase, nunca una autorización de envío."""
     # Dependencias reales de Flow: importación tardía para conservar demo autónoma.
     from nurus.personal.work import Work
     from nurus.personal.sync import require_current_copy
@@ -55,10 +56,18 @@ def _guard(work, row_ref, origin, report_catalog):
         raise ContractError('FUENTE_O_COPIA_NO_VIGENTE') from None
     if capture.digest != getattr(work, 'capture_digest', ''):
         raise ContractError('PAQUETE_CAMBIADO')
+    return capture
+
+
+def verify_record(work, capture, row_ref, origin, report_catalog):
     source = _one(capture.rows('registros'), 'record_id', row_ref)
     if source != getattr(work, 'capture_sources', {}).get(row_ref):
         raise ContractError('PROCEDENCIA_CAMBIADA')
     verify_origin(source, capture.rows('consultas'), origin, report_catalog=report_catalog)
+
+
+def _guard(work, row_ref, origin, report_catalog):
+    verify_record(work, load_verified_capture(work), row_ref, origin, report_catalog)
 
 
 def candidate_from_work(work, row_ref, *, work_id, origin, destination, observation_state, report_catalog=None):
