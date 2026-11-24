@@ -1,0 +1,24 @@
+import tkinter as tk
+from unittest.mock import patch
+import unittest
+
+from registrador_rus.app.main import DemoApp
+
+
+class DemoUITests(unittest.TestCase):
+    def test_selection_confirmation_and_receipt(self):
+        root=tk.Tk(); app=DemoApp(root)
+        try:
+            root.update(); app.table.selection_set('demo-1'); app.preview()
+            self.assertIn('DESMARCADA',app.detail.get('1.0','end'))
+            app.prepare()
+            with patch('registrador_rus.app.main.messagebox.askyesno',return_value=False): app.authorize()
+            self.assertEqual(app.confirmed,set())
+            with patch('registrador_rus.app.main.messagebox.askyesno',return_value=True): app.authorize()
+            app.execute(); app.refresh()
+            self.assertEqual(app.journal.state('demo-1'),'COMPROBADA')
+            app.table.selection_set('demo-2'); app.preview()
+            self.assertIn('MARCADA',app.detail.get('1.0','end'))
+            app.limit.set('1'); app.configure()
+            self.assertEqual(app.journal.schedule_eligibility().reason,'ESPERAR_CUPO')
+        finally: app.close()

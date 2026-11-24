@@ -33,3 +33,5 @@ P6c: conciliación ficticia por identidad, texto y recibo a una copia XLSX simpl
 P7a: puente localhost de simulación, sin consumidor real. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_bridge.py -v`. El ack solo confirma recepción categórica; no acredita registro. No admite write_one.
 
 P7b/P8-sim: controlador de simulación sin red y adaptador ficticio cerrado. `python -m unittest discover -s registrador_rus/tests -p test_simulation.py -v`. Todos los guardados y confirmaciones son ficticios; no instalar ni habilitar RUS.
+
+P7c: UI ficticia: `python -m registrador_rus.app.main` desde raíz. Prueba GUI (requiere pantalla Tk): `python -m unittest discover -s registrador_rus/tests -p test_demo_ui.py -v`. Ocho operaciones ficticias y puente opcional. Extensión de demostración en extension/, sin acceso a RUS. `python -m registrador_rus.tests.run_browser_demo` verifica puente y DOM mediante transporte de prueba; carga MV3 nativa pendiente por política del Chromium de desarrollo. El ack nunca autoriza ni registra.

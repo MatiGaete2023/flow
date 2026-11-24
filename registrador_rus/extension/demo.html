@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Registrador ficticio</title>
+<body>
+<h1>Demostración del registrador Flow</h1>
+<p>Solo datos ficticios; sin acceso ni escritura en RUS. El botón de guardado del formulario es inerte.</p>
+<p>Origen para el puente: <code id="origin"></code></p>
+<label>Puerto <input id="port" inputmode="numeric"></label>
+<label>Sesión <input id="session" autocomplete="off"></label>
+<label>Token <input id="token" type="password" autocomplete="off"></label>
+<button id="poll" type="button">Recibir una orden</button>
+<p id="status" role="status">Desconectado</p>
+<iframe id="fixture" title="Formulario exclusivamente ficticio" width="760" height="330" sandbox="allow-same-origin"></iframe>
+<script src="observer.js"></script><script src="prepare.js"></script><script src="demo.js"></script>
+</body></html>
